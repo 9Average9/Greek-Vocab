@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.103";
+const APP_VERSION = "3.0.104";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.104 &mdash; English Rhema Highlighting</div>
+<ul>
+  <li><strong>English highlighting added</strong> &mdash; The Rhema highlighter now works in MSB and BSB by tagging English parts of speech with winkNLP.</li>
+  <li><strong>Greek highlighting preserved</strong> &mdash; Greek and Hebrew highlighting still use the existing morphology data path.</li>
+  <li><strong>Lightweight loading</strong> &mdash; The English NLP model loads only when the English view and highlight tool need it.</li>
+</ul>
 <div class="un-version-label">v3.0.103 &mdash; Home Theme Match & Rhema Selector</div>
 <ul>
   <li><strong>Theme names made readable</strong> &mdash; Color wheel tiles now wrap and resize labels so names fit inside the boxes.</li>
@@ -23243,6 +23249,160 @@ const HIGHLIGHT_CATS = {
   ADV:  { color:'rgba(253,186,116,0.32)' },
 };
 
+const RHEMA_ENGLISH_NLP_BUNDLE_VERSION = '3.0.104';
+const RHEMA_ENGLISH_POS_TO_HIGHLIGHT = {
+  VERB: 'V',
+  AUX: 'V',
+  NOUN: 'N',
+  PROPN: 'N',
+  ADJ: 'ADJ',
+  DET: 'T',
+  PRON: 'PRON',
+  ADP: 'PREP',
+  SCONJ: 'CONJ',
+  CCONJ: 'CONJ',
+  ADV: 'ADV'
+};
+
+let _rhemaEnglishNlp = null;
+let _rhemaEnglishNlpPromise = null;
+let _rhemaEnglishHighlightRenderToken = 0;
+const _rhemaEnglishPosCache = new Map();
+
+function _rhemaEnglishHighlightActive() {
+  return _rhemaShowEnglish && _rhemaHighlightBarOn && !_rhemaSyntaxMode;
+}
+
+function _rhemaEnglishHighlightSelected() {
+  return _rhemaEnglishHighlightActive() && _rhemaPosHighlights.size > 0;
+}
+
+function _loadRhemaEnglishNlp() {
+  if (_rhemaEnglishNlp) return Promise.resolve(_rhemaEnglishNlp);
+  if (_rhemaEnglishNlpPromise) return _rhemaEnglishNlpPromise;
+  _rhemaEnglishNlpPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-rhema-english-nlp="true"]');
+    const finish = () => {
+      const bundle = window.DiscipleBuilderWinkNLP;
+      if (!bundle?.winkNLP || !bundle?.model) {
+        reject(new Error('Rhema English NLP bundle did not initialize.'));
+        return;
+      }
+      const nlp = bundle.winkNLP(bundle.model);
+      _rhemaEnglishNlp = { nlp, its: nlp.its };
+      resolve(_rhemaEnglishNlp);
+    };
+    if (existing) {
+      if (window.DiscipleBuilderWinkNLP) finish();
+      else existing.addEventListener('load', finish, { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `assets/vendor/wink-nlp-en.js?v=${RHEMA_ENGLISH_NLP_BUNDLE_VERSION}`;
+    script.async = true;
+    script.dataset.rhemaEnglishNlp = 'true';
+    script.onload = finish;
+    script.onerror = () => reject(new Error('Unable to load Rhema English NLP bundle.'));
+    document.head.appendChild(script);
+  }).catch((error) => {
+    console.warn('Rhema English highlighting unavailable:', error);
+    _rhemaEnglishNlpPromise = null;
+    throw error;
+  });
+  return _rhemaEnglishNlpPromise;
+}
+
+function _requestRhemaEnglishHighlightRender() {
+  if (!_rhemaEnglishHighlightActive() || _rhemaEnglishNlp) return;
+  const token = ++_rhemaEnglishHighlightRenderToken;
+  _loadRhemaEnglishNlp().then(() => {
+    if (token !== _rhemaEnglishHighlightRenderToken) return;
+    updateHighlightToolbar();
+    renderRhemaVerse();
+  }).catch(() => updateHighlightToolbar());
+}
+
+function _rhemaEnglishPosKey(pos) {
+  return RHEMA_ENGLISH_POS_TO_HIGHLIGHT[pos] || null;
+}
+
+function _rhemaEnglishRowsToCats(rows) {
+  const cats = new Set();
+  rows.forEach((token) => {
+    const cat = _rhemaEnglishPosKey(token.pos);
+    if (cat) cats.add(cat);
+  });
+  return cats;
+}
+
+function _rhemaEnglishTokenRows(text) {
+  if (!_rhemaEnglishNlp || !text) return [];
+  const doc = _rhemaEnglishNlp.nlp.readDoc(text);
+  const rows = [];
+  doc.tokens().each((token) => {
+    rows.push({ value: token.out(), pos: token.out(_rhemaEnglishNlp.its.pos) });
+  });
+  return rows;
+}
+
+function _rhemaEnglishCacheKey(book, chapter, verse) {
+  return `${_rhemaEnglishVersion()}|${book}|${chapter}|${verse}`;
+}
+
+function _rhemaEnglishVerseCats(book, chapter, verse, text) {
+  if (!_rhemaEnglishNlp || !text) return new Set(Object.keys(HIGHLIGHT_CATS));
+  const key = _rhemaEnglishCacheKey(book, chapter, verse);
+  const cached = _rhemaEnglishPosCache.get(key);
+  if (cached) return cached;
+  const cats = _rhemaEnglishRowsToCats(_rhemaEnglishTokenRows(text));
+  _rhemaEnglishPosCache.set(key, cats);
+  return cats;
+}
+
+function _rhemaEnglishPresentCats() {
+  const cats = new Set();
+  if (!_rhemaEnglishNlp) return new Set(Object.keys(HIGHLIGHT_CATS));
+  const addVerse = (verse) => {
+    const text = _rhemaEnglishText(_rhemaBook, _rhemaChapter, verse);
+    _rhemaEnglishVerseCats(_rhemaBook, _rhemaChapter, verse, text).forEach((cat) => cats.add(cat));
+  };
+  if (_rhemaFullChapter) {
+    const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
+    Object.keys(chapterData).forEach(addVerse);
+  } else {
+    addVerse(_rhemaVerse);
+  }
+  return cats;
+}
+
+function _renderRhemaEnglishText(text, book = _rhemaBook, chapter = _rhemaChapter, verse = _rhemaVerse) {
+  if (!text) return '';
+  if (!_rhemaEnglishHighlightSelected() || !_rhemaEnglishNlp) return _escapeRhemaAttr(text);
+  const rows = _rhemaEnglishTokenRows(text);
+  _rhemaEnglishPosCache.set(_rhemaEnglishCacheKey(book, chapter, verse), _rhemaEnglishRowsToCats(rows));
+  let cursor = 0;
+  let html = '';
+  const lowerText = text.toLowerCase();
+  rows.forEach((token) => {
+    const rawToken = String(token.value || '');
+    if (!rawToken) return;
+    const idx = lowerText.indexOf(rawToken.toLowerCase(), cursor);
+    if (idx < cursor) return;
+    html += _escapeRhemaAttr(text.slice(cursor, idx));
+    const surface = text.slice(idx, idx + rawToken.length);
+    const cat = _rhemaEnglishPosKey(token.pos);
+    const color = cat && _rhemaPosHighlights.has(cat) ? HIGHLIGHT_CATS[cat]?.color : null;
+    if (color) {
+      html += `<span class="rhema-english-pos-highlight" data-cat="${cat}" style="background:${color}">${_escapeRhemaAttr(surface)}</span>`;
+    } else {
+      html += _escapeRhemaAttr(surface);
+    }
+    cursor = idx + rawToken.length;
+  });
+  html += _escapeRhemaAttr(text.slice(cursor));
+  return html;
+}
+
 function toggleRhemaHighlightBar() {
   _rhemaHighlightBarOn = !_rhemaHighlightBarOn;
   const bar = document.getElementById('rhemaHighlightBar');
@@ -23253,10 +23413,29 @@ function toggleRhemaHighlightBar() {
     renderRhemaVerse();
   } else {
     updateHighlightToolbar();
+    _requestRhemaEnglishHighlightRender();
   }
 }
 
 function toggleRhemaHighlight(cat) {
+  if (_rhemaEnglishHighlightActive()) {
+    const present = _rhemaEnglishPresentCats();
+    const hasMatch = present.has(cat);
+    if (_rhemaPosHighlights.has(cat)) {
+      _rhemaPosHighlights.delete(cat);
+    } else {
+      if (!hasMatch) {
+        const btn = document.querySelector(`.rhema-hl-pill[data-cat="${cat}"]`);
+        if (btn) { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 500); }
+        return;
+      }
+      _rhemaPosHighlights.add(cat);
+    }
+    renderRhemaVerse();
+    _requestRhemaEnglishHighlightRender();
+    return;
+  }
+
   const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
   const hasMatch = words.some(w => normalizePosKey(w[2]) === cat);
 
@@ -23276,6 +23455,20 @@ function toggleRhemaHighlight(cat) {
 
 function updateHighlightToolbar() {
   if (!_rhemaHighlightBarOn) return;
+  if (_rhemaShowEnglish && !_rhemaSyntaxMode) {
+    const present = _rhemaEnglishPresentCats();
+    for (const cat of Object.keys(HIGHLIGHT_CATS)) {
+      const btn = document.querySelector(`.rhema-hl-pill[data-cat="${cat}"]`);
+      if (!btn) continue;
+      const hasMatch = present.has(cat);
+      const isActive = _rhemaPosHighlights.has(cat);
+      btn.classList.toggle('hl-active',  isActive && hasMatch);
+      btn.classList.toggle('hl-dimmed',  isActive && !hasMatch);
+      btn.classList.toggle('hl-present', !isActive && hasMatch);
+    }
+    _requestRhemaEnglishHighlightRender();
+    return;
+  }
   let words;
   if (_rhemaFullChapter) {
     const chData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
@@ -24116,7 +24309,9 @@ function renderRhemaVerse() {
       EnglishDiv.innerHTML = _rhemaSyntaxMode ? '' : verseNums.map(vn => {
         const v = String(vn);
         const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, v);
-        const engContent = engText || `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
+        const engContent = engText
+          ? _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, v)
+          : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
         return `<div class="rhema-chapter-block" data-verse="${v}">` +
                `<div class="rhema-chapter-verse-label">${vn}</div>` +
                `<div class="rhema-chapter-english">${engContent}</div></div>`;
@@ -24141,7 +24336,9 @@ function renderRhemaVerse() {
       display.innerHTML = _rhemaLayerBadge() + _renderVerseWords(words, null);
       if (EnglishDiv) {
         const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
-        EnglishDiv.innerHTML = engText || `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
+        EnglishDiv.innerHTML = engText
+          ? _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, _rhemaVerse)
+          : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
       }
     }
   }
@@ -24157,7 +24354,8 @@ function renderRhemaVerse() {
 
 function toggleRhemaEnglish() {
   _rhemaShowEnglish = !_rhemaShowEnglish;
-  updateRhemaSwapVisibility();
+  renderRhemaVerse();
+  _requestRhemaEnglishHighlightRender();
   closeRhemaSheet();
 }
 

@@ -16118,6 +16118,15 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   color: var(--muted-color);
 }
 
+.rhema-english-pos-highlight {
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  color: color-mix(in srgb, var(--font-color) 82%, currentColor);
+  font-weight: 650;
+  padding: 0 2px;
+}
+
 /* Tap hint sits in-flow between verse display and verse nav */
 .rhema-tap-hint {
   text-align: center;
