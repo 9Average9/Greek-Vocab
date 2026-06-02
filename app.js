@@ -18315,7 +18315,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.95";
+const APP_VERSION = "3.0.96";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18334,6 +18334,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.96 &mdash; Sleeker Home Layout</div>
+<ul>
+  <li><strong>Rhema search bar slimmed down</strong> &mdash; The Home search now uses a cleaner modern pill treatment with tighter result rows.</li>
+  <li><strong>Study boxes made shorter</strong> &mdash; Home study cards, the current Rhema card, and the new-study tile now use less vertical space.</li>
+</ul>
 <div class="un-version-label">v3.0.95 &mdash; Smarter Rhema Search</div>
 <ul>
   <li><strong>Rhema results scroll to the verse</strong> &mdash; Home search results now open the full chapter and scroll the visible MSB chapter view to the selected verse.</li>
