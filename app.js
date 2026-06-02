@@ -18492,7 +18492,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.100";
+const APP_VERSION = "3.0.101";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18511,6 +18511,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.101 &mdash; Habit Reminder Completion Check</div>
+<ul>
+  <li><strong>Completed habits stay quiet</strong> &mdash; Habit reminders now check today's habit entry and skip sending if that habit is already completed for the user's local day.</li>
+  <li><strong>Habit reminder token cleanup</strong> &mdash; Habit reminders now use the same stale-token pruning path as the other push reminders.</li>
+</ul>
 <div class="un-version-label">v3.0.100 &mdash; Reminder Deploy Compatibility</div>
 <ul>
   <li><strong>Reminder deployment fixed</strong> &mdash; Scheduled reminder functions stay on their existing generation so Firebase can deploy them safely while keeping the reliability and cost fixes.</li>

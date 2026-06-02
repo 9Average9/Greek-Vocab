@@ -507,7 +507,41 @@ exports.sendScheduledReminders = functions.pubsub
       const uids = Object.keys(slotsByUid);
       const userSnaps = await Promise.all(uids.map(uid => db.collection("users").doc(uid).get()));
       const userMap = {};
-      userSnaps.forEach(snap => { if (snap.exists) userMap[snap.id] = snap.data(); });
+      const userRefMap = {};
+      userSnaps.forEach(snap => {
+        if (snap.exists) {
+          userMap[snap.id] = snap.data();
+          userRefMap[snap.id] = snap.ref;
+        }
+      });
+
+      const entryRefsByKey = {};
+      for (const uid of uids) {
+        if (!userMap[uid]) continue;
+        for (const { slot } of slotsByUid[uid]) {
+          if (!slot.habitId) continue;
+          const dayKey = mercyDateKey(now.getTime(), slot.timezone || "UTC");
+          const key = `${uid}|${slot.habitId}|${dayKey}`;
+          if (!entryRefsByKey[key]) {
+            entryRefsByKey[key] = db.collection("users").doc(uid)
+              .collection("habits").doc(slot.habitId)
+              .collection("entries").doc(dayKey);
+          }
+        }
+      }
+      const entrySnaps = Object.keys(entryRefsByKey).length
+        ? await db.getAll(...Object.values(entryRefsByKey))
+        : [];
+      const completedHabitDays = {};
+      entrySnaps.forEach(snap => {
+        if (snap.exists && snap.data().status === "success") {
+          const path = snap.ref.path.split("/");
+          const uid = path[1];
+          const habitId = path[3];
+          const dayKey = snap.id;
+          completedHabitDays[`${uid}|${habitId}|${dayKey}`] = true;
+        }
+      });
 
       // Update slot nextSendAts in parallel, then send notifications
       const slotUpdates = [];
@@ -527,17 +561,18 @@ exports.sendScheduledReminders = functions.pubsub
           const slotUpdate = { lastSent: now };
           if (nextSendAt) slotUpdate.nextSendAt = nextSendAt;
           slotUpdates.push(slotDoc.ref.update(slotUpdate));
+          const dayKey = mercyDateKey(now.getTime(), slot.timezone || "UTC");
+          if (completedHabitDays[`${uid}|${slot.habitId}|${dayKey}`]) continue;
           if (!tokens.length) continue;
           const body = randomHabitReminderMessage(slot.habitName || "your habit");
           slotUpdates.push(
-            messaging.sendEachForMulticast({
-              tokens,
+            sendToUserTokens(userRefMap[uid], tokens, {
               notification: { title: slot.habitName || "Habit Reminder", body },
               webpush: {
                 fcmOptions: { link: "/Greek-Vocab/?open=habits" },
                 notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] }
               }
-            }).catch(e => console.error(`${uid} habit reminder error:`, e.message))
+            }, `habit reminder ${uid}`)
           );
         }
       }
