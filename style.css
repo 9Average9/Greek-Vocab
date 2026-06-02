@@ -15663,12 +15663,6 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   overflow: hidden;
   text-overflow: ellipsis;
 }
-#rhemaPillChap {
-  flex: 0 1 auto;
-  text-overflow: clip;
-  font-size: clamp(0.68rem, 2.85vw, 0.82rem);
-  letter-spacing: 0;
-}
 .rhema-pill.hidden { display: none; }
 .rhema-chapter-mode-pill { flex: 0 0 auto; padding: 0 12px; color: var(--muted-color); border-radius: 20px; }
 .rhema-chapter-mode-pill.active {
@@ -15804,9 +15798,14 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   flex-shrink: 0;
 }
 .rhema-picker-title {
+  flex: 1;
+  min-width: 0;
   font-size: 1.05rem;
   font-weight: 800;
   color: var(--font-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .rhema-picker-x {
   background: none;
@@ -15848,6 +15847,40 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   touch-action: pan-y;
   overscroll-behavior: none;
 }
+
+.rhema-picker-back {
+  width: 34px;
+  height: 34px;
+  border: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--card-color) 86%, transparent);
+  color: var(--font-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-right: 8px;
+  cursor: pointer;
+}
+.rhema-picker-back.hidden { display: none; }
+.rhema-picker-back .material-symbols-outlined {
+  font-size: 1.15rem !important;
+}
+
+.rhema-book-chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
+  gap: 9px;
+  padding: 12px 14px 18px;
+}
+
+.rhema-book-chapter-grid .rhema-num-cell {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .rhema-book-row {
   display: flex;
   align-items: center;
@@ -16931,20 +16964,21 @@ body.high-contrast-theme .sett-theme-card {
 .theme-wheel-tile strong,
 .theme-wheel-tile small {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .theme-wheel-tile strong {
-  font-size: 0.78rem;
-  line-height: 1.05;
+  font-size: clamp(0.66rem, 2.45vw, 0.76rem);
+  line-height: 1.08;
   font-weight: 850;
   color: var(--font-color);
 }
 
 .theme-wheel-tile small {
-  font-size: 0.66rem;
+  font-size: clamp(0.56rem, 2.05vw, 0.64rem);
   line-height: 1.05;
   color: var(--muted-color);
 }
@@ -20717,6 +20751,43 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   --home-action-icon: #b91c1c;
   --home-action-border: rgba(239, 68, 68, 0.28);
   --home-action-shadow: rgba(239, 68, 68, 0.13);
+}
+
+body.home-theme-match #homeScreen .home-action-tile .hat-icon {
+  --qa-bg:
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--secondary-color) 18%, var(--card-color)) 0%,
+      color-mix(in srgb, var(--accent-color) 16%, var(--primary-light)) 100%) !important;
+  --qa-border: color-mix(in srgb, var(--secondary-color) 68%, var(--border-color)) !important;
+  --qa-shadow: color-mix(in srgb, var(--secondary-color) 24%, transparent) !important;
+  color: var(--secondary-color) !important;
+}
+
+body.home-theme-match #homeScreen .home-action-tile .hat-text strong {
+  color: var(--secondary-color) !important;
+}
+
+body.home-theme-match #homeScreen .hs-study-card,
+body.home-theme-match #homeScreen .hs-start-btn,
+body.home-theme-match #homeScreen .hs-add-card {
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--secondary-color) 12%, var(--card-color)),
+      color-mix(in srgb, var(--accent-color) 8%, var(--primary-light))) !important;
+  border-color: color-mix(in srgb, var(--secondary-color) 45%, var(--border-color)) !important;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--secondary-color) 12%, transparent) !important;
+}
+
+body.home-theme-match #homeScreen .hs-study-icon,
+body.home-theme-match #homeScreen .hs-add-card .material-symbols-outlined,
+body.home-theme-match #homeScreen .hs-start-btn .material-symbols-outlined {
+  color: var(--secondary-color) !important;
+}
+
+body.home-theme-match #homeScreen .hs-study-name,
+body.home-theme-match #homeScreen .hs-add-card span:last-child,
+body.home-theme-match #homeScreen .hs-start-btn span:last-child {
+  color: var(--font-color) !important;
 }
 
 /* Home-only nav dock: collapses inward into a centered control. */

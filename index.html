@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.102" rel="stylesheet"/>
+<link href="style.css?v=3.0.103" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -8367,6 +8367,20 @@ Verb Endings
 <span class="slider"></span>
 </label>
 </div>
+<div class="sett-sep"></div>
+<div class="sett-row">
+<span class="sett-row-icon-wrap">
+<span class="material-symbols-outlined">palette</span>
+</span>
+<span class="sett-row-text">
+<span class="sett-row-name">Match Home Theme</span>
+<span class="sett-row-sub">Use the current theme on Home studies and quick actions</span>
+</span>
+<label class="switch">
+<input id="matchHomeThemeToggle" onchange="toggleMatchHomeTheme()" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
 </div>
 <!-- APP THEME -->
 <div class="sett-section-label">App Theme</div>
@@ -9824,10 +9838,6 @@ Verb Endings
 <span id="rhemaPillBook">John</span>
 <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
 </button>
-<button class="rhema-pill" onclick="openRhemaChapPicker()">
-<span id="rhemaPillChap">Ch. 3</span>
-<span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
-</button>
 <button class="rhema-pill" id="rhemaVersePillBtn" onclick="openRhemaVersePicker()">
 <span id="rhemaPillVerse">v16</span>
 <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
@@ -9870,7 +9880,6 @@ Verb Endings
 <span class="material-symbols-outlined">chevron_right</span>
 </button>
 </div>
-<p class="rhema-tap-hint" id="rhemaTapHint">Tap any word · swipe to navigate</p>
 </div>
 <!-- Chapter toast: position:absolute so it floats above content -->
 <div class="rhema-chapter-toast hidden" id="rhemaChapterToast"></div>
@@ -10032,7 +10041,10 @@ Verb Endings
 <div class="rhema-picker-overlay hidden" id="rxBookPickerOverlay" onclick="closeRxBookPicker()">
 <div class="rhema-picker-sheet" onclick="event.stopPropagation()">
 <div class="rhema-picker-hdr">
-<span class="rhema-picker-title">Select Book</span>
+<button class="rhema-picker-back hidden" id="rhemaBookPickerBack" onclick="rhemaRenderBookList();event.stopPropagation()" type="button">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="rhema-picker-title" id="rhemaBookPickerTitle">Select Book</span>
 <button class="rhema-picker-x" onclick="closeRxBookPicker()">✕</button>
 </div>
 <div class="rhema-picker-search-row">
@@ -16255,7 +16267,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.102"></script>
+<script src="app.js?v=3.0.103"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.29"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
 <script src="firebase-lb.js?v=3.0.101" type="module"></script>

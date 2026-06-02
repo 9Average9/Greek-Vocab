@@ -13038,6 +13038,7 @@ function showSettings() {
   });
   updateLessonModeSettingsUI();
   updateHighContrastSettingsUI();
+  updateMatchHomeThemeSettingsUI();
 }
 
 function resetTestData() {
@@ -13774,6 +13775,7 @@ function applyAppTheme(themeName) {
 
   document.body.classList.toggle("dark", themeName === "midnight");
   document.body.classList.toggle("high-contrast-theme", getHighContrastMode());
+  applyMatchHomeThemeMode();
 
   document.querySelectorAll(".theme-preset").forEach(btn => {
     btn.classList.toggle("selected", btn.classList.contains(themeName));
@@ -13801,6 +13803,26 @@ function toggleHighContrastMode() {
   const enabled = document.getElementById("highContrastToggle")?.checked === true;
   localStorage.setItem("highContrastMode", String(enabled));
   applyAppTheme(localStorage.getItem("appTheme") || "royal");
+  syncUserData();
+}
+
+function getMatchHomeThemeMode() {
+  return localStorage.getItem("matchHomeTheme") === "true";
+}
+
+function applyMatchHomeThemeMode() {
+  document.body?.classList.toggle("home-theme-match", getMatchHomeThemeMode());
+}
+
+function updateMatchHomeThemeSettingsUI() {
+  const toggle = document.getElementById("matchHomeThemeToggle");
+  if (toggle) toggle.checked = getMatchHomeThemeMode();
+}
+
+function toggleMatchHomeTheme() {
+  const enabled = document.getElementById("matchHomeThemeToggle")?.checked === true;
+  localStorage.setItem("matchHomeTheme", String(enabled));
+  applyMatchHomeThemeMode();
   syncUserData();
 }
 
@@ -13891,6 +13913,7 @@ window.addEventListener("load", () => {
   localStorage.setItem("darkMode", isDark ? "true" : "false");
 
   applyAppTheme(savedTheme);
+  applyMatchHomeThemeMode();
   applyHomeBackdrop(localStorage.getItem("homeBackdrop") || "none");
   _syncHomeViewportState(document.querySelector(".screen.active")?.id || "homeScreen");
 });
@@ -18672,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.102";
+const APP_VERSION = "3.0.103";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18691,6 +18714,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.103 &mdash; Home Theme Match & Rhema Selector</div>
+<ul>
+  <li><strong>Theme names made readable</strong> &mdash; Color wheel tiles now wrap and resize labels so names fit inside the boxes.</li>
+  <li><strong>Match Home Theme added</strong> &mdash; Appearance settings can now apply the current theme to Home quick actions and study cards.</li>
+  <li><strong>Rhema chapter selection simplified</strong> &mdash; The book picker now flows into a chapter grid, and the main pill displays references like Psalm 118.</li>
+  <li><strong>Rhema hint text removed</strong> &mdash; The bottom tap/swipe helper copy is gone for a cleaner reader.</li>
+</ul>
 <div class="un-version-label">v3.0.102 &mdash; Theme Wheel Refresh</div>
 <ul>
   <li><strong>Theme selector cleaned up</strong> &mdash; Profile settings now groups themes into compact color-family wheels instead of one long stacked list.</li>
@@ -19373,6 +19403,7 @@ async function restoreUserFromFirestore(user) {
   }
   if (data.darkMode != null) localStorage.setItem("darkMode", String(data.darkMode));
   if (data.highContrastMode != null) localStorage.setItem("highContrastMode", String(data.highContrastMode));
+  if (data.matchHomeTheme != null) localStorage.setItem("matchHomeTheme", String(data.matchHomeTheme));
   if (data.appTheme) {
     localStorage.setItem("appTheme", data.appTheme);
     applyAppTheme(data.appTheme);
@@ -19385,6 +19416,7 @@ async function restoreUserFromFirestore(user) {
   } else {
     applyHomeBackdrop(localStorage.getItem("homeBackdrop") || "none");
   }
+  applyMatchHomeThemeMode();
   if (data.advQuizScores) localStorage.setItem("advQuizScores", JSON.stringify(data.advQuizScores));
   if (data.merciesSettings) {
     localStorage.setItem("mercyDailyEnabled", String(!!data.merciesSettings.dailyEnabled));
@@ -19461,6 +19493,7 @@ async function syncUserData() {
     lastSeenAppVersion: APP_VERSION,
     darkMode: localStorage.getItem("darkMode") === "true",
     highContrastMode: getHighContrastMode(),
+    matchHomeTheme: getMatchHomeThemeMode(),
     appTheme: localStorage.getItem("appTheme") || null,
     homeBackdrop: localStorage.getItem("homeBackdrop") || "none",
     advQuizScores: (() => { try { return JSON.parse(localStorage.getItem("advQuizScores") || "{}"); } catch { return {}; } })(),
@@ -19506,6 +19539,7 @@ function gatherMigrationData() {
     lessonMode: localStorage.getItem("lessonMode") || "basic",
     darkMode: localStorage.getItem("darkMode") === "true",
     highContrastMode: getHighContrastMode(),
+    matchHomeTheme: getMatchHomeThemeMode(),
     appTheme: localStorage.getItem("appTheme") || null,
     homeBackdrop: localStorage.getItem("homeBackdrop") || "none",
     appWelcomeCoachSeenV275: _hasCompletedAppWelcomeCoach(),
@@ -23474,14 +23508,11 @@ async function showRhema() {
   modal.classList.add('open');
 
   const loading = document.getElementById('rhemaLoadingMsg');
-  const hint    = document.getElementById('rhemaTapHint');
   if (loading) loading.style.display = 'block';
-  if (hint)    hint.classList.add('hidden');
 
   try {
     await loadRhemaScripts();
     if (loading) loading.style.display = 'none';
-    if (hint)    hint.classList.remove('hidden');
     initRhemaPicker();
     renderRhemaVerse();
     startRhemaCoach();
@@ -23587,10 +23618,8 @@ function initRhemaPicker() {
 function syncRhemaPicker() {
   const bookName = _rhemaBookName(_rhemaBook);
   const b = document.getElementById('rhemaPillBook');
-  const c = document.getElementById('rhemaPillChap');
   const v = document.getElementById('rhemaPillVerse');
-  if (b) b.textContent = bookName;
-  if (c) c.textContent = 'Ch. ' + _rhemaChapter;
+  if (b) b.textContent = `${bookName} ${_rhemaChapter}`;
   if (v) v.textContent = 'v' + _rhemaVerse;
 }
 
@@ -23600,7 +23629,21 @@ function openRhemaBookPicker() {
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   const overlay = document.getElementById('rhemaBookPickerOverlay');
   if (!overlay || !_rhemaData()) return;
+  rhemaRenderBookList();
+  overlay.classList.remove('hidden');
+  document.getElementById('rhemaModal')?.classList.add('picker-open');
+  initRhemaPickerSwipeDown('rhemaBookPickerOverlay');
+}
+
+function rhemaRenderBookList() {
   const list = document.getElementById('rhemaBookList');
+  const title = document.getElementById('rhemaBookPickerTitle');
+  const back = document.getElementById('rhemaBookPickerBack');
+  const searchRow = document.querySelector('#rhemaBookPickerOverlay .rhema-picker-search-row');
+  if (!list || !_rhemaData()) return;
+  if (title) title.textContent = 'Select Book';
+  back?.classList.add('hidden');
+  searchRow?.classList.remove('hidden');
   const books = _rhemaBookOrder();
   const firstOT = books.find(c => RHEMA_OT_BOOK_ORDER.includes(c));
   const firstNT = books.find(c => RHEMA_NT_BOOK_ORDER.includes(c));
@@ -23611,7 +23654,7 @@ function openRhemaBookPicker() {
     let out = '';
     if (code === firstOT) out += '<div class="rhema-testament-sep" data-sep="OT">Old Testament</div>';
     if (code === firstNT) out += '<div class="rhema-testament-sep" data-sep="NT">New Testament</div>';
-    out += `<div class="rhema-book-row${sel}" data-testament="${isNT ? 'NT' : 'OT'}" onclick="rhemaSelectBook('${code}')">
+    out += `<div class="rhema-book-row${sel}" data-testament="${isNT ? 'NT' : 'OT'}" onclick="rhemaShowChaptersForBook('${code}')">
       <span class="material-symbols-outlined rhema-book-icon">menu_book</span>
       <span class="rhema-book-name">${name}</span>
       <span class="material-symbols-outlined rhema-book-check">check</span>
@@ -23620,13 +23663,27 @@ function openRhemaBookPicker() {
   }).join('');
   const search = document.getElementById('rhemaBookSearch');
   if (search) search.value = '';
-  overlay.classList.remove('hidden');
-  document.getElementById('rhemaModal')?.classList.add('picker-open');
-  initRhemaPickerSwipeDown('rhemaBookPickerOverlay');
   requestAnimationFrame(() => {
     const sel = list.querySelector('.selected');
     if (sel) list.scrollTop = sel.offsetTop - (list.clientHeight - sel.offsetHeight) / 2;
   });
+}
+
+function rhemaShowChaptersForBook(code) {
+  const list = document.getElementById('rhemaBookList');
+  const title = document.getElementById('rhemaBookPickerTitle');
+  const back = document.getElementById('rhemaBookPickerBack');
+  const searchRow = document.querySelector('#rhemaBookPickerOverlay .rhema-picker-search-row');
+  if (!list || !_rhemaData()) return;
+  const chapters = Object.keys(_rhemaText()[code] || {}).sort((a, b) => +a - +b);
+  if (title) title.textContent = `${_rhemaBookName(code)} Chapters`;
+  back?.classList.remove('hidden');
+  searchRow?.classList.add('hidden');
+  list.innerHTML = `<div class="rhema-book-chapter-grid">${chapters.map(ch => {
+    const sel = code === _rhemaBook && ch === _rhemaChapter ? ' selected' : '';
+    return `<button class="rhema-num-cell${sel}" onclick="rhemaSelectBookChapter('${code}','${ch}')">${ch}</button>`;
+  }).join('')}</div>`;
+  list.scrollTop = 0;
 }
 
 function openRhemaChapPicker() {
@@ -23695,6 +23752,18 @@ function rhemaSelectBook(code) {
   _rhemaBook    = code;
   _rhemaChapter = '1';
   _rhemaVerse   = '1';
+  if (isRhemaOTBook(code) && !isRhemaOTBook(fromBook)) _rhemaOTLayer = 'hebrew';
+  _rhemaHighlightStrongs = null;
+  closeRhemaPickerSheet();
+  syncRhemaPicker();
+  renderRhemaVerse();
+}
+
+function rhemaSelectBookChapter(code, ch) {
+  const fromBook = _rhemaBook;
+  _rhemaBook = code;
+  _rhemaChapter = String(ch);
+  _rhemaVerse = '1';
   if (isRhemaOTBook(code) && !isRhemaOTBook(fromBook)) _rhemaOTLayer = 'hebrew';
   _rhemaHighlightStrongs = null;
   closeRhemaPickerSheet();
@@ -25734,14 +25803,12 @@ function updateRhemaSwapVisibility() {
   const gr  = document.getElementById('rhemaVerseDisplay');
   const English = document.getElementById('rhemaEnglishDisplay');
   const btn = document.getElementById('rhemaSwapBtn');
-  const hint = document.getElementById('rhemaTapHint');
   if (gr)   gr.classList.toggle('hidden', _rhemaShowEnglish);
   if (English)  English.classList.toggle('hidden', !_rhemaShowEnglish);
   if (btn) {
     btn.textContent = _rhemaEnglishLabel();
     btn.classList.toggle('active', _rhemaShowEnglish);
   }
-  if (hint) hint.classList.toggle('hidden', _rhemaShowEnglish);
 }
 
 // ── Word detail sheet ─────────────────────────────────────────────────────────
