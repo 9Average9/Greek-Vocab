@@ -472,29 +472,54 @@ exports.sendScheduledReminders = functions.pubsub
       .limit(200)
       .get();
 
-    for (const slotDoc of habitSlotSnap.docs) {
-      const slot = slotDoc.data();
-      if (!slot.uid || !slot.time) continue;
-      const userSnap = await db.collection("users").doc(slot.uid).get();
-      if (!userSnap.exists) { await slotDoc.ref.delete(); continue; }
-      const tokens = userSnap.data().fcmTokens || [];
-      const nextSendAt = calculateNextReminderDate(
-        { time: slot.time, frequency: slot.frequency || "daily", timezone: slot.timezone || "UTC" },
-        new Date(now.getTime() + 60 * 1000)
-      );
-      const slotUpdate = { lastSent: now };
-      if (nextSendAt) slotUpdate.nextSendAt = nextSendAt;
-      await slotDoc.ref.update(slotUpdate);
-      if (!tokens.length) continue;
-      const body = randomHabitReminderMessage(slot.habitName || "your habit");
-      await messaging.sendEachForMulticast({
-        tokens,
-        notification: { title: slot.habitName || "Habit Reminder", body },
-        webpush: {
-          fcmOptions: { link: "/Greek-Vocab/?open=habits" },
-          notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] }
+    if (!habitSlotSnap.empty) {
+      // Batch-read all distinct user docs in one round-trip instead of N+1 sequential reads
+      const slotsByUid = {};
+      for (const slotDoc of habitSlotSnap.docs) {
+        const slot = slotDoc.data();
+        if (!slot.uid || !slot.time) continue;
+        if (!slotsByUid[slot.uid]) slotsByUid[slot.uid] = [];
+        slotsByUid[slot.uid].push({ doc: slotDoc, slot });
+      }
+
+      const uids = Object.keys(slotsByUid);
+      const userSnaps = await Promise.all(uids.map(uid => db.collection("users").doc(uid).get()));
+      const userMap = {};
+      userSnaps.forEach(snap => { if (snap.exists) userMap[snap.id] = snap.data(); });
+
+      // Update slot nextSendAts in parallel, then send notifications
+      const slotUpdates = [];
+      for (const uid of uids) {
+        const userData = userMap[uid];
+        if (!userData) {
+          // User gone — delete all their slots
+          slotsByUid[uid].forEach(({ doc }) => slotUpdates.push(doc.ref.delete()));
+          continue;
         }
-      }).catch(e => console.error(`${slot.uid} habit reminder error:`, e.message));
+        const tokens = userData.fcmTokens || [];
+        for (const { doc: slotDoc, slot } of slotsByUid[uid]) {
+          const nextSendAt = calculateNextReminderDate(
+            { time: slot.time, frequency: slot.frequency || "daily", timezone: slot.timezone || "UTC" },
+            new Date(now.getTime() + 60 * 1000)
+          );
+          const slotUpdate = { lastSent: now };
+          if (nextSendAt) slotUpdate.nextSendAt = nextSendAt;
+          slotUpdates.push(slotDoc.ref.update(slotUpdate));
+          if (!tokens.length) continue;
+          const body = randomHabitReminderMessage(slot.habitName || "your habit");
+          slotUpdates.push(
+            messaging.sendEachForMulticast({
+              tokens,
+              notification: { title: slot.habitName || "Habit Reminder", body },
+              webpush: {
+                fcmOptions: { link: "/Greek-Vocab/?open=habits" },
+                notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] }
+              }
+            }).catch(e => console.error(`${uid} habit reminder error:`, e.message))
+          );
+        }
+      }
+      await Promise.all(slotUpdates);
     }
 
     return null;
