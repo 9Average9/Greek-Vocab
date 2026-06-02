@@ -1880,8 +1880,16 @@ async function fcmRegisterToken(uid) {
     serviceWorkerRegistration: reg
   });
   if (token) {
+    const syncedToken = localStorage.getItem("fcmToken");
+    const syncedUid = localStorage.getItem("fcmTokenUid");
+    const syncedAt = Number(localStorage.getItem("fcmTokenSyncedAt") || 0);
+    if (syncedToken === token && syncedUid === uid && Date.now() - syncedAt < 24 * 60 * 60 * 1000) {
+      return token;
+    }
     await setDoc(doc(db, "users", uid), { fcmTokens: arrayUnion(token) }, { merge: true });
     localStorage.setItem("fcmToken", token);
+    localStorage.setItem("fcmTokenUid", uid);
+    localStorage.setItem("fcmTokenSyncedAt", String(Date.now()));
   }
   return token || null;
 }
@@ -1890,6 +1898,8 @@ async function fcmRemoveToken(uid, token) {
   try {
     await setDoc(doc(db, "users", uid), { fcmTokens: arrayRemove(token) }, { merge: true });
     localStorage.removeItem("fcmToken");
+    localStorage.removeItem("fcmTokenUid");
+    localStorage.removeItem("fcmTokenSyncedAt");
   } catch (e) {
     console.warn("fcmRemoveToken:", e);
   }

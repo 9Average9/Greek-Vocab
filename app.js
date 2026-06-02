@@ -18492,7 +18492,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.98";
+const APP_VERSION = "3.0.99";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18511,6 +18511,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.99 &mdash; Reminder Reliability & Firebase Efficiency</div>
+<ul>
+  <li><strong>Reminder scheduler hardened</strong> &mdash; Study and Praise reminders now run through the current scheduled Functions API with one active scheduler instance.</li>
+  <li><strong>Push tokens cleaned up</strong> &mdash; Failed sends now prune stale FCM tokens so reminders do not keep retrying dead devices.</li>
+  <li><strong>Habit reads reduced</strong> &mdash; Habit entry listeners now start when Habits is opened instead of on every sign-in.</li>
+  <li><strong>FCM writes reduced</strong> &mdash; Existing push tokens are re-synced at most daily unless the browser receives a new token.</li>
+</ul>
 <div class="un-version-label">v3.0.98 &mdash; Rhema Search Polish</div>
 <ul>
   <li><strong>Search result verse landing hardened</strong> &mdash; Opening a Home Rhema result now re-scrolls the visible chapter view to the selected verse after render.</li>
@@ -19625,15 +19632,6 @@ window.__onAuthStateReady = async (user) => {
     _maybeStartAppWelcomeCoachAfterAuth();
     setTimeout(maybeShowHomeIntroModal, 500);
     hideAppLaunchScreen('ready');
-
-    // Pre-start the habits listener so data is loaded before the user navigates there
-    if (!_habitsUnsub && window.Habits?.listen) {
-      _habitsUnsub = window.Habits.listen(user.uid, habits => {
-        _habitItems = habits || [];
-        _habitsLoaded = true;
-        if (document.getElementById("habitsPage")?.classList.contains("active")) renderHabits();
-      });
-    }
 
     // If a data-dependent page was already visible (e.g. shown before auth resolved),
     // refresh it now so users don't stay stuck on a "sign in" or "loading" message.

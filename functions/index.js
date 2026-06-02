@@ -1,4 +1,5 @@
 const functions = require("firebase-functions/v1");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { initializeApp } = require("firebase-admin/app");
 const { FieldValue, getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
@@ -13,6 +14,38 @@ async function deleteStoragePath(path) {
   if (!path) return;
   try { await bucket.file(path).delete({ ignoreNotFound: true }); }
   catch (e) { console.warn("deleteStoragePath:", path, e.message); }
+}
+
+function isInvalidFcmTokenError(error) {
+  const code = error?.code || "";
+  return code === "messaging/registration-token-not-registered" ||
+    code === "messaging/invalid-registration-token" ||
+    code === "messaging/invalid-argument";
+}
+
+async function sendToUserTokens(userRef, tokens, payload, label = "notification") {
+  const uniqueTokens = [...new Set((tokens || []).filter(Boolean))];
+  if (!uniqueTokens.length) return { successCount: 0, failureCount: 0, responses: [] };
+
+  try {
+    const result = await messaging.sendEachForMulticast({ tokens: uniqueTokens, ...payload });
+    const invalidTokens = [];
+    result.responses.forEach((r, i) => {
+      if (!r.success) {
+        const err = r.error;
+        console.warn(`${label} token[${i}]:`, err?.code, err?.message);
+        if (isInvalidFcmTokenError(err)) invalidTokens.push(uniqueTokens[i]);
+      }
+    });
+    if (invalidTokens.length) {
+      await userRef.update({ fcmTokens: FieldValue.arrayRemove(...invalidTokens) });
+      console.log(`${label}: pruned ${invalidTokens.length} invalid FCM token(s)`);
+    }
+    return result;
+  } catch (e) {
+    console.error(`${label} FCM error:`, e.message);
+    return { successCount: 0, failureCount: uniqueTokens.length, responses: [] };
+  }
 }
 
 async function shareRecentCommunityPostsBetweenFriends(uidA, uidB) {
@@ -177,9 +210,12 @@ exports.cleanupDeletedAuthUser = functions.auth.user().onDelete(async user => {
   return null;
 });
 
-exports.cleanupExpiredMercies = functions.pubsub
-  .schedule("every 24 hours")
-  .onRun(async () => {
+exports.cleanupExpiredMercies = onSchedule({
+  schedule: "every 24 hours",
+  timeZone: "UTC",
+  region: "us-central1",
+  maxInstances: 1
+}, async () => {
     const now = Date.now();
     const snap = await db.collection("merciesPosts")
       .where("expiresAtMs", "<=", now)
@@ -332,7 +368,7 @@ function randomPraisePrompt() {
 }
 
 async function backfillReminderNextSendAt(now) {
-  if (now.getUTCMinutes() !== 0) return;
+  if (now.getUTCMinutes() !== 0 || now.getUTCHours() % 6 !== 0) return;
   const snap = await db.collection("users")
     .where("reminder.enabled", "==", true)
     .limit(500)
@@ -357,9 +393,12 @@ async function backfillReminderNextSendAt(now) {
 }
 
 // Runs every minute, but only reads users whose reminder.nextSendAt is due.
-exports.sendScheduledReminders = functions.pubsub
-  .schedule("every 1 minutes")
-  .onRun(async () => {
+exports.sendScheduledReminders = onSchedule({
+  schedule: "every 1 minutes",
+  timeZone: "UTC",
+  region: "us-central1",
+  maxInstances: 1
+}, async () => {
     const now = new Date();
     await backfillReminderNextSendAt(now);
     await backfillMercyReminderNextSendAt(now);
@@ -392,22 +431,14 @@ exports.sendScheduledReminders = functions.pubsub
       if (nextSendAt) update["reminder.nextSendAt"] = nextSendAt;
       await userDoc.ref.update(update);
 
-      try {
-        const result = await messaging.sendEachForMulticast({
-          tokens,
-          notification: {
-            title: "Time to study Greek!",
-            body: "Take a few minutes to review your vocabulary and lessons."
-          },
-          webpush: { notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } }
-        });
-        console.log(`${userDoc.id}: ${result.successCount} sent, ${result.failureCount} failed`);
-        result.responses.forEach((r, i) => {
-          if (!r.success) console.warn(`token[${i}]:`, r.error?.code, r.error?.message);
-        });
-      } catch (e) {
-        console.error(`${userDoc.id} FCM error:`, e.message);
-      }
+      const result = await sendToUserTokens(userDoc.ref, tokens, {
+        notification: {
+          title: "Time to study Greek!",
+          body: "Take a few minutes to review your vocabulary and lessons."
+        },
+        webpush: { fcmOptions: { link: "/Greek-Vocab/" }, notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } }
+      }, `study reminder ${userDoc.id}`);
+      console.log(`${userDoc.id}: ${result.successCount} sent, ${result.failureCount} failed`);
     }
 
     const mercyDailySnap = await db.collection("users")
@@ -425,11 +456,10 @@ exports.sendScheduledReminders = functions.pubsub
       if (data.mercyLastPostDate === mercyDateKey(now.getTime(), reminder.timezone || "UTC")) continue;
       if (!tokens.length) continue;
       const body = `Share your daily praise: ${randomPraisePrompt()}`;
-      await messaging.sendEachForMulticast({
-        tokens,
+      await sendToUserTokens(userDoc.ref, tokens, {
         notification: { title: "Praises", body },
         webpush: { fcmOptions: { link: "/Greek-Vocab/?open=mercies" }, notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } }
-      }).catch(e => console.error(`${userDoc.id} mercy reminder error:`, e.message));
+      }, `mercy reminder ${userDoc.id}`);
     }
 
     const mercyFriendSnap = await db.collection("users")
@@ -457,12 +487,11 @@ exports.sendScheduledReminders = functions.pubsub
         expiresAtMs: now.getTime() + 24 * 60 * 60 * 1000
       };
       await userDoc.ref.update({ pendingMercyFriendEncouragement: pendingPrompt });
-      await messaging.sendEachForMulticast({
-        tokens,
+      await sendToUserTokens(userDoc.ref, tokens, {
         notification: { title: "Praises", body: `Encourage ${friendName} with a praise this week.` },
         data: { open: "mercies", friendUid, friendName },
         webpush: { fcmOptions: { link: `/Greek-Vocab/?open=mercies&friend=${encodeURIComponent(friendUid)}` }, notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } }
-      }).catch(e => console.error(`${userDoc.id} mercy friend reminder error:`, e.message));
+      }, `mercy friend reminder ${userDoc.id}`);
     }
 
     // ── Habit reminder slots ─────────────────────────────────────────────────
@@ -526,7 +555,7 @@ exports.sendScheduledReminders = functions.pubsub
   });
 
 async function backfillMercyReminderNextSendAt(now) {
-  if (now.getUTCMinutes() !== 0) return;
+  if (now.getUTCMinutes() !== 0 || now.getUTCHours() % 6 !== 0) return;
   const [dailySnap, friendSnap] = await Promise.all([
     db.collection("users").where("mercyReminder.enabled", "==", true).limit(500).get(),
     db.collection("users").where("mercyFriendReminder.enabled", "==", true).limit(500).get()
@@ -663,10 +692,6 @@ exports.onEncouragementCreated = functions.firestore
     } else if (type === "encouragement") {
       title = "Study Encouragement";
       body = `${fromName} is encouraging you to study your Greek!`;
-    } else if (type === "habitEncouragement") {
-      const habitName = snap.data().habitName || "a habit";
-      title = "Habit Encouragement";
-      body = `${fromName} is encouraging you to complete your ${habitName} habit.`;
     } else {
       return null; // unknown type — don't send a misleading notification
     }
@@ -683,22 +708,14 @@ exports.onEncouragementCreated = functions.firestore
       return null;
     }
 
-    try {
-      const webpush = { notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } };
-      if (type && String(type).startsWith("mercy")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=mercies" };
-      if (type && String(type).startsWith("habit")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=habits" };
-      const result = await messaging.sendEachForMulticast({
-        tokens,
-        notification: { title, body },
-        webpush
-      });
-      console.log(`onEncouragementCreated ${targetUid}: ${result.successCount} sent, ${result.failureCount} failed`);
-      result.responses.forEach((r, i) => {
-        if (!r.success) console.warn(`token[${i}]:`, r.error?.code, r.error?.message);
-      });
-    } catch (e) {
-      console.error("sendEachForMulticast threw:", e.message);
-    }
+    const webpush = { notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } };
+    if (type && String(type).startsWith("mercy")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=mercies" };
+    if (type && String(type).startsWith("habit")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=habits" };
+    const result = await sendToUserTokens(userSnap.ref, tokens, {
+      notification: { title, body },
+      webpush
+    }, `push ${type} ${targetUid}`);
+    console.log(`onEncouragementCreated ${targetUid}: ${result.successCount} sent, ${result.failureCount} failed`);
 
     await snap.ref.update({ processed: true });
     return null;
