@@ -8642,6 +8642,31 @@ body #settingsScreen .danger-btn {
   color: white !important;
   border: none !important;
 }
+
+body #settingsScreen .theme-wheel-tile.theme-preset {
+  padding: 8px !important;
+  border: 1px solid color-mix(in srgb, var(--border-color) 56%, transparent) !important;
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--card-color) 88%, rgba(255,255,255,0.42)) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+body #settingsScreen .theme-wheel-tile.theme-preset.selected {
+  border-color: color-mix(in srgb, var(--secondary-color) 72%, var(--border-color)) !important;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--secondary-color) 11%, var(--card-color)),
+      color-mix(in srgb, var(--accent-color) 7%, var(--card-color))) !important;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--secondary-color) 16%, transparent) !important;
+  outline: 2px solid color-mix(in srgb, var(--secondary-color) 28%, transparent) !important;
+}
+
+@media (max-width: 380px) {
+  body #settingsScreen .theme-wheel-tile.theme-preset {
+    padding: 7px !important;
+  }
+}
 html,
 body {
   width: 100%;
@@ -16807,6 +16832,209 @@ body.high-contrast-theme #settingsScreen #highContrastToggle + .slider {
 
 body.high-contrast-theme .sett-theme-card {
   border-color: color-mix(in srgb, var(--secondary-color) 38%, var(--border-color));
+}
+
+.theme-wheel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+}
+
+.theme-wheel-group {
+  --wheel-colors: conic-gradient(#1d4ed8, #38bdf8, #003bdb, #93c5fd, #1d4ed8);
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--border-color) 58%, transparent);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--card-color) 92%, transparent),
+      color-mix(in srgb, var(--secondary-color) 5%, var(--card-color)));
+}
+
+.theme-wheel-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.theme-wheel-head strong {
+  max-width: 100%;
+  color: var(--font-color);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.theme-wheel-orb {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--wheel-colors);
+  box-shadow:
+    inset 0 0 0 7px color-mix(in srgb, var(--card-color) 82%, transparent),
+    0 10px 24px color-mix(in srgb, var(--secondary-color) 18%, transparent);
+}
+
+.theme-wheel-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.theme-wheel-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 18px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 1px 8px;
+  min-height: 58px;
+  padding: 8px 8px;
+  border: 1px solid color-mix(in srgb, var(--border-color) 56%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card-color) 88%, rgba(255,255,255,0.42));
+  color: var(--font-color);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overflow: hidden;
+  transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+}
+
+.theme-wheel-tile:active {
+  transform: scale(0.985);
+}
+
+.theme-wheel-tile > span:first-child {
+  grid-row: 1 / 3;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50% !important;
+  background: var(--tile-gradient) !important;
+  border: 2px solid color-mix(in srgb, white 52%, var(--border-color)) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12), 0 5px 12px rgba(0,0,0,0.12) !important;
+}
+
+.theme-wheel-tile strong,
+.theme-wheel-tile small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theme-wheel-tile strong {
+  font-size: 0.78rem;
+  line-height: 1.05;
+  font-weight: 850;
+  color: var(--font-color);
+}
+
+.theme-wheel-tile small {
+  font-size: 0.66rem;
+  line-height: 1.05;
+  color: var(--muted-color);
+}
+
+.theme-wheel-check {
+  grid-row: 1 / 3;
+  grid-column: 3;
+  align-self: center;
+  justify-self: center;
+  display: none !important;
+  color: var(--secondary-color) !important;
+  font-size: 1.05rem !important;
+  width: auto !important;
+  height: auto !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.theme-wheel-tile.selected {
+  border-color: color-mix(in srgb, var(--secondary-color) 72%, var(--border-color));
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--secondary-color) 11%, var(--card-color)),
+      color-mix(in srgb, var(--accent-color) 7%, var(--card-color)));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--secondary-color) 16%, transparent);
+}
+
+.theme-wheel-tile.selected .theme-wheel-check {
+  display: inline-flex !important;
+}
+
+.theme-wheel-blues { --wheel-colors: conic-gradient(#003bdb, #00a7e8, #38d6ff, #001730, #2563eb, #003bdb); }
+.theme-wheel-greens { --wheel-colors: conic-gradient(#047857, #00d47e, #a3e635, #14532d, #0f766e, #047857); }
+.theme-wheel-reds { --wheel-colors: conic-gradient(#e0002a, #ff2a00, #ff8a00, #9f1239, #ff1744, #e0002a); }
+.theme-wheel-violets { --wheel-colors: conic-gradient(#6d28d9, #d900ff, #ff2da8, #8b00ff, #00c2ff, #6d28d9); }
+.theme-wheel-golds { --wheel-colors: conic-gradient(#f5d400, #ffb300, #ff6a00, #d4a011, #c8a24a, #f5d400); }
+.theme-wheel-neutrals { --wheel-colors: conic-gradient(#111827, #4b5563, #f0f8ff, #8b5e34, #334155, #111827); }
+
+body.high-contrast-theme .theme-wheel-tile.selected {
+  border-width: 2px;
+}
+
+body.dark .theme-wheel-group,
+body.dark .theme-wheel-tile {
+  background: color-mix(in srgb, var(--card-color) 92%, #111827);
+}
+
+@media (min-width: 720px) {
+  .theme-wheel-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .theme-wheel-stack {
+    padding: 12px;
+  }
+
+  .theme-wheel-group {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 9px;
+    padding: 8px;
+  }
+
+  .theme-wheel-orb {
+    width: 46px;
+    height: 46px;
+  }
+
+  .theme-wheel-tile {
+    grid-template-columns: 26px minmax(0, 1fr) 15px;
+    min-height: 54px;
+    padding: 7px;
+    gap: 1px 6px;
+  }
+
+  .theme-wheel-tile > span:first-child {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .theme-wheel-tile strong {
+    font-size: 0.72rem;
+  }
+
+  .theme-wheel-tile small {
+    font-size: 0.61rem;
+  }
 }
 
 /* Reset old theme-preset span rules that bleed onto text/check spans in settings rows */

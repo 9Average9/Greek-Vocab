@@ -13455,6 +13455,186 @@ coral_deep: {
   text: "#280008",
   muted: "#7a4040",
   buttonText: "#ffffff"
+},
+
+sapphire: {
+  primary: "#e8f1ff",
+  light: "#f7fbff",
+  secondary: "#0047ff",
+  accent: "#00a3ff",
+  card: "rgba(249,252,255,0.95)",
+  border: "#9dc5ff",
+  text: "#061433",
+  muted: "#405c8a",
+  buttonText: "#ffffff"
+},
+
+sky_pop: {
+  primary: "#e7fbff",
+  light: "#f8feff",
+  secondary: "#00a7e8",
+  accent: "#38d6ff",
+  card: "rgba(249,254,255,0.95)",
+  border: "#9eeaff",
+  text: "#062536",
+  muted: "#3f7182",
+  buttonText: "#ffffff"
+},
+
+cyan_glow: {
+  primary: "#041018",
+  light: "#071a24",
+  secondary: "#00e5ff",
+  accent: "#63ffda",
+  card: "rgba(7,26,36,0.97)",
+  border: "#124052",
+  text: "#e8fbff",
+  muted: "#91cbd6",
+  buttonText: "#001014"
+},
+
+lime_burst: {
+  primary: "#f1ffe7",
+  light: "#fbfff7",
+  secondary: "#36b300",
+  accent: "#a3e635",
+  card: "rgba(251,255,247,0.95)",
+  border: "#b9f48e",
+  text: "#143006",
+  muted: "#4f762c",
+  buttonText: "#ffffff"
+},
+
+spring: {
+  primary: "#ebfff4",
+  light: "#f8fffb",
+  secondary: "#00a85a",
+  accent: "#00d47e",
+  card: "rgba(248,255,251,0.95)",
+  border: "#96f0c0",
+  text: "#06311d",
+  muted: "#3f7356",
+  buttonText: "#ffffff"
+},
+
+ruby: {
+  primary: "#fff0f3",
+  light: "#fff8f9",
+  secondary: "#e0002a",
+  accent: "#ff335c",
+  card: "rgba(255,249,250,0.95)",
+  border: "#ffb1c0",
+  text: "#35000a",
+  muted: "#834554",
+  buttonText: "#ffffff"
+},
+
+scarlet: {
+  primary: "#fff1ec",
+  light: "#fff9f6",
+  secondary: "#ff2a00",
+  accent: "#ff8a00",
+  card: "rgba(255,250,247,0.95)",
+  border: "#ffb39f",
+  text: "#3a0900",
+  muted: "#8a4a3a",
+  buttonText: "#ffffff"
+},
+
+cherry: {
+  primary: "#160308",
+  light: "#25060d",
+  secondary: "#ff1744",
+  accent: "#ff5f7d",
+  card: "rgba(37,6,13,0.97)",
+  border: "#5b1422",
+  text: "#fff0f3",
+  muted: "#e099a8",
+  buttonText: "#ffffff"
+},
+
+magenta_pop: {
+  primary: "#fff0fd",
+  light: "#fff8ff",
+  secondary: "#d900ff",
+  accent: "#ff4fd8",
+  card: "rgba(255,249,255,0.95)",
+  border: "#efb3ff",
+  text: "#32003b",
+  muted: "#80448a",
+  buttonText: "#ffffff"
+},
+
+orchid: {
+  primary: "#f7edff",
+  light: "#fcf8ff",
+  secondary: "#9d00ff",
+  accent: "#d946ef",
+  card: "rgba(253,249,255,0.95)",
+  border: "#d8b4fe",
+  text: "#250036",
+  muted: "#72458a",
+  buttonText: "#ffffff"
+},
+
+sunburst: {
+  primary: "#fff7d6",
+  light: "#fffdf2",
+  secondary: "#ffb300",
+  accent: "#ff5c00",
+  card: "rgba(255,253,244,0.95)",
+  border: "#ffe08a",
+  text: "#2f2200",
+  muted: "#7b6322",
+  buttonText: "#1f1600"
+},
+
+canary: {
+  primary: "#fffde1",
+  light: "#fffff5",
+  secondary: "#f5d400",
+  accent: "#111827",
+  card: "rgba(255,255,247,0.95)",
+  border: "#f2df62",
+  text: "#1e1a00",
+  muted: "#6f651f",
+  buttonText: "#171200"
+},
+
+amber_glow: {
+  primary: "#fff3df",
+  light: "#fffaf2",
+  secondary: "#f59e0b",
+  accent: "#ef4444",
+  card: "rgba(255,251,244,0.95)",
+  border: "#f6c56e",
+  text: "#2f1c05",
+  muted: "#79582a",
+  buttonText: "#ffffff"
+},
+
+tangerine: {
+  primary: "#fff0e5",
+  light: "#fff8f3",
+  secondary: "#ff6a00",
+  accent: "#ffd000",
+  card: "rgba(255,250,246,0.95)",
+  border: "#ffc28e",
+  text: "#351600",
+  muted: "#84502a",
+  buttonText: "#ffffff"
+},
+
+candy: {
+  primary: "#fff0f6",
+  light: "#fff9fc",
+  secondary: "#ff2da8",
+  accent: "#00c2ff",
+  card: "rgba(255,249,252,0.95)",
+  border: "#ffabd6",
+  text: "#360019",
+  muted: "#884b68",
+  buttonText: "#ffffff"
 }
 };
 
@@ -18492,7 +18672,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.101";
+const APP_VERSION = "3.0.102";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18511,6 +18691,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.102 &mdash; Theme Wheel Refresh</div>
+<ul>
+  <li><strong>Theme selector cleaned up</strong> &mdash; Profile settings now groups themes into compact color-family wheels instead of one long stacked list.</li>
+  <li><strong>15 vibrant presets added</strong> &mdash; New bright blue, green, red, violet, yellow, orange, and candy-color themes expand the app's style range.</li>
+  <li><strong>Night and high contrast preserved</strong> &mdash; Dark Mode and High Contrast continue to work with the updated selector.</li>
+</ul>
 <div class="un-version-label">v3.0.101 &mdash; Habit Reminder Completion Check</div>
 <ul>
   <li><strong>Completed habits stay quiet</strong> &mdash; Habit reminders now check today's habit entry and skip sending if that habit is already completed for the user's local day.</li>
