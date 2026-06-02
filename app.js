@@ -18315,7 +18315,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.97";
+const APP_VERSION = "3.0.98";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18334,6 +18334,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.98 &mdash; Rhema Search Polish</div>
+<ul>
+  <li><strong>Search result verse landing hardened</strong> &mdash; Opening a Home Rhema result now re-scrolls the visible chapter view to the selected verse after render.</li>
+  <li><strong>Home header spacing improved</strong> &mdash; The greeting name is larger and the Rhema widget has more breathing room below it.</li>
+  <li><strong>Search bar controls refined</strong> &mdash; Placeholder text fits better on mobile, and the clear button appears only after typing.</li>
+  <li><strong>Rhema chapter pill fixed</strong> &mdash; The chapter selector now shows labels like Ch. 3 without collapsing into C...</li>
+</ul>
 <div class="un-version-label">v3.0.97 &mdash; Home Search Upgrade</div>
 <ul>
   <li><strong>Verse of the day removed from Home</strong> &mdash; The Rhema and study tools now move up naturally into that space.</li>
@@ -22597,9 +22604,14 @@ function _renderHomeRhemaSearchResults(items, status) {
   `).join('');
 }
 
+function _syncHomeRhemaSearchClear(query = '') {
+  document.getElementById('homeRhemaSearchClear')?.classList.toggle('hidden', !String(query || '').trim());
+}
+
 function homeRhemaSearch(value) {
   clearTimeout(_homeRhemaSearchTimer);
   const query = String(value || '').trim();
+  _syncHomeRhemaSearchClear(query);
   if (!query) {
     _homeRhemaResults = [];
     _renderHomeRhemaSearchResults([]);
@@ -22635,7 +22647,9 @@ function clearHomeRhemaSearch() {
   _homeRhemaResults = [];
   const input = document.getElementById('homeRhemaSearchInput');
   if (input) input.value = '';
+  _syncHomeRhemaSearchClear('');
   _renderHomeRhemaSearchResults([]);
+  input?.focus();
 }
 
 function openHomeRhemaTopResult() {
@@ -22661,14 +22675,20 @@ async function openHomeRhemaResult(index) {
   document.getElementById('rhemaVersePillBtn')?.classList.add('hidden');
   renderRhemaVerse();
   updateRhemaSwapVisibility();
-  requestAnimationFrame(() => {
+  const scrollToSelectedVerse = () => {
     const body = document.querySelector('#rhemaModal .rhema-body');
-    const visibleDisplay = _rhemaShowEnglish
-      ? document.getElementById('rhemaEnglishDisplay')
+    const englishDisplay = document.getElementById('rhemaEnglishDisplay');
+    const visibleDisplay = _rhemaShowEnglish && englishDisplay && !englishDisplay.classList.contains('hidden')
+      ? englishDisplay
       : document.getElementById('rhemaVerseDisplay');
     const target = visibleDisplay?.querySelector(`.rhema-chapter-block[data-verse="${_rhemaVerse}"]`);
-    if (body && target) body.scrollTop = target.offsetTop;
-  });
+    if (body && target) {
+      target.classList.add('rhema-chapter-block-target');
+      body.scrollTo ? body.scrollTo({ top: Math.max(0, target.offsetTop - 12), behavior: 'auto' }) : (body.scrollTop = Math.max(0, target.offsetTop - 12));
+    }
+  };
+  requestAnimationFrame(scrollToSelectedVerse);
+  setTimeout(scrollToSelectedVerse, 180);
 }
 
 function isRhemaOTBook(bookCode) {
@@ -23200,7 +23220,7 @@ function syncRhemaPicker() {
   const c = document.getElementById('rhemaPillChap');
   const v = document.getElementById('rhemaPillVerse');
   if (b) b.textContent = bookName;
-  if (c) c.textContent = 'Ch ' + _rhemaChapter;
+  if (c) c.textContent = 'Ch. ' + _rhemaChapter;
   if (v) v.textContent = 'v' + _rhemaVerse;
 }
 

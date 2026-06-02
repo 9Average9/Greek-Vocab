@@ -15357,7 +15357,10 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   box-shadow: 0 2px 6px color-mix(in srgb, var(--secondary-color) 10%, rgba(0,0,0,0.07)), 0 1px 2px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.9);
 }
 .rhema-pill:first-child { flex: 2.2; }
-.rhema-pill:nth-child(2) { min-width: 78px; }
+.rhema-pill:nth-child(2) {
+  flex: 0 0 clamp(78px, 20vw, 102px);
+  min-width: 78px;
+}
 .rhema-pill:active {
   background: color-mix(in srgb, var(--secondary-color) 12%, rgba(255,255,255,0.9));
   box-shadow: 0 1px 3px color-mix(in srgb, var(--secondary-color) 10%, rgba(0,0,0,0.06));
@@ -15370,6 +15373,12 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+#rhemaPillChap {
+  flex: 0 1 auto;
+  text-overflow: clip;
+  font-size: clamp(0.68rem, 2.85vw, 0.82rem);
+  letter-spacing: 0;
 }
 .rhema-pill.hidden { display: none; }
 .rhema-chapter-mode-pill { flex: 0 0 auto; padding: 0 12px; color: var(--muted-color); border-radius: 20px; }
@@ -16928,6 +16937,7 @@ body.dark .bn-item::before {
 .home-top-row {
   display: flex; align-items: flex-end; justify-content: space-between;
   padding: calc(env(safe-area-inset-top, 20px) + 12px) 0 0;
+  margin-bottom: 14px;
 }
 .home-top-row .home-greeting-wrap { margin: 0; }
 .ht-btn {
@@ -17142,8 +17152,9 @@ body.dark .bn-item::before {
   display: block; font-size: 2.6rem; font-weight: 700; color: var(--secondary-color);
 }
 .home-greeting-name {
-  font-size: 0.95rem; font-weight: 500; color: var(--font-color);
-  opacity: 0.6; margin: 0; letter-spacing: 0.01em;
+  font-size: clamp(1.22rem, 5.4vw, 1.5rem); font-weight: 800; color: var(--font-color);
+  opacity: 0.72; margin: 0; letter-spacing: 0;
+  line-height: 1.08;
 }
 .home-verse-wrap { margin: 8px 0 22px; }
 .home-verse-inner { display: flex; align-items: flex-start; gap: 12px; }
@@ -17224,6 +17235,7 @@ body.dark .bn-item::before {
   border-radius: 16px;
   padding: 11px 13px 10px;
   margin-bottom: 12px;
+  margin-top: 2px;
 }
 #homeScreen .hcc-body {
   gap: 10px;
@@ -17370,8 +17382,9 @@ body.dark .bn-item::before {
   background: transparent;
   color: var(--font-color);
   font: inherit;
-  font-size: 0.86rem;
+  font-size: clamp(0.72rem, 3.25vw, 0.86rem);
   font-weight: 700;
+  text-overflow: ellipsis;
 }
 .home-rhema-search-row input::placeholder {
   color: color-mix(in srgb, var(--muted-color) 74%, transparent);
@@ -17392,6 +17405,7 @@ body.dark .bn-item::before {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+.home-rhema-search-clear.hidden { display: none; }
 .home-rhema-search-clear .material-symbols-outlined { font-size: 18px; }
 .home-rhema-search-results {
   display: grid;

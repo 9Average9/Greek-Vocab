@@ -303,7 +303,7 @@ glacier: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.97" rel="stylesheet"/>
+<link href="style.css?v=3.0.98" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -473,7 +473,7 @@ Start a New Study
 <div class="home-rhema-search-row">
 <span class="material-symbols-outlined">search</span>
 <input id="homeRhemaSearchInput" type="search" autocomplete="off" autocapitalize="sentences" spellcheck="true" placeholder="Search Rhema by thought, story, or reference" oninput="homeRhemaSearch(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();openHomeRhemaTopResult();}">
-<button class="home-rhema-search-clear" type="button" onclick="clearHomeRhemaSearch()" aria-label="Clear search"><span class="material-symbols-outlined">close</span></button>
+<button class="home-rhema-search-clear hidden" id="homeRhemaSearchClear" type="button" onclick="clearHomeRhemaSearch()" aria-label="Clear search"><span class="material-symbols-outlined">close</span></button>
 </div>
 <div class="home-rhema-search-results" id="homeRhemaSearchResults"></div>
 </div>
@@ -9724,7 +9724,7 @@ Verb Endings
 <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
 </button>
 <button class="rhema-pill" onclick="openRhemaChapPicker()">
-<span id="rhemaPillChap">Ch 3</span>
+<span id="rhemaPillChap">Ch. 3</span>
 <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
 </button>
 <button class="rhema-pill" id="rhemaVersePillBtn" onclick="openRhemaVersePicker()">
@@ -16136,7 +16136,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.97"></script>
+<script src="app.js?v=3.0.98"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.29"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
 <script src="firebase-lb.js?v=3.0.85" type="module"></script>
