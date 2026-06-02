@@ -18315,7 +18315,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.94";
+const APP_VERSION = "3.0.95";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18334,6 +18334,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.95 &mdash; Smarter Rhema Search</div>
+<ul>
+  <li><strong>Rhema results scroll to the verse</strong> &mdash; Home search results now open the full chapter and scroll the visible MSB chapter view to the selected verse.</li>
+  <li><strong>Old Testament story search improved</strong> &mdash; Rough searches for stories like Shadrach, Meshach, and Abednego in the fiery furnace are recognized, including common misspellings.</li>
+  <li><strong>Typo tolerance added</strong> &mdash; Rhema search now gives close spelling matches a score boost instead of requiring every important word to be exact.</li>
+</ul>
 <div class="un-version-label">v3.0.94 &mdash; Home Rhema Search</div>
 <ul>
   <li><strong>Home Rhema thought search added</strong> &mdash; Search natural phrases from Home and jump straight into Rhema full-chapter MSB view.</li>
@@ -22303,7 +22309,15 @@ function _homeRhemaNormalize(text) {
     [/\bact(?:ed|ing)?\b/g, ' conduct behavior hypocrisy '],
     [/\bhypocrit(?:e|es|ical|ically)?\b/g, ' hypocrisy hypocrite '],
     [/\bpaul\b/g, ' paul apostle i '],
-    [/\bsaul\b/g, ' saul paul ']
+    [/\bsaul\b/g, ' saul paul '],
+    [/\bradshack\b/g, ' shadrach '],
+    [/\bmishack\b/g, ' meshach '],
+    [/\babendigo\b/g, ' abednego '],
+    [/\babednigo\b/g, ' abednego '],
+    [/\bshadrack\b/g, ' shadrach '],
+    [/\bmeshack\b/g, ' meshach '],
+    [/\bfiery\b/g, ' fire furnace flame burning '],
+    [/\bfurnace\b/g, ' furnace fire flame burning ']
   ];
   aliases.forEach(([pattern, replacement]) => { out = out.replace(pattern, replacement); });
   return out.replace(/\s+/g, ' ').trim();
@@ -22330,11 +22344,44 @@ async function _ensureHomeRhemaSearchIndex() {
         if (!text) return;
         const ref = `${_rhemaBookName(book)} ${chapter}:${verse}`;
         const norm = _homeRhemaNormalize(`${ref} ${RHEMA_BOOK_ABBR[book] || ''} ${text}`);
-        _homeRhemaSearchIndex.push({ book, chapter: String(chapter), verse: String(verse), ref, text, norm });
+        const tokenSet = new Set(norm.split(' ').filter(t => t.length > 2 && !HOME_RHEMA_STOPWORDS.has(t)));
+        _homeRhemaSearchIndex.push({ book, chapter: String(chapter), verse: String(verse), ref, text, norm, tokenSet });
       });
     });
   });
   return _homeRhemaSearchIndex;
+}
+
+function _homeRhemaEditDistance(a, b, max = 2) {
+  if (!a || !b) return max + 1;
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const curr = [i];
+    let rowMin = curr[0];
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+      rowMin = Math.min(rowMin, curr[j]);
+    }
+    if (rowMin > max) return max + 1;
+    prev = curr;
+  }
+  return prev[b.length];
+}
+
+function _homeRhemaFuzzyTokenScore(token, entry) {
+  if (!entry.tokenSet || token.length < 5) return 0;
+  let best = 0;
+  entry.tokenSet.forEach((candidate) => {
+    if (best >= 5) return;
+    if (candidate.length < 5 || Math.abs(candidate.length - token.length) > 2) return;
+    const dist = _homeRhemaEditDistance(token, candidate, 2);
+    if (dist === 1) best = Math.max(best, 5);
+    else if (dist === 2 && token.length >= 7) best = Math.max(best, 3);
+  });
+  return best;
 }
 
 function _homeRhemaDirectRef(query) {
@@ -22376,6 +22423,9 @@ function _homeRhemaTopicBoost(normQuery, entry) {
   if ((has('faith') && has('works')) || has('dead')) {
     if (entry.book === 'JAM' && entry.chapter === '2') score += 55;
   }
+  if ((has('shadrach') || has('meshach') || has('abednego')) && (has('furnace') || has('fire') || has('flame') || has('burning') || has('nebuchadnezzar'))) {
+    if (entry.book === 'DAN' && entry.chapter === '3') score += 220;
+  }
   return score;
 }
 
@@ -22386,13 +22436,16 @@ function _scoreHomeRhemaEntry(query, tokens, entry, directRef) {
   }
   tokens.forEach((token, idx) => {
     const first = entry.norm.indexOf(token);
-    if (first === -1) return;
+    if (first === -1) {
+      score += _homeRhemaFuzzyTokenScore(token, entry);
+      return;
+    }
     score += first < 30 ? 13 : 7;
     if (entry.norm.includes(` ${token} `)) score += 3;
     if (idx > 0 && entry.norm.includes(`${tokens[idx - 1]} ${token}`)) score += 8;
   });
   score += _homeRhemaTopicBoost(_homeRhemaNormalize(query), entry);
-  if (tokens.length && tokens.every(token => entry.norm.includes(token))) score += 20;
+  if (tokens.length && tokens.every(token => entry.norm.includes(token) || _homeRhemaFuzzyTokenScore(token, entry) > 0)) score += 20;
   return score;
 }
 
@@ -22475,6 +22528,14 @@ async function openHomeRhemaResult(index) {
   document.getElementById('rhemaVersePillBtn')?.classList.add('hidden');
   renderRhemaVerse();
   updateRhemaSwapVisibility();
+  requestAnimationFrame(() => {
+    const body = document.querySelector('#rhemaModal .rhema-body');
+    const visibleDisplay = _rhemaShowEnglish
+      ? document.getElementById('rhemaEnglishDisplay')
+      : document.getElementById('rhemaVerseDisplay');
+    const target = visibleDisplay?.querySelector(`.rhema-chapter-block[data-verse="${_rhemaVerse}"]`);
+    if (body && target) body.scrollTop = target.offsetTop;
+  });
 }
 
 function isRhemaOTBook(bookCode) {
