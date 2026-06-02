@@ -550,9 +550,9 @@ Start a New Study
 <span class="material-symbols-outlined">add_circle</span>
 <span><strong>New Habit</strong><small>Create a habit manually</small></span>
 </button>
-<button class="habits-primary" onclick="openHabitSettingsModal()">
-<span class="material-symbols-outlined">upload_file</span>
-<span><strong>Import CSV</strong><small>Import from HabitShare</small></span>
+<button class="habits-primary" onclick="openHabitReminderModal()">
+<span class="material-symbols-outlined">notifications_active</span>
+<span><strong>Reminders</strong><small>Set notification times</small></span>
 </button>
 </div>
 <div class="habits-stats-row">
@@ -10145,6 +10145,21 @@ Verb Endings
 </div>
 </div>
 <!-- Habit create modal -->
+<!-- Habit reminder modal -->
+<div class="modal-overlay" id="habitReminderModal" onclick="closeHabitReminderModal(event)">
+<div class="modal-card habit-reminder-card" onclick="event.stopPropagation()">
+<button class="modal-close" onclick="closeHabitReminderModal()">&times;</button>
+<div class="habits-kicker"><span class="material-symbols-outlined">notifications_active</span> Habit Builder</div>
+<h2>Habit Reminders</h2>
+<p class="habit-reminder-desc">Get notified when it's time to complete each habit. Set as many times per day as you want.</p>
+<div id="habitReminderNotifWarning" class="habit-notif-warning hidden">
+<span class="material-symbols-outlined">notifications_off</span>
+<span>Enable notifications to receive habit reminders.</span>
+<button onclick="enableNotificationsFromPrompt()" class="habits-mini-btn">Enable</button>
+</div>
+<div id="habitReminderList"></div>
+</div>
+</div>
 <div class="modal-overlay" id="habitCreateModal" onclick="closeHabitCreateModal(event)">
 <div class="modal-card habit-create-card" onclick="event.stopPropagation()">
 <button class="modal-close" onclick="closeHabitCreateModal()">&times;</button>
@@ -10187,6 +10202,9 @@ Verb Endings
 <div class="habit-friend-picker" id="habitCreateFriendsList"></div>
 </div>
 <button class="main-btn" onclick="submitHabitCreate()">Create Habit</button>
+<button class="habit-import-inline" onclick="closeHabitCreateModal();openHabitSettingsModal()">
+<span class="material-symbols-outlined">upload_file</span> Import habits from CSV instead
+</button>
 </div>
 </div>
 <!-- Habit detail / edit modal (opened by tapping a habit card) -->

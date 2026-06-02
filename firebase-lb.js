@@ -2008,6 +2008,86 @@ window.FCM = {
   listenForeground:  fcmListenForeground
 };
 
+// ── Habit Reminder Slots ─────────────────────────────────────────────────────
+
+async function saveHabitReminderSlots(uid, habitId, habitName, { enabled, frequency, times, timezone }) {
+  try {
+    const batch = writeBatch(db);
+    for (let i = 0; i < 10; i++) {
+      batch.delete(doc(db, "users", uid, "habitReminderSlots", `${habitId}_${i}`));
+    }
+    if (enabled && times && times.length) {
+      const tz = timezone || "UTC";
+      for (let i = 0; i < Math.min(times.length, 6); i++) {
+        const time = times[i];
+        if (!time) continue;
+        const nextSendAt = calculateReminderNextSendAt({ time, frequency: frequency || "daily", timezone: tz });
+        batch.set(doc(db, "users", uid, "habitReminderSlots", `${habitId}_${i}`), {
+          uid,
+          habitId,
+          habitName,
+          slotIndex: i,
+          time,
+          frequency: frequency || "daily",
+          timezone: tz,
+          enabled: true,
+          nextSendAt,
+          lastSent: null,
+          updatedAt: serverTimestamp()
+        });
+      }
+    }
+    await batch.commit();
+    return true;
+  } catch (e) {
+    console.warn("saveHabitReminderSlots:", e);
+    return false;
+  }
+}
+
+async function clearHabitReminderSlots(uid, habitId) {
+  try {
+    const batch = writeBatch(db);
+    for (let i = 0; i < 10; i++) {
+      batch.delete(doc(db, "users", uid, "habitReminderSlots", `${habitId}_${i}`));
+    }
+    await batch.commit();
+    return true;
+  } catch (e) {
+    console.warn("clearHabitReminderSlots:", e);
+    return false;
+  }
+}
+
+async function loadHabitReminderSlots(uid) {
+  try {
+    const snap = await getDocs(collection(db, "users", uid, "habitReminderSlots"));
+    const result = {};
+    snap.docs.forEach(d => {
+      const data = d.data();
+      if (!result[data.habitId]) {
+        result[data.habitId] = { enabled: true, frequency: data.frequency || "daily", times: [] };
+      }
+      result[data.habitId].times[data.slotIndex] = data.time;
+      result[data.habitId].frequency = data.frequency || "daily";
+    });
+    Object.keys(result).forEach(id => {
+      result[id].times = result[id].times.filter(Boolean);
+      if (!result[id].times.length) result[id].times = ["08:00"];
+    });
+    return result;
+  } catch (e) {
+    console.warn("loadHabitReminderSlots:", e);
+    return {};
+  }
+}
+
+window.HabitReminders = {
+  save:  saveHabitReminderSlots,
+  clear: clearHabitReminderSlots,
+  load:  loadHabitReminderSlots
+};
+
 async function saveRhemaPosition(uid, pos) {
   try {
     await setDoc(doc(db, "users", uid), { rhemaLastPos: pos }, { merge: true });

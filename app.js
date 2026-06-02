@@ -10187,6 +10187,7 @@ let _habitCreateIcon = "menu_book";
 let _habitCreateColor = "";
 let _habitSettingsFriends = {};
 let _habitFriendCache = {};
+let _habitReminderSettings = {};
 let _habitCalHabitId = null;
 let _habitCalYear = null;
 let _habitCalMonth = null;
@@ -11363,6 +11364,182 @@ async function confirmHabitImport() {
   if (!result) { alert("Import failed. Check the CSV and try again."); return; }
   clearHabitImportPreview();
   _showStudyToast(`Imported ${result.entries} habit entries`);
+}
+
+// ── Habit Reminder Modal ──────────────────────────────────────────────────────
+
+async function openHabitReminderModal() {
+  const modal = document.getElementById("habitReminderModal");
+  if (!modal) return;
+  modal.classList.add("open");
+
+  const listEl = document.getElementById("habitReminderList");
+  if (listEl) listEl.innerHTML = '<p class="habit-reminder-empty">Loading…</p>';
+
+  const notifWarning = document.getElementById("habitReminderNotifWarning");
+  if (notifWarning) {
+    const granted = typeof Notification !== "undefined" && Notification.permission === "granted";
+    notifWarning.classList.toggle("hidden", granted);
+  }
+
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  if (uid) {
+    _habitReminderSettings = await window.HabitReminders?.load?.(uid) || {};
+  }
+  renderHabitReminderList();
+}
+
+function closeHabitReminderModal(event) {
+  if (!event || event.target?.id === "habitReminderModal") {
+    document.getElementById("habitReminderModal")?.classList.remove("open");
+  }
+}
+
+function renderHabitReminderList() {
+  const listEl = document.getElementById("habitReminderList");
+  if (!listEl) return;
+  if (!_habitItems.length) {
+    listEl.innerHTML = '<p class="habit-reminder-empty">Create a habit first, then set reminders here.</p>';
+    return;
+  }
+  listEl.className = "habit-reminder-list";
+  listEl.innerHTML = _habitItems.map(h => _renderHabitReminderItem(h)).join("");
+}
+
+function _renderHabitReminderItem(habit) {
+  const habitId = habit.id;
+  const settings = _habitReminderSettings[habitId] || { enabled: false, frequency: "daily", times: ["08:00"] };
+  const icon = _habitEsc(habit.icon || "menu_book");
+  const color = habit.color || "";
+  const iconStyle = color ? ` style="background:color-mix(in srgb,${color} 16%,transparent);color:${color}"` : "";
+  const name = _habitEsc(habit.name);
+  const enabled = !!settings.enabled;
+  const frequency = settings.frequency || "daily";
+  const times = (settings.times && settings.times.length) ? settings.times : ["08:00"];
+  const eid = _habitEsc(habitId);
+
+  const freqBtns = [
+    ["daily", "Daily"],
+    ["weekdays", "Weekdays"],
+    ["weekends", "Weekends"]
+  ].map(([val, label]) =>
+    `<button class="habit-reminder-freq-btn${frequency === val ? " active" : ""}" onclick="setHabitReminderFreq('${eid}','${val}')">${label}</button>`
+  ).join("");
+
+  const timeRows = times.map((t, i) => `
+    <div class="habit-reminder-time-row">
+      <input type="time" value="${_habitEsc(t || "08:00")}" onchange="updateHabitReminderTime('${eid}',${i},this.value)"/>
+      ${times.length > 1 ? `<button class="habit-reminder-remove-time" onclick="removeHabitReminderTime('${eid}',${i})" aria-label="Remove time">&times;</button>` : ""}
+    </div>`).join("");
+
+  return `<div class="habit-reminder-item" id="hri_${eid}">
+    <div class="habit-reminder-item-top">
+      <div class="habit-card-icon-sm"${iconStyle}><span class="material-symbols-outlined">${icon}</span></div>
+      <span class="habit-reminder-item-name">${name}</span>
+      <label class="habit-reminder-toggle" title="${enabled ? "Disable reminder" : "Enable reminder"}">
+        <input type="checkbox" ${enabled ? "checked" : ""} onchange="toggleHabitReminderEnabled('${eid}',this.checked)">
+        <span class="habit-reminder-toggle-track"></span>
+      </label>
+    </div>
+    ${enabled ? `<div class="habit-reminder-settings">
+      <div class="habit-reminder-freq-row">${freqBtns}</div>
+      <div class="habit-reminder-times-label">Reminder times</div>
+      <div class="habit-reminder-times">${timeRows}</div>
+      ${times.length < 6 ? `<button class="habit-reminder-add-time-btn" onclick="addHabitReminderTime('${eid}')"><span class="material-symbols-outlined">add_circle</span> Add another time</button>` : ""}
+      <button class="habit-reminder-save-btn" id="hrsbtn_${eid}" onclick="saveHabitReminderItem('${eid}')">Save reminders for ${name}</button>
+    </div>` : ""}
+  </div>`;
+}
+
+function _reRenderHabitReminderItem(habitId) {
+  const habit = _habitItems.find(h => h.id === habitId);
+  if (!habit) return;
+  const el = document.getElementById("hri_" + habitId);
+  if (!el) return;
+  const temp = document.createElement("div");
+  temp.innerHTML = _renderHabitReminderItem(habit);
+  el.replaceWith(temp.firstElementChild);
+}
+
+function toggleHabitReminderEnabled(habitId, enabled) {
+  if (!_habitReminderSettings[habitId]) {
+    _habitReminderSettings[habitId] = { enabled: false, frequency: "daily", times: ["08:00"] };
+  }
+  _habitReminderSettings[habitId].enabled = enabled;
+  _reRenderHabitReminderItem(habitId);
+  if (!enabled) {
+    const uid = window.Auth?.getCurrentUser()?.uid;
+    if (uid) window.HabitReminders?.clear?.(uid, habitId).catch(() => {});
+  }
+}
+
+function setHabitReminderFreq(habitId, freq) {
+  if (!_habitReminderSettings[habitId]) return;
+  _habitReminderSettings[habitId].frequency = freq;
+  _reRenderHabitReminderItem(habitId);
+}
+
+function addHabitReminderTime(habitId) {
+  const settings = _habitReminderSettings[habitId];
+  if (!settings || (settings.times || []).length >= 6) return;
+  if (!settings.times) settings.times = [];
+  settings.times = [...settings.times, "08:00"];
+  _reRenderHabitReminderItem(habitId);
+}
+
+function removeHabitReminderTime(habitId, idx) {
+  const settings = _habitReminderSettings[habitId];
+  if (!settings || !settings.times || settings.times.length <= 1) return;
+  settings.times = settings.times.filter((_, i) => i !== idx);
+  _reRenderHabitReminderItem(habitId);
+}
+
+function updateHabitReminderTime(habitId, idx, time) {
+  const settings = _habitReminderSettings[habitId];
+  if (!settings || !settings.times) return;
+  settings.times[idx] = time;
+}
+
+async function saveHabitReminderItem(habitId) {
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  if (!uid) { alert("Sign in to save reminders."); return; }
+
+  const settings = _habitReminderSettings[habitId];
+  if (!settings || !settings.enabled) return;
+
+  let permission;
+  try { permission = await Notification.requestPermission(); } catch (e) { permission = "denied"; }
+  if (permission !== "granted") {
+    alert("Please allow notifications to set habit reminders.");
+    return;
+  }
+  syncNotificationPermissionUI(permission);
+  try { await window.FCM?.registerToken(uid); } catch (e) {}
+
+  const habit = _habitItems.find(h => h.id === habitId);
+  const habitName = habit?.name || habitId;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const btn = document.getElementById("hrsbtn_" + habitId);
+  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+
+  const ok = await window.HabitReminders?.save?.(uid, habitId, habitName, {
+    enabled: true,
+    frequency: settings.frequency || "daily",
+    times: settings.times || ["08:00"],
+    timezone
+  });
+
+  if (btn) {
+    btn.disabled = false;
+    if (ok) {
+      btn.textContent = "Saved ✓";
+      setTimeout(() => { const b = document.getElementById("hrsbtn_" + habitId); if (b) b.textContent = `Save reminders for ${habit?.name || habitId}`; }, 2500);
+      _showStudyToast(`Reminders set for ${habitName}`);
+    } else {
+      btn.textContent = "Save failed — try again";
+    }
+  }
 }
 
 function _saveRhemaPosition() {
