@@ -24510,3 +24510,52 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   min-height: 110px !important;
   height: auto !important;
 }
+
+#settingsScreen.screen.active .nav-bar,
+#newLearnMenu.screen.active .nav-bar,
+#advancedLearnMenu.screen.active .nav-bar,
+#basicVerbsLearnMenu.screen.active .nav-bar,
+#advVerbsLearnMenu.screen.active .nav-bar {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 12px !important;
+  min-height: calc(env(safe-area-inset-top, 0px) + 62px) !important;
+  background: var(--primary-light) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 55%, transparent);
+  position: relative;
+  z-index: 20;
+}
+
+#newLearnMenu.screen.active .nav-bar,
+#advancedLearnMenu.screen.active .nav-bar,
+#basicVerbsLearnMenu.screen.active .nav-bar,
+#advVerbsLearnMenu.screen.active .nav-bar {
+  background: color-mix(in srgb, var(--primary-light) 92%, var(--card-color)) !important;
+}
+
+#settingsScreen .sett-section-label,
+#settingsScreen .sett-section-desc,
+#settingsScreen .sett-card,
+#settingsScreen .sett-sep,
+#settingsScreen .sett-row,
+#settingsScreen .sett-theme-row {
+  flex-shrink: 0 !important;
+}
+
+#settingsScreen .sett-row,
+#settingsScreen .sett-theme-row {
+  min-height: 68px !important;
+}
+
+#settingsScreen .sett-card {
+  min-height: unset !important;
+  height: auto !important;
+}
+
+#settingsScreen .sett-card:not(.sett-theme-card):not(.home-backdrop-card) {
+  overflow: hidden !important;
+}
+
+#settingsScreen .sett-scroll {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 56px) !important;
+}
