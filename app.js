@@ -18492,7 +18492,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.99";
+const APP_VERSION = "3.0.100";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18511,9 +18511,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.100 &mdash; Reminder Deploy Compatibility</div>
+<ul>
+  <li><strong>Reminder deployment fixed</strong> &mdash; Scheduled reminder functions stay on their existing generation so Firebase can deploy them safely while keeping the reliability and cost fixes.</li>
+</ul>
 <div class="un-version-label">v3.0.99 &mdash; Reminder Reliability & Firebase Efficiency</div>
 <ul>
-  <li><strong>Reminder scheduler hardened</strong> &mdash; Study and Praise reminders now run through the current scheduled Functions API with one active scheduler instance.</li>
+  <li><strong>Reminder sender hardened</strong> &mdash; Study and Praise reminders now clean up failed push tokens instead of retrying stale devices.</li>
   <li><strong>Push tokens cleaned up</strong> &mdash; Failed sends now prune stale FCM tokens so reminders do not keep retrying dead devices.</li>
   <li><strong>Habit reads reduced</strong> &mdash; Habit entry listeners now start when Habits is opened instead of on every sign-in.</li>
   <li><strong>FCM writes reduced</strong> &mdash; Existing push tokens are re-synced at most daily unless the browser receives a new token.</li>

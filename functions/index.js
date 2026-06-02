@@ -1,5 +1,4 @@
 const functions = require("firebase-functions/v1");
-const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { initializeApp } = require("firebase-admin/app");
 const { FieldValue, getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
@@ -210,12 +209,9 @@ exports.cleanupDeletedAuthUser = functions.auth.user().onDelete(async user => {
   return null;
 });
 
-exports.cleanupExpiredMercies = onSchedule({
-  schedule: "every 24 hours",
-  timeZone: "UTC",
-  region: "us-central1",
-  maxInstances: 1
-}, async () => {
+exports.cleanupExpiredMercies = functions.pubsub
+  .schedule("every 24 hours")
+  .onRun(async () => {
     const now = Date.now();
     const snap = await db.collection("merciesPosts")
       .where("expiresAtMs", "<=", now)
@@ -393,12 +389,9 @@ async function backfillReminderNextSendAt(now) {
 }
 
 // Runs every minute, but only reads users whose reminder.nextSendAt is due.
-exports.sendScheduledReminders = onSchedule({
-  schedule: "every 1 minutes",
-  timeZone: "UTC",
-  region: "us-central1",
-  maxInstances: 1
-}, async () => {
+exports.sendScheduledReminders = functions.pubsub
+  .schedule("every 1 minutes")
+  .onRun(async () => {
     const now = new Date();
     await backfillReminderNextSendAt(now);
     await backfillMercyReminderNextSendAt(now);
