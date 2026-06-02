@@ -17312,9 +17312,9 @@ body.dark .bn-item::before {
   font-size: 0.66rem;
 }
 .home-rhema-search-card {
-  margin: -4px 0 14px;
+  margin: 2px 0 16px;
   padding: 0;
-  border-radius: 999px;
+  border-radius: 20px;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -17322,22 +17322,47 @@ body.dark .bn-item::before {
 .home-rhema-search-row {
   display: flex;
   align-items: center;
-  gap: 7px;
-  min-height: 38px;
-  padding: 0 7px 0 12px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--card-color) 86%, transparent);
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, var(--border-color));
-  box-shadow: 0 6px 18px rgba(0,0,0,0.045), inset 0 1px 0 rgba(255,255,255,0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 9px 0 14px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--card-color) 96%, #fff) 0%, color-mix(in srgb, var(--primary-color) 72%, var(--card-color)) 100%);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 16%, rgba(255,255,255,0.72));
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.055),
+    inset 0 1px 0 rgba(255,255,255,0.86);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+.home-rhema-search-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--secondary-color) 16%, transparent), transparent 38%);
+  opacity: 0.55;
+}
+.home-rhema-search-row:focus-within {
+  border-color: color-mix(in srgb, var(--secondary-color) 58%, var(--border-color));
+  box-shadow:
+    0 12px 30px rgba(0,0,0,0.075),
+    0 0 0 3px color-mix(in srgb, var(--secondary-color) 13%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+  transform: translateY(-1px);
 }
 .home-rhema-search-row > .material-symbols-outlined {
-  font-size: 18px;
+  position: relative;
+  z-index: 1;
+  font-size: 19px;
   color: var(--secondary-color);
   flex-shrink: 0;
 }
 .home-rhema-search-row input {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-width: 0;
   border: 0;
@@ -17345,19 +17370,21 @@ body.dark .bn-item::before {
   background: transparent;
   color: var(--font-color);
   font: inherit;
-  font-size: 0.84rem;
-  font-weight: 650;
+  font-size: 0.86rem;
+  font-weight: 700;
 }
 .home-rhema-search-row input::placeholder {
-  color: color-mix(in srgb, var(--muted-color) 82%, transparent);
+  color: color-mix(in srgb, var(--muted-color) 74%, transparent);
   font-weight: 600;
 }
 .home-rhema-search-clear {
+  position: relative;
+  z-index: 1;
   width: 26px;
   height: 26px;
   border: 0;
   border-radius: 50%;
-  background: transparent;
+  background: color-mix(in srgb, var(--font-color) 6%, transparent);
   color: var(--muted-color);
   display: flex;
   align-items: center;
@@ -17369,26 +17396,26 @@ body.dark .bn-item::before {
 .home-rhema-search-results {
   display: grid;
   gap: 6px;
-  margin-top: 7px;
+  margin-top: 8px;
 }
 .home-rhema-result,
 .home-rhema-search-status {
   width: 100%;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, var(--border-color));
-  background: var(--card-color);
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 14%, var(--border-color));
+  background: color-mix(in srgb, var(--card-color) 94%, var(--primary-color));
   color: var(--font-color);
   text-align: left;
 }
 .home-rhema-result {
   display: grid;
   gap: 2px;
-  padding: 8px 10px;
+  padding: 8px 11px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .home-rhema-result:active {
-  transform: scale(0.99);
+  transform: scale(0.992);
   border-color: var(--secondary-color);
 }
 .home-rhema-result strong {

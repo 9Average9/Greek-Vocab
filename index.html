@@ -303,7 +303,7 @@ glacier: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.96" rel="stylesheet"/>
+<link href="style.css?v=3.0.97" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -445,17 +445,6 @@ Start a New Study
 <span class="notif-badge hidden" id="notifBadge"></span>
 </button>
 </div>
-<div class="home-verse-wrap">
-<div class="home-verse-inner">
-<div class="home-verse-icon">
-<span class="home-verse-quote">&ldquo;</span>
-</div>
-<div class="home-verse-body">
-<p class="home-verse-text" id="homeVerseText">Your word I have treasured in my heart, that I may not sin against you.</p>
-<span class="home-verse-ref">— Psalm 119:11</span>
-</div>
-</div>
-</div>
 <!-- Continue Studying card (shown after first Rhema use) -->
 <div class="home-continue-card" id="homeContinueCard" onclick="resumeRhema()" style="display:none">
 <div class="hcc-body">
@@ -483,7 +472,7 @@ Start a New Study
 <div class="home-rhema-search-card" id="homeRhemaSearchCard">
 <div class="home-rhema-search-row">
 <span class="material-symbols-outlined">search</span>
-<input id="homeRhemaSearchInput" type="search" autocomplete="off" autocapitalize="sentences" spellcheck="true" placeholder="Find a Rhema passage" oninput="homeRhemaSearch(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();openHomeRhemaTopResult();}">
+<input id="homeRhemaSearchInput" type="search" autocomplete="off" autocapitalize="sentences" spellcheck="true" placeholder="Search Rhema by thought, story, or reference" oninput="homeRhemaSearch(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();openHomeRhemaTopResult();}">
 <button class="home-rhema-search-clear" type="button" onclick="clearHomeRhemaSearch()" aria-label="Clear search"><span class="material-symbols-outlined">close</span></button>
 </div>
 <div class="home-rhema-search-results" id="homeRhemaSearchResults"></div>
@@ -16147,7 +16136,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.96"></script>
+<script src="app.js?v=3.0.97"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.29"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
 <script src="firebase-lb.js?v=3.0.85" type="module"></script>

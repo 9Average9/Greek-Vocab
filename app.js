@@ -18315,7 +18315,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.96";
+const APP_VERSION = "3.0.97";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18334,6 +18334,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.97 &mdash; Home Search Upgrade</div>
+<ul>
+  <li><strong>Verse of the day removed from Home</strong> &mdash; The Rhema and study tools now move up naturally into that space.</li>
+  <li><strong>Rhema search redesigned</strong> &mdash; The Home search bar now uses a cleaner single-surface style with a stronger focus state.</li>
+  <li><strong>Search intelligence expanded</strong> &mdash; More story, theme, synonym, typo, and reference patterns now boost the best in-app Rhema result.</li>
+</ul>
 <div class="un-version-label">v3.0.96 &mdash; Sleeker Home Layout</div>
 <ul>
   <li><strong>Rhema search bar slimmed down</strong> &mdash; The Home search now uses a cleaner modern pill treatment with tighter result rows.</li>
@@ -22287,8 +22293,92 @@ let _homeRhemaResults = [];
 let _homeRhemaSearchIndex = null;
 
 const HOME_RHEMA_STOPWORDS = new Set([
-  'a','an','and','are','as','at','about','be','but','by','for','from','he','her','his','how','i','in','is','it','like','me','of','on','or','out','passage','she','so','that','the','their','them','there','they','this','to','was','were','what','when','where','who','with','you','your'
+  'a','an','and','are','as','at','about','be','but','by','for','from','he','her','his','how','i','in','is','it','like','me','of','on','or','out','passage','she','so','story','that','the','their','them','there','they','this','to','was','were','what','when','where','who','with','you','your'
 ]);
+
+const HOME_RHEMA_REF_ALIASES = {
+  gen: 'GEN', ge: 'GEN', genesis: 'GEN',
+  ex: 'EXO', exo: 'EXO', exod: 'EXO', exodus: 'EXO',
+  lev: 'LEV', leviticus: 'LEV',
+  num: 'NUM', numbers: 'NUM',
+  deut: 'DEU', dt: 'DEU', deuteronomy: 'DEU',
+  josh: 'JOS', jos: 'JOS', joshua: 'JOS',
+  judg: 'JDG', jdg: 'JDG', judges: 'JDG',
+  ruth: 'RUT',
+  ps: 'PSA', psa: 'PSA', psalm: 'PSA', psalms: 'PSA',
+  prov: 'PRO', pr: 'PRO', proverbs: 'PRO',
+  eccl: 'ECC', ecclesiastes: 'ECC',
+  song: 'SNG', songs: 'SNG',
+  isa: 'ISA', isaiah: 'ISA',
+  jer: 'JER', jeremiah: 'JER',
+  ezek: 'EZK', ezekiel: 'EZK',
+  dan: 'DAN', daniel: 'DAN',
+  hos: 'HOS', hosea: 'HOS',
+  joel: 'JOL',
+  amos: 'AMO',
+  jonah: 'JON',
+  micah: 'MIC',
+  matt: 'MAT', mt: 'MAT', mat: 'MAT', matthew: 'MAT',
+  mark: 'MAR', mk: 'MAR', mrk: 'MAR',
+  luke: 'LUK', lk: 'LUK', luk: 'LUK',
+  john: 'JOH', jn: 'JOH', joh: 'JOH',
+  acts: 'ACT', ac: 'ACT', act: 'ACT',
+  rom: 'ROM', romans: 'ROM',
+  '1cor': '1CO', '1co': '1CO', '1corinthians': '1CO', cor: '1CO',
+  '2cor': '2CO', '2co': '2CO', '2corinthians': '2CO',
+  gal: 'GAL', galatians: 'GAL',
+  eph: 'EPH', ephesians: 'EPH',
+  phil: 'PHP', php: 'PHP', philippians: 'PHP',
+  col: 'COL', colossians: 'COL',
+  '1thess': '1TH', '1th': '1TH', '1thessalonians': '1TH', thess: '1TH',
+  '2thess': '2TH', '2th': '2TH', '2thessalonians': '2TH',
+  '1tim': '1TI', '1ti': '1TI', '1timothy': '1TI', tim: '1TI',
+  '2tim': '2TI', '2ti': '2TI', '2timothy': '2TI',
+  heb: 'HEB', hebrews: 'HEB',
+  jam: 'JAM', james: 'JAM',
+  '1pet': '1PE', '1pe': '1PE', '1peter': '1PE', pet: '1PE', peter: '1PE',
+  '2pet': '2PE', '2pe': '2PE', '2peter': '2PE',
+  '1john': '1JO', '1jn': '1JO', '1jo': '1JO',
+  '2john': '2JO', '2jn': '2JO', '2jo': '2JO',
+  '3john': '3JO', '3jn': '3JO', '3jo': '3JO',
+  jude: 'JUD',
+  rev: 'REV', revelation: 'REV'
+};
+
+const HOME_RHEMA_TOPIC_RULES = [
+  { any: ['noah','ark','flood'], refs: [['GEN','6'], ['GEN','7'], ['GEN','8'], ['GEN','9']], boost: 150 },
+  { any: ['babel','tower'], refs: [['GEN','11']], boost: 150 },
+  { any: ['burning','bush'], refs: [['EXO','3']], boost: 150 },
+  { any: ['red','sea','pharaoh'], refs: [['EXO','14']], boost: 150 },
+  { any: ['commandments','sinai','tablets'], refs: [['EXO','20']], boost: 150 },
+  { any: ['manna','wilderness','bread'], refs: [['EXO','16']], boost: 95 },
+  { any: ['david','goliath','giant'], refs: [['1SA','17']], boost: 190 },
+  { any: ['elijah','carmel','fire','prophets'], refs: [['1KI','18']], boost: 170 },
+  { any: ['lion','lions','den','daniel'], refs: [['DAN','6']], boost: 190 },
+  { any: ['dry','bones','valley'], refs: [['EZK','37']], boost: 170 },
+  { any: ['jonah','fish','whale'], refs: [['JON','1'], ['JON','2']], boost: 175 },
+  { any: ['esther','time','such'], refs: [['EST','4']], boost: 135 },
+  { any: ['ruth','boaz','kinsman'], refs: [['RUT','2'], ['RUT','3'], ['RUT','4']], boost: 125 },
+  { any: ['beatitudes','blessed','poor','meek'], refs: [['MAT','5']], boost: 140 },
+  { any: ['lord','prayer','kingdom','daily'], refs: [['MAT','6'], ['LUK','11']], boost: 135 },
+  { any: ['samaritan','neighbor','road'], refs: [['LUK','10']], boost: 170 },
+  { any: ['prodigal','lost','son'], refs: [['LUK','15']], boost: 190 },
+  { any: ['lost','sheep'], refs: [['LUK','15'], ['MAT','18']], boost: 135 },
+  { any: ['woman','well','living','water'], refs: [['JOH','4']], boost: 170 },
+  { any: ['born','again','nicodemus'], refs: [['JOH','3']], boost: 170 },
+  { any: ['lazarus','raise','dead','tomb'], refs: [['JOH','11']], boost: 180 },
+  { any: ['feeding','five','thousand','loaves','fish'], refs: [['JOH','6'], ['MAT','14'], ['MAR','6'], ['LUK','9']], boost: 150 },
+  { any: ['walking','water','storm'], refs: [['MAT','14'], ['MAR','6'], ['JOH','6']], boost: 140 },
+  { any: ['transfiguration','mountain','moses','elijah'], refs: [['MAT','17'], ['MAR','9'], ['LUK','9']], boost: 160 },
+  { any: ['temple','tables','money','changers'], refs: [['JOH','2'], ['MAT','21'], ['MAR','11'], ['LUK','19']], boost: 150 },
+  { any: ['fruit','spirit','love','joy','peace'], refs: [['GAL','5']], boost: 150 },
+  { any: ['love','patient','kind'], refs: [['1CO','13']], boost: 170 },
+  { any: ['armor','armour','god'], refs: [['EPH','6']], boost: 170 },
+  { any: ['faith','works','dead'], refs: [['JAM','2']], boost: 150 },
+  { any: ['anxious','worry','worried','birds','lilies'], refs: [['MAT','6']], boost: 150 },
+  { any: ['peace','understanding','anxious'], refs: [['PHP','4']], boost: 145 },
+  { any: ['new','heaven','earth','tears'], refs: [['REV','21']], boost: 150 }
+];
 
 function _homeRhemaEscape(text) {
   return String(text || '').replace(/[&<>"']/g, (ch) => ({
@@ -22322,7 +22412,25 @@ function _homeRhemaNormalize(text) {
     [/\bshadrack\b/g, ' shadrach '],
     [/\bmeshack\b/g, ' meshach '],
     [/\bfiery\b/g, ' fire furnace flame burning '],
-    [/\bfurnace\b/g, ' furnace fire flame burning ']
+    [/\bfurnace\b/g, ' furnace fire flame burning '],
+    [/\bwhale\b/g, ' fish great fish jonah '],
+    [/\bgiants?\b/g, ' giant goliath '],
+    [/\bscared\b/g, ' afraid fear anxious '],
+    [/\bworried\b/g, ' worry anxious care '],
+    [/\bworry(?:ing)?\b/g, ' worry anxious care '],
+    [/\banxiety\b/g, ' anxious worry care '],
+    [/\bforgive(?:n|ness)?\b/g, ' forgive forgiveness mercy debt '],
+    [/\bpraying\b/g, ' pray prayer '],
+    [/\bneighbor\b/g, ' neighbor samaritan mercy '],
+    [/\bnicodemous\b/g, ' nicodemus '],
+    [/\blazurus\b/g, ' lazarus '],
+    [/\bresurection\b/g, ' resurrection raise dead '],
+    [/\bholy\s+spirit\b/g, ' spirit holy spirit '],
+    [/\btablets\b/g, ' commandments tablets law '],
+    [/\bten\s+commandments\b/g, ' commandments tablets law sinai '],
+    [/\bmoney\s+changers?\b/g, ' money changers temple tables '],
+    [/\blord'?s\s+prayer\b/g, ' lord prayer kingdom daily bread '],
+    [/\bfruit\s+of\s+the\s+spirit\b/g, ' fruit spirit love joy peace patience kindness goodness faithfulness gentleness self control ']
   ];
   aliases.forEach(([pattern, replacement]) => { out = out.replace(pattern, replacement); });
   return out.replace(/\s+/g, ' ').trim();
@@ -22392,6 +22500,13 @@ function _homeRhemaFuzzyTokenScore(token, entry) {
 function _homeRhemaDirectRef(query) {
   const raw = String(query || '').toLowerCase().replace(/\s+/g, ' ').trim();
   if (!raw) return null;
+  const aliasMatch = raw.match(/\b([1-3]?\s?[a-z]+)\s+(\d{1,3})(?::(\d{1,3}))?\b/);
+  if (aliasMatch) {
+    const alias = aliasMatch[1].replace(/\s+/g, '');
+    const numberedAlias = aliasMatch[1].replace(/\s+/, '');
+    const code = HOME_RHEMA_REF_ALIASES[alias] || HOME_RHEMA_REF_ALIASES[numberedAlias];
+    if (code) return { book: code, chapter: aliasMatch[2], verse: aliasMatch[3] || '1' };
+  }
   const names = [];
   Object.entries(RHEMA_BOOK_NAMES).forEach(([code, name]) => {
     names.push([code, name.toLowerCase()]);
@@ -22411,6 +22526,13 @@ function _homeRhemaTopicBoost(normQuery, entry) {
   let score = 0;
   const has = (word) => normQuery.includes(word);
   const inRef = (book, chapter, verses) => entry.book === book && entry.chapter === String(chapter) && (!verses || verses.includes(entry.verse));
+  HOME_RHEMA_TOPIC_RULES.forEach((rule) => {
+    const hits = rule.any.filter(term => has(term)).length;
+    if (!hits) return;
+    const matchesRef = rule.refs.some(([book, chapter, verses]) => inRef(book, chapter, verses));
+    if (!matchesRef) return;
+    score += rule.boost + Math.min(hits, 4) * 18;
+  });
 
   if ((has('paul') || has('apostle')) && (has('peter') || has('cephas')) && (has('gentile') || has('uncircumcised') || has('hypocrisy') || has('rebuke') || has('oppose') || has('confront'))) {
     if (inRef('GAL', 2, ['11','12','13','14'])) score += 320;
@@ -22439,17 +22561,23 @@ function _scoreHomeRhemaEntry(query, tokens, entry, directRef) {
   if (directRef && entry.book === directRef.book && entry.chapter === directRef.chapter) {
     score += entry.verse === directRef.verse ? 200 : 25;
   }
+  let matchedTokens = 0;
   tokens.forEach((token, idx) => {
     const first = entry.norm.indexOf(token);
     if (first === -1) {
-      score += _homeRhemaFuzzyTokenScore(token, entry);
+      const fuzzy = _homeRhemaFuzzyTokenScore(token, entry);
+      if (fuzzy > 0) matchedTokens++;
+      score += fuzzy;
       return;
     }
+    matchedTokens++;
     score += first < 30 ? 13 : 7;
     if (entry.norm.includes(` ${token} `)) score += 3;
     if (idx > 0 && entry.norm.includes(`${tokens[idx - 1]} ${token}`)) score += 8;
   });
   score += _homeRhemaTopicBoost(_homeRhemaNormalize(query), entry);
+  if (tokens.length >= 2) score += Math.round((matchedTokens / tokens.length) * 24);
+  if (matchedTokens >= 3) score += 18;
   if (tokens.length && tokens.every(token => entry.norm.includes(token) || _homeRhemaFuzzyTokenScore(token, entry) > 0)) score += 20;
   return score;
 }
