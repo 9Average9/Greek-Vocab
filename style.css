@@ -17220,6 +17220,144 @@ body.dark .bn-item::before {
 .hce-text { display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; }
 .hce-text strong { font-weight: 700; color: var(--font-color); }
 .hce-text span { font-size: 0.8rem; color: var(--secondary-color); font-weight: 600; }
+#homeScreen .home-continue-card {
+  border-radius: 18px;
+  padding: 14px 15px 12px;
+  margin-bottom: 18px;
+}
+#homeScreen .hcc-body {
+  gap: 12px;
+  margin-bottom: 10px;
+}
+#homeScreen .hcc-icon-wrap {
+  width: 42px;
+  height: 42px;
+}
+#homeScreen .hcc-book-deco {
+  font-size: 3rem !important;
+}
+#homeScreen .home-continue-empty {
+  padding: 14px 15px;
+}
+#homeScreen .hce-icon {
+  font-size: 1.75rem !important;
+}
+#homeScreen .hce-text {
+  gap: 2px;
+  font-size: 0.84rem;
+}
+#homeScreen .home-studies-section {
+  margin-top: 10px;
+}
+#homeScreen .hs-grid {
+  gap: 7px;
+}
+#homeScreen .hs-start-btn {
+  padding: 11px 14px;
+  border-radius: 14px;
+  font-size: 0.85rem;
+}
+#homeScreen .hs-study-card {
+  border-radius: 14px;
+  padding: 10px 9px 9px;
+  gap: 4px;
+}
+.home-rhema-search-card {
+  margin: -12px 0 18px;
+  padding: 10px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--card-color) 92%, var(--primary-color));
+  border: 1.5px solid color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
+  box-shadow: 0 8px 18px rgba(0,0,0,0.04);
+}
+.home-rhema-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 8px 0 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--primary-color) 74%, var(--card-color));
+  border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+}
+.home-rhema-search-row > .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--secondary-color);
+  flex-shrink: 0;
+}
+.home-rhema-search-row input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--font-color);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+.home-rhema-search-row input::placeholder {
+  color: color-mix(in srgb, var(--muted-color) 82%, transparent);
+  font-weight: 600;
+}
+.home-rhema-search-clear {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.home-rhema-search-clear .material-symbols-outlined { font-size: 18px; }
+.home-rhema-search-results {
+  display: grid;
+  gap: 8px;
+  margin-top: 9px;
+}
+.home-rhema-result,
+.home-rhema-search-status {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, var(--border-color));
+  background: var(--card-color);
+  color: var(--font-color);
+  text-align: left;
+}
+.home-rhema-result {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.home-rhema-result:active {
+  transform: scale(0.99);
+  border-color: var(--secondary-color);
+}
+.home-rhema-result strong {
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+.home-rhema-result span {
+  color: var(--muted-color);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.home-rhema-search-status {
+  padding: 10px 12px;
+  color: var(--muted-color);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
 /* Quick actions */
 .home-section-label { font-size: 1rem; font-weight: 800; color: var(--font-color); margin: 0 0 12px; }
 .home-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
@@ -19850,8 +19988,8 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 #homeScreen .home-actions-grid {
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: 14px !important;
-  margin: 6px 0 24px !important;
+  gap: 10px !important;
+  margin: 4px 0 18px !important;
 }
 
 #homeScreen .home-action-tile {
@@ -19865,7 +20003,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   flex-direction: column !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: 9px !important;
+  gap: 7px !important;
   text-align: center !important;
 }
 
@@ -19875,9 +20013,9 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 
 /* Rounded-square Quick Action tiles */
 #homeScreen .home-action-tile .hat-icon {
-  width: clamp(72px, 20vw, 96px) !important;
-  height: clamp(72px, 20vw, 96px) !important;
-  border-radius: 20px !important;
+  width: clamp(62px, 17vw, 82px) !important;
+  height: clamp(62px, 17vw, 82px) !important;
+  border-radius: 18px !important;
   background: var(--qa-bg) !important;
   border: 1.5px solid var(--qa-border) !important;
   box-shadow:
@@ -19918,8 +20056,8 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 
 /* SVG icons */
 #homeScreen .home-action-tile .hat-icon .qa-svg {
-  width: 54px !important;
-  height: 54px !important;
+  width: 46px !important;
+  height: 46px !important;
   flex-shrink: 0;
   display: flex;
 }
@@ -19952,7 +20090,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 
 #homeScreen .home-action-tile .hat-text strong {
   display: block;
-  font-size: clamp(0.66rem, 2.9vw, 0.8rem) !important;
+  font-size: clamp(0.64rem, 2.7vw, 0.76rem) !important;
   font-weight: 800 !important;
   line-height: 1.12;
   color: var(--font-color) !important;
@@ -21670,7 +21808,7 @@ body.dark .bottom-nav::before {
     padding: 28px clamp(28px, 4vw, 56px) 40px;
   }
 
-  #homeScreen .home-scroll > :not(.desktop-home-shell) {
+  #homeScreen .home-scroll > :not(.desktop-home-shell):not(.home-rhema-search-card) {
     display: none !important;
   }
 
@@ -21679,6 +21817,13 @@ body.dark .bottom-nav::before {
     gap: 24px;
     max-width: 1280px;
     margin: 0 auto;
+  }
+
+  #homeScreen .home-rhema-search-card {
+    display: block;
+    width: min(980px, calc(100% - 48px));
+    max-width: 980px;
+    margin: 18px auto 0;
   }
 
   .desktop-study-hero {
