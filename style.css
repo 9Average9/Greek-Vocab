@@ -6713,6 +6713,270 @@ body.dark .habit-notes-history-item {
   font-size: 0.86rem;
 }
 
+/* ── Habit Reminder Modal ────────────────────────────────────────────────── */
+.habit-reminder-card {
+  max-width: 600px;
+  width: min(600px, calc(100vw - 24px));
+  max-height: min(840px, calc(100vh - 28px));
+  overflow: auto;
+}
+
+.habit-reminder-desc {
+  color: var(--muted-color);
+  font-size: 0.875rem;
+  margin: -4px 0 14px;
+}
+
+.habit-notif-warning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: color-mix(in srgb, #f97316 12%, transparent);
+  border: 1px solid color-mix(in srgb, #f97316 30%, transparent);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 0.82rem;
+  color: #c2410c;
+}
+
+.habit-notif-warning .material-symbols-outlined {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.habit-reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.habit-reminder-item {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--light-color);
+  overflow: hidden;
+}
+
+.habit-reminder-item-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.habit-reminder-item-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.habit-reminder-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.habit-reminder-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.habit-reminder-toggle-track {
+  width: 44px;
+  height: 24px;
+  background: var(--border-color);
+  border-radius: 12px;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.habit-reminder-toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  transition: left 0.2s;
+}
+
+.habit-reminder-toggle input:checked + .habit-reminder-toggle-track {
+  background: var(--secondary-color);
+}
+
+.habit-reminder-toggle input:checked + .habit-reminder-toggle-track::after {
+  left: 22px;
+}
+
+.habit-reminder-settings {
+  border-top: 1px solid var(--border-color);
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.habit-reminder-freq-row {
+  display: flex;
+  gap: 8px;
+}
+
+.habit-reminder-freq-btn {
+  flex: 1;
+  padding: 7px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--card-color);
+  color: var(--muted-color);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.habit-reminder-freq-btn.active {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: white;
+}
+
+.habit-reminder-times-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-color);
+  margin-bottom: -4px;
+}
+
+.habit-reminder-times {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.habit-reminder-time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.habit-reminder-time-row input[type="time"] {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--card-color);
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.habit-reminder-remove-time {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--muted-color);
+  font-size: 17px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.habit-reminder-remove-time:hover {
+  background: color-mix(in srgb, #ef4444 10%, transparent);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.habit-reminder-add-time-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--secondary-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+}
+
+.habit-reminder-add-time-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.habit-reminder-save-btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--secondary-color);
+  color: white;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+}
+
+.habit-reminder-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.habit-reminder-empty {
+  text-align: center;
+  color: var(--muted-color);
+  padding: 28px 16px;
+  font-size: 0.9rem;
+}
+
+.habit-import-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--muted-color);
+  font-size: 0.82rem;
+  padding: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 2px;
+}
+
+.habit-import-inline:hover {
+  color: var(--secondary-color);
+  text-decoration: underline;
+}
+
+.habit-import-inline .material-symbols-outlined {
+  font-size: 15px;
+}
+
+/* ── END Habit Reminder Modal ─────────────────────────────────────────────── */
+
 .habit-settings-card {
   max-width: 600px;
   width: min(600px, calc(100vw - 24px));

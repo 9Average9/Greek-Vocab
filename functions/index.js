@@ -284,6 +284,34 @@ function mercyDateKey(ms = Date.now(), timeZone = "UTC") {
   return `${local.year}-${String(local.month).padStart(2, "0")}-${String(local.day).padStart(2, "0")}`;
 }
 
+const HABIT_REMINDER_MESSAGES = [
+  "You better not forget to do {name} today!",
+  "Don't be a loser and give up on {name} — complete it!",
+  "{name} isn't going to do itself. Get on it!",
+  "Your streak is on the line. Time to crush {name}!",
+  "Hey! {name} is calling your name. Answer it.",
+  "Future you will thank present you for doing {name} today.",
+  "You've been so consistent with {name}. Don't break that streak now!",
+  "Okay, it's time. {name}. Go. Now.",
+  "Did you forget about {name}? It definitely didn't forget about you.",
+  "Champions don't skip {name}. You're a champion — prove it!",
+  "Still haven't done {name}? The clock is ticking!",
+  "Time to stop scrolling and do {name}.",
+  "You said you were going to do {name}. We both know you meant it.",
+  "Every great achiever does {name} daily. Just saying.",
+  "Rise up and crush {name} today. No excuses!",
+  "One small step: {name}. You've totally got this.",
+  "Be the person who never skips {name}. That person is legendary.",
+  "The only bad {name} session is the one you skip.",
+  "No excuses. {name}. Do it.",
+  "{name} won't complete itself — but you will. Let's go!"
+];
+
+function randomHabitReminderMessage(habitName) {
+  const msg = HABIT_REMINDER_MESSAGES[Math.floor(Math.random() * HABIT_REMINDER_MESSAGES.length)];
+  return msg.replace(/{name}/g, habitName || "your habit");
+}
+
 const PRAISE_PROMPTS = [
   "What good gift can you praise God for today?",
   "What ordinary blessing did you notice today?",
@@ -435,6 +463,38 @@ exports.sendScheduledReminders = functions.pubsub
         data: { open: "mercies", friendUid, friendName },
         webpush: { fcmOptions: { link: `/Greek-Vocab/?open=mercies&friend=${encodeURIComponent(friendUid)}` }, notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } }
       }).catch(e => console.error(`${userDoc.id} mercy friend reminder error:`, e.message));
+    }
+
+    // ── Habit reminder slots ─────────────────────────────────────────────────
+    const habitSlotSnap = await db.collectionGroup("habitReminderSlots")
+      .where("enabled", "==", true)
+      .where("nextSendAt", "<=", now)
+      .limit(200)
+      .get();
+
+    for (const slotDoc of habitSlotSnap.docs) {
+      const slot = slotDoc.data();
+      if (!slot.uid || !slot.time) continue;
+      const userSnap = await db.collection("users").doc(slot.uid).get();
+      if (!userSnap.exists) { await slotDoc.ref.delete(); continue; }
+      const tokens = userSnap.data().fcmTokens || [];
+      const nextSendAt = calculateNextReminderDate(
+        { time: slot.time, frequency: slot.frequency || "daily", timezone: slot.timezone || "UTC" },
+        new Date(now.getTime() + 60 * 1000)
+      );
+      const slotUpdate = { lastSent: now };
+      if (nextSendAt) slotUpdate.nextSendAt = nextSendAt;
+      await slotDoc.ref.update(slotUpdate);
+      if (!tokens.length) continue;
+      const body = randomHabitReminderMessage(slot.habitName || "your habit");
+      await messaging.sendEachForMulticast({
+        tokens,
+        notification: { title: slot.habitName || "Habit Reminder", body },
+        webpush: {
+          fcmOptions: { link: "/Greek-Vocab/?open=habits" },
+          notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] }
+        }
+      }).catch(e => console.error(`${slot.uid} habit reminder error:`, e.message));
     }
 
     return null;

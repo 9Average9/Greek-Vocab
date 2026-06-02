@@ -37,6 +37,11 @@ service cloud.firestore {
         allow read, create, update, delete: if request.auth != null
           && request.auth.uid == uid;
       }
+
+      match /habitReminderSlots/{slotId} {
+        allow read, create, update, delete: if request.auth != null
+          && request.auth.uid == uid;
+      }
     }
 
     // Leaderboards — anyone can read, only owner can write their own entry
