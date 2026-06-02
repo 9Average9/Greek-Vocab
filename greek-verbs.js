@@ -98,6 +98,7 @@ function showBasicVerbLesson(lessonId) {
   if (typeof _updateAppHeaderForScreen === "function") _updateAppHeaderForScreen("basicVerbsLearnMenu");
   _restoreOpenedVerbBlocks(section, lessonId, "basic");
   _updateVerbCompleteButton(lessonId, "basic");
+  requestAnimationFrame(() => section.scrollTo?.(0, 0));
 }
 
 function showAdvVerbLesson(lessonId) {
@@ -124,6 +125,7 @@ function showAdvVerbLesson(lessonId) {
     const s = savedScores[lessonId];
     _updateVerbAdvLessonScore(lessonId, s.correct, s.total, s.passed);
   }
+  requestAnimationFrame(() => section.scrollTo?.(0, 0));
 }
 
 function _shuffleVerbKCOptions(section) {

@@ -12856,6 +12856,9 @@ html += `</div>`;
 function showSettings() {
   hideBottomNav();
   showScreen("settingsScreen");
+  requestAnimationFrame(() => {
+    document.querySelector("#settingsScreen .sett-scroll")?.scrollTo?.(0, 0);
+  });
   updateLessonModeSettingsUI();
   updateHighContrastSettingsUI();
 }
@@ -13990,6 +13993,7 @@ function showLearnLesson(lesson) {
 
   restoreOpenedLessonBlocks(lessonSection, lesson);
   updateCompleteLessonButton(lesson);
+  requestAnimationFrame(() => lessonSection.scrollTo?.(0, 0));
 
   closeLearnSideMenu();
 }
@@ -14259,6 +14263,7 @@ function showAdvancedLesson(lessonId) {
   currentAdvLearnLesson = lessonId;
   updateAdvLessonTopBar(lessonId);
   _updateAppHeaderForScreen("advancedLearnMenu");
+  requestAnimationFrame(() => section.scrollTo?.(0, 0));
 }
 
 function showAdvancedLearnDashboard() {
@@ -18310,7 +18315,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.91";
+const APP_VERSION = "3.0.92";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18329,6 +18334,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.92 &mdash; Mobile Scroll Shell Repair</div>
+<ul>
+  <li><strong>Profile settings fully scroll again</strong> &mdash; The settings page now hides the global app header while open, owns the full mobile viewport, starts at the top, and keeps the Home Background, Lesson Mode, Data &amp; Progress, and Account controls reachable.</li>
+  <li><strong>Lesson screens scroll correctly</strong> &mdash; Basic lessons now use the active lesson itself as the scroll container, matching Advanced and Verb lessons, so long lesson pages move with one finger instead of locking up.</li>
+  <li><strong>Verb lessons refreshed</strong> &mdash; Basic and Advanced Verb lessons reset to the top when opened and are cache-busted with this release.</li>
+</ul>
 <div class="un-version-label">v3.0.91 &mdash; Mobile Settings Scroll Fix</div>
 <ul>
   <li><strong>Mobile PWA settings scroll fixed</strong> &mdash; Profile settings and theme rows now use a dedicated vertical scroll container with Android-friendly one-finger panning, so the settings screen no longer locks up or requires two fingers to move.</li>

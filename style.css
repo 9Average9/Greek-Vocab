@@ -24411,6 +24411,16 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   overscroll-behavior: contain;
 }
 
+#newLearnMenu.screen.active .learn-lesson.active {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
 #advancedLearnMenu.screen.active {
   display: flex !important;
   flex-direction: column !important;
@@ -24469,4 +24479,34 @@ body .app:has(#advVerbsLearnMenu.screen.active) {
   overflow: hidden;
   height: 100vh;
   height: 100svh;
+}
+
+body .app:has(#settingsScreen.screen.active) .app-header,
+body .app:has(#newLearnMenu.screen.active) .app-header,
+body .app:has(#advancedLearnMenu.screen.active) .app-header,
+body .app:has(#basicVerbsLearnMenu.screen.active) .app-header,
+body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
+  display: none !important;
+}
+
+#settingsScreen.screen.active,
+#newLearnMenu.screen.active,
+#advancedLearnMenu.screen.active,
+#basicVerbsLearnMenu.screen.active,
+#advVerbsLearnMenu.screen.active {
+  max-height: 100vh !important;
+  max-height: 100svh !important;
+}
+
+#settingsScreen .home-backdrop-card {
+  min-height: 134px !important;
+  align-items: stretch !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+#settingsScreen .home-backdrop-option {
+  flex: 0 0 124px !important;
+  min-height: 110px !important;
+  height: auto !important;
 }
