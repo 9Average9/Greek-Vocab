@@ -18310,7 +18310,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.85";
+const APP_VERSION = "3.0.91";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18329,6 +18329,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.91 &mdash; Mobile Settings Scroll Fix</div>
+<ul>
+  <li><strong>Mobile PWA settings scroll fixed</strong> &mdash; Profile settings and theme rows now use a dedicated vertical scroll container with Android-friendly one-finger panning, so the settings screen no longer locks up or requires two fingers to move.</li>
+  <li><strong>Settings taps restored</strong> &mdash; Theme rows, settings rows, and the profile settings entry now cooperate with scrolling while staying easy to press.</li>
+</ul>
 <div class="un-version-label">v3.0.89 &mdash; Scroll Stability Restored</div>
 <ul>
   <li><strong>Lesson &amp; settings scroll restored</strong> — Reverted an earlier experimental Android scroll fix (v3.0.87) that caused lessons and certain screens to be completely unscrollable. Screens now scroll the same way they did in v3.0.86.</li>
