@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.107";
+const APP_VERSION = "3.0.108";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.108 &mdash; Structure Fixes &amp; Saved Structures</div>
+<ul>
+  <li><strong>Structure overlay fixed</strong> &mdash; The workspace and passage picker now appear correctly above the Verse Structure screen instead of behind it or on the home screen.</li>
+  <li><strong>Saved Structures browser</strong> &mdash; A folder button next to the tool wand lists all saved structure layouts; tap any entry to open and edit it directly.</li>
+  <li><strong>Cabinet badge</strong> &mdash; The folder button shows a dot indicator when there are saved structures.</li>
+</ul>
 <div class="un-version-label">v3.0.107 &mdash; Structure Workspace</div>
 <ul>
   <li><strong>Structure tool added</strong> &mdash; A new Structure item in the VS tool wheel opens a free-canvas workspace where you can spatially arrange verse words into custom segments.</li>
