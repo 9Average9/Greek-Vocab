@@ -25418,7 +25418,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 }
 
 /* theme-match override */
-body.home-theme-match .vs-home-wide-btn {
+body.home-theme-match #homeScreen .vs-home-wide-btn {
   background: linear-gradient(135deg,
     color-mix(in srgb, var(--secondary-color) 14%, var(--card-color)),
     color-mix(in srgb, var(--accent-color) 10%, var(--primary-light))) !important;
@@ -25426,12 +25426,19 @@ body.home-theme-match .vs-home-wide-btn {
   box-shadow: 0 4px 16px color-mix(in srgb, var(--secondary-color) 16%, transparent),
     inset 0 1px 0 rgba(255,255,255,0.65) !important;
 }
-body.home-theme-match .vs-home-icon {
+body.home-theme-match #homeScreen .vs-home-icon {
   background: linear-gradient(145deg,
     color-mix(in srgb, var(--secondary-color) 22%, var(--card-color)),
     color-mix(in srgb, var(--accent-color) 18%, var(--primary-light))) !important;
   border-color: color-mix(in srgb, var(--secondary-color) 65%, var(--border-color)) !important;
   color: var(--secondary-color) !important;
+}
+body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-text strong {
+  color: var(--secondary-color) !important;
+}
+body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
+  color: var(--secondary-color) !important;
+  opacity: 0.7;
 }
 
 /* ── Verse Structure Modal ────────────────────────────────────────────────────*/
