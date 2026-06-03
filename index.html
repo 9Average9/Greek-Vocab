@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.106" rel="stylesheet"/>
+<link href="style.css?v=3.0.107" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -16206,9 +16206,10 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.106"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.106"></script>
-<script src="verse-structure.js?v=3.0.106"></script>
+<script src="app.js?v=3.0.107"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.107"></script>
+<script src="verse-structure.js?v=3.0.107"></script>
+<script src="vs-structure.js?v=3.0.107"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
 <script src="firebase-lb.js?v=3.0.101" type="module"></script>
 <!-- Leaderboard Intro Modal -->
@@ -17424,6 +17425,10 @@ Save
           <span class="material-symbols-outlined">auto_stories</span>
           <span class="rwi-label">Chapter</span>
         </button>
+        <button class="vs-wheel-item" id="vsWheelStructure" onclick="vsWheelAction('structure')">
+          <span class="material-symbols-outlined">account_tree</span>
+          <span class="rwi-label">Structure</span>
+        </button>
         <button class="vs-wheel-center" onclick="closeVSWheel()">
           <span class="material-symbols-outlined">close</span>
         </button>
@@ -17562,6 +17567,77 @@ Save
 <button class="rx-primary-btn" onclick="rxTrailSaveConfirm()"><span class="material-symbols-outlined">bookmark</span>Save Trail</button>
 <button class="rx-trail-save-cancel" onclick="rxTrailSaveDismiss()">Cancel</button>
 </div>
+</div>
+
+<!-- ── VS Structure Picker Modal ───────────────────────────────────────── -->
+<div class="vs-struct-picker-modal" id="vsStructPickerModal" onclick="if(event.target===this)closeVSStructPicker()">
+  <div class="vs-struct-picker-sheet" onclick="event.stopPropagation()">
+    <h3 class="vs-struct-picker-title">Choose Passage</h3>
+    <div class="vs-struct-picker-row">
+      <span class="vs-struct-picker-label">Book</span>
+      <select class="vs-struct-picker-sel" id="vsStructPickerBook" onchange="vsStructPickerUpdateChapters()"></select>
+    </div>
+    <div class="vs-struct-picker-row">
+      <span class="vs-struct-picker-label">Chapter</span>
+      <select class="vs-struct-picker-sel" id="vsStructPickerChapter" onchange="vsStructPickerUpdateVerses()"></select>
+    </div>
+    <div class="vs-struct-picker-row">
+      <span class="vs-struct-picker-label">From v.</span>
+      <select class="vs-struct-picker-sel" id="vsStructPickerVerseStart"></select>
+    </div>
+    <div class="vs-struct-picker-row">
+      <span class="vs-struct-picker-label">To v.</span>
+      <select class="vs-struct-picker-sel" id="vsStructPickerVerseEnd"></select>
+    </div>
+    <button class="vs-struct-picker-open-btn" onclick="openVSStructureWorkspace()">Open Structure</button>
+  </div>
+</div>
+
+<!-- ── VS Structure Workspace Modal ────────────────────────────────────── -->
+<div class="vs-struct-modal" id="vsStructModal">
+  <div class="vs-struct-header">
+    <button class="vs-struct-back" onclick="closeVSStructureWorkspace()">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <span class="vs-struct-title" id="vsStructTitle">Structure</span>
+    <div class="vs-struct-toolbar">
+      <button class="vs-struct-tool-btn" id="vsStructUndoBtn" onclick="vsStructUndo()" title="Undo" disabled>
+        <span class="material-symbols-outlined">undo</span>
+      </button>
+      <button class="vs-struct-tool-btn" id="vsStructRedoBtn" onclick="vsStructRedo()" title="Redo" disabled>
+        <span class="material-symbols-outlined">redo</span>
+      </button>
+      <button class="vs-struct-tool-btn" id="vsStructResetBtn" onclick="vsStructReset()" title="Reset layout">
+        <span class="material-symbols-outlined">refresh</span>
+      </button>
+      <button class="vs-struct-tool-btn" id="vsStructInfoBtn" onclick="openVSStructInfo()" title="How to use">
+        <span class="material-symbols-outlined">info</span>
+      </button>
+      <button class="vs-struct-tool-btn" id="vsStructSaveBtn" onclick="vsStructSave()" title="Save">
+        <span class="material-symbols-outlined">save</span>
+      </button>
+      <button class="vs-struct-tool-btn active" id="vsStructEditBtn" onclick="toggleVSStructEdit()" title="Edit mode">
+        <span class="material-symbols-outlined">edit</span>
+      </button>
+    </div>
+  </div>
+  <div class="vs-struct-edit-bar" id="vsStructEditBar">
+    <span class="vs-struct-edit-label">Edit Mode — Hold a word to split &amp; drag</span>
+  </div>
+  <div class="vs-struct-canvas-wrap" id="vsStructCanvasWrap">
+    <div class="vs-struct-canvas" id="vsStructCanvas"></div>
+  </div>
+</div>
+
+<!-- ── VS Structure Info Sheet ──────────────────────────────────────────── -->
+<div class="vs-struct-info-modal" id="vsStructInfoModal" onclick="if(event.target===this)closeVSStructInfo()">
+  <div class="vs-struct-info-sheet" onclick="event.stopPropagation()">
+    <h3>How to Use Structure</h3>
+    <p>Structure lets you spatially arrange the words of a passage on a free canvas.</p>
+    <p><strong>Edit Mode</strong> is on by default. Hold any word for 0.3 seconds to split it off as a new segment, then drag that segment anywhere on the canvas.</p>
+    <p>Use <strong>Undo/Redo</strong> to step through changes, <strong>Reset</strong> to restore the default layout, and <strong>Save</strong> to store your arrangement.</p>
+    <button class="vs-struct-picker-open-btn" onclick="closeVSStructInfo()">Got it</button>
+  </div>
 </div>
 
 </body>

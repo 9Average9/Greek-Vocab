@@ -474,6 +474,10 @@ function vsWheelAction(tool) {
     _vsSyncPills();
     _vsRenderVerse();
     _syncVSWheelItems();
+  } else if (tool === 'structure') {
+    setTimeout(() => {
+      if (typeof openVSStructurePicker === 'function') openVSStructurePicker();
+    }, 120);
   }
 }
 
