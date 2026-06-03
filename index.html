@@ -10022,82 +10022,6 @@ Verb Endings
 </div>
 <!-- ── Book picker ── -->
 <!-- Scripture Trail Cross References -->
-<div class="rhema-xref-page hidden" id="rhemaXrefPage">
-<div class="rx-page-header">
-<button class="rx-icon-btn" onclick="rhemaCrossRefBack()"><span class="material-symbols-outlined">arrow_back</span></button>
-<h2 id="rxPageTitle">Cross References</h2>
-<button class="rx-icon-btn" onclick="openRhemaCrossRefInfo()"><span class="material-symbols-outlined">info</span></button>
-</div>
-<div class="rx-breadcrumb hidden" id="rxBreadcrumb">
-<div class="rx-breadcrumb-scroll" id="rxBreadcrumbScroll"></div>
-<button class="rx-breadcrumb-clear" onclick="clearRhemaXrefBreadcrumb()" aria-label="Clear trail"><span class="material-symbols-outlined">close</span></button>
-</div>
-<div class="rx-scroll" id="rxMainView"></div>
-</div>
-<div class="rhema-xref-page hidden" id="rhemaXrefSelectPage">
-<div class="rx-page-header">
-<button class="rx-icon-btn" onclick="closeRhemaCrossRefSelect()"><span class="material-symbols-outlined">close</span></button>
-<h2>Select Reference</h2>
-<span class="rx-header-spacer"></span>
-</div>
-<div class="rx-scroll">
-<section class="rx-select-section">
-<h3>1. Testament</h3>
-<div class="rx-testament-grid" id="rxTestamentGrid"></div>
-</section>
-<section class="rx-select-section">
-<h3>2. Book</h3>
-<button class="rx-book-btn" id="rxBookBtn" onclick="openRxBookPicker()">
-<span class="material-symbols-outlined">menu_book</span>
-<span id="rxBookBtnLabel">Select Book</span>
-<span class="material-symbols-outlined rx-book-btn-chevron">expand_more</span>
-</button>
-</section>
-<div class="rhema-picker-overlay hidden" id="rxBookPickerOverlay" onclick="closeRxBookPicker()">
-<div class="rhema-picker-sheet" onclick="event.stopPropagation()">
-<div class="rhema-picker-hdr">
-<button class="rhema-picker-back hidden" id="rhemaBookPickerBack" onclick="rhemaRenderBookList();event.stopPropagation()" type="button">
-<span class="material-symbols-outlined">arrow_back</span>
-</button>
-<span class="rhema-picker-title" id="rhemaBookPickerTitle">Select Book</span>
-<button class="rhema-picker-x" onclick="closeRxBookPicker()">✕</button>
-</div>
-<div class="rhema-picker-search-row">
-<span class="material-symbols-outlined rhema-picker-search-icon">search</span>
-<input class="rhema-picker-search-input" id="rxBookSearchInput" oninput="rxFilterBooks(this.value)" placeholder="Search books…"/>
-</div>
-<div class="rhema-book-list" id="rxBookList"></div>
-</div>
-</div>
-<section class="rx-select-section">
-<h3>3. Chapter</h3>
-<div class="rx-number-grid" id="rxChapterGrid"></div>
-</section>
-<section class="rx-select-section">
-<h3>4. Verse</h3>
-<div class="rx-number-grid rx-verse-grid" id="rxVerseGrid"></div>
-</section>
-<div class="rx-selected-card" id="rxSelectedCard"></div>
-<button class="rx-primary-btn" onclick="applyRhemaXrefSelection()">View Cross References</button>
-</div>
-</div>
-<div class="rhema-xref-info hidden" id="rhemaXrefInfoModal" onclick="closeRhemaCrossRefInfo(event)">
-<div class="rhema-xref-info-card" onclick="event.stopPropagation()">
-<button class="sheet-x-close" onclick="closeRhemaCrossRefInfo()"><span class="material-symbols-outlined">close</span></button>
-<p>Cross references help you compare Scripture with Scripture. These links show verses that share direct wording, themes, Old/New Testament connections, parallel ideas, or prophecy fulfillment relationships.</p>
-</div>
-</div>
-<div class="rx-trail-save-overlay hidden" id="rxTrailSaveModal" onclick="rxTrailSaveDismiss()">
-<div class="rx-trail-save-card" onclick="event.stopPropagation()">
-<div class="rx-trail-save-icon"><span class="material-symbols-outlined">bookmark_add</span></div>
-<h3>Name Your Trail</h3>
-<p>Give this cross-reference journey a title</p>
-<input class="rx-trail-save-input" id="rxTrailSaveInput" type="text" placeholder="Trail name…" maxlength="60" onkeydown="if(event.key==='Enter')rxTrailSaveConfirm()"/>
-<button class="rx-primary-btn" onclick="rxTrailSaveConfirm()"><span class="material-symbols-outlined">bookmark</span>Save Trail</button>
-<button class="rx-trail-save-cancel" onclick="rxTrailSaveDismiss()">Cancel</button>
-</div>
-</div>
-<div class="rhema-picker-overlay hidden" id="rhemaBookPickerOverlay" onclick="closeRhemaPickerSheet()">
 <div class="rhema-picker-sheet" onclick="event.stopPropagation()">
 <div class="rhema-picker-hdr">
 <span class="rhema-picker-title">Select Book</span>
@@ -16283,7 +16207,7 @@ Verb Endings
 </main>
 <script src="vocab.js?v=3.0.8"></script>
 <script src="app.js?v=3.0.106"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.29"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.106"></script>
 <script src="verse-structure.js?v=3.0.106"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
 <script src="firebase-lb.js?v=3.0.101" type="module"></script>
@@ -17428,21 +17352,22 @@ Save
         <span class="vs-title">Verse Structure</span>
         <span class="vs-title-sub">English Translations</span>
       </div>
-      <button class="vs-xref-btn" onclick="openVSCrossReferences()" title="Cross References">
-        <span class="material-symbols-outlined">hub</span>
+      <button class="vs-tool-btn" id="vsToolBtn" onclick="toggleVSWheel()" title="Tools">
+        <span class="material-symbols-outlined">auto_fix_high</span>
+        <span class="vs-tool-dot" id="vsToolDot"></span>
       </button>
     </div>
 
-    <!-- Reference picker pills -->
+    <!-- Reference picker: combined pill + range button -->
     <div class="vs-picker">
-      <button class="rhema-pill" onclick="openVSBookPicker()">
+      <button class="rhema-pill" id="vsPillRef" onclick="openVSBookPicker()">
         <span class="material-symbols-outlined rhema-pill-icon">menu_book</span>
-        <span id="vsPillBook">John</span>
+        <span id="vsPillRefLabel">John 3:16</span>
         <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
       </button>
-      <button class="rhema-pill" onclick="openVSVersePicker()">
-        <span id="vsPillVerse">3:16</span>
-        <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
+      <button class="vs-range-btn" id="vsRangeBtn" onclick="openVSRangePicker()">
+        <span id="vsRangeBtnLabel">v16</span>
+        <span class="material-symbols-outlined">unfold_more</span>
       </button>
     </div>
 
@@ -17455,7 +17380,7 @@ Save
       <button class="vs-trans-chip" data-trans="NASB" onclick="vsSelectTrans('NASB')">NASB</button>
     </div>
 
-    <!-- POS Highlight bar (same pills as Rhema) -->
+    <!-- POS Highlight bar -->
     <div class="rhema-highlight-bar hidden" id="vsHighlightBar">
       <button class="rhema-hl-pill" data-cat="V"    onclick="toggleVSHighlight('V')">   <span class="rhema-hl-dot" style="background:rgba(251,146,60,1)"></span>Verb</button>
       <button class="rhema-hl-pill" data-cat="N"    onclick="toggleVSHighlight('N')">   <span class="rhema-hl-dot" style="background:rgba(96,165,250,1)"></span>Noun</button>
@@ -17475,21 +17400,39 @@ Save
 
     <!-- Bottom nav -->
     <div class="vs-verse-nav">
-      <button class="vs-nav-btn" onclick="vsNavVerse(-1)" aria-label="Previous verse">
+      <button class="vs-nav-btn" onclick="vsNavVerse(-1)" aria-label="Previous">
         <span class="material-symbols-outlined">chevron_left</span>
       </button>
-      <button class="vs-nav-btn" id="vsHlToggleBtn" onclick="toggleVSHighlightBar()" title="Highlight parts of speech">
-        <span class="material-symbols-outlined">format_color_text</span>
-      </button>
       <span class="vs-verse-ref" id="vsVerseRef">John 3:16</span>
-      <button class="vs-nav-btn" onclick="vsNavVerse(1)" aria-label="Next verse">
+      <button class="vs-nav-btn" onclick="vsNavVerse(1)" aria-label="Next">
         <span class="material-symbols-outlined">chevron_right</span>
       </button>
     </div>
 
+    <!-- Tool Wheel Overlay -->
+    <div class="vs-wheel-overlay" id="vsWheelOverlay" onclick="if(event.target===this)closeVSWheel()" style="display:none">
+      <div class="vs-wheel">
+        <button class="vs-wheel-item" id="vsWheelCrossRef" onclick="vsWheelAction('xref')">
+          <span class="material-symbols-outlined">hub</span>
+          <span class="rwi-label">Cross-Ref</span>
+        </button>
+        <button class="vs-wheel-item" id="vsWheelHighlight" onclick="vsWheelAction('highlight')">
+          <span class="material-symbols-outlined">format_color_text</span>
+          <span class="rwi-label">Highlight</span>
+        </button>
+        <button class="vs-wheel-item" id="vsWheelChapter" onclick="vsWheelAction('chapter')">
+          <span class="material-symbols-outlined">auto_stories</span>
+          <span class="rwi-label">Chapter</span>
+        </button>
+        <button class="vs-wheel-center" onclick="closeVSWheel()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    </div>
+
   </div><!-- end #vsSlide -->
 
-  <!-- Book picker overlay (shares Rhema's picker styles) -->
+  <!-- Book picker overlay -->
   <div class="rhema-picker-overlay hidden" id="vsBookPickerOverlay" onclick="closeVSBookPicker()">
     <div class="rhema-picker-sheet" onclick="event.stopPropagation()">
       <div class="rhema-picker-hdr">
@@ -17500,18 +17443,16 @@ Save
         <span class="material-symbols-outlined rhema-picker-search-icon">search</span>
         <input class="rhema-picker-search-input" id="vsBookSearchInput" oninput="vsFilterBooks(this.value)" placeholder="Search books…"/>
       </div>
-      <!-- Testament selector -->
       <div class="vs-testa-grid" id="vsTestamentGrid"></div>
-      <!-- Book list -->
       <div class="rhema-book-list" id="vsBookList"></div>
     </div>
   </div>
 
-  <!-- Verse picker overlay -->
+  <!-- Chapter + verse picker overlay -->
   <div class="rhema-picker-overlay hidden" id="vsVersePickerOverlay" onclick="closeVSVersePicker()">
     <div class="rhema-picker-sheet vs-verse-picker-sheet" onclick="event.stopPropagation()">
       <div class="rhema-picker-hdr">
-        <span class="rhema-picker-title">Select Verse</span>
+        <span class="rhema-picker-title">Select Chapter &amp; Verse</span>
         <button class="rhema-picker-x" onclick="closeVSVersePicker()">✕</button>
       </div>
       <div class="vs-picker-body">
@@ -17528,7 +17469,100 @@ Save
     </div>
   </div>
 
+  <!-- Range picker overlay -->
+  <div class="vs-range-overlay hidden" id="vsRangePickerOverlay" onclick="if(event.target===this)closeVSRangePicker()">
+    <div class="vs-range-sheet" onclick="event.stopPropagation()">
+      <div class="vs-range-hdr">
+        <h3>Verse Range</h3>
+        <button class="vs-range-close-btn" onclick="closeVSRangePicker()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <p class="vs-range-hint">Tap start verse, then tap end verse</p>
+      <div class="vs-range-selection" id="vsRangeSelection">Tap a verse to begin</div>
+      <div class="vs-range-grid" id="vsRangeGrid"></div>
+      <button class="vs-range-apply-btn" id="vsRangeApplyBtn" onclick="applyVSRange()" disabled>Apply Range</button>
+    </div>
+  </div>
+
 </div><!-- end #verseStructureModal -->
+
+<!-- ══ Cross-Reference Pages (top-level fixed, above all modals) ══════════ -->
+<div class="rhema-xref-page hidden" id="rhemaXrefPage">
+<div class="rx-page-header">
+<button class="rx-icon-btn" onclick="rhemaCrossRefBack()"><span class="material-symbols-outlined">arrow_back</span></button>
+<h2 id="rxPageTitle">Cross References</h2>
+<button class="rx-icon-btn" onclick="openRhemaCrossRefInfo()"><span class="material-symbols-outlined">info</span></button>
+</div>
+<div class="rx-breadcrumb hidden" id="rxBreadcrumb">
+<div class="rx-breadcrumb-scroll" id="rxBreadcrumbScroll"></div>
+<button class="rx-breadcrumb-clear" onclick="clearRhemaXrefBreadcrumb()" aria-label="Clear trail"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="rx-scroll" id="rxMainView"></div>
+</div>
+<div class="rhema-xref-page hidden" id="rhemaXrefSelectPage">
+<div class="rx-page-header">
+<button class="rx-icon-btn" onclick="closeRhemaCrossRefSelect()"><span class="material-symbols-outlined">close</span></button>
+<h2>Select Reference</h2>
+<span class="rx-header-spacer"></span>
+</div>
+<div class="rx-scroll">
+<section class="rx-select-section">
+<h3>1. Testament</h3>
+<div class="rx-testament-grid" id="rxTestamentGrid"></div>
+</section>
+<section class="rx-select-section">
+<h3>2. Book</h3>
+<button class="rx-book-btn" id="rxBookBtn" onclick="openRxBookPicker()">
+<span class="material-symbols-outlined">menu_book</span>
+<span id="rxBookBtnLabel">Select Book</span>
+<span class="material-symbols-outlined rx-book-btn-chevron">expand_more</span>
+</button>
+</section>
+<div class="rhema-picker-overlay hidden" id="rxBookPickerOverlay" onclick="closeRxBookPicker()">
+<div class="rhema-picker-sheet" onclick="event.stopPropagation()">
+<div class="rhema-picker-hdr">
+<button class="rhema-picker-back hidden" id="rhemaBookPickerBack" onclick="rhemaRenderBookList();event.stopPropagation()" type="button">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="rhema-picker-title" id="rhemaBookPickerTitle">Select Book</span>
+<button class="rhema-picker-x" onclick="closeRxBookPicker()">✕</button>
+</div>
+<div class="rhema-picker-search-row">
+<span class="material-symbols-outlined rhema-picker-search-icon">search</span>
+<input class="rhema-picker-search-input" id="rxBookSearchInput" oninput="rxFilterBooks(this.value)" placeholder="Search books…"/>
+</div>
+<div class="rhema-book-list" id="rxBookList"></div>
+</div>
+</div>
+<section class="rx-select-section">
+<h3>3. Chapter</h3>
+<div class="rx-number-grid" id="rxChapterGrid"></div>
+</section>
+<section class="rx-select-section">
+<h3>4. Verse</h3>
+<div class="rx-number-grid rx-verse-grid" id="rxVerseGrid"></div>
+</section>
+<div class="rx-selected-card" id="rxSelectedCard"></div>
+<button class="rx-primary-btn" onclick="applyRhemaXrefSelection()">View Cross References</button>
+</div>
+</div>
+<div class="rhema-xref-info hidden" id="rhemaXrefInfoModal" onclick="closeRhemaCrossRefInfo(event)">
+<div class="rhema-xref-info-card" onclick="event.stopPropagation()">
+<button class="sheet-x-close" onclick="closeRhemaCrossRefInfo()"><span class="material-symbols-outlined">close</span></button>
+<p>Cross references help you compare Scripture with Scripture. These links show verses that share direct wording, themes, Old/New Testament connections, parallel ideas, or prophecy fulfillment relationships.</p>
+</div>
+</div>
+<div class="rx-trail-save-overlay hidden" id="rxTrailSaveModal" onclick="rxTrailSaveDismiss()">
+<div class="rx-trail-save-card" onclick="event.stopPropagation()">
+<div class="rx-trail-save-icon"><span class="material-symbols-outlined">bookmark_add</span></div>
+<h3>Name Your Trail</h3>
+<p>Give this cross-reference journey a title</p>
+<input class="rx-trail-save-input" id="rxTrailSaveInput" type="text" placeholder="Trail name…" maxlength="60" onkeydown="if(event.key==='Enter')rxTrailSaveConfirm()"/>
+<button class="rx-primary-btn" onclick="rxTrailSaveConfirm()"><span class="material-symbols-outlined">bookmark</span>Save Trail</button>
+<button class="rx-trail-save-cancel" onclick="rxTrailSaveDismiss()">Cancel</button>
+</div>
+</div>
 
 </body>
 </html>

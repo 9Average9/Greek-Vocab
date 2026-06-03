@@ -95,21 +95,35 @@ function _xrefEscape(value) {
 }
 
 async function openRhemaCrossReferences(forceCoach = false) {
-  closeRhemaWheel();
+  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
+  if (!inVsCtx && typeof closeRhemaWheel === 'function') closeRhemaWheel();
   await loadRhemaScripts();
-  _rhemaXrefEnglishVersion = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
+  // In VS context use the selected VS translation, else use Rhema's current translation
+  if (inVsCtx && typeof _vsTranslation !== 'undefined') {
+    _rhemaXrefEnglishVersion = _vsTranslation;
+  } else {
+    _rhemaXrefEnglishVersion = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
+  }
   _rhemaXrefActive = { book: _rhemaBook || 'JOH', chapter: _rhemaChapter || '1', verse: _rhemaVerse || '1' };
   _rhemaXrefBreadcrumb = [_xrefKey(_rhemaXrefActive)];
   _rhemaXrefCursor = 0;
   _rhemaXrefCategory = null;
   renderRhemaCrossReferences();
-  setTimeout(() => {
-    if (typeof startCrossRefCoach === 'function') startCrossRefCoach(forceCoach);
-  }, 160);
+  if (!inVsCtx) {
+    setTimeout(() => {
+      if (typeof startCrossRefCoach === 'function') startCrossRefCoach(forceCoach);
+    }, 160);
+  }
 }
 
 function setRhemaXrefEnglishVersion(version) {
-  _rhemaXrefEnglishVersion = version === 'BSB' ? 'BSB' : 'MSB';
+  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
+  if (inVsCtx) {
+    // Accept all 5 translations in VS context
+    _rhemaXrefEnglishVersion = ['MSB','BSB','NIV','NKJV','NASB'].includes(version) ? version : 'MSB';
+  } else {
+    _rhemaXrefEnglishVersion = version === 'BSB' ? 'BSB' : 'MSB';
+  }
   if (_rhemaXrefView === 'trail') renderRhemaXrefTrail();
   else renderRhemaCrossReferences();
 }
@@ -117,30 +131,52 @@ function setRhemaXrefEnglishVersion(version) {
 function _showRhemaXrefShell(view) {
   document.getElementById('rhemaXrefPage')?.classList.toggle('hidden', view === 'select');
   document.getElementById('rhemaXrefSelectPage')?.classList.toggle('hidden', view !== 'select');
-  document.getElementById('rhemaModal')?.classList.add('xref-open');
-  document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
+  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
+  if (!inVsCtx) {
+    document.getElementById('rhemaModal')?.classList.add('xref-open');
+    document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
+  }
 }
 
 function _closeRhemaXrefShell() {
   document.getElementById('rhemaXrefPage')?.classList.add('hidden');
   document.getElementById('rhemaXrefSelectPage')?.classList.add('hidden');
   document.getElementById('rhemaXrefInfoModal')?.classList.add('hidden');
-  document.getElementById('rhemaModal')?.classList.remove('xref-open');
-  if (_studySandboxId) document.querySelector('.rhema-sandbox-arrows')?.classList.add('visible');
+  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
+  if (!inVsCtx) {
+    document.getElementById('rhemaModal')?.classList.remove('xref-open');
+    if (_studySandboxId) document.querySelector('.rhema-sandbox-arrows')?.classList.add('visible');
+  }
+  // Reset VS context flag so next open from Rhema works normally
+  if (inVsCtx && typeof _vsXrefContext !== 'undefined') _vsXrefContext = false;
+}
+
+function _xrefTopCardText() {
+  const v = _xrefEnglishVersion();
+  if (v === 'MSB' || v === 'BSB') return _xrefEnglishText(_rhemaXrefActive);
+  // VS context with API translation: try cache, fall back to MSB
+  if (typeof _vsTextCache !== 'undefined') {
+    const key = `${v}|${_rhemaXrefActive.book}|${_rhemaXrefActive.chapter}|${_rhemaXrefActive.verse}`;
+    const cached = _vsTextCache.get(key);
+    if (cached) return cached;
+  }
+  return _xrefEnglishText(_rhemaXrefActive);
 }
 
 function _xrefTopCardHtml() {
   const ref = _xrefKey();
+  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
+  const versions = inVsCtx ? ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'] : ['MSB', 'BSB'];
   return `<div class="rx-top-card" role="button" tabindex="0" onclick="openRhemaCrossRefSelect()" onkeydown="if(event.key==='Enter'||event.key===' ')openRhemaCrossRefSelect()">
     <div class="rx-top-card-copy">
       <h3>${_xrefEscape(_xrefDisplay(ref))}</h3>
-      <p>${_xrefEscape(_xrefEnglishText(_rhemaXrefActive))}</p>
+      <p>${_xrefEscape(_xrefTopCardText())}</p>
       <span class="rx-change"><span class="material-symbols-outlined">touch_app</span>Tap to change verse</span>
     </div>
     <span class="material-symbols-outlined rx-top-watermark">auto_stories</span>
   </div>
   <div class="rx-translation-toggle" aria-label="English translation">
-    ${['MSB', 'BSB'].map(version => `<button class="${_xrefEnglishVersion() === version ? 'active' : ''}" onclick="setRhemaXrefEnglishVersion('${version}')">${version}</button>`).join('')}
+    ${versions.map(version => `<button class="${_xrefEnglishVersion() === version ? 'active' : ''}" onclick="setRhemaXrefEnglishVersion('${version}')">${version}</button>`).join('')}
   </div>`;
 }
 
@@ -239,7 +275,8 @@ function rhemaXrefFollow(ref) {
   _rhemaXrefBreadcrumb.push(_xrefKey(parsed));
   _rhemaXrefCursor = _rhemaXrefBreadcrumb.length - 1;
   _rhemaXrefCategory = null;
-  syncRhemaPicker();
+  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
+  if (!inVsCtx && typeof syncRhemaPicker === 'function') syncRhemaPicker();
   renderRhemaCrossReferences();
 }
 
@@ -252,7 +289,8 @@ function rhemaXrefJumpBreadcrumb(idx) {
   _rhemaChapter = parsed.chapter;
   _rhemaVerse = parsed.verse;
   _rhemaXrefCategory = null;
-  syncRhemaPicker();
+  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
+  if (!inVsCtx && typeof syncRhemaPicker === 'function') syncRhemaPicker();
   renderRhemaCrossReferences();
 }
 
@@ -371,7 +409,8 @@ function applyRhemaXrefSelection() {
   _rhemaXrefBreadcrumb = [_xrefKey(_rhemaXrefActive)];
   _rhemaXrefCursor = 0;
   _rhemaXrefCategory = null;
-  syncRhemaPicker();
+  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
+  if (!inVsCtx && typeof syncRhemaPicker === 'function') syncRhemaPicker();
   renderRhemaCrossReferences();
 }
 
