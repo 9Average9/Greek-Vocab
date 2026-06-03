@@ -25820,8 +25820,10 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 /* ── VS Structure Workspace ──────────────────────────────────────────────── */
 .vs-struct-modal {
   position: fixed; inset: 0; z-index: 1155;
-  display: flex; flex-direction: column;
+  display: none;
+  flex-direction: column;
   background: var(--bg-color);
+  will-change: transform;
   transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
   transform: translateY(100%);
 }
@@ -25873,12 +25875,15 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .vs-struct-canvas-wrap {
   flex: 1; overflow: auto; position: relative;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--bg-color);
 }
 .vs-struct-canvas {
   position: relative;
   width: 2200px; height: 2000px;
   touch-action: pan-x pan-y;
+  background: var(--bg-color);
 }
 .vs-struct-canvas.edit-mode { touch-action: none; }
 
@@ -25902,8 +25907,8 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 }
 .vs-struct-seg.edit-mode { cursor: grab; }
 .vs-struct-word {
-  font-size: 0.95rem; font-weight: 500; color: var(--font-color);
-  padding: 3px 5px; border-radius: 6px;
+  font-size: 1.3rem; font-weight: 500; color: var(--font-color);
+  padding: 3px 6px; border-radius: 6px;
   cursor: default;
   transition: background 0.1s;
 }
