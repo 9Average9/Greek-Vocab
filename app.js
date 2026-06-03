@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.104";
+const APP_VERSION = "3.0.105";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.105 &mdash; Friend Praise Prompt Fix</div>
+<ul>
+  <li><strong>Friend names fixed in Praises</strong> &mdash; Friend encouragement prompts now use the selected friend's actual name instead of the placeholder text.</li>
+  <li><strong>Prompt logic tightened</strong> &mdash; Manual friend prompts and weekly friend reminders now use the same friend-specific wording path.</li>
+</ul>
 <div class="un-version-label">v3.0.104 &mdash; English Rhema Highlighting</div>
 <ul>
   <li><strong>English highlighting added</strong> &mdash; The Rhema highlighter now works in MSB and BSB by tagging English parts of speech with winkNLP.</li>
@@ -20382,9 +20387,22 @@ function _mercyPromptToday() {
   return MERCY_PROMPTS[Math.floor(Date.now() / 86400000) % MERCY_PROMPTS.length];
 }
 
+function _mercyCleanFriendName(friendName = "") {
+  const name = String(friendName || "").trim();
+  if (!name || /^tag (one|another) friend/i.test(name)) return "your friend";
+  return name;
+}
+
 function _mercyFriendPrompt(friendName = "your friend") {
   const prompt = MERCY_FRIEND_PROMPTS[Math.floor(Math.random() * MERCY_FRIEND_PROMPTS.length)];
-  return prompt.replaceAll("[friend]", friendName);
+  return prompt.replaceAll("[friend]", _mercyCleanFriendName(friendName));
+}
+
+function _mercyFriendPromptText(promptText, friendName = "your friend") {
+  const cleanName = _mercyCleanFriendName(friendName);
+  const text = String(promptText || "").trim();
+  if (!text || /^Encourage .+ with a praise this week\.$/i.test(text)) return _mercyFriendPrompt(cleanName);
+  return text.replaceAll("[friend]", cleanName).replace(/Tag one friend \(optional\)/gi, cleanName);
 }
 
 function showMerciesView(view) {
@@ -20468,7 +20486,7 @@ function savePendingMercyFriendEncouragement(friendUid, friendName = 'your frien
   const pending = {
     friendUid,
     friendName,
-    promptText: _mercyFriendPrompt(friendName),
+    promptText: _mercyFriendPromptText('', friendName),
     createdAtMs: Date.now(),
     expiresAtMs: Date.now() + 24 * 60 * 60 * 1000
   };
@@ -20486,7 +20504,7 @@ function syncPendingMercyFriendEncouragement(pending) {
   const normalized = {
     friendUid: pending.friendUid,
     friendName: pending.friendName || 'your friend',
-    promptText: pending.promptText || _mercyFriendPrompt(pending.friendName || 'your friend'),
+    promptText: _mercyFriendPromptText(pending.promptText, pending.friendName || 'your friend'),
     createdAtMs: Number(pending.createdAtMs || Date.now()),
     expiresAtMs: Number(pending.expiresAtMs || Date.now() + 24 * 60 * 60 * 1000)
   };
@@ -20537,8 +20555,9 @@ function openPendingMercyFriendEncouragement() {
   if (!pending) return;
   openMercyComposer({
     friendUid: pending.friendUid,
+    friendName: pending.friendName || 'your friend',
     lockedFriend: true,
-    promptText: pending.promptText || _mercyFriendPrompt(pending.friendName || 'your friend')
+    promptText: _mercyFriendPromptText(pending.promptText, pending.friendName || 'your friend')
   });
 }
 
@@ -20634,8 +20653,20 @@ function openMercyComposer(prefill = {}) {
   _mercyLockedFriendUid = prefill.lockedFriend ? (prefill.friendUid || null) : null;
   _mercyPromptMode = prefill.friendUid ? 'friend' : 'regular';
   clearMercyPhoto();
+  _populateMercyFriendSelect(prefill.friendUid || '', prefill.friendName || '', prefill.promptText || '');
+  if (prefill.friendUid && prefill.friendName) {
+    const sel = document.getElementById('mercyFriendSelect');
+    if (sel && ![...sel.options].some(opt => opt.value === prefill.friendUid)) {
+      const opt = document.createElement('option');
+      opt.value = prefill.friendUid;
+      opt.textContent = prefill.friendName;
+      opt.dataset.name = prefill.friendName;
+      opt.selected = true;
+      sel.appendChild(opt);
+    }
+    if (sel) sel.value = prefill.friendUid;
+  }
   _populateMercyPromptSelect(prefill.promptText);
-  _populateMercyFriendSelect(prefill.friendUid || '');
   populateMercyBooks();
   const friendMode = document.getElementById('mercyFriendEncouragement');
   if (friendMode) friendMode.checked = !!prefill.friendUid;
@@ -20701,15 +20732,25 @@ function _currentMercyPromptText() {
 function _populateMercyPromptSelect(selectedText) {
   const sel = document.getElementById('mercyPromptSelect');
   if (!sel) return;
-  const prompts = _mercyPromptMode === 'friend' ? MERCY_FRIEND_PROMPTS.map(p => p.replaceAll('[friend]', _selectedMercyFriendName() || 'your friend')) : MERCY_PROMPTS;
+  const prompts = _mercyPromptMode === 'friend'
+    ? MERCY_FRIEND_PROMPTS.map(p => p.replaceAll('[friend]', _mercyCleanFriendName(_selectedMercyFriendName())))
+    : MERCY_PROMPTS;
   const defaultPrompt = selectedText || (_mercyPromptMode === 'friend' ? prompts[0] : _mercyPromptToday());
   sel.innerHTML = prompts.map(p => `<option value="${_lbEscape(p)}"${p === defaultPrompt ? ' selected' : ''}>${_lbEscape(p)}</option>`).join('');
 }
 
-function _populateMercyFriendSelect(selectedUid = '') {
+function _populateMercyFriendSelect(selectedUid = '', selectedName = '', selectedPromptText = '') {
   const sel = document.getElementById('mercyFriendSelect');
   _fillMercyFriendSelect(sel, selectedUid, 'Tag one friend (optional)');
-  setTimeout(() => _populateMercyPromptSelect(), 150);
+  if (sel && selectedUid && selectedName && ![...sel.options].some(opt => opt.value === selectedUid)) {
+    const opt = document.createElement('option');
+    opt.value = selectedUid;
+    opt.textContent = selectedName;
+    opt.dataset.name = selectedName;
+    opt.selected = true;
+    sel.appendChild(opt);
+  }
+  setTimeout(() => _populateMercyPromptSelect(selectedPromptText), 150);
 }
 
 function addMercyFriendTag(selectedUid = '') {
@@ -20815,7 +20856,9 @@ function selectMercyFriend(selectId, uid, name) {
 }
 
 function _selectedMercyFriendName() {
-  const opt = document.getElementById('mercyFriendSelect')?.selectedOptions?.[0];
+  const sel = document.getElementById('mercyFriendSelect');
+  if (!sel?.value) return '';
+  const opt = sel.selectedOptions?.[0];
   return opt?.dataset?.name || opt?.textContent || '';
 }
 

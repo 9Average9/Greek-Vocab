@@ -363,6 +363,29 @@ function randomPraisePrompt() {
   return PRAISE_PROMPTS[Math.floor(Math.random() * PRAISE_PROMPTS.length)];
 }
 
+const PRAISE_FRIEND_PROMPTS = [
+  "What is one way {friend} has encouraged you?",
+  "What is something you appreciate about {friend}?",
+  "What is one Christlike quality you see in {friend}?",
+  "What is a time {friend} made you smile?",
+  "What is one way God has used {friend} to bless your life?",
+  "What is one strength you see in {friend}?",
+  "What is one memory with {friend} you are thankful for?",
+  "What is a verse or truth that reminds you of {friend}?",
+  "How has {friend} been faithful, kind, or steady?",
+  "What prayer would you write for {friend} this week?"
+];
+
+function cleanPraiseFriendName(friendName) {
+  const name = String(friendName || "").trim();
+  return name || "your friend";
+}
+
+function randomPraiseFriendPrompt(friendName) {
+  const prompt = PRAISE_FRIEND_PROMPTS[Math.floor(Math.random() * PRAISE_FRIEND_PROMPTS.length)];
+  return prompt.replace(/{friend}/g, cleanPraiseFriendName(friendName));
+}
+
 async function backfillReminderNextSendAt(now) {
   if (now.getUTCMinutes() !== 0 || now.getUTCHours() % 6 !== 0) return;
   const snap = await db.collection("users")
@@ -472,16 +495,17 @@ exports.sendScheduledReminders = functions.pubsub
       const friendUid = friends[Math.floor(Math.random() * friends.length)];
       const friendSnap = await db.collection("users").doc(friendUid).get();
       const friendName = friendSnap.exists ? (friendSnap.data().displayName || friendSnap.data().username || "a friend") : "a friend";
+      const promptText = randomPraiseFriendPrompt(friendName);
       const pendingPrompt = {
         friendUid,
         friendName,
-        promptText: `Encourage ${friendName} with a praise this week.`,
+        promptText,
         createdAtMs: now.getTime(),
         expiresAtMs: now.getTime() + 24 * 60 * 60 * 1000
       };
       await userDoc.ref.update({ pendingMercyFriendEncouragement: pendingPrompt });
       await sendToUserTokens(userDoc.ref, tokens, {
-        notification: { title: "Praises", body: `Encourage ${friendName} with a praise this week.` },
+        notification: { title: "Praises", body: promptText },
         data: { open: "mercies", friendUid, friendName },
         webpush: { fcmOptions: { link: `/Greek-Vocab/?open=mercies&friend=${encodeURIComponent(friendUid)}` }, notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } }
       }, `mercy friend reminder ${userDoc.id}`);
