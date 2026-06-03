@@ -25819,7 +25819,9 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 
 /* ── VS Structure Workspace ──────────────────────────────────────────────── */
 .vs-struct-modal {
-  position: fixed; inset: 0; z-index: 1155;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9990;
   display: none;
   flex-direction: column;
   background: var(--bg-color);
@@ -25926,7 +25928,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 
 /* Struct picker modal */
 .vs-struct-picker-modal {
-  position: fixed; inset: 0; z-index: 1150;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9985;
   display: flex; align-items: flex-end; justify-content: center;
   background: rgba(0,0,0,0.45);
   opacity: 0; pointer-events: none;
@@ -25983,7 +25985,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 
 /* Struct info sheet */
 .vs-struct-info-modal {
-  position: fixed; inset: 0; z-index: 1165;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9995;
   display: flex; align-items: flex-end; justify-content: center;
   background: rgba(0,0,0,0.45);
   opacity: 0; pointer-events: none;
@@ -26008,7 +26010,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 
 /* ── VS Saved Structures Browser ─────────────────────────────────────────── */
 .vs-struct-browser-modal {
-  position: fixed; inset: 0; z-index: 1150;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9985;
   display: flex; align-items: flex-end; justify-content: center;
   background: rgba(0,0,0,0.45);
   opacity: 0; pointer-events: none;

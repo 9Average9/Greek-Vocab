@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.110";
+const APP_VERSION = "3.0.111";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.111 &mdash; Structure True Isolation</div>
+<ul>
+  <li><strong>VS screen hidden while structure is open</strong> &mdash; The Verse Structure modal is now fully hidden (not just covered) when the structure workspace opens, eliminating all overlap and bleed-through.</li>
+  <li><strong>Z-index raised to 9990+</strong> &mdash; Structure workspace and its sheets now sit above every other layer in the app.</li>
+  <li><strong>inset shorthand replaced</strong> &mdash; Explicit top/left/right/bottom for broader browser compatibility.</li>
+</ul>
 <div class="un-version-label">v3.0.110 &mdash; Structure Isolation Fix</div>
 <ul>
   <li><strong>Fully isolated canvas</strong> &mdash; Structure workspace now starts as a hidden layer and only enters the rendering stack when opened, preventing any bleed-through from the Verse Structure screen beneath it.</li>
