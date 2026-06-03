@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.105";
+const APP_VERSION = "3.0.106";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.106 &mdash; Verse Structure</div>
+<ul>
+  <li><strong>Verse Structure added</strong> &mdash; A new quick action on the Home screen lets you read any verse in NIV, NKJV, NASB, MSB, or BSB side-by-side using api.bible for the licensed translations.</li>
+  <li><strong>Full reference selector</strong> &mdash; Pick any Old or New Testament book, chapter, and verse using the same pill-based picker as Rhema.</li>
+  <li><strong>English POS highlighting</strong> &mdash; The same Verb, Noun, Adjective, and other part-of-speech highlights from Rhema are available for all translations.</li>
+  <li><strong>Cross-reference button</strong> &mdash; Tap the hub icon to jump straight into Rhema cross-references for the current verse.</li>
+  <li><strong>Matches Home theme</strong> &mdash; The Verse Structure tile on the Home screen adopts your accent color when Match Home Theme is on.</li>
+</ul>
 <div class="un-version-label">v3.0.105 &mdash; Friend Praise Prompt Fix</div>
 <ul>
   <li><strong>Friend names fixed in Praises</strong> &mdash; Friend encouragement prompts now use the selected friend's actual name instead of the placeholder text.</li>
