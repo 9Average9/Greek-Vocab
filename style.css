@@ -25830,8 +25830,10 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .vs-struct-header {
   display: flex; align-items: center; gap: 8px;
   padding: 14px 16px 10px;
+  padding-top: max(14px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+  background: var(--bg-color);
 }
 .vs-struct-back {
   width: 36px; height: 36px; border-radius: 50%; border: 0;
@@ -25871,6 +25873,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .vs-struct-canvas-wrap {
   flex: 1; overflow: auto; position: relative;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .vs-struct-canvas {
   position: relative;
@@ -25883,21 +25886,19 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   position: absolute;
   display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
   padding: 10px 14px;
-  background: var(--card-color);
-  border: 1.5px solid var(--border-color);
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   cursor: default;
   user-select: none;
   -webkit-user-select: none;
   max-width: 320px;
-  transition: box-shadow 0.15s, border-color 0.15s;
+  transition: opacity 0.15s;
 }
 .vs-struct-seg.dragging {
-  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-  border-color: var(--secondary-color);
+  opacity: 0.75;
   z-index: 100;
-  opacity: 0.92;
 }
 .vs-struct-seg.edit-mode { cursor: grab; }
 .vs-struct-word {
@@ -25931,7 +25932,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   width: 100%; max-width: 480px;
   background: var(--card-color);
   border-radius: 20px 20px 0 0;
-  padding: 20px 20px 32px;
+  padding: 20px 20px calc(32px + env(safe-area-inset-bottom, 0px));
   transform: translateY(30px);
   transition: transform 0.22s cubic-bezier(0.32,0.72,0,1);
 }
@@ -25961,6 +25962,19 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   margin-top: 8px;
 }
 .vs-struct-picker-open-btn:active { opacity: 0.85; }
+
+.vs-struct-name-input {
+  width: 100%; height: 44px; border-radius: 12px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-color); color: var(--font-color);
+  font-size: 0.95rem; padding: 0 12px;
+  box-sizing: border-box; margin-bottom: 12px;
+  outline: none;
+}
+.vs-struct-name-input:focus {
+  border-color: var(--secondary-color);
+}
+.vs-struct-name-input::placeholder { color: var(--muted-color); }
 
 /* Struct info sheet */
 .vs-struct-info-modal {
@@ -26000,7 +26014,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   width: 100%; max-width: 480px;
   background: var(--card-color);
   border-radius: 20px 20px 0 0;
-  padding: 0 0 40px;
+  padding: 0 0 calc(40px + env(safe-area-inset-bottom, 0px));
   max-height: 78vh;
   display: flex; flex-direction: column;
   transform: translateY(30px);
