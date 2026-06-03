@@ -13888,9 +13888,9 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 
 /* Scripture Trail Cross References */
 .rhema-xref-page {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 1120;
+  z-index: 1200;
   display: flex;
   flex-direction: column;
   background: var(--primary-color);
@@ -14323,9 +14323,9 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   line-height: 1.6;
 }
 .rhema-xref-info {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 1160;
+  z-index: 1210;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25483,7 +25483,8 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .vs-title-sub {
   display: block; font-size: 0.71rem; color: var(--muted-color); margin-top: 1px;
 }
-.vs-xref-btn {
+.vs-tool-btn {
+  position: relative;
   width: 36px; height: 36px; border-radius: 50%;
   background: color-mix(in srgb, var(--secondary-color) 12%, transparent);
   border: 1.5px solid color-mix(in srgb, var(--secondary-color) 30%, var(--border-color));
@@ -25492,9 +25493,20 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   display: flex; align-items: center; justify-content: center;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s;
+  flex-shrink: 0;
 }
-.vs-xref-btn:active { background: color-mix(in srgb, var(--secondary-color) 22%, transparent); }
-.vs-xref-btn .material-symbols-outlined { font-size: 1.2rem; }
+.vs-tool-btn:active { background: color-mix(in srgb, var(--secondary-color) 22%, transparent); }
+.vs-tool-btn .material-symbols-outlined { font-size: 1.2rem; }
+.vs-tool-dot {
+  position: absolute;
+  top: 3px; right: 3px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--secondary-color);
+  opacity: 0;
+  transition: opacity 0.18s;
+  pointer-events: none;
+}
+.vs-tool-dot.active { opacity: 1; }
 
 /* Reference picker row */
 .vs-picker {
@@ -25621,4 +25633,182 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 #vsVersePreview strong {
   display: block; color: var(--secondary-color);
   font-size: 0.85rem; font-weight: 800; margin-bottom: 4px;
+}
+
+/* ── VS Wheel Overlay ──────────────────────────────────────────────────── */
+.vs-slide { position: relative; }
+.vs-wheel-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--secondary-color) 14%, rgba(0,0,0,0.32));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+.vs-wheel-overlay.open { opacity: 1; }
+.vs-wheel { position: relative; width: 0; height: 0; }
+.vs-wheel-center {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--card-color);
+  border: 2px solid var(--border-color);
+  color: var(--font-color);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-wheel-center .material-symbols-outlined { font-size: 20px; }
+.vs-wheel-item {
+  position: absolute;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  width: 78px; height: 78px;
+  border-radius: 50%;
+  background: var(--card-color);
+  border: 2px solid var(--border-color);
+  color: var(--font-color);
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-wheel-item .material-symbols-outlined { font-size: 22px; }
+.vs-wheel-item .rwi-label { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; opacity: 0.8; line-height: 1.05; }
+.vs-wheel-item.active {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: #fff;
+}
+/* Triangle positions (r=90px): top = Cross-Ref, bottom-right = Highlight, bottom-left = Chapter */
+.vs-wheel-overlay.open .vs-wheel-item:nth-child(1) { transform: translate(calc(-50% + 0px),   calc(-50% + -90px)) scale(1); opacity: 1; transition-delay: 0s; }
+.vs-wheel-overlay.open .vs-wheel-item:nth-child(2) { transform: translate(calc(-50% + 78px),  calc(-50% + 45px))  scale(1); opacity: 1; transition-delay: 0.05s; }
+.vs-wheel-overlay.open .vs-wheel-item:nth-child(3) { transform: translate(calc(-50% + -78px), calc(-50% + 45px))  scale(1); opacity: 1; transition-delay: 0.1s; }
+
+/* ── VS Range Button ───────────────────────────────────────────────────── */
+.vs-range-btn {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 3px;
+  padding: 6px 11px 6px 13px; border-radius: 20px;
+  background: var(--card-color);
+  border: 1.5px solid var(--border-color);
+  color: var(--font-color); font-size: 0.8rem; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-range-btn:active { background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color)); }
+.vs-range-btn .material-symbols-outlined { font-size: 1rem; opacity: 0.55; }
+.vs-range-btn.vs-range-active {
+  background: color-mix(in srgb, var(--secondary-color) 14%, var(--card-color));
+  border-color: var(--secondary-color);
+  color: var(--secondary-color);
+}
+
+/* ── VS Range Picker Overlay ───────────────────────────────────────────── */
+.vs-range-overlay {
+  position: absolute; inset: 0; z-index: 1050;
+  background: rgba(0,0,0,0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.vs-range-overlay.hidden { display: none; }
+.vs-range-sheet {
+  width: 100%; max-height: 82svh;
+  background: var(--primary-color);
+  border-radius: 24px 24px 0 0;
+  border-top: 1.5px solid var(--border-color);
+  overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  -webkit-overflow-scrolling: touch;
+}
+.vs-range-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky; top: 0; background: var(--primary-color); z-index: 1;
+}
+.vs-range-hdr h3 { margin: 0; font-size: 0.88rem; font-weight: 800; color: var(--font-color); }
+.vs-range-close-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--font-color); display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-range-hint {
+  font-size: 0.74rem; color: var(--muted-color);
+  padding: 10px 20px 4px;
+}
+.vs-range-selection {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 20px 10px;
+  font-size: 0.85rem; font-weight: 800; color: var(--secondary-color);
+  min-height: 36px;
+}
+.vs-range-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  padding: 4px 16px 16px;
+}
+.vs-range-grid button {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--card-color);
+  border: 1.5px solid var(--border-color);
+  color: var(--font-color); font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: all 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-range-grid button.range-start,
+.vs-range-grid button.range-end {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: #fff;
+}
+.vs-range-grid button.range-mid {
+  background: color-mix(in srgb, var(--secondary-color) 22%, var(--card-color));
+  border-color: color-mix(in srgb, var(--secondary-color) 40%, var(--border-color));
+  color: var(--font-color);
+}
+.vs-range-apply-btn {
+  display: block; width: calc(100% - 32px); margin: 4px 16px 16px;
+  padding: 13px; border-radius: 14px;
+  background: var(--secondary-color); color: #fff;
+  border: none; font-size: 0.9rem; font-weight: 800;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.vs-range-apply-btn:disabled { opacity: 0.45; cursor: default; }
+
+/* ── VS Full Chapter View ──────────────────────────────────────────────── */
+.vs-chapter-view { width: 100%; }
+.vs-chapter-verse {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+}
+.vs-chapter-verse:last-child { border-bottom: none; }
+.vs-verse-num {
+  flex-shrink: 0;
+  font-size: 0.72rem; font-weight: 800;
+  color: var(--secondary-color);
+  min-width: 22px; text-align: right;
+  line-height: 1.75;
+  margin-top: 2px;
+}
+.vs-verse-text-inline {
+  font-size: 1.1rem; line-height: 1.75; color: var(--font-color); font-weight: 400;
 }

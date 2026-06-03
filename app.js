@@ -18716,11 +18716,13 @@ const RHEMA_DATA_VERSIONS = {
 const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.106 &mdash; Verse Structure</div>
 <ul>
-  <li><strong>Verse Structure added</strong> &mdash; A new quick action on the Home screen lets you read any verse in NIV, NKJV, NASB, MSB, or BSB side-by-side using api.bible for the licensed translations.</li>
-  <li><strong>Full reference selector</strong> &mdash; Pick any Old or New Testament book, chapter, and verse using the same pill-based picker as Rhema.</li>
-  <li><strong>English POS highlighting</strong> &mdash; The same Verb, Noun, Adjective, and other part-of-speech highlights from Rhema are available for all translations.</li>
-  <li><strong>Cross-reference button</strong> &mdash; Tap the hub icon to jump straight into Rhema cross-references for the current verse.</li>
-  <li><strong>Matches Home theme</strong> &mdash; The Verse Structure tile on the Home screen adopts your accent color when Match Home Theme is on.</li>
+  <li><strong>Verse Structure added</strong> &mdash; A new quick action on the Home screen lets you read any verse in NIV, NKJV, NASB, MSB, or BSB using api.bible for the licensed translations.</li>
+  <li><strong>Tool wand wheel</strong> &mdash; Cross-Ref, Highlight, and Full Chapter live in an animated radial wheel in the header, matching Rhema's wand button.</li>
+  <li><strong>Combined reference pill + range selector</strong> &mdash; Book, chapter, and verse are shown in one pill; a range button lets you select a verse span like 5–12.</li>
+  <li><strong>Full Chapter mode</strong> &mdash; Tap the Chapter wheel item to load all verses at once; prev/next navigates chapter-by-chapter.</li>
+  <li><strong>Cross-ref fix</strong> &mdash; Cross-references now open above the VS modal, and closing returns to VS instead of Rhema.</li>
+  <li><strong>All 5 translations in cross-ref</strong> &mdash; NIV, NKJV, and NASB chips appear in the cross-reference toggle when opened from Verse Structure.</li>
+  <li><strong>Matches Home theme</strong> &mdash; The Verse Structure tile adopts your accent color when Match Home Theme is on.</li>
 </ul>
 <div class="un-version-label">v3.0.105 &mdash; Friend Praise Prompt Fix</div>
 <ul>

@@ -13,18 +13,23 @@ const VS_BOOK_CODE_MAP = {
 const VS_LOCAL_SET    = new Set(['MSB', 'BSB']);
 const VS_TRANSLATIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
 
-const VS_TRANS_LABELS = {
-  MSB: 'MSB', BSB: 'BSB', NIV: 'NIV', NKJV: 'NKJV', NASB: 'NASB'
-};
-
 // ── State ─────────────────────────────────────────────────────────────────────
 let _vsBook        = 'JOH';
 let _vsChapter     = '3';
 let _vsVerse       = '16';
+let _vsVerseEnd    = null;   // null = single verse, '20' = range end
+let _vsFullChapter = false;
 let _vsTranslation = 'MSB';
 let _vsPickerTesta = 'NT';
 let _vsHlOn        = false;
 let _vsPosActive   = new Set();
+let _vsWheelOpen   = false;
+let _vsXrefContext = false;  // true when xref was opened from VS (not Rhema)
+
+// Range picker tap state: 'start' | 'end'
+let _vsRangeTapState = 'start';
+let _vsRangeStart    = null;
+let _vsRangeEndPick  = null;
 
 // api.bible Bible-ID cache
 let _vsBibleIds       = null;
@@ -58,6 +63,16 @@ function _vsLocalText(trans, book, ch, v) {
 
 function _vsApiCode(appCode) {
   return VS_BOOK_CODE_MAP[appCode] || appCode;
+}
+
+function _vsChapterVerses(book, ch) {
+  const bData = _vsLocalData()[book] || {};
+  return Object.keys(bData[String(ch)] || {}).sort((a, b) => +a - +b);
+}
+
+function _vsChapterList(book) {
+  const bData = _vsLocalData()[book] || {};
+  return Object.keys(bData).sort((a, b) => +a - +b);
 }
 
 // ── api.bible Integration ─────────────────────────────────────────────────────
@@ -103,18 +118,20 @@ async function _vsFetchVerse(trans, book, ch, v) {
     `?content-type=text&include-notes=false&include-titles=false` +
     `&include-chapter-numbers=false&include-verse-numbers=false`;
 
-  const r = await fetch(url, { headers: { 'api-key': VS_API_KEY } });
-  if (!r.ok) return null;
-
-  const { data } = await r.json();
-  const text = (data?.content || '').trim().replace(/\s+/g, ' ');
-  _vsTextCache.set(key, text);
-  return text;
+  try {
+    const r = await fetch(url, { headers: { 'api-key': VS_API_KEY } });
+    if (!r.ok) return null;
+    const { data } = await r.json();
+    const text = (data?.content || '').trim().replace(/\s+/g, ' ');
+    _vsTextCache.set(key, text);
+    return text;
+  } catch {
+    return null;
+  }
 }
 
 // ── POS Highlighting ──────────────────────────────────────────────────────────
 function _vsNlp() {
-  // _rhemaEnglishNlp is a top-level let in app.js, shared via the global lexical scope
   return typeof _rhemaEnglishNlp !== 'undefined' ? _rhemaEnglishNlp : null;
 }
 
@@ -163,33 +180,57 @@ async function openVerseStructure() {
     requestAnimationFrame(() => modal.classList.add('vs-active'));
   });
 
-  // Ensure local Bible data is loaded
   if (typeof loadRhemaScripts === 'function') {
-    try { await loadRhemaScripts(); } catch { /* continue with API-only */ }
+    try { await loadRhemaScripts(); } catch { /* continue */ }
   }
 
   _vsSyncPills();
   _vsSyncTransRow();
   _vsRenderVerse();
+  _syncVSWheelItems();
   const bar = document.getElementById('vsHighlightBar');
   if (bar) bar.classList.toggle('hidden', !_vsHlOn);
 }
 
 function closeVerseStructure() {
+  closeVSWheel();
   const modal = document.getElementById('verseStructureModal');
   if (!modal) return;
   modal.classList.remove('vs-active');
   setTimeout(() => modal.classList.add('hidden'), 320);
 }
 
-// ── Reference Pills ───────────────────────────────────────────────────────────
+// ── Sync UI ───────────────────────────────────────────────────────────────────
 function _vsSyncPills() {
-  const pb = document.getElementById('vsPillBook');
-  if (pb) pb.textContent = _vsBookName(_vsBook);
-  const pv = document.getElementById('vsPillVerse');
-  if (pv) pv.textContent = `${_vsChapter}:${_vsVerse}`;
-  const rv = document.getElementById('vsVerseRef');
-  if (rv) rv.textContent = `${_vsBookName(_vsBook)} ${_vsChapter}:${_vsVerse}`;
+  const label = document.getElementById('vsPillRefLabel');
+  if (label) {
+    label.textContent = `${_vsBookName(_vsBook)} ${_vsChapter}:${_vsVerse}`;
+  }
+  const rangeLabel = document.getElementById('vsRangeBtnLabel');
+  const rangeBtn   = document.getElementById('vsRangeBtn');
+  if (rangeLabel) {
+    if (_vsFullChapter) {
+      rangeLabel.textContent = 'All';
+    } else if (_vsVerseEnd) {
+      rangeLabel.textContent = `${_vsVerse}–${_vsVerseEnd}`;
+    } else {
+      rangeLabel.textContent = `v${_vsVerse}`;
+    }
+  }
+  if (rangeBtn) {
+    rangeBtn.classList.toggle('vs-range-active', !!_vsVerseEnd || _vsFullChapter);
+    rangeBtn.disabled = _vsFullChapter;
+  }
+  const ref = document.getElementById('vsVerseRef');
+  if (ref) {
+    if (_vsFullChapter) {
+      ref.textContent = `${_vsBookName(_vsBook)} ${_vsChapter}`;
+    } else if (_vsVerseEnd) {
+      ref.textContent = `${_vsBookName(_vsBook)} ${_vsChapter}:${_vsVerse}–${_vsVerseEnd}`;
+    } else {
+      ref.textContent = `${_vsBookName(_vsBook)} ${_vsChapter}:${_vsVerse}`;
+    }
+  }
 }
 
 // ── Book Picker ───────────────────────────────────────────────────────────────
@@ -237,18 +278,17 @@ function vsFilterBooks(q) {
 
 function vsPickTestament(t) {
   _vsPickerTesta = t;
-  if (!_vsAllBooks().find(b => b.code === _vsBook && b.testament === t)) {
-    const first = _vsAllBooks().find(b => b.testament === t);
-    if (first) _vsBook = first.code;
-  }
+  const search = document.getElementById('vsBookSearchInput');
+  if (search) search.value = '';
   _vsRenderBookList();
 }
 
 function vsPickBook(code) {
   _vsBook        = code;
   _vsPickerTesta = _vsAllBooks().find(b => b.code === code)?.testament || 'NT';
-  _vsChapter     = '1';
-  _vsVerse       = '1';
+  _vsChapter     = _vsChapterList(code)[0] || '1';
+  _vsVerse       = _vsChapterVerses(code, _vsChapter)[0] || '1';
+  _vsVerseEnd    = null;
   closeVSBookPicker();
   _vsRenderVersePicker();
   openVSVersePicker();
@@ -268,8 +308,7 @@ function closeVSVersePicker() {
 }
 
 function _vsRenderVersePicker() {
-  const bData = _vsLocalData()[_vsBook] || {};
-  const chs   = Object.keys(bData).sort((a, b) => +a - +b);
+  const chs = _vsChapterList(_vsBook);
   if (!chs.includes(_vsChapter)) _vsChapter = chs[0] || '1';
 
   const cg = document.getElementById('vsChapterGrid');
@@ -279,7 +318,7 @@ function _vsRenderVersePicker() {
     ).join('');
   }
 
-  const vs = Object.keys(bData[_vsChapter] || {}).sort((a, b) => +a - +b);
+  const vs = _vsChapterVerses(_vsBook, _vsChapter);
   if (!vs.includes(_vsVerse)) _vsVerse = vs[0] || '1';
 
   const vg = document.getElementById('vsVerseGrid');
@@ -300,15 +339,151 @@ function _vsRenderVersePicker() {
 
 function vsPickChapter(ch) {
   _vsChapter = ch;
-  _vsVerse   = '1';
+  _vsVerse   = _vsChapterVerses(_vsBook, ch)[0] || '1';
+  _vsVerseEnd = null;
   _vsRenderVersePicker();
 }
 
 function vsPickVerse(v) {
-  _vsVerse = v;
+  _vsVerse    = v;
+  _vsVerseEnd = null;
   closeVSVersePicker();
   _vsSyncPills();
   _vsRenderVerse();
+}
+
+// ── Range Picker ──────────────────────────────────────────────────────────────
+function openVSRangePicker() {
+  if (_vsFullChapter) return;
+  const ov = document.getElementById('vsRangePickerOverlay');
+  if (!ov) return;
+  _vsRangeTapState = 'start';
+  _vsRangeStart    = _vsVerse;
+  _vsRangeEndPick  = _vsVerseEnd || _vsVerse;
+  _vsRenderRangeGrid();
+  ov.classList.remove('hidden');
+}
+
+function closeVSRangePicker() {
+  document.getElementById('vsRangePickerOverlay')?.classList.add('hidden');
+}
+
+function _vsRenderRangeGrid() {
+  const vs = _vsChapterVerses(_vsBook, _vsChapter);
+  const grid = document.getElementById('vsRangeGrid');
+  if (!grid) return;
+
+  const startN = _vsRangeStart ? parseInt(_vsRangeStart, 10) : null;
+  const endN   = _vsRangeEndPick ? parseInt(_vsRangeEndPick, 10) : null;
+
+  grid.innerHTML = vs.map(v => {
+    const n = parseInt(v, 10);
+    let cls = '';
+    if (startN !== null && endN !== null) {
+      if (n === startN && n === endN) cls = 'range-start range-end';
+      else if (n === startN) cls = 'range-start';
+      else if (n === endN)   cls = 'range-end';
+      else if (n > startN && n < endN) cls = 'range-mid';
+    } else if (startN !== null && n === startN) {
+      cls = 'range-start';
+    }
+    return `<button class="${cls}" onclick="vsRangeTap('${v}')">${v}</button>`;
+  }).join('');
+
+  const sel = document.getElementById('vsRangeSelection');
+  if (sel) {
+    if (startN !== null && endN !== null && startN !== endN) {
+      sel.textContent = `Verses ${startN}–${endN}`;
+    } else if (startN !== null) {
+      sel.textContent = `Verse ${startN} selected – tap end verse`;
+    } else {
+      sel.textContent = 'Tap a verse to begin';
+    }
+  }
+
+  const applyBtn = document.getElementById('vsRangeApplyBtn');
+  if (applyBtn) {
+    const hasRange = startN !== null && endN !== null && endN >= startN;
+    applyBtn.disabled = !hasRange;
+  }
+}
+
+function vsRangeTap(v) {
+  const n = parseInt(v, 10);
+  if (_vsRangeTapState === 'start') {
+    _vsRangeStart   = v;
+    _vsRangeEndPick = v;
+    _vsRangeTapState = 'end';
+  } else {
+    const startN = parseInt(_vsRangeStart, 10);
+    if (n < startN) {
+      // Tapped before start: reset start
+      _vsRangeStart    = v;
+      _vsRangeEndPick  = v;
+    } else {
+      _vsRangeEndPick  = v;
+    }
+  }
+  _vsRenderRangeGrid();
+}
+
+function applyVSRange() {
+  const startN = parseInt(_vsRangeStart, 10);
+  const endN   = parseInt(_vsRangeEndPick, 10);
+  if (isNaN(startN) || isNaN(endN) || endN < startN) return;
+
+  _vsVerse    = String(startN);
+  _vsVerseEnd = startN === endN ? null : String(endN);
+  closeVSRangePicker();
+  _vsSyncPills();
+  _vsRenderVerse();
+}
+
+// ── Tool Wheel ────────────────────────────────────────────────────────────────
+function openVSWheel() {
+  const overlay = document.getElementById('vsWheelOverlay');
+  if (!overlay) return;
+  _vsWheelOpen = true;
+  overlay.style.display = 'flex';
+  requestAnimationFrame(() => overlay.classList.add('open'));
+  _syncVSWheelItems();
+}
+
+function closeVSWheel() {
+  const overlay = document.getElementById('vsWheelOverlay');
+  if (!overlay) return;
+  _vsWheelOpen = false;
+  overlay.classList.remove('open');
+  setTimeout(() => { if (!_vsWheelOpen) overlay.style.display = 'none'; }, 280);
+}
+
+function toggleVSWheel() {
+  if (_vsWheelOpen) closeVSWheel();
+  else openVSWheel();
+}
+
+function vsWheelAction(tool) {
+  closeVSWheel();
+  if (tool === 'xref') {
+    setTimeout(() => openVSCrossReferences(), 120);
+  } else if (tool === 'highlight') {
+    toggleVSHighlightBar();
+  } else if (tool === 'chapter') {
+    _vsFullChapter = !_vsFullChapter;
+    if (_vsFullChapter) _vsVerseEnd = null;
+    _vsSyncPills();
+    _vsRenderVerse();
+    _syncVSWheelItems();
+  }
+}
+
+function _syncVSWheelItems() {
+  const chBtn = document.getElementById('vsWheelChapter');
+  if (chBtn) chBtn.classList.toggle('active', _vsFullChapter);
+  const hlBtn = document.getElementById('vsWheelHighlight');
+  if (hlBtn) hlBtn.classList.toggle('active', _vsHlOn);
+  const dot = document.getElementById('vsToolDot');
+  if (dot) dot.classList.toggle('active', _vsHlOn || _vsFullChapter);
 }
 
 // ── Translation Chips ─────────────────────────────────────────────────────────
@@ -330,6 +505,19 @@ async function _vsRenderVerse() {
   const loading = document.getElementById('vsLoadingMsg');
   if (!display) return;
 
+  // Full chapter mode
+  if (_vsFullChapter) {
+    await _vsRenderChapter(display, loading);
+    return;
+  }
+
+  // Range mode
+  if (_vsVerseEnd) {
+    await _vsRenderRange(display, loading);
+    return;
+  }
+
+  // Single verse
   if (VS_LOCAL_SET.has(_vsTranslation)) {
     const text = _vsLocalText(_vsTranslation, _vsBook, _vsChapter, _vsVerse);
     display.innerHTML = text
@@ -340,41 +528,107 @@ async function _vsRenderVerse() {
     return;
   }
 
-  // API-backed translation
   display.classList.add('hidden');
   if (loading) { loading.textContent = `Loading ${_vsTranslation}…`; loading.classList.remove('hidden'); }
 
   try {
     const text = await _vsFetchVerse(_vsTranslation, _vsBook, _vsChapter, _vsVerse);
     if (loading) loading.classList.add('hidden');
-    if (text) {
-      display.innerHTML = `<div class="vs-verse-text">${_vsHighlightText(text)}</div>`;
-    } else {
-      display.innerHTML =
-        `<div class="vs-error"><span class="material-symbols-outlined">info</span>Verse unavailable in ${_vsTranslation}.</div>`;
-    }
+    display.innerHTML = text
+      ? `<div class="vs-verse-text">${_vsHighlightText(text)}</div>`
+      : `<div class="vs-error"><span class="material-symbols-outlined">info</span>Verse unavailable in ${_vsTranslation}.</div>`;
     display.classList.remove('hidden');
   } catch {
     if (loading) loading.classList.add('hidden');
     display.innerHTML =
-      `<div class="vs-error"><span class="material-symbols-outlined">wifi_off</span>Could not load verse. Check your connection.</div>`;
+      `<div class="vs-error"><span class="material-symbols-outlined">wifi_off</span>Could not load verse.</div>`;
     display.classList.remove('hidden');
   }
 }
 
+async function _vsRenderRange(display, loading) {
+  const startN = parseInt(_vsVerse, 10);
+  const endN   = parseInt(_vsVerseEnd, 10);
+  const vs     = [];
+  for (let i = startN; i <= endN; i++) vs.push(String(i));
+
+  if (VS_LOCAL_SET.has(_vsTranslation)) {
+    const lines = vs.map(v => {
+      const text = _vsLocalText(_vsTranslation, _vsBook, _vsChapter, v);
+      return `<div class="vs-chapter-verse"><span class="vs-verse-num">${v}</span><span class="vs-verse-text-inline">${_vsHighlightText(text)}</span></div>`;
+    });
+    display.innerHTML = `<div class="vs-chapter-view">${lines.join('')}</div>`;
+    loading?.classList.add('hidden');
+    display.classList.remove('hidden');
+    return;
+  }
+
+  display.classList.add('hidden');
+  if (loading) { loading.textContent = `Loading ${_vsTranslation}…`; loading.classList.remove('hidden'); }
+
+  const texts = await Promise.all(vs.map(v => _vsFetchVerse(_vsTranslation, _vsBook, _vsChapter, v).catch(() => null)));
+  if (loading) loading.classList.add('hidden');
+  const lines = vs.map((v, i) =>
+    `<div class="vs-chapter-verse"><span class="vs-verse-num">${v}</span><span class="vs-verse-text-inline">${_vsHighlightText(texts[i] || '')}</span></div>`
+  );
+  display.innerHTML = `<div class="vs-chapter-view">${lines.join('')}</div>`;
+  display.classList.remove('hidden');
+}
+
+async function _vsRenderChapter(display, loading) {
+  const vs = _vsChapterVerses(_vsBook, _vsChapter);
+
+  if (VS_LOCAL_SET.has(_vsTranslation)) {
+    const lines = vs.map(v => {
+      const text = _vsLocalText(_vsTranslation, _vsBook, _vsChapter, v);
+      return `<div class="vs-chapter-verse"><span class="vs-verse-num">${v}</span><span class="vs-verse-text-inline">${_vsHighlightText(text)}</span></div>`;
+    });
+    display.innerHTML = `<div class="vs-chapter-view">${lines.join('')}</div>`;
+    loading?.classList.add('hidden');
+    display.classList.remove('hidden');
+    return;
+  }
+
+  display.classList.add('hidden');
+  if (loading) { loading.textContent = `Loading ${_vsTranslation}…`; loading.classList.remove('hidden'); }
+
+  const texts = await Promise.all(vs.map(v => _vsFetchVerse(_vsTranslation, _vsBook, _vsChapter, v).catch(() => null)));
+  if (loading) loading.classList.add('hidden');
+  const lines = vs.map((v, i) =>
+    `<div class="vs-chapter-verse"><span class="vs-verse-num">${v}</span><span class="vs-verse-text-inline">${_vsHighlightText(texts[i] || '')}</span></div>`
+  );
+  display.innerHTML = `<div class="vs-chapter-view">${lines.join('')}</div>`;
+  display.classList.remove('hidden');
+}
+
 // ── Verse Navigation ──────────────────────────────────────────────────────────
 function vsNavVerse(dir) {
-  const bData = _vsLocalData()[_vsBook] || {};
-  const chs   = Object.keys(bData).sort((a, b) => +a - +b);
-  const vs    = Object.keys(bData[_vsChapter] || {}).sort((a, b) => +a - +b);
-  const vIdx  = vs.indexOf(String(_vsVerse));
+  const chs = _vsChapterList(_vsBook);
+
+  if (_vsFullChapter) {
+    const cIdx = chs.indexOf(String(_vsChapter));
+    if (dir > 0 && cIdx < chs.length - 1) _vsChapter = chs[cIdx + 1];
+    else if (dir < 0 && cIdx > 0)          _vsChapter = chs[cIdx - 1];
+    _vsSyncPills();
+    _vsRenderVerse();
+    return;
+  }
+
+  // Clear range on nav
+  _vsVerseEnd = null;
+
+  const vs   = _vsChapterVerses(_vsBook, _vsChapter);
+  const vIdx = vs.indexOf(String(_vsVerse));
 
   if (dir > 0) {
     if (vIdx < vs.length - 1) {
       _vsVerse = vs[vIdx + 1];
     } else {
       const cIdx = chs.indexOf(String(_vsChapter));
-      if (cIdx < chs.length - 1) { _vsChapter = chs[cIdx + 1]; _vsVerse = '1'; }
+      if (cIdx < chs.length - 1) {
+        _vsChapter = chs[cIdx + 1];
+        _vsVerse   = _vsChapterVerses(_vsBook, _vsChapter)[0] || '1';
+      }
     }
   } else {
     if (vIdx > 0) {
@@ -383,7 +637,7 @@ function vsNavVerse(dir) {
       const cIdx = chs.indexOf(String(_vsChapter));
       if (cIdx > 0) {
         _vsChapter = chs[cIdx - 1];
-        const prevVs = Object.keys(bData[_vsChapter] || {}).sort((a, b) => +a - +b);
+        const prevVs = _vsChapterVerses(_vsBook, _vsChapter);
         _vsVerse = prevVs[prevVs.length - 1] || '1';
       }
     }
@@ -397,8 +651,7 @@ function toggleVSHighlightBar() {
   _vsHlOn = !_vsHlOn;
   const bar = document.getElementById('vsHighlightBar');
   if (bar) bar.classList.toggle('hidden', !_vsHlOn);
-  const btn = document.getElementById('vsHlToggleBtn');
-  if (btn) btn.classList.toggle('vs-nav-active', _vsHlOn);
+  _syncVSWheelItems();
 
   if (_vsHlOn && typeof _loadRhemaEnglishNlp === 'function') {
     _loadRhemaEnglishNlp()
@@ -412,8 +665,8 @@ function toggleVSHighlightBar() {
 }
 
 function toggleVSHighlight(cat) {
-  if (_vsPosActive.has(cat)) { _vsPosActive.delete(cat); }
-  else                       { _vsPosActive.add(cat);    }
+  if (_vsPosActive.has(cat)) _vsPosActive.delete(cat);
+  else                        _vsPosActive.add(cat);
   _vsRefreshHlBar();
   _vsRenderVerse();
 }
@@ -425,18 +678,23 @@ function _vsRefreshHlBar() {
 }
 
 // ── Cross References ──────────────────────────────────────────────────────────
-function openVSCrossReferences() {
-  // Point rhema at the current VS reference then open cross-refs within it
+async function openVSCrossReferences() {
+  // Load scripts if needed (xref data lives in rhema bundles)
+  if (typeof loadRhemaScripts === 'function') {
+    try { await loadRhemaScripts(); } catch { /* continue */ }
+  }
+
+  // Set the shared rhema state variables so xref functions work
   if (typeof _rhemaBook    !== 'undefined') _rhemaBook    = _vsBook;
   if (typeof _rhemaChapter !== 'undefined') _rhemaChapter = _vsChapter;
   if (typeof _rhemaVerse   !== 'undefined') _rhemaVerse   = _vsVerse;
-  if (typeof syncRhemaPicker === 'function') syncRhemaPicker();
-  if (typeof showRhema === 'function') {
-    showRhema();
-    setTimeout(() => {
-      if (typeof openRhemaCrossReferences === 'function') openRhemaCrossReferences();
-    }, 100);
-  } else if (typeof openRhemaCrossReferences === 'function') {
+
+  // Mark that xref was opened from VS context (suppresses syncRhemaPicker / showRhema)
+  _vsXrefContext = true;
+
+  // Open cross-reference directly — the xref pages are now position:fixed top-level
+  // so they appear above the VS modal without needing rhemaModal to be open
+  if (typeof openRhemaCrossReferences === 'function') {
     openRhemaCrossReferences();
   }
 }
