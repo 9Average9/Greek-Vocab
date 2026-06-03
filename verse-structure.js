@@ -17,6 +17,7 @@ const VS_TRANSLATIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
 const VS_LS_BIBLE_IDS   = 'vs_bible_ids_v1';
 const VS_LS_VERSE_PFX   = 'vs_v_'; // + "TRANS|BOOK|CH|V"
 const VS_LS_CHAPTER_PFX = 'vs_ch_'; // + "TRANS|BOOK|CH" → '1' when fully cached
+const VS_LS_API_LIMITED = 'vs_api_limited_until'; // timestamp when limit resets
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let _vsBook        = 'JOH';
@@ -83,6 +84,39 @@ function _vsChapterList(book) {
   return Object.keys(bData).sort((a, b) => +a - +b);
 }
 
+// ── API Rate-Limit Handling ────────────────────────────────────────────────────
+function _vsIsApiLimited() {
+  try {
+    const until = parseInt(localStorage.getItem(VS_LS_API_LIMITED) || '0', 10);
+    return until > Date.now();
+  } catch { return false; }
+}
+
+function _vsSetApiLimited() {
+  // Mark limit active until the first of next month (when api.bible resets)
+  const now   = new Date();
+  const reset = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime();
+  try { localStorage.setItem(VS_LS_API_LIMITED, String(reset)); } catch {}
+  _vsApplyLimitedState();
+}
+
+function _vsApplyLimitedState() {
+  const limited = _vsIsApiLimited();
+  // Grey out API-only chips
+  document.querySelectorAll('#vsTransRow .vs-trans-chip').forEach(chip => {
+    const isApi = !VS_LOCAL_SET.has(chip.dataset.trans);
+    chip.classList.toggle('limited', limited && isApi);
+  });
+  // Show/hide the banner
+  const banner = document.getElementById('vsApiLimitBanner');
+  if (banner) banner.classList.toggle('hidden', !limited);
+  // If currently on a limited translation, fall back to MSB silently
+  if (limited && !VS_LOCAL_SET.has(_vsTranslation)) {
+    _vsTranslation = 'MSB';
+    _vsSyncTransRow();
+  }
+}
+
 // ── api.bible Integration ─────────────────────────────────────────────────────
 async function _vsGetBibleIds() {
   if (_vsBibleIds) return _vsBibleIds;
@@ -136,6 +170,9 @@ async function _vsFetchVerse(trans, book, ch, v) {
     }
   } catch {}
 
+  // Don't hit the network if the monthly quota is exhausted
+  if (_vsIsApiLimited()) return null;
+
   // Fire-and-forget background prefetch for the whole chapter so future
   // verse reads in this chapter are instant with zero API calls.
   _vsPrefetchChapter(trans, book, ch);
@@ -151,7 +188,11 @@ async function _vsFetchVerse(trans, book, ch, v) {
 
   try {
     const r = await fetch(url, { headers: { 'api-key': VS_API_KEY } });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      // 429 = Too Many Requests; 403 can also mean quota exceeded on api.bible
+      if (r.status === 429 || r.status === 403) _vsSetApiLimited();
+      return null;
+    }
     const { data } = await r.json();
     const text = (data?.content || '').trim().replace(/\s+/g, ' ');
     _vsTextCache.set(key, text);
@@ -251,6 +292,7 @@ async function openVerseStructure() {
   }
 
   _vsSyncPills();
+  _vsApplyLimitedState();
   _vsSyncTransRow();
   _vsRenderVerse();
   _syncVSWheelItems();
@@ -565,6 +607,17 @@ function _vsSyncTransRow() {
 }
 
 function vsSelectTrans(t) {
+  if (!VS_LOCAL_SET.has(t) && _vsIsApiLimited()) {
+    // Flash the banner to explain why the chip isn't switching
+    const banner = document.getElementById('vsApiLimitBanner');
+    if (banner) {
+      banner.classList.remove('hidden');
+      banner.classList.remove('vs-limit-flash');
+      void banner.offsetWidth; // force reflow to restart animation
+      banner.classList.add('vs-limit-flash');
+    }
+    return;
+  }
   _vsTranslation = t;
   _vsSyncTransRow();
   _vsRenderVerse();
