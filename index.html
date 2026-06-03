@@ -551,6 +551,21 @@ Start a New Study
 <div class="hat-text"><strong>Test</strong></div>
 </button>
 </div>
+<button class="vs-home-wide-btn" id="verseStructureHomeBtn" onclick="openVerseStructure()">
+<div class="vs-home-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none" width="28" height="28" aria-hidden="true">
+<rect x="3" y="4" width="12" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
+<path d="M7 8h4M7 11h4M7 14h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+<circle cx="18" cy="16" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+<path d="M20.5 19.5L22.5 21.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
+</div>
+<div class="vs-home-text">
+<strong>Verse Structure</strong>
+<small>Compare NIV · NKJV · NASB · MSB · BSB with highlights</small>
+</div>
+<span class="material-symbols-outlined vs-home-chev">chevron_right</span>
+</button>
 <div style="height:88px"></div>
 </div>
 <!-- Hidden badge kept for backward compatibility -->
@@ -16269,6 +16284,7 @@ Verb Endings
 <script src="vocab.js?v=3.0.8"></script>
 <script src="app.js?v=3.0.105"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.29"></script>
+<script src="verse-structure.js?v=1.0.0"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
 <script src="firebase-lb.js?v=3.0.101" type="module"></script>
 <!-- Leaderboard Intro Modal -->
@@ -17398,5 +17414,121 @@ Save
 </div>
 </div>
 </div>
+
+<!-- ══ Verse Structure ══════════════════════════════════════════════════════ -->
+<div id="verseStructureModal" class="vs-modal hidden">
+  <div id="vsSlide" class="vs-slide">
+
+    <!-- Header -->
+    <div class="vs-header">
+      <button class="icon-btn vs-back-btn" onclick="closeVerseStructure()" aria-label="Close">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <div class="vs-title-block">
+        <span class="vs-title">Verse Structure</span>
+        <span class="vs-title-sub">English Translations</span>
+      </div>
+      <button class="vs-xref-btn" onclick="openVSCrossReferences()" title="Cross References">
+        <span class="material-symbols-outlined">hub</span>
+      </button>
+    </div>
+
+    <!-- Reference picker pills -->
+    <div class="vs-picker">
+      <button class="rhema-pill" onclick="openVSBookPicker()">
+        <span class="material-symbols-outlined rhema-pill-icon">menu_book</span>
+        <span id="vsPillBook">John</span>
+        <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
+      </button>
+      <button class="rhema-pill" onclick="openVSVersePicker()">
+        <span id="vsPillVerse">3:16</span>
+        <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
+      </button>
+    </div>
+
+    <!-- Translation chips -->
+    <div class="vs-trans-row" id="vsTransRow">
+      <button class="vs-trans-chip active" data-trans="MSB" onclick="vsSelectTrans('MSB')">MSB</button>
+      <button class="vs-trans-chip" data-trans="BSB" onclick="vsSelectTrans('BSB')">BSB</button>
+      <button class="vs-trans-chip" data-trans="NIV" onclick="vsSelectTrans('NIV')">NIV</button>
+      <button class="vs-trans-chip" data-trans="NKJV" onclick="vsSelectTrans('NKJV')">NKJV</button>
+      <button class="vs-trans-chip" data-trans="NASB" onclick="vsSelectTrans('NASB')">NASB</button>
+    </div>
+
+    <!-- POS Highlight bar (same pills as Rhema) -->
+    <div class="rhema-highlight-bar hidden" id="vsHighlightBar">
+      <button class="rhema-hl-pill" data-cat="V"    onclick="toggleVSHighlight('V')">   <span class="rhema-hl-dot" style="background:rgba(251,146,60,1)"></span>Verb</button>
+      <button class="rhema-hl-pill" data-cat="N"    onclick="toggleVSHighlight('N')">   <span class="rhema-hl-dot" style="background:rgba(96,165,250,1)"></span>Noun</button>
+      <button class="rhema-hl-pill" data-cat="ADJ"  onclick="toggleVSHighlight('ADJ')"> <span class="rhema-hl-dot" style="background:rgba(74,222,128,1)"></span>Adj</button>
+      <button class="rhema-hl-pill" data-cat="T"    onclick="toggleVSHighlight('T')">   <span class="rhema-hl-dot" style="background:rgba(167,139,250,1)"></span>Article</button>
+      <button class="rhema-hl-pill" data-cat="PRON" onclick="toggleVSHighlight('PRON')"><span class="rhema-hl-dot" style="background:rgba(251,113,133,1)"></span>Pronoun</button>
+      <button class="rhema-hl-pill" data-cat="PREP" onclick="toggleVSHighlight('PREP')"><span class="rhema-hl-dot" style="background:rgba(45,212,191,1)"></span>Prep</button>
+      <button class="rhema-hl-pill" data-cat="CONJ" onclick="toggleVSHighlight('CONJ')"><span class="rhema-hl-dot" style="background:rgba(250,204,21,1)"></span>Conj</button>
+      <button class="rhema-hl-pill" data-cat="ADV"  onclick="toggleVSHighlight('ADV')"> <span class="rhema-hl-dot" style="background:rgba(253,186,116,1)"></span>Adverb</button>
+    </div>
+
+    <!-- Body: verse text -->
+    <div class="vs-body">
+      <div class="vs-loading hidden" id="vsLoadingMsg">Loading…</div>
+      <div class="vs-verse-display" id="vsVerseDisplay"></div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="vs-verse-nav">
+      <button class="vs-nav-btn" onclick="vsNavVerse(-1)" aria-label="Previous verse">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
+      <button class="vs-nav-btn" id="vsHlToggleBtn" onclick="toggleVSHighlightBar()" title="Highlight parts of speech">
+        <span class="material-symbols-outlined">format_color_text</span>
+      </button>
+      <span class="vs-verse-ref" id="vsVerseRef">John 3:16</span>
+      <button class="vs-nav-btn" onclick="vsNavVerse(1)" aria-label="Next verse">
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+    </div>
+
+  </div><!-- end #vsSlide -->
+
+  <!-- Book picker overlay (shares Rhema's picker styles) -->
+  <div class="rhema-picker-overlay hidden" id="vsBookPickerOverlay" onclick="closeVSBookPicker()">
+    <div class="rhema-picker-sheet" onclick="event.stopPropagation()">
+      <div class="rhema-picker-hdr">
+        <span class="rhema-picker-title">Select Book</span>
+        <button class="rhema-picker-x" onclick="closeVSBookPicker()">✕</button>
+      </div>
+      <div class="rhema-picker-search-row">
+        <span class="material-symbols-outlined rhema-picker-search-icon">search</span>
+        <input class="rhema-picker-search-input" id="vsBookSearchInput" oninput="vsFilterBooks(this.value)" placeholder="Search books…"/>
+      </div>
+      <!-- Testament selector -->
+      <div class="vs-testa-grid" id="vsTestamentGrid"></div>
+      <!-- Book list -->
+      <div class="rhema-book-list" id="vsBookList"></div>
+    </div>
+  </div>
+
+  <!-- Verse picker overlay -->
+  <div class="rhema-picker-overlay hidden" id="vsVersePickerOverlay" onclick="closeVSVersePicker()">
+    <div class="rhema-picker-sheet vs-verse-picker-sheet" onclick="event.stopPropagation()">
+      <div class="rhema-picker-hdr">
+        <span class="rhema-picker-title">Select Verse</span>
+        <button class="rhema-picker-x" onclick="closeVSVersePicker()">✕</button>
+      </div>
+      <div class="vs-picker-body">
+        <div class="vs-picker-section">
+          <h3 class="vs-picker-label">Chapter</h3>
+          <div class="rx-number-grid" id="vsChapterGrid"></div>
+        </div>
+        <div class="vs-picker-section">
+          <h3 class="vs-picker-label">Verse</h3>
+          <div class="rx-number-grid rx-verse-grid" id="vsVerseGrid"></div>
+        </div>
+        <div class="rx-selected-card" id="vsVersePreview"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #verseStructureModal -->
+
 </body>
 </html>
