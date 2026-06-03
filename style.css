@@ -25824,7 +25824,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   z-index: 9990;
   display: none;
   flex-direction: column;
-  background: var(--bg-color);
+  background: var(--primary-color);
   will-change: transform;
   transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
   transform: translateY(100%);
@@ -25837,7 +25837,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   padding-top: max(14px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-  background: var(--bg-color);
+  background: var(--primary-color);
 }
 .vs-struct-back {
   width: 36px; height: 36px; border-radius: 50%; border: 0;
@@ -25879,13 +25879,13 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: var(--bg-color);
+  background: var(--primary-color);
 }
 .vs-struct-canvas {
   position: relative;
   width: 2200px; height: 2000px;
   touch-action: pan-x pan-y;
-  background: var(--bg-color);
+  background: var(--primary-color);
 }
 .vs-struct-canvas.edit-mode { touch-action: none; }
 
@@ -25959,7 +25959,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .vs-struct-picker-sel {
   flex: 1; height: 40px; border-radius: 10px;
   border: 1.5px solid var(--border-color);
-  background: var(--bg-color); color: var(--font-color);
+  background: var(--card-color); color: var(--font-color);
   font-size: 0.9rem; padding: 0 10px;
 }
 .vs-struct-picker-open-btn {
@@ -25973,7 +25973,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .vs-struct-name-input {
   width: 100%; height: 44px; border-radius: 12px;
   border: 1.5px solid var(--border-color);
-  background: var(--bg-color); color: var(--font-color);
+  background: var(--card-color); color: var(--font-color);
   font-size: 0.95rem; padding: 0 12px;
   box-sizing: border-box; margin-bottom: 12px;
   outline: none;
@@ -26068,7 +26068,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .vs-struct-browser-item:active { background: color-mix(in srgb, var(--secondary-color) 10%, transparent); }
 .vs-struct-browser-item-icon {
   width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-  background: color-mix(in srgb, var(--secondary-color) 14%, var(--bg-color));
+  background: color-mix(in srgb, var(--secondary-color) 14%, var(--primary-color));
   display: flex; align-items: center; justify-content: center;
   color: var(--secondary-color); font-size: 1.2rem;
 }

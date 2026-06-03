@@ -11,7 +11,6 @@ let _vsStructVerseEnd    = '16';
 let _vsStructTranslation = 'MSB';
 let _vsStructName        = '';   // user-given name for this structure
 let _vsStructCurrentKey  = null; // unique localStorage key for the open structure
-let _vsStructVsBehind    = false; // true when VS modal was hidden to show workspace
 let _vsStructEditMode    = true;
 let _vsStructWords       = [];   // flat array of word strings
 let _vsStructSegments    = [];   // [{ id, startIdx, endIdx, x, y }]
@@ -269,11 +268,6 @@ async function openVSStructureWorkspace() {
 }
 
 function _vsStructOpenWorkspaceModal() {
-  // Hide the VS modal entirely so it cannot show through
-  const vsModal = document.getElementById('verseStructureModal');
-  _vsStructVsBehind = !!(vsModal && vsModal.classList.contains('vs-active'));
-  if (_vsStructVsBehind) vsModal.style.visibility = 'hidden';
-
   const modal = document.getElementById('vsStructModal');
   if (!modal) return;
   modal.style.display = 'flex';
@@ -298,12 +292,6 @@ function closeVSStructureWorkspace() {
   modal.classList.remove('open');
   setTimeout(() => {
     modal.style.display = 'none';
-    // Restore VS modal visibility after workspace slides out
-    if (_vsStructVsBehind) {
-      const vsModal = document.getElementById('verseStructureModal');
-      if (vsModal) vsModal.style.visibility = '';
-      _vsStructVsBehind = false;
-    }
   }, 340);
 }
 
