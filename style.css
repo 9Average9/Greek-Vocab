@@ -25369,3 +25369,249 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 #settingsScreen .sett-scroll {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 56px) !important;
 }
+
+/* ── Verse Structure Home Button ─────────────────────────────────────────────*/
+.vs-home-wide-btn {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, #f59e0b 14%, var(--card-color)),
+    color-mix(in srgb, #d97706 10%, var(--primary-light)));
+  border: 1.5px solid color-mix(in srgb, #d97706 55%, var(--border-color));
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(217,119,6,0.14), inset 0 1px 0 rgba(255,255,255,0.65);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.12s, box-shadow 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-home-wide-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(217,119,6,0.12);
+}
+.vs-home-icon {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #fef3c7, #fde68a);
+  border: 1.5px solid #d97706;
+  display: flex; align-items: center; justify-content: center;
+  color: #92400e;
+  box-shadow: 0 2px 8px rgba(217,119,6,0.18);
+}
+.vs-home-text {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.vs-home-text strong {
+  font-size: 0.88rem; font-weight: 800;
+  color: var(--font-color); line-height: 1.2;
+}
+.vs-home-text small {
+  font-size: 0.72rem; color: var(--muted-color); line-height: 1.3;
+}
+.vs-home-chev {
+  font-size: 1.1rem !important; color: var(--muted-color); flex-shrink: 0;
+}
+
+/* theme-match override */
+body.home-theme-match .vs-home-wide-btn {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--secondary-color) 14%, var(--card-color)),
+    color-mix(in srgb, var(--accent-color) 10%, var(--primary-light))) !important;
+  border-color: color-mix(in srgb, var(--secondary-color) 55%, var(--border-color)) !important;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--secondary-color) 16%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.65) !important;
+}
+body.home-theme-match .vs-home-icon {
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--secondary-color) 22%, var(--card-color)),
+    color-mix(in srgb, var(--accent-color) 18%, var(--primary-light))) !important;
+  border-color: color-mix(in srgb, var(--secondary-color) 65%, var(--border-color)) !important;
+  color: var(--secondary-color) !important;
+}
+
+/* ── Verse Structure Modal ────────────────────────────────────────────────────*/
+.vs-modal {
+  position: fixed; inset: 0;
+  z-index: 1100;
+  background: var(--primary-color);
+  display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+}
+.vs-modal.vs-active { transform: translateY(0); }
+.vs-modal.hidden { display: none; }
+
+.vs-slide {
+  flex: 1; display: flex; flex-direction: column;
+  height: 100%; overflow: hidden;
+}
+
+/* Header */
+.vs-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px 10px;
+  padding-top: max(14px, env(safe-area-inset-top));
+  background: var(--primary-color);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.vs-back-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: none; border: none; cursor: pointer;
+  color: var(--font-color);
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-back-btn .material-symbols-outlined { font-size: 1.35rem; }
+.vs-title-block { flex: 1; }
+.vs-title {
+  display: block; font-size: 1rem; font-weight: 800; color: var(--font-color);
+  line-height: 1.15;
+}
+.vs-title-sub {
+  display: block; font-size: 0.71rem; color: var(--muted-color); margin-top: 1px;
+}
+.vs-xref-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: color-mix(in srgb, var(--secondary-color) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--secondary-color) 30%, var(--border-color));
+  color: var(--secondary-color);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.vs-xref-btn:active { background: color-mix(in srgb, var(--secondary-color) 22%, transparent); }
+.vs-xref-btn .material-symbols-outlined { font-size: 1.2rem; }
+
+/* Reference picker row */
+.vs-picker {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px 8px;
+  background: var(--primary-color);
+  flex-shrink: 0;
+}
+
+/* Translation chips */
+.vs-trans-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 16px 8px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; flex-shrink: 0;
+}
+.vs-trans-row::-webkit-scrollbar { display: none; }
+.vs-trans-chip {
+  flex-shrink: 0;
+  padding: 5px 14px; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.03em;
+  background: var(--card-color);
+  border: 1.5px solid var(--border-color);
+  color: var(--muted-color);
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-trans-chip.active {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  color: #fff;
+}
+.vs-trans-chip:not(.active):active {
+  background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color));
+}
+
+/* Body */
+.vs-body {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 20px 20px 16px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+.vs-loading {
+  text-align: center; color: var(--muted-color);
+  font-size: 0.88rem; padding: 32px 0;
+}
+.vs-verse-display { width: 100%; }
+.vs-verse-text {
+  font-size: 1.25rem; line-height: 1.75; color: var(--font-color);
+  font-weight: 400; letter-spacing: 0.01em;
+}
+.vs-error {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--muted-color); font-size: 0.88rem; padding: 20px 0;
+}
+.vs-error .material-symbols-outlined { font-size: 1.1rem; }
+.vs-verse-empty { color: var(--muted-color); font-size: 0.88rem; padding: 20px 0; }
+
+/* Bottom verse nav */
+.vs-verse-nav {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  background: var(--primary-color);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.vs-nav-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--card-color); border: 1.5px solid var(--border-color);
+  color: var(--font-color); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-nav-btn:active { background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color)); }
+.vs-nav-btn.vs-nav-active {
+  background: color-mix(in srgb, var(--secondary-color) 16%, var(--card-color));
+  border-color: var(--secondary-color);
+  color: var(--secondary-color);
+}
+.vs-nav-btn .material-symbols-outlined { font-size: 1.2rem; }
+.vs-verse-ref {
+  flex: 1; text-align: center;
+  font-size: 0.82rem; font-weight: 700; color: var(--muted-color);
+}
+
+/* Book picker testament grid */
+.vs-testa-grid {
+  display: flex; gap: 8px;
+  padding: 10px 16px 4px;
+}
+.vs-testa-btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 12px; border-radius: 12px;
+  background: var(--card-color); border: 1.5px solid var(--border-color);
+  color: var(--muted-color); font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: all 0.14s;
+  -webkit-tap-highlight-color: transparent;
+}
+.vs-testa-btn .material-symbols-outlined { font-size: 1rem; }
+.vs-testa-btn.active {
+  background: color-mix(in srgb, var(--secondary-color) 14%, var(--card-color));
+  border-color: var(--secondary-color);
+  color: var(--secondary-color);
+}
+
+/* Verse picker sheet sizing */
+.vs-verse-picker-sheet { max-height: 85vh; overflow-y: auto; }
+.vs-picker-body { padding: 0 16px 20px; }
+.vs-picker-section { margin-bottom: 16px; }
+.vs-picker-label {
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted-color);
+  margin: 12px 0 8px;
+}
+
+/* VS verse preview card (inside verse picker) */
+#vsVersePreview { border-top: 1px solid var(--border-color); margin-top: 8px; }
+#vsVersePreview strong {
+  display: block; color: var(--secondary-color);
+  font-size: 0.85rem; font-weight: 800; margin-bottom: 4px;
+}
