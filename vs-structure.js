@@ -9,6 +9,8 @@ let _vsStructChapter     = '3';
 let _vsStructVerseStart  = '16';
 let _vsStructVerseEnd    = '16';
 let _vsStructTranslation = 'MSB';
+let _vsStructName        = '';   // user-given name for this structure
+let _vsStructCurrentKey  = null; // unique localStorage key for the open structure
 let _vsStructEditMode    = true;
 let _vsStructWords       = [];   // flat array of word strings
 let _vsStructSegments    = [];   // [{ id, startIdx, endIdx, x, y }]
@@ -25,32 +27,25 @@ let _vsStructLpEl        = null;
 let _vsStructTouchStart  = null; // { x, y } of touchstart
 
 // ── Storage helpers ──────────────────────────────────────────────────────────
-function _vsStructKey(book, ch, vs, ve, trans) {
-  return `${VS_STRUCT_LS_PREFIX}${book}_${ch}_${vs}_${ve}_${trans}`;
+function _vsStructNewKey() {
+  return `${VS_STRUCT_LS_PREFIX}${Date.now()}`;
 }
 
 function _vsStructSaveLocal() {
-  const key = _vsStructKey(_vsStructBook, _vsStructChapter, _vsStructVerseStart, _vsStructVerseEnd, _vsStructTranslation);
+  if (!_vsStructCurrentKey) return;
   const data = {
-    id: key,
+    id: _vsStructCurrentKey,
+    name: _vsStructName,
     bibleVersion: _vsStructTranslation,
     referenceStart: `${_vsStructBook} ${_vsStructChapter}:${_vsStructVerseStart}`,
     referenceEnd:   `${_vsStructBook} ${_vsStructChapter}:${_vsStructVerseEnd}`,
     originalWords: _vsStructWords,
     segments: _vsStructSegments,
     history: [],
+    createdAt: _vsStructCurrentKey.replace(VS_STRUCT_LS_PREFIX, '') | 0,
     updatedAt: Date.now()
   };
-  try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
-}
-
-function _vsStructLoadLocal() {
-  const key = _vsStructKey(_vsStructBook, _vsStructChapter, _vsStructVerseStart, _vsStructVerseEnd, _vsStructTranslation);
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return null;
+  try { localStorage.setItem(_vsStructCurrentKey, JSON.stringify(data)); } catch {}
 }
 
 // ── Snapshot (undo/redo) ──────────────────────────────────────────────────────
@@ -238,57 +233,55 @@ function vsStructPickerUpdateVerses() {
 }
 
 async function openVSStructureWorkspace() {
-  const bookSel = document.getElementById('vsStructPickerBook');
-  const chSel   = document.getElementById('vsStructPickerChapter');
-  const vsSel   = document.getElementById('vsStructPickerVerseStart');
-  const veSel   = document.getElementById('vsStructPickerVerseEnd');
+  const bookSel  = document.getElementById('vsStructPickerBook');
+  const chSel    = document.getElementById('vsStructPickerChapter');
+  const vsSel    = document.getElementById('vsStructPickerVerseStart');
+  const veSel    = document.getElementById('vsStructPickerVerseEnd');
+  const nameInp  = document.getElementById('vsStructPickerName');
   if (bookSel) _vsStructBook        = bookSel.value;
   if (chSel)   _vsStructChapter     = chSel.value;
   if (vsSel)   _vsStructVerseStart  = vsSel.value;
   if (veSel)   _vsStructVerseEnd    = veSel.value;
-  // Ensure end >= start
+  if (nameInp) _vsStructName        = nameInp.value.trim();
   if (+_vsStructVerseEnd < +_vsStructVerseStart) _vsStructVerseEnd = _vsStructVerseStart;
 
+  // Always create a brand-new entry
+  _vsStructCurrentKey = _vsStructNewKey();
+
   closeVSStructPicker();
+  if (nameInp) nameInp.value = '';
 
-  // Show workspace
-  const modal = document.getElementById('vsStructModal');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  requestAnimationFrame(() => modal.classList.add('open'));
+  _vsStructWords    = [];
+  _vsStructSegments = [];
+  _vsStructHistory  = [];
+  _vsStructFuture   = [];
 
-  // Update title
-  const titleEl = document.getElementById('vsStructTitle');
-  const bookName = (window.RhemaEnglishBooks || []).find(b => b.code === _vsStructBook)?.name || _vsStructBook;
-  const rangeLabel = _vsStructVerseStart === _vsStructVerseEnd
-    ? `${bookName} ${_vsStructChapter}:${_vsStructVerseStart}`
-    : `${bookName} ${_vsStructChapter}:${_vsStructVerseStart}–${_vsStructVerseEnd}`;
-  if (titleEl) titleEl.textContent = rangeLabel;
-
-  // Sync edit bar
-  _vsStructSyncEditBar();
-
-  // Try to restore saved layout
-  const saved = _vsStructLoadLocal();
-  if (saved?.segments?.length && saved?.originalWords?.length) {
-    _vsStructWords    = saved.originalWords;
-    _vsStructSegments = saved.segments;
-    _vsStructHistory  = [];
-    _vsStructFuture   = [];
-    _vsStructSyncUndoRedo();
-    _vsStructRender();
-    return;
-  }
+  _vsStructOpenWorkspaceModal();
 
   // Load words fresh
   const canvas = document.getElementById('vsStructCanvas');
   if (canvas) canvas.innerHTML = '<p style="padding:20px;color:var(--muted-color);font-size:0.9rem;">Loading…</p>';
   _vsStructWords    = await _vsStructLoadWords();
   _vsStructSegments = _vsStructDefaultLayout(_vsStructWords);
-  _vsStructHistory  = [];
-  _vsStructFuture   = [];
   _vsStructSyncUndoRedo();
   _vsStructRender();
+}
+
+function _vsStructOpenWorkspaceModal() {
+  const modal   = document.getElementById('vsStructModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => modal.classList.add('open'));
+
+  const titleEl  = document.getElementById('vsStructTitle');
+  const bookName = (window.RhemaEnglishBooks || []).find(b => b.code === _vsStructBook)?.name || _vsStructBook;
+  const refLabel = _vsStructVerseStart === _vsStructVerseEnd
+    ? `${bookName} ${_vsStructChapter}:${_vsStructVerseStart}`
+    : `${bookName} ${_vsStructChapter}:${_vsStructVerseStart}–${_vsStructVerseEnd}`;
+  if (titleEl) titleEl.textContent = _vsStructName || refLabel;
+
+  _vsStructSyncEditBar();
+  _vsStructSyncUndoRedo();
 }
 
 function closeVSStructureWorkspace() {
@@ -628,11 +621,13 @@ function _vsStructRenderBrowserList() {
     const displayRef = bookName
       ? refLabel.replace(data.referenceStart.split(' ')[0], bookName)
       : refLabel;
+    const primaryLabel = data.name || displayRef;
+    const subLabel     = data.name ? displayRef : '';
     return `<button class="vs-struct-browser-item" onclick="vsStructBrowserOpen(${idx})">
       <span class="vs-struct-browser-item-icon material-symbols-outlined">layers</span>
       <span class="vs-struct-browser-item-copy">
-        <span class="vs-struct-browser-item-ref">${displayRef}</span>
-        <span class="vs-struct-browser-item-meta">${_vsStructBibleLabel(data.bibleVersion)} · ${data.segments?.length || 0} segments · ${_vsStructFormatDate(data.updatedAt)}</span>
+        <span class="vs-struct-browser-item-ref">${primaryLabel}</span>
+        <span class="vs-struct-browser-item-meta">${subLabel ? subLabel + ' · ' : ''}${_vsStructBibleLabel(data.bibleVersion)} · ${data.segments?.length || 0} segments · ${_vsStructFormatDate(data.updatedAt)}</span>
       </span>
       <span class="vs-struct-browser-item-arrow material-symbols-outlined">chevron_right</span>
     </button>`;
@@ -649,7 +644,6 @@ function vsStructBrowserOpen(idx) {
 
   closeVSStructureBrowser();
 
-  // Parse stored ref: "JOH 3:16"
   const parseRef = ref => {
     const m = String(ref || '').match(/^(\S+)\s+(\d+):(\d+)$/);
     return m ? { book: m[1], chapter: m[2], verse: m[3] } : null;
@@ -663,26 +657,14 @@ function vsStructBrowserOpen(idx) {
   _vsStructVerseStart  = start.verse;
   _vsStructVerseEnd    = end?.verse || start.verse;
   _vsStructTranslation = data.bibleVersion || 'MSB';
+  _vsStructName        = data.name || '';
+  _vsStructCurrentKey  = data.id;  // reuse existing key so saves update in-place
   _vsStructWords       = data.originalWords || [];
   _vsStructSegments    = data.segments || [];
   _vsStructHistory     = [];
   _vsStructFuture      = [];
 
-  // Open workspace directly (skip picker)
-  const modal = document.getElementById('vsStructModal');
-  if (!modal) return;
-  const titleEl = document.getElementById('vsStructTitle');
-  const books   = window.RhemaEnglishBooks || [];
-  const bName   = books.find(b => b.code === _vsStructBook)?.name || _vsStructBook;
-  const rangeLabel = _vsStructVerseStart === _vsStructVerseEnd
-    ? `${bName} ${_vsStructChapter}:${_vsStructVerseStart}`
-    : `${bName} ${_vsStructChapter}:${_vsStructVerseStart}–${_vsStructVerseEnd}`;
-  if (titleEl) titleEl.textContent = rangeLabel;
-  _vsStructSyncEditBar();
-  _vsStructSyncUndoRedo();
-
-  modal.style.display = 'flex';
-  requestAnimationFrame(() => modal.classList.add('open'));
+  _vsStructOpenWorkspaceModal();
   _vsStructRender();
 }
 

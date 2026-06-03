@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.108";
+const APP_VERSION = "3.0.109";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.109 &mdash; Structure Polish</div>
+<ul>
+  <li><strong>Safe area fixed</strong> &mdash; The structure workspace header now sits below the Dynamic Island / notch on every iPhone model; bottom canvas padding respects the home indicator.</li>
+  <li><strong>Borderless phrases</strong> &mdash; Segment cards no longer have a border or box shadow — words float cleanly on the blank canvas.</li>
+  <li><strong>Name your structures</strong> &mdash; Each time you press Open Structure a brand-new entry is created; a name field in the picker lets you label it so it&apos;s easy to find later.</li>
+  <li><strong>Dedicated blank canvas</strong> &mdash; The workspace is a proper full-screen page above Verse Structure with no overlapping content.</li>
+</ul>
 <div class="un-version-label">v3.0.108 &mdash; Structure Fixes &amp; Saved Structures</div>
 <ul>
   <li><strong>Structure overlay fixed</strong> &mdash; The workspace and passage picker now appear correctly above the Verse Structure screen instead of behind it or on the home screen.</li>
