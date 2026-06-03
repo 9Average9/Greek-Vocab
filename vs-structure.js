@@ -290,7 +290,7 @@ function closeVSStructureWorkspace() {
   const modal = document.getElementById('vsStructModal');
   if (!modal) return;
   modal.classList.remove('open');
-  setTimeout(() => { modal.style.display = ''; }, 340);
+  setTimeout(() => { modal.style.display = 'none'; }, 340);
 }
 
 // ── Edit mode ─────────────────────────────────────────────────────────────────

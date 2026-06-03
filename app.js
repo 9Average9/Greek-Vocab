@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.109";
+const APP_VERSION = "3.0.110";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.110 &mdash; Structure Isolation Fix</div>
+<ul>
+  <li><strong>Fully isolated canvas</strong> &mdash; Structure workspace now starts as a hidden layer and only enters the rendering stack when opened, preventing any bleed-through from the Verse Structure screen beneath it.</li>
+  <li><strong>Larger verse text</strong> &mdash; Words on the canvas are rendered at a larger, more readable size.</li>
+  <li><strong>Scroll isolation</strong> &mdash; Scrolling the canvas no longer propagates to the screen behind it.</li>
+</ul>
 <div class="un-version-label">v3.0.109 &mdash; Structure Polish</div>
 <ul>
   <li><strong>Safe area fixed</strong> &mdash; The structure workspace header now sits below the Dynamic Island / notch on every iPhone model; bottom canvas padding respects the home indicator.</li>
