@@ -25927,14 +25927,14 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   cursor: default;
   user-select: none;
   -webkit-user-select: none;
-  max-width: 320px;
+  max-width: min(760px, calc(100vw - 48px));
   transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s ease, opacity 0.15s;
   will-change: transform;
 }
 .vs-struct-seg.edit-mode {
   cursor: grab;
-  background: color-mix(in srgb, var(--secondary-color) 6%, transparent);
-  border: 1.5px dashed color-mix(in srgb, var(--secondary-color) 35%, transparent);
+  background: transparent;
+  border: none;
 }
 .vs-struct-seg.dragging {
   cursor: grabbing;
@@ -25948,6 +25948,21 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   padding: 3px 6px; border-radius: 6px;
   cursor: default;
   transition: background 0.1s;
+}
+.vs-struct-verse-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--secondary-color) 14%, transparent);
+  color: var(--secondary-color);
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
+  flex: 0 0 auto;
 }
 .vs-struct-seg.edit-mode .vs-struct-word {
   cursor: pointer;
@@ -26125,6 +26140,19 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 }
 .vs-struct-browser-item-arrow {
   color: var(--muted-color); font-size: 1.1rem; flex-shrink: 0;
+}
+.vs-struct-browser-delete {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #dc2626;
+  background: color-mix(in srgb, #dc2626 8%, transparent);
+  cursor: pointer;
+}
+.vs-struct-browser-delete .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+.vs-struct-browser-delete:active {
+  background: color-mix(in srgb, #dc2626 18%, transparent);
 }
 
 /* File cabinet button in VS header */

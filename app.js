@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.115";
+const APP_VERSION = "3.0.116";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.116 &mdash; Structure Flow Tools</div>
+<ul>
+  <li><strong>Saved structures can now be deleted</strong> &mdash; The Saved Structures cabinet includes a delete control for removing old layouts from this device.</li>
+  <li><strong>Structure dragging feels quicker</strong> &mdash; Holding a word now splits and lifts the whole following phrase faster, with less jump when the phrase starts moving.</li>
+  <li><strong>Multi-verse structure layout fixed</strong> &mdash; Verse groups now populate top-to-bottom with their verse number before the first word instead of spreading horizontally or overlapping.</li>
+</ul>
 <div class="un-version-label">v3.0.115 &mdash; Graceful API Limit Handling</div>
 <ul>
   <li><strong>No broken experience when API limit is reached</strong> &mdash; If the monthly api.bible quota is exhausted, the app automatically switches to MSB, greys out the NIV/NKJV/NASB chips, and shows a clear banner explaining the situation and when access resets.</li>

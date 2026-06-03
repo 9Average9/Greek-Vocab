@@ -128,19 +128,18 @@ function _vsStructDefaultLayout(words) {
     }
   }
 
-  const COLS = 2;
-  const COL_W = 340;
-  const ROW_H = 90;
-  verseSegs.forEach((seg, idx) => {
-    const col = idx % COLS;
-    const row = Math.floor(idx / COLS);
+  let nextY = 20;
+  verseSegs.forEach((seg) => {
+    const visibleWords = words.slice(seg.startIdx, seg.endIdx + 1)
+      .filter(w => !/^_VERSE_\d+_$/.test(w)).length;
     segments.push({
       id: id++,
       startIdx: seg.startIdx,
       endIdx: seg.endIdx,
-      x: 20 + col * (COL_W + 20),
-      y: 20 + row * ROW_H
+      x: 20,
+      y: nextY
     });
+    nextY += Math.max(92, Math.ceil(visibleWords / 8) * 34 + 36);
   });
   return segments;
 }
@@ -373,6 +372,7 @@ function _vsStructRender() {
   if (!canvas) return;
   canvas.innerHTML = '';
   canvas.classList.toggle('edit-mode', _vsStructEditMode);
+  let maxY = 0;
 
   _vsStructSegments.forEach(seg => {
     const words = _vsStructWords.slice(seg.startIdx, seg.endIdx + 1).filter(w => !/^_VERSE_\d+_$/.test(w));
@@ -383,6 +383,14 @@ function _vsStructRender() {
     div.dataset.segId = seg.id;
     div.style.left = seg.x + 'px';
     div.style.top  = seg.y + 'px';
+
+    const verseNum = _vsStructVerseNumberForSegment(seg);
+    if (verseNum) {
+      const label = document.createElement('span');
+      label.className = 'vs-struct-verse-num';
+      label.textContent = verseNum;
+      div.appendChild(label);
+    }
 
     words.forEach((word, wIdx) => {
       const span = document.createElement('span');
@@ -406,7 +414,9 @@ function _vsStructRender() {
     }
 
     canvas.appendChild(div);
+    maxY = Math.max(maxY, seg.y + div.offsetHeight);
   });
+  canvas.style.height = Math.max(2000, maxY + 220) + 'px';
 }
 
 // Given a segment and a within-segment word index (skipping markers), returns the absolute index in _vsStructWords
@@ -421,6 +431,13 @@ function _vsStructAbsIdx(seg, withinIdx) {
 }
 
 // ── Shared drag initiator ─────────────────────────────────────────────────────
+function _vsStructVerseNumberForSegment(seg) {
+  if (seg.startIdx === 0) return _vsStructVerseStart;
+  const prev = _vsStructWords[seg.startIdx - 1];
+  const marker = String(prev || '').match(/^_VERSE_(\d+)_$/);
+  return marker ? marker[1] : '';
+}
+
 function _vsStructBeginDrag(seg, segEl, touchX, touchY) {
   if (!segEl) return;
   const wrap     = document.getElementById('vsStructCanvasWrap');
@@ -452,15 +469,23 @@ function _vsStructWordTouchStart(e) {
   const segEl  = span.closest('.vs-struct-seg');
   if (!segEl) return;
   const segId  = parseInt(segEl.dataset.segId, 10);
+  const wrap = document.getElementById('vsStructCanvasWrap');
+  const spanRect = span.getBoundingClientRect();
+  const wrapRect = wrap?.getBoundingClientRect();
 
-  _vsStructLpWord = { segId, absIdx };
+  _vsStructLpWord = {
+    segId,
+    absIdx,
+    x: wrap && wrapRect ? spanRect.left - wrapRect.left + wrap.scrollLeft - 8 : null,
+    y: wrap && wrapRect ? spanRect.top - wrapRect.top + wrap.scrollTop - 8 : null
+  };
   _vsStructLpEl   = span;
   span.classList.add('long-press-active');
 
   _vsStructLpTimer = setTimeout(() => {
     _vsStructLpTimer = null;
     _vsStructSplitAndBeginDrag(segId, absIdx, touch.clientX, touch.clientY);
-  }, 350);
+  }, 220);
 }
 
 function _vsStructWordTouchMove(e) {
@@ -514,8 +539,8 @@ function _vsStructSplitAndBeginDrag(segId, splitAbsIdx, touchX, touchY) {
       id: maxId + 1,
       startIdx: splitAbsIdx,
       endIdx: prevEnd,
-      x: seg.x + 20,
-      y: seg.y + 60
+      x: Math.max(0, _vsStructLpWord?.x ?? seg.x + 20),
+      y: Math.max(0, _vsStructLpWord?.y ?? seg.y + 44)
     };
     _vsStructSegments.push(newSeg);
     _vsStructRender();
@@ -572,6 +597,11 @@ function _vsStructDragEnd() {
   _vsStructDragWrap = null;
   const hadDrag = !!_vsStructDragSeg;
   _vsStructDragSeg  = null;
+  if (_vsStructLpEl) {
+    _vsStructLpEl.classList.remove('long-press-active');
+    _vsStructLpEl = null;
+  }
+  _vsStructLpWord = null;
   if (hadDrag) _vsStructSaveLocal();
 }
 
@@ -642,11 +672,28 @@ function _vsStructRenderBrowserList() {
         <span class="vs-struct-browser-item-ref">${primaryLabel}</span>
         <span class="vs-struct-browser-item-meta">${subLabel ? subLabel + ' · ' : ''}${_vsStructBibleLabel(data.bibleVersion)} · ${data.segments?.length || 0} segments · ${_vsStructFormatDate(data.updatedAt)}</span>
       </span>
+      <span class="vs-struct-browser-delete" onclick="event.stopPropagation();vsStructBrowserDelete(${idx}, event)" title="Delete saved structure" aria-label="Delete saved structure">
+        <span class="material-symbols-outlined">delete</span>
+      </span>
       <span class="vs-struct-browser-item-arrow material-symbols-outlined">chevron_right</span>
     </button>`;
   }).join('');
   // Store refs for click handler
   list._savedData = saved;
+}
+
+function vsStructBrowserDelete(idx, e) {
+  e?.stopPropagation?.();
+  const list = document.getElementById('vsStructBrowserList');
+  const saved = list?._savedData;
+  const data = saved?.[idx];
+  if (!data?.id) return;
+  const label = data.name || data.referenceStart || 'this structure';
+  if (!confirm(`Delete "${label}"? This removes the saved structure from this device.`)) return;
+  try { localStorage.removeItem(data.id); } catch {}
+  if (_vsStructCurrentKey === data.id) _vsStructCurrentKey = null;
+  _vsStructRenderBrowserList();
+  vsStructUpdateCabinetBadge();
 }
 
 function vsStructBrowserOpen(idx) {
