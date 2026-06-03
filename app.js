@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.114";
+const APP_VERSION = "3.0.115";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.115 &mdash; Graceful API Limit Handling</div>
+<ul>
+  <li><strong>No broken experience when API limit is reached</strong> &mdash; If the monthly api.bible quota is exhausted, the app automatically switches to MSB, greys out the NIV/NKJV/NASB chips, and shows a clear banner explaining the situation and when access resets.</li>
+  <li><strong>Cached verses still work</strong> &mdash; Any NIV/NKJV/NASB verse already stored on the device loads instantly even when the limit is active.</li>
+  <li><strong>Auto-resets next month</strong> &mdash; The limit flag clears on the 1st of the following month when the api.bible quota renews.</li>
+</ul>
 <div class="un-version-label">v3.0.114 &mdash; Chapter-Level Verse Prefetch</div>
 <ul>
   <li><strong>Whole chapter cached on first read</strong> &mdash; The first time any verse from a chapter is opened in NIV, NKJV, or NASB, the entire chapter is silently fetched in the background (5 verses at a time). Every subsequent read from that chapter costs zero API calls and is instant.</li>

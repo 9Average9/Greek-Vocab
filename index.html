@@ -16206,10 +16206,10 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.114"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.114"></script>
-<script src="verse-structure.js?v=3.0.114"></script>
-<script src="vs-structure.js?v=3.0.114"></script>
+<script src="app.js?v=3.0.115"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.115"></script>
+<script src="verse-structure.js?v=3.0.115"></script>
+<script src="vs-structure.js?v=3.0.115"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
 <script src="firebase-lb.js?v=3.0.101" type="module"></script>
 <!-- Leaderboard Intro Modal -->
@@ -17383,6 +17383,12 @@ Save
       <button class="vs-trans-chip" data-trans="NIV" onclick="vsSelectTrans('NIV')">NIV</button>
       <button class="vs-trans-chip" data-trans="NKJV" onclick="vsSelectTrans('NKJV')">NKJV</button>
       <button class="vs-trans-chip" data-trans="NASB" onclick="vsSelectTrans('NASB')">NASB</button>
+    </div>
+
+    <!-- API rate-limit notice (hidden until limit is detected) -->
+    <div id="vsApiLimitBanner" class="vs-api-limit-banner hidden">
+      <span class="material-symbols-outlined">lock</span>
+      <span>Monthly API limit reached — NIV, NKJV &amp; NASB unavailable until next month. MSB &amp; BSB work as normal. Cached verses still load instantly.</span>
     </div>
 
     <!-- POS Highlight bar -->

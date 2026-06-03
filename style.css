@@ -25546,6 +25546,33 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .vs-trans-chip:not(.active):active {
   background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color));
 }
+.vs-trans-chip.limited {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  pointer-events: auto;
+}
+.vs-api-limit-banner {
+  margin: 0 14px 6px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--accent-color) 14%, var(--card-color));
+  border: 1px solid color-mix(in srgb, var(--accent-color) 60%, transparent);
+  border-radius: 10px;
+  font-size: 0.76rem;
+  color: var(--font-color);
+  display: flex; align-items: flex-start; gap: 7px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+.vs-api-limit-banner .material-symbols-outlined {
+  font-size: 1rem; color: var(--accent-color); flex-shrink: 0; margin-top: 1px;
+}
+.vs-api-limit-banner.hidden { display: none; }
+.vs-limit-flash { animation: vs-limit-flash 0.5s ease; }
+@keyframes vs-limit-flash {
+  0%, 100% { opacity: 1; }
+  40%       { opacity: 0.25; }
+}
 
 /* Body */
 .vs-body {
