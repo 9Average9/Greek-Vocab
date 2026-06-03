@@ -154,13 +154,63 @@ function _closeRhemaXrefShell() {
 function _xrefTopCardText() {
   const v = _xrefEnglishVersion();
   if (v === 'MSB' || v === 'BSB') return _xrefEnglishText(_rhemaXrefActive);
-  // VS context with API translation: try cache, fall back to MSB
+  // VS context with API translation: try cache, fall back to MSB/BSB local
   if (typeof _vsTextCache !== 'undefined') {
     const key = `${v}|${_rhemaXrefActive.book}|${_rhemaXrefActive.chapter}|${_rhemaXrefActive.verse}`;
     const cached = _vsTextCache.get(key);
     if (cached) return cached;
   }
   return _xrefEnglishText(_rhemaXrefActive);
+}
+
+function _xrefRefText(refOrObj) {
+  const p = typeof refOrObj === 'string' ? _xrefParseRef(refOrObj) : refOrObj;
+  if (!p) return '';
+  const v = _xrefEnglishVersion();
+  if (v === 'MSB' || v === 'BSB') return _xrefEnglishText(refOrObj);
+  if (typeof _vsTextCache !== 'undefined') {
+    const key = `${v}|${p.book}|${p.chapter}|${p.verse}`;
+    const cached = _vsTextCache.get(key);
+    if (cached) return cached;
+  }
+  return _xrefEnglishText(refOrObj);
+}
+
+async function _xrefLoadAsyncVerseTexts(refs) {
+  const v = _xrefEnglishVersion();
+  if (v === 'MSB' || v === 'BSB') return;
+  if (typeof _vsFetchVerse !== 'function') return;
+  const toFetch = refs.filter(r => {
+    const p = _xrefParseRef(r);
+    if (!p) return false;
+    return !_vsTextCache?.has(`${v}|${p.book}|${p.chapter}|${p.verse}`);
+  });
+  if (!toFetch.length) return;
+  await Promise.all(toFetch.map(async r => {
+    const p = _xrefParseRef(r);
+    if (!p) return;
+    await _vsFetchVerse(v, p.book, p.chapter, p.verse);
+  }));
+  // Update DOM spans by data-xref-ref
+  const body = document.getElementById('rxMainView');
+  if (!body) return;
+  body.querySelectorAll('[data-xref-ref]').forEach(el => {
+    const ref = el.dataset.xrefRef;
+    const p = _xrefParseRef(ref);
+    if (!p) return;
+    const key = `${v}|${p.book}|${p.chapter}|${p.verse}`;
+    const text = _vsTextCache?.get(key);
+    if (text) {
+      const clipped = el.dataset.xrefClip === '1' ? _xrefClip(text) : text;
+      el.textContent = clipped;
+    }
+  });
+  // Also update top card text
+  const topCardP = body.querySelector('.rx-top-card p');
+  if (topCardP) {
+    const text = _xrefTopCardText();
+    if (text) topCardP.textContent = text;
+  }
 }
 
 function _xrefTopCardHtml() {
@@ -210,10 +260,15 @@ function renderRhemaCrossReferences() {
   const data = _xrefCurrentData();
   const body = document.getElementById('rxMainView');
   if (!body) return;
+  const allRefs = [];
   body.innerHTML = _xrefTopCardHtml() + `<div class="rx-category-list">${RHEMA_XREF_CATEGORIES.map(cat => {
     const refs = data[cat.key] || [];
     const isEmpty = refs.length === 0;
-    const preview = !isEmpty ? refs.slice(0, 2).map(item => `<div class="rx-preview-line"><strong>${_xrefEscape(_xrefDisplay(item.ref))}</strong><span>${_xrefEscape(_xrefClip(_xrefEnglishText(item.ref)))}</span></div>`).join('') : '';
+    if (!isEmpty) refs.forEach(item => allRefs.push(item.ref));
+    const preview = !isEmpty ? refs.slice(0, 2).map(item => {
+      allRefs.push(item.ref);
+      return `<div class="rx-preview-line"><strong>${_xrefEscape(_xrefDisplay(item.ref))}</strong><span data-xref-ref="${_xrefEscape(item.ref)}" data-xref-clip="1">${_xrefEscape(_xrefClip(_xrefRefText(item.ref)))}</span></div>`;
+    }).join('') : '';
     const chips = cat.key === 'themes' && !isEmpty ? refs.slice(0, 5).map(item => `<span>${_xrefEscape(item.label)}</span>`).join('') : '';
     return `<button class="rx-category-card${isEmpty ? ' rx-no-data' : ''}" data-xref-cat="${cat.key}" onclick="openRhemaXrefCategory('${cat.key}')">
       <span class="rx-category-icon"><span class="material-symbols-outlined">${cat.icon}</span></span>
@@ -225,6 +280,7 @@ function renderRhemaCrossReferences() {
       <span class="material-symbols-outlined rx-card-arrow">${isEmpty ? 'block' : 'chevron_right'}</span>
     </button>`;
   }).join('')}</div>`;
+  _xrefLoadAsyncVerseTexts([_xrefKey(_rhemaXrefActive), ...allRefs]);
 }
 
 function openRhemaXrefCategory(key) {
@@ -254,7 +310,7 @@ function renderRhemaXrefTrail() {
   const cards = refs.map(item => `<button class="rx-verse-card" onclick="rhemaXrefFollow('${item.ref.replace(/'/g, "\\'")}')">
     <span class="rx-verse-copy">
       <strong>${_xrefEscape(_xrefDisplay(item.ref))}</strong>
-      <span>${_xrefEscape(_xrefEnglishText(item.ref))}</span>
+      <span data-xref-ref="${_xrefEscape(item.ref)}">${_xrefEscape(_xrefRefText(item.ref))}</span>
       <em>${_xrefEscape(item.label)}</em>
     </span>
     <span class="rx-arrow-btn material-symbols-outlined">arrow_forward</span>
@@ -263,6 +319,7 @@ function renderRhemaXrefTrail() {
   document.getElementById('rxMainView').innerHTML = _xrefTopCardHtml() +
     `<div class="rx-active-category" data-xref-cat="${cat.key}"><span class="rx-category-icon"><span class="material-symbols-outlined">${cat.icon}</span></span><div><strong>${cat.title} <em>${refs.length}</em></strong><p>${cat.desc}</p></div></div>` +
     `<div class="rx-verse-stack">${cards || '<p class="rx-empty">No starter links are loaded for this verse yet.</p>'}</div>${save}`;
+  _xrefLoadAsyncVerseTexts([_xrefKey(_rhemaXrefActive), ...refs.map(r => r.ref)]);
 }
 
 function rhemaXrefFollow(ref) {

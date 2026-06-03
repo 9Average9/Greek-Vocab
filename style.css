@@ -14513,10 +14513,9 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 }
 
 .rx-translation-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 5px;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
   margin: -6px 2px 16px;
   border: 1px solid color-mix(in srgb, var(--secondary-color) 20%, var(--border-color));
   border-radius: 999px;
@@ -14525,14 +14524,18 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 }
 
 .rx-translation-toggle button {
-  min-height: 34px;
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--muted-color);
+  font-size: 0.72rem;
   font-weight: 850;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .rx-translation-toggle button.active {
@@ -25691,10 +25694,11 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   border-color: var(--secondary-color);
   color: #fff;
 }
-/* Triangle positions (r=90px): top = Cross-Ref, bottom-right = Highlight, bottom-left = Chapter */
+/* Diamond positions (r=90px): top=Cross-Ref, right=Highlight, bottom=Chapter, left=Structure */
 .vs-wheel-overlay.open .vs-wheel-item:nth-child(1) { transform: translate(calc(-50% + 0px),   calc(-50% + -90px)) scale(1); opacity: 1; transition-delay: 0s; }
-.vs-wheel-overlay.open .vs-wheel-item:nth-child(2) { transform: translate(calc(-50% + 78px),  calc(-50% + 45px))  scale(1); opacity: 1; transition-delay: 0.05s; }
-.vs-wheel-overlay.open .vs-wheel-item:nth-child(3) { transform: translate(calc(-50% + -78px), calc(-50% + 45px))  scale(1); opacity: 1; transition-delay: 0.1s; }
+.vs-wheel-overlay.open .vs-wheel-item:nth-child(2) { transform: translate(calc(-50% + 90px),  calc(-50% + 0px))   scale(1); opacity: 1; transition-delay: 0.05s; }
+.vs-wheel-overlay.open .vs-wheel-item:nth-child(3) { transform: translate(calc(-50% + 0px),   calc(-50% + 90px))  scale(1); opacity: 1; transition-delay: 0.1s; }
+.vs-wheel-overlay.open .vs-wheel-item:nth-child(4) { transform: translate(calc(-50% + -90px), calc(-50% + 0px))   scale(1); opacity: 1; transition-delay: 0.15s; }
 
 /* ── VS Range Button ───────────────────────────────────────────────────── */
 .vs-range-btn {
@@ -25811,4 +25815,174 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 }
 .vs-verse-text-inline {
   font-size: 1.1rem; line-height: 1.75; color: var(--font-color); font-weight: 400;
+}
+
+/* ── VS Structure Workspace ──────────────────────────────────────────────── */
+.vs-struct-modal {
+  position: fixed; inset: 0; z-index: 1050;
+  display: flex; flex-direction: column;
+  background: var(--bg-color);
+  transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  transform: translateY(100%);
+}
+.vs-struct-modal.open { transform: translateY(0); }
+
+.vs-struct-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.vs-struct-back {
+  width: 36px; height: 36px; border-radius: 50%; border: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--font-color); cursor: pointer;
+}
+.vs-struct-title {
+  flex: 1; font-size: 1rem; font-weight: 700; color: var(--font-color);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vs-struct-toolbar {
+  display: flex; align-items: center; gap: 6px;
+}
+.vs-struct-tool-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--font-color); cursor: pointer;
+  font-size: 1.2rem;
+}
+.vs-struct-tool-btn:active { background: color-mix(in srgb, var(--secondary-color) 15%, transparent); }
+.vs-struct-tool-btn.active { color: var(--secondary-color); }
+.vs-struct-tool-btn:disabled { opacity: 0.35; pointer-events: none; }
+
+.vs-struct-edit-bar {
+  display: none; align-items: center; justify-content: center; gap: 10px;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color));
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.vs-struct-edit-bar.visible { display: flex; }
+.vs-struct-edit-label {
+  font-size: 0.75rem; font-weight: 700; color: var(--secondary-color);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+.vs-struct-canvas-wrap {
+  flex: 1; overflow: auto; position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+.vs-struct-canvas {
+  position: relative;
+  width: 2200px; height: 2000px;
+  touch-action: pan-x pan-y;
+}
+.vs-struct-canvas.edit-mode { touch-action: none; }
+
+.vs-struct-seg {
+  position: absolute;
+  display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+  padding: 10px 14px;
+  background: var(--card-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  max-width: 320px;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.vs-struct-seg.dragging {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  border-color: var(--secondary-color);
+  z-index: 100;
+  opacity: 0.92;
+}
+.vs-struct-seg.edit-mode { cursor: grab; }
+.vs-struct-word {
+  font-size: 0.95rem; font-weight: 500; color: var(--font-color);
+  padding: 3px 5px; border-radius: 6px;
+  cursor: default;
+  transition: background 0.1s;
+}
+.vs-struct-seg.edit-mode .vs-struct-word {
+  cursor: pointer;
+}
+.vs-struct-seg.edit-mode .vs-struct-word:hover {
+  background: color-mix(in srgb, var(--secondary-color) 15%, transparent);
+  color: var(--secondary-color);
+}
+.vs-struct-word.long-press-active {
+  background: color-mix(in srgb, var(--secondary-color) 22%, transparent);
+  color: var(--secondary-color);
+}
+
+/* Struct picker modal */
+.vs-struct-picker-modal {
+  position: fixed; inset: 0; z-index: 1060;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0,0,0,0.45);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s;
+}
+.vs-struct-picker-modal.open { opacity: 1; pointer-events: all; }
+.vs-struct-picker-sheet {
+  width: 100%; max-width: 480px;
+  background: var(--card-color);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 32px;
+  transform: translateY(30px);
+  transition: transform 0.22s cubic-bezier(0.32,0.72,0,1);
+}
+.vs-struct-picker-modal.open .vs-struct-picker-sheet { transform: translateY(0); }
+
+.vs-struct-picker-title {
+  font-size: 1rem; font-weight: 700; color: var(--font-color);
+  margin: 0 0 16px;
+}
+.vs-struct-picker-row {
+  display: flex; gap: 10px; margin-bottom: 12px; align-items: center;
+}
+.vs-struct-picker-label {
+  font-size: 0.8rem; font-weight: 700; color: var(--muted-color);
+  min-width: 52px;
+}
+.vs-struct-picker-sel {
+  flex: 1; height: 40px; border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-color); color: var(--font-color);
+  font-size: 0.9rem; padding: 0 10px;
+}
+.vs-struct-picker-open-btn {
+  width: 100%; height: 48px; border-radius: 14px; border: 0;
+  background: var(--secondary-color); color: #fff;
+  font-size: 1rem; font-weight: 800; cursor: pointer;
+  margin-top: 8px;
+}
+.vs-struct-picker-open-btn:active { opacity: 0.85; }
+
+/* Struct info sheet */
+.vs-struct-info-modal {
+  position: fixed; inset: 0; z-index: 1070;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0,0,0,0.45);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s;
+}
+.vs-struct-info-modal.open { opacity: 1; pointer-events: all; }
+.vs-struct-info-sheet {
+  width: 100%; max-width: 480px;
+  background: var(--card-color);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 40px;
+  transform: translateY(30px);
+  transition: transform 0.22s;
+}
+.vs-struct-info-modal.open .vs-struct-info-sheet { transform: translateY(0); }
+.vs-struct-info-sheet h3 {
+  margin: 0 0 12px; font-size: 1rem; font-weight: 800; color: var(--font-color);
+}
+.vs-struct-info-sheet p {
+  margin: 0 0 10px; font-size: 0.88rem; line-height: 1.6; color: var(--muted-color);
 }

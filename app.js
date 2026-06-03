@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.106";
+const APP_VERSION = "3.0.107";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,10 +18714,18 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.107 &mdash; Structure Workspace</div>
+<ul>
+  <li><strong>Structure tool added</strong> &mdash; A new Structure item in the VS tool wheel opens a free-canvas workspace where you can spatially arrange verse words into custom segments.</li>
+  <li><strong>Long-press to split</strong> &mdash; In Edit Mode, hold any word for 0.3 s to break it off as a new draggable segment; drag it anywhere on the canvas.</li>
+  <li><strong>Undo, redo, reset, save</strong> &mdash; Full edit history with undo/redo; reset restores the default layout; save persists to localStorage and Firebase.</li>
+  <li><strong>Cross-ref translation fix</strong> &mdash; Verse snippets in cross-reference lists now update to the selected translation (NIV/NKJV/NASB) instead of always showing MSB.</li>
+  <li><strong>Translation toggle fit fix</strong> &mdash; All five version chips (MSB/BSB/NIV/NKJV/NASB) now fit inside the rounded toggle container without overflowing.</li>
+</ul>
 <div class="un-version-label">v3.0.106 &mdash; Verse Structure</div>
 <ul>
   <li><strong>Verse Structure added</strong> &mdash; A new quick action on the Home screen lets you read any verse in NIV, NKJV, NASB, MSB, or BSB using api.bible for the licensed translations.</li>
-  <li><strong>Tool wand wheel</strong> &mdash; Cross-Ref, Highlight, and Full Chapter live in an animated radial wheel in the header, matching Rhema's wand button.</li>
+  <li><strong>Tool wand wheel</strong> &mdash; Cross-Ref, Highlight, Full Chapter, and Structure live in an animated radial wheel in the header, matching Rhema's wand button.</li>
   <li><strong>Combined reference pill + range selector</strong> &mdash; Book, chapter, and verse are shown in one pill; a range button lets you select a verse span like 5–12.</li>
   <li><strong>Full Chapter mode</strong> &mdash; Tap the Chapter wheel item to load all verses at once; prev/next navigates chapter-by-chapter.</li>
   <li><strong>Cross-ref fix</strong> &mdash; Cross-references now open above the VS modal, and closing returns to VS instead of Rhema.</li>
