@@ -190,6 +190,7 @@ async function openVerseStructure() {
   _syncVSWheelItems();
   const bar = document.getElementById('vsHighlightBar');
   if (bar) bar.classList.toggle('hidden', !_vsHlOn);
+  if (typeof vsStructUpdateCabinetBadge === 'function') vsStructUpdateCabinetBadge();
 }
 
 function closeVerseStructure() {

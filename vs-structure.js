@@ -292,7 +292,8 @@ async function openVSStructureWorkspace() {
 }
 
 function closeVSStructureWorkspace() {
-  _vsStructSaveLocal();
+  if (_vsStructWords.length) _vsStructSaveLocal();
+  vsStructUpdateCabinetBadge();
   const modal = document.getElementById('vsStructModal');
   if (!modal) return;
   modal.classList.remove('open');
@@ -346,6 +347,7 @@ function vsStructSave() {
     btn.style.color = 'var(--secondary-color)';
     setTimeout(() => { btn.style.color = ''; }, 800);
   }
+  vsStructUpdateCabinetBadge();
 }
 
 // ── Info ──────────────────────────────────────────────────────────────────────
@@ -565,4 +567,128 @@ function _vsStructDragEnd() {
   if (segEl) segEl.classList.remove('dragging');
   _vsStructDragSeg = null;
   _vsStructSaveLocal();
+}
+
+// ── Saved Structures Browser ──────────────────────────────────────────────────
+function _vsStructAllSaved() {
+  const results = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key.startsWith(VS_STRUCT_LS_PREFIX)) continue;
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (data?.segments?.length) results.push(data);
+    } catch {}
+  }
+  results.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  return results;
+}
+
+function _vsStructFormatDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function _vsStructBibleLabel(v) {
+  return v || 'MSB';
+}
+
+function openVSStructureBrowser() {
+  const modal = document.getElementById('vsStructBrowserModal');
+  if (!modal) return;
+  _vsStructRenderBrowserList();
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => modal.classList.add('open'));
+}
+
+function closeVSStructureBrowser() {
+  const modal = document.getElementById('vsStructBrowserModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  setTimeout(() => { modal.style.display = ''; }, 240);
+}
+
+function _vsStructRenderBrowserList() {
+  const list = document.getElementById('vsStructBrowserList');
+  if (!list) return;
+  const saved = _vsStructAllSaved();
+  if (!saved.length) {
+    list.innerHTML = `<div class="vs-struct-browser-empty">
+      <span class="material-symbols-outlined" style="font-size:2.5rem;display:block;margin-bottom:10px;color:var(--secondary-color)">folder_open</span>
+      No saved structures yet.<br>Open a passage from the Structure tool and save it.
+    </div>`;
+    return;
+  }
+  list.innerHTML = saved.map((data, idx) => {
+    const refLabel = data.referenceStart === data.referenceEnd
+      ? data.referenceStart
+      : `${data.referenceStart} – ${data.referenceEnd}`;
+    const bookName = (window.RhemaEnglishBooks || []).find(b => data.referenceStart?.startsWith(b.code))?.name || '';
+    const displayRef = bookName
+      ? refLabel.replace(data.referenceStart.split(' ')[0], bookName)
+      : refLabel;
+    return `<button class="vs-struct-browser-item" onclick="vsStructBrowserOpen(${idx})">
+      <span class="vs-struct-browser-item-icon material-symbols-outlined">layers</span>
+      <span class="vs-struct-browser-item-copy">
+        <span class="vs-struct-browser-item-ref">${displayRef}</span>
+        <span class="vs-struct-browser-item-meta">${_vsStructBibleLabel(data.bibleVersion)} · ${data.segments?.length || 0} segments · ${_vsStructFormatDate(data.updatedAt)}</span>
+      </span>
+      <span class="vs-struct-browser-item-arrow material-symbols-outlined">chevron_right</span>
+    </button>`;
+  }).join('');
+  // Store refs for click handler
+  list._savedData = saved;
+}
+
+function vsStructBrowserOpen(idx) {
+  const list = document.getElementById('vsStructBrowserList');
+  const saved = list?._savedData;
+  if (!saved?.[idx]) return;
+  const data = saved[idx];
+
+  closeVSStructureBrowser();
+
+  // Parse stored ref: "JOH 3:16"
+  const parseRef = ref => {
+    const m = String(ref || '').match(/^(\S+)\s+(\d+):(\d+)$/);
+    return m ? { book: m[1], chapter: m[2], verse: m[3] } : null;
+  };
+  const start = parseRef(data.referenceStart);
+  const end   = parseRef(data.referenceEnd);
+  if (!start) return;
+
+  _vsStructBook        = start.book;
+  _vsStructChapter     = start.chapter;
+  _vsStructVerseStart  = start.verse;
+  _vsStructVerseEnd    = end?.verse || start.verse;
+  _vsStructTranslation = data.bibleVersion || 'MSB';
+  _vsStructWords       = data.originalWords || [];
+  _vsStructSegments    = data.segments || [];
+  _vsStructHistory     = [];
+  _vsStructFuture      = [];
+
+  // Open workspace directly (skip picker)
+  const modal = document.getElementById('vsStructModal');
+  if (!modal) return;
+  const titleEl = document.getElementById('vsStructTitle');
+  const books   = window.RhemaEnglishBooks || [];
+  const bName   = books.find(b => b.code === _vsStructBook)?.name || _vsStructBook;
+  const rangeLabel = _vsStructVerseStart === _vsStructVerseEnd
+    ? `${bName} ${_vsStructChapter}:${_vsStructVerseStart}`
+    : `${bName} ${_vsStructChapter}:${_vsStructVerseStart}–${_vsStructVerseEnd}`;
+  if (titleEl) titleEl.textContent = rangeLabel;
+  _vsStructSyncEditBar();
+  _vsStructSyncUndoRedo();
+
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => modal.classList.add('open'));
+  _vsStructRender();
+}
+
+function vsStructUpdateCabinetBadge() {
+  const badge = document.getElementById('vsCabinetBadge');
+  if (!badge) return;
+  const count = _vsStructAllSaved().length;
+  badge.classList.toggle('visible', count > 0);
 }
