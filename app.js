@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.111";
+const APP_VERSION = "3.0.112";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.112 &mdash; Structure Background Fix</div>
+<ul>
+  <li><strong>Solid theme background</strong> &mdash; Fixed the root cause of the see-through structure workspace: the CSS variable <code>--bg-color</code> was never defined in this app's theme system, making every structure surface transparent. All structure elements now use <code>--primary-color</code> (and <code>--card-color</code> for inputs), which correctly adapts to the user's selected theme.</li>
+  <li><strong>No more home-screen flash</strong> &mdash; Removed the <code>visibility:hidden</code> approach that was briefly exposing the home screen during the slide-up animation. The workspace at z-index 9990 with a solid background covers everything correctly without hiding the VS modal.</li>
+</ul>
 <div class="un-version-label">v3.0.111 &mdash; Structure True Isolation</div>
 <ul>
   <li><strong>VS screen hidden while structure is open</strong> &mdash; The Verse Structure modal is now fully hidden (not just covered) when the structure workspace opens, eliminating all overlap and bleed-through.</li>
