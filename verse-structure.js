@@ -13,6 +13,10 @@ const VS_BOOK_CODE_MAP = {
 const VS_LOCAL_SET    = new Set(['MSB', 'BSB']);
 const VS_TRANSLATIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
 
+// Persistent localStorage cache keys for api.bible data
+const VS_LS_BIBLE_IDS   = 'vs_bible_ids_v1';
+const VS_LS_VERSE_PFX   = 'vs_v_'; // + "TRANS|BOOK|CH|V"
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let _vsBook        = 'JOH';
 let _vsChapter     = '3';
@@ -80,6 +84,15 @@ async function _vsGetBibleIds() {
   if (_vsBibleIds) return _vsBibleIds;
   if (_vsBibleIdsFetch) return _vsBibleIdsFetch;
 
+  // Check localStorage before hitting the network
+  try {
+    const cached = localStorage.getItem(VS_LS_BIBLE_IDS);
+    if (cached) {
+      _vsBibleIds = JSON.parse(cached);
+      return _vsBibleIds;
+    }
+  } catch {}
+
   _vsBibleIdsFetch = (async () => {
     try {
       const r = await fetch(`${VS_API_BASE}/bibles?language=ENG`, {
@@ -96,6 +109,7 @@ async function _vsGetBibleIds() {
         if (!ids.NASB && /^NASB/.test(abbr)) ids.NASB = b.id;
       }
       _vsBibleIds = ids;
+      try { localStorage.setItem(VS_LS_BIBLE_IDS, JSON.stringify(ids)); } catch {}
       return ids;
     } catch {
       _vsBibleIdsFetch = null;
@@ -108,6 +122,15 @@ async function _vsGetBibleIds() {
 async function _vsFetchVerse(trans, book, ch, v) {
   const key = `${trans}|${book}|${ch}|${v}`;
   if (_vsTextCache.has(key)) return _vsTextCache.get(key);
+
+  // Check persistent localStorage cache before hitting the network
+  try {
+    const stored = localStorage.getItem(VS_LS_VERSE_PFX + key);
+    if (stored !== null) {
+      _vsTextCache.set(key, stored);
+      return stored;
+    }
+  } catch {}
 
   const ids     = await _vsGetBibleIds();
   const bibleId = ids[trans];
@@ -124,6 +147,7 @@ async function _vsFetchVerse(trans, book, ch, v) {
     const { data } = await r.json();
     const text = (data?.content || '').trim().replace(/\s+/g, ' ');
     _vsTextCache.set(key, text);
+    try { localStorage.setItem(VS_LS_VERSE_PFX + key, text); } catch {}
     return text;
   } catch {
     return null;

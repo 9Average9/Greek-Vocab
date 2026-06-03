@@ -19,8 +19,15 @@ let _vsStructFuture      = [];   // snapshots for redo
 
 // Long-press drag state
 let _vsStructDragSeg     = null; // segment being dragged
+let _vsStructDragEl      = null; // cached DOM element for active drag
+let _vsStructDragWrap    = null; // cached wrap element
+let _vsStructDragWrapX   = 0;   // cached wrapRect.left
+let _vsStructDragWrapY   = 0;   // cached wrapRect.top
 let _vsStructDragOffX    = 0;
 let _vsStructDragOffY    = 0;
+let _vsStructDragRaf     = null; // rAF handle for throttled position updates
+let _vsStructDragPendX   = 0;
+let _vsStructDragPendY   = 0;
 let _vsStructLpTimer     = null;
 let _vsStructLpWord      = null; // { segId, wordIdx }
 let _vsStructLpEl        = null;
@@ -386,17 +393,16 @@ function _vsStructRender() {
       span.dataset.absIdx = absIdx;
 
       if (_vsStructEditMode) {
-        span.addEventListener('touchstart', _vsStructWordTouchStart, { passive: true });
-        span.addEventListener('touchmove',  _vsStructWordTouchMove,  { passive: true });
-        span.addEventListener('touchend',   _vsStructWordTouchEnd,   { passive: false });
+        span.addEventListener('touchstart',  _vsStructWordTouchStart,  { passive: false });
+        span.addEventListener('touchmove',   _vsStructWordTouchMove,   { passive: false });
+        span.addEventListener('touchend',    _vsStructWordTouchEnd,    { passive: false });
+        span.addEventListener('touchcancel', _vsStructWordTouchEnd,    { passive: true  });
       }
       div.appendChild(span);
     });
 
     if (_vsStructEditMode) {
-      div.addEventListener('touchstart', _vsStructSegTouchStart, { passive: true });
-      div.addEventListener('touchmove',  _vsStructSegTouchMove,  { passive: false });
-      div.addEventListener('touchend',   _vsStructSegTouchEnd,   { passive: true });
+      div.addEventListener('touchstart', _vsStructSegTouchStart, { passive: false });
     }
 
     canvas.appendChild(div);
@@ -414,9 +420,31 @@ function _vsStructAbsIdx(seg, withinIdx) {
   return seg.startIdx + withinIdx;
 }
 
+// ── Shared drag initiator ─────────────────────────────────────────────────────
+function _vsStructBeginDrag(seg, segEl, touchX, touchY) {
+  if (!segEl) return;
+  const wrap     = document.getElementById('vsStructCanvasWrap');
+  if (!wrap) return;
+  const rect     = segEl.getBoundingClientRect();
+  const wrapRect = wrap.getBoundingClientRect();
+  _vsStructDragSeg   = seg;
+  _vsStructDragEl    = segEl;
+  _vsStructDragWrap  = wrap;
+  _vsStructDragWrapX = wrapRect.left;
+  _vsStructDragWrapY = wrapRect.top;
+  // Offset = how far the touch point is from the element's top-left corner (viewport coords)
+  _vsStructDragOffX  = touchX - rect.left;
+  _vsStructDragOffY  = touchY - rect.top;
+  segEl.classList.add('dragging');
+  window.addEventListener('touchmove',   _vsStructDragMove, { passive: false });
+  window.addEventListener('touchend',    _vsStructDragEnd,  { passive: true  });
+  window.addEventListener('touchcancel', _vsStructDragEnd,  { passive: true  });
+}
+
 // ── Long-press split interaction ──────────────────────────────────────────────
 function _vsStructWordTouchStart(e) {
   if (!_vsStructEditMode) return;
+  e.preventDefault(); // prevent scroll while registering long-press
   const touch = e.touches[0];
   _vsStructTouchStart = { x: touch.clientX, y: touch.clientY };
   const span   = e.currentTarget;
@@ -432,16 +460,20 @@ function _vsStructWordTouchStart(e) {
   _vsStructLpTimer = setTimeout(() => {
     _vsStructLpTimer = null;
     _vsStructSplitAndBeginDrag(segId, absIdx, touch.clientX, touch.clientY);
-  }, 300);
+  }, 350);
 }
 
 function _vsStructWordTouchMove(e) {
-  if (!_vsStructLpTimer && !_vsStructDragSeg) return;
   const touch = e.touches[0];
   const dx = Math.abs(touch.clientX - (_vsStructTouchStart?.x || 0));
   const dy = Math.abs(touch.clientY - (_vsStructTouchStart?.y || 0));
-  if ((dx > 8 || dy > 8) && _vsStructLpTimer) {
-    // User scrolled — cancel long press
+  if (_vsStructDragSeg) {
+    // Already dragging — prevent scroll
+    e.preventDefault();
+    return;
+  }
+  if ((dx > 10 || dy > 10) && _vsStructLpTimer) {
+    // Finger moved before long-press fired — cancel
     clearTimeout(_vsStructLpTimer);
     _vsStructLpTimer = null;
     if (_vsStructLpEl) _vsStructLpEl.classList.remove('long-press-active');
@@ -466,17 +498,15 @@ function _vsStructSplitAndBeginDrag(segId, splitAbsIdx, touchX, touchY) {
 
   _vsStructPushHistory();
 
-  const canvas  = document.getElementById('vsStructCanvas');
-  const wrap    = document.getElementById('vsStructCanvasWrap');
-  if (!canvas || !wrap) return;
-  const wrapRect = wrap.getBoundingClientRect();
+  const canvas = document.getElementById('vsStructCanvas');
+  if (!canvas) return;
 
   let newSeg;
   if (splitAbsIdx === seg.startIdx) {
     // Drag the whole segment
     newSeg = seg;
   } else {
-    // Split: shorten seg, create new
+    // Split: shorten existing seg, create new one from split point
     const prevEnd = seg.endIdx;
     seg.endIdx    = splitAbsIdx - 1;
     const maxId   = _vsStructSegments.reduce((m, s) => Math.max(m, s.id), 0);
@@ -491,77 +521,58 @@ function _vsStructSplitAndBeginDrag(segId, splitAbsIdx, touchX, touchY) {
     _vsStructRender();
   }
 
-  // Begin drag
   const segEl = document.querySelector(`[data-seg-id="${newSeg.id}"]`);
-  if (!segEl) return;
-  const rect = segEl.getBoundingClientRect();
-  _vsStructDragSeg  = newSeg;
-  _vsStructDragOffX = touchX - rect.left + wrapRect.left + wrap.scrollLeft;
-  _vsStructDragOffY = touchY - rect.top  + wrapRect.top  + wrap.scrollTop;
-  segEl.classList.add('dragging');
-
-  // Attach move/end to window
-  window.addEventListener('touchmove', _vsStructDragMove, { passive: false });
-  window.addEventListener('touchend',  _vsStructDragEnd,  { passive: true });
+  _vsStructBeginDrag(newSeg, segEl, touchX, touchY);
 }
 
 // ── Segment drag ───────────────────────────────────────────────────────────────
 function _vsStructSegTouchStart(e) {
   if (!_vsStructEditMode) return;
-  // Only start segment drag if touch is directly on the segment background (not a word span)
   if (e.target.classList.contains('vs-struct-word')) return;
-  const touch  = e.touches[0];
-  const segEl  = e.currentTarget;
-  const segId  = parseInt(segEl.dataset.segId, 10);
-  const seg    = _vsStructSegments.find(s => s.id === segId);
-  if (!seg) return;
-  const wrap   = document.getElementById('vsStructCanvasWrap');
-  if (!wrap) return;
-  const wrapRect = wrap.getBoundingClientRect();
-  const rect     = segEl.getBoundingClientRect();
-  _vsStructDragSeg  = seg;
-  _vsStructDragOffX = touch.clientX - rect.left + wrapRect.left + wrap.scrollLeft;
-  _vsStructDragOffY = touch.clientY - rect.top  + wrapRect.top  + wrap.scrollTop;
-  segEl.classList.add('dragging');
-  window.addEventListener('touchmove', _vsStructDragMove, { passive: false });
-  window.addEventListener('touchend',  _vsStructDragEnd,  { passive: true });
-}
-
-function _vsStructSegTouchMove(e) {
-  // Prevent canvas scroll while dragging segment background
-  if (_vsStructDragSeg && !e.target.classList.contains('vs-struct-word')) {
-    e.preventDefault();
-  }
-}
-
-function _vsStructSegTouchEnd() {}
-
-function _vsStructDragMove(e) {
-  if (!_vsStructDragSeg) return;
   e.preventDefault();
   const touch = e.touches[0];
-  const wrap  = document.getElementById('vsStructCanvasWrap');
-  if (!wrap) return;
-  const wrapRect = wrap.getBoundingClientRect();
-  const newX = touch.clientX - wrapRect.left + wrap.scrollLeft - _vsStructDragOffX;
-  const newY = touch.clientY - wrapRect.top  + wrap.scrollTop  - _vsStructDragOffY;
-  _vsStructDragSeg.x = Math.max(0, newX);
-  _vsStructDragSeg.y = Math.max(0, newY);
-  const segEl = document.querySelector(`[data-seg-id="${_vsStructDragSeg.id}"]`);
-  if (segEl) {
-    segEl.style.left = _vsStructDragSeg.x + 'px';
-    segEl.style.top  = _vsStructDragSeg.y + 'px';
+  const segEl = e.currentTarget;
+  const segId = parseInt(segEl.dataset.segId, 10);
+  const seg   = _vsStructSegments.find(s => s.id === segId);
+  if (!seg) return;
+  _vsStructBeginDrag(seg, segEl, touch.clientX, touch.clientY);
+}
+
+function _vsStructDragMove(e) {
+  if (!_vsStructDragSeg || !_vsStructDragWrap) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  // Canvas coordinates = viewport position relative to wrap + scroll offset
+  _vsStructDragPendX = Math.max(0, touch.clientX - _vsStructDragWrapX + _vsStructDragWrap.scrollLeft - _vsStructDragOffX);
+  _vsStructDragPendY = Math.max(0, touch.clientY - _vsStructDragWrapY + _vsStructDragWrap.scrollTop  - _vsStructDragOffY);
+  if (!_vsStructDragRaf) {
+    _vsStructDragRaf = requestAnimationFrame(_vsStructDragApply);
   }
+}
+
+function _vsStructDragApply() {
+  _vsStructDragRaf = null;
+  if (!_vsStructDragSeg || !_vsStructDragEl) return;
+  _vsStructDragSeg.x = _vsStructDragPendX;
+  _vsStructDragSeg.y = _vsStructDragPendY;
+  _vsStructDragEl.style.left = _vsStructDragSeg.x + 'px';
+  _vsStructDragEl.style.top  = _vsStructDragSeg.y + 'px';
 }
 
 function _vsStructDragEnd() {
-  window.removeEventListener('touchmove', _vsStructDragMove);
-  window.removeEventListener('touchend',  _vsStructDragEnd);
-  if (!_vsStructDragSeg) return;
-  const segEl = document.querySelector(`[data-seg-id="${_vsStructDragSeg.id}"]`);
-  if (segEl) segEl.classList.remove('dragging');
-  _vsStructDragSeg = null;
-  _vsStructSaveLocal();
+  if (_vsStructDragRaf) {
+    cancelAnimationFrame(_vsStructDragRaf);
+    _vsStructDragRaf = null;
+  }
+  window.removeEventListener('touchmove',   _vsStructDragMove);
+  window.removeEventListener('touchend',    _vsStructDragEnd);
+  window.removeEventListener('touchcancel', _vsStructDragEnd);
+  if (_vsStructDragEl) _vsStructDragEl.classList.remove('dragging');
+  _vsStructDragEl   = null;
+  _vsStructDragWrap = null;
+  const hadDrag = !!_vsStructDragSeg;
+  _vsStructDragSeg  = null;
+  if (hadDrag) _vsStructSaveLocal();
 }
 
 // ── Saved Structures Browser ──────────────────────────────────────────────────

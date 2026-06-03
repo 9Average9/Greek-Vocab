@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.112";
+const APP_VERSION = "3.0.113";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,15 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.113 &mdash; Smoother Drag &amp; Offline Verse Cache</div>
+<ul>
+  <li><strong>Smooth drag with lift animation</strong> &mdash; Dragging structure segments now uses <code>requestAnimationFrame</code> throttling and a cached DOM reference, eliminating slip and lag. A scale + shadow lift effect confirms you're dragging.</li>
+  <li><strong>No more stuck drags</strong> &mdash; Added <code>touchcancel</code> handling so drags always release cleanly when iOS interrupts (notifications, app-switch, etc.).</li>
+  <li><strong>Better long-press feel</strong> &mdash; Increased threshold to 350ms, improved scroll-vs-drag detection, and added a subtle pulse animation when a split is triggered.</li>
+  <li><strong>Edit mode visual hint</strong> &mdash; Segments show a faint dashed border in edit mode so it&apos;s clear which elements can be moved.</li>
+  <li><strong>Verse text cached to device</strong> &mdash; NIV / NKJV / NASB verses are now persisted in localStorage after the first fetch. Switching the same verse again is instant with zero API calls.</li>
+  <li><strong>Bible IDs cached to device</strong> &mdash; The api.bible version lookup is also stored locally, so the app no longer makes that network call on every launch.</li>
+</ul>
 <div class="un-version-label">v3.0.112 &mdash; Structure Background Fix</div>
 <ul>
   <li><strong>Solid theme background</strong> &mdash; Fixed the root cause of the see-through structure workspace: the CSS variable <code>--bg-color</code> was never defined in this app's theme system, making every structure surface transparent. All structure elements now use <code>--primary-color</code> (and <code>--card-color</code> for inputs), which correctly adapts to the user's selected theme.</li>
