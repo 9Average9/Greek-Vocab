@@ -16,6 +16,7 @@ const VS_TRANSLATIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
 // Persistent localStorage cache keys for api.bible data
 const VS_LS_BIBLE_IDS   = 'vs_bible_ids_v1';
 const VS_LS_VERSE_PFX   = 'vs_v_'; // + "TRANS|BOOK|CH|V"
+const VS_LS_CHAPTER_PFX = 'vs_ch_'; // + "TRANS|BOOK|CH" → '1' when fully cached
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let _vsBook        = 'JOH';
@@ -41,6 +42,9 @@ let _vsBibleIdsFetch  = null;
 
 // Verse text cache: "TRANS|BOOK|CH|V" → text
 const _vsTextCache = new Map();
+
+// Tracks chapters currently being background-prefetched to avoid duplicates
+const _vsPrefetchInProgress = new Set();
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 function _vsEsc(s) {
@@ -132,6 +136,10 @@ async function _vsFetchVerse(trans, book, ch, v) {
     }
   } catch {}
 
+  // Fire-and-forget background prefetch for the whole chapter so future
+  // verse reads in this chapter are instant with zero API calls.
+  _vsPrefetchChapter(trans, book, ch);
+
   const ids     = await _vsGetBibleIds();
   const bibleId = ids[trans];
   if (!bibleId) return null;
@@ -151,6 +159,40 @@ async function _vsFetchVerse(trans, book, ch, v) {
     return text;
   } catch {
     return null;
+  }
+}
+
+// Fetches every verse in a chapter in the background and caches them all.
+// Uses the local MSB/BSB data to know the verse list — no extra API call needed.
+// Batches 5 concurrent requests to avoid overwhelming the API.
+async function _vsPrefetchChapter(trans, book, ch) {
+  if (VS_LOCAL_SET.has(trans)) return; // MSB/BSB are already local
+  const chKey = `${trans}|${book}|${ch}`;
+  if (_vsPrefetchInProgress.has(chKey)) return;
+  try { if (localStorage.getItem(VS_LS_CHAPTER_PFX + chKey)) return; } catch {}
+
+  _vsPrefetchInProgress.add(chKey);
+  try {
+    // Verse list comes from local MSB structure — same verse numbers across translations
+    const verses = _vsChapterVerses(book, ch);
+    if (!verses.length) return;
+
+    const uncached = verses.filter(v => {
+      const vKey = `${trans}|${book}|${ch}|${v}`;
+      if (_vsTextCache.has(vKey)) return false;
+      try { return localStorage.getItem(VS_LS_VERSE_PFX + vKey) === null; } catch { return true; }
+    });
+
+    const BATCH = 5;
+    for (let i = 0; i < uncached.length; i += BATCH) {
+      await Promise.all(
+        uncached.slice(i, i + BATCH).map(v => _vsFetchVerse(trans, book, ch, v).catch(() => null))
+      );
+    }
+
+    try { localStorage.setItem(VS_LS_CHAPTER_PFX + chKey, '1'); } catch {}
+  } finally {
+    _vsPrefetchInProgress.delete(chKey);
   }
 }
 

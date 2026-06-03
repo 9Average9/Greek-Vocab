@@ -18695,7 +18695,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.113";
+const APP_VERSION = "3.0.114";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18714,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.114 &mdash; Chapter-Level Verse Prefetch</div>
+<ul>
+  <li><strong>Whole chapter cached on first read</strong> &mdash; The first time any verse from a chapter is opened in NIV, NKJV, or NASB, the entire chapter is silently fetched in the background (5 verses at a time). Every subsequent read from that chapter costs zero API calls and is instant.</li>
+  <li><strong>Chapter cache persists across sessions</strong> &mdash; Once a chapter is fully cached it is marked in localStorage so it is never re-fetched, even after the app is restarted.</li>
+</ul>
 <div class="un-version-label">v3.0.113 &mdash; Smoother Drag &amp; Offline Verse Cache</div>
 <ul>
   <li><strong>Smooth drag with lift animation</strong> &mdash; Dragging structure segments now uses <code>requestAnimationFrame</code> throttling and a cached DOM reference, eliminating slip and lag. A scale + shadow lift effect confirms you're dragging.</li>
