@@ -873,7 +873,7 @@ function _vsStructRenderBrowserList() {
     const primaryLabel = data.name || displayRef;
     const subLabel     = data.name ? displayRef : '';
     return `<button class="vs-struct-browser-item" onclick="vsStructBrowserOpen(${idx})">
-      <span class="vs-struct-browser-item-icon material-symbols-outlined">layers</span>
+      <span class="vs-struct-browser-item-icon"><span class="material-symbols-outlined">layers</span></span>
       <span class="vs-struct-browser-item-copy">
         <span class="vs-struct-browser-item-ref">${primaryLabel}</span>
         <span class="vs-struct-browser-item-meta">${subLabel ? subLabel + ' · ' : ''}${_vsStructBibleLabel(data.bibleVersion)} · ${data.segments?.length || 0} segments · ${_vsStructFormatDate(data.updatedAt)}</span>

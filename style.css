@@ -26207,6 +26207,12 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   line-height: 1;
   text-align: center;
 }
+.vs-struct-browser-item-icon .material-symbols-outlined {
+  display: block;
+  font-size: 1.35rem;
+  line-height: 1;
+  transform: translateY(2px);
+}
 .vs-struct-browser-item-copy {
   flex: 1; min-width: 0;
 }

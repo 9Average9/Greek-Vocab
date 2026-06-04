@@ -18757,7 +18757,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.121";
+const APP_VERSION = "3.0.122";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18776,7 +18776,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.121 &mdash; Saved Structure Icon Polish</div>
+<div class="un-version-label">v3.0.122 &mdash; Saved Structure Icon Polish</div>
 <ul>
   <li><strong>Saved structure icons centered</strong> &mdash; The folder sheet row icons, delete icon, close icon, and chevron now sit cleanly centered in their touch targets.</li>
 </ul>
