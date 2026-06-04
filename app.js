@@ -18757,7 +18757,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.123";
+const APP_VERSION = "3.0.124";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18776,9 +18776,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.123 &mdash; Rhema Range of Meaning</div>
+<div class="un-version-label">v3.0.124 &mdash; Rhema Range Label Cleanup</div>
 <ul>
-  <li><strong>Range of Meaning added</strong> &mdash; Definition tabs now include a Range of Meaning button under Quick Definition with semantic range chips and up to 10 highlighted verse examples.</li>
+  <li><strong>Range labels cleaned up</strong> &mdash; Legacy Strong's/KJV markers like "X" are now removed from Range of Meaning chips so labels read like normal meanings.</li>
 </ul>
 <div class="un-version-label">v3.0.120 &mdash; Structure Live Phrase Drag</div>
 <ul>
@@ -26908,6 +26908,11 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
 }
 
 function _rhemaSemanticRangeParts(lex = {}) {
+  const cleanRangePart = part => part
+    .replace(/^[xX]\s+/, '')
+    .replace(/^[-–—+*]+\s*/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
   const text = [
     lex.kjv_def,
     lex.quick_def,
@@ -26918,7 +26923,7 @@ function _rhemaSemanticRangeParts(lex = {}) {
   return [...new Set(text
     .replace(/^--\s*/, '')
     .split(/[,;]|\bor\b|\band\b/i)
-    .map(part => part.replace(/^[\s.:;-]+|[\s.:;-]+$/g, '').trim())
+    .map(part => cleanRangePart(part.replace(/^[\s.:;-]+|[\s.:;-]+$/g, '')))
     .filter(part => part.length > 2 && part.length < 52)
   )].slice(0, 12);
 }
