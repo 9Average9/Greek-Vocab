@@ -581,6 +581,7 @@ function _vsStructBeginDrag(seg, segEl, touchX, touchY) {
   if (!segEl) return;
   const wrap     = document.getElementById('vsStructCanvasWrap');
   if (!wrap) return;
+  _vsStructKeepSegmentInView(seg, segEl);
   const rect     = segEl.getBoundingClientRect();
   const wrapRect = wrap.getBoundingClientRect();
   _vsStructDragSeg   = seg;
@@ -595,6 +596,27 @@ function _vsStructBeginDrag(seg, segEl, touchX, touchY) {
   window.addEventListener('touchmove',   _vsStructDragMove, { passive: false });
   window.addEventListener('touchend',    _vsStructDragEnd,  { passive: true  });
   window.addEventListener('touchcancel', _vsStructDragEnd,  { passive: true  });
+}
+
+function _vsStructViewportClampedX(x, segEl) {
+  const wrap = _vsStructDragWrap || document.getElementById('vsStructCanvasWrap');
+  if (!wrap || !segEl) return Math.max(0, x);
+  const pad = 16;
+  const visibleLeft = wrap.scrollLeft + pad;
+  const available = Math.max(120, wrap.clientWidth - pad * 2);
+  const width = Math.min(segEl.offsetWidth || available, available);
+  const visibleRight = wrap.scrollLeft + wrap.clientWidth - pad;
+  const maxX = Math.max(visibleLeft, visibleRight - width);
+  return Math.max(visibleLeft, Math.min(x, maxX));
+}
+
+function _vsStructKeepSegmentInView(seg, segEl) {
+  if (!seg || !segEl) return;
+  const nextX = _vsStructViewportClampedX(seg.x || 0, segEl);
+  if (nextX !== seg.x) {
+    seg.x = nextX;
+    segEl.style.left = seg.x + 'px';
+  }
 }
 
 // ── Long-press split interaction ──────────────────────────────────────────────
@@ -692,6 +714,7 @@ function _vsStructSplitAndBeginDrag(segId, splitAbsIdx, touchX, touchY) {
   }
 
   const segEl = document.querySelector(`[data-seg-id="${newSeg.id}"]`);
+  _vsStructKeepSegmentInView(newSeg, segEl);
   _vsStructBeginDrag(newSeg, segEl, touchX, touchY);
   _vsStructDragMove({ touches: [{ clientX: touchX, clientY: touchY }], preventDefault() {} });
 }
@@ -716,7 +739,8 @@ function _vsStructDragMove(e) {
   e.preventDefault();
   const touch = e.touches[0];
   // Canvas coordinates = viewport position relative to wrap + scroll offset
-  _vsStructDragPendX = Math.max(0, touch.clientX - _vsStructDragWrapX + _vsStructDragWrap.scrollLeft - _vsStructDragOffX);
+  const nextX = touch.clientX - _vsStructDragWrapX + _vsStructDragWrap.scrollLeft - _vsStructDragOffX;
+  _vsStructDragPendX = _vsStructViewportClampedX(nextX, _vsStructDragEl);
   _vsStructDragPendY = Math.max(0, touch.clientY - _vsStructDragWrapY + _vsStructDragWrap.scrollTop  - _vsStructDragOffY);
   if (!_vsStructDragRaf) {
     _vsStructDragRaf = requestAnimationFrame(_vsStructDragApply);

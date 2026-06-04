@@ -18757,7 +18757,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.117";
+const APP_VERSION = "3.0.118";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18776,6 +18776,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.118 &mdash; Structure Edge Drag Fix</div>
+<ul>
+  <li><strong>Long phrases stay attached</strong> &mdash; Split phrases that would poke off the right side of the screen now clamp into view before dragging begins, so you do not have to let go and grab them again.</li>
+</ul>
 <div class="un-version-label">v3.0.117 &mdash; Structure Study Flow Fixes</div>
 <ul>
   <li><strong>Structure drag is smoother</strong> &mdash; Long-pressing a word now lifts the following phrase and immediately keeps dragging from the same finger, with better tolerance for quick movement.</li>
