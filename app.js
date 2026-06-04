@@ -18757,7 +18757,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.126";
+const APP_VERSION = "3.0.127";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18776,6 +18776,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.127 &mdash; Abbott-Smith Headword Guard</div>
+<ul>
+  <li><strong>Abbott-Smith headwords checked</strong> &mdash; Abbott-Smith entries now verify the Greek headword against the selected lemma before showing, preventing unrelated Greek words from appearing under the wrong word.</li>
+  <li><strong>Be-state quick definitions cleaned up</strong> &mdash; Glosses that begin with "am/is/be" now read as normal English states, so "he / she is hidden" does not turn into broken wording.</li>
+</ul>
 <div class="un-version-label">v3.0.126 &mdash; Quick Definition Accuracy Fixes</div>
 <ul>
   <li><strong>More irregular verbs</strong> &mdash; Added ~12 additional irregular verb forms including "hide → hidden / hid", so glosses like κρυβῆναι now read "to be hidden" instead of "to be hided".</li>
@@ -25458,8 +25463,21 @@ function _eng3sg(v) {
   return v + 's';
 }
 
+function _rhemaVerbBaseInfo(brief) {
+  let base = (brief || '').split(',')[0].split(';')[0].trim().replace(/^I\s+/i, '').trim();
+  base = base
+    .replace(/^[xX]\s+/, '')
+    .replace(/^[-–—+*]+\s*/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const being = base.match(/^(?:am|is|are|was|were|be|being|been)\s+(.+)$/i);
+  if (being?.[1]) return { base, kind: 'being', complement: being[1].trim() };
+  return { base, kind: 'action', complement: '' };
+}
+
 function _sxVerbGloss(morph, brief) {
-  const base = (brief || '').split(',')[0].split(';')[0].trim().replace(/^I /, '').trim();
+  const baseInfo = _rhemaVerbBaseInfo(brief);
+  const base = baseInfo.base;
   if (!base) return '';
   if (!morph || !morph.startsWith('V-')) return base;
 
@@ -25472,6 +25490,32 @@ function _sxVerbGloss(morph, brief) {
 
   const BE_PRES = { '1S':'am','2S':'are','3S':'is','1P':'are','2P':'are','3P':'are' };
   const BE_PAST = { '1S':'was','2S':'were','3S':'was','1P':'were','2P':'were','3P':'were' };
+
+  if (baseInfo.kind === 'being') {
+    const comp = baseInfo.complement;
+    if (mood === 'N') return `to be ${comp}`;
+    if (mood === 'P') return (tense === 'A' || tense === 'X' || tense === 'Y')
+      ? `having been ${comp}`
+      : `being ${comp}`;
+
+    const pn = persNum.match(/^([123])([SP])/);
+    if (!pn) return `be ${comp}`;
+    const [, pers, num] = pn;
+    const SUBJ = { '1S':'I','2S':'you','3S':'he / she','1P':'we','2P':'you all','3P':'they' };
+    const subj = SUBJ[`${pers}${num}`] || '';
+    const pnKey = `${pers}${num}`;
+    if (mood === 'M') return `be ${comp}!`;
+    if (mood === 'S' || mood === 'O') return `${subj} might be ${comp}`;
+    switch (tense) {
+      case 'P': return `${subj} ${BE_PRES[pnKey] || 'are'} ${comp}`;
+      case 'I': return `${subj} ${BE_PAST[pnKey] || 'were'} ${comp}`;
+      case 'F': return `${subj} will be ${comp}`;
+      case 'A': return `${subj} ${BE_PAST[pnKey] || 'were'} ${comp}`;
+      case 'X': return `${subj} ${num==='S'&&pers==='3'?'has':'have'} been ${comp}`;
+      case 'Y': return `${subj} had been ${comp}`;
+      default:  return `${subj} be ${comp}`;
+    }
+  }
 
   // ── Infinitive ────────────────────────────────────────────────────────────────
   if (mood === 'N') return voice === 'P' ? `to be ${_engPast(base)}` : `to ${base}`;
@@ -26971,6 +27015,66 @@ function getRhemaQuickDefinition(lex) {
   return answer.length > 150 ? answer.slice(0, 147).trimEnd() + '...' : answer;
 }
 
+function _rhemaAbbottHeadword(abbott) {
+  const match = String(abbott || '').match(/<b>(.*?)<\/b>/i);
+  return match ? rhemaPlainDefinitionText(match[1]) : '';
+}
+
+function _rhemaGreekCompareKey(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/ς/g, 'σ')
+    .replace(/[^\p{Script=Greek}]+/gu, '');
+}
+
+function _rhemaGreekStemKey(text) {
+  let key = _rhemaGreekCompareKey(text);
+  const endings = ['ομαι', 'εομαι', 'αομαι', 'ησομαι', 'θησομαι', 'ω', 'εω', 'αω', 'οω', 'μι', 'ος', 'ον', 'ης', 'ας', 'ου', 'ων', 'η', 'α'];
+  for (const ending of endings) {
+    if (key.length > ending.length + 3 && key.endsWith(ending)) {
+      key = key.slice(0, -ending.length);
+      break;
+    }
+  }
+  return key;
+}
+
+function _rhemaEditDistance(a, b) {
+  const left = Array.from(a || '');
+  const right = Array.from(b || '');
+  const dp = Array.from({ length: left.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= right.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= left.length; i++) {
+    for (let j = 1; j <= right.length; j++) {
+      dp[i][j] = left[i - 1] === right[j - 1]
+        ? dp[i - 1][j - 1]
+        : Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]) + 1;
+    }
+  }
+  return dp[left.length][right.length];
+}
+
+function _rhemaGreekKeysClose(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a))) return true;
+  const maxLen = Math.max(a.length, b.length);
+  const distance = _rhemaEditDistance(a, b);
+  return maxLen >= 5 && (distance / maxLen) <= 0.28;
+}
+
+function _rhemaAbbottMatchesLex(lex = {}) {
+  if (!lex.abbott_smith) return false;
+  const headword = _rhemaAbbottHeadword(lex.abbott_smith);
+  if (!headword || !/[\u0370-\u03ff\u1f00-\u1fff]/.test(headword)) return true;
+  const lemmaKey = _rhemaGreekCompareKey(lex.lemma);
+  const headKey = _rhemaGreekCompareKey(headword);
+  if (_rhemaGreekKeysClose(lemmaKey, headKey)) return true;
+  return _rhemaGreekKeysClose(_rhemaGreekStemKey(lex.lemma), _rhemaGreekStemKey(headword));
+}
+
 function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguageLayer()) {
   if (layer === 'hebrew') return renderHebrewDefinition(strongs);
   const lex = getCurrentRhemaLexicon(layer)[strongs];
@@ -27002,10 +27106,15 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
     </div>`);
   }
 
-  if (lex.abbott_smith) {
+  if (lex.abbott_smith && _rhemaAbbottMatchesLex(lex)) {
     sections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Abbott-Smith Lexicon</div>
       <div class="rhema-def-text rhema-def-abbott">${lex.abbott_smith}</div>
+    </div>`);
+  } else if (lex.abbott_smith) {
+    sections.push(`<div class="rhema-def-section">
+      <div class="rhema-def-label">Abbott-Smith Lexicon</div>
+      <div class="rhema-def-text" style="opacity:.7">No exact Abbott-Smith entry matched this Greek headword.</div>
     </div>`);
   }
 
