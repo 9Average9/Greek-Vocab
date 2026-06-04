@@ -18757,7 +18757,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.118";
+const APP_VERSION = "3.0.119";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18776,9 +18776,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.118 &mdash; Structure Edge Drag Fix</div>
+<div class="un-version-label">v3.0.119 &mdash; Structure Split Drag Fix</div>
 <ul>
-  <li><strong>Long phrases stay attached</strong> &mdash; Split phrases that would poke off the right side of the screen now clamp into view before dragging begins, so you do not have to let go and grab them again.</li>
+  <li><strong>Non-first-word drags stay attached</strong> &mdash; Splitting a phrase from any later word now ignores the browser's synthetic cancel from re-rendering that word, so the lifted phrase can keep moving without needing a second grab.</li>
+  <li><strong>Free horizontal placement restored</strong> &mdash; Phrases can still be moved far left or right when you want that extra canvas space.</li>
 </ul>
 <div class="un-version-label">v3.0.117 &mdash; Structure Study Flow Fixes</div>
 <ul>
