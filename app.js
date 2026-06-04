@@ -18757,7 +18757,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.124";
+const APP_VERSION = "3.0.125";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18776,6 +18776,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.125 &mdash; Natural English Quick Definitions</div>
+<ul>
+  <li><strong>Tense-aware verb glosses</strong> &mdash; Quick definitions now reflect the actual tense of the Greek form: aorist shows simple past ("they remembered"), imperfect shows ongoing past ("they were remembering"), future shows "will", perfect shows "have/has remembered", pluperfect shows "had remembered".</li>
+  <li><strong>Passive voice fixed</strong> &mdash; Passive forms now read naturally: "they are remembered" (present), "they were remembered" (aorist), "they will be remembered" (future), "they have been remembered" (perfect) — not the old broken "they be remember".</li>
+  <li><strong>Irregular verbs</strong> &mdash; Common NT verbs now use correct English forms: "they knew", "he saw / he has seen", "they spoke / they have spoken", "they went", "they gave / having given", etc.</li>
+  <li><strong>Better -ing forms</strong> &mdash; Consonant doubling now correct: "running", "sitting", "beginning".</li>
+</ul>
 <div class="un-version-label">v3.0.124 &mdash; Rhema Range Label Cleanup</div>
 <ul>
   <li><strong>Range labels cleaned up</strong> &mdash; Legacy Strong's/KJV markers like "X" are now removed from Range of Meaning chips so labels read like normal meanings.</li>
@@ -25351,6 +25358,40 @@ function _sxVerbPerson(morph) {
 
 // Simple English morphology helpers for verb gloss display
 
+// Irregular verb tables for common NT vocabulary
+const _IRREG_PAST_PART = {
+  bear:'borne',begin:'begun',bind:'bound',bring:'brought',build:'built',
+  buy:'bought',cast:'cast',catch:'caught',choose:'chosen',come:'come',
+  cut:'cut',do:'done',draw:'drawn',drink:'drunk',drive:'driven',eat:'eaten',
+  fall:'fallen',feed:'fed',feel:'felt',find:'found',flee:'fled',fly:'flown',
+  forgive:'forgiven',get:'gotten',give:'given',go:'gone',grow:'grown',
+  hang:'hung',have:'had',hear:'heard',hold:'held',keep:'kept',know:'known',
+  lay:'laid',lead:'led',leave:'left',lose:'lost',make:'made',mean:'meant',
+  meet:'met',overcome:'overcome',pay:'paid',put:'put',read:'read',
+  ride:'ridden',rise:'risen',run:'run',say:'said',see:'seen',seek:'sought',
+  sell:'sold',send:'sent',set:'set',shine:'shone',show:'shown',shut:'shut',
+  sit:'sat',sleep:'slept',speak:'spoken',spend:'spent',stand:'stood',
+  strike:'struck',swear:'sworn',take:'taken',teach:'taught',tell:'told',
+  think:'thought',throw:'thrown',understand:'understood',wake:'woken',
+  win:'won',write:'written',beat:'beaten',become:'become',
+};
+const _IRREG_SIMPLE_PAST = {
+  bear:'bore',begin:'began',bind:'bound',bring:'brought',build:'built',
+  buy:'bought',cast:'cast',catch:'caught',choose:'chose',come:'came',
+  cut:'cut',do:'did',draw:'drew',drink:'drank',drive:'drove',eat:'ate',
+  fall:'fell',feed:'fed',feel:'felt',find:'found',flee:'fled',fly:'flew',
+  forgive:'forgave',get:'got',give:'gave',go:'went',grow:'grew',
+  hang:'hung',have:'had',hear:'heard',hold:'held',keep:'kept',know:'knew',
+  lay:'laid',lead:'led',leave:'left',lose:'lost',make:'made',mean:'meant',
+  meet:'met',overcome:'overcame',pay:'paid',put:'put',read:'read',
+  ride:'rode',rise:'rose',run:'ran',say:'said',see:'saw',seek:'sought',
+  sell:'sold',send:'sent',set:'set',shine:'shone',show:'showed',shut:'shut',
+  sit:'sat',sleep:'slept',speak:'spoke',spend:'spent',stand:'stood',
+  strike:'struck',swear:'swore',take:'took',teach:'taught',tell:'told',
+  think:'thought',throw:'threw',understand:'understood',wake:'woke',
+  win:'won',write:'wrote',beat:'beat',become:'became',
+};
+
 // Pluralise an English noun brief (e.g. "a word" → "words", "sin" → "sins").
 function _engPlural(base) {
   // Strip leading indefinite / definite article
@@ -25367,14 +25408,30 @@ function _engPlural(base) {
 
 function _engIng(v) {
   if (!v) return v;
-  if (/[^aeiou]e$/.test(v)) return v.slice(0, -1) + 'ing'; // come→coming, love→loving
+  if (/[^aeiou]e$/.test(v)) return v.slice(0, -1) + 'ing'; // love→loving
+  if (/[^aeiou][aeiou][^aeiouwxy]$/.test(v)) return v + v.slice(-1) + 'ing'; // run→running
   return v + 'ing';
 }
+// Past participle (used with "have" / "be"): known, seen, given, remembered
 function _engPast(v) {
   if (!v) return v;
-  if (/e$/.test(v)) return v + 'd';          // loved, placed
-  if (/[^aeiou]y$/.test(v)) return v.slice(0, -1) + 'ied'; // tried
-  return v + 'ed';                           // killed, walked
+  const words = v.split(' ');
+  const key = words[0].toLowerCase();
+  if (_IRREG_PAST_PART[key]) { words[0] = _IRREG_PAST_PART[key]; return words.join(' '); }
+  const w = words[0];
+  if (/e$/.test(w)) words[0] = w + 'd';
+  else if (/[^aeiou]y$/.test(w)) words[0] = w.slice(0, -1) + 'ied';
+  else if (/[^aeiou][aeiou][^aeiouwxy]$/.test(w)) words[0] = w + w.slice(-1) + 'ed';
+  else words[0] = w + 'ed';
+  return words.join(' ');
+}
+// Simple past tense (used for aorist): knew, saw, gave, remembered
+function _engSimplePast(v) {
+  if (!v) return v;
+  const words = v.split(' ');
+  const key = words[0].toLowerCase();
+  if (_IRREG_SIMPLE_PAST[key]) { words[0] = _IRREG_SIMPLE_PAST[key]; return words.join(' '); }
+  return _engPast(v); // regular verbs are the same
 }
 function _eng3sg(v) {
   if (!v) return v;
@@ -25387,32 +25444,92 @@ function _sxVerbGloss(morph, brief) {
   const base = (brief || '').split(',')[0].split(';')[0].trim().replace(/^I /, '').trim();
   if (!base) return '';
   if (!morph || !morph.startsWith('V-')) return base;
-  const parts = morph.split('-');
-  const form = (parts[1] || '').replace(/^2/, '');
+
+  const parts   = morph.split('-');
+  const form    = (parts[1] || '').replace(/^2/, ''); // strip 2nd-aorist/perfect prefix
   const persNum = parts[2] || '';
-  const tense = form[0], voice = form[1], mood = form[form.length - 1];
-  if (mood === 'N') return `to ${base}`;
-  if (mood === 'P') return (tense === 'A' || tense === 'X' || tense === 'Y')
-    ? `having ${_engPast(base)}`
-    : _engIng(base);
+  const tense   = form[0] || '';  // P=present I=imperfect F=future A=aorist X=perfect Y=pluperfect
+  const voice   = form[1] || '';  // A=active M=middle P=passive D/O/Q=deponent
+  const mood    = form.slice(2);  // I=indicative S=subjunctive O=optative M=imperative N=infinitive P=participle
+
+  const BE_PRES = { '1S':'am','2S':'are','3S':'is','1P':'are','2P':'are','3P':'are' };
+  const BE_PAST = { '1S':'was','2S':'were','3S':'was','1P':'were','2P':'were','3P':'were' };
+
+  // ── Infinitive ────────────────────────────────────────────────────────────────
+  if (mood === 'N') return voice === 'P' ? `to be ${_engPast(base)}` : `to ${base}`;
+
+  // ── Participle ────────────────────────────────────────────────────────────────
+  if (mood === 'P') {
+    if (voice === 'P') return `having been ${_engPast(base)}`;
+    return (tense === 'A' || tense === 'X' || tense === 'Y')
+      ? `having ${_engPast(base)}`
+      : _engIng(base);
+  }
+
+  // ── Finite forms: resolve subject ─────────────────────────────────────────────
   const pn = persNum.match(/^([123])([SP])/);
   if (!pn) return base;
   const [, pers, num] = pn;
-  const SUBJ = { '1S':'I', '2S':'you', '3S':'he / she', '1P':'we', '2P':'you all', '3P':'they' };
-  const subj = SUBJ[`${pers}${num}`] || '';
-  const modal = (mood === 'S' || mood === 'O') ? ' might' : '';
-  if (mood === 'M') return `${base}!`;
-  if (base === 'am' || base === 'be') {
-    const BE = { '1S':'am', '2S':'are', '3S':'is', '1P':'are', '2P':'are', '3P':'are' };
-    const beF = BE[`${pers}${num}`] || 'are';
-    return modal ? `${subj} might ${beF}` : `${subj} ${beF}`;
+  const SUBJ  = { '1S':'I','2S':'you','3S':'he / she','1P':'we','2P':'you all','3P':'they' };
+  const subj  = SUBJ[`${pers}${num}`] || '';
+  const pnKey = `${pers}${num}`;
+
+  // ── Passive voice ─────────────────────────────────────────────────────────────
+  if (voice === 'P') {
+    const pp = _engPast(base); // past participle: "remembered", "known"
+    if (mood === 'M') return `be ${pp}!`;
+    if (mood === 'S' || mood === 'O') return `${subj} might be ${pp}`;
+    switch (tense) {
+      case 'P': return `${subj} ${BE_PRES[pnKey] || 'are'} ${pp}`;           // they are remembered
+      case 'I': return `${subj} ${BE_PAST[pnKey] || 'were'} being ${pp}`;    // they were being remembered
+      case 'F': return `${subj} will be ${pp}`;                               // they will be remembered
+      case 'A': return `${subj} ${BE_PAST[pnKey] || 'were'} ${pp}`;          // they were remembered
+      case 'X': return `${subj} ${num==='S'&&pers==='3'?'has':'have'} been ${pp}`; // they have been remembered
+      case 'Y': return `${subj} had been ${pp}`;                              // they had been remembered
+      default:  return `${subj} be ${pp}`;
+    }
   }
-  const conjugated = voice === 'P'
-    ? `be ${base}`
-    : (pers === '3' && num === 'S' && !modal)
-      ? _eng3sg(base.split(' ')[0]) + (base.includes(' ') ? base.slice(base.indexOf(' ')) : '')
-      : base;
-  return subj ? `${subj}${modal} ${conjugated}` : `${modal.trim()} ${conjugated}`.trim();
+
+  // ── Active / middle / deponent ─────────────────────────────────────────────────
+  const isBe = (base === 'am' || base === 'be');
+
+  if (isBe) {
+    if (mood === 'M') return 'be!';
+    if (mood === 'S' || mood === 'O') return `${subj} might be`;
+    switch (tense) {
+      case 'P': return `${subj} ${BE_PRES[pnKey] || 'are'}`;
+      case 'I': return `${subj} ${BE_PAST[pnKey] || 'were'}`;
+      case 'F': return `${subj} will be`;
+      case 'A': return `${subj} ${BE_PAST[pnKey] || 'were'}`;
+      case 'X': return `${subj} ${num==='S'&&pers==='3'?'has':'have'} been`;
+      case 'Y': return `${subj} had been`;
+      default:  return `${subj} be`;
+    }
+  }
+
+  if (mood === 'M') return `${base}!`;
+  if (mood === 'S' || mood === 'O') return `${subj} might ${base}`;
+
+  switch (tense) {
+    case 'P': { // present: "they remember" / "he remembers"
+      const conj = (pers === '3' && num === 'S')
+        ? _eng3sg(base.split(' ')[0]) + (base.includes(' ') ? base.slice(base.indexOf(' ')) : '')
+        : base;
+      return `${subj} ${conj}`;
+    }
+    case 'I': { // imperfect: "they were remembering"
+      const was = BE_PAST[pnKey] || 'were';
+      return `${subj} ${was} ${_engIng(base)}`;
+    }
+    case 'F': return `${subj} will ${base}`;                                   // future
+    case 'A': return `${subj} ${_engSimplePast(base)}`;                        // aorist: "they remembered"
+    case 'X': {                                                                 // perfect: "they have remembered"
+      const hv = (pers === '3' && num === 'S') ? 'has' : 'have';
+      return `${subj} ${hv} ${_engPast(base)}`;
+    }
+    case 'Y': return `${subj} had ${_engPast(base)}`;                          // pluperfect
+    default:  return `${subj} ${base}`;
+  }
 }
 
 // Case-inflected English gloss for nouns, pronouns, adjectives, and other declinable words.
