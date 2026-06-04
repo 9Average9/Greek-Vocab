@@ -18757,7 +18757,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.125";
+const APP_VERSION = "3.0.126";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18776,6 +18776,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.126 &mdash; Quick Definition Accuracy Fixes</div>
+<ul>
+  <li><strong>More irregular verbs</strong> &mdash; Added ~12 additional irregular verb forms including "hide → hidden / hid", so glosses like κρυβῆναι now read "to be hidden" instead of "to be hided".</li>
+  <li><strong>Verb -ing / -ed doubling fixed</strong> &mdash; Consonant doubling now only applies to single-syllable words, so multi-syllable verb bases like "enter", "suffer", "render" no longer produce "enterring" or "sufferred".</li>
+</ul>
 <div class="un-version-label">v3.0.125 &mdash; Natural English Quick Definitions</div>
 <ul>
   <li><strong>Tense-aware verb glosses</strong> &mdash; Quick definitions now reflect the actual tense of the Greek form: aorist shows simple past ("they remembered"), imperfect shows ongoing past ("they were remembering"), future shows "will", perfect shows "have/has remembered", pluperfect shows "had remembered".</li>
@@ -25360,36 +25365,44 @@ function _sxVerbPerson(morph) {
 
 // Irregular verb tables for common NT vocabulary
 const _IRREG_PAST_PART = {
-  bear:'borne',begin:'begun',bind:'bound',bring:'brought',build:'built',
+  arise:'arisen',bear:'borne',beat:'beaten',become:'become',begin:'begun',
+  bind:'bound',blow:'blown',bring:'brought',build:'built',burst:'burst',
   buy:'bought',cast:'cast',catch:'caught',choose:'chosen',come:'come',
-  cut:'cut',do:'done',draw:'drawn',drink:'drunk',drive:'driven',eat:'eaten',
-  fall:'fallen',feed:'fed',feel:'felt',find:'found',flee:'fled',fly:'flown',
-  forgive:'forgiven',get:'gotten',give:'given',go:'gone',grow:'grown',
-  hang:'hung',have:'had',hear:'heard',hold:'held',keep:'kept',know:'known',
-  lay:'laid',lead:'led',leave:'left',lose:'lost',make:'made',mean:'meant',
-  meet:'met',overcome:'overcome',pay:'paid',put:'put',read:'read',
-  ride:'ridden',rise:'risen',run:'run',say:'said',see:'seen',seek:'sought',
-  sell:'sold',send:'sent',set:'set',shine:'shone',show:'shown',shut:'shut',
-  sit:'sat',sleep:'slept',speak:'spoken',spend:'spent',stand:'stood',
-  strike:'struck',swear:'sworn',take:'taken',teach:'taught',tell:'told',
-  think:'thought',throw:'thrown',understand:'understood',wake:'woken',
-  win:'won',write:'written',beat:'beaten',become:'become',
+  cut:'cut',dig:'dug',do:'done',draw:'drawn',drink:'drunk',drive:'driven',
+  eat:'eaten',fall:'fallen',feed:'fed',feel:'felt',find:'found',flee:'fled',
+  fly:'flown',forbid:'forbidden',forget:'forgotten',forgive:'forgiven',
+  get:'gotten',give:'given',go:'gone',grow:'grown',hang:'hung',have:'had',
+  hear:'heard',hide:'hidden',hit:'hit',hold:'held',hurt:'hurt',keep:'kept',
+  know:'known',lay:'laid',lead:'led',leave:'left',let:'let',light:'lit',
+  lose:'lost',make:'made',mean:'meant',meet:'met',overcome:'overcome',
+  pay:'paid',put:'put',read:'read',ride:'ridden',rise:'risen',run:'run',
+  say:'said',see:'seen',seek:'sought',sell:'sold',send:'sent',set:'set',
+  shine:'shone',show:'shown',shut:'shut',sit:'sat',sleep:'slept',
+  sow:'sown',speak:'spoken',spend:'spent',spread:'spread',spring:'sprung',
+  stand:'stood',steal:'stolen',strike:'struck',swear:'sworn',swim:'swum',
+  take:'taken',teach:'taught',tell:'told',think:'thought',throw:'thrown',
+  understand:'understood',wake:'woken',weep:'wept',win:'won',write:'written',
+  withdraw:'withdrawn',
 };
 const _IRREG_SIMPLE_PAST = {
-  bear:'bore',begin:'began',bind:'bound',bring:'brought',build:'built',
+  arise:'arose',bear:'bore',beat:'beat',become:'became',begin:'began',
+  bind:'bound',blow:'blew',bring:'brought',build:'built',burst:'burst',
   buy:'bought',cast:'cast',catch:'caught',choose:'chose',come:'came',
-  cut:'cut',do:'did',draw:'drew',drink:'drank',drive:'drove',eat:'ate',
-  fall:'fell',feed:'fed',feel:'felt',find:'found',flee:'fled',fly:'flew',
-  forgive:'forgave',get:'got',give:'gave',go:'went',grow:'grew',
-  hang:'hung',have:'had',hear:'heard',hold:'held',keep:'kept',know:'knew',
-  lay:'laid',lead:'led',leave:'left',lose:'lost',make:'made',mean:'meant',
-  meet:'met',overcome:'overcame',pay:'paid',put:'put',read:'read',
-  ride:'rode',rise:'rose',run:'ran',say:'said',see:'saw',seek:'sought',
-  sell:'sold',send:'sent',set:'set',shine:'shone',show:'showed',shut:'shut',
-  sit:'sat',sleep:'slept',speak:'spoke',spend:'spent',stand:'stood',
-  strike:'struck',swear:'swore',take:'took',teach:'taught',tell:'told',
-  think:'thought',throw:'threw',understand:'understood',wake:'woke',
-  win:'won',write:'wrote',beat:'beat',become:'became',
+  cut:'cut',dig:'dug',do:'did',draw:'drew',drink:'drank',drive:'drove',
+  eat:'ate',fall:'fell',feed:'fed',feel:'felt',find:'found',flee:'fled',
+  fly:'flew',forbid:'forbade',forget:'forgot',forgive:'forgave',
+  get:'got',give:'gave',go:'went',grow:'grew',hang:'hung',have:'had',
+  hear:'heard',hide:'hid',hit:'hit',hold:'held',hurt:'hurt',keep:'kept',
+  know:'knew',lay:'laid',lead:'led',leave:'left',let:'let',light:'lit',
+  lose:'lost',make:'made',mean:'meant',meet:'met',overcome:'overcame',
+  pay:'paid',put:'put',read:'read',ride:'rode',rise:'rose',run:'ran',
+  say:'said',see:'saw',seek:'sought',sell:'sold',send:'sent',set:'set',
+  shine:'shone',show:'showed',shut:'shut',sit:'sat',sleep:'slept',
+  sow:'sowed',speak:'spoke',spend:'spent',spread:'spread',spring:'sprang',
+  stand:'stood',steal:'stole',strike:'struck',swear:'swore',swim:'swam',
+  take:'took',teach:'taught',tell:'told',think:'thought',throw:'threw',
+  understand:'understood',wake:'woke',weep:'wept',win:'won',write:'wrote',
+  withdraw:'withdrew',
 };
 
 // Pluralise an English noun brief (e.g. "a word" → "words", "sin" → "sins").
@@ -25406,10 +25419,15 @@ function _engPlural(base) {
   return word + 's';
 }
 
+// Single-syllable guard: consonant doubling only applies to 1-syllable words
+// (e.g. run→running, stop→stopped) not multi-syllable (enter→entering, suffer→suffered)
+function _isSingleSyllable(w) {
+  return (w.toLowerCase().match(/[aeiou]+/g) || []).length === 1;
+}
 function _engIng(v) {
   if (!v) return v;
   if (/[^aeiou]e$/.test(v)) return v.slice(0, -1) + 'ing'; // love→loving
-  if (/[^aeiou][aeiou][^aeiouwxy]$/.test(v)) return v + v.slice(-1) + 'ing'; // run→running
+  if (_isSingleSyllable(v) && /[^aeiou][aeiou][^aeiouwxy]$/.test(v)) return v + v.slice(-1) + 'ing'; // run→running
   return v + 'ing';
 }
 // Past participle (used with "have" / "be"): known, seen, given, remembered
@@ -25421,7 +25439,7 @@ function _engPast(v) {
   const w = words[0];
   if (/e$/.test(w)) words[0] = w + 'd';
   else if (/[^aeiou]y$/.test(w)) words[0] = w.slice(0, -1) + 'ied';
-  else if (/[^aeiou][aeiou][^aeiouwxy]$/.test(w)) words[0] = w + w.slice(-1) + 'ed';
+  else if (_isSingleSyllable(w) && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) words[0] = w + w.slice(-1) + 'ed';
   else words[0] = w + 'ed';
   return words.join(' ');
 }
