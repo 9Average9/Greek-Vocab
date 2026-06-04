@@ -26156,16 +26156,25 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   flex-shrink: 0;
 }
 .vs-struct-browser-hdr-icon {
-  font-size: 1.4rem; color: var(--secondary-color);
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  font-size: 1.4rem; line-height: 1; color: var(--secondary-color);
 }
 .vs-struct-browser-hdr-title {
   flex: 1; font-size: 1rem; font-weight: 800; color: var(--font-color);
 }
 .vs-struct-browser-close {
   width: 32px; height: 32px; border-radius: 50%; border: 0;
-  display: flex; align-items: center; justify-content: center;
+  display: grid; place-items: center;
   background: transparent; color: var(--muted-color); cursor: pointer;
   font-size: 1.1rem;
+}
+.vs-struct-browser-close .material-symbols-outlined {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
 }
 .vs-struct-browser-list {
   flex: 1; overflow-y: auto; padding: 8px 12px;
@@ -26190,8 +26199,13 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .vs-struct-browser-item-icon {
   width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
   background: color-mix(in srgb, var(--secondary-color) 14%, var(--primary-color));
-  display: grid; place-items: center;
-  color: var(--secondary-color); font-size: 1.2rem; line-height: 1;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: var(--secondary-color);
+  font-size: 1.35rem;
+  line-height: 1;
+  text-align: center;
 }
 .vs-struct-browser-item-copy {
   flex: 1; min-width: 0;
@@ -26204,17 +26218,24 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   font-size: 0.75rem; color: var(--muted-color); margin-top: 2px;
 }
 .vs-struct-browser-item-arrow {
-  color: var(--muted-color); font-size: 1.1rem; flex-shrink: 0;
+  width: 24px; height: 24px;
+  display: grid; place-items: center;
+  color: var(--muted-color); font-size: 1.1rem; line-height: 1; flex-shrink: 0;
 }
 .vs-struct-browser-delete {
   width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-grid; place-items: center;
   color: #dc2626;
   background: color-mix(in srgb, #dc2626 8%, transparent);
   cursor: pointer;
 }
 .vs-struct-browser-delete .material-symbols-outlined {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
   font-size: 1.1rem;
+  line-height: 1;
 }
 .vs-struct-browser-delete:active {
   background: color-mix(in srgb, #dc2626 18%, transparent);
