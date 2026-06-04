@@ -16,6 +16,8 @@ let _vsStructWords       = [];   // flat array of word strings
 let _vsStructSegments    = [];   // [{ id, startIdx, endIdx, x, y }]
 let _vsStructHistory     = [];   // snapshots for undo
 let _vsStructFuture      = [];   // snapshots for redo
+let _vsStructPickerContext = null;
+let _vsStructStudyContext  = null;
 
 // Long-press drag state
 let _vsStructDragSeg     = null; // segment being dragged
@@ -32,14 +34,14 @@ let _vsStructLpTimer     = null;
 let _vsStructLpWord      = null; // { segId, wordIdx }
 let _vsStructLpEl        = null;
 let _vsStructTouchStart  = null; // { x, y } of touchstart
+let _vsStructTouchCurrent = null;
 
 // ── Storage helpers ──────────────────────────────────────────────────────────
 function _vsStructNewKey() {
   return `${VS_STRUCT_LS_PREFIX}${Date.now()}`;
 }
 
-function _vsStructSaveLocal() {
-  if (!_vsStructCurrentKey) return;
+function _vsStructCurrentData() {
   const data = {
     id: _vsStructCurrentKey,
     name: _vsStructName,
@@ -52,7 +54,85 @@ function _vsStructSaveLocal() {
     createdAt: _vsStructCurrentKey.replace(VS_STRUCT_LS_PREFIX, '') | 0,
     updatedAt: Date.now()
   };
-  try { localStorage.setItem(_vsStructCurrentKey, JSON.stringify(data)); } catch {}
+  return data;
+}
+
+function _vsStructSaveLocal() {
+  if (!_vsStructCurrentKey) return;
+  const data = _vsStructCurrentData();
+  if (!_vsStructStudyContext?.studyOnly) {
+    try { localStorage.setItem(_vsStructCurrentKey, JSON.stringify(data)); } catch {}
+  }
+  _vsStructSaveStudyContext(data);
+}
+
+function _vsStructSaveStudyContext(data) {
+  const ctx = _vsStructStudyContext;
+  if (!ctx?.studyId || !window.Studies?.saveStructure) return;
+  const user = window.Auth?.getCurrentUser?.();
+  if (!user) return;
+  if (!ctx.structureId) ctx.structureId = data.id || _vsStructCurrentKey || _vsStructNewKey();
+  const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
+  window.Studies.saveStructure(ctx.studyId, user.uid, displayName, data, ctx.structureId)
+    .then(id => {
+      if (id && _vsStructStudyContext?.studyId === ctx.studyId) _vsStructStudyContext.structureId = id;
+    })
+    .catch(() => {});
+}
+
+function _vsStructRefLabel(data = _vsStructCurrentData()) {
+  const start = data.referenceStart || '';
+  const end = data.referenceEnd || start;
+  return start === end ? start : `${start} - ${end}`;
+}
+
+function _vsStructFlashSaveBtn() {
+  const btn = document.getElementById('vsStructSaveBtn');
+  if (btn) {
+    btn.style.color = 'var(--secondary-color)';
+    setTimeout(() => { btn.style.color = ''; }, 800);
+  }
+}
+
+function _vsStructCancelLongPress() {
+  if (_vsStructLpTimer) {
+    clearTimeout(_vsStructLpTimer);
+    _vsStructLpTimer = null;
+  }
+  if (_vsStructLpEl) _vsStructLpEl.classList.remove('long-press-active');
+  _vsStructLpEl = null;
+}
+
+function _vsStructResetSessionState() {
+  _vsStructWords    = [];
+  _vsStructSegments = [];
+  _vsStructHistory  = [];
+  _vsStructFuture   = [];
+  _vsStructCancelLongPress();
+  _vsStructTouchStart = null;
+  _vsStructTouchCurrent = null;
+}
+
+function _vsStructStackInitialLayout() {
+  requestAnimationFrame(() => {
+    let nextY = 20;
+    let changed = false;
+    [..._vsStructSegments]
+      .sort((a, b) => a.y - b.y)
+      .forEach(seg => {
+        const el = document.querySelector(`[data-seg-id="${seg.id}"]`);
+        if (!el) return;
+        if (seg.y < nextY) {
+          seg.y = nextY;
+          el.style.top = seg.y + 'px';
+          changed = true;
+        }
+        nextY = seg.y + el.offsetHeight + 34;
+      });
+    const canvas = document.getElementById('vsStructCanvas');
+    if (canvas) canvas.style.height = Math.max(2000, nextY + 220) + 'px';
+    if (changed) _vsStructSaveLocal();
+  });
 }
 
 // ── Snapshot (undo/redo) ──────────────────────────────────────────────────────
@@ -139,7 +219,7 @@ function _vsStructDefaultLayout(words) {
       x: 20,
       y: nextY
     });
-    nextY += Math.max(92, Math.ceil(visibleWords / 8) * 34 + 36);
+    nextY += Math.max(138, Math.ceil(visibleWords / 6) * 42 + 70);
   });
   return segments;
 }
@@ -180,7 +260,8 @@ async function _vsStructLoadWords() {
 }
 
 // ── Picker ────────────────────────────────────────────────────────────────────
-function openVSStructurePicker() {
+function openVSStructurePicker(context = null) {
+  _vsStructPickerContext = context || null;
   // Inherit current VS selection
   if (typeof _vsBook !== 'undefined')        _vsStructBook        = _vsBook;
   if (typeof _vsChapter !== 'undefined')     _vsStructChapter     = _vsChapter;
@@ -251,16 +332,17 @@ async function openVSStructureWorkspace() {
   if (nameInp) _vsStructName        = nameInp.value.trim();
   if (+_vsStructVerseEnd < +_vsStructVerseStart) _vsStructVerseEnd = _vsStructVerseStart;
 
+  _vsStructStudyContext = _vsStructPickerContext?.studyId
+    ? { studyId: _vsStructPickerContext.studyId, structureId: null, studyOnly: true, returnToStudy: true }
+    : null;
+
   // Always create a brand-new entry
   _vsStructCurrentKey = _vsStructNewKey();
 
   closeVSStructPicker();
   if (nameInp) nameInp.value = '';
 
-  _vsStructWords    = [];
-  _vsStructSegments = [];
-  _vsStructHistory  = [];
-  _vsStructFuture   = [];
+  _vsStructResetSessionState();
 
   _vsStructOpenWorkspaceModal();
 
@@ -270,6 +352,36 @@ async function openVSStructureWorkspace() {
   _vsStructWords    = await _vsStructLoadWords();
   _vsStructSegments = _vsStructDefaultLayout(_vsStructWords);
   _vsStructSyncUndoRedo();
+  _vsStructRender();
+  _vsStructStackInitialLayout();
+  _vsStructSaveLocal();
+  _vsStructPickerContext = null;
+}
+
+function openVSStructureFromData(data, context = null) {
+  if (!data) return;
+  const parseRef = ref => {
+    const m = String(ref || '').match(/^(\S+)\s+(\d+):(\d+)$/);
+    return m ? { book: m[1], chapter: m[2], verse: m[3] } : null;
+  };
+  const start = parseRef(data.referenceStart);
+  const end   = parseRef(data.referenceEnd);
+  if (!start) return;
+  _vsStructBook        = start.book;
+  _vsStructChapter     = start.chapter;
+  _vsStructVerseStart  = start.verse;
+  _vsStructVerseEnd    = end?.verse || start.verse;
+  _vsStructTranslation = data.bibleVersion || 'MSB';
+  _vsStructName        = data.name || '';
+  _vsStructCurrentKey  = data.id || _vsStructNewKey();
+  _vsStructWords       = data.originalWords || [];
+  _vsStructSegments    = data.segments || [];
+  _vsStructHistory     = [];
+  _vsStructFuture      = [];
+  _vsStructStudyContext = context?.studyId
+    ? { studyId: context.studyId, structureId: context.structureId || data.id || null, studyOnly: !!context.studyOnly, returnToStudy: !!context.returnToStudy }
+    : null;
+  _vsStructOpenWorkspaceModal();
   _vsStructRender();
 }
 
@@ -298,6 +410,10 @@ function closeVSStructureWorkspace() {
   modal.classList.remove('open');
   setTimeout(() => {
     modal.style.display = 'none';
+    if (_vsStructStudyContext?.returnToStudy) {
+      if (typeof switchSandboxTab === 'function') switchSandboxTab('verses');
+      if (typeof switchStudyVerseTab === 'function') switchStudyVerseTab('structured');
+    }
   }, 340);
 }
 
@@ -320,35 +436,58 @@ function _vsStructSyncEditBar() {
 // ── Save ──────────────────────────────────────────────────────────────────────
 function vsStructSave() {
   _vsStructSaveLocal();
-  // Firebase sync if signed in
-  if (typeof firebase !== 'undefined' && firebase.auth?.().currentUser) {
-    const uid = firebase.auth().currentUser.uid;
-    const key = _vsStructKey(_vsStructBook, _vsStructChapter, _vsStructVerseStart, _vsStructVerseEnd, _vsStructTranslation);
-    const data = {
-      id: key,
-      bibleVersion: _vsStructTranslation,
-      referenceStart: `${_vsStructBook} ${_vsStructChapter}:${_vsStructVerseStart}`,
-      referenceEnd:   `${_vsStructBook} ${_vsStructChapter}:${_vsStructVerseEnd}`,
-      originalWords: _vsStructWords,
-      segments: _vsStructSegments,
-      history: [],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp?.() || Date.now(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp?.() || Date.now()
-    };
-    firebase.firestore?.()
-      .collection('users').doc(uid)
-      .collection('structureLayouts').doc(key)
-      .set(data, { merge: true })
-      .catch(() => {});
-  }
-
-  // Flash save button
-  const btn = document.getElementById('vsStructSaveBtn');
-  if (btn) {
-    btn.style.color = 'var(--secondary-color)';
-    setTimeout(() => { btn.style.color = ''; }, 800);
-  }
+  openVSStructStudySave();
+  _vsStructFlashSaveBtn();
   vsStructUpdateCabinetBadge();
+}
+
+async function openVSStructStudySave() {
+  const modal = document.getElementById('vsStructStudySaveModal');
+  const list = document.getElementById('vsStructStudySaveList');
+  if (!modal || !list) return;
+  const user = window.Auth?.getCurrentUser?.();
+  if (!user) {
+    alert('Sign in to save this structure into a study.');
+    return;
+  }
+  list.innerHTML = '<div class="vs-struct-study-empty">Loading studies...</div>';
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => modal.classList.add('open'));
+  const studies = await window.Studies?.getMine?.(user.uid).catch(() => []);
+  if (!studies?.length) {
+    list.innerHTML = '<div class="vs-struct-study-empty">No studies yet. Create a study first, then save this structure into it.</div>';
+    return;
+  }
+  list.innerHTML = studies.map(study => `
+    <label class="vs-struct-study-choice">
+      <input type="checkbox" value="${study.id}">
+      <span class="vs-struct-study-choice-icon material-symbols-outlined" style="color:${study.color || 'var(--secondary-color)'}">${study.icon || 'menu_book'}</span>
+      <span class="vs-struct-study-choice-copy">
+        <strong>${study.name || 'Study'}</strong>
+        <small>${_vsStructRefLabel()}</small>
+      </span>
+    </label>
+  `).join('');
+}
+
+function closeVSStructStudySave() {
+  const modal = document.getElementById('vsStructStudySaveModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  setTimeout(() => { modal.style.display = ''; }, 240);
+}
+
+async function confirmVSStructStudySave() {
+  const modal = document.getElementById('vsStructStudySaveModal');
+  const ids = [...(modal?.querySelectorAll('input[type="checkbox"]:checked') || [])].map(i => i.value);
+  if (!ids.length) return;
+  const user = window.Auth?.getCurrentUser?.();
+  if (!user || !window.Studies?.saveStructure) return;
+  const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
+  const data = _vsStructCurrentData();
+  await Promise.all(ids.map(id => window.Studies.saveStructure(id, user.uid, displayName, data).catch(() => null)));
+  closeVSStructStudySave();
+  _vsStructFlashSaveBtn();
 }
 
 // ── Info ──────────────────────────────────────────────────────────────────────
@@ -461,9 +600,14 @@ function _vsStructBeginDrag(seg, segEl, touchX, touchY) {
 // ── Long-press split interaction ──────────────────────────────────────────────
 function _vsStructWordTouchStart(e) {
   if (!_vsStructEditMode) return;
-  e.preventDefault(); // prevent scroll while registering long-press
+  if (e.touches.length > 1) {
+    _vsStructCancelLongPress();
+    return;
+  }
+  e.preventDefault(); // prevent one-finger scroll while registering long-press
   const touch = e.touches[0];
   _vsStructTouchStart = { x: touch.clientX, y: touch.clientY };
+  _vsStructTouchCurrent = { x: touch.clientX, y: touch.clientY };
   const span   = e.currentTarget;
   const absIdx = parseInt(span.dataset.absIdx, 10);
   const segEl  = span.closest('.vs-struct-seg');
@@ -484,12 +628,18 @@ function _vsStructWordTouchStart(e) {
 
   _vsStructLpTimer = setTimeout(() => {
     _vsStructLpTimer = null;
-    _vsStructSplitAndBeginDrag(segId, absIdx, touch.clientX, touch.clientY);
+    const pt = _vsStructTouchCurrent || _vsStructTouchStart || { x: touch.clientX, y: touch.clientY };
+    _vsStructSplitAndBeginDrag(segId, absIdx, pt.x, pt.y);
   }, 220);
 }
 
 function _vsStructWordTouchMove(e) {
+  if (e.touches.length > 1) {
+    _vsStructCancelLongPress();
+    return;
+  }
   const touch = e.touches[0];
+  _vsStructTouchCurrent = { x: touch.clientX, y: touch.clientY };
   const dx = Math.abs(touch.clientX - (_vsStructTouchStart?.x || 0));
   const dy = Math.abs(touch.clientY - (_vsStructTouchStart?.y || 0));
   if (_vsStructDragSeg) {
@@ -497,7 +647,7 @@ function _vsStructWordTouchMove(e) {
     e.preventDefault();
     return;
   }
-  if ((dx > 10 || dy > 10) && _vsStructLpTimer) {
+  if ((dx > 22 || dy > 22) && _vsStructLpTimer) {
     // Finger moved before long-press fired — cancel
     clearTimeout(_vsStructLpTimer);
     _vsStructLpTimer = null;
@@ -507,14 +657,9 @@ function _vsStructWordTouchMove(e) {
 }
 
 function _vsStructWordTouchEnd(e) {
-  if (_vsStructLpTimer) {
-    clearTimeout(_vsStructLpTimer);
-    _vsStructLpTimer = null;
-  }
-  if (_vsStructLpEl) {
-    _vsStructLpEl.classList.remove('long-press-active');
-    _vsStructLpEl = null;
-  }
+  _vsStructCancelLongPress();
+  _vsStructTouchStart = null;
+  _vsStructTouchCurrent = null;
 }
 
 function _vsStructSplitAndBeginDrag(segId, splitAbsIdx, touchX, touchY) {
@@ -548,11 +693,13 @@ function _vsStructSplitAndBeginDrag(segId, splitAbsIdx, touchX, touchY) {
 
   const segEl = document.querySelector(`[data-seg-id="${newSeg.id}"]`);
   _vsStructBeginDrag(newSeg, segEl, touchX, touchY);
+  _vsStructDragMove({ touches: [{ clientX: touchX, clientY: touchY }], preventDefault() {} });
 }
 
 // ── Segment drag ───────────────────────────────────────────────────────────────
 function _vsStructSegTouchStart(e) {
   if (!_vsStructEditMode) return;
+  if (e.touches.length > 1) return;
   if (e.target.classList.contains('vs-struct-word')) return;
   e.preventDefault();
   const touch = e.touches[0];
@@ -565,6 +712,7 @@ function _vsStructSegTouchStart(e) {
 
 function _vsStructDragMove(e) {
   if (!_vsStructDragSeg || !_vsStructDragWrap) return;
+  if (e.touches?.length > 1) return;
   e.preventDefault();
   const touch = e.touches[0];
   // Canvas coordinates = viewport position relative to wrap + scroll offset
@@ -703,29 +851,7 @@ function vsStructBrowserOpen(idx) {
   const data = saved[idx];
 
   closeVSStructureBrowser();
-
-  const parseRef = ref => {
-    const m = String(ref || '').match(/^(\S+)\s+(\d+):(\d+)$/);
-    return m ? { book: m[1], chapter: m[2], verse: m[3] } : null;
-  };
-  const start = parseRef(data.referenceStart);
-  const end   = parseRef(data.referenceEnd);
-  if (!start) return;
-
-  _vsStructBook        = start.book;
-  _vsStructChapter     = start.chapter;
-  _vsStructVerseStart  = start.verse;
-  _vsStructVerseEnd    = end?.verse || start.verse;
-  _vsStructTranslation = data.bibleVersion || 'MSB';
-  _vsStructName        = data.name || '';
-  _vsStructCurrentKey  = data.id;  // reuse existing key so saves update in-place
-  _vsStructWords       = data.originalWords || [];
-  _vsStructSegments    = data.segments || [];
-  _vsStructHistory     = [];
-  _vsStructFuture      = [];
-
-  _vsStructOpenWorkspaceModal();
-  _vsStructRender();
+  openVSStructureFromData(data);
 }
 
 function vsStructUpdateCabinetBadge() {
@@ -734,3 +860,28 @@ function vsStructUpdateCabinetBadge() {
   const count = _vsStructAllSaved().length;
   badge.classList.toggle('visible', count > 0);
 }
+
+Object.assign(window, {
+  openVSStructurePicker,
+  closeVSStructPicker,
+  vsStructPickerUpdateChapters,
+  vsStructPickerUpdateVerses,
+  openVSStructureWorkspace,
+  openVSStructureFromData,
+  closeVSStructureWorkspace,
+  toggleVSStructEdit,
+  vsStructUndo,
+  vsStructRedo,
+  vsStructReset,
+  vsStructSave,
+  openVSStructStudySave,
+  closeVSStructStudySave,
+  confirmVSStructStudySave,
+  openVSStructInfo,
+  closeVSStructInfo,
+  openVSStructureBrowser,
+  closeVSStructureBrowser,
+  vsStructBrowserDelete,
+  vsStructBrowserOpen,
+  vsStructUpdateCabinetBadge
+});

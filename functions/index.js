@@ -197,7 +197,7 @@ async function cleanupDeletedUserData(uid) {
       continue;
     }
 
-    for (const sub of ["notes", "entries", "savedVerses", "wordLog", "trails"]) {
+    for (const sub of ["notes", "entries", "savedVerses", "wordLog", "trails", "structures"]) {
       await deleteQueryInBatches(studyDoc.ref.collection(sub));
     }
     await studyDoc.ref.delete();

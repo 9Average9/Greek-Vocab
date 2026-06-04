@@ -794,6 +794,35 @@ async function studyDeleteVerse(studyId, verseId) {
   catch (e) { console.warn("studyDeleteVerse:", e); return false; }
 }
 
+// Structured Verses
+function studyListenStructures(studyId, callback) {
+  const q = query(collection(db, "studies", studyId, "structures"), orderBy("updatedAtMs", "desc"));
+  return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+    err => { console.warn("studyListenStructures:", err); callback([]); });
+}
+async function studySaveStructure(studyId, uid, displayName, structure, structureId = null) {
+  try {
+    const ref = structureId
+      ? doc(db, "studies", studyId, "structures", structureId)
+      : doc(collection(db, "studies", studyId, "structures"));
+    const now = Date.now();
+    await setDoc(ref, {
+      ...structure,
+      id: ref.id,
+      savedByUid: uid,
+      savedByName: displayName,
+      updatedAtMs: now,
+      updatedAt: serverTimestamp(),
+      savedAt: structureId ? (structure.savedAt || serverTimestamp()) : serverTimestamp()
+    }, { merge: true });
+    return ref.id;
+  } catch (e) { console.warn("studySaveStructure:", e); return null; }
+}
+async function studyDeleteStructure(studyId, structureId) {
+  try { await deleteDoc(doc(db, "studies", studyId, "structures", structureId)); return true; }
+  catch (e) { console.warn("studyDeleteStructure:", e); return false; }
+}
+
 // Saved Scripture Trails
 function studyListenTrails(studyId, callback) {
   const q = query(collection(db, "studies", studyId, "trails"), orderBy("savedAt", "desc"));
@@ -914,7 +943,7 @@ async function studyDeletePermanent(studyId, uid) {
     const snap = await getDoc(studyRef);
     if (!snap.exists() || snap.data().creatorUid !== uid) return false;
     // Delete all subcollection documents first
-    for (const sub of ['notes', 'entries', 'savedVerses', 'wordLog', 'trails']) {
+    for (const sub of ['notes', 'entries', 'savedVerses', 'wordLog', 'trails', 'structures']) {
       const subSnap = await getDocs(collection(db, "studies", studyId, sub));
       for (const d of subSnap.docs) await deleteDoc(d.ref);
     }
@@ -1485,6 +1514,7 @@ window.Studies = {
   listenNotes: studyListenNotes, addNote: studyAddNote, deleteNote: studyDeleteNote,
   listenEntries: studyListenEntries, addEntry: studyAddEntry, deleteEntry: studyDeleteEntry,
   listenVerses: studyListenVerses, saveVerse: studySaveVerse, deleteVerse: studyDeleteVerse,
+  listenStructures: studyListenStructures, saveStructure: studySaveStructure, deleteStructure: studyDeleteStructure,
   listenTrails: studyListenTrails, saveTrail: studySaveTrail, deleteTrail: studyDeleteTrail,
   listenWordLog: studyListenWordLog, logWord: studyLogWord, deleteWordLog: studyDeleteWordLog,
   requestCollab: studyRequestCollab, approveCollab: studyApproveCollab, denyCollab: studyDenyCollab, leaveCollab: studyLeaveCollab,

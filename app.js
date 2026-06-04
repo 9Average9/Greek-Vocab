@@ -66,7 +66,10 @@ let _workspaceTab = 'observations';
 let _sandboxUnsubVerses = null;
 let _sandboxUnsubWordLog = null;
 let _sandboxUnsubTrails = null;
+let _sandboxUnsubStructures = null;
 let _sandboxTrailsCache = [];
+let _sandboxStructuresCache = [];
+let _sandboxVerseTab = 'saved';
 let _sandboxUnsubStudy = null;
 let _sandboxTab = 'notes';
 let _rhemaCrossRefMode = false;
@@ -8457,6 +8460,7 @@ async function openStudySandbox(studyId, studyObj) {
   _sandboxUnsubVerses?.();
   _sandboxUnsubWordLog?.();
   _sandboxUnsubTrails?.();
+  _sandboxUnsubStructures?.();
   _sandboxUnsubStudy?.();
   _sandboxUnsubEntries = window.Studies.listenEntries(studyId, entries => {
     _sandboxEntriesCache = entries;
@@ -8470,6 +8474,10 @@ async function openStudySandbox(studyId, studyObj) {
   _sandboxUnsubTrails = window.Studies.listenTrails?.(studyId, trails => {
     _sandboxTrailsCache = trails;
     if (typeof _renderSandboxTrails === 'function') _renderSandboxTrails(trails);
+  });
+  _sandboxUnsubStructures = window.Studies.listenStructures?.(studyId, structures => {
+    _sandboxStructuresCache = structures || [];
+    _renderSandboxStructures(_sandboxStructuresCache);
   });
   // Live study-doc listener — updates collaborator count and Rhema positions in real time
   _sandboxUnsubStudy = window.Studies.listenStudy?.(studyId, updated => {
@@ -8516,10 +8524,12 @@ function closeStudySandbox() {
   _sandboxUnsubVerses?.();
   _sandboxUnsubWordLog?.();
   _sandboxUnsubTrails?.();
+  _sandboxUnsubStructures?.();
   _sandboxUnsubStudy?.();
-  _sandboxUnsubNotes = _sandboxUnsubEntries = _sandboxUnsubVerses = _sandboxUnsubWordLog = _sandboxUnsubTrails = _sandboxUnsubStudy = null;
+  _sandboxUnsubNotes = _sandboxUnsubEntries = _sandboxUnsubVerses = _sandboxUnsubWordLog = _sandboxUnsubTrails = _sandboxUnsubStructures = _sandboxUnsubStudy = null;
   _sandboxEntriesCache = [];
   _sandboxTrailsCache = [];
+  _sandboxStructuresCache = [];
   _activeSandboxStudy = null;
   document.getElementById('studySandbox')?.classList.add('hidden');
   document.getElementById('studyTabBar')?.classList.add('hidden');
@@ -9242,6 +9252,15 @@ function _findAnyMorphForStrongs(strongs) {
 }
 
 // Saved Verses
+function switchStudyVerseTab(type = 'saved') {
+  _sandboxVerseTab = type === 'structured' ? 'structured' : 'saved';
+  document.querySelectorAll('.ss-subtab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.verseTab === _sandboxVerseTab);
+  });
+  document.getElementById('ssSavedVersesPane')?.classList.toggle('active', _sandboxVerseTab === 'saved');
+  document.getElementById('ssStructuredVersesPane')?.classList.toggle('active', _sandboxVerseTab === 'structured');
+}
+
 function _renderSandboxVerses(verses) {
   const list = document.getElementById('ssVersesList');
   if (!list) return;
@@ -9260,6 +9279,49 @@ function _renderSandboxVerses(verses) {
 async function deleteSandboxVerse(verseId) {
   if (!_activeSandboxStudy) return;
   await window.Studies.deleteVerse(_activeSandboxStudy.id, verseId);
+}
+
+function _renderSandboxStructures(structures = []) {
+  const list = document.getElementById('ssStructuresList');
+  if (!list) return;
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  if (!structures.length) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = structures.map(s => {
+    const ref = s.referenceStart === s.referenceEnd ? s.referenceStart : `${s.referenceStart || ''} - ${s.referenceEnd || ''}`;
+    const canDel = s.savedByUid === uid || _activeSandboxStudy?.creatorUid === uid;
+    return `<div class="ss-verse-item ss-structure-item">
+      <button class="ss-verse-ref" onclick="openStudyStructure('${s.id}')">
+        <span class="ss-structure-title">${s.name || ref || 'Structured Verse'}</span>
+        <span class="ss-structure-meta">${s.name ? ref : ''}${s.bibleVersion ? (s.name ? ' · ' : '') + s.bibleVersion : ''}</span>
+      </button>
+      ${canDel ? `<button class="ss-verse-del" onclick="deleteStudyStructure('${s.id}')"><span class="material-symbols-outlined">close</span></button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openStudyStructure(structureId) {
+  if (!_activeSandboxStudy) return;
+  const data = _sandboxStructuresCache.find(s => s.id === structureId);
+  if (!data || typeof openVSStructureFromData !== 'function') return;
+  openVSStructureFromData(data, {
+    studyId: _activeSandboxStudy.id,
+    structureId,
+    studyOnly: true,
+    returnToStudy: true
+  });
+}
+
+function openStudyStructurePicker() {
+  if (!_activeSandboxStudy || typeof openVSStructurePicker !== 'function') return;
+  openVSStructurePicker({ studyId: _activeSandboxStudy.id, returnToStudy: true });
+}
+
+async function deleteStudyStructure(structureId) {
+  if (!_activeSandboxStudy) return;
+  await window.Studies.deleteStructure?.(_activeSandboxStudy.id, structureId);
 }
 
 // Opens Rhema to a saved verse (in study mode)
@@ -18695,7 +18757,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.116";
+const APP_VERSION = "3.0.117";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18714,6 +18776,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.117 &mdash; Structure Study Flow Fixes</div>
+<ul>
+  <li><strong>Structure drag is smoother</strong> &mdash; Long-pressing a word now lifts the following phrase and immediately keeps dragging from the same finger, with better tolerance for quick movement.</li>
+  <li><strong>Study structured verses</strong> &mdash; Study Rhema now has a Structured Verses tab, plus study-local structure creation and a Structure save button for sending layouts into one or more studies.</li>
+  <li><strong>Rhema selector repaired</strong> &mdash; The main Rhema book picker now owns its search sheet and no longer conflicts with the cross-reference book selector.</li>
+</ul>
 <div class="un-version-label">v3.0.116 &mdash; Structure Flow Tools</div>
 <ul>
   <li><strong>Saved structures can now be deleted</strong> &mdash; The Saved Structures cabinet includes a delete control for removing old layouts from this device.</li>

@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.116" rel="stylesheet"/>
+<link href="style.css?v=3.0.117" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -562,7 +562,7 @@ Start a New Study
 </div>
 <div class="vs-home-text">
 <strong>Verse Structure</strong>
-<small>Compare NIV · NKJV · NASB · MSB · BSB with highlights</small>
+<small>Structure the flow of thought</small>
 </div>
 <span class="material-symbols-outlined vs-home-chev">chevron_right</span>
 </button>
@@ -10022,9 +10022,13 @@ Verb Endings
 </div>
 <!-- ── Book picker ── -->
 <!-- Scripture Trail Cross References -->
+<div class="rhema-picker-overlay hidden" id="rhemaBookPickerOverlay" onclick="closeRhemaPickerSheet()">
 <div class="rhema-picker-sheet" onclick="event.stopPropagation()">
 <div class="rhema-picker-hdr">
-<span class="rhema-picker-title">Select Book</span>
+<button class="rhema-picker-back hidden" id="rhemaBookPickerBack" onclick="rhemaRenderBookList();event.stopPropagation()" type="button">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="rhema-picker-title" id="rhemaBookPickerTitle">Select Book</span>
 <button class="rhema-picker-x" onclick="closeRhemaPickerSheet()">✕</button>
 </div>
 <div class="rhema-picker-search-row">
@@ -16206,12 +16210,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.116"></script>
+<script src="app.js?v=3.0.117"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.115"></script>
-<script src="verse-structure.js?v=3.0.116"></script>
-<script src="vs-structure.js?v=3.0.116"></script>
+<script src="verse-structure.js?v=3.0.117"></script>
+<script src="vs-structure.js?v=3.0.117"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
-<script src="firebase-lb.js?v=3.0.101" type="module"></script>
+<script src="firebase-lb.js?v=3.0.117" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -16335,8 +16339,21 @@ Verb Endings
 </div>
 <!-- Saved Verses -->
 <div class="ss-pane" id="ssPaneVerses">
+<div class="ss-subtabs">
+<button class="ss-subtab active" data-verse-tab="saved" onclick="switchStudyVerseTab('saved')">Saved Verses</button>
+<button class="ss-subtab" data-verse-tab="structured" onclick="switchStudyVerseTab('structured')">Structured Verses</button>
+</div>
+<div class="ss-verse-pane active" id="ssSavedVersesPane">
 <p class="ss-hint">Tap a verse reference in Rhema while this study is open to save it here.</p>
 <div class="ss-verses-list" id="ssVersesList"></div>
+</div>
+<div class="ss-verse-pane" id="ssStructuredVersesPane">
+<p class="ss-hint">Structures saved to this study stay with the study.</p>
+<div class="ss-verses-list" id="ssStructuresList"></div>
+<button class="ss-structured-add" onclick="openStudyStructurePicker()" title="Create structure">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
 </div>
 <!-- Word Log -->
 <div class="ss-pane" id="ssPaneWordlog">
@@ -17537,10 +17554,10 @@ Save
 <div class="rhema-picker-overlay hidden" id="rxBookPickerOverlay" onclick="closeRxBookPicker()">
 <div class="rhema-picker-sheet" onclick="event.stopPropagation()">
 <div class="rhema-picker-hdr">
-<button class="rhema-picker-back hidden" id="rhemaBookPickerBack" onclick="rhemaRenderBookList();event.stopPropagation()" type="button">
+<button class="rhema-picker-back hidden" id="rxBookPickerBack" onclick="event.stopPropagation()" type="button">
 <span class="material-symbols-outlined">arrow_back</span>
 </button>
-<span class="rhema-picker-title" id="rhemaBookPickerTitle">Select Book</span>
+<span class="rhema-picker-title" id="rxBookPickerTitle">Select Book</span>
 <button class="rhema-picker-x" onclick="closeRxBookPicker()">✕</button>
 </div>
 <div class="rhema-picker-search-row">
@@ -17638,7 +17655,7 @@ Save
       <button class="vs-struct-tool-btn" id="vsStructInfoBtn" onclick="openVSStructInfo()" title="How to use">
         <span class="material-symbols-outlined">info</span>
       </button>
-      <button class="vs-struct-tool-btn" id="vsStructSaveBtn" onclick="vsStructSave()" title="Save">
+      <button class="vs-struct-tool-btn" id="vsStructSaveBtn" onclick="vsStructSave()" title="Save to Study">
         <span class="material-symbols-outlined">save</span>
       </button>
       <button class="vs-struct-tool-btn active" id="vsStructEditBtn" onclick="toggleVSStructEdit()" title="Edit mode">
@@ -17655,6 +17672,20 @@ Save
 </div>
 
 <!-- ── VS Structure Info Sheet ──────────────────────────────────────────── -->
+<div class="vs-struct-study-save-modal" id="vsStructStudySaveModal" onclick="if(event.target===this)closeVSStructStudySave()">
+  <div class="vs-struct-study-save-sheet" onclick="event.stopPropagation()">
+    <div class="vs-struct-browser-hdr">
+      <span class="vs-struct-browser-hdr-icon material-symbols-outlined">library_add</span>
+      <span class="vs-struct-browser-hdr-title">Save to Studies</span>
+      <button class="vs-struct-browser-close" onclick="closeVSStructStudySave()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="vs-struct-study-save-list" id="vsStructStudySaveList"></div>
+    <button class="vs-struct-study-save-confirm" onclick="confirmVSStructStudySave()">Save to Selected</button>
+  </div>
+</div>
+
 <div class="vs-struct-info-modal" id="vsStructInfoModal" onclick="if(event.target===this)closeVSStructInfo()">
   <div class="vs-struct-info-sheet" onclick="event.stopPropagation()">
     <h3>How to Use Structure</h3>
