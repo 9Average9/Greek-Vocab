@@ -18757,7 +18757,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.122";
+const APP_VERSION = "3.0.123";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18776,9 +18776,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.122 &mdash; Saved Structure Icon Polish</div>
+<div class="un-version-label">v3.0.123 &mdash; Rhema Range of Meaning</div>
 <ul>
-  <li><strong>Saved structure icons centered</strong> &mdash; The folder sheet row icons, delete icon, close icon, and chevron now sit cleanly centered in their touch targets.</li>
+  <li><strong>Range of Meaning added</strong> &mdash; Definition tabs now include a Range of Meaning button under Quick Definition with semantic range chips and up to 10 highlighted verse examples.</li>
 </ul>
 <div class="un-version-label">v3.0.120 &mdash; Structure Live Phrase Drag</div>
 <ul>
@@ -26859,6 +26859,11 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
     sections.push(`<div class="rhema-def-section rhema-def-quick">
       <div class="rhema-def-label">Quick Definition</div>
       <div class="rhema-def-quick-text"><strong>${quickDefinition}</strong></div>
+      <button class="rhema-range-btn" onclick="toggleRhemaRangeMeaning('${_escapeRhemaAttr(strongs)}','${_escapeRhemaAttr(layer)}')">
+        <span class="material-symbols-outlined">travel_explore</span>
+        <span>Range of Meaning</span>
+      </button>
+      <div class="rhema-range-panel hidden" id="rhemaRangePanel-${_escapeRhemaAttr(strongs)}"></div>
     </div>`);
   }
 
@@ -26900,6 +26905,87 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
   }
 
   return sections.join('<div class="rhema-def-sep"></div>') || `<p style="opacity:.5;font-size:.85rem">No definition found.</p>`;
+}
+
+function _rhemaSemanticRangeParts(lex = {}) {
+  const text = [
+    lex.kjv_def,
+    lex.quick_def,
+    lex.brief,
+    lex.extended,
+    lex.strongs_def
+  ].map(rhemaPlainDefinitionText).filter(Boolean).join('; ');
+  return [...new Set(text
+    .replace(/^--\s*/, '')
+    .split(/[,;]|\bor\b|\band\b/i)
+    .map(part => part.replace(/^[\s.:;-]+|[\s.:;-]+$/g, '').trim())
+    .filter(part => part.length > 2 && part.length < 52)
+  )].slice(0, 12);
+}
+
+function _rhemaRangeExamples(strongs, layer = getCurrentOriginalLanguageLayer(), max = 10) {
+  const text = _wlTextForLayer(layer);
+  const books = _wlBooksForLayer(layer);
+  const examples = [];
+  for (const book of books) {
+    const bdata = text?.[book] || {};
+    const chapters = Object.keys(bdata).sort((a, b) => +a - +b);
+    for (const ch of chapters) {
+      const verses = Object.keys(bdata[ch] || {}).sort((a, b) => +a - +b);
+      for (const v of verses) {
+        const words = bdata[ch][v] || [];
+        const matching = words
+          .map((w, idx) => String(w[1]) === String(strongs) ? idx : -1)
+          .filter(idx => idx >= 0);
+        if (!matching.length) continue;
+        const verseHtml = words.map((w, idx) =>
+          matching.includes(idx)
+            ? `<span class="rhema-range-hit">${_escapeRhemaAttr(w[0])}</span>`
+            : _escapeRhemaAttr(w[0])
+        ).join(' ');
+        examples.push({
+          ref: `${_rhemaBookName(book)} ${ch}:${v}`,
+          book, ch, v,
+          verseHtml
+        });
+        if (examples.length >= max) return examples;
+      }
+    }
+  }
+  return examples;
+}
+
+function renderRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLayer()) {
+  const lex = getCurrentRhemaLexicon(layer)[strongs] || {};
+  const ranges = _rhemaSemanticRangeParts(lex);
+  const examples = _rhemaRangeExamples(strongs, layer, 10);
+  const rangeHtml = ranges.length
+    ? `<div class="rhema-range-chip-row">${ranges.map(r => `<span>${_escapeRhemaAttr(r)}</span>`).join('')}</div>`
+    : `<p class="rhema-range-muted">No separate range glosses found for this word.</p>`;
+  const exampleHtml = examples.length
+    ? examples.map(ex => `<button class="rhema-range-example" onclick="jumpToRhemaVerse('${ex.book}','${ex.ch}','${ex.v}','${_escapeRhemaAttr(strongs)}')">
+        <span class="rhema-range-ref">${_escapeRhemaAttr(ex.ref)}</span>
+        <span class="rhema-range-verse">${ex.verseHtml}</span>
+      </button>`).join('')
+    : `<p class="rhema-range-muted">No verse examples found in the loaded text.</p>`;
+  return `
+    <div class="rhema-range-head">
+      <strong>Semantic Range</strong>
+      <small>${examples.length} example${examples.length === 1 ? '' : 's'}</small>
+    </div>
+    ${rangeHtml}
+    <div class="rhema-range-examples">${exampleHtml}</div>
+  `;
+}
+
+function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLayer()) {
+  const panel = document.getElementById(`rhemaRangePanel-${strongs}`);
+  if (!panel) return;
+  const willOpen = panel.classList.contains('hidden');
+  document.querySelectorAll('.rhema-range-panel').forEach(p => p.classList.add('hidden'));
+  if (!willOpen) return;
+  panel.innerHTML = renderRhemaRangeMeaning(strongs, layer);
+  panel.classList.remove('hidden');
 }
 
 function renderRhemaOccurrences(strongs, layer = getCurrentOriginalLanguageLayer()) {

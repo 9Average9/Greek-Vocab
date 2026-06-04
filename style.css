@@ -16604,6 +16604,103 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   color: var(--font-color);
 }
 .rhema-def-quick-text strong { font-weight: 800; }
+.rhema-range-btn {
+  margin-top: 10px;
+  height: 38px;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 30%, var(--border-color));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--secondary-color) 9%, var(--card-color));
+  color: var(--secondary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+.rhema-range-btn:active { transform: scale(0.985); }
+.rhema-range-btn .material-symbols-outlined { font-size: 1.05rem; line-height: 1; }
+.rhema-range-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--secondary-color) 5%, var(--primary-color));
+}
+.rhema-range-panel.hidden { display: none; }
+.rhema-range-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.rhema-range-head strong {
+  flex: 1;
+  font-size: 0.88rem;
+  color: var(--font-color);
+}
+.rhema-range-head small {
+  font-size: 0.7rem;
+  color: var(--muted-color);
+  font-weight: 700;
+}
+.rhema-range-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.rhema-range-chip-row span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary-color) 13%, var(--card-color));
+  color: var(--secondary-color);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.rhema-range-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rhema-range-example {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--card-color);
+  padding: 9px 10px;
+  text-align: left;
+  cursor: pointer;
+}
+.rhema-range-ref {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--secondary-color);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+.rhema-range-verse {
+  display: block;
+  color: var(--font-color);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+.rhema-range-hit {
+  background: color-mix(in srgb, var(--secondary-color) 22%, transparent);
+  color: var(--secondary-color);
+  border-radius: 5px;
+  padding: 1px 3px;
+  font-weight: 900;
+}
+.rhema-range-muted {
+  margin: 0;
+  color: var(--muted-color);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
 .rhema-def-english {
   font-size: 0.78rem;
   color: var(--muted-color);
