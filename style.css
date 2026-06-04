@@ -26038,6 +26038,9 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   color: var(--secondary-color);
   animation: vs-lp-pulse 0.35s ease forwards;
 }
+.vs-struct-word-splitting-hidden {
+  visibility: hidden;
+}
 @keyframes vs-lp-pulse {
   0%   { transform: scale(1);    opacity: 1; }
   40%  { transform: scale(0.92); opacity: 0.6; }

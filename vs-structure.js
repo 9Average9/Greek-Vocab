@@ -30,6 +30,7 @@ let _vsStructDragOffY    = 0;
 let _vsStructDragRaf     = null; // rAF handle for throttled position updates
 let _vsStructDragPendX   = 0;
 let _vsStructDragPendY   = 0;
+let _vsStructDragNeedsRender = false;
 let _vsStructLpTimer     = null;
 let _vsStructLpWord      = null; // { segId, wordIdx }
 let _vsStructLpEl        = null;
@@ -559,6 +560,39 @@ function _vsStructRender() {
   canvas.style.height = Math.max(2000, maxY + 220) + 'px';
 }
 
+function _vsStructCreateSegmentElement(seg) {
+  const words = _vsStructWords.slice(seg.startIdx, seg.endIdx + 1).filter(w => !/^_VERSE_\d+_$/.test(w));
+  if (!words.length) return null;
+
+  const div = document.createElement('div');
+  div.className = 'vs-struct-seg' + (_vsStructEditMode ? ' edit-mode' : '');
+  div.dataset.segId = seg.id;
+  div.style.left = seg.x + 'px';
+  div.style.top  = seg.y + 'px';
+
+  const verseNum = _vsStructVerseNumberForSegment(seg);
+  if (verseNum) {
+    const label = document.createElement('span');
+    label.className = 'vs-struct-verse-num';
+    label.textContent = verseNum;
+    div.appendChild(label);
+  }
+
+  words.forEach((word, wIdx) => {
+    const span = document.createElement('span');
+    span.className = 'vs-struct-word';
+    span.textContent = word;
+    const absIdx = _vsStructAbsIdx(seg, wIdx);
+    span.dataset.absIdx = absIdx;
+    div.appendChild(span);
+  });
+
+  if (_vsStructEditMode) {
+    div.addEventListener('touchstart', _vsStructSegTouchStart, { passive: false });
+  }
+  return div;
+}
+
 // Given a segment and a within-segment word index (skipping markers), returns the absolute index in _vsStructWords
 function _vsStructAbsIdx(seg, withinIdx) {
   let count = 0;
@@ -677,20 +711,34 @@ function _vsStructSplitAndBeginDrag(segId, splitAbsIdx, touchX, touchY) {
     // Drag the whole segment
     newSeg = seg;
   } else {
-    // Split: shorten existing seg, create new one from split point
+    // Split the data, but do not re-render the touched word out from under
+    // the active finger. A temporary live segment moves until touchend.
     const prevEnd = seg.endIdx;
+    const oldSegEl = document.querySelector(`[data-seg-id="${seg.id}"]`);
     seg.endIdx    = splitAbsIdx - 1;
     const maxId   = _vsStructSegments.reduce((m, s) => Math.max(m, s.id), 0);
     newSeg = {
       id: maxId + 1,
       startIdx: splitAbsIdx,
       endIdx: prevEnd,
-      x: Math.max(0, _vsStructLpWord?.x ?? seg.x + 20),
+      x: _vsStructLpWord?.x ?? seg.x + 20,
       y: Math.max(0, _vsStructLpWord?.y ?? seg.y + 44)
     };
     _vsStructSegments.push(newSeg);
-    _vsStructIgnoreCancelUntil = Date.now() + 450;
-    _vsStructRender();
+    _vsStructDragNeedsRender = true;
+    _vsStructIgnoreCancelUntil = Date.now() + 650;
+
+    oldSegEl?.querySelectorAll('.vs-struct-word').forEach(wordEl => {
+      if (parseInt(wordEl.dataset.absIdx, 10) >= splitAbsIdx) {
+        wordEl.classList.add('vs-struct-word-splitting-hidden');
+      }
+    });
+
+    const liveSegEl = _vsStructCreateSegmentElement(newSeg);
+    if (liveSegEl) {
+      canvas.appendChild(liveSegEl);
+      canvas.style.height = Math.max(parseFloat(canvas.style.height) || 2000, newSeg.y + liveSegEl.offsetHeight + 220) + 'px';
+    }
   }
 
   const segEl = document.querySelector(`[data-seg-id="${newSeg.id}"]`);
@@ -718,7 +766,7 @@ function _vsStructDragMove(e) {
   e.preventDefault();
   const touch = e.touches[0];
   // Canvas coordinates = viewport position relative to wrap + scroll offset
-  _vsStructDragPendX = Math.max(0, touch.clientX - _vsStructDragWrapX + _vsStructDragWrap.scrollLeft - _vsStructDragOffX);
+  _vsStructDragPendX = touch.clientX - _vsStructDragWrapX + _vsStructDragWrap.scrollLeft - _vsStructDragOffX;
   _vsStructDragPendY = Math.max(0, touch.clientY - _vsStructDragWrapY + _vsStructDragWrap.scrollTop  - _vsStructDragOffY);
   if (!_vsStructDragRaf) {
     _vsStructDragRaf = requestAnimationFrame(_vsStructDragApply);
@@ -754,7 +802,13 @@ function _vsStructDragEnd(e) {
     _vsStructLpEl = null;
   }
   _vsStructLpWord = null;
-  if (hadDrag) _vsStructSaveLocal();
+  if (hadDrag) {
+    if (_vsStructDragNeedsRender) {
+      _vsStructDragNeedsRender = false;
+      _vsStructRender();
+    }
+    _vsStructSaveLocal();
+  }
 }
 
 // ── Saved Structures Browser ──────────────────────────────────────────────────
