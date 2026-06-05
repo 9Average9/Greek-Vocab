@@ -11609,12 +11609,15 @@ function _saveRhemaPosition() {
   // Study sandbox Rhema: debounced save to study only — never touch main homescreen position
   if (_studySandboxId) {
     if (!uid) return;
+    // Capture values now — close handler restores main position before the timer fires
+    const sandboxId = _studySandboxId;
+    const book = _rhemaBook, chapter = _rhemaChapter, verse = _rhemaVerse;
     clearTimeout(_rhemaPosSaveTimer);
     _rhemaPosSaveTimer = setTimeout(() => {
-      const posKey = `${_rhemaBook}|${_rhemaChapter}|${_rhemaVerse}`;
+      const posKey = `${book}|${chapter}|${verse}`;
       if (posKey === _lastSavedSandboxPos) return;
       _lastSavedSandboxPos = posKey;
-      window.Studies?.saveRhemaPos(_studySandboxId, uid, _rhemaBook, _rhemaChapter, _rhemaVerse);
+      window.Studies?.saveRhemaPos(sandboxId, uid, book, chapter, verse);
     }, 2000);
     return;
   }
