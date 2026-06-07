@@ -6722,6 +6722,65 @@ body.dark .habit-notes-history-item {
   font-size: 0.86rem;
 }
 
+.habit-note-status-row {
+  margin-bottom: 14px;
+}
+
+.habit-note-status-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 850;
+  color: var(--muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.habit-note-status-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.habit-note-status-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 6px 7px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--light-color);
+  color: var(--muted-color);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 0.14s, background 0.14s, color 0.14s;
+  font-family: inherit;
+}
+
+.habit-note-status-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.habit-note-status-btn[data-status="success"].selected {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.habit-note-status-btn[data-status="skipped"].selected {
+  background: rgba(245,158,11,0.12);
+  border-color: rgba(245,158,11,0.45);
+  color: #92400e;
+}
+
+.habit-note-status-btn[data-status="missed"].selected {
+  background: rgba(239,68,68,0.09);
+  border-color: rgba(239,68,68,0.32);
+  color: #991b1b;
+}
+
 /* ── Habit Reminder Modal ────────────────────────────────────────────────── */
 .habit-reminder-card {
   max-width: 600px;
