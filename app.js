@@ -18999,7 +18999,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.141";
+const APP_VERSION = "3.0.142";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19018,6 +19018,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.142 &mdash; Creator Commitment Check</div>
+<ul>
+  <li><strong>Create checks your calendar first</strong> &mdash; Event creators now get the same commitment prompt before the event is created, with that day&rsquo;s Google Calendar plans listed first.</li>
+  <li><strong>Create wording cleaned up</strong> &mdash; New events now use Create/Creating wording, while edits use Update/Updating.</li>
+</ul>
 <div class="un-version-label">v3.0.141 &mdash; Invite Commitment Check</div>
 <ul>
   <li><strong>Linked users are not re-prompted</strong> &mdash; Event details no longer ask Google-connected users, including hosts, to add events that already sync automatically.</li>
@@ -21042,6 +21047,8 @@ async function openCreateEventModal(eventId = null) {
   if (!modal) return;
   _editingEventId = eventId;
   document.getElementById('createEventModalTitle').textContent = eventId ? 'Edit Event' : 'New Event';
+  const eventSaveBtn = document.getElementById('eventSaveBtn');
+  if (eventSaveBtn) eventSaveBtn.textContent = eventId ? 'Update' : 'Create';
   const ev = eventId ? _calendarEvents.find(e => e.id === eventId) : null;
   document.getElementById('eventTitleInput').value = ev?.title || '';
   document.getElementById('eventDateInput').value = ev?.date || _calSelectedDate || _calTodayKey();
@@ -21119,17 +21126,11 @@ function toggleAllEventInviteFriends() {
   _syncEventInviteFriendButtons();
 }
 
-async function saveEvent() {
+async function saveEvent(opts = {}) {
   if (_calEventSaveInFlight) return;
   const uid = window.Auth?.getCurrentUser()?.uid;
   if (!uid) return;
-  _calEventSaveInFlight = true;
   const saveBtn = document.getElementById('eventSaveBtn');
-  if (saveBtn) {
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
-  }
-  try {
   const title = document.getElementById('eventTitleInput')?.value.trim();
   const date  = document.getElementById('eventDateInput')?.value;
   const time  = document.getElementById('eventTimeInput')?.value;
@@ -21139,6 +21140,22 @@ async function saveEvent() {
   if (!title) { alert('Please enter an event name.'); return; }
   if (!date)  { alert('Please pick a date.'); return; }
   if (!time)  { alert('Please pick a time.'); return; }
+  if (!_editingEventId && !opts.commitConfirmed) {
+    await openEventCommitPrompt(null, {
+      event: { title, date, time, timezone },
+      onConfirm: async (canCommit) => {
+        if (canCommit) await saveEvent({ commitConfirmed: true });
+      }
+    });
+    return;
+  }
+
+  _calEventSaveInFlight = true;
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = _editingEventId ? 'Updating...' : 'Creating...';
+  }
+  try {
   const reminders = [...document.querySelectorAll('.event-reminder-cb:checked')].map(cb => cb.dataset.key);
   const displayName = localStorage.getItem('authDisplayName') || 'Someone';
   const inviteeData = (await Promise.all([..._calEventInviteUids].map(async invUid => {
@@ -21202,7 +21219,7 @@ async function saveEvent() {
     _calEventSaveInFlight = false;
     if (saveBtn) {
       saveBtn.disabled = false;
-      saveBtn.textContent = 'Save';
+      saveBtn.textContent = _editingEventId ? 'Update' : 'Create';
     }
   }
 }
@@ -21294,7 +21311,7 @@ function _eventCommitTimeLabel(item = {}) {
 }
 
 async function openEventCommitPrompt(eventId, opts = {}) {
-  const ev = _calendarEvents.find(e => e.id === eventId) || await window.Events?.getById?.(eventId).catch(() => null);
+  const ev = opts.event || _calendarEvents.find(e => e.id === eventId) || await window.Events?.getById?.(eventId).catch(() => null);
   if (!ev) return false;
   _pendingEventCommit = { eventId, opts };
   const summary = document.getElementById('eventCommitSummary');
@@ -21341,6 +21358,10 @@ async function confirmEventCommit(canCommit) {
   if (!pending) return;
   _pendingEventCommit = null;
   _hideCalSheet('eventCommitModal');
+  if (typeof pending.opts?.onConfirm === 'function') {
+    await pending.opts.onConfirm(canCommit);
+    return;
+  }
   if (canCommit) {
     await respondToEvent(pending.eventId, 'accepted', { ...(pending.opts || {}), commitConfirmed: true });
   } else {
