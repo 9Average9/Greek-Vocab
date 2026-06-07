@@ -20822,6 +20822,10 @@ async function saveEvent() {
         { eventId, eventTitle: title, date, time },
         `evtinvite_${eventId}_${inv.uid}`);
     }
+    // Add to creator's own Google Calendar so it can be auto-deleted on cancel
+    if (_calGCalToken && Date.now() < _calGCalTokenExpiry) {
+      _addEventToGoogleCalendar(eventId, { title, date, time, location, description }).catch(() => {});
+    }
     closeCreateEventModal();
     _showStudyToast('Event created!');
     _calSelectedDate = date;
@@ -20929,6 +20933,11 @@ async function cancelEvent(eventId) {
   const displayName = localStorage.getItem('authDisplayName') || 'Someone';
   const ev = _calendarEvents.find(e => e.id === eventId);
   if (!ev) return;
+  // Delete from creator's own Google Calendar immediately
+  if (_calGCalToken && Date.now() < _calGCalTokenExpiry) {
+    const gcalEventId = ev.googleCalIds?.[uid];
+    if (gcalEventId) await _deleteGCalEvent(gcalEventId).catch(() => {});
+  }
   await window.Events?.delete?.(eventId);
   for (const inv of (ev.invitees || []).filter(i => i.status !== 'declined')) {
     await window.Events?.sendNotification?.(inv.uid, 'eventCancelled', displayName, uid,
