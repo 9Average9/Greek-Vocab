@@ -5813,13 +5813,17 @@ body.dark .big-lock .material-symbols-outlined {
   min-width: 34px;
 }
 
-.friend-habits-modal .habits-list {
+.friend-habits-modal-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 12px 20px 24px;
-  align-content: start;
+}
+
+.friend-habits-modal .habits-list {
+  padding: 0;
 }
 
 /* Habits list */
