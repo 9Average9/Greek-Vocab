@@ -10435,7 +10435,7 @@ function _habitLastSevenDays(habit) {
   });
 }
 
-function _habitWeeklyProgressHtml(habit, skipPill = "", calIconBtn = "") {
+function _habitWeeklyProgressHtml(habit, skipPill = "", calIconBtn = "", allowNoteEdit = false) {
   const days = _habitLastSevenDays(habit);
   const complete = days.filter(d => d.status === "success").length;
   const pct = Math.round((complete / 7) * 100);
@@ -10451,6 +10451,9 @@ function _habitWeeklyProgressHtml(habit, skipPill = "", calIconBtn = "") {
           const icon = d.status === "success" ? "check" : d.status === "skipped" ? "remove" : d.status === "missed" ? "close" : "";
           const note = (habit.entries?.[d.date]?.comment || "").trim();
           const daySpan = `<span class="habit-week-day ${d.status}" title="${_habitEsc(d.date)} ${_habitEsc(_habitStatusLabel(d.status))}">${icon ? `<span class="material-symbols-outlined">${icon}</span>` : dayLabel}</span><span class="habit-week-note-dot"></span>`;
+          if (allowNoteEdit) {
+            return `<button class="habit-week-day-wrap${note ? " has-note" : ""}" onclick="openHabitNoteModal('${_habitEsc(habit.id)}','${_habitEsc(d.date)}')" title="${note ? _habitEsc(note) : "Add note for " + _habitEsc(d.date)}">${daySpan}</button>`;
+          }
           if (note) {
             return `<button class="habit-week-day-wrap has-note" onclick="openHabitNoteModal('${_habitEsc(habit.id)}','${_habitEsc(d.date)}')" title="${_habitEsc(note)}">${daySpan}</button>`;
           }
@@ -10486,11 +10489,7 @@ function _habitMonthHtml(habit, year, month) {
           : String(day);
     const note = (habit.entries?.[key]?.comment || "").trim();
     const dot = note ? '<span class="habit-cal-note-dot"></span>' : '';
-    if (note) {
-      cells.push(`<button class="habit-cal-day ${status}${isToday ? " today" : ""} has-note" onclick="openHabitNoteModal('${_habitEsc(habit.id)}','${_habitEsc(key)}')" title="${_habitEsc(note)}">${icon}${dot}</button>`);
-    } else {
-      cells.push(`<div class="habit-cal-day ${status}${isToday ? " today" : ""}">${icon}</div>`);
-    }
+    cells.push(`<button class="habit-cal-day ${status}${isToday ? " today" : ""}${note ? " has-note" : ""}" onclick="openHabitNoteModal('${_habitEsc(habit.id)}','${_habitEsc(key)}')" title="${note ? _habitEsc(note) : "Add note for " + _habitEsc(key)}">${icon}${dot}</button>`);
   }
   return `
     <div class="habit-calendar-month">
@@ -10977,7 +10976,7 @@ function renderHabits() {
             <span class="material-symbols-outlined">history_edu</span>All Notes
           </button>
         </div>
-        ${_habitWeeklyProgressHtml(habit, skipPill, calIconBtn)}
+        ${_habitWeeklyProgressHtml(habit, skipPill, calIconBtn, true)}
       </article>`;
   }).join("");
 
@@ -11113,10 +11112,11 @@ async function toggleHabitToday(habitId, status) {
   try {
     const habit = _habitItems.find(h => h.id === habitId);
     const beforeMilestones = new Set(habit?.awardedMilestones || []);
+    const existingComment = habit?.entries?.[_habitTodayKey()]?.comment || "";
     const ok = await window.Habits?.setEntry?.(uid, habitId, {
       date: _habitTodayKey(),
       status,
-      comment: "",
+      comment: existingComment,
       notify: status === "success"
     });
     if (!ok) alert("Could not update that habit.");
@@ -18760,7 +18760,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.127";
+const APP_VERSION = "3.0.128";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
