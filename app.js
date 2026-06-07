@@ -9753,8 +9753,11 @@ async function _openCollabStudy(studyId) {
 
 // ── Collab notifications ──────────────────────────────────────────────────────
 
+let _encSeenIds = null; // null = first batch not yet processed
+
 function _startEncouragementListener(uid) {
   _unsubEncouragements?.();
+  _encSeenIds = null;
   _unsubEncouragements = window.Studies?.listenEncouragements?.(uid, msgs => {
     _mergeStudyNotificationMessages(msgs);
     _updateNotifBadge();
@@ -9767,6 +9770,13 @@ function _mergeStudyNotificationMessages(msgs = []) {
     if (existing) Object.assign(existing, item, { read: existing.read || item.read });
     else _notifItems.push(item);
   };
+
+  // Track which message IDs we've already seen so we can detect truly new arrivals.
+  const isFirstBatch = _encSeenIds === null;
+  if (isFirstBatch) _encSeenIds = new Set();
+
+  const newMsgs = msgs.filter(m => m.id && !_encSeenIds.has(m.id));
+  msgs.forEach(m => { if (m.id) _encSeenIds.add(m.id); });
 
   msgs.filter(m => m.type === 'studyCollabRequest' && !m._read).forEach(m => {
     upsert('collab_' + m.id, {
@@ -9802,6 +9812,19 @@ function _mergeStudyNotificationMessages(msgs = []) {
       read: false
     });
   });
+
+  // Show an in-app toast for any genuinely new (post-initial-load) unread messages.
+  if (!isFirstBatch) {
+    newMsgs.filter(m => !m._read).forEach(m => {
+      const name = m.fromName || 'Someone';
+      let text;
+      if (m.type === 'studyInvite')          text = `${name} invited you to "${m.studyName || 'a study'}"`;
+      else if (m.type === 'studyCollabRequest') text = `${name} wants to collaborate on "${m.studyName || 'your study'}"`;
+      else if (m.type === 'studyCollabApproved') text = `${name} approved your collaboration request`;
+      else if (m.type === 'habitEncouragement') text = `${name} encouraged you on ${m.habitName || 'your habit'}!`;
+      if (text) _showStudyToast(text);
+    });
+  }
 }
 
 async function notifApproveCollab(studyId, requesterUid, requesterName, itemId) {
@@ -18786,7 +18809,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.131";
+const APP_VERSION = "3.0.132";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20420,8 +20443,15 @@ function initFCMForeground() {
   window.FCM?.listenForeground(payload => {
     const title = payload.notification?.title || "Disciple Builder";
     const body  = payload.notification?.body  || "Time to grow together.";
-    if (Notification.permission === "granted") {
-      new Notification(title, { body, icon: "./assets/icons/disciple-builder-icon-192.png" });
+    const data  = payload.data || {};
+    if (Notification.permission !== "granted") return;
+    const opts = { body, icon: "./assets/icons/disciple-builder-icon-192.png", data };
+    // Use service-worker showNotification so it works on iOS PWA; fall back to
+    // Notification constructor on desktop browsers without a SW registration.
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.ready.then(reg => reg.showNotification(title, opts)).catch(() => {});
+    } else {
+      try { new Notification(title, opts); } catch {}
     }
   });
 }
