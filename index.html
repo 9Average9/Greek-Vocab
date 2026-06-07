@@ -468,6 +468,10 @@ Start a New Study
 </h1>
 <p class="home-greeting-name" id="homeGreetingName">Friend</p>
 </div>
+<button class="ht-btn home-calendar-btn" id="calendarBtn" onclick="openCalendarModal()" aria-label="Group Calendar">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="notif-badge hidden" id="calEventBadge"></span>
+</button>
 <button class="ht-btn home-bell-btn" id="notifBtn" onclick="openNotifications()" aria-label="Notifications">
 <span class="material-symbols-outlined">notifications</span>
 <span class="notif-badge hidden" id="notifBadge"></span>
@@ -8975,6 +8979,12 @@ Verb Endings
 <button class="prof-menu-row" id="profileNotificationBtn" onclick="openReminderModal()">
 <span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">notifications</span></span>
 <span class="prof-menu-name" id="profileNotificationBtnText">Reminders</span>
+<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
+</button>
+<div class="prof-menu-sep"></div>
+<button class="prof-menu-row" id="profileCalendarBtn" onclick="openCalendarSyncModal()">
+<span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">calendar_month</span></span>
+<span class="prof-menu-name">Sync Google Calendar</span>
 <span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
 </button>
 <div class="prof-menu-sep"></div>
@@ -17710,5 +17720,101 @@ Save
   </div>
 </div>
 
+<!-- ══ CALENDAR MODAL ══════════════════════════════════════════════════════════ -->
+<div class="cal-modal-overlay" id="calendarModal" style="display:none" onclick="if(event.target===this)closeCalendarModal()">
+  <div class="cal-modal-sheet" onclick="event.stopPropagation()">
+    <div class="cal-modal-header">
+      <button class="cal-back-btn" onclick="closeCalendarModal()"><span class="material-symbols-outlined">arrow_back</span></button>
+      <span class="cal-modal-title">Group Calendar</span>
+      <button class="cal-add-btn" onclick="openCreateEventModal()"><span class="material-symbols-outlined">add</span></button>
+    </div>
+    <div class="cal-month-nav">
+      <button class="cal-nav-btn" onclick="_calendarPrevMonth()"><span class="material-symbols-outlined">chevron_left</span></button>
+      <span class="cal-month-label" id="calMonthLabel">June 2025</span>
+      <button class="cal-nav-btn" onclick="_calendarNextMonth()"><span class="material-symbols-outlined">chevron_right</span></button>
+    </div>
+    <div class="cal-grid-wrap">
+      <div class="cal-day-headers">
+        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="cal-events-section">
+      <div class="cal-events-label" id="calEventsLabel">Events</div>
+      <div class="cal-events-list" id="calEventsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CREATE / EDIT EVENT MODAL ══════════════════════════════════════════════ -->
+<div class="cal-modal-overlay" id="createEventModal" style="display:none" onclick="if(event.target===this)closeCreateEventModal()">
+  <div class="cal-modal-sheet cal-form-sheet" onclick="event.stopPropagation()">
+    <div class="cal-modal-header">
+      <button class="cal-text-btn" onclick="closeCreateEventModal()">Cancel</button>
+      <span class="cal-modal-title" id="createEventModalTitle">New Event</span>
+      <button class="cal-text-btn cal-text-btn--primary" onclick="saveEvent()">Save</button>
+    </div>
+    <div class="cal-form-body">
+      <div class="cal-field-group">
+        <input class="cal-input" id="eventTitleInput" placeholder="Event name" maxlength="80" />
+      </div>
+      <div class="cal-field-row">
+        <div class="cal-field-group cal-field-group--half">
+          <label class="cal-field-label">Date</label>
+          <input class="cal-input" type="date" id="eventDateInput" />
+        </div>
+        <div class="cal-field-group cal-field-group--half">
+          <label class="cal-field-label">Time</label>
+          <input class="cal-input" type="time" id="eventTimeInput" />
+        </div>
+      </div>
+      <div class="cal-field-group">
+        <input class="cal-input" id="eventLocationInput" placeholder="Location (optional)" maxlength="100" />
+      </div>
+      <div class="cal-field-group">
+        <textarea class="cal-input cal-textarea" id="eventDescInput" placeholder="Description (optional)" rows="3" maxlength="400"></textarea>
+      </div>
+      <div class="cal-section-label">Invite Friends</div>
+      <div class="event-invite-list" id="eventInviteList"></div>
+      <div class="cal-section-label">Reminders</div>
+      <div class="event-reminders-list">
+        <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="3week" /><span>3 weeks before</span></label>
+        <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="2week" /><span>2 weeks before</span></label>
+        <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="1week" checked /><span>1 week before</span></label>
+        <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="3day" checked /><span>3 days before</span></label>
+        <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="1day" checked /><span>1 day before</span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EVENT DETAIL MODAL ═════════════════════════════════════════════════════ -->
+<div class="cal-modal-overlay" id="eventDetailModal" style="display:none" onclick="if(event.target===this)closeEventDetail()">
+  <div class="cal-modal-sheet" onclick="event.stopPropagation()">
+    <div class="cal-modal-header">
+      <button class="cal-back-btn" onclick="closeEventDetail()"><span class="material-symbols-outlined">arrow_back</span></button>
+      <span class="cal-modal-title">Event</span>
+      <span></span>
+    </div>
+    <div class="evt-detail-body" id="eventDetailBody"></div>
+  </div>
+</div>
+
+<!-- ══ GOOGLE CALENDAR SYNC PROMPT ═══════════════════════════════════════════ -->
+<div class="cal-modal-overlay cal-sync-overlay" id="calSyncPromptModal" style="display:none" onclick="if(event.target===this)dismissCalSyncPrompt()">
+  <div class="cal-sync-card" onclick="event.stopPropagation()">
+    <button class="cal-sync-dismiss-btn" onclick="dismissCalSyncPrompt(true)"><span class="material-symbols-outlined">close</span></button>
+    <div class="cal-sync-icon-wrap"><span class="material-symbols-outlined">calendar_month</span></div>
+    <h3 class="cal-sync-title">Link Your Google Calendar</h3>
+    <p class="cal-sync-body">Any accepted invites, updates, or changes sync instantly to Google Calendar and right here in the app.</p>
+    <div class="cal-sync-btns">
+      <button class="main-btn" onclick="connectGoogleCalendar()">Link Google Calendar</button>
+    </div>
+    <button class="cal-sync-later-btn" onclick="dismissCalSyncPrompt(true)">Maybe Later</button>
+  </div>
+</div>
+
+<!-- Google Identity Services for optional Google Calendar OAuth -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
 </html>
