@@ -26531,8 +26531,9 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   justify-content: center;
   cursor: pointer;
   color: inherit;
-  margin-right: -2px;
+  margin-right: -10px;
 }
+.home-calendar-btn + .home-bell-btn { margin-left: 0; }
 .home-calendar-btn .material-symbols-outlined { font-size: 26px; }
 
 .cal-modal-overlay {
@@ -26550,13 +26551,17 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   border-radius: 24px 24px 0 0;
   width: 100%;
   max-width: 540px;
+  height: calc(100dvh - max(54px, calc(env(safe-area-inset-top) + 38px)));
   max-height: calc(100dvh - max(12px, env(safe-area-inset-top)));
   margin-top: max(12px, env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-.cal-form-sheet { max-height: calc(100dvh - max(12px, env(safe-area-inset-top))); }
+.cal-form-sheet {
+  height: calc(100dvh - max(42px, calc(env(safe-area-inset-top) + 30px)));
+  max-height: calc(100dvh - max(12px, env(safe-area-inset-top)));
+}
 
 .cal-modal-header {
   display: flex;
@@ -27070,6 +27075,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .cal-picker-sheet {
   width: 100%;
   max-width: 440px;
+  height: min(66dvh, 560px);
   max-height: calc(100dvh - max(18px, env(safe-area-inset-top)));
   margin-top: max(18px, env(safe-area-inset-top));
   background: var(--card-bg, #fff);
@@ -27086,6 +27092,8 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 }
 .cal-picker-body {
   padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
+  height: calc(100% - 55px);
+  box-sizing: border-box;
 }
 .cal-picker-monthbar {
   display: flex;
@@ -27133,14 +27141,44 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
+  height: calc(100% - 34px);
+  min-height: 260px;
+  position: relative;
 }
+.cal-time-wheel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 46px;
+  transform: translateY(-50%);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--secondary-color, #6c63ff) 8%, transparent);
+  pointer-events: none;
+}
+.cal-time-affordance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--muted-color, #777);
+  font-size: 0.78rem;
+  font-weight: 750;
+  margin: 0 0 8px;
+}
+.cal-time-affordance .material-symbols-outlined { font-size: 17px; }
 .cal-time-col {
-  max-height: 250px;
+  height: 100%;
+  max-height: none;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   border-radius: 16px;
   background: var(--card-bg-2, rgba(0,0,0,0.04));
-  padding: 7px;
+  padding: 96px 7px;
+  scroll-snap-type: y proximity;
+  box-sizing: border-box;
+  box-shadow: inset 0 22px 22px -24px rgba(0,0,0,0.45), inset 0 -22px 22px -24px rgba(0,0,0,0.45);
 }
 .cal-time-col button {
   width: 100%;
@@ -27153,6 +27191,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   font-weight: 800;
   padding: 10px 4px;
   cursor: pointer;
+  scroll-snap-align: center;
 }
 .cal-time-col button.selected {
   background: var(--secondary-color, #6c63ff);
