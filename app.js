@@ -19029,7 +19029,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.143";
+const APP_VERSION = "3.0.144";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19048,6 +19048,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.144 &mdash; Event Attendees</div>
+<ul>
+  <li><strong>Attendees button added</strong> &mdash; Event creators and accepted attendees can now open a grouped RSVP list showing who is going, who declined, and who has not answered yet.</li>
+</ul>
 <div class="un-version-label">v3.0.143 &mdash; Event Invite Reliability</div>
 <ul>
   <li><strong>Invite notifications stay actionable</strong> &mdash; Event invites now stay in the bell until the recipient answers through the commitment prompt.</li>
@@ -21276,14 +21280,10 @@ function openEventDetail(eventId) {
   const dateObj = new Date(y, m-1, d);
   const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const formattedDate = ev.date ? `${dayNames[dateObj.getDay()]}, ${_calMonthNames()[m-1]} ${d}, ${y}` : '';
-  const acceptedCount = (ev.invitees || []).filter(i => i.status === 'accepted').length;
-  const attendeesHtml = (ev.invitees || []).map(inv => {
-    const icon = inv.status === 'accepted' ? 'check_circle' : inv.status === 'declined' ? 'cancel' : 'schedule';
-    return `<div class="evt-attendee evt-attendee--${inv.status||'pending'}">
-      <span class="material-symbols-outlined evt-att-icon">${icon}</span>
-      <span>${_calEsc(inv.name)}</span>
-    </div>`;
-  }).join('');
+  const attendeeCounts = _eventAttendeeCounts(ev);
+  const canViewAttendees = isCreator || myStatus === 'accepted';
+  const acceptedCount = attendeeCounts.going;
+  const attendeesHtml = '';
   const gcalUrl = _googleCalendarUrl(ev);
   const syncedForMe = !!ev.googleCalIds?.[uid] || _isGCalLinked();
   const calendarActionsHtml = syncedForMe
@@ -21307,6 +21307,11 @@ function openEventDetail(eventId) {
       ${ev.location ? `<div class="evt-meta-row"><span class="material-symbols-outlined">location_on</span><span>${_calEsc(ev.location)}</span></div>` : ''}
     </div>
     ${ev.description ? `<p class="evt-desc">${_calEsc(ev.description)}</p>` : ''}
+    ${canViewAttendees ? `<button class="evt-attendees-btn" onclick="openEventAttendees('${ev.id}')">
+      <span class="material-symbols-outlined">groups</span>
+      <span>Attendees</span>
+      <small>${attendeeCounts.going} going · ${attendeeCounts.declined} declined</small>
+    </button>` : ''}
     ${attendeesHtml ? `<div class="evt-attendees">
       <div class="evt-section-label">Attendees · ${acceptedCount} going</div>
       ${attendeesHtml}
@@ -21332,6 +21337,63 @@ function openEventDetail(eventId) {
 
 function closeEventDetail() {
   _hideCalSheet('eventDetailModal');
+}
+
+function _eventAttendeeCounts(ev = {}) {
+  const invitees = ev.invitees || [];
+  return {
+    going: 1 + invitees.filter(i => i.status === 'accepted').length,
+    declined: invitees.filter(i => i.status === 'declined').length,
+    pending: invitees.filter(i => !i.status || i.status === 'pending').length
+  };
+}
+
+function _eventAttendeeRow(name, status, label = '') {
+  const icon = status === 'creator' ? 'stars' : status === 'accepted' ? 'check_circle' : status === 'declined' ? 'cancel' : 'schedule';
+  return `<div class="evt-attendee evt-attendee--${status}">
+    <span class="material-symbols-outlined evt-att-icon">${icon}</span>
+    <span>${_calEsc(name || 'Friend')}</span>
+    ${label ? `<small>${_calEsc(label)}</small>` : ''}
+  </div>`;
+}
+
+function _eventAttendeeGroup(title, rows, emptyText) {
+  return `<section class="evt-attendee-group">
+    <div class="evt-section-label">${_calEsc(title)} · ${rows.length}</div>
+    ${rows.length ? rows.join('') : `<div class="evt-attendee-empty">${_calEsc(emptyText)}</div>`}
+  </section>`;
+}
+
+function openEventAttendees(eventId) {
+  const ev = _calendarEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  const myStatus = (ev.invitees || []).find(i => i.uid === uid)?.status;
+  if (ev.creatorUid !== uid && myStatus !== 'accepted') return;
+  const body = document.getElementById('eventAttendeesBody');
+  if (!body) return;
+  const invitees = ev.invitees || [];
+  const goingRows = [
+    _eventAttendeeRow(ev.creatorName || 'Creator', 'creator', 'Creator'),
+    ...invitees.filter(i => i.status === 'accepted').map(i => _eventAttendeeRow(i.name, 'accepted'))
+  ];
+  const declinedRows = invitees.filter(i => i.status === 'declined').map(i => _eventAttendeeRow(i.name, 'declined'));
+  const pendingRows = invitees.filter(i => !i.status || i.status === 'pending').map(i => _eventAttendeeRow(i.name, 'pending'));
+  const counts = _eventAttendeeCounts(ev);
+  body.innerHTML = `
+    <div class="evt-attendees-summary">
+      <strong>${_calEsc(ev.title || 'Event')}</strong>
+      <span>${counts.going} going · ${counts.declined} declined · ${counts.pending} waiting</span>
+    </div>
+    ${_eventAttendeeGroup('Going', goingRows, 'No one has accepted yet.')}
+    ${_eventAttendeeGroup('Declined', declinedRows, 'No one has declined.')}
+    ${_eventAttendeeGroup('Waiting', pendingRows, 'No pending invites.')}
+  `;
+  _showCalSheet('eventAttendeesModal');
+}
+
+function closeEventAttendees() {
+  _hideCalSheet('eventAttendeesModal');
 }
 
 function closeEventCommitPrompt() {
