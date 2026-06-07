@@ -25,16 +25,23 @@ messaging.onBackgroundMessage(function () {
 self.addEventListener("notificationclick", (event) => {
   if (event.notification.data?.FCM_MSG) return; // let Firebase handle it
   event.notification.close();
+  const data = event.notification.data || {};
+  const targetUrl = data.open === "calendar" && data.action === "commit" && data.eventId
+    ? `./?open=calendar&action=commit&eventId=${encodeURIComponent(data.eventId)}&msgId=${encodeURIComponent(data.msgId || "")}`
+    : "./";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(clients => {
       const appClient = clients.find(c => c.visibilityState === "visible") || clients[0];
-      if (appClient) return appClient.focus();
-      return self.clients.openWindow("./");
+      if (appClient) {
+        if ("navigate" in appClient) return appClient.navigate(targetUrl).then(client => client?.focus());
+        return appClient.focus();
+      }
+      return self.clients.openWindow(targetUrl);
     })
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.142";
+const CACHE_NAME = "disciple-builder-v3.0.143";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -42,9 +49,9 @@ const CACHE_NAME = "disciple-builder-v3.0.142";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.142",
+  "./style.css?v=3.0.143",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.142",
+  "./app.js?v=3.0.143",
   "./verse-structure.js?v=3.0.133",
   "./vs-structure.js?v=3.0.133",
   // Rhema Greek text (pinned data versions)
@@ -63,7 +70,7 @@ const FILES_TO_CACHE = [
   "./rhema-crossrefs.js?v=3.0.65",
   "./rhema-crossrefs-ui.js?v=3.0.29",
   "./greek-verbs.js?v=3.0.93",
-  "./firebase-lb.js?v=3.0.142",
+  "./firebase-lb.js?v=3.0.143",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",

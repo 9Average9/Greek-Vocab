@@ -12121,16 +12121,15 @@ async function _loadNotifications() {
         </div>`;
     }
     if (n.type === 'event_invite') {
+      const when = [n.date, _calFmtTime(n.time)].filter(Boolean).join(' at ');
       return `
         <div class="notif-item${n.read ? '' : ' unread'}">
           <div class="notif-icon"><span class="material-symbols-outlined">event</span></div>
           <div class="notif-body">
             <div class="notif-title">${_calEsc(n.fromName)}</div>
-            <div class="notif-sub">Invited you to "${_calEsc(n.eventTitle)}"</div>
+            <div class="notif-sub">Invited you to "${_calEsc(n.eventTitle)}"${when ? ` • ${_calEsc(when)}` : ''}</div>
             <div class="notif-fr-actions">
-              <button class="notif-accept-btn" onclick="notifAcceptEvent('${n.eventId}','${n.id}','${n.msgId||''}')">Accept</button>
-              <button class="notif-accept-btn" onclick="openCalendarModal();notifDismissCollab('${n.id}','${n.msgId||''}')">View</button>
-              <button class="notif-deny-btn" onclick="notifDismissCollab('${n.id}','${n.msgId||''}')">Dismiss</button>
+              <button class="notif-accept-btn" onclick="notifAcceptEvent('${n.eventId}','${n.id}','${n.msgId||''}')">Respond</button>
             </div>
           </div>
         </div>`;
@@ -12216,9 +12215,40 @@ async function notifAcceptEvent(eventId, notifId, msgId) {
   await openEventCommitPrompt(eventId, {
     keepOpen: true,
     afterCommit: async () => {
-      await notifDismissCollab(notifId, msgId || '');
+      await dismissEventInviteNotifications(eventId, notifId, msgId || '');
     }
   });
+}
+
+async function dismissEventInviteNotifications(eventId, notifId = '', msgId = '') {
+  const currentUid = window.Auth?.getCurrentUser()?.uid;
+  const matches = _notifItems.filter(n =>
+    n.type === 'event_invite' &&
+    (n.eventId === eventId || n.id === notifId || n.msgId === msgId)
+  );
+  const idsToRemove = new Set([notifId, ...matches.map(n => n.id)].filter(Boolean));
+  const msgIds = [...new Set([msgId, ...matches.map(n => n.msgId)].filter(Boolean))];
+  if (currentUid) {
+    await Promise.all(msgIds.map(id => window.Studies?.deleteMsg(currentUid, id).catch(() => {})));
+  }
+  _notifItems = _notifItems.filter(n => !idsToRemove.has(n.id));
+  _updateNotifBadge();
+  if (document.getElementById('notifPanel')?.classList.contains('open')) _loadNotifications();
+}
+
+async function handleCalendarNotificationOpen() {
+  openCalendarModal();
+  const params = new URLSearchParams(location.search);
+  const eventId = params.get('eventId') || params.get('event');
+  const action = params.get('action') || '';
+  if (eventId && action === 'commit') {
+    await openEventCommitPrompt(eventId, {
+      keepOpen: true,
+      afterCommit: async () => {
+        await dismissEventInviteNotifications(eventId, '', params.get('msgId') || '');
+      }
+    });
+  }
 }
 
 function notifDismissAccepted(uid) {
@@ -18999,7 +19029,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.142";
+const APP_VERSION = "3.0.143";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19018,6 +19048,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.143 &mdash; Event Invite Reliability</div>
+<ul>
+  <li><strong>Invite notifications stay actionable</strong> &mdash; Event invites now stay in the bell until the recipient answers through the commitment prompt.</li>
+  <li><strong>Push taps open the commitment prompt</strong> &mdash; Event invite pushes now open the app directly into the Yep/No commitment check for that event.</li>
+  <li><strong>Calendar day checks improved</strong> &mdash; Google Calendar day lookups now request less data and include events that overlap the day, including multi-day events.</li>
+</ul>
 <div class="un-version-label">v3.0.142 &mdash; Creator Commitment Check</div>
 <ul>
   <li><strong>Create checks your calendar first</strong> &mdash; Event creators now get the same commitment prompt before the event is created, with that day&rsquo;s Google Calendar plans listed first.</li>
@@ -20425,7 +20461,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => showNavPage('habits'), 900);
   }
   if (openParam === 'calendar') {
-    setTimeout(() => openCalendarModal(), 900);
+    setTimeout(() => handleCalendarNotificationOpen(), 900);
   }
   if (window.__pendingAuthResolved) setAppLaunchText('Finishing setup');
 });
@@ -21390,6 +21426,7 @@ async function respondToEvent(eventId, status, opts = {}) {
   await window.Events?.sendNotification?.(ev.creatorUid,
     status === 'accepted' ? 'eventAccepted' : 'eventDeclined', displayName, uid,
     { eventId, eventTitle: ev.title }, `evtresp_${eventId}_${uid}_${status}_${Date.now()}`);
+  await dismissEventInviteNotifications(eventId);
   if (!opts.keepOpen) closeEventDetail();
   _renderCalEventsList();
   if (typeof opts.afterCommit === 'function') await opts.afterCommit(status);

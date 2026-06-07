@@ -219,6 +219,12 @@ function dateKeyInTimeZone(value, timeZone = "UTC") {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
+function previousDateKey(dateKey) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey || "")) return dateKey || "";
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day - 1)).toISOString().slice(0, 10);
+}
+
 async function upsertGoogleCalendarEvent(uid, eventId, ev = {}) {
   const body = calendarEventBody(ev);
   if (!body) return null;
@@ -356,34 +362,45 @@ exports.listGoogleCalendarDayEvents = functions.https.onCall(async (data, contex
   const [year, month, day] = date.split("-").map(Number);
   const timeMin = new Date(Date.UTC(year, month - 1, day - 1, 0, 0, 0)).toISOString();
   const timeMax = new Date(Date.UTC(year, month - 1, day + 2, 0, 0, 0)).toISOString();
-  const url = `${GOOGLE_CALENDAR_API}?${new URLSearchParams({
-    timeMin,
-    timeMax,
-    singleEvents: "true",
-    orderBy: "startTime",
-    maxResults: "20",
-    timeZone
-  })}`;
-  const res = await googleCalendarRequest(context.auth.uid, url, { method: "GET" });
-  if (!res.ok) return { linked: false, events: [] };
-  const items = Array.isArray(res.data?.items) ? res.data.items : [];
+  const items = [];
+  let pageToken = "";
+  do {
+    const params = {
+      timeMin,
+      timeMax,
+      singleEvents: "true",
+      orderBy: "startTime",
+      maxResults: "100",
+      timeZone,
+      fields: "items(id,summary,start,end),nextPageToken"
+    };
+    if (pageToken) params.pageToken = pageToken;
+    const url = `${GOOGLE_CALENDAR_API}?${new URLSearchParams(params)}`;
+    const res = await googleCalendarRequest(context.auth.uid, url, { method: "GET" });
+    if (!res.ok) return { linked: false, events: [] };
+    items.push(...(Array.isArray(res.data?.items) ? res.data.items : []));
+    pageToken = res.data?.nextPageToken || "";
+  } while (pageToken && items.length < 500);
   const events = items
     .map(item => {
       const allDayDate = item.start?.date || "";
       const startsAt = item.start?.dateTime || allDayDate;
       const endsAt = item.end?.dateTime || item.end?.date || "";
       const itemDate = allDayDate || dateKeyInTimeZone(startsAt, timeZone);
+      const endDate = allDayDate
+        ? previousDateKey(endsAt || allDayDate)
+        : dateKeyInTimeZone(new Date(new Date(endsAt || startsAt).getTime() - 1), timeZone);
       return {
         id: item.id || "",
         title: item.summary || "Untitled event",
         startsAt,
         endsAt,
         allDay: !!allDayDate,
-        date: itemDate
+        date: itemDate,
+        endDate
       };
     })
-    .filter(item => item.date === date)
-    .slice(0, 12);
+    .filter(item => item.date <= date && (item.endDate || item.date) >= date);
   return { linked: true, events };
 });
 
@@ -1193,12 +1210,26 @@ exports.onEncouragementCreated = functions.firestore
       return null;
     }
 
+    const messageId = context.params.messageId || "";
+    const eventId = snap.data().eventId || "";
     const webpush = { notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } };
     if (type && String(type).startsWith("mercy")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=mercies" };
     if (type && String(type).startsWith("habit")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=habits" };
-    if (type && String(type).startsWith("event")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=calendar" };
+    if (type === "eventInvite" && eventId) {
+      webpush.fcmOptions = { link: `/Greek-Vocab/?open=calendar&action=commit&eventId=${encodeURIComponent(eventId)}&msgId=${encodeURIComponent(messageId)}` };
+    } else if (type && String(type).startsWith("event")) {
+      webpush.fcmOptions = { link: "/Greek-Vocab/?open=calendar" };
+    }
+    const dataPayload = {
+      type: String(type || ""),
+      open: type && String(type).startsWith("event") ? "calendar" : "",
+      action: type === "eventInvite" ? "commit" : "",
+      eventId: String(eventId || ""),
+      msgId: String(messageId || "")
+    };
     const result = await sendToUserTokens(userSnap.ref, tokens, {
       notification: { title, body },
+      data: dataPayload,
       webpush
     }, `push ${type} ${targetUid}`);
     console.log(`onEncouragementCreated ${targetUid}: ${result.successCount} sent, ${result.failureCount} failed`);
