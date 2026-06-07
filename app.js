@@ -18993,7 +18993,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.137";
+const APP_VERSION = "3.0.138";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19012,6 +19012,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.138 &mdash; Calendar Link &amp; Time Wheel Fixes</div>
+<ul>
+  <li><strong>Permanent Calendar link prompt</strong> &mdash; Users with the old local-only Google Calendar link are prompted once more so the new server-backed link can be saved permanently.</li>
+  <li><strong>Apple-style time wheels</strong> &mdash; Event time now uses compact scroll wheels for hour, every minute, and AM/PM, with the centered value becoming the selected time.</li>
+  <li><strong>Calendar sheet motion</strong> &mdash; Calendar sheets slide up and down, and the Home calendar button now sits directly beside the notification bell.</li>
+</ul>
 <div class="un-version-label">v3.0.137 &mdash; Server Google Calendar Sync</div>
 <ul>
   <li><strong>One-time Calendar linking foundation</strong> &mdash; Google Calendar sync now links through Cloud Functions so accepted and created events can keep syncing after the app is closed and reopened.</li>
@@ -20690,9 +20696,9 @@ function _updateCalendarBadge() {
 function openCalendarModal() {
   const modal = document.getElementById('calendarModal');
   if (!modal) return;
-  modal.style.display = 'flex';
+  _showCalSheet('calendarModal');
   if (!localStorage.getItem('calSyncPromptSeen') && !localStorage.getItem('calGCalConnected')) {
-    setTimeout(() => { document.getElementById('calSyncPromptModal')?.style && (document.getElementById('calSyncPromptModal').style.display = 'flex'); }, 900);
+    setTimeout(() => openCalendarSyncModal(), 900);
   }
   const now = new Date();
   _calViewYear = now.getFullYear();
@@ -20703,7 +20709,26 @@ function openCalendarModal() {
 }
 
 function closeCalendarModal() {
-  document.getElementById('calendarModal')?.style && (document.getElementById('calendarModal').style.display = 'none');
+  _hideCalSheet('calendarModal');
+}
+
+function _showCalSheet(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  modal.style.display = 'flex';
+  modal.classList.remove('is-closing');
+  requestAnimationFrame(() => modal.classList.add('open'));
+}
+
+function _hideCalSheet(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  modal.classList.remove('open');
+  modal.classList.add('is-closing');
+  setTimeout(() => {
+    if (!modal.classList.contains('open')) modal.style.display = 'none';
+    modal.classList.remove('is-closing');
+  }, 260);
 }
 
 function _calTodayKey() {
@@ -20819,7 +20844,7 @@ function openEventDatePicker() {
   _calPickerDate = document.getElementById('eventDateInput')?.value || _calTodayKey();
   _renderEventDatePicker();
   document.getElementById('calPickerTitle').textContent = 'Pick Date';
-  document.getElementById('eventDateTimePickerModal').style.display = 'flex';
+  _showCalSheet('eventDateTimePickerModal');
 }
 
 function openEventTimePicker() {
@@ -20827,11 +20852,11 @@ function openEventTimePicker() {
   _calPickerTime = document.getElementById('eventTimeInput')?.value || '18:00';
   _renderEventTimePicker();
   document.getElementById('calPickerTitle').textContent = 'Pick Time';
-  document.getElementById('eventDateTimePickerModal').style.display = 'flex';
+  _showCalSheet('eventDateTimePickerModal');
 }
 
 function closeEventDateTimePicker() {
-  document.getElementById('eventDateTimePickerModal')?.style && (document.getElementById('eventDateTimePickerModal').style.display = 'none');
+  _hideCalSheet('eventDateTimePickerModal');
 }
 
 function applyEventDateTimePicker() {
@@ -20883,50 +20908,97 @@ function shiftEventPickerMonth(delta) {
   _renderEventDatePicker();
 }
 
-function _renderEventTimePicker(options = {}) {
+function _renderEventTimePicker() {
   const body = document.getElementById('calPickerBody');
   if (!body) return;
-  const previousScroll = options.preserveScroll
-    ? [...body.querySelectorAll('.cal-time-col')].map(col => col.scrollTop)
-    : null;
   const [hour24, minuteRaw] = (_calPickerTime || '18:00').split(':').map(Number);
   const period = hour24 >= 12 ? 'PM' : 'AM';
   const hour12 = hour24 % 12 || 12;
-  const minute = Math.round((minuteRaw || 0) / 5) * 5 % 60;
+  const minute = Number.isFinite(minuteRaw) ? Math.max(0, Math.min(59, minuteRaw)) : 0;
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-  const mins = Array.from({ length: 12 }, (_, i) => i * 5);
+  const mins = Array.from({ length: 60 }, (_, i) => i);
   body.innerHTML = `
-    <div class="cal-time-affordance"><span class="material-symbols-outlined">unfold_more</span><span>Slide each wheel or tap a value</span></div>
     <div class="cal-time-wheel">
-      <div class="cal-time-col">${hours.map(h => `<button data-time-part="hour" data-time-value="${h}" class="${h === hour12 ? 'selected' : ''}" onclick="selectEventPickerTimePart('hour',${h})">${h}</button>`).join('')}</div>
-      <div class="cal-time-col">${mins.map(m => `<button data-time-part="minute" data-time-value="${m}" class="${m === minute ? 'selected' : ''}" onclick="selectEventPickerTimePart('minute',${m})">${String(m).padStart(2,'0')}</button>`).join('')}</div>
-      <div class="cal-time-col">${['AM','PM'].map(p => `<button data-time-part="period" data-time-value="${p}" class="${p === period ? 'selected' : ''}" onclick="selectEventPickerTimePart('period','${p}')">${p}</button>`).join('')}</div>
+      <div class="cal-time-col" data-time-part="hour">${hours.map(h => `<button data-time-part="hour" data-time-value="${h}" class="${h === hour12 ? 'selected' : ''}" onclick="selectEventPickerTimePart('hour',${h})">${h}</button>`).join('')}</div>
+      <div class="cal-time-col" data-time-part="minute">${mins.map(m => `<button data-time-part="minute" data-time-value="${m}" class="${m === minute ? 'selected' : ''}" onclick="selectEventPickerTimePart('minute',${m})">${String(m).padStart(2,'0')}</button>`).join('')}</div>
+      <div class="cal-time-col" data-time-part="period">${['AM','PM'].map(p => `<button data-time-part="period" data-time-value="${p}" class="${p === period ? 'selected' : ''}" onclick="selectEventPickerTimePart('period','${p}')">${p}</button>`).join('')}</div>
     </div>`;
   const cols = [...body.querySelectorAll('.cal-time-col')];
-  if (previousScroll) {
-    cols.forEach((col, i) => { col.scrollTop = previousScroll[i] || 0; });
-  } else {
-    requestAnimationFrame(() => {
-      cols.forEach(col => {
-        const selected = col.querySelector('.selected');
-        if (selected) col.scrollTop = Math.max(0, selected.offsetTop - (col.clientHeight / 2) + (selected.clientHeight / 2));
-      });
-    });
-  }
+  cols.forEach(col => {
+    col.addEventListener('scroll', _updateEventTimeFromWheel, { passive: true });
+  });
+  requestAnimationFrame(() => {
+    _scrollEventTimePartIntoView('hour', hour12, 'auto');
+    _scrollEventTimePartIntoView('minute', minute, 'auto');
+    _scrollEventTimePartIntoView('period', period, 'auto');
+    _updateEventTimeFromWheel();
+  });
 }
 
 function selectEventPickerTimePart(part, value) {
   const [hour24, minuteRaw] = (_calPickerTime || '18:00').split(':').map(Number);
   let period = hour24 >= 12 ? 'PM' : 'AM';
   let hour12 = hour24 % 12 || 12;
-  let minute = Math.round((minuteRaw || 0) / 5) * 5 % 60;
+  let minute = Number.isFinite(minuteRaw) ? Math.max(0, Math.min(59, minuteRaw)) : 0;
   if (part === 'hour') hour12 = Number(value);
   if (part === 'minute') minute = Number(value);
   if (part === 'period') period = value;
+  _setEventPickerTime(hour12, minute, period);
+  _scrollEventTimePartIntoView(part, value, 'smooth');
+}
+
+function _scrollEventTimePartIntoView(part, value, behavior = 'smooth') {
+  const col = document.querySelector(`.cal-time-col[data-time-part="${part}"]`);
+  if (!col) return;
+  const btn = col.querySelector(`button[data-time-value="${value}"]`);
+  if (!btn) return;
+  const top = btn.offsetTop - (col.clientHeight / 2) + (btn.clientHeight / 2);
+  col.scrollTo({ top: Math.max(0, top), behavior });
+}
+
+function _nearestEventTimeValue(col) {
+  const buttons = [...col.querySelectorAll('button')];
+  if (!buttons.length) return null;
+  const center = col.scrollTop + (col.clientHeight / 2);
+  let best = buttons[0];
+  let bestDist = Infinity;
+  buttons.forEach(btn => {
+    const btnCenter = btn.offsetTop + (btn.offsetHeight / 2);
+    const dist = Math.abs(btnCenter - center);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = btn;
+    }
+  });
+  return best?.dataset.timeValue ?? null;
+}
+
+function _updateEventTimeFromWheel() {
+  const hourValue = _nearestEventTimeValue(document.querySelector('.cal-time-col[data-time-part="hour"]'));
+  const minuteValue = _nearestEventTimeValue(document.querySelector('.cal-time-col[data-time-part="minute"]'));
+  const periodValue = _nearestEventTimeValue(document.querySelector('.cal-time-col[data-time-part="period"]'));
+  if (!hourValue || minuteValue == null || !periodValue) return;
+  const hour12 = Number(hourValue);
+  const minute = Number(minuteValue);
+  _setEventPickerTime(hour12, minute, periodValue);
+}
+
+function _setEventPickerTime(hour12, minute, period) {
+  hour12 = Math.max(1, Math.min(12, Number(hour12) || 12));
+  minute = Math.max(0, Math.min(59, Number(minute) || 0));
+  period = period === 'AM' ? 'AM' : 'PM';
+  document.querySelectorAll('.cal-time-col button').forEach(btn => {
+    const part = btn.dataset.timePart;
+    const value = btn.dataset.timeValue;
+    const selected =
+      (part === 'hour' && Number(value) === hour12) ||
+      (part === 'minute' && Number(value) === minute) ||
+      (part === 'period' && value === period);
+    btn.classList.toggle('selected', selected);
+  });
   let nextHour = hour12 % 12;
   if (period === 'PM') nextHour += 12;
   _calPickerTime = `${String(nextHour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
-  _renderEventTimePicker({ preserveScroll: true });
 }
 
 // ── Create / Edit Event ────────────────────────────────────────────────────────
@@ -20947,11 +21019,11 @@ async function openCreateEventModal(eventId = null) {
   document.querySelectorAll('.event-reminder-cb').forEach(cb => { cb.checked = enabledReminders.includes(cb.dataset.key); });
   _updateEventPickerLabels();
   await _renderEventInviteFriendsList();
-  modal.style.display = 'flex';
+  _showCalSheet('createEventModal');
 }
 
 function closeCreateEventModal() {
-  document.getElementById('createEventModal')?.style && (document.getElementById('createEventModal').style.display = 'none');
+  _hideCalSheet('createEventModal');
   _editingEventId = null;
   _calEventInviteUids = new Set();
 }
@@ -21126,11 +21198,11 @@ function openEventDetail(eventId) {
     </div>` : ''}
     ${isCreator ? `<button class="evt-cancel-btn" onclick="cancelEvent('${ev.id}')"><span class="material-symbols-outlined">delete</span>Cancel Event</button>` : ''}
   `;
-  modal.style.display = 'flex';
+  _showCalSheet('eventDetailModal');
 }
 
 function closeEventDetail() {
-  document.getElementById('eventDetailModal')?.style && (document.getElementById('eventDetailModal').style.display = 'none');
+  _hideCalSheet('eventDetailModal');
 }
 
 async function respondToEvent(eventId, status, opts = {}) {
@@ -21209,7 +21281,7 @@ function downloadEventICS(eventId) {
 // ── Google Calendar OAuth ──────────────────────────────────────────────────────
 
 function dismissCalSyncPrompt(permanent = false) {
-  document.getElementById('calSyncPromptModal')?.style && (document.getElementById('calSyncPromptModal').style.display = 'none');
+  _hideCalSheet('calSyncPromptModal');
   if (permanent) localStorage.setItem('calSyncPromptSeen', '1');
 }
 
@@ -21263,7 +21335,7 @@ function openCalendarSyncModal() {
   if (btnWrap) btnWrap.innerHTML = connected
     ? `<button class="main-btn" style="background:#c0392b" onclick="disconnectGoogleCalendar()">Disconnect</button>`
     : `<button class="main-btn" onclick="connectGoogleCalendar()">Link Google Calendar</button>`;
-  prompt.style.display = 'flex';
+  _showCalSheet('calSyncPromptModal');
 }
 
 function disconnectGoogleCalendar() {
@@ -21310,9 +21382,21 @@ function _requestGCalToken(cb, silent = false) {
 // Called on login — silently restores the GCal token if the user previously linked.
 // Uses prompt:'' so no popup appears; Google returns a token instantly if already authorized.
 function _tryGCalSilentRefresh() {
+  const hadLegacyLocalLink = localStorage.getItem('calGCalConnected') === '1';
   _syncGCalProfileStatusFromStorage();
-  window.Events?.gcalStatus?.().then(status => {
-    _setGCalLinked(!!status?.linked);
+  if (!window.Events?.gcalStatus) {
+    setTimeout(() => _tryGCalSilentRefresh(), 1200);
+    return;
+  }
+  window.Events.gcalStatus().then(status => {
+    const linked = !!status?.linked;
+    _setGCalLinked(linked);
+    if (!linked && hadLegacyLocalLink) {
+      localStorage.removeItem('calSyncPromptSeen');
+      setTimeout(() => openCalendarSyncModal(), 500);
+    }
+  }).catch(() => {
+    if (hadLegacyLocalLink) _updateGCalProfileStatus(true);
   });
 }
 

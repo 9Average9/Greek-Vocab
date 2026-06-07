@@ -129,11 +129,21 @@ async function exchangeGoogleAuthCode(uid, code) {
     })
   });
   const data = await res.json().catch(() => ({}));
+  const now = Date.now();
   if (!res.ok || !data.refresh_token) {
+    const existing = await gcalTokenRef(uid).get();
+    if (res.ok && existing.exists && existing.data().refreshToken && data.access_token) {
+      await existing.ref.set({
+        accessToken: data.access_token,
+        accessTokenExpiresAt: now + ((data.expires_in || 3600) * 1000) - 60000,
+        scope: data.scope || existing.data().scope || "",
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+      return;
+    }
     console.warn("exchangeGoogleAuthCode:", res.status, data.error || data.error_description || data);
     throw new functions.https.HttpsError("permission-denied", "Google did not return a long-term Calendar token.");
   }
-  const now = Date.now();
   await gcalTokenRef(uid).set({
     refreshToken: data.refresh_token,
     accessToken: data.access_token || "",
