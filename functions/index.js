@@ -9,6 +9,17 @@ const db = getFirestore();
 const messaging = getMessaging();
 const bucket = getStorage().bucket();
 
+const GCAL_CLIENT_ID = "473409624300-jq90dnic5pb52ag1rfabej4mkhdav28a.apps.googleusercontent.com";
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+
+function googleCalendarClientSecret() {
+  return process.env.GCAL_CLIENT_SECRET ||
+    functions.config()?.google?.calendar_client_secret ||
+    functions.config()?.gcal?.client_secret ||
+    "";
+}
+
 async function deleteStoragePath(path) {
   if (!path) return;
   try { await bucket.file(path).delete({ ignoreNotFound: true }); }
@@ -74,6 +85,161 @@ function eventStartMs(event = {}) {
   return Number.isFinite(ms) ? ms : null;
 }
 
+function calendarEventBody(ev = {}) {
+  const startsAt = eventStartMs(ev);
+  if (!startsAt) return null;
+  const start = new Date(startsAt);
+  const end = new Date(startsAt + 60 * 60 * 1000);
+  const timeZone = ev.timezone || "UTC";
+  return {
+    summary: ev.title || "Event",
+    description: ev.description || "",
+    location: ev.location || "",
+    start: { dateTime: start.toISOString(), timeZone },
+    end: { dateTime: end.toISOString(), timeZone },
+    reminders: { useDefault: true }
+  };
+}
+
+function eventSyncRecipients(ev = {}) {
+  const accepted = (ev.invitees || [])
+    .filter(inv => inv && inv.uid && inv.status === "accepted")
+    .map(inv => inv.uid);
+  return [...new Set([ev.creatorUid, ...accepted].filter(Boolean))];
+}
+
+function gcalTokenRef(uid) {
+  return db.collection("googleCalendarTokens").doc(uid);
+}
+
+async function exchangeGoogleAuthCode(uid, code) {
+  const clientSecret = googleCalendarClientSecret();
+  if (!clientSecret) {
+    throw new functions.https.HttpsError("failed-precondition", "Google Calendar server secret is not configured.");
+  }
+  const res = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: GCAL_CLIENT_ID,
+      client_secret: clientSecret,
+      redirect_uri: "postmessage",
+      grant_type: "authorization_code"
+    })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.refresh_token) {
+    console.warn("exchangeGoogleAuthCode:", res.status, data.error || data.error_description || data);
+    throw new functions.https.HttpsError("permission-denied", "Google did not return a long-term Calendar token.");
+  }
+  const now = Date.now();
+  await gcalTokenRef(uid).set({
+    refreshToken: data.refresh_token,
+    accessToken: data.access_token || "",
+    accessTokenExpiresAt: now + ((data.expires_in || 3600) * 1000) - 60000,
+    scope: data.scope || "",
+    linkedAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
+async function googleAccessToken(uid) {
+  const tokenSnap = await gcalTokenRef(uid).get();
+  if (!tokenSnap.exists || !tokenSnap.data().refreshToken) return null;
+  const token = tokenSnap.data();
+  if (token.accessToken && token.accessTokenExpiresAt && token.accessTokenExpiresAt > Date.now() + 60000) {
+    return token.accessToken;
+  }
+  const clientSecret = googleCalendarClientSecret();
+  if (!clientSecret) return null;
+  const res = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: GCAL_CLIENT_ID,
+      client_secret: clientSecret,
+      refresh_token: token.refreshToken,
+      grant_type: "refresh_token"
+    })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.access_token) {
+    console.warn("googleAccessToken refresh:", uid, res.status, data.error || data.error_description || data);
+    return null;
+  }
+  await tokenSnap.ref.set({
+    accessToken: data.access_token,
+    accessTokenExpiresAt: Date.now() + ((data.expires_in || 3600) * 1000) - 60000,
+    updatedAt: FieldValue.serverTimestamp()
+  }, { merge: true });
+  return data.access_token;
+}
+
+async function googleCalendarRequest(uid, url, options = {}) {
+  const accessToken = await googleAccessToken(uid);
+  if (!accessToken) return { ok: false, status: 401, data: null };
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+  const data = res.status === 204 ? null : await res.json().catch(() => null);
+  return { ok: res.ok, status: res.status, data };
+}
+
+async function upsertGoogleCalendarEvent(uid, eventId, ev = {}) {
+  const body = calendarEventBody(ev);
+  if (!body) return null;
+  const existingId = ev.googleCalIds?.[uid];
+  if (existingId) {
+    const patch = await googleCalendarRequest(uid, `${GOOGLE_CALENDAR_API}/${encodeURIComponent(existingId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(body)
+    });
+    if (patch.ok) return existingId;
+    if (patch.status !== 404 && patch.status !== 410) return null;
+  }
+  const created = await googleCalendarRequest(uid, GOOGLE_CALENDAR_API, {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
+  return created.ok && created.data?.id ? created.data.id : null;
+}
+
+async function deleteGoogleCalendarEvent(uid, googleEventId) {
+  if (!googleEventId) return;
+  await googleCalendarRequest(uid, `${GOOGLE_CALENDAR_API}/${encodeURIComponent(googleEventId)}`, { method: "DELETE" });
+}
+
+async function syncEventToLinkedGoogleCalendars(eventId, ev = {}) {
+  if (!ev || ev.isActive === false) return {};
+  const updates = {};
+  for (const uid of eventSyncRecipients(ev)) {
+    const googleEventId = await upsertGoogleCalendarEvent(uid, eventId, ev);
+    if (googleEventId && googleEventId !== ev.googleCalIds?.[uid]) updates[`googleCalIds.${uid}`] = googleEventId;
+  }
+  return updates;
+}
+
+function eventRelevantSnapshot(ev = {}) {
+  return JSON.stringify({
+    title: ev.title || "",
+    description: ev.description || "",
+    location: ev.location || "",
+    date: ev.date || "",
+    time: ev.time || "",
+    eventAtMs: ev.eventAtMs || null,
+    timezone: ev.timezone || "",
+    creatorUid: ev.creatorUid || "",
+    isActive: ev.isActive !== false,
+    invitees: (ev.invitees || []).map(inv => ({ uid: inv.uid, status: inv.status })).sort((a, b) => String(a.uid).localeCompare(String(b.uid)))
+  });
+}
+
 async function writeEventMessage(toUid, type, fromName, fromUid, extra, dedupeKey) {
   if (!toUid || !dedupeKey) return;
   const ref = db.collection("encouragements").doc(toUid).collection("messages").doc(dedupeKey);
@@ -88,6 +254,60 @@ async function writeEventMessage(toUid, type, fromName, fromUid, extra, dedupeKe
     ...extra
   });
 }
+
+exports.googleCalendarStatus = functions.https.onCall(async (_data, context) => {
+  if (!context.auth?.uid) throw new functions.https.HttpsError("unauthenticated", "Sign in first.");
+  const snap = await gcalTokenRef(context.auth.uid).get();
+  return { linked: snap.exists && !!snap.data().refreshToken, configured: !!googleCalendarClientSecret() };
+});
+
+exports.connectGoogleCalendar = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) throw new functions.https.HttpsError("unauthenticated", "Sign in first.");
+  const code = String(data?.code || "");
+  if (!code) throw new functions.https.HttpsError("invalid-argument", "Missing Google authorization code.");
+  await exchangeGoogleAuthCode(context.auth.uid, code);
+
+  const upcoming = await db.collection("events")
+    .where("participantUids", "array-contains", context.auth.uid)
+    .where("isActive", "==", true)
+    .limit(100)
+    .get();
+  for (const eventDoc of upcoming.docs) {
+    const ev = eventDoc.data();
+    const isCreator = ev.creatorUid === context.auth.uid;
+    const accepted = (ev.invitees || []).some(inv => inv.uid === context.auth.uid && inv.status === "accepted");
+    if (!isCreator && !accepted) continue;
+    const googleEventId = await upsertGoogleCalendarEvent(context.auth.uid, eventDoc.id, ev);
+    if (googleEventId && googleEventId !== ev.googleCalIds?.[context.auth.uid]) {
+      await eventDoc.ref.update({ [`googleCalIds.${context.auth.uid}`]: googleEventId, updatedAt: FieldValue.serverTimestamp() });
+    }
+  }
+  return { linked: true };
+});
+
+exports.disconnectGoogleCalendar = functions.https.onCall(async (_data, context) => {
+  if (!context.auth?.uid) throw new functions.https.HttpsError("unauthenticated", "Sign in first.");
+  await gcalTokenRef(context.auth.uid).delete();
+  return { linked: false };
+});
+
+exports.syncGoogleCalendarEvent = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) throw new functions.https.HttpsError("unauthenticated", "Sign in first.");
+  const eventId = String(data?.eventId || "");
+  if (!eventId) throw new functions.https.HttpsError("invalid-argument", "Missing event id.");
+  const ref = db.collection("events").doc(eventId);
+  const snap = await ref.get();
+  if (!snap.exists) throw new functions.https.HttpsError("not-found", "Event not found.");
+  const ev = snap.data();
+  if (!(ev.participantUids || []).includes(context.auth.uid)) {
+    throw new functions.https.HttpsError("permission-denied", "Not an event participant.");
+  }
+  const googleEventId = await upsertGoogleCalendarEvent(context.auth.uid, eventId, ev);
+  if (googleEventId && googleEventId !== ev.googleCalIds?.[context.auth.uid]) {
+    await ref.update({ [`googleCalIds.${context.auth.uid}`]: googleEventId, updatedAt: FieldValue.serverTimestamp() });
+  }
+  return { synced: !!googleEventId };
+});
 
 async function shareRecentCommunityPostsBetweenFriends(uidA, uidB) {
   if (!uidA || !uidB) return;
@@ -709,6 +929,31 @@ exports.onUserReminderWritten = functions.firestore
       if (next) updates["mercyFriendReminder.nextSendAt"] = next;
     }
     if (Object.keys(updates).length) await change.after.ref.update(updates);
+    return null;
+  });
+
+exports.onEventCalendarSync = functions.firestore
+  .document("events/{eventId}")
+  .onWrite(async (change, context) => {
+    const before = change.before.exists ? change.before.data() : null;
+    const after = change.after.exists ? change.after.data() : null;
+    if (!after) return null;
+
+    const eventId = context.params.eventId;
+    if (before && eventRelevantSnapshot(before) === eventRelevantSnapshot(after)) return null;
+
+    if (after.isActive === false) {
+      const ids = after.googleCalIds || {};
+      for (const [uid, googleEventId] of Object.entries(ids)) {
+        await deleteGoogleCalendarEvent(uid, googleEventId);
+      }
+      return null;
+    }
+
+    const updates = await syncEventToLinkedGoogleCalendars(eventId, after);
+    if (Object.keys(updates).length) {
+      await change.after.ref.update({ ...updates, lastGoogleSyncAt: FieldValue.serverTimestamp() });
+    }
     return null;
   });
 

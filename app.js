@@ -11931,6 +11931,7 @@ let _calPickerTime = null;
 // See: https://console.cloud.google.com → APIs & Services → Credentials
 const GCAL_CLIENT_ID = "473409624300-jq90dnic5pb52ag1rfabej4mkhdav28a.apps.googleusercontent.com";
 const GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+let _calGCalLinked = localStorage.getItem('calGCalConnected') === '1';
 
 const _REMINDER_OFFSETS_MS = {
   '3week': 21 * 86400000,
@@ -18992,7 +18993,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.136";
+const APP_VERSION = "3.0.137";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19011,6 +19012,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.137 &mdash; Server Google Calendar Sync</div>
+<ul>
+  <li><strong>One-time Calendar linking foundation</strong> &mdash; Google Calendar sync now links through Cloud Functions so accepted and created events can keep syncing after the app is closed and reopened.</li>
+  <li><strong>Calendar token state secured</strong> &mdash; Long-term Calendar tokens are stored server-side only, and Profile checks the server before asking a linked user to reconnect.</li>
+</ul>
 <div class="un-version-label">v3.0.136 &mdash; Calendar Sync State &amp; Wheel Polish</div>
 <ul>
   <li><strong>Google Calendar state stays visible</strong> &mdash; Profile now reads the saved linked state immediately, and accepted events only show the add-calendar prompt when the user is not linked.</li>
@@ -20991,6 +20997,7 @@ async function saveEvent() {
   const time  = document.getElementById('eventTimeInput')?.value;
   const location = document.getElementById('eventLocationInput')?.value.trim() || '';
   const description = document.getElementById('eventDescInput')?.value.trim() || '';
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   if (!title) { alert('Please enter an event name.'); return; }
   if (!date)  { alert('Please pick a date.'); return; }
   if (!time)  { alert('Please pick a time.'); return; }
@@ -21018,7 +21025,7 @@ async function saveEvent() {
     if (newInvitees.length) changedFields.push('invitees');
     const participantUids = [uid, ...mergedInvitees.map(i => i.uid)];
     const ok = await window.Events?.update?.(_editingEventId, {
-      title, date, time, location, description,
+      title, date, time, location, description, timezone,
       invitees: mergedInvitees, participantUids, reminders, sentReminders: {}
     });
     if (ok) {
@@ -21038,17 +21045,14 @@ async function saveEvent() {
     closeCreateEventModal();
     _showStudyToast('Event updated');
   } else {
-    const eventId = await window.Events?.create?.(uid, displayName, { title, date, time, location, description, invitees: inviteeData, reminders });
+    const eventId = await window.Events?.create?.(uid, displayName, { title, date, time, location, description, timezone, invitees: inviteeData, reminders });
     if (!eventId) { alert('Could not create event. Try again.'); return; }
     for (const inv of inviteeData) {
       await window.Events?.sendNotification?.(inv.uid, 'eventInvite', displayName, uid,
         { eventId, eventTitle: title, date, time },
         `evtinvite_${eventId}_${inv.uid}`);
     }
-    // Add to creator's own Google Calendar so it can be auto-deleted on cancel
-    _ensureGCalToken(ok => {
-      if (ok) _addEventToGoogleCalendar(eventId, { title, date, time, location, description }).catch(() => {});
-    });
+    if (_isGCalLinked()) window.Events?.gcalSync?.(eventId).catch(() => {});
     closeCreateEventModal();
     _showStudyToast('Event created!');
     _calSelectedDate = date;
@@ -21139,7 +21143,7 @@ async function respondToEvent(eventId, status, opts = {}) {
   if (status === 'accepted') {
     _showStudyToast("You're going!");
     _ensureGCalToken(ok => {
-      if (ok) _addEventToGoogleCalendar(eventId, ev).catch(() => {});
+      if (ok) window.Events?.gcalSync?.(eventId).catch(() => {});
     }, { promptIfNeeded: true });
   } else {
     _showStudyToast('Response updated');
@@ -21158,12 +21162,6 @@ async function cancelEvent(eventId) {
   const displayName = localStorage.getItem('authDisplayName') || 'Someone';
   const ev = _calendarEvents.find(e => e.id === eventId);
   if (!ev) return;
-  // Delete from creator's own Google Calendar immediately
-  if (ev.googleCalIds?.[uid]) {
-    _ensureGCalToken(ok => {
-      if (ok) _deleteGCalEvent(ev.googleCalIds?.[uid]).catch(() => {});
-    });
-  }
   await window.Events?.delete?.(eventId);
   for (const inv of (ev.invitees || []).filter(i => i.status !== 'declined')) {
     await window.Events?.sendNotification?.(inv.uid, 'eventCancelled', displayName, uid,
@@ -21216,11 +21214,11 @@ function dismissCalSyncPrompt(permanent = false) {
 }
 
 function _hasActiveGCalToken() {
-  return !!_calGCalToken && Date.now() < _calGCalTokenExpiry;
+  return _calGCalLinked || (!!_calGCalToken && Date.now() < _calGCalTokenExpiry);
 }
 
 function _isGCalLinked() {
-  return localStorage.getItem('calGCalConnected') === '1';
+  return _calGCalLinked || localStorage.getItem('calGCalConnected') === '1';
 }
 
 function connectGoogleCalendar() {
@@ -21229,34 +21227,52 @@ function connectGoogleCalendar() {
     _showStudyToast('Google Calendar requires setup in the developer console.');
     return;
   }
-  _requestGCalToken(token => {
-    if (token) { _showStudyToast('Google Calendar linked!'); _updateGCalProfileStatus(true); }
-    else _showStudyToast('Could not connect. Try again.');
-  });
+  if (!window.Events?.gcalConnect) {
+    _showStudyToast('Google Calendar sync is still loading. Try again.');
+    return;
+  }
+  try {
+    google.accounts.oauth2.initCodeClient({
+      client_id: GCAL_CLIENT_ID,
+      scope: GCAL_SCOPE,
+      ux_mode: 'popup',
+      prompt: 'consent',
+      include_granted_scopes: true,
+      callback: async r => {
+        if (!r?.code) { _showStudyToast('Could not connect. Try again.'); return; }
+        const ok = await window.Events.gcalConnect(r.code);
+        _setGCalLinked(ok);
+        _showStudyToast(ok ? 'Google Calendar linked!' : 'Could not connect. Try again.');
+      }
+    }).requestCode();
+  } catch (e) {
+    console.warn('GCal code OAuth:', e);
+    _showStudyToast('Could not connect. Try again.');
+  }
 }
 
 function openCalendarSyncModal() {
   const connected = _isGCalLinked();
-  const ready = _hasActiveGCalToken();
   const prompt = document.getElementById('calSyncPromptModal');
   if (!prompt) return;
   prompt.querySelector('.cal-sync-title').textContent = connected ? 'Google Calendar Connected' : 'Link Google Calendar';
   prompt.querySelector('.cal-sync-body').textContent = connected
-    ? (ready ? 'Your Google Calendar is connected. Events you accept sync automatically.' : 'Google Calendar is linked. If Google needs a fresh permission token, tap refresh before syncing a new event.')
+    ? 'Your Google Calendar is linked. Events you create or accept sync automatically from the server.'
     : 'Link your Google Calendar so accepted invites and event updates sync automatically.';
   const btnWrap = prompt.querySelector('.cal-sync-btns');
   if (btnWrap) btnWrap.innerHTML = connected
-    ? `<button class="main-btn" onclick="_refreshGCalFromPrompt()">Refresh Calendar Access</button><button class="main-btn" style="background:#c0392b;margin-top:8px" onclick="disconnectGoogleCalendar()">Disconnect</button>`
+    ? `<button class="main-btn" style="background:#c0392b" onclick="disconnectGoogleCalendar()">Disconnect</button>`
     : `<button class="main-btn" onclick="connectGoogleCalendar()">Link Google Calendar</button>`;
   prompt.style.display = 'flex';
 }
 
 function disconnectGoogleCalendar() {
   _calGCalToken = null; _calGCalTokenExpiry = 0;
-  localStorage.removeItem('calGCalConnected');
-  _updateGCalProfileStatus(false);
-  dismissCalSyncPrompt();
-  _showStudyToast('Google Calendar disconnected');
+  window.Events?.gcalDisconnect?.().finally(() => {
+    _setGCalLinked(false);
+    dismissCalSyncPrompt();
+    _showStudyToast('Google Calendar disconnected');
+  });
 }
 
 function _updateGCalProfileStatus(connected) {
@@ -21266,6 +21282,13 @@ function _updateGCalProfileStatus(connected) {
 
 function _syncGCalProfileStatusFromStorage() {
   _updateGCalProfileStatus(_isGCalLinked());
+}
+
+function _setGCalLinked(linked) {
+  _calGCalLinked = !!linked;
+  if (linked) localStorage.setItem('calGCalConnected', '1');
+  else localStorage.removeItem('calGCalConnected');
+  _updateGCalProfileStatus(!!linked);
 }
 
 function _requestGCalToken(cb, silent = false) {
@@ -21287,49 +21310,24 @@ function _requestGCalToken(cb, silent = false) {
 // Called on login — silently restores the GCal token if the user previously linked.
 // Uses prompt:'' so no popup appears; Google returns a token instantly if already authorized.
 function _tryGCalSilentRefresh() {
-  if (!localStorage.getItem('calGCalConnected')) return;
-  if (GCAL_CLIENT_ID.startsWith('YOUR_')) return;
-  _updateGCalProfileStatus(true);
-  const attempt = () => {
-    if (typeof google === 'undefined') return;
-    _requestGCalToken(token => {
-      if (token) _updateGCalProfileStatus(true);
-    }, true);
-  };
-  // GIS script loads async — give it a moment if not ready yet
-  if (typeof google !== 'undefined') attempt();
-  else setTimeout(attempt, 3000);
-}
-
-function _refreshGCalFromPrompt() {
-  _requestGCalToken(token => {
-    if (token) {
-      dismissCalSyncPrompt(true);
-      _updateGCalProfileStatus(true);
-      _showStudyToast('Google Calendar refreshed');
-    } else {
-      _showStudyToast('Could not refresh Google Calendar. Try again.');
-    }
+  _syncGCalProfileStatusFromStorage();
+  window.Events?.gcalStatus?.().then(status => {
+    _setGCalLinked(!!status?.linked);
   });
 }
 
+function _refreshGCalFromPrompt() {
+  connectGoogleCalendar();
+}
+
 function _ensureGCalToken(cb, { promptIfNeeded = false } = {}) {
-  if (_hasActiveGCalToken()) { cb(true); return; }
+  if (_isGCalLinked()) { cb(true); return; }
   if (!_isGCalLinked()) {
     if (promptIfNeeded) setTimeout(() => openCalendarSyncModal(), 250);
     cb(false);
     return;
   }
-  _requestGCalToken(token => {
-    if (token) {
-      _updateGCalProfileStatus(true);
-      cb(true);
-    } else {
-      _updateGCalProfileStatus(true);
-      if (promptIfNeeded) _showStudyToast('Google Calendar is linked, but Google needs you to refresh access from Profile.');
-      cb(false);
-    }
-  }, true);
+  cb(false);
 }
 
 async function _addEventToGoogleCalendar(eventId, ev) {

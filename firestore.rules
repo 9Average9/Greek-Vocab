@@ -218,7 +218,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasAll([
           'title', 'date', 'time', 'creatorUid', 'creatorName',
           'invitees', 'participantUids', 'reminders', 'sentReminders',
-          'googleCalIds', 'isActive', 'createdAt', 'updatedAt'
+          'googleCalIds', 'isActive', 'timezone', 'createdAt', 'updatedAt'
         ]);
 
       allow update: if request.auth != null
@@ -228,7 +228,7 @@ service cloud.firestore {
           // Creator may edit/cancel the event and reset reminder state after meaningful changes.
           (request.auth.uid == resource.data.creatorUid
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-              'title', 'date', 'time', 'location', 'description',
+              'title', 'date', 'time', 'timezone', 'location', 'description',
               'eventAtMs', 'invitees', 'participantUids', 'reminders', 'sentReminders',
               'isActive', 'updatedAt'
             ]))
@@ -245,6 +245,12 @@ service cloud.firestore {
 
       // No hard deletes -- creator cancellation is a soft update to isActive:false.
       allow delete: if false;
+    }
+
+    // Google Calendar refresh tokens are server-only. Cloud Functions uses Admin SDK
+    // and bypasses rules; the client should only use callable functions.
+    match /googleCalendarTokens/{uid} {
+      allow read, write: if false;
     }
 
   }

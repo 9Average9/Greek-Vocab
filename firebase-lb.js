@@ -45,6 +45,10 @@ import {
   getDownloadURL,
   deleteObject
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+import {
+  getFunctions,
+  httpsCallable
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDVWKRCtjg7ppR-D8ZNs-TfSwPlWdXXQ5Q",
@@ -59,6 +63,7 @@ const fbApp = initializeApp(firebaseConfig);
 const db = initializeFirestore(fbApp, { localCache: persistentLocalCache() });
 const auth = getAuth(fbApp);
 const storage = getStorage(fbApp);
+const functionsApp = getFunctions(fbApp);
 let messaging = null;
 try { messaging = getMessaging(fbApp); } catch (e) { console.warn("FCM unavailable:", e); }
 
@@ -2181,12 +2186,13 @@ function evtEventAtMs(date, time) {
   return Number.isFinite(ms) ? ms : null;
 }
 
-async function evtCreate(uid, displayName, { title, description, date, time, location, invitees, reminders }) {
+async function evtCreate(uid, displayName, { title, description, date, time, location, invitees, reminders, timezone }) {
   try {
     const participantUids = [uid, ...invitees.map(i => i.uid)];
     const ref = await addDoc(collection(db, "events"), {
       title, description: description || '', date, time,
       eventAtMs: evtEventAtMs(date, time),
+      timezone: timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       location: location || '',
       creatorUid: uid, creatorName: displayName,
       invitees,
@@ -2264,6 +2270,38 @@ async function evtGetById(eventId) {
   } catch (e) { console.warn("evtGetById:", e); return null; }
 }
 
+async function evtGCalStatus() {
+  try {
+    const fn = httpsCallable(functionsApp, "googleCalendarStatus");
+    const res = await fn({});
+    return res.data || { linked: false, configured: false };
+  } catch (e) { console.warn("evtGCalStatus:", e); return { linked: false, configured: false }; }
+}
+
+async function evtGCalConnect(code) {
+  try {
+    const fn = httpsCallable(functionsApp, "connectGoogleCalendar");
+    const res = await fn({ code });
+    return !!res.data?.linked;
+  } catch (e) { console.warn("evtGCalConnect:", e); return false; }
+}
+
+async function evtGCalDisconnect() {
+  try {
+    const fn = httpsCallable(functionsApp, "disconnectGoogleCalendar");
+    const res = await fn({});
+    return res.data?.linked === false;
+  } catch (e) { console.warn("evtGCalDisconnect:", e); return false; }
+}
+
+async function evtGCalSync(eventId) {
+  try {
+    const fn = httpsCallable(functionsApp, "syncGoogleCalendarEvent");
+    const res = await fn({ eventId });
+    return !!res.data?.synced;
+  } catch (e) { console.warn("evtGCalSync:", e); return false; }
+}
+
 window.Events = {
   create:           evtCreate,
   update:           evtUpdate,
@@ -2273,6 +2311,10 @@ window.Events = {
   markReminderSent: evtMarkReminderSent,
   storeGCalId:      evtStoreGCalId,
   getById:          evtGetById,
+  gcalStatus:       evtGCalStatus,
+  gcalConnect:      evtGCalConnect,
+  gcalDisconnect:   evtGCalDisconnect,
+  gcalSync:         evtGCalSync,
   sendNotification: fcmSendPushNotification
 };
 
