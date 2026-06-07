@@ -20137,6 +20137,7 @@ window.__onAuthStateReady = async (user) => {
     _startEncouragementListener(user.uid);
     _startCalendarListener(user.uid);
     setTimeout(() => _checkEventReminders(), 5000);
+    setTimeout(() => _tryGCalSilentRefresh(), 2000);
     // If friends modal was opened while auth was still loading, populate it now
     if (document.getElementById("friendsModal")?.classList.contains("open")) {
       switchFriendsTab(_friendsTab);
@@ -21014,6 +21015,7 @@ function openCalendarSyncModal() {
 
 function disconnectGoogleCalendar() {
   _calGCalToken = null; _calGCalTokenExpiry = 0;
+  localStorage.removeItem('calGCalConnected');
   _updateGCalProfileStatus(false);
   dismissCalSyncPrompt();
   _showStudyToast('Google Calendar disconnected');
@@ -21024,7 +21026,7 @@ function _updateGCalProfileStatus(connected) {
   if (label) label.textContent = connected ? 'Google Calendar · Connected' : 'Sync Google Calendar';
 }
 
-function _requestGCalToken(cb) {
+function _requestGCalToken(cb, silent = false) {
   if (typeof google === 'undefined') { cb(null); return; }
   try {
     google.accounts.oauth2.initTokenClient({
@@ -21033,10 +21035,27 @@ function _requestGCalToken(cb) {
         if (r.error) { cb(null); return; }
         _calGCalToken = r.access_token;
         _calGCalTokenExpiry = Date.now() + ((r.expires_in || 3600) * 1000) - 60000;
+        localStorage.setItem('calGCalConnected', '1');
         cb(_calGCalToken);
       }
-    }).requestAccessToken();
+    }).requestAccessToken(silent ? { prompt: '' } : undefined);
   } catch (e) { console.warn('GCal OAuth:', e); cb(null); }
+}
+
+// Called on login — silently restores the GCal token if the user previously linked.
+// Uses prompt:'' so no popup appears; Google returns a token instantly if already authorized.
+function _tryGCalSilentRefresh() {
+  if (!localStorage.getItem('calGCalConnected')) return;
+  if (GCAL_CLIENT_ID.startsWith('YOUR_')) return;
+  const attempt = () => {
+    if (typeof google === 'undefined') return;
+    _requestGCalToken(token => {
+      if (token) _updateGCalProfileStatus(true);
+    }, true);
+  };
+  // GIS script loads async — give it a moment if not ready yet
+  if (typeof google !== 'undefined') attempt();
+  else setTimeout(attempt, 3000);
 }
 
 async function _addEventToGoogleCalendar(eventId, ev) {
