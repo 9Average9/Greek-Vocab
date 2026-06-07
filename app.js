@@ -9813,15 +9813,63 @@ function _mergeStudyNotificationMessages(msgs = []) {
     });
   });
 
+  msgs.filter(m => m.type === 'eventInvite' && !m._read).forEach(m => {
+    upsert('evtinvite_' + m.id, {
+      id: 'evtinvite_' + m.id, type: 'event_invite',
+      fromName: m.fromName || 'Someone', fromUid: m.fromUid,
+      eventId: m.eventId, eventTitle: m.eventTitle || 'an event',
+      date: m.date, time: m.time, msgId: m.id, read: false
+    });
+  });
+
+  msgs.filter(m => m.type === 'eventUpdate' && !m._read).forEach(m => {
+    upsert('evtupdate_' + m.id, {
+      id: 'evtupdate_' + m.id, type: 'event_update',
+      fromName: m.fromName || 'Someone',
+      eventId: m.eventId, eventTitle: m.eventTitle || 'an event',
+      date: m.date, time: m.time, msgId: m.id, read: false
+    });
+  });
+
+  msgs.filter(m => m.type === 'eventReminder' && !m._read).forEach(m => {
+    upsert('evtremind_' + m.id, {
+      id: 'evtremind_' + m.id, type: 'event_reminder',
+      fromName: m.fromName || 'Disciple Builder',
+      eventId: m.eventId, eventTitle: m.eventTitle || 'an event',
+      date: m.date, time: m.time, reminderKey: m.reminderKey, msgId: m.id, read: false
+    });
+  });
+
+  msgs.filter(m => m.type === 'eventAccepted' && !m._read).forEach(m => {
+    upsert('evtaccepted_' + m.id, {
+      id: 'evtaccepted_' + m.id, type: 'event_accepted',
+      fromName: m.fromName || 'Someone',
+      eventId: m.eventId, eventTitle: m.eventTitle || 'your event', msgId: m.id, read: false
+    });
+  });
+
+  msgs.filter(m => m.type === 'eventCancelled' && !m._read).forEach(m => {
+    upsert('evtcancelled_' + m.id, {
+      id: 'evtcancelled_' + m.id, type: 'event_cancelled',
+      fromName: m.fromName || 'Someone',
+      eventId: m.eventId, eventTitle: m.eventTitle || 'an event', msgId: m.id, read: false
+    });
+  });
+
   // Show an in-app toast for any genuinely new (post-initial-load) unread messages.
   if (!isFirstBatch) {
     newMsgs.filter(m => !m._read).forEach(m => {
       const name = m.fromName || 'Someone';
       let text;
-      if (m.type === 'studyInvite')          text = `${name} invited you to "${m.studyName || 'a study'}"`;
-      else if (m.type === 'studyCollabRequest') text = `${name} wants to collaborate on "${m.studyName || 'your study'}"`;
+      if (m.type === 'studyInvite')           text = `${name} invited you to "${m.studyName || 'a study'}"`;
+      else if (m.type === 'studyCollabRequest')  text = `${name} wants to collaborate on "${m.studyName || 'your study'}"`;
       else if (m.type === 'studyCollabApproved') text = `${name} approved your collaboration request`;
-      else if (m.type === 'habitEncouragement') text = `${name} encouraged you on ${m.habitName || 'your habit'}!`;
+      else if (m.type === 'habitEncouragement')  text = `${name} encouraged you on ${m.habitName || 'your habit'}!`;
+      else if (m.type === 'eventInvite')         text = `${name} invited you to "${m.eventTitle || 'an event'}"`;
+      else if (m.type === 'eventUpdate')         text = `${name} updated "${m.eventTitle || 'an event'}"`;
+      else if (m.type === 'eventReminder')       text = `Reminder: "${m.eventTitle || 'an event'}" is coming up!`;
+      else if (m.type === 'eventAccepted')       text = `${name} is coming to your event!`;
+      else if (m.type === 'eventCancelled')      text = `${name} cancelled "${m.eventTitle || 'an event'}"`;
       if (text) _showStudyToast(text);
     });
   }
@@ -11856,6 +11904,37 @@ function _animChar(span, newCh, delay) {
   }, delay);
 }
 
+// ── Calendar Events ────────────────────────────────────────────────────────────
+let _calendarEvents = [];
+let _unsubCalendar = null;
+let _calViewYear = new Date().getFullYear();
+let _calViewMonth = new Date().getMonth();
+let _calSelectedDate = null;
+let _editingEventId = null;
+let _calEventInviteUids = new Set();
+let _calGCalToken = null;
+let _calGCalTokenExpiry = 0;
+
+// Fill in your Google Cloud OAuth client ID to enable live Google Calendar sync.
+// See: https://console.cloud.google.com → APIs & Services → Credentials
+const GCAL_CLIENT_ID = "YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com";
+const GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+
+const _REMINDER_OFFSETS_MS = {
+  '3week': 21 * 86400000,
+  '2week': 14 * 86400000,
+  '1week':  7 * 86400000,
+  '3day':   3 * 86400000,
+  '1day':   1 * 86400000
+};
+const _REMINDER_LABELS = {
+  '3week': '3 weeks before',
+  '2week': '2 weeks before',
+  '1week': '1 week before',
+  '3day':  '3 days before',
+  '1day':  '1 day before'
+};
+
 // ── Notifications ─────────────────────────────────────────────────────────────
 let _notifItems = [];
 
@@ -11931,7 +12010,8 @@ async function _loadNotifications() {
   const collabItems   = _notifItems.filter(n => n.type === 'collab_request' || n.type === 'collab_approved');
   const inviteItems   = _notifItems.filter(n => n.type === 'study_invite');
   const habitItems    = _notifItems.filter(n => n.type === 'habit_encouragement');
-  _notifItems = [...updatedIncoming, ...preservedFriendItems, ...acceptedItems, ...collabItems, ...inviteItems, ...habitItems];
+  const eventItems    = _notifItems.filter(n => n.type?.startsWith('event_'));
+  _notifItems = [...updatedIncoming, ...preservedFriendItems, ...acceptedItems, ...collabItems, ...inviteItems, ...habitItems, ...eventItems];
   _updateNotifBadge();
 
   if (!_notifItems.length) {
@@ -12013,6 +12093,71 @@ async function _loadNotifications() {
           <div class="notif-body">
             <div class="notif-title">${_habitEsc(n.fromName)}</div>
             <div class="notif-sub">Encouraged you to keep going with "${_habitEsc(n.habitName || 'habit')}"</div>
+          </div>
+          <button class="notif-x-btn" onclick="event.stopPropagation();notifDismissCollab('${n.id}','${n.msgId||''}')" title="Dismiss"><span class="material-symbols-outlined">close</span></button>
+        </div>`;
+    }
+    if (n.type === 'event_invite') {
+      return `
+        <div class="notif-item${n.read ? '' : ' unread'}">
+          <div class="notif-icon"><span class="material-symbols-outlined">event</span></div>
+          <div class="notif-body">
+            <div class="notif-title">${n.fromName}</div>
+            <div class="notif-sub">Invited you to "${n.eventTitle}"</div>
+            <div class="notif-fr-actions">
+              <button class="notif-accept-btn" onclick="openCalendarModal();notifDismissCollab('${n.id}','${n.msgId||''}')">View</button>
+              <button class="notif-deny-btn" onclick="notifDismissCollab('${n.id}','${n.msgId||''}')">Dismiss</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    if (n.type === 'event_update') {
+      return `
+        <div class="notif-item${n.read ? '' : ' unread'}">
+          <div class="notif-icon"><span class="material-symbols-outlined">event_repeat</span></div>
+          <div class="notif-body">
+            <div class="notif-title">${n.fromName} updated "${n.eventTitle}"</div>
+            <div class="notif-sub">${n.date ? `New date: ${n.date} at ${_calFmtTime(n.time)}` : 'Event details changed'}</div>
+            <div class="notif-fr-actions">
+              <button class="notif-accept-btn" onclick="openCalendarModal();notifDismissCollab('${n.id}','${n.msgId||''}')">View</button>
+              <button class="notif-deny-btn" onclick="notifDismissCollab('${n.id}','${n.msgId||''}')">Dismiss</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    if (n.type === 'event_reminder') {
+      const label = _REMINDER_LABELS[n.reminderKey] || 'soon';
+      return `
+        <div class="notif-item${n.read ? '' : ' unread'}">
+          <div class="notif-icon"><span class="material-symbols-outlined">notifications_active</span></div>
+          <div class="notif-body">
+            <div class="notif-title">"${n.eventTitle}"</div>
+            <div class="notif-sub">Coming up — ${label}! ${n.date ? n.date : ''} ${_calFmtTime(n.time)}</div>
+            <div class="notif-fr-actions">
+              <button class="notif-accept-btn" onclick="openCalendarModal();notifDismissCollab('${n.id}','${n.msgId||''}')">View</button>
+              <button class="notif-deny-btn" onclick="notifDismissCollab('${n.id}','${n.msgId||''}')">Dismiss</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    if (n.type === 'event_accepted') {
+      return `
+        <div class="notif-item${n.read ? '' : ' unread'}">
+          <div class="notif-icon notif-icon-accepted"><span class="material-symbols-outlined">event_available</span></div>
+          <div class="notif-body">
+            <div class="notif-title">${n.fromName}</div>
+            <div class="notif-sub">Is coming to "${n.eventTitle}"!</div>
+          </div>
+          <button class="notif-x-btn" onclick="event.stopPropagation();notifDismissCollab('${n.id}','${n.msgId||''}')" title="Dismiss"><span class="material-symbols-outlined">close</span></button>
+        </div>`;
+    }
+    if (n.type === 'event_cancelled') {
+      return `
+        <div class="notif-item${n.read ? '' : ' unread'}">
+          <div class="notif-icon"><span class="material-symbols-outlined">event_busy</span></div>
+          <div class="notif-body">
+            <div class="notif-title">${n.fromName}</div>
+            <div class="notif-sub">Cancelled "${n.eventTitle}"</div>
           </div>
           <button class="notif-x-btn" onclick="event.stopPropagation();notifDismissCollab('${n.id}','${n.msgId||''}')" title="Dismiss"><span class="material-symbols-outlined">close</span></button>
         </div>`;
@@ -18809,7 +18954,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.132";
+const APP_VERSION = "3.0.133";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19990,6 +20135,8 @@ window.__onAuthStateReady = async (user) => {
     populateHomeScreen();
     await _loadMyStudies();
     _startEncouragementListener(user.uid);
+    _startCalendarListener(user.uid);
+    setTimeout(() => _checkEventReminders(), 5000);
     // If friends modal was opened while auth was still loading, populate it now
     if (document.getElementById("friendsModal")?.classList.contains("open")) {
       switchFriendsTab(_friendsTab);
@@ -20438,6 +20585,506 @@ async function disableReminders() {
   updateReminderButtonUI();
   alert("Reminders disabled.");
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CALENDAR EVENTS FEATURE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function _startCalendarListener(uid) {
+  _unsubCalendar?.();
+  _unsubCalendar = window.Events?.listen?.(uid, events => {
+    _calendarEvents = events;
+    _renderCalendarGrid();
+    _renderCalEventsList();
+    _updateCalendarBadge();
+  });
+}
+
+function _updateCalendarBadge() {
+  const badge = document.getElementById('calEventBadge');
+  if (!badge) return;
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  const pending = _calendarEvents.filter(e =>
+    (e.invitees || []).some(inv => inv.uid === uid && inv.status === 'pending')
+  ).length;
+  badge.textContent = pending > 9 ? '9+' : String(pending || '');
+  badge.classList.toggle('hidden', pending === 0);
+}
+
+function openCalendarModal() {
+  const modal = document.getElementById('calendarModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  if (!localStorage.getItem('calSyncPromptSeen')) {
+    setTimeout(() => { document.getElementById('calSyncPromptModal')?.style && (document.getElementById('calSyncPromptModal').style.display = 'flex'); }, 900);
+  }
+  const now = new Date();
+  _calViewYear = now.getFullYear();
+  _calViewMonth = now.getMonth();
+  _calSelectedDate = _calTodayKey();
+  _renderCalendarGrid();
+  _renderCalEventsList();
+}
+
+function closeCalendarModal() {
+  document.getElementById('calendarModal')?.style && (document.getElementById('calendarModal').style.display = 'none');
+}
+
+function _calTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function _calMonthNames() {
+  return ['January','February','March','April','May','June','July','August','September','October','November','December'];
+}
+
+function _renderCalendarGrid() {
+  const label = document.getElementById('calMonthLabel');
+  const grid = document.getElementById('calGrid');
+  if (!label || !grid) return;
+  label.textContent = `${_calMonthNames()[_calViewMonth]} ${_calViewYear}`;
+  const eventDates = new Set(_calendarEvents.map(e => e.date).filter(Boolean));
+  const firstDay = new Date(_calViewYear, _calViewMonth, 1).getDay();
+  const daysInMonth = new Date(_calViewYear, _calViewMonth + 1, 0).getDate();
+  const today = _calTodayKey();
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-cell cal-cell--empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dk = `${_calViewYear}-${String(_calViewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dk === today;
+    const isSel = dk === _calSelectedDate;
+    const hasEvt = eventDates.has(dk);
+    html += `<button class="cal-cell${isToday?' cal-cell--today':''}${isSel?' cal-cell--selected':''}" onclick="_calSelectDate('${dk}')">
+      <span class="cal-cell-num">${d}</span>${hasEvt ? '<span class="cal-event-dot"></span>' : ''}
+    </button>`;
+  }
+  grid.innerHTML = html;
+}
+
+function _calSelectDate(dk) {
+  _calSelectedDate = dk;
+  _renderCalendarGrid();
+  _renderCalEventsList();
+}
+
+function _calendarPrevMonth() {
+  _calViewMonth--;
+  if (_calViewMonth < 0) { _calViewMonth = 11; _calViewYear--; }
+  _renderCalendarGrid();
+  _renderCalEventsList();
+}
+
+function _calendarNextMonth() {
+  _calViewMonth++;
+  if (_calViewMonth > 11) { _calViewMonth = 0; _calViewYear++; }
+  _renderCalendarGrid();
+  _renderCalEventsList();
+}
+
+function _renderCalEventsList() {
+  const label = document.getElementById('calEventsLabel');
+  const list = document.getElementById('calEventsList');
+  if (!label || !list) return;
+  if (!_calSelectedDate) { label.textContent = 'Events'; list.innerHTML = '<p class="cal-no-events">Select a day to see events</p>'; return; }
+  const [y, m, d] = _calSelectedDate.split('-').map(Number);
+  const dateObj = new Date(y, m-1, d);
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  label.textContent = `${dayNames[dateObj.getDay()]}, ${monthsShort[m-1]} ${d}`;
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  const dayEvents = _calendarEvents.filter(e => e.date === _calSelectedDate);
+  if (!dayEvents.length) { list.innerHTML = '<p class="cal-no-events">No events this day</p>'; return; }
+  list.innerHTML = dayEvents.map(ev => {
+    const myInv = (ev.invitees || []).find(i => i.uid === uid);
+    const isCreator = ev.creatorUid === uid;
+    const pill = myInv?.status === 'accepted' ? '<span class="cal-evt-pill cal-evt-pill--accepted">Going</span>'
+      : myInv?.status === 'declined' ? '<span class="cal-evt-pill cal-evt-pill--declined">Declined</span>'
+      : myInv?.status === 'pending' ? '<span class="cal-evt-pill cal-evt-pill--pending">Invited</span>'
+      : isCreator ? '<span class="cal-evt-pill cal-evt-pill--creator">Hosting</span>' : '';
+    return `<button class="cal-event-card" onclick="openEventDetail('${ev.id}')">
+      <div class="cal-event-time">${_calFmtTime(ev.time)}</div>
+      <div class="cal-event-info">
+        <div class="cal-event-title">${ev.title}</div>
+        ${ev.location ? `<div class="cal-event-loc"><span class="material-symbols-outlined" style="font-size:13px">location_on</span>${ev.location}</div>` : ''}
+      </div>
+      ${pill}
+    </button>`;
+  }).join('');
+}
+
+function _calFmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+}
+
+// ── Create / Edit Event ────────────────────────────────────────────────────────
+
+async function openCreateEventModal(eventId = null) {
+  const modal = document.getElementById('createEventModal');
+  if (!modal) return;
+  _editingEventId = eventId;
+  document.getElementById('createEventModalTitle').textContent = eventId ? 'Edit Event' : 'New Event';
+  const ev = eventId ? _calendarEvents.find(e => e.id === eventId) : null;
+  document.getElementById('eventTitleInput').value = ev?.title || '';
+  document.getElementById('eventDateInput').value = ev?.date || _calSelectedDate || _calTodayKey();
+  document.getElementById('eventTimeInput').value = ev?.time || '';
+  document.getElementById('eventLocationInput').value = ev?.location || '';
+  document.getElementById('eventDescInput').value = ev?.description || '';
+  _calEventInviteUids = new Set((ev?.invitees || []).map(i => i.uid));
+  const enabledReminders = ev?.reminders || ['1week', '3day', '1day'];
+  document.querySelectorAll('.event-reminder-cb').forEach(cb => { cb.checked = enabledReminders.includes(cb.dataset.key); });
+  await _renderEventInviteFriendsList();
+  modal.style.display = 'flex';
+}
+
+function closeCreateEventModal() {
+  document.getElementById('createEventModal')?.style && (document.getElementById('createEventModal').style.display = 'none');
+  _editingEventId = null;
+  _calEventInviteUids = new Set();
+}
+
+function toggleEventInviteFriend(uid) {
+  if (_calEventInviteUids.has(uid)) _calEventInviteUids.delete(uid);
+  else _calEventInviteUids.add(uid);
+  document.querySelectorAll('.event-invite-friend-btn').forEach(btn => {
+    const sel = _calEventInviteUids.has(btn.dataset.uid);
+    btn.classList.toggle('invited', sel);
+    const ic = btn.querySelector('.eif-check');
+    if (ic) ic.textContent = sel ? 'check_circle' : 'add_circle';
+  });
+}
+
+async function _renderEventInviteFriendsList() {
+  const list = document.getElementById('eventInviteList');
+  if (!list) return;
+  if (!friendsList.length) { list.innerHTML = '<p class="cal-hint">No friends yet — add them in the Community tab.</p>'; return; }
+  list.innerHTML = '<p class="cal-hint">Loading friends…</p>';
+  try {
+    const users = await Promise.all(friendsList.map(u => window.Friends?.getUser(u).catch(() => null)));
+    list.innerHTML = users.filter(Boolean).map(u => {
+      const name = u.displayName || u.username || 'Friend';
+      const uid = u.uid || u.id;
+      const sel = _calEventInviteUids.has(uid);
+      return `<button class="event-invite-friend-btn${sel?' invited':''}" data-uid="${uid}" onclick="toggleEventInviteFriend('${uid}')">
+        <span class="eif-name">${name}</span>
+        <span class="material-symbols-outlined eif-check">${sel?'check_circle':'add_circle'}</span>
+      </button>`;
+    }).join('') || '<p class="cal-hint">No friends found.</p>';
+  } catch { list.innerHTML = '<p class="cal-hint">Could not load friends.</p>'; }
+}
+
+async function saveEvent() {
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  if (!uid) return;
+  const title = document.getElementById('eventTitleInput')?.value.trim();
+  const date  = document.getElementById('eventDateInput')?.value;
+  const time  = document.getElementById('eventTimeInput')?.value;
+  const location = document.getElementById('eventLocationInput')?.value.trim() || '';
+  const description = document.getElementById('eventDescInput')?.value.trim() || '';
+  if (!title) { alert('Please enter an event name.'); return; }
+  if (!date)  { alert('Please pick a date.'); return; }
+  if (!time)  { alert('Please pick a time.'); return; }
+  const reminders = [...document.querySelectorAll('.event-reminder-cb:checked')].map(cb => cb.dataset.key);
+  const displayName = localStorage.getItem('authDisplayName') || 'Someone';
+  const inviteeData = (await Promise.all([..._calEventInviteUids].map(async invUid => {
+    const u = await window.Friends?.getUser(invUid).catch(() => null);
+    return u ? { uid: invUid, name: u.displayName || u.username || 'Friend', status: 'pending' } : null;
+  }))).filter(Boolean);
+
+  if (_editingEventId) {
+    const existing = _calendarEvents.find(e => e.id === _editingEventId);
+    const dateChanged = existing && (existing.date !== date || existing.time !== time);
+    const mergedInvitees = inviteeData.map(inv => {
+      const prev = (existing?.invitees || []).find(p => p.uid === inv.uid);
+      return prev ? prev : inv;
+    });
+    const participantUids = [uid, ...mergedInvitees.map(i => i.uid)];
+    const ok = await window.Events?.update?.(_editingEventId, {
+      title, date, time, location, description,
+      invitees: mergedInvitees, participantUids, reminders, sentReminders: {}
+    });
+    if (ok && dateChanged) {
+      for (const inv of mergedInvitees.filter(i => i.status === 'accepted')) {
+        await window.Events?.sendNotification?.(inv.uid, 'eventUpdate', displayName, uid,
+          { eventId: _editingEventId, eventTitle: title, date, time },
+          `evtupdate_${_editingEventId}_${inv.uid}`);
+      }
+    }
+    closeCreateEventModal();
+    _showStudyToast('Event updated');
+  } else {
+    const eventId = await window.Events?.create?.(uid, displayName, { title, date, time, location, description, invitees: inviteeData, reminders });
+    if (!eventId) { alert('Could not create event. Try again.'); return; }
+    for (const inv of inviteeData) {
+      await window.Events?.sendNotification?.(inv.uid, 'eventInvite', displayName, uid,
+        { eventId, eventTitle: title, date, time },
+        `evtinvite_${eventId}_${inv.uid}`);
+    }
+    closeCreateEventModal();
+    _showStudyToast('Event created!');
+    _calSelectedDate = date;
+    _calViewYear = parseInt(date.split('-')[0]);
+    _calViewMonth = parseInt(date.split('-')[1]) - 1;
+    _renderCalendarGrid();
+    _renderCalEventsList();
+  }
+}
+
+// ── Event Detail ───────────────────────────────────────────────────────────────
+
+function openEventDetail(eventId) {
+  const ev = _calendarEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  const modal = document.getElementById('eventDetailModal');
+  const body  = document.getElementById('eventDetailBody');
+  if (!modal || !body) return;
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  const isCreator = ev.creatorUid === uid;
+  const myInv = (ev.invitees || []).find(i => i.uid === uid);
+  const myStatus = myInv?.status;
+  const [y, m, d] = (ev.date || '').split('-').map(Number);
+  const dateObj = new Date(y, m-1, d);
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const formattedDate = ev.date ? `${dayNames[dateObj.getDay()]}, ${_calMonthNames()[m-1]} ${d}, ${y}` : '';
+  const acceptedCount = (ev.invitees || []).filter(i => i.status === 'accepted').length;
+  const attendeesHtml = (ev.invitees || []).map(inv => {
+    const icon = inv.status === 'accepted' ? 'check_circle' : inv.status === 'declined' ? 'cancel' : 'schedule';
+    return `<div class="evt-attendee evt-attendee--${inv.status||'pending'}">
+      <span class="material-symbols-outlined evt-att-icon">${icon}</span>
+      <span>${inv.name}</span>
+    </div>`;
+  }).join('');
+  const gcalUrl = _googleCalendarUrl(ev);
+  body.innerHTML = `
+    <div class="evt-detail-header">
+      <h2 class="evt-detail-title">${ev.title}</h2>
+      ${isCreator ? `<button class="evt-edit-btn" onclick="openCreateEventModal('${ev.id}');closeEventDetail()"><span class="material-symbols-outlined">edit</span></button>` : ''}
+    </div>
+    <div class="evt-meta">
+      <div class="evt-meta-row"><span class="material-symbols-outlined">calendar_today</span><span>${formattedDate}</span></div>
+      <div class="evt-meta-row"><span class="material-symbols-outlined">schedule</span><span>${_calFmtTime(ev.time)}</span></div>
+      ${ev.location ? `<div class="evt-meta-row"><span class="material-symbols-outlined">location_on</span><span>${ev.location}</span></div>` : ''}
+    </div>
+    ${ev.description ? `<p class="evt-desc">${ev.description}</p>` : ''}
+    ${attendeesHtml ? `<div class="evt-attendees">
+      <div class="evt-section-label">Attendees · ${acceptedCount} going</div>
+      ${attendeesHtml}
+    </div>` : ''}
+    <div class="evt-add-cal-row">
+      <a class="evt-add-cal-btn" href="${gcalUrl}" target="_blank" rel="noopener">
+        <span class="material-symbols-outlined">event</span>Google Calendar
+      </a>
+      <button class="evt-add-cal-btn" onclick="downloadEventICS('${ev.id}')">
+        <span class="material-symbols-outlined">download</span>Save .ics
+      </button>
+    </div>
+    ${!isCreator && myStatus === 'pending' ? `
+    <div class="evt-rsvp-section">
+      <div class="evt-section-label">Will you be there?</div>
+      <div class="evt-rsvp-btns">
+        <button class="evt-rsvp-btn evt-rsvp-btn--accept" onclick="respondToEvent('${ev.id}','accepted')"><span class="material-symbols-outlined">check_circle</span>Accept</button>
+        <button class="evt-rsvp-btn evt-rsvp-btn--decline" onclick="respondToEvent('${ev.id}','declined')"><span class="material-symbols-outlined">cancel</span>Decline</button>
+      </div>
+    </div>` : ''}
+    ${!isCreator && myStatus === 'accepted' ? `
+    <div class="evt-rsvp-section">
+      <div class="evt-section-label" style="color:var(--secondary-color)">You're going!</div>
+      <button class="evt-rsvp-btn evt-rsvp-btn--decline" style="max-width:200px;margin:8px auto 0" onclick="respondToEvent('${ev.id}','declined')"><span class="material-symbols-outlined">cancel</span>Can't make it</button>
+    </div>` : ''}
+    ${isCreator ? `<button class="evt-cancel-btn" onclick="cancelEvent('${ev.id}')"><span class="material-symbols-outlined">delete</span>Cancel Event</button>` : ''}
+  `;
+  modal.style.display = 'flex';
+}
+
+function closeEventDetail() {
+  document.getElementById('eventDetailModal')?.style && (document.getElementById('eventDetailModal').style.display = 'none');
+}
+
+async function respondToEvent(eventId, status) {
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  if (!uid) return;
+  const ev = _calendarEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  const ok = await window.Events?.respond?.(eventId, uid, status);
+  if (!ok) { alert('Could not update your response. Try again.'); return; }
+  if (status === 'accepted') {
+    _showStudyToast("You're going! 🎉");
+    if (_calGCalToken && Date.now() < _calGCalTokenExpiry) _addEventToGoogleCalendar(eventId, ev).catch(() => {});
+  } else {
+    _showStudyToast('Response updated');
+  }
+  const displayName = localStorage.getItem('authDisplayName') || 'Someone';
+  await window.Events?.sendNotification?.(ev.creatorUid,
+    status === 'accepted' ? 'eventAccepted' : 'eventDeclined', displayName, uid,
+    { eventId, eventTitle: ev.title }, `evtresp_${eventId}_${uid}`);
+  closeEventDetail();
+  _renderCalEventsList();
+}
+
+async function cancelEvent(eventId) {
+  if (!confirm('Cancel this event? All invitees will be notified.')) return;
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  const displayName = localStorage.getItem('authDisplayName') || 'Someone';
+  const ev = _calendarEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  await window.Events?.delete?.(eventId);
+  for (const inv of (ev.invitees || []).filter(i => i.status !== 'declined')) {
+    await window.Events?.sendNotification?.(inv.uid, 'eventCancelled', displayName, uid,
+      { eventId, eventTitle: ev.title }, `evtcancel_${eventId}_${inv.uid}`);
+  }
+  closeEventDetail();
+  _showStudyToast('Event cancelled');
+}
+
+// ── ICS / Google Calendar helpers ──────────────────────────────────────────────
+
+function _googleCalendarUrl(ev) {
+  if (!ev?.date || !ev?.time) return '#';
+  const [y, m, d] = ev.date.split('-').map(Number);
+  const [h, mn] = ev.time.split(':').map(Number);
+  const p = s => String(s).padStart(2,'0');
+  const dtS = `${y}${p(m)}${p(d)}T${p(h)}${p(mn)}00`;
+  const dtE = `${y}${p(m)}${p(d)}T${p(h+1)}${p(mn)}00`;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${dtS}/${dtE}&details=${encodeURIComponent(ev.description||'')}&location=${encodeURIComponent(ev.location||'')}`;
+}
+
+function downloadEventICS(eventId) {
+  const ev = _calendarEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  const [y, m, d] = ev.date.split('-').map(Number);
+  const [h, mn] = ev.time.split(':').map(Number);
+  const p = s => String(s).padStart(2,'0');
+  const dtS = `${y}${p(m)}${p(d)}T${p(h)}${p(mn)}00`;
+  const dtE = `${y}${p(m)}${p(d)}T${p(h+1)}${p(mn)}00`;
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Disciple Builder//EN','BEGIN:VEVENT',
+    `DTSTART:${dtS}`,`DTEND:${dtE}`,`SUMMARY:${ev.title}`,
+    `DESCRIPTION:${(ev.description||'').replace(/\n/g,'\\n')}`,
+    `LOCATION:${ev.location||''}`,
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+  a.download = `${ev.title.replace(/[^a-z0-9]/gi,'_')}.ics`;
+  a.click();
+}
+
+// ── Google Calendar OAuth ──────────────────────────────────────────────────────
+
+function dismissCalSyncPrompt(permanent = false) {
+  document.getElementById('calSyncPromptModal')?.style && (document.getElementById('calSyncPromptModal').style.display = 'none');
+  if (permanent) localStorage.setItem('calSyncPromptSeen', '1');
+}
+
+function connectGoogleCalendar() {
+  dismissCalSyncPrompt(true);
+  if (GCAL_CLIENT_ID.startsWith('YOUR_')) {
+    _showStudyToast('Google Calendar requires setup in the developer console.');
+    return;
+  }
+  _requestGCalToken(token => {
+    if (token) { _showStudyToast('Google Calendar linked!'); _updateGCalProfileStatus(true); }
+    else _showStudyToast('Could not connect. Try again.');
+  });
+}
+
+function openCalendarSyncModal() {
+  const connected = !!_calGCalToken && Date.now() < _calGCalTokenExpiry;
+  const prompt = document.getElementById('calSyncPromptModal');
+  if (!prompt) return;
+  prompt.querySelector('.cal-sync-title').textContent = connected ? 'Google Calendar Connected' : 'Link Google Calendar';
+  prompt.querySelector('.cal-sync-body').textContent = connected
+    ? 'Your Google Calendar is connected. Events you accept sync automatically.'
+    : 'Link your Google Calendar so accepted invites and event updates sync automatically.';
+  const btnWrap = prompt.querySelector('.cal-sync-btns');
+  if (btnWrap) btnWrap.innerHTML = connected
+    ? `<button class="main-btn" style="background:#c0392b" onclick="disconnectGoogleCalendar()">Disconnect</button>`
+    : `<button class="main-btn" onclick="connectGoogleCalendar()">Link Google Calendar</button>`;
+  prompt.style.display = 'flex';
+}
+
+function disconnectGoogleCalendar() {
+  _calGCalToken = null; _calGCalTokenExpiry = 0;
+  _updateGCalProfileStatus(false);
+  dismissCalSyncPrompt();
+  _showStudyToast('Google Calendar disconnected');
+}
+
+function _updateGCalProfileStatus(connected) {
+  const label = document.querySelector('#profileCalendarBtn .prof-menu-name');
+  if (label) label.textContent = connected ? 'Google Calendar · Connected' : 'Sync Google Calendar';
+}
+
+function _requestGCalToken(cb) {
+  if (typeof google === 'undefined') { cb(null); return; }
+  try {
+    google.accounts.oauth2.initTokenClient({
+      client_id: GCAL_CLIENT_ID, scope: GCAL_SCOPE,
+      callback: r => {
+        if (r.error) { cb(null); return; }
+        _calGCalToken = r.access_token;
+        _calGCalTokenExpiry = Date.now() + ((r.expires_in || 3600) * 1000) - 60000;
+        cb(_calGCalToken);
+      }
+    }).requestAccessToken();
+  } catch (e) { console.warn('GCal OAuth:', e); cb(null); }
+}
+
+async function _addEventToGoogleCalendar(eventId, ev) {
+  if (!_calGCalToken) return;
+  const [y, m, d] = ev.date.split('-').map(Number);
+  const [h, mn] = ev.time.split(':').map(Number);
+  const p = s => String(s).padStart(2,'0');
+  try {
+    const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${_calGCalToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        summary: ev.title, description: ev.description || '', location: ev.location || '',
+        start: { dateTime: `${y}-${p(m)}-${p(d)}T${p(h)}:${p(mn)}:00` },
+        end:   { dateTime: `${y}-${p(m)}-${p(d)}T${p(h+1)}:${p(mn)}:00` }
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const uid = window.Auth?.getCurrentUser()?.uid;
+      await window.Events?.storeGCalId?.(eventId, uid, data.id);
+    }
+  } catch (e) { console.warn('addEventToGCal:', e); }
+}
+
+// ── Event Reminders ────────────────────────────────────────────────────────────
+
+async function _checkEventReminders() {
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  if (!uid) return;
+  const displayName = localStorage.getItem('authDisplayName') || 'Someone';
+  const now = Date.now();
+  for (const ev of _calendarEvents.filter(e => e.creatorUid === uid)) {
+    if (!ev.date || !ev.time) continue;
+    const [y, m, d] = ev.date.split('-').map(Number);
+    const [h, mn] = ev.time.split(':').map(Number);
+    const evMs = new Date(y, m-1, d, h, mn).getTime();
+    if (evMs < now) continue;
+    const sentReminders = ev.sentReminders || {};
+    for (const key of (ev.reminders || ['1week','3day','1day'])) {
+      const offset = _REMINDER_OFFSETS_MS[key];
+      if (!offset || sentReminders[key] || now < evMs - offset) continue;
+      const accepted = (ev.invitees || []).filter(i => i.status === 'accepted');
+      for (const inv of accepted) {
+        await window.Events?.sendNotification?.(inv.uid, 'eventReminder', displayName, uid,
+          { eventId: ev.id, eventTitle: ev.title, date: ev.date, time: ev.time, reminderKey: key },
+          `evtremind_${ev.id}_${key}_${inv.uid}`);
+      }
+      await window.Events?.sendNotification?.(uid, 'eventReminder', 'Disciple Builder', uid,
+        { eventId: ev.id, eventTitle: ev.title, date: ev.date, time: ev.time, reminderKey: key },
+        `evtremind_${ev.id}_${key}_${uid}`);
+      await window.Events?.markReminderSent?.(ev.id, key);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function initFCMForeground() {
   window.FCM?.listenForeground(payload => {

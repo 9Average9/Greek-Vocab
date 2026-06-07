@@ -2171,6 +2171,92 @@ window.Auth = {
   uploadAvatarPhoto
 };
 
+// ── Calendar Events ───────────────────────────────────────────────────────────
+
+async function evtCreate(uid, displayName, { title, description, date, time, location, invitees, reminders }) {
+  try {
+    const participantUids = [uid, ...invitees.map(i => i.uid)];
+    const ref = await addDoc(collection(db, "events"), {
+      title, description: description || '', date, time,
+      location: location || '',
+      creatorUid: uid, creatorName: displayName,
+      invitees,
+      participantUids,
+      reminders: reminders || ['1week', '3day', '1day'],
+      sentReminders: {},
+      googleCalIds: {},
+      isActive: true,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    return ref.id;
+  } catch (e) { console.warn("evtCreate:", e); return null; }
+}
+
+async function evtUpdate(eventId, updates) {
+  try {
+    await updateDoc(doc(db, "events", eventId), { ...updates, updatedAt: serverTimestamp() });
+    return true;
+  } catch (e) { console.warn("evtUpdate:", e); return false; }
+}
+
+async function evtDelete(eventId) {
+  try {
+    await updateDoc(doc(db, "events", eventId), { isActive: false, updatedAt: serverTimestamp() });
+    return true;
+  } catch (e) { console.warn("evtDelete:", e); return false; }
+}
+
+function evtListen(uid, callback) {
+  const q = query(collection(db, "events"), where("participantUids", "array-contains", uid));
+  return onSnapshot(q, snap => {
+    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    docs.sort((a, b) => (a.date || '') < (b.date || '') ? -1 : 1);
+    callback(docs.filter(e => e.isActive !== false));
+  }, err => console.warn("evtListen:", err));
+}
+
+async function evtRespond(eventId, uid, status) {
+  try {
+    const snap = await getDoc(doc(db, "events", eventId));
+    if (!snap.exists()) return false;
+    const data = snap.data();
+    const invitees = (data.invitees || []).map(inv =>
+      inv.uid === uid ? { ...inv, status } : inv
+    );
+    await updateDoc(doc(db, "events", eventId), { invitees, updatedAt: serverTimestamp() });
+    return true;
+  } catch (e) { console.warn("evtRespond:", e); return false; }
+}
+
+async function evtMarkReminderSent(eventId, reminderKey) {
+  try {
+    await updateDoc(doc(db, "events", eventId), {
+      [`sentReminders.${reminderKey}`]: true,
+      updatedAt: serverTimestamp()
+    });
+  } catch (e) { console.warn("evtMarkReminderSent:", e); }
+}
+
+async function evtStoreGCalId(eventId, uid, gcalEventId) {
+  try {
+    await updateDoc(doc(db, "events", eventId), {
+      [`googleCalIds.${uid}`]: gcalEventId,
+      updatedAt: serverTimestamp()
+    });
+  } catch (e) { console.warn("evtStoreGCalId:", e); }
+}
+
+window.Events = {
+  create:           evtCreate,
+  update:           evtUpdate,
+  delete:           evtDelete,
+  listen:           evtListen,
+  respond:          evtRespond,
+  markReminderSent: evtMarkReminderSent,
+  storeGCalId:      evtStoreGCalId,
+  sendNotification: fcmSendPushNotification
+};
+
 // Notify app.js when Firebase auth state is resolved
 onAuthStateChanged(auth, user => {
   if (typeof window.__onAuthStateReady === "function") {
