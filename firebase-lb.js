@@ -2173,16 +2173,25 @@ window.Auth = {
 
 // ── Calendar Events ───────────────────────────────────────────────────────────
 
+function evtEventAtMs(date, time) {
+  if (!date || !time) return null;
+  const [y, m, d] = String(date).split("-").map(Number);
+  const [h, mn] = String(time).split(":").map(Number);
+  const ms = new Date(y, (m || 1) - 1, d || 1, h || 0, mn || 0).getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+
 async function evtCreate(uid, displayName, { title, description, date, time, location, invitees, reminders }) {
   try {
     const participantUids = [uid, ...invitees.map(i => i.uid)];
     const ref = await addDoc(collection(db, "events"), {
       title, description: description || '', date, time,
+      eventAtMs: evtEventAtMs(date, time),
       location: location || '',
       creatorUid: uid, creatorName: displayName,
       invitees,
       participantUids,
-      reminders: reminders || ['1week', '3day', '1day'],
+      reminders: reminders || ['1week', '3day', '1day', 'dayof'],
       sentReminders: {},
       googleCalIds: {},
       isActive: true,
@@ -2194,7 +2203,9 @@ async function evtCreate(uid, displayName, { title, description, date, time, loc
 
 async function evtUpdate(eventId, updates) {
   try {
-    await updateDoc(doc(db, "events", eventId), { ...updates, updatedAt: serverTimestamp() });
+    const next = { ...updates, updatedAt: serverTimestamp() };
+    if (updates.date && updates.time) next.eventAtMs = evtEventAtMs(updates.date, updates.time);
+    await updateDoc(doc(db, "events", eventId), next);
     return true;
   } catch (e) { console.warn("evtUpdate:", e); return false; }
 }

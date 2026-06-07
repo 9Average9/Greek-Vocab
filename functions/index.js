@@ -47,6 +47,48 @@ async function sendToUserTokens(userRef, tokens, payload, label = "notification"
   }
 }
 
+const EVENT_REMINDER_OFFSETS_MS = {
+  "3week": 21 * 24 * 60 * 60 * 1000,
+  "2week": 14 * 24 * 60 * 60 * 1000,
+  "1week": 7 * 24 * 60 * 60 * 1000,
+  "3day": 3 * 24 * 60 * 60 * 1000,
+  "1day": 24 * 60 * 60 * 1000,
+  "dayof": 2 * 60 * 60 * 1000
+};
+
+const EVENT_REMINDER_LABELS = {
+  "3week": "in 3 weeks",
+  "2week": "in 2 weeks",
+  "1week": "in 1 week",
+  "3day": "in 3 days",
+  "1day": "tomorrow",
+  "dayof": "today"
+};
+
+function eventStartMs(event = {}) {
+  if (Number.isFinite(event.eventAtMs)) return event.eventAtMs;
+  if (!event.date || !event.time) return null;
+  const [y, m, d] = String(event.date).split("-").map(Number);
+  const [h, min] = String(event.time).split(":").map(Number);
+  const ms = new Date(y, (m || 1) - 1, d || 1, h || 0, min || 0).getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+
+async function writeEventMessage(toUid, type, fromName, fromUid, extra, dedupeKey) {
+  if (!toUid || !dedupeKey) return;
+  const ref = db.collection("encouragements").doc(toUid).collection("messages").doc(dedupeKey);
+  const existing = await ref.get();
+  if (existing.exists) return;
+  await ref.set({
+    type,
+    fromName,
+    fromUid,
+    processed: false,
+    createdAt: FieldValue.serverTimestamp(),
+    ...extra
+  });
+}
+
 async function shareRecentCommunityPostsBetweenFriends(uidA, uidB) {
   if (!uidA || !uidB) return;
   const now = Date.now();
@@ -670,6 +712,48 @@ exports.onUserReminderWritten = functions.firestore
     return null;
   });
 
+// Checks group calendar event reminders from the backend so delivery does not depend on the creator's browser.
+exports.sendEventReminders = functions.pubsub
+  .schedule("every 1 hours")
+  .onRun(async () => {
+    const now = Date.now();
+    const snap = await db.collection("events")
+      .where("isActive", "==", true)
+      .limit(500)
+      .get();
+
+    for (const eventDoc of snap.docs) {
+      const ev = eventDoc.data();
+      const startsAt = eventStartMs(ev);
+      if (!startsAt || startsAt < now) continue;
+
+      const sentReminders = ev.sentReminders || {};
+      const reminders = Array.isArray(ev.reminders) && ev.reminders.length
+        ? ev.reminders
+        : ["1week", "3day", "1day", "dayof"];
+
+      for (const key of reminders) {
+        const offset = EVENT_REMINDER_OFFSETS_MS[key];
+        if (offset == null || sentReminders[key] || now < startsAt - offset) continue;
+
+        const accepted = (ev.invitees || []).filter(inv => inv && inv.uid && inv.status === "accepted");
+        const recipients = [...new Set([ev.creatorUid, ...accepted.map(inv => inv.uid)].filter(Boolean))];
+        for (const uid of recipients) {
+          await writeEventMessage(uid, "eventReminder", ev.creatorName || "Disciple Builder", ev.creatorUid || uid, {
+            eventId: eventDoc.id,
+            eventTitle: ev.title || "an event",
+            date: ev.date || "",
+            time: ev.time || "",
+            reminderKey: key
+          }, `evtremind_${eventDoc.id}_${key}_${uid}`);
+        }
+
+        await eventDoc.ref.update({ [`sentReminders.${key}`]: true, updatedAt: FieldValue.serverTimestamp() });
+      }
+    }
+    return null;
+  });
+
 // Triggers on any new doc in encouragements/{targetUid}/messages/{messageId}.
 // Handles the app's social, study, habit, and encouragement notification types.
 exports.onEncouragementCreated = functions.firestore
@@ -741,6 +825,32 @@ exports.onEncouragementCreated = functions.firestore
       const habitName = snap.data().habitName || "habit";
       title = "Habit Encouragement";
       body = `${fromName} encouraged you to keep going with "${habitName}".`;
+    } else if (type === "eventInvite") {
+      const eventTitle = snap.data().eventTitle || "an event";
+      const date = snap.data().date || "";
+      title = "Event Invitation";
+      body = `${fromName} invited you to "${eventTitle}"${date ? ` on ${date}` : ""}.`;
+    } else if (type === "eventUpdate") {
+      const eventTitle = snap.data().eventTitle || "an event";
+      title = "Event Updated";
+      body = `${fromName} updated "${eventTitle}".`;
+    } else if (type === "eventReminder") {
+      const eventTitle = snap.data().eventTitle || "an event";
+      const label = EVENT_REMINDER_LABELS[snap.data().reminderKey] || "soon";
+      title = "Event Reminder";
+      body = `"${eventTitle}" is coming up ${label}.`;
+    } else if (type === "eventAccepted") {
+      const eventTitle = snap.data().eventTitle || "your event";
+      title = "Event Accepted";
+      body = `${fromName} is coming to "${eventTitle}".`;
+    } else if (type === "eventDeclined") {
+      const eventTitle = snap.data().eventTitle || "your event";
+      title = "Event Declined";
+      body = `${fromName} declined "${eventTitle}".`;
+    } else if (type === "eventCancelled") {
+      const eventTitle = snap.data().eventTitle || "an event";
+      title = "Event Cancelled";
+      body = `${fromName} cancelled "${eventTitle}".`;
     } else if (type === "encouragement") {
       title = "Study Encouragement";
       body = `${fromName} is encouraging you to study your Greek!`;
@@ -763,6 +873,7 @@ exports.onEncouragementCreated = functions.firestore
     const webpush = { notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } };
     if (type && String(type).startsWith("mercy")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=mercies" };
     if (type && String(type).startsWith("habit")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=habits" };
+    if (type && String(type).startsWith("event")) webpush.fcmOptions = { link: "/Greek-Vocab/?open=calendar" };
     const result = await sendToUserTokens(userSnap.ref, tokens, {
       notification: { title, body },
       webpush

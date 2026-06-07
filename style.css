@@ -26531,7 +26531,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   justify-content: center;
   cursor: pointer;
   color: inherit;
-  margin-right: 4px;
+  margin-right: -2px;
 }
 .home-calendar-btn .material-symbols-outlined { font-size: 26px; }
 
@@ -26550,12 +26550,13 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   border-radius: 24px 24px 0 0;
   width: 100%;
   max-width: 540px;
-  max-height: 92vh;
+  max-height: calc(100dvh - max(12px, env(safe-area-inset-top)));
+  margin-top: max(12px, env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-.cal-form-sheet { max-height: 95vh; }
+.cal-form-sheet { max-height: calc(100dvh - max(12px, env(safe-area-inset-top))); }
 
 .cal-modal-header {
   display: flex;
@@ -26780,6 +26781,33 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 }
 .cal-input:focus { outline: none; border-color: var(--secondary-color, #6c63ff); }
 .cal-textarea { resize: none; min-height: 70px; }
+.cal-picker-btn {
+  appearance: none;
+  background: var(--card-bg-2, rgba(0,0,0,0.05));
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  padding: 11px 12px;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-color, #666);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.cal-picker-btn .material-symbols-outlined {
+  font-size: 19px;
+  color: var(--secondary-color, #6c63ff);
+}
+.cal-picker-btn.is-set {
+  color: var(--text-color, #222);
+  background: color-mix(in srgb, var(--secondary-color, #6c63ff) 10%, var(--card-bg, #fff));
+  border-color: color-mix(in srgb, var(--secondary-color, #6c63ff) 22%, transparent);
+}
 .cal-section-label {
   font-size: 0.75rem;
   font-weight: 700;
@@ -26790,15 +26818,20 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 }
 .cal-hint { font-size: 0.82rem; color: var(--muted-color, #888); margin: 4px 0; }
 
-.event-invite-list { display: flex; flex-direction: column; gap: 6px; }
+.event-invite-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: 8px;
+}
 .event-invite-friend-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 8px;
   background: var(--card-bg-2, rgba(0,0,0,0.04));
   border: 1.5px solid transparent;
-  border-radius: 12px;
-  padding: 10px 14px;
+  border-radius: 14px;
+  padding: 9px 10px;
   cursor: pointer;
   text-align: left;
   width: 100%;
@@ -26810,11 +26843,36 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   background: rgba(108,99,255,0.1);
   border-color: var(--secondary-color, #6c63ff);
 }
-.eif-name { font-size: 0.9rem; font-weight: 600; }
-.eif-check { font-size: 20px; color: var(--muted-color, #aaa); }
+.eif-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  background: color-mix(in srgb, var(--secondary-color, #6c63ff) 14%, transparent);
+  color: var(--secondary-color, #6c63ff);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+.eif-name {
+  min-width: 0;
+  flex: 1;
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.eif-check { font-size: 20px; color: var(--muted-color, #aaa); flex: 0 0 auto; }
 .event-invite-friend-btn.invited .eif-check { color: var(--secondary-color, #6c63ff); }
 
-.event-reminders-list { display: flex; flex-direction: column; gap: 4px; }
+.event-reminders-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
+  gap: 7px;
+}
 .event-reminder-row {
   display: flex;
   align-items: center;
@@ -27003,4 +27061,100 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   cursor: pointer;
   padding: 8px;
   font-family: inherit;
+}
+
+.cal-picker-overlay {
+  z-index: 1250;
+  background: rgba(0,0,0,0.34);
+}
+.cal-picker-sheet {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100dvh - max(18px, env(safe-area-inset-top)));
+  margin-top: max(18px, env(safe-area-inset-top));
+  background: var(--card-bg, #fff);
+  border-radius: 24px 24px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -16px 44px rgba(0,0,0,0.2);
+}
+.cal-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-color, rgba(0,0,0,0.08));
+}
+.cal-picker-body {
+  padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
+}
+.cal-picker-monthbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.cal-picker-monthbar strong {
+  font-size: 1rem;
+  font-weight: 900;
+}
+.cal-picker-weekdays,
+.cal-picker-date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+.cal-picker-weekdays {
+  color: var(--muted-color, #888);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 5px;
+}
+.cal-picker-day {
+  aspect-ratio: 1;
+  min-height: 36px;
+  border: none;
+  border-radius: 12px;
+  background: var(--card-bg-2, rgba(0,0,0,0.04));
+  color: inherit;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.cal-picker-day.blank {
+  background: transparent;
+  pointer-events: none;
+}
+.cal-picker-day.selected {
+  background: var(--secondary-color, #6c63ff);
+  color: #fff;
+}
+.cal-time-wheel {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.cal-time-col {
+  max-height: 250px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 16px;
+  background: var(--card-bg-2, rgba(0,0,0,0.04));
+  padding: 7px;
+}
+.cal-time-col button {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+.cal-time-col button.selected {
+  background: var(--secondary-color, #6c63ff);
+  color: #fff;
 }

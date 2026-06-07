@@ -9848,6 +9848,14 @@ function _mergeStudyNotificationMessages(msgs = []) {
     });
   });
 
+  msgs.filter(m => m.type === 'eventDeclined' && !m._read).forEach(m => {
+    upsert('evtdeclined_' + m.id, {
+      id: 'evtdeclined_' + m.id, type: 'event_declined',
+      fromName: m.fromName || 'Someone',
+      eventId: m.eventId, eventTitle: m.eventTitle || 'your event', msgId: m.id, read: false
+    });
+  });
+
   msgs.filter(m => m.type === 'eventCancelled' && !m._read).forEach(m => {
     upsert('evtcancelled_' + m.id, {
       id: 'evtcancelled_' + m.id, type: 'event_cancelled',
@@ -9869,6 +9877,7 @@ function _mergeStudyNotificationMessages(msgs = []) {
       else if (m.type === 'eventUpdate')         text = `${name} updated "${m.eventTitle || 'an event'}"`;
       else if (m.type === 'eventReminder')       text = `Reminder: "${m.eventTitle || 'an event'}" is coming up!`;
       else if (m.type === 'eventAccepted')       text = `${name} is coming to your event!`;
+      else if (m.type === 'eventDeclined')       text = `${name} declined "${m.eventTitle || 'your event'}"`;
       else if (m.type === 'eventCancelled')      text = `${name} cancelled "${m.eventTitle || 'an event'}"`;
       if (text) _showStudyToast(text);
     });
@@ -11914,6 +11923,9 @@ let _editingEventId = null;
 let _calEventInviteUids = new Set();
 let _calGCalToken = null;
 let _calGCalTokenExpiry = 0;
+let _calPickerMode = null;
+let _calPickerDate = null;
+let _calPickerTime = null;
 
 // Fill in your Google Cloud OAuth client ID to enable live Google Calendar sync.
 // See: https://console.cloud.google.com → APIs & Services → Credentials
@@ -11925,15 +11937,23 @@ const _REMINDER_OFFSETS_MS = {
   '2week': 14 * 86400000,
   '1week':  7 * 86400000,
   '3day':   3 * 86400000,
-  '1day':   1 * 86400000
+  '1day':   1 * 86400000,
+  'dayof':  2 * 3600000
 };
 const _REMINDER_LABELS = {
   '3week': '3 weeks before',
   '2week': '2 weeks before',
   '1week': '1 week before',
   '3day':  '3 days before',
-  '1day':  '1 day before'
+  '1day':  '1 day before',
+  'dayof': 'day of'
 };
+
+function _calEsc(value) {
+  return typeof _habitEsc === 'function' ? _habitEsc(value) : String(value ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 
 // ── Notifications ─────────────────────────────────────────────────────────────
 let _notifItems = [];
@@ -12102,9 +12122,10 @@ async function _loadNotifications() {
         <div class="notif-item${n.read ? '' : ' unread'}">
           <div class="notif-icon"><span class="material-symbols-outlined">event</span></div>
           <div class="notif-body">
-            <div class="notif-title">${n.fromName}</div>
-            <div class="notif-sub">Invited you to "${n.eventTitle}"</div>
+            <div class="notif-title">${_calEsc(n.fromName)}</div>
+            <div class="notif-sub">Invited you to "${_calEsc(n.eventTitle)}"</div>
             <div class="notif-fr-actions">
+              <button class="notif-accept-btn" onclick="notifAcceptEvent('${n.eventId}','${n.id}','${n.msgId||''}')">Accept</button>
               <button class="notif-accept-btn" onclick="openCalendarModal();notifDismissCollab('${n.id}','${n.msgId||''}')">View</button>
               <button class="notif-deny-btn" onclick="notifDismissCollab('${n.id}','${n.msgId||''}')">Dismiss</button>
             </div>
@@ -12116,7 +12137,7 @@ async function _loadNotifications() {
         <div class="notif-item${n.read ? '' : ' unread'}">
           <div class="notif-icon"><span class="material-symbols-outlined">event_repeat</span></div>
           <div class="notif-body">
-            <div class="notif-title">${n.fromName} updated "${n.eventTitle}"</div>
+            <div class="notif-title">${_calEsc(n.fromName)} updated "${_calEsc(n.eventTitle)}"</div>
             <div class="notif-sub">${n.date ? `New date: ${n.date} at ${_calFmtTime(n.time)}` : 'Event details changed'}</div>
             <div class="notif-fr-actions">
               <button class="notif-accept-btn" onclick="openCalendarModal();notifDismissCollab('${n.id}','${n.msgId||''}')">View</button>
@@ -12131,7 +12152,7 @@ async function _loadNotifications() {
         <div class="notif-item${n.read ? '' : ' unread'}">
           <div class="notif-icon"><span class="material-symbols-outlined">notifications_active</span></div>
           <div class="notif-body">
-            <div class="notif-title">"${n.eventTitle}"</div>
+            <div class="notif-title">"${_calEsc(n.eventTitle)}"</div>
             <div class="notif-sub">Coming up — ${label}! ${n.date ? n.date : ''} ${_calFmtTime(n.time)}</div>
             <div class="notif-fr-actions">
               <button class="notif-accept-btn" onclick="openCalendarModal();notifDismissCollab('${n.id}','${n.msgId||''}')">View</button>
@@ -12145,8 +12166,19 @@ async function _loadNotifications() {
         <div class="notif-item${n.read ? '' : ' unread'}">
           <div class="notif-icon notif-icon-accepted"><span class="material-symbols-outlined">event_available</span></div>
           <div class="notif-body">
-            <div class="notif-title">${n.fromName}</div>
-            <div class="notif-sub">Is coming to "${n.eventTitle}"!</div>
+            <div class="notif-title">${_calEsc(n.fromName)}</div>
+            <div class="notif-sub">Is coming to "${_calEsc(n.eventTitle)}"!</div>
+          </div>
+          <button class="notif-x-btn" onclick="event.stopPropagation();notifDismissCollab('${n.id}','${n.msgId||''}')" title="Dismiss"><span class="material-symbols-outlined">close</span></button>
+        </div>`;
+    }
+    if (n.type === 'event_declined') {
+      return `
+        <div class="notif-item${n.read ? '' : ' unread'}">
+          <div class="notif-icon"><span class="material-symbols-outlined">event_busy</span></div>
+          <div class="notif-body">
+            <div class="notif-title">${_calEsc(n.fromName)}</div>
+            <div class="notif-sub">Declined "${_calEsc(n.eventTitle)}"</div>
           </div>
           <button class="notif-x-btn" onclick="event.stopPropagation();notifDismissCollab('${n.id}','${n.msgId||''}')" title="Dismiss"><span class="material-symbols-outlined">close</span></button>
         </div>`;
@@ -12156,8 +12188,8 @@ async function _loadNotifications() {
         <div class="notif-item${n.read ? '' : ' unread'}">
           <div class="notif-icon"><span class="material-symbols-outlined">event_busy</span></div>
           <div class="notif-body">
-            <div class="notif-title">${n.fromName}</div>
-            <div class="notif-sub">Cancelled "${n.eventTitle}"</div>
+            <div class="notif-title">${_calEsc(n.fromName)}</div>
+            <div class="notif-sub">Cancelled "${_calEsc(n.eventTitle)}"</div>
           </div>
           <button class="notif-x-btn" onclick="event.stopPropagation();notifDismissEventCancelled('${n.id}','${n.msgId||''}','${n.eventId||''}')" title="Dismiss"><span class="material-symbols-outlined">close</span></button>
         </div>`;
@@ -12174,6 +12206,12 @@ async function notifAcceptFriend(uid) {
 async function notifDeclineFriend(uid) {
   await declineRequestAction(uid);
   await _loadNotifications();
+}
+
+async function notifAcceptEvent(eventId, notifId, msgId) {
+  if (!eventId) return;
+  await respondToEvent(eventId, 'accepted', { keepOpen: true });
+  await notifDismissCollab(notifId, msgId || '');
 }
 
 function notifDismissAccepted(uid) {
@@ -18954,7 +18992,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.133";
+const APP_VERSION = "3.0.134";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -18973,6 +19011,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.134 &mdash; Calendar Polish &amp; Event Notifications</div>
+<ul>
+  <li><strong>Calendar event sheets refined</strong> &mdash; Creating events now uses app-styled date and time pickers, friend invite chips, safer mobile sheet spacing, and a day-of reminder option.</li>
+  <li><strong>Event notifications completed</strong> &mdash; Calendar invites, updates, reminders, accepts, declines, and cancellations now have push wording and can open the calendar directly.</li>
+  <li><strong>Calendar rules tightened</strong> &mdash; Event creators keep control of event details while invitees are limited to RSVP and calendar-sync state updates.</li>
+</ul>
 <div class="un-version-label">v3.0.127 &mdash; Abbott-Smith Headword Guard</div>
 <ul>
   <li><strong>Abbott-Smith headwords checked</strong> &mdash; Abbott-Smith entries now verify the Greek headword against the selected lemma before showing, preventing unrelated Greek words from appearing under the wrong word.</li>
@@ -20332,6 +20376,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (openParam === 'habits') {
     setTimeout(() => showNavPage('habits'), 900);
   }
+  if (openParam === 'calendar') {
+    setTimeout(() => openCalendarModal(), 900);
+  }
   if (window.__pendingAuthResolved) setAppLaunchText('Finishing setup');
 });
 
@@ -20717,8 +20764,8 @@ function _renderCalEventsList() {
     return `<button class="cal-event-card" onclick="openEventDetail('${ev.id}')">
       <div class="cal-event-time">${_calFmtTime(ev.time)}</div>
       <div class="cal-event-info">
-        <div class="cal-event-title">${ev.title}</div>
-        ${ev.location ? `<div class="cal-event-loc"><span class="material-symbols-outlined" style="font-size:13px">location_on</span>${ev.location}</div>` : ''}
+        <div class="cal-event-title">${_calEsc(ev.title)}</div>
+        ${ev.location ? `<div class="cal-event-loc"><span class="material-symbols-outlined" style="font-size:13px">location_on</span>${_calEsc(ev.location)}</div>` : ''}
       </div>
       ${pill}
     </button>`;
@@ -20729,6 +20776,125 @@ function _calFmtTime(t) {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);
   return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+}
+
+function _calFmtDateLabel(dateKey) {
+  if (!dateKey) return 'Pick date';
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  if (Number.isNaN(date.getTime())) return 'Pick date';
+  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function _updateEventPickerLabels() {
+  const date = document.getElementById('eventDateInput')?.value || '';
+  const time = document.getElementById('eventTimeInput')?.value || '';
+  const dateLabel = document.getElementById('eventDatePickerLabel');
+  const timeLabel = document.getElementById('eventTimePickerLabel');
+  if (dateLabel) dateLabel.textContent = _calFmtDateLabel(date);
+  if (timeLabel) timeLabel.textContent = time ? _calFmtTime(time) : 'Pick time';
+  document.getElementById('eventDatePickerBtn')?.classList.toggle('is-set', !!date);
+  document.getElementById('eventTimePickerBtn')?.classList.toggle('is-set', !!time);
+}
+
+function openEventDatePicker() {
+  _calPickerMode = 'date';
+  _calPickerDate = document.getElementById('eventDateInput')?.value || _calTodayKey();
+  _renderEventDatePicker();
+  document.getElementById('calPickerTitle').textContent = 'Pick Date';
+  document.getElementById('eventDateTimePickerModal').style.display = 'flex';
+}
+
+function openEventTimePicker() {
+  _calPickerMode = 'time';
+  _calPickerTime = document.getElementById('eventTimeInput')?.value || '18:00';
+  _renderEventTimePicker();
+  document.getElementById('calPickerTitle').textContent = 'Pick Time';
+  document.getElementById('eventDateTimePickerModal').style.display = 'flex';
+}
+
+function closeEventDateTimePicker() {
+  document.getElementById('eventDateTimePickerModal')?.style && (document.getElementById('eventDateTimePickerModal').style.display = 'none');
+}
+
+function applyEventDateTimePicker() {
+  if (_calPickerMode === 'date' && _calPickerDate) {
+    const input = document.getElementById('eventDateInput');
+    if (input) input.value = _calPickerDate;
+  }
+  if (_calPickerMode === 'time' && _calPickerTime) {
+    const input = document.getElementById('eventTimeInput');
+    if (input) input.value = _calPickerTime;
+  }
+  _updateEventPickerLabels();
+  closeEventDateTimePicker();
+}
+
+function _renderEventDatePicker() {
+  const body = document.getElementById('calPickerBody');
+  if (!body) return;
+  const [yy, mm] = (_calPickerDate || _calTodayKey()).split('-').map(Number);
+  const first = new Date(yy, mm - 1, 1);
+  const days = new Date(yy, mm, 0).getDate();
+  const start = first.getDay();
+  const monthName = first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const cells = [];
+  for (let i = 0; i < start; i++) cells.push('<span class="cal-picker-day blank"></span>');
+  for (let d = 1; d <= days; d++) {
+    const key = `${yy}-${String(mm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells.push(`<button class="cal-picker-day${key === _calPickerDate ? ' selected' : ''}" onclick="selectEventPickerDate('${key}')">${d}</button>`);
+  }
+  body.innerHTML = `
+    <div class="cal-picker-monthbar">
+      <button class="cal-nav-btn" onclick="shiftEventPickerMonth(-1)"><span class="material-symbols-outlined">chevron_left</span></button>
+      <strong>${monthName}</strong>
+      <button class="cal-nav-btn" onclick="shiftEventPickerMonth(1)"><span class="material-symbols-outlined">chevron_right</span></button>
+    </div>
+    <div class="cal-picker-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+    <div class="cal-picker-date-grid">${cells.join('')}</div>`;
+}
+
+function selectEventPickerDate(key) {
+  _calPickerDate = key;
+  _renderEventDatePicker();
+}
+
+function shiftEventPickerMonth(delta) {
+  const [y, m, d] = (_calPickerDate || _calTodayKey()).split('-').map(Number);
+  const next = new Date(y, m - 1 + delta, Math.min(d || 1, 28));
+  _calPickerDate = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')}`;
+  _renderEventDatePicker();
+}
+
+function _renderEventTimePicker() {
+  const body = document.getElementById('calPickerBody');
+  if (!body) return;
+  const [hour24, minuteRaw] = (_calPickerTime || '18:00').split(':').map(Number);
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hour24 % 12 || 12;
+  const minute = Math.round((minuteRaw || 0) / 5) * 5 % 60;
+  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+  const mins = Array.from({ length: 12 }, (_, i) => i * 5);
+  body.innerHTML = `
+    <div class="cal-time-wheel">
+      <div class="cal-time-col">${hours.map(h => `<button class="${h === hour12 ? 'selected' : ''}" onclick="selectEventPickerTimePart('hour',${h})">${h}</button>`).join('')}</div>
+      <div class="cal-time-col">${mins.map(m => `<button class="${m === minute ? 'selected' : ''}" onclick="selectEventPickerTimePart('minute',${m})">${String(m).padStart(2,'0')}</button>`).join('')}</div>
+      <div class="cal-time-col">${['AM','PM'].map(p => `<button class="${p === period ? 'selected' : ''}" onclick="selectEventPickerTimePart('period','${p}')">${p}</button>`).join('')}</div>
+    </div>`;
+}
+
+function selectEventPickerTimePart(part, value) {
+  const [hour24, minuteRaw] = (_calPickerTime || '18:00').split(':').map(Number);
+  let period = hour24 >= 12 ? 'PM' : 'AM';
+  let hour12 = hour24 % 12 || 12;
+  let minute = Math.round((minuteRaw || 0) / 5) * 5 % 60;
+  if (part === 'hour') hour12 = Number(value);
+  if (part === 'minute') minute = Number(value);
+  if (part === 'period') period = value;
+  let nextHour = hour12 % 12;
+  if (period === 'PM') nextHour += 12;
+  _calPickerTime = `${String(nextHour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+  _renderEventTimePicker();
 }
 
 // ── Create / Edit Event ────────────────────────────────────────────────────────
@@ -20745,8 +20911,9 @@ async function openCreateEventModal(eventId = null) {
   document.getElementById('eventLocationInput').value = ev?.location || '';
   document.getElementById('eventDescInput').value = ev?.description || '';
   _calEventInviteUids = new Set((ev?.invitees || []).map(i => i.uid));
-  const enabledReminders = ev?.reminders || ['1week', '3day', '1day'];
+  const enabledReminders = ev?.reminders || ['1week', '3day', '1day', 'dayof'];
   document.querySelectorAll('.event-reminder-cb').forEach(cb => { cb.checked = enabledReminders.includes(cb.dataset.key); });
+  _updateEventPickerLabels();
   await _renderEventInviteFriendsList();
   modal.style.display = 'flex';
 }
@@ -20765,6 +20932,7 @@ function toggleEventInviteFriend(uid) {
     btn.classList.toggle('invited', sel);
     const ic = btn.querySelector('.eif-check');
     if (ic) ic.textContent = sel ? 'check_circle' : 'add_circle';
+    btn.setAttribute('aria-pressed', sel ? 'true' : 'false');
   });
 }
 
@@ -20779,8 +20947,10 @@ async function _renderEventInviteFriendsList() {
       const name = u.displayName || u.username || 'Friend';
       const uid = u.uid || u.id;
       const sel = _calEventInviteUids.has(uid);
-      return `<button class="event-invite-friend-btn${sel?' invited':''}" data-uid="${uid}" onclick="toggleEventInviteFriend('${uid}')">
-        <span class="eif-name">${name}</span>
+      const initial = _calEsc(name).slice(0, 1).toUpperCase() || 'F';
+      return `<button class="event-invite-friend-btn${sel?' invited':''}" data-uid="${_calEsc(uid)}" aria-pressed="${sel ? 'true' : 'false'}" onclick="toggleEventInviteFriend('${_calEsc(uid)}')">
+        <span class="eif-avatar">${initial}</span>
+        <span class="eif-name">${_calEsc(name)}</span>
         <span class="material-symbols-outlined eif-check">${sel?'check_circle':'add_circle'}</span>
       </button>`;
     }).join('') || '<p class="cal-hint">No friends found.</p>';
@@ -20807,21 +20977,36 @@ async function saveEvent() {
 
   if (_editingEventId) {
     const existing = _calendarEvents.find(e => e.id === _editingEventId);
-    const dateChanged = existing && (existing.date !== date || existing.time !== time);
+    const changedFields = [];
+    if (existing?.title !== title) changedFields.push('title');
+    if (existing?.date !== date) changedFields.push('date');
+    if (existing?.time !== time) changedFields.push('time');
+    if ((existing?.location || '') !== location) changedFields.push('location');
+    if ((existing?.description || '') !== description) changedFields.push('description');
+    if (JSON.stringify(existing?.reminders || []) !== JSON.stringify(reminders)) changedFields.push('reminders');
     const mergedInvitees = inviteeData.map(inv => {
       const prev = (existing?.invitees || []).find(p => p.uid === inv.uid);
       return prev ? prev : inv;
     });
+    const newInvitees = mergedInvitees.filter(inv => !(existing?.invitees || []).some(p => p.uid === inv.uid));
+    if (newInvitees.length) changedFields.push('invitees');
     const participantUids = [uid, ...mergedInvitees.map(i => i.uid)];
     const ok = await window.Events?.update?.(_editingEventId, {
       title, date, time, location, description,
       invitees: mergedInvitees, participantUids, reminders, sentReminders: {}
     });
-    if (ok && dateChanged) {
+    if (ok) {
+      for (const inv of newInvitees) {
+        await window.Events?.sendNotification?.(inv.uid, 'eventInvite', displayName, uid,
+          { eventId: _editingEventId, eventTitle: title, date, time },
+          `evtinvite_${_editingEventId}_${inv.uid}_${Date.now()}`);
+      }
+    }
+    if (ok && changedFields.length) {
       for (const inv of mergedInvitees.filter(i => i.status === 'accepted')) {
         await window.Events?.sendNotification?.(inv.uid, 'eventUpdate', displayName, uid,
-          { eventId: _editingEventId, eventTitle: title, date, time },
-          `evtupdate_${_editingEventId}_${inv.uid}`);
+          { eventId: _editingEventId, eventTitle: title, date, time, changedFields },
+          `evtupdate_${_editingEventId}_${inv.uid}_${Date.now()}`);
       }
     }
     closeCreateEventModal();
@@ -20869,21 +21054,21 @@ function openEventDetail(eventId) {
     const icon = inv.status === 'accepted' ? 'check_circle' : inv.status === 'declined' ? 'cancel' : 'schedule';
     return `<div class="evt-attendee evt-attendee--${inv.status||'pending'}">
       <span class="material-symbols-outlined evt-att-icon">${icon}</span>
-      <span>${inv.name}</span>
+      <span>${_calEsc(inv.name)}</span>
     </div>`;
   }).join('');
   const gcalUrl = _googleCalendarUrl(ev);
   body.innerHTML = `
     <div class="evt-detail-header">
-      <h2 class="evt-detail-title">${ev.title}</h2>
+      <h2 class="evt-detail-title">${_calEsc(ev.title)}</h2>
       ${isCreator ? `<button class="evt-edit-btn" onclick="openCreateEventModal('${ev.id}');closeEventDetail()"><span class="material-symbols-outlined">edit</span></button>` : ''}
     </div>
     <div class="evt-meta">
       <div class="evt-meta-row"><span class="material-symbols-outlined">calendar_today</span><span>${formattedDate}</span></div>
       <div class="evt-meta-row"><span class="material-symbols-outlined">schedule</span><span>${_calFmtTime(ev.time)}</span></div>
-      ${ev.location ? `<div class="evt-meta-row"><span class="material-symbols-outlined">location_on</span><span>${ev.location}</span></div>` : ''}
+      ${ev.location ? `<div class="evt-meta-row"><span class="material-symbols-outlined">location_on</span><span>${_calEsc(ev.location)}</span></div>` : ''}
     </div>
-    ${ev.description ? `<p class="evt-desc">${ev.description}</p>` : ''}
+    ${ev.description ? `<p class="evt-desc">${_calEsc(ev.description)}</p>` : ''}
     ${attendeesHtml ? `<div class="evt-attendees">
       <div class="evt-section-label">Attendees · ${acceptedCount} going</div>
       ${attendeesHtml}
@@ -20918,7 +21103,7 @@ function closeEventDetail() {
   document.getElementById('eventDetailModal')?.style && (document.getElementById('eventDetailModal').style.display = 'none');
 }
 
-async function respondToEvent(eventId, status) {
+async function respondToEvent(eventId, status, opts = {}) {
   const uid = window.Auth?.getCurrentUser()?.uid;
   if (!uid) return;
   const ev = _calendarEvents.find(e => e.id === eventId);
@@ -20926,16 +21111,20 @@ async function respondToEvent(eventId, status) {
   const ok = await window.Events?.respond?.(eventId, uid, status);
   if (!ok) { alert('Could not update your response. Try again.'); return; }
   if (status === 'accepted') {
-    _showStudyToast("You're going! 🎉");
-    if (_calGCalToken && Date.now() < _calGCalTokenExpiry) _addEventToGoogleCalendar(eventId, ev).catch(() => {});
+    _showStudyToast("You're going!");
+    if (_calGCalToken && Date.now() < _calGCalTokenExpiry) {
+      _addEventToGoogleCalendar(eventId, ev).catch(() => {});
+    } else {
+      setTimeout(() => openCalendarSyncModal(), 250);
+    }
   } else {
     _showStudyToast('Response updated');
   }
   const displayName = localStorage.getItem('authDisplayName') || 'Someone';
   await window.Events?.sendNotification?.(ev.creatorUid,
     status === 'accepted' ? 'eventAccepted' : 'eventDeclined', displayName, uid,
-    { eventId, eventTitle: ev.title }, `evtresp_${eventId}_${uid}`);
-  closeEventDetail();
+    { eventId, eventTitle: ev.title }, `evtresp_${eventId}_${uid}_${status}_${Date.now()}`);
+  if (!opts.keepOpen) closeEventDetail();
   _renderCalEventsList();
 }
 
@@ -20966,8 +21155,10 @@ function _googleCalendarUrl(ev) {
   const [y, m, d] = ev.date.split('-').map(Number);
   const [h, mn] = ev.time.split(':').map(Number);
   const p = s => String(s).padStart(2,'0');
-  const dtS = `${y}${p(m)}${p(d)}T${p(h)}${p(mn)}00`;
-  const dtE = `${y}${p(m)}${p(d)}T${p(h+1)}${p(mn)}00`;
+  const start = new Date(y, m - 1, d, h, mn);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  const dtS = `${start.getFullYear()}${p(start.getMonth()+1)}${p(start.getDate())}T${p(start.getHours())}${p(start.getMinutes())}00`;
+  const dtE = `${end.getFullYear()}${p(end.getMonth()+1)}${p(end.getDate())}T${p(end.getHours())}${p(end.getMinutes())}00`;
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${dtS}/${dtE}&details=${encodeURIComponent(ev.description||'')}&location=${encodeURIComponent(ev.location||'')}`;
 }
 
@@ -20977,8 +21168,10 @@ function downloadEventICS(eventId) {
   const [y, m, d] = ev.date.split('-').map(Number);
   const [h, mn] = ev.time.split(':').map(Number);
   const p = s => String(s).padStart(2,'0');
-  const dtS = `${y}${p(m)}${p(d)}T${p(h)}${p(mn)}00`;
-  const dtE = `${y}${p(m)}${p(d)}T${p(h+1)}${p(mn)}00`;
+  const start = new Date(y, m - 1, d, h, mn);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  const dtS = `${start.getFullYear()}${p(start.getMonth()+1)}${p(start.getDate())}T${p(start.getHours())}${p(start.getMinutes())}00`;
+  const dtE = `${end.getFullYear()}${p(end.getMonth()+1)}${p(end.getDate())}T${p(end.getHours())}${p(end.getMinutes())}00`;
   const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Disciple Builder//EN','BEGIN:VEVENT',
     `DTSTART:${dtS}`,`DTEND:${dtE}`,`SUMMARY:${ev.title}`,
     `DESCRIPTION:${(ev.description||'').replace(/\n/g,'\\n')}`,
@@ -21074,14 +21267,17 @@ async function _addEventToGoogleCalendar(eventId, ev) {
   const [y, m, d] = ev.date.split('-').map(Number);
   const [h, mn] = ev.time.split(':').map(Number);
   const p = s => String(s).padStart(2,'0');
+  const start = new Date(y, m - 1, d, h, mn);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   try {
     const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
       method: 'POST',
       headers: { Authorization: `Bearer ${_calGCalToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         summary: ev.title, description: ev.description || '', location: ev.location || '',
-        start: { dateTime: `${y}-${p(m)}-${p(d)}T${p(h)}:${p(mn)}:00` },
-        end:   { dateTime: `${y}-${p(m)}-${p(d)}T${p(h+1)}:${p(mn)}:00` }
+        start: { dateTime: `${start.getFullYear()}-${p(start.getMonth()+1)}-${p(start.getDate())}T${p(start.getHours())}:${p(start.getMinutes())}:00`, timeZone: tz },
+        end:   { dateTime: `${end.getFullYear()}-${p(end.getMonth()+1)}-${p(end.getDate())}T${p(end.getHours())}:${p(end.getMinutes())}:00`, timeZone: tz }
       })
     });
     if (res.ok) {
@@ -21129,9 +21325,9 @@ async function _checkEventReminders() {
     const evMs = new Date(y, m-1, d, h, mn).getTime();
     if (evMs < now) continue;
     const sentReminders = ev.sentReminders || {};
-    for (const key of (ev.reminders || ['1week','3day','1day'])) {
+    for (const key of (ev.reminders || ['1week','3day','1day','dayof'])) {
       const offset = _REMINDER_OFFSETS_MS[key];
-      if (!offset || sentReminders[key] || now < evMs - offset) continue;
+      if (offset == null || sentReminders[key] || now < evMs - offset) continue;
       const accepted = (ev.invitees || []).filter(i => i.status === 'accepted');
       for (const inv of accepted) {
         await window.Events?.sendNotification?.(inv.uid, 'eventReminder', displayName, uid,

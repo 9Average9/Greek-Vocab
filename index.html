@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.127" rel="stylesheet"/>
+<link href="style.css?v=3.0.134" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -16234,12 +16234,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.127"></script>
+<script src="app.js?v=3.0.134"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.115"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
-<script src="firebase-lb.js?v=3.0.127" type="module"></script>
+<script src="firebase-lb.js?v=3.0.134" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -17761,11 +17761,19 @@ Save
       <div class="cal-field-row">
         <div class="cal-field-group cal-field-group--half">
           <label class="cal-field-label">Date</label>
-          <input class="cal-input" type="date" id="eventDateInput" />
+          <input type="hidden" id="eventDateInput" />
+          <button class="cal-picker-btn" id="eventDatePickerBtn" type="button" onclick="openEventDatePicker()">
+            <span class="material-symbols-outlined">calendar_today</span>
+            <span id="eventDatePickerLabel">Pick date</span>
+          </button>
         </div>
         <div class="cal-field-group cal-field-group--half">
           <label class="cal-field-label">Time</label>
-          <input class="cal-input" type="time" id="eventTimeInput" />
+          <input type="hidden" id="eventTimeInput" />
+          <button class="cal-picker-btn" id="eventTimePickerBtn" type="button" onclick="openEventTimePicker()">
+            <span class="material-symbols-outlined">schedule</span>
+            <span id="eventTimePickerLabel">Pick time</span>
+          </button>
         </div>
       </div>
       <div class="cal-field-group">
@@ -17783,8 +17791,21 @@ Save
         <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="1week" checked /><span>1 week before</span></label>
         <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="3day" checked /><span>3 days before</span></label>
         <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="1day" checked /><span>1 day before</span></label>
+        <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="dayof" checked /><span>Day of event</span></label>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ══ EVENT DATE / TIME PICKER ═══════════════════════════════════════════════ -->
+<div class="cal-modal-overlay cal-picker-overlay" id="eventDateTimePickerModal" style="display:none" onclick="if(event.target===this)closeEventDateTimePicker()">
+  <div class="cal-picker-sheet" onclick="event.stopPropagation()">
+    <div class="cal-picker-header">
+      <button class="cal-text-btn" onclick="closeEventDateTimePicker()">Cancel</button>
+      <span class="cal-modal-title" id="calPickerTitle">Pick Date</span>
+      <button class="cal-text-btn cal-text-btn--primary" onclick="applyEventDateTimePicker()">Done</button>
+    </div>
+    <div class="cal-picker-body" id="calPickerBody"></div>
   </div>
 </div>
 
