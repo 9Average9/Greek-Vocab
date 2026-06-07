@@ -666,6 +666,20 @@ Start a New Study
 <div class="habits-kicker"><span class="material-symbols-outlined">edit_note</span> Daily Note</div>
 <h2 id="habitNoteTitle">Habit Note</h2>
 <p class="habit-note-date" id="habitNoteDateLabel"></p>
+<div class="habit-note-status-row">
+<span class="habit-note-status-label">Mark Day As</span>
+<div class="habit-note-status-btns">
+<button type="button" class="habit-note-status-btn" data-status="success" onclick="selectHabitNoteStatus('success')">
+<span class="material-symbols-outlined">check_circle</span>Completed
+</button>
+<button type="button" class="habit-note-status-btn" data-status="skipped" onclick="selectHabitNoteStatus('skipped')">
+<span class="material-symbols-outlined">snooze</span>Planned Skip
+</button>
+<button type="button" class="habit-note-status-btn" data-status="missed" onclick="selectHabitNoteStatus('missed')">
+<span class="material-symbols-outlined">cancel</span>Missed
+</button>
+</div>
+</div>
 <label class="habit-field">
 <span>Reflection</span>
 <textarea id="habitNoteInput" placeholder="What helped, what got in the way, or what do you want to remember?" maxlength="360"></textarea>

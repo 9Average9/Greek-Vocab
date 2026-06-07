@@ -10353,30 +10353,35 @@ function _habitShiftDateKey(dateKey, deltaDays) {
 }
 
 function _habitCurrentStreak(entries = {}) {
-  const done = new Set(Object.values(entries).filter(e => e.status === "success").map(e => e.date));
+  const byDate = {};
+  Object.values(entries).forEach(e => { if (e.date) byDate[e.date] = e.status; });
   const [year, month, day] = _habitTodayKey().split("-").map(Number);
   let cursor = new Date(year, month - 1, day);
   let streak = 0;
   const keyFor = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  while (done.has(keyFor(cursor))) {
-    streak++;
+  while (true) {
+    const status = byDate[keyFor(cursor)];
+    if (status === "success") streak++;
+    else if (status !== "skipped") break;
     cursor.setDate(cursor.getDate() - 1);
   }
   return streak;
 }
 
 function _habitBestStreak(entries = {}) {
-  const days = [...new Set(Object.values(entries).filter(e => e.status === "success").map(e => e.date))]
-    .sort((a, b) => _habitDateMs(a) - _habitDateMs(b));
+  const byDate = {};
+  Object.values(entries).forEach(e => { if (e.date) byDate[e.date] = e.status; });
+  const allDates = Object.keys(byDate).sort((a, b) => _habitDateMs(a) - _habitDateMs(b));
   let best = 0;
   let current = 0;
   let prev = null;
-  days.forEach(day => {
-    if (!prev || _habitDateMs(day) - _habitDateMs(prev) === 86400000) current++;
-    else current = 1;
-    best = Math.max(best, current);
+  for (const day of allDates) {
+    const status = byDate[day];
+    if (prev !== null && _habitDateMs(day) - _habitDateMs(prev) > 86400000) current = 0;
+    if (status === "success") { current++; best = Math.max(best, current); }
+    else if (status !== "skipped") current = 0;
     prev = day;
-  });
+  }
   return best;
 }
 
@@ -11167,6 +11172,12 @@ async function catchUpHabitYesterday(habitId) {
   _showStudyToast("Yesterday marked complete");
 }
 
+function selectHabitNoteStatus(status) {
+  document.querySelectorAll(".habit-note-status-btn").forEach(btn => {
+    btn.classList.toggle("selected", btn.dataset.status === status);
+  });
+}
+
 function openHabitNoteModal(habitId, dateKey = _habitTodayKey()) {
   const habit = _habitItems.find(h => h.id === habitId);
   if (!habit) return;
@@ -11181,6 +11192,10 @@ function openHabitNoteModal(habitId, dateKey = _habitTodayKey()) {
     weekday: "long", month: "long", day: "numeric"
   });
   if (input) input.value = entry.comment || "";
+  const currentStatus = entry.status;
+  document.querySelectorAll(".habit-note-status-btn").forEach(btn => {
+    btn.classList.toggle("selected", btn.dataset.status === currentStatus);
+  });
   document.getElementById("habitNoteModal")?.classList.add("open");
 }
 
@@ -11195,8 +11210,10 @@ async function saveHabitNote() {
   if (!uid || !_habitNoteHabitId || !_habitNoteDate) return;
   const habit = _habitItems.find(h => h.id === _habitNoteHabitId);
   const previous = habit?.entries?.[_habitNoteDate] || {};
-  const status = previous.status || "open";
+  const selectedBtn = document.querySelector(".habit-note-status-btn.selected");
+  const status = selectedBtn?.dataset?.status || previous.status || "open";
   const comment = document.getElementById("habitNoteInput")?.value.trim() || "";
+  const beforeMilestones = new Set(habit?.awardedMilestones || []);
   const ok = await window.Habits?.setEntry?.(uid, _habitNoteHabitId, {
     date: _habitNoteDate,
     status,
@@ -11204,8 +11221,17 @@ async function saveHabitNote() {
     notify: false
   });
   if (!ok) { alert("Could not save that note."); return; }
+  if (status === "success" && previous.status !== "success" && habit) {
+    const mergedEntries = { ...(habit.entries || {}), [_habitNoteDate]: { date: _habitNoteDate, status: "success" } };
+    const streak = _habitCurrentStreak(mergedEntries);
+    const milestone = _habitMilestoneForStreak(streak);
+    if (milestone && !beforeMilestones.has(milestone.key)) {
+      addXP(milestone.xp, `${habit.name}: ${milestone.label}`, true);
+      await window.Habits?.awardMilestone?.(uid, _habitNoteHabitId, milestone.key);
+    }
+  }
   closeHabitNoteModal();
-  _showStudyToast("Habit note saved");
+  _showStudyToast("Habit day updated");
 }
 
 function openHabitNotesHistory(habitId) {
@@ -18760,7 +18786,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.130";
+const APP_VERSION = "3.0.131";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
