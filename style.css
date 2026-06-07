@@ -5817,7 +5817,9 @@ body.dark .big-lock .material-symbols-outlined {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 12px 20px 24px;
+  align-content: start;
 }
 
 /* Habits list */
