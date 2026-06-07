@@ -26618,6 +26618,10 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   font-family: inherit;
 }
 .cal-text-btn--primary { color: var(--secondary-color, #6c63ff); }
+.cal-text-btn:disabled {
+  opacity: 0.48;
+  pointer-events: none;
+}
 
 .cal-month-nav {
   display: flex;

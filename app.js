@@ -11926,6 +11926,7 @@ let _calGCalTokenExpiry = 0;
 let _calPickerMode = null;
 let _calPickerDate = null;
 let _calPickerTime = null;
+let _calEventSaveInFlight = false;
 
 // Fill in your Google Cloud OAuth client ID to enable live Google Calendar sync.
 // See: https://console.cloud.google.com → APIs & Services → Credentials
@@ -18993,7 +18994,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.139";
+const APP_VERSION = "3.0.140";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19012,6 +19013,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.140 &mdash; Calendar Duplicate Guard</div>
+<ul>
+  <li><strong>Duplicate Google events prevented</strong> &mdash; Event saves now run once at a time, and Google Calendar sync uses a stable event id so repeated syncs update the same calendar event.</li>
+  <li><strong>Save button protected</strong> &mdash; The event Save button disables while saving so fast taps cannot create repeated app or Google Calendar events.</li>
+</ul>
 <div class="un-version-label">v3.0.139 &mdash; Event Time Picker &amp; Invite Layout</div>
 <ul>
   <li><strong>Time wheels fixed</strong> &mdash; The first and last hour/minute values can now land in the highlighted picker row, and the AM/PM wheel scrolls correctly.</li>
@@ -21104,8 +21110,16 @@ function toggleAllEventInviteFriends() {
 }
 
 async function saveEvent() {
+  if (_calEventSaveInFlight) return;
   const uid = window.Auth?.getCurrentUser()?.uid;
   if (!uid) return;
+  _calEventSaveInFlight = true;
+  const saveBtn = document.getElementById('eventSaveBtn');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+  }
+  try {
   const title = document.getElementById('eventTitleInput')?.value.trim();
   const date  = document.getElementById('eventDateInput')?.value;
   const time  = document.getElementById('eventTimeInput')?.value;
@@ -21166,7 +21180,6 @@ async function saveEvent() {
         { eventId, eventTitle: title, date, time },
         `evtinvite_${eventId}_${inv.uid}`);
     }
-    if (_isGCalLinked()) window.Events?.gcalSync?.(eventId).catch(() => {});
     closeCreateEventModal();
     _showStudyToast('Event created!');
     _calSelectedDate = date;
@@ -21174,6 +21187,13 @@ async function saveEvent() {
     _calViewMonth = parseInt(date.split('-')[1]) - 1;
     _renderCalendarGrid();
     _renderCalEventsList();
+  }
+  } finally {
+    _calEventSaveInFlight = false;
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+    }
   }
 }
 
@@ -21256,9 +21276,7 @@ async function respondToEvent(eventId, status, opts = {}) {
   if (!ok) { alert('Could not update your response. Try again.'); return; }
   if (status === 'accepted') {
     _showStudyToast("You're going!");
-    _ensureGCalToken(ok => {
-      if (ok) window.Events?.gcalSync?.(eventId).catch(() => {});
-    }, { promptIfNeeded: true });
+    if (!_isGCalLinked()) _ensureGCalToken(() => {}, { promptIfNeeded: true });
   } else {
     _showStudyToast('Response updated');
   }

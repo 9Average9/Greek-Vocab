@@ -1,4 +1,5 @@
 const functions = require("firebase-functions/v1");
+const crypto = require("crypto");
 const { initializeApp } = require("firebase-admin/app");
 const { FieldValue, getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
@@ -198,10 +199,15 @@ async function googleCalendarRequest(uid, url, options = {}) {
   return { ok: res.ok, status: res.status, data };
 }
 
+function googleCalendarEventId(uid, eventId) {
+  // Google event ids must use base32hex characters; a hex digest is a safe subset.
+  return `db${crypto.createHash("sha256").update(`${uid}:${eventId}`).digest("hex").slice(0, 32)}`;
+}
+
 async function upsertGoogleCalendarEvent(uid, eventId, ev = {}) {
   const body = calendarEventBody(ev);
   if (!body) return null;
-  const existingId = ev.googleCalIds?.[uid];
+  const existingId = ev.googleCalIds?.[uid] || googleCalendarEventId(uid, eventId);
   if (existingId) {
     const patch = await googleCalendarRequest(uid, `${GOOGLE_CALENDAR_API}/${encodeURIComponent(existingId)}`, {
       method: "PATCH",
@@ -210,11 +216,20 @@ async function upsertGoogleCalendarEvent(uid, eventId, ev = {}) {
     if (patch.ok) return existingId;
     if (patch.status !== 404 && patch.status !== 410) return null;
   }
+  const deterministicId = googleCalendarEventId(uid, eventId);
   const created = await googleCalendarRequest(uid, GOOGLE_CALENDAR_API, {
     method: "POST",
-    body: JSON.stringify(body)
+    body: JSON.stringify({ ...body, id: deterministicId })
   });
-  return created.ok && created.data?.id ? created.data.id : null;
+  if (created.ok && created.data?.id) return created.data.id;
+  if (created.status === 409) {
+    const patch = await googleCalendarRequest(uid, `${GOOGLE_CALENDAR_API}/${encodeURIComponent(deterministicId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(body)
+    });
+    if (patch.ok) return deterministicId;
+  }
+  return null;
 }
 
 async function deleteGoogleCalendarEvent(uid, googleEventId) {
