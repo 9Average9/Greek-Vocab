@@ -18992,7 +18992,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.134";
+const APP_VERSION = "3.0.135";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19011,6 +19011,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.135 &mdash; Google Calendar Re-Link Prompt Fix</div>
+<ul>
+  <li><strong>Google Calendar stays linked</strong> &mdash; The calendar no longer re-prompts linked users on every reopen just because the short-lived Google access token needs a quiet refresh.</li>
+  <li><strong>Sync refresh is quieter</strong> &mdash; Creating, accepting, and cancelling events now try a silent Google token refresh first, then only ask for action when Google actually requires it.</li>
+</ul>
 <div class="un-version-label">v3.0.134 &mdash; Calendar Polish &amp; Event Notifications</div>
 <ul>
   <li><strong>Calendar event sheets refined</strong> &mdash; Creating events now uses app-styled date and time pickers, friend invite chips, safer mobile sheet spacing, and a day-of reminder option.</li>
@@ -20674,7 +20679,7 @@ function openCalendarModal() {
   const modal = document.getElementById('calendarModal');
   if (!modal) return;
   modal.style.display = 'flex';
-  if (!localStorage.getItem('calSyncPromptSeen')) {
+  if (!localStorage.getItem('calSyncPromptSeen') && !localStorage.getItem('calGCalConnected')) {
     setTimeout(() => { document.getElementById('calSyncPromptModal')?.style && (document.getElementById('calSyncPromptModal').style.display = 'flex'); }, 900);
   }
   const now = new Date();
@@ -21020,9 +21025,9 @@ async function saveEvent() {
         `evtinvite_${eventId}_${inv.uid}`);
     }
     // Add to creator's own Google Calendar so it can be auto-deleted on cancel
-    if (_calGCalToken && Date.now() < _calGCalTokenExpiry) {
-      _addEventToGoogleCalendar(eventId, { title, date, time, location, description }).catch(() => {});
-    }
+    _ensureGCalToken(ok => {
+      if (ok) _addEventToGoogleCalendar(eventId, { title, date, time, location, description }).catch(() => {});
+    });
     closeCreateEventModal();
     _showStudyToast('Event created!');
     _calSelectedDate = date;
@@ -21112,11 +21117,9 @@ async function respondToEvent(eventId, status, opts = {}) {
   if (!ok) { alert('Could not update your response. Try again.'); return; }
   if (status === 'accepted') {
     _showStudyToast("You're going!");
-    if (_calGCalToken && Date.now() < _calGCalTokenExpiry) {
-      _addEventToGoogleCalendar(eventId, ev).catch(() => {});
-    } else {
-      setTimeout(() => openCalendarSyncModal(), 250);
-    }
+    _ensureGCalToken(ok => {
+      if (ok) _addEventToGoogleCalendar(eventId, ev).catch(() => {});
+    }, { promptIfNeeded: true });
   } else {
     _showStudyToast('Response updated');
   }
@@ -21135,9 +21138,10 @@ async function cancelEvent(eventId) {
   const ev = _calendarEvents.find(e => e.id === eventId);
   if (!ev) return;
   // Delete from creator's own Google Calendar immediately
-  if (_calGCalToken && Date.now() < _calGCalTokenExpiry) {
-    const gcalEventId = ev.googleCalIds?.[uid];
-    if (gcalEventId) await _deleteGCalEvent(gcalEventId).catch(() => {});
+  if (ev.googleCalIds?.[uid]) {
+    _ensureGCalToken(ok => {
+      if (ok) _deleteGCalEvent(ev.googleCalIds?.[uid]).catch(() => {});
+    });
   }
   await window.Events?.delete?.(eventId);
   for (const inv of (ev.invitees || []).filter(i => i.status !== 'declined')) {
@@ -21190,6 +21194,14 @@ function dismissCalSyncPrompt(permanent = false) {
   if (permanent) localStorage.setItem('calSyncPromptSeen', '1');
 }
 
+function _hasActiveGCalToken() {
+  return !!_calGCalToken && Date.now() < _calGCalTokenExpiry;
+}
+
+function _isGCalLinked() {
+  return localStorage.getItem('calGCalConnected') === '1';
+}
+
 function connectGoogleCalendar() {
   dismissCalSyncPrompt(true);
   if (GCAL_CLIENT_ID.startsWith('YOUR_')) {
@@ -21203,16 +21215,17 @@ function connectGoogleCalendar() {
 }
 
 function openCalendarSyncModal() {
-  const connected = !!_calGCalToken && Date.now() < _calGCalTokenExpiry;
+  const connected = _isGCalLinked();
+  const ready = _hasActiveGCalToken();
   const prompt = document.getElementById('calSyncPromptModal');
   if (!prompt) return;
   prompt.querySelector('.cal-sync-title').textContent = connected ? 'Google Calendar Connected' : 'Link Google Calendar';
   prompt.querySelector('.cal-sync-body').textContent = connected
-    ? 'Your Google Calendar is connected. Events you accept sync automatically.'
+    ? (ready ? 'Your Google Calendar is connected. Events you accept sync automatically.' : 'Google Calendar is linked. If Google needs a fresh permission token, tap refresh before syncing a new event.')
     : 'Link your Google Calendar so accepted invites and event updates sync automatically.';
   const btnWrap = prompt.querySelector('.cal-sync-btns');
   if (btnWrap) btnWrap.innerHTML = connected
-    ? `<button class="main-btn" style="background:#c0392b" onclick="disconnectGoogleCalendar()">Disconnect</button>`
+    ? `<button class="main-btn" onclick="_refreshGCalFromPrompt()">Refresh Calendar Access</button><button class="main-btn" style="background:#c0392b;margin-top:8px" onclick="disconnectGoogleCalendar()">Disconnect</button>`
     : `<button class="main-btn" onclick="connectGoogleCalendar()">Link Google Calendar</button>`;
   prompt.style.display = 'flex';
 }
@@ -21251,6 +21264,7 @@ function _requestGCalToken(cb, silent = false) {
 function _tryGCalSilentRefresh() {
   if (!localStorage.getItem('calGCalConnected')) return;
   if (GCAL_CLIENT_ID.startsWith('YOUR_')) return;
+  _updateGCalProfileStatus(true);
   const attempt = () => {
     if (typeof google === 'undefined') return;
     _requestGCalToken(token => {
@@ -21260,6 +21274,37 @@ function _tryGCalSilentRefresh() {
   // GIS script loads async — give it a moment if not ready yet
   if (typeof google !== 'undefined') attempt();
   else setTimeout(attempt, 3000);
+}
+
+function _refreshGCalFromPrompt() {
+  _requestGCalToken(token => {
+    if (token) {
+      dismissCalSyncPrompt(true);
+      _updateGCalProfileStatus(true);
+      _showStudyToast('Google Calendar refreshed');
+    } else {
+      _showStudyToast('Could not refresh Google Calendar. Try again.');
+    }
+  });
+}
+
+function _ensureGCalToken(cb, { promptIfNeeded = false } = {}) {
+  if (_hasActiveGCalToken()) { cb(true); return; }
+  if (!_isGCalLinked()) {
+    if (promptIfNeeded) setTimeout(() => openCalendarSyncModal(), 250);
+    cb(false);
+    return;
+  }
+  _requestGCalToken(token => {
+    if (token) {
+      _updateGCalProfileStatus(true);
+      cb(true);
+    } else {
+      _updateGCalProfileStatus(true);
+      if (promptIfNeeded) _showStudyToast('Google Calendar is linked, but Google needs you to refresh access from Profile.');
+      cb(false);
+    }
+  }, true);
 }
 
 async function _addEventToGoogleCalendar(eventId, ev) {
