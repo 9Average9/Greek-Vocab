@@ -11917,7 +11917,7 @@ let _calGCalTokenExpiry = 0;
 
 // Fill in your Google Cloud OAuth client ID to enable live Google Calendar sync.
 // See: https://console.cloud.google.com → APIs & Services → Credentials
-const GCAL_CLIENT_ID = "YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com";
+const GCAL_CLIENT_ID = "473409624300-jq90dnic5pb52ag1rfabej4mkhdav28a.apps.googleusercontent.com";
 const GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.events";
 
 const _REMINDER_OFFSETS_MS = {
