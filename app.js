@@ -20594,6 +20594,17 @@ async function disableReminders() {
 function _startCalendarListener(uid) {
   _unsubCalendar?.();
   _unsubCalendar = window.Events?.listen?.(uid, events => {
+    // Auto-delete from Google Calendar any events that were active before
+    // but are now gone (cancelled by creator) while this user has GCal linked.
+    if (_calGCalToken && Date.now() < _calGCalTokenExpiry) {
+      const newIds = new Set(events.map(e => e.id));
+      _calendarEvents.forEach(prev => {
+        if (!newIds.has(prev.id)) {
+          const gcalEventId = prev.googleCalIds?.[uid];
+          if (gcalEventId) _deleteGCalEvent(gcalEventId).catch(() => {});
+        }
+      });
+    }
     _calendarEvents = events;
     _renderCalendarGrid();
     _renderCalEventsList();
