@@ -14,10 +14,7 @@ const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
 
 function googleCalendarClientSecret() {
-  return process.env.GCAL_CLIENT_SECRET ||
-    functions.config()?.google?.calendar_client_secret ||
-    functions.config()?.gcal?.client_secret ||
-    "";
+  return process.env.GCAL_CLIENT_SECRET || "";
 }
 
 async function deleteStoragePath(path) {
