@@ -12159,7 +12159,7 @@ async function _loadNotifications() {
             <div class="notif-title">${n.fromName}</div>
             <div class="notif-sub">Cancelled "${n.eventTitle}"</div>
           </div>
-          <button class="notif-x-btn" onclick="event.stopPropagation();notifDismissCollab('${n.id}','${n.msgId||''}')" title="Dismiss"><span class="material-symbols-outlined">close</span></button>
+          <button class="notif-x-btn" onclick="event.stopPropagation();notifDismissEventCancelled('${n.id}','${n.msgId||''}','${n.eventId||''}')" title="Dismiss"><span class="material-symbols-outlined">close</span></button>
         </div>`;
     }
     return '';
@@ -21051,6 +21051,29 @@ async function _addEventToGoogleCalendar(eventId, ev) {
       await window.Events?.storeGCalId?.(eventId, uid, data.id);
     }
   } catch (e) { console.warn('addEventToGCal:', e); }
+}
+
+async function _deleteGCalEvent(gcalEventId) {
+  if (!_calGCalToken || !gcalEventId) return;
+  try {
+    await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(gcalEventId)}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${_calGCalToken}` }
+    });
+  } catch (e) { console.warn('deleteGCalEvent:', e); }
+}
+
+async function notifDismissEventCancelled(itemId, msgId, eventId) {
+  // Auto-delete from the user's own Google Calendar if they have it connected
+  if (_calGCalToken && Date.now() < _calGCalTokenExpiry && eventId) {
+    const uid = window.Auth?.getCurrentUser()?.uid;
+    if (uid) {
+      const ev = await window.Events?.getById?.(eventId).catch(() => null);
+      const gcalEventId = ev?.googleCalIds?.[uid];
+      if (gcalEventId) await _deleteGCalEvent(gcalEventId);
+    }
+  }
+  notifDismissCollab(itemId, msgId);
 }
 
 // ── Event Reminders ────────────────────────────────────────────────────────────

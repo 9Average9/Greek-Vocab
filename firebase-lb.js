@@ -2246,6 +2246,13 @@ async function evtStoreGCalId(eventId, uid, gcalEventId) {
   } catch (e) { console.warn("evtStoreGCalId:", e); }
 }
 
+async function evtGetById(eventId) {
+  try {
+    const snap = await getDoc(doc(db, "events", eventId));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  } catch (e) { console.warn("evtGetById:", e); return null; }
+}
+
 window.Events = {
   create:           evtCreate,
   update:           evtUpdate,
@@ -2254,6 +2261,7 @@ window.Events = {
   respond:          evtRespond,
   markReminderSent: evtMarkReminderSent,
   storeGCalId:      evtStoreGCalId,
+  getById:          evtGetById,
   sendNotification: fcmSendPushNotification
 };
 
