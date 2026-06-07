@@ -5814,6 +5814,8 @@ body.dark .big-lock .material-symbols-outlined {
 }
 
 .friend-habits-modal .habits-list {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 12px 20px 24px;
 }
@@ -6223,6 +6225,7 @@ body.dark .big-lock .material-symbols-outlined {
   font: inherit;
 }
 
+button.habit-week-day-wrap,
 .habit-week-day-wrap.has-note {
   cursor: pointer;
 }
