@@ -2302,6 +2302,14 @@ async function evtGCalSync(eventId) {
   } catch (e) { console.warn("evtGCalSync:", e); return false; }
 }
 
+async function evtGCalDayEvents(date, timezone) {
+  try {
+    const fn = httpsCallable(functionsApp, "listGoogleCalendarDayEvents");
+    const res = await fn({ date, timezone });
+    return res.data || { linked: false, events: [] };
+  } catch (e) { console.warn("evtGCalDayEvents:", e); return { linked: false, events: [] }; }
+}
+
 window.Events = {
   create:           evtCreate,
   update:           evtUpdate,
@@ -2315,6 +2323,7 @@ window.Events = {
   gcalConnect:      evtGCalConnect,
   gcalDisconnect:   evtGCalDisconnect,
   gcalSync:         evtGCalSync,
+  gcalDayEvents:    evtGCalDayEvents,
   sendNotification: fcmSendPushNotification
 };
 

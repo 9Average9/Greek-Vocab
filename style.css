@@ -27018,6 +27018,19 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 }
 .evt-add-cal-btn:active { background: rgba(108,99,255,0.1); }
 .evt-add-cal-btn .material-symbols-outlined { font-size: 18px; }
+.evt-google-synced {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(46,204,113,0.12);
+  color: #27ae60;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+.evt-google-synced .material-symbols-outlined { font-size: 18px; }
 
 .evt-rsvp-section { display: flex; flex-direction: column; gap: 10px; }
 .evt-rsvp-btns { display: flex; gap: 10px; }
@@ -27075,6 +27088,77 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 .cal-modal-overlay.open .cal-sync-card {
   transform: translateY(0) scale(1);
   opacity: 1;
+}
+.cal-commit-overlay { align-items: center; }
+.cal-commit-card {
+  background: var(--card-bg, #fff);
+  border-radius: 24px;
+  max-width: 390px;
+  width: calc(100% - 36px);
+  padding: 28px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  position: relative;
+  transform: translateY(18px) scale(0.96);
+  opacity: 0;
+  transition: transform 0.24s ease, opacity 0.24s ease;
+}
+.cal-modal-overlay.open .cal-commit-card {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+.event-commit-list {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.event-commit-item,
+.event-commit-open,
+.event-commit-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  background: var(--card-bg-2, rgba(0,0,0,0.05));
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 0.86rem;
+}
+.event-commit-time {
+  min-width: 62px;
+  color: var(--secondary-color, #6c63ff);
+  font-weight: 900;
+  white-space: nowrap;
+}
+.event-commit-title {
+  min-width: 0;
+  flex: 1;
+  font-weight: 750;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.event-commit-open {
+  color: #27ae60;
+  font-weight: 800;
+  justify-content: center;
+}
+.event-commit-open .material-symbols-outlined { font-size: 20px; }
+.event-commit-empty {
+  color: var(--muted-color, #666);
+  justify-content: center;
+  line-height: 1.35;
+}
+.event-commit-actions {
+  width: 100%;
+  display: flex;
+  gap: 10px;
 }
 .cal-sync-dismiss-btn {
   position: absolute;

@@ -11927,6 +11927,7 @@ let _calPickerMode = null;
 let _calPickerDate = null;
 let _calPickerTime = null;
 let _calEventSaveInFlight = false;
+let _pendingEventCommit = null;
 
 // Fill in your Google Cloud OAuth client ID to enable live Google Calendar sync.
 // See: https://console.cloud.google.com → APIs & Services → Credentials
@@ -12212,8 +12213,12 @@ async function notifDeclineFriend(uid) {
 
 async function notifAcceptEvent(eventId, notifId, msgId) {
   if (!eventId) return;
-  await respondToEvent(eventId, 'accepted', { keepOpen: true });
-  await notifDismissCollab(notifId, msgId || '');
+  await openEventCommitPrompt(eventId, {
+    keepOpen: true,
+    afterCommit: async () => {
+      await notifDismissCollab(notifId, msgId || '');
+    }
+  });
 }
 
 function notifDismissAccepted(uid) {
@@ -18994,7 +18999,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.140";
+const APP_VERSION = "3.0.141";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19013,6 +19018,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.141 &mdash; Invite Commitment Check</div>
+<ul>
+  <li><strong>Linked users are not re-prompted</strong> &mdash; Event details no longer ask Google-connected users, including hosts, to add events that already sync automatically.</li>
+  <li><strong>Invite acceptance check</strong> &mdash; Accepting an invite now opens a quick commitment prompt that lists anything already on that user&rsquo;s Google Calendar for the event day, or confirms the day is open.</li>
+</ul>
 <div class="un-version-label">v3.0.140 &mdash; Calendar Duplicate Guard</div>
 <ul>
   <li><strong>Duplicate Google events prevented</strong> &mdash; Event saves now run once at a time, and Google Calendar sync uses a stable event id so repeated syncs update the same calendar event.</li>
@@ -21222,6 +21232,17 @@ function openEventDetail(eventId) {
     </div>`;
   }).join('');
   const gcalUrl = _googleCalendarUrl(ev);
+  const syncedForMe = !!ev.googleCalIds?.[uid] || _isGCalLinked();
+  const calendarActionsHtml = syncedForMe
+    ? `<div class="evt-google-synced"><span class="material-symbols-outlined">event_available</span><span>Google Calendar sync is on for this event.</span></div>`
+    : `<div class="evt-add-cal-row">
+      <a class="evt-add-cal-btn" href="${gcalUrl}" target="_blank" rel="noopener">
+        <span class="material-symbols-outlined">event</span>Google Calendar
+      </a>
+      <button class="evt-add-cal-btn" onclick="downloadEventICS('${ev.id}')">
+        <span class="material-symbols-outlined">download</span>Save .ics
+      </button>
+    </div>`;
   body.innerHTML = `
     <div class="evt-detail-header">
       <h2 class="evt-detail-title">${_calEsc(ev.title)}</h2>
@@ -21237,19 +21258,12 @@ function openEventDetail(eventId) {
       <div class="evt-section-label">Attendees · ${acceptedCount} going</div>
       ${attendeesHtml}
     </div>` : ''}
-    <div class="evt-add-cal-row">
-      <a class="evt-add-cal-btn" href="${gcalUrl}" target="_blank" rel="noopener">
-        <span class="material-symbols-outlined">event</span>Google Calendar
-      </a>
-      <button class="evt-add-cal-btn" onclick="downloadEventICS('${ev.id}')">
-        <span class="material-symbols-outlined">download</span>Save .ics
-      </button>
-    </div>
+    ${calendarActionsHtml}
     ${!isCreator && myStatus === 'pending' ? `
     <div class="evt-rsvp-section">
       <div class="evt-section-label">Will you be there?</div>
       <div class="evt-rsvp-btns">
-        <button class="evt-rsvp-btn evt-rsvp-btn--accept" onclick="respondToEvent('${ev.id}','accepted')"><span class="material-symbols-outlined">check_circle</span>Accept</button>
+        <button class="evt-rsvp-btn evt-rsvp-btn--accept" onclick="openEventCommitPrompt('${ev.id}')"><span class="material-symbols-outlined">check_circle</span>Accept</button>
         <button class="evt-rsvp-btn evt-rsvp-btn--decline" onclick="respondToEvent('${ev.id}','declined')"><span class="material-symbols-outlined">cancel</span>Decline</button>
       </div>
     </div>` : ''}
@@ -21267,11 +21281,82 @@ function closeEventDetail() {
   _hideCalSheet('eventDetailModal');
 }
 
+function closeEventCommitPrompt() {
+  _pendingEventCommit = null;
+  _hideCalSheet('eventCommitModal');
+}
+
+function _eventCommitTimeLabel(item = {}) {
+  if (item.allDay) return 'All day';
+  const date = new Date(item.startsAt);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+async function openEventCommitPrompt(eventId, opts = {}) {
+  const ev = _calendarEvents.find(e => e.id === eventId) || await window.Events?.getById?.(eventId).catch(() => null);
+  if (!ev) return false;
+  _pendingEventCommit = { eventId, opts };
+  const summary = document.getElementById('eventCommitSummary');
+  const list = document.getElementById('eventCommitList');
+  const yesBtn = document.getElementById('eventCommitYesBtn');
+  if (summary) summary.textContent = 'Checking your Google Calendar for that day...';
+  if (list) list.innerHTML = '<div class="event-commit-empty">Looking for anything already planned.</div>';
+  if (yesBtn) yesBtn.disabled = false;
+  _showCalSheet('eventCommitModal');
+
+  const timezone = ev.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  if (!_isGCalLinked() || !window.Events?.gcalDayEvents) {
+    if (summary) summary.textContent = 'Google Calendar is not linked yet.';
+    if (list) list.innerHTML = '<div class="event-commit-empty">No linked calendar to check. You can still commit, or link Google Calendar from Profile for future checks.</div>';
+    return true;
+  }
+  const result = await window.Events.gcalDayEvents(ev.date, timezone);
+  if (!result?.linked) {
+    if (summary) summary.textContent = 'Google Calendar could not be checked.';
+    if (list) list.innerHTML = '<div class="event-commit-empty">Your calendar link may need to be refreshed. You can still commit, or reconnect Google Calendar from Profile.</div>';
+    return true;
+  }
+  const items = Array.isArray(result?.events) ? result.events : [];
+  if (summary) {
+    summary.textContent = items.length
+      ? 'You already have something on Google Calendar that day.'
+      : 'Your Google Calendar looks open that day.';
+  }
+  if (!list) return true;
+  if (!items.length) {
+    list.innerHTML = '<div class="event-commit-open"><span class="material-symbols-outlined">check_circle</span><span>That day is currently open.</span></div>';
+  } else {
+    list.innerHTML = items.map(item => `
+      <div class="event-commit-item">
+        <span class="event-commit-time">${_calEsc(_eventCommitTimeLabel(item))}</span>
+        <span class="event-commit-title">${_calEsc(item.title || 'Calendar event')}</span>
+      </div>`).join('');
+  }
+  return true;
+}
+
+async function confirmEventCommit(canCommit) {
+  const pending = _pendingEventCommit;
+  if (!pending) return;
+  _pendingEventCommit = null;
+  _hideCalSheet('eventCommitModal');
+  if (canCommit) {
+    await respondToEvent(pending.eventId, 'accepted', { ...(pending.opts || {}), commitConfirmed: true });
+  } else {
+    await respondToEvent(pending.eventId, 'declined', { ...(pending.opts || {}), commitConfirmed: true });
+  }
+}
+
 async function respondToEvent(eventId, status, opts = {}) {
   const uid = window.Auth?.getCurrentUser()?.uid;
   if (!uid) return;
-  const ev = _calendarEvents.find(e => e.id === eventId);
+  const ev = _calendarEvents.find(e => e.id === eventId) || await window.Events?.getById?.(eventId).catch(() => null);
   if (!ev) return;
+  if (status === 'accepted' && !opts.commitConfirmed) {
+    await openEventCommitPrompt(eventId, opts);
+    return false;
+  }
   const ok = await window.Events?.respond?.(eventId, uid, status);
   if (!ok) { alert('Could not update your response. Try again.'); return; }
   if (status === 'accepted') {
@@ -21286,6 +21371,8 @@ async function respondToEvent(eventId, status, opts = {}) {
     { eventId, eventTitle: ev.title }, `evtresp_${eventId}_${uid}_${status}_${Date.now()}`);
   if (!opts.keepOpen) closeEventDetail();
   _renderCalEventsList();
+  if (typeof opts.afterCommit === 'function') await opts.afterCommit(status);
+  return true;
 }
 
 async function cancelEvent(eventId) {

@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.140" rel="stylesheet"/>
+<link href="style.css?v=3.0.141" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -16234,12 +16234,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.140"></script>
+<script src="app.js?v=3.0.141"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.115"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
-<script src="firebase-lb.js?v=3.0.140" type="module"></script>
+<script src="firebase-lb.js?v=3.0.141" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -17825,6 +17825,24 @@ Save
 </div>
 
 <!-- ══ GOOGLE CALENDAR SYNC PROMPT ═══════════════════════════════════════════ -->
+<div class="cal-modal-overlay cal-commit-overlay" id="eventCommitModal" style="display:none" onclick="if(event.target===this)closeEventCommitPrompt()">
+  <div class="cal-commit-card" onclick="event.stopPropagation()">
+    <button class="cal-sync-dismiss-btn" onclick="closeEventCommitPrompt()"><span class="material-symbols-outlined">close</span></button>
+    <div class="cal-sync-icon-wrap"><span class="material-symbols-outlined">event_available</span></div>
+    <h3 class="cal-sync-title">Are you sure you can commit?</h3>
+    <p class="cal-sync-body" id="eventCommitSummary">Checking your calendar for that day...</p>
+    <div class="event-commit-list" id="eventCommitList"></div>
+    <div class="event-commit-actions">
+      <button class="evt-rsvp-btn evt-rsvp-btn--accept" id="eventCommitYesBtn" onclick="confirmEventCommit(true)">
+        <span class="material-symbols-outlined">check_circle</span>Yep!
+      </button>
+      <button class="evt-rsvp-btn evt-rsvp-btn--decline" onclick="confirmEventCommit(false)">
+        <span class="material-symbols-outlined">cancel</span>No, I can't
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="cal-modal-overlay cal-sync-overlay" id="calSyncPromptModal" style="display:none" onclick="if(event.target===this)dismissCalSyncPrompt()">
   <div class="cal-sync-card" onclick="event.stopPropagation()">
     <button class="cal-sync-dismiss-btn" onclick="dismissCalSyncPrompt(true)"><span class="material-symbols-outlined">close</span></button>

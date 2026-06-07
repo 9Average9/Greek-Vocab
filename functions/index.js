@@ -204,6 +204,21 @@ function googleCalendarEventId(uid, eventId) {
   return `db${crypto.createHash("sha256").update(`${uid}:${eventId}`).digest("hex").slice(0, 32)}`;
 }
 
+function dateKeyInTimeZone(value, timeZone = "UTC") {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date).reduce((acc, part) => {
+    acc[part.type] = part.value;
+    return acc;
+  }, {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
 async function upsertGoogleCalendarEvent(uid, eventId, ev = {}) {
   const body = calendarEventBody(ev);
   if (!body) return null;
@@ -329,6 +344,47 @@ exports.syncGoogleCalendarEvent = functions.https.onCall(async (data, context) =
     await ref.update({ [`googleCalIds.${context.auth.uid}`]: googleEventId, updatedAt: FieldValue.serverTimestamp() });
   }
   return { synced: !!googleEventId };
+});
+
+exports.listGoogleCalendarDayEvents = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) throw new functions.https.HttpsError("unauthenticated", "Sign in first.");
+  const date = String(data?.date || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing event date.");
+  }
+  const timeZone = String(data?.timezone || "UTC");
+  const [year, month, day] = date.split("-").map(Number);
+  const timeMin = new Date(Date.UTC(year, month - 1, day - 1, 0, 0, 0)).toISOString();
+  const timeMax = new Date(Date.UTC(year, month - 1, day + 2, 0, 0, 0)).toISOString();
+  const url = `${GOOGLE_CALENDAR_API}?${new URLSearchParams({
+    timeMin,
+    timeMax,
+    singleEvents: "true",
+    orderBy: "startTime",
+    maxResults: "20",
+    timeZone
+  })}`;
+  const res = await googleCalendarRequest(context.auth.uid, url, { method: "GET" });
+  if (!res.ok) return { linked: false, events: [] };
+  const items = Array.isArray(res.data?.items) ? res.data.items : [];
+  const events = items
+    .map(item => {
+      const allDayDate = item.start?.date || "";
+      const startsAt = item.start?.dateTime || allDayDate;
+      const endsAt = item.end?.dateTime || item.end?.date || "";
+      const itemDate = allDayDate || dateKeyInTimeZone(startsAt, timeZone);
+      return {
+        id: item.id || "",
+        title: item.summary || "Untitled event",
+        startsAt,
+        endsAt,
+        allDay: !!allDayDate,
+        date: itemDate
+      };
+    })
+    .filter(item => item.date === date)
+    .slice(0, 12);
+  return { linked: true, events };
 });
 
 async function shareRecentCommunityPostsBetweenFriends(uidA, uidB) {
