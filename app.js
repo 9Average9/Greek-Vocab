@@ -18993,7 +18993,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.138";
+const APP_VERSION = "3.0.139";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19012,6 +19012,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.139 &mdash; Event Time Picker &amp; Invite Layout</div>
+<ul>
+  <li><strong>Time wheels fixed</strong> &mdash; The first and last hour/minute values can now land in the highlighted picker row, and the AM/PM wheel scrolls correctly.</li>
+  <li><strong>Event form reorganized</strong> &mdash; Reminders now sit above friend invites, invites have a select-all control, and the bottom of the friend list has more comfortable spacing.</li>
+</ul>
 <div class="un-version-label">v3.0.138 &mdash; Calendar Link &amp; Time Wheel Fixes</div>
 <ul>
   <li><strong>Permanent Calendar link prompt</strong> &mdash; Users with the old local-only Google Calendar link are prompted once more so the new server-backed link can be saved permanently.</li>
@@ -20925,14 +20930,25 @@ function _renderEventTimePicker() {
     </div>`;
   const cols = [...body.querySelectorAll('.cal-time-col')];
   cols.forEach(col => {
+    _syncEventTimeWheelPadding(col);
     col.addEventListener('scroll', _updateEventTimeFromWheel, { passive: true });
   });
   requestAnimationFrame(() => {
+    cols.forEach(_syncEventTimeWheelPadding);
     _scrollEventTimePartIntoView('hour', hour12, 'auto');
     _scrollEventTimePartIntoView('minute', minute, 'auto');
     _scrollEventTimePartIntoView('period', period, 'auto');
     _updateEventTimeFromWheel();
   });
+}
+
+function _syncEventTimeWheelPadding(col) {
+  if (!col) return;
+  const btn = col.querySelector('button');
+  const itemHeight = btn?.offsetHeight || 42;
+  const pad = Math.max(0, (col.clientHeight - itemHeight) / 2);
+  col.style.paddingTop = `${pad}px`;
+  col.style.paddingBottom = `${pad}px`;
 }
 
 function selectEventPickerTimePart(part, value) {
@@ -20950,13 +20966,15 @@ function selectEventPickerTimePart(part, value) {
 function _scrollEventTimePartIntoView(part, value, behavior = 'smooth') {
   const col = document.querySelector(`.cal-time-col[data-time-part="${part}"]`);
   if (!col) return;
+  _syncEventTimeWheelPadding(col);
   const btn = col.querySelector(`button[data-time-value="${value}"]`);
   if (!btn) return;
   const top = btn.offsetTop - (col.clientHeight / 2) + (btn.clientHeight / 2);
-  col.scrollTo({ top: Math.max(0, top), behavior });
+  col.scrollTo({ top: Math.max(0, Math.min(top, col.scrollHeight - col.clientHeight)), behavior });
 }
 
 function _nearestEventTimeValue(col) {
+  _syncEventTimeWheelPadding(col);
   const buttons = [...col.querySelectorAll('button')];
   if (!buttons.length) return null;
   const center = col.scrollTop + (col.clientHeight / 2);
@@ -21019,6 +21037,7 @@ async function openCreateEventModal(eventId = null) {
   document.querySelectorAll('.event-reminder-cb').forEach(cb => { cb.checked = enabledReminders.includes(cb.dataset.key); });
   _updateEventPickerLabels();
   await _renderEventInviteFriendsList();
+  _syncEventInviteFriendButtons();
   _showCalSheet('createEventModal');
 }
 
@@ -21031,13 +21050,7 @@ function closeCreateEventModal() {
 function toggleEventInviteFriend(uid) {
   if (_calEventInviteUids.has(uid)) _calEventInviteUids.delete(uid);
   else _calEventInviteUids.add(uid);
-  document.querySelectorAll('.event-invite-friend-btn').forEach(btn => {
-    const sel = _calEventInviteUids.has(btn.dataset.uid);
-    btn.classList.toggle('invited', sel);
-    const ic = btn.querySelector('.eif-check');
-    if (ic) ic.textContent = sel ? 'check_circle' : 'add_circle';
-    btn.setAttribute('aria-pressed', sel ? 'true' : 'false');
-  });
+  _syncEventInviteFriendButtons();
 }
 
 async function _renderEventInviteFriendsList() {
@@ -21058,7 +21071,36 @@ async function _renderEventInviteFriendsList() {
         <span class="material-symbols-outlined eif-check">${sel?'check_circle':'add_circle'}</span>
       </button>`;
     }).join('') || '<p class="cal-hint">No friends found.</p>';
+    _syncEventInviteFriendButtons();
   } catch { list.innerHTML = '<p class="cal-hint">Could not load friends.</p>'; }
+}
+
+function _syncEventInviteFriendButtons() {
+  document.querySelectorAll('.event-invite-friend-btn').forEach(btn => {
+    const sel = _calEventInviteUids.has(btn.dataset.uid);
+    btn.classList.toggle('invited', sel);
+    const ic = btn.querySelector('.eif-check');
+    if (ic) ic.textContent = sel ? 'check_circle' : 'add_circle';
+    btn.setAttribute('aria-pressed', sel ? 'true' : 'false');
+  });
+  const selectable = [...document.querySelectorAll('.event-invite-friend-btn[data-uid]')];
+  const allSelected = selectable.length > 0 && selectable.every(btn => _calEventInviteUids.has(btn.dataset.uid));
+  const selectAllBtn = document.getElementById('eventInviteSelectAllBtn');
+  if (selectAllBtn) {
+    selectAllBtn.textContent = allSelected ? 'Clear all' : 'Select all';
+    selectAllBtn.disabled = selectable.length === 0;
+  }
+}
+
+function toggleAllEventInviteFriends() {
+  const buttons = [...document.querySelectorAll('.event-invite-friend-btn[data-uid]')];
+  if (!buttons.length) return;
+  const allSelected = buttons.every(btn => _calEventInviteUids.has(btn.dataset.uid));
+  buttons.forEach(btn => {
+    if (allSelected) _calEventInviteUids.delete(btn.dataset.uid);
+    else _calEventInviteUids.add(btn.dataset.uid);
+  });
+  _syncEventInviteFriendButtons();
 }
 
 async function saveEvent() {

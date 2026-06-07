@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.138" rel="stylesheet"/>
+<link href="style.css?v=3.0.139" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -16234,12 +16234,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.138"></script>
+<script src="app.js?v=3.0.139"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.115"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.93"></script>
-<script src="firebase-lb.js?v=3.0.138" type="module"></script>
+<script src="firebase-lb.js?v=3.0.139" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -17782,8 +17782,6 @@ Save
       <div class="cal-field-group">
         <textarea class="cal-input cal-textarea" id="eventDescInput" placeholder="Description (optional)" rows="3" maxlength="400"></textarea>
       </div>
-      <div class="cal-section-label">Invite Friends</div>
-      <div class="event-invite-list" id="eventInviteList"></div>
       <div class="cal-section-label">Reminders</div>
       <div class="event-reminders-list">
         <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="3week" /><span>3 weeks before</span></label>
@@ -17793,6 +17791,11 @@ Save
         <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="1day" checked /><span>1 day before</span></label>
         <label class="event-reminder-row"><input class="event-reminder-cb" type="checkbox" data-key="dayof" checked /><span>Day of event</span></label>
       </div>
+      <div class="event-invite-header">
+        <div class="cal-section-label">Invite Friends</div>
+        <button class="event-select-all-btn" type="button" id="eventInviteSelectAllBtn" onclick="toggleAllEventInviteFriends()">Select all</button>
+      </div>
+      <div class="event-invite-list" id="eventInviteList"></div>
     </div>
   </div>
 </div>

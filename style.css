@@ -26770,7 +26770,7 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 16px;
+  padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 42px);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -26840,6 +26840,33 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
   gap: 8px;
+  padding-bottom: 18px;
+}
+.event-invite-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+}
+.event-invite-header .cal-section-label {
+  margin: 0;
+}
+.event-select-all-btn {
+  border: 1.5px solid color-mix(in srgb, var(--secondary-color, #6c63ff) 22%, transparent);
+  background: color-mix(in srgb, var(--secondary-color, #6c63ff) 8%, transparent);
+  color: var(--secondary-color, #6c63ff);
+  border-radius: 999px;
+  padding: 6px 11px;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.event-select-all-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 .event-invite-friend-btn {
   display: flex;
@@ -26890,6 +26917,10 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
   gap: 7px;
+  padding: 10px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--secondary-color, #6c63ff) 7%, var(--card-bg-2, rgba(0,0,0,0.04)));
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #6c63ff) 16%, transparent);
 }
 .event-reminder-row {
   display: flex;
