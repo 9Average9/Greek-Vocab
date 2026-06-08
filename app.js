@@ -17330,6 +17330,9 @@ function showNounCheatSheet() {
         <div><strong>Object</strong><span>The one receiving the action.</span></div>
         <div><strong>-ος</strong><span>Usually points to the subject.</span></div>
         <div><strong>-ον</strong><span>Usually points to the object.</span></div>
+        <div><strong>1st declension</strong><span>Mostly feminine. Singular can be η-stem or α-stem: η/α, ης/ας, ῃ/ᾳ, ην/αν.</span></div>
+        <div><strong>2nd declension</strong><span>Mostly masculine/neuter: λόγος and ἔργον patterns.</span></div>
+        <div><strong>3rd declension</strong><span>Find the stem from the genitive: σάρξ, σαρκός → σαρκ-.</span></div>
         <div><strong>Articles</strong><span>Match the noun and help confirm its role.</span></div>
       </div>
     `
@@ -17353,6 +17356,7 @@ function showPrepositionsCheatSheet() {
         <div><strong>διά + genitive</strong><span>Through / by means of — δι᾽ αὐτοῦ (through him).</span></div>
         <div><strong>διά + accusative</strong><span>Because of — διὰ τοῦτο (because of this).</span></div>
         <div><strong>κατά + accusative</strong><span>According to — κατὰ σάρκα (according to flesh).</span></div>
+        <div><strong>εἰμί</strong><span>I am: εἰμί, εἶ, ἐστίν, ἐσμέν, ἐστέ, εἰσί(ν).</span></div>
       </div>
     `
   );
@@ -17368,6 +17372,8 @@ function showAdjectivesCheatSheet() {
 
       <div class="cheat-list">
         <div><strong>Agreement rule</strong><span>Adjective must match its noun in gender, case, and number.</span></div>
+        <div><strong>2-1-2 pattern</strong><span>ἀγαθός / ἀγαθή / ἀγαθόν — masculine and neuter use 2nd declension, feminine uses 1st.</span></div>
+        <div><strong>Key forms</strong><span>Nom. sg: ἀγαθός, ἀγαθή, ἀγαθόν. Gen. sg: ἀγαθοῦ, ἀγαθῆς, ἀγαθοῦ.</span></div>
         <div><strong>Attributive</strong><span>Inside the article-noun group — directly describes: ὁ ἀγαθὸς λόγος (the good word).</span></div>
         <div><strong>Predicative</strong><span>Outside the group — makes a statement: ὁ λόγος ἀγαθός (the word is good).</span></div>
         <div><strong>πᾶς / πᾶσα / πᾶν</strong><span>All / every — the most common NT adjective.</span></div>
@@ -17395,7 +17401,9 @@ function showPronounsCheatSheet() {
         <div><strong>ἐγώ</strong><span>I — emphatic self-reference. ἐγώ εἰμι = I am.</span></div>
         <div><strong>σύ</strong><span>You (singular).</span></div>
         <div><strong>ἡμεῖς / ὑμεῖς</strong><span>We / you all.</span></div>
-        <div><strong>μου / σου</strong><span>Of me / of you (short genitive forms).</span></div>
+        <div><strong>μου / σου · μοι / σοι · με / σε</strong><span>My/your · to me/to you · me/you.</span></div>
+        <div><strong>ὅς / ἥ / ὅ</strong><span>Who / which / that — introduces a relative clause.</span></div>
+        <div><strong>ἐκεῖνος / ἐκείνη / ἐκεῖνο</strong><span>That one — distant demonstrative.</span></div>
       </div>
     `
   );
@@ -19029,7 +19037,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.145";
+const APP_VERSION = "3.0.146";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19048,7 +19056,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.145 &mdash; Greek Lesson Paradigms</div>
+<div class="un-version-label">v3.0.146 &mdash; Mounce-Aligned Lesson Flow</div>
 <ul>
   <li><strong>Attendees button added</strong> &mdash; Event creators and accepted attendees can now open a grouped RSVP list showing who is going, who declined, and who has not answered yet.</li>
 </ul>
