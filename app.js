@@ -21237,11 +21237,13 @@ async function saveEvent(opts = {}) {
           `evtupdate_${_editingEventId}_${inv.uid}_${Date.now()}`);
       }
     }
+    if (ok) _calendarEvents = _calendarEvents.map(e => e.id !== _editingEventId ? e : { ...e, title, date, time, location, description, timezone, invitees: mergedInvitees, participantUids, reminders });
     closeCreateEventModal();
     _showStudyToast('Event updated');
   } else {
     const eventId = await window.Events?.create?.(uid, displayName, { title, date, time, location, description, timezone, invitees: inviteeData, reminders });
     if (!eventId) { alert('Could not create event. Try again.'); return; }
+    _calendarEvents = [..._calendarEvents, { id: eventId, title, date, time, location, description, timezone, invitees: inviteeData, participantUids: [uid, ...inviteeData.map(i => i.uid)], creatorUid: uid, isActive: true, reminders }];
     for (const inv of inviteeData) {
       await window.Events?.sendNotification?.(inv.uid, 'eventInvite', displayName, uid,
         { eventId, eventTitle: title, date, time },
@@ -21478,8 +21480,10 @@ async function respondToEvent(eventId, status, opts = {}) {
   }
   const ok = await window.Events?.respond?.(eventId, uid, status);
   if (!ok) { alert('Could not update your response. Try again.'); return; }
+  _calendarEvents = _calendarEvents.map(e => e.id !== eventId ? e : { ...e, invitees: (e.invitees || []).map(inv => inv.uid === uid ? { ...inv, status } : inv) });
   if (status === 'accepted') {
     _showStudyToast("You're going!");
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) _promptAddToAppleCalendar(eventId);
     if (!_isGCalLinked()) _ensureGCalToken(() => {}, { promptIfNeeded: true });
   } else {
     _showStudyToast('Response updated');
@@ -21543,6 +21547,25 @@ function downloadEventICS(eventId) {
   a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
   a.download = `${ev.title.replace(/[^a-z0-9]/gi,'_')}.ics`;
   a.click();
+}
+
+function _promptAddToAppleCalendar(eventId) {
+  const existing = document.getElementById('iosCalPrompt');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'iosCalPrompt';
+  el.className = 'ios-cal-prompt';
+  el.innerHTML = `
+    <span class="material-symbols-outlined ios-cal-prompt-icon">calendar_month</span>
+    <span class="ios-cal-prompt-text">Add to Apple Calendar?</span>
+    <button class="ios-cal-prompt-add">Add</button>
+    <button class="ios-cal-prompt-dismiss"><span class="material-symbols-outlined">close</span></button>
+  `;
+  document.body.appendChild(el);
+  const dismiss = () => el.remove();
+  const timer = setTimeout(dismiss, 12000);
+  el.querySelector('.ios-cal-prompt-add').addEventListener('click', () => { clearTimeout(timer); downloadEventICS(eventId); dismiss(); });
+  el.querySelector('.ios-cal-prompt-dismiss').addEventListener('click', () => { clearTimeout(timer); dismiss(); });
 }
 
 // ── Google Calendar OAuth ──────────────────────────────────────────────────────

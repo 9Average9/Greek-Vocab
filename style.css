@@ -27074,6 +27074,54 @@ body.home-theme-match #homeScreen .vs-home-wide-btn .vs-home-chev {
 }
 .evt-google-synced .material-symbols-outlined { font-size: 18px; }
 
+.ios-cal-prompt {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1c1c1e;
+  color: #fff;
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 9998;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+  max-width: calc(100vw - 32px);
+  animation: iosCalPromptIn 0.3s ease;
+}
+@keyframes iosCalPromptIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.ios-cal-prompt-icon { font-size: 18px; color: #3478f6; flex-shrink: 0; }
+.ios-cal-prompt-text { flex: 1; white-space: nowrap; }
+.ios-cal-prompt-add {
+  background: #3478f6;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ios-cal-prompt-dismiss {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.ios-cal-prompt-dismiss .material-symbols-outlined { font-size: 18px; }
+
 .evt-rsvp-section { display: flex; flex-direction: column; gap: 10px; }
 .evt-rsvp-btns { display: flex; gap: 10px; }
 .evt-rsvp-btn {
