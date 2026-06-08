@@ -31,6 +31,43 @@ let answeredKCs = JSON.parse(localStorage.getItem("answeredKCs")) || {};
 let openedLessonBlocks =
   JSON.parse(localStorage.getItem("openedLessonBlocks")) || {};
 
+let openedLessonBlocksSyncTimer = null;
+
+function mergeOpenedBlockMaps(localMap = {}, remoteMap = {}) {
+  const merged = { ...(localMap || {}) };
+  Object.entries(remoteMap || {}).forEach(([lessonId, blocks]) => {
+    const localBlocks = Array.isArray(merged[lessonId]) ? merged[lessonId] : [];
+    const remoteBlocks = Array.isArray(blocks) ? blocks : [];
+    merged[lessonId] = [...new Set([...localBlocks, ...remoteBlocks])]
+      .filter(item => Number.isInteger(item) || typeof item === "string")
+      .sort((a, b) => String(a).localeCompare(String(b)));
+  });
+  return merged;
+}
+
+function getLessonBlockKey(block, index) {
+  const heading = block.querySelector(".lesson-block-header")?.textContent || "";
+  const normalized = heading
+    .replace(/\s+/g, " ")
+    .replace(/~\s*[\d.]+\s*min/gi, "")
+    .trim()
+    .toLowerCase();
+  return `h:${index}:${normalized}`;
+}
+
+function persistOpenedLessonBlocks() {
+  localStorage.setItem("openedLessonBlocks", JSON.stringify(openedLessonBlocks));
+}
+
+function scheduleOpenedLessonBlocksSync() {
+  clearTimeout(openedLessonBlocksSyncTimer);
+  openedLessonBlocksSyncTimer = setTimeout(() => {
+    if (window.Auth?.getCurrentUser?.()) {
+      syncUserData().catch(err => console.warn("Opened lesson block sync failed:", err));
+    }
+  }, 900);
+}
+
 let friendsList = [];
 let friendRequestsIn = [];
 let friendRequestsOut = [];
@@ -16704,9 +16741,7 @@ function checkAdvQuizAvailability(lessonId) {
   const section = document.getElementById(lessonId + "Lesson");
   if (!section) return;
 
-  const totalBlocks = section.querySelectorAll(".lesson-block").length;
-  const openedCount = (openedLessonBlocks[lessonId] || []).length;
-  const allBlocksOpened = totalBlocks > 0 && openedCount >= totalBlocks;
+  const allBlocksOpened = hasOpenedAllLessonBlocks(lessonId);
 
   const kcIds = Array.from(section.querySelectorAll(".knowledge-check")).map(kc => kc.id);
   const lessonAnswered = answeredKCs[lessonId] || {};
@@ -16951,6 +16986,7 @@ function markLessonBlockOpened(lessonSection, block) {
   const blockIndex = blocks.indexOf(block);
 
   if (blockIndex === -1) return;
+  const blockKey = getLessonBlockKey(block, blockIndex);
 
   //  THIS makes the checkmark appear immediately
   block.classList.add("visited");
@@ -16959,11 +16995,17 @@ function markLessonBlockOpened(lessonSection, block) {
     openedLessonBlocks[lessonId] = [];
   }
 
-  if (!openedLessonBlocks[lessonId].includes(blockIndex)) {
-    openedLessonBlocks[lessonId].push(blockIndex);
-  }
+  const beforeCount = openedLessonBlocks[lessonId].length;
+  openedLessonBlocks[lessonId] = [...new Set([
+    ...openedLessonBlocks[lessonId],
+    blockIndex,
+    blockKey
+  ])];
 
-  localStorage.setItem("openedLessonBlocks", JSON.stringify(openedLessonBlocks));
+  if (openedLessonBlocks[lessonId].length !== beforeCount) {
+    persistOpenedLessonBlocks();
+    scheduleOpenedLessonBlocksSync();
+  }
 
   if (lessonId.startsWith("adv_")) {
     checkAdvQuizAvailability(lessonId);
@@ -16973,10 +17015,16 @@ function markLessonBlockOpened(lessonSection, block) {
 }
 
 function restoreOpenedLessonBlocks(lessonSection, lessonId) {
+  try {
+    openedLessonBlocks = mergeOpenedBlockMaps(
+      openedLessonBlocks,
+      JSON.parse(localStorage.getItem("openedLessonBlocks") || "{}")
+    );
+  } catch {}
   const opened = openedLessonBlocks[lessonId] || [];
 
   lessonSection.querySelectorAll(".lesson-block").forEach((block, index) => {
-    if (opened.includes(index)) {
+    if (opened.includes(index) || opened.includes(getLessonBlockKey(block, index))) {
       block.classList.add("visited");
     }
   });
@@ -16986,8 +17034,12 @@ function hasOpenedAllLessonBlocks(lessonId) {
   const lessonSection = document.getElementById(lessonId + "Lesson");
   if (!lessonSection) return false;
 
-  const totalBlocks = lessonSection.querySelectorAll(".lesson-block").length;
-  const openedCount = openedLessonBlocks[lessonId]?.length || 0;
+  const blocks = Array.from(lessonSection.querySelectorAll(".lesson-block"));
+  const opened = openedLessonBlocks[lessonId] || [];
+  const totalBlocks = blocks.length;
+  const openedCount = blocks.filter((block, index) =>
+    opened.includes(index) || opened.includes(getLessonBlockKey(block, index))
+  ).length;
 
   return totalBlocks > 0 && openedCount >= totalBlocks;
 }
@@ -19037,7 +19089,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.146";
+const APP_VERSION = "3.0.147";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19056,7 +19108,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.146 &mdash; Mounce-Aligned Lesson Flow</div>
+<div class="un-version-label">v3.0.147 &mdash; Persistent Lesson Sections</div>
 <ul>
   <li><strong>Attendees button added</strong> &mdash; Event creators and accepted attendees can now open a grouped RSVP list showing who is going, who declined, and who has not answered yet.</li>
 </ul>
@@ -19945,7 +19997,13 @@ async function restoreUserFromFirestore(user) {
   if (data.mercyLastPostDate) localStorage.setItem("mercyLastPostDate", data.mercyLastPostDate);
   updatePraiseStreakUI();
   if (data.answeredKCs) localStorage.setItem("answeredKCs", JSON.stringify(data.answeredKCs));
-  if (data.openedLessonBlocks) localStorage.setItem("openedLessonBlocks", JSON.stringify(data.openedLessonBlocks));
+  if (data.openedLessonBlocks) {
+    openedLessonBlocks = mergeOpenedBlockMaps(
+      JSON.parse(localStorage.getItem("openedLessonBlocks") || "{}"),
+      data.openedLessonBlocks
+    );
+    persistOpenedLessonBlocks();
+  }
   if (data.translationXPCount) localStorage.setItem("translationXPCount", String(data.translationXPCount));
   if (data.lessonModePromptDismissed) localStorage.setItem("lessonModePromptDismissed", "true");
   if (data.hasSeenLearnWelcome) localStorage.setItem("hasSeenLearnWelcome", "true");

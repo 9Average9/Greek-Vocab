@@ -7,8 +7,40 @@ let completedVerbBasicLessons =
 let completedVerbAdvancedLessons =
   JSON.parse(localStorage.getItem("completedVerbAdvancedLessons")) || {};
 let answeredVerbKCs = JSON.parse(localStorage.getItem("answeredVerbKCs")) || {};
+let openedVerbBlocksSyncTimer = null;
 let currentVerbBasicLesson = null;
 let currentVerbAdvLesson = null;
+
+function _mergeVerbOpenedBlockMaps(localMap = {}, remoteMap = {}) {
+  const merged = { ...(localMap || {}) };
+  Object.entries(remoteMap || {}).forEach(([lessonId, blocks]) => {
+    const localBlocks = Array.isArray(merged[lessonId]) ? merged[lessonId] : [];
+    const remoteBlocks = Array.isArray(blocks) ? blocks : [];
+    merged[lessonId] = [...new Set([...localBlocks, ...remoteBlocks])]
+      .filter(item => Number.isInteger(item) || typeof item === "string")
+      .sort((a, b) => String(a).localeCompare(String(b)));
+  });
+  return merged;
+}
+
+function _verbBlockKey(block, index) {
+  const heading = block.querySelector(".lesson-block-header")?.textContent || "";
+  const normalized = heading
+    .replace(/\s+/g, " ")
+    .replace(/~\s*[\d.]+\s*min/gi, "")
+    .trim()
+    .toLowerCase();
+  return `h:${index}:${normalized}`;
+}
+
+function _scheduleVerbOpenedBlocksSync() {
+  clearTimeout(openedVerbBlocksSyncTimer);
+  openedVerbBlocksSyncTimer = setTimeout(() => {
+    if (window.Auth?.getCurrentUser?.() && typeof syncUserData === "function") {
+      syncUserData().catch(err => console.warn("Opened verb block sync failed:", err));
+    }
+  }, 900);
+}
 
 // ── Lesson ID Arrays ───────────────────────────────────────────────────────────
 const VERB_BASIC_LESSONS = [
@@ -304,18 +336,29 @@ function _markVerbBlockOpened(lesson, block, track) {
 
   const blocks = Array.from(lesson.querySelectorAll(".lesson-block"));
   const idx = blocks.indexOf(block);
-  if (idx >= 0 && !stored[lessonId].includes(idx)) {
-    stored[lessonId].push(idx);
+  if (idx >= 0) {
+    const beforeCount = stored[lessonId].length;
+    stored[lessonId] = [...new Set([
+      ...stored[lessonId],
+      idx,
+      _verbBlockKey(block, idx)
+    ])];
     localStorage.setItem(key, JSON.stringify(stored));
+    if (stored[lessonId].length !== beforeCount) _scheduleVerbOpenedBlocksSync();
   }
 }
 
 function _restoreOpenedVerbBlocks(section, lessonId, track) {
   const key = track === "basic" ? "openedVerbBasicBlocks" : "openedVerbAdvBlocks";
-  const stored = JSON.parse(localStorage.getItem(key) || "{}");
+  const stored = _mergeVerbOpenedBlockMaps({}, JSON.parse(localStorage.getItem(key) || "{}"));
+  localStorage.setItem(key, JSON.stringify(stored));
   const opened = stored[lessonId] || [];
   const blocks = Array.from(section.querySelectorAll(".lesson-block"));
-  opened.forEach(idx => { if (blocks[idx]) blocks[idx].classList.add("visited"); });
+  blocks.forEach((block, idx) => {
+    if (opened.includes(idx) || opened.includes(_verbBlockKey(block, idx))) {
+      block.classList.add("visited");
+    }
+  });
 }
 
 function _hasOpenedAllVerbBlocks(lessonId, track) {
@@ -324,9 +367,13 @@ function _hasOpenedAllVerbBlocks(lessonId, track) {
   if (!section) return false;
   const key = track === "basic" ? "openedVerbBasicBlocks" : "openedVerbAdvBlocks";
   const stored = JSON.parse(localStorage.getItem(key) || "{}");
-  const opened = (stored[lessonId] || []).length;
-  const total = section.querySelectorAll(".lesson-block").length;
-  return total > 0 && opened >= total;
+  const opened = stored[lessonId] || [];
+  const blocks = Array.from(section.querySelectorAll(".lesson-block"));
+  const total = blocks.length;
+  const openedCount = blocks.filter((block, idx) =>
+    opened.includes(idx) || opened.includes(_verbBlockKey(block, idx))
+  ).length;
+  return total > 0 && openedCount >= total;
 }
 
 function _updateVerbCompleteButton(lessonId, track) {
@@ -491,11 +538,7 @@ function _checkVerbAdvQuizAvailability(lessonId) {
   const section = document.getElementById(lessonId + "VaLesson");
   if (!section) return;
 
-  const key = "openedVerbAdvBlocks";
-  const stored = JSON.parse(localStorage.getItem(key) || "{}");
-  const opened = (stored[lessonId] || []).length;
-  const totalBlocks = section.querySelectorAll(".lesson-block").length;
-  const allBlocksOpened = totalBlocks > 0 && opened >= totalBlocks;
+  const allBlocksOpened = _hasOpenedAllVerbBlocks(lessonId, "adv");
 
   const kcIds = Array.from(section.querySelectorAll(".knowledge-check")).map(kc => kc.id);
   const lessonAnswered = answeredVerbKCs[lessonId] || {};
@@ -732,10 +775,20 @@ function loadVerbDataFromSync(data) {
     answeredVerbKCs = data.answeredVerbKCs;
     localStorage.setItem("answeredVerbKCs", JSON.stringify(answeredVerbKCs));
   }
-  if (data.openedVerbBasicBlocks)
-    localStorage.setItem("openedVerbBasicBlocks", JSON.stringify(data.openedVerbBasicBlocks));
-  if (data.openedVerbAdvBlocks)
-    localStorage.setItem("openedVerbAdvBlocks", JSON.stringify(data.openedVerbAdvBlocks));
+  if (data.openedVerbBasicBlocks) {
+    const local = JSON.parse(localStorage.getItem("openedVerbBasicBlocks") || "{}");
+    localStorage.setItem(
+      "openedVerbBasicBlocks",
+      JSON.stringify(_mergeVerbOpenedBlockMaps(local, data.openedVerbBasicBlocks))
+    );
+  }
+  if (data.openedVerbAdvBlocks) {
+    const local = JSON.parse(localStorage.getItem("openedVerbAdvBlocks") || "{}");
+    localStorage.setItem(
+      "openedVerbAdvBlocks",
+      JSON.stringify(_mergeVerbOpenedBlockMaps(local, data.openedVerbAdvBlocks))
+    );
+  }
   if (data.verbAdvQuizScores)
     localStorage.setItem("verbAdvQuizScores", JSON.stringify(data.verbAdvQuizScores));
 }
