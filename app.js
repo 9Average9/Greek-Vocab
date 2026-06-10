@@ -19089,7 +19089,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.148";
+const APP_VERSION = "3.0.149";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19108,8 +19108,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.148 &mdash; Three-Week Praises</div>
+<div class="un-version-label">v3.0.149 &mdash; Rhema Meaning Polish</div>
 <ul>
+  <li><strong>Rhema definitions polished</strong> &mdash; Quick definitions now prefer clean modern English, show source confidence chips, explain why the meaning was chosen, and include English snippets in range examples.</li>
   <li><strong>Daily Praises now stay active for up to 21 days</strong> with a wider feed window so older active praises do not disappear early on busy feeds.</li>
   <li><strong>Attendees button added</strong> &mdash; Event creators and accepted attendees can now open a grouped RSVP list showing who is going, who declined, and who has not answered yet.</li>
 </ul>
@@ -28457,12 +28458,66 @@ function rhemaPlainDefinitionText(value) {
 }
 
 function getRhemaQuickDefinition(lex) {
-  const source = lex.quick_def || lex.brief || lex.extended || lex.strongs_def || lex.kjv_def || '';
-  const plain = rhemaPlainDefinitionText(source).replace(/^--\s*/, '');
-  if (!plain) return '';
-  const firstThought = plain.split(/(?:;|\.)\s+/)[0].trim();
-  const answer = firstThought || plain;
-  return answer.length > 150 ? answer.slice(0, 147).trimEnd() + '...' : answer;
+  return _rhemaDefinitionSummary(lex).text;
+}
+
+function _rhemaCleanGlossFragment(value = '') {
+  return rhemaPlainDefinitionText(value)
+    .replace(/^--\s*/, '')
+    .replace(/^[xX]\s+/, '')
+    .replace(/^[-–—+*]+\s*/, '')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\b(i\.e\.|e\.g\.|figuratively|literally|properly|by implication|specially)\b[:,;]?\s*/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function _rhemaReadableDefinitionSentence(value = '') {
+  let text = _rhemaCleanGlossFragment(value)
+    .split(/(?:;|\.)\s+/)[0]
+    .split(/\s--\s/)[0]
+    .trim();
+  text = text
+    .replace(/^I\s+am\s+/i, 'to be ')
+    .replace(/^I\s+/i, 'to ')
+    .replace(/^am\s+/i, 'to be ')
+    .replace(/^is\s+/i, 'to be ')
+    .replace(/^are\s+/i, 'to be ')
+    .replace(/^be\s+/i, 'to be ')
+    .replace(/^the\s+the\s+/i, 'the ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!text) return '';
+  if (/^(?:to|the|a|an|one|not|without|in|for|of|with|from|into|upon)\b/i.test(text)) {
+    return text;
+  }
+  return text.length <= 28 && /^[a-z]/.test(text) ? text : text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+function _rhemaDefinitionSummary(lex = {}) {
+  const candidates = [
+    { source: 'Dodson concise gloss', text: lex.brief, confidence: 'High' },
+    { source: 'Dodson expanded gloss', text: lex.extended, confidence: 'High' },
+    { source: "Strong's definition", text: lex.strongs_def, confidence: 'Reference' },
+    { source: 'Traditional English glosses', text: lex.kjv_def, confidence: 'Gloss list' }
+  ];
+  for (const candidate of candidates) {
+    const text = _rhemaReadableDefinitionSentence(candidate.text);
+    if (text && text.length > 1) {
+      return {
+        text: text.length > 150 ? text.slice(0, 147).trimEnd() + '...' : text,
+        source: candidate.source,
+        confidence: candidate.confidence
+      };
+    }
+  }
+  const plain = rhemaPlainDefinitionText(lex.quick_def || '');
+  if (!plain) return { text: '', source: '', confidence: '' };
+  return {
+    text: plain.length > 150 ? plain.slice(0, 147).trimEnd() + '...' : plain,
+    source: 'Lexicon gloss',
+    confidence: 'Reference'
+  };
 }
 
 function _rhemaAbbottHeadword(abbott) {
@@ -28518,11 +28573,59 @@ function _rhemaGreekKeysClose(a, b) {
 function _rhemaAbbottMatchesLex(lex = {}) {
   if (!lex.abbott_smith) return false;
   const headword = _rhemaAbbottHeadword(lex.abbott_smith);
-  if (!headword || !/[\u0370-\u03ff\u1f00-\u1fff]/.test(headword)) return true;
+  if (!headword || !/[\u0370-\u03ff\u1f00-\u1fff]/.test(headword)) return false;
   const lemmaKey = _rhemaGreekCompareKey(lex.lemma);
   const headKey = _rhemaGreekCompareKey(headword);
   if (_rhemaGreekKeysClose(lemmaKey, headKey)) return true;
   return _rhemaGreekKeysClose(_rhemaGreekStemKey(lex.lemma), _rhemaGreekStemKey(headword));
+}
+
+function _rhemaSourceConfidenceHtml(lex = {}, summary = {}) {
+  const chips = [];
+  if (summary.source) chips.push({ label: summary.source, tone: summary.confidence || 'Reference' });
+  if (lex.brief || lex.extended) chips.push({ label: 'Modern gloss', tone: 'Readable' });
+  if (lex.abbott_smith && _rhemaAbbottMatchesLex(lex)) chips.push({ label: 'Abbott-Smith', tone: 'Headword checked' });
+  if (lex.moulton_milligan || (window.RhemaMoultonMilligan || {})[lex.strongs]) chips.push({ label: 'Historical usage', tone: 'MM' });
+  if (lex.strongs_def) chips.push({ label: "Strong's", tone: 'Legacy reference' });
+  return chips.length
+    ? `<div class="rhema-source-chips">${chips.slice(0, 5).map(chip =>
+        `<span><strong>${_escapeRhemaAttr(chip.label)}</strong><em>${_escapeRhemaAttr(chip.tone)}</em></span>`
+      ).join('')}</div>`
+    : '';
+}
+
+function _rhemaMorphWhyParts(morph = '') {
+  if (!morph) return [];
+  const parts = morph.split('-');
+  const pos = parts[0];
+  const rows = [];
+  const posLabel = MORPH_POS[pos];
+  if (posLabel) rows.push(`The form is parsed as ${posLabel.toLowerCase()}.`);
+  if (pos === 'V') {
+    const form = (parts[1] || '').replace(/^2/, '');
+    const persNum = parts[2] || '';
+    const tense = MORPH_TENSE[form[0]]?.l;
+    const voice = MORPH_VOICE[form[1]]?.l;
+    const mood = MORPH_MOOD[form.slice(2)]?.l;
+    const pn = persNum.match(/^([123])([SP])/);
+    if (tense || voice || mood) rows.push([tense, voice, mood].filter(Boolean).join(', ') + '.');
+    if (pn) rows.push(`${MORPH_PERSON[pn[1]]}, ${MORPH_NUM[pn[2]]?.toLowerCase()}.`);
+  } else {
+    const info = _rhemaNounMorphInfo(morph);
+    if (info) rows.push(`${info.caseLabel}, ${info.numberLabel.toLowerCase()}${info.genderLabel ? `, ${info.genderLabel.toLowerCase()}` : ''}.`);
+  }
+  return rows.filter(Boolean);
+}
+
+function _rhemaWhyDefinitionHtml({ lex = {}, morph = '', quickDefinition = '', summary = {}, inflectedGloss = '' } = {}) {
+  const bits = [];
+  if (lex.lemma) bits.push(`Dictionary form: ${lex.lemma}.`);
+  if (quickDefinition) bits.push(`Plain meaning chosen from ${summary.source || 'the loaded lexicon data'}: "${quickDefinition}."`);
+  if (inflectedGloss && inflectedGloss !== quickDefinition) bits.push(`This exact form is rendered as "${inflectedGloss}" because of its parsing.`);
+  bits.push(..._rhemaMorphWhyParts(morph));
+  return bits.length
+    ? `<div class="rhema-why-def"><div class="rhema-def-label">Why this definition?</div>${bits.map(bit => `<p>${_escapeRhemaAttr(bit)}</p>`).join('')}</div>`
+    : '';
 }
 
 function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguageLayer()) {
@@ -28543,11 +28646,15 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
   const _inflGloss = layer === 'hebrew' ? '' : morph?.startsWith('V-')
     ? _sxVerbGloss(morph, lex.brief)
     : _nounGloss(morph, lex.brief);
-  const quickDefinition = _inflGloss || getRhemaQuickDefinition(lex);
+  const summary = _rhemaDefinitionSummary(lex);
+  const quickDefinition = summary.text || _inflGloss || '';
   if (quickDefinition) {
     sections.push(`<div class="rhema-def-section rhema-def-quick">
       <div class="rhema-def-label">Quick Definition</div>
-      <div class="rhema-def-quick-text"><strong>${quickDefinition}</strong></div>
+      <div class="rhema-def-quick-text"><strong>${_escapeRhemaAttr(quickDefinition)}</strong></div>
+      ${_inflGloss && _inflGloss !== quickDefinition ? `<div class="rhema-current-form-gloss">This form: <strong>${_escapeRhemaAttr(_inflGloss)}</strong></div>` : ''}
+      ${_rhemaSourceConfidenceHtml({ ...lex, strongs }, summary)}
+      ${_rhemaWhyDefinitionHtml({ lex, morph, quickDefinition, summary, inflectedGloss: _inflGloss })}
       <button class="rhema-range-btn" onclick="toggleRhemaRangeMeaning('${_escapeRhemaAttr(strongs)}','${_escapeRhemaAttr(layer)}')">
         <span class="material-symbols-outlined">travel_explore</span>
         <span>Range of Meaning</span>
@@ -28560,11 +28667,6 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
     sections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Abbott-Smith Lexicon</div>
       <div class="rhema-def-text rhema-def-abbott">${lex.abbott_smith}</div>
-    </div>`);
-  } else if (lex.abbott_smith) {
-    sections.push(`<div class="rhema-def-section">
-      <div class="rhema-def-label">Abbott-Smith Lexicon</div>
-      <div class="rhema-def-text" style="opacity:.7">No exact Abbott-Smith entry matched this Greek headword.</div>
     </div>`);
   }
 
@@ -28622,6 +28724,24 @@ function _rhemaSemanticRangeParts(lex = {}) {
   )].slice(0, 12);
 }
 
+function _rhemaSemanticRangePartsClean(lex = {}) {
+  const cleanRangePart = part => _rhemaCleanGlossFragment(part)
+    .replace(/^[\s.:;-]+|[\s.:;-]+$/g, '')
+    .trim();
+  const text = [
+    lex.brief,
+    lex.extended,
+    lex.kjv_def,
+    lex.strongs_def
+  ].map(rhemaPlainDefinitionText).filter(Boolean).join('; ');
+  return [...new Set(text
+    .replace(/^--\s*/, '')
+    .split(/[,;]|\bor\b|\band\b/i)
+    .map(cleanRangePart)
+    .filter(part => part.length > 2 && part.length < 52 && !/^(?:x|or|and|the|to)$/i.test(part))
+  )].slice(0, 12);
+}
+
 function _rhemaRangeExamples(strongs, layer = getCurrentOriginalLanguageLayer(), max = 10) {
   const text = _wlTextForLayer(layer);
   const books = _wlBooksForLayer(layer);
@@ -28645,7 +28765,8 @@ function _rhemaRangeExamples(strongs, layer = getCurrentOriginalLanguageLayer(),
         examples.push({
           ref: `${_rhemaBookName(book)} ${ch}:${v}`,
           book, ch, v,
-          verseHtml
+          verseHtml,
+          english: _rhemaEnglishText(book, ch, v)
         });
         if (examples.length >= max) return examples;
       }
@@ -28656,7 +28777,7 @@ function _rhemaRangeExamples(strongs, layer = getCurrentOriginalLanguageLayer(),
 
 function renderRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLayer()) {
   const lex = getCurrentRhemaLexicon(layer)[strongs] || {};
-  const ranges = _rhemaSemanticRangeParts(lex);
+  const ranges = _rhemaSemanticRangePartsClean(lex);
   const examples = _rhemaRangeExamples(strongs, layer, 10);
   const rangeHtml = ranges.length
     ? `<div class="rhema-range-chip-row">${ranges.map(r => `<span>${_escapeRhemaAttr(r)}</span>`).join('')}</div>`
@@ -28665,6 +28786,7 @@ function renderRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
     ? examples.map(ex => `<button class="rhema-range-example" onclick="jumpToRhemaVerse('${ex.book}','${ex.ch}','${ex.v}','${_escapeRhemaAttr(strongs)}')">
         <span class="rhema-range-ref">${_escapeRhemaAttr(ex.ref)}</span>
         <span class="rhema-range-verse">${ex.verseHtml}</span>
+        ${ex.english ? `<span class="rhema-range-english">${_escapeRhemaAttr(ex.english)}</span>` : ''}
       </button>`).join('')
     : `<p class="rhema-range-muted">No verse examples found in the loaded text.</p>`;
   return `

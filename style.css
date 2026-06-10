@@ -16672,6 +16672,54 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   color: var(--font-color);
 }
 .rhema-def-quick-text strong { font-weight: 800; }
+.rhema-current-form-gloss {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color));
+  color: var(--muted-color);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+.rhema-current-form-gloss strong {
+  color: var(--font-color);
+}
+.rhema-source-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.rhema-source-chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary-color) 10%, transparent);
+  color: var(--secondary-color);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+.rhema-source-chips em {
+  color: var(--muted-color);
+  font-style: normal;
+  font-weight: 750;
+}
+.rhema-why-def {
+  margin-top: 12px;
+  padding: 10px 11px;
+  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary-color) 70%, var(--card-color));
+}
+.rhema-why-def p {
+  margin: 5px 0 0;
+  color: var(--muted-color);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
 .rhema-range-btn {
   margin-top: 10px;
   height: 38px;
@@ -16755,6 +16803,15 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   color: var(--font-color);
   font-size: 0.86rem;
   line-height: 1.55;
+}
+.rhema-range-english {
+  display: block;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
+  color: var(--muted-color);
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 .rhema-range-hit {
   background: color-mix(in srgb, var(--secondary-color) 22%, transparent);
