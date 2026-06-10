@@ -17792,7 +17792,20 @@ body.dark .bn-item::before {
   right: 0;
   display: flex; align-items: flex-start; gap: 2px;
 }
-.home-top-actions .ht-btn { padding-top: 0; }
+/* Normalize the two legacy buttons (different paddings/heights/icon sizes)
+   so calendar and bell sit on exactly the same line. */
+.home-top-actions .ht-btn {
+  width: 36px;
+  height: 34px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.home-top-actions .ht-btn .material-symbols-outlined {
+  font-size: 1.5rem;
+  line-height: 1;
+}
 .ht-btn {
   background: none; border: none; cursor: pointer; padding: 6px;
   color: var(--font-color); position: relative; flex-shrink: 0;
