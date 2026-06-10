@@ -16804,7 +16804,8 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   font-size: 0.86rem;
   line-height: 1.55;
 }
-.rhema-range-english {
+.rhema-range-english,
+.rhema-range-translation-list {
   display: block;
   margin-top: 7px;
   padding-top: 7px;
@@ -16812,6 +16813,41 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   color: var(--muted-color);
   font-size: 0.78rem;
   line-height: 1.45;
+}
+.rhema-range-translation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.rhema-range-translation-row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: start;
+  gap: 7px;
+}
+.rhema-range-translation-row em {
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--secondary-color) 10%, transparent);
+  color: var(--secondary-color);
+  font-style: normal;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+.rhema-range-translation-row strong {
+  color: var(--font-color);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+.rhema-range-translation-row > span {
+  min-width: 0;
+}
+.rhema-range-english-hit {
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--secondary-color) 18%, transparent);
+  color: var(--secondary-color);
+  padding: 1px 3px;
+  font-weight: 900;
 }
 .rhema-range-hit {
   background: color-mix(in srgb, var(--secondary-color) 22%, transparent);
