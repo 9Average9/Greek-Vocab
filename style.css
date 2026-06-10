@@ -13817,27 +13817,36 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 }
 
 .rhema-swap-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   background: linear-gradient(145deg, rgba(255,255,255,0.92), color-mix(in srgb, var(--secondary-color) 6%, rgba(255,255,255,0.85)));
   border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, rgba(255,255,255,0.6));
   border-radius: 14px;
-  padding: 8px 12px;
-  font-size: 0.75rem;
+  padding: 3px;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--secondary-color);
   cursor: pointer;
   transition: all 0.15s;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--secondary-color) 12%, rgba(0,0,0,0.08)), 0 1px 2px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.8);
-}
-.rhema-swap-btn.active {
-  background: linear-gradient(145deg, var(--secondary-color), color-mix(in srgb, var(--secondary-color) 80%, #000));
-  border-color: var(--secondary-color);
-  color: var(--btn-text-color);
-  box-shadow: 0 3px 10px color-mix(in srgb, var(--secondary-color) 35%, rgba(0,0,0,0.12));
 }
 .rhema-swap-btn:active {
   transform: scale(0.96);
   box-shadow: 0 1px 4px color-mix(in srgb, var(--secondary-color) 15%, rgba(0,0,0,0.1));
+}
+.rhema-swap-seg {
+  padding: 5px 9px;
+  border-radius: 11px;
+  color: color-mix(in srgb, var(--secondary-color) 70%, var(--muted-color));
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.rhema-swap-seg.active {
+  background: linear-gradient(145deg, var(--secondary-color), color-mix(in srgb, var(--secondary-color) 80%, #000));
+  color: var(--btn-text-color);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--secondary-color) 35%, rgba(0,0,0,0.12));
 }
 
 /* ── Magic-wand tool button ── */
@@ -15940,7 +15949,9 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 
 .rhema-book-chapter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
+  /* auto-fill (not auto-fit) keeps empty tracks, so chapter boxes stay the
+     same size whether a book has 1 chapter or 150 */
+  grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
   gap: 9px;
   padding: 12px 14px 18px;
 }
@@ -16187,6 +16198,39 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   line-height: 1.9;
   font-style: italic;
   color: var(--muted-color);
+}
+
+/* ── English chapter reading mode (Bible-app style) ── */
+.rhema-english-display.rhema-english-reading {
+  padding: 18px 18px 30px;
+  font-style: normal;
+  font-size: 1.06rem;
+  line-height: 1.8;
+  color: var(--font-color);
+}
+.rhema-english-chapter-title {
+  margin: 4px 2px 16px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--font-color);
+}
+.rhema-english-reading .rhema-chapter-block {
+  padding: 4px 8px;
+  border-bottom: none;
+  border-radius: 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rhema-english-reading .rhema-chapter-block.rhema-chapter-block-target {
+  background: color-mix(in srgb, var(--secondary-color) 9%, transparent);
+}
+.rhema-english-vnum {
+  margin-right: 6px;
+  font-size: 0.62em;
+  font-weight: 800;
+  color: var(--secondary-color);
+  user-select: none;
 }
 
 .rhema-english-pos-highlight {
