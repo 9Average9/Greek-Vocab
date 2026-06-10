@@ -19219,7 +19219,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.154";
+const APP_VERSION = "3.0.155";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19238,7 +19238,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.154 &mdash; English-First Rhema &amp; Home Bookshelf</div>
+<div class="un-version-label">v3.0.155 &mdash; English-First Rhema &amp; Home Bookshelf</div>
 <ul>
   <li><strong>Rhema opens as a plain-English reader</strong> &mdash; Rhema now starts on the full chapter in clean English, styled like a reading Bible, with a clear English / Greek switch in the header (Hebrew for Old Testament books). Tap any verse to select it before swapping into the original language.</li>
   <li><strong>References open the whole chapter</strong> &mdash; Picking a book or chapter always opens the full chapter, the verse pill jumps straight to a verse inside it, and verse jumps now land properly in view instead of hiding behind the top bar.</li>
