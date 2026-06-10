@@ -19089,7 +19089,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.147";
+const APP_VERSION = "3.0.148";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19108,8 +19108,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.147 &mdash; Persistent Lesson Sections</div>
+<div class="un-version-label">v3.0.148 &mdash; Three-Week Praises</div>
 <ul>
+  <li><strong>Daily Praises now stay active for up to 21 days</strong> with a wider feed window so older active praises do not disappear early on busy feeds.</li>
   <li><strong>Attendees button added</strong> &mdash; Event creators and accepted attendees can now open a grouped RSVP list showing who is going, who declined, and who has not answered yet.</li>
 </ul>
 <div class="un-version-label">v3.0.143 &mdash; Event Invite Reliability</div>

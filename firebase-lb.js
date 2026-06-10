@@ -68,6 +68,9 @@ let messaging = null;
 try { messaging = getMessaging(fbApp); } catch (e) { console.warn("FCM unavailable:", e); }
 
 const EMAIL_DOMAIN = "@greek-vocab.app";
+const DAY_MS = 24 * 60 * 60 * 1000;
+const COMMUNITY_POST_TTL_MS = 7 * DAY_MS;
+const MERCY_POST_TTL_MS = 21 * DAY_MS;
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -1021,7 +1024,7 @@ async function addCommunityPost(uid, displayName, avatar, friendUids = [], post 
       commentCount: 0,
       createdAt: serverTimestamp(),
       createdAtMs: now,
-      expiresAtMs: now + 7 * 24 * 60 * 60 * 1000,
+      expiresAtMs: now + COMMUNITY_POST_TTL_MS,
       isActive: true
     });
     if (post.alertFriends) {
@@ -1032,7 +1035,7 @@ async function addCommunityPost(uid, displayName, avatar, friendUids = [], post 
         });
       }
     }
-    return { id: ref.id, imageUrl, imagePath, createdAtMs: now, expiresAtMs: now + 21 * 24 * 60 * 60 * 1000 };
+    return { id: ref.id, createdAtMs: now, expiresAtMs: now + COMMUNITY_POST_TTL_MS };
   } catch (e) {
     console.warn("addCommunityPost:", e);
     return null;
@@ -1544,7 +1547,7 @@ function listenMerciesPosts(uid, friendUids = [], callback) {
     collection(db, "merciesPosts"),
     where("audienceUids", "array-contains", uid),
     orderBy("createdAtMs", "desc"),
-    limit(24)
+    limit(120)
   );
   return onSnapshot(q, async snap => {
     const now = Date.now();
@@ -1633,7 +1636,7 @@ async function addMercyPost(uid, displayName, avatar, friendUids = [], imageBlob
       journalSavedBy: [],
       createdAt: serverTimestamp(),
       createdAtMs: now,
-      expiresAtMs: now + 21 * 24 * 60 * 60 * 1000,
+      expiresAtMs: now + MERCY_POST_TTL_MS,
       isActive: true
     });
     const streakDays = await advanceMercyStreak(uid, now);
@@ -1644,7 +1647,7 @@ async function addMercyPost(uid, displayName, avatar, friendUids = [], imageBlob
           mercyPostId: ref.id
         });
       });
-    return { id: ref.id, imageUrl, imagePath, createdAtMs: now, streakDays };
+    return { id: ref.id, imageUrl, imagePath, createdAtMs: now, expiresAtMs: now + MERCY_POST_TTL_MS, streakDays };
   } catch (e) {
     console.warn("addMercyPost:", e);
     return null;
