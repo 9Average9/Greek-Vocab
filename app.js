@@ -8160,6 +8160,7 @@ function _renderHomeStudies() {
 
   if (!_myStudies.length) {
     _studyDeleteMode = false;
+    grid.classList.remove('hs-has-books');
     grid.innerHTML = `<button class="hs-start-btn" onclick="openStudyCreateSheet()">
       <span class="material-symbols-outlined">add</span><span>Start a Study</span></button>`;
     viewAllBtn?.classList.add('hidden');
@@ -8170,27 +8171,27 @@ function _renderHomeStudies() {
   const uid = window.Auth?.getCurrentUser()?.uid;
   const visible = _myStudies.slice(0, 3);
 
-  const cards = visible.map(s => {
+  const books = visible.map(s => {
     const doneToday = uid && (s.lastSessionDates || {})[uid] === today;
     const isCreator = s.creatorUid === uid;
     const isCollaborator = uid && !isCreator && s.collaboratorUids?.includes(uid);
-    return `<div class="hs-study-card${_studyDeleteMode ? ' jiggle' : ''}" style="--study-color:${s.color}"
-      onclick="${_studyDeleteMode ? 'void(0)' : `openStudySandbox('${s.id}')`}"
+    return `<div class="hs-book${_studyDeleteMode ? ' jiggle' : ''}" style="--study-color:${s.color}"
+      onclick="${_studyDeleteMode ? 'void(0)' : `openStudyBook('${s.id}', this)`}"
       ontouchstart="_startStudyLongPress('${s.id}',event)" ontouchmove="_onStudyLongPressMove(event)" ontouchend="_cancelStudyLongPress()" ontouchcancel="_cancelStudyLongPress()"
       onmousedown="_startStudyLongPress('${s.id}',event)" onmousemove="_onStudyLongPressMove(event)" onmouseup="_cancelStudyLongPress()" onmouseleave="_cancelStudyLongPress()">
       ${_studyDeleteMode && (isCreator || isCollaborator) ? `<button class="hs-delete-btn" onclick="event.stopPropagation();confirmDeleteStudy('${s.id}')"><span class="material-symbols-outlined">${isCreator ? 'close' : 'logout'}</span></button>` : ''}
       ${doneToday ? '<span class="study-card-done-dot"></span>' : ''}
-      <span class="hs-study-icon material-symbols-outlined">${s.icon}</span>
-      <span class="hs-study-name">${s.name}</span>
-      ${_studyMemberAvatarStack(s)}
-      <span class="hs-study-meta">${_studyMemberLabel(s)}</span>
+      <span class="hs-book-icon material-symbols-outlined">${s.icon}</span>
+      <span class="hs-book-title">${_escHtml(s.name || '')}</span>
+      <span class="hs-book-foot">${_studyMemberAvatarStack(s)}<span class="hs-book-meta">${_studyMemberLabel(s)}</span></span>
     </div>`;
   }).join('');
 
-  const addCard = _studyDeleteMode ? '' : `<button class="hs-add-card" onclick="openStudyCreateSheet()">
+  const addBook = _studyDeleteMode ? '' : `<button class="hs-add-book" onclick="openStudyCreateSheet()">
     <span class="material-symbols-outlined">add</span><span>New</span>
   </button>`;
-  grid.innerHTML = cards + addCard;
+  grid.classList.add('hs-has-books');
+  grid.innerHTML = books + addBook;
 
   // Header: "Done" in delete mode, "View All" otherwise
   if (_studyDeleteMode) {
@@ -8203,6 +8204,65 @@ function _renderHomeStudies() {
     viewAllBtn?.classList.add('hidden');
     if (viewAllBtn) viewAllBtn.onclick = openStudiesViewAll;
   }
+}
+
+// ── Study book opening animation ─────────────────────────────────────────────
+// The book lifts off the shelf, flies to the center, swings its cover open,
+// then the screen dives into the pages — revealing the study session that
+// loads behind the overlay in parallel.
+let _bookOpenAnimating = false;
+
+function openStudyBook(studyId, bookEl) {
+  if (_studyDeleteMode) return;
+  const study = _myStudies.find(s => s.id === studyId);
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  if (study && bookEl && !reduceMotion && !_bookOpenAnimating) {
+    _animateStudyBookOpen(study, bookEl);
+  }
+  openStudySandbox(studyId);
+}
+
+function _animateStudyBookOpen(study, bookEl) {
+  _bookOpenAnimating = true;
+  const rect = bookEl.getBoundingClientRect();
+  const overlay = document.createElement('div');
+  overlay.className = 'book-open-overlay';
+  overlay.innerHTML = `
+    <div class="book-fly" style="--study-color:${study.color};left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px">
+      <div class="book-page"></div>
+      <div class="book-cover">
+        <div class="book-cover-front">
+          <span class="material-symbols-outlined">${study.icon}</span>
+          <span class="book-cover-title">${_escHtml(study.name || '')}</span>
+        </div>
+        <div class="book-cover-back"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const fly = overlay.querySelector('.book-fly');
+  bookEl.classList.add('hs-book-ghost');
+
+  const centerScale = Math.min(2.6, Math.min(window.innerWidth * 0.52, 240) / rect.width);
+  const dx = window.innerWidth / 2 - (rect.left + rect.width / 2);
+  const dy = window.innerHeight / 2.2 - (rect.top + rect.height / 2);
+  const diveScale = Math.max(window.innerWidth / rect.width, window.innerHeight / rect.height) * 1.3;
+
+  const step = (fn, ms) => new Promise(resolve => setTimeout(() => { fn(); resolve(); }, ms));
+  requestAnimationFrame(() => requestAnimationFrame(async () => {
+    overlay.classList.add('lift');
+    fly.style.transform = `translate(${dx}px, ${dy}px) scale(${centerScale})`;
+    await step(() => fly.classList.add('open'), 430);
+    await step(() => {
+      overlay.classList.add('dive');
+      fly.style.transform = `translate(${dx}px, ${dy}px) scale(${diveScale})`;
+    }, 540);
+    await step(() => overlay.classList.add('fade-out'), 500);
+    await step(() => {
+      overlay.remove();
+      bookEl.classList.remove('hs-book-ghost');
+      _bookOpenAnimating = false;
+    }, 260);
+  }));
 }
 
 let _studyLongPressStartX = 0, _studyLongPressStartY = 0;
