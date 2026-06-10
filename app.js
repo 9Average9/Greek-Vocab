@@ -19211,7 +19211,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.152";
+const APP_VERSION = "3.0.153";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19230,6 +19230,16 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.153 &mdash; English-First Rhema &amp; Home Bookshelf</div>
+<ul>
+  <li><strong>Rhema opens as a plain-English reader</strong> &mdash; Rhema now starts on the full chapter in clean English, styled like a reading Bible, with a clear English / Greek switch in the header (Hebrew for Old Testament books). Tap any verse to select it before swapping into the original language.</li>
+  <li><strong>References open the whole chapter</strong> &mdash; Picking a book or chapter always opens the full chapter, the verse pill jumps straight to a verse inside it, and verse jumps now land properly in view instead of hiding behind the top bar.</li>
+  <li><strong>Your Studies is now a bookshelf</strong> &mdash; Studies appear as books in your chosen color and title, standing on a wooden shelf. Tap a book and it lifts off the shelf, opens, and the screen dives into the pages as your study session opens.</li>
+  <li><strong>Shelf slides and books lean</strong> &mdash; All your studies fit on the shelf with horizontal scrolling, books lean playfully in the direction you slide, full study names always fit on the cover, and a small info tap shows each study&rsquo;s description.</li>
+  <li><strong>Home header refreshed</strong> &mdash; Calendar and notifications moved up beside the greeting, and Rhema search is now a magnifier next to your name that spins open into a search bar with the keyboard ready.</li>
+  <li><strong>Range of Meaning highlights upgraded</strong> &mdash; English highlights now recognize irregular forms like said, spoke, and went, avoid false matches, count distinct renderings, and load instantly even for the most common Greek words.</li>
+  <li><strong>Quick Actions match your theme</strong> &mdash; The home shortcut tiles now follow your selected app color instead of fixed colors, and the Verse Structure button moved out of the home page (it remains available inside studies).</li>
+</ul>
 <div class="un-version-label">v3.0.152 &mdash; Clearer Range Highlights</div>
 <ul>
   <li><strong>Range examples highlight English renderings more reliably</strong> &mdash; Rhema now matches likely translated words and phrases through punctuation and highlights the exact English text under each Greek example.</li>
