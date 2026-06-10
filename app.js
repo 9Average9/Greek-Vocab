@@ -24292,6 +24292,7 @@ let _rhemaTrailPos = -1;   // cursor into trail (-1 = at tip, not in trail)
 let _rhemaHighlightStrongs = null;
 let _rhemaSavedScrollY = 0;
 let _rhemaFullChapter = false;
+let _rhemaVerseFocus = false; // verse picked to jump to inside the open chapter
 
 const RHEMA_OT_BOOK_ORDER = ['GEN','EXO','LEV','NUM','DEU','JOS','JDG','RUT','1SA','2SA','1KI','2KI','1CH','2CH','EZR','NEH','EST','JOB','PSA','PRO','ECC','SNG','ISA','JER','LAM','EZK','DAN','HOS','JOL','AMO','OBA','JON','MIC','NAM','HAB','ZEP','HAG','ZEC','MAL'];
 const RHEMA_NT_BOOK_ORDER = ['MAT','MAR','LUK','JOH','ACT','ROM','1CO','2CO','GAL','EPH','PHP','COL','1TH','2TH','1TI','2TI','TIT','PHM','HEB','JAM','1PE','2PE','1JO','2JO','3JO','JUD','REV'];
@@ -24742,12 +24743,12 @@ async function openHomeRhemaResult(index) {
   _rhemaVerse = String(result.verse);
   _rhemaFullChapter = true;
   _rhemaShowEnglish = true;
+  _rhemaVerseFocus = true;
   _rhemaGreekOnly = false;
   _rhemaSyntaxMode = false;
   _rhemaHighlightStrongs = null;
   syncRhemaPicker();
-  document.getElementById('rhemaChapterModeBtn')?.classList.add('active');
-  document.getElementById('rhemaVersePillBtn')?.classList.add('hidden');
+  _syncRhemaChapterUi();
   renderRhemaVerse();
   updateRhemaSwapVisibility();
   const scrollToSelectedVerse = () => {
@@ -24758,7 +24759,6 @@ async function openHomeRhemaResult(index) {
       : document.getElementById('rhemaVerseDisplay');
     const target = visibleDisplay?.querySelector(`.rhema-chapter-block[data-verse="${_rhemaVerse}"]`);
     if (body && target) {
-      target.classList.add('rhema-chapter-block-target');
       body.scrollTo ? body.scrollTo({ top: Math.max(0, target.offsetTop - 12), behavior: 'auto' }) : (body.scrollTop = Math.max(0, target.offsetTop - 12));
     }
   };
@@ -25365,6 +25365,16 @@ async function showRhema() {
   if (!modal) return;
   modal.classList.add('open');
 
+  // Main entry opens as a plain-English chapter reader; the swap control takes
+  // you into the Greek. Sandbox and sermon flows manage their own modes.
+  const sermonMode = typeof _sermonRhemaMode !== 'undefined' && _sermonRhemaMode;
+  if (!_studySandboxId && !sermonMode) {
+    _rhemaFullChapter = true;
+    _rhemaShowEnglish = true;
+    _rhemaVerseFocus = false;
+  }
+  _syncRhemaChapterUi();
+
   const loading = document.getElementById('rhemaLoadingMsg');
   if (loading) loading.style.display = 'block';
 
@@ -25377,6 +25387,10 @@ async function showRhema() {
   } catch (e) {
     if (loading) loading.textContent = 'Failed to load data. Check your connection.';
   }
+}
+
+function _syncRhemaChapterUi() {
+  document.getElementById('rhemaChapterModeBtn')?.classList.toggle('active', _rhemaFullChapter);
 }
 
 function closeRhema(keepSandbox = false) {
@@ -25426,6 +25440,7 @@ function closeRhema(keepSandbox = false) {
   _rhemaTrail = [];
   _rhemaTrailPos = -1;
   _rhemaHighlightStrongs = null;
+  _rhemaVerseFocus = false;
   _rhemaPosHighlights.clear();
   _rhemaHighlightBarOn = false;
   document.getElementById('rhemaHighlightBar')?.classList.add('hidden');
@@ -25460,6 +25475,7 @@ function rhemaGoBack() {
   _rhemaChapter = target.chapter;
   _rhemaVerse = target.verse;
   _rhemaHighlightStrongs = target.strongs || null;
+  _rhemaVerseFocus = true;
   closeRhemaSheet();
   syncRhemaPicker();
   renderRhemaVerse();
@@ -25605,16 +25621,25 @@ function rhemaFilterBooks(query) {
   });
 }
 
+// Selecting any reference always opens the whole chapter; the verse picker
+// then jumps to (and marks) a verse inside it.
+function _rhemaOpenSelectedReference() {
+  _rhemaFullChapter = true;
+  _rhemaHighlightStrongs = null;
+  _syncRhemaChapterUi();
+  closeRhemaPickerSheet();
+  syncRhemaPicker();
+  renderRhemaVerse();
+}
+
 function rhemaSelectBook(code) {
   const fromBook = _rhemaBook;
   _rhemaBook    = code;
   _rhemaChapter = '1';
   _rhemaVerse   = '1';
+  _rhemaVerseFocus = false;
   if (isRhemaOTBook(code) && !isRhemaOTBook(fromBook)) _rhemaOTLayer = 'hebrew';
-  _rhemaHighlightStrongs = null;
-  closeRhemaPickerSheet();
-  syncRhemaPicker();
-  renderRhemaVerse();
+  _rhemaOpenSelectedReference();
 }
 
 function rhemaSelectBookChapter(code, ch) {
@@ -25622,24 +25647,21 @@ function rhemaSelectBookChapter(code, ch) {
   _rhemaBook = code;
   _rhemaChapter = String(ch);
   _rhemaVerse = '1';
+  _rhemaVerseFocus = false;
   if (isRhemaOTBook(code) && !isRhemaOTBook(fromBook)) _rhemaOTLayer = 'hebrew';
-  _rhemaHighlightStrongs = null;
-  closeRhemaPickerSheet();
-  syncRhemaPicker();
-  renderRhemaVerse();
+  _rhemaOpenSelectedReference();
 }
 
 function rhemaSelectChap(ch) {
   _rhemaChapter = ch;
   _rhemaVerse   = '1';
-  _rhemaHighlightStrongs = null;
-  closeRhemaPickerSheet();
-  syncRhemaPicker();
-  renderRhemaVerse();
+  _rhemaVerseFocus = false;
+  _rhemaOpenSelectedReference();
 }
 
 function rhemaSelectVerse(v) {
   _rhemaVerse = v;
+  _rhemaVerseFocus = true;
   _rhemaHighlightStrongs = null;
   closeRhemaPickerSheet();
   syncRhemaPicker();
@@ -25701,6 +25723,7 @@ function rhemaPrevVerse() {
     if (chIdx > 0) {
       _rhemaChapter = chapters[chIdx - 1];
       _rhemaVerse = '1';
+      _rhemaVerseFocus = false;
     } else return;
   } else {
     const verses = Object.keys((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {}).sort((a,b) => +a - +b);
@@ -25727,6 +25750,7 @@ function rhemaNextVerse() {
     if (chIdx < chapters.length - 1) {
       _rhemaChapter = chapters[chIdx + 1];
       _rhemaVerse = '1';
+      _rhemaVerseFocus = false;
     } else return;
   } else {
     const verses = Object.keys((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {}).sort((a,b) => +a - +b);
@@ -25759,6 +25783,7 @@ function jumpToRhemaVerse(book, chapter, verse, highlightStrongs) {
   _rhemaVerse = String(verse);
   if (isRhemaOTBook(book) && !isRhemaOTBook(fromBook)) _rhemaOTLayer = 'hebrew';
   _rhemaHighlightStrongs = highlightStrongs || null;
+  _rhemaVerseFocus = true;
   closeRhemaSheet();
   syncRhemaPicker();
   renderRhemaVerse();
@@ -25955,6 +25980,7 @@ function renderRhemaVerse() {
   if (_rhemaFullChapter) {
     const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
     const verseNums = Object.keys(chapterData).map(Number).sort((a, b) => a - b);
+    const focusVerse = (_rhemaHighlightStrongs !== null || _rhemaVerseFocus) ? _rhemaVerse : null;
 
     display.classList.remove('greek-only');
     display.classList.toggle('chapter-mode', !_rhemaSyntaxMode);
@@ -25962,7 +25988,7 @@ function renderRhemaVerse() {
     display.innerHTML = _rhemaLayerBadge() + verseNums.map(vn => {
       const v = String(vn);
       const words = chapterData[v] || [];
-      const isTarget = v === _rhemaVerse && _rhemaHighlightStrongs !== null;
+      const isTarget = v === focusVerse;
       const inner = _rhemaSyntaxMode
         ? _renderSyntaxView(words, v)
         : `<div class="rhema-chapter-word-grid${_rhemaGreekOnly ? ' greek-only' : ''}${isHebrew ? ' rhema-hebrew-layer' : ''}">${_renderVerseWords(words, v)}</div>`;
@@ -25971,26 +25997,34 @@ function renderRhemaVerse() {
     }).join('');
 
     if (EnglishDiv) {
-      EnglishDiv.innerHTML = _rhemaSyntaxMode ? '' : verseNums.map(vn => {
-        const v = String(vn);
-        const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, v);
-        const engContent = engText
-          ? _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, v)
-          : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
-        return `<div class="rhema-chapter-block" data-verse="${v}">` +
-               `<div class="rhema-chapter-verse-label">${vn}</div>` +
-               `<div class="rhema-chapter-english">${engContent}</div></div>`;
-      }).join('');
+      EnglishDiv.classList.toggle('rhema-english-reading', !_rhemaSyntaxMode);
+      EnglishDiv.innerHTML = _rhemaSyntaxMode ? '' :
+        `<div class="rhema-english-chapter-title">${_escapeRhemaAttr(_rhemaBookName(_rhemaBook))} ${_escapeRhemaAttr(_rhemaChapter)}</div>` +
+        verseNums.map(vn => {
+          const v = String(vn);
+          const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, v);
+          const engContent = engText
+            ? _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, v)
+            : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
+          return `<div class="rhema-chapter-block rhema-english-verse${v === focusVerse ? ' rhema-chapter-block-target' : ''}" data-verse="${v}" onclick="rhemaFocusEnglishVerse('${v}')">` +
+                 `<sup class="rhema-english-vnum">${vn}</sup>${engContent}</div>`;
+        }).join('');
     }
 
     requestAnimationFrame(() => {
-      const body   = document.querySelector('#rhemaModal .rhema-body');
-      const target = display.querySelector(`.rhema-chapter-block[data-verse="${_rhemaVerse}"]`);
-      if (body && target) body.scrollTop = target.offsetTop;
+      const body = document.querySelector('#rhemaModal .rhema-body');
+      if (!body) return;
+      // A fresh chapter open starts at the top; only scroll when jumping to a
+      // focused verse or resuming somewhere mid-chapter.
+      if (!focusVerse && _rhemaVerse === String(verseNums[0])) { body.scrollTop = 0; return; }
+      const visibleDisplay = _rhemaShowEnglish && !_rhemaSyntaxMode && EnglishDiv ? EnglishDiv : display;
+      const target = visibleDisplay.querySelector(`.rhema-chapter-block[data-verse="${_rhemaVerse}"]`);
+      if (target) body.scrollTop = Math.max(0, target.offsetTop - (focusVerse ? 12 : 0));
     });
   } else {
     const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
     display.classList.remove('chapter-mode', 'rsx-chapter-mode');
+    EnglishDiv?.classList.remove('rhema-english-reading');
     if (_rhemaSyntaxMode) {
       display.classList.remove('greek-only');
       display.innerHTML = _rhemaLayerBadge() + _renderSyntaxView(words, null);
@@ -26017,8 +26051,27 @@ function renderRhemaVerse() {
   if (_studySandboxId) _initStudyLongPress();
 }
 
+// Top-most verse currently scrolled into view in a chapter display, so mode
+// swaps can keep the reader's place instead of snapping back to verse 1.
+function _rhemaChapterScrollVerse(displayEl) {
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  if (!body || !displayEl) return null;
+  let current = null;
+  for (const block of displayEl.querySelectorAll('.rhema-chapter-block')) {
+    if (block.offsetTop <= body.scrollTop + 40) current = block;
+    else break;
+  }
+  return current?.dataset?.verse || null;
+}
+
 function toggleRhemaEnglish() {
   _rhemaShowEnglish = !_rhemaShowEnglish;
+  if (_rhemaFullChapter && !_rhemaSyntaxMode && !_rhemaVerseFocus) {
+    // The display being swapped away from is the opposite of the new state
+    const prev = document.getElementById(_rhemaShowEnglish ? 'rhemaVerseDisplay' : 'rhemaEnglishDisplay');
+    const verse = _rhemaChapterScrollVerse(prev);
+    if (verse) { _rhemaVerse = verse; syncRhemaPicker(); }
+  }
   renderRhemaVerse();
   _requestRhemaEnglishHighlightRender();
   closeRhemaSheet();
@@ -26565,28 +26618,28 @@ Object.assign(window, {
 
 const _RHEMA_COACH_STEPS = [
   {
-    targetFn: () => document.getElementById('rhemaVerseDisplay'),
+    targetFn: () => _coachFirst(['#rhemaEnglishDisplay:not(.hidden)', '#rhemaVerseDisplay']),
     position: 'center',
-    title: 'Read the Greek text',
-    body: 'Tap any highlighted Greek word to open its definition, parsing, and usage — no Greek knowledge needed.',
+    title: 'Read the chapter in English',
+    body: 'Rhema opens as a plain-English reading Bible. Tap a verse to select it — then everything else in Rhema follows that verse.',
+  },
+  {
+    targetFn: () => document.getElementById('rhemaSwapBtn'),
+    position: 'below',
+    title: 'Swap into the Greek',
+    body: 'This switch flips the chapter between English and the original language. In the Greek, tap any word to open its definition, parsing, and usage — no Greek knowledge needed.',
   },
   {
     targetFn: () => document.getElementById('rhemaToolBtn'),
     position: 'below',
     title: 'Study tools',
-    body: 'Open the tool wheel to turn on the Syntax tree, Greek-only mode, word highlighting, and the Majority Text / Critical Text switch. That text switch lets you compare the Greek tradition behind the passage without leaving Rhema.',
-  },
-  {
-    targetFn: () => document.getElementById('rhemaSwapBtn'),
-    position: 'below',
-    title: 'Paired English version',
-    body: 'This button shows the English partner for the Greek text you are reading. The default is MSB (Majority Standard Bible) with the Majority Text. When you switch to Critical Text, Rhema uses BSB (Berean Standard Bible), so the English and Greek stay paired together.',
+    body: 'Open the tool wheel to turn on the Syntax tree, Greek-only mode, word highlighting, and the Majority Text / Critical Text switch. The English pairs with the Greek tradition: MSB with the Majority Text, BSB with the Critical Text.',
   },
   {
     targetFn: () => document.querySelector('.rhema-picker'),
     position: 'above',
-    title: 'Jump to any verse',
-    body: 'Tap the book, chapter, or verse to jump anywhere in Rhema instantly.',
+    title: 'Jump anywhere',
+    body: 'Pick a book and chapter to open that whole chapter, then use the verse pill to jump straight to a verse inside it.',
   },
 ];
 
@@ -27805,9 +27858,14 @@ function closeAnyRhemaSheet() {
 }
 
 function toggleRhemaChapterMode() {
+  if (_rhemaFullChapter && !_rhemaSyntaxMode && !_rhemaVerseFocus) {
+    // Leaving chapter mode: land on the verse the reader is looking at
+    const visible = document.getElementById(_rhemaShowEnglish ? 'rhemaEnglishDisplay' : 'rhemaVerseDisplay');
+    const verse = _rhemaChapterScrollVerse(visible);
+    if (verse) _rhemaVerse = verse;
+  }
   _rhemaFullChapter = !_rhemaFullChapter;
-  document.getElementById('rhemaChapterModeBtn')?.classList.toggle('active', _rhemaFullChapter);
-  document.getElementById('rhemaVersePillBtn')?.classList.toggle('hidden', _rhemaFullChapter);
+  _syncRhemaChapterUi();
   // Toast feedback
   const toast = document.getElementById('rhemaChapterToast');
   if (toast) {
@@ -27824,6 +27882,10 @@ function toggleRhemaChapterMode() {
   renderRhemaVerse();
 }
 
+function _rhemaOriginalLabel() {
+  return getCurrentOriginalLanguageLayer() === 'hebrew' ? 'Hebrew' : 'Greek';
+}
+
 function updateRhemaSwapVisibility() {
   const gr  = document.getElementById('rhemaVerseDisplay');
   const English = document.getElementById('rhemaEnglishDisplay');
@@ -27831,9 +27893,34 @@ function updateRhemaSwapVisibility() {
   if (gr)   gr.classList.toggle('hidden', _rhemaShowEnglish);
   if (English)  English.classList.toggle('hidden', !_rhemaShowEnglish);
   if (btn) {
-    btn.textContent = _rhemaEnglishLabel();
-    btn.classList.toggle('active', _rhemaShowEnglish);
+    const original = _rhemaOriginalLabel();
+    btn.innerHTML =
+      `<span class="rhema-swap-seg${_rhemaShowEnglish ? ' active' : ''}">English</span>` +
+      `<span class="rhema-swap-seg${_rhemaShowEnglish ? '' : ' active'}">${original}</span>`;
+    btn.title = _rhemaShowEnglish
+      ? `Swap to the ${original} text`
+      : `Swap to English (${_rhemaEnglishLabel()})`;
   }
+}
+
+// Tapping a verse in the English reading view selects it, so the verse pill,
+// nav bar, and a swap into the original language all land on that verse.
+function rhemaFocusEnglishVerse(v) {
+  const verse = String(v);
+  if (_rhemaVerseFocus && verse === _rhemaVerse) {
+    _rhemaVerseFocus = false; // tap the selected verse again to dismiss
+  } else {
+    _rhemaVerse = verse;
+    _rhemaVerseFocus = true;
+  }
+  syncRhemaPicker();
+  updateRhemaVerseNav();
+  ['rhemaVerseDisplay', 'rhemaEnglishDisplay'].forEach(id => {
+    document.getElementById(id)?.querySelectorAll('.rhema-chapter-block').forEach(block =>
+      block.classList.toggle('rhema-chapter-block-target', _rhemaVerseFocus && block.dataset.verse === _rhemaVerse)
+    );
+  });
+  _saveRhemaPosition();
 }
 
 // ── Word detail sheet ─────────────────────────────────────────────────────────
