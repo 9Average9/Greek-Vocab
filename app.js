@@ -24759,7 +24759,8 @@ async function openHomeRhemaResult(index) {
       : document.getElementById('rhemaVerseDisplay');
     const target = visibleDisplay?.querySelector(`.rhema-chapter-block[data-verse="${_rhemaVerse}"]`);
     if (body && target) {
-      body.scrollTo ? body.scrollTo({ top: Math.max(0, target.offsetTop - 12), behavior: 'auto' }) : (body.scrollTop = Math.max(0, target.offsetTop - 12));
+      const top = Math.max(0, _rhemaBlockScrollTop(body, target) - 12);
+      body.scrollTo ? body.scrollTo({ top, behavior: 'auto' }) : (body.scrollTop = top);
     }
   };
   requestAnimationFrame(scrollToSelectedVerse);
@@ -25963,6 +25964,13 @@ function _renderVerseWords(words, verse) {
   }
 }
 
+// Scroll position of a chapter block measured against the scroll container
+// itself — block.offsetTop is relative to the modal, which includes the
+// header/picker height and lands the verse hidden behind the top bar.
+function _rhemaBlockScrollTop(body, block) {
+  return block.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop;
+}
+
 function renderRhemaVerse() {
   if (!_rhemaData()) return;
   closeRhemaSheet();
@@ -26019,7 +26027,7 @@ function renderRhemaVerse() {
       if (!focusVerse && _rhemaVerse === String(verseNums[0])) { body.scrollTop = 0; return; }
       const visibleDisplay = _rhemaShowEnglish && !_rhemaSyntaxMode && EnglishDiv ? EnglishDiv : display;
       const target = visibleDisplay.querySelector(`.rhema-chapter-block[data-verse="${_rhemaVerse}"]`);
-      if (target) body.scrollTop = Math.max(0, target.offsetTop - (focusVerse ? 12 : 0));
+      if (target) body.scrollTop = Math.max(0, _rhemaBlockScrollTop(body, target) - 12);
     });
   } else {
     const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
@@ -26056,9 +26064,10 @@ function renderRhemaVerse() {
 function _rhemaChapterScrollVerse(displayEl) {
   const body = document.querySelector('#rhemaModal .rhema-body');
   if (!body || !displayEl) return null;
+  const bodyTop = body.getBoundingClientRect().top;
   let current = null;
   for (const block of displayEl.querySelectorAll('.rhema-chapter-block')) {
-    if (block.offsetTop <= body.scrollTop + 40) current = block;
+    if (block.getBoundingClientRect().top - bodyTop <= 40) current = block;
     else break;
   }
   return current?.dataset?.verse || null;
