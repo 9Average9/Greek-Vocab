@@ -19089,7 +19089,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.150";
+const APP_VERSION = "3.0.151";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19108,8 +19108,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.150 &mdash; Smarter Rhema Range</div>
+<div class="un-version-label">v3.0.151 &mdash; Clearer Rhema Source Tags</div>
 <ul>
+  <li><strong>Rhema source tags cleaned up</strong> &mdash; Definition tags now use plain language and can be tapped for a quick explanation of what each source cue means.</li>
   <li><strong>Range of Meaning is smarter</strong> &mdash; Rhema now prioritizes varied usage examples and shows likely MSB/BSB English renderings for the selected Greek word inside each example.</li>
   <li><strong>Rhema definitions polished</strong> &mdash; Quick definitions now prefer clean modern English, show source confidence chips, explain why the meaning was chosen, and include English snippets in range examples.</li>
   <li><strong>Daily Praises now stay active for up to 21 days</strong> with a wider feed window so older active praises do not disappear early on busy feeds.</li>
@@ -28154,6 +28155,49 @@ function closeRhemaGrammarModal(e) {
   document.getElementById('rhemaGrammarModal')?.classList.add('hidden');
 }
 
+const RHEMA_SOURCE_TAG_HELP = {
+  simple: {
+    title: 'Simple Meaning',
+    label: 'Best first step',
+    body: 'This is the clearest short English meaning Rhema found for the word. It is meant to orient you quickly, not replace checking the full context.'
+  },
+  lexicon: {
+    title: 'Lexicon',
+    label: 'Modern English gloss',
+    body: 'This comes from the app’s modern lexicon gloss data. It is usually easier to read than older reference works and is a good starting point for the word’s basic sense.'
+  },
+  checked: {
+    title: 'Checked Entry',
+    label: 'Greek headword matched',
+    body: 'Rhema checked that the Greek headword in the lexicon entry matches the selected Greek lemma before showing it. This helps prevent the wrong entry from appearing.'
+  },
+  history: {
+    title: 'Usage History',
+    label: 'Historical examples',
+    body: 'This points to historical usage material, especially Moulton-Milligan when available. It can help show how the word was used outside the New Testament.'
+  },
+  older: {
+    title: 'Older Reference',
+    label: 'Helpful but dated',
+    body: 'This comes from older reference material such as Strong’s. It can be useful, but the English may be dated or less precise, so Rhema does not treat it as the cleanest first explanation.'
+  }
+};
+
+function showRhemaSourceTagHelp(key) {
+  const entry = RHEMA_SOURCE_TAG_HELP[key];
+  if (!entry) return;
+  const modal = document.getElementById('rhemaGrammarModal');
+  const title = document.getElementById('rhemaGrammarTitle');
+  const body = document.getElementById('rhemaGrammarBody');
+  if (!modal || !title || !body) return;
+  title.textContent = entry.title;
+  body.innerHTML = `
+    <div class="rhema-grammar-example-sentence">${entry.label}</div>
+    <div class="rhema-grammar-example-body">${entry.body}</div>
+  `;
+  modal.classList.remove('hidden');
+}
+
 function extractWordEnding(surface, lemma) {
   if (!surface || !lemma) return null;
   let i = 0;
@@ -28583,14 +28627,14 @@ function _rhemaAbbottMatchesLex(lex = {}) {
 
 function _rhemaSourceConfidenceHtml(lex = {}, summary = {}) {
   const chips = [];
-  if (summary.source) chips.push({ label: summary.source, tone: summary.confidence || 'Reference' });
-  if (lex.brief || lex.extended) chips.push({ label: 'Modern gloss', tone: 'Readable' });
-  if (lex.abbott_smith && _rhemaAbbottMatchesLex(lex)) chips.push({ label: 'Abbott-Smith', tone: 'Headword checked' });
-  if (lex.moulton_milligan || (window.RhemaMoultonMilligan || {})[lex.strongs]) chips.push({ label: 'Historical usage', tone: 'MM' });
-  if (lex.strongs_def) chips.push({ label: "Strong's", tone: 'Legacy reference' });
+  if (summary.source) chips.push({ key: 'simple', label: 'Simple meaning' });
+  if (lex.brief || lex.extended) chips.push({ key: 'lexicon', label: 'Lexicon' });
+  if (lex.abbott_smith && _rhemaAbbottMatchesLex(lex)) chips.push({ key: 'checked', label: 'Checked entry' });
+  if (lex.moulton_milligan || (window.RhemaMoultonMilligan || {})[lex.strongs]) chips.push({ key: 'history', label: 'Usage history' });
+  if (lex.strongs_def && !chips.some(chip => chip.key === 'older')) chips.push({ key: 'older', label: 'Older reference' });
   return chips.length
     ? `<div class="rhema-source-chips">${chips.slice(0, 5).map(chip =>
-        `<span><strong>${_escapeRhemaAttr(chip.label)}</strong><em>${_escapeRhemaAttr(chip.tone)}</em></span>`
+        `<button type="button" onclick="event.stopPropagation();showRhemaSourceTagHelp('${_escapeRhemaAttr(chip.key)}')">${_escapeRhemaAttr(chip.label)}<span class="material-symbols-outlined">info</span></button>`
       ).join('')}</div>`
     : '';
 }
