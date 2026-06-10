@@ -8177,7 +8177,7 @@ function _renderHomeStudies() {
     const doneToday = uid && (s.lastSessionDates || {})[uid] === today;
     const isCreator = s.creatorUid === uid;
     const isCollaborator = uid && !isCreator && s.collaboratorUids?.includes(uid);
-    return `<div class="hs-book${_studyDeleteMode ? ' jiggle' : ''}" style="--study-color:${s.color}"
+    return `<div class="hs-book${_studyDeleteMode ? ' jiggle' : ''}" style="--study-color:${s.color}" data-study-id="${s.id}"
       onclick="${_studyDeleteMode ? 'void(0)' : `openStudyBook('${s.id}', this)`}"
       ontouchstart="_startStudyLongPress('${s.id}',event)" ontouchmove="_onStudyLongPressMove(event)" ontouchend="_cancelStudyLongPress()" ontouchcancel="_cancelStudyLongPress()"
       onmousedown="_startStudyLongPress('${s.id}',event)" onmousemove="_onStudyLongPressMove(event)" onmouseup="_cancelStudyLongPress()" onmouseleave="_cancelStudyLongPress()">
@@ -8236,10 +8236,18 @@ function openStudyBookPeek(studyId) {
         ? `<p class="study-peek-desc">${_escHtml(study.description)}</p>`
         : '<p class="study-peek-desc study-peek-desc-empty">No description yet.</p>'}
       <span class="study-peek-meta">${_studyMemberLabel(study)}</span>
-      <button class="study-peek-open" onclick="document.getElementById('studyBookPeek')?.remove();openStudySandbox('${study.id}')">Open Study</button>
+      <button class="study-peek-open" onclick="openStudyBookFromPeek('${study.id}')">Open Study</button>
     </div>`;
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add('open'));
+}
+
+// Opening from the peek card plays the same book animation, flying out of
+// the matching book on the shelf.
+function openStudyBookFromPeek(studyId) {
+  document.getElementById('studyBookPeek')?.remove();
+  const bookEl = document.querySelector(`.hs-book[data-study-id="${CSS.escape(studyId)}"]`);
+  openStudyBook(studyId, bookEl || null);
 }
 
 // Books lean in the scroll direction while the shelf slides, then spring
@@ -19211,7 +19219,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.153";
+const APP_VERSION = "3.0.154";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19230,7 +19238,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.153 &mdash; English-First Rhema &amp; Home Bookshelf</div>
+<div class="un-version-label">v3.0.154 &mdash; English-First Rhema &amp; Home Bookshelf</div>
 <ul>
   <li><strong>Rhema opens as a plain-English reader</strong> &mdash; Rhema now starts on the full chapter in clean English, styled like a reading Bible, with a clear English / Greek switch in the header (Hebrew for Old Testament books). Tap any verse to select it before swapping into the original language.</li>
   <li><strong>References open the whole chapter</strong> &mdash; Picking a book or chapter always opens the full chapter, the verse pill jumps straight to a verse inside it, and verse jumps now land properly in view instead of hiding behind the top bar.</li>
