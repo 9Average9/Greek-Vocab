@@ -19089,7 +19089,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.151";
+const APP_VERSION = "3.0.152";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19108,8 +19108,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.151 &mdash; Clearer Rhema Source Tags</div>
+<div class="un-version-label">v3.0.152 &mdash; Clearer Range Highlights</div>
 <ul>
+  <li><strong>Range examples highlight English renderings more reliably</strong> &mdash; Rhema now matches likely translated words and phrases through punctuation and highlights the exact English text under each Greek example.</li>
   <li><strong>Rhema source tags cleaned up</strong> &mdash; Definition tags now use plain language and can be tapped for a quick explanation of what each source cue means.</li>
   <li><strong>Range of Meaning is smarter</strong> &mdash; Rhema now prioritizes varied usage examples and shows likely MSB/BSB English renderings for the selected Greek word inside each example.</li>
   <li><strong>Rhema definitions polished</strong> &mdash; Quick definitions now prefer clean modern English, show source confidence chips, explain why the meaning was chosen, and include English snippets in range examples.</li>
@@ -28809,6 +28810,10 @@ function _rhemaTranslationCandidates(lex = {}) {
         candidates.push(value);
         candidates.push(value.replace(/^(?:to|the|a|an)\s+/i, '').trim());
         if (/^to\s+/i.test(value)) candidates.push(value.replace(/^to\s+/i, '').trim());
+        value.split(/\s+/)
+          .map(word => word.replace(/^[^\w']+|[^\w']+$/g, '').trim())
+          .filter(word => word.length > 3 && !/^(?:that|this|with|from|into|upon|have|been|being)$/i.test(word))
+          .forEach(word => candidates.push(word));
       });
   });
   return [...new Set(candidates
@@ -28817,25 +28822,36 @@ function _rhemaTranslationCandidates(lex = {}) {
   )].sort((a, b) => b.length - a.length);
 }
 
-function _rhemaFindEnglishTranslation(text = '', candidates = []) {
+function _rhemaFindEnglishTranslationMatch(text = '', candidates = []) {
+  const raw = String(text || '');
   for (const candidate of candidates) {
     const words = candidate.split(/\s+/).filter(Boolean);
     if (!words.length) continue;
     const pattern = words.length === 1
       ? `\\b(${_rhemaRegexEscape(words[0])}\\w{0,4})\\b`
-      : `\\b(${words.map(_rhemaRegexEscape).join('\\s+')})\\b`;
+      : `\\b(${words.map(_rhemaRegexEscape).join('[\\s,;:.-]+')})\\b`;
     const re = new RegExp(pattern, 'i');
-    const match = String(text).match(re);
-    if (match?.[1]) return match[1];
+    const match = raw.match(re);
+    if (match?.[1]) {
+      const start = match.index + match[0].indexOf(match[1]);
+      return { hit: match[1], start, end: start + match[1].length };
+    }
   }
-  return '';
+  return null;
 }
 
-function _rhemaEnglishWithTranslationHit(text = '', hit = '') {
-  const escapedText = _escapeRhemaAttr(text);
-  if (!hit) return escapedText;
-  const re = new RegExp(`\\b(${_rhemaRegexEscape(hit)})\\b`, 'i');
-  return escapedText.replace(re, '<span class="rhema-range-english-hit">$1</span>');
+function _rhemaFindEnglishTranslation(text = '', candidates = []) {
+  return _rhemaFindEnglishTranslationMatch(text, candidates)?.hit || '';
+}
+
+function _rhemaEnglishWithTranslationHit(text = '', match = null) {
+  const raw = String(text || '');
+  if (!match?.hit || match.start < 0 || match.end <= match.start) return _escapeRhemaAttr(raw);
+  return [
+    _escapeRhemaAttr(raw.slice(0, match.start)),
+    `<span class="rhema-range-english-hit">${_escapeRhemaAttr(raw.slice(match.start, match.end))}</span>`,
+    _escapeRhemaAttr(raw.slice(match.end))
+  ].join('');
 }
 
 function _rhemaTranslationRows(book, ch, v, lex = {}) {
@@ -28846,8 +28862,8 @@ function _rhemaTranslationRows(book, ch, v, lex = {}) {
     .map(version => {
       const text = _rhemaEnglishText(book, ch, v, version);
       if (!text) return null;
-      const hit = _rhemaFindEnglishTranslation(text, candidates);
-      return { version, text, hit };
+      const match = _rhemaFindEnglishTranslationMatch(text, candidates);
+      return { version, text, hit: match?.hit || '', match };
     })
     .filter(Boolean);
 }
@@ -28915,7 +28931,7 @@ function renderRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
           <span class="rhema-range-translation-row">
             <em>${_escapeRhemaAttr(row.version)}</em>
             ${row.hit ? `<strong>${_escapeRhemaAttr(row.hit)}</strong>` : '<strong>context</strong>'}
-            <span>${_rhemaEnglishWithTranslationHit(row.text, row.hit)}</span>
+            <span>${_rhemaEnglishWithTranslationHit(row.text, row.match)}</span>
           </span>`).join('')}</span>` : ''}
       </button>`).join('')
     : `<p class="rhema-range-muted">No verse examples found in the loaded text.</p>`;
