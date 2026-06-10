@@ -8158,9 +8158,10 @@ function _renderHomeStudies() {
   const viewAllBtn = document.getElementById('hsViewAllBtn');
   if (!grid) return;
 
+  const shelfUnit = document.getElementById('hsShelfUnit');
   if (!_myStudies.length) {
     _studyDeleteMode = false;
-    grid.classList.remove('hs-has-books');
+    shelfUnit?.classList.remove('hs-has-books');
     grid.innerHTML = `<button class="hs-start-btn" onclick="openStudyCreateSheet()">
       <span class="material-symbols-outlined">add</span><span>Start a Study</span></button>`;
     viewAllBtn?.classList.add('hidden');
@@ -8169,7 +8170,8 @@ function _renderHomeStudies() {
 
   const today = new Date().toLocaleDateString("en-CA");
   const uid = window.Auth?.getCurrentUser()?.uid;
-  const visible = _myStudies.slice(0, 3);
+  // The shelf scrolls horizontally, so every study gets a book on it
+  const visible = _myStudies;
 
   const books = visible.map(s => {
     const doneToday = uid && (s.lastSessionDates || {})[uid] === today;
@@ -8188,10 +8190,11 @@ function _renderHomeStudies() {
   }).join('');
 
   const addBook = _studyDeleteMode ? '' : `<button class="hs-add-book" onclick="openStudyCreateSheet()">
-    <span class="material-symbols-outlined">add</span><span>New</span>
+    <span class="material-symbols-outlined">add</span><span>New Study</span>
   </button>`;
-  grid.classList.add('hs-has-books');
+  shelfUnit?.classList.add('hs-has-books');
   grid.innerHTML = books + addBook;
+  _initShelfLean(grid);
 
   // Header: "Done" in delete mode, "View All" otherwise
   if (_studyDeleteMode) {
@@ -8206,10 +8209,31 @@ function _renderHomeStudies() {
   }
 }
 
+// Books lean in the scroll direction while the shelf slides, then spring
+// back upright when it settles.
+function _initShelfLean(shelf) {
+  if (!shelf || shelf._leanInit) return;
+  shelf._leanInit = true;
+  let lastX = shelf.scrollLeft;
+  let lastT = performance.now();
+  let idleTimer = null;
+  shelf.addEventListener('scroll', () => {
+    const now = performance.now();
+    const dx = shelf.scrollLeft - lastX;
+    const dt = Math.max(now - lastT, 1);
+    lastX = shelf.scrollLeft;
+    lastT = now;
+    const lean = Math.max(-9, Math.min(9, (dx / dt) * 16));
+    shelf.style.setProperty('--shelf-lean', `${lean.toFixed(2)}deg`);
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => shelf.style.setProperty('--shelf-lean', '0deg'), 90);
+  }, { passive: true });
+}
+
 // ── Study book opening animation ─────────────────────────────────────────────
 // The book lifts off the shelf, flies to the center, swings its cover open,
-// then the screen dives into the pages — revealing the study session that
-// loads behind the overlay in parallel.
+// then the screen dives into the pages. The study session is only revealed
+// once the dive has fully covered the home screen.
 let _bookOpenAnimating = false;
 
 function openStudyBook(studyId, bookEl) {
@@ -8217,12 +8241,13 @@ function openStudyBook(studyId, bookEl) {
   const study = _myStudies.find(s => s.id === studyId);
   const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
   if (study && bookEl && !reduceMotion && !_bookOpenAnimating) {
-    _animateStudyBookOpen(study, bookEl);
+    _animateStudyBookOpen(study, bookEl, () => openStudySandbox(studyId));
+  } else {
+    openStudySandbox(studyId);
   }
-  openStudySandbox(studyId);
 }
 
-function _animateStudyBookOpen(study, bookEl) {
+function _animateStudyBookOpen(study, bookEl, onReveal) {
   _bookOpenAnimating = true;
   const rect = bookEl.getBoundingClientRect();
   const overlay = document.createElement('div');
@@ -8251,17 +8276,20 @@ function _animateStudyBookOpen(study, bookEl) {
   requestAnimationFrame(() => requestAnimationFrame(async () => {
     overlay.classList.add('lift');
     fly.style.transform = `translate(${dx}px, ${dy}px) scale(${centerScale})`;
-    await step(() => fly.classList.add('open'), 430);
+    await step(() => fly.classList.add('open'), 450);
     await step(() => {
       overlay.classList.add('dive');
       fly.style.transform = `translate(${dx}px, ${dy}px) scale(${diveScale})`;
-    }, 540);
-    await step(() => overlay.classList.add('fade-out'), 500);
+    }, 560);
+    // The overlay background is opaque now — open the study behind it so the
+    // home screen never flashes away mid-animation.
+    await step(() => { onReveal?.(); }, 430);
+    await step(() => overlay.classList.add('fade-out'), 240);
     await step(() => {
       overlay.remove();
       bookEl.classList.remove('hs-book-ghost');
       _bookOpenAnimating = false;
-    }, 260);
+    }, 280);
   }));
 }
 
