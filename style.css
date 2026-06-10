@@ -16847,6 +16847,11 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   font-size: 0.72rem;
   font-weight: 900;
 }
+.rhema-range-translation-row strong.rhema-range-no-hit {
+  color: var(--muted-color);
+  font-style: italic;
+  font-weight: 700;
+}
 .rhema-range-translation-row > span {
   min-width: 0;
 }

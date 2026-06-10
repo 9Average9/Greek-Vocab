@@ -28749,27 +28749,6 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
   return sections.join('<div class="rhema-def-sep"></div>') || `<p style="opacity:.5;font-size:.85rem">No definition found.</p>`;
 }
 
-function _rhemaSemanticRangeParts(lex = {}) {
-  const cleanRangePart = part => part
-    .replace(/^[xX]\s+/, '')
-    .replace(/^[-–—+*]+\s*/, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const text = [
-    lex.kjv_def,
-    lex.quick_def,
-    lex.brief,
-    lex.extended,
-    lex.strongs_def
-  ].map(rhemaPlainDefinitionText).filter(Boolean).join('; ');
-  return [...new Set(text
-    .replace(/^--\s*/, '')
-    .split(/[,;]|\bor\b|\band\b/i)
-    .map(part => cleanRangePart(part.replace(/^[\s.:;-]+|[\s.:;-]+$/g, '')))
-    .filter(part => part.length > 2 && part.length < 52)
-  )].slice(0, 12);
-}
-
 function _rhemaSemanticRangePartsClean(lex = {}) {
   const cleanRangePart = part => _rhemaCleanGlossFragment(part)
     .replace(/^[\s.:;-]+|[\s.:;-]+$/g, '')
@@ -28792,56 +28771,151 @@ function _rhemaRegexEscape(value = '') {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function _rhemaTranslationCandidates(lex = {}) {
-  const rawParts = [
-    _rhemaDefinitionSummary(lex).text,
-    lex.brief,
-    lex.extended,
-    lex.kjv_def,
-    ..._rhemaSemanticRangePartsClean(lex)
-  ];
-  const candidates = [];
-  rawParts.forEach(part => {
-    _rhemaCleanGlossFragment(part)
-      .split(/[,;]|\bor\b|\band\b/i)
-      .map(value => value.replace(/^[\s.:;-]+|[\s.:;-]+$/g, '').trim())
-      .filter(Boolean)
-      .forEach(value => {
-        candidates.push(value);
-        candidates.push(value.replace(/^(?:to|the|a|an)\s+/i, '').trim());
-        if (/^to\s+/i.test(value)) candidates.push(value.replace(/^to\s+/i, '').trim());
-        value.split(/\s+/)
-          .map(word => word.replace(/^[^\w']+|[^\w']+$/g, '').trim())
-          .filter(word => word.length > 3 && !/^(?:that|this|with|from|into|upon|have|been|being)$/i.test(word))
-          .forEach(word => candidates.push(word));
-      });
-  });
-  return [...new Set(candidates
-    .map(c => c.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim())
-    .filter(c => c.length > 2 && c.length < 48 && !/^(?:the|and|or|for|of|to|in|on|by|with|from|into)$/i.test(c))
-  )].sort((a, b) => b.length - a.length);
+// Irregular English inflections so a gloss like "speak" still highlights
+// "spoke"/"spoken" in the verse text. Regular -s/-ed/-ing forms are generated.
+const _RHEMA_IRREGULAR_ENGLISH_FORMS = {
+  arise: ['arose', 'arisen'], bear: ['bore', 'borne', 'born'], begin: ['began', 'begun'],
+  bind: ['bound'], blow: ['blew', 'blown'], break: ['broke', 'broken'], bring: ['brought'],
+  build: ['built'], buy: ['bought'], cast: ['cast'], catch: ['caught'], child: ['children'],
+  choose: ['chose', 'chosen'], come: ['came'], cut: ['cut'], die: ['died', 'dying'],
+  draw: ['drew', 'drawn'], drink: ['drank', 'drunk'], drive: ['drove', 'driven'],
+  dwell: ['dwelt', 'dwelled'], eat: ['ate', 'eaten'], fall: ['fell', 'fallen'],
+  feed: ['fed'], feel: ['felt'], fight: ['fought'], find: ['found'], flee: ['fled'],
+  fly: ['flew', 'flown'], foot: ['feet'], forgive: ['forgave', 'forgiven'],
+  forsake: ['forsook', 'forsaken'], get: ['got', 'gotten'], give: ['gave', 'given'],
+  go: ['went', 'gone', 'goes', 'going'], grow: ['grew', 'grown'],
+  have: ['had', 'has', 'having'], hear: ['heard'], hide: ['hid', 'hidden'], hold: ['held'],
+  keep: ['kept'], know: ['knew', 'known'], lay: ['laid'], lead: ['led'], leave: ['left'],
+  let: ['let'], lie: ['lay', 'lain', 'lying'], light: ['lit'], make: ['made'], man: ['men'],
+  mean: ['meant'], meet: ['met'], pay: ['paid'], put: ['put'], rise: ['rose', 'risen'],
+  run: ['ran', 'running'], say: ['said'], see: ['saw', 'seen'], seek: ['sought'],
+  sell: ['sold'], send: ['sent'], set: ['set'], shake: ['shook', 'shaken'],
+  shine: ['shone'], show: ['showed', 'shown'], shut: ['shut'], sing: ['sang', 'sung'],
+  sit: ['sat', 'sitting'], slay: ['slew', 'slain'], sleep: ['slept'],
+  speak: ['spoke', 'spoken'], spring: ['sprang', 'sprung'], stand: ['stood'],
+  steal: ['stole', 'stolen'], strike: ['struck'], swear: ['swore', 'sworn'],
+  take: ['took', 'taken'], teach: ['taught'], tear: ['tore', 'torn'], tell: ['told'],
+  think: ['thought'], throw: ['threw', 'thrown'], understand: ['understood'],
+  wear: ['wore', 'worn'], weep: ['wept'], win: ['won'], woman: ['women'],
+  write: ['wrote', 'written']
+};
+
+// Function words and lexicographer jargon that should never be highlighted on
+// their own when pulled out of a multi-word gloss phrase.
+const _RHEMA_GLOSS_STOPWORDS = new Set([
+  'the', 'and', 'for', 'that', 'this', 'with', 'from', 'into', 'unto', 'upon',
+  'have', 'has', 'had', 'been', 'being', 'was', 'were', 'are', 'will', 'shall',
+  'would', 'should', 'could', 'may', 'might', 'must', 'his', 'her', 'him', 'she',
+  'they', 'them', 'their', 'there', 'then', 'than', 'these', 'those', 'some',
+  'such', 'thus', 'very', 'much', 'more', 'most', 'also', 'even', 'only', 'any',
+  'all', 'each', 'both', 'either', 'neither', 'one', 'who', 'whom', 'whose',
+  'what', 'when', 'where', 'which', 'while', 'why', 'how', 'not', 'but', 'its',
+  'our', 'your', 'out', 'own', 'off', 'etc', 'implication', 'specially',
+  'especially', 'particularly', 'properly', 'literally', 'figuratively'
+]);
+
+function _rhemaEnglishWordForms(word) {
+  const base = String(word || '').toLowerCase();
+  const forms = new Set([base]);
+  const irregular = _RHEMA_IRREGULAR_ENGLISH_FORMS[base];
+  if (irregular) irregular.forEach(form => forms.add(form));
+  if (base.length < 3) return [...forms];
+  const endsConsonantY = /[^aeiou]y$/.test(base);
+  const sibilant = /(?:s|x|z|ch|sh)$/.test(base);
+  const doubled = /[^aeiou][aeiou]([^aeiouwxy])$/.exec(base);
+  // Plural / third person singular
+  if (endsConsonantY) forms.add(base.slice(0, -1) + 'ies');
+  else if (/[^f]fe$/.test(base)) forms.add(base.slice(0, -2) + 'ves');
+  else if (/[^f]f$/.test(base)) forms.add(base.slice(0, -1) + 'ves');
+  if (!endsConsonantY) forms.add(base + (sibilant ? 'es' : 's'));
+  // Present participle
+  if (/ie$/.test(base)) forms.add(base.slice(0, -2) + 'ying');
+  else if (/e$/.test(base) && !/ee$/.test(base)) forms.add(base.slice(0, -1) + 'ing');
+  else forms.add(base + 'ing');
+  if (doubled) forms.add(base + doubled[1] + 'ing');
+  // Regular past — irregular verbs never take it (avoids "see" -> "seed")
+  if (!irregular) {
+    if (endsConsonantY) forms.add(base.slice(0, -1) + 'ied');
+    else if (/e$/.test(base)) forms.add(base + 'd');
+    else forms.add(base + 'ed');
+    if (doubled) forms.add(base + doubled[1] + 'ed');
+  }
+  return [...forms];
 }
 
-function _rhemaFindEnglishTranslationMatch(text = '', candidates = []) {
+// Words too ambiguous to highlight reliably as a full gloss: in a verse like
+// "the king and the people", there is no way to know which "the"/"and" renders
+// the Greek word, so highlighting one would mislead more than help.
+const _RHEMA_UNHIGHLIGHTABLE_GLOSSES = new Set(['the', 'a', 'an', 'and', 'or', 'to', 'of', 'in', 'on', 'at', 'by', 'as', 'so']);
+
+function _rhemaBuildTranslationMatchers(lex = {}) {
+  const sources = [
+    { text: _rhemaDefinitionSummary(lex).text, priority: 0 },
+    { text: lex.brief, priority: 1 },
+    { text: lex.extended, priority: 2 },
+    { text: lex.kjv_def, priority: 3 },
+    { text: lex.strongs_def, priority: 4 }
+  ];
+  const entries = new Map();
+  const addEntry = (value, priority) => {
+    const base = value.toLowerCase();
+    const words = base.split(/\s+/).filter(Boolean);
+    if (!words.length || words.length > 4) return;
+    if (!words.every(word => /^[a-z][a-z'-]*$/.test(word))) return;
+    if (words.length === 1 && (base.length < 3 || _RHEMA_UNHIGHLIGHTABLE_GLOSSES.has(base))) return;
+    const existing = entries.get(base);
+    if (!existing || existing.priority > priority) entries.set(base, { base, words, priority });
+  };
+  sources.forEach(({ text, priority }) => {
+    _rhemaCleanGlossFragment(text)
+      .split(/[,;]|\bor\b|\band\b/i)
+      .map(part => part.replace(/^[\s.:;-]+|[\s.:;-]+$/g, '').replace(/\s+/g, ' ').trim())
+      .filter(part => part && part.length < 48)
+      .forEach(part => {
+        const phrase = part.replace(/^(?:to|the|a|an)\s+/i, '').trim();
+        if (!phrase) return;
+        addEntry(phrase, priority);
+        // Significant words inside a phrase are fallbacks, ranked after it
+        if (/\s/.test(phrase)) {
+          phrase.split(/\s+/)
+            .map(word => word.replace(/^[^a-z']+|[^a-z']+$/gi, '').toLowerCase())
+            .filter(word => word.length > 2 && !_RHEMA_GLOSS_STOPWORDS.has(word))
+            .forEach(word => addEntry(word, priority + 5));
+        }
+      });
+  });
+  return [...entries.values()]
+    .map(entry => {
+      const wordPatterns = entry.words.map(word =>
+        `(?:${_rhemaEnglishWordForms(word).sort((a, b) => b.length - a.length).map(_rhemaRegexEscape).join('|')})`
+      );
+      return {
+        base: entry.base,
+        priority: entry.priority,
+        wordCount: entry.words.length,
+        re: new RegExp(`\\b(${wordPatterns.join("[\\s,;:.'’-]+")})\\b`, 'i')
+      };
+    })
+    .sort((a, b) =>
+      b.wordCount - a.wordCount || a.priority - b.priority || b.base.length - a.base.length
+    );
+}
+
+function _rhemaMatchEnglishTranslation(text = '', matchers = []) {
   const raw = String(text || '');
-  for (const candidate of candidates) {
-    const words = candidate.split(/\s+/).filter(Boolean);
-    if (!words.length) continue;
-    const pattern = words.length === 1
-      ? `\\b(${_rhemaRegexEscape(words[0])}\\w{0,4})\\b`
-      : `\\b(${words.map(_rhemaRegexEscape).join('[\\s,;:.-]+')})\\b`;
-    const re = new RegExp(pattern, 'i');
-    const match = raw.match(re);
+  if (!raw) return null;
+  for (const matcher of matchers) {
+    const match = raw.match(matcher.re);
     if (match?.[1]) {
-      const start = match.index + match[0].indexOf(match[1]);
-      return { hit: match[1], start, end: start + match[1].length };
+      return {
+        hit: match[1],
+        start: match.index,
+        end: match.index + match[1].length,
+        base: matcher.base
+      };
     }
   }
   return null;
-}
-
-function _rhemaFindEnglishTranslation(text = '', candidates = []) {
-  return _rhemaFindEnglishTranslationMatch(text, candidates)?.hit || '';
 }
 
 function _rhemaEnglishWithTranslationHit(text = '', match = null) {
@@ -28854,72 +28928,122 @@ function _rhemaEnglishWithTranslationHit(text = '', match = null) {
   ].join('');
 }
 
-function _rhemaTranslationRows(book, ch, v, lex = {}) {
+function _rhemaTranslationRows(book, ch, v, matchers = []) {
   const active = _rhemaEnglishVersion();
   const versions = [...new Set([active, active === 'BSB' ? 'MSB' : 'BSB'])];
-  const candidates = _rhemaTranslationCandidates(lex);
-  return versions
-    .map(version => {
-      const text = _rhemaEnglishText(book, ch, v, version);
-      if (!text) return null;
-      const match = _rhemaFindEnglishTranslationMatch(text, candidates);
-      return { version, text, hit: match?.hit || '', match };
-    })
-    .filter(Boolean);
+  const rows = [];
+  versions.forEach(version => {
+    const text = _rhemaEnglishText(book, ch, v, version);
+    if (!text) return;
+    const match = _rhemaMatchEnglishTranslation(text, matchers);
+    const prev = rows[rows.length - 1];
+    if (prev && prev.text === text) {
+      prev.version += ' · ' + version;
+      return;
+    }
+    rows.push({ version, text, hit: match?.hit || '', base: match?.base || '', match });
+  });
+  return rows;
 }
 
-function _rhemaRangeExamples(strongs, layer = getCurrentOriginalLanguageLayer(), max = 10) {
+function _rhemaRangeVerseHtml(words = [], strongs) {
+  const target = String(strongs);
+  return words.map(w =>
+    String(w[1]) === target
+      ? `<span class="rhema-range-hit">${_escapeRhemaAttr(w[0])}</span>`
+      : _escapeRhemaAttr(w[0])
+  ).join(' ');
+}
+
+function _rhemaRangeOccurrences(strongs, layer) {
   const text = _wlTextForLayer(layer);
-  const books = _wlBooksForLayer(layer);
-  const lex = getCurrentRhemaLexicon(layer)[strongs] || {};
-  const examples = [];
-  for (const book of books) {
+  const target = String(strongs);
+  const occurrences = [];
+  for (const book of _wlBooksForLayer(layer)) {
     const bdata = text?.[book] || {};
-    const chapters = Object.keys(bdata).sort((a, b) => +a - +b);
-    for (const ch of chapters) {
-      const verses = Object.keys(bdata[ch] || {}).sort((a, b) => +a - +b);
-      for (const v of verses) {
-        const words = bdata[ch][v] || [];
-        const matching = words
-          .map((w, idx) => String(w[1]) === String(strongs) ? idx : -1)
-          .filter(idx => idx >= 0);
-        if (!matching.length) continue;
-        const verseHtml = words.map((w, idx) =>
-          matching.includes(idx)
-            ? `<span class="rhema-range-hit">${_escapeRhemaAttr(w[0])}</span>`
-            : _escapeRhemaAttr(w[0])
-        ).join(' ');
-        const translations = _rhemaTranslationRows(book, ch, v, lex);
-        const primaryHit = translations.find(row => row.hit)?.hit || '';
-        examples.push({
-          ref: `${_rhemaBookName(book)} ${ch}:${v}`,
-          book, ch, v,
-          verseHtml,
-          translations,
-          translationKey: primaryHit.toLowerCase() || `unmatched-${book}-${ch}-${v}`
-        });
+    for (const ch of Object.keys(bdata).sort((a, b) => +a - +b)) {
+      const verses = bdata[ch] || {};
+      for (const v of Object.keys(verses).sort((a, b) => +a - +b)) {
+        const words = verses[v] || [];
+        if (words.some(w => String(w[1]) === target)) occurrences.push({ book, ch, v, words });
       }
     }
   }
+  return occurrences;
+}
+
+function _rhemaRangeExamples(strongs, layer = getCurrentOriginalLanguageLayer(), max = 10) {
+  const lex = getCurrentRhemaLexicon(layer)[strongs] || {};
+  const matchers = _rhemaBuildTranslationMatchers(lex);
+  const occurrences = _rhemaRangeOccurrences(strongs, layer);
+  if (!occurrences.length) return [];
+
+  // English matching is the expensive part, so for very common words only a
+  // sample of occurrences is matched — spread evenly so examples still span
+  // the whole corpus instead of clustering in Matthew.
+  const scanCap = 120;
+  let scanned = occurrences;
+  if (occurrences.length > scanCap) {
+    const step = occurrences.length / scanCap;
+    scanned = Array.from({ length: scanCap }, (_, i) => occurrences[Math.floor(i * step)]);
+  }
+
+  const scored = scanned.map((occ, order) => {
+    const translations = _rhemaTranslationRows(occ.book, occ.ch, occ.v, matchers);
+    const primary = translations.find(row => row.hit);
+    return {
+      ...occ,
+      order,
+      translations,
+      // Key on the matched gloss base so "say"/"says"/"saying" count as one
+      // rendering and the examples show genuinely different translations.
+      translationKey: primary
+        ? (primary.base || primary.hit.toLowerCase())
+        : `unmatched-${occ.book}-${occ.ch}-${occ.v}`
+    };
+  });
+
+  // Verses with a confirmed English highlight teach the most, so they fill
+  // the variety slots first; a couple of looser "in context" renderings are
+  // still included since free translations are part of the word's range too.
+  const matched = scored.filter(ex => !ex.translationKey.startsWith('unmatched-'));
+  const unmatched = scored.filter(ex => ex.translationKey.startsWith('unmatched-'));
   const selected = [];
   const seenTranslations = new Set();
-  examples.forEach(example => {
-    if (selected.length >= max) return;
-    if (!seenTranslations.has(example.translationKey)) {
-      seenTranslations.add(example.translationKey);
-      selected.push(example);
-    }
-  });
-  examples.forEach(example => {
-    if (selected.length < max && !selected.includes(example)) selected.push(example);
-  });
-  return selected;
+  for (const example of matched) {
+    if (selected.length >= max) break;
+    if (seenTranslations.has(example.translationKey)) continue;
+    seenTranslations.add(example.translationKey);
+    selected.push(example);
+  }
+  for (const example of unmatched.slice(0, 2)) {
+    if (selected.length >= max) break;
+    selected.push(example);
+  }
+  for (const example of [...matched, ...unmatched]) {
+    if (selected.length >= max) break;
+    if (!selected.includes(example)) selected.push(example);
+  }
+  selected.sort((a, b) => a.order - b.order);
+
+  return selected.map(({ book, ch, v, words, translations, translationKey }) => ({
+    ref: `${_rhemaBookName(book)} ${ch}:${v}`,
+    book, ch, v,
+    verseHtml: _rhemaRangeVerseHtml(words, strongs),
+    translations,
+    translationKey
+  }));
 }
 
 function renderRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLayer()) {
   const lex = getCurrentRhemaLexicon(layer)[strongs] || {};
   const ranges = _rhemaSemanticRangePartsClean(lex);
   const examples = _rhemaRangeExamples(strongs, layer, 10);
+  const renderings = new Set(
+    examples.map(ex => ex.translationKey).filter(key => !key.startsWith('unmatched-'))
+  );
+  const headParts = [`${examples.length} example${examples.length === 1 ? '' : 's'}`];
+  if (renderings.size > 1) headParts.push(`${renderings.size} renderings`);
   const rangeHtml = ranges.length
     ? `<div class="rhema-range-chip-row">${ranges.map(r => `<span>${_escapeRhemaAttr(r)}</span>`).join('')}</div>`
     : `<p class="rhema-range-muted">No separate range glosses found for this word.</p>`;
@@ -28930,7 +29054,7 @@ function renderRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
         ${ex.translations?.length ? `<span class="rhema-range-translation-list">${ex.translations.map(row => `
           <span class="rhema-range-translation-row">
             <em>${_escapeRhemaAttr(row.version)}</em>
-            ${row.hit ? `<strong>${_escapeRhemaAttr(row.hit)}</strong>` : '<strong>context</strong>'}
+            ${row.hit ? `<strong>${_escapeRhemaAttr(row.hit)}</strong>` : '<strong class="rhema-range-no-hit">in context</strong>'}
             <span>${_rhemaEnglishWithTranslationHit(row.text, row.match)}</span>
           </span>`).join('')}</span>` : ''}
       </button>`).join('')
@@ -28938,7 +29062,7 @@ function renderRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
   return `
     <div class="rhema-range-head">
       <strong>Semantic Range</strong>
-      <small>${examples.length} example${examples.length === 1 ? '' : 's'}</small>
+      <small>${headParts.join(' · ')}</small>
     </div>
     ${rangeHtml}
     <div class="rhema-range-examples">${exampleHtml}</div>
