@@ -17777,12 +17777,19 @@ body.dark .bn-item::before {
 /* ── Home Screen ─────────────────────────────────────────────────────────── */
 /* Greeting row — greeting text left, settings icon right, at same baseline */
 .home-top-row {
-  display: flex; align-items: flex-end; justify-content: flex-start;
+  position: relative;
+  display: flex; align-items: flex-start; justify-content: flex-start;
   gap: 2px;
   padding: calc(env(safe-area-inset-top, 20px) + 12px) 0 0;
   margin-bottom: 14px;
 }
 .home-top-row .home-greeting-wrap { margin: 0; flex: 1 1 auto; min-width: 0; }
+.home-top-actions { /* floats level with the "Good" line so the name row below keeps the full width */
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 20px) + 16px);
+  right: 0;
+  display: flex; align-items: center; gap: 2px;
+}
 .ht-btn {
   background: none; border: none; cursor: pointer; padding: 6px;
   color: var(--font-color); position: relative; flex-shrink: 0;
@@ -17999,6 +18006,66 @@ body.dark .bn-item::before {
   opacity: 0.72; margin: 0; letter-spacing: 0;
   line-height: 1.08;
 }
+/* ── Inline Rhema search: a magnifier beside the name that spins open ── */
+.home-greeting-name-row {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 40px;
+}
+.home-greeting-name-row .home-greeting-name { flex-shrink: 0; }
+.home-inline-search {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; justify-content: flex-end;
+}
+.his-pill {
+  display: flex; align-items: center;
+  width: 40px; height: 40px;
+  border-radius: 999px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--card-color) 96%, #fff) 0%,
+    color-mix(in srgb, var(--primary-color) 72%, var(--card-color)) 100%);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 16%, rgba(255,255,255,0.72));
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.85);
+  overflow: hidden;
+  transition: width 0.45s cubic-bezier(0.32, 0.72, 0.25, 1), box-shadow 0.3s;
+}
+.home-inline-search.open .his-pill {
+  width: 100%;
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.07),
+    0 0 0 3px color-mix(in srgb, var(--secondary-color) 12%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+}
+.his-pill input {
+  flex: 1 1 auto; min-width: 0;
+  border: 0; outline: none; background: transparent;
+  color: var(--font-color);
+  font: inherit;
+  font-size: clamp(0.78rem, 3.4vw, 0.88rem);
+  font-weight: 700;
+  padding: 0 0 0 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease 0.12s;
+}
+.home-inline-search.open .his-pill input { opacity: 1; pointer-events: auto; }
+.his-pill input::placeholder {
+  color: color-mix(in srgb, var(--muted-color) 74%, transparent);
+  font-weight: 600;
+}
+.his-toggle {
+  width: 38px; height: 38px;
+  flex-shrink: 0;
+  margin-left: auto;
+  border: 0; border-radius: 50%;
+  background: transparent;
+  color: var(--secondary-color);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.5s cubic-bezier(0.34, 1.1, 0.4, 1);
+}
+.his-toggle .material-symbols-outlined { font-size: 21px; }
+.home-inline-search.open .his-toggle { transform: rotate(-360deg); }
 .home-verse-wrap { margin: 8px 0 22px; }
 .home-verse-inner { display: flex; align-items: flex-start; gap: 12px; }
 .home-verse-icon {
@@ -18130,73 +18197,6 @@ body.dark .bn-item::before {
 #homeScreen .hs-member-avatar .material-symbols-outlined {
   font-size: 12px !important;
 }
-.home-rhema-search-card {
-  margin: 2px 0 16px;
-  padding: 0;
-  border-radius: 20px;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-}
-.home-rhema-search-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  padding: 0 9px 0 14px;
-  border-radius: 18px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--card-color) 96%, #fff) 0%, color-mix(in srgb, var(--primary-color) 72%, var(--card-color)) 100%);
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 16%, rgba(255,255,255,0.72));
-  box-shadow:
-    0 10px 24px rgba(0,0,0,0.055),
-    inset 0 1px 0 rgba(255,255,255,0.86);
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
-}
-.home-rhema-search-row::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--secondary-color) 16%, transparent), transparent 38%);
-  opacity: 0.55;
-}
-.home-rhema-search-row:focus-within {
-  border-color: color-mix(in srgb, var(--secondary-color) 58%, var(--border-color));
-  box-shadow:
-    0 12px 30px rgba(0,0,0,0.075),
-    0 0 0 3px color-mix(in srgb, var(--secondary-color) 13%, transparent),
-    inset 0 1px 0 rgba(255,255,255,0.9);
-  transform: translateY(-1px);
-}
-.home-rhema-search-row > .material-symbols-outlined {
-  position: relative;
-  z-index: 1;
-  font-size: 19px;
-  color: var(--secondary-color);
-  flex-shrink: 0;
-}
-.home-rhema-search-row input {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: var(--font-color);
-  font: inherit;
-  font-size: clamp(0.72rem, 3.25vw, 0.86rem);
-  font-weight: 700;
-  text-overflow: ellipsis;
-}
-.home-rhema-search-row input::placeholder {
-  color: color-mix(in srgb, var(--muted-color) 74%, transparent);
-  font-weight: 600;
-}
 .home-rhema-search-clear {
   position: relative;
   z-index: 1;
@@ -18217,8 +18217,9 @@ body.dark .bn-item::before {
 .home-rhema-search-results {
   display: grid;
   gap: 6px;
-  margin-top: 8px;
+  margin: -4px 0 14px;
 }
+.home-rhema-search-results:empty { display: none; }
 .home-rhema-result,
 .home-rhema-search-status {
   width: 100%;
@@ -18600,6 +18601,82 @@ body.dark .bn-item::before {
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.14em;
+}
+/* Long titles shrink so the full study name always fits on the cover */
+.hs-book-title-sm { font-size: 0.63rem !important; -webkit-line-clamp: 5 !important; }
+.hs-book-title-xs { font-size: 0.55rem !important; letter-spacing: 0 !important; -webkit-line-clamp: 7 !important; }
+.hs-book-info {
+  position: absolute; top: 5px; right: 5px; z-index: 3;
+  width: 21px; height: 21px;
+  border: 0; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(247, 238, 216, 0.85);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hs-book-info .material-symbols-outlined { font-size: 13px; }
+.hs-book .study-card-done-dot { left: 8px; right: auto; }
+
+/* ── Study peek card (tap ⓘ on a book) ── */
+.study-peek-overlay {
+  position: fixed; inset: 0; z-index: 6500;
+  background: rgba(12, 16, 26, 0);
+  display: flex; align-items: center; justify-content: center;
+  padding: 28px;
+  transition: background 0.25s ease;
+}
+.study-peek-overlay.open { background: rgba(12, 16, 26, 0.45); }
+.study-peek-card {
+  width: min(340px, 100%);
+  border-radius: 20px;
+  background: var(--card-color);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  padding: 0 18px 16px;
+  text-align: center;
+  transform: translateY(14px) scale(0.96);
+  opacity: 0;
+  transition: transform 0.28s cubic-bezier(0.34, 1.3, 0.5, 1), opacity 0.2s;
+}
+.study-peek-overlay.open .study-peek-card { transform: none; opacity: 1; }
+.study-peek-band {
+  margin: 0 -18px 12px;
+  border-radius: 20px 20px 0 0;
+  padding: 16px 0 14px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0) 40%),
+    color-mix(in srgb, var(--study-color, #4f8cff) 84%, #20242e);
+  color: rgba(247, 238, 216, 0.95);
+}
+.study-peek-band .material-symbols-outlined { font-size: 26px; }
+.study-peek-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.02rem; font-weight: 800;
+  color: var(--font-color);
+  overflow-wrap: anywhere;
+}
+.study-peek-desc {
+  margin: 0 0 10px;
+  font-size: 0.84rem; line-height: 1.5;
+  color: var(--muted-color);
+  overflow-wrap: anywhere;
+}
+.study-peek-desc-empty { font-style: italic; opacity: 0.7; }
+.study-peek-meta {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 0.64rem; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted-color);
+}
+.study-peek-open {
+  width: 100%;
+  padding: 11px;
+  border: 0; border-radius: 12px;
+  background: var(--study-color, var(--secondary-color));
+  color: #fff;
+  font-weight: 800; font-size: 0.88rem;
+  cursor: pointer;
 }
 
 /* ── Study book opening animation ──
@@ -23011,7 +23088,7 @@ body.dark .bottom-nav::before {
     padding: 28px clamp(28px, 4vw, 56px) 40px;
   }
 
-  #homeScreen .home-scroll > :not(.desktop-home-shell):not(.home-rhema-search-card) {
+  #homeScreen .home-scroll > :not(.desktop-home-shell):not(.home-top-row):not(.home-rhema-search-results) {
     display: none !important;
   }
 
@@ -23022,11 +23099,15 @@ body.dark .bottom-nav::before {
     margin: 0 auto;
   }
 
-  #homeScreen .home-rhema-search-card {
-    display: block;
-    width: min(980px, calc(100% - 48px));
-    max-width: 980px;
-    margin: 18px auto 0;
+  #homeScreen .home-top-row {
+    max-width: 1280px;
+    margin: 0 auto 6px;
+    width: 100%;
+  }
+  #homeScreen .home-rhema-search-results {
+    max-width: 720px;
+    margin: 0 auto 14px;
+    width: 100%;
   }
 
   .desktop-study-hero {

@@ -8182,9 +8182,10 @@ function _renderHomeStudies() {
       ontouchstart="_startStudyLongPress('${s.id}',event)" ontouchmove="_onStudyLongPressMove(event)" ontouchend="_cancelStudyLongPress()" ontouchcancel="_cancelStudyLongPress()"
       onmousedown="_startStudyLongPress('${s.id}',event)" onmousemove="_onStudyLongPressMove(event)" onmouseup="_cancelStudyLongPress()" onmouseleave="_cancelStudyLongPress()">
       ${_studyDeleteMode && (isCreator || isCollaborator) ? `<button class="hs-delete-btn" onclick="event.stopPropagation();confirmDeleteStudy('${s.id}')"><span class="material-symbols-outlined">${isCreator ? 'close' : 'logout'}</span></button>` : ''}
+      ${_studyDeleteMode ? '' : `<button class="hs-book-info" onclick="event.stopPropagation();openStudyBookPeek('${s.id}')" aria-label="About this study"><span class="material-symbols-outlined">info</span></button>`}
       ${doneToday ? '<span class="study-card-done-dot"></span>' : ''}
       <span class="hs-book-icon material-symbols-outlined">${s.icon}</span>
-      <span class="hs-book-title">${_escHtml(s.name || '')}</span>
+      <span class="hs-book-title${_studyBookTitleTier(s.name)}">${_escHtml(s.name || '')}</span>
       <span class="hs-book-foot">${_studyMemberAvatarStack(s)}<span class="hs-book-meta">${_studyMemberLabel(s)}</span></span>
     </div>`;
   }).join('');
@@ -8207,6 +8208,38 @@ function _renderHomeStudies() {
     viewAllBtn?.classList.add('hidden');
     if (viewAllBtn) viewAllBtn.onclick = openStudiesViewAll;
   }
+}
+
+// Long study names get a smaller serif so the full title always fits on the
+// cover instead of being cut off.
+function _studyBookTitleTier(name = '') {
+  const len = String(name || '').length;
+  if (len > 30) return ' hs-book-title-xs';
+  if (len > 18) return ' hs-book-title-sm';
+  return '';
+}
+
+// Small info tap on a book: shows the study description without opening it.
+function openStudyBookPeek(studyId) {
+  const study = _myStudies.find(s => s.id === studyId);
+  if (!study) return;
+  document.getElementById('studyBookPeek')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'studyBookPeek';
+  overlay.className = 'study-peek-overlay';
+  overlay.onclick = () => overlay.remove();
+  overlay.innerHTML = `
+    <div class="study-peek-card" style="--study-color:${study.color}" onclick="event.stopPropagation()">
+      <div class="study-peek-band"><span class="material-symbols-outlined">${study.icon}</span></div>
+      <h3>${_escHtml(study.name || '')}</h3>
+      ${study.description
+        ? `<p class="study-peek-desc">${_escHtml(study.description)}</p>`
+        : '<p class="study-peek-desc study-peek-desc-empty">No description yet.</p>'}
+      <span class="study-peek-meta">${_studyMemberLabel(study)}</span>
+      <button class="study-peek-open" onclick="document.getElementById('studyBookPeek')?.remove();openStudySandbox('${study.id}')">Open Study</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('open'));
 }
 
 // Books lean in the scroll direction while the shelf slides, then spring
@@ -8258,7 +8291,7 @@ function _animateStudyBookOpen(study, bookEl, onReveal) {
       <div class="book-cover">
         <div class="book-cover-front">
           <span class="material-symbols-outlined">${study.icon}</span>
-          <span class="book-cover-title">${_escHtml(study.name || '')}</span>
+          <span class="book-cover-title${_studyBookTitleTier(study.name)}">${_escHtml(study.name || '')}</span>
         </div>
         <div class="book-cover-back"></div>
       </div>
@@ -10181,6 +10214,7 @@ function bindHabitsNavCollapse() {
 let _prevNavPage = 'home';
 
 function showNavPage(page) {
+  if (page !== 'home') closeHomeSearch();
   // Keep habits and mercies feed listeners alive across navigation so data renders
   // instantly on return. They are torn down on sign-out inside __onAuthStateReady.
   if (page !== 'mercies' && _merciesJournalUnsub) { _merciesJournalUnsub(); _merciesJournalUnsub = null; }
@@ -24816,6 +24850,54 @@ function clearHomeRhemaSearch() {
   input?.focus();
 }
 
+// ── Inline home search (collapses to a magnifier next to the greeting) ───────
+let _homeSearchInteracting = false;
+
+function toggleHomeSearch(event) {
+  event?.stopPropagation?.();
+  const wrap = document.getElementById('homeInlineSearch');
+  if (!wrap) return;
+  if (wrap.classList.contains('open')) { closeHomeSearch(); return; }
+  _initHomeSearchBehavior();
+  wrap.classList.add('open');
+  // Focus inside the tap gesture so the keyboard opens right away
+  document.getElementById('homeRhemaSearchInput')?.focus({ preventScroll: true });
+}
+
+function closeHomeSearch() {
+  const wrap = document.getElementById('homeInlineSearch');
+  if (!wrap || !wrap.classList.contains('open')) return;
+  wrap.classList.remove('open');
+  clearTimeout(_homeRhemaSearchTimer);
+  _homeRhemaResults = [];
+  const input = document.getElementById('homeRhemaSearchInput');
+  if (input) { input.value = ''; input.blur(); }
+  _syncHomeRhemaSearchClear('');
+  _renderHomeRhemaSearchResults([]);
+}
+
+function _initHomeSearchBehavior() {
+  const input = document.getElementById('homeRhemaSearchInput');
+  if (!input || input._homeSearchInit) return;
+  input._homeSearchInit = true;
+  // Taps on results or inside the pill (clear button) shouldn't count as
+  // dismissing the keyboard — only a true blur closes the search.
+  const markInteraction = () => {
+    _homeSearchInteracting = true;
+    setTimeout(() => { _homeSearchInteracting = false; }, 600);
+  };
+  document.getElementById('homeRhemaSearchResults')?.addEventListener('pointerdown', markInteraction);
+  document.querySelector('#homeInlineSearch .his-pill')?.addEventListener('pointerdown', e => {
+    if (e.target !== input) markInteraction();
+  });
+  input.addEventListener('blur', () => {
+    setTimeout(() => {
+      if (_homeSearchInteracting || document.activeElement === input) return;
+      closeHomeSearch();
+    }, 140);
+  });
+}
+
 function openHomeRhemaTopResult() {
   if (_homeRhemaResults[0]) openHomeRhemaResult(0);
 }
@@ -25447,6 +25529,7 @@ function loadRhemaScripts() {
 // ── Modal open/close ──────────────────────────────────────────────────────────
 
 async function showRhema() {
+  closeHomeSearch();
   _desktopCollapseNav();
   hideBottomNav();
   setNavActive('rhema');
