@@ -11896,7 +11896,7 @@ function _saveRhemaPosition() {
   }
   const verseSnippet = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
   const greekSnippet = _rhemaData() ? (((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {})[_rhemaVerse] || []).map(w => w[0]).join(' ') : '';
-  const pos = { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, textMode: _rhemaTextMode, translation: _rhemaEnglishLabel(), ts: Date.now(), snippet: verseSnippet, greek: greekSnippet };
+  const pos = { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion(), translation: _rhemaEnglishLabel(), ts: Date.now(), snippet: verseSnippet, greek: greekSnippet };
   localStorage.setItem('rhemaLastPos', JSON.stringify(pos));
   if (uid && window.LB) {
     window.LB.saveRhemaPosition?.(uid, pos)?.catch?.(() => {});
@@ -11948,6 +11948,10 @@ function resumeRhema() {
       _rhemaChapter = pos.chapter || '3';
       _rhemaVerse = pos.verse || '16';
       _rhemaTextMode = pos.textMode === 'critical' ? 'critical' : 'majority';
+      if (pos.englishVersion) {
+        _rhemaEnglishMode = pos.englishVersion === 'BSB' ? 'BSB' : 'MSB';
+        localStorage.setItem('rhemaEnglishVersion', _rhemaEnglishMode);
+      }
     } catch {}
   }
   showRhema();
@@ -19219,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.155";
+const APP_VERSION = "3.0.156";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19238,6 +19242,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.156 &mdash; Rhema Reader Controls</div>
+<ul>
+  <li><strong>English translation selector added</strong> &mdash; The reader pill now switches directly between MSB and BSB, while full chapter/verse mode moved into the tool wheel for New Testament passages. Old Testament passages still show the LXX toggle so you can move between Hebrew and Septuagint Greek.</li>
+</ul>
 <div class="un-version-label">v3.0.155 &mdash; English-First Rhema &amp; Home Bookshelf</div>
 <ul>
   <li><strong>Rhema opens as a plain-English reader</strong> &mdash; Rhema now starts on the full chapter in clean English, styled like a reading Bible, with a clear English / Greek switch in the header (Hebrew for Old Testament books). Tap any verse to select it before swapping into the original language.</li>
@@ -23402,7 +23410,7 @@ async function openCommunityPostComposer() {
   if (question) question.value = '';
   if (link) link.value = '';
   if (ref) ref.value = '';
-  if (version) version.value = _rhemaTextMode === 'critical' ? 'BSB' : 'MSB';
+  if (version) version.value = _rhemaEnglishVersion();
   if (alertFriends) alertFriends.checked = false;
   document.getElementById('communityPostVersePreview').textContent = 'No verse will be sent unless you type a reference like John 3:16 and preview it.';
   document.getElementById('communityPostComposer')?.classList.add('open');
@@ -24423,6 +24431,7 @@ let _rhemaShowEnglish    = false;
 let _rhemaGreekOnly  = false;
 let _rhemaSyntaxMode = false;
 let _rhemaTextMode = localStorage.getItem('rhemaTextMode') === 'critical' ? 'critical' : 'majority';
+let _rhemaEnglishMode = localStorage.getItem('rhemaEnglishVersion') === 'BSB' ? 'BSB' : 'MSB';
 let _rhemaOTLayer = localStorage.getItem('rhemaOTLayer') === 'lxx' ? 'lxx' : 'hebrew';
 let _rhemaActiveTab = 'parsing';
 let _rhemaActiveWord = null;
@@ -24439,7 +24448,7 @@ const RHEMA_NT_BOOK_ORDER = ['MAT','MAR','LUK','JOH','ACT','ROM','1CO','2CO','GA
 const RHEMA_BOOK_ORDER = [...RHEMA_OT_BOOK_ORDER, ...RHEMA_NT_BOOK_ORDER];
 
 function _rhemaEnglishVersion() {
-  return _rhemaTextMode === 'critical' ? 'BSB' : 'MSB';
+  return _rhemaEnglishMode === 'BSB' ? 'BSB' : 'MSB';
 }
 
 function _rhemaEnglishLabel(version = _rhemaEnglishVersion()) {
@@ -25580,7 +25589,15 @@ async function showRhema() {
 }
 
 function _syncRhemaChapterUi() {
-  document.getElementById('rhemaChapterModeBtn')?.classList.toggle('active', _rhemaFullChapter);
+  const versionBtn = document.getElementById('rhemaEnglishVersionBtn');
+  const versionLabel = document.getElementById('rhemaEnglishVersionLabel');
+  if (versionBtn) {
+    versionBtn.classList.toggle('active', _rhemaEnglishVersion() === 'BSB');
+    versionBtn.title = `English translation: ${_rhemaEnglishLabel()}. Tap to switch to ${_rhemaEnglishVersion() === 'BSB' ? 'MSB' : 'BSB'}.`;
+  }
+  if (versionLabel) versionLabel.textContent = _rhemaEnglishLabel();
+  document.getElementById('rhemaVersePillBtn')?.classList.toggle('hidden', _rhemaFullChapter);
+  _syncRhemaLxxBtn();
 }
 
 function closeRhema(keepSandbox = false) {
@@ -26239,6 +26256,7 @@ function renderRhemaVerse() {
     }
   }
 
+  _syncRhemaChapterUi();
   updateRhemaSwapVisibility();
   updateRhemaVerseNav();
   initRhemaVerseSwipe();
@@ -26273,6 +26291,17 @@ function toggleRhemaEnglish() {
   renderRhemaVerse();
   _requestRhemaEnglishHighlightRender();
   closeRhemaSheet();
+}
+
+function toggleRhemaEnglishVersion() {
+  _rhemaEnglishMode = _rhemaEnglishVersion() === 'BSB' ? 'MSB' : 'BSB';
+  localStorage.setItem('rhemaEnglishVersion', _rhemaEnglishMode);
+  _syncRhemaEnglishAlias();
+  _syncRhemaChapterUi();
+  closeRhemaSheet();
+  renderRhemaVerse();
+  updateRhemaSwapVisibility();
+  _requestRhemaEnglishHighlightRender();
 }
 
 function toggleRhemaMode() {
@@ -26355,7 +26384,7 @@ function toggleWheelTool(tool) {
     toggleRhemaTextMode();
   } else if (tool === 'lxx') {
     if (!isRhemaOTBook(_rhemaBook)) {
-      showRhemaVariant('LXX', 'Septuagint Greek is available for Old Testament verses.');
+      toggleRhemaChapterMode();
       closeRhemaWheel();
       return;
     }
@@ -26382,12 +26411,16 @@ function _syncRhemaLxxBtn() {
   const btn = document.getElementById('wheelItemLxx');
   if (!btn) return;
   const isOT = isRhemaOTBook(_rhemaBook);
+  const icon = btn.querySelector('.material-symbols-outlined');
   const label = btn.querySelector('.rwi-label');
-  if (label) label.textContent = isOT ? 'LXX' : 'OT LXX';
+  if (icon) icon.textContent = isOT ? 'language' : (_rhemaFullChapter ? 'article' : 'short_text');
+  if (label) label.textContent = isOT ? 'LXX' : (_rhemaFullChapter ? 'Chapter' : 'Verse');
   btn.classList.remove('hidden');
-  btn.classList.toggle('disabled', !isOT);
-  btn.classList.toggle('active', isOT && _rhemaOTLayer === 'lxx');
-  btn.title = isOT ? 'Swap Old Testament original-language layer between Hebrew and Septuagint Greek' : 'LXX is available for Old Testament verses.';
+  btn.classList.remove('disabled');
+  btn.classList.toggle('active', isOT ? _rhemaOTLayer === 'lxx' : _rhemaFullChapter);
+  btn.title = isOT
+    ? 'Swap Old Testament original-language layer between Hebrew and Septuagint Greek'
+    : (_rhemaFullChapter ? 'Full chapter is on. Tap for verse-only mode.' : 'Verse-only mode is on. Tap for full chapter.');
 }
 
 function _syncRhemaGreekOnlyBtn() {

@@ -15750,6 +15750,11 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   color: var(--secondary-color);
   border-color: color-mix(in srgb, var(--secondary-color) 25%, rgba(255,255,255,0.5));
 }
+.rhema-translation-pill {
+  min-width: 58px;
+  justify-content: center;
+  font-weight: 800;
+}
 
 /* ── Full chapter rendering ── */
 .rhema-verse-display.chapter-mode {
