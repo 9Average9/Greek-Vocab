@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.168";
+const APP_VERSION = "3.0.169";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,6 +19243,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.169 &mdash; Rhema Interlinear Accuracy</div>
+<ul>
+  <li><strong>Interlinear glosses are safer</strong> &mdash; The word-by-word gloss now uses parsed lexical meaning first instead of raw sentence-alignment fragments, so 2 Corinthians 3:1 reads "we begin," "to commend," and "recommendation" instead of misleading nearby English words.</li>
+  <li><strong>Pronouns are clearer</strong> &mdash; Common personal and reflexive forms now show "our," "your," "ourselves," and similar context-aware glosses instead of a generic dictionary form.</li>
+</ul>
 <div class="un-version-label">v3.0.168 &mdash; Rhema Lexicon Glosses</div>
 <ul>
   <li><strong>The interlinear now speaks Rhema Lexicon</strong> &mdash; The English gloss under each Greek word comes from the measured lexicon: the actual rendering of that occurrence when known, otherwise the word's top measured sense. Glosses now wrap so the full text is always visible.</li>
@@ -26384,16 +26389,11 @@ function _renderVerseWords(words, verse) {
       const variant = variantMap[i];
       const cls = `${isXref ? 'rhema-word xref' : 'rhema-word'}${variant ? ' has-variant' : ''}`;
       const lex = getCurrentRhemaLexicon(layer)[w[1]] || {};
-      // Greek layers gloss from the Rhema Lexicon (verse-specific rendering
-      // when this word's shard is loaded, else its top measured sense);
-      // morphology-derived gloss remains the fallback.
+      // Greek layers use parsed lexical/form glosses by default. Deep lexicon
+      // labels are allowed only when they are safer than raw alignment text.
       const deepRef = !isHebrew && isRhemaNTBook(_rhemaBook) ? `${_rhemaBook} ${_rhemaChapter}:${verse || _rhemaVerse}` : null;
-      const deepGloss = isHebrew ? '' : _rhemaDeepGloss(w[1], deepRef);
-      const gloss = deepGloss || (isHebrew
-        ? getRhemaQuickDefinition(lex)
-        : w[2]?.startsWith('V-')
-          ? _sxVerbGloss(w[2], lex.brief)
-          : _nounGloss(w[2], lex.brief));
+      const deepGloss = isHebrew ? '' : _rhemaDeepGloss(w[1], deepRef, w[2], lex);
+      const gloss = deepGloss || (isHebrew ? getRhemaQuickDefinition(lex) : _rhemaBaseInterlinearGloss(w[2], lex));
       const glossHtml = gloss ? `<span class="rhema-gloss">${gloss}</span>` : '';
       const variantTag = variant
         ? `<button class="rhema-variant-tag" onclick="event.stopPropagation();showRhemaVariant('${variant.label}', '${_escapeRhemaAttr(variant.text)}')" title="Text variant">var</button>`
@@ -27609,12 +27609,49 @@ function _nounGloss(morph, brief) {
   } else {
     caseCode = cng[0];
   }
+  const pronoun = _rhemaPronounGloss(posRaw, cng, base, caseCode);
+  if (pronoun) return pronoun;
   const CASE_PREP = { N: '', G: 'of ', D: 'to/for ', A: '', V: 'O ' };
   const prep = CASE_PREP[caseCode];
   if (prep === undefined) return base;
   // Pluralise the English gloss for common nouns when the Greek form is plural (cng[1] === 'P')
   const displayBase = (posRaw === 'N' && cng[1] === 'P') ? _engPlural(base) : base;
   return prep ? `${prep}${displayBase}` : displayBase;
+}
+
+function _rhemaPronounGloss(posRaw, cng = '', base = '', caseCode = '') {
+  if (posRaw === 'F') {
+    const person = cng[0];
+    const number = cng[2];
+    if (person === '1') return number === 'P' ? 'ourselves' : 'myself';
+    if (person === '2') return number === 'P' ? 'yourselves' : 'yourself';
+    if (person === '3') {
+      if (number === 'P') return 'themselves';
+      const gender = cng[3];
+      if (gender === 'F') return 'herself';
+      if (gender === 'N') return 'itself';
+      return 'himself';
+    }
+  }
+  if (posRaw !== 'P') return '';
+  const person = cng[0];
+  const isFirstOrSecond = person === '1' || person === '2';
+  const number = isFirstOrSecond ? cng[2] : cng[1];
+  const gender = isFirstOrSecond ? '' : cng[2];
+  if (person === '1') {
+    if (number === 'P') return ({ N: 'we', G: 'our', D: 'to/for us', A: 'us' })[caseCode] || 'we';
+    return ({ N: 'I', G: 'my', D: 'to/for me', A: 'me' })[caseCode] || 'I';
+  }
+  if (person === '2') {
+    if (number === 'P') return ({ N: 'you all', G: 'your', D: 'to/for you', A: 'you' })[caseCode] || 'you all';
+    return ({ N: 'you', G: 'your', D: 'to/for you', A: 'you' })[caseCode] || 'you';
+  }
+  const lower = base.toLowerCase();
+  if (!/(?:he|him|she|her|it|they|them|self|you)/.test(lower)) return '';
+  if (number === 'P') return ({ N: 'they', G: 'their', D: 'to/for them', A: 'them' })[caseCode] || 'they';
+  if (gender === 'F') return ({ N: 'she', G: 'her', D: 'to/for her', A: 'her' })[caseCode] || 'she';
+  if (gender === 'N') return ({ N: 'it', G: 'its', D: 'to/for it', A: 'it' })[caseCode] || 'it';
+  return ({ N: 'he', G: 'his', D: 'to/for him', A: 'him' })[caseCode] || 'he';
 }
 
 const _SX_CLAUSE_TYPES = {
@@ -29795,21 +29832,72 @@ function loadDeepLexiconSpine() {
     .catch(() => { window._rhemaSpineLoading = false; });
 }
 
-// Gloss for the verse grid, from the Rhema Lexicon: the measured rendering of
-// this exact occurrence when its shard is already loaded, else the word's top
-// measured sense from the spine. Returns '' when neither is available.
-function _rhemaDeepGloss(strongs, refStr) {
+function _rhemaBaseInterlinearGloss(morph = '', lex = {}) {
+  if (morph?.startsWith('V-')) return _sxVerbGloss(morph, lex.brief);
+  return _nounGloss(morph, lex.brief) || getRhemaQuickDefinition(lex);
+}
+
+function _rhemaCompactInterlinearGloss(value = '') {
+  let text = _deepCleanMeaningText(value)
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!text) return '';
+  text = text
+    .split(/\s+or\s+|,\s+|\s*;\s*/i)[0]
+    .replace(/^(?:to\s+)?(?:be\s+)?/i, match => match.toLowerCase())
+    .trim();
+  if (text.length > 34) text = text.slice(0, 31).trimEnd() + '...';
+  return text;
+}
+
+function _rhemaInterlinearDeepCandidate(entry = {}, senseIndex = null, morph = '') {
+  if (!entry) return '';
+  const senses = entry.senses || [];
+  const idx = senseIndex != null ? senseIndex : 0;
+  const sense = senses[idx];
+  const meaning = _deepSenseMeaning(entry, sense, idx);
+  const raw = _deepCleanMeaningText(meaning.raw || sense?.display || '');
+  const label = _rhemaCompactInterlinearGloss(meaning.text || '');
+  const rawLooksBad = raw ? _deepLooksLikeAlignmentArtifact(raw) : false;
+  const pos = String(morph || '').split('-')[0];
+
+  // Verbs and ordinary nouns read best from their parsed form ("we begin",
+  // "of letters"). Deep labels are definition evidence, not sentence grammar.
+  if (pos === 'V' || pos === 'N' || pos === 'P' || pos === 'T' || pos === 'F' ||
+      pos === 'ADV' || pos === 'PREP' || pos === 'CONJ' || pos === 'COND' || pos === 'PRT') {
+    return '';
+  }
+
+  // For adjectives and other modifiers with bad measured fragments, prefer the
+  // prose label if it is concise. This fixes cases like συστατικός -> people.
+  if (label && (rawLooksBad || meaning.source !== 'measured rendering' || entry.confidence === 'low')) {
+    return label;
+  }
+
+  // Only let a measured rendering become the interlinear gloss when it is
+  // clean, corroborated enough, and not just a sentence-function word.
+  if (sense && raw && !rawLooksBad && (sense.corroborated?.length || sense.share >= 0.7 || entry.confidence === 'high')) {
+    return _rhemaCompactInterlinearGloss(raw);
+  }
+  return '';
+}
+
+// Gloss for the verse grid. This intentionally does not use the spine's top
+// measured rendering as a fallback: top renderings are good evidence for the
+// Definition tab, but they can be wrong for a specific verse in the interlinear.
+function _rhemaDeepGloss(strongs, refStr, morph = '', lex = {}) {
   const num = parseInt(strongs, 10);
   if (!num) return '';
   const lo = Math.floor((num - 1) / 100) * 100 + 1;
   const entry = _deepLexiconData.get(lo)?.[num];
   if (entry && entry.senses?.length) {
     if (refStr && entry.verseSense && refStr in entry.verseSense) {
-      return entry.senses[entry.verseSense[refStr]]?.display || '';
+      return _rhemaInterlinearDeepCandidate(entry, entry.verseSense[refStr], morph);
     }
-    return entry.senses[0].display || '';
+    return _rhemaInterlinearDeepCandidate(entry, 0, morph);
   }
-  return (window.RhemaSpine?.[num]?.[1]) || '';
+  return '';
 }
 
 function _deepRefButton(refStr, strongs) {
