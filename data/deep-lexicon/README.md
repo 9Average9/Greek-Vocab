@@ -90,6 +90,32 @@ way a lexicographer works but with exhaustive coverage:
   LXX↔Hebrew alignment inherits known versification offsets (Psalms etc.),
   which wash out statistically but can distort individual rare counterparts.
 
-Stage 2 (planned) layers a reviewed synthesis pass over this evidence to
-produce prose definitions; Stage 3 wires the shards into the app via
-on-demand loading.
+Stage 2 (`scripts/build-deep-lexicon-prose.js`) layers an AI-synthesized prose
+pass over this evidence — one plain-English definition, sense labels, and a
+short article per word, written from the digest above and nothing else. It is
+a **one-time offline batch job**; nothing AI runs in the app, so runtime cost
+stays zero no matter how many users the app has.
+
+```sh
+export ANTHROPIC_API_KEY=sk-ant-...
+cd scripts && npm install && cd ..
+node scripts/build-deep-lexicon-prose.js --dry-run            # inspect the prompt (free)
+node scripts/build-deep-lexicon-prose.js --sample 3056,26     # try a few words first
+node scripts/build-deep-lexicon-prose.js                      # full run via Batches API
+```
+
+Approximate one-time cost for all ~5,400 entries (Batches API, 50% discount):
+
+| Model | Flag | Cost |
+|---|---|---|
+| Claude Opus 4.8 (default, best prose) | — | ≈ $33 |
+| Claude Sonnet 4.6 | `--model claude-sonnet-4-6` | ≈ $20 |
+| Claude Haiku 4.5 (budget) | `--model claude-haiku-4-5` | ≈ $7 |
+
+Add `--min-count 2` to skip single-occurrence words (the classical lexica
+cover those) and cut the bill by roughly a quarter. The run is resumable;
+results land in `prose/results.jsonl` and merge into the shards. The app
+works fully without this step — prose just enriches the answer block.
+
+Stage 3 wires the shards into the app via on-demand loading (done: the
+Range of Meaning panel and the answer-first Definition block).

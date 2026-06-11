@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.161";
+const APP_VERSION = "3.0.162";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,6 +19243,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.162 &mdash; Answer-First Word Study</div>
+<ul>
+  <li><strong>The Definition tab now leads with the answer</strong> &mdash; Tap a word and the first thing you see is what it means in the verse you are reading, measured from how the Majority Standard Bible actually renders that occurrence: "Here: ‘miracles’ — a secondary sense (18%); most often ‘power’." The four classical lexicon entries are still there in full, now tucked behind a single "Full lexicon entries" expander so the screen stays calm.</li>
+</ul>
 <div class="un-version-label">v3.0.161 &mdash; Measured Range of Meaning</div>
 <ul>
   <li><strong>Range of Meaning is now measured, not guessed</strong> &mdash; Tap Range of Meaning on any Greek word to see how the Majority Standard Bible actually renders it across every occurrence in the Byzantine text: each sense with counts, share, independent BSB agreement, lexicon corroboration, tappable citations, Septuagint usage with Hebrew counterparts, and a "Why this range?" walkthrough showing the full evidence trail. Data loads on demand in small pieces, so the app stays fast.</li>
@@ -29274,6 +29278,13 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
 
   const sections = [];
 
+  // Answer-first block: filled in asynchronously from the deep lexicon once
+  // the word's shard arrives. Shows the measured sense for the verse being
+  // read, so the reader gets the answer before the reference material.
+  const answerId = `rhemaDeepAnswer-${strongs}-${++_deepAnswerSeq}`;
+  sections.push(`<div class="rhema-deep-answer hidden" id="${answerId}"></div>`);
+  setTimeout(() => _populateDeepAnswer(answerId, strongs, layer), 0);
+
   if (lex.lemma) {
     sections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Root Word</div>
@@ -29302,8 +29313,12 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
     </div>`);
   }
 
+  // Reference lexica are depth, not the answer — they live behind one
+  // expander so the panel leads with what the reader actually asked for.
+  const refSections = [];
+
   if (lex.abbott_smith && _rhemaAbbottMatchesLex(lex)) {
-    sections.push(`<div class="rhema-def-section">
+    refSections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Abbott-Smith Lexicon</div>
       <div class="rhema-def-text rhema-def-abbott">${lex.abbott_smith}</div>
     </div>`);
@@ -29311,21 +29326,21 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
 
   const moultonMilligan = lex.moulton_milligan || (window.RhemaMoultonMilligan || {})[strongs] || '';
   if (moultonMilligan) {
-    sections.push(`<div class="rhema-def-section">
+    refSections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Moulton-Milligan Lexicon</div>
       <div class="rhema-def-text rhema-def-mm">${moultonMilligan}</div>
     </div>`);
   }
 
   if (lex.extended || lex.brief) {
-    sections.push(`<div class="rhema-def-section">
+    refSections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Dodson Lexicon</div>
       <div class="rhema-def-text">${lex.extended || lex.brief}</div>
     </div>`);
   }
 
   if (lex.strongs_def) {
-    sections.push(`<div class="rhema-def-section">
+    refSections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Strong's Definition</div>
       <div class="rhema-def-text">${lex.strongs_def}</div>
       ${lex.kjv_def ? `<div class="rhema-def-english">Glosses: ${lex.kjv_def}</div>` : ''}
@@ -29333,10 +29348,24 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
   }
 
   if (lex.deriv) {
-    sections.push(`<div class="rhema-def-section">
+    refSections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Etymology</div>
       <div class="rhema-def-text" style="opacity:.7">${lex.deriv}</div>
     </div>`);
+  }
+
+  if (refSections.length) {
+    const names = [];
+    if (lex.abbott_smith && _rhemaAbbottMatchesLex(lex)) names.push('Abbott-Smith');
+    if (moultonMilligan) names.push('Moulton-Milligan');
+    if (lex.extended || lex.brief) names.push('Dodson');
+    if (lex.strongs_def) names.push("Strong's");
+    sections.push(`<button type="button" class="rhema-deep-lexica-btn" onclick="this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
+      <span class="material-symbols-outlined">menu_book</span>
+      <span>Full lexicon entries${names.length ? ` · ${names.join(', ')}` : ''}</span>
+      <span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
+    </button>
+    <div class="rhema-deep-lexica hidden">${refSections.join('<div class="rhema-def-sep"></div>')}</div>`);
   }
 
   return sections.join('<div class="rhema-def-sep"></div>') || `<p style="opacity:.5;font-size:.85rem">No definition found.</p>`;
@@ -29678,7 +29707,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.161';
+const DEEP_LEXICON_VERSION = '3.0.162';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 
 function loadDeepLexiconEntry(strongs) {
@@ -29762,6 +29791,63 @@ function renderDeepLexiconEvidence(entry, strongs) {
 
   parts.push(`<div class="rhema-deep-foot">Measured from every occurrence in the Byzantine text against the MSB, cross-checked with the BSB — every count is verifiable at the cited verses. Statistical, not infallible: tap “Why this range?” for the full evidence trail.</div>`);
   return parts.join('');
+}
+
+// ── Answer-first block (Definition tab) ──────────────────────────────────────
+// Leads with what the word means *in the verse being read*, measured from the
+// MSB's actual rendering of this occurrence, before any reference material.
+
+let _deepAnswerSeq = 0;
+
+function _populateDeepAnswer(elId, strongs, layer) {
+  if (layer === 'hebrew') return;
+  // Capture reader position now — globals may move before the shard arrives.
+  const book = _rhemaBook, ch = _rhemaChapter, v = _rhemaVerse;
+  loadDeepLexiconEntry(strongs).then(entry => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (!entry || !entry.count || !entry.senses) { el.remove(); return; }
+    const esc = _escapeRhemaAttr;
+    const top = entry.senses[0];
+
+    // Only claim "in this verse" when the tapped word really sits in the
+    // current NT verse (the Word Library opens definitions with no verse).
+    let verseRef = null, verseSenseIdx;
+    if (book && ch && v && isRhemaNTBook(book)) {
+      const words = (_rhemaText()?.[book] || {})[ch]?.[v] || [];
+      if (words.some(w => String(w[1]) === String(strongs))) {
+        verseRef = `${book} ${ch}:${v}`;
+        verseSenseIdx = (entry.verseSense || {})[verseRef];
+      }
+    }
+
+    const lines = [];
+    const prose = entry.prose || null;
+    if (verseRef && verseSenseIdx !== undefined) {
+      const sense = entry.senses[verseSenseIdx];
+      lines.push(`<div class="rhema-deep-answer-main">Here: <strong>“${esc(sense.display)}”</strong></div>`);
+      const pct = Math.round(sense.share * 100);
+      lines.push(`<div class="rhema-deep-answer-sub">${verseSenseIdx === 0
+        ? `Its usual sense — ${sense.count} of ${entry.count} NT uses (${pct}%)`
+        : `A secondary sense — ${sense.count} of ${entry.count} NT uses (${pct}%); most often “${esc(top.display)}”`}${sense.bsbAgree != null ? ` · BSB agrees ${Math.round(sense.bsbAgree * 100)}%` : ''}</div>`);
+    } else if (verseRef && top) {
+      lines.push(`<div class="rhema-deep-answer-main">Here it has no English word of its own</div>`);
+      lines.push(`<div class="rhema-deep-answer-sub">It is woven into the phrasing of this verse. Where it stands alone it usually means <strong>“${esc(top.display)}”</strong> (${Math.round(top.share * 100)}% of ${entry.count} uses).</div>`);
+    } else if (top) {
+      lines.push(`<div class="rhema-deep-answer-main">Usually: <strong>“${esc(top.display)}”</strong></div>`);
+      lines.push(`<div class="rhema-deep-answer-sub">${top.count} of ${entry.count} NT uses (${Math.round(top.share * 100)}%)${top.bsbAgree != null ? ` · BSB agrees ${Math.round(top.bsbAgree * 100)}%` : ''}</div>`);
+    } else { el.remove(); return; }
+
+    if (prose?.def) {
+      lines.push(`<div class="rhema-deep-answer-def">${esc(prose.def)}</div>`);
+    }
+
+    el.innerHTML = `<div class="rhema-deep-answer-head">
+        <span class="rhema-def-label">${verseRef ? `In ${esc(_rhemaBookName(book) || book)} ${esc(ch)}:${esc(v)}` : 'Measured meaning'}</span>
+        <span class="rhema-deep-conf rhema-deep-conf-${esc(entry.confidence)}">${esc(_DEEP_CONFIDENCE_LABELS[entry.confidence] || entry.confidence)}</span>
+      </div>${lines.join('')}`;
+    el.classList.remove('hidden');
+  });
 }
 
 function _injectDeepLexiconRange(panel, strongs, layer) {

@@ -17198,6 +17198,59 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   color: var(--muted-color);
   font-style: italic;
 }
+/* Answer-first block at the top of the Definition tab */
+.rhema-deep-answer {
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 30%, var(--border-color));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--secondary-color) 9%, var(--card-color));
+}
+.rhema-deep-answer.hidden { display: none; }
+.rhema-deep-answer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.rhema-deep-answer-main {
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+.rhema-deep-answer-main strong { font-weight: 800; }
+.rhema-deep-answer-sub {
+  margin-top: 4px;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--muted-color);
+}
+.rhema-deep-answer-def {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+/* Collapsed reference-lexica expander */
+.rhema-deep-lexica-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--card-color);
+  color: var(--text-color);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.rhema-deep-lexica-btn .material-symbols-outlined { font-size: 1rem; flex-shrink: 0; }
+.rhema-deep-lexica-btn.open .rhema-deep-why-arrow { transform: rotate(180deg); }
+.rhema-deep-lexica { margin-top: 10px; }
+.rhema-deep-lexica.hidden { display: none; }
 .rhema-def-english {
   font-size: 0.78rem;
   color: var(--muted-color);

@@ -1,0 +1,8 @@
+{
+  "name": "greek-vocab-build-scripts",
+  "private": true,
+  "description": "Build-time scripts for Disciple Builder. Only build-deep-lexicon-prose.js needs the dependency below; the other scripts are dependency-free.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0"
+  }
+}

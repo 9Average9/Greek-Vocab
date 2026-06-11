@@ -685,6 +685,18 @@ function main() {
     const byBook = {};
     for (const o of occ) byBook[o.book] = (byBook[o.book] || 0) + 1;
 
+    // Per-verse sense map: "MAT 7:24" → index into senses[]. Powers the
+    // "in this verse" answer in the app. Occurrences that were absorbed into
+    // the phrasing (or fell into rare/singleton renderings) are absent — the
+    // app reads absence as "no single English word carries it here".
+    const verseSense = {};
+    senses.forEach((sense, idx) => {
+      for (const o of groups.get(sense.key) || []) {
+        const r = ref(o.book, o.ch, o.v);
+        if (!(r in verseSense)) verseSense[r] = idx;
+      }
+    });
+
     const lxxU = lxxUsage.get(s);
     const lxx = lxxU ? {
       count: lxxU.count,
@@ -706,6 +718,7 @@ function main() {
       refs: spreadRefs(occ, 4),
       byBook,
       senses,
+      verseSense,
       rare,
       untranslated,
       lxx,
