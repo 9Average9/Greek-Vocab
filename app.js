@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.163";
+const APP_VERSION = "3.0.164";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,6 +19243,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.164 &mdash; Note Sheet Fix</div>
+<ul>
+  <li><strong>Observation/interpretation sheet respects the notch</strong> &mdash; The title bar and close button no longer hide behind the status bar or Dynamic Island when adding a note in sandbox studies.</li>
+</ul>
 <div class="un-version-label">v3.0.163 &mdash; Deep Lexicon Prose</div>
 <ul>
   <li><strong>Every Greek word now has a written entry</strong> &mdash; All 5,523 words carry a plain-English definition, an "About this word" article grounded in the measured evidence, an honesty note where the evidence is thin, and named sense labels in the Range of Meaning panel.</li>

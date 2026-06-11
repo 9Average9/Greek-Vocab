@@ -20088,7 +20088,9 @@ body.sandbox-open .rhema-english-display {
 .swm-modal.hidden { display: none; }
 .swm-modal.open { transform: translateY(0); opacity: 1; }
 .swm-header {
-  display: flex; align-items: center; gap: 12px; padding: 16px 20px 12px;
+  display: flex; align-items: center; gap: 12px;
+  /* Full-screen sheet: keep the title row clear of the status bar / Dynamic Island */
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 12px;
   border-bottom: 1px solid var(--border-color); flex-shrink: 0;
 }
 .swm-type-chip {
