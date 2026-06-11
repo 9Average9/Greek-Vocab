@@ -83,11 +83,10 @@ function _xrefCurrentData() {
 }
 
 function _xrefCuratedScriptureNotes(key) {
-  return (window.RhemaCuratedScriptureNotes?.[key] || []).map(item => ({
-    ...item,
-    label: item.label || 'Quoted or alluded Scripture source.',
-    type: item.type || 'scripture link'
-  }));
+  if (typeof window.getRhemaScriptureNotesForKey === 'function') {
+    return window.getRhemaScriptureNotesForKey(key);
+  }
+  return [];
 }
 
 function _xrefApplyCuratedScriptureNotes(data, key) {

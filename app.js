@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.159";
+const APP_VERSION = "3.0.160";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19239,9 +19239,14 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-bsb.js':       '3.0.65',
   'rhema-syntax.js':    '3.0.65',
   'rhema-crossrefs.js': '3.0.65',
+  'rhema-scripture-notes.js': '3.0.160',
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.160 &mdash; Official Scripture Notes</div>
+<ul>
+  <li><strong>BSB/MSB note data imported</strong> &mdash; Rhema reader notes now come from the official BSB/MSB USJ footnote data, filtered to Scripture citation and cross-reference notes instead of hand-built guesses.</li>
+</ul>
 <div class="un-version-label">v3.0.159 &mdash; Focused Scripture Notes</div>
 <ul>
   <li><strong>Reader notes are now selective</strong> &mdash; Inline notes only appear on clear quotation, allusion, or prophecy-fulfillment verses, and the sheet now shows those Scripture-note links instead of every general cross-reference.</li>
@@ -25307,266 +25312,20 @@ function _rhemaXrefKeyForVerse(book = _rhemaBook, chapter = _rhemaChapter, verse
   return `${book} ${chapter}:${verse}`;
 }
 
-const RHEMA_CURATED_SCRIPTURE_NOTES = {
-  'MAT 1:22': [
-    { ref: 'ISA 7:14', type: 'prophecy fulfillment', label: 'Matthew points to Isaiah\'s virgin-birth sign being fulfilled in Jesus.' }
-  ],
-  'MAT 1:23': [
-    { ref: 'ISA 7:14', type: 'quotation', label: 'Matthew quotes Isaiah: the virgin will bear a son called Immanuel.' }
-  ],
-  'MAT 2:5': [
-    { ref: 'MIC 5:2', type: 'prophecy fulfillment', label: 'The priests and scribes identify Bethlehem from Micah\'s prophecy.' }
-  ],
-  'MAT 2:6': [
-    { ref: 'MIC 5:2', type: 'quotation', label: 'Matthew quotes Micah on the ruler coming from Bethlehem.' },
-    { ref: '2SA 5:2', type: 'allusion', label: 'The shepherd-ruler language also echoes David\'s calling.' }
-  ],
-  'MAT 2:15': [
-    { ref: 'HOS 11:1', type: 'prophecy fulfillment', label: 'Matthew applies Hosea\'s “Out of Egypt I called My Son” to Jesus.' }
-  ],
-  'MAT 2:17': [
-    { ref: 'JER 31:15', type: 'prophecy fulfillment', label: 'Matthew points to Jeremiah\'s lament over Rachel weeping.' }
-  ],
-  'MAT 2:18': [
-    { ref: 'JER 31:15', type: 'quotation', label: 'Matthew quotes Jeremiah\'s picture of Rachel weeping for her children.' }
-  ],
-  'MAT 3:3': [
-    { ref: 'ISA 40:3', type: 'quotation', label: 'Matthew identifies John the Baptist with Isaiah\'s voice in the wilderness.' }
-  ],
-  'MAT 4:14': [
-    { ref: 'ISA 9:1', type: 'prophecy fulfillment', label: 'Matthew connects Jesus\' Galilean ministry with Isaiah\'s promise of light.' }
-  ],
-  'MAT 4:15': [
-    { ref: 'ISA 9:1', type: 'quotation', label: 'Matthew quotes Isaiah\'s geography of Zebulun, Naphtali, and Galilee.' }
-  ],
-  'MAT 4:16': [
-    { ref: 'ISA 9:2', type: 'quotation', label: 'Matthew quotes Isaiah on light dawning for those in darkness.' }
-  ],
-  'MAT 8:17': [
-    { ref: 'ISA 53:4', type: 'prophecy fulfillment', label: 'Matthew connects Jesus\' healing ministry with Isaiah\'s servant carrying infirmities.' }
-  ],
-  'MAT 12:17': [
-    { ref: 'ISA 42:1', type: 'prophecy fulfillment', label: 'Matthew introduces Isaiah\'s servant song as fulfilled in Jesus.' }
-  ],
-  'MAT 12:18': [
-    { ref: 'ISA 42:1', type: 'quotation', label: 'Matthew quotes Isaiah\'s chosen servant on whom God puts His Spirit.' }
-  ],
-  'MAT 12:19': [
-    { ref: 'ISA 42:2', type: 'quotation', label: 'Matthew quotes Isaiah on the servant\'s quiet, non-striving ministry.' }
-  ],
-  'MAT 12:20': [
-    { ref: 'ISA 42:3', type: 'quotation', label: 'Matthew quotes Isaiah on the servant\'s gentleness toward the weak.' }
-  ],
-  'MAT 12:21': [
-    { ref: 'ISA 42:4', type: 'quotation', label: 'Matthew quotes Isaiah on the nations hoping in the servant.' }
-  ],
-  'MAT 13:14': [
-    { ref: 'ISA 6:9', type: 'quotation', label: 'Jesus quotes Isaiah on hearing without understanding.' }
-  ],
-  'MAT 13:15': [
-    { ref: 'ISA 6:10', type: 'quotation', label: 'Jesus continues Isaiah\'s warning about hardened hearts.' }
-  ],
-  'MAT 13:35': [
-    { ref: 'PSA 78:2', type: 'prophecy fulfillment', label: 'Matthew connects Jesus\' parables with the Psalm\'s promise to speak hidden things.' }
-  ],
-  'MAT 21:4': [
-    { ref: 'ZEC 9:9', type: 'prophecy fulfillment', label: 'Matthew frames Jesus\' entry into Jerusalem as fulfilling Zechariah.' }
-  ],
-  'MAT 21:5': [
-    { ref: 'ZEC 9:9', type: 'quotation', label: 'Matthew quotes Zechariah: the king comes humble and riding on a donkey.' },
-    { ref: 'ISA 62:11', type: 'quotation context', label: 'Matthew also echoes Isaiah\'s announcement to Zion.' }
-  ],
-  'MAT 26:31': [
-    { ref: 'ZEC 13:7', type: 'quotation', label: 'Jesus quotes Zechariah: strike the shepherd and the sheep will scatter.' }
-  ],
-  'MAT 27:46': [
-    { ref: 'PSA 22:1', type: 'quotation', label: 'Jesus cries out with the opening words of Psalm 22.' }
-  ],
-  'MRK 1:2': [
-    { ref: 'MAL 3:1', type: 'quotation', label: 'Mark opens with the messenger promised before the Lord.' }
-  ],
-  'MRK 1:3': [
-    { ref: 'ISA 40:3', type: 'quotation', label: 'Mark quotes Isaiah\'s voice preparing the way in the wilderness.' }
-  ],
-  'MRK 14:27': [
-    { ref: 'ZEC 13:7', type: 'quotation', label: 'Jesus quotes Zechariah on the shepherd being struck and the sheep scattered.' }
-  ],
-  'MRK 15:34': [
-    { ref: 'PSA 22:1', type: 'quotation', label: 'Jesus cries out with the opening words of Psalm 22.' }
-  ],
-  'LUK 3:4': [
-    { ref: 'ISA 40:3', type: 'quotation', label: 'Luke identifies John with Isaiah\'s voice in the wilderness.' }
-  ],
-  'LUK 3:5': [
-    { ref: 'ISA 40:4', type: 'quotation', label: 'Luke continues Isaiah\'s promise of the way being prepared.' }
-  ],
-  'LUK 3:6': [
-    { ref: 'ISA 40:5', type: 'quotation', label: 'Luke quotes Isaiah on all flesh seeing God\'s salvation.' }
-  ],
-  'LUK 4:18': [
-    { ref: 'ISA 61:1', type: 'quotation', label: 'Jesus reads Isaiah\'s Spirit-anointed mission.' }
-  ],
-  'LUK 4:19': [
-    { ref: 'ISA 61:2', type: 'quotation', label: 'Jesus reads Isaiah\'s proclamation of the Lord\'s favor.' }
-  ],
-  'LUK 22:37': [
-    { ref: 'ISA 53:12', type: 'quotation', label: 'Jesus quotes Isaiah: He was numbered with the transgressors.' }
-  ],
-  'JOH 1:23': [
-    { ref: 'ISA 40:3', type: 'quotation', label: 'John the Baptist identifies himself with Isaiah\'s wilderness voice.' }
-  ],
-  'JOH 12:38': [
-    { ref: 'ISA 53:1', type: 'quotation', label: 'John quotes Isaiah on the rejected report and the revealed arm of the Lord.' }
-  ],
-  'JOH 12:40': [
-    { ref: 'ISA 6:10', type: 'quotation', label: 'John quotes Isaiah on blinded eyes and hardened hearts.' }
-  ],
-  'JOH 19:24': [
-    { ref: 'PSA 22:18', type: 'prophecy fulfillment', label: 'John connects the soldiers casting lots for Jesus\' garment with Psalm 22.' }
-  ],
-  'JOH 19:36': [
-    { ref: 'EXO 12:46', type: 'prophecy fulfillment', label: 'John connects Jesus\' unbroken bones with the Passover lamb command.' },
-    { ref: 'PSA 34:20', type: 'prophecy fulfillment', label: 'John also echoes the Psalm that none of the righteous sufferer\'s bones are broken.' }
-  ],
-  'JOH 19:37': [
-    { ref: 'ZEC 12:10', type: 'prophecy fulfillment', label: 'John points to Zechariah: they will look on the one they pierced.' }
-  ],
-  'ACT 2:16': [
-    { ref: 'JOL 2:28', type: 'prophecy fulfillment', label: 'Peter says Pentecost is what Joel spoke about.' }
-  ],
-  'ACT 2:17': [
-    { ref: 'JOL 2:28', type: 'quotation', label: 'Peter quotes Joel on God pouring out His Spirit.' }
-  ],
-  'ACT 2:18': [
-    { ref: 'JOL 2:29', type: 'quotation', label: 'Peter continues Joel\'s promise of the Spirit on servants.' }
-  ],
-  'ACT 2:19': [
-    { ref: 'JOL 2:30', type: 'quotation', label: 'Peter quotes Joel\'s signs and wonders language.' }
-  ],
-  'ACT 2:20': [
-    { ref: 'JOL 2:31', type: 'quotation', label: 'Peter quotes Joel on the day of the Lord.' }
-  ],
-  'ACT 2:21': [
-    { ref: 'JOL 2:32', type: 'quotation', label: 'Peter quotes Joel: everyone who calls on the Lord will be saved.' }
-  ],
-  'ACT 2:25': [
-    { ref: 'PSA 16:8', type: 'quotation', label: 'Peter quotes David\'s Psalm about the Lord at his right hand.' }
-  ],
-  'ACT 2:26': [
-    { ref: 'PSA 16:9', type: 'quotation', label: 'Peter continues Psalm 16 on hope and rejoicing.' }
-  ],
-  'ACT 2:27': [
-    { ref: 'PSA 16:10', type: 'quotation', label: 'Peter quotes Psalm 16 on the Holy One not seeing decay.' }
-  ],
-  'ACT 2:34': [
-    { ref: 'PSA 110:1', type: 'quotation', label: 'Peter quotes Psalm 110 on the Lord seated at God\'s right hand.' }
-  ],
-  'ACT 2:35': [
-    { ref: 'PSA 110:1', type: 'quotation', label: 'Peter completes Psalm 110: enemies made a footstool.' }
-  ],
-  'ACT 8:32': [
-    { ref: 'ISA 53:7', type: 'quotation', label: 'The Ethiopian official is reading Isaiah\'s suffering servant passage.' }
-  ],
-  'ACT 8:33': [
-    { ref: 'ISA 53:8', type: 'quotation', label: 'The quotation continues Isaiah\'s servant being humiliated and cut off.' }
-  ],
-  'ROM 1:17': [
-    { ref: 'HAB 2:4', type: 'quotation', label: 'Paul quotes Habakkuk on the righteous living by faith.' }
-  ],
-  'ROM 3:10': [
-    { ref: 'PSA 14:1', type: 'quotation', label: 'Paul begins a chain of Psalms showing universal sin.' },
-    { ref: 'PSA 53:1', type: 'parallel quote source', label: 'Parallel Psalm wording behind Paul\'s argument.' }
-  ],
-  'ROM 4:3': [
-    { ref: 'GEN 15:6', type: 'quotation', label: 'Paul quotes Abraham being counted righteous by faith.' }
-  ],
-  'ROM 9:25': [
-    { ref: 'HOS 2:23', type: 'quotation', label: 'Paul quotes Hosea to explain mercy given to those once not called God\'s people.' }
-  ],
-  'ROM 9:26': [
-    { ref: 'HOS 1:10', type: 'quotation', label: 'Paul continues Hosea\'s promise that those once not God\'s people will be called sons of the living God.' }
-  ],
-  'ROM 10:13': [
-    { ref: 'JOL 2:32', type: 'quotation', label: 'Paul quotes Joel: everyone who calls on the Lord will be saved.' }
-  ],
-  'ROM 11:8': [
-    { ref: 'DEU 29:4', type: 'allusion', label: 'Paul draws from Moses on Israel not yet receiving eyes to see.' },
-    { ref: 'ISA 29:10', type: 'allusion', label: 'Paul also echoes Isaiah\'s language of spiritual stupor.' }
-  ],
-  'ROM 15:9': [
-    { ref: 'PSA 18:49', type: 'quotation', label: 'Paul quotes David praising God among the nations.' },
-    { ref: '2SA 22:50', type: 'parallel quote source', label: 'The same Davidic song also appears in Samuel.' }
-  ],
-  'ROM 15:10': [
-    { ref: 'DEU 32:43', type: 'quotation', label: 'Paul quotes Moses calling the nations to rejoice with God\'s people.' }
-  ],
-  'ROM 15:11': [
-    { ref: 'PSA 117:1', type: 'quotation', label: 'Paul quotes the Psalm calling all nations to praise the Lord.' }
-  ],
-  'ROM 15:12': [
-    { ref: 'ISA 11:10', type: 'quotation', label: 'Paul quotes Isaiah on the root of Jesse becoming the hope of the nations.' }
-  ],
-  '1CO 1:19': [
-    { ref: 'ISA 29:14', type: 'quotation', label: 'Paul quotes Isaiah on God overturning human wisdom.' }
-  ],
-  '1CO 2:9': [
-    { ref: 'ISA 64:4', type: 'allusion', label: 'Paul draws on Isaiah\'s language about what God has prepared.' }
-  ],
-  '1CO 10:7': [
-    { ref: 'EXO 32:6', type: 'quotation', label: 'Paul quotes the golden-calf scene as a warning against idolatry.' }
-  ],
-  '1CO 14:21': [
-    { ref: 'ISA 28:11', type: 'quotation', label: 'Paul quotes Isaiah on foreign lips and strange tongues.' },
-    { ref: 'ISA 28:12', type: 'quotation context', label: 'The next verse completes the Isaiah warning Paul is using.' }
-  ],
-  '1CO 15:45': [
-    { ref: 'GEN 2:7', type: 'quotation', label: 'Paul quotes Genesis on Adam becoming a living being.' }
-  ],
-  '1CO 15:54': [
-    { ref: 'ISA 25:8', type: 'quotation', label: 'Paul quotes Isaiah on death being swallowed up in victory.' }
-  ],
-  '1CO 15:55': [
-    { ref: 'HOS 13:14', type: 'quotation', label: 'Paul quotes Hosea while celebrating resurrection victory over death.' }
-  ],
-  '2CO 6:16': [
-    { ref: 'LEV 26:12', type: 'quotation', label: 'Paul quotes covenant language about God dwelling among his people.' },
-    { ref: 'EZE 37:27', type: 'quotation context', label: 'Ezekiel gives the same restoration promise that God will dwell with his people.' }
-  ],
-  '2CO 6:17': [
-    { ref: 'ISA 52:11', type: 'quotation', label: 'Paul quotes Isaiah\'s call to come out and be separate.' }
-  ],
-  'GAL 3:6': [
-    { ref: 'GEN 15:6', type: 'quotation', label: 'Paul quotes Abraham being counted righteous by faith.' }
-  ],
-  'GAL 3:10': [
-    { ref: 'DEU 27:26', type: 'quotation', label: 'Paul quotes the curse on failing to abide by the law.' }
-  ],
-  'GAL 3:11': [
-    { ref: 'HAB 2:4', type: 'quotation', label: 'Paul quotes Habakkuk to contrast faith with law-based righteousness.' }
-  ],
-  'GAL 3:12': [
-    { ref: 'LEV 18:5', type: 'quotation', label: 'Paul quotes Leviticus on doing the law and living by it.' }
-  ],
-  'GAL 3:13': [
-    { ref: 'DEU 21:23', type: 'quotation', label: 'Paul quotes Deuteronomy on the one hanged on a tree being cursed.' }
-  ],
-  'GAL 4:27': [
-    { ref: 'ISA 54:1', type: 'quotation', label: 'Paul quotes Isaiah\'s promise to the barren woman.' }
-  ],
-  'EPH 4:8': [
-    { ref: 'PSA 68:18', type: 'quotation', label: 'Paul quotes the Psalm about ascending and giving gifts.' }
-  ]
-};
-
-window.RhemaCuratedScriptureNotes = RHEMA_CURATED_SCRIPTURE_NOTES;
-
 function _rhemaCuratedScriptureNotesForKey(key) {
-  return (window.RhemaCuratedScriptureNotes?.[key] || []).map(item => ({
+  const version = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
+  const official = window.RhemaScriptureNotes?.[version]?.[key]
+    || (version === 'MSB' ? window.RhemaScriptureNotes?.BSB?.[key] : null)
+    || [];
+  return official.map(item => ({
     ...item,
-    label: item.label || 'Quoted or alluded Scripture source.',
-    type: item.type || 'scripture link'
+    label: item.label || 'Scripture citation footnote.',
+    type: item.type || 'scripture citation',
+    source: item.source || `${version} official footnote`
   }));
 }
+
+window.getRhemaScriptureNotesForKey = _rhemaCuratedScriptureNotesForKey;
 
 function _rhemaExpandedCrossRefsForKey(key) {
   const raw = window.RhemaCrossRefs?.[key] || {};
@@ -25967,7 +25726,7 @@ function loadRhemaScripts() {
     }
     _rhemaLoading = true;
     let loaded = 0;
-    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js'];
+    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js'];
     let failed = false;
     for (const file of files) {
       const s = document.createElement('script');
