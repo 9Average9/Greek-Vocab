@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.165";
+const APP_VERSION = "3.0.166";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,10 +19243,15 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.165 &mdash; Wider Greek &amp; Usage Patterns</div>
+<div class="un-version-label">v3.0.166 &mdash; Wider Greek &amp; Usage Patterns</div>
 <ul>
   <li><strong>The lexicon now reads beyond the New Testament</strong> &mdash; 4,604 words carry their classical-Greek entry from Liddell-Scott-Jones, occurrence counts in the Apostolic Fathers show whether the next generation kept using a word, and a literature timeline (classical &middot; Septuagint &middot; NT &middot; Apostolic Fathers) appears in Range of Meaning.</li>
   <li><strong>Greek usage patterns</strong> &mdash; 354 well-attested words now show how their occurrences group by the Greek words around them, with no English in the loop &mdash; revealing range that a uniform translation can flatten (try &sigma;&alpha;&rho;&xi;).</li>
+</ul>
+<div class="un-version-label">v3.0.165 &mdash; Rhema Definition Accuracy</div>
+<ul>
+  <li><strong>Quick definitions are cleaner</strong> &mdash; Rhema now prefers lexicon-backed prose meanings over raw sentence fragments from translation alignment, so words like comfort no longer land on nearby English glue words like "any."</li>
+  <li><strong>Parsing and Definition agree</strong> &mdash; The Parsing tab now shows the same modern Rhema quick definition, while still showing the exact parsed form underneath.</li>
 </ul>
 <div class="un-version-label">v3.0.164 &mdash; Note Sheet Fix</div>
 <ul>
@@ -29073,11 +29078,21 @@ function renderRhemaParsing(surface, strongs, morph, lemma, layer = getCurrentOr
   const inflectedGloss = morph?.startsWith('V-')
     ? _sxVerbGloss(morph, lex.brief)
     : _nounGloss(morph, lex.brief);
+  const summary = _rhemaDefinitionSummary(lex);
+  const quickDefinition = summary.text || inflectedGloss || '';
+  const parseQuickId = `rhemaParseQuick-${strongs}-${++_deepAnswerSeq}`;
+  const quickHtml = quickDefinition
+    ? `<div class="rhema-parse-quick" id="${parseQuickId}">
+        <div class="rhema-def-label">Quick Definition</div>
+        <div class="rhema-def-quick-text"><strong>${_escapeRhemaAttr(quickDefinition)}</strong></div>
+      </div>`
+    : `<div class="rhema-parse-quick hidden" id="${parseQuickId}"></div>`;
+  setTimeout(() => _populateParsingQuickDefinition(parseQuickId, strongs, layer, morph, inflectedGloss), 0);
   const glossHtml = inflectedGloss
-    ? `<div class="rhema-inflected-gloss">"${inflectedGloss}"</div>`
+    ? `<div class="rhema-inflected-gloss">This form: "${inflectedGloss}"</div>`
     : '';
 
-  return glossHtml + `<div class="rhema-parsing-grid">` +
+  return quickHtml + glossHtml + `<div class="rhema-parsing-grid">` +
     rows.map(r => {
       // Render the value as a tappable link when a grammar example exists for it
       let valueHtml = `<div class="rhema-parse-value">${r.value}</div>`;
@@ -29720,7 +29735,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.165';
+const DEEP_LEXICON_VERSION = '3.0.166';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 
 function loadDeepLexiconEntry(strongs) {
@@ -29752,6 +29767,62 @@ const _DEEP_CONFIDENCE_LABELS = {
   low: 'Low confidence', none: 'No NT usage',
 };
 
+const _DEEP_FRAGMENT_ARTIFACTS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'but', 'for', 'of', 'to', 'in', 'on', 'at', 'by',
+  'with', 'from', 'into', 'upon', 'any', 'all', 'one', 'some', 'those', 'these',
+  'this', 'that', 'what', 'who', 'whom', 'whose', 'which', 'when', 'where', 'why',
+  'how', 'he', 'she', 'it', 'they', 'them', 'his', 'her', 'their', 'our', 'your',
+  'my', 'me', 'we', 'you', 'him', 'us', 'own', 'up', 'out', 'off', 'then',
+]);
+
+function _deepCleanMeaningText(value = '') {
+  return rhemaPlainDefinitionText(value)
+    .replace(/^["'“”]+|["'“”]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function _deepLooksLikeAlignmentArtifact(value = '') {
+  const clean = _deepCleanMeaningText(value).toLowerCase();
+  if (!clean) return true;
+  if (_DEEP_FRAGMENT_ARTIFACTS.has(clean)) return true;
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length === 1) return _RHEMA_GLOSS_STOPWORDS.has(clean);
+  const meaningful = words.filter(w => !_DEEP_FRAGMENT_ARTIFACTS.has(w) && !_RHEMA_GLOSS_STOPWORDS.has(w));
+  return meaningful.length === 0;
+}
+
+function _deepSenseMeaning(entry = {}, sense = null, senseIndex = 0) {
+  const proseLabels = entry.prose?.senseLabels || [];
+  const label = _deepCleanMeaningText(proseLabels[senseIndex] || '');
+  if (label) return { text: label, source: 'lexicon-backed sense', raw: sense?.display || '' };
+
+  const raw = _deepCleanMeaningText(sense?.display || '');
+  if (raw && !_deepLooksLikeAlignmentArtifact(raw)) {
+    return { text: raw, source: 'measured rendering', raw };
+  }
+
+  const def = _deepCleanMeaningText(entry.prose?.def || '');
+  if (def) return { text: def, source: 'plain-English lexicon definition', raw };
+  return { text: raw, source: 'measured rendering', raw };
+}
+
+function _deepDefinitionSummary(entry = {}, senseIndex = null) {
+  const senses = entry.senses || [];
+  const sense = senseIndex != null ? senses[senseIndex] : senses[0];
+  const idx = senseIndex != null ? senseIndex : 0;
+  const meaning = _deepSenseMeaning(entry, sense, idx);
+  const def = _deepCleanMeaningText(entry.prose?.def || '');
+  return {
+    text: meaning.text || def || '',
+    short: meaning.text || '',
+    def,
+    source: meaning.source,
+    raw: meaning.raw || '',
+    rawLooksSuspect: meaning.raw ? _deepLooksLikeAlignmentArtifact(meaning.raw) : false,
+  };
+}
+
 function renderDeepLexiconEvidence(entry, strongs) {
   const esc = _escapeRhemaAttr;
   const parts = [];
@@ -29766,16 +29837,19 @@ function renderDeepLexiconEvidence(entry, strongs) {
   if (senses.length) {
     parts.push(`<div class="rhema-deep-senses">${senses.map((sense, i) => {
       const pct = Math.round((sense.share || 0) * 100);
+      const meaning = _deepSenseMeaning(entry, sense, i);
+      const raw = _deepCleanMeaningText(sense.display || '');
+      const showRaw = raw && raw !== meaning.text;
       const meta = [];
       if (sense.bsbAgree != null) meta.push(`BSB agrees ${Math.round(sense.bsbAgree * 100)}%`);
       if (sense.corroborated?.length) meta.push(`in ${sense.corroborated.map(c => _DEEP_CORROBORATION_NAMES[c] || c).join(', ')}`);
       const refs = (sense.refs || []).slice(0, 3).map(r => _deepRefButton(r, strongs)).join('');
       return `<div class="rhema-deep-sense">
         <div class="rhema-deep-sense-top">
-          <span class="rhema-deep-gloss">${esc(sense.display)}</span>
+          <span class="rhema-deep-gloss">${esc(meaning.text || raw)}</span>
           <span class="rhema-deep-count">${sense.count}× · ${pct}%</span>
         </div>
-        ${senseLabels[i] ? `<div class="rhema-deep-sense-label">${esc(senseLabels[i])}</div>` : ''}
+        ${showRaw ? `<div class="rhema-deep-sense-label">${_deepLooksLikeAlignmentArtifact(raw) ? 'MSB phrase includes' : 'MSB renders'}: ${esc(raw)}</div>` : ''}
         <div class="rhema-deep-bar"><span style="width:${Math.max(pct, 2)}%"></span></div>
         ${meta.length ? `<div class="rhema-deep-meta">${esc(meta.join(' · '))}</div>` : ''}
         ${refs ? `<div class="rhema-deep-refs">${refs}</div>` : ''}
@@ -29826,7 +29900,7 @@ function renderDeepLexiconEvidence(entry, strongs) {
     <div class="rhema-deep-why hidden">${entry.why.map(p => `<p>${esc(p)}</p>`).join('')}</div>`);
   }
 
-  parts.push(`<div class="rhema-deep-foot">Measured from every occurrence in the Byzantine text against the MSB, cross-checked with the BSB — every count is verifiable at the cited verses. Statistical, not infallible: tap “Why this range?” for the full evidence trail.</div>`);
+  parts.push(`<div class="rhema-deep-foot">Measured from every occurrence in the Byzantine text against the MSB, cross-checked with the BSB. The app shows lexicon-backed meaning first, then the observed English wording where it helps; tap “Why this range?” for the evidence trail.</div>`);
   return parts.join('');
 }
 
@@ -29843,9 +29917,9 @@ function _populateDeepAnswer(elId, strongs, layer) {
   loadDeepLexiconEntry(strongs).then(entry => {
     const el = document.getElementById(elId);
     if (!el) return;
-    if (!entry || !entry.count || !entry.senses) { el.remove(); return; }
+    if (!entry || (!entry.count && !entry.prose?.def)) { el.remove(); return; }
     const esc = _escapeRhemaAttr;
-    const top = entry.senses[0];
+    const top = (entry.senses || [])[0];
 
     // Only claim "in this verse" when the tapped word really sits in the
     // current NT verse (the Word Library opens definitions with no verse).
@@ -29862,17 +29936,30 @@ function _populateDeepAnswer(elId, strongs, layer) {
     const prose = entry.prose || null;
     if (verseRef && verseSenseIdx !== undefined) {
       const sense = entry.senses[verseSenseIdx];
-      lines.push(`<div class="rhema-deep-answer-main">Here: <strong>“${esc(sense.display)}”</strong></div>`);
+      const meaning = _deepDefinitionSummary(entry, verseSenseIdx);
+      lines.push(`<div class="rhema-deep-answer-main">Here: <strong>“${esc(meaning.short || meaning.text)}”</strong></div>`);
       const pct = Math.round(sense.share * 100);
+      const rawNote = meaning.raw && meaning.raw !== meaning.text
+        ? ` · MSB phrase includes “${esc(meaning.raw)}”`
+        : '';
       lines.push(`<div class="rhema-deep-answer-sub">${verseSenseIdx === 0
         ? `Its usual sense — ${sense.count} of ${entry.count} NT uses (${pct}%)`
-        : `A secondary sense — ${sense.count} of ${entry.count} NT uses (${pct}%); most often “${esc(top.display)}”`}${sense.bsbAgree != null ? ` · BSB agrees ${Math.round(sense.bsbAgree * 100)}%` : ''}</div>`);
+        : `A secondary sense — ${sense.count} of ${entry.count} NT uses (${pct}%); most often “${esc(_deepDefinitionSummary(entry, 0).short || top.display)}”`}${sense.bsbAgree != null ? ` · BSB agrees ${Math.round(sense.bsbAgree * 100)}%` : ''}${rawNote}</div>`);
     } else if (verseRef && top) {
-      lines.push(`<div class="rhema-deep-answer-main">Here it has no English word of its own</div>`);
-      lines.push(`<div class="rhema-deep-answer-sub">It is woven into the phrasing of this verse. Where it stands alone it usually means <strong>“${esc(top.display)}”</strong> (${Math.round(top.share * 100)}% of ${entry.count} uses).</div>`);
+      const meaning = _deepDefinitionSummary(entry, 0);
+      lines.push(`<div class="rhema-deep-answer-main">Here: <strong>“${esc(meaning.short || meaning.text)}”</strong></div>`);
+      lines.push(`<div class="rhema-deep-answer-sub">Its English wording is woven into the phrase here. Across NT usage, this is the lexicon-backed sense (${Math.round(top.share * 100)}% measured from ${entry.count} uses).</div>`);
     } else if (top) {
-      lines.push(`<div class="rhema-deep-answer-main">Usually: <strong>“${esc(top.display)}”</strong></div>`);
-      lines.push(`<div class="rhema-deep-answer-sub">${top.count} of ${entry.count} NT uses (${Math.round(top.share * 100)}%)${top.bsbAgree != null ? ` · BSB agrees ${Math.round(top.bsbAgree * 100)}%` : ''}</div>`);
+      const meaning = _deepDefinitionSummary(entry, 0);
+      lines.push(`<div class="rhema-deep-answer-main">Usually: <strong>“${esc(meaning.short || meaning.text)}”</strong></div>`);
+      const rawNote = meaning.raw && meaning.raw !== meaning.text
+        ? ` · MSB phrase includes “${esc(meaning.raw)}”`
+        : '';
+      lines.push(`<div class="rhema-deep-answer-sub">${top.count} of ${entry.count} NT uses (${Math.round(top.share * 100)}%)${top.bsbAgree != null ? ` · BSB agrees ${Math.round(top.bsbAgree * 100)}%` : ''}${rawNote}</div>`);
+    } else if (prose?.def) {
+      const meaning = _deepDefinitionSummary(entry, null);
+      lines.push(`<div class="rhema-deep-answer-main">Meaning: <strong>“${esc(meaning.text)}”</strong></div>`);
+      if (entry.count) lines.push(`<div class="rhema-deep-answer-sub">This word is woven into the English phrasing, so the lexicon-backed definition is the clearer guide.</div>`);
     } else { el.remove(); return; }
 
     if (prose?.def) {
@@ -29908,6 +29995,30 @@ function _populateDeepAnswer(elId, strongs, layer) {
         if (label && !label.textContent.includes('LSJ')) label.textContent += ', LSJ';
       }
     }
+  });
+}
+
+function _populateParsingQuickDefinition(elId, strongs, layer, morph = '', inflectedGloss = '') {
+  if (layer === 'hebrew') return;
+  loadDeepLexiconEntry(strongs).then(entry => {
+    const el = document.getElementById(elId);
+    if (!el || !entry) return;
+    const deep = _deepDefinitionSummary(entry, null);
+    const quick = deep.text || inflectedGloss || '';
+    if (!quick) return;
+    const formHtml = inflectedGloss && inflectedGloss !== quick
+      ? `<div class="rhema-current-form-gloss">This form: <strong>${_escapeRhemaAttr(inflectedGloss)}</strong></div>`
+      : '';
+    const caution = deep.rawLooksSuspect && deep.raw
+      ? `<div class="rhema-deep-caution">The measured English phrase includes “${_escapeRhemaAttr(deep.raw)},” but that looks like surrounding sentence wording, so the quick definition uses the lexicon-backed meaning.</div>`
+      : '';
+    el.innerHTML = `
+      <div class="rhema-def-label">Quick Definition</div>
+      <div class="rhema-def-quick-text"><strong>${_escapeRhemaAttr(quick)}</strong></div>
+      ${formHtml}
+      ${caution}
+    `;
+    el.classList.remove('hidden');
   });
 }
 
