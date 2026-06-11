@@ -17042,6 +17042,135 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   font-size: 0.8rem;
   line-height: 1.45;
 }
+/* Deep lexicon — corpus-measured range of meaning */
+.rhema-deep-block {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color));
+}
+.rhema-deep-loading {
+  color: var(--muted-color);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+.rhema-deep-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.rhema-deep-head strong { font-size: 0.82rem; }
+.rhema-deep-conf {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.rhema-deep-conf-high     { background: color-mix(in srgb, #2e9e5b 18%, var(--card-color)); color: #2e9e5b; }
+.rhema-deep-conf-good     { background: color-mix(in srgb, var(--secondary-color) 16%, var(--card-color)); color: var(--secondary-color); }
+.rhema-deep-conf-moderate { background: color-mix(in srgb, #d98a26 18%, var(--card-color)); color: #d98a26; }
+.rhema-deep-conf-low,
+.rhema-deep-conf-none     { background: color-mix(in srgb, var(--muted-color) 16%, var(--card-color)); color: var(--muted-color); }
+.rhema-deep-senses {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.rhema-deep-sense-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.rhema-deep-gloss { font-weight: 800; font-size: 0.92rem; }
+.rhema-deep-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted-color);
+  white-space: nowrap;
+}
+.rhema-deep-bar {
+  height: 5px;
+  margin: 4px 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color));
+  overflow: hidden;
+}
+.rhema-deep-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--secondary-color);
+}
+.rhema-deep-meta {
+  font-size: 0.7rem;
+  color: var(--muted-color);
+  margin-bottom: 4px;
+}
+.rhema-deep-refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.rhema-deep-refs button {
+  padding: 3px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--card-color);
+  color: var(--secondary-color);
+  font-size: 0.66rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rhema-deep-refs button:active { transform: scale(0.97); }
+.rhema-deep-note {
+  font-size: 0.72rem;
+  color: var(--muted-color);
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+.rhema-deep-why-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 4px 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--card-color);
+  color: var(--text-color);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rhema-deep-why-btn .material-symbols-outlined { font-size: 1rem; }
+.rhema-deep-why-arrow { margin-left: auto; transition: transform 0.18s ease; }
+.rhema-deep-why-btn.open .rhema-deep-why-arrow { transform: rotate(180deg); }
+.rhema-deep-why {
+  padding: 8px 10px;
+  border-left: 3px solid color-mix(in srgb, var(--secondary-color) 45%, transparent);
+  margin: 6px 0;
+}
+.rhema-deep-why.hidden { display: none; }
+.rhema-deep-why p {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.rhema-deep-why p:last-child { margin-bottom: 0; }
+.rhema-deep-foot {
+  margin-top: 4px;
+  font-size: 0.66rem;
+  line-height: 1.4;
+  color: var(--muted-color);
+  font-style: italic;
+}
 .rhema-def-english {
   font-size: 0.78rem;
   color: var(--muted-color);

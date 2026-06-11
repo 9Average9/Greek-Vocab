@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.157";
+const APP_VERSION = "3.0.158";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19242,6 +19242,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.158 &mdash; Measured Range of Meaning</div>
+<ul>
+  <li><strong>Range of Meaning is now measured, not guessed</strong> &mdash; Tap Range of Meaning on any Greek word to see how the Majority Standard Bible actually renders it across every occurrence in the Byzantine text: each sense with counts, share, independent BSB agreement, lexicon corroboration, tappable citations, Septuagint usage with Hebrew counterparts, and a "Why this range?" walkthrough showing the full evidence trail. Data loads on demand in small pieces, so the app stays fast.</li>
+</ul>
 <div class="un-version-label">v3.0.157 &mdash; Rhema Reader Tool Polish</div>
 <ul>
   <li><strong>Rhema tools tightened</strong> &mdash; Syntax now stays verse-only, full-chapter highlighting checks the whole chapter, English reader notes expose connected passages inline, and app updates no longer force a mid-session reload.</li>
@@ -29599,6 +29603,119 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
   if (!willOpen) return;
   panel.innerHTML = renderRhemaRangeMeaning(strongs, layer);
   panel.classList.remove('hidden');
+  _injectDeepLexiconRange(panel, strongs, layer);
+}
+
+// ── Deep lexicon (corpus-measured range of meaning) ──────────────────────────
+// Built by scripts/build-deep-lexicon.js. Entries are sharded JSON (100
+// Strong's numbers each) fetched on demand, so the app never carries the
+// whole dataset: in-memory cache here, service-worker runtime cache offline.
+
+const DEEP_LEXICON_VERSION = '3.0.158';
+const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
+
+function loadDeepLexiconEntry(strongs) {
+  const num = parseInt(strongs, 10);
+  if (!num || num <= 0 || num > 5700) return Promise.resolve(null);
+  const lo = Math.floor((num - 1) / 100) * 100 + 1;
+  if (!_deepLexiconShards.has(lo)) {
+    const file = `data/deep-lexicon/shard-${String(lo).padStart(4, '0')}.json`;
+    const promise = fetch(`${file}?v=${DEEP_LEXICON_VERSION}`)
+      .then(r => (r.ok ? r.json() : null))
+      .catch(() => null);
+    _deepLexiconShards.set(lo, promise);
+    promise.then(data => { if (!data) _deepLexiconShards.delete(lo); }); // allow retry
+  }
+  return _deepLexiconShards.get(lo).then(shard => (shard && shard[num]) || null);
+}
+
+function _deepRefButton(refStr, strongs) {
+  const m = String(refStr).match(/^(\S+) (\d+):(\d+)$/);
+  if (!m) return '';
+  const [, code, ch, v] = m;
+  const label = `${_rhemaBookName(code) || code} ${ch}:${v}`;
+  return `<button type="button" onclick="event.stopPropagation();jumpToRhemaVerse('${code}','${ch}','${v}','${_escapeRhemaAttr(strongs)}')">${_escapeRhemaAttr(label)}</button>`;
+}
+
+const _DEEP_CORROBORATION_NAMES = { dodson: 'Dodson', strongs: "Strong's", kjv: 'KJV' };
+const _DEEP_CONFIDENCE_LABELS = {
+  high: 'High confidence', good: 'Good confidence', moderate: 'Moderate confidence',
+  low: 'Low confidence', none: 'No NT usage',
+};
+
+function renderDeepLexiconEvidence(entry, strongs) {
+  const esc = _escapeRhemaAttr;
+  const parts = [];
+
+  parts.push(`<div class="rhema-deep-head">
+    <strong>Measured Range of Meaning</strong>
+    <span class="rhema-deep-conf rhema-deep-conf-${esc(entry.confidence)}">${esc(_DEEP_CONFIDENCE_LABELS[entry.confidence] || entry.confidence)}</span>
+  </div>`);
+
+  const senses = (entry.senses || []).slice(0, 6);
+  if (senses.length) {
+    parts.push(`<div class="rhema-deep-senses">${senses.map(sense => {
+      const pct = Math.round((sense.share || 0) * 100);
+      const meta = [];
+      if (sense.bsbAgree != null) meta.push(`BSB agrees ${Math.round(sense.bsbAgree * 100)}%`);
+      if (sense.corroborated?.length) meta.push(`in ${sense.corroborated.map(c => _DEEP_CORROBORATION_NAMES[c] || c).join(', ')}`);
+      const refs = (sense.refs || []).slice(0, 3).map(r => _deepRefButton(r, strongs)).join('');
+      return `<div class="rhema-deep-sense">
+        <div class="rhema-deep-sense-top">
+          <span class="rhema-deep-gloss">${esc(sense.display)}</span>
+          <span class="rhema-deep-count">${sense.count}× · ${pct}%</span>
+        </div>
+        <div class="rhema-deep-bar"><span style="width:${Math.max(pct, 2)}%"></span></div>
+        ${meta.length ? `<div class="rhema-deep-meta">${esc(meta.join(' · '))}</div>` : ''}
+        ${refs ? `<div class="rhema-deep-refs">${refs}</div>` : ''}
+      </div>`;
+    }).join('')}</div>`);
+  } else if (entry.count) {
+    parts.push(`<p class="rhema-range-muted">No single English rendering could be isolated for this word — see the explanation below.</p>`);
+  }
+
+  if (entry.rare?.length) {
+    parts.push(`<div class="rhema-deep-note">Rare renderings: ${entry.rare.slice(0, 4).map(r => esc(r.display)).join(', ')}</div>`);
+  }
+  if (entry.untranslated && entry.count && entry.untranslated >= Math.max(2, entry.count * 0.05)) {
+    parts.push(`<div class="rhema-deep-note">Absorbed into the English phrasing (no word of its own) ${entry.untranslated}× of ${entry.count}.</div>`);
+  }
+  if (entry.lxx) {
+    const heb = (entry.lxx.hebrew || []).slice(0, 3).map(h => `${h.lemma || 'H' + h.h} (${h.count}×)`).join(', ');
+    parts.push(`<div class="rhema-deep-note">Septuagint: ${entry.lxx.count}× in ${entry.lxx.books} book${entry.lxx.books === 1 ? '' : 's'}${heb ? ` · translates Hebrew ${esc(heb)}` : ''}</div>`);
+  }
+
+  if (entry.why?.length) {
+    parts.push(`<button type="button" class="rhema-deep-why-btn" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
+      <span class="material-symbols-outlined">help</span><span>Why this range?</span>
+      <span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
+    </button>
+    <div class="rhema-deep-why hidden">${entry.why.map(p => `<p>${esc(p)}</p>`).join('')}</div>`);
+  }
+
+  parts.push(`<div class="rhema-deep-foot">Measured from every occurrence in the Byzantine text against the MSB, cross-checked with the BSB — every count is verifiable at the cited verses. Statistical, not infallible: tap “Why this range?” for the full evidence trail.</div>`);
+  return parts.join('');
+}
+
+function _injectDeepLexiconRange(panel, strongs, layer) {
+  if (layer === 'hebrew') return;
+  panel.querySelectorAll('.rhema-deep-block').forEach(el => el.remove());
+  const holder = document.createElement('div');
+  holder.className = 'rhema-deep-block';
+  holder.innerHTML = '<div class="rhema-deep-loading">Measuring attested usage…</div>';
+  const head = panel.querySelector('.rhema-range-head');
+  if (head && head.nextSibling) panel.insertBefore(holder, head.nextSibling);
+  else panel.insertBefore(holder, panel.firstChild);
+  loadDeepLexiconEntry(strongs).then(entry => {
+    if (!holder.isConnected) return;
+    if (!entry || (!entry.count && !entry.lxx)) { holder.remove(); return; }
+    holder.innerHTML = renderDeepLexiconEvidence(entry, strongs);
+    // The measured senses supersede the heuristic gloss chips.
+    if (entry.senses?.length) {
+      const chips = panel.querySelector('.rhema-range-chip-row');
+      if (chips) chips.style.display = 'none';
+    }
+  });
 }
 
 function renderRhemaOccurrences(strongs, layer = getCurrentOriginalLanguageLayer()) {
