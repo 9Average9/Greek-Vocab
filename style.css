@@ -17161,6 +17161,40 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   line-height: 1.45;
   margin-bottom: 6px;
 }
+.rhema-deep-patterns {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+}
+.rhema-deep-patterns-head {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-color);
+  margin-bottom: 8px;
+}
+.rhema-deep-pattern { margin-bottom: 10px; }
+.rhema-deep-pattern:last-of-type { margin-bottom: 6px; }
+.rhema-deep-pattern-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.rhema-deep-pattern-comp {
+  font-size: 0.76rem;
+  margin: 2px 0;
+  line-height: 1.45;
+}
+.rhema-deep-pattern-comp em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--secondary-color);
+}
 .rhema-deep-why-btn {
   display: flex;
   align-items: center;

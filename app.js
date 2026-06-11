@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.164";
+const APP_VERSION = "3.0.165";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,6 +19243,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.165 &mdash; Wider Greek &amp; Usage Patterns</div>
+<ul>
+  <li><strong>The lexicon now reads beyond the New Testament</strong> &mdash; 4,604 words carry their classical-Greek entry from Liddell-Scott-Jones, occurrence counts in the Apostolic Fathers show whether the next generation kept using a word, and a literature timeline (classical &middot; Septuagint &middot; NT &middot; Apostolic Fathers) appears in Range of Meaning.</li>
+  <li><strong>Greek usage patterns</strong> &mdash; 354 well-attested words now show how their occurrences group by the Greek words around them, with no English in the loop &mdash; revealing range that a uniform translation can flatten (try &sigma;&alpha;&rho;&xi;).</li>
+</ul>
 <div class="un-version-label">v3.0.164 &mdash; Note Sheet Fix</div>
 <ul>
   <li><strong>Observation/interpretation sheet respects the notch</strong> &mdash; The title bar and close button no longer hide behind the status bar or Dynamic Island when adding a note in sandbox studies.</li>
@@ -29715,7 +29720,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.163';
+const DEEP_LEXICON_VERSION = '3.0.165';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 
 function loadDeepLexiconEntry(strongs) {
@@ -29778,6 +29783,28 @@ function renderDeepLexiconEvidence(entry, strongs) {
     }).join('')}</div>`);
   } else if (entry.count) {
     parts.push(`<p class="rhema-range-muted">No single English rendering could be isolated for this word — see the explanation below.</p>`);
+  }
+
+  if (entry.contexts?.length) {
+    parts.push(`<div class="rhema-deep-patterns">
+      <div class="rhema-deep-patterns-head">Greek usage patterns</div>
+      ${entry.contexts.map((c, i) => `<div class="rhema-deep-pattern">
+        <div class="rhema-deep-pattern-top"><span>Pattern ${i + 1}</span><span class="rhema-deep-count">${c.n}× · ${c.share}%</span></div>
+        <div class="rhema-deep-pattern-comp">keeps company with ${c.companions.map(x => `<em>${esc(x)}</em>`).join(', ')}</div>
+        <div class="rhema-deep-meta">rendered ${c.renderings.map(r => r.r === '(absorbed)' ? `woven into phrasing ${r.pct}%` : `“${esc(r.r)}” ${r.pct}%`).join(' · ')}</div>
+        ${(c.refs || []).length ? `<div class="rhema-deep-refs">${c.refs.map(r => _deepRefButton(r, strongs)).join('')}</div>` : ''}
+      </div>`).join('')}
+      <div class="rhema-deep-note">Patterns group occurrences by the Greek words around them — no English involved. The same English rendering across different company can hide a wider range.</div>
+    </div>`);
+  }
+
+  const dia = [];
+  if (entry.classical?.lsj) dia.push('classical Greek (in LSJ)');
+  if (entry.lxx) dia.push(`Septuagint ${entry.lxx.count}×`);
+  if (entry.count) dia.push(`NT ${entry.count}×`);
+  if (entry.classical?.af) dia.push(`Apostolic Fathers ≈${entry.classical.af}×`);
+  if (dia.length > 1) {
+    parts.push(`<div class="rhema-deep-note">Across Greek literature: ${esc(dia.join(' · '))}</div>`);
   }
 
   if (entry.rare?.length) {
@@ -29865,6 +29892,22 @@ function _populateDeepAnswer(elId, strongs, layer) {
         <span class="rhema-deep-conf rhema-deep-conf-${esc(entry.confidence)}">${esc(_DEEP_CONFIDENCE_LABELS[entry.confidence] || entry.confidence)}</span>
       </div>${lines.join('')}`;
     el.classList.remove('hidden');
+
+    // Slot the LSJ classical entry into the lexica expander (built before the
+    // shard arrived, so it gets appended here).
+    if (entry.classical?.lsj) {
+      const lexica = el.parentElement?.querySelector('.rhema-deep-lexica');
+      if (lexica && !lexica.querySelector('.rhema-deep-lsj')) {
+        const div = document.createElement('div');
+        div.className = 'rhema-def-section rhema-deep-lsj';
+        div.innerHTML = `<div class="rhema-def-label">LSJ — Classical Greek</div>
+          <div class="rhema-def-text">${esc(entry.classical.lsj)}</div>
+          <div class="rhema-def-english">Liddell-Scott-Jones: this word across all of ancient Greek literature, not just the New Testament.</div>`;
+        lexica.insertBefore(div, lexica.firstChild);
+        const label = lexica.previousElementSibling?.querySelectorAll('span')[1];
+        if (label && !label.textContent.includes('LSJ')) label.textContent += ', LSJ';
+      }
+    }
   });
 }
 

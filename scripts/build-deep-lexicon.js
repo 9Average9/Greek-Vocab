@@ -403,6 +403,124 @@ function spreadRefs(occList, limit) {
   return out.map(o => ref(o.book, o.ch, o.v));
 }
 
+// ── Greek-context clustering ─────────────────────────────────────────────────
+//
+// Groups a word's occurrences by their *Greek* surroundings (which content
+// words share the verse), with no English in the loop. Where one English
+// rendering spans several distinct context patterns, the word has range the
+// translation flattens — the σάρξ problem. Plain k-means over binary
+// co-occurrence vectors with cosine similarity; deterministic seeding.
+
+function clusterContexts(occList, verseContent, selfStrongs, lexicon) {
+  const n = occList.length;
+  if (n < 20) return null;
+
+  // Per-occurrence context set (co-occurring content strongs, self excluded)
+  const contexts = occList.map(o => {
+    const set = verseContent.get(`${o.book} ${o.ch}:${o.v}`) || [];
+    return set.filter(s => s !== selfStrongs);
+  });
+
+  // Global feature frequency within this word's occurrences
+  const globalFreq = new Map();
+  for (const ctx of contexts) for (const f of new Set(ctx)) globalFreq.set(f, (globalFreq.get(f) || 0) + 1);
+
+  const k = Math.min(4, Math.max(2, Math.floor(n / 25)));
+  // Deterministic seeds spread across the occurrence list
+  let assign = contexts.map((_, i) => i % k);
+
+  for (let iter = 0; iter < 8; iter++) {
+    // Centroids: feature → weight (normalized by cluster size)
+    const centroids = Array.from({ length: k }, () => new Map());
+    const sizes = new Array(k).fill(0);
+    contexts.forEach((ctx, i) => {
+      const c = assign[i];
+      sizes[c]++;
+      for (const f of new Set(ctx)) centroids[c].set(f, (centroids[c].get(f) || 0) + 1);
+    });
+    const norms = centroids.map(cen => Math.sqrt([...cen.values()].reduce((a, v) => a + v * v, 0)) || 1);
+    // Reassign by cosine
+    let changed = 0;
+    contexts.forEach((ctx, i) => {
+      let best = assign[i], bestSim = -1;
+      const feats = new Set(ctx);
+      for (let c = 0; c < k; c++) {
+        if (!sizes[c]) continue;
+        let dot = 0;
+        for (const f of feats) dot += centroids[c].get(f) || 0;
+        const sim = dot / (norms[c] * Math.sqrt(feats.size || 1));
+        if (sim > bestSim) { bestSim = sim; best = c; }
+      }
+      if (best !== assign[i]) { assign[i] = best; changed++; }
+    });
+    if (!changed) break;
+  }
+
+  // Collect clusters, drop tiny ones
+  const clusters = new Map();
+  assign.forEach((c, i) => {
+    if (!clusters.has(c)) clusters.set(c, []);
+    clusters.get(c).push(i);
+  });
+  const kept = [...clusters.values()].filter(idxs => idxs.length >= 5).sort((a, b) => b.length - a.length);
+  if (kept.length < 2) return null;
+
+  const out = [];
+  for (const idxs of kept.slice(0, 4)) {
+    const size = idxs.length;
+    // Distinctive companions by lift vs the word's own baseline
+    const freq = new Map();
+    for (const i of idxs) for (const f of new Set(contexts[i])) freq.set(f, (freq.get(f) || 0) + 1);
+    const companions = [...freq.entries()]
+      .map(([f, c]) => ({ f, c, lift: (c / size) / ((globalFreq.get(f) || 0) / n) }))
+      .filter(x => x.c >= Math.max(3, size * 0.15) && x.lift >= 1.8 && lexicon[x.f]?.lemma)
+      .sort((a, b) => b.lift * b.c - a.lift * a.c)
+      .slice(0, 4)
+      .map(x => lexicon[x.f].lemma);
+    if (!companions.length) continue;
+    // How this pattern is rendered in English
+    const rend = new Map();
+    for (const i of idxs) {
+      const key = occList[i].key || '(absorbed)';
+      rend.set(key, (rend.get(key) || 0) + 1);
+    }
+    const renderings = [...rend.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2)
+      .map(([kk, c]) => ({ r: kk === '(absorbed)' ? kk : (occList[idxs.find(i => occList[i].key === kk)]?.rendering || kk), pct: Math.round(c / size * 100) }));
+    out.push({
+      n: size,
+      share: Math.round(size / n * 100),
+      companions,
+      renderings,
+      refs: spreadRefs(idxs.map(i => occList[i]), 3),
+    });
+  }
+  return out.length >= 2 ? out : null;
+}
+
+// ── Sidecar merge ────────────────────────────────────────────────────────────
+// Rebuilds are idempotent: previously generated prose (Stage 2) and classical
+// data (LSJ / Apostolic Fathers) re-attach automatically when present.
+
+function loadSidecars() {
+  const prose = new Map();
+  const proseFile = path.join(OUT_DIR, 'prose', 'results.jsonl');
+  if (fs.existsSync(proseFile)) {
+    for (const line of fs.readFileSync(proseFile, 'utf8').split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const r = JSON.parse(line);
+        if (!r.error) prose.set(r.s, { def: r.definition, senseLabels: r.senseLabels, article: r.article, caution: r.caution, model: r.model, v: 1 });
+      } catch { /* skip */ }
+    }
+  }
+  let classical = {};
+  const classicalFile = path.join(OUT_DIR, 'classical', 'classical.json');
+  if (fs.existsSync(classicalFile)) {
+    classical = JSON.parse(fs.readFileSync(classicalFile, 'utf8')).entries || {};
+  }
+  return { prose, classical };
+}
+
 // ── Confidence + deterministic explanation ───────────────────────────────────
 
 function confidenceTier(entry) {
@@ -556,6 +674,13 @@ function main() {
   }
   console.log(`  ${occurrences.size} Strong's numbers with attested occurrences (${alignVerse.repaired || 0} renderings recovered by repair pass)`);
 
+  // Verse → content-word strongs, for Greek-context clustering
+  const verseContent = new Map();
+  for (const verse of msbCorpus) {
+    verseContent.set(ref(verse.book, verse.ch, verse.v),
+      [...new Set(verse.words.filter(w => isContentMorph(w[2])).map(w => w[1]))]);
+  }
+
   // ── 3. LXX usage + Hebrew counterparts ────────────────────────────────────
   console.log('\nTraining alignment: LXX Greek ↔ Hebrew OT…');
   const lxxText = w.RhemaLXX.text;
@@ -622,6 +747,10 @@ function main() {
 
   // ── 6. Build entries ──────────────────────────────────────────────────────
   console.log('\nAssembling entries…');
+  const { prose: proseSidecar, classical: classicalSidecar } = loadSidecars();
+  if (proseSidecar.size) console.log(`  sidecar: ${proseSidecar.size} prose entries will re-attach`);
+  if (Object.keys(classicalSidecar).length) console.log(`  sidecar: ${Object.keys(classicalSidecar).length} classical entries will re-attach`);
+  let clustered = 0;
   const allStrongs = new Set([
     ...Object.keys(lexicon).map(Number),
     ...occurrences.keys(),
@@ -710,6 +839,13 @@ function main() {
 
     const critical = criticalCounts.has(s) ? { count: criticalCounts.get(s) } : (occ.length ? { count: 0 } : null);
 
+    // Greek-context usage patterns (content words with enough occurrences)
+    let contexts = null;
+    if (occ.length >= 20 && occ[0] && isContentMorph(occ[0].morph)) {
+      contexts = clusterContexts(occ, verseContent, s, lexicon);
+      if (contexts) clustered++;
+    }
+
     const entry = {
       s,
       lemma: lex.lemma || '',
@@ -719,6 +855,7 @@ function main() {
       byBook,
       senses,
       verseSense,
+      contexts,
       rare,
       untranslated,
       lxx,
@@ -728,9 +865,11 @@ function main() {
     };
     entry.confidence = confidenceTier(entry);
     entry.why = buildWhy(entry, bookNames, hebLexicon);
+    if (proseSidecar.has(s)) entry.prose = proseSidecar.get(s);
+    if (classicalSidecar[s]) entry.classical = classicalSidecar[s];
     entries.set(s, entry);
   }
-  console.log(`  ${entries.size} entries`);
+  console.log(`  ${entries.size} entries (${clustered} with Greek-context patterns)`);
 
   // ── 7. Write output ───────────────────────────────────────────────────────
   console.log('\nWriting output…');
