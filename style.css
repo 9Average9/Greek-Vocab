@@ -17231,6 +17231,45 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   font-size: 0.84rem;
   line-height: 1.5;
 }
+.rhema-deep-article-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--card-color);
+  color: var(--text-color);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rhema-deep-article-btn .material-symbols-outlined { font-size: 1rem; }
+.rhema-deep-article-btn.open .rhema-deep-why-arrow { transform: rotate(180deg); }
+.rhema-deep-article {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.rhema-deep-article.hidden { display: none; }
+.rhema-deep-caution {
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-left: 3px solid color-mix(in srgb, #d98a26 60%, transparent);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, #d98a26 9%, var(--card-color));
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--muted-color);
+}
+.rhema-deep-sense-label {
+  margin-top: 1px;
+  font-size: 0.74rem;
+  font-style: italic;
+  color: var(--muted-color);
+}
 /* Collapsed reference-lexica expander */
 .rhema-deep-lexica-btn {
   display: flex;

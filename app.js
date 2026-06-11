@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.162";
+const APP_VERSION = "3.0.163";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,6 +19243,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.163 &mdash; Deep Lexicon Prose</div>
+<ul>
+  <li><strong>Every Greek word now has a written entry</strong> &mdash; All 5,523 words carry a plain-English definition, an "About this word" article grounded in the measured evidence, an honesty note where the evidence is thin, and named sense labels in the Range of Meaning panel.</li>
+</ul>
 <div class="un-version-label">v3.0.162 &mdash; Answer-First Word Study</div>
 <ul>
   <li><strong>The Definition tab now leads with the answer</strong> &mdash; Tap a word and the first thing you see is what it means in the verse you are reading, measured from how the Majority Standard Bible actually renders that occurrence: "Here: ‘miracles’ — a secondary sense (18%); most often ‘power’." The four classical lexicon entries are still there in full, now tucked behind a single "Full lexicon entries" expander so the screen stays calm.</li>
@@ -29707,7 +29711,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.162';
+const DEEP_LEXICON_VERSION = '3.0.163';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 
 function loadDeepLexiconEntry(strongs) {
@@ -29749,8 +29753,9 @@ function renderDeepLexiconEvidence(entry, strongs) {
   </div>`);
 
   const senses = (entry.senses || []).slice(0, 6);
+  const senseLabels = entry.prose?.senseLabels || [];
   if (senses.length) {
-    parts.push(`<div class="rhema-deep-senses">${senses.map(sense => {
+    parts.push(`<div class="rhema-deep-senses">${senses.map((sense, i) => {
       const pct = Math.round((sense.share || 0) * 100);
       const meta = [];
       if (sense.bsbAgree != null) meta.push(`BSB agrees ${Math.round(sense.bsbAgree * 100)}%`);
@@ -29761,6 +29766,7 @@ function renderDeepLexiconEvidence(entry, strongs) {
           <span class="rhema-deep-gloss">${esc(sense.display)}</span>
           <span class="rhema-deep-count">${sense.count}× · ${pct}%</span>
         </div>
+        ${senseLabels[i] ? `<div class="rhema-deep-sense-label">${esc(senseLabels[i])}</div>` : ''}
         <div class="rhema-deep-bar"><span style="width:${Math.max(pct, 2)}%"></span></div>
         ${meta.length ? `<div class="rhema-deep-meta">${esc(meta.join(' · '))}</div>` : ''}
         ${refs ? `<div class="rhema-deep-refs">${refs}</div>` : ''}
@@ -29840,6 +29846,14 @@ function _populateDeepAnswer(elId, strongs, layer) {
 
     if (prose?.def) {
       lines.push(`<div class="rhema-deep-answer-def">${esc(prose.def)}</div>`);
+    }
+    if (prose?.article) {
+      lines.push(`<button type="button" class="rhema-deep-article-btn" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
+        <span>About this word</span><span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
+      </button>
+      <div class="rhema-deep-article hidden">${esc(prose.article)}${prose.caution ? `<div class="rhema-deep-caution">${esc(prose.caution)}</div>` : ''}</div>`);
+    } else if (prose?.caution) {
+      lines.push(`<div class="rhema-deep-caution">${esc(prose.caution)}</div>`);
     }
 
     el.innerHTML = `<div class="rhema-deep-answer-head">
