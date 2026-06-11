@@ -15511,6 +15511,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   75%       { filter: brightness(0.8); }
 }
 .rhema-wheel-item.shake { animation: rw-shake 0.4s ease; }
+.rhema-wheel-item.disabled.shake { animation: rw-shake 0.4s ease; }
 
 /* ── POS Highlight toolbar ── */
 .rhema-highlight-bar {
@@ -15578,6 +15579,8 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 /* CONJ = amber */
 .rhema-hl-pill[data-cat="CONJ"].hl-active { background: rgba(250,204,21,0.8); color: #78350f; }
 .rhema-hl-pill[data-cat="ADV"].hl-active  { background: rgba(253,186,116,0.85); color: #7c2d12; }
+.rhema-hl-pill[data-cat="NEG"].hl-active  { background: rgba(248,113,113,0.86); }
+.rhema-hl-pill[data-cat="PART"].hl-active { background: rgba(148,163,184,0.9); color: #111827; }
 
 /* Selected but no matches in this verse — dimmed */
 .rhema-hl-pill.hl-dimmed {
@@ -15754,6 +15757,14 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   min-width: 58px;
   justify-content: center;
   font-weight: 800;
+  line-height: 1;
+  overflow: hidden;
+}
+.rhema-translation-pill.active {
+  background: var(--secondary-color);
+  color: var(--btn-text-color);
+  border-color: var(--secondary-color);
+  box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--secondary-color) 100%, transparent);
 }
 
 /* ── Full chapter rendering ── */
@@ -16244,6 +16255,113 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   -webkit-box-decoration-break: clone;
   color: color-mix(in srgb, var(--font-color) 82%, currentColor);
   font-weight: 650;
+  padding: 0 2px;
+}
+
+.rhema-reader-note-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 30px;
+  height: 20px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 30%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary-color) 10%, transparent);
+  color: var(--secondary-color);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  vertical-align: text-top;
+}
+.rhema-reader-note-btn .material-symbols-outlined { font-size: 13px; }
+.rhema-reader-note-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9060;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(0,0,0,0);
+  pointer-events: none;
+  transition: background 0.22s ease;
+}
+.rhema-reader-note-overlay.open {
+  background: rgba(0,0,0,0.34);
+  pointer-events: auto;
+}
+.rhema-reader-note-card {
+  width: 100%;
+  max-height: min(74svh, 680px);
+  overflow-y: auto;
+  background: var(--card-color);
+  border-radius: 22px 22px 0 0;
+  border-top: 1px solid var(--border-color);
+  padding: 18px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateY(100%);
+  transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -18px 40px rgba(0,0,0,0.22);
+}
+.rhema-reader-note-overlay.open .rhema-reader-note-card { transform: translateY(0); }
+.rhema-reader-note-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 38px;
+  color: var(--font-color);
+}
+.rhema-reader-note-head > .material-symbols-outlined {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--secondary-color) 13%, transparent);
+  color: var(--secondary-color);
+}
+.rhema-reader-note-head strong { display: block; font-size: 1.05rem; }
+.rhema-reader-note-head small { display: block; color: var(--muted-color); font-size: 0.78rem; margin-top: 2px; }
+.rhema-reader-note-source {
+  margin: 14px 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary-color) 80%, var(--card-color));
+  color: var(--font-color);
+  line-height: 1.55;
+}
+.rhema-reader-note-groups section { margin-top: 14px; }
+.rhema-reader-note-groups h4 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 8px;
+  font-size: 0.84rem;
+  color: var(--secondary-color);
+}
+.rhema-reader-note-groups h4 .material-symbols-outlined { font-size: 18px; }
+.rhema-reader-note-groups button {
+  width: 100%;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card-color) 96%, var(--primary-color));
+  color: var(--font-color);
+  padding: 10px 11px;
+  margin: 7px 0;
+}
+.rhema-reader-note-groups button strong { color: var(--secondary-color); font-size: 0.84rem; }
+.rhema-reader-note-groups button span { font-size: 0.83rem; line-height: 1.45; }
+.rhema-reader-note-groups button em { color: var(--muted-color); font-size: 0.72rem; font-style: normal; }
+
+.rsx-english-tree .rsx-diagram { padding-bottom: 20px; }
+.rsx-en-punct {
+  align-self: center;
+  color: var(--muted-color);
+  font-weight: 800;
   padding: 0 2px;
 }
 
