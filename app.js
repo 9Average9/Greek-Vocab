@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.167";
+const APP_VERSION = "3.0.168";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,6 +19243,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.168 &mdash; Rhema Lexicon Glosses</div>
+<ul>
+  <li><strong>The interlinear now speaks Rhema Lexicon</strong> &mdash; The English gloss under each Greek word comes from the measured lexicon: the actual rendering of that occurrence when known, otherwise the word's top measured sense. Glosses now wrap so the full text is always visible.</li>
+  <li><strong>Calmer Definition tab</strong> &mdash; The source tags and "Why this definition?" walkthrough now sit behind one tap instead of crowding the panel. Nothing was removed.</li>
+</ul>
 <div class="un-version-label">v3.0.167 &mdash; Scripture vs Language Evidence</div>
 <ul>
   <li><strong>Clear line between the Bible and language witnesses</strong> &mdash; Wherever classical authors (LSJ) or the Apostolic Fathers appear, the app now states plainly that they sit outside Scripture and only show how Greek speakers used a word. All measured senses come from the biblical text itself, and the Septuagint data covers only the 39 canonical Old Testament books.</li>
@@ -25755,6 +25760,7 @@ function loadRhemaScripts() {
       return;
     }
     _rhemaLoading = true;
+    loadDeepLexiconSpine();
     let loaded = 0;
     const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js'];
     let failed = false;
@@ -26378,11 +26384,16 @@ function _renderVerseWords(words, verse) {
       const variant = variantMap[i];
       const cls = `${isXref ? 'rhema-word xref' : 'rhema-word'}${variant ? ' has-variant' : ''}`;
       const lex = getCurrentRhemaLexicon(layer)[w[1]] || {};
-      const gloss = isHebrew
+      // Greek layers gloss from the Rhema Lexicon (verse-specific rendering
+      // when this word's shard is loaded, else its top measured sense);
+      // morphology-derived gloss remains the fallback.
+      const deepRef = !isHebrew && isRhemaNTBook(_rhemaBook) ? `${_rhemaBook} ${_rhemaChapter}:${verse || _rhemaVerse}` : null;
+      const deepGloss = isHebrew ? '' : _rhemaDeepGloss(w[1], deepRef);
+      const gloss = deepGloss || (isHebrew
         ? getRhemaQuickDefinition(lex)
         : w[2]?.startsWith('V-')
           ? _sxVerbGloss(w[2], lex.brief)
-          : _nounGloss(w[2], lex.brief);
+          : _nounGloss(w[2], lex.brief));
       const glossHtml = gloss ? `<span class="rhema-gloss">${gloss}</span>` : '';
       const variantTag = variant
         ? `<button class="rhema-variant-tag" onclick="event.stopPropagation();showRhemaVariant('${variant.label}', '${_escapeRhemaAttr(variant.text)}')" title="Text variant">var</button>`
@@ -29331,12 +29342,17 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
   const summary = _rhemaDefinitionSummary(lex);
   const quickDefinition = summary.text || _inflGloss || '';
   if (quickDefinition) {
+    // Source tags and the "why" walkthrough stay one tap away instead of
+    // crowding the panel — the data is intact, the surface is calm.
+    const whyContent = `${_rhemaSourceConfidenceHtml({ ...lex, strongs }, summary)}${_rhemaWhyDefinitionHtml({ lex, morph, quickDefinition, summary, inflectedGloss: _inflGloss })}`;
     sections.push(`<div class="rhema-def-section rhema-def-quick">
       <div class="rhema-def-label">Quick Definition</div>
       <div class="rhema-def-quick-text"><strong>${_escapeRhemaAttr(quickDefinition)}</strong></div>
       ${_inflGloss && _inflGloss !== quickDefinition ? `<div class="rhema-current-form-gloss">This form: <strong>${_escapeRhemaAttr(_inflGloss)}</strong></div>` : ''}
-      ${_rhemaSourceConfidenceHtml({ ...lex, strongs }, summary)}
-      ${_rhemaWhyDefinitionHtml({ lex, morph, quickDefinition, summary, inflectedGloss: _inflGloss })}
+      ${whyContent.trim() ? `<button type="button" class="rhema-why-toggle" onclick="this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
+        <span>Why this definition?</span><span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
+      </button>
+      <div class="rhema-why-wrap hidden">${whyContent}</div>` : ''}
       <button class="rhema-range-btn" onclick="toggleRhemaRangeMeaning('${_escapeRhemaAttr(strongs)}','${_escapeRhemaAttr(layer)}')">
         <span class="material-symbols-outlined">travel_explore</span>
         <span>Range of Meaning</span>
@@ -29741,6 +29757,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 
 const DEEP_LEXICON_VERSION = '3.0.166';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
+const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
 function loadDeepLexiconEntry(strongs) {
   const num = parseInt(strongs, 10);
@@ -29752,9 +29769,47 @@ function loadDeepLexiconEntry(strongs) {
       .then(r => (r.ok ? r.json() : null))
       .catch(() => null);
     _deepLexiconShards.set(lo, promise);
-    promise.then(data => { if (!data) _deepLexiconShards.delete(lo); }); // allow retry
+    promise.then(data => {
+      if (!data) _deepLexiconShards.delete(lo); // allow retry
+      else _deepLexiconData.set(lo, data);
+    });
   }
   return _deepLexiconShards.get(lo).then(shard => (shard && shard[num]) || null);
+}
+
+// Tiny spine (lemma + top measured gloss per word) — fetched once alongside
+// the Rhema data so the verse grid can gloss from the Rhema Lexicon.
+function loadDeepLexiconSpine() {
+  if (window.RhemaSpine || window._rhemaSpineLoading) return;
+  window._rhemaSpineLoading = true;
+  fetch(`data/deep-lexicon/spine.json?v=${DEEP_LEXICON_VERSION}`)
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => {
+      if (!d) { window._rhemaSpineLoading = false; return; }
+      window.RhemaSpine = d;
+      // Re-gloss the open chapter once the spine arrives
+      if (document.getElementById('rhemaModal')?.classList.contains('open')) {
+        try { renderRhemaVerse(); } catch { /* not fatal */ }
+      }
+    })
+    .catch(() => { window._rhemaSpineLoading = false; });
+}
+
+// Gloss for the verse grid, from the Rhema Lexicon: the measured rendering of
+// this exact occurrence when its shard is already loaded, else the word's top
+// measured sense from the spine. Returns '' when neither is available.
+function _rhemaDeepGloss(strongs, refStr) {
+  const num = parseInt(strongs, 10);
+  if (!num) return '';
+  const lo = Math.floor((num - 1) / 100) * 100 + 1;
+  const entry = _deepLexiconData.get(lo)?.[num];
+  if (entry && entry.senses?.length) {
+    if (refStr && entry.verseSense && refStr in entry.verseSense) {
+      return entry.senses[entry.verseSense[refStr]]?.display || '';
+    }
+    return entry.senses[0].display || '';
+  }
+  return (window.RhemaSpine?.[num]?.[1]) || '';
 }
 
 function _deepRefButton(refStr, strongs) {
@@ -29832,7 +29887,7 @@ function renderDeepLexiconEvidence(entry, strongs) {
   const parts = [];
 
   parts.push(`<div class="rhema-deep-head">
-    <strong>Measured Range of Meaning</strong>
+    <strong>Rhema Lexicon · Range of Meaning</strong>
     <span class="rhema-deep-conf rhema-deep-conf-${esc(entry.confidence)}">${esc(_DEEP_CONFIDENCE_LABELS[entry.confidence] || entry.confidence)}</span>
   </div>`);
 
@@ -29981,7 +30036,7 @@ function _populateDeepAnswer(elId, strongs, layer) {
     }
 
     el.innerHTML = `<div class="rhema-deep-answer-head">
-        <span class="rhema-def-label">${verseRef ? `In ${esc(_rhemaBookName(book) || book)} ${esc(ch)}:${esc(v)}` : 'Measured meaning'}</span>
+        <span class="rhema-def-label">${verseRef ? `In ${esc(_rhemaBookName(book) || book)} ${esc(ch)}:${esc(v)}` : 'Rhema Lexicon'}</span>
         <span class="rhema-deep-conf rhema-deep-conf-${esc(entry.confidence)}">${esc(_DEEP_CONFIDENCE_LABELS[entry.confidence] || entry.confidence)}</span>
       </div>${lines.join('')}`;
     el.classList.remove('hidden');

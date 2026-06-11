@@ -160,6 +160,12 @@ function isContentMorph(morph = '') {
   return pos === 'N' || pos === 'V' || pos === 'A' || pos === 'ADV';
 }
 
+// The verb "to be" (εἰμί and its form-split Strong's numbers in the Byzantine
+// tagging). Its genuine glosses — was, is, are, be — are exactly the words the
+// noise filter strips from other content words, so these are treated like
+// function words: no edge-trimming, no noise-nuking.
+const BE_VERB_STRONGS = new Set([1488, 1498, 1510, 1511, 1526, 2070, 2071, 2075, 2076, 2077, 2252, 2258, 2277, 2468, 5600, 5607]);
+
 // ── String interning (numeric IDs make the EM tables small and fast) ─────────
 
 class Interner {
@@ -650,7 +656,7 @@ function main() {
     const bsb = bsbByRef.get(ref(verse.book, verse.ch, verse.v));
     verse.words.forEach((wd, i) => {
       const [, strongs, morph] = wd;
-      const content = isContentMorph(morph);
+      const content = isContentMorph(morph) && !BE_VERB_STRONGS.has(strongs);
       const a = aligned[i];
       const key = a.words.length ? senseKey(a.words, content) : '';
       let bsbKey = null;

@@ -16196,12 +16196,13 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   opacity: 0.75;
   margin-top: 4px;
   letter-spacing: 0.01em;
-  white-space: nowrap;
-  max-width: 92px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Show the whole Rhema Lexicon gloss — wrap instead of truncating */
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  padding: 0 2px;
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 /* Greek-only overrides */
 .greek-only .rhema-word {
@@ -28201,3 +28202,27 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   font-style: italic;
   opacity: 0.85;
 }
+
+/* Collapsed "Why this definition?" toggle in the Quick Definition section */
+.rhema-why-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--card-color);
+  color: var(--text-color);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.rhema-why-toggle .rhema-deep-why-arrow { margin-left: auto; }
+.rhema-why-toggle.open .rhema-deep-why-arrow { transform: rotate(180deg); }
+.rhema-why-wrap { margin-top: 8px; }
+.rhema-why-wrap.hidden { display: none; }
+.rhema-why-wrap .rhema-why-def .rhema-def-label { display: none; } /* toggle already says it */
+.rhema-why-wrap .rhema-why-def { margin-top: 8px; }
