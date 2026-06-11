@@ -14517,6 +14517,10 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 .rx-active-category[data-xref-cat="direct"] {
   --rx-cat-color: #2656b8;
 }
+.rx-category-card[data-xref-cat="quoted"],
+.rx-active-category[data-xref-cat="quoted"] {
+  --rx-cat-color: #9a6519;
+}
 .rx-category-card[data-xref-cat="themes"],
 .rx-active-category[data-xref-cat="themes"] {
   --rx-cat-color: #087a4a;
@@ -16331,6 +16335,24 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   color: var(--font-color);
   line-height: 1.55;
 }
+.rhema-reader-note-actions {
+  display: flex;
+  margin: 0 0 10px;
+}
+.rhema-reader-note-actions button {
+  width: 100%;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 32%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--secondary-color) 13%, var(--card-color));
+  color: var(--secondary-color);
+  font-weight: 850;
+}
+.rhema-reader-note-actions .material-symbols-outlined { font-size: 19px; }
 .rhema-reader-note-groups section { margin-top: 14px; }
 .rhema-reader-note-groups h4 {
   display: flex;
@@ -16356,6 +16378,11 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 .rhema-reader-note-groups button strong { color: var(--secondary-color); font-size: 0.84rem; }
 .rhema-reader-note-groups button span { font-size: 0.83rem; line-height: 1.45; }
 .rhema-reader-note-groups button em { color: var(--muted-color); font-size: 0.72rem; font-style: normal; }
+.rhema-reader-note-groups button em b {
+  color: var(--secondary-color);
+  font-weight: 850;
+  text-transform: capitalize;
+}
 
 .rsx-english-tree .rsx-diagram { padding-bottom: 20px; }
 .rsx-en-punct {

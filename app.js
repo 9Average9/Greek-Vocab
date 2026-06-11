@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.158";
+const APP_VERSION = "3.0.161";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19239,12 +19239,25 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-bsb.js':       '3.0.65',
   'rhema-syntax.js':    '3.0.65',
   'rhema-crossrefs.js': '3.0.65',
+  'rhema-scripture-notes.js': '3.0.160',
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.158 &mdash; Measured Range of Meaning</div>
+<div class="un-version-label">v3.0.161 &mdash; Measured Range of Meaning</div>
 <ul>
   <li><strong>Range of Meaning is now measured, not guessed</strong> &mdash; Tap Range of Meaning on any Greek word to see how the Majority Standard Bible actually renders it across every occurrence in the Byzantine text: each sense with counts, share, independent BSB agreement, lexicon corroboration, tappable citations, Septuagint usage with Hebrew counterparts, and a "Why this range?" walkthrough showing the full evidence trail. Data loads on demand in small pieces, so the app stays fast.</li>
+</ul>
+<div class="un-version-label">v3.0.160 &mdash; Official Scripture Notes</div>
+<ul>
+  <li><strong>BSB/MSB note data imported</strong> &mdash; Rhema reader notes now come from the official BSB/MSB USJ footnote data, filtered to Scripture citation and cross-reference notes instead of hand-built guesses.</li>
+</ul>
+<div class="un-version-label">v3.0.159 &mdash; Focused Scripture Notes</div>
+<ul>
+  <li><strong>Reader notes are now selective</strong> &mdash; Inline notes only appear on clear quotation, allusion, or prophecy-fulfillment verses, and the sheet now shows those Scripture-note links instead of every general cross-reference.</li>
+</ul>
+<div class="un-version-label">v3.0.158 &mdash; Scripture Note Trails</div>
+<ul>
+  <li><strong>Reader notes now behave like trails</strong> &mdash; English reader note links now open into the cross-reference breadcrumb trail instead of only jumping verses, and quoted/alluded Old Testament sources are surfaced ahead of general related references.</li>
 </ul>
 <div class="un-version-label">v3.0.157 &mdash; Rhema Reader Tool Polish</div>
 <ul>
@@ -25303,32 +25316,64 @@ function _rhemaXrefKeyForVerse(book = _rhemaBook, chapter = _rhemaChapter, verse
   return `${book} ${chapter}:${verse}`;
 }
 
+function _rhemaCuratedScriptureNotesForKey(key) {
+  const version = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
+  const official = window.RhemaScriptureNotes?.[version]?.[key]
+    || (version === 'MSB' ? window.RhemaScriptureNotes?.BSB?.[key] : null)
+    || [];
+  return official.map(item => ({
+    ...item,
+    label: item.label || 'Scripture citation footnote.',
+    type: item.type || 'scripture citation',
+    source: item.source || `${version} official footnote`
+  }));
+}
+
+window.getRhemaScriptureNotesForKey = _rhemaCuratedScriptureNotesForKey;
+
 function _rhemaExpandedCrossRefsForKey(key) {
   const raw = window.RhemaCrossRefs?.[key] || {};
   const labels = window.RhemaCrossRefLabels || [];
+  const curated = _rhemaCuratedScriptureNotesForKey(key);
+  const curatedRefs = new Set(curated.map(item => item.ref));
   const maps = [
-    ['d', 'Direct Cross References', 'menu_book'],
-    ['t', 'Themes', 'hub'],
-    ['o', 'OT/NT Connections', 'link'],
-    ['p', 'Parallel Ideas', 'sync_alt'],
-    ['f', 'Prophecy', 'workspace_premium']
+    ['d', 'direct', 'Direct Cross References', 'menu_book'],
+    ['t', 'themes', 'Themes', 'hub'],
+    ['o', 'otNt', 'OT/NT Connections', 'link'],
+    ['p', 'parallel', 'Parallel Ideas', 'sync_alt'],
+    ['f', 'prophecy', 'Prophecy', 'workspace_premium']
   ];
-  return maps.map(([shortKey, title, icon]) => ({
+  const groups = maps.map(([shortKey, keyName, title, icon]) => ({
+    key: keyName,
     title,
     icon,
     refs: (raw[shortKey] || []).map(value => {
       const [ref, labelIndex] = String(value).split('|');
       return { ref, label: labels[Number(labelIndex)] || 'Related reference' };
-    })
+    }).filter(item => !curatedRefs.has(item.ref))
   })).filter(group => group.refs.length);
+  if (curated.length) {
+    groups.unshift({
+      key: 'quoted',
+      title: 'Quoted / Alluded Scripture',
+      icon: 'format_quote',
+      refs: curated.map(item => ({
+        ref: item.ref,
+        label: item.label,
+        type: item.type
+      }))
+    });
+  }
+  return groups;
 }
 
 function _rhemaInlineNoteHtml(book, chapter, verse) {
   const key = _rhemaXrefKeyForVerse(book, chapter, verse);
-  const count = _rhemaExpandedCrossRefsForKey(key).reduce((sum, group) => sum + group.refs.length, 0);
-  if (!count) return '';
-  return `<button class="rhema-reader-note-btn" onclick="event.stopPropagation();openRhemaReaderNote('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="${count} connected reference${count === 1 ? '' : 's'}">
-    <span class="material-symbols-outlined">sticky_note_2</span><span>${count}</span>
+  const notes = _rhemaCuratedScriptureNotesForKey(key);
+  if (!notes.length) return '';
+  const title = `${notes.length} Scripture note${notes.length === 1 ? '' : 's'}`;
+  return `<button class="rhema-reader-note-btn rhema-reader-note-btn-curated" onclick="event.stopPropagation();openRhemaReaderNote('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="${title}" aria-label="${title}">
+    <span class="material-symbols-outlined">sticky_note_2</span>
   </button>`;
 }
 
@@ -25348,8 +25393,8 @@ function _rhemaTextForRefKey(key) {
 
 function openRhemaReaderNote(book, chapter, verse) {
   const key = _rhemaXrefKeyForVerse(book, chapter, verse);
-  const groups = _rhemaExpandedCrossRefsForKey(key);
-  if (!groups.length) return;
+  const notes = _rhemaCuratedScriptureNotesForKey(key);
+  if (!notes.length) return;
   const existing = document.getElementById('rhemaReaderNoteSheet');
   if (existing) existing.remove();
   const sheet = document.createElement('div');
@@ -25360,27 +25405,45 @@ function openRhemaReaderNote(book, chapter, verse) {
     <button class="sheet-x-close" onclick="closeRhemaReaderNote()"><span class="material-symbols-outlined">close</span></button>
     <div class="rhema-reader-note-head">
       <span class="material-symbols-outlined">sticky_note_2</span>
-      <div><strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(key))}</strong><small>Reader notes and connected passages</small></div>
+      <div><strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(key))}</strong><small>Scripture note</small></div>
     </div>
     <p class="rhema-reader-note-source">${_escapeRhemaAttr(_rhemaEnglishText(book, chapter, verse))}</p>
-    <div class="rhema-reader-note-groups">${groups.map(group => `
+    <div class="rhema-reader-note-actions">
+      <button onclick="openRhemaReaderNoteTrail('${_escapeRhemaAttr(key)}','quoted')"><span class="material-symbols-outlined">route</span>Open as trail</button>
+    </div>
+    <div class="rhema-reader-note-groups">
       <section>
-        <h4><span class="material-symbols-outlined">${group.icon}</span>${_escapeRhemaAttr(group.title)}</h4>
-        ${group.refs.slice(0, 10).map(item => `<button onclick="openRhemaReaderNoteRef('${_escapeRhemaAttr(item.ref)}')">
+        <h4><span class="material-symbols-outlined">format_quote</span>Quoted / Alluded Scripture</h4>
+        ${notes.map(item => `<button onclick="openRhemaReaderNoteRef('${_escapeRhemaAttr(key)}','${_escapeRhemaAttr(item.ref)}','quoted')">
           <strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(item.ref))}</strong>
           <span>${_escapeRhemaAttr(_rhemaTextForRefKey(item.ref))}</span>
-          <em>${_escapeRhemaAttr(item.label)}</em>
+          <em><b>${_escapeRhemaAttr(item.type)}</b> - ${_escapeRhemaAttr(item.label)}</em>
         </button>`).join('')}
-      </section>`).join('')}</div>
+      </section>
+    </div>
   </div>`;
   document.getElementById('rhemaModal')?.appendChild(sheet);
   requestAnimationFrame(() => sheet.classList.add('open'));
 }
 
-function openRhemaReaderNoteRef(ref) {
+function openRhemaReaderNoteTrail(sourceRef, category = 'direct') {
+  closeRhemaReaderNote();
+  if (typeof openRhemaXrefTrailFromReader === 'function') {
+    openRhemaXrefTrailFromReader(sourceRef, null, category);
+    return;
+  }
+  const parsed = typeof _xrefParseRef === 'function' ? _xrefParseRef(sourceRef) : null;
+  if (parsed) jumpToRhemaVerse(parsed.book, parsed.chapter, parsed.verse);
+}
+
+function openRhemaReaderNoteRef(sourceRef, ref, category = '') {
   const parsed = typeof _xrefParseRef === 'function' ? _xrefParseRef(ref) : null;
   if (!parsed) return;
   closeRhemaReaderNote();
+  if (typeof openRhemaXrefTrailFromReader === 'function') {
+    openRhemaXrefTrailFromReader(sourceRef, ref, category || null);
+    return;
+  }
   jumpToRhemaVerse(parsed.book, parsed.chapter, parsed.verse);
 }
 
@@ -25667,7 +25730,7 @@ function loadRhemaScripts() {
     }
     _rhemaLoading = true;
     let loaded = 0;
-    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js'];
+    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js'];
     let failed = false;
     for (const file of files) {
       const s = document.createElement('script');
@@ -26994,6 +27057,10 @@ Object.assign(window, {
   closeCoachReplayModal,
   openRhemaNerdModal,
   closeRhemaNerdModal,
+  openRhemaReaderNote,
+  closeRhemaReaderNote,
+  openRhemaReaderNoteTrail,
+  openRhemaReaderNoteRef,
   startCoachReplay,
   appCoachNext,
   appCoachBack
@@ -29611,7 +29678,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.158';
+const DEEP_LEXICON_VERSION = '3.0.161';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 
 function loadDeepLexiconEntry(strongs) {

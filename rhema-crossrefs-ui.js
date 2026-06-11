@@ -1,4 +1,5 @@
 const RHEMA_XREF_CATEGORIES = [
+  { key: 'quoted', title: 'Quoted / Alluded Scripture', short: 'Quoted', icon: 'format_quote', desc: 'Places where this verse quotes, cites, or strongly echoes another Scripture passage.' },
   { key: 'direct', title: 'Direct Cross References', short: 'Direct', icon: 'menu_book', desc: 'Verses that directly reference or relate to this verse.' },
   { key: 'themes', title: 'Thematic Links', short: 'Themes', icon: 'hub', desc: 'Verses connected by common themes and topics.' },
   { key: 'otNt', title: 'Old Testament / New Testament Connections', short: 'OT/NT Connections', icon: 'link', desc: 'Verses connected across the Old and New Testament.' },
@@ -66,7 +67,9 @@ function _xrefEnglishText(refOrObj) {
 
 function _xrefCurrentData() {
   const raw = window.RhemaCrossRefs?.[_xrefKey()] || {};
-  if (raw.direct || raw.themes || raw.otNt || raw.parallel || raw.prophecy) return raw;
+  if (raw.direct || raw.themes || raw.otNt || raw.parallel || raw.prophecy || raw.quoted) {
+    return _xrefApplyCuratedScriptureNotes(raw, _xrefKey());
+  }
   const map = { d: 'direct', t: 'themes', o: 'otNt', p: 'parallel', f: 'prophecy' };
   const labels = window.RhemaCrossRefLabels || [];
   const expanded = {};
@@ -76,7 +79,31 @@ function _xrefCurrentData() {
       return { ref, label: labels[Number(labelIndex)] || 'Related reference' };
     });
   }
-  return expanded;
+  return _xrefApplyCuratedScriptureNotes(expanded, _xrefKey());
+}
+
+function _xrefCuratedScriptureNotes(key) {
+  if (typeof window.getRhemaScriptureNotesForKey === 'function') {
+    return window.getRhemaScriptureNotesForKey(key);
+  }
+  return [];
+}
+
+function _xrefApplyCuratedScriptureNotes(data, key) {
+  const curated = _xrefCuratedScriptureNotes(key);
+  if (!curated.length) return data;
+  const curatedRefs = new Set(curated.map(item => item.ref));
+  const next = {};
+  RHEMA_XREF_CATEGORIES.forEach(cat => { next[cat.key] = []; });
+  Object.entries(data || {}).forEach(([category, refs]) => {
+    next[category] = Array.isArray(refs) ? refs.filter(item => !curatedRefs.has(item.ref)) : [];
+  });
+  next.quoted = curated.map(item => ({
+    ref: item.ref,
+    label: item.label,
+    type: item.type
+  }));
+  return next;
 }
 
 function _xrefCategoryMeta(key) {
@@ -335,6 +362,27 @@ function rhemaXrefFollow(ref) {
   const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
   if (!inVsCtx && typeof syncRhemaPicker === 'function') syncRhemaPicker();
   renderRhemaCrossReferences();
+}
+
+function openRhemaXrefTrailFromReader(sourceRef, targetRef = null, category = null) {
+  const source = _xrefParseRef(sourceRef);
+  const target = targetRef ? _xrefParseRef(targetRef) : null;
+  const active = target || source;
+  if (!source || !active) return;
+  if (typeof closeRhemaWheel === 'function') closeRhemaWheel();
+  _rhemaXrefEnglishVersion = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
+  _rhemaXrefActive = active;
+  _rhemaBook = active.book;
+  _rhemaChapter = active.chapter;
+  _rhemaVerse = active.verse;
+  _rhemaXrefBreadcrumb = [_xrefKey(source)];
+  if (target) _rhemaXrefBreadcrumb.push(_xrefKey(target));
+  _rhemaXrefCursor = _rhemaXrefBreadcrumb.length - 1;
+  _rhemaXrefCategory = !target && category ? category : null;
+  _rhemaXrefView = _rhemaXrefCategory ? 'trail' : 'main';
+  if (typeof syncRhemaPicker === 'function') syncRhemaPicker();
+  if (_rhemaXrefCategory) renderRhemaXrefTrail();
+  else renderRhemaCrossReferences();
 }
 
 function rhemaXrefJumpBreadcrumb(idx) {
@@ -605,6 +653,7 @@ Object.assign(window, {
   closeRhemaCrossRefInfo,
   saveCurrentRhemaTrail,
   setRhemaXrefEnglishVersion,
+  openRhemaXrefTrailFromReader,
   openSavedRhemaTrail,
   deleteSandboxTrail,
   openRxBookPicker,
