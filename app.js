@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.162";
+const APP_VERSION = "3.0.163";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,6 +19243,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.163 &mdash; Written Definitions for Every Word</div>
+<ul>
+  <li><strong>Every Greek word now has a written definition</strong> &mdash; All 5,523 words in the deep lexicon now open with a plain-English definition written from the measured evidence: a one-sentence answer, a human label for each measured sense, a short article explaining the word&rsquo;s range (Hebrew counterparts, papyri usage, notable secondary senses), and an honest caution wherever the evidence is thin. Written once offline from the corpus data &mdash; nothing AI runs in the app, so lookups stay instant and work offline as before.</li>
+</ul>
 <div class="un-version-label">v3.0.162 &mdash; Answer-First Word Study</div>
 <ul>
   <li><strong>The Definition tab now leads with the answer</strong> &mdash; Tap a word and the first thing you see is what it means in the verse you are reading, measured from how the Majority Standard Bible actually renders that occurrence: "Here: ‘miracles’ — a secondary sense (18%); most often ‘power’." The four classical lexicon entries are still there in full, now tucked behind a single "Full lexicon entries" expander so the screen stays calm.</li>
@@ -29707,7 +29711,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.162';
+const DEEP_LEXICON_VERSION = '3.0.163';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 
 function loadDeepLexiconEntry(strongs) {
