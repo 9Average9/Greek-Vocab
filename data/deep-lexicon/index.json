@@ -1,0 +1,351 @@
+{
+  "version": 1,
+  "built": "2026-06-11",
+  "method": "IBM Model 1 alignment, Byzantine RP2018 ↔ MSB (primary) / BSB (cross-check); LXX ↔ Hebrew OT for counterparts",
+  "shardSize": 100,
+  "entries": 5523,
+  "shards": [
+    {
+      "file": "shard-0001.json",
+      "lo": 1,
+      "hi": 100,
+      "entries": 100
+    },
+    {
+      "file": "shard-0101.json",
+      "lo": 101,
+      "hi": 200,
+      "entries": 100
+    },
+    {
+      "file": "shard-0201.json",
+      "lo": 201,
+      "hi": 300,
+      "entries": 100
+    },
+    {
+      "file": "shard-0301.json",
+      "lo": 301,
+      "hi": 400,
+      "entries": 100
+    },
+    {
+      "file": "shard-0401.json",
+      "lo": 401,
+      "hi": 500,
+      "entries": 100
+    },
+    {
+      "file": "shard-0501.json",
+      "lo": 501,
+      "hi": 600,
+      "entries": 100
+    },
+    {
+      "file": "shard-0601.json",
+      "lo": 601,
+      "hi": 700,
+      "entries": 100
+    },
+    {
+      "file": "shard-0701.json",
+      "lo": 701,
+      "hi": 800,
+      "entries": 100
+    },
+    {
+      "file": "shard-0801.json",
+      "lo": 801,
+      "hi": 900,
+      "entries": 100
+    },
+    {
+      "file": "shard-0901.json",
+      "lo": 901,
+      "hi": 1000,
+      "entries": 100
+    },
+    {
+      "file": "shard-1001.json",
+      "lo": 1001,
+      "hi": 1100,
+      "entries": 100
+    },
+    {
+      "file": "shard-1101.json",
+      "lo": 1101,
+      "hi": 1200,
+      "entries": 100
+    },
+    {
+      "file": "shard-1201.json",
+      "lo": 1201,
+      "hi": 1300,
+      "entries": 100
+    },
+    {
+      "file": "shard-1301.json",
+      "lo": 1301,
+      "hi": 1400,
+      "entries": 100
+    },
+    {
+      "file": "shard-1401.json",
+      "lo": 1401,
+      "hi": 1500,
+      "entries": 100
+    },
+    {
+      "file": "shard-1501.json",
+      "lo": 1501,
+      "hi": 1600,
+      "entries": 100
+    },
+    {
+      "file": "shard-1601.json",
+      "lo": 1601,
+      "hi": 1700,
+      "entries": 100
+    },
+    {
+      "file": "shard-1701.json",
+      "lo": 1701,
+      "hi": 1800,
+      "entries": 100
+    },
+    {
+      "file": "shard-1801.json",
+      "lo": 1801,
+      "hi": 1900,
+      "entries": 100
+    },
+    {
+      "file": "shard-1901.json",
+      "lo": 1901,
+      "hi": 2000,
+      "entries": 100
+    },
+    {
+      "file": "shard-2001.json",
+      "lo": 2001,
+      "hi": 2100,
+      "entries": 100
+    },
+    {
+      "file": "shard-2101.json",
+      "lo": 2101,
+      "hi": 2200,
+      "entries": 100
+    },
+    {
+      "file": "shard-2201.json",
+      "lo": 2201,
+      "hi": 2300,
+      "entries": 100
+    },
+    {
+      "file": "shard-2301.json",
+      "lo": 2301,
+      "hi": 2400,
+      "entries": 100
+    },
+    {
+      "file": "shard-2401.json",
+      "lo": 2401,
+      "hi": 2500,
+      "entries": 100
+    },
+    {
+      "file": "shard-2501.json",
+      "lo": 2501,
+      "hi": 2600,
+      "entries": 100
+    },
+    {
+      "file": "shard-2601.json",
+      "lo": 2601,
+      "hi": 2700,
+      "entries": 100
+    },
+    {
+      "file": "shard-2701.json",
+      "lo": 2701,
+      "hi": 2800,
+      "entries": 99
+    },
+    {
+      "file": "shard-2801.json",
+      "lo": 2801,
+      "hi": 2900,
+      "entries": 100
+    },
+    {
+      "file": "shard-2901.json",
+      "lo": 2901,
+      "hi": 3000,
+      "entries": 100
+    },
+    {
+      "file": "shard-3001.json",
+      "lo": 3001,
+      "hi": 3100,
+      "entries": 100
+    },
+    {
+      "file": "shard-3101.json",
+      "lo": 3101,
+      "hi": 3200,
+      "entries": 100
+    },
+    {
+      "file": "shard-3201.json",
+      "lo": 3201,
+      "hi": 3300,
+      "entries": 2
+    },
+    {
+      "file": "shard-3301.json",
+      "lo": 3301,
+      "hi": 3400,
+      "entries": 98
+    },
+    {
+      "file": "shard-3401.json",
+      "lo": 3401,
+      "hi": 3500,
+      "entries": 100
+    },
+    {
+      "file": "shard-3501.json",
+      "lo": 3501,
+      "hi": 3600,
+      "entries": 100
+    },
+    {
+      "file": "shard-3601.json",
+      "lo": 3601,
+      "hi": 3700,
+      "entries": 100
+    },
+    {
+      "file": "shard-3701.json",
+      "lo": 3701,
+      "hi": 3800,
+      "entries": 100
+    },
+    {
+      "file": "shard-3801.json",
+      "lo": 3801,
+      "hi": 3900,
+      "entries": 100
+    },
+    {
+      "file": "shard-3901.json",
+      "lo": 3901,
+      "hi": 4000,
+      "entries": 100
+    },
+    {
+      "file": "shard-4001.json",
+      "lo": 4001,
+      "hi": 4100,
+      "entries": 100
+    },
+    {
+      "file": "shard-4101.json",
+      "lo": 4101,
+      "hi": 4200,
+      "entries": 100
+    },
+    {
+      "file": "shard-4201.json",
+      "lo": 4201,
+      "hi": 4300,
+      "entries": 100
+    },
+    {
+      "file": "shard-4301.json",
+      "lo": 4301,
+      "hi": 4400,
+      "entries": 100
+    },
+    {
+      "file": "shard-4401.json",
+      "lo": 4401,
+      "hi": 4500,
+      "entries": 100
+    },
+    {
+      "file": "shard-4501.json",
+      "lo": 4501,
+      "hi": 4600,
+      "entries": 100
+    },
+    {
+      "file": "shard-4601.json",
+      "lo": 4601,
+      "hi": 4700,
+      "entries": 100
+    },
+    {
+      "file": "shard-4701.json",
+      "lo": 4701,
+      "hi": 4800,
+      "entries": 100
+    },
+    {
+      "file": "shard-4801.json",
+      "lo": 4801,
+      "hi": 4900,
+      "entries": 100
+    },
+    {
+      "file": "shard-4901.json",
+      "lo": 4901,
+      "hi": 5000,
+      "entries": 100
+    },
+    {
+      "file": "shard-5001.json",
+      "lo": 5001,
+      "hi": 5100,
+      "entries": 100
+    },
+    {
+      "file": "shard-5101.json",
+      "lo": 5101,
+      "hi": 5200,
+      "entries": 100
+    },
+    {
+      "file": "shard-5201.json",
+      "lo": 5201,
+      "hi": 5300,
+      "entries": 100
+    },
+    {
+      "file": "shard-5301.json",
+      "lo": 5301,
+      "hi": 5400,
+      "entries": 100
+    },
+    {
+      "file": "shard-5401.json",
+      "lo": 5401,
+      "hi": 5500,
+      "entries": 100
+    },
+    {
+      "file": "shard-5501.json",
+      "lo": 5501,
+      "hi": 5600,
+      "entries": 100
+    },
+    {
+      "file": "shard-5601.json",
+      "lo": 5601,
+      "hi": 5700,
+      "entries": 24
+    }
+  ]
+}
