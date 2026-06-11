@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.158";
+const APP_VERSION = "3.0.159";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19242,6 +19242,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.159 &mdash; Focused Scripture Notes</div>
+<ul>
+  <li><strong>Reader notes are now selective</strong> &mdash; Inline notes only appear on clear quotation, allusion, or prophecy-fulfillment verses, and the sheet now shows those Scripture-note links instead of every general cross-reference.</li>
+</ul>
 <div class="un-version-label">v3.0.158 &mdash; Scripture Note Trails</div>
 <ul>
   <li><strong>Reader notes now behave like trails</strong> &mdash; English reader note links now open into the cross-reference breadcrumb trail instead of only jumping verses, and quoted/alluded Old Testament sources are surfaced ahead of general related references.</li>
@@ -25304,6 +25308,168 @@ function _rhemaXrefKeyForVerse(book = _rhemaBook, chapter = _rhemaChapter, verse
 }
 
 const RHEMA_CURATED_SCRIPTURE_NOTES = {
+  'MAT 1:22': [
+    { ref: 'ISA 7:14', type: 'prophecy fulfillment', label: 'Matthew points to Isaiah\'s virgin-birth sign being fulfilled in Jesus.' }
+  ],
+  'MAT 1:23': [
+    { ref: 'ISA 7:14', type: 'quotation', label: 'Matthew quotes Isaiah: the virgin will bear a son called Immanuel.' }
+  ],
+  'MAT 2:5': [
+    { ref: 'MIC 5:2', type: 'prophecy fulfillment', label: 'The priests and scribes identify Bethlehem from Micah\'s prophecy.' }
+  ],
+  'MAT 2:6': [
+    { ref: 'MIC 5:2', type: 'quotation', label: 'Matthew quotes Micah on the ruler coming from Bethlehem.' },
+    { ref: '2SA 5:2', type: 'allusion', label: 'The shepherd-ruler language also echoes David\'s calling.' }
+  ],
+  'MAT 2:15': [
+    { ref: 'HOS 11:1', type: 'prophecy fulfillment', label: 'Matthew applies Hosea\'s “Out of Egypt I called My Son” to Jesus.' }
+  ],
+  'MAT 2:17': [
+    { ref: 'JER 31:15', type: 'prophecy fulfillment', label: 'Matthew points to Jeremiah\'s lament over Rachel weeping.' }
+  ],
+  'MAT 2:18': [
+    { ref: 'JER 31:15', type: 'quotation', label: 'Matthew quotes Jeremiah\'s picture of Rachel weeping for her children.' }
+  ],
+  'MAT 3:3': [
+    { ref: 'ISA 40:3', type: 'quotation', label: 'Matthew identifies John the Baptist with Isaiah\'s voice in the wilderness.' }
+  ],
+  'MAT 4:14': [
+    { ref: 'ISA 9:1', type: 'prophecy fulfillment', label: 'Matthew connects Jesus\' Galilean ministry with Isaiah\'s promise of light.' }
+  ],
+  'MAT 4:15': [
+    { ref: 'ISA 9:1', type: 'quotation', label: 'Matthew quotes Isaiah\'s geography of Zebulun, Naphtali, and Galilee.' }
+  ],
+  'MAT 4:16': [
+    { ref: 'ISA 9:2', type: 'quotation', label: 'Matthew quotes Isaiah on light dawning for those in darkness.' }
+  ],
+  'MAT 8:17': [
+    { ref: 'ISA 53:4', type: 'prophecy fulfillment', label: 'Matthew connects Jesus\' healing ministry with Isaiah\'s servant carrying infirmities.' }
+  ],
+  'MAT 12:17': [
+    { ref: 'ISA 42:1', type: 'prophecy fulfillment', label: 'Matthew introduces Isaiah\'s servant song as fulfilled in Jesus.' }
+  ],
+  'MAT 12:18': [
+    { ref: 'ISA 42:1', type: 'quotation', label: 'Matthew quotes Isaiah\'s chosen servant on whom God puts His Spirit.' }
+  ],
+  'MAT 12:19': [
+    { ref: 'ISA 42:2', type: 'quotation', label: 'Matthew quotes Isaiah on the servant\'s quiet, non-striving ministry.' }
+  ],
+  'MAT 12:20': [
+    { ref: 'ISA 42:3', type: 'quotation', label: 'Matthew quotes Isaiah on the servant\'s gentleness toward the weak.' }
+  ],
+  'MAT 12:21': [
+    { ref: 'ISA 42:4', type: 'quotation', label: 'Matthew quotes Isaiah on the nations hoping in the servant.' }
+  ],
+  'MAT 13:14': [
+    { ref: 'ISA 6:9', type: 'quotation', label: 'Jesus quotes Isaiah on hearing without understanding.' }
+  ],
+  'MAT 13:15': [
+    { ref: 'ISA 6:10', type: 'quotation', label: 'Jesus continues Isaiah\'s warning about hardened hearts.' }
+  ],
+  'MAT 13:35': [
+    { ref: 'PSA 78:2', type: 'prophecy fulfillment', label: 'Matthew connects Jesus\' parables with the Psalm\'s promise to speak hidden things.' }
+  ],
+  'MAT 21:4': [
+    { ref: 'ZEC 9:9', type: 'prophecy fulfillment', label: 'Matthew frames Jesus\' entry into Jerusalem as fulfilling Zechariah.' }
+  ],
+  'MAT 21:5': [
+    { ref: 'ZEC 9:9', type: 'quotation', label: 'Matthew quotes Zechariah: the king comes humble and riding on a donkey.' },
+    { ref: 'ISA 62:11', type: 'quotation context', label: 'Matthew also echoes Isaiah\'s announcement to Zion.' }
+  ],
+  'MAT 26:31': [
+    { ref: 'ZEC 13:7', type: 'quotation', label: 'Jesus quotes Zechariah: strike the shepherd and the sheep will scatter.' }
+  ],
+  'MAT 27:46': [
+    { ref: 'PSA 22:1', type: 'quotation', label: 'Jesus cries out with the opening words of Psalm 22.' }
+  ],
+  'MRK 1:2': [
+    { ref: 'MAL 3:1', type: 'quotation', label: 'Mark opens with the messenger promised before the Lord.' }
+  ],
+  'MRK 1:3': [
+    { ref: 'ISA 40:3', type: 'quotation', label: 'Mark quotes Isaiah\'s voice preparing the way in the wilderness.' }
+  ],
+  'MRK 14:27': [
+    { ref: 'ZEC 13:7', type: 'quotation', label: 'Jesus quotes Zechariah on the shepherd being struck and the sheep scattered.' }
+  ],
+  'MRK 15:34': [
+    { ref: 'PSA 22:1', type: 'quotation', label: 'Jesus cries out with the opening words of Psalm 22.' }
+  ],
+  'LUK 3:4': [
+    { ref: 'ISA 40:3', type: 'quotation', label: 'Luke identifies John with Isaiah\'s voice in the wilderness.' }
+  ],
+  'LUK 3:5': [
+    { ref: 'ISA 40:4', type: 'quotation', label: 'Luke continues Isaiah\'s promise of the way being prepared.' }
+  ],
+  'LUK 3:6': [
+    { ref: 'ISA 40:5', type: 'quotation', label: 'Luke quotes Isaiah on all flesh seeing God\'s salvation.' }
+  ],
+  'LUK 4:18': [
+    { ref: 'ISA 61:1', type: 'quotation', label: 'Jesus reads Isaiah\'s Spirit-anointed mission.' }
+  ],
+  'LUK 4:19': [
+    { ref: 'ISA 61:2', type: 'quotation', label: 'Jesus reads Isaiah\'s proclamation of the Lord\'s favor.' }
+  ],
+  'LUK 22:37': [
+    { ref: 'ISA 53:12', type: 'quotation', label: 'Jesus quotes Isaiah: He was numbered with the transgressors.' }
+  ],
+  'JOH 1:23': [
+    { ref: 'ISA 40:3', type: 'quotation', label: 'John the Baptist identifies himself with Isaiah\'s wilderness voice.' }
+  ],
+  'JOH 12:38': [
+    { ref: 'ISA 53:1', type: 'quotation', label: 'John quotes Isaiah on the rejected report and the revealed arm of the Lord.' }
+  ],
+  'JOH 12:40': [
+    { ref: 'ISA 6:10', type: 'quotation', label: 'John quotes Isaiah on blinded eyes and hardened hearts.' }
+  ],
+  'JOH 19:24': [
+    { ref: 'PSA 22:18', type: 'prophecy fulfillment', label: 'John connects the soldiers casting lots for Jesus\' garment with Psalm 22.' }
+  ],
+  'JOH 19:36': [
+    { ref: 'EXO 12:46', type: 'prophecy fulfillment', label: 'John connects Jesus\' unbroken bones with the Passover lamb command.' },
+    { ref: 'PSA 34:20', type: 'prophecy fulfillment', label: 'John also echoes the Psalm that none of the righteous sufferer\'s bones are broken.' }
+  ],
+  'JOH 19:37': [
+    { ref: 'ZEC 12:10', type: 'prophecy fulfillment', label: 'John points to Zechariah: they will look on the one they pierced.' }
+  ],
+  'ACT 2:16': [
+    { ref: 'JOL 2:28', type: 'prophecy fulfillment', label: 'Peter says Pentecost is what Joel spoke about.' }
+  ],
+  'ACT 2:17': [
+    { ref: 'JOL 2:28', type: 'quotation', label: 'Peter quotes Joel on God pouring out His Spirit.' }
+  ],
+  'ACT 2:18': [
+    { ref: 'JOL 2:29', type: 'quotation', label: 'Peter continues Joel\'s promise of the Spirit on servants.' }
+  ],
+  'ACT 2:19': [
+    { ref: 'JOL 2:30', type: 'quotation', label: 'Peter quotes Joel\'s signs and wonders language.' }
+  ],
+  'ACT 2:20': [
+    { ref: 'JOL 2:31', type: 'quotation', label: 'Peter quotes Joel on the day of the Lord.' }
+  ],
+  'ACT 2:21': [
+    { ref: 'JOL 2:32', type: 'quotation', label: 'Peter quotes Joel: everyone who calls on the Lord will be saved.' }
+  ],
+  'ACT 2:25': [
+    { ref: 'PSA 16:8', type: 'quotation', label: 'Peter quotes David\'s Psalm about the Lord at his right hand.' }
+  ],
+  'ACT 2:26': [
+    { ref: 'PSA 16:9', type: 'quotation', label: 'Peter continues Psalm 16 on hope and rejoicing.' }
+  ],
+  'ACT 2:27': [
+    { ref: 'PSA 16:10', type: 'quotation', label: 'Peter quotes Psalm 16 on the Holy One not seeing decay.' }
+  ],
+  'ACT 2:34': [
+    { ref: 'PSA 110:1', type: 'quotation', label: 'Peter quotes Psalm 110 on the Lord seated at God\'s right hand.' }
+  ],
+  'ACT 2:35': [
+    { ref: 'PSA 110:1', type: 'quotation', label: 'Peter completes Psalm 110: enemies made a footstool.' }
+  ],
+  'ACT 8:32': [
+    { ref: 'ISA 53:7', type: 'quotation', label: 'The Ethiopian official is reading Isaiah\'s suffering servant passage.' }
+  ],
+  'ACT 8:33': [
+    { ref: 'ISA 53:8', type: 'quotation', label: 'The quotation continues Isaiah\'s servant being humiliated and cut off.' }
+  ],
   'ROM 1:17': [
     { ref: 'HAB 2:4', type: 'quotation', label: 'Paul quotes Habakkuk on the righteous living by faith.' }
   ],
@@ -25440,10 +25606,11 @@ function _rhemaExpandedCrossRefsForKey(key) {
 
 function _rhemaInlineNoteHtml(book, chapter, verse) {
   const key = _rhemaXrefKeyForVerse(book, chapter, verse);
-  const count = _rhemaExpandedCrossRefsForKey(key).reduce((sum, group) => sum + group.refs.length, 0);
-  if (!count) return '';
-  return `<button class="rhema-reader-note-btn" onclick="event.stopPropagation();openRhemaReaderNote('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="${count} connected reference${count === 1 ? '' : 's'}">
-    <span class="material-symbols-outlined">sticky_note_2</span><span>${count}</span>
+  const notes = _rhemaCuratedScriptureNotesForKey(key);
+  if (!notes.length) return '';
+  const title = `${notes.length} Scripture note${notes.length === 1 ? '' : 's'}`;
+  return `<button class="rhema-reader-note-btn rhema-reader-note-btn-curated" onclick="event.stopPropagation();openRhemaReaderNote('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="${title}" aria-label="${title}">
+    <span class="material-symbols-outlined">sticky_note_2</span>
   </button>`;
 }
 
@@ -25463,9 +25630,8 @@ function _rhemaTextForRefKey(key) {
 
 function openRhemaReaderNote(book, chapter, verse) {
   const key = _rhemaXrefKeyForVerse(book, chapter, verse);
-  const groups = _rhemaExpandedCrossRefsForKey(key);
-  if (!groups.length) return;
-  const primaryCategory = groups[0]?.key || 'direct';
+  const notes = _rhemaCuratedScriptureNotesForKey(key);
+  if (!notes.length) return;
   const existing = document.getElementById('rhemaReaderNoteSheet');
   if (existing) existing.remove();
   const sheet = document.createElement('div');
@@ -25476,21 +25642,22 @@ function openRhemaReaderNote(book, chapter, verse) {
     <button class="sheet-x-close" onclick="closeRhemaReaderNote()"><span class="material-symbols-outlined">close</span></button>
     <div class="rhema-reader-note-head">
       <span class="material-symbols-outlined">sticky_note_2</span>
-      <div><strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(key))}</strong><small>Reader notes and connected passages</small></div>
+      <div><strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(key))}</strong><small>Scripture note</small></div>
     </div>
     <p class="rhema-reader-note-source">${_escapeRhemaAttr(_rhemaEnglishText(book, chapter, verse))}</p>
     <div class="rhema-reader-note-actions">
-      <button onclick="openRhemaReaderNoteTrail('${_escapeRhemaAttr(key)}','${_escapeRhemaAttr(primaryCategory)}')"><span class="material-symbols-outlined">route</span>Open as trail</button>
+      <button onclick="openRhemaReaderNoteTrail('${_escapeRhemaAttr(key)}','quoted')"><span class="material-symbols-outlined">route</span>Open as trail</button>
     </div>
-    <div class="rhema-reader-note-groups">${groups.map(group => `
+    <div class="rhema-reader-note-groups">
       <section>
-        <h4><span class="material-symbols-outlined">${group.icon}</span>${_escapeRhemaAttr(group.title)}</h4>
-        ${group.refs.slice(0, 12).map(item => `<button onclick="openRhemaReaderNoteRef('${_escapeRhemaAttr(key)}','${_escapeRhemaAttr(item.ref)}','${_escapeRhemaAttr(group.key || '')}')">
+        <h4><span class="material-symbols-outlined">format_quote</span>Quoted / Alluded Scripture</h4>
+        ${notes.map(item => `<button onclick="openRhemaReaderNoteRef('${_escapeRhemaAttr(key)}','${_escapeRhemaAttr(item.ref)}','quoted')">
           <strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(item.ref))}</strong>
           <span>${_escapeRhemaAttr(_rhemaTextForRefKey(item.ref))}</span>
-          <em>${item.type ? `<b>${_escapeRhemaAttr(item.type)}</b> · ` : ''}${_escapeRhemaAttr(item.label)}</em>
+          <em><b>${_escapeRhemaAttr(item.type)}</b> - ${_escapeRhemaAttr(item.label)}</em>
         </button>`).join('')}
-      </section>`).join('')}</div>
+      </section>
+    </div>
   </div>`;
   document.getElementById('rhemaModal')?.appendChild(sheet);
   requestAnimationFrame(() => sheet.classList.add('open'));
