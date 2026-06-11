@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.157";
+const APP_VERSION = "3.0.158";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19242,6 +19242,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.158 &mdash; Scripture Note Trails</div>
+<ul>
+  <li><strong>Reader notes now behave like trails</strong> &mdash; English reader note links now open into the cross-reference breadcrumb trail instead of only jumping verses, and quoted/alluded Old Testament sources are surfaced ahead of general related references.</li>
+</ul>
 <div class="un-version-label">v3.0.157 &mdash; Rhema Reader Tool Polish</div>
 <ul>
   <li><strong>Rhema tools tightened</strong> &mdash; Syntax now stays verse-only, full-chapter highlighting checks the whole chapter, English reader notes expose connected passages inline, and app updates no longer force a mid-session reload.</li>
@@ -25299,24 +25303,139 @@ function _rhemaXrefKeyForVerse(book = _rhemaBook, chapter = _rhemaChapter, verse
   return `${book} ${chapter}:${verse}`;
 }
 
+const RHEMA_CURATED_SCRIPTURE_NOTES = {
+  'ROM 1:17': [
+    { ref: 'HAB 2:4', type: 'quotation', label: 'Paul quotes Habakkuk on the righteous living by faith.' }
+  ],
+  'ROM 3:10': [
+    { ref: 'PSA 14:1', type: 'quotation', label: 'Paul begins a chain of Psalms showing universal sin.' },
+    { ref: 'PSA 53:1', type: 'parallel quote source', label: 'Parallel Psalm wording behind Paul\'s argument.' }
+  ],
+  'ROM 4:3': [
+    { ref: 'GEN 15:6', type: 'quotation', label: 'Paul quotes Abraham being counted righteous by faith.' }
+  ],
+  'ROM 9:25': [
+    { ref: 'HOS 2:23', type: 'quotation', label: 'Paul quotes Hosea to explain mercy given to those once not called God\'s people.' }
+  ],
+  'ROM 9:26': [
+    { ref: 'HOS 1:10', type: 'quotation', label: 'Paul continues Hosea\'s promise that those once not God\'s people will be called sons of the living God.' }
+  ],
+  'ROM 10:13': [
+    { ref: 'JOL 2:32', type: 'quotation', label: 'Paul quotes Joel: everyone who calls on the Lord will be saved.' }
+  ],
+  'ROM 11:8': [
+    { ref: 'DEU 29:4', type: 'allusion', label: 'Paul draws from Moses on Israel not yet receiving eyes to see.' },
+    { ref: 'ISA 29:10', type: 'allusion', label: 'Paul also echoes Isaiah\'s language of spiritual stupor.' }
+  ],
+  'ROM 15:9': [
+    { ref: 'PSA 18:49', type: 'quotation', label: 'Paul quotes David praising God among the nations.' },
+    { ref: '2SA 22:50', type: 'parallel quote source', label: 'The same Davidic song also appears in Samuel.' }
+  ],
+  'ROM 15:10': [
+    { ref: 'DEU 32:43', type: 'quotation', label: 'Paul quotes Moses calling the nations to rejoice with God\'s people.' }
+  ],
+  'ROM 15:11': [
+    { ref: 'PSA 117:1', type: 'quotation', label: 'Paul quotes the Psalm calling all nations to praise the Lord.' }
+  ],
+  'ROM 15:12': [
+    { ref: 'ISA 11:10', type: 'quotation', label: 'Paul quotes Isaiah on the root of Jesse becoming the hope of the nations.' }
+  ],
+  '1CO 1:19': [
+    { ref: 'ISA 29:14', type: 'quotation', label: 'Paul quotes Isaiah on God overturning human wisdom.' }
+  ],
+  '1CO 2:9': [
+    { ref: 'ISA 64:4', type: 'allusion', label: 'Paul draws on Isaiah\'s language about what God has prepared.' }
+  ],
+  '1CO 10:7': [
+    { ref: 'EXO 32:6', type: 'quotation', label: 'Paul quotes the golden-calf scene as a warning against idolatry.' }
+  ],
+  '1CO 14:21': [
+    { ref: 'ISA 28:11', type: 'quotation', label: 'Paul quotes Isaiah on foreign lips and strange tongues.' },
+    { ref: 'ISA 28:12', type: 'quotation context', label: 'The next verse completes the Isaiah warning Paul is using.' }
+  ],
+  '1CO 15:45': [
+    { ref: 'GEN 2:7', type: 'quotation', label: 'Paul quotes Genesis on Adam becoming a living being.' }
+  ],
+  '1CO 15:54': [
+    { ref: 'ISA 25:8', type: 'quotation', label: 'Paul quotes Isaiah on death being swallowed up in victory.' }
+  ],
+  '1CO 15:55': [
+    { ref: 'HOS 13:14', type: 'quotation', label: 'Paul quotes Hosea while celebrating resurrection victory over death.' }
+  ],
+  '2CO 6:16': [
+    { ref: 'LEV 26:12', type: 'quotation', label: 'Paul quotes covenant language about God dwelling among his people.' },
+    { ref: 'EZE 37:27', type: 'quotation context', label: 'Ezekiel gives the same restoration promise that God will dwell with his people.' }
+  ],
+  '2CO 6:17': [
+    { ref: 'ISA 52:11', type: 'quotation', label: 'Paul quotes Isaiah\'s call to come out and be separate.' }
+  ],
+  'GAL 3:6': [
+    { ref: 'GEN 15:6', type: 'quotation', label: 'Paul quotes Abraham being counted righteous by faith.' }
+  ],
+  'GAL 3:10': [
+    { ref: 'DEU 27:26', type: 'quotation', label: 'Paul quotes the curse on failing to abide by the law.' }
+  ],
+  'GAL 3:11': [
+    { ref: 'HAB 2:4', type: 'quotation', label: 'Paul quotes Habakkuk to contrast faith with law-based righteousness.' }
+  ],
+  'GAL 3:12': [
+    { ref: 'LEV 18:5', type: 'quotation', label: 'Paul quotes Leviticus on doing the law and living by it.' }
+  ],
+  'GAL 3:13': [
+    { ref: 'DEU 21:23', type: 'quotation', label: 'Paul quotes Deuteronomy on the one hanged on a tree being cursed.' }
+  ],
+  'GAL 4:27': [
+    { ref: 'ISA 54:1', type: 'quotation', label: 'Paul quotes Isaiah\'s promise to the barren woman.' }
+  ],
+  'EPH 4:8': [
+    { ref: 'PSA 68:18', type: 'quotation', label: 'Paul quotes the Psalm about ascending and giving gifts.' }
+  ]
+};
+
+window.RhemaCuratedScriptureNotes = RHEMA_CURATED_SCRIPTURE_NOTES;
+
+function _rhemaCuratedScriptureNotesForKey(key) {
+  return (window.RhemaCuratedScriptureNotes?.[key] || []).map(item => ({
+    ...item,
+    label: item.label || 'Quoted or alluded Scripture source.',
+    type: item.type || 'scripture link'
+  }));
+}
+
 function _rhemaExpandedCrossRefsForKey(key) {
   const raw = window.RhemaCrossRefs?.[key] || {};
   const labels = window.RhemaCrossRefLabels || [];
+  const curated = _rhemaCuratedScriptureNotesForKey(key);
+  const curatedRefs = new Set(curated.map(item => item.ref));
   const maps = [
-    ['d', 'Direct Cross References', 'menu_book'],
-    ['t', 'Themes', 'hub'],
-    ['o', 'OT/NT Connections', 'link'],
-    ['p', 'Parallel Ideas', 'sync_alt'],
-    ['f', 'Prophecy', 'workspace_premium']
+    ['d', 'direct', 'Direct Cross References', 'menu_book'],
+    ['t', 'themes', 'Themes', 'hub'],
+    ['o', 'otNt', 'OT/NT Connections', 'link'],
+    ['p', 'parallel', 'Parallel Ideas', 'sync_alt'],
+    ['f', 'prophecy', 'Prophecy', 'workspace_premium']
   ];
-  return maps.map(([shortKey, title, icon]) => ({
+  const groups = maps.map(([shortKey, keyName, title, icon]) => ({
+    key: keyName,
     title,
     icon,
     refs: (raw[shortKey] || []).map(value => {
       const [ref, labelIndex] = String(value).split('|');
       return { ref, label: labels[Number(labelIndex)] || 'Related reference' };
-    })
+    }).filter(item => !curatedRefs.has(item.ref))
   })).filter(group => group.refs.length);
+  if (curated.length) {
+    groups.unshift({
+      key: 'quoted',
+      title: 'Quoted / Alluded Scripture',
+      icon: 'format_quote',
+      refs: curated.map(item => ({
+        ref: item.ref,
+        label: item.label,
+        type: item.type
+      }))
+    });
+  }
+  return groups;
 }
 
 function _rhemaInlineNoteHtml(book, chapter, verse) {
@@ -25346,6 +25465,7 @@ function openRhemaReaderNote(book, chapter, verse) {
   const key = _rhemaXrefKeyForVerse(book, chapter, verse);
   const groups = _rhemaExpandedCrossRefsForKey(key);
   if (!groups.length) return;
+  const primaryCategory = groups[0]?.key || 'direct';
   const existing = document.getElementById('rhemaReaderNoteSheet');
   if (existing) existing.remove();
   const sheet = document.createElement('div');
@@ -25359,13 +25479,16 @@ function openRhemaReaderNote(book, chapter, verse) {
       <div><strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(key))}</strong><small>Reader notes and connected passages</small></div>
     </div>
     <p class="rhema-reader-note-source">${_escapeRhemaAttr(_rhemaEnglishText(book, chapter, verse))}</p>
+    <div class="rhema-reader-note-actions">
+      <button onclick="openRhemaReaderNoteTrail('${_escapeRhemaAttr(key)}','${_escapeRhemaAttr(primaryCategory)}')"><span class="material-symbols-outlined">route</span>Open as trail</button>
+    </div>
     <div class="rhema-reader-note-groups">${groups.map(group => `
       <section>
         <h4><span class="material-symbols-outlined">${group.icon}</span>${_escapeRhemaAttr(group.title)}</h4>
-        ${group.refs.slice(0, 10).map(item => `<button onclick="openRhemaReaderNoteRef('${_escapeRhemaAttr(item.ref)}')">
+        ${group.refs.slice(0, 12).map(item => `<button onclick="openRhemaReaderNoteRef('${_escapeRhemaAttr(key)}','${_escapeRhemaAttr(item.ref)}','${_escapeRhemaAttr(group.key || '')}')">
           <strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(item.ref))}</strong>
           <span>${_escapeRhemaAttr(_rhemaTextForRefKey(item.ref))}</span>
-          <em>${_escapeRhemaAttr(item.label)}</em>
+          <em>${item.type ? `<b>${_escapeRhemaAttr(item.type)}</b> · ` : ''}${_escapeRhemaAttr(item.label)}</em>
         </button>`).join('')}
       </section>`).join('')}</div>
   </div>`;
@@ -25373,10 +25496,24 @@ function openRhemaReaderNote(book, chapter, verse) {
   requestAnimationFrame(() => sheet.classList.add('open'));
 }
 
-function openRhemaReaderNoteRef(ref) {
+function openRhemaReaderNoteTrail(sourceRef, category = 'direct') {
+  closeRhemaReaderNote();
+  if (typeof openRhemaXrefTrailFromReader === 'function') {
+    openRhemaXrefTrailFromReader(sourceRef, null, category);
+    return;
+  }
+  const parsed = typeof _xrefParseRef === 'function' ? _xrefParseRef(sourceRef) : null;
+  if (parsed) jumpToRhemaVerse(parsed.book, parsed.chapter, parsed.verse);
+}
+
+function openRhemaReaderNoteRef(sourceRef, ref, category = '') {
   const parsed = typeof _xrefParseRef === 'function' ? _xrefParseRef(ref) : null;
   if (!parsed) return;
   closeRhemaReaderNote();
+  if (typeof openRhemaXrefTrailFromReader === 'function') {
+    openRhemaXrefTrailFromReader(sourceRef, ref, category || null);
+    return;
+  }
   jumpToRhemaVerse(parsed.book, parsed.chapter, parsed.verse);
 }
 
@@ -26990,6 +27127,10 @@ Object.assign(window, {
   closeCoachReplayModal,
   openRhemaNerdModal,
   closeRhemaNerdModal,
+  openRhemaReaderNote,
+  closeRhemaReaderNote,
+  openRhemaReaderNoteTrail,
+  openRhemaReaderNoteRef,
   startCoachReplay,
   appCoachNext,
   appCoachBack
