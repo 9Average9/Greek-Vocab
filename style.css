@@ -28196,3 +28196,8 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   transform: scale(1.08);
   opacity: 1;
 }
+.rhema-deep-note-sub {
+  margin-top: 4px;
+  font-style: italic;
+  opacity: 0.85;
+}

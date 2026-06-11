@@ -19223,7 +19223,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.166";
+const APP_VERSION = "3.0.167";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,6 +19243,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.167 &mdash; Scripture vs Language Evidence</div>
+<ul>
+  <li><strong>Clear line between the Bible and language witnesses</strong> &mdash; Wherever classical authors (LSJ) or the Apostolic Fathers appear, the app now states plainly that they sit outside Scripture and only show how Greek speakers used a word. All measured senses come from the biblical text itself, and the Septuagint data covers only the 39 canonical Old Testament books.</li>
+</ul>
 <div class="un-version-label">v3.0.166 &mdash; Wider Greek &amp; Usage Patterns</div>
 <ul>
   <li><strong>The lexicon now reads beyond the New Testament</strong> &mdash; 4,604 words carry their classical-Greek entry from Liddell-Scott-Jones, occurrence counts in the Apostolic Fathers show whether the next generation kept using a word, and a literature timeline (classical &middot; Septuagint &middot; NT &middot; Apostolic Fathers) appears in Range of Meaning.</li>
@@ -29878,7 +29882,9 @@ function renderDeepLexiconEvidence(entry, strongs) {
   if (entry.count) dia.push(`NT ${entry.count}×`);
   if (entry.classical?.af) dia.push(`Apostolic Fathers ≈${entry.classical.af}×`);
   if (dia.length > 1) {
-    parts.push(`<div class="rhema-deep-note">Across Greek literature: ${esc(dia.join(' · '))}</div>`);
+    const extraBiblical = entry.classical?.lsj || entry.classical?.af;
+    parts.push(`<div class="rhema-deep-note">Across Greek literature: ${esc(dia.join(' · '))}${extraBiblical
+      ? `<div class="rhema-deep-note-sub">Classical authors (LSJ) and the Apostolic Fathers are outside the Bible — they only witness how Greek speakers used the word. All measured senses come from Scripture itself.</div>` : ''}</div>`);
   }
 
   if (entry.rare?.length) {
@@ -29989,7 +29995,7 @@ function _populateDeepAnswer(elId, strongs, layer) {
         div.className = 'rhema-def-section rhema-deep-lsj';
         div.innerHTML = `<div class="rhema-def-label">LSJ — Classical Greek</div>
           <div class="rhema-def-text">${esc(entry.classical.lsj)}</div>
-          <div class="rhema-def-english">Liddell-Scott-Jones: this word across all of ancient Greek literature, not just the New Testament.</div>`;
+          <div class="rhema-def-english">Liddell-Scott-Jones: this word across all of ancient Greek literature — classical and secular authors included. Language evidence for its range of meaning, not Scripture.</div>`;
         lexica.insertBefore(div, lexica.firstChild);
         const label = lexica.previousElementSibling?.querySelectorAll('span')[1];
         if (label && !label.textContent.includes('LSJ')) label.textContent += ', LSJ';
