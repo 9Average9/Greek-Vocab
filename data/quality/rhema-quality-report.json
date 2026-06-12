@@ -1,0 +1,3022 @@
+{
+  "generatedAt": "2026-06-12T02:48:54.069Z",
+  "scope": "NT Majority + Critical",
+  "summary": {
+    "total": 18173,
+    "bySeverity": {
+      "high": 1322,
+      "medium": 14477,
+      "low": 2374
+    },
+    "byType": {
+      "missingStrongs": 1322,
+      "functionWordDefinition": 26,
+      "lowConfidence": 8687,
+      "properNameCase": 1264,
+      "suspectReceipt": 4500,
+      "broadDefinition": 2374
+    }
+  },
+  "issues": [
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 1:16",
+      "index": 8,
+      "surface": "οἶδα",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 1:2",
+      "index": 17,
+      "surface": "ἐπικαλουμένοις",
+      "morph": "V-PMP-DPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 10:14",
+      "index": 6,
+      "surface": "εἰδωλολατρίας.",
+      "morph": "N-GSF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 10:2",
+      "index": 4,
+      "surface": "Μωϋσῆν",
+      "morph": "N-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 10:23",
+      "index": 1,
+      "surface": "ἔξεστιν·",
+      "morph": "V-PAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 10:23",
+      "index": 7,
+      "surface": "ἔξεστιν·",
+      "morph": "V-PAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 10:28",
+      "index": 6,
+      "surface": "⸀ἱερόθυτόν",
+      "morph": "A-NSN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 10:33",
+      "index": 9,
+      "surface": "⸀σύμφορον",
+      "morph": "A-ASN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:17",
+      "index": 13,
+      "surface": "ἧσσον",
+      "morph": "A-ASN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:2",
+      "index": 6,
+      "surface": "μέμνησθε",
+      "morph": "V-RMI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:3",
+      "index": 3,
+      "surface": "εἰδέναι",
+      "morph": "V-RAN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:30",
+      "index": 9,
+      "surface": "κοιμῶνται",
+      "morph": "V-PMI-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:34",
+      "index": 13,
+      "surface": "λοιπὰ",
+      "morph": "A-APN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:5",
+      "index": 20,
+      "surface": "ἐξυρημένῃ.",
+      "morph": "V-RPP-DSF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:6",
+      "index": 3,
+      "surface": "κατακαλύπτεται",
+      "morph": "V-PMI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:6",
+      "index": 14,
+      "surface": "ξυρᾶσθαι,",
+      "morph": "V-AMN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:6",
+      "index": 15,
+      "surface": "κατακαλυπτέσθω.",
+      "morph": "V-PMM-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 11:7",
+      "index": 5,
+      "surface": "κατακαλύπτεσθαι",
+      "morph": "V-PMN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 12:2",
+      "index": 0,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 12:28",
+      "index": 20,
+      "surface": "ἀντιλήμψεις,",
+      "morph": "N-APF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 12:31",
+      "index": 12,
+      "surface": "δείκνυμι.",
+      "morph": "V-PAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 13:5",
+      "index": 7,
+      "surface": "παροξύνεται,",
+      "morph": "V-PPI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 14:16",
+      "index": 22,
+      "surface": "οἶδεν·",
+      "morph": "V-RAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 15:15",
+      "index": 3,
+      "surface": "ψευδομάρτυρες",
+      "morph": "N-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 15:18",
+      "index": 3,
+      "surface": "κοιμηθέντες",
+      "morph": "V-APP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 15:20",
+      "index": 8,
+      "surface": "⸀κεκοιμημένων.",
+      "morph": "V-RMP-GPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 15:37",
+      "index": 18,
+      "surface": "λοιπῶν·",
+      "morph": "A-GPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 15:51",
+      "index": 6,
+      "surface": "κοιμηθησόμεθα",
+      "morph": "V-FPI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 15:58",
+      "index": 14,
+      "surface": "εἰδότες",
+      "morph": "V-RAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 15:6",
+      "index": 15,
+      "surface": "ἐκοιμήθησαν·",
+      "morph": "V-API-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 16:1",
+      "index": 3,
+      "surface": "λογείας",
+      "morph": "N-GSF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 16:13",
+      "index": 0,
+      "surface": "Γρηγορεῖτε,",
+      "morph": "V-PAM-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 16:13",
+      "index": 6,
+      "surface": "κραταιοῦσθε.",
+      "morph": "V-PPM-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 16:15",
+      "index": 4,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 16:2",
+      "index": 12,
+      "surface": "εὐοδῶται,",
+      "morph": "V-PPS-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 16:2",
+      "index": 18,
+      "surface": "λογεῖαι",
+      "morph": "N-NPF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 16:22",
+      "index": 8,
+      "surface": "⸂Μαράνα",
+      "morph": "N-VSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 16:22",
+      "index": 9,
+      "surface": "θά⸃.",
+      "morph": "V-AAM-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 2:10",
+      "index": 12,
+      "surface": "ἐραυνᾷ,",
+      "morph": "V-PAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 2:11",
+      "index": 2,
+      "surface": "οἶδεν",
+      "morph": "V-RAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 2:12",
+      "index": 16,
+      "surface": "εἰδῶμεν",
+      "morph": "V-RAS-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 2:2",
+      "index": 4,
+      "surface": "εἰδέναι⸃",
+      "morph": "V-RAN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 3:16",
+      "index": 1,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 4:11",
+      "index": 9,
+      "surface": "γυμνιτεύομεν",
+      "morph": "V-PAI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 4:13",
+      "index": 0,
+      "surface": "⸀δυσφημούμενοι",
+      "morph": "V-PPP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 4:13",
+      "index": 8,
+      "surface": "περίψημα",
+      "morph": "N-NSN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 4:4",
+      "index": 3,
+      "surface": "σύνοιδα,",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 5:6",
+      "index": 6,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:11",
+      "index": 5,
+      "surface": "ἀπελούσασθε,",
+      "morph": "V-AMI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:12",
+      "index": 2,
+      "surface": "ἔξεστιν·",
+      "morph": "V-PAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:12",
+      "index": 9,
+      "surface": "ἔξεστιν·",
+      "morph": "V-PAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:15",
+      "index": 1,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:16",
+      "index": 2,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:16",
+      "index": 5,
+      "surface": "κολλώμενος",
+      "morph": "V-PPP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:17",
+      "index": 2,
+      "surface": "κολλώμενος",
+      "morph": "V-PPP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:19",
+      "index": 2,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:2",
+      "index": 2,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:3",
+      "index": 1,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 6:9",
+      "index": 2,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:12",
+      "index": 2,
+      "surface": "λοιποῖς",
+      "morph": "A-DPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:16",
+      "index": 2,
+      "surface": "οἶδας,",
+      "morph": "V-RAI-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:16",
+      "index": 10,
+      "surface": "οἶδας,",
+      "morph": "V-RAI-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:21",
+      "index": 4,
+      "surface": "μελέτω·",
+      "morph": "V-PAM-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:25",
+      "index": 12,
+      "surface": "ἠλεημένος",
+      "morph": "V-RPP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:35",
+      "index": 6,
+      "surface": "⸀σύμφορον",
+      "morph": "A-ASN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:35",
+      "index": 18,
+      "surface": "⸀εὐπάρεδρον",
+      "morph": "A-ASN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:38",
+      "index": 3,
+      "surface": "⸀γαμίζων",
+      "morph": "V-PAP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:38",
+      "index": 12,
+      "surface": "⸁γαμίζων",
+      "morph": "V-PAP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:39",
+      "index": 11,
+      "surface": "κοιμηθῇ",
+      "morph": "V-APS-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 7:9",
+      "index": 10,
+      "surface": "πυροῦσθαι.",
+      "morph": "V-PPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 8:1",
+      "index": 4,
+      "surface": "οἴδαμεν",
+      "morph": "V-RAI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 8:4",
+      "index": 6,
+      "surface": "οἴδαμεν",
+      "morph": "V-RAI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 9:10",
+      "index": 14,
+      "surface": "ἀροτριῶν",
+      "morph": "V-PAP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 9:10",
+      "index": 15,
+      "surface": "ἀροτριᾶν,",
+      "morph": "V-PAN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 9:13",
+      "index": 1,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 9:13",
+      "index": 15,
+      "surface": "⸀παρεδρεύοντες",
+      "morph": "V-PAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 9:24",
+      "index": 1,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 9:26",
+      "index": 8,
+      "surface": "πυκτεύω",
+      "morph": "V-PAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 9:9",
+      "index": 7,
+      "surface": "⸀κημώσεις",
+      "morph": "V-FAI-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1CO 9:9",
+      "index": 13,
+      "surface": "μέλει",
+      "morph": "V-PAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 1:10",
+      "index": 5,
+      "surface": "ἐξηραύνησαν",
+      "morph": "V-AAI-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 1:11",
+      "index": 0,
+      "surface": "ἐραυνῶντες",
+      "morph": "V-PAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 1:14",
+      "index": 4,
+      "surface": "συσχηματιζόμενοι",
+      "morph": "V-PMP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 1:17",
+      "index": 3,
+      "surface": "ἐπικαλεῖσθε",
+      "morph": "V-PMI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 1:18",
+      "index": 0,
+      "surface": "εἰδότες",
+      "morph": "V-RAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 1:18",
+      "index": 7,
+      "surface": "ἐλυτρώθητε",
+      "morph": "V-API-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 2:10",
+      "index": 10,
+      "surface": "ἠλεημένοι",
+      "morph": "V-RPP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 2:10",
+      "index": 13,
+      "surface": "ἐλεηθέντες.",
+      "morph": "V-APP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 2:16",
+      "index": 5,
+      "surface": "ἐπικάλυμμα",
+      "morph": "N-ASN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 2:17",
+      "index": 7,
+      "surface": "φοβεῖσθε,",
+      "morph": "V-PMM-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 2:24",
+      "index": 16,
+      "surface": "ἀπογενόμενοι",
+      "morph": "V-AMP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 3:14",
+      "index": 12,
+      "surface": "φοβηθῆτε",
+      "morph": "V-APS-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 3:6",
+      "index": 14,
+      "surface": "φοβούμεναι",
+      "morph": "V-PMP-NPF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 3:8",
+      "index": 8,
+      "surface": "⸀ταπεινόφρονες,",
+      "morph": "A-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 4:1",
+      "index": 9,
+      "surface": "ὁπλίσασθε,",
+      "morph": "V-AMM-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 4:3",
+      "index": 19,
+      "surface": "εἰδωλολατρίαις.",
+      "morph": "N-DPF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 5:7",
+      "index": 4,
+      "surface": "ἐπιρίψαντες",
+      "morph": "V-AAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 5:7",
+      "index": 9,
+      "surface": "μέλει",
+      "morph": "V-PAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 5:8",
+      "index": 1,
+      "surface": "γρηγορήσατε.",
+      "morph": "V-AAM-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1PE 5:9",
+      "index": 5,
+      "surface": "εἰδότες",
+      "morph": "V-RAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 1:4",
+      "index": 0,
+      "surface": "εἰδότες,",
+      "morph": "V-RAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 1:5",
+      "index": 23,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 2:1",
+      "index": 2,
+      "surface": "οἴδατε,",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 2:11",
+      "index": 1,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 2:2",
+      "index": 5,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 2:5",
+      "index": 8,
+      "surface": "οἴδατε,",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 2:8",
+      "index": 1,
+      "surface": "ὁμειρόμενοι",
+      "morph": "V-PMP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 3:3",
+      "index": 2,
+      "surface": "σαίνεσθαι",
+      "morph": "V-PPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 3:3",
+      "index": 9,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 3:4",
+      "index": 15,
+      "surface": "οἴδατε.",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 4:13",
+      "index": 8,
+      "surface": "⸀κοιμωμένων,",
+      "morph": "V-PMP-GPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 4:14",
+      "index": 13,
+      "surface": "κοιμηθέντας",
+      "morph": "V-APP-APM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 4:15",
+      "index": 12,
+      "surface": "περιλειπόμενοι",
+      "morph": "V-PPP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 4:15",
+      "index": 22,
+      "surface": "κοιμηθέντας·",
+      "morph": "V-APP-APM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 4:16",
+      "index": 5,
+      "surface": "κελεύσματι,",
+      "morph": "N-DSN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 4:17",
+      "index": 5,
+      "surface": "περιλειπόμενοι",
+      "morph": "V-PPP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 4:2",
+      "index": 0,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 4:4",
+      "index": 0,
+      "surface": "εἰδέναι",
+      "morph": "V-RAN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 4:5",
+      "index": 10,
+      "surface": "εἰδότα",
+      "morph": "V-RAP-NPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 5:10",
+      "index": 6,
+      "surface": "γρηγορῶμεν",
+      "morph": "V-PAS-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 5:12",
+      "index": 4,
+      "surface": "εἰδέναι",
+      "morph": "V-RAN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 5:2",
+      "index": 3,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 5:27",
+      "index": 0,
+      "surface": "⸀ἐνορκίζω",
+      "morph": "V-PAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 5:6",
+      "index": 8,
+      "surface": "γρηγορῶμεν",
+      "morph": "V-PAS-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TH 5:7",
+      "index": 7,
+      "surface": "μεθυσκόμενοι",
+      "morph": "V-PPP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 1:13",
+      "index": 9,
+      "surface": "ἠλεήθην,",
+      "morph": "V-API-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 1:16",
+      "index": 3,
+      "surface": "ἠλεήθην,",
+      "morph": "V-API-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 1:4",
+      "index": 7,
+      "surface": "⸀ἐκζητήσεις",
+      "morph": "N-APF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 1:6",
+      "index": 3,
+      "surface": "ἐξετράπησαν",
+      "morph": "V-API-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 1:7",
+      "index": 4,
+      "surface": "νοοῦντες",
+      "morph": "V-PAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 1:8",
+      "index": 0,
+      "surface": "Οἴδαμεν",
+      "morph": "V-RAI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 1:9",
+      "index": 17,
+      "surface": "πατρολῴαις",
+      "morph": "N-DPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 1:9",
+      "index": 19,
+      "surface": "μητρολῴαις,",
+      "morph": "N-DPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 2:10",
+      "index": 4,
+      "surface": "ἐπαγγελλομέναις",
+      "morph": "V-PMP-DPF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 3:11",
+      "index": 5,
+      "surface": "νηφαλίους,",
+      "morph": "A-APF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 3:15",
+      "index": 4,
+      "surface": "εἰδῇς",
+      "morph": "V-RAS-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 3:2",
+      "index": 4,
+      "surface": "ἀνεπίλημπτον",
+      "morph": "A-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 3:2",
+      "index": 9,
+      "surface": "νηφάλιον,",
+      "morph": "A-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 3:5",
+      "index": 8,
+      "surface": "οἶδεν,",
+      "morph": "V-RAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 3:6",
+      "index": 4,
+      "surface": "τυφωθεὶς",
+      "morph": "V-APP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 4:1",
+      "index": 9,
+      "surface": "ἀποστήσονταί",
+      "morph": "V-FMI-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 4:2",
+      "index": 3,
+      "surface": "κεκαυστηριασμένων",
+      "morph": "V-RPP-GPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 4:6",
+      "index": 9,
+      "surface": "ἐντρεφόμενος",
+      "morph": "V-PPP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 5:15",
+      "index": 3,
+      "surface": "ἐξετράπησαν",
+      "morph": "V-API-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 5:5",
+      "index": 5,
+      "surface": "μεμονωμένη",
+      "morph": "V-RPP-NSF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 5:7",
+      "index": 4,
+      "surface": "ἀνεπίλημπτοι",
+      "morph": "A-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 6:11",
+      "index": 14,
+      "surface": "⸀πραϋπαθίαν.",
+      "morph": "N-ASF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 6:14",
+      "index": 5,
+      "surface": "ἀνεπίλημπτον",
+      "morph": "A-ASF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 6:15",
+      "index": 3,
+      "surface": "δείξει",
+      "morph": "V-FAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 6:20",
+      "index": 5,
+      "surface": "ἐκτρεπόμενος",
+      "morph": "V-PMP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 6:21",
+      "index": 2,
+      "surface": "ἐπαγγελλόμενοι",
+      "morph": "V-PMP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 6:4",
+      "index": 0,
+      "surface": "τετύφωται,",
+      "morph": "V-RPI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "1TI 6:5",
+      "index": 0,
+      "surface": "διαπαρατριβαὶ",
+      "morph": "N-NPF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 1:17",
+      "index": 10,
+      "surface": "βουλεύομαι",
+      "morph": "V-PMI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 1:17",
+      "index": 13,
+      "surface": "βουλεύομαι,",
+      "morph": "V-PMI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 1:23",
+      "index": 5,
+      "surface": "ἐπικαλοῦμαι",
+      "morph": "V-PMI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 1:7",
+      "index": 7,
+      "surface": "εἰδότες",
+      "morph": "V-RAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 10:12",
+      "index": 10,
+      "surface": "συνιστανόντων·",
+      "morph": "V-PAP-GPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 10:18",
+      "index": 4,
+      "surface": "⸀συνιστάνων,",
+      "morph": "V-PAP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 10:18",
+      "index": 12,
+      "surface": "συνίστησιν.",
+      "morph": "V-PAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 11:11",
+      "index": 8,
+      "surface": "οἶδεν.",
+      "morph": "V-RAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 11:2",
+      "index": 5,
+      "surface": "ἡρμοσάμην",
+      "morph": "V-AMI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 11:24",
+      "index": 3,
+      "surface": "τεσσεράκοντα",
+      "morph": "A-APF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 11:28",
+      "index": 4,
+      "surface": "⸀ἐπίστασίς",
+      "morph": "N-NSF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 11:29",
+      "index": 10,
+      "surface": "πυροῦμαι;",
+      "morph": "V-PPI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 11:3",
+      "index": 0,
+      "surface": "φοβοῦμαι",
+      "morph": "V-PMI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 11:31",
+      "index": 7,
+      "surface": "οἶδεν,",
+      "morph": "V-RAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:11",
+      "index": 10,
+      "surface": "συνίστασθαι.",
+      "morph": "V-PPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:13",
+      "index": 4,
+      "surface": "⸀ἡσσώθητε",
+      "morph": "V-API-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:13",
+      "index": 7,
+      "surface": "λοιπὰς",
+      "morph": "A-APF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:15",
+      "index": 5,
+      "surface": "ἐκδαπανηθήσομαι",
+      "morph": "V-FPI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:15",
+      "index": 14,
+      "surface": "ἧσσον",
+      "morph": "A-ASN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:2",
+      "index": 0,
+      "surface": "οἶδα",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:2",
+      "index": 11,
+      "surface": "οἶδα,",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:2",
+      "index": 17,
+      "surface": "οἶδα,",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:2",
+      "index": 20,
+      "surface": "οἶδεν—",
+      "morph": "V-RAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:20",
+      "index": 0,
+      "surface": "φοβοῦμαι",
+      "morph": "V-PMI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:3",
+      "index": 1,
+      "surface": "οἶδα",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:3",
+      "index": 13,
+      "surface": "οἶδα,",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:3",
+      "index": 16,
+      "surface": "οἶδεν—",
+      "morph": "V-RAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:4",
+      "index": 11,
+      "surface": "ἐξὸν",
+      "morph": "V-PAP-NSN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 12:8",
+      "index": 7,
+      "surface": "ἀποστῇ",
+      "morph": "V-AAS-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 13:2",
+      "index": 14,
+      "surface": "λοιποῖς",
+      "morph": "A-DPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 2:4",
+      "index": 11,
+      "surface": "δακρύων,",
+      "morph": "N-GPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 4:1",
+      "index": 7,
+      "surface": "ἠλεήθημεν,",
+      "morph": "V-API-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 4:1",
+      "index": 9,
+      "surface": "⸀ἐγκακοῦμεν,",
+      "morph": "V-PAI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 4:14",
+      "index": 0,
+      "surface": "εἰδότες",
+      "morph": "V-RAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 4:16",
+      "index": 2,
+      "surface": "⸀ἐγκακοῦμεν,",
+      "morph": "V-PAI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 4:2",
+      "index": 1,
+      "surface": "ἀπειπάμεθα",
+      "morph": "V-AMI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 4:2",
+      "index": 21,
+      "surface": "⸀συνιστάνοντες",
+      "morph": "V-PAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 4:8",
+      "index": 5,
+      "surface": "στενοχωρούμενοι,",
+      "morph": "V-PPP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 5:1",
+      "index": 0,
+      "surface": "Οἴδαμεν",
+      "morph": "V-RAI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 5:11",
+      "index": 0,
+      "surface": "Εἰδότες",
+      "morph": "V-RAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 5:12",
+      "index": 3,
+      "surface": "συνιστάνομεν",
+      "morph": "V-PAI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 5:16",
+      "index": 6,
+      "surface": "οἴδαμεν",
+      "morph": "V-RAI-1P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 5:6",
+      "index": 4,
+      "surface": "εἰδότες",
+      "morph": "V-RAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 6:12",
+      "index": 1,
+      "surface": "στενοχωρεῖσθε",
+      "morph": "V-PPI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 6:12",
+      "index": 4,
+      "surface": "στενοχωρεῖσθε",
+      "morph": "V-PPI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 6:15",
+      "index": 5,
+      "surface": "Βελιάρ,",
+      "morph": "N-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 6:4",
+      "index": 3,
+      "surface": "⸀συνιστάνοντες",
+      "morph": "V-PAP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 7:11",
+      "index": 26,
+      "surface": "συνεστήσατε",
+      "morph": "V-AAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 7:8",
+      "index": 9,
+      "surface": "μεταμέλομαι·",
+      "morph": "V-PMI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 7:8",
+      "index": 12,
+      "surface": "μετεμελόμην",
+      "morph": "V-IMI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 8:20",
+      "index": 0,
+      "surface": "στελλόμενοι",
+      "morph": "V-PMP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 9:10",
+      "index": 19,
+      "surface": "γενήματα",
+      "morph": "N-APN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2CO 9:2",
+      "index": 0,
+      "surface": "οἶδα",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 2:13",
+      "index": 17,
+      "surface": "συνευωχούμενοι",
+      "morph": "V-PMP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 2:17",
+      "index": 5,
+      "surface": "ὁμίχλαι⸃",
+      "morph": "N-NPF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 2:19",
+      "index": 2,
+      "surface": "ἐπαγγελλόμενοι,",
+      "morph": "V-PMP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 2:19",
+      "index": 11,
+      "surface": "ἥττηται,",
+      "morph": "V-RMI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 2:20",
+      "index": 18,
+      "surface": "ἐμπλακέντες",
+      "morph": "V-APP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 2:20",
+      "index": 19,
+      "surface": "ἡττῶνται,",
+      "morph": "V-RMI-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 2:22",
+      "index": 16,
+      "surface": "⸀κυλισμὸν",
+      "morph": "N-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 2:9",
+      "index": 0,
+      "surface": "οἶδεν",
+      "morph": "V-RAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:10",
+      "index": 14,
+      "surface": "καυσούμενα",
+      "morph": "V-PPP-NPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:12",
+      "index": 12,
+      "surface": "πυρούμενοι",
+      "morph": "V-PPP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:12",
+      "index": 16,
+      "surface": "καυσούμενα",
+      "morph": "V-PPP-NPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:12",
+      "index": 17,
+      "surface": "τήκεται·",
+      "morph": "V-PPI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:16",
+      "index": 25,
+      "surface": "λοιπὰς",
+      "morph": "A-APF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:17",
+      "index": 11,
+      "surface": "συναπαχθέντες",
+      "morph": "V-APP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:2",
+      "index": 0,
+      "surface": "μνησθῆναι",
+      "morph": "V-APN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:3",
+      "index": 10,
+      "surface": "ἐμπαιγμονῇ⸃",
+      "morph": "N-DSF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:4",
+      "index": 14,
+      "surface": "ἐκοιμήθησαν,",
+      "morph": "V-API-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2PE 3:5",
+      "index": 16,
+      "surface": "συνεστῶσα",
+      "morph": "V-RAP-NSF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 1:10",
+      "index": 2,
+      "surface": "ἐνδοξασθῆναι",
+      "morph": "V-APN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 1:12",
+      "index": 1,
+      "surface": "ἐνδοξασθῇ",
+      "morph": "V-APS-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 1:4",
+      "index": 5,
+      "surface": "⸀ἐγκαυχᾶσθαι",
+      "morph": "V-PMN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 1:8",
+      "index": 7,
+      "surface": "εἰδόσι",
+      "morph": "V-RAP-DPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 2:2",
+      "index": 10,
+      "surface": "θροεῖσθαι",
+      "morph": "V-PPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 2:6",
+      "index": 4,
+      "surface": "οἴδατε,",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 3:13",
+      "index": 4,
+      "surface": "⸀ἐγκακήσητε",
+      "morph": "V-AAS-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 3:14",
+      "index": 12,
+      "surface": "σημειοῦσθε,",
+      "morph": "V-PMM-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 3:6",
+      "index": 11,
+      "surface": "στέλλεσθαι",
+      "morph": "V-PMN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TH 3:7",
+      "index": 2,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 1:12",
+      "index": 9,
+      "surface": "οἶδα",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 1:15",
+      "index": 0,
+      "surface": "Οἶδας",
+      "morph": "V-RAI-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 1:15",
+      "index": 12,
+      "surface": "Φύγελος",
+      "morph": "N-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 1:4",
+      "index": 3,
+      "surface": "μεμνημένος",
+      "morph": "V-RMP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 1:4",
+      "index": 6,
+      "surface": "δακρύων,",
+      "morph": "N-GPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 2:14",
+      "index": 10,
+      "surface": "χρήσιμον,",
+      "morph": "A-ASN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 2:19",
+      "index": 17,
+      "surface": "Ἀποστήτω",
+      "morph": "V-AAM-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 2:20",
+      "index": 10,
+      "surface": "ἀργυρᾶ",
+      "morph": "A-NPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 2:22",
+      "index": 13,
+      "surface": "ἐπικαλουμένων",
+      "morph": "V-PMP-GPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 2:4",
+      "index": 2,
+      "surface": "ἐμπλέκεται",
+      "morph": "V-PMI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 2:7",
+      "index": 0,
+      "surface": "νόει",
+      "morph": "V-PAM-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 2:8",
+      "index": 8,
+      "surface": "Δαυίδ,",
+      "morph": "N-GSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 2:9",
+      "index": 4,
+      "surface": "δεσμῶν",
+      "morph": "N-GPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 3:14",
+      "index": 7,
+      "surface": "ἐπιστώθης,",
+      "morph": "V-API-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 3:15",
+      "index": 6,
+      "surface": "οἶδας,",
+      "morph": "V-RAI-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 3:16",
+      "index": 8,
+      "surface": "⸀ἐλεγμόν,",
+      "morph": "N-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 3:4",
+      "index": 2,
+      "surface": "τετυφωμένοι,",
+      "morph": "V-RPP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 3:5",
+      "index": 10,
+      "surface": "ἀποτρέπου.",
+      "morph": "V-PMM-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 3:8",
+      "index": 7,
+      "surface": "Μωϋσεῖ,",
+      "morph": "N-DSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 4:13",
+      "index": 1,
+      "surface": "φαιλόνην,",
+      "morph": "N-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 4:3",
+      "index": 17,
+      "surface": "κνηθόμενοι",
+      "morph": "V-PPP-NPM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 4:4",
+      "index": 12,
+      "surface": "ἐκτραπήσονται.",
+      "morph": "V-FPI-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "2TI 4:6",
+      "index": 3,
+      "surface": "σπένδομαι,",
+      "morph": "V-PPI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:13",
+      "index": 24,
+      "surface": "Μαθθαῖος,",
+      "morph": "N-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:14",
+      "index": 10,
+      "surface": "⸀Μαριὰμ",
+      "morph": "N-DSF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:16",
+      "index": 14,
+      "surface": "Δαυὶδ",
+      "morph": "N-GSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:18",
+      "index": 12,
+      "surface": "ἐλάκησεν",
+      "morph": "V-AAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:19",
+      "index": 16,
+      "surface": "Ἁκελδαμάχ,",
+      "morph": "N-ASN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:23",
+      "index": 6,
+      "surface": "Βαρσαββᾶν,",
+      "morph": "N-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:23",
+      "index": 8,
+      "surface": "ἐπεκλήθη",
+      "morph": "V-API-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:23",
+      "index": 11,
+      "surface": "Μαθθίαν.",
+      "morph": "N-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:26",
+      "index": 9,
+      "surface": "Μαθθίαν,",
+      "morph": "N-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:26",
+      "index": 11,
+      "surface": "συγκατεψηφίσθη",
+      "morph": "V-API-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:3",
+      "index": 14,
+      "surface": "τεσσεράκοντα",
+      "morph": "A-GPF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 1:4",
+      "index": 1,
+      "surface": "συναλιζόμενος",
+      "morph": "V-PMP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:18",
+      "index": 6,
+      "surface": "ἐπικαλούμενος",
+      "morph": "V-PPP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:19",
+      "index": 3,
+      "surface": "διενθυμουμένου",
+      "morph": "V-PMP-GSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:2",
+      "index": 2,
+      "surface": "φοβούμενος",
+      "morph": "V-PMP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:22",
+      "index": 8,
+      "surface": "φοβούμενος",
+      "morph": "V-PMP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:22",
+      "index": 23,
+      "surface": "μεταπέμψασθαί",
+      "morph": "V-AMN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:23",
+      "index": 0,
+      "surface": "εἰσκαλεσάμενος",
+      "morph": "V-AMP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:28",
+      "index": 11,
+      "surface": "κολλᾶσθαι",
+      "morph": "V-PPN",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:28",
+      "index": 18,
+      "surface": "ἔδειξεν",
+      "morph": "V-AAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:29",
+      "index": 4,
+      "surface": "μεταπεμφθείς",
+      "morph": "V-APP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:29",
+      "index": 9,
+      "surface": "μετεπέμψασθέ",
+      "morph": "V-AMI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:3",
+      "index": 7,
+      "surface": "ἐνάτην",
+      "morph": "A-ASF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:30",
+      "index": 13,
+      "surface": "⸀ἐνάτην",
+      "morph": "A-ASF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:31",
+      "index": 11,
+      "surface": "ἐμνήσθησαν",
+      "morph": "V-API-3P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:32",
+      "index": 5,
+      "surface": "μετακάλεσαι",
+      "morph": "V-AMM-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:32",
+      "index": 8,
+      "surface": "ἐπικαλεῖται",
+      "morph": "V-PPI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:34",
+      "index": 12,
+      "surface": "προσωπολήμπτης",
+      "morph": "N-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:35",
+      "index": 5,
+      "surface": "φοβούμενος",
+      "morph": "V-PMP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:37",
+      "index": 1,
+      "surface": "οἴδατε",
+      "morph": "V-RAI-2P",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:5",
+      "index": 7,
+      "surface": "μετάπεμψαι",
+      "morph": "V-AMM-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 10:5",
+      "index": 11,
+      "surface": "ἐπικαλεῖται",
+      "morph": "V-PPI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 11:13",
+      "index": 18,
+      "surface": "μετάπεμψαι",
+      "morph": "V-AMM-2S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 11:13",
+      "index": 21,
+      "surface": "ἐπικαλούμενον",
+      "morph": "V-PPP-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 11:16",
+      "index": 0,
+      "surface": "ἐμνήσθην",
+      "morph": "V-API-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 11:29",
+      "index": 4,
+      "surface": "εὐπορεῖτό",
+      "morph": "V-IMI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 12:10",
+      "index": 11,
+      "surface": "σιδηρᾶν",
+      "morph": "A-ASF",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 12:10",
+      "index": 28,
+      "surface": "ἀπέστη",
+      "morph": "V-AAI-3S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 12:11",
+      "index": 8,
+      "surface": "οἶδα",
+      "morph": "V-RAI-1S",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 12:12",
+      "index": 0,
+      "surface": "Συνιδών",
+      "morph": "V-AAP-NSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 12:12",
+      "index": 12,
+      "surface": "ἐπικαλουμένου",
+      "morph": "V-PPP-GSM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 12:25",
+      "index": 13,
+      "surface": "ἐπικληθέντα",
+      "morph": "V-APP-ASM",
+      "message": "Content word has no Strong number."
+    },
+    {
+      "type": "missingStrongs",
+      "severity": "high",
+      "dataset": "Critical",
+      "ref": "ACT 12:6",
+      "index": 13,
+      "surface": "κοιμώμενος",
+      "morph": "V-PMP-NSM",
+      "message": "Content word has no Strong number."
+    }
+  ]
+}

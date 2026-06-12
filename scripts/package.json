@@ -2,6 +2,10 @@
   "name": "greek-vocab-build-scripts",
   "private": true,
   "description": "Build-time scripts for Disciple Builder. Only build-deep-lexicon-prose.js needs the dependency below; the other scripts are dependency-free.",
+  "scripts": {
+    "audit:rhema": "node audit-rhema-quality.js",
+    "audit:rhema:2co3": "node audit-rhema-quality.js --book=2CO --chapter=3 --limit=120"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0"
   }

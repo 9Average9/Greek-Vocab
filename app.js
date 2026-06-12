@@ -19227,7 +19227,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.173";
+const APP_VERSION = "3.0.174";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19247,6 +19247,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.174 &mdash; Rhema Premium Audit Gate</div>
+<ul>
+  <li><strong>Context receipts tightened</strong> &mdash; When a Greek form and chapter context establish the meaning, the Definition tab now keeps that same sense in the supporting explanation instead of letting a broader measured sense contradict it.</li>
+  <li><strong>Rhema quality audit added</strong> &mdash; A new developer audit scans the NT text, lexicon, and deep-lexicon data for missing Strong's numbers, weak receipts, low-confidence entries, broad definitions, and display-gloss risks so future polish can be systematic.</li>
+</ul>
 <div class="un-version-label">v3.0.173 &mdash; Rhema Lexicon Receipts Restored</div>
 <ul>
   <li><strong>Thought-flow explanations restored</strong> &mdash; The Definition tab again shows the fuller Rhema Lexicon material: prose definition, About this word, usage counts, BSB agreement, and the evidence trail.</li>
@@ -26551,7 +26556,9 @@ function _rhemaMeaningDecision(word = [], {
     : formFirst
       ? (inflectedGloss || summary.text || deep?.text || '')
       : (deepSafeForGrid ? deep.text : (inflectedGloss || summary.text || deep?.text || ''));
-  const definition = deep?.text || summary.text || gloss || '';
+  const definition = contextual
+    ? (summary.text || contextual || gloss || '')
+    : (deep?.text || summary.text || gloss || '');
   const confidence = contextual
     ? 'Context checked'
     : deep?.source
