@@ -19227,7 +19227,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.171";
+const APP_VERSION = "3.0.172";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19247,6 +19247,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.172 &mdash; Rhema Meaning Resolver</div>
+<ul>
+  <li><strong>One meaning decision</strong> &mdash; The interlinear, Parsing quick definition, and Definition quick answer now share the same occurrence-aware resolver instead of choosing separate answers.</li>
+  <li><strong>Better explanations</strong> &mdash; The Definition tab now shows why Rhema chose the displayed gloss, including form gloss, chapter context, and lexicon evidence when available.</li>
+</ul>
 <div class="un-version-label">v3.0.171 &mdash; Rhema English Gloss Polish</div>
 <ul>
   <li><strong>Passive participles read naturally</strong> &mdash; Forms like γινωσκομένη now show "being known" instead of mechanical phrases like "having been come to know."</li>
@@ -26392,6 +26397,7 @@ const RHEMA_CONTEXTUAL_BRIEFS = {
     4956: 'recommendation',
     1992: 'letter',
     4006: 'confidence',
+    2316: 'God',
     5547: 'Christ',
     1247: 'I serve, minister',
     4151: 'Spirit',
@@ -26411,6 +26417,7 @@ const RHEMA_CONTEXTUAL_BRIEFS = {
     3820: 'old',
     343: 'I unveil',
     2962: 'Lord',
+    3475: 'Moses',
     1657: 'freedom',
     2734: 'I behold as in a mirror, reflect',
     3339: 'I transform',
@@ -26489,6 +26496,81 @@ function _rhemaLexForWord(word = [], layer = getCurrentOriginalLanguageLayer(), 
   return patched;
 }
 
+function _rhemaDeepEntrySync(strongs) {
+  const num = parseInt(strongs, 10);
+  if (!num) return null;
+  const lo = Math.floor((num - 1) / 100) * 100 + 1;
+  return _deepLexiconData.get(lo)?.[num] || null;
+}
+
+function _rhemaMeaningDecision(word = [], {
+  layer = getCurrentOriginalLanguageLayer(),
+  book = _rhemaBook,
+  chapter = _rhemaChapter,
+  verse = _rhemaVerse,
+  entry = null,
+} = {}) {
+  const resolved = _rhemaResolveWord(word, book, chapter);
+  const strongs = resolved?.[1];
+  const morph = resolved?.[2] || '';
+  const lex = _rhemaLexForWord(resolved, layer, book, chapter);
+  if (layer === 'hebrew') {
+    const text = getRhemaQuickDefinition(lex);
+    return { word: resolved, lex, gloss: text, definition: text, source: 'Hebrew lexicon', confidence: 'Reference', evidence: [] };
+  }
+
+  const pos = String(morph || '').split('-')[0];
+  const inflectedGloss = _rhemaBaseInterlinearGloss(morph, lex);
+  const summary = _rhemaDefinitionSummary(lex);
+  const contextual = _rhemaContextualBrief(resolved, book, chapter);
+  const loadedEntry = entry || _rhemaDeepEntrySync(strongs);
+  const ref = book && chapter && verse && isRhemaNTBook(book) ? `${book} ${chapter}:${verse}` : '';
+  let deep = null;
+  if (loadedEntry?.senses?.length) {
+    const idx = ref && loadedEntry.verseSense && ref in loadedEntry.verseSense
+      ? loadedEntry.verseSense[ref]
+      : 0;
+    const deepSummary = _deepDefinitionSummary(loadedEntry, idx);
+    if (deepSummary.text) deep = { ...deepSummary, senseIndex: idx };
+  } else if (loadedEntry?.prose?.def) {
+    const deepSummary = _deepDefinitionSummary(loadedEntry, null);
+    if (deepSummary.text) deep = { ...deepSummary, senseIndex: null };
+  }
+
+  const formFirst = pos === 'V' || pos === 'N' || pos === 'P' || pos === 'F' || pos === 'T' ||
+    pos === 'A' || pos === 'D' || pos === 'R' || pos === 'I' || pos === 'X';
+  const deepSafeForGrid = deep && !_deepLooksLikeAlignmentArtifact(deep.text) &&
+    !['V', 'N', 'P', 'F', 'T'].includes(pos);
+  const gloss = contextual
+    ? (inflectedGloss || contextual)
+    : formFirst
+      ? (inflectedGloss || summary.text || deep?.text || '')
+      : (deepSafeForGrid ? deep.text : (inflectedGloss || summary.text || deep?.text || ''));
+  const definition = deep?.text || summary.text || gloss || '';
+  const confidence = contextual
+    ? 'Context checked'
+    : deep?.source
+      ? (loadedEntry?.confidence ? (_DEEP_CONFIDENCE_LABELS[loadedEntry.confidence] || loadedEntry.confidence) : deep.source)
+      : (summary.confidence || 'Reference');
+  const source = contextual
+    ? 'Greek form + chapter context'
+    : deep?.source || summary.source || 'Loaded lexicon';
+  const evidence = [];
+  if (inflectedGloss) evidence.push(`Form gloss: ${inflectedGloss}.`);
+  if (contextual) evidence.push(`Context note: ${_rhemaBookName(book)} ${chapter} favors "${contextual}".`);
+  if (deep?.text) {
+    evidence.push(`Rhema Lexicon: ${deep.text}${deep.source ? ` (${deep.source})` : ''}.`);
+    if (deep.raw && deep.raw !== deep.text) {
+      evidence.push(_deepLooksLikeAlignmentArtifact(deep.raw)
+        ? `Measured English phrase includes "${deep.raw}", but that looks like surrounding wording.`
+        : `Measured rendering evidence includes "${deep.raw}".`);
+    }
+  }
+  if (summary.text && summary.text !== definition) evidence.push(`Reference gloss: ${summary.text}.`);
+
+  return { word: resolved, lex, gloss, definition, source, confidence, evidence, inflectedGloss, summary, deep, entry: loadedEntry };
+}
+
 function _renderVerseWords(words, verse) {
   const vArg = verse ? `, '${verse}'` : '';
   const variantMap = _rhemaVariantMap(words, verse);
@@ -26517,12 +26599,8 @@ function _renderVerseWords(words, verse) {
       const style = hlColor ? ` style="background:${hlColor};border-radius:4px"` : '';
       const variant = variantMap[i];
       const cls = `${isXref ? 'rhema-word xref' : 'rhema-word'}${variant ? ' has-variant' : ''}`;
-      const lex = _rhemaLexForWord(word, layer, _rhemaBook, _rhemaChapter);
-      // Greek layers use parsed lexical/form glosses by default. Deep lexicon
-      // labels are allowed only when they are safer than raw alignment text.
-      const deepRef = !isHebrew && isRhemaNTBook(_rhemaBook) ? `${_rhemaBook} ${_rhemaChapter}:${verse || _rhemaVerse}` : null;
-      const deepGloss = isHebrew ? '' : _rhemaDeepGloss(word[1], deepRef, word[2], lex);
-      const gloss = deepGloss || (isHebrew ? getRhemaQuickDefinition(lex) : _rhemaBaseInterlinearGloss(word[2], lex));
+      const decision = _rhemaMeaningDecision(word, { layer, book: _rhemaBook, chapter: _rhemaChapter, verse: verse || _rhemaVerse });
+      const gloss = decision.gloss;
       const glossHtml = gloss ? `<span class="rhema-gloss">${gloss}</span>` : '';
       const variantTag = variant
         ? `<button class="rhema-variant-tag" onclick="event.stopPropagation();showRhemaVariant('${variant.label}', '${_escapeRhemaAttr(variant.text)}')" title="Text variant">var</button>`
@@ -29284,12 +29362,11 @@ function renderRhemaParsing(surface, strongs, morph, lemma, layer = getCurrentOr
 
   const safeStr = (v) => v.replace(/'/g, "\\'").replace(/\//g, '\\/');
 
-  const lex = getCurrentRhemaLexicon(layer)[strongs] || {};
-  const inflectedGloss = morph?.startsWith('V-')
-    ? _sxVerbGloss(morph, lex.brief)
-    : _nounGloss(morph, lex.brief);
-  const summary = _rhemaDefinitionSummary(lex);
-  const quickDefinition = summary.text || inflectedGloss || '';
+  const decision = _rhemaMeaningDecision([surface, strongs, morph, lemma], {
+    layer, book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse
+  });
+  const inflectedGloss = decision.inflectedGloss || decision.gloss || '';
+  const quickDefinition = decision.gloss || decision.definition || '';
   const parseQuickId = `rhemaParseQuick-${strongs}-${++_deepAnswerSeq}`;
   const quickHtml = quickDefinition
     ? `<div class="rhema-parse-quick" id="${parseQuickId}">
@@ -29297,7 +29374,7 @@ function renderRhemaParsing(surface, strongs, morph, lemma, layer = getCurrentOr
         <div class="rhema-def-quick-text"><strong>${_escapeRhemaAttr(quickDefinition)}</strong></div>
       </div>`
     : `<div class="rhema-parse-quick hidden" id="${parseQuickId}"></div>`;
-  setTimeout(() => _populateParsingQuickDefinition(parseQuickId, strongs, layer, morph, inflectedGloss), 0);
+  setTimeout(() => _populateParsingQuickDefinition(parseQuickId, strongs, layer, morph, inflectedGloss, [surface, strongs, morph, lemma]), 0);
   const glossHtml = inflectedGloss
     ? `<div class="rhema-inflected-gloss">This form: "${inflectedGloss}"</div>`
     : '';
@@ -29359,6 +29436,7 @@ function _rhemaReadableDefinitionSentence(value = '') {
     .split(/\s--\s/)[0]
     .trim();
   text = text
+    .replace(/^I\s+am\b/i, 'to be')
     .replace(/^I\s+am\s+/i, 'to be ')
     .replace(/^I\s+/i, 'to ')
     .replace(/^am\s+/i, 'to be ')
@@ -29369,6 +29447,7 @@ function _rhemaReadableDefinitionSentence(value = '') {
     .replace(/\s+/g, ' ')
     .trim();
   if (!text) return '';
+  if (/^(?:God|Christ|Lord|Moses|Israel|Jesus|Spirit)\b/.test(text)) return text;
   if (/^(?:to|the|a|an|one|not|without|in|for|of|with|from|into|upon)\b/i.test(text)) {
     return text;
   }
@@ -29509,12 +29588,22 @@ function _rhemaWhyDefinitionHtml({ lex = {}, morph = '', quickDefinition = '', s
     : '';
 }
 
+function _rhemaMeaningEvidenceHtml(decision = {}) {
+  const lines = [];
+  if (decision.source) lines.push(`Chosen by ${decision.source}${decision.confidence ? `; ${decision.confidence}` : ''}.`);
+  lines.push(...(decision.evidence || []));
+  return lines.length
+    ? `<div class="rhema-why-def"><div class="rhema-def-label">Why Rhema chose this</div>${lines.map(line => `<p>${_escapeRhemaAttr(line)}</p>`).join('')}</div>`
+    : '';
+}
+
 function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguageLayer()) {
   if (layer === 'hebrew') return renderHebrewDefinition(strongs);
   const activeWord = _rhemaActiveWord && String(_rhemaActiveWord[1]) === String(strongs)
     ? _rhemaActiveWord
     : ['', strongs, morph || ''];
-  const lex = _rhemaLexForWord(activeWord, layer, _rhemaBook, _rhemaChapter);
+  const decision = _rhemaMeaningDecision(activeWord, { layer, book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse });
+  const lex = decision.lex;
   if (!lex) return `<p style="opacity:.5;font-size:.85rem">${layer === 'hebrew' ? 'No Hebrew lexicon entry loaded yet.' : 'No definition found.'}</p>`;
 
   const sections = [];
@@ -29534,15 +29623,13 @@ function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguag
     </div>`);
   }
 
-  const _inflGloss = layer === 'hebrew' ? '' : morph?.startsWith('V-')
-    ? _sxVerbGloss(morph, lex.brief)
-    : _nounGloss(morph, lex.brief);
-  const summary = _rhemaDefinitionSummary(lex);
-  const quickDefinition = summary.text || _inflGloss || '';
+  const _inflGloss = decision.inflectedGloss || decision.gloss || '';
+  const summary = decision.summary || _rhemaDefinitionSummary(lex);
+  const quickDefinition = decision.gloss || decision.definition || _inflGloss || '';
   if (quickDefinition) {
     // Source tags and the "why" walkthrough stay one tap away instead of
     // crowding the panel — the data is intact, the surface is calm.
-    const whyContent = `${_rhemaSourceConfidenceHtml({ ...lex, strongs }, summary)}${_rhemaWhyDefinitionHtml({ lex, morph, quickDefinition, summary, inflectedGloss: _inflGloss })}`;
+    const whyContent = `${_rhemaSourceConfidenceHtml({ ...lex, strongs }, summary)}${_rhemaMeaningEvidenceHtml(decision)}${_rhemaWhyDefinitionHtml({ lex, morph, quickDefinition, summary, inflectedGloss: _inflGloss })}`;
     sections.push(`<div class="rhema-def-section rhema-def-quick">
       <div class="rhema-def-label">Quick Definition</div>
       <div class="rhema-def-quick-text"><strong>${_escapeRhemaAttr(quickDefinition)}</strong></div>
@@ -30221,6 +30308,22 @@ function renderDeepLexiconEvidence(entry, strongs) {
 
 let _deepAnswerSeq = 0;
 
+function _rhemaDeepAnswerHtml(decision = {}) {
+  const esc = _escapeRhemaAttr;
+  const main = decision.gloss || decision.definition || '';
+  if (!main) return '';
+  const sub = [];
+  if (decision.definition && decision.definition !== main) sub.push(`lexicon sense: "${decision.definition}"`);
+  if (decision.source) sub.push(decision.source);
+  if (decision.confidence) sub.push(decision.confidence);
+  const caution = decision.deep?.rawLooksSuspect && decision.deep?.raw
+    ? `<div class="rhema-deep-caution">The measured English phrase includes "${esc(decision.deep.raw)}," but that looks like surrounding sentence wording, so Rhema used the lexicon-backed meaning.</div>`
+    : '';
+  return `<div class="rhema-deep-answer-main">Here: <strong>"${esc(main)}"</strong></div>
+    ${sub.length ? `<div class="rhema-deep-answer-sub">${esc(sub.join(' · '))}</div>` : ''}
+    ${caution}`;
+}
+
 function _populateDeepAnswer(elId, strongs, layer) {
   if (layer === 'hebrew') return;
   // Capture reader position now — globals may move before the shard arrives.
@@ -30230,6 +30333,9 @@ function _populateDeepAnswer(elId, strongs, layer) {
   if (contextual) {
     const el = document.getElementById(elId);
     if (el) {
+      el.innerHTML = _rhemaDeepAnswerHtml(_rhemaMeaningDecision(activeWord, { layer, book, chapter: ch, verse: v }));
+      el.classList.remove('hidden');
+      return;
       const formGloss = _rhemaBaseInterlinearGloss(activeWord[2], _rhemaLexForWord(activeWord, layer, book, ch));
       el.innerHTML = `<div class="rhema-deep-answer-main">Here: <strong>“${_escapeRhemaAttr(formGloss || contextual)}”</strong></div>
         <div class="rhema-deep-answer-sub">Chosen from the actual Greek form and this chapter context, so the word-sheet answer matches the interlinear gloss.</div>`;
@@ -30241,6 +30347,13 @@ function _populateDeepAnswer(elId, strongs, layer) {
     const el = document.getElementById(elId);
     if (!el) return;
     if (!entry || (!entry.count && !entry.prose?.def)) { el.remove(); return; }
+    const decisionWord = activeWord || ['', strongs, ''];
+    const decisionHtml = _rhemaDeepAnswerHtml(_rhemaMeaningDecision(decisionWord, { layer, book, chapter: ch, verse: v, entry }));
+    if (decisionHtml) {
+      el.innerHTML = decisionHtml;
+      el.classList.remove('hidden');
+      return;
+    }
     const esc = _escapeRhemaAttr;
     const top = (entry.senses || [])[0];
 
@@ -30321,11 +30434,32 @@ function _populateDeepAnswer(elId, strongs, layer) {
   });
 }
 
-function _populateParsingQuickDefinition(elId, strongs, layer, morph = '', inflectedGloss = '') {
+function _populateParsingQuickDefinition(elId, strongs, layer, morph = '', inflectedGloss = '', word = null) {
   if (layer === 'hebrew') return;
   loadDeepLexiconEntry(strongs).then(entry => {
     const el = document.getElementById(elId);
     if (!el || !entry) return;
+    const decision = _rhemaMeaningDecision(word || ['', strongs, morph], {
+      layer, book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, entry
+    });
+    const decisionQuick = decision.gloss || decision.definition || '';
+    if (decisionQuick) {
+      const formGloss = decision.inflectedGloss || decision.gloss || inflectedGloss;
+      const formHtml = formGloss && formGloss !== decisionQuick
+        ? `<div class="rhema-current-form-gloss">This form: <strong>${_escapeRhemaAttr(formGloss)}</strong></div>`
+        : '';
+      const caution = decision.deep?.rawLooksSuspect && decision.deep?.raw
+        ? `<div class="rhema-deep-caution">The measured English phrase includes "${_escapeRhemaAttr(decision.deep.raw)}," but that looks like surrounding sentence wording, so the quick definition uses the lexicon-backed meaning.</div>`
+        : '';
+      el.innerHTML = `
+        <div class="rhema-def-label">Quick Definition</div>
+        <div class="rhema-def-quick-text"><strong>${_escapeRhemaAttr(decisionQuick)}</strong></div>
+        ${formHtml}
+        ${caution}
+      `;
+      el.classList.remove('hidden');
+      return;
+    }
     const deep = _deepDefinitionSummary(entry, null);
     const quick = deep.text || inflectedGloss || '';
     if (!quick) return;
