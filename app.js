@@ -19227,7 +19227,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.177";
+const APP_VERSION = "3.0.178";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19248,6 +19248,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.178 &mdash; Rare Words Read with Confidence</div>
+<ul>
+  <li><strong>Honest, reassuring usage tags</strong> &mdash; A word that appears only a few times in the New Testament now reads &#8220;Rare in NT&#8221; (or &#8220;Lexicon entry&#8221; when it is defined but outside the NT) instead of a bare &#8220;Low confidence,&#8221; which wrongly implied the meaning itself was uncertain.</li>
+  <li><strong>The meaning is still trustworthy</strong> &mdash; For these rare words Rhema now adds a short note explaining that the definition rests on the established lexicon; only the corpus usage statistics are limited, not the meaning.</li>
+</ul>
 <div class="un-version-label">v3.0.177 &mdash; Clearer, More Reliable Word Meanings</div>
 <ul>
   <li><strong>Sacred and proper names read right</strong> &mdash; God, Jesus, Christ, Moses, Israel, the Lord and every proper name now display capitalized everywhere they appear, instead of slipping to lowercase from a measured rendering.</li>
@@ -30245,8 +30250,8 @@ function _deepRefButton(refStr, strongs) {
 
 const _DEEP_CORROBORATION_NAMES = { dodson: 'Dodson', strongs: "Strong's", kjv: 'KJV' };
 const _DEEP_CONFIDENCE_LABELS = {
-  high: 'High confidence', good: 'Good confidence', moderate: 'Moderate confidence',
-  low: 'Low confidence', none: 'No NT usage',
+  high: 'Common in NT', good: 'Frequent in NT', moderate: 'Occasional use',
+  low: 'Rare in NT', none: 'Lexicon entry',
 };
 
 const _DEEP_FRAGMENT_ARTIFACTS = new Set([
@@ -30313,6 +30318,7 @@ function renderDeepLexiconEvidence(entry, strongs) {
     <strong>Rhema Lexicon · Range of Meaning</strong>
     <span class="rhema-deep-conf rhema-deep-conf-${esc(entry.confidence)}">${esc(_DEEP_CONFIDENCE_LABELS[entry.confidence] || entry.confidence)}</span>
   </div>`);
+  parts.push(_rhemaRareWordNote(entry));
 
   const senses = (entry.senses || []).slice(0, 6);
   const senseLabels = entry.prose?.senseLabels || [];
@@ -30410,6 +30416,22 @@ function _rhemaDeepAnswerHtml(decision = {}) {
     ${caution}`;
 }
 
+// For a word that occurs only a handful of times (or not at all) in the NT, the
+// corpus statistics are necessarily thin — but the meaning itself is established
+// by the lexicon. This note reassures the reader so a "Rare in NT" tag never
+// reads as if the meaning is doubtful.
+function _rhemaRareWordNote(entry = {}) {
+  const c = entry.confidence;
+  if (c !== 'low' && c !== 'none') return '';
+  const n = Number(entry.count || 0);
+  const freq = c === 'none' || n === 0
+    ? 'This word is defined in the lexicon but does not occur in the Byzantine New Testament'
+    : n === 1
+      ? 'This word occurs only once in the New Testament'
+      : `This word occurs just ${n} times in the New Testament`;
+  return `<div class="rhema-deep-rare-note">${freq}, so the meaning above rests on the established lexicon rather than corpus frequency. The definition is reliable — only the usage statistics are limited.</div>`;
+}
+
 function _rhemaDeepAnswerReceiptsHtml(decision = {}, entry = {}, strongs = '', book = '', ch = '', v = '') {
   const esc = _escapeRhemaAttr;
   const parts = [_rhemaDeepAnswerHtml(decision)];
@@ -30432,6 +30454,7 @@ function _rhemaDeepAnswerReceiptsHtml(decision = {}, entry = {}, strongs = '', b
     }
     parts.push(`<div class="rhema-deep-answer-sub">${esc(meta.filter(Boolean).join(' · '))}</div>`);
   }
+  parts.push(_rhemaRareWordNote(entry));
   if (prose.def) parts.push(`<div class="rhema-deep-answer-def">${esc(prose.def)}</div>`);
   if (prose.article) {
     parts.push(`<button type="button" class="rhema-deep-article-btn" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
@@ -30515,6 +30538,7 @@ function _populateDeepAnswer(elId, strongs, layer) {
       if (entry.count) lines.push(`<div class="rhema-deep-answer-sub">This word is woven into the English phrasing, so the lexicon-backed definition is the clearer guide.</div>`);
     } else { el.remove(); return; }
 
+    lines.push(_rhemaRareWordNote(entry));
     if (prose?.def) {
       lines.push(`<div class="rhema-deep-answer-def">${esc(prose.def)}</div>`);
     }
