@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.183" rel="stylesheet"/>
+<link href="style.css?v=3.0.184" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -513,24 +513,21 @@ Start a New Study
 <span>Read in plain English — tap any word to go deeper into the Greek →</span>
 </div>
 </div>
-<!-- Your Studies section -->
-<div class="home-studies-section" id="homeStudiesSection">
-<div class="home-studies-header">
-<div style="display:flex;align-items:center;gap:6px">
-<span class="home-section-label" style="margin:0">Your Studies</span>
-<button class="hs-info-btn" onclick="openStudiesInfoModal()" title="About Studies"><span class="material-symbols-outlined">info</span></button>
+<!-- Habit Builder widget -->
+<div class="home-habit-widget" id="homeHabitWidget" onclick="showNavPage('habits')" role="button" tabindex="0">
+<div class="hhw-main">
+<span class="hhw-kicker">
+<svg class="hhw-sprout" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20.5V13" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M12 13c-3.9-.4-6.6-2.8-7.8-7.1 4.4.1 7.2 2.4 7.8 7.1Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 13c.7-4.2 3.4-6.8 7.9-7.8-1 4.6-3.7 7.2-7.9 7.8Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.2 20.5h9.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+Habit Builder</span>
+<h3 class="hhw-headline" id="hhwHeadline">Build habits that stick</h3>
+<p class="hhw-sub" id="hhwSub">Track what matters daily, celebrate streaks, and invite friends to cheer you on.</p>
+<div class="hhw-progress hidden" id="hhwProgress">
+<div class="hhw-bar"><span id="hhwBarFill" style="width:0%"></span></div>
+<strong class="hhw-count" id="hhwCount"></strong>
 </div>
-<button class="hs-view-all-btn hidden" id="hsViewAllBtn" onclick="openStudiesViewAll()">View All</button>
+<span class="hhw-streak hidden" id="hhwStreak"></span>
 </div>
-<div class="hs-shelf-unit" id="hsShelfUnit">
-<div class="hs-shelf" id="hsGrid">
-<button class="hs-start-btn" onclick="openStudyCreateSheet()">
-<span class="material-symbols-outlined">add</span>
-<span>Start a Study</span>
-</button>
-</div>
-<div class="hs-shelf-plank" aria-hidden="true"></div>
-</div>
+<div class="hhw-art" aria-hidden="true"><img src="habit-hero.svg" alt="" width="128" height="101"/></div>
 </div>
 <div class="home-section-label">Quick Actions</div>
 <div class="home-actions-grid">
@@ -16521,7 +16518,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.183"></script>
+<script src="app.js?v=3.0.184"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>

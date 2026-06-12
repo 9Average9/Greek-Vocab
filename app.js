@@ -8176,18 +8176,21 @@ function _studyBookHtml(s) {
 }
 
 function _renderHomeStudies() {
+  // Studies live in the Study Library now — keep it in sync whenever the
+  // study list or delete mode changes, with or without a home shelf present.
+  if (!_myStudies.length) _studyDeleteMode = false;
+  if (_studyLibraryOpen()) _renderStudyLibrary();
+
   const grid = document.getElementById('hsGrid');
   const viewAllBtn = document.getElementById('hsViewAllBtn');
   if (!grid) return;
 
   const shelfUnit = document.getElementById('hsShelfUnit');
   if (!_myStudies.length) {
-    _studyDeleteMode = false;
     shelfUnit?.classList.remove('hs-has-books');
     grid.innerHTML = `<button class="hs-start-btn" onclick="openStudyCreateSheet()">
       <span class="material-symbols-outlined">add</span><span>Start a Study</span></button>`;
     viewAllBtn?.classList.add('hidden');
-    if (_studyLibraryOpen()) _renderStudyLibrary();
     return;
   }
 
@@ -8212,8 +8215,6 @@ function _renderHomeStudies() {
     viewAllBtn?.classList.add('hidden');
     if (viewAllBtn) viewAllBtn.onclick = openStudiesViewAll;
   }
-
-  if (_studyLibraryOpen()) _renderStudyLibrary();
 }
 
 // Long study names get a smaller serif so the full title always fits on the
@@ -10999,13 +11000,67 @@ async function startHabitsPage() {
     return;
   }
   list.innerHTML = '<p class="study-board-empty">Loading habits...</p>';
+  _startHabitsListener();
+  if (_habitsTab === "friends") loadFriendsHabits();
+}
+
+// One shared real-time habits listener feeds both the Habits page and the
+// home screen Habit Builder widget.
+function _startHabitsListener() {
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  if (_habitsUnsub || !uid || !window.Habits?.listen) return;
   _habitsLoaded = false;
-  _habitsUnsub = window.Habits?.listen?.(uid, habits => {
+  _habitsUnsub = window.Habits.listen(uid, habits => {
     _habitItems = habits || [];
     _habitsLoaded = true;
     if (document.getElementById("habitsPage")?.classList.contains("active")) renderHabits();
+    _renderHomeHabitWidget();
   });
-  if (_habitsTab === "friends") loadFriendsHabits();
+}
+
+// ── Habit Builder home widget ─────────────────────────────────────────────────
+// A glanceable daily pulse: how many habits are done today, plus the hottest
+// running streak. Tapping it opens the Habits page.
+function _renderHomeHabitWidget() {
+  const headline = document.getElementById('hhwHeadline');
+  if (!headline) return;
+  const sub = document.getElementById('hhwSub');
+  const progress = document.getElementById('hhwProgress');
+  const fill = document.getElementById('hhwBarFill');
+  const count = document.getElementById('hhwCount');
+  const streakEl = document.getElementById('hhwStreak');
+
+  const habits = _habitsLoaded ? (_habitItems || []) : null;
+  if (!habits || !habits.length) {
+    headline.textContent = 'Build habits that stick';
+    if (sub) sub.textContent = 'Track what matters daily, celebrate streaks, and invite friends to cheer you on.';
+    progress?.classList.add('hidden');
+    streakEl?.classList.add('hidden');
+    return;
+  }
+
+  const today = _habitTodayKey();
+  const done = habits.filter(h => h.entries?.[today]?.status === 'success').length;
+  const total = habits.length;
+  const best = Math.max(0, ...habits.map(h => _habitCurrentStreak(h.entries || {})));
+
+  headline.textContent = done >= total
+    ? 'All habits done today!'
+    : `${done} of ${total} habit${total === 1 ? '' : 's'} done today`;
+  if (sub) {
+    sub.textContent = done >= total
+      ? 'Way to show up for what matters.'
+      : 'Small daily wins build a lasting walk.';
+  }
+  if (progress && fill && count) {
+    progress.classList.remove('hidden');
+    fill.style.width = `${Math.round((done / total) * 100)}%`;
+    count.textContent = `${done}/${total}`;
+  }
+  if (streakEl) {
+    streakEl.classList.toggle('hidden', best < 2);
+    streakEl.innerHTML = `<span class="material-symbols-outlined">local_fire_department</span>${best}-day streak`;
+  }
 }
 
 function _applyHabitsTabUI(tab) {
@@ -19310,7 +19365,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.183";
+const APP_VERSION = "3.0.184";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19331,6 +19386,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.184 &mdash; Habit Builder on Home</div>
+<ul>
+  <li><strong>Habit Builder widget</strong> &mdash; The home studies shelf has been replaced by a live Habit Builder card showing today's progress bar and your hottest streak; tap it to open Habit Builder.</li>
+  <li><strong>Studies live in the Library</strong> &mdash; Your studies are all on the Study Library shelves, opened from Quick Actions.</li>
+</ul>
 <div class="un-version-label">v3.0.183 &mdash; Library Against the Wall</div>
 <ul>
   <li><strong>A proper bookcase</strong> &mdash; The Study Library is now one tall wooden bookcase with crown moulding, a floor plinth, and at least four shelves &mdash; empty shelves included &mdash; standing against a softly lit wall.</li>
@@ -20702,6 +20762,7 @@ window.__onAuthStateReady = async (user) => {
     updateLessonCompletionUI();
     populateHomeScreen();
     await _loadMyStudies();
+    _startHabitsListener();
     _startEncouragementListener(user.uid);
     _startCalendarListener(user.uid);
     setTimeout(() => _checkEventReminders(), 5000);
@@ -27201,7 +27262,7 @@ const APP_WELCOME_COACH_STEPS = [
   { before: () => { showNavPage('community'); showLbTab('xp'); }, target: () => _coachFirst(['button[data-tab="xp"]', '#lbPaneXP']), title: 'XP leaderboard', body: 'XP rewards steady work: lessons, tests, vocab, translation, and study habits. It is not the goal, but it helps your progress feel visible.' },
   { before: () => { showNavPage('community'); showLbTab('scholar'); }, target: () => _coachFirst(['button[data-tab="scholar"]', '#lbPaneScholar']), title: 'Scholar board', body: 'The Scholar board highlights careful practice quality, not just activity. It gives deeper testing and review work its own place.' },
   { before: () => showNavPage('home'), target: () => _coachFirst(['.home-actions-grid', '#notifBtn']), title: 'Home quick actions', body: 'Home is the launch point. Quick Actions open notifications, vocabulary, translation, and tests. The Notifications button is where app updates and activity notices live.' },
-  { target: () => _coachFirst(['#homeStudiesSection', '.hs-start-btn']), title: 'Create studies here', body: 'Your Studies is where you make focused study spaces. A study can hold Rhema work, saved verses, word logs, scripture trails, and notes.' },
+  { target: () => _coachFirst(['#studyLibraryHomeBtn', '.home-actions-grid']), title: 'Create studies here', body: 'The Study Library holds your focused study spaces. A study can hold Rhema work, saved verses, word logs, scripture trails, and notes.' },
   { target: () => _coachFirst(['#homeContinueCard', '#homeContinueEmpty']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. You can open a passage, tap words, compare English, use syntax, and explore cross references. Rhema has its own first-time coach when opened.' },
   { before: () => showNavPage('profile'), target: () => _coachFirst(['#profileJourneySection', '.profile-action-row', '.profile-header']), title: 'Profile tracks your journey', body: 'Your profile keeps XP, rank, streak, lesson progress, known words, translation attempts, achievements, settings, reminders, and reset controls.' }
 ];
