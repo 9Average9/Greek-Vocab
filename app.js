@@ -8864,22 +8864,24 @@ function _getVerseSnippet() {
 // ── Study Mini Wheel ──────────────────────────────────────────────────────────
 
 function _initStudyLongPress() {
-  const display = document.getElementById('rhemaVerseDisplay');
-  if (!display || display._lpInit) return;
-  display._lpInit = true;
-  display.addEventListener('touchstart', e => {
-    if (!_studySandboxId || _sandboxTab !== 'rhema') return;
-    if (e.target.closest('.rsx-diagram') || e.target.closest('.rhema-sheet')) return;
-    _miniWheelLongPressActive = true;
-    _miniWheelLongPressTimer = setTimeout(() => {
-      if (_miniWheelLongPressActive) {
-        e.preventDefault?.();
-        openStudyMiniWheel();
-      }
-    }, 520);
-  }, { passive: true });
-  display.addEventListener('touchend',  () => { _miniWheelLongPressActive = false; clearTimeout(_miniWheelLongPressTimer); }, { passive: true });
-  display.addEventListener('touchmove', () => { _miniWheelLongPressActive = false; clearTimeout(_miniWheelLongPressTimer); }, { passive: true });
+  ['rhemaVerseDisplay', 'rhemaEnglishDisplay'].forEach(id => {
+    const display = document.getElementById(id);
+    if (!display || display._lpInit) return;
+    display._lpInit = true;
+    display.addEventListener('touchstart', e => {
+      if (!_studySandboxId || _sandboxTab !== 'rhema') return;
+      if (e.target.closest('.rsx-diagram') || e.target.closest('.rhema-sheet')) return;
+      _miniWheelLongPressActive = true;
+      _miniWheelLongPressTimer = setTimeout(() => {
+        if (_miniWheelLongPressActive) {
+          e.preventDefault?.();
+          openStudyMiniWheel();
+        }
+      }, 520);
+    }, { passive: true });
+    display.addEventListener('touchend',  () => { _miniWheelLongPressActive = false; clearTimeout(_miniWheelLongPressTimer); }, { passive: true });
+    display.addEventListener('touchmove', () => { _miniWheelLongPressActive = false; clearTimeout(_miniWheelLongPressTimer); }, { passive: true });
+  });
 }
 
 function openStudyMiniWheel() {
@@ -19227,7 +19229,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.180";
+const APP_VERSION = "3.0.181";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19248,6 +19250,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.181 &mdash; Smarter Invites &amp; English Reader Notes</div>
+<ul>
+  <li><strong>No double-asking on event invites</strong> &mdash; If you already accepted an event (from the in-app notification or the calendar), tapping the push notification now confirms you're already attending and only offers a &#8220;Can't make it&#8221; option instead of asking again.</li>
+  <li><strong>Study wheel works in English</strong> &mdash; Long-press a verse in the English reader (not just the Greek) while a study is open to capture an Observation, Interpretation, Application, or Question.</li>
+  <li><strong>Single verse reads like the chapter</strong> &mdash; The English single-verse view now uses the same font and reading style as full chapter mode, complete with the verse number.</li>
+</ul>
 <div class="un-version-label">v3.0.180 &mdash; Crisp Quick Definitions</div>
 <ul>
   <li><strong>Quick answers stay short</strong> &mdash; The headline meaning for small words like &#7984;&#948;&#959;&#973;, &#7989;&#957;&#945;, and &#955;&#943;&#945;&#957; now reads as a tight gloss (&#8220;See! Lo! Behold!&#8221;, &#8220;in order that, so that&#8221;, &#8220;very, exceedingly&#8221;) instead of a long sentence.</li>
@@ -21749,12 +21757,32 @@ async function openEventCommitPrompt(eventId, opts = {}) {
   const ev = opts.event || _calendarEvents.find(e => e.id === eventId) || await window.Events?.getById?.(eventId).catch(() => null);
   if (!ev) return false;
   _pendingEventCommit = { eventId, opts };
+  const titleEl = document.querySelector('#eventCommitModal .cal-sync-title');
   const summary = document.getElementById('eventCommitSummary');
   const list = document.getElementById('eventCommitList');
   const yesBtn = document.getElementById('eventCommitYesBtn');
+  const noBtn = document.getElementById('eventCommitNoBtn');
+
+  // Already accepted (via the in-app notification, event detail, or another
+  // device) — don't ask again. Confirm they're attending and only offer a
+  // way to back out.
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  const myStatus = eventId ? (ev.invitees || []).find(i => i.uid === uid)?.status : null;
+  if (myStatus === 'accepted') {
+    if (titleEl) titleEl.textContent = 'Already attending';
+    if (summary) summary.textContent = `You already accepted "${ev.title || 'this event'}". No need to respond again — we'll let the host know if that changes.`;
+    if (list) list.innerHTML = '';
+    if (yesBtn) yesBtn.style.display = 'none';
+    if (noBtn) noBtn.innerHTML = '<span class="material-symbols-outlined">cancel</span>Can\'t make it';
+    _showCalSheet('eventCommitModal');
+    return true;
+  }
+
+  if (titleEl) titleEl.textContent = 'Are you sure you can commit?';
   if (summary) summary.textContent = 'Checking your Google Calendar for that day...';
   if (list) list.innerHTML = '<div class="event-commit-empty">Looking for anything already planned.</div>';
-  if (yesBtn) yesBtn.disabled = false;
+  if (yesBtn) { yesBtn.disabled = false; yesBtn.style.display = ''; }
+  if (noBtn) noBtn.innerHTML = '<span class="material-symbols-outlined">cancel</span>No, I can\'t';
   _showCalSheet('eventCommitModal');
 
   const timezone = ev.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -26768,6 +26796,7 @@ function renderRhemaVerse() {
 
     if (EnglishDiv) {
       EnglishDiv.classList.toggle('rhema-english-reading', !_rhemaSyntaxMode);
+      EnglishDiv.classList.remove('rhema-english-single');
       EnglishDiv.innerHTML = _rhemaSyntaxMode ? '' :
         `<div class="rhema-english-chapter-title">${_escapeRhemaAttr(_rhemaBookName(_rhemaBook))} ${_escapeRhemaAttr(_rhemaChapter)}</div>` +
         verseNums.map(vn => {
@@ -26794,7 +26823,10 @@ function renderRhemaVerse() {
   } else {
     const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
     display.classList.remove('chapter-mode', 'rsx-chapter-mode');
-    EnglishDiv?.classList.remove('rhema-english-reading');
+    // Single English verse reads in the same Bible-app style as the full
+    // chapter view — just one verse.
+    EnglishDiv?.classList.toggle('rhema-english-reading', !_rhemaSyntaxMode);
+    EnglishDiv?.classList.toggle('rhema-english-single', !_rhemaSyntaxMode);
     if (_rhemaSyntaxMode) {
       display.classList.remove('greek-only');
       if (_rhemaShowEnglish) {
@@ -26812,7 +26844,10 @@ function renderRhemaVerse() {
       if (EnglishDiv) {
         const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
         EnglishDiv.innerHTML = engText
-          ? _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, _rhemaVerse) + _rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, _rhemaVerse)
+          ? `<div class="rhema-chapter-block rhema-english-verse" data-verse="${_rhemaVerse}">` +
+            `<sup class="rhema-english-vnum">${_rhemaVerse}</sup>` +
+            _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, _rhemaVerse) +
+            _rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, _rhemaVerse) + `</div>`
           : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
       }
     }

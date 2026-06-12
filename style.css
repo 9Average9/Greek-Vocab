@@ -16262,6 +16262,12 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   color: var(--secondary-color);
   user-select: none;
 }
+/* Single-verse English view: same reading style as the chapter, but the
+   block isn't a tappable verse selector. */
+.rhema-english-single .rhema-chapter-block {
+  cursor: default;
+  padding: 0;
+}
 
 .rhema-english-pos-highlight {
   border-radius: 4px;
