@@ -1,101 +1,101 @@
 # Rhema Quality Audit
 
-Generated: 2026-06-12T02:56:31.640Z
+Generated: 2026-06-12T03:11:33.050Z
 Scope: NT Majority + Critical
 
-Total findings: **17408**
+Total findings: **18066**
 
 ## By Severity
-- high: 306
-- medium: 14693
-- low: 2409
+- high: 164
+- medium: 17469
+- low: 433
 
 ## By Type
-- missingStrongs: 306
-- functionWordDefinition: 26
-- lowConfidence: 8901
-- properNameCase: 1264
-- suspectReceipt: 4502
-- broadDefinition: 2409
+- missingStrongs: 164
+- functionWordDefinition: 30
+- lowConfidence: 9963
+- properNameCase: 1405
+- suspectReceipt: 6071
+- broadDefinition: 433
 
 ## Top Findings
-- **high / missingStrongs** Critical 1 Corinthians 10:14 [6] εἰδωλολατρίας. : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 10:28 [6] ⸀ἱερόθυτόν : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Corinthians 10:33 [9] ⸀σύμφορον : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Corinthians 11:17 [13] ἧσσον : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 12:28 [20] ἀντιλήμψεις, : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Corinthians 16:1 [3] λογείας : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Corinthians 16:2 [18] λογεῖαι : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 16:22 [8] ⸂Μαράνα : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 16:22 [9] θά⸃. : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Corinthians 2:10 [12] ἐραυνᾷ, : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 4:11 [9] γυμνιτεύομεν : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 4:13 [0] ⸀δυσφημούμενοι : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Corinthians 7:35 [6] ⸀σύμφορον : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 7:35 [18] ⸀εὐπάρεδρον : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Corinthians 7:38 [3] ⸀γαμίζων : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Corinthians 7:38 [12] ⸁γαμίζων : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 9:10 [15] ἀροτριᾶν, : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 9:13 [15] ⸀παρεδρεύοντες : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Corinthians 9:9 [7] ⸀κημώσεις : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Peter 1:10 [5] ἐξηραύνησαν : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Peter 1:11 [0] ἐραυνῶντες : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Peter 3:8 [8] ⸀ταπεινόφρονες, : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Peter 4:3 [19] εἰδωλολατρίαις. : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Peter 5:7 [4] ἐπιρίψαντες : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Thessalonians 5:27 [0] ⸀ἐνορκίζω : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Timothy 1:4 [7] ⸀ἐκζητήσεις : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Timothy 3:11 [5] νηφαλίους, : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Timothy 3:2 [4] ἀνεπίλημπτον : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Timothy 3:2 [9] νηφάλιον, : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Timothy 4:2 [3] κεκαυστηριασμένων : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Timothy 5:7 [4] ἀνεπίλημπτοι : Content word has no Strong number.
 - **high / missingStrongs** Critical 1 Timothy 6:11 [14] ⸀πραϋπαθίαν. : Content word has no Strong number.
-- **high / missingStrongs** Critical 1 Timothy 6:14 [5] ἀνεπίλημπτον : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Corinthians 10:18 [4] ⸀συνιστάνων, : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Corinthians 11:24 [3] τεσσεράκοντα : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Corinthians 11:28 [4] ⸀ἐπίστασίς : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Corinthians 12:13 [4] ⸀ἡσσώθητε : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Corinthians 12:15 [14] ἧσσον : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Corinthians 4:1 [9] ⸀ἐγκακοῦμεν, : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Corinthians 4:16 [2] ⸀ἐγκακοῦμεν, : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Corinthians 4:2 [21] ⸀συνιστάνοντες : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Corinthians 6:4 [3] ⸀συνιστάνοντες : Content word has no Strong number.
 - **high / missingStrongs** Critical 2 Peter 2:17 [5] ὁμίχλαι⸃ : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Peter 2:19 [11] ἥττηται, : Content word has no Strong number.
 - **high / missingStrongs** Critical 2 Peter 2:22 [16] ⸀κυλισμὸν : Content word has no Strong number.
 - **high / missingStrongs** Critical 2 Peter 3:3 [10] ἐμπαιγμονῇ⸃ : Content word has no Strong number.
 - **high / missingStrongs** Critical 2 Thessalonians 1:4 [5] ⸀ἐγκαυχᾶσθαι : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Thessalonians 1:8 [7] εἰδόσι : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Thessalonians 3:13 [4] ⸀ἐγκακήσητε : Content word has no Strong number.
 - **high / missingStrongs** Critical 2 Timothy 3:16 [8] ⸀ἐλεγμόν, : Content word has no Strong number.
-- **high / missingStrongs** Critical 2 Timothy 3:8 [7] Μωϋσεῖ, : Content word has no Strong number.
 - **high / missingStrongs** Critical 2 Timothy 4:13 [1] φαιλόνην, : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 1:13 [24] Μαθθαῖος, : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 1:19 [16] Ἁκελδαμάχ, : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 1:23 [11] Μαθθίαν. : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 1:26 [9] Μαθθίαν, : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 1:3 [14] τεσσεράκοντα : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 10:34 [12] προσωπολήμπτης : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 13:1 [27] τετραάρχου : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 13:18 [2] τεσσερακονταετῆ : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 13:21 [17] τεσσεράκοντα· : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 14:14 [11] ⸀ἐξεπήδησαν : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 14:17 [5] ⸀ἀγαθουργῶν, : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 16:11 [11] ⸂Νέαν : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 16:22 [9] περιρήξαντες : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 18:7 [8] ⸀Τιτίου : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 18:9 [11] φοβοῦ, : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 19:16 [14] ἀμφοτέρων⸃ : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 2:13 [2] ⸀διαχλευάζοντες : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 20:1 [6] ⸀μεταπεμψάμενος : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 21:24 [10] ⸀ξυρήσονται : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 23:13 [3] τεσσεράκοντα : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 23:21 [12] τεσσεράκοντα, : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 23:34 [6] ⸀ἐπαρχείας : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 24:12 [11] ⸀ἐπίστασιν : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 24:2 [14] ⸀διορθωμάτων : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 25:1 [4] ἐπαρχείᾳ : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 25:15 [17] ⸀καταδίκην· : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 26:4 [19] ἴσασι : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 27:14 [11] ⸀Εὐρακύλων· : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 27:16 [5] ⸀Καῦδα : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 27:41 [5] ⸀ἐπέκειλαν : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 27:43 [16] ἀπορίψαντας : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 28:6 [22] ⸀μεταβαλόμενοι : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 28:8 [8] ⸀δυσεντερίῳ : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 3:23 [11] ἐξολεθρευθήσεται : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 3:7 [16] ⸀σφυδρά, : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 5:1 [6] Σαπφίρῃ : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 5:15 [11] ⸀κλιναρίων : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 5:2 [5] συνειδυίης : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 5:36 [12] ⸀προσεκλίθη : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 5:37 [12] ἀπέστησε : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 7:12 [4] ⸂σιτία : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 7:16 [17] Ἑμμὼρ : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 7:26 [8] ⸀συνήλλασσεν : Content word has no Strong number.
+- **high / missingStrongs** Critical Acts 7:43 [11] ⸀Ῥαιφάν, : Content word has no Strong number.
+- **high / missingStrongs** Critical Colossians 2:23 [7] ἐθελοθρησκίᾳ : Content word has no Strong number.
+- **high / missingStrongs** Critical Galatians 2:18 [9] ⸀συνιστάνω. : Content word has no Strong number.
+- **high / missingStrongs** Critical Hebrews 10:17 [10] ⸀μνησθήσομαι : Content word has no Strong number.
+- **high / missingStrongs** Critical Hebrews 11:15 [7] ⸀ἐξέβησαν, : Content word has no Strong number.
+- **high / missingStrongs** Critical Hebrews 12:28 [15] δέους⸃, : Content word has no Strong number.
+- **high / missingStrongs** Critical Hebrews 2:1 [9] παραρυῶμεν. : Content word has no Strong number.
+- **high / missingStrongs** Critical Hebrews 3:9 [6] δοκιμασίᾳ⸃ : Content word has no Strong number.
+- **high / missingStrongs** Critical Hebrews 9:5 [3] Χερουβὶν : Content word has no Strong number.
+- **high / missingStrongs** Critical John 20:18 [4] ⸀ἀγγέλλουσα : Content word has no Strong number.
+- **high / missingStrongs** Critical John 7:49 [9] ⸀ἐπάρατοί : Content word has no Strong number.
+- **high / missingStrongs** Critical John 9:8 [10] ⸀προσαίτης : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 1:36 [4] ⸀συγγενίς : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 10:39 [8] ⸂παρακαθεσθεῖσα : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 10:41 [10] ⸀θορυβάζῃ : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 12:28 [16] ⸀ἀμφιέζει, : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 13:11 [7] ⸀δεκαοκτώ, : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 13:4 [3] ⸀δεκαοκτὼ : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 14:31 [12] ⸀βουλεύσεται : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 16:20 [10] εἱλκωμένος : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 16:21 [16] ⸀ἐπέλειχον : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 18:25 [5] ⸂τρήματος : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 18:25 [6] βελόνης⸃ : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 19:4 [7] συκομορέαν : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 19:43 [6] ⸀παρεμβαλοῦσιν : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 19:8 [9] ⸀ἡμίσιά : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 2:24 [15] νοσσοὺς : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 20:24 [0] ⸀Δείξατέ : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 21:35 [2] ⸂ἐπεισελεύσεται : Content word has no Strong number.

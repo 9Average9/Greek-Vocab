@@ -19227,14 +19227,14 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.175";
+const APP_VERSION = "3.0.176";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
 const RHEMA_DATA_VERSIONS = {
   'rhema-nt.js':        '3.0.65',
   'rhema-critical.js':  '3.0.23',
-  'rhema-critical-fallbacks.js': '3.0.175',
+  'rhema-critical-fallbacks.js': '3.0.176',
   'rhema-ot-hebrew.js': '3.0.81',
   'rhema-hebrew-lexicon.js': '3.0.81',
   'rhema-lxx.js':       '3.0.65',
@@ -19248,6 +19248,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.176 &mdash; Rhema Accuracy Polish</div>
+<ul>
+  <li><strong>More Critical Text words resolve</strong> &mdash; Curated spelling aliases now restore Strong's numbers for additional SBLGNT/Critical variants such as forty, Capernaum, fear, Moses, Samaritan, and related forms while leaving ambiguous cases for review.</li>
+  <li><strong>Cleaner quick definitions</strong> &mdash; Broad dictionary prose is compacted into a modern first-glance meaning, while the deeper explanation and lexicon receipts remain available underneath.</li>
+  <li><strong>Receipts read more clearly</strong> &mdash; When translation alignment catches surrounding English wording, Rhema now says the alignment was checked and explains why the lexicon-backed meaning is being shown.</li>
+</ul>
 <div class="un-version-label">v3.0.175 &mdash; Critical Text Strong's Coverage</div>
 <ul>
   <li><strong>Critical Text taps are more complete</strong> &mdash; Rhema now loads a generated fallback map for SBLGNT/Critical forms that were missing Strong's numbers when the same normalized Greek form has one clear Strong's match in the Majority text.</li>
@@ -29473,6 +29479,25 @@ function _rhemaReadableDefinitionSentence(value = '') {
   return text.length <= 28 && /^[a-z]/.test(text) ? text : text.charAt(0).toLowerCase() + text.slice(1);
 }
 
+function _rhemaCompactQuickDefinitionText(value = '') {
+  let text = _rhemaReadableDefinitionSentence(value);
+  if (!text) return '';
+  if (/^the basic verb "?to be"?/i.test(text)) return 'to be, exist, or be present';
+  text = text
+    .replace(/\s+(?:--|-|–|—)\s+.*$/, '')
+    .replace(/\s*\bused to\b.*$/i, '')
+    .replace(/\s*\bdepending on context\b.*$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const commaParts = text.split(/\s*,\s*/).filter(Boolean);
+  if (text.split(/\s+/).length > 9 && commaParts.length > 1) {
+    text = commaParts.slice(0, 3).join(', ');
+  }
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length > 12) text = words.slice(0, 12).join(' ');
+  return text.replace(/[;,.]\s*$/, '').trim();
+}
+
 function _rhemaDefinitionSummary(lex = {}) {
   const candidates = [
     { source: 'Dodson concise gloss', text: lex.brief, confidence: 'High' },
@@ -29481,7 +29506,7 @@ function _rhemaDefinitionSummary(lex = {}) {
     { source: 'Traditional English glosses', text: lex.kjv_def, confidence: 'Gloss list' }
   ];
   for (const candidate of candidates) {
-    const text = _rhemaReadableDefinitionSentence(candidate.text);
+    const text = _rhemaCompactQuickDefinitionText(candidate.text);
     if (text && text.length > 1) {
       return {
         text: text.length > 150 ? text.slice(0, 147).trimEnd() + '...' : text,
@@ -29492,8 +29517,9 @@ function _rhemaDefinitionSummary(lex = {}) {
   }
   const plain = rhemaPlainDefinitionText(lex.quick_def || '');
   if (!plain) return { text: '', source: '', confidence: '' };
+  const compact = _rhemaCompactQuickDefinitionText(plain) || plain;
   return {
-    text: plain.length > 150 ? plain.slice(0, 147).trimEnd() + '...' : plain,
+    text: compact.length > 150 ? compact.slice(0, 147).trimEnd() + '...' : compact,
     source: 'Lexicon gloss',
     confidence: 'Reference'
   };
@@ -30264,7 +30290,7 @@ function renderDeepLexiconEvidence(entry, strongs) {
           <span class="rhema-deep-gloss">${esc(meaning.text || raw)}</span>
           <span class="rhema-deep-count">${sense.count}× · ${pct}%</span>
         </div>
-        ${showRaw ? `<div class="rhema-deep-sense-label">${_deepLooksLikeAlignmentArtifact(raw) ? 'MSB phrase includes' : 'MSB renders'}: ${esc(raw)}</div>` : ''}
+        ${showRaw ? `<div class="rhema-deep-sense-label">${_deepLooksLikeAlignmentArtifact(raw) ? 'MSB alignment checked; phrase also includes' : 'MSB renders'}: ${esc(raw)}</div>` : ''}
         <div class="rhema-deep-bar"><span style="width:${Math.max(pct, 2)}%"></span></div>
         ${meta.length ? `<div class="rhema-deep-meta">${esc(meta.join(' · '))}</div>` : ''}
         ${refs ? `<div class="rhema-deep-refs">${refs}</div>` : ''}
@@ -30332,11 +30358,11 @@ function _rhemaDeepAnswerHtml(decision = {}) {
   const main = decision.gloss || decision.definition || '';
   if (!main) return '';
   const sub = [];
-  if (decision.definition && decision.definition !== main) sub.push(`lexicon sense: "${decision.definition}"`);
+  if (decision.definition && decision.definition !== main) sub.push(`lexicon sense: "${_rhemaCompactQuickDefinitionText(decision.definition) || decision.definition}"`);
   if (decision.source) sub.push(decision.source);
   if (decision.confidence) sub.push(decision.confidence);
   const caution = decision.deep?.rawLooksSuspect && decision.deep?.raw
-    ? `<div class="rhema-deep-caution">The measured English phrase includes "${esc(decision.deep.raw)}," but that looks like surrounding sentence wording, so Rhema used the lexicon-backed meaning.</div>`
+    ? `<div class="rhema-deep-caution">English alignment was checked, but "${esc(decision.deep.raw)}" looks like surrounding sentence wording, so Rhema shows the lexicon-backed meaning here.</div>`
     : '';
   return `<div class="rhema-deep-answer-main">Here: <strong>"${esc(main)}"</strong></div>
     ${sub.length ? `<div class="rhema-deep-answer-sub">${esc(sub.join(' · '))}</div>` : ''}
@@ -30358,7 +30384,11 @@ function _rhemaDeepAnswerReceiptsHtml(decision = {}, entry = {}, strongs = '', b
       ? `usual sense: ${sense.count} of ${entry.count} NT uses (${pct}%)`
       : `secondary sense: ${sense.count} of ${entry.count} NT uses (${pct}%); usual sense is "${_deepDefinitionSummary(entry, 0).short || (entry.senses || [])[0]?.display || ''}"`);
     if (sense.bsbAgree != null) meta.push(`BSB agrees ${Math.round(sense.bsbAgree * 100)}%`);
-    if (meaning.raw && meaning.raw !== meaning.text) meta.push(`MSB phrase includes "${meaning.raw}"`);
+    if (meaning.raw && meaning.raw !== meaning.text && !meaning.rawLooksSuspect) {
+      meta.push(`MSB renders "${meaning.raw}"`);
+    } else if (meaning.rawLooksSuspect) {
+      meta.push('English alignment checked; surrounding wording was not used as the meaning');
+    }
     parts.push(`<div class="rhema-deep-answer-sub">${esc(meta.filter(Boolean).join(' · '))}</div>`);
   }
   if (prose.def) parts.push(`<div class="rhema-deep-answer-def">${esc(prose.def)}</div>`);
@@ -30509,7 +30539,7 @@ function _populateParsingQuickDefinition(elId, strongs, layer, morph = '', infle
         ? `<div class="rhema-current-form-gloss">This form: <strong>${_escapeRhemaAttr(formGloss)}</strong></div>`
         : '';
       const caution = decision.deep?.rawLooksSuspect && decision.deep?.raw
-        ? `<div class="rhema-deep-caution">The measured English phrase includes "${_escapeRhemaAttr(decision.deep.raw)}," but that looks like surrounding sentence wording, so the quick definition uses the lexicon-backed meaning.</div>`
+        ? `<div class="rhema-deep-caution">English alignment was checked, but "${_escapeRhemaAttr(decision.deep.raw)}" looks like surrounding sentence wording, so the quick definition uses the lexicon-backed meaning.</div>`
         : '';
       el.innerHTML = `
         <div class="rhema-def-label">Quick Definition</div>
@@ -30527,7 +30557,7 @@ function _populateParsingQuickDefinition(elId, strongs, layer, morph = '', infle
       ? `<div class="rhema-current-form-gloss">This form: <strong>${_escapeRhemaAttr(inflectedGloss)}</strong></div>`
       : '';
     const caution = deep.rawLooksSuspect && deep.raw
-      ? `<div class="rhema-deep-caution">The measured English phrase includes “${_escapeRhemaAttr(deep.raw)},” but that looks like surrounding sentence wording, so the quick definition uses the lexicon-backed meaning.</div>`
+      ? `<div class="rhema-deep-caution">English alignment was checked, but "${_escapeRhemaAttr(deep.raw)}" looks like surrounding sentence wording, so the quick definition uses the lexicon-backed meaning.</div>`
       : '';
     el.innerHTML = `
       <div class="rhema-def-label">Quick Definition</div>

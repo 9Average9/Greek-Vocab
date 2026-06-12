@@ -31,6 +31,66 @@ function greekKey(surface = '') {
     .replace(/[^\u03b1-\u03c9]/g, '');
 }
 
+// Curated lemma aliases for Critical/SBLGNT spellings that differ from the
+// Majority-text lexicon spelling but point to the same established Strong's
+// entry. These are intentionally explicit; ambiguous text-critical names and
+// split numerals are left unresolved instead of guessed.
+const CURATED_LEMMA_STRONGS = {
+  τεσσερακοντα: '5062',
+  καφαρναουμ: '2584',
+  φοβεομαι: '5399',
+  κραβαττοσ: '2895',
+  σαμαριτησ: '4541',
+  μωυσησ: '3475',
+  γαμιζω: '1061',
+  εγκακεω: '1573',
+  εραυναω: '2045',
+  μαθθαιοσ: '3156',
+  τετρααρχησ: '5076',
+  λεγιων: '3003',
+  βαλλαντιον: '905',
+  προσωπολημψια: '4382',
+  ελεαω: '1653',
+  ειδωλολατρια: '1495',
+  ελιακιμ: '1662',
+  νεφθαλιμ: '3508',
+  ισκαριωθ: '2469',
+  τετρααρχεω: '5075',
+  οιδα: '1492',
+  συνιστημι: '4921',
+  ανεπιλημπτοσ: '423',
+  νηφαλιοσ: '3524',
+  βιβλαριδιον: '974',
+  βοεσ: '1003',
+  ιωβηδ: '5601',
+  ναζαρα: '3478',
+  κρυφαιοσ: '2927',
+  καναναιοσ: '2581',
+  επικαλεω: '1941',
+  γεθσημανι: '1068',
+  ιαιροσ: '2383',
+  αναγαιον: '508',
+  ωταριον: '5621',
+  μνηστευομαι: '3423',
+  μαθθατ: '3158',
+  καιναμ: '2536',
+  χρεοφειλετησ: '5533',
+  επιριπτω: '1977',
+  σαμαριτισ: '4542',
+  μαθθιασ: '3159',
+  τεσσερακονταετησ: '5063',
+  επαρχεια: '1885',
+  επιστασισ: '1999',
+  οικτιρω: '3627',
+  συμφορον: '4851',
+  ησσων: '2276',
+  λογεια: '3048',
+  ητταομαι: '2274',
+  σκοτοομαι: '4654',
+  οφθαλμοδουλια: '3787',
+  χρυσουσ: '5552',
+};
+
 function isContentMorph(morph = '') {
   const pos = String(morph).split('-')[0];
   return !['', 'T', 'ADV', 'CONJ', 'COND', 'PRT', 'PART', 'PREP'].includes(pos);
@@ -69,13 +129,20 @@ function main() {
 
   const fallback = {};
   const skipped = { ambiguous: 0, unresolved: 0 };
+  const resolvedBy = { surface: 0, curatedLemma: 0 };
   let missing = 0;
   walkText(critical, (word) => {
     if (word[1] || !isContentMorph(word[2])) return;
     missing += 1;
-    const values = surfaceStrong.get(greekKey(word[0]));
+    const surfaceKey = greekKey(word[0]);
+    const lemmaKey = greekKey(word[3] || '');
+    const values = surfaceStrong.get(surfaceKey);
     if (values?.size === 1) {
-      fallback[greekKey(word[0])] = [...values][0];
+      fallback[surfaceKey] = [...values][0];
+      resolvedBy.surface += 1;
+    } else if (CURATED_LEMMA_STRONGS[lemmaKey]) {
+      fallback[surfaceKey] = CURATED_LEMMA_STRONGS[lemmaKey];
+      resolvedBy.curatedLemma += 1;
     } else if (values?.size > 1) {
       skipped.ambiguous += 1;
     } else {
@@ -93,6 +160,7 @@ function main() {
   console.log(JSON.stringify({
     missingCriticalContentWords: missing,
     fallbackKeys: Object.keys(sorted).length,
+    resolvedBy,
     skipped,
     out: OUT,
   }, null, 2));

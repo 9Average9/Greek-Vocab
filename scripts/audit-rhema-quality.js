@@ -15,12 +15,12 @@ const OUT_JSON = path.join(OUT_DIR, 'rhema-quality-report.json');
 const OUT_MD = path.join(OUT_DIR, 'rhema-quality-report.md');
 
 const BOOKS = [
-  'MAT','MRK','LUK','JHN','ACT','ROM','1CO','2CO','GAL','EPH','PHP','COL','1TH','2TH',
+  'MAT','MAR','LUK','JOH','ACT','ROM','1CO','2CO','GAL','EPH','PHP','COL','1TH','2TH',
   '1TI','2TI','TIT','PHM','HEB','JAS','1PE','2PE','1JN','2JN','3JN','JUD','REV'
 ];
 
 const BOOK_NAMES = {
-  MAT:'Matthew', MRK:'Mark', LUK:'Luke', JHN:'John', ACT:'Acts', ROM:'Romans',
+  MAT:'Matthew', MAR:'Mark', LUK:'Luke', JOH:'John', ACT:'Acts', ROM:'Romans',
   '1CO':'1 Corinthians', '2CO':'2 Corinthians', GAL:'Galatians', EPH:'Ephesians',
   PHP:'Philippians', COL:'Colossians', '1TH':'1 Thessalonians', '2TH':'2 Thessalonians',
   '1TI':'1 Timothy', '2TI':'2 Timothy', TIT:'Titus', PHM:'Philemon', HEB:'Hebrews',
@@ -123,6 +123,39 @@ function firstGloss(value = '') {
     .replace(/^[xX]\s+/, '')
     .split(/[;,]/)[0]
     .trim();
+}
+
+function readableDefinition(value = '') {
+  let text = firstGloss(value)
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\b(i\.e\.|e\.g\.|figuratively|literally|properly|by implication|specially)\b[:,;]?\s*/gi, '')
+    .replace(/^I\s+am\b/i, 'to be')
+    .replace(/^I\s+am\s+/i, 'to be ')
+    .replace(/^I\s+/i, 'to ')
+    .replace(/^am\s+/i, 'to be ')
+    .replace(/^is\s+/i, 'to be ')
+    .replace(/^are\s+/i, 'to be ')
+    .replace(/^be\s+/i, 'to be ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text;
+}
+
+function compactDefinition(value = '') {
+  let text = readableDefinition(value);
+  if (!text) return '';
+  if (/^the basic verb "?to be"?/i.test(text)) return 'to be, exist, or be present';
+  text = text
+    .replace(/\s+(?:--|-|–|—)\s+.*$/, '')
+    .replace(/\s*\bused to\b.*$/i, '')
+    .replace(/\s*\bdepending on context\b.*$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const commaParts = text.split(/\s*,\s*/).filter(Boolean);
+  if (text.split(/\s+/).length > 9 && commaParts.length > 1) text = commaParts.slice(0, 3).join(', ');
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length > 12) text = words.slice(0, 12).join(' ');
+  return text.replace(/[;,.]\s*$/, '').trim();
 }
 
 function isContentMorph(morph = '') {
@@ -269,7 +302,7 @@ function meaningDecision(word, lex, entry, book, chapter, verse) {
   const morph = String(word?.[2] || '');
   const pos = morph.split('-')[0];
   const formGloss = roughGloss(word, lex, book, chapter);
-  const definition = firstGloss(contextualBrief(word, book, chapter) || lex.brief || lex.extended || lex.strongs_def || '');
+  const definition = compactDefinition(contextualBrief(word, book, chapter) || lex.brief || lex.extended || lex.strongs_def || '');
   const ref = `${book} ${chapter}:${verse}`;
   const deep = entry ? deepDefinitionSummary(entry, ref) : null;
   const formFirst = ['V', 'N', 'P', 'F', 'T', 'A', 'D', 'R', 'I', 'X'].includes(pos);
@@ -332,6 +365,7 @@ function auditWord({ dataset, book, chapter, verse, index, rawWord, word, lexico
   const decision = meaningDecision(word, lex, entry, book, chapter, verse);
   const gloss = decision.gloss;
   const definition = decision.definition;
+  const quickDisplay = gloss || definition;
   const combined = `${gloss} ${definition}`.toLowerCase();
 
   if (/\b(you all am|he\/she am|they am|we am|to am|been come|having been come|undefined|null|he\/she make |he \/ she make )\b/i.test(combined)) {
@@ -364,8 +398,8 @@ function auditWord({ dataset, book, chapter, verse, index, rawWord, word, lexico
   if (isContentMorph(morph) && !entry?.prose?.def && Number(entry?.count || 0) > 1) {
     issues.push(issue('weakDeepEvidence', { dataset, ref, index, surface, strongs, morph, gloss, definition, message: 'Deep lexicon has no prose definition for a repeated word.' }));
   }
-  if (definition.length > 70 || definition.split(/\s+/).length > 9) {
-    issues.push(issue('broadDefinition', { dataset, ref, index, surface, strongs, morph, gloss, definition, message: 'Definition is broad/verbose; consider a cleaner quick label.' }));
+  if (quickDisplay.length > 70 || quickDisplay.split(/\s+/).length > 9) {
+    issues.push(issue('broadDefinition', { dataset, ref, index, surface, strongs, morph, gloss, definition, message: 'Quick display is broad/verbose; consider a cleaner quick label.' }));
   }
 
   return issues;
