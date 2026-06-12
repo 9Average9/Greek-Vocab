@@ -18973,17 +18973,6 @@ body.dark .bn-item::before {
   transition: width 0.4s ease;
 }
 .hhw-count { font-size: 0.74rem; font-weight: 800; color: var(--secondary-color); }
-.hhw-streak {
-  display: inline-flex; align-items: center; gap: 4px;
-  margin-top: 8px; padding: 3px 9px 3px 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, #f97316 14%, var(--card-color));
-  border: 1px solid color-mix(in srgb, #f97316 35%, transparent);
-  font-size: 0.7rem; font-weight: 800;
-  color: #ea580c;
-}
-.hhw-streak.hidden { display: none; }
-.hhw-streak .material-symbols-outlined { font-size: 14px; }
 .hhw-art {
   position: absolute; right: 2px; bottom: -2px;
   pointer-events: none;

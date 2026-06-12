@@ -11023,8 +11023,8 @@ function _startHabitsListener() {
 }
 
 // ── Habit Builder home widget ─────────────────────────────────────────────────
-// A glanceable daily pulse: how many habits are done today, plus the hottest
-// running streak. Tapping it opens the Habits page.
+// A glanceable daily pulse: how many habits are done today. Tapping it opens
+// the Habits page.
 function _renderHomeHabitWidget() {
   const headline = document.getElementById('hhwHeadline');
   if (!headline) return;
@@ -11032,21 +11032,18 @@ function _renderHomeHabitWidget() {
   const progress = document.getElementById('hhwProgress');
   const fill = document.getElementById('hhwBarFill');
   const count = document.getElementById('hhwCount');
-  const streakEl = document.getElementById('hhwStreak');
 
   const habits = _habitsLoaded ? (_habitItems || []) : null;
   if (!habits || !habits.length) {
     headline.textContent = 'Build habits that stick';
     if (sub) sub.textContent = 'Track what matters daily, celebrate streaks, and invite friends to cheer you on.';
     progress?.classList.add('hidden');
-    streakEl?.classList.add('hidden');
     return;
   }
 
   const today = _habitTodayKey();
   const done = habits.filter(h => h.entries?.[today]?.status === 'success').length;
   const total = habits.length;
-  const best = Math.max(0, ...habits.map(h => _habitCurrentStreak(h.entries || {})));
 
   headline.textContent = done >= total
     ? 'All habits done today!'
@@ -11060,10 +11057,6 @@ function _renderHomeHabitWidget() {
     progress.classList.remove('hidden');
     fill.style.width = `${Math.round((done / total) * 100)}%`;
     count.textContent = `${done}/${total}`;
-  }
-  if (streakEl) {
-    streakEl.classList.toggle('hidden', best < 2);
-    streakEl.innerHTML = `<span class="material-symbols-outlined">local_fire_department</span>${best}-day streak`;
   }
 }
 
@@ -19369,7 +19362,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.185";
+const APP_VERSION = "3.0.186";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19390,6 +19383,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.186 &mdash; Simpler Habit Widget</div>
+<ul>
+  <li><strong>Streak chip removed from Home</strong> &mdash; The Habit Builder widget now focuses on today's progress only; streaks live on the Habits page.</li>
+</ul>
 <div class="un-version-label">v3.0.185 &mdash; Honest Streaks &amp; Tidier Quick Actions</div>
 <ul>
   <li><strong>Streaks no longer reset at midnight</strong> &mdash; A habit streak now holds while today is still open, only dropping to zero when a day is actually missed. Planned skips still bridge the run.</li>
