@@ -19227,7 +19227,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.178";
+const APP_VERSION = "3.0.179";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19248,6 +19248,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.179 &mdash; Sharper Measured Meanings</div>
+<ul>
+  <li><strong>&#8220;One&#8221; restored in the Critical Text</strong> &mdash; Fixed a tagging slip where &#7956;&#957; (&#8220;one&#8221;) was linked to the preposition &#949;&#7984;&#962; (&#8220;into&#8221;); these now read &#8220;one&#8221; with the right lexicon entry.</li>
+  <li><strong>Correct meanings no longer second-guessed</strong> &mdash; Rhema now recognizes when a measured English rendering matches a word&#8217;s own meaning (&#960;&#8118;&#962; &#8594; &#8220;all,&#8221; &#955;&#945;&#972;&#962; &#8594; &#8220;people,&#8221; &#949;&#7984;&#956;&#943; &#8594; &#8220;is/are&#8221;), so it stops mislabeling those as stray alignment wording.</li>
+  <li><strong>Cleaner interlinear glosses</strong> &mdash; The word-by-word grid now trusts these accurate measured renderings instead of falling back unnecessarily.</li>
+</ul>
 <div class="un-version-label">v3.0.178 &mdash; Rare Words Read with Confidence</div>
 <ul>
   <li><strong>Honest, reassuring usage tags</strong> &mdash; A word that appears only a few times in the New Testament now reads &#8220;Rare in NT&#8221; (or &#8220;Lexicon entry&#8221; when it is defined but outside the NT) instead of a bare &#8220;Low confidence,&#8221; which wrongly implied the meaning itself was uncertain.</li>
@@ -26459,6 +26465,12 @@ const RHEMA_CONTEXTUAL_BRIEFS = {
 
 function _rhemaResolveWord(word = [], book = _rhemaBook, chapter = _rhemaChapter) {
   if (!Array.isArray(word)) return word;
+  // Correct a known SBLGNT mistag: ἕν "one" (εἷς, G1520) carries εἰς's number
+  // (G1519) in the Critical text. εἰς is only ever a preposition, so an
+  // adjective morph on G1519 is unambiguously εἷς "one".
+  if (String(word[1]) === '1519' && /^A-/.test(String(word[2] || ''))) {
+    return [word[0], '1520', word[2] || '', word[3] || ''];
+  }
   if (word[1]) return word;
   const key = _rhemaGreekSurfaceKey(word[0]);
   const fallback = RHEMA_SURFACE_STRONGS_FALLBACKS[key] || window.RhemaCriticalFallbacks?.[key];
@@ -26598,9 +26610,10 @@ function _rhemaMeaningDecision(word = [], {
     if (deepSummary.text) deep = { ...deepSummary, senseIndex: null };
   }
 
+  const expectedMeaning = _deepExpectedMeaningWords(loadedEntry, lex);
   const formFirst = pos === 'V' || pos === 'N' || pos === 'P' || pos === 'F' || pos === 'T' ||
     pos === 'A' || pos === 'D' || pos === 'R' || pos === 'I' || pos === 'X';
-  const deepSafeForGrid = deep && !_deepLooksLikeAlignmentArtifact(deep.text) &&
+  const deepSafeForGrid = deep && !_deepLooksLikeAlignmentArtifact(deep.text, expectedMeaning) &&
     !['V', 'N', 'P', 'F', 'T'].includes(pos);
   const rawGloss = contextual
     ? (inflectedGloss || contextual)
@@ -26632,7 +26645,7 @@ function _rhemaMeaningDecision(word = [], {
   if (deep?.text) {
     evidence.push(`Rhema Lexicon: ${deep.text}${deep.source ? ` (${deep.source})` : ''}.`);
     if (deep.raw && deep.raw !== deep.text) {
-      evidence.push(_deepLooksLikeAlignmentArtifact(deep.raw)
+      evidence.push(_deepLooksLikeAlignmentArtifact(deep.raw, expectedMeaning)
         ? `Measured English phrase includes "${deep.raw}", but that looks like surrounding wording.`
         : `Measured rendering evidence includes "${deep.raw}".`);
     }
@@ -30199,7 +30212,7 @@ function _rhemaInterlinearDeepCandidate(entry = {}, senseIndex = null, morph = '
   const meaning = _deepSenseMeaning(entry, sense, idx);
   const raw = _deepCleanMeaningText(meaning.raw || sense?.display || '');
   const label = _rhemaCompactInterlinearGloss(meaning.text || '');
-  const rawLooksBad = raw ? _deepLooksLikeAlignmentArtifact(raw) : false;
+  const rawLooksBad = raw ? _deepLooksLikeAlignmentArtifact(raw, _deepExpectedMeaningWords(entry)) : false;
   const pos = String(morph || '').split('-')[0];
 
   // Verbs and ordinary nouns read best from their parsed form ("we begin",
@@ -30269,9 +30282,45 @@ function _deepCleanMeaningText(value = '') {
     .trim();
 }
 
-function _deepLooksLikeAlignmentArtifact(value = '') {
+// Pure connective/article/preposition glue — words that are never a standalone
+// content meaning, only sentence scaffolding.
+const _DEEP_GLUE_WORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'but', 'for', 'of', 'to', 'in', 'on', 'at',
+  'by', 'with', 'from', 'into', 'upon',
+]);
+
+// The set of English words that legitimately express THIS word's meaning, drawn
+// from its lexicon glosses and the deep-lexicon prose. Used so a measured
+// rendering that matches the word's own meaning (e.g. πᾶς → "all", λαός →
+// "people") is never mistaken for a stray alignment fragment.
+function _deepExpectedMeaningWords(entry = {}, lex = {}) {
+  const src = [
+    ...(entry?.prose?.senseLabels || []),
+    entry?.prose?.def || '',
+    lex?.brief || '', lex?.extended || '',
+  ].join(' ').toLowerCase();
+  const set = new Set();
+  for (const w of src.split(/[^a-z]+/)) {
+    if (w.length > 1 && !_DEEP_GLUE_WORDS.has(w)) set.add(w);
+  }
+  // A word that means "be" is legitimately rendered by any copula inflection
+  // (is/are/was/were…), so those are its meaning, not surrounding wording.
+  if (set.has('be')) ['am', 'is', 'are', 'was', 'were', 'been', 'being'].forEach(w => set.add(w));
+  return set;
+}
+
+function _deepMatchesExpectedMeaning(clean, expected) {
+  if (!expected || !expected.size) return false;
+  const words = clean.split(/\s+/).filter(w => w && !_DEEP_GLUE_WORDS.has(w));
+  return words.length > 0 && words.every(w => expected.has(w));
+}
+
+function _deepLooksLikeAlignmentArtifact(value = '', expected = null) {
   const clean = _deepCleanMeaningText(value).toLowerCase();
   if (!clean) return true;
+  // A rendering that matches the word's own established meaning is the meaning,
+  // not a stray fragment — even when it's a short, common word like "all".
+  if (_deepMatchesExpectedMeaning(clean, expected)) return false;
   if (_DEEP_FRAGMENT_ARTIFACTS.has(clean)) return true;
   const words = clean.split(/\s+/).filter(Boolean);
   if (words.length === 1) return _RHEMA_GLOSS_STOPWORDS.has(clean);
@@ -30285,7 +30334,7 @@ function _deepSenseMeaning(entry = {}, sense = null, senseIndex = 0) {
   if (label) return { text: label, source: 'lexicon-backed sense', raw: sense?.display || '' };
 
   const raw = _deepCleanMeaningText(sense?.display || '');
-  if (raw && !_deepLooksLikeAlignmentArtifact(raw)) {
+  if (raw && !_deepLooksLikeAlignmentArtifact(raw, _deepExpectedMeaningWords(entry))) {
     return { text: raw, source: 'measured rendering', raw };
   }
 
@@ -30306,13 +30355,14 @@ function _deepDefinitionSummary(entry = {}, senseIndex = null) {
     def,
     source: meaning.source,
     raw: meaning.raw || '',
-    rawLooksSuspect: meaning.raw ? _deepLooksLikeAlignmentArtifact(meaning.raw) : false,
+    rawLooksSuspect: meaning.raw ? _deepLooksLikeAlignmentArtifact(meaning.raw, _deepExpectedMeaningWords(entry)) : false,
   };
 }
 
 function renderDeepLexiconEvidence(entry, strongs) {
   const esc = _escapeRhemaAttr;
   const parts = [];
+  const expectedMeaning = _deepExpectedMeaningWords(entry);
 
   parts.push(`<div class="rhema-deep-head">
     <strong>Rhema Lexicon · Range of Meaning</strong>
@@ -30337,7 +30387,7 @@ function renderDeepLexiconEvidence(entry, strongs) {
           <span class="rhema-deep-gloss">${esc(meaning.text || raw)}</span>
           <span class="rhema-deep-count">${sense.count}× · ${pct}%</span>
         </div>
-        ${showRaw ? `<div class="rhema-deep-sense-label">${_deepLooksLikeAlignmentArtifact(raw) ? 'MSB alignment checked; phrase also includes' : 'MSB renders'}: ${esc(raw)}</div>` : ''}
+        ${showRaw ? `<div class="rhema-deep-sense-label">${_deepLooksLikeAlignmentArtifact(raw, expectedMeaning) ? 'MSB alignment checked; phrase also includes' : 'MSB renders'}: ${esc(raw)}</div>` : ''}
         <div class="rhema-deep-bar"><span style="width:${Math.max(pct, 2)}%"></span></div>
         ${meta.length ? `<div class="rhema-deep-meta">${esc(meta.join(' · '))}</div>` : ''}
         ${refs ? `<div class="rhema-deep-refs">${refs}</div>` : ''}

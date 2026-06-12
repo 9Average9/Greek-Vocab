@@ -173,6 +173,11 @@ function isCoreLexicalMorph(morph = '') {
 
 function resolveWord(word, book, chapter) {
   if (!Array.isArray(word)) return word;
+  // εἰς (G1519) is only ever a preposition; an adjective morph on G1519 is the
+  // SBLGNT mistag of ἕν "one" (εἷς, G1520).
+  if (String(word[1]) === '1519' && /^A-/.test(String(word[2] || ''))) {
+    return [word[0], '1520', word[2] || '', word[3] || ''];
+  }
   if (word[1]) return word;
   const key = greekKey(word[0]);
   const fallback = GREEK_FALLBACK_STRONGS[key] || generatedCriticalFallbacks[key];
@@ -253,9 +258,38 @@ function deepClean(value = '') {
   return plain(value).replace(/\s+/g, ' ').trim();
 }
 
-function looksLikeAlignmentArtifact(value = '') {
+const GLUE_WORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'but', 'for', 'of', 'to', 'in', 'on', 'at',
+  'by', 'with', 'from', 'into', 'upon',
+]);
+
+// English words that legitimately express this word's own meaning, drawn from
+// its lexicon glosses and deep-lexicon prose. A measured rendering matching
+// these (e.g. πᾶς → "all") is the meaning, not a stray alignment fragment.
+function expectedMeaningWords(entry = {}, lex = {}) {
+  const src = [
+    ...(entry?.prose?.senseLabels || []),
+    entry?.prose?.def || '',
+    lex?.brief || '', lex?.extended || '',
+  ].join(' ').toLowerCase();
+  const set = new Set();
+  for (const w of src.split(/[^a-z]+/)) {
+    if (w.length > 1 && !GLUE_WORDS.has(w)) set.add(w);
+  }
+  if (set.has('be')) ['am', 'is', 'are', 'was', 'were', 'been', 'being'].forEach(w => set.add(w));
+  return set;
+}
+
+function matchesExpectedMeaning(clean, expected) {
+  if (!expected || !expected.size) return false;
+  const words = clean.split(/\s+/).filter(w => w && !GLUE_WORDS.has(w));
+  return words.length > 0 && words.every(w => expected.has(w));
+}
+
+function looksLikeAlignmentArtifact(value = '', expected = null) {
   const clean = deepClean(value).toLowerCase();
   if (!clean) return false;
+  if (matchesExpectedMeaning(clean, expected)) return false;
   if (RAW_ALIGNMENT_ARTIFACTS.has(clean)) return true;
   const words = clean.split(/\s+/).filter(Boolean);
   if (words.length === 1) return GLOSS_STOPWORDS.has(clean);
@@ -269,24 +303,25 @@ function looksLikeDisplayArtifact(value = '') {
   return DISPLAY_ARTIFACTS.has(clean);
 }
 
-function deepSenseMeaning(entry = {}, sense = null, senseIndex = 0) {
+function deepSenseMeaning(entry = {}, sense = null, senseIndex = 0, expected = null) {
   const labels = entry.prose?.senseLabels || [];
   const label = deepClean(labels[senseIndex] || '');
   if (label) return { text: label, source: 'lexicon-backed sense', raw: sense?.display || '' };
 
   const raw = deepClean(sense?.display || '');
-  if (raw && !looksLikeAlignmentArtifact(raw)) return { text: raw, source: 'measured rendering', raw };
+  if (raw && !looksLikeAlignmentArtifact(raw, expected)) return { text: raw, source: 'measured rendering', raw };
 
   const def = deepClean(entry.prose?.def || '');
   if (def) return { text: def, source: 'plain-English lexicon definition', raw };
   return { text: raw, source: 'measured rendering', raw };
 }
 
-function deepDefinitionSummary(entry = {}, ref = '') {
+function deepDefinitionSummary(entry = {}, ref = '', lex = {}) {
   const senses = entry.senses || [];
   const idx = ref && entry.verseSense && ref in entry.verseSense ? entry.verseSense[ref] : 0;
   const sense = senses[idx];
-  const meaning = sense ? deepSenseMeaning(entry, sense, idx) : {
+  const expected = expectedMeaningWords(entry, lex);
+  const meaning = sense ? deepSenseMeaning(entry, sense, idx, expected) : {
     text: deepClean(entry.prose?.def || ''),
     source: 'plain-English lexicon definition',
     raw: '',
@@ -294,7 +329,7 @@ function deepDefinitionSummary(entry = {}, ref = '') {
   return {
     ...meaning,
     senseIndex: sense ? idx : null,
-    rawLooksSuspect: meaning.raw ? looksLikeAlignmentArtifact(meaning.raw) : false,
+    rawLooksSuspect: meaning.raw ? looksLikeAlignmentArtifact(meaning.raw, expected) : false,
   };
 }
 
@@ -324,7 +359,7 @@ function meaningDecision(word, lex, entry, book, chapter, verse) {
   const formGloss = roughGloss(word, lex, book, chapter);
   const definition = compactDefinition(contextualBrief(word, book, chapter) || lex.brief || lex.extended || lex.strongs_def || '');
   const ref = `${book} ${chapter}:${verse}`;
-  const deep = entry ? deepDefinitionSummary(entry, ref) : null;
+  const deep = entry ? deepDefinitionSummary(entry, ref, lex) : null;
   const formFirst = ['V', 'N', 'P', 'F', 'T', 'A', 'D', 'R', 'I', 'X'].includes(pos);
   const deepSafe = deep?.text && !looksLikeAlignmentArtifact(deep.text) && !['V', 'N', 'P', 'F', 'T'].includes(pos);
   const contextual = contextualBrief(word, book, chapter);
