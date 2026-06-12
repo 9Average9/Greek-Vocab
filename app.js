@@ -8153,6 +8153,28 @@ function _studyMemberAvatarStack(study) {
   ).join('')}</span>`;
 }
 
+// One book on a shelf — shared by the home shelf and the Study Library so
+// both render (and behave) identically: tap to open, ⓘ to peek, long-press
+// for delete mode.
+function _studyBookHtml(s) {
+  const today = new Date().toLocaleDateString("en-CA");
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  const doneToday = uid && (s.lastSessionDates || {})[uid] === today;
+  const isCreator = s.creatorUid === uid;
+  const isCollaborator = uid && !isCreator && s.collaboratorUids?.includes(uid);
+  return `<div class="hs-book${_studyDeleteMode ? ' jiggle' : ''}" style="--study-color:${s.color}" data-study-id="${s.id}"
+    onclick="${_studyDeleteMode ? 'void(0)' : `openStudyBook('${s.id}', this)`}"
+    ontouchstart="_startStudyLongPress('${s.id}',event)" ontouchmove="_onStudyLongPressMove(event)" ontouchend="_cancelStudyLongPress()" ontouchcancel="_cancelStudyLongPress()"
+    onmousedown="_startStudyLongPress('${s.id}',event)" onmousemove="_onStudyLongPressMove(event)" onmouseup="_cancelStudyLongPress()" onmouseleave="_cancelStudyLongPress()">
+    ${_studyDeleteMode && (isCreator || isCollaborator) ? `<button class="hs-delete-btn" onclick="event.stopPropagation();confirmDeleteStudy('${s.id}')"><span class="material-symbols-outlined">${isCreator ? 'close' : 'logout'}</span></button>` : ''}
+    ${_studyDeleteMode ? '' : `<button class="hs-book-info" onclick="event.stopPropagation();openStudyBookPeek('${s.id}')" aria-label="About this study"><span class="material-symbols-outlined">info</span></button>`}
+    ${doneToday ? '<span class="study-card-done-dot"></span>' : ''}
+    <span class="hs-book-icon material-symbols-outlined">${s.icon}</span>
+    <span class="hs-book-title${_studyBookTitleTier(s.name)}">${_escHtml(s.name || '')}</span>
+    <span class="hs-book-foot">${_studyMemberAvatarStack(s)}<span class="hs-book-meta">${_studyMemberLabel(s)}</span></span>
+  </div>`;
+}
+
 function _renderHomeStudies() {
   const grid = document.getElementById('hsGrid');
   const viewAllBtn = document.getElementById('hsViewAllBtn');
@@ -8165,30 +8187,12 @@ function _renderHomeStudies() {
     grid.innerHTML = `<button class="hs-start-btn" onclick="openStudyCreateSheet()">
       <span class="material-symbols-outlined">add</span><span>Start a Study</span></button>`;
     viewAllBtn?.classList.add('hidden');
+    if (_studyLibraryOpen()) _renderStudyLibrary();
     return;
   }
 
-  const today = new Date().toLocaleDateString("en-CA");
-  const uid = window.Auth?.getCurrentUser()?.uid;
   // The shelf scrolls horizontally, so every study gets a book on it
-  const visible = _myStudies;
-
-  const books = visible.map(s => {
-    const doneToday = uid && (s.lastSessionDates || {})[uid] === today;
-    const isCreator = s.creatorUid === uid;
-    const isCollaborator = uid && !isCreator && s.collaboratorUids?.includes(uid);
-    return `<div class="hs-book${_studyDeleteMode ? ' jiggle' : ''}" style="--study-color:${s.color}" data-study-id="${s.id}"
-      onclick="${_studyDeleteMode ? 'void(0)' : `openStudyBook('${s.id}', this)`}"
-      ontouchstart="_startStudyLongPress('${s.id}',event)" ontouchmove="_onStudyLongPressMove(event)" ontouchend="_cancelStudyLongPress()" ontouchcancel="_cancelStudyLongPress()"
-      onmousedown="_startStudyLongPress('${s.id}',event)" onmousemove="_onStudyLongPressMove(event)" onmouseup="_cancelStudyLongPress()" onmouseleave="_cancelStudyLongPress()">
-      ${_studyDeleteMode && (isCreator || isCollaborator) ? `<button class="hs-delete-btn" onclick="event.stopPropagation();confirmDeleteStudy('${s.id}')"><span class="material-symbols-outlined">${isCreator ? 'close' : 'logout'}</span></button>` : ''}
-      ${_studyDeleteMode ? '' : `<button class="hs-book-info" onclick="event.stopPropagation();openStudyBookPeek('${s.id}')" aria-label="About this study"><span class="material-symbols-outlined">info</span></button>`}
-      ${doneToday ? '<span class="study-card-done-dot"></span>' : ''}
-      <span class="hs-book-icon material-symbols-outlined">${s.icon}</span>
-      <span class="hs-book-title${_studyBookTitleTier(s.name)}">${_escHtml(s.name || '')}</span>
-      <span class="hs-book-foot">${_studyMemberAvatarStack(s)}<span class="hs-book-meta">${_studyMemberLabel(s)}</span></span>
-    </div>`;
-  }).join('');
+  const books = _myStudies.map(_studyBookHtml).join('');
 
   const addBook = _studyDeleteMode ? '' : `<button class="hs-add-book" onclick="openStudyCreateSheet()">
     <span class="material-symbols-outlined">add</span><span>New Study</span>
@@ -8208,6 +8212,8 @@ function _renderHomeStudies() {
     viewAllBtn?.classList.add('hidden');
     if (viewAllBtn) viewAllBtn.onclick = openStudiesViewAll;
   }
+
+  if (_studyLibraryOpen()) _renderStudyLibrary();
 }
 
 // Long study names get a smaller serif so the full title always fits on the
@@ -8243,10 +8249,13 @@ function openStudyBookPeek(studyId) {
 }
 
 // Opening from the peek card plays the same book animation, flying out of
-// the matching book on the shelf.
+// the matching book on the shelf. With the Study Library open, the animation
+// starts from the library's copy of the book, not the home shelf behind it.
 function openStudyBookFromPeek(studyId) {
   document.getElementById('studyBookPeek')?.remove();
-  const bookEl = document.querySelector(`.hs-book[data-study-id="${CSS.escape(studyId)}"]`);
+  const scope = (_studyLibraryOpen() && document.getElementById('slBookcase')) || document;
+  const bookEl = scope.querySelector(`.hs-book[data-study-id="${CSS.escape(studyId)}"]`)
+    || document.querySelector(`.hs-book[data-study-id="${CSS.escape(studyId)}"]`);
   openStudyBook(studyId, bookEl || null);
 }
 
@@ -8571,6 +8580,77 @@ function openStudiesViewAll() {
   document.getElementById('studiesViewAllModal')?.classList.add('open');
 }
 function closeStudiesViewAll() { document.getElementById('studiesViewAllModal')?.classList.remove('open'); }
+
+// ── Study Library ─────────────────────────────────────────────────────────────
+// Full-screen bookcase opened from the Quick Actions grid. Every study sits on
+// wooden shelves and behaves exactly like the home shelf: tap to open with the
+// book animation, ⓘ to peek, long-press for delete mode, and a ghost book to
+// start a new study.
+
+function _studyLibraryOpen() {
+  const modal = document.getElementById('studyLibraryModal');
+  return !!modal && !modal.classList.contains('hidden');
+}
+
+function openStudyLibrary() {
+  const modal = document.getElementById('studyLibraryModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  requestAnimationFrame(() => modal.classList.add('open'));
+  _renderStudyLibrary();
+}
+
+function closeStudyLibrary() {
+  const modal = document.getElementById('studyLibraryModal');
+  if (!modal) return;
+  if (_studyDeleteMode) _exitStudyDeleteMode();
+  modal.classList.remove('open');
+  setTimeout(() => modal.classList.add('hidden'), 240);
+}
+
+function _renderStudyLibrary() {
+  const bookcase = document.getElementById('slBookcase');
+  if (!bookcase) return;
+  const doneBtn = document.getElementById('slDoneBtn');
+  doneBtn?.classList.toggle('hidden', !_studyDeleteMode);
+  const countEl = document.getElementById('slCount');
+  if (countEl) countEl.textContent = _myStudies.length === 1 ? '1 study' : `${_myStudies.length} studies`;
+
+  if (!_myStudies.length) {
+    bookcase.innerHTML = `<div class="sl-empty">
+      <span class="material-symbols-outlined">local_library</span>
+      <p>Your library is empty.<br>Start a study and it will live on these shelves.</p>
+      <button class="hs-start-btn" onclick="openStudyCreateSheet()">
+        <span class="material-symbols-outlined">add</span><span>Start a Study</span>
+      </button>
+    </div>`;
+    return;
+  }
+
+  const books = _myStudies.map(_studyBookHtml);
+  if (!_studyDeleteMode) {
+    books.push(`<button class="hs-add-book" onclick="openStudyCreateSheet()">
+      <span class="material-symbols-outlined">add</span><span>New Study</span>
+    </button>`);
+  }
+
+  // Chunk the books into full shelf rows that fit the bookcase width.
+  // Bookcase frame padding (12px) + shelf side padding (10px) on each side;
+  // books are 94px wide with a 12px gap (the slim add-book still gets a slot
+  // so rows stay even).
+  const caseWidth = bookcase.clientWidth || bookcase.parentElement?.clientWidth || 320;
+  const avail = caseWidth - 24 - 20;
+  const perShelf = Math.max(2, Math.floor((avail + 12) / (94 + 12)));
+  const shelves = [];
+  for (let i = 0; i < books.length; i += perShelf) shelves.push(books.slice(i, i + perShelf));
+
+  bookcase.innerHTML = shelves.map(row =>
+    `<div class="hs-shelf-unit hs-has-books sl-shelf-unit">
+      <div class="hs-shelf sl-shelf">${row.join('')}</div>
+      <div class="hs-shelf-plank" aria-hidden="true"></div>
+    </div>`
+  ).join('');
+}
 
 // ── Study Sandbox ─────────────────────────────────────────────────────────────
 
@@ -19229,7 +19309,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.181";
+const APP_VERSION = "3.0.182";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19250,6 +19330,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.182 &mdash; Study Library</div>
+<ul>
+  <li><strong>Study Library on Quick Actions</strong> &mdash; A new Library tile on Home opens a full-screen wooden bookcase holding every one of your studies.</li>
+  <li><strong>Works just like the home shelf</strong> &mdash; Tap a book to open it with the same flying-book animation, tap &#9432; to peek at a study, long-press for delete mode, and grab the slim ghost book to start a new study.</li>
+</ul>
 <div class="un-version-label">v3.0.181 &mdash; Smarter Invites &amp; English Reader Notes</div>
 <ul>
   <li><strong>No double-asking on event invites</strong> &mdash; If you already accepted an event (from the in-app notification or the calendar), tapping the push notification now confirms you're already attending and only offers a &#8220;Can't make it&#8221; option instead of asking again.</li>
