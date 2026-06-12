@@ -33,6 +33,8 @@ const TEXT_DATASETS = [
   { name: 'Critical', global: 'RhemaCriticalNT', file: 'rhema-critical.js' },
 ];
 
+let generatedCriticalFallbacks = {};
+
 const ISSUE_SEVERITY = {
   missingStrongs: 'high',
   missingLexicon: 'high',
@@ -139,7 +141,8 @@ function isCoreLexicalMorph(morph = '') {
 function resolveWord(word, book, chapter) {
   if (!Array.isArray(word)) return word;
   if (word[1]) return word;
-  const fallback = GREEK_FALLBACK_STRONGS[greekKey(word[0])];
+  const key = greekKey(word[0]);
+  const fallback = GREEK_FALLBACK_STRONGS[key] || generatedCriticalFallbacks[key];
   return fallback ? [word[0], fallback, word[2] || '', word[3] || ''] : word;
 }
 
@@ -441,8 +444,9 @@ function parseArgs(argv) {
 
 function main() {
   const { filters, limit } = parseArgs(process.argv.slice(2));
-  const files = ['rhema-lexicon.js', ...TEXT_DATASETS.map(d => d.file)];
+  const files = ['rhema-lexicon.js', 'rhema-critical-fallbacks.js', ...TEXT_DATASETS.map(d => d.file)];
   const globals = loadWindowGlobals(files);
+  generatedCriticalFallbacks = globals.RhemaCriticalFallbacks || {};
   const lexicon = globals.RhemaLexicon || {};
   const deep = loadDeepEntries();
   const issues = [];

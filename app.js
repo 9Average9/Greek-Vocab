@@ -19227,13 +19227,14 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.174";
+const APP_VERSION = "3.0.175";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
 const RHEMA_DATA_VERSIONS = {
   'rhema-nt.js':        '3.0.65',
   'rhema-critical.js':  '3.0.23',
+  'rhema-critical-fallbacks.js': '3.0.175',
   'rhema-ot-hebrew.js': '3.0.81',
   'rhema-hebrew-lexicon.js': '3.0.81',
   'rhema-lxx.js':       '3.0.65',
@@ -19247,6 +19248,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.175 &mdash; Critical Text Strong's Coverage</div>
+<ul>
+  <li><strong>Critical Text taps are more complete</strong> &mdash; Rhema now loads a generated fallback map for SBLGNT/Critical forms that were missing Strong's numbers when the same normalized Greek form has one clear Strong's match in the Majority text.</li>
+  <li><strong>Safer data, not guesses</strong> &mdash; Ambiguous and unresolved forms stay unfilled for review, while 587 fallback forms restore lexicon, parsing, range, and interlinear behavior across many Critical Text occurrences.</li>
+</ul>
 <div class="un-version-label">v3.0.174 &mdash; Rhema Premium Audit Gate</div>
 <ul>
   <li><strong>Context receipts tightened</strong> &mdash; When a Greek form and chapter context establish the meaning, the Definition tab now keeps that same sense in the supporting explanation instead of letting a broader measured sense contradict it.</li>
@@ -25797,7 +25803,7 @@ function loadRhemaScripts() {
     _rhemaLoading = true;
     loadDeepLexiconSpine();
     let loaded = 0;
-    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js'];
+    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-critical-fallbacks.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js'];
     let failed = false;
     for (const file of files) {
       const s = document.createElement('script');
@@ -26437,7 +26443,8 @@ const RHEMA_CONTEXTUAL_BRIEFS = {
 function _rhemaResolveWord(word = [], book = _rhemaBook, chapter = _rhemaChapter) {
   if (!Array.isArray(word)) return word;
   if (word[1]) return word;
-  const fallback = RHEMA_SURFACE_STRONGS_FALLBACKS[_rhemaGreekSurfaceKey(word[0])];
+  const key = _rhemaGreekSurfaceKey(word[0]);
+  const fallback = RHEMA_SURFACE_STRONGS_FALLBACKS[key] || window.RhemaCriticalFallbacks?.[key];
   return fallback ? [word[0], fallback, word[2] || '', word[3] || ''] : word;
 }
 
