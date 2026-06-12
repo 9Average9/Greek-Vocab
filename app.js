@@ -8998,6 +8998,10 @@ function _stripGreekAccents(s) {
     .replace(/[\u0300-\u0344\u0346-\u036f]/g, '')
     .replace(/\u03c2/g, '\u03c3');
 }
+
+function _rhemaGreekSurfaceKey(surface = '') {
+  return _stripGreekAccents(surface).toLowerCase().replace(/[^α-ω]/g, '');
+}
 function _normalizeTranslit(s) {
   return s.toLowerCase()
     .replace(/[ūū]/g,'u').replace(/ō/g,'o').replace(/ē/g,'e')
@@ -19223,7 +19227,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.169";
+const APP_VERSION = "3.0.170";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19243,6 +19247,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.170 &mdash; 2 Corinthians 3 Rhema Audit</div>
+<ul>
+  <li><strong>2 Corinthians 3 glosses tightened</strong> &mdash; Critical Text forms like Ἀρχόμεθα now read from the middle-voice sense "we begin" instead of the active sense "we reign/rule."</li>
+  <li><strong>Missing Critical Text tags patched</strong> &mdash; Variant-marked words such as commend, Moses, veil, and transform now resolve to the right lexicon entries when their Strong's number is absent.</li>
+  <li><strong>Chapter vocabulary is clearer</strong> &mdash; Repeated words in 2 Corinthians 3 now surface as ministry, covenant, letter/written code, Spirit, glory, veil, Lord, Christ, and related context-aware glosses.</li>
+</ul>
 <div class="un-version-label">v3.0.169 &mdash; Rhema Interlinear Accuracy</div>
 <ul>
   <li><strong>Interlinear glosses are safer</strong> &mdash; The word-by-word gloss now uses parsed lexical meaning first instead of raw sentence-alignment fragments, so 2 Corinthians 3:1 reads "we begin," "to commend," and "recommendation" instead of misleading nearby English words.</li>
@@ -26361,6 +26371,119 @@ function _rhemaLayerBadge(bookCode = _rhemaBook) {
   return '';
 }
 
+const RHEMA_SURFACE_STRONGS_FALLBACKS = {
+  συνιστανειν: '4921',
+  μωυσεωσ: '3475',
+  μωυσησ: '3475',
+  καλυμμα: '2571',
+  μεταμορφουμεθα: '3339',
+  εινεκεν: '1752',
+};
+
+const RHEMA_CONTEXTUAL_BRIEFS = {
+  '2CO 3': {
+    757: 'I begin',
+    4921: 'I commend, recommend',
+    4956: 'recommendation',
+    1992: 'letter',
+    4006: 'confidence',
+    5547: 'Christ',
+    1247: 'I serve, minister',
+    4151: 'Spirit',
+    2588: 'heart',
+    2425: 'sufficient',
+    2426: 'sufficiency',
+    2427: 'I make sufficient',
+    1249: 'servant, minister',
+    2537: 'new',
+    1242: 'covenant',
+    1121: 'letter, written code',
+    1248: 'ministry',
+    1391: 'glory',
+    2571: 'veil',
+    2673: 'I make powerless, bring to an end',
+    3954: 'boldness, confidence',
+    3820: 'old',
+    343: 'I unveil',
+    2962: 'Lord',
+    1657: 'freedom',
+    2734: 'I behold as in a mirror, reflect',
+    3339: 'I transform',
+  },
+};
+
+function _rhemaResolveWord(word = [], book = _rhemaBook, chapter = _rhemaChapter) {
+  if (!Array.isArray(word)) return word;
+  if (word[1]) return word;
+  const fallback = RHEMA_SURFACE_STRONGS_FALLBACKS[_rhemaGreekSurfaceKey(word[0])];
+  return fallback ? [word[0], fallback, word[2] || '', word[3] || ''] : word;
+}
+
+function _rhemaContextualBrief(word = [], book = _rhemaBook, chapter = _rhemaChapter) {
+  const strongs = parseInt(word?.[1], 10);
+  if (!strongs) return '';
+  const morph = String(word?.[2] || '');
+  const surfaceKey = _rhemaGreekSurfaceKey(word?.[0] || '');
+
+  // G757 has two legitimate senses. In the middle voice, as in 2 Cor 3:1
+  // Ἀρχόμεθα, it is ἄρχομαι: "begin," not "rule/reign."
+  if (strongs === 757 && morph.startsWith('V-') && morph[3] === 'M' && surfaceKey.startsWith('αρχ')) {
+    return 'I begin';
+  }
+
+  return RHEMA_CONTEXTUAL_BRIEFS[`${book} ${chapter}`]?.[strongs] || '';
+}
+
+function _rhemaContextualPronounGloss(word = []) {
+  const strongs = parseInt(word?.[1], 10);
+  const morph = String(word?.[2] || '');
+  const cng = morph.split('-')[1] || '';
+  if (!strongs || !cng) return '';
+  const caseCode = cng[0] === '1' || cng[0] === '2' ? cng[1] : cng[0];
+  const numberCode = cng[0] === '1' || cng[0] === '2' ? cng[2] : cng[1];
+
+  if (strongs === 1473) {
+    if (numberCode === 'P') return ({ N: 'we', G: 'our', D: 'to/for us', A: 'us' })[caseCode] || '';
+    return ({ N: 'I', G: 'my', D: 'to/for me', A: 'me' })[caseCode] || '';
+  }
+  if (strongs === 4771) {
+    if (numberCode === 'P') return ({ N: 'you all', G: 'your', D: 'to/for you', A: 'you' })[caseCode] || '';
+    return ({ N: 'you', G: 'your', D: 'to/for you', A: 'you' })[caseCode] || '';
+  }
+  if (strongs === 1438) {
+    if (numberCode === 'P') return ({ G: 'ourselves', D: 'to/for ourselves', A: 'ourselves' })[caseCode] || 'ourselves';
+    return ({ G: 'himself', D: 'to/for himself', A: 'himself' })[caseCode] || 'himself';
+  }
+  if (strongs === 846) {
+    if (numberCode === 'P') return ({ N: 'they', G: 'their', D: 'to/for them', A: 'them' })[caseCode] || '';
+    return ({ N: 'he/she/it', G: 'his/her/its', D: 'to/for him/her/it', A: 'him/her/it' })[caseCode] || '';
+  }
+  return '';
+}
+
+function _rhemaLexForWord(word = [], layer = getCurrentOriginalLanguageLayer(), book = _rhemaBook, chapter = _rhemaChapter) {
+  const resolved = _rhemaResolveWord(word, book, chapter);
+  const lex = getCurrentRhemaLexicon(layer)[resolved?.[1]] || {};
+  const brief = layer === 'hebrew' ? '' : _rhemaContextualBrief(resolved, book, chapter);
+  const pronounGloss = layer === 'hebrew' ? '' : _rhemaContextualPronounGloss(resolved);
+  if (!brief && !pronounGloss) return lex;
+  const patched = { ...lex };
+  if (brief) patched.brief = brief;
+  if (pronounGloss) {
+    patched._rhemaPronounGloss = pronounGloss;
+    if (!brief) patched.brief = pronounGloss;
+  }
+  if (!patched.extended || patched.extended === lex.brief || /^I reign, rule\.?$/i.test(patched.extended)) {
+    const text = brief || pronounGloss;
+    patched.extended = text.endsWith('.') ? text : `${text}.`;
+  }
+  if (parseInt(resolved?.[1], 10) === 757 && brief === 'I begin') {
+    patched.lemma = 'ἄρχομαι';
+    patched.translit = 'árchomai';
+  }
+  return patched;
+}
+
 function _renderVerseWords(words, verse) {
   const vArg = verse ? `, '${verse}'` : '';
   const variantMap = _rhemaVariantMap(words, verse);
@@ -26382,18 +26505,19 @@ function _renderVerseWords(words, verse) {
     }).join('');
   } else {
     return words.map((w, i) => {
-      const isXref = _rhemaHighlightStrongs !== null && w[1] === _rhemaHighlightStrongs;
-      const posKey = _rhemaOriginalHighlightKey(w);
+      const word = _rhemaResolveWord(w, _rhemaBook, _rhemaChapter);
+      const isXref = _rhemaHighlightStrongs !== null && String(word[1]) === String(_rhemaHighlightStrongs);
+      const posKey = _rhemaOriginalHighlightKey(word);
       const hlColor = _rhemaPosHighlights.has(posKey) ? HIGHLIGHT_CATS[posKey]?.color : null;
       const style = hlColor ? ` style="background:${hlColor};border-radius:4px"` : '';
       const variant = variantMap[i];
       const cls = `${isXref ? 'rhema-word xref' : 'rhema-word'}${variant ? ' has-variant' : ''}`;
-      const lex = getCurrentRhemaLexicon(layer)[w[1]] || {};
+      const lex = _rhemaLexForWord(word, layer, _rhemaBook, _rhemaChapter);
       // Greek layers use parsed lexical/form glosses by default. Deep lexicon
       // labels are allowed only when they are safer than raw alignment text.
       const deepRef = !isHebrew && isRhemaNTBook(_rhemaBook) ? `${_rhemaBook} ${_rhemaChapter}:${verse || _rhemaVerse}` : null;
-      const deepGloss = isHebrew ? '' : _rhemaDeepGloss(w[1], deepRef, w[2], lex);
-      const gloss = deepGloss || (isHebrew ? getRhemaQuickDefinition(lex) : _rhemaBaseInterlinearGloss(w[2], lex));
+      const deepGloss = isHebrew ? '' : _rhemaDeepGloss(word[1], deepRef, word[2], lex);
+      const gloss = deepGloss || (isHebrew ? getRhemaQuickDefinition(lex) : _rhemaBaseInterlinearGloss(word[2], lex));
       const glossHtml = gloss ? `<span class="rhema-gloss">${gloss}</span>` : '';
       const variantTag = variant
         ? `<button class="rhema-variant-tag" onclick="event.stopPropagation();showRhemaVariant('${variant.label}', '${_escapeRhemaAttr(variant.text)}')" title="Text variant">var</button>`
@@ -27611,6 +27735,7 @@ function _nounGloss(morph, brief) {
   }
   const pronoun = _rhemaPronounGloss(posRaw, cng, base, caseCode);
   if (pronoun) return pronoun;
+  if (posRaw === 'A' || posRaw === 'D' || posRaw === 'R' || posRaw === 'I' || posRaw === 'X') return base;
   const CASE_PREP = { N: '', G: 'of ', D: 'to/for ', A: '', V: 'O ' };
   const prep = CASE_PREP[caseCode];
   if (prep === undefined) return base;
@@ -28509,7 +28634,7 @@ function openRhemaSheet(wordIdx, verse) {
   if (!_rhemaData()) return;
   if (verse) { _rhemaVerse = verse; syncRhemaPicker(); }
   const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
-  const word  = words[wordIdx];
+  const word  = _rhemaResolveWord(words[wordIdx], _rhemaBook, _rhemaChapter);
   if (!word) return;
 
   closeRhemaPickerSheet();
@@ -28522,7 +28647,7 @@ function openRhemaSheet(wordIdx, verse) {
 
   // Populate header
   const [surface, strongs, morph, lemma] = word;
-  const lex = getCurrentRhemaLexicon(_rhemaActiveWordLayer)[strongs] || {};
+  const lex = _rhemaLexForWord(word, _rhemaActiveWordLayer, _rhemaBook, _rhemaChapter);
 
   document.getElementById('rhemaSheetSurface').textContent = surface;
   document.getElementById('rhemaSheetStrongs').textContent = strongs ? (_rhemaActiveWordLayer === 'hebrew' ? 'H' : 'G') + strongs : (_rhemaActiveWordLayer === 'lxx' ? 'LXX' : '');
@@ -29353,7 +29478,10 @@ function _rhemaWhyDefinitionHtml({ lex = {}, morph = '', quickDefinition = '', s
 
 function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguageLayer()) {
   if (layer === 'hebrew') return renderHebrewDefinition(strongs);
-  const lex = getCurrentRhemaLexicon(layer)[strongs];
+  const activeWord = _rhemaActiveWord && String(_rhemaActiveWord[1]) === String(strongs)
+    ? _rhemaActiveWord
+    : ['', strongs, morph || ''];
+  const lex = _rhemaLexForWord(activeWord, layer, _rhemaBook, _rhemaChapter);
   if (!lex) return `<p style="opacity:.5;font-size:.85rem">${layer === 'hebrew' ? 'No Hebrew lexicon entry loaded yet.' : 'No definition found.'}</p>`;
 
   const sections = [];
@@ -29833,6 +29961,7 @@ function loadDeepLexiconSpine() {
 }
 
 function _rhemaBaseInterlinearGloss(morph = '', lex = {}) {
+  if (lex._rhemaPronounGloss) return lex._rhemaPronounGloss;
   if (morph?.startsWith('V-')) return _sxVerbGloss(morph, lex.brief);
   return _nounGloss(morph, lex.brief) || getRhemaQuickDefinition(lex);
 }
@@ -30063,6 +30192,18 @@ function _populateDeepAnswer(elId, strongs, layer) {
   if (layer === 'hebrew') return;
   // Capture reader position now — globals may move before the shard arrives.
   const book = _rhemaBook, ch = _rhemaChapter, v = _rhemaVerse;
+  const activeWord = _rhemaActiveWord && String(_rhemaActiveWord[1]) === String(strongs) ? _rhemaActiveWord : null;
+  const contextual = activeWord ? _rhemaContextualBrief(activeWord, book, ch) : '';
+  if (contextual) {
+    const el = document.getElementById(elId);
+    if (el) {
+      const formGloss = _rhemaBaseInterlinearGloss(activeWord[2], _rhemaLexForWord(activeWord, layer, book, ch));
+      el.innerHTML = `<div class="rhema-deep-answer-main">Here: <strong>“${_escapeRhemaAttr(formGloss || contextual)}”</strong></div>
+        <div class="rhema-deep-answer-sub">Chosen from the actual Greek form and this chapter context, so the word-sheet answer matches the interlinear gloss.</div>`;
+      el.classList.remove('hidden');
+    }
+    return;
+  }
   loadDeepLexiconEntry(strongs).then(entry => {
     const el = document.getElementById(elId);
     if (!el) return;
