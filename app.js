@@ -19227,7 +19227,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.172";
+const APP_VERSION = "3.0.173";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19247,6 +19247,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.173 &mdash; Rhema Lexicon Receipts Restored</div>
+<ul>
+  <li><strong>Thought-flow explanations restored</strong> &mdash; The Definition tab again shows the fuller Rhema Lexicon material: prose definition, About this word, usage counts, BSB agreement, and the evidence trail.</li>
+  <li><strong>Resolver plus receipts</strong> &mdash; The top answer still comes from the shared occurrence-aware resolver, but it no longer replaces the deeper context and range evidence.</li>
+</ul>
 <div class="un-version-label">v3.0.172 &mdash; Rhema Meaning Resolver</div>
 <ul>
   <li><strong>One meaning decision</strong> &mdash; The interlinear, Parsing quick definition, and Definition quick answer now share the same occurrence-aware resolver instead of choosing separate answers.</li>
@@ -30324,13 +30329,50 @@ function _rhemaDeepAnswerHtml(decision = {}) {
     ${caution}`;
 }
 
+function _rhemaDeepAnswerReceiptsHtml(decision = {}, entry = {}, strongs = '', book = '', ch = '', v = '') {
+  const esc = _escapeRhemaAttr;
+  const parts = [_rhemaDeepAnswerHtml(decision)];
+  const prose = entry.prose || {};
+  const ref = book && ch && v && isRhemaNTBook(book) ? `${book} ${ch}:${v}` : '';
+  const idx = ref && entry.verseSense && ref in entry.verseSense ? entry.verseSense[ref] : null;
+  const sense = idx != null ? (entry.senses || [])[idx] : (entry.senses || [])[0];
+  if (sense && entry.count) {
+    const meaning = _deepDefinitionSummary(entry, idx);
+    const pct = Math.round((sense.share || 0) * 100);
+    const meta = [];
+    meta.push(idx === 0 || idx == null
+      ? `usual sense: ${sense.count} of ${entry.count} NT uses (${pct}%)`
+      : `secondary sense: ${sense.count} of ${entry.count} NT uses (${pct}%); usual sense is "${_deepDefinitionSummary(entry, 0).short || (entry.senses || [])[0]?.display || ''}"`);
+    if (sense.bsbAgree != null) meta.push(`BSB agrees ${Math.round(sense.bsbAgree * 100)}%`);
+    if (meaning.raw && meaning.raw !== meaning.text) meta.push(`MSB phrase includes "${meaning.raw}"`);
+    parts.push(`<div class="rhema-deep-answer-sub">${esc(meta.filter(Boolean).join(' · '))}</div>`);
+  }
+  if (prose.def) parts.push(`<div class="rhema-deep-answer-def">${esc(prose.def)}</div>`);
+  if (prose.article) {
+    parts.push(`<button type="button" class="rhema-deep-article-btn" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
+      <span>About this word</span><span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
+    </button>
+    <div class="rhema-deep-article hidden">${esc(prose.article)}${prose.caution ? `<div class="rhema-deep-caution">${esc(prose.caution)}</div>` : ''}</div>`);
+  } else if (prose.caution) {
+    parts.push(`<div class="rhema-deep-caution">${esc(prose.caution)}</div>`);
+  }
+  if (entry.why?.length) {
+    parts.push(`<button type="button" class="rhema-deep-why-btn" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
+      <span class="material-symbols-outlined">help</span><span>Evidence trail</span>
+      <span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
+    </button>
+    <div class="rhema-deep-why hidden">${entry.why.map(p => `<p>${esc(p)}</p>`).join('')}</div>`);
+  }
+  return parts.filter(Boolean).join('');
+}
+
 function _populateDeepAnswer(elId, strongs, layer) {
   if (layer === 'hebrew') return;
   // Capture reader position now — globals may move before the shard arrives.
   const book = _rhemaBook, ch = _rhemaChapter, v = _rhemaVerse;
   const activeWord = _rhemaActiveWord && String(_rhemaActiveWord[1]) === String(strongs) ? _rhemaActiveWord : null;
   const contextual = activeWord ? _rhemaContextualBrief(activeWord, book, ch) : '';
-  if (contextual) {
+  if (contextual && !strongs) {
     const el = document.getElementById(elId);
     if (el) {
       el.innerHTML = _rhemaDeepAnswerHtml(_rhemaMeaningDecision(activeWord, { layer, book, chapter: ch, verse: v }));
@@ -30348,9 +30390,13 @@ function _populateDeepAnswer(elId, strongs, layer) {
     if (!el) return;
     if (!entry || (!entry.count && !entry.prose?.def)) { el.remove(); return; }
     const decisionWord = activeWord || ['', strongs, ''];
-    const decisionHtml = _rhemaDeepAnswerHtml(_rhemaMeaningDecision(decisionWord, { layer, book, chapter: ch, verse: v, entry }));
+    const decision = _rhemaMeaningDecision(decisionWord, { layer, book, chapter: ch, verse: v, entry });
+    const decisionHtml = _rhemaDeepAnswerReceiptsHtml(decision, entry, strongs, book, ch, v);
     if (decisionHtml) {
-      el.innerHTML = decisionHtml;
+      el.innerHTML = `<div class="rhema-deep-answer-head">
+          <span class="rhema-def-label">${book && ch && v ? `In ${_escapeRhemaAttr(_rhemaBookName(book) || book)} ${_escapeRhemaAttr(ch)}:${_escapeRhemaAttr(v)}` : 'Rhema Lexicon'}</span>
+          <span class="rhema-deep-conf rhema-deep-conf-${_escapeRhemaAttr(entry.confidence)}">${_escapeRhemaAttr(_DEEP_CONFIDENCE_LABELS[entry.confidence] || entry.confidence || decision.confidence || '')}</span>
+        </div>${decisionHtml}`;
       el.classList.remove('hidden');
       return;
     }
