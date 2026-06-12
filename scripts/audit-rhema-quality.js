@@ -351,6 +351,22 @@ function properCaseGloss(text = '', strongs, lemma = '', lex = {}) {
   return text;
 }
 
+function isVerboseGloss(text = '') {
+  const t = String(text || '').trim();
+  return t.length > 48 || t.split(/\s+/).filter(Boolean).length > 8;
+}
+
+function extractQuotedGloss(text = '') {
+  const out = [];
+  const re = /[“"]([^”"]{1,24})[”"]/g;
+  let m;
+  while ((m = re.exec(String(text))) && out.length < 3) {
+    const g = m[1].replace(/[.,;:]+$/, '').trim();
+    if (g && !out.includes(g)) out.push(g);
+  }
+  return out.join(' / ');
+}
+
 function meaningDecision(word, lex, entry, book, chapter, verse) {
   const morph = String(word?.[2] || '');
   const pos = morph.split('-')[0];
@@ -360,8 +376,9 @@ function meaningDecision(word, lex, entry, book, chapter, verse) {
   const definition = compactDefinition(contextualBrief(word, book, chapter) || lex.brief || lex.extended || lex.strongs_def || '');
   const ref = `${book} ${chapter}:${verse}`;
   const deep = entry ? deepDefinitionSummary(entry, ref, lex) : null;
+  const expected = expectedMeaningWords(entry || {}, lex);
   const formFirst = ['V', 'N', 'P', 'F', 'T', 'A', 'D', 'R', 'I', 'X'].includes(pos);
-  const deepSafe = deep?.text && !looksLikeAlignmentArtifact(deep.text) && !['V', 'N', 'P', 'F', 'T'].includes(pos);
+  const deepSafe = deep?.text && !looksLikeAlignmentArtifact(deep.text, expected) && !['V', 'N', 'P', 'F', 'T'].includes(pos);
   const contextual = contextualBrief(word, book, chapter);
   const rawGloss = contextual
     ? (formGloss || contextual)
@@ -373,8 +390,13 @@ function meaningDecision(word, lex, entry, book, chapter, verse) {
   const rawDefinition = contextual
     ? (definition || contextual || rawGloss || '')
     : ((deepDefUsable ? deep.text : '') || definition || deep?.text || rawGloss || '');
+  let crispGloss = rawGloss;
+  if (isVerboseGloss(crispGloss)) {
+    const briefGloss = definition && !isVerboseGloss(definition) ? definition : '';
+    crispGloss = briefGloss || extractQuotedGloss(crispGloss) || crispGloss;
+  }
   return {
-    gloss: properCaseGloss(rawGloss, strongs, lemmaForCase, lex),
+    gloss: properCaseGloss(crispGloss, strongs, lemmaForCase, lex),
     definition: properCaseGloss(rawDefinition, strongs, lemmaForCase, lex),
     formGloss,
     lexicalDefinition: definition,
