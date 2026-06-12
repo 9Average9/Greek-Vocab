@@ -1,20 +1,19 @@
 # Rhema Quality Audit
 
-Generated: 2026-06-12T03:11:33.050Z
+Generated: 2026-06-12T03:33:02.955Z
 Scope: NT Majority + Critical
 
-Total findings: **18066**
+Total findings: **16633**
 
 ## By Severity
-- high: 164
-- medium: 17469
+- high: 149
+- medium: 16051
 - low: 433
 
 ## By Type
-- missingStrongs: 164
-- functionWordDefinition: 30
-- lowConfidence: 9963
-- properNameCase: 1405
+- missingStrongs: 149
+- lowConfidence: 9968
+- properNameCase: 12
 - suspectReceipt: 6071
 - broadDefinition: 433
 
@@ -48,10 +47,7 @@ Total findings: **18066**
 - **high / missingStrongs** Critical Acts 16:11 [11] ⸂Νέαν : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 16:22 [9] περιρήξαντες : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 18:7 [8] ⸀Τιτίου : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 19:16 [14] ἀμφοτέρων⸃ : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 2:13 [2] ⸀διαχλευάζοντες : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 20:1 [6] ⸀μεταπεμψάμενος : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 21:24 [10] ⸀ξυρήσονται : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 24:2 [14] ⸀διορθωμάτων : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 25:15 [17] ⸀καταδίκην· : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 27:14 [11] ⸀Εὐρακύλων· : Content word has no Strong number.
@@ -60,7 +56,6 @@ Total findings: **18066**
 - **high / missingStrongs** Critical Acts 27:43 [16] ἀπορίψαντας : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 28:6 [22] ⸀μεταβαλόμενοι : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 28:8 [8] ⸀δυσεντερίῳ : Content word has no Strong number.
-- **high / missingStrongs** Critical Acts 3:23 [11] ἐξολεθρευθήσεται : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 3:7 [16] ⸀σφυδρά, : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 5:1 [6] Σαπφίρῃ : Content word has no Strong number.
 - **high / missingStrongs** Critical Acts 5:15 [11] ⸀κλιναρίων : Content word has no Strong number.
@@ -73,7 +68,6 @@ Total findings: **18066**
 - **high / missingStrongs** Critical Acts 7:43 [11] ⸀Ῥαιφάν, : Content word has no Strong number.
 - **high / missingStrongs** Critical Colossians 2:23 [7] ἐθελοθρησκίᾳ : Content word has no Strong number.
 - **high / missingStrongs** Critical Galatians 2:18 [9] ⸀συνιστάνω. : Content word has no Strong number.
-- **high / missingStrongs** Critical Hebrews 10:17 [10] ⸀μνησθήσομαι : Content word has no Strong number.
 - **high / missingStrongs** Critical Hebrews 11:15 [7] ⸀ἐξέβησαν, : Content word has no Strong number.
 - **high / missingStrongs** Critical Hebrews 12:28 [15] δέους⸃, : Content word has no Strong number.
 - **high / missingStrongs** Critical Hebrews 2:1 [9] παραρυῶμεν. : Content word has no Strong number.
@@ -95,7 +89,12 @@ Total findings: **18066**
 - **high / missingStrongs** Critical Luke 18:25 [6] βελόνης⸃ : Content word has no Strong number.
 - **high / missingStrongs** Critical Luke 19:4 [7] συκομορέαν : Content word has no Strong number.
 - **high / missingStrongs** Critical Luke 19:43 [6] ⸀παρεμβαλοῦσιν : Content word has no Strong number.
-- **high / missingStrongs** Critical Luke 19:8 [9] ⸀ἡμίσιά : Content word has no Strong number.
 - **high / missingStrongs** Critical Luke 2:24 [15] νοσσοὺς : Content word has no Strong number.
-- **high / missingStrongs** Critical Luke 20:24 [0] ⸀Δείξατέ : Content word has no Strong number.
 - **high / missingStrongs** Critical Luke 21:35 [2] ⸂ἐπεισελεύσεται : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 22:55 [0] ⸀περιαψάντων : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 24:33 [10] ⸀ἠθροισμένους : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 3:17 [7] ⸀διακαθᾶραι : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 3:24 [7] Ἰανναὶ : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 3:26 [5] Σεμεῒν : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 3:26 [7] ⸀Ἰωσὴχ : Content word has no Strong number.
+- **high / missingStrongs** Critical Luke 3:26 [9] Ἰωδὰ : Content word has no Strong number.

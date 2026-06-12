@@ -89,6 +89,23 @@ const CURATED_LEMMA_STRONGS = {
   σκοτοομαι: '4654',
   οφθαλμοδουλια: '3787',
   χρυσουσ: '5552',
+  // High-confidence SBLGNT vocabulary verified against the shipped Rhema Lexicon
+  // (the deponent/orthographic form points to the same established Strong's entry).
+  εκπλησσομαι: '1605',
+  μεταμορφοομαι: '3339',
+  συσχηματιζομαι: '4964',
+  δεικνυμι: '1166',
+  μιμνηισκομαι: '3403',
+  αμφοτεροι: '297',
+  ημισυσ: '2255',
+  αρσην: '730',
+  ξυραομαι: '3587',
+  μεταπεμπομαι: '3343',
+  βατταλογεω: '945',
+  κολλαομαι: '2853',
+  εξολεθρευω: '1842',
+  φαρμακον: '5331',
+  ζηλευω: '2206',
 };
 
 function isContentMorph(morph = '') {
@@ -124,12 +141,17 @@ function main() {
   const majority = globals.RhemaNT?.text || {};
   const critical = globals.RhemaCriticalNT?.text || {};
   const surfaceStrong = new Map();
+  const criticalLemmaStrong = new Map();
 
   walkText(majority, (word) => add(surfaceStrong, greekKey(word[0]), word[1]));
+  // The Critical text is internally consistent in lemma spelling: a missing-tag
+  // form can borrow the Strong's number that other occurrences of the SAME lemma
+  // already carry. This uses the text's own tags — no guessing.
+  walkText(critical, (word) => { if (word[1] && word[3]) add(criticalLemmaStrong, greekKey(word[3]), word[1]); });
 
   const fallback = {};
   const skipped = { ambiguous: 0, unresolved: 0 };
-  const resolvedBy = { surface: 0, curatedLemma: 0 };
+  const resolvedBy = { surface: 0, curatedLemma: 0, criticalLemma: 0 };
   let missing = 0;
   walkText(critical, (word) => {
     if (word[1] || !isContentMorph(word[2])) return;
@@ -137,13 +159,17 @@ function main() {
     const surfaceKey = greekKey(word[0]);
     const lemmaKey = greekKey(word[3] || '');
     const values = surfaceStrong.get(surfaceKey);
+    const critLemma = criticalLemmaStrong.get(lemmaKey);
     if (values?.size === 1) {
       fallback[surfaceKey] = [...values][0];
       resolvedBy.surface += 1;
     } else if (CURATED_LEMMA_STRONGS[lemmaKey]) {
       fallback[surfaceKey] = CURATED_LEMMA_STRONGS[lemmaKey];
       resolvedBy.curatedLemma += 1;
-    } else if (values?.size > 1) {
+    } else if (critLemma?.size === 1) {
+      fallback[surfaceKey] = [...critLemma][0];
+      resolvedBy.criticalLemma += 1;
+    } else if (values?.size > 1 || critLemma?.size > 1) {
       skipped.ambiguous += 1;
     } else {
       skipped.unresolved += 1;
