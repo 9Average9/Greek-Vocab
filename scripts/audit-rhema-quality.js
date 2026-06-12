@@ -298,9 +298,29 @@ function deepDefinitionSummary(entry = {}, ref = '') {
   };
 }
 
+const DIVINE_TITLE_CASE = { 2316: 'God', 2962: 'Lord' };
+const LEAD_FUNCWORD = /^(?:a|an|the|to|of|for|in|on|by|with|from|and|or|but|as|at)\s/i;
+const FUNCWORD_DEF = /^(?:a|an|the|and|or|but|for|of|to|in|on|at|by|with|from|any|some|one|it|this|that)$/i;
+
+function properCaseGloss(text = '', strongs, lemma = '', lex = {}) {
+  if (!text) return text;
+  const n = parseInt(strongs, 10);
+  const forced = DIVINE_TITLE_CASE[n];
+  if (forced && new RegExp('^' + forced + '\\b', 'i').test(text)) {
+    return forced + text.slice(forced.length);
+  }
+  const lem = String(lemma || lex.lemma || '').normalize('NFC');
+  if (lem && /^\p{Lu}/u.test(lem) && /^\p{Ll}/u.test(text) && !LEAD_FUNCWORD.test(text)) {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+  return text;
+}
+
 function meaningDecision(word, lex, entry, book, chapter, verse) {
   const morph = String(word?.[2] || '');
   const pos = morph.split('-')[0];
+  const strongs = word?.[1];
+  const lemmaForCase = word?.[3] || lex.lemma || '';
   const formGloss = roughGloss(word, lex, book, chapter);
   const definition = compactDefinition(contextualBrief(word, book, chapter) || lex.brief || lex.extended || lex.strongs_def || '');
   const ref = `${book} ${chapter}:${verse}`;
@@ -308,14 +328,19 @@ function meaningDecision(word, lex, entry, book, chapter, verse) {
   const formFirst = ['V', 'N', 'P', 'F', 'T', 'A', 'D', 'R', 'I', 'X'].includes(pos);
   const deepSafe = deep?.text && !looksLikeAlignmentArtifact(deep.text) && !['V', 'N', 'P', 'F', 'T'].includes(pos);
   const contextual = contextualBrief(word, book, chapter);
-  const gloss = contextual
+  const rawGloss = contextual
     ? (formGloss || contextual)
     : formFirst
       ? (formGloss || definition || deep?.text || '')
       : (deepSafe ? deep.text : (formGloss || definition || deep?.text || ''));
+  const isContentPos = pos === 'V' || pos === 'N' || pos === 'A' || pos === 'F';
+  const deepDefUsable = deep?.text && !(isContentPos && FUNCWORD_DEF.test(String(deep.text).trim()));
+  const rawDefinition = contextual
+    ? (definition || contextual || rawGloss || '')
+    : ((deepDefUsable ? deep.text : '') || definition || deep?.text || rawGloss || '');
   return {
-    gloss,
-    definition: contextual ? (definition || contextual || gloss || '') : (deep?.text || definition || gloss || ''),
+    gloss: properCaseGloss(rawGloss, strongs, lemmaForCase, lex),
+    definition: properCaseGloss(rawDefinition, strongs, lemmaForCase, lex),
     formGloss,
     lexicalDefinition: definition,
     deep,

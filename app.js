@@ -19227,14 +19227,14 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.176";
+const APP_VERSION = "3.0.177";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
 const RHEMA_DATA_VERSIONS = {
   'rhema-nt.js':        '3.0.65',
   'rhema-critical.js':  '3.0.23',
-  'rhema-critical-fallbacks.js': '3.0.176',
+  'rhema-critical-fallbacks.js': '3.0.177',
   'rhema-ot-hebrew.js': '3.0.81',
   'rhema-hebrew-lexicon.js': '3.0.81',
   'rhema-lxx.js':       '3.0.65',
@@ -19248,6 +19248,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.177 &mdash; Clearer, More Reliable Word Meanings</div>
+<ul>
+  <li><strong>Sacred and proper names read right</strong> &mdash; God, Jesus, Christ, Moses, Israel, the Lord and every proper name now display capitalized everywhere they appear, instead of slipping to lowercase from a measured rendering.</li>
+  <li><strong>No more meanings that collapse to filler</strong> &mdash; Content words like &#8220;another&#8221; (&#7940;&#955;&#955;&#959;&#962; / &#7973;&#964;&#949;&#961;&#959;&#962;) no longer degrade to a bare &#8220;one&#8221; or &#8220;some&#8221;; the real lexicon sense is shown instead.</li>
+  <li><strong>More Critical Text words resolve</strong> &mdash; Additional verified SBLGNT vocabulary now restores full lexicon, parsing, and range behavior, with rare unverified forms still left for review rather than guessed.</li>
+</ul>
 <div class="un-version-label">v3.0.176 &mdash; Rhema Accuracy Polish</div>
 <ul>
   <li><strong>More Critical Text words resolve</strong> &mdash; Curated spelling aliases now restore Strong's numbers for additional SBLGNT/Critical variants such as forty, Capernaum, fear, Moses, Samaritan, and related forms while leaving ambiguous cases for review.</li>
@@ -19257,7 +19263,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.175 &mdash; Critical Text Strong's Coverage</div>
 <ul>
   <li><strong>Critical Text taps are more complete</strong> &mdash; Rhema now loads a generated fallback map for SBLGNT/Critical forms that were missing Strong's numbers when the same normalized Greek form has one clear Strong's match in the Majority text.</li>
-  <li><strong>Safer data, not guesses</strong> &mdash; Ambiguous and unresolved forms stay unfilled for review, while 587 fallback forms restore lexicon, parsing, range, and interlinear behavior across many Critical Text occurrences.</li>
+  <li><strong>Safer data, not guesses</strong> &mdash; Ambiguous and unresolved forms stay unfilled for review, while hundreds of fallback forms restore lexicon, parsing, range, and interlinear behavior across many Critical Text occurrences.</li>
 </ul>
 <div class="un-version-label">v3.0.174 &mdash; Rhema Premium Audit Gate</div>
 <ul>
@@ -26526,6 +26532,33 @@ function _rhemaDeepEntrySync(strongs) {
   return _deepLexiconData.get(lo)?.[num] || null;
 }
 
+// Greek capitalizes true proper-name lemmas (Ἰησοῦς, Μωσεύς, Ἰσραήλ…), so their
+// English gloss should read capitalized wherever it surfaces — including when the
+// source is a lowercase measured rendering. θεός and κύριος are common Greek nouns
+// but render as the divine titles God/Lord in their overwhelming NT usage.
+const RHEMA_DIVINE_TITLE_CASE = { 2316: 'God', 2962: 'Lord' };
+const _RHEMA_LEAD_FUNCWORD = /^(?:a|an|the|to|of|for|in|on|by|with|from|and|or|but|as|at)\s/i;
+
+function _rhemaProperCaseGloss(text = '', strongs, lemma = '', lex = {}) {
+  if (!text) return text;
+  const n = parseInt(strongs, 10);
+  const forced = RHEMA_DIVINE_TITLE_CASE[n];
+  if (forced && new RegExp('^' + forced + '\\b', 'i').test(text)) {
+    return forced + text.slice(forced.length);
+  }
+  const lem = String(lemma || lex.lemma || '').normalize('NFC');
+  if (lem && /^\p{Lu}/u.test(lem) && /^\p{Ll}/u.test(text) && !_RHEMA_LEAD_FUNCWORD.test(text)) {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+  return text;
+}
+
+// A content word's displayed definition should never collapse to a bare English
+// function word like "one", "some", or "the" — that is an alignment artifact, not
+// a meaning. When the measured deep sense degrades this way, fall back to the
+// curated lexicon sense instead.
+const _RHEMA_FUNCWORD_DEF = /^(?:a|an|the|and|or|but|for|of|to|in|on|at|by|with|from|any|some|one|it|this|that)$/i;
+
 function _rhemaMeaningDecision(word = [], {
   layer = getCurrentOriginalLanguageLayer(),
   book = _rhemaBook,
@@ -26564,14 +26597,22 @@ function _rhemaMeaningDecision(word = [], {
     pos === 'A' || pos === 'D' || pos === 'R' || pos === 'I' || pos === 'X';
   const deepSafeForGrid = deep && !_deepLooksLikeAlignmentArtifact(deep.text) &&
     !['V', 'N', 'P', 'F', 'T'].includes(pos);
-  const gloss = contextual
+  const rawGloss = contextual
     ? (inflectedGloss || contextual)
     : formFirst
       ? (inflectedGloss || summary.text || deep?.text || '')
       : (deepSafeForGrid ? deep.text : (inflectedGloss || summary.text || deep?.text || ''));
-  const definition = contextual
-    ? (summary.text || contextual || gloss || '')
-    : (deep?.text || summary.text || gloss || '');
+  // Content words (verb/noun/adjective/reflexive) must not present a bare function
+  // word as their definition; prefer the curated lexicon sense when the deep
+  // rendering collapses that way.
+  const isContentPos = pos === 'V' || pos === 'N' || pos === 'A' || pos === 'F';
+  const deepDefUsable = deep?.text && !(isContentPos && _RHEMA_FUNCWORD_DEF.test(String(deep.text).trim()));
+  const rawDefinition = contextual
+    ? (summary.text || contextual || rawGloss || '')
+    : ((deepDefUsable ? deep.text : '') || summary.text || deep?.text || rawGloss || '');
+  const lemmaForCase = resolved?.[3] || lex.lemma || '';
+  const gloss = _rhemaProperCaseGloss(rawGloss, strongs, lemmaForCase, lex);
+  const definition = _rhemaProperCaseGloss(rawDefinition, strongs, lemmaForCase, lex);
   const confidence = contextual
     ? 'Context checked'
     : deep?.source
@@ -30415,20 +30456,6 @@ function _populateDeepAnswer(elId, strongs, layer) {
   // Capture reader position now — globals may move before the shard arrives.
   const book = _rhemaBook, ch = _rhemaChapter, v = _rhemaVerse;
   const activeWord = _rhemaActiveWord && String(_rhemaActiveWord[1]) === String(strongs) ? _rhemaActiveWord : null;
-  const contextual = activeWord ? _rhemaContextualBrief(activeWord, book, ch) : '';
-  if (contextual && !strongs) {
-    const el = document.getElementById(elId);
-    if (el) {
-      el.innerHTML = _rhemaDeepAnswerHtml(_rhemaMeaningDecision(activeWord, { layer, book, chapter: ch, verse: v }));
-      el.classList.remove('hidden');
-      return;
-      const formGloss = _rhemaBaseInterlinearGloss(activeWord[2], _rhemaLexForWord(activeWord, layer, book, ch));
-      el.innerHTML = `<div class="rhema-deep-answer-main">Here: <strong>“${_escapeRhemaAttr(formGloss || contextual)}”</strong></div>
-        <div class="rhema-deep-answer-sub">Chosen from the actual Greek form and this chapter context, so the word-sheet answer matches the interlinear gloss.</div>`;
-      el.classList.remove('hidden');
-    }
-    return;
-  }
   loadDeepLexiconEntry(strongs).then(entry => {
     const el = document.getElementById(elId);
     if (!el) return;
