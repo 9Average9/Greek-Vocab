@@ -1,21 +1,21 @@
 # Rhema Quality Audit
 
-Generated: 2026-06-12T03:33:02.955Z
+Generated: 2026-06-12T04:08:17.951Z
 Scope: NT Majority + Critical
 
-Total findings: **16633**
+Total findings: **10950**
 
 ## By Severity
 - high: 149
-- medium: 16051
-- low: 433
+- medium: 10380
+- low: 421
 
 ## By Type
 - missingStrongs: 149
 - lowConfidence: 9968
 - properNameCase: 12
-- suspectReceipt: 6071
-- broadDefinition: 433
+- suspectReceipt: 400
+- broadDefinition: 421
 
 ## Top Findings
 - **high / missingStrongs** Critical 1 Corinthians 10:28 [6] ⸀ἱερόθυτόν : Content word has no Strong number.
