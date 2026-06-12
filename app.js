@@ -19227,7 +19227,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.179";
+const APP_VERSION = "3.0.180";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19248,6 +19248,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.180 &mdash; Crisp Quick Definitions</div>
+<ul>
+  <li><strong>Quick answers stay short</strong> &mdash; The headline meaning for small words like &#7984;&#948;&#959;&#973;, &#7989;&#957;&#945;, and &#955;&#943;&#945;&#957; now reads as a tight gloss (&#8220;See! Lo! Behold!&#8221;, &#8220;in order that, so that&#8221;, &#8220;very, exceedingly&#8221;) instead of a long sentence.</li>
+  <li><strong>Full explanation still one glance away</strong> &mdash; The complete written definition remains directly beneath the quick gloss, so nothing is lost — the answer is just faster to read.</li>
+</ul>
 <div class="un-version-label">v3.0.179 &mdash; Sharper Measured Meanings</div>
 <ul>
   <li><strong>&#8220;One&#8221; restored in the Critical Text</strong> &mdash; Fixed a tagging slip where &#7956;&#957; (&#8220;one&#8221;) was linked to the preposition &#949;&#7984;&#962; (&#8220;into&#8221;); these now read &#8220;one&#8221; with the right lexicon entry.</li>
@@ -26549,6 +26554,25 @@ function _rhemaDeepEntrySync(strongs) {
   return _deepLexiconData.get(lo)?.[num] || null;
 }
 
+// Keep the headline gloss crisp: a verbose prose sentence is an explanation, not
+// a quick gloss. When the answer line would be long, prefer the lexicon's short
+// gloss, else the quoted core of the prose ('meaning "look!" or "behold!"').
+function _rhemaIsVerboseGloss(text = '') {
+  const t = String(text || '').trim();
+  return t.length > 48 || t.split(/\s+/).filter(Boolean).length > 8;
+}
+
+function _rhemaExtractQuotedGloss(text = '') {
+  const out = [];
+  const re = /[“"]([^”"]{1,24})[”"]/g;
+  let m;
+  while ((m = re.exec(String(text))) && out.length < 3) {
+    const g = m[1].replace(/[.,;:]+$/, '').trim();
+    if (g && !out.includes(g)) out.push(g);
+  }
+  return out.join(' / ');
+}
+
 // Greek capitalizes true proper-name lemmas (Ἰησοῦς, Μωσεύς, Ἰσραήλ…), so their
 // English gloss should read capitalized wherever it surfaces — including when the
 // source is a lowercase measured rendering. θεός and κύριος are common Greek nouns
@@ -26628,8 +26652,16 @@ function _rhemaMeaningDecision(word = [], {
   const rawDefinition = contextual
     ? (summary.text || contextual || rawGloss || '')
     : ((deepDefUsable ? deep.text : '') || summary.text || deep?.text || rawGloss || '');
+  // The headline gloss should stay crisp; a verbose prose definition belongs in
+  // the explanation, not the answer line. Fall back to the short lexicon gloss.
+  let crispGloss = rawGloss;
+  if (_rhemaIsVerboseGloss(crispGloss)) {
+    const briefGloss = summary.text && !_rhemaIsVerboseGloss(summary.text) ? summary.text : '';
+    crispGloss = briefGloss || _rhemaExtractQuotedGloss(crispGloss) ||
+      _rhemaCompactQuickDefinitionText(crispGloss) || crispGloss;
+  }
   const lemmaForCase = resolved?.[3] || lex.lemma || '';
-  const gloss = _rhemaProperCaseGloss(rawGloss, strongs, lemmaForCase, lex);
+  const gloss = _rhemaProperCaseGloss(crispGloss, strongs, lemmaForCase, lex);
   const definition = _rhemaProperCaseGloss(rawDefinition, strongs, lemmaForCase, lex);
   const confidence = contextual
     ? 'Context checked'
