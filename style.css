@@ -19168,38 +19168,77 @@ body.dark .bn-item::before {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 18px 14px calc(36px + env(safe-area-inset-bottom, 0px));
+  padding: 30px 18px calc(46px + env(safe-area-inset-bottom, 0px));
+  /* the room: soft light falling down a papered wall */
+  background:
+    radial-gradient(130% 60% at 50% 0%, rgba(255, 243, 210, 0.30), rgba(255, 243, 210, 0) 62%),
+    repeating-linear-gradient(90deg, rgba(125, 102, 70, 0.05) 0 30px, rgba(0, 0, 0, 0) 30px 60px),
+    linear-gradient(180deg, #ece3d0 0%, #e0d4ba 64%, #cdbd9d 100%);
 }
-.sl-bookcase { /* the wooden case the shelves sit in */
-  display: flex; flex-direction: column; gap: 34px;
-  padding: 24px 12px 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(64, 42, 20, 0.35);
+body.dark .sl-body {
+  background:
+    radial-gradient(130% 60% at 50% 0%, rgba(255, 226, 166, 0.07), rgba(255, 226, 166, 0) 62%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.16) 0 30px, rgba(0, 0, 0, 0) 30px 60px),
+    linear-gradient(180deg, #2c2823 0%, #232019 70%, #1b1813 100%);
+}
+.sl-bookcase { /* one tall wooden bookcase standing against the wall */
+  position: relative;
+  display: flex; flex-direction: column; gap: 12px;
+  max-width: 560px;
+  margin: 14px auto 18px;
+  padding: 18px 13px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(64, 42, 20, 0.4);
   background:
     repeating-linear-gradient(94deg,
       rgba(96, 64, 30, 0.10) 0 18px,
       rgba(0, 0, 0, 0) 18px 46px),
     linear-gradient(180deg, #b78a55 0%, #a37749 30%, #8a6238 100%);
   box-shadow:
-    inset 0 2px 0 rgba(255, 233, 195, 0.4),
-    inset 0 0 26px rgba(40, 24, 10, 0.35),
-    0 14px 30px rgba(46, 30, 14, 0.28);
+    inset 0 0 0 4px rgba(255, 222, 168, 0.16),
+    inset 0 0 30px rgba(40, 24, 10, 0.32),
+    0 30px 40px -18px rgba(46, 30, 14, 0.55), /* shadow cast onto wall & floor */
+    0 4px 14px rgba(46, 30, 14, 0.22);
 }
+.sl-bookcase::before { /* crown moulding along the top */
+  content: '';
+  position: absolute; top: -12px; left: -9px; right: -9px; height: 16px;
+  border-radius: 6px 6px 2px 2px;
+  background: linear-gradient(180deg, #cfa067 0%, #b9854e 55%, #99693a 100%);
+  box-shadow:
+    0 2px 4px rgba(46, 30, 14, 0.35),
+    inset 0 1px 0 rgba(255, 233, 195, 0.6);
+}
+.sl-bookcase::after { /* plinth standing on the floor */
+  content: '';
+  position: absolute; bottom: -12px; left: -9px; right: -9px; height: 16px;
+  border-radius: 2px 2px 5px 5px;
+  background: linear-gradient(180deg, #936439 0%, #7a4f26 60%, #66401c 100%);
+  box-shadow:
+    0 12px 18px -6px rgba(40, 24, 10, 0.55),
+    inset 0 1px 0 rgba(255, 233, 195, 0.25);
+}
+/* Each compartment is a fixed-height cubby, so empty shelves still read as
+   part of the same tall bookcase */
 .sl-shelf-unit .hs-shelf {
   overflow-x: visible; /* rows are pre-fitted to the case, nothing scrolls */
   justify-content: flex-start;
+  align-items: flex-end;
+  min-height: 158px;
 }
-.sl-empty {
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-  padding: 34px 18px;
-  margin: 6px 4px;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--card-color) 88%, transparent);
-  text-align: center;
+.sl-shelf-unit.hs-shelf-unit.hs-has-books::before { /* darker case interior */
+  inset: -4px -6px 13px;
+  border-radius: 4px;
+  background: linear-gradient(180deg,
+    rgba(48, 31, 14, 0.45),
+    rgba(48, 31, 14, 0.16) 32%,
+    rgba(48, 31, 14, 0.40));
 }
-.sl-empty .material-symbols-outlined { font-size: 40px; color: var(--secondary-color); }
-.sl-empty p { margin: 0; font-size: 0.88rem; color: var(--muted-color); line-height: 1.5; }
-.sl-empty .hs-start-btn { flex: none; }
+.sl-shelf-unit .hs-start-btn {
+  flex: 1;
+  margin: 0 6px 10px;
+  background: color-mix(in srgb, var(--card-color) 94%, transparent);
+}
 
 /* ── Study peek card (tap ⓘ on a book) ── */
 .study-peek-overlay {
