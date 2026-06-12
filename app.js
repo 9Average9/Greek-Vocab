@@ -19227,7 +19227,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.170";
+const APP_VERSION = "3.0.171";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19247,6 +19247,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.171 &mdash; Rhema English Gloss Polish</div>
+<ul>
+  <li><strong>Passive participles read naturally</strong> &mdash; Forms like γινωσκομένη now show "being known" instead of mechanical phrases like "having been come to know."</li>
+  <li><strong>Interlinear nouns are cleaner</strong> &mdash; The verse grid now keeps nouns readable as letters, hearts, God, Spirit, glory, and tablets while the Parsing tab still carries the detailed case data.</li>
+</ul>
 <div class="un-version-label">v3.0.170 &mdash; 2 Corinthians 3 Rhema Audit</div>
 <ul>
   <li><strong>2 Corinthians 3 glosses tightened</strong> &mdash; Critical Text forms like Ἀρχόμεθα now read from the middle-voice sense "we begin" instead of the active sense "we reign/rule."</li>
@@ -27529,6 +27534,23 @@ const _IRREG_SIMPLE_PAST = {
 };
 
 // Pluralise an English noun brief (e.g. "a word" → "words", "sin" → "sins").
+const _PASSIVE_PARTICIPLE_PHRASES = {
+  'come to know': 'known',
+  'learn': 'learned',
+  'realize': 'realized',
+  'make clear': 'made clear',
+  'make visible': 'made visible',
+  'make manifest': 'made manifest',
+  'make sufficient': 'made sufficient',
+  'make to live': 'made alive',
+  'put to death': 'put to death',
+  'bring to an end': 'brought to an end',
+  'bring to naught': 'brought to nothing',
+  'strip off': 'removed',
+  'cast off': 'removed',
+  'change the form': 'transformed',
+};
+
 function _engPlural(base) {
   // Strip leading indefinite / definite article
   const word = base.replace(/^(?:a |an |the )/i, '');
@@ -27566,6 +27588,14 @@ function _engPast(v) {
   else words[0] = w + 'ed';
   return words.join(' ');
 }
+
+function _engPassiveParticiple(v) {
+  if (!v) return v;
+  const normalized = String(v).trim().toLowerCase();
+  if (_PASSIVE_PARTICIPLE_PHRASES[normalized]) return _PASSIVE_PARTICIPLE_PHRASES[normalized];
+  return _engPast(v);
+}
+
 // Simple past tense (used for aorist): knew, saw, gave, remembered
 function _engSimplePast(v) {
   if (!v) return v;
@@ -27636,11 +27666,15 @@ function _sxVerbGloss(morph, brief) {
   }
 
   // ── Infinitive ────────────────────────────────────────────────────────────────
-  if (mood === 'N') return voice === 'P' ? `to be ${_engPast(base)}` : `to ${base}`;
+  if (mood === 'N') return voice === 'P' ? `to be ${_engPassiveParticiple(base)}` : `to ${base}`;
 
   // ── Participle ────────────────────────────────────────────────────────────────
   if (mood === 'P') {
-    if (voice === 'P') return `having been ${_engPast(base)}`;
+    if (voice === 'P') {
+      const pp = _engPassiveParticiple(base);
+      if (tense === 'P' || tense === 'I') return `being ${pp}`;
+      return pp;
+    }
     return (tense === 'A' || tense === 'X' || tense === 'Y')
       ? `having ${_engPast(base)}`
       : _engIng(base);
@@ -27656,7 +27690,7 @@ function _sxVerbGloss(morph, brief) {
 
   // ── Passive voice ─────────────────────────────────────────────────────────────
   if (voice === 'P') {
-    const pp = _engPast(base); // past participle: "remembered", "known"
+    const pp = _engPassiveParticiple(base); // past participle: "remembered", "known"
     if (mood === 'M') return `be ${pp}!`;
     if (mood === 'S' || mood === 'O') return `${subj} might be ${pp}`;
     switch (tense) {
@@ -27736,12 +27770,11 @@ function _nounGloss(morph, brief) {
   const pronoun = _rhemaPronounGloss(posRaw, cng, base, caseCode);
   if (pronoun) return pronoun;
   if (posRaw === 'A' || posRaw === 'D' || posRaw === 'R' || posRaw === 'I' || posRaw === 'X') return base;
-  const CASE_PREP = { N: '', G: 'of ', D: 'to/for ', A: '', V: 'O ' };
-  const prep = CASE_PREP[caseCode];
-  if (prep === undefined) return base;
-  // Pluralise the English gloss for common nouns when the Greek form is plural (cng[1] === 'P')
-  const displayBase = (posRaw === 'N' && cng[1] === 'P') ? _engPlural(base) : base;
-  return prep ? `${prep}${displayBase}` : displayBase;
+  if (posRaw === 'N') {
+    const cleanBase = base.replace(/^(?:a |an |the )/i, '');
+    return cng[1] === 'P' ? _engPlural(cleanBase) : cleanBase;
+  }
+  return base;
 }
 
 function _rhemaPronounGloss(posRaw, cng = '', base = '', caseCode = '') {
