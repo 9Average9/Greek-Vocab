@@ -18922,6 +18922,74 @@ body.dark .bn-item::before {
   background: none; border: none;
   cursor: pointer; padding: 0 4px;
 }
+/* ── Habit Builder home widget ── */
+.home-habit-widget {
+  position: relative;
+  overflow: hidden;
+  margin: 4px 0 22px;
+  padding: 16px 138px 16px 16px;
+  border-radius: 20px;
+  border: 1.5px solid color-mix(in srgb, var(--secondary-color) 24%, var(--border-color));
+  background:
+    radial-gradient(120% 150% at 100% 100%, color-mix(in srgb, var(--secondary-color) 16%, transparent), transparent 55%),
+    linear-gradient(160deg, color-mix(in srgb, var(--secondary-color) 10%, var(--card-color)), var(--card-color) 72%);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--secondary-color) 12%, transparent);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease;
+}
+.home-habit-widget:active { transform: scale(0.985); }
+.hhw-kicker {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.68rem; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--secondary-color);
+}
+.hhw-sprout { width: 16px; height: 16px; flex-shrink: 0; }
+.hhw-headline {
+  margin: 6px 0 2px;
+  font-size: 1.06rem; font-weight: 800;
+  color: var(--font-color);
+  line-height: 1.25;
+}
+.hhw-sub {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  color: var(--muted-color);
+  line-height: 1.45;
+}
+.hhw-progress { display: flex; align-items: center; gap: 8px; }
+.hhw-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--secondary-color) 14%, var(--border-color));
+  overflow: hidden;
+}
+.hhw-bar span {
+  display: block; height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--secondary-color) 70%, #fff), var(--secondary-color));
+  transition: width 0.4s ease;
+}
+.hhw-count { font-size: 0.74rem; font-weight: 800; color: var(--secondary-color); }
+.hhw-streak {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 8px; padding: 3px 9px 3px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #f97316 14%, var(--card-color));
+  border: 1px solid color-mix(in srgb, #f97316 35%, transparent);
+  font-size: 0.7rem; font-weight: 800;
+  color: #ea580c;
+}
+.hhw-streak.hidden { display: none; }
+.hhw-streak .material-symbols-outlined { font-size: 14px; }
+.hhw-art {
+  position: absolute; right: 2px; bottom: -2px;
+  pointer-events: none;
+}
+.hhw-art img { display: block; width: 128px; height: auto; }
+
 /* ── Studies bookshelf ── */
 .hs-shelf-unit { position: relative; }
 .hs-shelf-unit.hs-has-books::before { /* recessed alcove behind the books */
