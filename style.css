@@ -19119,6 +19119,88 @@ body.dark .bn-item::before {
 .hs-book-info .material-symbols-outlined { font-size: 13px; }
 .hs-book .study-card-done-dot { left: 8px; right: auto; }
 
+/* ── Study Library (full-screen bookcase from Quick Actions) ── */
+.study-library {
+  position: fixed; inset: 0;
+  z-index: 940; /* above the bottom nav (900), below the study sandbox (950) */
+  background: var(--primary-color);
+  display: flex; flex-direction: column;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+.study-library.open { opacity: 1; transform: translateY(0); }
+.study-library.hidden { display: none; }
+.sl-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px;
+  background: var(--card-color);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.sl-back-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--primary-color);
+  color: var(--font-color);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.sl-title-wrap { flex: 1; min-width: 0; }
+.sl-title {
+  margin: 0;
+  font-size: 1.15rem; font-weight: 800;
+  color: var(--font-color);
+}
+.sl-count {
+  display: block;
+  font-size: 0.72rem; font-weight: 600;
+  color: var(--muted-color);
+}
+.sl-done-btn {
+  border: none; background: none;
+  font-size: 0.85rem; font-weight: 700;
+  color: var(--secondary-color);
+  cursor: pointer; padding: 6px 4px;
+}
+.sl-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 18px 14px calc(36px + env(safe-area-inset-bottom, 0px));
+}
+.sl-bookcase { /* the wooden case the shelves sit in */
+  display: flex; flex-direction: column; gap: 34px;
+  padding: 24px 12px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(64, 42, 20, 0.35);
+  background:
+    repeating-linear-gradient(94deg,
+      rgba(96, 64, 30, 0.10) 0 18px,
+      rgba(0, 0, 0, 0) 18px 46px),
+    linear-gradient(180deg, #b78a55 0%, #a37749 30%, #8a6238 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 233, 195, 0.4),
+    inset 0 0 26px rgba(40, 24, 10, 0.35),
+    0 14px 30px rgba(46, 30, 14, 0.28);
+}
+.sl-shelf-unit .hs-shelf {
+  overflow-x: visible; /* rows are pre-fitted to the case, nothing scrolls */
+  justify-content: flex-start;
+}
+.sl-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 34px 18px;
+  margin: 6px 4px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card-color) 88%, transparent);
+  text-align: center;
+}
+.sl-empty .material-symbols-outlined { font-size: 40px; color: var(--secondary-color); }
+.sl-empty p { margin: 0; font-size: 0.88rem; color: var(--muted-color); line-height: 1.5; }
+.sl-empty .hs-start-btn { flex: none; }
+
 /* ── Study peek card (tap ⓘ on a book) ── */
 .study-peek-overlay {
   position: fixed; inset: 0; z-index: 6500;

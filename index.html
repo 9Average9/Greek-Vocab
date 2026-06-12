@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.181" rel="stylesheet"/>
+<link href="style.css?v=3.0.182" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -560,6 +560,12 @@ Start a New Study
 <svg class="qa-svg qa-svg-clipboard" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="4.8" width="14" height="16.2" rx="2.4" stroke="currentColor" stroke-width="1.9"/><path d="M9.4 4.8V4a2.6 2.6 0 0 1 5.2 0v.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><rect x="8.1" y="3.6" width="7.8" height="3.6" rx="1.4" fill="var(--qa-bg-fill, #ffedda)" stroke="currentColor" stroke-width="1.7"/><path d="m8.7 11.5 1.4 1.4 2.3-2.7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.2 12h2.3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="m8.7 16.2 1.4 1.4 2.3-2.7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.2 16.7h2.3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
 </div>
 <div class="hat-text"><strong>Test</strong></div>
+</button>
+<button class="home-action-tile" id="studyLibraryHomeBtn" onclick="openStudyLibrary()">
+<div class="hat-icon hat-icon-library">
+<svg class="qa-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4.5h3.2v12.5H4.5z"/><path d="M10 4.5h3.2v12.5H10z"/><path d="m15.4 5.6 3.1-.83 3 11.6-3.1.83z"/><path d="M3 20.5h18"/><path d="M6.1 7.5v1"/><path d="M11.6 7.5v1"/></svg>
+</div>
+<div class="hat-text"><strong>Library</strong></div>
 </button>
 </div>
 <div style="height:88px"></div>
@@ -16515,7 +16521,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.181"></script>
+<script src="app.js?v=3.0.182"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
@@ -17060,6 +17066,20 @@ Save
 <button class="modal-close" onclick="closeStudiesViewAll()">×</button>
 <h2 style="margin-bottom:16px">All My Studies</h2>
 <div class="sva-list" id="studiesViewAllList"></div>
+</div>
+</div>
+<!-- ══ STUDY LIBRARY (full bookcase) ═════════════════════════════════════════ -->
+<div class="study-library hidden" id="studyLibraryModal">
+<div class="sl-header">
+<button class="sl-back-btn" onclick="closeStudyLibrary()" aria-label="Close library"><span class="material-symbols-outlined">arrow_back</span></button>
+<div class="sl-title-wrap">
+<h1 class="sl-title">Study Library</h1>
+<span class="sl-count" id="slCount"></span>
+</div>
+<button class="sl-done-btn hidden" id="slDoneBtn" onclick="_exitStudyDeleteMode()">Done</button>
+</div>
+<div class="sl-body">
+<div class="sl-bookcase" id="slBookcase"></div>
 </div>
 </div>
 <!-- Study Board Info Sheet (friend's study) -->
