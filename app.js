@@ -10694,6 +10694,10 @@ function _habitCurrentStreak(entries = {}) {
   let cursor = new Date(year, month - 1, day);
   let streak = 0;
   const keyFor = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  // Today still being open (no entry yet) doesn't break the streak — the
+  // user just hasn't checked in yet. Only an explicit miss today, or a past
+  // day without a success/skip, actually breaks it.
+  if (byDate[keyFor(cursor)] === undefined) cursor.setDate(cursor.getDate() - 1);
   while (true) {
     const status = byDate[keyFor(cursor)];
     if (status === "success") streak++;
@@ -19365,7 +19369,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.184";
+const APP_VERSION = "3.0.185";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19386,6 +19390,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.185 &mdash; Honest Streaks &amp; Tidier Quick Actions</div>
+<ul>
+  <li><strong>Streaks no longer reset at midnight</strong> &mdash; A habit streak now holds while today is still open, only dropping to zero when a day is actually missed. Planned skips still bridge the run.</li>
+  <li><strong>Quick Actions reshuffled</strong> &mdash; The Habits tile is gone (the Habit Builder widget above opens it now) and Study Library moved up to take its place in the row.</li>
+</ul>
 <div class="un-version-label">v3.0.184 &mdash; Habit Builder on Home</div>
 <ul>
   <li><strong>Habit Builder widget</strong> &mdash; The home studies shelf has been replaced by a live Habit Builder card showing today's progress bar and your hottest streak; tap it to open Habit Builder.</li>
