@@ -8616,33 +8616,34 @@ function _renderStudyLibrary() {
   const countEl = document.getElementById('slCount');
   if (countEl) countEl.textContent = _myStudies.length === 1 ? '1 study' : `${_myStudies.length} studies`;
 
-  if (!_myStudies.length) {
-    bookcase.innerHTML = `<div class="sl-empty">
-      <span class="material-symbols-outlined">local_library</span>
-      <p>Your library is empty.<br>Start a study and it will live on these shelves.</p>
-      <button class="hs-start-btn" onclick="openStudyCreateSheet()">
-        <span class="material-symbols-outlined">add</span><span>Start a Study</span>
-      </button>
-    </div>`;
-    return;
-  }
-
-  const books = _myStudies.map(_studyBookHtml);
-  if (!_studyDeleteMode) {
-    books.push(`<button class="hs-add-book" onclick="openStudyCreateSheet()">
-      <span class="material-symbols-outlined">add</span><span>New Study</span>
-    </button>`);
-  }
-
-  // Chunk the books into full shelf rows that fit the bookcase width.
-  // Bookcase frame padding (12px) + shelf side padding (10px) on each side;
-  // books are 94px wide with a 12px gap (the slim add-book still gets a slot
-  // so rows stay even).
-  const caseWidth = bookcase.clientWidth || bookcase.parentElement?.clientWidth || 320;
-  const avail = caseWidth - 24 - 20;
-  const perShelf = Math.max(2, Math.floor((avail + 12) / (94 + 12)));
   const shelves = [];
-  for (let i = 0; i < books.length; i += perShelf) shelves.push(books.slice(i, i + perShelf));
+  if (!_myStudies.length) {
+    // An empty library is still a bookcase — the start button waits on the
+    // top shelf.
+    shelves.push([`<button class="hs-start-btn" onclick="openStudyCreateSheet()">
+      <span class="material-symbols-outlined">add</span><span>Start a Study</span>
+    </button>`]);
+  } else {
+    const books = _myStudies.map(_studyBookHtml);
+    if (!_studyDeleteMode) {
+      books.push(`<button class="hs-add-book" onclick="openStudyCreateSheet()">
+        <span class="material-symbols-outlined">add</span><span>New Study</span>
+      </button>`);
+    }
+    // Chunk the books into full shelf rows that fit the bookcase width.
+    // Bookcase frame padding (13px) + shelf side padding (10px) on each side;
+    // books are 94px wide with a 12px gap (the slim add-book still gets a
+    // slot so rows stay even).
+    const caseWidth = bookcase.clientWidth || bookcase.parentElement?.clientWidth || 320;
+    const avail = caseWidth - 26 - 20;
+    const perShelf = Math.max(2, Math.floor((avail + 12) / (94 + 12)));
+    for (let i = 0; i < books.length; i += perShelf) shelves.push(books.slice(i, i + perShelf));
+  }
+
+  // Pad the case with empty shelves so it always stands as one tall bookcase
+  // against the wall.
+  const MIN_SHELVES = 4;
+  while (shelves.length < MIN_SHELVES) shelves.push([]);
 
   bookcase.innerHTML = shelves.map(row =>
     `<div class="hs-shelf-unit hs-has-books sl-shelf-unit">
@@ -19309,7 +19310,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.182";
+const APP_VERSION = "3.0.183";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19330,6 +19331,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.183 &mdash; Library Against the Wall</div>
+<ul>
+  <li><strong>A proper bookcase</strong> &mdash; The Study Library is now one tall wooden bookcase with crown moulding, a floor plinth, and at least four shelves &mdash; empty shelves included &mdash; standing against a softly lit wall.</li>
+  <li><strong>Clearer Home tile</strong> &mdash; The Quick Action tile now reads &#8220;Study Library.&#8221;</li>
+</ul>
 <div class="un-version-label">v3.0.182 &mdash; Study Library</div>
 <ul>
   <li><strong>Study Library on Quick Actions</strong> &mdash; A new Library tile on Home opens a full-screen wooden bookcase holding every one of your studies.</li>
