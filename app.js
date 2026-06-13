@@ -19362,7 +19362,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.187";
+const APP_VERSION = "3.0.188";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19383,6 +19383,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.188 &mdash; Sharper Word Glosses (1 Cor 13 audit)</div>
+<ul>
+  <li><strong>Cleaner participles &amp; plurals</strong> &mdash; Fixed broken glosses like &#8220;make a sounding&#8221; &rarr; &#8220;making a sound,&#8221; &#8220;cry alouding&#8221; &rarr; &#8220;crying aloud,&#8221; and &#8220;anything hiddens&#8221; &rarr; &#8220;mysteries.&#8221;</li>
+  <li><strong>Right gender on reflexives</strong> &mdash; &#7953;&#945;&#965;&#964;&#8134;&#962; now reads &#8220;herself,&#8221; not &#8220;himself&#8221;; plural reflexives read &#8220;themselves,&#8221; not &#8220;ourselves.&#8221;</li>
+  <li><strong>Degrees &amp; demonstratives</strong> &mdash; Comparative/superlative adjectives now show the degree (&#956;&#949;&#943;&#950;&#969;&#957; &rarr; &#8220;greater&#8221;), and plural &#8220;this&#8221; now reads &#8220;these.&#8221;</li>
+</ul>
 <div class="un-version-label">v3.0.187 &mdash; Truer Verb Meanings</div>
 <ul>
   <li><strong>&#8220;Lacks,&#8221; not &#8220;is wanting&#8221;</strong> &mdash; Deponent verbs that look passive but mean something active now read naturally: James 1:5 &#955;&#949;&#943;&#960;&#949;&#964;&#945;&#953; is &#8220;lacks&#8221; (wisdom), not the archaic &#8220;is wanting.&#8221;</li>
@@ -26706,8 +26712,13 @@ function _rhemaContextualPronounGloss(word = []) {
     return ({ N: 'you', G: 'your', D: 'to/for you', A: 'you' })[caseCode] || '';
   }
   if (strongs === 1438) {
-    if (numberCode === 'P') return ({ G: 'ourselves', D: 'to/for ourselves', A: 'ourselves' })[caseCode] || 'ourselves';
-    return ({ G: 'himself', D: 'to/for himself', A: 'himself' })[caseCode] || 'himself';
+    // reflexive ἑαυτοῦ — morph is F-[person][case][number][gender] (e.g. 3GSF, 3GPM),
+    // so person/number/gender come from fixed positions, not the personal-pronoun layout.
+    const person = cng[0], number = cng[2], gender = cng[3];
+    if (number === 'P') return person === '1' ? 'ourselves' : person === '2' ? 'yourselves' : 'themselves';
+    if (gender === 'F') return 'herself';
+    if (gender === 'N') return 'itself';
+    return person === '1' ? 'myself' : person === '2' ? 'yourself' : 'himself';
   }
   if (strongs === 846) {
     if (numberCode === 'P') return ({ N: 'they', G: 'their', D: 'to/for them', A: 'them' })[caseCode] || '';
@@ -27967,9 +27978,17 @@ function _isSingleSyllable(w) {
 }
 function _engIng(v) {
   if (!v) return v;
-  if (/[^aeiou]e$/.test(v)) return v.slice(0, -1) + 'ing'; // love→loving
-  if (_isSingleSyllable(v) && /[^aeiou][aeiou][^aeiouwxy]$/.test(v)) return v + v.slice(-1) + 'ing'; // run→running
-  return v + 'ing';
+  // Conjugate the FIRST word of a phrase ("make a sound" → "making a sound"),
+  // not the whole string ("make a sounding"). "am/be" → "being".
+  const words = String(v).split(' ');
+  let w = words[0];
+  const lw = w.toLowerCase();
+  if (lw === 'am' || lw === 'is' || lw === 'are' || lw === 'be') w = 'being';
+  else if (/[^aeiou]e$/.test(w)) w = w.slice(0, -1) + 'ing';            // love→loving
+  else if (_isSingleSyllable(w) && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) w = w + w.slice(-1) + 'ing'; // run→running
+  else w = w + 'ing';
+  words[0] = w;
+  return words.join(' ');
 }
 // Past participle (used with "have" / "be"): known, seen, given, remembered
 function _engPast(v) {
@@ -28146,6 +28165,25 @@ function _sxVerbGloss(morph, brief) {
 
 // Case-inflected English gloss for nouns, pronouns, adjectives, and other declinable words.
 // Returns a preposition-prefixed gloss (e.g. "of God", "to/for God") based on the Greek case.
+// Already-graded or non-gradable English glosses must not be re-graded
+// ("least" → "leastest", "first-born" → "most first-born").
+const _ENG_NOGRADE = new Set(['more','most','less','only','own','whole','same','such','very','mere','sole','main','chief','former','latter','elder','eldest','foremost','utmost','inner','outer','upper','lower']);
+function _engComparative(base = '', sup = false) {
+  const IRR = {
+    good:['better','best'], well:['better','best'], bad:['worse','worst'],
+    great:['greater','greatest'], large:['greater','greatest'], much:['more','most'],
+    many:['more','most'], little:['less','least'], far:['further','furthest'],
+  };
+  const words = String(base).trim().split(' ');
+  const w0 = words[0].toLowerCase();
+  if (IRR[w0]) { words[0] = IRR[w0][sup ? 1 : 0]; return words.join(' '); }
+  // Leave multi-word/hyphenated, already-graded (-er/-st), or known non-gradable glosses alone.
+  if (words.length > 1 || /-/.test(base) || /(?:er|st)$/.test(w0) || _ENG_NOGRADE.has(w0)) return base;
+  if (/[^aeiou]y$/.test(w0)) { words[0] = sup ? w0.slice(0, -1) + 'iest' : w0.slice(0, -1) + 'ier'; return words.join(' '); }
+  if (w0.length <= 7) { const stem = /e$/.test(w0) ? w0.slice(0, -1) : w0; words[0] = sup ? stem + 'est' : stem + 'er'; return words.join(' '); }
+  return (sup ? 'most ' : 'more ') + base;
+}
+
 function _nounGloss(morph, brief) {
   const base = (brief || '').split(',')[0].split(';')[0].trim();
   if (!base || !morph) return base;
@@ -28167,10 +28205,26 @@ function _nounGloss(morph, brief) {
   }
   const pronoun = _rhemaPronounGloss(posRaw, cng, base, caseCode);
   if (pronoun) return pronoun;
-  if (posRaw === 'A' || posRaw === 'D' || posRaw === 'R' || posRaw === 'I' || posRaw === 'X') return base;
+  if (posRaw === 'A') {            // adjective — render comparative (-C) / superlative (-S) degree
+    if (segs[2] === 'C') return _engComparative(base, false);
+    if (segs[2] === 'S') return _engComparative(base, true);
+    return base;
+  }
+  if (posRaw === 'D') return cng[1] === 'P' ? (base === 'that' ? 'those' : 'these') : base;  // this→these
+  if (posRaw === 'R' || posRaw === 'I' || posRaw === 'X') return base;
   if (posRaw === 'N') {
     const cleanBase = base.replace(/^(?:a |an |the )/i, '');
-    return cng[1] === 'P' ? _engPlural(cleanBase) : cleanBase;
+    if (cng[1] !== 'P') return cleanBase;
+    // Pluralizing a descriptive phrase reads badly ("anything hidden" → "anything
+    // hiddens"); prefer a single-word noun gloss from the brief when the lead is a phrase.
+    let pl = cleanBase;
+    if (/\s/.test(cleanBase)) {
+      const single = String(brief || '').split(',')
+        .map(s => s.trim().replace(/^(?:a |an |the )/i, '').trim())
+        .find(p => p && !/\s/.test(p));
+      if (single) pl = single;
+    }
+    return _engPlural(pl);
   }
   return base;
 }
