@@ -19362,7 +19362,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.188";
+const APP_VERSION = "3.0.189";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19383,6 +19383,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.189 &mdash; Verbs Read Like Scripture</div>
+<ul>
+  <li><strong>No more &#8220;he / she&#8221; guess</strong> &mdash; Third-person verbs now drop the gendered subject placeholder, so love reads as Scripture does: &#8220;suffers long, is kind&#8230; does not boast&#8230; seeks not its own.&#8221; First-person (&#8220;I spoke&#8221;) and plural (&#8220;they will cease&#8221;) are unchanged.</li>
+</ul>
 <div class="un-version-label">v3.0.188 &mdash; Sharper Word Glosses (1 Cor 13 audit)</div>
 <ul>
   <li><strong>Cleaner participles &amp; plurals</strong> &mdash; Fixed broken glosses like &#8220;make a sounding&#8221; &rarr; &#8220;making a sound,&#8221; &#8220;cry alouding&#8221; &rarr; &#8220;crying aloud,&#8221; and &#8220;anything hiddens&#8221; &rarr; &#8220;mysteries.&#8221;</li>
@@ -28039,6 +28043,14 @@ function _rhemaVerbBaseInfo(brief) {
 }
 
 function _sxVerbGloss(morph, brief) {
+  const g = _sxVerbGlossRaw(morph, brief);
+  // 3rd-person-singular "he / she" is a gender guess that reads wrong for abstract
+  // subjects (love, faith…); drop it so the gloss is the clean verb: "is kind",
+  // "seeks", "endures", "has been written". 1st/2nd person ("I", "you") stay.
+  return /^3S/.test(String(morph).split('-')[2] || '') ? g.replace(/^he \/ she /, '') : g;
+}
+
+function _sxVerbGlossRaw(morph, brief) {
   const baseInfo = _rhemaVerbBaseInfo(brief);
   const base = baseInfo.base;
   if (!base) return '';
