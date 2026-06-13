@@ -19368,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.193";
+const APP_VERSION = "3.0.194";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19389,6 +19389,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.194 &mdash; More Audits (John 6, Luke 15, Acts 2, etc.)</div>
+<ul>
+  <li><strong>Impersonal verbs read right in every tense</strong> &mdash; &#948;&#949;&#8150; now reads &#8220;it is necessary&#8221; / &#8220;it was necessary&#8221; (was a broken &#8220;was iting is necessary&#8221;), and likewise &#967;&#961;&#942;, &#7956;&#958;&#949;&#963;&#964;&#953;.</li>
+  <li><strong>Cleaner senses</strong> &mdash; &#960;&#945;&#8150;&#962; &#8220;servant&#8221; (not &#8220;boy or girl childs&#8221;), &#7936;&#960;&#941;&#961;&#967;&#959;&#956;&#945;&#953; &#8220;depart,&#8221; &#956;&#940;&#967;&#959;&#956;&#945;&#953; &#8220;quarrel,&#8221; &#963;&#964;&#940;&#948;&#953;&#959;&#957; &#8220;furlong.&#8221;</li>
+</ul>
 <div class="un-version-label">v3.0.193 &mdash; More Chapter Audits</div>
 <ul>
   <li><strong>Cleaner verb &amp; noun senses</strong> &mdash; &#8133;&#7134;&#956;&#945; now reads &#8220;word&#8221; (not &#8220;thing spokens&#8221;), &#966;&#945;&#943;&#957;&#969; &#8220;appear,&#8221; &#945;&#8016;&#958;&#940;&#957;&#969; &#8220;grow,&#8221; &#948;&#953;&#945;&#955;&#955;&#940;&#963;&#963;&#969; &#8220;be reconciled,&#8221; and &#960;&#949;&#961;&#953;&#946;&#940;&#955;&#955;&#969; &#8220;wear.&#8221;</li>
@@ -28064,6 +28069,10 @@ function _rhemaVerbBaseInfo(brief) {
     .replace(/^[-–—+*]+\s*/, '')
     .replace(/\s+/g, ' ')
     .trim();
+  // Impersonal / fixed-subject phrases ("it is necessary", "there is") keep their
+  // own subject and copula; conjugate the copula by tense, not the leading pronoun.
+  const cop = base.match(/^((?:it|there|he|she|they|we|you)\b)\s+(?:is|are|was|were)\b\s*(.*)$/i);
+  if (cop) return { base, kind: 'copula', leadSubj: cop[1].toLowerCase(), complement: cop[2].trim() };
   const being = base.match(/^(?:am|is|are|was|were|be|being|been)\s+(.+)$/i);
   if (being?.[1]) return { base, kind: 'being', complement: being[1].trim() };
   return { base, kind: 'action', complement: '' };
@@ -28094,6 +28103,20 @@ function _sxVerbGlossRaw(morph, brief) {
 
   const BE_PRES = { '1S':'am','2S':'are','3S':'is','1P':'are','2P':'are','3P':'are' };
   const BE_PAST = { '1S':'was','2S':'were','3S':'was','1P':'were','2P':'were','3P':'were' };
+
+  if (baseInfo.kind === 'copula') {
+    const ls = baseInfo.leadSubj, comp = baseInfo.complement;
+    const join = (...xs) => xs.filter(Boolean).join(' ');
+    if (mood === 'N') return join('to be', comp);
+    if (mood === 'S' || mood === 'O') return join(ls, 'might be', comp);
+    switch (tense) {
+      case 'I': case 'A': return join(ls, 'was', comp);
+      case 'F': return join(ls, 'will be', comp);
+      case 'X': return join(ls, 'has been', comp);
+      case 'Y': return join(ls, 'had been', comp);
+      default:  return join(ls, 'is', comp);
+    }
+  }
 
   if (baseInfo.kind === 'being') {
     const comp = baseInfo.complement;
@@ -30528,6 +30551,7 @@ const RHEMA_DEPONENT_ACTIVE = new Map([
   [1410, 'be able'],     // δύναμαι — "be able, can" (brief wrongly leads "powerful")
   [5316, 'appear'],      // φαίνομαι — mid./pass. "appear" (active = "shine")
   [4016, 'wear'],        // περιβάλλομαι — mid. "wear, clothe oneself" (active = "cast around")
+  [3164, 'quarrel'],     // μάχομαι — deponent "quarrel, dispute" (brief "engage in battle")
 ]);
 
 // Curated interlinear gloss for words whose lexicon brief leads with a misleading
@@ -30541,6 +30565,8 @@ const RHEMA_PREFERRED_GLOSS = new Map([
   [435,  'man'],         // ἀνήρ (brief leads "male human being")
   [2540, 'time'],        // καιρός (brief leads "fitting season")
   [4487, 'word'],        // ῥῆμα (brief "a thing spoken" → plural "thing spokens")
+  [3816, 'servant'],     // παῖς (brief "a boy or girl child" → "boy or girl childs")
+  [4712, 'furlong'],     // στάδιον (brief "one eighth of a Roman mile")
 ]);
 
 // Active (non-deponent) verbs whose lexicon brief leads with an archaic or
@@ -30552,6 +30578,7 @@ const RHEMA_VERB_BASE = new Map([
   [4637, 'dwell'],       // σκηνόω (brief "dwell as in a tent")
   [1259, 'reconcile'],   // διαλλάσσομαι (brief "become reconciled to" → "be become reconciled")
   [837,  'grow'],        // αὐξάνω (brief leads "cause to increase")
+  [565,  'depart'],      // ἀπέρχομαι (brief "come or go away from" → "came or go away from")
 ]);
 
 // ἵστημι is transitive ("set, place") in the present/imperfect/future/1-aorist
