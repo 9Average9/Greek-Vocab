@@ -10690,7 +10690,8 @@ function _habitShiftDateKey(dateKey, deltaDays) {
 function _habitCurrentStreak(entries = {}) {
   const byDate = {};
   Object.values(entries).forEach(e => { if (e.date) byDate[e.date] = e.status; });
-  const [year, month, day] = _habitTodayKey().split("-").map(Number);
+  const todayKey = _habitTodayKey();
+  const [year, month, day] = todayKey.split("-").map(Number);
   let cursor = new Date(year, month - 1, day);
   let streak = 0;
   const keyFor = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -10699,7 +10700,12 @@ function _habitCurrentStreak(entries = {}) {
   // day without a success/skip, actually breaks it.
   if (byDate[keyFor(cursor)] === undefined) cursor.setDate(cursor.getDate() - 1);
   while (true) {
-    const status = byDate[keyFor(cursor)];
+    const dateKey = keyFor(cursor);
+    const status = byDate[dateKey];
+    if (dateKey === todayKey && (!status || status === "open")) {
+      cursor.setDate(cursor.getDate() - 1);
+      continue;
+    }
     if (status === "success") streak++;
     else if (status !== "skipped") break;
     cursor.setDate(cursor.getDate() - 1);
@@ -19362,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.189";
+const APP_VERSION = "3.0.190";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19383,6 +19389,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.190 &mdash; Habit Streak Before Check-In</div>
+<ul>
+  <li><strong>Current streaks stay accurate while today is open</strong> &mdash; A habit now shows the latest active streak before the user checks in today, then adds one after completion.</li>
+  <li><strong>Skips and missed days keep their meaning</strong> &mdash; Planned skips still bridge the streak, while a genuinely missed prior day still resets it.</li>
+</ul>
 <div class="un-version-label">v3.0.189 &mdash; Verbs Read Like Scripture</div>
 <ul>
   <li><strong>No more &#8220;he / she&#8221; guess</strong> &mdash; Third-person verbs now drop the gendered subject placeholder, so love reads as Scripture does: &#8220;suffers long, is kind&#8230; does not boast&#8230; seeks not its own.&#8221; First-person (&#8220;I spoke&#8221;) and plural (&#8220;they will cease&#8221;) are unchanged.</li>
