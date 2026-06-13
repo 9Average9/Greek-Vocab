@@ -19368,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.196";
+const APP_VERSION = "3.0.197";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19389,6 +19389,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.197 &mdash; Mark 15, Luke 24, Acts 17 Audit</div>
+<ul>
+  <li><strong>Crucifixion &amp; resurrection chapters polished</strong> &mdash; &#963;&#967;&#943;&#950;&#969; now reads &#8220;the veil was torn&#8221; (not &#8220;rended&#8221;), &#955;&#945;&#964;&#959;&#956;&#941;&#969; &#8220;hewn&#8221; (a tomb hewn from rock).</li>
+  <li><strong>Cleaner senses</strong> &mdash; &#7985;&#960;&#949;&#943;&#967;&#969; &#8220;undergo,&#8221; &#7952;&#960;&#953;&#948;&#943;&#948;&#969;&#956;&#953; &#8220;give,&#8221; &#7936;&#957;&#945;&#946;&#959;&#940;&#969; &#8220;cry out.&#8221;</li>
+</ul>
 <div class="un-version-label">v3.0.196 &mdash; Philippians 2, John 11, Acts 9 Audit</div>
 <ul>
   <li><strong>Cleaner English forms</strong> &mdash; Participles like &#8220;being shaked&#8221; and &#8220;was lieing&#8221; now read &#8220;being shaken&#8221; and &#8220;was lying.&#8221;</li>
@@ -27963,7 +27968,7 @@ const _IRREG_PAST_PART = {
   stand:'stood',steal:'stolen',strike:'struck',swear:'sworn',swim:'swum',
   take:'taken',teach:'taught',tell:'told',think:'thought',throw:'thrown',
   understand:'understood',wake:'woken',weep:'wept',win:'won',write:'written',
-  withdraw:'withdrawn',
+  withdraw:'withdrawn',tear:'torn',hew:'hewn',
 };
 const _IRREG_SIMPLE_PAST = {
   arise:'arose',bear:'bore',beat:'beat',become:'became',beget:'begot',begin:'began',
@@ -27983,7 +27988,7 @@ const _IRREG_SIMPLE_PAST = {
   stand:'stood',steal:'stole',strike:'struck',swear:'swore',swim:'swam',
   take:'took',teach:'taught',tell:'told',think:'thought',throw:'threw',
   understand:'understood',wake:'woke',weep:'wept',win:'won',write:'wrote',
-  withdraw:'withdrew',
+  withdraw:'withdrew',tear:'tore',
 };
 
 // Pluralise an English noun brief (e.g. "a word" → "words", "sin" → "sins").
@@ -30600,6 +30605,11 @@ const RHEMA_VERB_BASE = new Map([
   [483,  'speak against'], // ἀντιλέγω (brief "speak or say in opposition")
   [873,  'separate'],    // ἀφορίζω (brief leads "rail off")
   [2516, 'sit'],         // καθέζομαι (brief "I am sitting" → "being sitting")
+  [4977, 'tear'],        // σχίζω (brief "rend" → "was rended"; the veil was torn)
+  [2998, 'hew'],         // λατομέω (brief "hew stones" → "hewed stones")
+  [5254, 'undergo'],     // ὑπέχω (brief "submit to" → "submiting to")
+  [1929, 'give'],        // ἐπιδίδωμι (brief "hand in" → "was handing in")
+  [310,  'cry out'],     // ἀναβοάω (brief "shout upwards")
 ]);
 
 // ἵστημι is transitive ("set, place") in the present/imperfect/future/1-aorist
