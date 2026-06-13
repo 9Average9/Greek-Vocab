@@ -19362,7 +19362,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.186";
+const APP_VERSION = "3.0.187";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19383,6 +19383,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.187 &mdash; Truer Verb Meanings</div>
+<ul>
+  <li><strong>&#8220;Lacks,&#8221; not &#8220;is wanting&#8221;</strong> &mdash; Deponent verbs that look passive but mean something active now read naturally: James 1:5 &#955;&#949;&#943;&#960;&#949;&#964;&#945;&#953; is &#8220;lacks&#8221; (wisdom), not the archaic &#8220;is wanting.&#8221;</li>
+  <li><strong>Perfect-tense verbs fixed</strong> &mdash; About 1,600 perfect/pluperfect verbs were mis-rendered (&#8220;it be written&#8221;); they now read correctly &mdash; &#8220;it has been written,&#8221; &#8220;he has come,&#8221; &#8220;they had seen.&#8221;</li>
+  <li><strong>&#8220;Begotten&#8221; restored</strong> &mdash; &#947;&#949;&#957;&#957;&#940;&#969; now reads &#8220;begot / begotten&#8221; instead of &#8220;begeted.&#8221;</li>
+</ul>
 <div class="un-version-label">v3.0.186 &mdash; Simpler Habit Widget</div>
 <ul>
   <li><strong>Streak chip removed from Home</strong> &mdash; The Habit Builder widget now focuses on today's progress only; streaks live on the Habits page.</li>
@@ -26803,7 +26809,6 @@ function _rhemaMeaningDecision(word = [], {
   }
 
   const pos = String(morph || '').split('-')[0];
-  const inflectedGloss = _rhemaBaseInterlinearGloss(morph, lex);
   const summary = _rhemaDefinitionSummary(lex);
   const contextual = _rhemaContextualBrief(resolved, book, chapter);
   const loadedEntry = entry || _rhemaDeepEntrySync(strongs);
@@ -26819,6 +26824,10 @@ function _rhemaMeaningDecision(word = [], {
     const deepSummary = _deepDefinitionSummary(loadedEntry, null);
     if (deepSummary.text) deep = { ...deepSummary, senseIndex: null };
   }
+
+  // Verb headline reads from the modern deep sense ("lacks") when available,
+  // not the archaic lexicon brief ("is wanting"); see _rhemaBaseInterlinearGloss.
+  const inflectedGloss = _rhemaBaseInterlinearGloss(morph, lex, deep, strongs);
 
   const expectedMeaning = _deepExpectedMeaningWords(loadedEntry, lex);
   const formFirst = pos === 'V' || pos === 'N' || pos === 'P' || pos === 'F' || pos === 'T' ||
@@ -27880,7 +27889,7 @@ function _sxVerbPerson(morph) {
 
 // Irregular verb tables for common NT vocabulary
 const _IRREG_PAST_PART = {
-  arise:'arisen',bear:'borne',beat:'beaten',become:'become',begin:'begun',
+  arise:'arisen',bear:'borne',beat:'beaten',become:'become',beget:'begotten',begin:'begun',
   bind:'bound',blow:'blown',bring:'brought',build:'built',burst:'burst',
   buy:'bought',cast:'cast',catch:'caught',choose:'chosen',come:'come',
   cut:'cut',dig:'dug',do:'done',draw:'drawn',drink:'drunk',drive:'driven',
@@ -27900,7 +27909,7 @@ const _IRREG_PAST_PART = {
   withdraw:'withdrawn',
 };
 const _IRREG_SIMPLE_PAST = {
-  arise:'arose',bear:'bore',beat:'beat',become:'became',begin:'began',
+  arise:'arose',bear:'bore',beat:'beat',become:'became',beget:'begot',begin:'began',
   bind:'bound',blow:'blew',bring:'brought',build:'built',burst:'burst',
   buy:'bought',cast:'cast',catch:'caught',choose:'chose',come:'came',
   cut:'cut',dig:'dug',do:'did',draw:'drew',drink:'drank',drive:'drove',
@@ -28019,7 +28028,9 @@ function _sxVerbGloss(morph, brief) {
   const parts   = morph.split('-');
   const form    = (parts[1] || '').replace(/^2/, ''); // strip 2nd-aorist/perfect prefix
   const persNum = parts[2] || '';
-  const tense   = form[0] || '';  // P=present I=imperfect F=future A=aorist X=perfect Y=pluperfect
+  let   tense   = form[0] || '';  // P=present I=imperfect F=future A=aorist R/X=perfect L/Y=pluperfect
+  if (tense === 'R') tense = 'X';        // this dataset tags perfect as R…
+  else if (tense === 'L') tense = 'Y';   // …and pluperfect as L
   const voice   = form[1] || '';  // A=active M=middle P=passive D/O/Q=deponent
   const mood    = form.slice(2);  // I=indicative S=subjunctive O=optative M=imperative N=infinitive P=participle
 
@@ -30409,9 +30420,43 @@ function loadDeepLexiconSpine() {
     .catch(() => { window._rhemaSpineLoading = false; });
 }
 
-function _rhemaBaseInterlinearGloss(morph = '', lex = {}) {
+// Middle/passive-deponent verbs that are tagged passive but carry an ACTIVE
+// English meaning, so their headline should read "lacks", not "is lacked".
+// (True passives like γέγραπται are NOT here — they stay passive.)
+const RHEMA_DEPONENT_ACTIVE = new Set([
+  3007, // λείπομαι — to lack
+  5302, // ὑστερέομαι — to lack, fall short, be in need
+]);
+
+// Strip a deep-lexicon verb sense down to a clean conjugation base:
+// "to lack something" → "lack", "to be without" → "be without".
+function _rhemaCleanVerbBase(text = '') {
+  let t = String(text || '').trim().toLowerCase();
+  if (!t) return '';
+  t = t.split(/[,;]| or /)[0].trim();
+  t = t.replace(/^(?:to|i)\s+/i, '');
+  t = t.replace(/\s+(?:something|someone|somebody|anything|anyone|everything|everyone|somewhere|things|people|oneself|himself|herself|themselves|it|them|him|her|us|you)\b.*$/i, '').trim();
+  return t;
+}
+
+function _rhemaBaseInterlinearGloss(morph = '', lex = {}, deep = null, strongs = '') {
   if (lex._rhemaPronounGloss) return lex._rhemaPronounGloss;
-  if (morph?.startsWith('V-')) return _sxVerbGloss(morph, lex.brief);
+  if (morph?.startsWith('V-')) {
+    // Deponents tagged middle/passive carry an ACTIVE meaning that the archaic
+    // brief ("I am wanting") obscures. For these, read the clean modern deep
+    // sense ("lack") and render it actively. All other verbs keep the lexicon
+    // brief — the deep sense LABELS are descriptive phrases that don't conjugate
+    // cleanly ("to be said" → "saided"), so they're not a safe general base.
+    if (RHEMA_DEPONENT_ACTIVE.has(parseInt(strongs, 10))) {
+      const deepBase = _rhemaCleanVerbBase(deep && deep.text);
+      const base = (deepBase && deepBase.split(/\s+/).length <= 3) ? deepBase : (lex.brief || '');
+      const parts = String(morph).split('-');
+      const form = (parts[1] || '').replace(/^2/, '');
+      if (form[1] === 'P' || form[1] === 'M') parts[1] = form[0] + 'A' + form.slice(2);
+      return _sxVerbGloss(parts.join('-'), base);
+    }
+    return _sxVerbGloss(morph, lex.brief);
+  }
   return _nounGloss(morph, lex.brief) || getRhemaQuickDefinition(lex);
 }
 
