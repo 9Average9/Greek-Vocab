@@ -19368,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.190";
+const APP_VERSION = "3.0.191";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19389,6 +19389,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.191 &mdash; Smarter, Consistent Glossary</div>
+<ul>
+  <li><strong>Glossary matches the word study</strong> &mdash; The interlinear gloss now uses the same smart-sense meaning as the Definition tab, so James 1:5 &#955;&#949;&#943;&#960;&#949;&#964;&#945;&#953; reads &#8220;lacks&#8221; in both places &mdash; even before the deeper data loads.</li>
+  <li><strong>Dominant meanings, not rare ones</strong> &mdash; Words now show their common NT sense: &#960;&#957;&#949;&#8166;&#956;&#945; reads &#8220;spirit&#8221; (not &#8220;wind&#8221;), &#958;&#941;&#957;&#959;&#962; &#8220;stranger&#8221; (not &#8220;new&#8221;), &#952;&#949;&#956;&#941;&#955;&#953;&#959;&#962; &#8220;foundation.&#8221;</li>
+  <li><strong>Deponent verbs read right</strong> &mdash; &#7936;&#957;&#945;&#963;&#964;&#961;&#941;&#966;&#969; in the middle/passive now reads &#8220;lived&#8221; (conducted oneself) while its active sense stays &#8220;overturned.&#8221;</li>
+</ul>
 <div class="un-version-label">v3.0.190 &mdash; Habit Streak Before Check-In</div>
 <ul>
   <li><strong>Current streaks stay accurate while today is open</strong> &mdash; A habit now shows the latest active streak before the user checks in today, then adds one after completion.</li>
@@ -30497,44 +30503,47 @@ function loadDeepLexiconSpine() {
     .catch(() => { window._rhemaSpineLoading = false; });
 }
 
-// Middle/passive-deponent verbs that are tagged passive but carry an ACTIVE
-// English meaning, so their headline should read "lacks", not "is lacked".
-// (True passives like γέγραπται are NOT here — they stay passive.)
-const RHEMA_DEPONENT_ACTIVE = new Set([
-  3007, // λείπομαι — to lack
-  5302, // ὑστερέομαι — to lack, fall short, be in need
+// Middle/passive-deponent verbs tagged passive but carrying an ACTIVE meaning,
+// mapped to a clean modern conjugation base so the headline reads "lacks", not
+// "is lacked" / archaic "is wanting". Curated (not read from the deep shard) so
+// the interlinear and the Definition tab stay consistent even before a shard
+// loads. (True passives like γέγραπται are NOT here — they stay passive.)
+const RHEMA_DEPONENT_ACTIVE = new Map([
+  [3007, 'lack'],        // λείπομαι
+  [5302, 'fall short'],  // ὑστερέομαι
+  [390,  'live'],        // ἀναστρέφομαι — mid./pass. "conduct oneself, live" (active = "overturn")
 ]);
 
-// Strip a deep-lexicon verb sense down to a clean conjugation base:
-// "to lack something" → "lack", "to be without" → "be without".
-function _rhemaCleanVerbBase(text = '') {
-  let t = String(text || '').trim().toLowerCase();
-  if (!t) return '';
-  t = t.split(/[,;]| or /)[0].trim();
-  t = t.replace(/^(?:to|i)\s+/i, '');
-  t = t.replace(/\s+(?:something|someone|somebody|anything|anyone|everything|everyone|somewhere|things|people|oneself|himself|herself|themselves|it|them|him|her|us|you)\b.*$/i, '').trim();
-  return t;
-}
+// Curated interlinear gloss for words whose lexicon brief leads with a misleading
+// or rare sense. Verified against the deep "smart sense" lexicon, so the glossary
+// reads with the word's dominant NT meaning (πνεῦμα → "spirit", not "wind").
+const RHEMA_PREFERRED_GLOSS = new Map([
+  [4151, 'spirit'],      // πνεῦμα (brief leads "wind")
+  [3581, 'stranger'],    // ξένος (brief leads "new")
+  [2310, 'foundation'],  // θεμέλιος (brief leads "belonging to the foundation")
+  [1271, 'mind'],        // διάνοια (brief leads "understanding")
+]);
 
 function _rhemaBaseInterlinearGloss(morph = '', lex = {}, deep = null, strongs = '') {
   if (lex._rhemaPronounGloss) return lex._rhemaPronounGloss;
+  const num = parseInt(strongs, 10);
   if (morph?.startsWith('V-')) {
     // Deponents tagged middle/passive carry an ACTIVE meaning that the archaic
-    // brief ("I am wanting") obscures. For these, read the clean modern deep
-    // sense ("lack") and render it actively. All other verbs keep the lexicon
-    // brief — the deep sense LABELS are descriptive phrases that don't conjugate
-    // cleanly ("to be said" → "saided"), so they're not a safe general base.
-    if (RHEMA_DEPONENT_ACTIVE.has(parseInt(strongs, 10))) {
-      const deepBase = _rhemaCleanVerbBase(deep && deep.text);
-      const base = (deepBase && deepBase.split(/\s+/).length <= 3) ? deepBase : (lex.brief || '');
+    // brief ("I am wanting") obscures. Render their curated modern base actively
+    // — but only for the middle/passive forms, since some (e.g. ἀναστρέφω) keep a
+    // genuine active sense. Other verbs keep the lexicon brief.
+    const depBase = RHEMA_DEPONENT_ACTIVE.get(num);
+    if (depBase) {
       const parts = String(morph).split('-');
       const form = (parts[1] || '').replace(/^2/, '');
-      if (form[1] === 'P' || form[1] === 'M') parts[1] = form[0] + 'A' + form.slice(2);
-      return _sxVerbGloss(parts.join('-'), base);
+      if (form[1] && form[1] !== 'A') {
+        parts[1] = form[0] + 'A' + form.slice(2);
+        return _sxVerbGloss(parts.join('-'), depBase);
+      }
     }
     return _sxVerbGloss(morph, lex.brief);
   }
-  return _nounGloss(morph, lex.brief) || getRhemaQuickDefinition(lex);
+  return _nounGloss(morph, RHEMA_PREFERRED_GLOSS.get(num) || lex.brief) || getRhemaQuickDefinition(lex);
 }
 
 function _rhemaCompactInterlinearGloss(value = '') {
