@@ -19368,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.195";
+const APP_VERSION = "3.0.196";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19389,6 +19389,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.196 &mdash; Philippians 2, John 11, Acts 9 Audit</div>
+<ul>
+  <li><strong>Cleaner English forms</strong> &mdash; Participles like &#8220;being shaked&#8221; and &#8220;was lieing&#8221; now read &#8220;being shaken&#8221; and &#8220;was lying.&#8221;</li>
+  <li><strong>Truer senses</strong> &mdash; &#7936;&#966;&#959;&#961;&#943;&#950;&#969; &#8220;separate&#8221; (not &#8220;rail off&#8221;), &#7936;&#957;&#964;&#953;&#955;&#941;&#947;&#969; &#8220;speak against,&#8221; &#7936;&#966;&#943;&#963;&#964;&#951;&#956;&#953; &#8220;depart,&#8221; &#954;&#945;&#952;&#941;&#950;&#959;&#956;&#945;&#953; &#8220;sit.&#8221;</li>
+</ul>
 <div class="un-version-label">v3.0.195 &mdash; 1 Cor 15, Luke 1, Colossians 1 Audit</div>
 <ul>
   <li><strong>Key words read right</strong> &mdash; &#947;&#961;&#945;&#966;&#942; now reads &#8220;Scripture&#8221; (1 Cor 15:3&#8211;4 &#8220;according to the Scriptures&#8221;), &#948;&#953;&#945;&#954;&#959;&#957;&#943;&#945; &#8220;ministry,&#8221; &#948;&#953;&#945;&#954;&#959;&#957;&#941;&#969; &#8220;serve,&#8221; &#956;&#949;&#952;&#943;&#963;&#964;&#951;&#956;&#953; &#8220;remove.&#8221;</li>
@@ -27953,7 +27958,7 @@ const _IRREG_PAST_PART = {
   lose:'lost',make:'made',mean:'meant',meet:'met',overcome:'overcome',
   pay:'paid',put:'put',read:'read',ride:'ridden',rise:'risen',run:'run',
   say:'said',see:'seen',seek:'sought',sell:'sold',send:'sent',set:'set',
-  shine:'shone',show:'shown',shut:'shut',sit:'sat',sleep:'slept',
+  shake:'shaken',shine:'shone',show:'shown',shut:'shut',sit:'sat',sleep:'slept',forsake:'forsaken',
   sow:'sown',speak:'spoken',spend:'spent',spread:'spread',spring:'sprung',
   stand:'stood',steal:'stolen',strike:'struck',swear:'sworn',swim:'swum',
   take:'taken',teach:'taught',tell:'told',think:'thought',throw:'thrown',
@@ -27973,7 +27978,7 @@ const _IRREG_SIMPLE_PAST = {
   lose:'lost',make:'made',mean:'meant',meet:'met',overcome:'overcame',
   pay:'paid',put:'put',read:'read',ride:'rode',rise:'rose',run:'ran',
   say:'said',see:'saw',seek:'sought',sell:'sold',send:'sent',set:'set',
-  shine:'shone',show:'showed',shut:'shut',sit:'sat',sleep:'slept',
+  shake:'shook',shine:'shone',show:'showed',shut:'shut',sit:'sat',sleep:'slept',forsake:'forsook',
   sow:'sowed',speak:'spoke',spend:'spent',spread:'spread',spring:'sprang',
   stand:'stood',steal:'stole',strike:'struck',swear:'swore',swim:'swam',
   take:'took',teach:'taught',tell:'told',think:'thought',throw:'threw',
@@ -28025,6 +28030,7 @@ function _engIng(v) {
   let w = words[0];
   const lw = w.toLowerCase();
   if (lw === 'am' || lw === 'is' || lw === 'are' || lw === 'be') w = 'being';
+  else if (/ie$/.test(w)) w = w.slice(0, -2) + 'ying';                  // lie→lying, die→dying
   else if (/[^aeiou]e$/.test(w)) w = w.slice(0, -1) + 'ing';            // love→loving
   else if (_isSingleSyllable(w) && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) w = w + w.slice(-1) + 'ing'; // run→running
   else w = w + 'ing';
@@ -30557,6 +30563,7 @@ const RHEMA_DEPONENT_ACTIVE = new Map([
   [5316, 'appear'],      // φαίνομαι — mid./pass. "appear" (active = "shine")
   [4016, 'wear'],        // περιβάλλομαι — mid. "wear, clothe oneself" (active = "cast around")
   [3164, 'quarrel'],     // μάχομαι — deponent "quarrel, dispute" (brief "engage in battle")
+  [868,  'depart'],      // ἀφίσταμαι — mid./pass. "depart, withdraw" (active = "lead away")
 ]);
 
 // Curated interlinear gloss for words whose lexicon brief leads with a misleading
@@ -30590,6 +30597,9 @@ const RHEMA_VERB_BASE = new Map([
   [1247, 'serve'],       // διακονέω (brief leads "wait at table")
   [3179, 'remove'],      // μεθίστημι (brief "move out of its place")
   [2106, 'be pleased'],  // εὐδοκέω (brief "I am resolved" → "was resolved")
+  [483,  'speak against'], // ἀντιλέγω (brief "speak or say in opposition")
+  [873,  'separate'],    // ἀφορίζω (brief leads "rail off")
+  [2516, 'sit'],         // καθέζομαι (brief "I am sitting" → "being sitting")
 ]);
 
 // ἵστημι is transitive ("set, place") in the present/imperfect/future/1-aorist
