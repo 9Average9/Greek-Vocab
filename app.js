@@ -19368,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.192";
+const APP_VERSION = "3.0.193";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19389,6 +19389,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.193 &mdash; More Chapter Audits</div>
+<ul>
+  <li><strong>Cleaner verb &amp; noun senses</strong> &mdash; &#8133;&#7134;&#956;&#945; now reads &#8220;word&#8221; (not &#8220;thing spokens&#8221;), &#966;&#945;&#943;&#957;&#969; &#8220;appear,&#8221; &#945;&#8016;&#958;&#940;&#957;&#969; &#8220;grow,&#8221; &#948;&#953;&#945;&#955;&#955;&#940;&#963;&#963;&#969; &#8220;be reconciled,&#8221; and &#960;&#949;&#961;&#953;&#946;&#940;&#955;&#955;&#969; &#8220;wear.&#8221;</li>
+  <li><strong>&#7989;&#963;&#964;&#951;&#956;&#953; reads right by tense</strong> &mdash; It now shows &#8220;stand&#8221; in the forms that mean stand and &#8220;set&#8221; where it means set/place, instead of always &#8220;cause to stand.&#8221;</li>
+</ul>
 <div class="un-version-label">v3.0.192 &mdash; Romans 8 &amp; John 1 Audit</div>
 <ul>
   <li><strong>Truer common meanings</strong> &mdash; &#948;&#973;&#957;&#945;&#956;&#945;&#953; now reads &#8220;able&#8221; (not &#8220;powerful&#8221;), &#946;&#955;&#941;&#960;&#969; &#8220;see,&#8221; &#7936;&#957;&#942;&#961; &#8220;man,&#8221; &#954;&#945;&#953;&#961;&#972;&#962; &#8220;time,&#8221; and &#7936;&#960;&#959;&#952;&#957;&#8197;&#963;&#954;&#969; &#8220;die&#8221; (so participles read &#8220;having died,&#8221; not &#8220;having been dying&#8221;).</li>
@@ -30521,6 +30526,8 @@ const RHEMA_DEPONENT_ACTIVE = new Map([
   [5302, 'fall short'],  // ὑστερέομαι
   [390,  'live'],        // ἀναστρέφομαι — mid./pass. "conduct oneself, live" (active = "overturn")
   [1410, 'be able'],     // δύναμαι — "be able, can" (brief wrongly leads "powerful")
+  [5316, 'appear'],      // φαίνομαι — mid./pass. "appear" (active = "shine")
+  [4016, 'wear'],        // περιβάλλομαι — mid. "wear, clothe oneself" (active = "cast around")
 ]);
 
 // Curated interlinear gloss for words whose lexicon brief leads with a misleading
@@ -30533,6 +30540,7 @@ const RHEMA_PREFERRED_GLOSS = new Map([
   [1271, 'mind'],        // διάνοια (brief leads "understanding")
   [435,  'man'],         // ἀνήρ (brief leads "male human being")
   [2540, 'time'],        // καιρός (brief leads "fitting season")
+  [4487, 'word'],        // ῥῆμα (brief "a thing spoken" → plural "thing spokens")
 ]);
 
 // Active (non-deponent) verbs whose lexicon brief leads with an archaic or
@@ -30542,7 +30550,21 @@ const RHEMA_VERB_BASE = new Map([
   [2348, 'die'],         // θνήσκω
   [991,  'see'],         // βλέπω (brief leads "look"; passive → "being seen")
   [4637, 'dwell'],       // σκηνόω (brief "dwell as in a tent")
+  [1259, 'reconcile'],   // διαλλάσσομαι (brief "become reconciled to" → "be become reconciled")
+  [837,  'grow'],        // αὐξάνω (brief leads "cause to increase")
 ]);
+
+// ἵστημι is transitive ("set, place") in the present/imperfect/future/1-aorist
+// active, but intransitive ("stand") in the perfect, pluperfect, 2-aorist, and
+// middle/passive — so a single brief gloss mis-renders half its forms.
+function _istemiTransitive(morph) {
+  const raw = String(morph).split('-')[1] || '';
+  if (raw.startsWith('2')) return false;                 // 2-aorist → stand
+  const form = raw.replace(/^2/, '');
+  if (form[0] === 'R' || form[0] === 'L') return false;  // perfect/pluperfect → stand
+  if (form[1] === 'P' || form[1] === 'M') return false;  // middle/passive → stand
+  return true;
+}
 
 function _rhemaBaseInterlinearGloss(morph = '', lex = {}, deep = null, strongs = '') {
   if (lex._rhemaPronounGloss) return lex._rhemaPronounGloss;
@@ -30561,6 +30583,7 @@ function _rhemaBaseInterlinearGloss(morph = '', lex = {}, deep = null, strongs =
         return _sxVerbGloss(parts.join('-'), depBase);
       }
     }
+    if (num === 2476) return _sxVerbGloss(morph, _istemiTransitive(morph) ? 'set' : 'stand');
     return _sxVerbGloss(morph, RHEMA_VERB_BASE.get(num) || lex.brief);
   }
   return _nounGloss(morph, RHEMA_PREFERRED_GLOSS.get(num) || lex.brief) || getRhemaQuickDefinition(lex);
