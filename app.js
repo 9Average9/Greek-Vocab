@@ -19368,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.191";
+const APP_VERSION = "3.0.192";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19389,6 +19389,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.192 &mdash; Romans 8 &amp; John 1 Audit</div>
+<ul>
+  <li><strong>Truer common meanings</strong> &mdash; &#948;&#973;&#957;&#945;&#956;&#945;&#953; now reads &#8220;able&#8221; (not &#8220;powerful&#8221;), &#946;&#955;&#941;&#960;&#969; &#8220;see,&#8221; &#7936;&#957;&#942;&#961; &#8220;man,&#8221; &#954;&#945;&#953;&#961;&#972;&#962; &#8220;time,&#8221; and &#7936;&#960;&#959;&#952;&#957;&#8197;&#963;&#954;&#969; &#8220;die&#8221; (so participles read &#8220;having died,&#8221; not &#8220;having been dying&#8221;).</li>
+  <li><strong>Impersonal verbs fixed</strong> &mdash; &#948;&#949;&#8150; and kin now read &#8220;it is necessary&#8221; instead of the broken &#8220;its is necessary&#8221;; the same fix corrects &#8220;it is permitted,&#8221; &#8220;there is,&#8221; and more.</li>
+</ul>
 <div class="un-version-label">v3.0.191 &mdash; Smarter, Consistent Glossary</div>
 <ul>
   <li><strong>Glossary matches the word study</strong> &mdash; The interlinear gloss now uses the same smart-sense meaning as the Definition tab, so James 1:5 &#955;&#949;&#943;&#960;&#949;&#964;&#945;&#953; reads &#8220;lacks&#8221; in both places &mdash; even before the deeper data loads.</li>
@@ -28167,12 +28172,15 @@ function _sxVerbGlossRaw(morph, brief) {
     }
   }
 
-  if (mood === 'M') return `${base}!`;
+  if (mood === 'M') return /[!?.]$/.test(base) ? base : `${base}!`;
   if (mood === 'S' || mood === 'O') return `${subj} might ${base}`;
 
+  // Impersonal / pronoun-led phrases ("it is necessary") must not be 3sg-conjugated
+  // on their leading pronoun ("its is necessary").
+  const _PRON_LEAD = /^(?:it|he|she|they|we|you|i|there|this|that)\b/i;
   switch (tense) {
     case 'P': { // present: "they remember" / "he remembers"
-      const conj = (pers === '3' && num === 'S')
+      const conj = (pers === '3' && num === 'S' && !_PRON_LEAD.test(base))
         ? _eng3sg(base.split(' ')[0]) + (base.includes(' ') ? base.slice(base.indexOf(' ')) : '')
         : base;
       return `${subj} ${conj}`;
@@ -30512,6 +30520,7 @@ const RHEMA_DEPONENT_ACTIVE = new Map([
   [3007, 'lack'],        // λείπομαι
   [5302, 'fall short'],  // ὑστερέομαι
   [390,  'live'],        // ἀναστρέφομαι — mid./pass. "conduct oneself, live" (active = "overturn")
+  [1410, 'be able'],     // δύναμαι — "be able, can" (brief wrongly leads "powerful")
 ]);
 
 // Curated interlinear gloss for words whose lexicon brief leads with a misleading
@@ -30522,6 +30531,17 @@ const RHEMA_PREFERRED_GLOSS = new Map([
   [3581, 'stranger'],    // ξένος (brief leads "new")
   [2310, 'foundation'],  // θεμέλιος (brief leads "belonging to the foundation")
   [1271, 'mind'],        // διάνοια (brief leads "understanding")
+  [435,  'man'],         // ἀνήρ (brief leads "male human being")
+  [2540, 'time'],        // καιρός (brief leads "fitting season")
+]);
+
+// Active (non-deponent) verbs whose lexicon brief leads with an archaic or
+// non-dominant sense; use a clean modern base for conjugation.
+const RHEMA_VERB_BASE = new Map([
+  [599,  'die'],         // ἀποθνήσκω (brief "I am dying")
+  [2348, 'die'],         // θνήσκω
+  [991,  'see'],         // βλέπω (brief leads "look"; passive → "being seen")
+  [4637, 'dwell'],       // σκηνόω (brief "dwell as in a tent")
 ]);
 
 function _rhemaBaseInterlinearGloss(morph = '', lex = {}, deep = null, strongs = '') {
@@ -30531,7 +30551,7 @@ function _rhemaBaseInterlinearGloss(morph = '', lex = {}, deep = null, strongs =
     // Deponents tagged middle/passive carry an ACTIVE meaning that the archaic
     // brief ("I am wanting") obscures. Render their curated modern base actively
     // — but only for the middle/passive forms, since some (e.g. ἀναστρέφω) keep a
-    // genuine active sense. Other verbs keep the lexicon brief.
+    // genuine active sense. Other verbs keep the lexicon brief (or a curated base).
     const depBase = RHEMA_DEPONENT_ACTIVE.get(num);
     if (depBase) {
       const parts = String(morph).split('-');
@@ -30541,7 +30561,7 @@ function _rhemaBaseInterlinearGloss(morph = '', lex = {}, deep = null, strongs =
         return _sxVerbGloss(parts.join('-'), depBase);
       }
     }
-    return _sxVerbGloss(morph, lex.brief);
+    return _sxVerbGloss(morph, RHEMA_VERB_BASE.get(num) || lex.brief);
   }
   return _nounGloss(morph, RHEMA_PREFERRED_GLOSS.get(num) || lex.brief) || getRhemaQuickDefinition(lex);
 }
