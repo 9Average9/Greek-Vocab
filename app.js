@@ -19368,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.194";
+const APP_VERSION = "3.0.195";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19389,6 +19389,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.195 &mdash; 1 Cor 15, Luke 1, Colossians 1 Audit</div>
+<ul>
+  <li><strong>Key words read right</strong> &mdash; &#947;&#961;&#945;&#966;&#942; now reads &#8220;Scripture&#8221; (1 Cor 15:3&#8211;4 &#8220;according to the Scriptures&#8221;), &#948;&#953;&#945;&#954;&#959;&#957;&#943;&#945; &#8220;ministry,&#8221; &#948;&#953;&#945;&#954;&#959;&#957;&#941;&#969; &#8220;serve,&#8221; &#956;&#949;&#952;&#943;&#963;&#964;&#951;&#956;&#953; &#8220;remove.&#8221;</li>
+  <li><strong>Spelling fix</strong> &mdash; &#7952;&#960;&#949;&#8150;&#948;&#959;&#957; now reads &#8220;looked upon&#8221; instead of the broken &#8220;lookeded upon.&#8221;</li>
+</ul>
 <div class="un-version-label">v3.0.194 &mdash; More Audits (John 6, Luke 15, Acts 2, etc.)</div>
 <ul>
   <li><strong>Impersonal verbs read right in every tense</strong> &mdash; &#948;&#949;&#8150; now reads &#8220;it is necessary&#8221; / &#8220;it was necessary&#8221; (was a broken &#8220;was iting is necessary&#8221;), and likewise &#967;&#961;&#942;, &#7956;&#958;&#949;&#963;&#964;&#953;.</li>
@@ -30567,6 +30572,8 @@ const RHEMA_PREFERRED_GLOSS = new Map([
   [4487, 'word'],        // ῥῆμα (brief "a thing spoken" → plural "thing spokens")
   [3816, 'servant'],     // παῖς (brief "a boy or girl child" → "boy or girl childs")
   [4712, 'furlong'],     // στάδιον (brief "one eighth of a Roman mile")
+  [1124, 'Scripture'],   // γραφή (brief leads "a writing" → "writings")
+  [1248, 'ministry'],    // διακονία (brief leads "waiting at table")
 ]);
 
 // Active (non-deponent) verbs whose lexicon brief leads with an archaic or
@@ -30579,6 +30586,10 @@ const RHEMA_VERB_BASE = new Map([
   [1259, 'reconcile'],   // διαλλάσσομαι (brief "become reconciled to" → "be become reconciled")
   [837,  'grow'],        // αὐξάνω (brief leads "cause to increase")
   [565,  'depart'],      // ἀπέρχομαι (brief "come or go away from" → "came or go away from")
+  [1896, 'look upon'],   // ἐπεῖδον (brief "I looked upon" → double-past "lookeded upon")
+  [1247, 'serve'],       // διακονέω (brief leads "wait at table")
+  [3179, 'remove'],      // μεθίστημι (brief "move out of its place")
+  [2106, 'be pleased'],  // εὐδοκέω (brief "I am resolved" → "was resolved")
 ]);
 
 // ἵστημι is transitive ("set, place") in the present/imperfect/future/1-aorist
