@@ -19368,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.197";
+const APP_VERSION = "3.0.198";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19389,6 +19389,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.198 &mdash; Wide Audit Sweep</div>
+<ul>
+  <li><strong>&#960;&#940;&#963;&#967;&#969; reads &#8220;suffer&#8221;</strong> &mdash; &#8220;if one member suffers&#8221; (1 Cor 12:26), not the literal &#8220;is acted upon.&#8221;</li>
+  <li><strong>&#954;&#945;&#964;&#945;&#956;&#941;&#957;&#969; &#8220;remain&#8221;</strong> &mdash; where the disciples were staying (Acts 1:13).</li>
+</ul>
 <div class="un-version-label">v3.0.197 &mdash; Mark 15, Luke 24, Acts 17 Audit</div>
 <ul>
   <li><strong>Crucifixion &amp; resurrection chapters polished</strong> &mdash; &#963;&#967;&#943;&#950;&#969; now reads &#8220;the veil was torn&#8221; (not &#8220;rended&#8221;), &#955;&#945;&#964;&#959;&#956;&#941;&#969; &#8220;hewn&#8221; (a tomb hewn from rock).</li>
@@ -30610,6 +30615,8 @@ const RHEMA_VERB_BASE = new Map([
   [5254, 'undergo'],     // ὑπέχω (brief "submit to" → "submiting to")
   [1929, 'give'],        // ἐπιδίδωμι (brief "hand in" → "was handing in")
   [310,  'cry out'],     // ἀναβοάω (brief "shout upwards")
+  [3958, 'suffer'],      // πάσχω (brief "I am acted upon" → "is acted upon")
+  [2650, 'remain'],      // καταμένω (brief leads "wait" → "waiting")
 ]);
 
 // ἵστημι is transitive ("set, place") in the present/imperfect/future/1-aorist
