@@ -10512,18 +10512,116 @@ function _memGetProgress(id = _memCurrent?.id || '') {
   catch { return { attempts: 0, best: 0, last: 0 }; }
 }
 
-function _memSaveProgress(score) {
+const MEM_STOPWORDS = new Set([
+  'the','a','an','and','or','but','of','to','in','on','at','by','for','with','as','is','are','was','were',
+  'be','been','am','it','its','he','she','they','them','his','her','their','you','your','we','our','us','i',
+  'me','my','that','this','these','those','who','whom','which','so','then','than','from','into','unto','up',
+  'out','not','no','nor','do','did','does','have','has','had','will','shall','may','can','if','o'
+]);
+
+function _memWeakKey(word = '') {
+  const w = (_memWords(word)[0] || '');
+  if (!w || w.length < 3 || MEM_STOPWORDS.has(w) || MEM_FILLER_WORDS.has(w)) return '';
+  return w;
+}
+
+// score: 0-100. opts: { mode, seenWords:[], weakWords:[], weakPhrases:[] }
+function _memSaveProgress(score, opts = {}) {
   if (!_memCurrent?.id) return;
   const prev = _memGetProgress(_memCurrent.id);
   const next = {
+    ...prev,
     attempts: Number(prev.attempts || 0) + 1,
     best: Math.max(Number(prev.best || 0), Number(score || 0)),
     last: Number(score || 0),
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
+    modeStats: { ...(prev.modeStats || {}) },
+    weak: { ...(prev.weak || {}) },
+    weakPhrases: { ...(prev.weakPhrases || {}) }
   };
+  if (opts.mode) {
+    const ms = next.modeStats[opts.mode] || { attempts: 0, best: 0, last: 0 };
+    next.modeStats[opts.mode] = {
+      attempts: Number(ms.attempts || 0) + 1,
+      best: Math.max(Number(ms.best || 0), Number(score || 0)),
+      last: Number(score || 0),
+      updatedAt: Date.now()
+    };
+  }
+  (opts.seenWords || []).forEach(w => {
+    const k = _memWeakKey(w);
+    if (!k) return;
+    const e = next.weak[k] || { seen: 0, miss: 0 };
+    e.seen += 1;
+    next.weak[k] = e;
+  });
+  (opts.weakWords || []).forEach(w => {
+    const k = _memWeakKey(w);
+    if (!k) return;
+    const e = next.weak[k] || { seen: 0, miss: 0 };
+    e.miss += 1;
+    if (e.seen < e.miss) e.seen = e.miss;
+    next.weak[k] = e;
+  });
+  (opts.weakPhrases || []).forEach(p => {
+    const text = String(p || '').trim();
+    const k = text.toLowerCase().slice(0, 70);
+    if (!k) return;
+    next.weakPhrases[k] = { miss: Number(next.weakPhrases[k]?.miss || 0) + 1, text };
+  });
   localStorage.setItem(_memStorageKey(_memCurrent.id), JSON.stringify(next));
   _memUpsertSavedPassage(_memCurrent, next);
   updateMemorizationProgressUI();
+}
+
+const MEM_MODE_META = {
+  recite:   { label: 'Recite',     icon: 'mic',          weight: 1.0 },
+  blank:    { label: 'Fill blanks', icon: 'edit_square',  weight: 0.9 },
+  recall:   { label: 'Recall',     icon: 'visibility_off', weight: 0.85 },
+  scramble: { label: 'Scramble',   icon: 'shuffle',      weight: 0.8 }
+};
+
+// Estimate how close the user is to having the passage memorized (0-100).
+function _memReadiness(progress = _memGetProgress()) {
+  const ms = progress.modeStats || {};
+  let best = 0;
+  Object.keys(MEM_MODE_META).forEach(mode => {
+    const stat = ms[mode];
+    if (!stat) return;
+    best = Math.max(best, Number(stat.best || 0) * MEM_MODE_META[mode].weight);
+  });
+  // Fall back to the raw best score if no per-mode data was recorded yet.
+  best = Math.max(best, Number(progress.best || 0) * 0.8);
+  return Math.round(Math.min(100, best));
+}
+
+function _memReadinessLabel(pct) {
+  if (pct >= 95) return 'Memorized';
+  if (pct >= 80) return 'Almost there';
+  if (pct >= 55) return 'Getting solid';
+  if (pct >= 25) return 'Taking shape';
+  if (pct > 0) return 'Just started';
+  return 'Not started';
+}
+
+// Top trouble words across every check, ranked by how often they were missed.
+function _memWeakWords(progress = _memGetProgress(), limit = 6) {
+  const weak = progress.weak || {};
+  return Object.keys(weak)
+    .map(word => ({ word, miss: Number(weak[word].miss || 0), seen: Number(weak[word].seen || 0) }))
+    .filter(e => e.miss > 0)
+    .map(e => ({ ...e, rate: e.seen ? e.miss / e.seen : 1 }))
+    .sort((a, b) => (b.miss - a.miss) || (b.rate - a.rate))
+    .slice(0, limit);
+}
+
+function _memWeakPhrases(progress = _memGetProgress(), limit = 4) {
+  const wp = progress.weakPhrases || {};
+  return Object.keys(wp)
+    .map(k => ({ text: wp[k].text || k, miss: Number(wp[k].miss || 0) }))
+    .filter(e => e.miss > 0)
+    .sort((a, b) => b.miss - a.miss)
+    .slice(0, limit);
 }
 
 function _memSavedList() {
@@ -10882,7 +10980,76 @@ function updateMemorizationProgressUI() {
   suggestion.innerHTML = html;
   suggestion.classList.toggle('hidden', !html);
   renderMemorizationSavedList();
+  if (!document.getElementById('memInsightsSheet')?.classList.contains('hidden')) renderMemorizationInsights();
 }
+
+function openMemorizationInsights() {
+  if (!_memCurrent?.id) { _showStudyToast('Start a passage first'); return; }
+  renderMemorizationInsights();
+  const sheet = document.getElementById('memInsightsSheet');
+  if (sheet) { sheet.classList.remove('hidden'); requestAnimationFrame(() => sheet.classList.add('open')); }
+}
+
+function closeMemorizationInsights() {
+  const sheet = document.getElementById('memInsightsSheet');
+  if (!sheet) return;
+  sheet.classList.remove('open');
+  setTimeout(() => sheet.classList.add('hidden'), 200);
+}
+
+function renderMemorizationInsights() {
+  const body = document.getElementById('memInsightsBody');
+  if (!body) return;
+  const titleEl = document.getElementById('memInsightsTitle');
+  if (titleEl) titleEl.textContent = _memCurrent?.ref || 'Progress';
+  const progress = _memGetProgress();
+  const readiness = _memReadiness(progress);
+  const label = _memReadinessLabel(readiness);
+  const ms = progress.modeStats || {};
+  const attempts = Number(progress.attempts || 0);
+
+  const modeChips = Object.keys(MEM_MODE_META)
+    .filter(mode => ms[mode])
+    .map(mode => {
+      const meta = MEM_MODE_META[mode];
+      const stat = ms[mode];
+      return `<div class="mem-stat-chip"><span class="material-symbols-outlined">${meta.icon}</span><div><strong>${Math.round(Number(stat.best || 0))}%</strong><small>${meta.label} · ${stat.attempts}×</small></div></div>`;
+    }).join('');
+
+  const weakWords = _memWeakWords(progress);
+  const weakPhrases = _memWeakPhrases(progress);
+
+  let recommendation;
+  if (readiness >= 95) recommendation = 'You have got this passage. Keep it warm with an occasional recite.';
+  else if (!ms.recite && readiness >= 60) recommendation = 'You are close. Run the Recite round to confirm it is locked in.';
+  else if (weakWords.length) recommendation = `Drill your weak words with Fill blanks or First letter — start with “${weakWords[0].word}”.`;
+  else if (!attempts) recommendation = 'Run any check (Fill blanks, Scramble, or Recite) to start tracking where you struggle.';
+  else recommendation = 'Keep cycling through the tools — every check sharpens the weak spots.';
+
+  body.innerHTML = `
+    <div class="mem-readiness">
+      <div class="mem-readiness-ring" style="--pct:${readiness}">
+        <strong>${readiness}%</strong><small>ready</small>
+      </div>
+      <div class="mem-readiness-text">
+        <span class="mem-readiness-label">${_memEsc(label)}</span>
+        <p>${attempts ? `${attempts} check${attempts === 1 ? '' : 's'} logged so far.` : 'No checks logged yet.'}</p>
+      </div>
+    </div>
+    ${modeChips ? `<div class="mem-insights-section"><span class="mem-kicker">How each tool went</span><div class="mem-stat-grid">${modeChips}</div></div>` : ''}
+    <div class="mem-insights-section">
+      <span class="mem-kicker">Weakest words</span>
+      ${weakWords.length
+        ? `<div class="mem-weak-list">${weakWords.map(w => `<span class="mem-weak-pill"><b>${_memEsc(w.word)}</b><i>missed ${w.miss}×</i></span>`).join('')}</div>`
+        : '<p class="mem-empty">No problem words yet. Run a check and the ones you keep dropping will collect here.</p>'}
+    </div>
+    ${weakPhrases.length ? `<div class="mem-insights-section"><span class="mem-kicker">Phrases out of order</span><div class="mem-weak-list">${weakPhrases.map(p => `<span class="mem-weak-pill phrase"><b>${_memEsc(p.text)}</b><i>${p.miss}×</i></span>`).join('')}</div></div>` : ''}
+    <div class="mem-insights-rec"><span class="material-symbols-outlined">tips_and_updates</span><p>${_memEsc(recommendation || 'Keep cycling through the tools — every check sharpens the weak spots.')}</p></div>
+  `;
+}
+
+window.openMemorizationInsights = openMemorizationInsights;
+window.closeMemorizationInsights = closeMemorizationInsights;
 
 function setMemorizationMode(mode) {
   _memMode = mode === 'voice' ? 'read' : (mode || 'read');
@@ -10905,24 +11072,82 @@ function renderMemorizationPractice() {
   const text = _memCurrent.text;
   if (_memMode === 'blank') card.innerHTML = _memBlankHtml(text);
   else if (_memMode === 'scramble') { card.innerHTML = _memScrambleHtml(text); _memInitScrambleBoard(); }
-  else card.innerHTML = `<div class="mem-rendered-text">${_memRenderTextByMode(text, _memMode)}</div>`;
+  else if (_memMode === 'read') card.innerHTML = `<div class="mem-rendered-text">${_memRenderTextByMode(text, _memMode)}</div>`;
+  else card.innerHTML = _memCueHtml(text, _memMode);
 }
 
-function _memRenderTextByMode(text, mode) {
+// Cue modes (third / keywords / letters / progressive) render the hidden words as
+// tappable cues so the user can self-check and flag the ones they could not recall.
+function _memCueHtml(text, mode) {
   const progressivePct = Math.min(1, 0.25 + Math.floor(Number(_memGetProgress().best || 0) / 25) * 0.25);
-  return _memRenderTokenWords(text, (token, wordIndex) => {
+  let cueCount = 0;
+  const rendered = _memRenderTokenWords(text, (token, wordIndex) => {
     const clean = token.replace(/[^A-Za-z0-9]/g, '');
-    const hide = mode === 'third'
+    const isCue = mode === 'third'
       ? wordIndex % 3 === 0
       : mode === 'keywords'
         ? clean.length >= 6
         : mode === 'progressive'
           ? ((wordIndex * 37) % 100) < progressivePct * 100
-          : false;
-    if (mode === 'letters') return `<span class="mem-first-letter">${_memEsc(clean[0] || '')}</span>`;
-    return hide ? `<span class="mem-hidden-word">${'&nbsp;'.repeat(Math.max(4, Math.min(clean.length, 14)))}</span>` : _memEsc(token);
+          : true; // letters: every word is a cue
+    if (!isCue) return _memEsc(token);
+    cueCount += 1;
+    const face = mode === 'letters'
+      ? `${_memEsc(clean[0] || '')}<i>${'·'.repeat(Math.max(1, Math.min(clean.length - 1, 9)))}</i>`
+      : '&nbsp;'.repeat(Math.max(3, Math.min(clean.length, 12)));
+    return `<button type="button" class="mem-cue-word" data-word="${_memEsc(clean)}" onclick="_memToggleCueWord(this)"><span class="mem-cue-face">${face}</span><span class="mem-cue-reveal">${_memEsc(token)}</span></button>`;
   });
+  if (!cueCount) return `<div class="mem-rendered-text">${rendered}</div>`;
+  return `<div class="mem-rendered-text mem-cue-text">${rendered}</div>
+    <div class="mem-cue-bar">
+      <p class="mem-cue-hint"><span class="material-symbols-outlined">touch_app</span>Recall each cue, then tap to reveal. Tap again if you actually knew it.</p>
+      <div class="mem-cue-actions">
+        <button class="mem-secondary-btn" onclick="_memRevealAllCues()"><span class="material-symbols-outlined">visibility</span>Reveal all</button>
+        <button class="mem-primary-btn" onclick="checkMemorizationRecall()"><span class="material-symbols-outlined">done_all</span>Save check</button>
+      </div>
+    </div>
+    <div class="mem-cue-result hidden" id="memCueResult"></div>`;
 }
+
+function _memRenderTextByMode(text, mode) {
+  return _memRenderTokenWords(text, token => _memEsc(token));
+}
+
+function _memToggleCueWord(btn) {
+  if (!btn.classList.contains('revealed')) {
+    btn.classList.add('revealed', 'missed');
+  } else {
+    btn.classList.toggle('missed');
+  }
+}
+
+function _memRevealAllCues() {
+  document.querySelectorAll('#memPracticeCard .mem-cue-word').forEach(btn => btn.classList.add('revealed'));
+}
+
+function checkMemorizationRecall() {
+  const cues = [...document.querySelectorAll('#memPracticeCard .mem-cue-word')];
+  if (!cues.length) return;
+  const seenWords = cues.map(c => c.dataset.word || '');
+  const weakWords = cues.filter(c => c.classList.contains('revealed') && c.classList.contains('missed')).map(c => c.dataset.word || '');
+  cues.forEach(c => c.classList.add('revealed'));
+  const total = cues.length;
+  const missed = weakWords.length;
+  const score = Math.round(((total - missed) / total) * 100);
+  _memSaveProgress(score, { mode: 'recall', seenWords, weakWords });
+  const result = document.getElementById('memCueResult');
+  if (result) {
+    result.classList.remove('hidden');
+    result.className = 'mem-cue-result ' + (missed === 0 ? 'good' : 'needs-work');
+    result.innerHTML = missed === 0
+      ? `<span class="material-symbols-outlined">verified</span><div><strong>${score}% recalled</strong><span>You flagged nothing as missed. Try reciting it out loud next.</span></div>`
+      : `<span class="material-symbols-outlined">target</span><div><strong>${score}% recalled</strong><span>${missed} word${missed === 1 ? '' : 's'} flagged. They are saved to your weak spots. <button class="mem-link-btn" onclick="openMemorizationInsights()">See progress</button></span></div>`;
+  }
+}
+
+window._memToggleCueWord = _memToggleCueWord;
+window._memRevealAllCues = _memRevealAllCues;
+window.checkMemorizationRecall = checkMemorizationRecall;
 
 function _memBlankHtml(text) {
   const words = _memWords(text);
@@ -10937,16 +11162,20 @@ function _memBlankHtml(text) {
 
 function checkMemorizationBlanks() {
   let total = 0, right = 0;
+  const seenWords = [], weakWords = [];
   document.querySelectorAll('#memPracticeCard .mem-blank-input').forEach(input => {
     total += 1;
-    const ok = (_memWords(input.dataset.answer || '')[0] || '') === (_memWords(input.value || '')[0] || '');
+    const answer = input.dataset.answer || '';
+    seenWords.push(answer);
+    const ok = (_memWords(answer)[0] || '') === (_memWords(input.value || '')[0] || '');
     if (ok) right += 1;
+    else weakWords.push(answer);
     input.classList.toggle('correct', ok);
     input.classList.toggle('wrong', !ok && !!input.value);
   });
   const score = total ? Math.round((right / total) * 100) : 0;
-  _memSaveProgress(score);
-  document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card"><strong>${score}% on the blanks</strong><p>${right}/${total} right. ${score >= 90 ? 'Very sturdy.' : 'A few words are still slippery.'}</p></div>`;
+  _memSaveProgress(score, { mode: 'blank', seenWords, weakWords });
+  document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card"><strong>${score}% on the blanks</strong><p>${right}/${total} right. ${score >= 90 ? 'Very sturdy.' : 'A few words are still slippery.'} <button class="mem-link-btn" onclick="openMemorizationInsights()">See progress</button></p></div>`;
 }
 
 function _memScrambleChunks(text) {
@@ -11125,8 +11354,10 @@ function checkMemorizationScramble() {
   const total = tiles.length;
   const allRight = correct === total;
   const score = total ? Math.round((correct / total) * 100) : 0;
+  const weakPhrases = tiles.filter((t, pos) => Number(t.dataset.correct) !== pos)
+    .map(t => t.querySelector('.mem-tile-text')?.textContent || '');
   // Reserve a perfect 100 (and the "memorized" badge) for spoken recitation.
-  _memSaveProgress(allRight ? 99 : Math.min(score, 90));
+  _memSaveProgress(allRight ? 99 : Math.min(score, 90), { mode: 'scramble', weakPhrases });
   const result = document.getElementById('memScrambleResult');
   if (result) {
     result.dataset.checked = '1';
@@ -11275,7 +11506,7 @@ function scoreMemorizationRecitation(transcript = '') {
   const target = _memWords(_memCurrent.text);
   const spoken = _memPrepareSpokenWords(transcript, target);
   const result = _memLcsCompare(target, spoken);
-  _memSaveProgress(result.score);
+  _memSaveProgress(result.score, { mode: 'recite', seenWords: target, weakWords: result.missing });
   const missed = _memGroupWords(result.missing);
   const added = _memGroupWords(result.hardAdded);
   const jab = result.score >= 95 ? 'That was clean. The scroll is impressed.'
@@ -11287,6 +11518,7 @@ function scoreMemorizationRecitation(transcript = '') {
     <p>${jab}</p>
     ${missed.length ? `<div class="mem-feedback-list"><span>Missed</span>${missed.map(x => `<em>${_memEsc(x)}</em>`).join('')}</div>` : '<div class="mem-feedback-list"><span>Missed</span><em>Nothing major.</em></div>'}
     ${added.length ? `<div class="mem-feedback-list"><span>Added</span>${added.map(x => `<em>${_memEsc(x)}</em>`).join('')}</div>` : ''}
+    <button class="mem-link-btn" onclick="openMemorizationInsights()"><span class="material-symbols-outlined">insights</span>See progress &amp; weak spots</button>
   </div>`;
   return result;
 }
@@ -20344,7 +20576,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.204";
+const APP_VERSION = "3.0.205";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20365,6 +20597,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.205 &mdash; Memorization Progress &amp; Weak Spots</div>
+<ul>
+  <li><strong>Progress button per passage</strong> &mdash; Every reference now has a Progress button that shows a readiness estimate, how each tool went, and the exact words you keep missing.</li>
+  <li><strong>Every tool can be checked</strong> &mdash; Fill blanks, Scramble, and the hide-word modes (Every 3rd, Key words, First letter, Vanish) now have a Save/Check step, and recitation already scored &mdash; so each practice mode tells you how you did.</li>
+  <li><strong>Weak spots are remembered</strong> &mdash; Missed words and out-of-order phrases are saved across attempts so your weakest parts surface at the top of the progress sheet with a focused recommendation.</li>
+  <li><strong>Layout fixes</strong> &mdash; The workshop now pins to the full screen height (no stray white bar) and sits flush edge-to-edge instead of shifting to one side.</li>
+</ul>
 <div class="un-version-label">v3.0.204 &mdash; Memorization Workshop Rebuild</div>
 <ul>
   <li><strong>Tabbed memorization hub</strong> &mdash; The tool now opens to a hub with two tabs: <em>New verse</em> for picking a reference (with a live preview) or pasting text, and <em>My verses</em> for reopening saved passages filtered by All, In progress, and Memorized.</li>

@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.204" rel="stylesheet"/>
+<link href="style.css?v=3.0.205" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -659,7 +659,7 @@ Habit Builder</span>
 <span class="mem-kicker">Current passage</span>
 <h2 id="memCurrentRef">Passage</h2>
 </div>
-<span class="mem-best-chip"><span class="material-symbols-outlined">workspace_premium</span><span id="memBestScore">0%</span></span>
+<button class="mem-progress-btn" onclick="openMemorizationInsights()" aria-label="See progress and weak spots"><span class="material-symbols-outlined">insights</span><span id="memBestScore">0%</span></button>
 </div>
 <div class="mem-suggestion hidden" id="memSuggestion"></div>
 <article class="mem-verse-stage" id="memPracticeCard">
@@ -700,6 +700,21 @@ Habit Builder</span>
 </section>
 
 <div style="height:40px"></div>
+</div>
+</div>
+
+<!-- ============ PROGRESS / INSIGHTS SHEET ============ -->
+<div class="mem-insights-sheet hidden" id="memInsightsSheet">
+<div class="mem-insights-backdrop" onclick="closeMemorizationInsights()"></div>
+<div class="mem-insights-panel" role="dialog" aria-label="Memorization progress">
+<header class="mem-insights-head">
+<div class="mem-title-stack" style="text-align:left">
+<span class="mem-kicker">Progress &amp; weak spots</span>
+<strong id="memInsightsTitle">Passage</strong>
+</div>
+<button class="mem-icon-btn" onclick="closeMemorizationInsights()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</header>
+<div class="mem-insights-body" id="memInsightsBody"></div>
 </div>
 </div>
 
@@ -16653,7 +16668,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.204"></script>
+<script src="app.js?v=3.0.205"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
