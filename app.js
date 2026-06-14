@@ -20344,7 +20344,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.203";
+const APP_VERSION = "3.0.204";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20365,6 +20365,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.204 &mdash; Memorization Workshop Rebuild</div>
+<ul>
+  <li><strong>Tabbed memorization hub</strong> &mdash; The tool now opens to a hub with two tabs: <em>New verse</em> for picking a reference (with a live preview) or pasting text, and <em>My verses</em> for reopening saved passages filtered by All, In progress, and Memorized.</li>
+  <li><strong>Dedicated full-screen workshop</strong> &mdash; Starting or tapping a verse opens a focused workshop with every practice tool, so each view fits any phone screen instead of one long scroll.</li>
+  <li><strong>Drag-to-order scramble</strong> &mdash; Scramble is now an interactive puzzle: press and hold a phrase to drag it, tiles snap into place, and a Check order button marks misplaced phrases red and tells you how many still need to move.</li>
+</ul>
 <div class="un-version-label">v3.0.203 &mdash; Memorization Full Screen</div>
 <ul>
   <li><strong>Edge-to-edge memorization workspace</strong> &mdash; Memorization now escapes the normal app container, hides the bottom nav, and uses the full screen with a home button in the top bar.</li>
