@@ -10407,6 +10407,7 @@ let _memFinalTranscript = '';
 let _memInterimTranscript = '';
 let _memSpeechErrored = false;
 let _memSavedFilter = 'all';
+let _memLastRecitation = null;
 const MEM_SAVED_KEY = 'memorizationSavedPassages';
 const MEM_MIC_ALLOWED_KEY = 'memorizationMicAllowed';
 
@@ -10415,13 +10416,33 @@ const MEM_FILLER_WORDS = new Set([
   'so','well','actually','just','let','lets','lemme','start','again'
 ]);
 const MEM_SOFT_EXTRA_WORDS = new Set(['and','but','so','then']);
-const MEM_SOUNDALIKE_WORDS = new Map([
-  ['and', new Set(['an'])],
-  ['an', new Set(['and'])],
-  ['to', new Set(['too', 'two'])],
-  ['too', new Set(['to', 'two'])],
-  ['two', new Set(['to', 'too'])]
-]);
+// Words that commonly come back from speech-to-text as a near-homophone, or
+// that get slurred together in fast recitation. These let the matcher anticipate
+// what a word "should" have sounded like and offer a "did you mean" confirmation.
+const MEM_SOUNDALIKE_PAIRS = [
+  ['and', 'an'],
+  ['to', 'too'], ['to', 'two'], ['too', 'two'],
+  ['their', 'there'], ['their', 'theyre'], ['there', 'theyre'],
+  ['your', 'youre'], ['its', 'its'],
+  ['here', 'hear'], ['no', 'know'], ['knew', 'new'],
+  ['son', 'sun'], ['for', 'four'], ['for', 'fore'],
+  ['be', 'bee'], ['by', 'buy'], ['by', 'bye'],
+  ['whose', 'whos'], ['were', 'where'], ['were', 'wear'],
+  ['thee', 'thy'], ['thou', 'though'], ['hath', 'has'],
+  ['o', 'oh'], ['ye', 'yee'], ['holy', 'wholly'],
+  ['peace', 'piece'], ['grace', 'graced'], ['lord', 'lords'],
+  ['through', 'thru'], ['unto', 'into'], ['will', 'well']
+];
+const MEM_SOUNDALIKE_WORDS = (() => {
+  const map = new Map();
+  const add = (a, b) => {
+    if (a === b) return;
+    if (!map.has(a)) map.set(a, new Set());
+    map.get(a).add(b);
+  };
+  MEM_SOUNDALIKE_PAIRS.forEach(([a, b]) => { add(a, b); add(b, a); });
+  return map;
+})();
 const MEM_CONTRACTIONS = {
   "cant": "can not",
   "cannot": "can not",
@@ -10869,9 +10890,15 @@ function _memRefLabel({ bookName, chapter, start, end, version } = {}) {
 
 function updateMemorizationCopyLink() {
   const el = document.getElementById('memCopyLinkText');
-  if (!el) return;
-  const ref = _memSource === 'paste' ? (document.getElementById('memPasteRef')?.value || 'selected passage') : _memRefLabel(_memCurrentRefParts());
-  el.textContent = _memSelectedVersion() === 'BSB' ? 'Open BSB copy page' : `Find ${ref}`;
+  if (el) {
+    const parts = _memCurrentRefParts();
+    el.textContent = `Find ${parts.bookName || 'passage'} ${parts.start === parts.end ? `${parts.chapter}:${parts.start}` : `${parts.chapter}:${parts.start}-${parts.end}`}`;
+  }
+  const pasteFind = document.getElementById('memPasteFindText');
+  if (pasteFind) {
+    const ref = (document.getElementById('memPasteRef')?.value || '').trim();
+    pasteFind.textContent = ref ? `Find ${ref}` : 'Find verse';
+  }
   _memUpdateVersePreview();
 }
 
@@ -10898,10 +10925,20 @@ function _memBibleHubBookPath(bookName = '') {
 }
 
 function openMemorizationCopySource() {
-  const parts = _memCurrentRefParts();
-  const url = _memSource === 'verse' && parts.version === 'BSB'
-    ? `https://biblehub.com/bsb/${_memBibleHubBookPath(parts.bookName)}/${parts.chapter}.htm`
-    : `https://www.google.com/search?q=${encodeURIComponent((_memSource === 'paste' ? (document.getElementById('memPasteRef')?.value || 'Bible verse') : `${parts.version} ${_memRefLabel(parts)}`) + ' copy text')}`;
+  let url;
+  if (_memSource === 'verse') {
+    // BibleHub's single-verse page lists every major translation side by side,
+    // so it is the cleanest place to copy the exact reference in any version.
+    const parts = _memCurrentRefParts();
+    url = `https://biblehub.com/${_memBibleHubBookPath(parts.bookName)}/${parts.chapter}-${parts.start}.htm`;
+  } else {
+    // Keep the web query short so the first result is a copyable verse page.
+    // The translation is folded in here, so the user never types it into Google.
+    const ref = (document.getElementById('memPasteRef')?.value || '').trim();
+    const translation = (document.getElementById('memPasteTranslation')?.value || '').trim();
+    const query = [ref || 'Bible verse', translation].filter(Boolean).join(' ');
+    url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+  }
   window.open(url, '_blank', 'noopener');
 }
 
@@ -10949,25 +10986,63 @@ function updateMemorizationProgressUI() {
   if (refEl) refEl.textContent = _memCurrent?.ref || 'Choose a passage';
   if (headerEl) headerEl.textContent = _memCurrent?.ref || 'Choose a passage';
   const progress = _memGetProgress();
-  if (bestEl) bestEl.textContent = `${Math.round(progress.best || 0)}%`;
+  const overall = _memOverallScore(progress);
+  if (bestEl) bestEl.textContent = `${overall}%`;
   if (!suggestion) return;
-  const best = Number(progress.best || 0);
+  const triedVoice = Number(progress.modeStats?.voice?.attempts || 0) > 0;
   let html = '';
-  if (_memCurrent && best >= 92) html = '<strong>You are cooking.</strong> Final round is ready when you are.';
-  else if (_memCurrent && best >= 82 && !['progressive','blank'].includes(_memMode)) html = '<strong>Looks like it is sticking.</strong> Try Vanish or Fill Blanks for a cleaner challenge.';
+  if (_memCurrent && overall >= 88 && !triedVoice) html = '<strong>Drills look great.</strong> Recite it out loud to lock in the score.';
+  else if (_memCurrent && overall >= 92) html = '<strong>You are cooking.</strong> Final round is ready when you are.';
+  else if (_memCurrent && overall >= 78 && !['progressive','blank'].includes(_memMode)) html = '<strong>Looks like it is sticking.</strong> Try Vanish or Fill Blanks for a cleaner challenge.';
   suggestion.innerHTML = html;
   suggestion.classList.toggle('hidden', !html);
   renderMemorizationSavedList();
 }
 
+// A single drill (one Scramble or one Fill-blanks pass) should NOT make the
+// passage look 99% memorized. The headline number blends the scored modes,
+// scales by how many different drills have actually been tried, and treats a
+// spoken recitation as the authoritative test of real memorization.
+function _memOverallScore(progress = _memGetProgress()) {
+  const ms = progress.modeStats || {};
+  const bestOf = mode => Number(ms[mode]?.best || 0);
+  const tried = mode => Number(ms[mode]?.attempts || 0) > 0;
+  // Drills that support memorization (everything except spoken recitation).
+  const support = [
+    { mode: 'blank', weight: 1.0 },
+    { mode: 'third', weight: 0.85 },
+    { mode: 'scramble', weight: 0.7 }
+  ];
+  let triedWeight = 0, weightedSum = 0, totalWeight = 0;
+  support.forEach(({ mode, weight }) => {
+    totalWeight += weight;
+    if (tried(mode)) { triedWeight += weight; weightedSum += weight * bestOf(mode); }
+  });
+  const supportAvg = triedWeight ? weightedSum / triedWeight : 0;
+  const supportCoverage = totalWeight ? triedWeight / totalWeight : 0;
+  // Drill score is held back until several different drills agree.
+  const supportScore = supportAvg * (0.45 + 0.4 * supportCoverage);
+  if (!tried('voice')) {
+    // No spoken check yet: drills alone can never read as fully memorized.
+    return Math.round(Math.max(0, Math.min(90, supportScore)));
+  }
+  const voice = bestOf('voice');
+  if (voice >= 100) return 100;
+  // Spoken recitation leads; drills nudge it up a little.
+  const blended = Math.max(voice, voice * 0.9 + supportScore * 0.1);
+  return Math.round(Math.max(0, Math.min(99, blended)));
+}
+
 function _memProgressReadiness(progress = _memGetProgress()) {
-  const best = Number(progress.best || 0);
+  const overall = _memOverallScore(progress);
   const attempts = Number(progress.attempts || 0);
+  const triedVoice = Number(progress.modeStats?.voice?.attempts || 0) > 0;
   if (!attempts) return { label: 'Not checked yet', copy: 'Try Fill blanks, Scramble, or a voice recitation and this will start learning your weak spots.' };
-  if (best >= 100) return { label: 'Memorized', copy: 'Perfect spoken recitation is on the board. Keep it warm with a quick review later.' };
-  if (best >= 95) return { label: 'Almost locked', copy: 'You are close enough that the last few misses matter. Drill the weak phrases below.' };
-  if (best >= 85) return { label: 'Very close', copy: 'The shape is there. Tighten the specific words that keep falling out.' };
-  if (best >= 70) return { label: 'Taking shape', copy: 'You know the road. Use Vanish or Fill blanks before the next spoken check.' };
+  if (overall >= 100) return { label: 'Memorized', copy: 'Perfect spoken recitation is on the board. Keep it warm with a quick review later.' };
+  if (overall >= 95) return { label: 'Almost locked', copy: 'You are close enough that the last few misses matter. Drill the weak phrases below.' };
+  if (overall >= 85) return { label: 'Very close', copy: triedVoice ? 'The shape is there. Tighten the specific words that keep falling out.' : 'Strong on the drills — now prove it with a spoken recitation to lock it in.' };
+  if (overall >= 70) return { label: 'Taking shape', copy: 'You know the road. Use Vanish or Fill blanks before the next spoken check.' };
+  if (overall >= 45) return { label: 'Building fast', copy: triedVoice ? 'Good progress. Keep reciting and chip away at the weak words below.' : 'Nice start on the drills. Mix in another mode, then recite it out loud.' };
   return { label: 'Still building', copy: 'Stay slow and honest. Read it once, then use First letter before trying to recite.' };
 }
 
@@ -10995,6 +11070,7 @@ function renderMemorizationProgress() {
   }
   const progress = _memGetProgress(_memCurrent.id);
   const readiness = _memProgressReadiness(progress);
+  const overall = _memOverallScore(progress);
   const topWords = _memTopEntries(progress.weakWords, 8);
   const topPhrases = _memTopEntries(progress.weakPhrases, 5);
   const modeStats = Object.entries(progress.modeStats || {})
@@ -11003,10 +11079,10 @@ function renderMemorizationProgress() {
   content.innerHTML = `
     <section class="mem-progress-hero">
       <div><span class="mem-kicker">How close?</span><strong>${_memEsc(readiness.label)}</strong><p>${_memEsc(readiness.copy)}</p></div>
-      <div class="mem-progress-ring"><strong>${Math.round(progress.best || 0)}%</strong><span>best</span></div>
+      <div class="mem-progress-ring"><strong>${overall}%</strong><span>memorized</span></div>
     </section>
     <div class="mem-progress-stats">
-      <div><strong>${Math.round(progress.last || 0)}%</strong><span>latest</span></div>
+      <div><strong>${Math.round(progress.best || 0)}%</strong><span>best run</span></div>
       <div><strong>${Number(progress.attempts || 0)}</strong><span>checks</span></div>
       <div><strong>${recent[0] ? _memEsc(_memModeLabel(recent[0].mode)) : 'None'}</strong><span>last mode</span></div>
     </div>
@@ -11101,7 +11177,7 @@ function _memThirdDropHtml(text) {
       <button class="mem-secondary-btn" onclick="resetMemorizationThirdDrop()"><span class="material-symbols-outlined">restart_alt</span>Reset</button>
       <button class="mem-primary-btn" onclick="checkMemorizationThirdDrop()"><span class="material-symbols-outlined">task_alt</span>Check words</button>
     </div>
-    <div class="mem-scramble-result" id="memThirdResult"><span class="material-symbols-outlined">touch_app</span><div><strong>Fill every third word</strong><span>Drag a word into a blank, or tap a word and then a blank.</span></div></div>`;
+    <div class="mem-scramble-result" id="memThirdResult"><span class="material-symbols-outlined">touch_app</span><div><strong>Fill every third word</strong><span>Tap a word, then press the blank space where you think it belongs.</span></div></div>`;
 }
 
 let _memThirdSelected = null;
@@ -11292,7 +11368,7 @@ function _memScrambleHtml(text) {
       <button class="mem-secondary-btn" onclick="shuffleMemorizationScramble()"><span class="material-symbols-outlined">shuffle</span>Shuffle</button>
       <button class="mem-primary-btn" onclick="checkMemorizationScramble()"><span class="material-symbols-outlined">task_alt</span>Check order</button>
     </div>
-    <div class="mem-scramble-result" id="memScrambleResult"><span class="material-symbols-outlined">touch_app</span><div><strong>Put the phrases in order</strong><span>Press and hold a phrase, then drag it into place.</span></div></div>`;
+    <div class="mem-scramble-result" id="memScrambleResult"><span class="material-symbols-outlined">touch_app</span><div><strong>Put the phrases in order</strong><span>Touch a phrase and drag it into place.</span></div></div>`;
 }
 
 let _memScrambleDrag = null;
@@ -11441,7 +11517,7 @@ function checkMemorizationScramble() {
     result.className = 'mem-scramble-result ' + (allRight ? 'good' : 'needs-work');
     result.innerHTML = allRight
       ? `<span class="material-symbols-outlined">verified</span><div><strong>Perfect order!</strong><span>All ${total} phrases are exactly right. Try reciting it out loud next.</span></div>`
-      : `<span class="material-symbols-outlined">swap_vert</span><div><strong>${total - correct} out of place</strong><span>The red phrases marked “incorrect” need to move. Press and hold one to slide it.</span></div>`;
+      : `<span class="material-symbols-outlined">swap_vert</span><div><strong>${total - correct} out of place</strong><span>The red phrases marked “incorrect” need to move. Drag one into place.</span></div>`;
   }
 }
 
@@ -11469,13 +11545,14 @@ function _memLcsCompare(targetWords, spokenWords) {
     }
   }
   const matchedTarget = new Set(), matchedSpoken = new Set(), fuzzyMatches = [];
-  let i = 0, j = 0;
+  let i = 0, j = 0, exactMatched = 0;
   while (i < n && j < m) {
     if (choice[i][j] === 'take') {
       const sim = _memWordSimilarity(targetWords[i], spokenWords[j]);
       matchedTarget.add(i);
       matchedSpoken.add(j);
-      if (sim < 1) fuzzyMatches.push({ target: targetWords[i], spoken: spokenWords[j], sim });
+      if (sim < 1) fuzzyMatches.push({ target: targetWords[i], spoken: spokenWords[j], sim, ti: i });
+      else exactMatched++;
       i++;
       j++;
     } else if (choice[i][j] === 'skipTarget') i++;
@@ -11484,12 +11561,32 @@ function _memLcsCompare(targetWords, spokenWords) {
   const missing = targetWords.map((w, idx) => matchedTarget.has(idx) ? null : w).filter(Boolean);
   const added = spokenWords.map((w, idx) => matchedSpoken.has(idx) ? null : w).filter(Boolean);
   const hardAdded = added.filter(w => !MEM_SOFT_EXTRA_WORDS.has(w));
-  const fuzzyPenalty = fuzzyMatches.reduce((sum, item) => sum + (1 - item.sim), 0) * 1.8;
+  return { matched: matchedTarget.size, exactMatched, missing, added, hardAdded, fuzzyMatches, total: n };
+}
+
+// Turn the alignment into a score. Fuzzy (slurred / near-homophone) matches
+// count at their similarity by default, but the user can confirm them as right
+// ("did you mean…") which lifts them to a clean hit, or reject them as a miss.
+function _memScoreRecitation(result, decisions = {}) {
+  const n = Number(result.total || 0);
+  if (!n) return { score: 0, missing: [], hardAdded: [] };
+  let credit = Number(result.exactMatched || 0);
+  const missing = result.missing.slice();
+  const hardAdded = result.hardAdded.slice();
+  (result.fuzzyMatches || []).forEach(fm => {
+    const decision = decisions[fm.ti];
+    if (decision === 'yes') credit += 1;            // confirmed correct → full credit
+    else if (decision === 'no') {                   // rejected → it becomes a miss + an extra word
+      missing.push(fm.target);
+      if (!MEM_SOFT_EXTRA_WORDS.has(fm.spoken)) hardAdded.push(fm.spoken);
+    } else credit += fm.sim;                         // undecided → partial credit
+  });
   const additionPenalty = Math.min(12, hardAdded.length * 2.25);
-  const base = n ? (Math.max(0, dp[0][0]) / n) * 100 : 0;
-  const exactClean = n > 0 && matchedTarget.size === n && hardAdded.length === 0 && fuzzyMatches.length === 0;
-  const score = exactClean ? 100 : Math.max(0, Math.min(99, Math.round(base - additionPenalty - fuzzyPenalty)));
-  return { score, matched: matchedTarget.size, missing, added, hardAdded, fuzzyMatches };
+  const base = (credit / n) * 100;
+  const undecidedFuzzy = (result.fuzzyMatches || []).some(fm => !decisions[fm.ti]);
+  const clean = credit >= n && hardAdded.length === 0 && !undecidedFuzzy;
+  const score = clean ? 100 : Math.max(0, Math.min(99, Math.round(base - additionPenalty)));
+  return { score, missing, hardAdded };
 }
 
 function _memPrepareSpokenWords(transcript = '', targetWords = []) {
@@ -11583,27 +11680,125 @@ function scoreMemorizationRecitation(transcript = '') {
   const target = _memWords(_memCurrent.text);
   const spoken = _memPrepareSpokenWords(transcript, target);
   const result = _memLcsCompare(target, spoken);
-  _memSaveProgress(result.score, {
+  // Only the genuinely ambiguous fuzzy matches become "did you mean" questions;
+  // very close slips are accepted silently, very far ones are just misses.
+  result.queries = (result.fuzzyMatches || []).filter(fm => fm.sim >= 0.74 && fm.sim < 0.97 && fm.spoken !== fm.target);
+  _memLastRecitation = { target, spoken, result, decisions: {} };
+  const scored = _memScoreRecitation(result, {});
+  _memSaveProgress(scored.score, {
     mode: 'voice',
     label: 'Voice recitation',
-    missingWords: result.missing,
-    addedWords: result.hardAdded,
-    weakPhrases: _memGroupWords(result.missing, 6),
+    missingWords: scored.missing,
+    addedWords: scored.hardAdded,
+    weakPhrases: _memGroupWords(scored.missing, 6),
     fuzzyMatches: result.fuzzyMatches
   });
-  const missed = _memGroupWords(result.missing);
-  const added = _memGroupWords(result.hardAdded);
-  const jab = result.score >= 95 ? 'That was clean. The scroll is impressed.'
-    : result.score >= 85 ? 'Very close. A few words tried to escape.'
-    : result.score >= 65 ? 'Solid bones. The details need another lap.'
-    : 'No shame. The verse is still under construction.';
-  document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card ${result.score >= 85 ? 'good' : result.score >= 65 ? 'okay' : 'needs-work'}">
-    <div class="mem-feedback-score"><strong>${result.score}% accurate</strong><span>${result.matched}/${target.length} words matched</span></div>
-    <p>${jab}</p>
-    ${missed.length ? `<div class="mem-feedback-list"><span>Missed</span>${missed.map(x => `<em>${_memEsc(x)}</em>`).join('')}</div>` : '<div class="mem-feedback-list"><span>Missed</span><em>Nothing major.</em></div>'}
-    ${added.length ? `<div class="mem-feedback-list"><span>Added</span>${added.map(x => `<em>${_memEsc(x)}</em>`).join('')}</div>` : ''}
-  </div>`;
+  _memRenderRecitationFeedback();
   return result;
+}
+
+function _memRenderRecitationFeedback() {
+  const el = document.getElementById('memFeedback');
+  if (!el || !_memLastRecitation) return;
+  const { target, result, decisions } = _memLastRecitation;
+  const scored = _memScoreRecitation(result, decisions);
+  const score = scored.score;
+  const matched = target.length - scored.missing.length;
+  const jab = score >= 95 ? 'That was clean. The scroll is impressed.'
+    : score >= 85 ? 'Very close. A few words tried to escape.'
+    : score >= 65 ? 'Solid bones. The details need another lap.'
+    : 'No shame. The verse is still under construction.';
+  const tone = score >= 85 ? 'good' : score >= 65 ? 'okay' : 'needs-work';
+
+  // Slurred-word confirmations: "Sounded like X — did you mean Y?"
+  const queries = (result.queries || []);
+  const dymHtml = queries.length ? `
+    <div class="mem-didyoumean">
+      <span class="mem-didyoumean-head"><span class="material-symbols-outlined">hearing</span>Sounded a little off — did you mean…</span>
+      ${queries.map(fm => {
+        const d = decisions[fm.ti];
+        const resolved = d === 'yes' ? 'resolved-yes' : d === 'no' ? 'resolved-no' : '';
+        const note = d === 'yes' ? '<div class="mem-dym-resolved">Counted as correct.</div>'
+          : d === 'no' ? '<div class="mem-dym-resolved">Counted as missed.</div>' : '';
+        return `<div class="mem-dym-card ${resolved}">
+          <p>Sounded like you said <strong>“${_memEsc(fm.spoken)}”</strong> — did you mean <strong>“${_memEsc(fm.target)}”</strong>?</p>
+          <div class="mem-dym-actions">
+            <button class="mem-dym-yes" onclick="memDecideFuzzy(${fm.ti}, 'yes')"><span class="material-symbols-outlined">check</span>Yes, I did</button>
+            <button class="mem-dym-no" onclick="memDecideFuzzy(${fm.ti}, 'no')"><span class="material-symbols-outlined">close</span>No, missed it</button>
+          </div>
+          ${note}
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  const missedHtml = scored.missing.length
+    ? `<div class="mem-feedback-list"><span>Missed words (${scored.missing.length})</span><div class="mem-word-chips missed">${scored.missing.map(w => `<span>${_memEsc(w)}</span>`).join('')}</div></div>`
+    : `<div class="mem-feedback-list"><span>Missed words</span><div class="mem-word-chips missed"><span class="mem-chip-clean">None — every word landed</span></div></div>`;
+  const addedHtml = scored.hardAdded.length
+    ? `<div class="mem-feedback-list"><span>Extra words (${scored.hardAdded.length})</span><div class="mem-word-chips extra">${scored.hardAdded.map(w => `<span>${_memEsc(w)}</span>`).join('')}</div></div>`
+    : '';
+
+  el.innerHTML = `<div class="mem-feedback-card ${tone}">
+    <div class="mem-feedback-score"><strong>${score}% accurate</strong><span>${matched}/${target.length} words matched</span></div>
+    <p>${jab}</p>
+    ${dymHtml}
+    ${missedHtml}
+    ${addedHtml}
+  </div>`;
+}
+
+function memDecideFuzzy(ti, decision) {
+  if (!_memLastRecitation) return;
+  _memLastRecitation.decisions[ti] = decision;
+  const scored = _memScoreRecitation(_memLastRecitation.result, _memLastRecitation.decisions);
+  // Update the saved score in place — confirming a slurred word should not look
+  // like a brand-new attempt, it just corrects the one we already logged.
+  _memReviseLastRecitation(scored.score, {
+    missingWords: scored.missing,
+    addedWords: scored.hardAdded,
+    weakPhrases: _memGroupWords(scored.missing, 6)
+  });
+  _memRenderRecitationFeedback();
+}
+window.memDecideFuzzy = memDecideFuzzy;
+
+// Revise the most recent recitation log without inflating the attempt count.
+function _memReviseLastRecitation(score, details = {}) {
+  if (!_memCurrent?.id) return;
+  const prev = _memGetProgress(_memCurrent.id);
+  if (!prev.history.length) return _memSaveProgress(score, { mode: 'voice', label: 'Voice recitation', ...details });
+  const cleanScore = Math.max(0, Math.min(100, Math.round(Number(score || 0))));
+  const history = prev.history.slice();
+  const lastIdx = history.length - 1;
+  const last = { ...history[lastIdx] };
+  if (last.mode !== 'voice') return;
+  last.score = cleanScore;
+  if (Array.isArray(details.missingWords)) last.missingWords = details.missingWords.slice(0, 30);
+  if (Array.isArray(details.addedWords)) last.addedWords = details.addedWords.slice(0, 20);
+  if (Array.isArray(details.weakPhrases)) last.weakPhrases = details.weakPhrases.slice(0, 10);
+  history[lastIdx] = last;
+  const best = history.reduce((max, h) => Math.max(max, Number(h.score || 0)), 0);
+  const voicePrev = prev.modeStats?.voice || {};
+  const next = {
+    ...prev,
+    best,
+    last: cleanScore,
+    history,
+    weakWords: _memBumpCountMap({}, [].concat(...history.map(h => h.missingWords || [])), 1),
+    modeStats: {
+      ...prev.modeStats,
+      voice: {
+        ...voicePrev,
+        best: Math.max(Number(voicePrev.best || 0), cleanScore),
+        last: cleanScore,
+        updatedAt: Date.now()
+      }
+    }
+  };
+  localStorage.setItem(_memStorageKey(_memCurrent.id), JSON.stringify(next));
+  _memUpsertSavedPassage(_memCurrent, next);
+  updateMemorizationProgressUI();
+  renderMemorizationProgress();
 }
 
 function _memSetRecitationStatus(text) {
@@ -20705,7 +20900,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.209";
+const APP_VERSION = "3.0.210";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20726,6 +20921,15 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.210 &mdash; Memorization Polish &amp; Smarter Recitation</div>
+<ul>
+  <li><strong>No more stray bottom bar</strong> &mdash; The memorization workshop drops the leftover divider line near the bottom and keeps any fixed app bars out of the full-screen view.</li>
+  <li><strong>Roomier, centered workshop header</strong> &mdash; The Scripture workshop title sits a little lower with more breathing room so it is better centered at the top.</li>
+  <li><strong>Cleaner copy flow</strong> &mdash; <em>Find verse</em> now opens a single clean copy page for the exact reference, and the paste tool takes an optional translation that is folded into a short web search for you, so you never type the version into Google.</li>
+  <li><strong>Honest progress tracker</strong> &mdash; The headline percentage now blends every drill you have tried and only reaches &ldquo;memorized&rdquo; after a spoken recitation, so one perfect Scramble no longer jumps you to 99%.</li>
+  <li><strong>Friendlier Every-3rd instructions</strong> &mdash; The prompt now reads &ldquo;tap a word, then press the blank space where you think it belongs,&rdquo; with the awkward press-and-hold wording removed.</li>
+  <li><strong>Smarter, more forgiving recitation</strong> &mdash; When a word sounds slurred or comes back as a near-homophone, the app asks &ldquo;sounded like you said &lsquo;X&rsquo; &mdash; did you mean &lsquo;Y&rsquo;?&rdquo; and lets you confirm it as correct. Missed and extra words are now listed clearly word by word, while filler words are still ignored unless the verse actually needs them.</li>
+</ul>
 <div class="un-version-label">v3.0.209 &mdash; Memorization Mic Permission</div>
 <ul>
   <li><strong>Mic permission remembered</strong> &mdash; After the microphone is successfully allowed once, memorization stores that grant locally and skips extra permission checks unless the device revokes access.</li>
