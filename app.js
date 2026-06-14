@@ -10408,6 +10408,7 @@ let _memInterimTranscript = '';
 let _memSpeechErrored = false;
 let _memSavedFilter = 'all';
 const MEM_SAVED_KEY = 'memorizationSavedPassages';
+const MEM_MIC_ALLOWED_KEY = 'memorizationMicAllowed';
 
 const MEM_FILLER_WORDS = new Set([
   'um','umm','uh','uhh','er','erm','ah','hmm','like','wait','sorry','okay','ok',
@@ -11621,7 +11622,39 @@ function _memResetMicUI(status = 'Ready when you are.') {
   _memSetRecitationStatus(status);
 }
 
-function toggleMemorizationRecording() {
+async function _memQueryMicPermission() {
+  try {
+    if (!navigator.permissions?.query) return 'unknown';
+    const status = await navigator.permissions.query({ name: 'microphone' });
+    return status?.state || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+async function _memEnsureMicPermission() {
+  const savedGrant = localStorage.getItem(MEM_MIC_ALLOWED_KEY) === 'true';
+  const permission = await _memQueryMicPermission();
+  if (permission === 'denied') {
+    localStorage.removeItem(MEM_MIC_ALLOWED_KEY);
+    return { ok: false, denied: true };
+  }
+  if (permission === 'granted' && savedGrant) return { ok: true, remembered: true };
+  if (!navigator.mediaDevices?.getUserMedia) {
+    return { ok: savedGrant || permission !== 'denied', remembered: savedGrant };
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(track => track.stop());
+    localStorage.setItem(MEM_MIC_ALLOWED_KEY, 'true');
+    return { ok: true, remembered: false };
+  } catch (err) {
+    localStorage.removeItem(MEM_MIC_ALLOWED_KEY);
+    return { ok: false, denied: true, error: err };
+  }
+}
+
+async function toggleMemorizationRecording() {
   if (_memRecording) {
     _memRecording = false;
     try { _memRecognition?.stop?.(); } catch {}
@@ -11633,6 +11666,14 @@ function toggleMemorizationRecording() {
     document.getElementById('memFeedback').innerHTML = '<div class="mem-feedback-card needs-work"><strong>Voice practice is not available in this browser.</strong><p>Try Chrome or Safari with microphone permission enabled.</p></div>';
     return;
   }
+  const micBtn = document.getElementById('memMicBtn');
+  if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic_external_on</span><strong>Checking mic</strong><small>One moment...</small>';
+  const micPermission = await _memEnsureMicPermission();
+  if (!micPermission.ok) {
+    _memResetMicUI('Mic permission is off. Allow it once in your browser/app settings, then come back here.');
+    document.getElementById('memFeedback').innerHTML = '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Once you allow the microphone, this app will remember that choice and stop asking unless your device revokes it.</p></div>';
+    return;
+  }
   _memFinalTranscript = '';
   _memInterimTranscript = '';
   _memSpeechErrored = false;
@@ -11642,7 +11683,6 @@ function toggleMemorizationRecording() {
   _memRecognition.continuous = true;
   _memRecording = true;
   _memReciting = true;
-  const micBtn = document.getElementById('memMicBtn');
   micBtn?.classList.add('recording');
   if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">stop_circle</span><strong>Stop and score</strong><small>I am listening. Keep going.</small>';
   _memSetRecitationStatus('Listening. Keep your eyes up and say it from memory.');
@@ -11659,6 +11699,7 @@ function toggleMemorizationRecording() {
   _memRecognition.onerror = event => {
     _memSpeechErrored = true;
     const permissionIssue = ['not-allowed', 'service-not-allowed', 'permission-denied'].includes(event.error);
+    if (permissionIssue) localStorage.removeItem(MEM_MIC_ALLOWED_KEY);
     _memResetMicUI(permissionIssue ? 'Mic permission was not allowed. Tap Start reciting again after allowing microphone access.' : 'Ready when you are.');
     document.getElementById('memFeedback').innerHTML = permissionIssue
       ? '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Allow microphone access when your phone asks. If you already tapped no, open browser/app permissions and turn the microphone back on.</p></div>'
@@ -20664,7 +20705,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.208";
+const APP_VERSION = "3.0.209";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20685,6 +20726,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.209 &mdash; Memorization Mic Permission</div>
+<ul>
+  <li><strong>Mic permission remembered</strong> &mdash; After the microphone is successfully allowed once, memorization stores that grant locally and skips extra permission checks unless the device revokes access.</li>
+</ul>
 <div class="un-version-label">v3.0.208 &mdash; Theme-Aware Memorization Fix</div>
 <ul>
   <li><strong>Theme-matched solid colors</strong> &mdash; Memorization keeps the no-white-bar/no-translucent-sheet fix while using the user's selected theme colors.</li>
