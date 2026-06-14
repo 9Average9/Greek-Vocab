@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.204" rel="stylesheet"/>
+<link href="style.css?v=3.0.205" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -659,7 +659,10 @@ Habit Builder</span>
 <span class="mem-kicker">Current passage</span>
 <h2 id="memCurrentRef">Passage</h2>
 </div>
+<div class="mem-practice-actions">
+<button class="mem-progress-btn" onclick="openMemorizationProgress()" type="button"><span class="material-symbols-outlined">insights</span><strong>Progress</strong></button>
 <span class="mem-best-chip"><span class="material-symbols-outlined">workspace_premium</span><span id="memBestScore">0%</span></span>
+</div>
 </div>
 <div class="mem-suggestion hidden" id="memSuggestion"></div>
 <article class="mem-verse-stage" id="memPracticeCard">
@@ -700,6 +703,20 @@ Habit Builder</span>
 </section>
 
 <div style="height:40px"></div>
+</div>
+</div>
+
+<div class="mem-progress-sheet hidden" id="memProgressSheet" onclick="closeMemorizationProgress(event)">
+<div class="mem-progress-panel" onclick="event.stopPropagation()">
+<div class="mem-progress-grabber"></div>
+<header class="mem-progress-head">
+<div>
+<span class="mem-kicker">Progress check</span>
+<strong id="memProgressTitle">Passage</strong>
+</div>
+<button class="mem-icon-btn" onclick="closeMemorizationProgress()" aria-label="Close progress"><span class="material-symbols-outlined">close</span></button>
+</header>
+<div class="mem-progress-content" id="memProgressContent"></div>
 </div>
 </div>
 
@@ -16653,7 +16670,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.204"></script>
+<script src="app.js?v=3.0.205"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>

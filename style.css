@@ -28425,7 +28425,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 #memorizationPage.screen.active { display: block; overflow: hidden; }
 body.memorization-active,
 body.memorization-active .app {
-  width: 100vw;
+  width: 100%;
   max-width: none !important;
   height: 100vh;
   height: 100svh;
@@ -28435,13 +28435,17 @@ body.memorization-active .app {
   overflow: hidden !important;
   background: var(--bg-color);
 }
+#memorizationPage {
+  background: var(--bg-color);
+}
 body.memorization-active .desktop-shell-nav,
 body.memorization-active .app-header,
 body.memorization-active .bottom-nav {
   display: none !important;
 }
 .mem-page {
-  width: 100vw;
+  width: 100%;
+  min-width: 0;
   max-width: none;
   height: 100vh;
   height: 100svh;
@@ -28468,8 +28472,9 @@ body.memorization-active .bottom-nav {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  background: transparent;
 }
-.mem-hub-scroll { padding: 14px max(16px, env(safe-area-inset-left, 0px)) 18px max(16px, env(safe-area-inset-right, 0px)); }
+.mem-hub-scroll { padding: 14px max(16px, env(safe-area-inset-left, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
 .mem-topbar {
   flex: 0 0 auto;
   z-index: 6;
@@ -28566,10 +28571,13 @@ body.memorization-active .bottom-nav {
 .mem-wheel-band,
 .mem-recitation-band {
   width: 100%;
-  max-width: 100vw;
+  max-width: 100%;
   padding: 18px max(16px, env(safe-area-inset-left, 0px)) 20px max(16px, env(safe-area-inset-right, 0px));
   border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 9%, transparent);
   box-sizing: border-box;
+}
+.mem-workshop-scroll {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .mem-band-head, .mem-practice-top {
   display: flex;
@@ -28577,6 +28585,22 @@ body.memorization-active .bottom-nav {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
+}
+.mem-practice-top {
+  align-items: flex-start;
+}
+.mem-practice-top > div:first-child {
+  min-width: 0;
+}
+.mem-practice-top h2 {
+  overflow-wrap: anywhere;
+}
+.mem-practice-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 .mem-band-head strong, .mem-practice-top h2 {
   display: block;
@@ -28674,6 +28698,23 @@ body.memorization-active .bottom-nav {
   font-size: 0.76rem;
   font-weight: 950;
 }
+.mem-progress-btn {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--card-color);
+  background: var(--secondary-color);
+  font-size: 0.75rem;
+  font-weight: 950;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--secondary-color) 18%, transparent);
+}
+.mem-progress-btn .material-symbols-outlined { font-size: 1rem; }
+.mem-progress-btn strong { font-size: inherit; }
 .mem-score-pill.memorized {
   color: #14723a;
   background: rgba(34,197,94,0.14);
@@ -28963,6 +29004,193 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   background: color-mix(in srgb, var(--secondary-color) 8%, transparent);
   color: var(--font-color);
 }
+.mem-progress-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,0.24);
+  padding: 0 max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+.mem-progress-sheet.hidden { display: none; }
+.mem-progress-panel {
+  width: min(100%, 620px);
+  max-height: min(82vh, 720px);
+  overflow: hidden;
+  border-radius: 28px 28px 20px 20px;
+  background: var(--bg-color);
+  color: var(--font-color);
+  box-shadow: 0 -20px 44px rgba(0,0,0,0.22);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 14%, transparent);
+}
+.mem-progress-grabber {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  margin: 10px auto 2px;
+  background: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
+}
+.mem-progress-head {
+  display: grid;
+  grid-template-columns: 1fr 46px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 9%, transparent);
+}
+.mem-progress-head strong {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 950;
+}
+.mem-progress-content {
+  max-height: calc(min(82vh, 720px) - 88px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 14px calc(18px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  display: grid;
+  gap: 11px;
+}
+.mem-progress-hero {
+  display: grid;
+  grid-template-columns: 1fr 92px;
+  gap: 12px;
+  align-items: center;
+  border-radius: 22px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--secondary-color) 9%, var(--card-color));
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 15%, transparent);
+}
+.mem-progress-hero strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--font-color);
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+.mem-progress-hero p,
+.mem-progress-block p {
+  margin: 5px 0 0;
+  color: var(--muted-color);
+  font-size: 0.86rem;
+  line-height: 1.42;
+}
+.mem-progress-ring {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  color: var(--secondary-color);
+  background:
+    radial-gradient(circle at center, var(--bg-color) 0 57%, transparent 58%),
+    conic-gradient(var(--secondary-color), color-mix(in srgb, var(--secondary-color) 18%, transparent));
+}
+.mem-progress-ring strong { font-size: 1.18rem; line-height: 1; }
+.mem-progress-ring span { font-size: 0.67rem; font-weight: 950; text-transform: uppercase; color: var(--muted-color); }
+.mem-progress-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.mem-progress-stats div,
+.mem-progress-block {
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--card-color) 72%, var(--bg-color));
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 11%, transparent);
+}
+.mem-progress-stats div {
+  min-width: 0;
+  padding: 11px 9px;
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+.mem-progress-stats strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--font-color);
+  font-size: 0.98rem;
+  font-weight: 950;
+}
+.mem-progress-stats span {
+  color: var(--muted-color);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.mem-progress-block { padding: 12px; }
+.mem-progress-block-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--font-color);
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+.mem-progress-block-head .material-symbols-outlined {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--secondary-color);
+  background: color-mix(in srgb, var(--secondary-color) 10%, transparent);
+  font-size: 1.05rem;
+}
+.mem-chip-list,
+.mem-phrase-list,
+.mem-mode-stats,
+.mem-recent-checks {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+.mem-chip-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.mem-chip-list span,
+.mem-phrase-list span,
+.mem-mode-stats div,
+.mem-recent-checks div {
+  min-width: 0;
+  border-radius: 14px;
+  padding: 9px 10px;
+  background: color-mix(in srgb, var(--secondary-color) 7%, transparent);
+  color: var(--font-color);
+  font-size: 0.82rem;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+.mem-chip-list small,
+.mem-phrase-list small {
+  color: var(--secondary-color);
+  font-weight: 950;
+}
+.mem-mode-stats div,
+.mem-recent-checks div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mem-mode-stats span,
+.mem-recent-checks span {
+  color: var(--muted-color);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-align: right;
+}
 .mem-library-tabs {
   display: grid;
   grid-template-columns: 0.8fr 1.2fr 1fr;
@@ -29039,4 +29267,16 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
 }
 @media (min-width: 520px) {
   .mem-mode-wheel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 360px) {
+  .mem-practice-top {
+    flex-direction: column;
+  }
+  .mem-practice-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .mem-chip-list {
+    grid-template-columns: 1fr;
+  }
 }
