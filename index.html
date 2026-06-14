@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.205" rel="stylesheet"/>
+<link href="style.css?v=3.0.206" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -637,7 +637,6 @@ Habit Builder</span>
 </div>
 </div>
 
-<div style="height:40px"></div>
 </div>
 </div>
 
@@ -649,7 +648,7 @@ Habit Builder</span>
 <span class="mem-kicker">Workshop</span>
 <strong id="memHeaderTitle">Passage</strong>
 </div>
-<span class="mem-score-pill" id="memStatusPill"><span class="material-symbols-outlined">hourglass_top</span><strong>In progress</strong></span>
+<span class="mem-icon-btn mem-icon-ghost" aria-hidden="true"></span>
 </header>
 
 <div class="mem-workshop-scroll">
@@ -679,8 +678,7 @@ Habit Builder</span>
 </div>
 <div class="mem-mode-wheel" aria-label="Memorization practice modes">
 <button class="active" data-mode="read" onclick="setMemorizationMode('read')"><span class="material-symbols-outlined">auto_stories</span><strong>Read</strong><small>normal text</small></button>
-<button data-mode="third" onclick="setMemorizationMode('third')"><span class="material-symbols-outlined">filter_3</span><strong>Every 3rd</strong><small>hide rhythm</small></button>
-<button data-mode="keywords" onclick="setMemorizationMode('keywords')"><span class="material-symbols-outlined">key</span><strong>Key words</strong><small>hide anchors</small></button>
+<button data-mode="third" onclick="setMemorizationMode('third')"><span class="material-symbols-outlined">filter_3</span><strong>Every 3rd</strong><small>place words</small></button>
 <button data-mode="letters" onclick="setMemorizationMode('letters')"><span class="material-symbols-outlined">sort_by_alpha</span><strong>First letter</strong><small>cue only</small></button>
 <button data-mode="blank" onclick="setMemorizationMode('blank')"><span class="material-symbols-outlined">edit_square</span><strong>Fill blanks</strong><small>type it out</small></button>
 <button data-mode="scramble" onclick="setMemorizationMode('scramble')"><span class="material-symbols-outlined">shuffle</span><strong>Scramble</strong><small>drag to order</small></button>
@@ -701,14 +699,11 @@ Habit Builder</span>
 <div class="mem-transcript" id="memTranscript">Ready when you are.</div>
 <div class="mem-feedback" id="memFeedback"></div>
 </section>
-
-<div style="height:40px"></div>
 </div>
 </div>
 
 <div class="mem-progress-sheet hidden" id="memProgressSheet" onclick="closeMemorizationProgress(event)">
 <div class="mem-progress-panel" onclick="event.stopPropagation()">
-<div class="mem-progress-grabber"></div>
 <header class="mem-progress-head">
 <div>
 <span class="mem-kicker">Progress check</span>
@@ -16670,7 +16665,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.205"></script>
+<script src="app.js?v=3.0.206"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>

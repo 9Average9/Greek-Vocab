@@ -10404,6 +10404,7 @@ let _memRecording = false;
 let _memReciting = false;
 let _memFinalTranscript = '';
 let _memInterimTranscript = '';
+let _memSpeechErrored = false;
 let _memSavedFilter = 'all';
 const MEM_SAVED_KEY = 'memorizationSavedPassages';
 
@@ -10511,7 +10512,6 @@ function _memModeLabel(mode = '') {
   return ({
     read: 'Read',
     third: 'Every 3rd',
-    keywords: 'Key words',
     letters: 'First letter',
     blank: 'Fill blanks',
     scramble: 'Scramble',
@@ -10943,17 +10943,11 @@ function updateMemorizationProgressUI() {
   const refEl = document.getElementById('memCurrentRef');
   const headerEl = document.getElementById('memHeaderTitle');
   const bestEl = document.getElementById('memBestScore');
-  const statusEl = document.getElementById('memStatusPill');
   const suggestion = document.getElementById('memSuggestion');
   if (refEl) refEl.textContent = _memCurrent?.ref || 'Choose a passage';
   if (headerEl) headerEl.textContent = _memCurrent?.ref || 'Choose a passage';
   const progress = _memGetProgress();
   if (bestEl) bestEl.textContent = `${Math.round(progress.best || 0)}%`;
-  if (statusEl) {
-    const memorized = Number(progress.best || 0) >= 100;
-    statusEl.classList.toggle('memorized', memorized);
-    statusEl.innerHTML = `<span class="material-symbols-outlined">${memorized ? 'verified' : 'hourglass_top'}</span><strong>${memorized ? 'Memorized' : 'Work in progress'}</strong>`;
-  }
   if (!suggestion) return;
   const best = Number(progress.best || 0);
   let html = '';
@@ -11049,7 +11043,7 @@ window.openMemorizationProgress = openMemorizationProgress;
 window.closeMemorizationProgress = closeMemorizationProgress;
 
 function setMemorizationMode(mode) {
-  _memMode = mode === 'voice' ? 'read' : (mode || 'read');
+  _memMode = ['read','third','letters','blank','scramble','progressive'].includes(mode) ? mode : 'read';
   document.querySelectorAll('.mem-mode-wheel button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === _memMode));
   renderMemorizationPractice();
 }
@@ -11068,6 +11062,7 @@ function renderMemorizationPractice() {
   }
   const text = _memCurrent.text;
   if (_memMode === 'blank') card.innerHTML = _memBlankHtml(text);
+  else if (_memMode === 'third') { card.innerHTML = _memThirdDropHtml(text); _memInitThirdDrop(); }
   else if (_memMode === 'scramble') { card.innerHTML = _memScrambleHtml(text); _memInitScrambleBoard(); }
   else card.innerHTML = `<div class="mem-rendered-text">${_memRenderTextByMode(text, _memMode)}</div>`;
 }
@@ -11076,17 +11071,147 @@ function _memRenderTextByMode(text, mode) {
   const progressivePct = Math.min(1, 0.25 + Math.floor(Number(_memGetProgress().best || 0) / 25) * 0.25);
   return _memRenderTokenWords(text, (token, wordIndex) => {
     const clean = token.replace(/[^A-Za-z0-9]/g, '');
-    const hide = mode === 'third'
-      ? wordIndex % 3 === 0
-      : mode === 'keywords'
-        ? clean.length >= 6
-        : mode === 'progressive'
+    const hide = mode === 'progressive'
           ? ((wordIndex * 37) % 100) < progressivePct * 100
           : false;
     if (mode === 'letters') return `<span class="mem-first-letter">${_memEsc(clean[0] || '')}</span>`;
-    return hide ? `<span class="mem-hidden-word">${'&nbsp;'.repeat(Math.max(4, Math.min(clean.length, 14)))}</span>` : _memEsc(token);
+    return hide ? `<span class="mem-hidden-word" style="width:${Math.max(4, Math.min(clean.length, 16))}ch"></span>` : _memEsc(token);
   });
 }
+
+function _memThirdDropHtml(text) {
+  const hidden = [];
+  let wordIdx = 0;
+  const rendered = _memRenderTokenWords(text, token => {
+    wordIdx += 1;
+    const answer = _memWords(token)[0] || '';
+    if (wordIdx % 3 !== 0 || !answer) return _memEsc(token);
+    const slotId = hidden.length;
+    hidden.push(answer);
+    return `<button class="mem-third-slot" data-answer="${_memEsc(answer)}" data-slot="${slotId}" style="width:${Math.max(4.2, Math.min(answer.length + 1.2, 16))}ch" type="button" ondragover="event.preventDefault()" ondrop="dropMemorizationThirdWord(event)" onclick="placeSelectedMemorizationThirdWord(this)" aria-label="Hidden word slot">&nbsp;</button>`;
+  });
+  const bank = _memShuffleDistinct(hidden.map((word, i) => ({ word, i }))).map(item =>
+    `<button class="mem-third-word" data-word="${_memEsc(item.word)}" data-bank="${item.i}" draggable="true" ondragstart="dragMemorizationThirdWord(event)" onclick="selectMemorizationThirdWord(this)" type="button">${_memEsc(item.word)}</button>`
+  ).join('');
+  return `<div class="mem-rendered-text mem-third-text">${rendered}</div>
+    <div class="mem-third-bank" id="memThirdBank">${bank || '<span class="mem-mode-note">This passage is too short for Every 3rd.</span>'}</div>
+    <div class="mem-scramble-actions">
+      <button class="mem-secondary-btn" onclick="resetMemorizationThirdDrop()"><span class="material-symbols-outlined">restart_alt</span>Reset</button>
+      <button class="mem-primary-btn" onclick="checkMemorizationThirdDrop()"><span class="material-symbols-outlined">task_alt</span>Check words</button>
+    </div>
+    <div class="mem-scramble-result" id="memThirdResult"><span class="material-symbols-outlined">touch_app</span><div><strong>Fill every third word</strong><span>Drag a word into a blank, or tap a word and then a blank.</span></div></div>`;
+}
+
+let _memThirdSelected = null;
+
+function _memInitThirdDrop() {
+  _memThirdSelected = null;
+  document.querySelectorAll('#memPracticeCard .mem-third-slot').forEach(slot => {
+    slot.addEventListener('dragover', event => event.preventDefault());
+    slot.addEventListener('drop', dropMemorizationThirdWord);
+  });
+}
+
+function dragMemorizationThirdWord(event) {
+  const word = event.currentTarget?.dataset?.word || '';
+  const bank = event.currentTarget?.dataset?.bank || '';
+  event.dataTransfer?.setData('text/plain', JSON.stringify({ word, bank }));
+}
+
+function selectMemorizationThirdWord(button) {
+  document.querySelectorAll('#memPracticeCard .mem-third-word').forEach(btn => btn.classList.remove('selected'));
+  _memThirdSelected = button ? { word: button.dataset.word || '', bank: button.dataset.bank || '' } : null;
+  button?.classList.add('selected');
+}
+
+function _memPlaceThirdWord(slot, word, bank = '') {
+  if (!slot || !word) return;
+  const prior = slot.dataset.value || '';
+  const priorBank = slot.dataset.bank || '';
+  if (prior) _memReturnThirdWord(prior, priorBank);
+  slot.dataset.value = word;
+  slot.dataset.bank = bank;
+  slot.textContent = word;
+  slot.classList.remove('correct', 'wrong', 'empty');
+  const bankWord = [...document.querySelectorAll('#memThirdBank .mem-third-word')]
+    .find(btn => btn.dataset.word === word && String(btn.dataset.bank || '') === String(bank));
+  bankWord?.classList.add('used');
+  _memThirdSelected = null;
+  document.querySelectorAll('#memPracticeCard .mem-third-word').forEach(btn => btn.classList.remove('selected'));
+}
+
+function _memReturnThirdWord(word, bank = '') {
+  const button = [...document.querySelectorAll('#memThirdBank .mem-third-word.used')]
+    .find(btn => btn.dataset.word === word && String(btn.dataset.bank || '') === String(bank));
+  button?.classList.remove('used');
+}
+
+function dropMemorizationThirdWord(event) {
+  event.preventDefault();
+  let payload = {};
+  try { payload = JSON.parse(event.dataTransfer?.getData('text/plain') || '{}'); }
+  catch { payload = { word: event.dataTransfer?.getData('text/plain') || '', bank: '' }; }
+  _memPlaceThirdWord(event.currentTarget, payload.word || '', payload.bank || '');
+}
+
+function placeSelectedMemorizationThirdWord(slot) {
+  if (_memThirdSelected) {
+    _memPlaceThirdWord(slot, _memThirdSelected.word, _memThirdSelected.bank);
+    return;
+  }
+  const prior = slot?.dataset?.value || '';
+  const priorBank = slot?.dataset?.bank || '';
+  if (prior) {
+    _memReturnThirdWord(prior, priorBank);
+    slot.dataset.value = '';
+    slot.dataset.bank = '';
+    slot.innerHTML = '&nbsp;';
+    slot.classList.remove('correct', 'wrong');
+  }
+}
+
+function resetMemorizationThirdDrop() {
+  renderMemorizationPractice();
+}
+
+function checkMemorizationThirdDrop() {
+  const slots = [...document.querySelectorAll('#memPracticeCard .mem-third-slot')];
+  if (!slots.length) return;
+  let right = 0;
+  const missedWords = [];
+  slots.forEach(slot => {
+    const answer = slot.dataset.answer || '';
+    const value = slot.dataset.value || '';
+    const ok = answer === value;
+    slot.classList.toggle('correct', ok);
+    slot.classList.toggle('wrong', !ok);
+    slot.classList.toggle('empty', !value);
+    if (ok) right += 1;
+    else if (answer) missedWords.push(answer);
+  });
+  const total = slots.length;
+  const score = total ? Math.round((right / total) * 100) : 0;
+  _memSaveProgress(Math.min(score, 99), {
+    mode: 'third',
+    label: 'Every 3rd',
+    missingWords: missedWords,
+    weakPhrases: _memGroupWords(missedWords)
+  });
+  const result = document.getElementById('memThirdResult');
+  if (result) {
+    result.className = 'mem-scramble-result ' + (score >= 90 ? 'good' : 'needs-work');
+    result.innerHTML = score >= 90
+      ? `<span class="material-symbols-outlined">verified</span><div><strong>${score}% placed</strong><span>${right}/${total} blanks are right. Good rhythm.</span></div>`
+      : `<span class="material-symbols-outlined">edit</span><div><strong>${total - right} blanks need work</strong><span>The red slots are the ones to practice next.</span></div>`;
+  }
+}
+
+window.dragMemorizationThirdWord = dragMemorizationThirdWord;
+window.selectMemorizationThirdWord = selectMemorizationThirdWord;
+window.dropMemorizationThirdWord = dropMemorizationThirdWord;
+window.placeSelectedMemorizationThirdWord = placeSelectedMemorizationThirdWord;
+window.resetMemorizationThirdDrop = resetMemorizationThirdDrop;
+window.checkMemorizationThirdDrop = checkMemorizationThirdDrop;
 
 function _memBlankHtml(text) {
   const words = _memWords(text);
@@ -11484,10 +11609,21 @@ function _memSetRecitationStatus(text) {
   if (el) el.textContent = text || 'Ready when you are.';
 }
 
+function _memResetMicUI(status = 'Ready when you are.') {
+  _memRecording = false;
+  _memReciting = false;
+  _memRecognition = null;
+  const micBtn = document.getElementById('memMicBtn');
+  micBtn?.classList.remove('recording');
+  if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
+  renderMemorizationPractice();
+  _memSetRecitationStatus(status);
+}
+
 function toggleMemorizationRecording() {
   if (_memRecording) {
     _memRecording = false;
-    _memRecognition?.stop?.();
+    try { _memRecognition?.stop?.(); } catch {}
     return;
   }
   if (!_memCurrent?.text) { _showStudyToast('Load a passage first'); return; }
@@ -11498,6 +11634,7 @@ function toggleMemorizationRecording() {
   }
   _memFinalTranscript = '';
   _memInterimTranscript = '';
+  _memSpeechErrored = false;
   _memRecognition = new Recognition();
   _memRecognition.lang = 'en-US';
   _memRecognition.interimResults = true;
@@ -11519,36 +11656,23 @@ function toggleMemorizationRecording() {
     _memInterimTranscript = interim;
   };
   _memRecognition.onerror = event => {
-    _memRecording = false;
-    _memReciting = false;
-    const micBtn = document.getElementById('memMicBtn');
-    micBtn?.classList.remove('recording');
-    if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
-    renderMemorizationPractice();
-    _memSetRecitationStatus('Ready when you are.');
-    document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card needs-work"><strong>Mic hiccup</strong><p>${_memEsc(event.error || 'Could not hear that clearly.')}</p></div>`;
+    _memSpeechErrored = true;
+    const permissionIssue = ['not-allowed', 'service-not-allowed', 'permission-denied'].includes(event.error);
+    _memResetMicUI(permissionIssue ? 'Mic permission was not allowed. Tap Start reciting again after allowing microphone access.' : 'Ready when you are.');
+    document.getElementById('memFeedback').innerHTML = permissionIssue
+      ? '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Allow microphone access when your phone asks. If you already tapped no, open browser/app permissions and turn the microphone back on.</p></div>'
+      : `<div class="mem-feedback-card needs-work"><strong>Mic hiccup</strong><p>${_memEsc(event.error || 'Could not hear that clearly.')}</p></div>`;
   };
   _memRecognition.onend = () => {
-    _memRecording = false;
-    _memReciting = false;
-    const micBtn = document.getElementById('memMicBtn');
-    micBtn?.classList.remove('recording');
-    if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
-    renderMemorizationPractice();
+    if (_memSpeechErrored) return;
     const transcript = (_memFinalTranscript || _memInterimTranscript || '').trim();
-    _memSetRecitationStatus(transcript ? 'Scored. Try again whenever you want.' : 'I did not catch enough to score.');
+    _memResetMicUI(transcript ? 'Scored. Try again whenever you want.' : 'I did not catch enough to score.');
     if (transcript) scoreMemorizationRecitation(transcript);
   };
   try {
     _memRecognition.start();
   } catch (err) {
-    _memRecording = false;
-    _memReciting = false;
-    const micBtn = document.getElementById('memMicBtn');
-    micBtn?.classList.remove('recording');
-    if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
-    renderMemorizationPractice();
-    _memSetRecitationStatus('Ready when you are.');
+    _memResetMicUI('Ready when you are.');
     document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card needs-work"><strong>Mic could not start</strong><p>${_memEsc(err?.message || 'Check microphone permission and try again.')}</p></div>`;
   }
 }
@@ -20532,7 +20656,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.205";
+const APP_VERSION = "3.0.206";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20553,6 +20677,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.206 &mdash; Memorization Polish</div>
+<ul>
+  <li><strong>Cleaner workshop header</strong> &mdash; Removed the top-right work-in-progress pill so the passage title has room to breathe.</li>
+  <li><strong>Every 3rd rebuilt</strong> &mdash; Every third word is now a word-bank placement exercise with checking, scoring, and weak-word tracking.</li>
+  <li><strong>Progress sheet visibility</strong> &mdash; The progress sheet now uses stronger overlay and solid surfaces, removes the center grab pill, and keeps the close button as the single close affordance.</li>
+  <li><strong>Mic recovery</strong> &mdash; Permission errors now reset the recitation button cleanly and keep the permission message visible.</li>
+</ul>
 <div class="un-version-label">v3.0.205 &mdash; Memorization Progress Coach</div>
 <ul>
   <li><strong>Progress button</strong> &mdash; Each active memorization passage now has a progress sheet with best/latest scores, attempt count, recent checks, and a simple readiness readout.</li>
@@ -20586,7 +20717,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.200 &mdash; Scripture Memorization</div>
 <ul>
   <li><strong>New Memorize quick action</strong> &mdash; Home now opens a memorization workspace for MSB/BSB passages or any pasted text from another translation.</li>
-  <li><strong>Practice modes added</strong> &mdash; Read, every-third-word, key-word hiding, first-letter, fill-blank, scrambled phrase, progressive hiding, and voice recitation modes are available per passage.</li>
+  <li><strong>Practice modes added</strong> &mdash; Read, every-third-word, first-letter, fill-blank, scrambled phrase, progressive hiding, and voice recitation modes are available per passage.</li>
   <li><strong>Voice feedback with grace</strong> &mdash; Recitation mode uses the device microphone, ignores filler words and repeated stumbles, then reports accuracy, missed phrases, and meaningful additions.</li>
 </ul>
 <div class="un-version-label">v3.0.199 &mdash; Whole-NT Cleanup</div>
