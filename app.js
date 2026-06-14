@@ -10452,11 +10452,43 @@ function openMemorizationPage() {
   hideBottomNav();
   showScreen('memorizationPage');
   hideBottomNav();
+  closeMemorizationWorkshop();
   startMemorizationPage();
   setTimeout(_applyPendingAppUpdateReload, 50);
 }
 
 window.openMemorizationPage = openMemorizationPage;
+
+let _memHubTab = 'new';
+
+function setMemorizationHubTab(tab) {
+  _memHubTab = tab === 'library' ? 'library' : 'new';
+  document.getElementById('memHubTabNew')?.classList.toggle('active', _memHubTab === 'new');
+  document.getElementById('memHubTabLibrary')?.classList.toggle('active', _memHubTab === 'library');
+  document.getElementById('memHubNew')?.classList.toggle('hidden', _memHubTab !== 'new');
+  document.getElementById('memHubLibrary')?.classList.toggle('hidden', _memHubTab !== 'library');
+  document.querySelector('.mem-hub-scroll')?.scrollTo({ top: 0 });
+  if (_memHubTab === 'library') renderMemorizationSavedList();
+}
+
+function openMemorizationWorkshop() {
+  document.getElementById('memHubView')?.classList.add('hidden');
+  document.getElementById('memWorkshopView')?.classList.remove('hidden');
+  document.querySelector('.mem-workshop-scroll')?.scrollTo({ top: 0 });
+  updateMemorizationProgressUI();
+  renderMemorizationPractice();
+}
+
+function closeMemorizationWorkshop() {
+  if (_memRecording) { try { _memRecognition?.stop?.(); } catch {} _memRecording = false; _memReciting = false; }
+  document.getElementById('memWorkshopView')?.classList.add('hidden');
+  document.getElementById('memHubView')?.classList.remove('hidden');
+  renderMemorizationSavedList();
+}
+
+window.setMemorizationHubTab = setMemorizationHubTab;
+window.openMemorizationWorkshop = openMemorizationWorkshop;
+window.closeMemorizationWorkshop = closeMemorizationWorkshop;
 
 function _memEsc(value = '') {
   return String(value || '').replace(/[&<>"']/g, ch => ({
@@ -10563,11 +10595,13 @@ function openMemorizationSaved(id) {
   const item = _memSavedList().find(saved => saved.id === id);
   if (!item) return;
   _memCurrent = { id: item.id, ref: item.ref, version: item.version, text: item.text };
+  _memMode = 'read';
+  document.querySelectorAll('.mem-mode-wheel button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === 'read'));
   localStorage.setItem('memorizationLastPassage', JSON.stringify(_memCurrent));
   document.getElementById('memFeedback').innerHTML = '';
   _memSetRecitationStatus('Ready when you are.');
   updateMemorizationProgressUI();
-  renderMemorizationPractice();
+  openMemorizationWorkshop();
 }
 
 function deleteMemorizationSaved(id) {
@@ -10669,19 +10703,10 @@ async function startMemorizationPage() {
       if (saved?.text) _memCurrent = saved;
     } catch {}
   }
+  setMemorizationHubTab(_memSavedList().length ? _memHubTab : 'new');
   updateMemorizationProgressUI();
-  renderMemorizationPractice();
   renderMemorizationSavedList();
 }
-
-function toggleMemorizationSetup(force) {
-  const drawer = document.getElementById('memSetupDrawer');
-  if (!drawer) return;
-  const open = typeof force === 'boolean' ? force : drawer.classList.contains('collapsed');
-  drawer.classList.toggle('collapsed', !open);
-}
-
-window.toggleMemorizationSetup = toggleMemorizationSetup;
 
 function setMemorizationSource(source) {
   _memSource = source === 'paste' ? 'paste' : 'verse';
@@ -10765,6 +10790,25 @@ function updateMemorizationCopyLink() {
   if (!el) return;
   const ref = _memSource === 'paste' ? (document.getElementById('memPasteRef')?.value || 'selected passage') : _memRefLabel(_memCurrentRefParts());
   el.textContent = _memSelectedVersion() === 'BSB' ? 'Open BSB copy page' : `Find ${ref}`;
+  _memUpdateVersePreview();
+}
+
+function _memSelectedPassageText() {
+  const parts = _memCurrentRefParts();
+  const data = _memEnglishData()?.[parts.book]?.[String(parts.chapter)] || {};
+  const verses = [];
+  for (let v = parts.start; v <= parts.end; v++) {
+    if (data[String(v)]) verses.push(data[String(v)]);
+  }
+  return { parts, text: verses.join(' ') };
+}
+
+function _memUpdateVersePreview() {
+  const el = document.getElementById('memVersePreview');
+  if (!el) return;
+  const { parts, text } = _memSelectedPassageText();
+  if (!text) { el.innerHTML = '<p class="mem-empty">Pick a reference to preview it here.</p>'; return; }
+  el.innerHTML = `<span class="mem-preview-ref">${_memEsc(_memRefLabel(parts))}</span><p>${_memEsc(text)}</p>`;
 }
 
 function _memBibleHubBookPath(bookName = '') {
@@ -10805,13 +10849,14 @@ function loadMemorizationPastedText() {
 
 function setMemorizationCurrent(next) {
   _memCurrent = next;
+  _memMode = 'read';
+  document.querySelectorAll('.mem-mode-wheel button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === 'read'));
   localStorage.setItem('memorizationLastPassage', JSON.stringify(next));
   _memUpsertSavedPassage(next);
   document.getElementById('memFeedback').innerHTML = '';
   _memSetRecitationStatus('Ready when you are.');
-  toggleMemorizationSetup(false);
   updateMemorizationProgressUI();
-  renderMemorizationPractice();
+  openMemorizationWorkshop();
 }
 
 function updateMemorizationProgressUI() {
@@ -10859,7 +10904,7 @@ function renderMemorizationPractice() {
   }
   const text = _memCurrent.text;
   if (_memMode === 'blank') card.innerHTML = _memBlankHtml(text);
-  else if (_memMode === 'scramble') card.innerHTML = _memScrambleHtml(text);
+  else if (_memMode === 'scramble') { card.innerHTML = _memScrambleHtml(text); _memInitScrambleBoard(); }
   else card.innerHTML = `<div class="mem-rendered-text">${_memRenderTextByMode(text, _memMode)}</div>`;
 }
 
@@ -10904,16 +10949,196 @@ function checkMemorizationBlanks() {
   document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card"><strong>${score}% on the blanks</strong><p>${right}/${total} right. ${score >= 90 ? 'Very sturdy.' : 'A few words are still slippery.'}</p></div>`;
 }
 
-function _memScrambleHtml(text) {
-  const clauses = String(text || '').split(/(?<=[,.;:!?])\s+|\s+(?=(?:for|and|but|because|that|who|whom|which)\b)/i).filter(Boolean);
-  const chunks = clauses.length >= 3 ? clauses : String(text || '').split(/\s+/).reduce((acc, word, i) => {
-    if (i % 5 === 0) acc.push([]);
+function _memScrambleChunks(text) {
+  const clauses = String(text || '')
+    .split(/(?<=[,.;:!?])\s+|\s+(?=(?:for|and|but|because|that|who|whom|which|therefore|so)\b)/i)
+    .map(s => s.trim())
+    .filter(Boolean);
+  let chunks = clauses.length >= 3 ? clauses : String(text || '').split(/\s+/).filter(Boolean).reduce((acc, word, i) => {
+    if (i % 4 === 0) acc.push([]);
     acc[acc.length - 1].push(word);
     return acc;
   }, []).map(group => group.join(' '));
-  const shuffled = chunks.map((chunk, i) => ({ chunk, sort: (i * 17 + 11) % 23 })).sort((a, b) => a.sort - b.sort);
-  return `<div class="mem-scramble-list">${shuffled.map(item => `<span>${_memEsc(item.chunk)}</span>`).join('')}</div><p class="mem-mode-note">Say the phrases back in order. This one is for making the flow stick, not for scoring.</p>`;
+  // Keep the puzzle approachable on small screens.
+  if (chunks.length > 12) {
+    const merged = [];
+    const groupSize = Math.ceil(chunks.length / 10);
+    for (let i = 0; i < chunks.length; i += groupSize) merged.push(chunks.slice(i, i + groupSize).join(' '));
+    chunks = merged;
+  }
+  return chunks;
 }
+
+function _memShuffleDistinct(arr) {
+  if (arr.length < 2) return arr.slice();
+  let out, tries = 0;
+  do {
+    out = arr.map(v => ({ v, s: Math.random() })).sort((a, b) => a.s - b.s).map(o => o.v);
+    tries += 1;
+  } while (tries < 16 && out.every((o, idx) => o.i === idx));
+  return out;
+}
+
+function _memScrambleHtml(text) {
+  const chunks = _memScrambleChunks(text);
+  if (chunks.length < 2) {
+    return '<p class="mem-mode-note">This passage is too short to scramble. Try a longer verse or a different mode.</p>';
+  }
+  const shuffled = _memShuffleDistinct(chunks.map((chunk, i) => ({ chunk, i })));
+  const tiles = shuffled.map(item =>
+    `<div class="mem-scramble-tile" data-correct="${item.i}"><span class="mem-tile-grip material-symbols-outlined">drag_indicator</span><span class="mem-tile-text">${_memEsc(item.chunk)}</span><span class="mem-tile-flag">incorrect</span></div>`
+  ).join('');
+  return `<div class="mem-scramble-board" id="memScrambleBoard">${tiles}</div>
+    <div class="mem-scramble-actions">
+      <button class="mem-secondary-btn" onclick="shuffleMemorizationScramble()"><span class="material-symbols-outlined">shuffle</span>Shuffle</button>
+      <button class="mem-primary-btn" onclick="checkMemorizationScramble()"><span class="material-symbols-outlined">task_alt</span>Check order</button>
+    </div>
+    <div class="mem-scramble-result" id="memScrambleResult"><span class="material-symbols-outlined">touch_app</span><div><strong>Put the phrases in order</strong><span>Press and hold a phrase, then drag it into place.</span></div></div>`;
+}
+
+let _memScrambleDrag = null;
+
+function _memInitScrambleBoard() {
+  const board = document.getElementById('memScrambleBoard');
+  if (!board) return;
+  board.querySelectorAll('.mem-scramble-tile').forEach(tile => {
+    tile.addEventListener('pointerdown', _memScramblePointerDown);
+  });
+}
+
+function _memScramblePointerDown(e) {
+  if (e.button != null && e.button > 0) return;
+  const tile = e.currentTarget;
+  const board = tile.parentElement;
+  const startX = e.clientX, startY = e.clientY;
+  const isTouch = e.pointerType === 'touch';
+  const pointerId = e.pointerId;
+  let armed = false;
+
+  const detach = () => {
+    document.removeEventListener('pointermove', move, { passive: false });
+    document.removeEventListener('pointerup', up);
+    document.removeEventListener('pointercancel', up);
+  };
+
+  const begin = () => {
+    if (armed) return;
+    armed = true;
+    const rect = tile.getBoundingClientRect();
+    const ph = document.createElement('div');
+    ph.className = 'mem-scramble-placeholder';
+    ph.style.width = rect.width + 'px';
+    ph.style.height = rect.height + 'px';
+    board.insertBefore(ph, tile);
+    tile.classList.add('dragging');
+    tile.style.width = rect.width + 'px';
+    tile.style.height = rect.height + 'px';
+    tile.style.position = 'fixed';
+    tile.style.left = rect.left + 'px';
+    tile.style.top = rect.top + 'px';
+    _memScrambleDrag = { tile, ph, board, grabX: startX - rect.left, grabY: startY - rect.top };
+    document.body.classList.add('mem-dragging');
+    try { tile.setPointerCapture(pointerId); } catch {}
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+  };
+
+  const timer = setTimeout(begin, isTouch ? 150 : 80);
+
+  function move(ev) {
+    if (!armed) {
+      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > 9) {
+        clearTimeout(timer);
+        if (!isTouch) begin();
+        else { detach(); return; }
+      }
+      if (!armed) return;
+    }
+    ev.preventDefault();
+    const d = _memScrambleDrag;
+    if (!d) return;
+    d.tile.style.left = (ev.clientX - d.grabX) + 'px';
+    d.tile.style.top = (ev.clientY - d.grabY) + 'px';
+    _memScramblePositionPlaceholder(ev.clientX, ev.clientY);
+  }
+
+  function up() {
+    clearTimeout(timer);
+    detach();
+    if (armed && _memScrambleDrag) _memScrambleDrop();
+  }
+
+  document.addEventListener('pointermove', move, { passive: false });
+  document.addEventListener('pointerup', up);
+  document.addEventListener('pointercancel', up);
+}
+
+function _memScramblePositionPlaceholder(x, y) {
+  const d = _memScrambleDrag;
+  if (!d) return;
+  const tiles = [...d.board.querySelectorAll('.mem-scramble-tile:not(.dragging)')];
+  let best = null, bestDist = Infinity, after = false;
+  tiles.forEach(t => {
+    const r = t.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const dist = Math.hypot(x - cx, y - cy);
+    if (dist < bestDist) { bestDist = dist; best = t; after = (y > r.bottom) || (y >= r.top && x > cx); }
+  });
+  if (!best) { d.board.appendChild(d.ph); return; }
+  if (after) best.after(d.ph); else best.before(d.ph);
+}
+
+function _memScrambleDrop() {
+  const d = _memScrambleDrag;
+  _memScrambleDrag = null;
+  const { tile, ph } = d;
+  ph.parentElement.insertBefore(tile, ph);
+  ph.remove();
+  tile.classList.remove('dragging');
+  tile.removeAttribute('style');
+  document.body.classList.remove('mem-dragging');
+  // Order changed: clear prior check marks so feedback stays honest.
+  d.board.querySelectorAll('.mem-scramble-tile').forEach(t => t.classList.remove('correct', 'wrong'));
+  const result = document.getElementById('memScrambleResult');
+  if (result && result.dataset.checked) {
+    result.dataset.checked = '';
+    result.className = 'mem-scramble-result';
+    result.innerHTML = '<span class="material-symbols-outlined">touch_app</span><div><strong>Keep arranging</strong><span>Hit Check order again when it looks right.</span></div>';
+  }
+}
+
+function shuffleMemorizationScramble() {
+  renderMemorizationPractice();
+}
+
+function checkMemorizationScramble() {
+  const board = document.getElementById('memScrambleBoard');
+  if (!board) return;
+  const tiles = [...board.querySelectorAll('.mem-scramble-tile')];
+  if (!tiles.length) return;
+  let correct = 0;
+  tiles.forEach((t, pos) => {
+    const ok = Number(t.dataset.correct) === pos;
+    t.classList.toggle('correct', ok);
+    t.classList.toggle('wrong', !ok);
+    if (ok) correct += 1;
+  });
+  const total = tiles.length;
+  const allRight = correct === total;
+  const score = total ? Math.round((correct / total) * 100) : 0;
+  // Reserve a perfect 100 (and the "memorized" badge) for spoken recitation.
+  _memSaveProgress(allRight ? 99 : Math.min(score, 90));
+  const result = document.getElementById('memScrambleResult');
+  if (result) {
+    result.dataset.checked = '1';
+    result.className = 'mem-scramble-result ' + (allRight ? 'good' : 'needs-work');
+    result.innerHTML = allRight
+      ? `<span class="material-symbols-outlined">verified</span><div><strong>Perfect order!</strong><span>All ${total} phrases are exactly right. Try reciting it out loud next.</span></div>`
+      : `<span class="material-symbols-outlined">swap_vert</span><div><strong>${total - correct} out of place</strong><span>The red phrases marked “incorrect” need to move. Press and hold one to slide it.</span></div>`;
+  }
+}
+
+window.shuffleMemorizationScramble = shuffleMemorizationScramble;
+window.checkMemorizationScramble = checkMemorizationScramble;
 
 function _memLcsCompare(targetWords, spokenWords) {
   const n = targetWords.length, m = spokenWords.length;
