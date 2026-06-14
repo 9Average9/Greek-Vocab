@@ -10508,29 +10508,46 @@ function _memReciteWords(text = '') {
 // numbers canonicalized), with fillers, stutters, and run-together pairs handled.
 function _memReciteSpokenWords(transcript = '', targetWords = []) {
   const targetSet = new Set(targetWords);
-  const targetRepeats = new Set();
   const joinedPairs = new Map();
+  // Longest run of each word repeated back-to-back in the actual verse (e.g.
+  // "holy holy holy" → 3). Anything beyond that, when a reciter says a word
+  // again right after itself, is treated as them re-reading aloud / stumbling
+  // — not a real duplicate — and is collapsed away so it costs nothing.
+  const targetMaxRun = new Map();
+  for (let i = 0; i < targetWords.length;) {
+    let j = i;
+    while (j < targetWords.length && targetWords[j] === targetWords[i]) j++;
+    targetMaxRun.set(targetWords[i], Math.max(targetMaxRun.get(targetWords[i]) || 0, j - i));
+    i = j;
+  }
   targetWords.forEach((word, idx) => {
-    if (idx > 0 && targetWords[idx - 1] === word) targetRepeats.add(word);
     if (idx < targetWords.length - 1) joinedPairs.set(`${word}${targetWords[idx + 1]}`, [word, targetWords[idx + 1]]);
   });
+  const allowedRun = word => targetMaxRun.get(word) || 1;
   const raw = _memNormalizeSpeechText(transcript)
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter(Boolean)
     .map(_memNormWord);
   const out = [];
+  let runWord = null, runCount = 0;
+  const push = word => {
+    if (word === runWord) {
+      if (runCount >= allowedRun(word)) return; // immediate repeat beyond the verse's own → drop
+      runCount += 1;
+    } else {
+      runWord = word;
+      runCount = 1;
+    }
+    out.push(word);
+  };
   raw.forEach(word => {
     if (!targetSet.has(word) && joinedPairs.has(word)) {
-      joinedPairs.get(word).forEach(part => {
-        if (out[out.length - 1] === part && !targetRepeats.has(part)) return;
-        out.push(part);
-      });
+      joinedPairs.get(word).forEach(push);
       return;
     }
     if (MEM_FILLER_WORDS.has(word) && !targetSet.has(word)) return;
-    if (out[out.length - 1] === word && !targetRepeats.has(word)) return;
-    out.push(word);
+    push(word);
   });
   return out;
 }
@@ -11988,22 +12005,29 @@ async function _memQueryMicPermission() {
 async function _memEnsureMicPermission() {
   const savedGrant = localStorage.getItem(MEM_MIC_ALLOWED_KEY) === 'true';
   const permission = await _memQueryMicPermission();
-  if (permission === 'denied') {
-    localStorage.removeItem(MEM_MIC_ALLOWED_KEY);
-    return { ok: false, denied: true };
+  if (permission === 'granted') {
+    localStorage.setItem(MEM_MIC_ALLOWED_KEY, 'true');
+    return { ok: true, remembered: savedGrant };
   }
-  if (permission === 'granted' && savedGrant) return { ok: true, remembered: true };
+  // Even if a previous "block" left the state as denied, still ATTEMPT to get
+  // the mic. On most browsers this re-shows the prompt (or, if it was only a
+  // dismiss, lets them allow it now). We never bail before trying, so tapping
+  // the button again always gives another real chance to allow.
   if (!navigator.mediaDevices?.getUserMedia) {
-    return { ok: savedGrant || permission !== 'denied', remembered: savedGrant };
+    // No getUserMedia: let SpeechRecognition raise its own permission prompt.
+    return { ok: true, viaSpeech: true };
   }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     stream.getTracks().forEach(track => track.stop());
     localStorage.setItem(MEM_MIC_ALLOWED_KEY, 'true');
-    return { ok: true, remembered: false };
+    return { ok: true };
   } catch (err) {
     localStorage.removeItem(MEM_MIC_ALLOWED_KEY);
-    return { ok: false, denied: true, error: err };
+    // NotAllowedError after a real prompt, or a sticky denied state, means the
+    // browser is blocking at the settings level — surface clear guidance.
+    const hardBlocked = permission === 'denied' || err?.name === 'NotAllowedError';
+    return { ok: false, denied: true, hardBlocked, error: err };
   }
 }
 
@@ -12023,8 +12047,10 @@ async function toggleMemorizationRecording() {
   if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic_external_on</span><strong>Checking mic</strong><small>One moment...</small>';
   const micPermission = await _memEnsureMicPermission();
   if (!micPermission.ok) {
-    _memResetMicUI('Mic permission is off. Allow it once in your browser/app settings, then come back here.');
-    document.getElementById('memFeedback').innerHTML = '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Once you allow the microphone, this app will remember that choice and stop asking unless your device revokes it.</p></div>';
+    _memResetMicUI('Mic is blocked right now. Tap Start reciting to try again.');
+    document.getElementById('memFeedback').innerHTML = micPermission.hardBlocked
+      ? '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Tap <strong>Start reciting</strong> again and choose Allow. If no prompt appears, your browser remembers a previous "block" — open this site\'s settings (the lock/aA icon by the address bar, or app settings) and switch the microphone to Allow, then tap again.</p></div>'
+      : '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Tap <strong>Start reciting</strong> again and choose Allow when the prompt appears.</p></div>';
     return;
   }
   _memFinalTranscript = '';
@@ -12053,10 +12079,11 @@ async function toggleMemorizationRecording() {
     _memSpeechErrored = true;
     const permissionIssue = ['not-allowed', 'service-not-allowed', 'permission-denied'].includes(event.error);
     if (permissionIssue) localStorage.removeItem(MEM_MIC_ALLOWED_KEY);
-    _memResetMicUI(permissionIssue ? 'Mic permission was not allowed. Tap Start reciting again after allowing microphone access.' : 'Ready when you are.');
+    // Always leave the button reset and tappable so they can retry immediately.
+    _memResetMicUI(permissionIssue ? 'Mic was blocked. Tap Start reciting to try again.' : 'Ready when you are.');
     document.getElementById('memFeedback').innerHTML = permissionIssue
-      ? '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Allow microphone access when your phone asks. If you already tapped no, open browser/app permissions and turn the microphone back on.</p></div>'
-      : `<div class="mem-feedback-card needs-work"><strong>Mic hiccup</strong><p>${_memEsc(event.error || 'Could not hear that clearly.')}</p></div>`;
+      ? '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Tap <strong>Start reciting</strong> again and choose Allow. If the prompt no longer appears, open this site\'s settings and switch the microphone to Allow.</p></div>'
+      : `<div class="mem-feedback-card needs-work"><strong>Mic hiccup</strong><p>${_memEsc(event.error || 'Could not hear that clearly.')} Tap Start reciting to try again.</p></div>`;
   };
   _memRecognition.onend = () => {
     if (_memSpeechErrored) return;
@@ -21058,7 +21085,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.212";
+const APP_VERSION = "3.0.213";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21079,6 +21106,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.213 &mdash; Full-Screen Memorization &amp; Retryable Mic</div>
+<ul>
+  <li><strong>Memorization is now its own full-screen page</strong> &mdash; It paints edge to edge (including the bottom safe-area strip), so the stray white bar at the bottom is gone for good and nothing from the app shell can peek through.</li>
+  <li><strong>Microphone is retryable</strong> &mdash; If you tap &ldquo;don&rsquo;t allow&rdquo; by accident, pressing <em>Start reciting</em> again now asks for the mic once more instead of getting stuck, with clear steps if your browser is still blocking it.</li>
+  <li><strong>Smarter about re-read words</strong> &mdash; Saying a word twice in a row while reading aloud no longer counts as a real duplicate or a mistake &mdash; the app collapses immediate repeats unless the verse itself actually repeats that word (like &ldquo;holy, holy, holy&rdquo;).</li>
+</ul>
 <div class="un-version-label">v3.0.212 &mdash; Bottom Bar Gone &amp; Kinder Recitation</div>
 <ul>
   <li><strong>Stray bottom bar removed</strong> &mdash; The memorization screen now matches its own height exactly (no leftover strip below it), trims the empty space at the very bottom, and force-hides every floating bar, so there is no more random pale bar for content to disappear behind.</li>
