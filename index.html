@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.200" rel="stylesheet"/>
+<link href="style.css?v=3.0.201" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -575,22 +575,24 @@ Habit Builder</span>
 <span class="friends-home-badge hidden" id="friendsHomeBadge"></span>
 </section>
 <section class="screen" id="memorizationPage">
-<div class="mem-scroll">
-<div class="mem-hero">
-<button class="mem-back-btn" onclick="showNavPage('home')" aria-label="Back home"><span class="material-symbols-outlined">arrow_back</span></button>
-<div>
+<div class="mem-page">
+<header class="mem-topbar">
+<button class="mem-icon-btn" onclick="showNavPage('home')" aria-label="Back home"><span class="material-symbols-outlined">arrow_back</span></button>
+<div class="mem-title-stack">
 <span class="mem-kicker">Memorization</span>
-<h1>Hide it in your heart</h1>
-<p>Choose a passage, paste any translation you are allowed to use, then practice until the words start sticking.</p>
+<strong id="memHeaderTitle">Choose a passage</strong>
 </div>
-<div class="mem-hero-mark" aria-hidden="true"><span class="material-symbols-outlined">psychology_alt</span></div>
-</div>
+<button class="mem-icon-btn" onclick="toggleMemorizationSetup()" aria-label="Choose text"><span class="material-symbols-outlined">add</span></button>
+</header>
 
-<div class="mem-layout">
-<section class="mem-panel mem-source-panel">
-<div class="mem-panel-head">
-<span class="material-symbols-outlined">auto_stories</span>
-<div><strong>Choose Text</strong><small>Use MSB/BSB or paste another translation</small></div>
+<div class="mem-main">
+<section class="mem-source-band" id="memSetupDrawer">
+<div class="mem-band-head">
+<div>
+<span class="mem-kicker">Choose text</span>
+<strong>Verse or pasted passage</strong>
+</div>
+<button class="mem-close-setup" onclick="toggleMemorizationSetup(false)" aria-label="Close chooser"><span class="material-symbols-outlined">keyboard_arrow_up</span></button>
 </div>
 <div class="mem-source-tabs" role="tablist">
 <button class="active" id="memSourceVerseBtn" onclick="setMemorizationSource('verse')">In-app verse</button>
@@ -619,38 +621,67 @@ Habit Builder</span>
 </div>
 </section>
 
-<section class="mem-panel mem-practice-panel">
+<section class="mem-practice-band">
 <div class="mem-practice-top">
 <div>
-<span class="mem-kicker">Practice</span>
+<span class="mem-kicker">Current passage</span>
 <h2 id="memCurrentRef">Choose a passage</h2>
 </div>
-<span class="mem-score-pill"><span class="material-symbols-outlined">workspace_premium</span><strong id="memBestScore">0%</strong></span>
-</div>
-<div class="mem-mode-grid">
-<button class="active" data-mode="read" onclick="setMemorizationMode('read')">Read</button>
-<button data-mode="third" onclick="setMemorizationMode('third')">Every 3rd</button>
-<button data-mode="keywords" onclick="setMemorizationMode('keywords')">Key Words</button>
-<button data-mode="letters" onclick="setMemorizationMode('letters')">First Letter</button>
-<button data-mode="blank" onclick="setMemorizationMode('blank')">Fill Blanks</button>
-<button data-mode="scramble" onclick="setMemorizationMode('scramble')">Scramble</button>
-<button data-mode="progressive" onclick="setMemorizationMode('progressive')">Progressive</button>
-<button data-mode="voice" onclick="setMemorizationMode('voice')">Voice</button>
+<span class="mem-score-pill" id="memStatusPill"><span class="material-symbols-outlined">hourglass_top</span><strong>Work in progress</strong></span>
 </div>
 <div class="mem-suggestion hidden" id="memSuggestion"></div>
-<article class="mem-verse-card" id="memPracticeCard">
+<article class="mem-verse-stage" id="memPracticeCard">
 <p class="mem-empty">Load a verse or paste text to begin.</p>
 </article>
-<div class="mem-voice-panel hidden" id="memVoicePanel">
+</section>
+
+<section class="mem-wheel-band">
+<div class="mem-band-head">
+<div>
+<span class="mem-kicker">Practice wheel</span>
+<strong>Pick the kind of challenge</strong>
+</div>
+<span class="mem-best-chip"><span class="material-symbols-outlined">workspace_premium</span><span id="memBestScore">0%</span></span>
+</div>
+<div class="mem-mode-wheel" aria-label="Memorization practice modes">
+<button class="active" data-mode="read" onclick="setMemorizationMode('read')"><span class="material-symbols-outlined">auto_stories</span><strong>Read</strong><small>normal text</small></button>
+<button data-mode="third" onclick="setMemorizationMode('third')"><span class="material-symbols-outlined">filter_3</span><strong>Every 3rd</strong><small>hide rhythm</small></button>
+<button data-mode="keywords" onclick="setMemorizationMode('keywords')"><span class="material-symbols-outlined">key</span><strong>Key words</strong><small>hide anchors</small></button>
+<button data-mode="letters" onclick="setMemorizationMode('letters')"><span class="material-symbols-outlined">sort_by_alpha</span><strong>First letter</strong><small>cue only</small></button>
+<button data-mode="blank" onclick="setMemorizationMode('blank')"><span class="material-symbols-outlined">edit_square</span><strong>Fill blanks</strong><small>type it out</small></button>
+<button data-mode="scramble" onclick="setMemorizationMode('scramble')"><span class="material-symbols-outlined">shuffle</span><strong>Scramble</strong><small>order phrases</small></button>
+<button data-mode="progressive" onclick="setMemorizationMode('progressive')"><span class="material-symbols-outlined">visibility_off</span><strong>Vanish</strong><small>progressive</small></button>
+</div>
+</section>
+
+<section class="mem-recitation-band" id="memVoicePanel">
+<div class="mem-band-head">
+<div>
+<span class="mem-kicker">Final round</span>
+<strong>Recite from memory</strong>
+</div>
+</div>
 <button class="mem-mic-btn" id="memMicBtn" onclick="toggleMemorizationRecording()">
-<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>Speak the verse out loud</small>
+<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>
 </button>
 <div class="mem-transcript" id="memTranscript">Your spoken words will appear here.</div>
-</div>
 <div class="mem-feedback" id="memFeedback"></div>
 </section>
+
+<section class="mem-saved-band">
+<div class="mem-band-head">
+<div>
+<span class="mem-kicker">Saved verses</span>
+<strong>Pick up where you left off</strong>
 </div>
-<div style="height:88px"></div>
+</div>
+<div class="mem-saved-list" id="memSavedList">
+<p class="mem-empty">Loaded verses will save here.</p>
+</div>
+</section>
+
+<div style="height:98px"></div>
+</div>
 </div>
 </section>
 <section class="screen" id="habitsPage">
@@ -16601,7 +16632,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.200"></script>
+<script src="app.js?v=3.0.201"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>

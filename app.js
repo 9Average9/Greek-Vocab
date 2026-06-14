@@ -10378,6 +10378,7 @@ function showScreen(id) {
   if (id !== 'habitsPage') setHabitsNavCollapsed(false);
 
   _syncHomeViewportState(id);
+  document.body?.classList.toggle('memorization-active', id === 'memorizationPage');
   _updateAppHeaderForScreen(id);
 }
 
@@ -10400,7 +10401,9 @@ let _memMode = 'read';
 let _memCurrent = null;
 let _memRecognition = null;
 let _memRecording = false;
+let _memReciting = false;
 let _memFinalTranscript = '';
+const MEM_SAVED_KEY = 'memorizationSavedPassages';
 
 const MEM_FILLER_WORDS = new Set([
   'um','umm','uh','uhh','er','erm','ah','hmm','like','wait','sorry','okay','ok',
@@ -10450,8 +10453,86 @@ function _memSaveProgress(score) {
     updatedAt: Date.now()
   };
   localStorage.setItem(_memStorageKey(_memCurrent.id), JSON.stringify(next));
+  _memUpsertSavedPassage(_memCurrent, next);
   updateMemorizationProgressUI();
 }
+
+function _memSavedList() {
+  try {
+    const list = JSON.parse(localStorage.getItem(MEM_SAVED_KEY) || '[]');
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function _memPersistSavedList(list) {
+  localStorage.setItem(MEM_SAVED_KEY, JSON.stringify(list.slice(0, 80)));
+}
+
+function _memUpsertSavedPassage(passage = _memCurrent, progress = _memGetProgress(passage?.id || '')) {
+  if (!passage?.id || !passage?.text) return;
+  const list = _memSavedList().filter(item => item.id !== passage.id);
+  const best = Number(progress?.best || 0);
+  list.unshift({
+    id: passage.id,
+    ref: passage.ref || 'Saved passage',
+    version: passage.version || 'Custom',
+    text: passage.text,
+    best,
+    status: best >= 100 ? 'memorized' : 'work',
+    updatedAt: Date.now()
+  });
+  _memPersistSavedList(list);
+  renderMemorizationSavedList();
+}
+
+function renderMemorizationSavedList() {
+  const el = document.getElementById('memSavedList');
+  if (!el) return;
+  const list = _memSavedList();
+  if (!list.length) {
+    el.innerHTML = '<p class="mem-empty">Loaded verses will save here.</p>';
+    return;
+  }
+  el.innerHTML = list.map(item => {
+    const status = item.status === 'memorized' ? 'Memorized' : 'Work in progress';
+    const icon = item.status === 'memorized' ? 'verified' : 'pending_actions';
+    return `<article class="mem-saved-item ${item.id === _memCurrent?.id ? 'active' : ''}">
+      <button class="mem-saved-main" onclick="openMemorizationSaved('${_memEsc(item.id)}')">
+        <span class="material-symbols-outlined">${icon}</span>
+        <span><strong>${_memEsc(item.ref)}</strong><small>${_memEsc(status)} | ${Math.round(Number(item.best || 0))}% best</small></span>
+      </button>
+      <button class="mem-saved-delete" onclick="deleteMemorizationSaved('${_memEsc(item.id)}')" aria-label="Remove saved passage"><span class="material-symbols-outlined">close</span></button>
+    </article>`;
+  }).join('');
+}
+
+function openMemorizationSaved(id) {
+  const item = _memSavedList().find(saved => saved.id === id);
+  if (!item) return;
+  _memCurrent = { id: item.id, ref: item.ref, version: item.version, text: item.text };
+  localStorage.setItem('memorizationLastPassage', JSON.stringify(_memCurrent));
+  document.getElementById('memFeedback').innerHTML = '';
+  document.getElementById('memTranscript').textContent = 'Your spoken words will appear here.';
+  updateMemorizationProgressUI();
+  renderMemorizationPractice();
+}
+
+function deleteMemorizationSaved(id) {
+  _memPersistSavedList(_memSavedList().filter(item => item.id !== id));
+  if (_memCurrent?.id === id) {
+    _memCurrent = null;
+    localStorage.removeItem('memorizationLastPassage');
+    document.getElementById('memFeedback').innerHTML = '';
+    document.getElementById('memTranscript').textContent = 'Your spoken words will appear here.';
+    renderMemorizationPractice();
+  }
+  updateMemorizationProgressUI();
+}
+
+window.openMemorizationSaved = openMemorizationSaved;
+window.deleteMemorizationSaved = deleteMemorizationSaved;
 
 function _memWords(text = '', { removeFillers = false } = {}) {
   const raw = String(text || '')
@@ -10477,6 +10558,23 @@ function _memIsWordToken(token = '') {
   return /[A-Za-z0-9]/.test(token);
 }
 
+function _memDisplayTokens(text = '') {
+  return String(text || '').split(/(\s+)/).filter(part => part.length);
+}
+
+function _memRenderTokenWords(text = '', renderWord) {
+  let wordIndex = 0;
+  return _memDisplayTokens(text).map(part => {
+    if (/^\s+$/.test(part)) return part;
+    const pieces = part.match(/[A-Za-z0-9]+(?:['\u2019][A-Za-z0-9]+)?|[^A-Za-z0-9]+/g) || [];
+    return pieces.map(piece => {
+      if (!/[A-Za-z0-9]/.test(piece)) return _memEsc(piece);
+      wordIndex += 1;
+      return renderWord(piece, wordIndex);
+    }).join('');
+  }).join('');
+}
+
 async function startMemorizationPage() {
   await loadRhemaScripts().catch(() => {});
   if (typeof _syncRhemaEnglishAlias === 'function') _syncRhemaEnglishAlias();
@@ -10490,7 +10588,17 @@ async function startMemorizationPage() {
   }
   updateMemorizationProgressUI();
   renderMemorizationPractice();
+  renderMemorizationSavedList();
 }
+
+function toggleMemorizationSetup(force) {
+  const drawer = document.getElementById('memSetupDrawer');
+  if (!drawer) return;
+  const open = typeof force === 'boolean' ? force : drawer.classList.contains('collapsed');
+  drawer.classList.toggle('collapsed', !open);
+}
+
+window.toggleMemorizationSetup = toggleMemorizationSetup;
 
 function setMemorizationSource(source) {
   _memSource = source === 'paste' ? 'paste' : 'verse';
@@ -10615,45 +10723,57 @@ function loadMemorizationPastedText() {
 function setMemorizationCurrent(next) {
   _memCurrent = next;
   localStorage.setItem('memorizationLastPassage', JSON.stringify(next));
+  _memUpsertSavedPassage(next);
   document.getElementById('memFeedback').innerHTML = '';
   document.getElementById('memTranscript').textContent = 'Your spoken words will appear here.';
+  toggleMemorizationSetup(false);
   updateMemorizationProgressUI();
   renderMemorizationPractice();
 }
 
 function updateMemorizationProgressUI() {
   const refEl = document.getElementById('memCurrentRef');
+  const headerEl = document.getElementById('memHeaderTitle');
   const bestEl = document.getElementById('memBestScore');
+  const statusEl = document.getElementById('memStatusPill');
   const suggestion = document.getElementById('memSuggestion');
   if (refEl) refEl.textContent = _memCurrent?.ref || 'Choose a passage';
+  if (headerEl) headerEl.textContent = _memCurrent?.ref || 'Choose a passage';
   const progress = _memGetProgress();
   if (bestEl) bestEl.textContent = `${Math.round(progress.best || 0)}%`;
+  if (statusEl) {
+    const memorized = Number(progress.best || 0) >= 100;
+    statusEl.classList.toggle('memorized', memorized);
+    statusEl.innerHTML = `<span class="material-symbols-outlined">${memorized ? 'verified' : 'hourglass_top'}</span><strong>${memorized ? 'Memorized' : 'Work in progress'}</strong>`;
+  }
   if (!suggestion) return;
   const best = Number(progress.best || 0);
   let html = '';
-  if (_memCurrent && best >= 92 && _memMode !== 'voice') html = '<strong>You are cooking.</strong> Want to try voice mode and prove it out loud?';
-  else if (_memCurrent && best >= 82 && !['progressive','blank','voice'].includes(_memMode)) html = '<strong>Looks like it is sticking.</strong> Try Progressive or Fill Blanks for a cleaner challenge.';
+  if (_memCurrent && best >= 92) html = '<strong>You are cooking.</strong> Final round is ready when you are.';
+  else if (_memCurrent && best >= 82 && !['progressive','blank'].includes(_memMode)) html = '<strong>Looks like it is sticking.</strong> Try Vanish or Fill Blanks for a cleaner challenge.';
   suggestion.innerHTML = html;
   suggestion.classList.toggle('hidden', !html);
+  renderMemorizationSavedList();
 }
 
 function setMemorizationMode(mode) {
-  _memMode = mode || 'read';
-  document.querySelectorAll('.mem-mode-grid button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === _memMode));
+  _memMode = mode === 'voice' ? 'read' : (mode || 'read');
+  document.querySelectorAll('.mem-mode-wheel button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === _memMode));
   renderMemorizationPractice();
 }
 
 function renderMemorizationPractice() {
   const card = document.getElementById('memPracticeCard');
-  const voice = document.getElementById('memVoicePanel');
   if (!card) return;
   updateMemorizationProgressUI();
   if (!_memCurrent?.text) {
     card.innerHTML = '<p class="mem-empty">Load a verse or paste text to begin.</p>';
-    voice?.classList.add('hidden');
     return;
   }
-  voice?.classList.toggle('hidden', _memMode !== 'voice');
+  if (_memReciting) {
+    card.innerHTML = `<div class="mem-reciting-cover"><span class="material-symbols-outlined">visibility_off</span><strong>Verse hidden</strong><p>Say it from memory. I will compare it when you stop.</p></div>`;
+    return;
+  }
   const text = _memCurrent.text;
   if (_memMode === 'blank') card.innerHTML = _memBlankHtml(text);
   else if (_memMode === 'scramble') card.innerHTML = _memScrambleHtml(text);
@@ -10661,12 +10781,8 @@ function renderMemorizationPractice() {
 }
 
 function _memRenderTextByMode(text, mode) {
-  const tokens = _memDisplayTokens(text);
-  let wordIndex = 0;
   const progressivePct = Math.min(1, 0.25 + Math.floor(Number(_memGetProgress().best || 0) / 25) * 0.25);
-  return tokens.map(token => {
-    if (!_memIsWordToken(token)) return _memEsc(token);
-    wordIndex += 1;
+  return _memRenderTokenWords(text, (token, wordIndex) => {
     const clean = token.replace(/[^A-Za-z0-9]/g, '');
     const hide = mode === 'third'
       ? wordIndex % 3 === 0
@@ -10677,18 +10793,17 @@ function _memRenderTextByMode(text, mode) {
           : false;
     if (mode === 'letters') return `<span class="mem-first-letter">${_memEsc(clean[0] || '')}</span>`;
     return hide ? `<span class="mem-hidden-word">${'&nbsp;'.repeat(Math.max(4, Math.min(clean.length, 14)))}</span>` : _memEsc(token);
-  }).join('');
+  });
 }
 
 function _memBlankHtml(text) {
   const words = _memWords(text);
   let idx = 0;
-  const rendered = _memDisplayTokens(text).map(token => {
-    if (!_memIsWordToken(token)) return _memEsc(token);
+  const rendered = _memRenderTokenWords(text, token => {
     const word = words[idx++] || '';
     if (idx % 3 !== 0 && word.length < 6) return _memEsc(token);
     return `<input class="mem-blank-input" data-answer="${_memEsc(word)}" aria-label="Missing word"/>`;
-  }).join('');
+  });
   return `<div class="mem-rendered-text">${rendered}</div><button class="mem-secondary-btn mem-check-blanks" onclick="checkMemorizationBlanks()"><span class="material-symbols-outlined">done_all</span>Check blanks</button>`;
 }
 
@@ -10771,7 +10886,11 @@ function scoreMemorizationRecitation(transcript = '') {
 }
 
 function toggleMemorizationRecording() {
-  if (_memRecording) { _memRecognition?.stop?.(); return; }
+  if (_memRecording) {
+    _memRecording = false;
+    _memRecognition?.stop?.();
+    return;
+  }
   if (!_memCurrent?.text) { _showStudyToast('Load a passage first'); return; }
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recognition) {
@@ -10782,10 +10901,14 @@ function toggleMemorizationRecording() {
   _memRecognition = new Recognition();
   _memRecognition.lang = 'en-US';
   _memRecognition.interimResults = true;
-  _memRecognition.continuous = false;
+  _memRecognition.continuous = true;
   _memRecording = true;
-  document.getElementById('memMicBtn')?.classList.add('recording');
+  _memReciting = true;
+  const micBtn = document.getElementById('memMicBtn');
+  micBtn?.classList.add('recording');
+  if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">stop_circle</span><strong>Stop and score</strong><small>I am listening. Keep going.</small>';
   document.getElementById('memTranscript').textContent = 'Listening...';
+  renderMemorizationPractice();
   _memRecognition.onresult = event => {
     let interim = '';
     for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -10796,15 +10919,35 @@ function toggleMemorizationRecording() {
     document.getElementById('memTranscript').textContent = (_memFinalTranscript + interim).trim() || 'Listening...';
   };
   _memRecognition.onerror = event => {
+    _memRecording = false;
+    _memReciting = false;
+    const micBtn = document.getElementById('memMicBtn');
+    micBtn?.classList.remove('recording');
+    if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
+    renderMemorizationPractice();
     document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card needs-work"><strong>Mic hiccup</strong><p>${_memEsc(event.error || 'Could not hear that clearly.')}</p></div>`;
   };
   _memRecognition.onend = () => {
     _memRecording = false;
-    document.getElementById('memMicBtn')?.classList.remove('recording');
+    _memReciting = false;
+    const micBtn = document.getElementById('memMicBtn');
+    micBtn?.classList.remove('recording');
+    if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
+    renderMemorizationPractice();
     const transcript = (document.getElementById('memTranscript')?.textContent || _memFinalTranscript || '').trim();
     if (transcript && transcript !== 'Listening...') scoreMemorizationRecitation(transcript);
   };
-  _memRecognition.start();
+  try {
+    _memRecognition.start();
+  } catch (err) {
+    _memRecording = false;
+    _memReciting = false;
+    const micBtn = document.getElementById('memMicBtn');
+    micBtn?.classList.remove('recording');
+    if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
+    renderMemorizationPractice();
+    document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card needs-work"><strong>Mic could not start</strong><p>${_memEsc(err?.message || 'Check microphone permission and try again.')}</p></div>`;
+  }
 }
 
 const LESSON_HEADER_FACTS = [
@@ -19786,7 +19929,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.200";
+const APP_VERSION = "3.0.201";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19807,6 +19950,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.201 &mdash; Memorization Redesign</div>
+<ul>
+  <li><strong>Full-page mobile practice</strong> &mdash; Memorization now opens as its own page with a sticky top bar, scripture-first layout, and no Disciple Builder shell title crowding the tool.</li>
+  <li><strong>Better practice flow</strong> &mdash; Practice modes moved into a scroll-snap wheel, recitation is now its own final round, and the verse hides while the microphone is listening.</li>
+  <li><strong>Saved verse progress</strong> &mdash; Loaded and pasted passages save locally with work-in-progress or memorized status, and perfect recitations mark the passage as memorized.</li>
+</ul>
 <div class="un-version-label">v3.0.200 &mdash; Scripture Memorization</div>
 <ul>
   <li><strong>New Memorize quick action</strong> &mdash; Home now opens a memorization workspace for MSB/BSB passages or any pasted text from another translation.</li>
