@@ -28424,7 +28424,18 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 .rhema-why-wrap .rhema-why-def { margin-top: 8px; }
 
 /* Memorization */
-#memorizationPage.screen.active { display: block; overflow: hidden; }
+/* Memorization is a full-screen page of its own: a fixed overlay pinned to all
+   four edges of the device so it paints edge-to-edge (including the bottom
+   safe-area / home-indicator strip) and nothing from the app shell — nav bars,
+   padding, safe-area gaps — can ever show behind or below it. */
+#memorizationPage.screen.active {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;
+  background: var(--memorization-page-color, var(--primary-light)) !important;
+}
 html.memorization-active {
   background: var(--memorization-page-color, var(--primary-light)) !important;
 }
@@ -28444,10 +28455,6 @@ body.memorization-active .app {
 }
 #memorizationPage {
   background: var(--memorization-page-color, var(--primary-light)) !important;
-  /* Match .mem-page exactly (which is 100svh) so no leftover strip shows below
-     it that reads as a stray bottom bar. */
-  height: 100vh;
-  height: 100svh;
   min-height: 0;
   overflow: hidden;
 }
@@ -28463,8 +28470,7 @@ body.memorization-active .rhema-sandbox-arrows {
   width: 100%;
   min-width: 0;
   max-width: none;
-  height: 100vh;
-  height: 100svh;
+  height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
