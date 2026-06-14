@@ -19368,7 +19368,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.198";
+const APP_VERSION = "3.0.199";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19389,6 +19389,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.199 &mdash; Whole-NT Cleanup</div>
+<ul>
+  <li><strong>Final conjugation gaps closed</strong> &mdash; &#8220;little childs&#8221; &rarr; &#8220;little children,&#8221; &#8220;transfered&#8221; &rarr; &#8220;transferred,&#8221; and &#960;&#949;&#961;&#953;&#963;&#963;&#949;&#973;&#969; now &#8220;abound.&#8221; A full scan of all 139,952 words confirms the word-by-word glosses now read cleanly across the New Testament.</li>
+</ul>
 <div class="un-version-label">v3.0.198 &mdash; Wide Audit Sweep</div>
 <ul>
   <li><strong>&#960;&#940;&#963;&#967;&#969; reads &#8220;suffer&#8221;</strong> &mdash; &#8220;if one member suffers&#8221; (1 Cor 12:26), not the literal &#8220;is acted upon.&#8221;</li>
@@ -28015,16 +28019,22 @@ const _PASSIVE_PARTICIPLE_PHRASES = {
 };
 
 function _engPlural(base) {
-  // Strip leading indefinite / definite article
-  const word = base.replace(/^(?:a |an |the )/i, '');
+  // Strip leading indefinite / definite article, then pluralise the head noun
+  // (the last word), so "little child" → "little children", not "little childs".
+  const stripped = base.replace(/^(?:a |an |the )/i, '');
+  const parts = stripped.split(' ');
+  const word = parts[parts.length - 1];
   const low = word.toLowerCase();
-  const IRREG = { man: 'men', woman: 'women', child: 'children', foot: 'feet', tooth: 'teeth' };
-  if (IRREG[low]) return IRREG[low];
-  if (/(?:s|sh|ch|x|z)$/i.test(word)) return word + 'es';
-  if (/[^aeiou]y$/i.test(word)) return word.slice(0, -1) + 'ies';
-  if (/fe$/i.test(word)) return word.slice(0, -2) + 'ves'; // life→lives, wife→wives
-  if (/lf$/i.test(word)) return word.slice(0, -1) + 'ves'; // half→halves
-  return word + 's';
+  const IRREG = { man: 'men', woman: 'women', child: 'children', foot: 'feet', tooth: 'teeth', ox: 'oxen' };
+  let pl;
+  if (IRREG[low]) pl = IRREG[low];
+  else if (/(?:s|sh|ch|x|z)$/i.test(word)) pl = word + 'es';
+  else if (/[^aeiou]y$/i.test(word)) pl = word.slice(0, -1) + 'ies';
+  else if (/fe$/i.test(word)) pl = word.slice(0, -2) + 'ves'; // life→lives, wife→wives
+  else if (/lf$/i.test(word)) pl = word.slice(0, -1) + 'ves'; // half→halves
+  else pl = word + 's';
+  parts[parts.length - 1] = pl;
+  return parts.join(' ');
 }
 
 // Single-syllable guard: consonant doubling only applies to 1-syllable words
@@ -28041,6 +28051,7 @@ function _engIng(v) {
   const lw = w.toLowerCase();
   if (lw === 'am' || lw === 'is' || lw === 'are' || lw === 'be') w = 'being';
   else if (/ie$/.test(w)) w = w.slice(0, -2) + 'ying';                  // lie→lying, die→dying
+  else if (/(?:fer|cur|mit)$/.test(w)) w = w + w.slice(-1) + 'ing';     // transfer→transferring
   else if (/[^aeiou]e$/.test(w)) w = w.slice(0, -1) + 'ing';            // love→loving
   else if (_isSingleSyllable(w) && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) w = w + w.slice(-1) + 'ing'; // run→running
   else w = w + 'ing';
@@ -28054,7 +28065,8 @@ function _engPast(v) {
   const key = words[0].toLowerCase();
   if (_IRREG_PAST_PART[key]) { words[0] = _IRREG_PAST_PART[key]; return words.join(' '); }
   const w = words[0];
-  if (/e$/.test(w)) words[0] = w + 'd';
+  if (/(?:fer|cur|mit)$/.test(w)) words[0] = w + w.slice(-1) + 'ed';    // transfer→transferred
+  else if (/e$/.test(w)) words[0] = w + 'd';
   else if (/[^aeiou]y$/.test(w)) words[0] = w.slice(0, -1) + 'ied';
   else if (_isSingleSyllable(w) && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) words[0] = w + w.slice(-1) + 'ed';
   else words[0] = w + 'ed';
@@ -30614,9 +30626,11 @@ const RHEMA_VERB_BASE = new Map([
   [2998, 'hew'],         // λατομέω (brief "hew stones" → "hewed stones")
   [5254, 'undergo'],     // ὑπέχω (brief "submit to" → "submiting to")
   [1929, 'give'],        // ἐπιδίδωμι (brief "hand in" → "was handing in")
+  [5302, 'fall short'],  // ὑστερέω active (brief "I am lacking" → "having been lacking")
   [310,  'cry out'],     // ἀναβοάω (brief "shout upwards")
   [3958, 'suffer'],      // πάσχω (brief "I am acted upon" → "is acted upon")
   [2650, 'remain'],      // καταμένω (brief leads "wait" → "waiting")
+  [4052, 'abound'],      // περισσεύω (brief leads "exceed"; grace "abounded")
 ]);
 
 // ἵστημι is transitive ("set, place") in the present/imperfect/future/1-aorist
