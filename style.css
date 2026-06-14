@@ -28466,6 +28466,11 @@ body.memorization-active #studyTabBar,
 body.memorization-active .rhema-sandbox-arrows {
   display: none !important;
 }
+/* The fixed status-bar backer must match the memorization page so the top edge
+   is one continuous color, not a separate blue/white bar above the page. */
+body.memorization-active #statusBarBg {
+  background: var(--memorization-page-color, var(--primary-light)) !important;
+}
 .mem-page {
   width: 100%;
   min-width: 0;
@@ -28506,9 +28511,9 @@ body.memorization-active .rhema-sandbox-arrows {
   align-items: center;
   gap: 10px;
   padding: calc(env(safe-area-inset-top, 0px) + 18px) 14px 14px;
-  background: color-mix(in srgb, var(--bg-color) 94%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 10%, transparent);
-  backdrop-filter: blur(16px);
+  /* Seamless with the page — no header band, line, or card look at the top. */
+  background: var(--memorization-page-color, var(--primary-light));
+  border-bottom: 0;
 }
 /* Hub topbar sits a touch lower with a roomier, better-centered title so the
    "Scripture workshop" heading is not jammed against the top edge. */

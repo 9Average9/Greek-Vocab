@@ -21085,7 +21085,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.213";
+const APP_VERSION = "3.0.214";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21106,6 +21106,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.214 &mdash; Seamless Full-Screen Memorization</div>
+<ul>
+  <li><strong>No more top bar</strong> &mdash; The status-bar strip and the workshop header now use the exact same page color, with the header band, divider line, and blur removed, so the memorization page is one continuous color from the very top edge all the way down — it truly fills the whole screen.</li>
+</ul>
 <div class="un-version-label">v3.0.213 &mdash; Full-Screen Memorization &amp; Retryable Mic</div>
 <ul>
   <li><strong>Memorization is now its own full-screen page</strong> &mdash; It paints edge to edge (including the bottom safe-area strip), so the stray white bar at the bottom is gone for good and nothing from the app shell can peek through.</li>
