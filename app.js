@@ -10471,6 +10471,66 @@ const MEM_CONTRACTIONS = {
   "youre": "you are"
 };
 
+// Spoken numbers come back from speech-to-text as words ("twelve") while a verse
+// may print digits ("12"), or vice versa. Canonicalizing both sides to the same
+// token lets the matcher line them up. The mapping only has to be internally
+// consistent — both target and spoken use it — so it does not need to be a true
+// numeric value (e.g. hundred → "100" on both sides still aligns).
+const MEM_NUMBER_CANON = {
+  zero:'0', one:'1', two:'2', three:'3', four:'4', five:'5', six:'6', seven:'7',
+  eight:'8', nine:'9', ten:'10', eleven:'11', twelve:'12', thirteen:'13',
+  fourteen:'14', fifteen:'15', sixteen:'16', seventeen:'17', eighteen:'18',
+  nineteen:'19', twenty:'20', thirty:'30', forty:'40', fourty:'40', fifty:'50',
+  sixty:'60', seventy:'70', eighty:'80', ninety:'90', hundred:'100',
+  thousand:'1000', million:'1000000',
+  first:'1st', second:'2nd', third:'3rd', fourth:'4th', fifth:'5th', sixth:'6th',
+  seventh:'7th', eighth:'8th', ninth:'9th', tenth:'10th'
+};
+
+function _memNormWord(piece = '') {
+  const w = String(piece || '').toLowerCase().replace(/['‘’]/g, '');
+  return MEM_NUMBER_CANON[w] || w;
+}
+
+// Recitation target words, kept 1:1 with the on-screen word tokens so the
+// "what I heard" diff can color each printed word by its result.
+function _memReciteWords(text = '') {
+  const out = [];
+  _memRenderTokenWords(text, piece => { out.push(_memNormWord(piece)); return ''; });
+  return out;
+}
+
+// Spoken words normalized the same way as the target (apostrophes dropped,
+// numbers canonicalized), with fillers, stutters, and run-together pairs handled.
+function _memReciteSpokenWords(transcript = '', targetWords = []) {
+  const targetSet = new Set(targetWords);
+  const targetRepeats = new Set();
+  const joinedPairs = new Map();
+  targetWords.forEach((word, idx) => {
+    if (idx > 0 && targetWords[idx - 1] === word) targetRepeats.add(word);
+    if (idx < targetWords.length - 1) joinedPairs.set(`${word}${targetWords[idx + 1]}`, [word, targetWords[idx + 1]]);
+  });
+  const raw = _memNormalizeSpeechText(transcript)
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(_memNormWord);
+  const out = [];
+  raw.forEach(word => {
+    if (!targetSet.has(word) && joinedPairs.has(word)) {
+      joinedPairs.get(word).forEach(part => {
+        if (out[out.length - 1] === part && !targetRepeats.has(part)) return;
+        out.push(part);
+      });
+      return;
+    }
+    if (MEM_FILLER_WORDS.has(word) && !targetSet.has(word)) return;
+    if (out[out.length - 1] === word && !targetRepeats.has(word)) return;
+    out.push(word);
+  });
+  return out;
+}
+
 function openMemorizationPage() {
   setNavActive('memorization');
   hideBottomNav();
@@ -11545,14 +11605,23 @@ function _memLcsCompare(targetWords, spokenWords) {
     }
   }
   const matchedTarget = new Set(), matchedSpoken = new Set(), fuzzyMatches = [];
+  // Per-target-word result, indexed by position, so the UI can color the verse.
+  const targetStatus = targetWords.map((word, ti) => ({ ti, word, state: 'miss' }));
   let i = 0, j = 0, exactMatched = 0;
   while (i < n && j < m) {
     if (choice[i][j] === 'take') {
       const sim = _memWordSimilarity(targetWords[i], spokenWords[j]);
       matchedTarget.add(i);
       matchedSpoken.add(j);
-      if (sim < 1) fuzzyMatches.push({ target: targetWords[i], spoken: spokenWords[j], sim, ti: i });
-      else exactMatched++;
+      if (sim < 1) {
+        fuzzyMatches.push({ target: targetWords[i], spoken: spokenWords[j], sim, ti: i });
+        targetStatus[i].state = 'fuzzy';
+        targetStatus[i].spoken = spokenWords[j];
+        targetStatus[i].sim = sim;
+      } else {
+        targetStatus[i].state = 'hit';
+        exactMatched++;
+      }
       i++;
       j++;
     } else if (choice[i][j] === 'skipTarget') i++;
@@ -11561,32 +11630,41 @@ function _memLcsCompare(targetWords, spokenWords) {
   const missing = targetWords.map((w, idx) => matchedTarget.has(idx) ? null : w).filter(Boolean);
   const added = spokenWords.map((w, idx) => matchedSpoken.has(idx) ? null : w).filter(Boolean);
   const hardAdded = added.filter(w => !MEM_SOFT_EXTRA_WORDS.has(w));
-  return { matched: matchedTarget.size, exactMatched, missing, added, hardAdded, fuzzyMatches, total: n };
+  return { matched: matchedTarget.size, exactMatched, missing, added, hardAdded, fuzzyMatches, targetStatus, total: n };
 }
 
-// Turn the alignment into a score. Fuzzy (slurred / near-homophone) matches
-// count at their similarity by default, but the user can confirm them as right
-// ("did you mean…") which lifts them to a clean hit, or reject them as a miss.
+// Turn the alignment into a score. The user can correct anything the audio got
+// wrong: confirm a slurred/near-homophone word as right ("yes"), reject it
+// ("no"), or tell us a flat miss was actually spoken ("said"). Every per-word
+// state is resolved here so the score, the diff colors, and the saved progress
+// all stay in sync.
 function _memScoreRecitation(result, decisions = {}) {
   const n = Number(result.total || 0);
-  if (!n) return { score: 0, missing: [], hardAdded: [] };
-  let credit = Number(result.exactMatched || 0);
-  const missing = result.missing.slice();
-  const hardAdded = result.hardAdded.slice();
-  (result.fuzzyMatches || []).forEach(fm => {
-    const decision = decisions[fm.ti];
-    if (decision === 'yes') credit += 1;            // confirmed correct → full credit
-    else if (decision === 'no') {                   // rejected → it becomes a miss + an extra word
-      missing.push(fm.target);
-      if (!MEM_SOFT_EXTRA_WORDS.has(fm.spoken)) hardAdded.push(fm.spoken);
-    } else credit += fm.sim;                         // undecided → partial credit
+  if (!n) return { score: 0, missing: [], hardAdded: [], unresolved: 0 };
+  const status = result.targetStatus || [];
+  let credit = 0, unresolved = 0;
+  const missing = [];
+  const hardAdded = (result.hardAdded || []).slice();
+  status.forEach(t => {
+    const decision = decisions[t.ti];
+    if (t.state === 'hit') { credit += 1; return; }
+    if (t.state === 'fuzzy') {
+      if (decision === 'yes') credit += 1;
+      else if (decision === 'no') {
+        missing.push(t.word);
+        if (t.spoken && !MEM_SOFT_EXTRA_WORDS.has(t.spoken)) hardAdded.push(t.spoken);
+      } else { credit += (t.sim || 0); unresolved += 1; }
+      return;
+    }
+    // flat miss
+    if (decision === 'said') credit += 1;
+    else missing.push(t.word);
   });
   const additionPenalty = Math.min(12, hardAdded.length * 2.25);
   const base = (credit / n) * 100;
-  const undecidedFuzzy = (result.fuzzyMatches || []).some(fm => !decisions[fm.ti]);
-  const clean = credit >= n && hardAdded.length === 0 && !undecidedFuzzy;
+  const clean = credit >= n && hardAdded.length === 0 && unresolved === 0;
   const score = clean ? 100 : Math.max(0, Math.min(99, Math.round(base - additionPenalty)));
-  return { score, missing, hardAdded };
+  return { score, missing, hardAdded, unresolved };
 }
 
 function _memPrepareSpokenWords(transcript = '', targetWords = []) {
@@ -11677,12 +11755,14 @@ function _memGroupWords(words = [], maxGroups = 4) {
 
 function scoreMemorizationRecitation(transcript = '') {
   if (!_memCurrent?.text) return null;
-  const target = _memWords(_memCurrent.text);
-  const spoken = _memPrepareSpokenWords(transcript, target);
+  // Target words stay 1:1 with the printed verse tokens so the diff can color
+  // each word; the spoken side is normalized the same way for fair alignment.
+  const target = _memReciteWords(_memCurrent.text);
+  const spoken = _memReciteSpokenWords(transcript, target);
   const result = _memLcsCompare(target, spoken);
-  // Only the genuinely ambiguous fuzzy matches become "did you mean" questions;
-  // very close slips are accepted silently, very far ones are just misses.
-  result.queries = (result.fuzzyMatches || []).filter(fm => fm.sim >= 0.74 && fm.sim < 0.97 && fm.spoken !== fm.target);
+  // Slurred matches close enough to be ambiguous become "did you mean" prompts;
+  // very close slips pass silently, very far ones are just misses.
+  result.queries = (result.fuzzyMatches || []).filter(fm => fm.sim >= 0.7 && fm.sim < 0.97 && fm.spoken !== fm.target);
   _memLastRecitation = { target, spoken, result, decisions: {} };
   const scored = _memScoreRecitation(result, {});
   _memSaveProgress(scored.score, {
@@ -11697,62 +11777,117 @@ function scoreMemorizationRecitation(transcript = '') {
   return result;
 }
 
+// Colored, word-by-word "what I heard" view of the whole passage. Stays 1:1
+// with the printed verse (works for single verses or long multi-verse ranges)
+// and reflects any corrections the user has made.
+function _memReciteDiffHtml() {
+  if (!_memLastRecitation) return '';
+  const status = _memLastRecitation.result.targetStatus || [];
+  const decisions = _memLastRecitation.decisions;
+  const body = _memRenderTokenWords(_memCurrent.text, (piece, wi) => {
+    const t = status[wi - 1];
+    let cls = 'mem-d-hit';
+    if (t) {
+      if (t.state === 'fuzzy') cls = decisions[t.ti] === 'yes' ? 'mem-d-fixed' : decisions[t.ti] === 'no' ? 'mem-d-miss' : 'mem-d-slur';
+      else if (t.state === 'miss') cls = decisions[t.ti] === 'said' ? 'mem-d-fixed' : 'mem-d-miss';
+    }
+    return `<span class="mem-d ${cls}">${_memEsc(piece)}</span>`;
+  });
+  return `<div class="mem-recite-diff">${body}</div>`;
+}
+
 function _memRenderRecitationFeedback() {
   const el = document.getElementById('memFeedback');
   if (!el || !_memLastRecitation) return;
   const { target, result, decisions } = _memLastRecitation;
   const scored = _memScoreRecitation(result, decisions);
   const score = scored.score;
-  const matched = target.length - scored.missing.length;
+  const total = target.length;
+  const matched = total - scored.missing.length;
+  const status = result.targetStatus || [];
+  const queryIds = new Set((result.queries || []).map(q => q.ti));
+
+  const verdict = score >= 100 ? 'Memorized — flawless.'
+    : score >= 95 ? 'Nearly perfect.'
+    : score >= 85 ? 'Strong recitation.'
+    : score >= 65 ? 'Good progress.'
+    : 'Keep building.';
   const jab = score >= 95 ? 'That was clean. The scroll is impressed.'
     : score >= 85 ? 'Very close. A few words tried to escape.'
     : score >= 65 ? 'Solid bones. The details need another lap.'
     : 'No shame. The verse is still under construction.';
   const tone = score >= 85 ? 'good' : score >= 65 ? 'okay' : 'needs-work';
+  const ringColor = score >= 85 ? '#16a34a' : score >= 65 ? '#d97706' : '#dc2626';
 
-  // Slurred-word confirmations: "Sounded like X — did you mean Y?"
-  const queries = (result.queries || []);
-  const dymHtml = queries.length ? `
-    <div class="mem-didyoumean">
-      <span class="mem-didyoumean-head"><span class="material-symbols-outlined">hearing</span>Sounded a little off — did you mean…</span>
-      ${queries.map(fm => {
-        const d = decisions[fm.ti];
-        const resolved = d === 'yes' ? 'resolved-yes' : d === 'no' ? 'resolved-no' : '';
-        const note = d === 'yes' ? '<div class="mem-dym-resolved">Counted as correct.</div>'
-          : d === 'no' ? '<div class="mem-dym-resolved">Counted as missed.</div>' : '';
-        return `<div class="mem-dym-card ${resolved}">
-          <p>Sounded like you said <strong>“${_memEsc(fm.spoken)}”</strong> — did you mean <strong>“${_memEsc(fm.target)}”</strong>?</p>
-          <div class="mem-dym-actions">
-            <button class="mem-dym-yes" onclick="memDecideFuzzy(${fm.ti}, 'yes')"><span class="material-symbols-outlined">check</span>Yes, I did</button>
-            <button class="mem-dym-no" onclick="memDecideFuzzy(${fm.ti}, 'no')"><span class="material-symbols-outlined">close</span>No, missed it</button>
-          </div>
-          ${note}
-        </div>`;
-      }).join('')}
+  // Build the ordered list of things the user can fix: ambiguous slurred words
+  // (confirm / reject) and flat misses the audio may simply have not caught.
+  const fixItems = [];
+  status.forEach(t => {
+    if (t.state === 'fuzzy' && queryIds.has(t.ti)) fixItems.push({ type: 'slur', t });
+    else if (t.state === 'miss') fixItems.push({ type: 'miss', t });
+  });
+  const shown = fixItems.slice(0, 24);
+  const moreCount = fixItems.length - shown.length;
+
+  const fixHtml = fixItems.length ? `
+    <div class="mem-fix">
+      <span class="mem-fix-head"><span class="material-symbols-outlined">hearing</span>Fix anything I misheard</span>
+      <div class="mem-fix-rows">
+        ${shown.map(({ type, t }) => {
+          const d = decisions[t.ti];
+          if (type === 'slur') {
+            const state = d === 'yes' ? 'resolved-yes' : d === 'no' ? 'resolved-no' : '';
+            return `<div class="mem-fix-row ${state}">
+              <div class="mem-fix-text">Heard <strong>“${_memEsc(t.spoken)}”</strong> — did you mean <strong>“${_memEsc(t.word)}”</strong>?</div>
+              <div class="mem-fix-btns">
+                <button class="mem-fix-yes ${d === 'yes' ? 'on' : ''}" onclick="memFixWord(${t.ti}, 'yes')" aria-label="Yes, I said it right"><span class="material-symbols-outlined">check</span></button>
+                <button class="mem-fix-no ${d === 'no' ? 'on' : ''}" onclick="memFixWord(${t.ti}, 'no')" aria-label="No, I missed it"><span class="material-symbols-outlined">close</span></button>
+              </div>
+            </div>`;
+          }
+          const said = d === 'said';
+          return `<div class="mem-fix-row ${said ? 'resolved-yes' : ''}">
+            <div class="mem-fix-text">Missed <strong>“${_memEsc(t.word)}”</strong>${said ? ' — counted as said' : ''}</div>
+            <div class="mem-fix-btns">
+              <button class="mem-fix-said ${said ? 'on' : ''}" onclick="memFixWord(${t.ti}, 'said')">${said ? 'Undo' : 'I said it'}</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${moreCount > 0 ? `<p class="mem-fix-more">+${moreCount} more highlighted in the verse above.</p>` : ''}
     </div>` : '';
 
-  const missedHtml = scored.missing.length
-    ? `<div class="mem-feedback-list"><span>Missed words (${scored.missing.length})</span><div class="mem-word-chips missed">${scored.missing.map(w => `<span>${_memEsc(w)}</span>`).join('')}</div></div>`
-    : `<div class="mem-feedback-list"><span>Missed words</span><div class="mem-word-chips missed"><span class="mem-chip-clean">None — every word landed</span></div></div>`;
   const addedHtml = scored.hardAdded.length
-    ? `<div class="mem-feedback-list"><span>Extra words (${scored.hardAdded.length})</span><div class="mem-word-chips extra">${scored.hardAdded.map(w => `<span>${_memEsc(w)}</span>`).join('')}</div></div>`
+    ? `<div class="mem-feedback-list"><span>Extra words you added (${scored.hardAdded.length})</span><div class="mem-word-chips extra">${scored.hardAdded.map(w => `<span>${_memEsc(w)}</span>`).join('')}</div></div>`
     : '';
 
   el.innerHTML = `<div class="mem-feedback-card ${tone}">
-    <div class="mem-feedback-score"><strong>${score}% accurate</strong><span>${matched}/${target.length} words matched</span></div>
-    <p>${jab}</p>
-    ${dymHtml}
-    ${missedHtml}
+    <div class="mem-result-head">
+      <div class="mem-result-ring" style="background:conic-gradient(${ringColor} ${Math.max(score, 2) * 3.6}deg, color-mix(in srgb, var(--secondary-color) 14%, transparent) 0)"><div><strong>${score}<small>%</small></strong></div></div>
+      <div class="mem-result-meta">
+        <strong>${verdict}</strong>
+        <span>${matched} of ${total} words matched</span>
+        <p>${jab}</p>
+      </div>
+    </div>
+    <div class="mem-recite-diff-wrap">
+      <div class="mem-diff-label">What I heard</div>
+      ${_memReciteDiffHtml()}
+      <div class="mem-diff-legend"><span class="mem-lg hit">Got it</span><span class="mem-lg slur">Sounded off</span><span class="mem-lg miss">Missed</span></div>
+    </div>
+    ${fixHtml}
     ${addedHtml}
   </div>`;
 }
 
-function memDecideFuzzy(ti, decision) {
+function memFixWord(ti, decision) {
   if (!_memLastRecitation) return;
-  _memLastRecitation.decisions[ti] = decision;
-  const scored = _memScoreRecitation(_memLastRecitation.result, _memLastRecitation.decisions);
-  // Update the saved score in place — confirming a slurred word should not look
-  // like a brand-new attempt, it just corrects the one we already logged.
+  const decisions = _memLastRecitation.decisions;
+  // Tapping the same choice again undoes it.
+  if (decisions[ti] === decision) delete decisions[ti];
+  else decisions[ti] = decision;
+  const scored = _memScoreRecitation(_memLastRecitation.result, decisions);
+  // Correct the score we already logged in place rather than adding an attempt.
   _memReviseLastRecitation(scored.score, {
     missingWords: scored.missing,
     addedWords: scored.hardAdded,
@@ -11760,7 +11895,7 @@ function memDecideFuzzy(ti, decision) {
   });
   _memRenderRecitationFeedback();
 }
-window.memDecideFuzzy = memDecideFuzzy;
+window.memFixWord = memFixWord;
 
 // Revise the most recent recitation log without inflating the attempt count.
 function _memReviseLastRecitation(score, details = {}) {
@@ -20900,7 +21035,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.210";
+const APP_VERSION = "3.0.211";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20921,6 +21056,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.211 &mdash; Recitation You Can Trust &amp; Fix</div>
+<ul>
+  <li><strong>&ldquo;What I heard&rdquo; verse view</strong> &mdash; After you recite, the whole passage is shown back to you word by word: green for what landed, amber for words that sounded a little off, and red for misses. It scales cleanly from a single verse to a long multi-verse range.</li>
+  <li><strong>Fix anything the audio got wrong</strong> &mdash; A tidy fix list lets you confirm a slurred word as correct, reject it, or tell the app it actually heard you wrong on a missed word. The score, the verse colors, and your saved progress update instantly &mdash; without logging a new attempt.</li>
+  <li><strong>Sharper matching</strong> &mdash; Spoken numbers now line up with printed numerals (&ldquo;twelve&rdquo; = &ldquo;12&rdquo;), the homophone list is broader (their/there, your/you&rsquo;re, son/sun, no/know, and more), and the target lines up one-to-one with the printed words so nothing drifts on long passages.</li>
+  <li><strong>Cleaner result card</strong> &mdash; A color-coded score ring, a plain-language verdict, and clear extra-word and missed-word readouts replace the old lumped phrase lists.</li>
+</ul>
 <div class="un-version-label">v3.0.210 &mdash; Memorization Polish &amp; Smarter Recitation</div>
 <ul>
   <li><strong>No more stray bottom bar</strong> &mdash; The memorization workshop drops the leftover divider line near the bottom and keeps any fixed app bars out of the full-screen view.</li>
