@@ -15701,12 +15701,19 @@ function enhanceThemeContrast(theme) {
 function applyAppTheme(themeName) {
   const baseTheme = APP_THEMES[themeName] || APP_THEMES.parchment;
   const theme = getHighContrastMode() ? enhanceThemeContrast(baseTheme) : baseTheme;
+  const solidThemeColor = value => {
+    const match = String(value || "").match(/rgba?\(([^)]+)\)/i);
+    if (!match) return value;
+    return `rgb(${match[1].split(",").slice(0, 3).map(part => part.trim()).join(", ")})`;
+  };
 
   document.documentElement.style.setProperty("--primary-color", theme.primary);
   document.documentElement.style.setProperty("--primary-light", theme.light);
   document.documentElement.style.setProperty("--secondary-color", theme.secondary);
   document.documentElement.style.setProperty("--accent-color", theme.accent);
   document.documentElement.style.setProperty("--card-color", theme.card);
+  document.documentElement.style.setProperty("--card-solid-color", solidThemeColor(theme.card));
+  document.documentElement.style.setProperty("--memorization-page-color", theme.light);
   document.documentElement.style.setProperty("--border-color", theme.border);
   document.documentElement.style.setProperty("--font-color", theme.text);
   document.documentElement.style.setProperty("--muted-color", theme.muted);
@@ -20657,7 +20664,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.207";
+const APP_VERSION = "3.0.208";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20678,6 +20685,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.208 &mdash; Theme-Aware Memorization Fix</div>
+<ul>
+  <li><strong>Theme-matched solid colors</strong> &mdash; Memorization keeps the no-white-bar/no-translucent-sheet fix while using the user's selected theme colors.</li>
+</ul>
 <div class="un-version-label">v3.0.207 &mdash; Memorization Visual Fix</div>
 <ul>
   <li><strong>Bottom bar fixed</strong> &mdash; Memorization now paints the root, body, app, and scroll canvas with a solid background so the bottom safe-area cannot show a white strip.</li>

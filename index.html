@@ -307,12 +307,20 @@ antique: {
   const theme = themes[savedTheme] || themes.royal;
 
   const root = document.documentElement;
+  const solidColor = value => {
+    const match = String(value || "").match(/rgba?\(([^)]+)\)/i);
+    if (!match) return value;
+    const parts = match[1].split(",").slice(0, 3).map(part => part.trim());
+    return `rgb(${parts.join(", ")})`;
+  };
 
   root.style.setProperty("--primary-color", theme.primary);
   root.style.setProperty("--primary-light", theme.light);
   root.style.setProperty("--secondary-color", theme.secondary);
   root.style.setProperty("--accent-color", theme.accent);
   root.style.setProperty("--card-color", theme.card);
+  root.style.setProperty("--card-solid-color", solidColor(theme.card));
+  root.style.setProperty("--memorization-page-color", theme.light);
   root.style.setProperty("--border-color", theme.border);
   root.style.setProperty("--font-color", theme.text);
   root.style.setProperty("--muted-color", theme.muted);
@@ -331,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.207" rel="stylesheet"/>
+<link href="style.css?v=3.0.208" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -16665,7 +16673,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.207"></script>
+<script src="app.js?v=3.0.208"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
