@@ -28423,36 +28423,57 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 
 /* Memorization */
 #memorizationPage.screen.active { display: block; overflow: hidden; }
-body.memorization-active .app-header { display: none; }
+body.memorization-active,
+body.memorization-active .app {
+  width: 100vw;
+  max-width: none !important;
+  height: 100vh;
+  height: 100svh;
+  min-height: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: var(--bg-color);
+}
+body.memorization-active .desktop-shell-nav,
+body.memorization-active .app-header,
+body.memorization-active .bottom-nav {
+  display: none !important;
+}
 .mem-page {
-  height: 100%;
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  height: 100svh;
   overflow-y: auto;
+  overflow-x: hidden;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--secondary-color) 11%, transparent), transparent 230px),
+    linear-gradient(180deg, color-mix(in srgb, var(--secondary-color) 9%, transparent), transparent 250px),
     var(--bg-color);
   color: var(--font-color);
+  overscroll-behavior-x: none;
 }
 .mem-topbar {
   position: sticky;
   top: 0;
   z-index: 6;
   display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  grid-template-columns: 46px minmax(0, 1fr) 46px;
   align-items: center;
   gap: 10px;
-  padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px;
-  background: color-mix(in srgb, var(--bg-color) 92%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 12%, var(--border-color));
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 9px;
+  background: color-mix(in srgb, var(--bg-color) 94%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 10%, transparent);
   backdrop-filter: blur(16px);
 }
 .mem-icon-btn, .mem-close-setup {
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
-  background: color-mix(in srgb, var(--card-color) 88%, transparent);
+  border: 0;
+  background: color-mix(in srgb, var(--secondary-color) 10%, transparent);
   color: var(--secondary-color);
   display: grid;
   place-items: center;
 }
-.mem-icon-btn { width: 44px; height: 44px; border-radius: 15px; }
+.mem-icon-btn { width: 46px; height: 46px; border-radius: 17px; }
 .mem-title-stack { min-width: 0; display: grid; gap: 1px; text-align: center; }
 .mem-title-stack strong {
   overflow: hidden;
@@ -28471,14 +28492,23 @@ body.memorization-active .app-header { display: none; }
   font-weight: 950;
   color: var(--secondary-color);
 }
-.mem-main { display: grid; gap: 0; }
+.mem-main {
+  width: 100%;
+  max-width: 100vw;
+  display: grid;
+  gap: 0;
+  overflow-x: hidden;
+}
 .mem-source-band,
 .mem-practice-band,
 .mem-wheel-band,
 .mem-recitation-band,
 .mem-saved-band {
-  padding: 17px 16px 18px;
-  border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 11%, var(--border-color));
+  width: 100%;
+  max-width: 100vw;
+  padding: 18px max(16px, env(safe-area-inset-left, 0px)) 20px max(16px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 9%, transparent);
+  box-sizing: border-box;
 }
 .mem-source-band.collapsed { display: none; }
 .mem-band-head, .mem-practice-top {
@@ -28506,7 +28536,7 @@ body.memorization-active .app-header { display: none; }
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   padding: 4px;
-  border-radius: 16px;
+  border-radius: 18px;
   background: color-mix(in srgb, var(--secondary-color) 9%, transparent);
 }
 .mem-source-tabs button {
@@ -28521,7 +28551,7 @@ body.memorization-active .app-header { display: none; }
 .mem-source-tabs button.active {
   background: var(--card-color);
   color: var(--secondary-color);
-  box-shadow: 0 7px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
 }
 .mem-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 13px; }
 .mem-form-grid label, .mem-paste-label {
@@ -28533,13 +28563,15 @@ body.memorization-active .app-header { display: none; }
 }
 .mem-form-grid select, .mem-paste-label input, .mem-paste-area {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 20%, var(--border-color));
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--card-color) 86%, var(--bg-color));
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 14%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--card-color) 76%, var(--bg-color));
   color: var(--font-color);
   font: inherit;
   font-size: 0.92rem;
   padding: 12px 10px;
+  box-sizing: border-box;
 }
 .mem-paste-area {
   min-height: 132px;
@@ -28547,11 +28579,12 @@ body.memorization-active .app-header { display: none; }
   resize: vertical;
   line-height: 1.45;
 }
-.mem-source-actions { display: flex; gap: 10px; margin-top: 13px; }
+.mem-source-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 13px; }
 .mem-secondary-btn, .mem-primary-btn {
   min-height: 45px;
-  border-radius: 15px;
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 25%, var(--border-color));
+  min-width: 0;
+  border-radius: 16px;
+  border: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -28561,7 +28594,7 @@ body.memorization-active .app-header { display: none; }
   padding: 0 12px;
 }
 .mem-secondary-btn {
-  background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color));
+  background: color-mix(in srgb, var(--secondary-color) 10%, transparent);
   color: var(--secondary-color);
 }
 .mem-primary-btn {
@@ -28586,17 +28619,17 @@ body.memorization-active .app-header { display: none; }
   background: rgba(34,197,94,0.14);
 }
 .mem-suggestion {
-  border-left: 4px solid var(--secondary-color);
-  padding: 10px 11px;
+  border-left: 3px solid var(--secondary-color);
+  padding: 10px 12px;
   margin-bottom: 12px;
-  background: color-mix(in srgb, var(--accent-color) 17%, var(--card-color));
+  background: color-mix(in srgb, var(--accent-color) 13%, transparent);
   color: var(--font-color);
   font-size: 0.86rem;
   line-height: 1.36;
 }
 .mem-verse-stage {
-  min-height: 245px;
-  padding: 18px 2px 6px;
+  min-height: 235px;
+  padding: 18px 0 6px;
   overflow: visible;
 }
 .mem-rendered-text {
@@ -28605,6 +28638,7 @@ body.memorization-active .app-header { display: none; }
   max-width: 100%;
   white-space: normal;
   overflow-wrap: break-word;
+  word-wrap: break-word;
   word-break: normal;
   font-family: "Playfair Display", Georgia, serif;
   color: var(--font-color);
@@ -28656,31 +28690,32 @@ body.memorization-active .app-header { display: none; }
   font-weight: 800;
 }
 .mem-mode-wheel {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 4px 2px 12px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  overflow: visible;
+  padding: 2px 0 4px;
 }
 .mem-mode-wheel button {
-  scroll-snap-align: center;
-  flex: 0 0 108px;
-  min-height: 124px;
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, var(--border-color));
-  border-radius: 24px;
-  background: color-mix(in srgb, var(--card-color) 90%, var(--bg-color));
+  min-width: 0;
+  min-height: 98px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--card-color) 68%, var(--bg-color));
   color: var(--font-color);
   display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
   align-content: center;
-  justify-items: center;
-  gap: 4px;
-  text-align: center;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+  justify-items: start;
+  gap: 8px;
+  text-align: left;
+  box-shadow: none;
+  padding: 12px;
 }
 .mem-mode-wheel button .material-symbols-outlined {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 15px;
   display: grid;
   place-items: center;
@@ -28689,20 +28724,22 @@ body.memorization-active .app-header { display: none; }
 }
 .mem-mode-wheel button strong { font-size: 0.86rem; font-weight: 950; }
 .mem-mode-wheel button small { color: var(--muted-color); font-size: 0.7rem; font-weight: 800; }
+.mem-mode-wheel button strong,
+.mem-mode-wheel button small { min-width: 0; display: block; }
 .mem-mode-wheel button.active {
   border-color: var(--secondary-color);
-  background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color));
-  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--secondary-color) 10%, transparent);
+  transform: none;
 }
 .mem-recitation-band {
   display: grid;
   gap: 10px;
-  background: color-mix(in srgb, var(--secondary-color) 5%, transparent);
+  background: color-mix(in srgb, var(--secondary-color) 4%, transparent);
 }
 .mem-mic-btn {
   width: 100%;
   border: 0;
-  border-radius: 24px;
+  border-radius: 22px;
   padding: 16px;
   display: grid;
   grid-template-columns: auto 1fr;
@@ -28720,10 +28757,10 @@ body.memorization-active .app-header { display: none; }
 @keyframes memPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
 .mem-transcript {
   min-height: 46px;
-  border-radius: 17px;
+  border-radius: 18px;
   padding: 12px;
-  background: color-mix(in srgb, var(--card-color) 88%, var(--bg-color));
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, var(--border-color));
+  background: color-mix(in srgb, var(--secondary-color) 6%, transparent);
+  border: 0;
   color: var(--muted-color);
   font-size: 0.86rem;
   font-weight: 850;
@@ -28752,10 +28789,10 @@ body.memorization-active .app-header { display: none; }
 .mem-reciting-cover p { margin: 0; max-width: 260px; line-height: 1.42; }
 .mem-feedback { margin-top: 2px; }
 .mem-feedback-card {
-  border-radius: 18px;
+  border-radius: 20px;
   padding: 13px;
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, var(--border-color));
-  background: var(--card-color);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, transparent);
+  background: color-mix(in srgb, var(--card-color) 72%, var(--bg-color));
 }
 .mem-feedback-card.good { border-color: rgba(34,197,94,0.45); }
 .mem-feedback-card.okay { border-color: rgba(234,179,8,0.48); }
@@ -28784,7 +28821,7 @@ body.memorization-active .app-header { display: none; }
   gap: 7px;
   margin: 0 0 12px;
   padding: 4px;
-  border-radius: 16px;
+  border-radius: 18px;
   background: color-mix(in srgb, var(--secondary-color) 8%, transparent);
 }
 .mem-library-tabs button {
@@ -28799,7 +28836,7 @@ body.memorization-active .app-header { display: none; }
 .mem-library-tabs button.active {
   background: var(--card-color);
   color: var(--secondary-color);
-  box-shadow: 0 7px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
 }
 .mem-saved-list { display: grid; gap: 9px; }
 .mem-saved-item {
@@ -28807,9 +28844,9 @@ body.memorization-active .app-header { display: none; }
   grid-template-columns: 1fr 38px;
   align-items: center;
   gap: 7px;
-  border-radius: 17px;
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 15%, var(--border-color));
-  background: color-mix(in srgb, var(--card-color) 86%, var(--bg-color));
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, transparent);
+  background: color-mix(in srgb, var(--card-color) 70%, var(--bg-color));
   padding: 7px;
 }
 .mem-saved-item.active { border-color: color-mix(in srgb, var(--secondary-color) 58%, var(--border-color)); }
@@ -28852,6 +28889,6 @@ body.memorization-active .app-header { display: none; }
   color: var(--muted-color);
   background: transparent;
 }
-@media (min-width: 820px) {
-  .mem-page { max-width: 540px; margin: 0 auto; border-inline: 1px solid color-mix(in srgb, var(--secondary-color) 10%, var(--border-color)); }
+@media (min-width: 520px) {
+  .mem-mode-wheel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

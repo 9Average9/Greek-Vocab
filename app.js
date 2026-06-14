@@ -10449,8 +10449,9 @@ const MEM_CONTRACTIONS = {
 
 function openMemorizationPage() {
   setNavActive('memorization');
-  showBottomNav();
+  hideBottomNav();
   showScreen('memorizationPage');
+  hideBottomNav();
   startMemorizationPage();
   setTimeout(_applyPendingAppUpdateReload, 50);
 }
@@ -20118,7 +20119,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.202";
+const APP_VERSION = "3.0.203";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20139,6 +20140,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.203 &mdash; Memorization Full Screen</div>
+<ul>
+  <li><strong>Edge-to-edge memorization workspace</strong> &mdash; Memorization now escapes the normal app container, hides the bottom nav, and uses the full screen with a home button in the top bar.</li>
+  <li><strong>No horizontal page scrolling</strong> &mdash; The practice selector now wraps into a responsive grid instead of a side-scrolling wheel, and the page clamps overflow on the x-axis.</li>
+  <li><strong>Sleeker UI pass</strong> &mdash; The workshop surfaces, controls, recitation area, and saved verse library were flattened and modernized so the feature feels less like cards inside cards.</li>
+</ul>
 <div class="un-version-label">v3.0.202 &mdash; Smarter Recitation</div>
 <ul>
   <li><strong>Recitation matching refined</strong> &mdash; Voice practice now uses ordered fuzzy alignment so fast speech, small speech-to-text slips, repeated stumbles, and close word endings are handled more graciously.</li>
