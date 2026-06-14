@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.203" rel="stylesheet"/>
+<link href="style.css?v=3.0.204" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -576,24 +576,27 @@ Habit Builder</span>
 </section>
 <section class="screen" id="memorizationPage">
 <div class="mem-page">
+
+<!-- ============ HUB VIEW ============ -->
+<div class="mem-view" id="memHubView">
 <header class="mem-topbar">
 <button class="mem-icon-btn" onclick="showNavPage('home')" aria-label="Home"><span class="material-symbols-outlined">home</span></button>
 <div class="mem-title-stack">
 <span class="mem-kicker">Memorization</span>
-<strong id="memHeaderTitle">Choose a passage</strong>
+<strong>Scripture workshop</strong>
 </div>
-<button class="mem-icon-btn" onclick="toggleMemorizationSetup()" aria-label="Choose text"><span class="material-symbols-outlined">add</span></button>
+<span class="mem-icon-btn mem-icon-ghost" aria-hidden="true"><span class="material-symbols-outlined">menu_book</span></span>
 </header>
 
-<div class="mem-main">
-<section class="mem-source-band" id="memSetupDrawer">
-<div class="mem-band-head">
-<div>
-<span class="mem-kicker">Choose text</span>
-<strong>Verse or pasted passage</strong>
+<div class="mem-hub-tabs" role="tablist" aria-label="Memorization sections">
+<button class="active" id="memHubTabNew" onclick="setMemorizationHubTab('new')"><span class="material-symbols-outlined">add_circle</span>New verse</button>
+<button id="memHubTabLibrary" onclick="setMemorizationHubTab('library')"><span class="material-symbols-outlined">book_2</span>My verses</button>
 </div>
-<button class="mem-close-setup" onclick="toggleMemorizationSetup(false)" aria-label="Close chooser"><span class="material-symbols-outlined">keyboard_arrow_up</span></button>
-</div>
+
+<div class="mem-hub-scroll">
+
+<!-- NEW VERSE TAB -->
+<div id="memHubNew">
 <div class="mem-source-tabs" role="tablist">
 <button class="active" id="memSourceVerseBtn" onclick="setMemorizationSource('verse')">In-app verse</button>
 <button id="memSourcePasteBtn" onclick="setMemorizationSource('paste')">Paste text</button>
@@ -606,9 +609,10 @@ Habit Builder</span>
 <label><span>Start</span><select id="memStartVerseSelect" onchange="syncMemorizationEndVerse(); updateMemorizationCopyLink()"></select></label>
 <label><span>End</span><select id="memEndVerseSelect" onchange="updateMemorizationCopyLink()"></select></label>
 </div>
+<article class="mem-preview-card" id="memVersePreview"><p class="mem-empty">Pick a reference to preview it here.</p></article>
 <div class="mem-source-actions">
 <button class="mem-secondary-btn" onclick="openMemorizationCopySource()"><span class="material-symbols-outlined">open_in_new</span><span id="memCopyLinkText">Find copy source</span></button>
-<button class="mem-primary-btn" onclick="loadMemorizationPassage()"><span class="material-symbols-outlined">playlist_add_check</span>Load passage</button>
+<button class="mem-primary-btn" onclick="loadMemorizationPassage()"><span class="material-symbols-outlined">play_arrow</span>Start memorizing</button>
 </div>
 </div>
 <div id="memPasteSource" class="hidden">
@@ -616,18 +620,46 @@ Habit Builder</span>
 <textarea id="memPasteText" class="mem-paste-area" placeholder="Paste the text you want to memorize here."></textarea>
 <div class="mem-source-actions">
 <button class="mem-secondary-btn" onclick="openMemorizationCopySource()"><span class="material-symbols-outlined">search</span>Search web</button>
-<button class="mem-primary-btn" onclick="loadMemorizationPastedText()"><span class="material-symbols-outlined">playlist_add_check</span>Use pasted text</button>
+<button class="mem-primary-btn" onclick="loadMemorizationPastedText()"><span class="material-symbols-outlined">play_arrow</span>Start memorizing</button>
 </div>
 </div>
-</section>
+</div>
 
+<!-- MY VERSES TAB -->
+<div id="memHubLibrary" class="hidden">
+<div class="mem-library-tabs" role="tablist" aria-label="Saved memorization verses">
+<button class="active" id="memSavedTabAll" onclick="setMemorizationSavedFilter('all')">All</button>
+<button id="memSavedTabWork" onclick="setMemorizationSavedFilter('work')">In progress</button>
+<button id="memSavedTabMemorized" onclick="setMemorizationSavedFilter('memorized')">Memorized</button>
+</div>
+<div class="mem-saved-list" id="memSavedList">
+<p class="mem-empty">Loaded verses will save here.</p>
+</div>
+</div>
+
+<div style="height:40px"></div>
+</div>
+</div>
+
+<!-- ============ WORKSHOP VIEW ============ -->
+<div class="mem-view hidden" id="memWorkshopView">
+<header class="mem-topbar">
+<button class="mem-icon-btn" onclick="closeMemorizationWorkshop()" aria-label="Back to list"><span class="material-symbols-outlined">arrow_back</span></button>
+<div class="mem-title-stack">
+<span class="mem-kicker">Workshop</span>
+<strong id="memHeaderTitle">Passage</strong>
+</div>
+<span class="mem-score-pill" id="memStatusPill"><span class="material-symbols-outlined">hourglass_top</span><strong>In progress</strong></span>
+</header>
+
+<div class="mem-workshop-scroll">
 <section class="mem-practice-band">
 <div class="mem-practice-top">
 <div>
 <span class="mem-kicker">Current passage</span>
-<h2 id="memCurrentRef">Choose a passage</h2>
+<h2 id="memCurrentRef">Passage</h2>
 </div>
-<span class="mem-score-pill" id="memStatusPill"><span class="material-symbols-outlined">hourglass_top</span><strong>Work in progress</strong></span>
+<span class="mem-best-chip"><span class="material-symbols-outlined">workspace_premium</span><span id="memBestScore">0%</span></span>
 </div>
 <div class="mem-suggestion hidden" id="memSuggestion"></div>
 <article class="mem-verse-stage" id="memPracticeCard">
@@ -641,7 +673,6 @@ Habit Builder</span>
 <span class="mem-kicker">Practice wheel</span>
 <strong>Pick the kind of challenge</strong>
 </div>
-<span class="mem-best-chip"><span class="material-symbols-outlined">workspace_premium</span><span id="memBestScore">0%</span></span>
 </div>
 <div class="mem-mode-wheel" aria-label="Memorization practice modes">
 <button class="active" data-mode="read" onclick="setMemorizationMode('read')"><span class="material-symbols-outlined">auto_stories</span><strong>Read</strong><small>normal text</small></button>
@@ -649,7 +680,7 @@ Habit Builder</span>
 <button data-mode="keywords" onclick="setMemorizationMode('keywords')"><span class="material-symbols-outlined">key</span><strong>Key words</strong><small>hide anchors</small></button>
 <button data-mode="letters" onclick="setMemorizationMode('letters')"><span class="material-symbols-outlined">sort_by_alpha</span><strong>First letter</strong><small>cue only</small></button>
 <button data-mode="blank" onclick="setMemorizationMode('blank')"><span class="material-symbols-outlined">edit_square</span><strong>Fill blanks</strong><small>type it out</small></button>
-<button data-mode="scramble" onclick="setMemorizationMode('scramble')"><span class="material-symbols-outlined">shuffle</span><strong>Scramble</strong><small>order phrases</small></button>
+<button data-mode="scramble" onclick="setMemorizationMode('scramble')"><span class="material-symbols-outlined">shuffle</span><strong>Scramble</strong><small>drag to order</small></button>
 <button data-mode="progressive" onclick="setMemorizationMode('progressive')"><span class="material-symbols-outlined">visibility_off</span><strong>Vanish</strong><small>progressive</small></button>
 </div>
 </section>
@@ -668,25 +699,10 @@ Habit Builder</span>
 <div class="mem-feedback" id="memFeedback"></div>
 </section>
 
-<section class="mem-saved-band">
-<div class="mem-band-head">
-<div>
-<span class="mem-kicker">Saved verses</span>
-<strong>Pick up where you left off</strong>
+<div style="height:40px"></div>
 </div>
 </div>
-<div class="mem-library-tabs" role="tablist" aria-label="Saved memorization verses">
-<button class="active" id="memSavedTabAll" onclick="setMemorizationSavedFilter('all')">All</button>
-<button id="memSavedTabWork" onclick="setMemorizationSavedFilter('work')">In progress</button>
-<button id="memSavedTabMemorized" onclick="setMemorizationSavedFilter('memorized')">Memorized</button>
-</div>
-<div class="mem-saved-list" id="memSavedList">
-<p class="mem-empty">Loaded verses will save here.</p>
-</div>
-</section>
 
-<div style="height:98px"></div>
-</div>
 </div>
 </section>
 <section class="screen" id="habitsPage">
@@ -16637,7 +16653,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.203"></script>
+<script src="app.js?v=3.0.204"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
