@@ -10379,6 +10379,7 @@ function showScreen(id) {
 
   _syncHomeViewportState(id);
   document.body?.classList.toggle('memorization-active', id === 'memorizationPage');
+  document.documentElement?.classList.toggle('memorization-active', id === 'memorizationPage');
   _updateAppHeaderForScreen(id);
 }
 
@@ -20656,7 +20657,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.206";
+const APP_VERSION = "3.0.207";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -20677,6 +20678,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.207 &mdash; Memorization Visual Fix</div>
+<ul>
+  <li><strong>Bottom bar fixed</strong> &mdash; Memorization now paints the root, body, app, and scroll canvas with a solid background so the bottom safe-area cannot show a white strip.</li>
+  <li><strong>Progress sheet made solid</strong> &mdash; The progress sheet now uses hard solid colors instead of translucent theme surfaces.</li>
+</ul>
 <div class="un-version-label">v3.0.206 &mdash; Memorization Polish</div>
 <ul>
   <li><strong>Cleaner workshop header</strong> &mdash; Removed the top-right work-in-progress pill so the passage title has room to breathe.</li>

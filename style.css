@@ -28423,6 +28423,9 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 
 /* Memorization */
 #memorizationPage.screen.active { display: block; overflow: hidden; }
+html.memorization-active {
+  background: #eff6ff !important;
+}
 body.memorization-active,
 body.memorization-active .app {
   width: 100%;
@@ -28433,12 +28436,12 @@ body.memorization-active .app {
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
-  background: var(--bg-color);
+  background: #eff6ff !important;
   overscroll-behavior: none;
   touch-action: manipulation;
 }
 #memorizationPage {
-  background: var(--bg-color);
+  background: #eff6ff !important;
   min-height: 100vh;
   min-height: 100dvh;
 }
@@ -28457,8 +28460,8 @@ body.memorization-active .bottom-nav {
   display: flex;
   flex-direction: column;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--secondary-color) 9%, transparent), transparent 250px),
-    var(--bg-color);
+    linear-gradient(180deg, rgba(29,78,216,0.09), transparent 250px),
+    #eff6ff;
   color: var(--font-color);
   overscroll-behavior: none;
   touch-action: manipulation;
@@ -28477,7 +28480,7 @@ body.memorization-active .bottom-nav {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  background: transparent;
+  background: #eff6ff;
 }
 .mem-hub-scroll { padding: 14px max(16px, env(safe-area-inset-left, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
 .mem-topbar {
@@ -29069,7 +29072,7 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(0,0,0,0.48);
+  background: rgba(15,23,42,0.72) !important;
   padding: 0 max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-right, 0px));
   box-sizing: border-box;
   opacity: 1;
@@ -29080,8 +29083,7 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   max-height: min(82vh, 720px);
   overflow: hidden;
   border-radius: 28px 28px 20px 20px;
-  background: var(--card-color);
-  background: var(--bg-color);
+  background: #eff6ff !important;
   color: var(--font-color);
   box-shadow: 0 -20px 44px rgba(0,0,0,0.22);
   border: 1px solid color-mix(in srgb, var(--secondary-color) 14%, transparent);
@@ -29094,6 +29096,7 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   gap: 10px;
   padding: 10px 14px 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 9%, transparent);
+  background: #eff6ff !important;
 }
 .mem-progress-head strong {
   display: block;
@@ -29112,7 +29115,7 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   box-sizing: border-box;
   display: grid;
   gap: 11px;
-  background: var(--bg-color);
+  background: #eff6ff !important;
 }
 .mem-progress-hero {
   display: grid;
@@ -29121,8 +29124,7 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   align-items: center;
   border-radius: 22px;
   padding: 14px;
-  background: var(--card-color);
-  background: color-mix(in srgb, var(--secondary-color) 9%, var(--card-color));
+  background: #ffffff !important;
   border: 1px solid color-mix(in srgb, var(--secondary-color) 15%, transparent);
 }
 .mem-progress-hero strong {
@@ -29161,8 +29163,7 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
 .mem-progress-stats div,
 .mem-progress-block {
   border-radius: 18px;
-  background: var(--card-color);
-  background: color-mix(in srgb, var(--card-color) 72%, var(--bg-color));
+  background: #ffffff !important;
   border: 1px solid color-mix(in srgb, var(--secondary-color) 11%, transparent);
 }
 .mem-progress-stats div {
