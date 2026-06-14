@@ -28492,11 +28492,19 @@ body.memorization-active .bottom-nav {
   grid-template-columns: 46px minmax(0, 1fr) 46px;
   align-items: center;
   gap: 10px;
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 9px;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) 14px 14px;
   background: color-mix(in srgb, var(--bg-color) 94%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 10%, transparent);
   backdrop-filter: blur(16px);
 }
+/* Hub topbar sits a touch lower with a roomier, better-centered title so the
+   "Scripture workshop" heading is not jammed against the top edge. */
+#memHubView .mem-topbar {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 26px);
+  padding-bottom: 16px;
+}
+#memHubView .mem-title-stack .mem-kicker { justify-content: center; }
+#memHubView .mem-title-stack strong { font-size: 1.14rem; letter-spacing: -0.01em; }
 .mem-icon-ghost { opacity: 0.32; background: transparent !important; box-shadow: none; }
 .mem-hub-tabs {
   flex: 0 0 auto;
@@ -28586,8 +28594,18 @@ body.memorization-active .bottom-nav {
   border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 9%, transparent);
   box-sizing: border-box;
 }
+/* The last band must not paint a stray divider line near the bottom of the screen. */
+.mem-workshop-scroll > section:last-child {
+  border-bottom: 0;
+}
 .mem-workshop-scroll {
-  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+}
+/* Belt-and-suspenders: no global fixed bottom bar should ever bleed into the
+   full-screen memorization workspace. */
+body.memorization-active #studyTabBar,
+body.memorization-active #bottomNav {
+  display: none !important;
 }
 .mem-band-head, .mem-practice-top {
   display: flex;
@@ -29066,6 +29084,90 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   padding: 8px 10px;
   background: color-mix(in srgb, var(--secondary-color) 8%, transparent);
   color: var(--font-color);
+}
+/* Word-level missed / extra chips read more clearly than lumped phrases. */
+.mem-word-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.mem-word-chips.missed span { background: rgba(239,68,68,0.12); color: var(--font-color); }
+.mem-word-chips.extra span { background: color-mix(in srgb, var(--secondary-color) 10%, transparent); color: var(--font-color); }
+.mem-word-chips span {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+.mem-word-chips .mem-chip-clean {
+  background: rgba(34,197,94,0.14);
+  color: #14723a;
+}
+/* "Sounded like ... did you mean ...?" slurred-word confirmations. */
+.mem-didyoumean { display: grid; gap: 9px; margin-top: 12px; }
+.mem-didyoumean-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  color: var(--secondary-color);
+}
+.mem-didyoumean-head .material-symbols-outlined { font-size: 1.05rem; }
+.mem-dym-card {
+  border-radius: 16px;
+  padding: 11px 12px;
+  background: color-mix(in srgb, var(--secondary-color) 7%, var(--card-color));
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 14%, transparent);
+}
+.mem-dym-card.resolved-yes { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.4); }
+.mem-dym-card.resolved-no { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.35); }
+.mem-dym-card p { margin: 0 0 9px; color: var(--font-color); font-size: 0.88rem; line-height: 1.4; }
+.mem-dym-card p strong { font-weight: 950; }
+.mem-dym-actions { display: flex; gap: 8px; }
+.mem-dym-actions button {
+  flex: 1;
+  min-height: 38px;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 950;
+  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.mem-dym-yes { background: var(--secondary-color); color: var(--card-color); }
+.mem-dym-no { background: color-mix(in srgb, var(--secondary-color) 12%, transparent); color: var(--secondary-color); }
+.mem-dym-card.resolved-yes .mem-dym-yes,
+.mem-dym-card.resolved-no .mem-dym-no { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--font-color) 22%, transparent); }
+.mem-dym-resolved { font-size: 0.78rem; font-weight: 850; color: var(--muted-color); margin-top: 2px; }
+/* Paste-flow translation prompt helper. */
+.mem-translation-prompt {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.mem-translation-prompt label { display: grid; gap: 6px; color: var(--muted-color); font-size: 0.72rem; font-weight: 900; }
+.mem-translation-prompt input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 14%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card-color) 76%, var(--bg-color));
+  color: var(--font-color);
+  font: inherit;
+  font-size: 0.92rem;
+  padding: 11px 12px;
+}
+.mem-paste-hint {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+  border-left: 3px solid var(--secondary-color);
+  color: var(--font-color);
+  font-size: 0.82rem;
+  line-height: 1.42;
 }
 .mem-progress-sheet {
   position: fixed;

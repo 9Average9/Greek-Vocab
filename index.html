@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.209" rel="stylesheet"/>
+<link href="style.css?v=3.0.210" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -624,10 +624,14 @@ Habit Builder</span>
 </div>
 </div>
 <div id="memPasteSource" class="hidden">
-<label class="mem-paste-label"><span>Reference or title</span><input id="memPasteRef" placeholder="John 3:16, Psalm 23, sermon quote..."/></label>
+<label class="mem-paste-label"><span>Reference or title</span><input id="memPasteRef" placeholder="John 3:16, Psalm 23, sermon quote..." oninput="updateMemorizationCopyLink()"/></label>
+<div class="mem-translation-prompt">
+<label><span>Translation (optional)</span><input id="memPasteTranslation" placeholder="ESV, NIV, KJV, NASB..." oninput="updateMemorizationCopyLink()"/></label>
+</div>
+<p class="mem-paste-hint">Tap <strong>Find verse</strong> to open a clean copy page for that reference. Copy the exact text, come back, and paste it below — the translation you type above is added to the search for you, so you never have to type it into the web yourself.</p>
 <textarea id="memPasteText" class="mem-paste-area" placeholder="Paste the text you want to memorize here."></textarea>
 <div class="mem-source-actions">
-<button class="mem-secondary-btn" onclick="openMemorizationCopySource()"><span class="material-symbols-outlined">search</span>Search web</button>
+<button class="mem-secondary-btn" onclick="openMemorizationCopySource()"><span class="material-symbols-outlined">menu_book</span><span id="memPasteFindText">Find verse</span></button>
 <button class="mem-primary-btn" onclick="loadMemorizationPastedText()"><span class="material-symbols-outlined">play_arrow</span>Start memorizing</button>
 </div>
 </div>
@@ -16673,7 +16677,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.209"></script>
+<script src="app.js?v=3.0.210"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
