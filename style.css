@@ -28444,12 +28444,19 @@ body.memorization-active .app {
 }
 #memorizationPage {
   background: var(--memorization-page-color, var(--primary-light)) !important;
-  min-height: 100vh;
-  min-height: 100dvh;
+  /* Match .mem-page exactly (which is 100svh) so no leftover strip shows below
+     it that reads as a stray bottom bar. */
+  height: 100vh;
+  height: 100svh;
+  min-height: 0;
+  overflow: hidden;
 }
 body.memorization-active .desktop-shell-nav,
 body.memorization-active .app-header,
-body.memorization-active .bottom-nav {
+body.memorization-active .bottom-nav,
+body.memorization-active #bottomNav,
+body.memorization-active #studyTabBar,
+body.memorization-active .rhema-sandbox-arrows {
   display: none !important;
 }
 .mem-page {
@@ -28484,7 +28491,7 @@ body.memorization-active .bottom-nav {
   overscroll-behavior-y: contain;
   background: var(--memorization-page-color, var(--primary-light));
 }
-.mem-hub-scroll { padding: 14px max(16px, env(safe-area-inset-left, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+.mem-hub-scroll { padding: 14px max(16px, env(safe-area-inset-left, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
 .mem-topbar {
   flex: 0 0 auto;
   z-index: 6;
@@ -28599,7 +28606,9 @@ body.memorization-active .bottom-nav {
   border-bottom: 0;
 }
 .mem-workshop-scroll {
-  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  /* Just enough to clear the home indicator — no fat empty strip that could
+     read as a stray bottom bar. */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
 /* Belt-and-suspenders: no global fixed bottom bar should ever bleed into the
    full-screen memorization workspace. */
