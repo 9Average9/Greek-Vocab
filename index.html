@@ -331,7 +331,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.201" rel="stylesheet"/>
+<link href="style.css?v=3.0.202" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -664,7 +664,7 @@ Habit Builder</span>
 <button class="mem-mic-btn" id="memMicBtn" onclick="toggleMemorizationRecording()">
 <span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>
 </button>
-<div class="mem-transcript" id="memTranscript">Your spoken words will appear here.</div>
+<div class="mem-transcript" id="memTranscript">Ready when you are.</div>
 <div class="mem-feedback" id="memFeedback"></div>
 </section>
 
@@ -674,6 +674,11 @@ Habit Builder</span>
 <span class="mem-kicker">Saved verses</span>
 <strong>Pick up where you left off</strong>
 </div>
+</div>
+<div class="mem-library-tabs" role="tablist" aria-label="Saved memorization verses">
+<button class="active" id="memSavedTabAll" onclick="setMemorizationSavedFilter('all')">All</button>
+<button id="memSavedTabWork" onclick="setMemorizationSavedFilter('work')">In progress</button>
+<button id="memSavedTabMemorized" onclick="setMemorizationSavedFilter('memorized')">Memorized</button>
 </div>
 <div class="mem-saved-list" id="memSavedList">
 <p class="mem-empty">Loaded verses will save here.</p>
@@ -16632,7 +16637,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.201"></script>
+<script src="app.js?v=3.0.202"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>

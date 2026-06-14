@@ -28719,12 +28719,14 @@ body.memorization-active .app-header { display: none; }
 .mem-mic-btn.recording { background: #b91c1c; animation: memPulse 1.1s infinite; }
 @keyframes memPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
 .mem-transcript {
-  min-height: 58px;
+  min-height: 46px;
   border-radius: 17px;
   padding: 12px;
   background: color-mix(in srgb, var(--card-color) 88%, var(--bg-color));
-  border: 1px dashed color-mix(in srgb, var(--secondary-color) 28%, var(--border-color));
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, var(--border-color));
   color: var(--muted-color);
+  font-size: 0.86rem;
+  font-weight: 850;
   line-height: 1.4;
 }
 .mem-reciting-cover {
@@ -28775,6 +28777,29 @@ body.memorization-active .app-header { display: none; }
   padding: 8px 10px;
   background: color-mix(in srgb, var(--secondary-color) 8%, transparent);
   color: var(--font-color);
+}
+.mem-library-tabs {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr 1fr;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding: 4px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--secondary-color) 8%, transparent);
+}
+.mem-library-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--muted-color);
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+.mem-library-tabs button.active {
+  background: var(--card-color);
+  color: var(--secondary-color);
+  box-shadow: 0 7px 16px rgba(0,0,0,0.08);
 }
 .mem-saved-list { display: grid; gap: 9px; }
 .mem-saved-item {

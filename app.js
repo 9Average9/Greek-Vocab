@@ -10403,6 +10403,8 @@ let _memRecognition = null;
 let _memRecording = false;
 let _memReciting = false;
 let _memFinalTranscript = '';
+let _memInterimTranscript = '';
+let _memSavedFilter = 'all';
 const MEM_SAVED_KEY = 'memorizationSavedPassages';
 
 const MEM_FILLER_WORDS = new Set([
@@ -10410,6 +10412,40 @@ const MEM_FILLER_WORDS = new Set([
   'so','well','actually','just','let','lets','lemme','start','again'
 ]);
 const MEM_SOFT_EXTRA_WORDS = new Set(['and','but','so','then']);
+const MEM_SOUNDALIKE_WORDS = new Map([
+  ['and', new Set(['an'])],
+  ['an', new Set(['and'])],
+  ['to', new Set(['too', 'two'])],
+  ['too', new Set(['to', 'two'])],
+  ['two', new Set(['to', 'too'])]
+]);
+const MEM_CONTRACTIONS = {
+  "cant": "can not",
+  "cannot": "can not",
+  "couldnt": "could not",
+  "didnt": "did not",
+  "doesnt": "does not",
+  "dont": "do not",
+  "hadnt": "had not",
+  "hasnt": "has not",
+  "havent": "have not",
+  "hes": "he is",
+  "heres": "here is",
+  "im": "i am",
+  "isnt": "is not",
+  "lets": "let us",
+  "shes": "she is",
+  "shouldnt": "should not",
+  "thats": "that is",
+  "theres": "there is",
+  "theyre": "they are",
+  "wasnt": "was not",
+  "weve": "we have",
+  "whos": "who is",
+  "wont": "will not",
+  "wouldnt": "would not",
+  "youre": "you are"
+};
 
 function openMemorizationPage() {
   setNavActive('memorization');
@@ -10490,9 +10526,18 @@ function _memUpsertSavedPassage(passage = _memCurrent, progress = _memGetProgres
 function renderMemorizationSavedList() {
   const el = document.getElementById('memSavedList');
   if (!el) return;
-  const list = _memSavedList();
+  document.getElementById('memSavedTabAll')?.classList.toggle('active', _memSavedFilter === 'all');
+  document.getElementById('memSavedTabWork')?.classList.toggle('active', _memSavedFilter === 'work');
+  document.getElementById('memSavedTabMemorized')?.classList.toggle('active', _memSavedFilter === 'memorized');
+  const all = _memSavedList();
+  const list = all.filter(item => _memSavedFilter === 'all' || item.status === _memSavedFilter);
   if (!list.length) {
-    el.innerHTML = '<p class="mem-empty">Loaded verses will save here.</p>';
+    const empty = _memSavedFilter === 'memorized'
+      ? 'Perfect recitations will show up here.'
+      : _memSavedFilter === 'work'
+        ? 'Verses you are still practicing will show up here.'
+        : 'Loaded verses will save here.';
+    el.innerHTML = `<p class="mem-empty">${empty}</p>`;
     return;
   }
   el.innerHTML = list.map(item => {
@@ -10508,13 +10553,18 @@ function renderMemorizationSavedList() {
   }).join('');
 }
 
+function setMemorizationSavedFilter(filter) {
+  _memSavedFilter = ['work', 'memorized'].includes(filter) ? filter : 'all';
+  renderMemorizationSavedList();
+}
+
 function openMemorizationSaved(id) {
   const item = _memSavedList().find(saved => saved.id === id);
   if (!item) return;
   _memCurrent = { id: item.id, ref: item.ref, version: item.version, text: item.text };
   localStorage.setItem('memorizationLastPassage', JSON.stringify(_memCurrent));
   document.getElementById('memFeedback').innerHTML = '';
-  document.getElementById('memTranscript').textContent = 'Your spoken words will appear here.';
+  _memSetRecitationStatus('Ready when you are.');
   updateMemorizationProgressUI();
   renderMemorizationPractice();
 }
@@ -10525,7 +10575,7 @@ function deleteMemorizationSaved(id) {
     _memCurrent = null;
     localStorage.removeItem('memorizationLastPassage');
     document.getElementById('memFeedback').innerHTML = '';
-    document.getElementById('memTranscript').textContent = 'Your spoken words will appear here.';
+    _memSetRecitationStatus('Ready when you are.');
     renderMemorizationPractice();
   }
   updateMemorizationProgressUI();
@@ -10533,6 +10583,7 @@ function deleteMemorizationSaved(id) {
 
 window.openMemorizationSaved = openMemorizationSaved;
 window.deleteMemorizationSaved = deleteMemorizationSaved;
+window.setMemorizationSavedFilter = setMemorizationSavedFilter;
 
 function _memWords(text = '', { removeFillers = false } = {}) {
   const raw = String(text || '')
@@ -10543,6 +10594,37 @@ function _memWords(text = '', { removeFillers = false } = {}) {
     .filter(Boolean);
   const out = [];
   raw.forEach(word => {
+    if (removeFillers && MEM_FILLER_WORDS.has(word)) return;
+    if (removeFillers && out[out.length - 1] === word) return;
+    out.push(word);
+  });
+  return out;
+}
+
+function _memNormalizeSpeechText(text = '') {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/\b([a-z]+)'(s|re|ve|ll|d|m|t)\b/g, '$1$2')
+    .replace(/\b([a-z]+)in'\b/g, '$1ing');
+}
+
+function _memWords(text = '', { removeFillers = false } = {}) {
+  const raw = _memNormalizeSpeechText(text)
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+  const out = [];
+  raw.forEach(word => {
+    const expanded = MEM_CONTRACTIONS[word];
+    if (expanded) {
+      expanded.split(/\s+/).forEach(part => {
+        if (removeFillers && MEM_FILLER_WORDS.has(part)) return;
+        if (removeFillers && out[out.length - 1] === part) return;
+        out.push(part);
+      });
+      return;
+    }
     if (removeFillers && MEM_FILLER_WORDS.has(word)) return;
     if (removeFillers && out[out.length - 1] === word) return;
     out.push(word);
@@ -10725,7 +10807,7 @@ function setMemorizationCurrent(next) {
   localStorage.setItem('memorizationLastPassage', JSON.stringify(next));
   _memUpsertSavedPassage(next);
   document.getElementById('memFeedback').innerHTML = '';
-  document.getElementById('memTranscript').textContent = 'Your spoken words will appear here.';
+  _memSetRecitationStatus('Ready when you are.');
   toggleMemorizationSetup(false);
   updateMemorizationProgressUI();
   renderMemorizationPractice();
@@ -10835,21 +10917,119 @@ function _memScrambleHtml(text) {
 function _memLcsCompare(targetWords, spokenWords) {
   const n = targetWords.length, m = spokenWords.length;
   const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
+  const choice = Array.from({ length: n + 1 }, () => Array(m + 1).fill(''));
   for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) {
-    dp[i][j] = targetWords[i] === spokenWords[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    const sim = _memWordSimilarity(targetWords[i], spokenWords[j]);
+    const take = sim >= 0.72 ? sim + dp[i + 1][j + 1] : -1;
+    const skipTarget = dp[i + 1][j];
+    const skipSpoken = dp[i][j + 1] - (MEM_SOFT_EXTRA_WORDS.has(spokenWords[j]) ? 0.03 : 0.08);
+    if (take >= skipTarget && take >= skipSpoken) {
+      dp[i][j] = take;
+      choice[i][j] = 'take';
+    } else if (skipTarget >= skipSpoken) {
+      dp[i][j] = skipTarget;
+      choice[i][j] = 'skipTarget';
+    } else {
+      dp[i][j] = skipSpoken;
+      choice[i][j] = 'skipSpoken';
+    }
   }
-  const matchedTarget = new Set(), matchedSpoken = new Set();
+  const matchedTarget = new Set(), matchedSpoken = new Set(), fuzzyMatches = [];
   let i = 0, j = 0;
   while (i < n && j < m) {
-    if (targetWords[i] === spokenWords[j]) { matchedTarget.add(i); matchedSpoken.add(j); i++; j++; }
-    else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
+    if (choice[i][j] === 'take') {
+      const sim = _memWordSimilarity(targetWords[i], spokenWords[j]);
+      matchedTarget.add(i);
+      matchedSpoken.add(j);
+      if (sim < 1) fuzzyMatches.push({ target: targetWords[i], spoken: spokenWords[j], sim });
+      i++;
+      j++;
+    } else if (choice[i][j] === 'skipTarget') i++;
     else j++;
   }
   const missing = targetWords.map((w, idx) => matchedTarget.has(idx) ? null : w).filter(Boolean);
   const added = spokenWords.map((w, idx) => matchedSpoken.has(idx) ? null : w).filter(Boolean);
   const hardAdded = added.filter(w => !MEM_SOFT_EXTRA_WORDS.has(w));
-  const score = n ? Math.max(0, Math.min(100, Math.round((matchedTarget.size / n) * 100 - Math.min(10, hardAdded.length * 2)))) : 0;
-  return { score, matched: matchedTarget.size, missing, added, hardAdded };
+  const fuzzyPenalty = fuzzyMatches.reduce((sum, item) => sum + (1 - item.sim), 0) * 1.8;
+  const additionPenalty = Math.min(12, hardAdded.length * 2.25);
+  const base = n ? (Math.max(0, dp[0][0]) / n) * 100 : 0;
+  const exactClean = n > 0 && matchedTarget.size === n && hardAdded.length === 0 && fuzzyMatches.length === 0;
+  const score = exactClean ? 100 : Math.max(0, Math.min(99, Math.round(base - additionPenalty - fuzzyPenalty)));
+  return { score, matched: matchedTarget.size, missing, added, hardAdded, fuzzyMatches };
+}
+
+function _memPrepareSpokenWords(transcript = '', targetWords = []) {
+  const targetSet = new Set(targetWords);
+  const joinedPairs = new Map();
+  const targetRepeats = new Set();
+  targetWords.forEach((word, idx) => {
+    if (idx > 0 && targetWords[idx - 1] === word) targetRepeats.add(word);
+    if (idx < targetWords.length - 1) joinedPairs.set(`${word}${targetWords[idx + 1]}`, [word, targetWords[idx + 1]]);
+  });
+  const raw = _memWords(transcript);
+  const out = [];
+  raw.forEach(word => {
+    if (!targetSet.has(word) && joinedPairs.has(word)) {
+      joinedPairs.get(word).forEach(part => {
+        if (out[out.length - 1] === part && !targetRepeats.has(part)) return;
+        out.push(part);
+      });
+      return;
+    }
+    if (MEM_FILLER_WORDS.has(word) && !targetSet.has(word)) return;
+    if (out[out.length - 1] === word && !targetRepeats.has(word)) return;
+    out.push(word);
+  });
+  return out;
+}
+
+function _memStemWord(word = '') {
+  const w = String(word || '');
+  if (w.length > 5 && w.endsWith('ies')) return w.slice(0, -3) + 'y';
+  if (w.length > 6 && w.endsWith('ing')) return w.slice(0, -3);
+  if (w.length > 5 && w.endsWith('ed')) return w.slice(0, -2);
+  if (w.length > 4 && w.endsWith('es')) return w.slice(0, -2);
+  if (w.length > 3 && w.endsWith('s')) return w.slice(0, -1);
+  return w;
+}
+
+function _memConsonantShape(word = '') {
+  const w = _memStemWord(word);
+  return (w[0] || '') + w.slice(1).replace(/[aeiou]/g, '').replace(/(.)\1+/g, '$1');
+}
+
+function _memEditDistance(a = '', b = '') {
+  if (a === b) return 0;
+  const rows = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) rows[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      rows[i][j] = Math.min(
+        rows[i - 1][j] + 1,
+        rows[i][j - 1] + 1,
+        rows[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return rows[a.length][b.length];
+}
+
+function _memWordSimilarity(target = '', spoken = '') {
+  if (!target || !spoken) return 0;
+  if (target === spoken) return 1;
+  if (MEM_SOUNDALIKE_WORDS.get(target)?.has(spoken)) return 0.92;
+  const tStem = _memStemWord(target);
+  const sStem = _memStemWord(spoken);
+  if (tStem === sStem && Math.min(target.length, spoken.length) >= 4) return 0.94;
+  const maxLen = Math.max(target.length, spoken.length);
+  const dist = _memEditDistance(target, spoken);
+  if (maxLen >= 8 && dist <= 2 && target[0] === spoken[0]) return 0.88;
+  if (maxLen >= 5 && dist <= 1) return 0.9;
+  const tShape = _memConsonantShape(target);
+  const sShape = _memConsonantShape(spoken);
+  if (maxLen >= 6 && tShape === sShape) return 0.84;
+  if (maxLen >= 7 && _memEditDistance(tShape, sShape) <= 1 && target[0] === spoken[0]) return 0.78;
+  return 0;
 }
 
 function _memGroupWords(words = [], maxGroups = 4) {
@@ -10867,7 +11047,7 @@ function _memGroupWords(words = [], maxGroups = 4) {
 function scoreMemorizationRecitation(transcript = '') {
   if (!_memCurrent?.text) return null;
   const target = _memWords(_memCurrent.text);
-  const spoken = _memWords(transcript, { removeFillers: true });
+  const spoken = _memPrepareSpokenWords(transcript, target);
   const result = _memLcsCompare(target, spoken);
   _memSaveProgress(result.score);
   const missed = _memGroupWords(result.missing);
@@ -10885,6 +11065,11 @@ function scoreMemorizationRecitation(transcript = '') {
   return result;
 }
 
+function _memSetRecitationStatus(text) {
+  const el = document.getElementById('memTranscript');
+  if (el) el.textContent = text || 'Ready when you are.';
+}
+
 function toggleMemorizationRecording() {
   if (_memRecording) {
     _memRecording = false;
@@ -10898,6 +11083,7 @@ function toggleMemorizationRecording() {
     return;
   }
   _memFinalTranscript = '';
+  _memInterimTranscript = '';
   _memRecognition = new Recognition();
   _memRecognition.lang = 'en-US';
   _memRecognition.interimResults = true;
@@ -10907,7 +11093,7 @@ function toggleMemorizationRecording() {
   const micBtn = document.getElementById('memMicBtn');
   micBtn?.classList.add('recording');
   if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">stop_circle</span><strong>Stop and score</strong><small>I am listening. Keep going.</small>';
-  document.getElementById('memTranscript').textContent = 'Listening...';
+  _memSetRecitationStatus('Listening. Keep your eyes up and say it from memory.');
   renderMemorizationPractice();
   _memRecognition.onresult = event => {
     let interim = '';
@@ -10916,7 +11102,7 @@ function toggleMemorizationRecording() {
       if (event.results[i].isFinal) _memFinalTranscript += ` ${text}`;
       else interim += ` ${text}`;
     }
-    document.getElementById('memTranscript').textContent = (_memFinalTranscript + interim).trim() || 'Listening...';
+    _memInterimTranscript = interim;
   };
   _memRecognition.onerror = event => {
     _memRecording = false;
@@ -10925,6 +11111,7 @@ function toggleMemorizationRecording() {
     micBtn?.classList.remove('recording');
     if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
     renderMemorizationPractice();
+    _memSetRecitationStatus('Ready when you are.');
     document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card needs-work"><strong>Mic hiccup</strong><p>${_memEsc(event.error || 'Could not hear that clearly.')}</p></div>`;
   };
   _memRecognition.onend = () => {
@@ -10934,8 +11121,9 @@ function toggleMemorizationRecording() {
     micBtn?.classList.remove('recording');
     if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
     renderMemorizationPractice();
-    const transcript = (document.getElementById('memTranscript')?.textContent || _memFinalTranscript || '').trim();
-    if (transcript && transcript !== 'Listening...') scoreMemorizationRecitation(transcript);
+    const transcript = (_memFinalTranscript || _memInterimTranscript || '').trim();
+    _memSetRecitationStatus(transcript ? 'Scored. Try again whenever you want.' : 'I did not catch enough to score.');
+    if (transcript) scoreMemorizationRecitation(transcript);
   };
   try {
     _memRecognition.start();
@@ -10946,6 +11134,7 @@ function toggleMemorizationRecording() {
     micBtn?.classList.remove('recording');
     if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
     renderMemorizationPractice();
+    _memSetRecitationStatus('Ready when you are.');
     document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card needs-work"><strong>Mic could not start</strong><p>${_memEsc(err?.message || 'Check microphone permission and try again.')}</p></div>`;
   }
 }
@@ -19929,7 +20118,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.201";
+const APP_VERSION = "3.0.202";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -19950,6 +20139,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.202 &mdash; Smarter Recitation</div>
+<ul>
+  <li><strong>Recitation matching refined</strong> &mdash; Voice practice now uses ordered fuzzy alignment so fast speech, small speech-to-text slips, repeated stumbles, and close word endings are handled more graciously.</li>
+  <li><strong>No live transcript</strong> &mdash; The app no longer echoes every word while you recite; it simply listens, hides the verse, and gives feedback after scoring.</li>
+  <li><strong>Saved verse tabs</strong> &mdash; Memorization now separates All, In progress, and Memorized passages so users can reopen each one in the workshop.</li>
+</ul>
 <div class="un-version-label">v3.0.201 &mdash; Memorization Redesign</div>
 <ul>
   <li><strong>Full-page mobile practice</strong> &mdash; Memorization now opens as its own page with a sticky top bar, scripture-first layout, and no Disciple Builder shell title crowding the tool.</li>
