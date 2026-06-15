@@ -12140,13 +12140,18 @@ function _memSetRecitationStatus(text) {
   if (el) el.textContent = text || 'Ready when you are.';
 }
 
+function _memMicBtnHtml(icon, title, sub) {
+  return `<span class="mem-mic-icon"><span class="material-symbols-outlined">${icon}</span></span>`
+    + `<span class="mem-mic-label"><strong>${title}</strong><small>${sub}</small></span>`;
+}
+
 function _memResetMicUI(status = 'Ready when you are.') {
   _memRecording = false;
   _memReciting = false;
   _memRecognition = null;
   const micBtn = document.getElementById('memMicBtn');
   micBtn?.classList.remove('recording');
-  if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic</span><strong>Start reciting</strong><small>The verse hides while you speak.</small>';
+  if (micBtn) micBtn.innerHTML = _memMicBtnHtml('mic', 'Start reciting', 'The verse hides while you speak.');
   renderMemorizationPractice();
   _memSetRecitationStatus(status);
 }
@@ -12203,7 +12208,7 @@ async function toggleMemorizationRecording() {
     return;
   }
   const micBtn = document.getElementById('memMicBtn');
-  if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">mic_external_on</span><strong>Checking mic</strong><small>One moment...</small>';
+  if (micBtn) micBtn.innerHTML = _memMicBtnHtml('mic_external_on', 'Checking mic', 'One moment…');
   const micPermission = await _memEnsureMicPermission();
   if (!micPermission.ok) {
     _memResetMicUI('Mic is blocked right now. Tap Start reciting to try again.');
@@ -12222,7 +12227,7 @@ async function toggleMemorizationRecording() {
   _memRecording = true;
   _memReciting = true;
   micBtn?.classList.add('recording');
-  if (micBtn) micBtn.innerHTML = '<span class="material-symbols-outlined">stop_circle</span><strong>Stop and score</strong><small>I am listening. Keep going.</small>';
+  if (micBtn) micBtn.innerHTML = _memMicBtnHtml('stop_circle', 'Stop &amp; score', 'Listening… keep going.');
   _memSetRecitationStatus('Listening. Keep your eyes up and say it from memory.');
   renderMemorizationPractice();
   _memRecognition.onresult = event => {
@@ -21244,7 +21249,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.216";
+const APP_VERSION = "3.0.217";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21265,6 +21270,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.217 &mdash; Redesigned Record Bar</div>
+<ul>
+  <li><strong>Fresh record bar</strong> &mdash; The recite control is now a sleek gradient pill with a round mic button, and turns red while recording.</li>
+  <li><strong>Centered animation</strong> &mdash; The sonar rings now radiate perfectly from the center of the round mic button instead of floating off to the side.</li>
+</ul>
 <div class="un-version-label">v3.0.216 &mdash; Speech Decoder &amp; Live Mic Animation</div>
 <ul>
   <li><strong>Hears what you meant</strong> &mdash; A new phonetic &ldquo;sounds-like&rdquo; decoder lines up words even when the mic mis-spells them (perish/parish, gave/gaev), so an imperfect mic stops costing you points.</li>
