@@ -28431,7 +28431,12 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 #memorizationPage.screen.active {
   display: block;
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100vh;
+  height: 100dvh;
   z-index: 1000;
   overflow: hidden;
   background: var(--memorization-page-color, var(--primary-light)) !important;
@@ -29214,6 +29219,57 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
 .mem-result-meta strong { display: block; font-size: 1.05rem; font-weight: 950; color: var(--font-color); }
 .mem-result-meta span { display: block; font-size: 0.78rem; font-weight: 850; color: var(--secondary-color); margin-top: 1px; }
 .mem-result-meta p { margin: 5px 0 0; font-size: 0.84rem; color: var(--muted-color); line-height: 1.35; }
+.mem-coach-trend {
+  display: inline-flex;
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 850;
+  color: var(--secondary-color);
+  background: color-mix(in srgb, var(--secondary-color) 12%, transparent);
+}
+/* Conversational, text-message-style read on the recitation. */
+.mem-coach-msg {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 16px 16px 16px 4px;
+  background: color-mix(in srgb, var(--secondary-color) 9%, var(--card-color));
+  color: var(--font-color);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.mem-coach-persist {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent-color) 13%, transparent);
+  color: var(--font-color);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+.mem-coach-persist .material-symbols-outlined { font-size: 1.1rem; color: var(--accent-color); flex: 0 0 auto; margin-top: 1px; }
+.mem-coach-persist strong { font-weight: 950; }
+.mem-coach-retry {
+  width: 100%;
+  margin-top: 14px;
+  min-height: 46px;
+  border: 0;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 950;
+  font-size: 0.9rem;
+  color: var(--card-color);
+  background: var(--secondary-color);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--secondary-color) 22%, transparent);
+}
+.mem-coach-retry .material-symbols-outlined { font-size: 1.2rem; }
 
 .mem-recite-diff-wrap { margin-top: 14px; }
 .mem-diff-label {

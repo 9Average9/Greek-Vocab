@@ -11823,6 +11823,72 @@ function _memReciteDiffHtml() {
   return `<div class="mem-recite-diff">${body}</div>`;
 }
 
+// A warm, human, text-message-style read on how the recitation went. Pulls from
+// the live alignment plus saved history so it can talk about swaps, where you
+// trailed off, how you did vs last time, and the words that keep tripping you.
+function _memCoachLine(scored, result, target, display, score) {
+  const status = result.targetStatus || [];
+  const total = target.length || 1;
+  const decisions = _memLastRecitation?.decisions || {};
+  const dispWord = t => display[t.ti] || t.word;
+  const quoteList = (arr, max = 3) => {
+    const a = arr.slice(0, max).map(w => `“${w}”`);
+    if (arr.length > max) a.push(`+${arr.length - max} more`);
+    return a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : (a[0] || '');
+  };
+  // Outstanding (unresolved) trouble only.
+  const misses = status.filter(t => (t.state === 'miss' && decisions[t.ti] !== 'said')).map(dispWord);
+  const swaps = status.filter(t => t.state === 'fuzzy' && !decisions[t.ti]).map(t => ({ said: t.spoken, meant: dispWord(t) }));
+
+  // Did they recite a solid chunk then stop? (long trailing run of misses)
+  let lastGood = -1;
+  status.forEach(t => { if (!(t.state === 'miss' && decisions[t.ti] !== 'said')) lastGood = t.ti; });
+  const trailing = total - 1 - lastGood;
+  const partial = lastGood >= 2 && lastGood < total - 1 &&
+    trailing >= Math.max(3, Math.round(total * 0.25)) &&
+    status.slice(lastGood + 1).every(t => t.state === 'miss' && decisions[t.ti] !== 'said');
+
+  let msg;
+  if (score >= 100) {
+    msg = 'Word for word — that one is locked in. 🎉 Come back later to keep it warm.';
+  } else if (partial) {
+    msg = `You had the first ${lastGood + 1} words solid, then it trailed off around “${dispWord(status[lastGood + 1])}.” Want to pick it up from there?`;
+  } else if (!misses.length && swaps.length) {
+    msg = `Really close — every word was there. Just confirm ${quoteList(swaps.map(s => s.meant))} below (I heard ${quoteList(swaps.map(s => s.said))}).`;
+  } else if (score >= 85) {
+    msg = misses.length
+      ? `So close! Only ${quoteList(misses)} slipped. One more pass and it is yours.`
+      : 'Crisp run — barely anything to tidy up.';
+  } else if (score >= 65) {
+    const bits = [];
+    if (misses.length) bits.push(`missed ${quoteList(misses)}`);
+    if (swaps.length) bits.push(`swapped ${quoteList(swaps.map(s => `${s.said}→${s.meant}`))}`);
+    msg = `Solid run — you ${bits.join(', and ') || 'were mostly there'}. Tighten those and you are nearly home.`;
+  } else {
+    msg = misses.length
+      ? `Good start — the shape is coming. The trickiest spots were ${quoteList(misses)}. Try First letter or Vanish, then say it again.`
+      : 'Good start — keep reading it through, then come back and recite.';
+  }
+
+  // Trend vs the previous spoken attempt.
+  const voiceHist = (_memGetProgress().history || []).filter(h => h.mode === 'voice');
+  const prev = voiceHist.length >= 2 ? voiceHist[voiceHist.length - 2] : null;
+  let trend = '';
+  if (prev) {
+    const delta = score - Math.round(Number(prev.score || 0));
+    if (delta >= 5) trend = `📈 Up from ${Math.round(prev.score)}% last time`;
+    else if (delta <= -5) trend = `Down from ${Math.round(prev.score)}% — shake it off and run it again`;
+    else if (score >= 95) trend = 'Holding steady up here 👌';
+  }
+
+  // Words that keep tripping them across attempts (memory).
+  const persistent = _memTopEntries(_memGetProgress().weakWords, 4)
+    .filter(([, count]) => Number(count) >= 2)
+    .map(([w]) => w);
+
+  return { msg, trend, persistent };
+}
+
 function _memRenderRecitationFeedback() {
   const el = document.getElementById('memFeedback');
   if (!el || !_memLastRecitation) return;
@@ -11839,12 +11905,9 @@ function _memRenderRecitationFeedback() {
     : score >= 85 ? 'Strong recitation.'
     : score >= 65 ? 'Good progress.'
     : 'Keep building.';
-  const jab = score >= 95 ? 'That was clean. The scroll is impressed.'
-    : score >= 85 ? 'Very close. A few words tried to escape.'
-    : score >= 65 ? 'Solid bones. The details need another lap.'
-    : 'No shame. The verse is still under construction.';
   const tone = score >= 85 ? 'good' : score >= 65 ? 'okay' : 'needs-work';
   const ringColor = score >= 85 ? '#16a34a' : score >= 65 ? '#d97706' : '#dc2626';
+  const coach = _memCoachLine(scored, result, target, display, score);
 
   // Group consecutive actionable words into a single prompt so a run of slurred
   // words is shown together ("did you mean 'X Y Z'") instead of one at a time.
@@ -11899,15 +11962,21 @@ function _memRenderRecitationFeedback() {
     ? `<div class="mem-feedback-list"><span>Extra words you added (${scored.hardAdded.length})</span><div class="mem-word-chips extra">${scored.hardAdded.map(w => `<span>${_memEsc(w)}</span>`).join('')}</div></div>`
     : '';
 
+  const trendHtml = coach.trend ? `<div class="mem-coach-trend">${_memEsc(coach.trend)}</div>` : '';
+  const persistentHtml = coach.persistent.length
+    ? `<div class="mem-coach-persist"><span class="material-symbols-outlined">push_pin</span><div>These keep tripping you up — worth a focused pass: <strong>${coach.persistent.map(w => _memEsc(w)).join(', ')}</strong></div></div>`
+    : '';
+
   el.innerHTML = `<div class="mem-feedback-card ${tone}">
     <div class="mem-result-head">
       <div class="mem-result-ring" style="background:conic-gradient(${ringColor} ${Math.max(score, 2) * 3.6}deg, color-mix(in srgb, var(--secondary-color) 14%, transparent) 0)"><div><strong>${score}<small>%</small></strong></div></div>
       <div class="mem-result-meta">
         <strong>${verdict}</strong>
         <span>${matched} of ${total} words matched</span>
-        <p>${jab}</p>
+        ${trendHtml}
       </div>
     </div>
+    <p class="mem-coach-msg">${coach.msg}</p>
     <div class="mem-recite-diff-wrap">
       <div class="mem-diff-label">What I heard</div>
       ${_memReciteDiffHtml()}
@@ -11915,6 +11984,8 @@ function _memRenderRecitationFeedback() {
     </div>
     ${fixHtml}
     ${addedHtml}
+    ${persistentHtml}
+    <button class="mem-coach-retry" onclick="toggleMemorizationRecording()"><span class="material-symbols-outlined">mic</span>Try it again</button>
   </div>`;
 }
 
@@ -21085,7 +21156,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.214";
+const APP_VERSION = "3.0.215";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21106,6 +21177,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.215 &mdash; Recitation Coach &amp; True Full-Screen</div>
+<ul>
+  <li><strong>It talks to you like a person</strong> &mdash; After each recitation you get a warm, plain-language read on how it went (&ldquo;So close! Only &lsquo;eternal&rsquo; slipped&rdquo;), instead of a dry list.</li>
+  <li><strong>Knows when you trailed off</strong> &mdash; If you nail the first chunk and stop, it says where you trailed off and offers to pick up from that exact word.</li>
+  <li><strong>Remembers your progress</strong> &mdash; It compares this run to your last one (&ldquo;📈 up from 78%&rdquo;) and pins the words that keep tripping you up across attempts so you know what to drill.</li>
+  <li><strong>One-tap retry</strong> &mdash; A <em>Try it again</em> button right under the feedback restarts recitation instantly.</li>
+  <li><strong>Truly full screen</strong> &mdash; The page now fills the entire device height (dynamic viewport), so there is no leftover space at the bottom.</li>
+</ul>
 <div class="un-version-label">v3.0.214 &mdash; Seamless Full-Screen Memorization</div>
 <ul>
   <li><strong>No more top bar</strong> &mdash; The status-bar strip and the workshop header now use the exact same page color, with the header band, divider line, and blur removed, so the memorization page is one continuous color from the very top edge all the way down — it truly fills the whole screen.</li>
