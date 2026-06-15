@@ -29048,8 +29048,34 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
 .mem-mic-btn .material-symbols-outlined { grid-row: span 2; font-size: 2.2rem; }
 .mem-mic-btn strong { font-size: 1rem; }
 .mem-mic-btn small { opacity: 0.84; }
+.mem-mic-btn { position: relative; overflow: visible; }
 .mem-mic-btn.recording { background: #b91c1c; animation: memPulse 1.1s infinite; }
+/* Sonar ripples emanating from the recording button. */
+.mem-mic-btn.recording::before,
+.mem-mic-btn.recording::after {
+  content: "";
+  position: absolute;
+  left: 26px;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  animation: memMicSonar 1.6s ease-out infinite;
+  pointer-events: none;
+}
+.mem-mic-btn.recording::after { animation-delay: 0.8s; }
+@keyframes memMicSonar {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+}
 @keyframes memPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
+@media (prefers-reduced-motion: reduce) {
+  .mem-mic-btn.recording { animation: none; }
+  .mem-mic-btn.recording::before,
+  .mem-mic-btn.recording::after { display: none; }
+}
 .mem-transcript {
   min-height: 46px;
   border-radius: 18px;
@@ -29066,22 +29092,86 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 8px;
+  gap: 10px;
   text-align: center;
   color: var(--muted-color);
 }
-.mem-reciting-cover .material-symbols-outlined {
-  width: 64px;
-  height: 64px;
-  border-radius: 22px;
-  display: grid;
-  place-items: center;
-  color: var(--secondary-color);
-  background: color-mix(in srgb, var(--secondary-color) 12%, transparent);
-  font-size: 2rem;
-}
 .mem-reciting-cover strong { color: var(--font-color); font-size: 1.2rem; }
 .mem-reciting-cover p { margin: 0; max-width: 260px; line-height: 1.42; }
+/* Animated "listening" orb with expanding sonar rings + a live pulsing icon. */
+.mem-listen-orb {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+}
+.mem-listen-orb .material-symbols-outlined {
+  position: relative;
+  z-index: 2;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 2.1rem;
+  color: var(--card-color);
+  background: var(--secondary-color);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--secondary-color) 38%, transparent);
+  animation: memOrbPulse 1.4s ease-in-out infinite;
+}
+.mem-listen-ring {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--secondary-color) 55%, transparent);
+  opacity: 0;
+  animation: memSonar 2.1s ease-out infinite;
+}
+.mem-listen-ring:nth-child(2) { animation-delay: 0.7s; }
+.mem-listen-ring:nth-child(3) { animation-delay: 1.4s; }
+@keyframes memOrbPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@keyframes memSonar {
+  0% { transform: scale(0.85); opacity: 0.75; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+/* Live equalizer bars under the orb. */
+.mem-listen-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 26px;
+}
+.mem-listen-eq i {
+  width: 4px;
+  border-radius: 3px;
+  background: var(--secondary-color);
+  animation: memEq 0.9s ease-in-out infinite;
+}
+.mem-listen-eq i:nth-child(1) { animation-delay: 0s; }
+.mem-listen-eq i:nth-child(2) { animation-delay: 0.18s; }
+.mem-listen-eq i:nth-child(3) { animation-delay: 0.36s; }
+.mem-listen-eq i:nth-child(4) { animation-delay: 0.12s; }
+.mem-listen-eq i:nth-child(5) { animation-delay: 0.30s; }
+.mem-listen-eq i:nth-child(6) { animation-delay: 0.06s; }
+.mem-listen-eq i:nth-child(7) { animation-delay: 0.24s; }
+@keyframes memEq {
+  0%, 100% { height: 7px; opacity: 0.55; }
+  50% { height: 26px; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mem-listen-orb .material-symbols-outlined,
+  .mem-listen-ring,
+  .mem-listen-eq i { animation: none; }
+  .mem-listen-ring { display: none; }
+}
 .mem-feedback { margin-top: 2px; }
 .mem-feedback-card {
   border-radius: 20px;

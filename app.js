@@ -10415,7 +10415,46 @@ const MEM_FILLER_WORDS = new Set([
   'um','umm','uh','uhh','er','erm','ah','hmm','like','wait','sorry','okay','ok',
   'so','well','actually','just','let','lets','lemme','start','again'
 ]);
-const MEM_SOFT_EXTRA_WORDS = new Set(['and','but','so','then']);
+const MEM_SOFT_EXTRA_WORDS = new Set(['and','but','so','then','amen','okay','ok','right','yeah']);
+// Strong "ignore everything before this, I'm restarting" cues — we keep only
+// what was said AFTER the last one, so a false start costs nothing.
+const MEM_RESTART_CUES = [
+  'start over','starting over','scratch that','let me restart','let me start over',
+  'let me try again','start again','starting again','from the top','let me redo',
+  'redo that','strike that','take two'
+];
+// Weak "oops" cues — just drop the cue words; the recitation around them stands.
+const MEM_CORRECTION_CUES = [
+  'no wait','wait no','hold on','one moment','i mean','i messed up','my bad'
+];
+
+// Decode the raw spoken words like a person would: honor restarts (keep only
+// the final attempt) and quietly remove little "oops" asides. Cues are ignored
+// when the verse itself legitimately contains those words.
+function _memApplySpeechCorrections(words = [], targetSet = new Set()) {
+  let arr = words.slice();
+  const cueInVerse = parts => parts.every(w => targetSet.has(w));
+  const matchAt = (parts, i) => parts.every((p, k) => arr[i + k] === p);
+  // Strong restart: cut everything up to and including the LAST restart cue.
+  let cutEnd = -1;
+  MEM_RESTART_CUES.forEach(cue => {
+    const parts = cue.split(' ');
+    if (cueInVerse(parts)) return;
+    for (let i = 0; i + parts.length <= arr.length; i++) {
+      if (matchAt(parts, i)) cutEnd = Math.max(cutEnd, i + parts.length);
+    }
+  });
+  if (cutEnd > 0) arr = arr.slice(cutEnd);
+  // Weak correction asides: splice the cue words out where they appear.
+  MEM_CORRECTION_CUES.forEach(cue => {
+    const parts = cue.split(' ');
+    if (cueInVerse(parts)) return;
+    for (let i = 0; i + parts.length <= arr.length; i++) {
+      if (matchAt(parts, i)) { arr.splice(i, parts.length); i--; }
+    }
+  });
+  return arr;
+}
 // Similarity at/above this is treated as "you said it, the mic just heard it a
 // little wrong" — full credit, no confirmation prompt. Below it (but still a
 // match) is genuinely ambiguous, so we ask the user.
@@ -10524,11 +10563,12 @@ function _memReciteSpokenWords(transcript = '', targetWords = []) {
     if (idx < targetWords.length - 1) joinedPairs.set(`${word}${targetWords[idx + 1]}`, [word, targetWords[idx + 1]]);
   });
   const allowedRun = word => targetMaxRun.get(word) || 1;
-  const raw = _memNormalizeSpeechText(transcript)
+  const rawWords = _memNormalizeSpeechText(transcript)
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter(Boolean)
     .map(_memNormWord);
+  const raw = _memApplySpeechCorrections(rawWords, targetSet);
   const out = [];
   let runWord = null, runCount = 0;
   const push = word => {
@@ -11216,7 +11256,17 @@ function renderMemorizationPractice() {
     return;
   }
   if (_memReciting) {
-    card.innerHTML = `<div class="mem-reciting-cover"><span class="material-symbols-outlined">visibility_off</span><strong>Verse hidden</strong><p>Say it from memory. I will compare it when you stop.</p></div>`;
+    card.innerHTML = `<div class="mem-reciting-cover listening">
+      <div class="mem-listen-orb">
+        <span class="mem-listen-ring"></span>
+        <span class="mem-listen-ring"></span>
+        <span class="mem-listen-ring"></span>
+        <span class="material-symbols-outlined">graphic_eq</span>
+      </div>
+      <div class="mem-listen-eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <strong>Listening…</strong>
+      <p>Say it from memory — I will read it back when you stop.</p>
+    </div>`;
     return;
   }
   const text = _memCurrent.text;
@@ -11750,6 +11800,36 @@ function _memEditDistance(a = '', b = '') {
   return rows[a.length][b.length];
 }
 
+// A rough phonetic "cypher" of a word — what it broadly sounds like — so that
+// speech-to-text mishears that SOUND like the right word (the mic is never
+// perfect) still line up even when spelled nothing alike.
+function _memPhoneticKey(word = '') {
+  let w = String(word || '').toLowerCase().replace(/[^a-z]/g, '');
+  if (!w) return '';
+  const first = w[0];
+  w = w
+    .replace(/[aeiou]+/g, 'a')      // collapse vowel runs to a single placeholder
+    .replace(/ph/g, 'f')
+    .replace(/gh/g, '')             // mostly silent
+    .replace(/ough/g, 'a')
+    .replace(/tion/g, 'shn')
+    .replace(/sion/g, 'shn')
+    .replace(/ck/g, 'k')
+    .replace(/qu?/g, 'k')
+    .replace(/c(?=[eiy])/g, 's')
+    .replace(/c/g, 'k')
+    .replace(/x/g, 'ks')
+    .replace(/z/g, 's')
+    .replace(/wr/g, 'r')
+    .replace(/kn/g, 'n')
+    .replace(/mb$/g, 'm')
+    .replace(/[wh]/g, '')           // weak/silent
+    .replace(/y/g, 'a');
+  // consonant skeleton: keep the first sound, drop the vowel placeholders after
+  const skeleton = (first.replace(/[aeiou]/, 'a')) + w.slice(1).replace(/a/g, '');
+  return skeleton.replace(/(.)\1+/g, '$1');
+}
+
 function _memWordSimilarity(target = '', spoken = '') {
   if (!target || !spoken) return 0;
   if (target === spoken) return 1;
@@ -11761,6 +11841,11 @@ function _memWordSimilarity(target = '', spoken = '') {
   const dist = _memEditDistance(target, spoken);
   if (maxLen >= 8 && dist <= 2 && target[0] === spoken[0]) return 0.88;
   if (maxLen >= 5 && dist <= 1) return 0.9;
+  // Phonetic ("sounds like") match — generous, because the mic mishears a lot.
+  const tPhon = _memPhoneticKey(target);
+  const sPhon = _memPhoneticKey(spoken);
+  if (tPhon && tPhon === sPhon && Math.min(target.length, spoken.length) >= 3) return 0.86;
+  if (tPhon && sPhon && maxLen >= 5 && _memEditDistance(tPhon, sPhon) <= 1) return 0.8;
   const tShape = _memConsonantShape(target);
   const sShape = _memConsonantShape(spoken);
   if (maxLen >= 6 && tShape === sShape) return 0.84;
@@ -11848,11 +11933,14 @@ function _memCoachLine(scored, result, target, display, score) {
     trailing >= Math.max(3, Math.round(total * 0.25)) &&
     status.slice(lastGood + 1).every(t => t.state === 'miss' && decisions[t.ti] !== 'said');
 
+  const extras = (scored.hardAdded || []);
   let msg;
   if (score >= 100) {
     msg = 'Word for word — that one is locked in. 🎉 Come back later to keep it warm.';
   } else if (partial) {
     msg = `You had the first ${lastGood + 1} words solid, then it trailed off around “${dispWord(status[lastGood + 1])}.” Want to pick it up from there?`;
+  } else if (!misses.length && !swaps.length && extras.length) {
+    msg = `You said the whole verse! 🙌 You just slipped in ${quoteList(extras)} — leave ${extras.length > 1 ? 'those' : 'that'} out and it is word-perfect.`;
   } else if (!misses.length && swaps.length) {
     msg = `Really close — every word was there. Just confirm ${quoteList(swaps.map(s => s.meant))} below (I heard ${quoteList(swaps.map(s => s.said))}).`;
   } else if (score >= 85) {
@@ -21156,7 +21244,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.215";
+const APP_VERSION = "3.0.216";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21177,6 +21265,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.216 &mdash; Speech Decoder &amp; Live Mic Animation</div>
+<ul>
+  <li><strong>Hears what you meant</strong> &mdash; A new phonetic &ldquo;sounds-like&rdquo; decoder lines up words even when the mic mis-spells them (perish/parish, gave/gaev), so an imperfect mic stops costing you points.</li>
+  <li><strong>Understands restarts and asides</strong> &mdash; Say &ldquo;scratch that&rdquo; or &ldquo;let me start over&rdquo; and only your real attempt counts; little &ldquo;no wait&rdquo; / &ldquo;my bad&rdquo; asides are quietly ignored.</li>
+  <li><strong>Coaches on extra words</strong> &mdash; If you nail the whole verse but sprinkle in extras (even &ldquo;amen&rdquo;), it tells you that you got it all and just to drop the extras.</li>
+  <li><strong>Live listening animation</strong> &mdash; While you recite, a glowing mic orb with expanding sonar rings and a pulsing equalizer shows the app is actively listening, and the record button now ripples too.</li>
+</ul>
 <div class="un-version-label">v3.0.215 &mdash; Recitation Coach &amp; True Full-Screen</div>
 <ul>
   <li><strong>It talks to you like a person</strong> &mdash; After each recitation you get a warm, plain-language read on how it went (&ldquo;So close! Only &lsquo;eternal&rsquo; slipped&rdquo;), instead of a dry list.</li>
