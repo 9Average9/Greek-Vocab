@@ -29031,46 +29031,64 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   gap: 10px;
   background: color-mix(in srgb, var(--secondary-color) 4%, transparent);
 }
+/* ---- Record bar: a clean pill with a circular mic on the left ---- */
 .mem-mic-btn {
+  position: relative;
   width: 100%;
   border: 0;
-  border-radius: 22px;
-  padding: 16px;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 4px 12px;
+  border-radius: 999px;
+  padding: 12px 20px 12px 12px;
+  display: flex;
   align-items: center;
+  gap: 14px;
   text-align: left;
-  background: var(--secondary-color);
   color: var(--card-color);
-  box-shadow: 0 14px 26px color-mix(in srgb, var(--secondary-color) 25%, transparent);
+  background: linear-gradient(135deg, var(--secondary-color), color-mix(in srgb, var(--secondary-color) 70%, #4f46e5));
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--secondary-color) 32%, transparent);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
-.mem-mic-btn .material-symbols-outlined { grid-row: span 2; font-size: 2.2rem; }
-.mem-mic-btn strong { font-size: 1rem; }
-.mem-mic-btn small { opacity: 0.84; }
-.mem-mic-btn { position: relative; overflow: visible; }
-.mem-mic-btn.recording { background: #b91c1c; animation: memPulse 1.1s infinite; }
-/* Sonar ripples emanating from the recording button. */
-.mem-mic-btn.recording::before,
-.mem-mic-btn.recording::after {
+.mem-mic-btn:active { transform: scale(0.985); }
+.mem-mic-icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+.mem-mic-icon .material-symbols-outlined { font-size: 1.9rem; color: #fff; position: relative; z-index: 2; }
+.mem-mic-label { display: grid; gap: 2px; min-width: 0; }
+.mem-mic-label strong { font-size: 1.02rem; font-weight: 950; }
+.mem-mic-label small { opacity: 0.85; font-size: 0.8rem; }
+
+/* Recording: red treatment + sonar rings centered exactly on the mic circle. */
+.mem-mic-btn.recording {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  box-shadow: 0 12px 28px rgba(220, 38, 38, 0.4);
+}
+.mem-mic-btn.recording .mem-mic-icon { background: rgba(255, 255, 255, 0.22); }
+.mem-mic-btn.recording .mem-mic-icon::before,
+.mem-mic-btn.recording .mem-mic-icon::after {
   content: "";
   position: absolute;
-  left: 26px;
-  top: 50%;
-  width: 34px;
-  height: 34px;
+  inset: 0;
   border-radius: 50%;
-  transform: translate(-50%, -50%);
-  border: 2px solid rgba(255, 255, 255, 0.55);
-  animation: memMicSonar 1.6s ease-out infinite;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  animation: memMicSonar 1.7s ease-out infinite;
   pointer-events: none;
 }
-.mem-mic-btn.recording::after { animation-delay: 0.8s; }
+.mem-mic-btn.recording .mem-mic-icon::after { animation-delay: 0.85s; }
 @keyframes memMicSonar {
-  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.7; }
-  100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+  0% { transform: scale(0.85); opacity: 0.75; }
+  100% { transform: scale(2.5); opacity: 0; }
 }
-@keyframes memPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
+@media (prefers-reduced-motion: reduce) {
+  .mem-mic-btn.recording .mem-mic-icon::before,
+  .mem-mic-btn.recording .mem-mic-icon::after { display: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .mem-mic-btn.recording { animation: none; }
   .mem-mic-btn.recording::before,
