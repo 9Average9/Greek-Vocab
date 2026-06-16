@@ -22074,7 +22074,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.234";
+const APP_VERSION = "3.0.235";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22095,6 +22095,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.235 &mdash; Habit Builder art polish</div>
+<ul>
+  <li><strong>Level artwork</strong> &mdash; The Habit Builder image on the home card now sits perfectly horizontal instead of tilting down on the left.</li>
+  <li><strong>Banner header</strong> &mdash; On the Habit Builder screen the artwork now spans the whole top as a banner, with a soft fog fade so the title reads cleanly over it.</li>
+</ul>
 <div class="un-version-label">v3.0.234 &mdash; Habit Builder Art</div>
 <ul>
   <li><strong>Habit art refreshed</strong> &mdash; The Home Habit Builder widget and the Habit Builder screen now use the new illustrated habit image.</li>
