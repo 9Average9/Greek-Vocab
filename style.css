@@ -5,6 +5,39 @@
 html, body {
   overscroll-behavior: none;
 }
+/* Portrait-only: block landscape on phones with a rotate prompt. Scoped to
+   touch devices with a short viewport so desktops/large tablets are unaffected. */
+#rotateLock { display: none; }
+@media (orientation: landscape) and (max-height: 540px) and (pointer: coarse) {
+  #rotateLock {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 2147483600;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 0;
+    padding: 24px;
+    text-align: center;
+    background: #eff6ff;
+    color: #172033;
+  }
+  #rotateLock .material-symbols-outlined {
+    font-size: 3.2rem;
+    color: #1d4ed8;
+    animation: rotateHint 2.4s ease-in-out infinite;
+  }
+  #rotateLock strong { font-size: 1.15rem; font-weight: 900; }
+  #rotateLock p { margin: 0; max-width: 360px; line-height: 1.45; color: #475569; }
+  /* Keep the app from scrolling/interacting behind the prompt. */
+  body { overflow: hidden !important; }
+}
+@keyframes rotateHint {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-90deg); }
+}
 html {
   touch-action: pan-x pan-y;
   -webkit-user-select: none;
