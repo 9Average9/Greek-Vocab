@@ -19399,7 +19399,7 @@ body.dark .bn-item::before {
   flex-direction: column;
   overflow: hidden; /* the shelf fills one screen; only book rows scroll */
   -webkit-overflow-scrolling: touch;
-  padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px));
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px));
   /* clean, theme-matched room behind the shelf */
   background:
     radial-gradient(130% 60% at 50% 0%, color-mix(in srgb, var(--secondary-color) 10%, transparent), transparent 62%),
@@ -19420,7 +19420,7 @@ body.dark .sl-body {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
-  max-width: 460px;
+  max-width: none;     /* fill the full width of the screen */
   margin: 0 auto;
   padding: 0;
   border: 0;
@@ -19429,11 +19429,11 @@ body.dark .sl-body {
   box-shadow: none;
   isolation: isolate; /* contain the theme tint to the shelf image */
   /* shelf geometry as fractions of the image */
-  --sl-inset: 13%;
-  --sl-rowA-top: 32%;
-  --sl-rowA-h: 19%;   /* book bottoms land on the ~51% board */
-  --sl-rowB-top: 53%;
-  --sl-rowB-h: 19%;   /* book bottoms land on the ~72% board */
+  --sl-inset: 10%;
+  --sl-rowA-top: 30%;
+  --sl-rowA-h: 21%;   /* book bottoms land on the ~51% board */
+  --sl-rowB-top: 51%;
+  --sl-rowB-h: 21%;   /* book bottoms land on the ~72% board */
 }
 .sl-bookcase::before,
 .sl-bookcase::after { content: none !important; display: none !important; }
