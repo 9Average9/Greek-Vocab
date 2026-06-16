@@ -5480,9 +5480,11 @@ body.dark .big-lock .material-symbols-outlined {
    a fog gradient fades the artwork into the hero so the words stay readable. */
 .habits-hero-art {
   position: absolute;
-  inset: 0;
+  top: max(env(safe-area-inset-top, 0px), 18px);
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  height: 100%;
   line-height: 0;
   z-index: 0;
   overflow: hidden;
@@ -7304,7 +7306,10 @@ body.dark .habit-notes-history-item {
     padding-right: 120px;
   }
   .habits-hero-art {
-    inset: 0;
+    top: max(env(safe-area-inset-top, 0px), 18px);
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
   }
   .home-habit-widget {
@@ -19097,9 +19102,9 @@ body.dark .bn-item::before {
 .hhw-art {
   position: absolute;
   right: -44px;
-  bottom: -18px;
+  top: 0;
+  bottom: 0;
   width: min(64vw, 248px);
-  height: 154px;
   border-radius: 26px;
   overflow: hidden;
   background:
