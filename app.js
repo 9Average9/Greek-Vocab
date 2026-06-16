@@ -10408,6 +10408,7 @@ let _memInterimTranscript = '';
 let _memSpeechErrored = false;
 let _memSavedFilter = 'all';
 let _memLastRecitation = null;
+let _memRestartAttempts = 0;
 const MEM_SAVED_KEY = 'memorizationSavedPassages';
 const MEM_MIC_ALLOWED_KEY = 'memorizationMicAllowed';
 
@@ -12220,6 +12221,7 @@ async function toggleMemorizationRecording() {
   _memFinalTranscript = '';
   _memInterimTranscript = '';
   _memSpeechErrored = false;
+  _memRestartAttempts = 0;
   _memRecognition = new Recognition();
   _memRecognition.lang = 'en-US';
   _memRecognition.interimResults = true;
@@ -12228,7 +12230,7 @@ async function toggleMemorizationRecording() {
   _memReciting = true;
   micBtn?.classList.add('recording');
   if (micBtn) micBtn.innerHTML = _memMicBtnHtml('stop_circle', 'Stop &amp; score', 'Listening… keep going.');
-  _memSetRecitationStatus('Listening. Keep your eyes up and say it from memory.');
+  _memSetRecitationStatus('Listening — say the whole verse, pauses and stumbles are fine. Tap Stop when done.');
   renderMemorizationPractice();
   _memRecognition.onresult = event => {
     let interim = '';
@@ -12238,22 +12240,38 @@ async function toggleMemorizationRecording() {
       else interim += ` ${text}`;
     }
     _memInterimTranscript = interim;
+    // We heard speech — reset the "gone quiet" counter so a mid-verse pause or
+    // stumble never ends the session early.
+    _memRestartAttempts = 0;
   };
   _memRecognition.onerror = event => {
-    _memSpeechErrored = true;
     const permissionIssue = ['not-allowed', 'service-not-allowed', 'permission-denied'].includes(event.error);
-    if (permissionIssue) localStorage.removeItem(MEM_MIC_ALLOWED_KEY);
-    // Always leave the button reset and tappable so they can retry immediately.
-    _memResetMicUI(permissionIssue ? 'Mic was blocked. Tap Start reciting to try again.' : 'Ready when you are.');
-    document.getElementById('memFeedback').innerHTML = permissionIssue
-      ? '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Tap <strong>Start reciting</strong> again and choose Allow. If the prompt no longer appears, open this site\'s settings and switch the microphone to Allow.</p></div>'
-      : `<div class="mem-feedback-card needs-work"><strong>Mic hiccup</strong><p>${_memEsc(event.error || 'Could not hear that clearly.')} Tap Start reciting to try again.</p></div>`;
+    if (permissionIssue) {
+      // Only a permission problem is fatal — stop and explain.
+      _memSpeechErrored = true;
+      localStorage.removeItem(MEM_MIC_ALLOWED_KEY);
+      _memResetMicUI('Mic was blocked. Tap Start reciting to try again.');
+      document.getElementById('memFeedback').innerHTML = '<div class="mem-feedback-card needs-work"><strong>Mic permission needed</strong><p>Tap <strong>Start reciting</strong> again and choose Allow. If the prompt no longer appears, open this site\'s settings and switch the microphone to Allow.</p></div>';
+      return;
+    }
+    // Everything else (no-speech, aborted, audio-capture, network) is NOT fatal.
+    // Don't tear the session down — onend will fire next and keep listening.
   };
   _memRecognition.onend = () => {
     if (_memSpeechErrored) return;
-    const transcript = (_memFinalTranscript || _memInterimTranscript || '').trim();
-    _memResetMicUI(transcript ? 'Scored. Try again whenever you want.' : 'I did not catch enough to score.');
-    if (transcript) scoreMemorizationRecitation(transcript);
+    // If the user hasn't tapped Stop, the engine just auto-paused (silence /
+    // end of an utterance). Restart so we keep hearing the REST of the verse
+    // instead of scoring a half-finished attempt.
+    if (_memRecording) {
+      _memRestartAttempts += 1;
+      if (_memRestartAttempts <= 6) {
+        try { _memRecognition.start(); }
+        catch { setTimeout(() => { if (_memRecording) { try { _memRecognition.start(); } catch {} } }, 250); }
+        return;
+      }
+      // Long silence with nothing new — assume they finished and score it.
+    }
+    _memFinalizeRecitation();
   };
   try {
     _memRecognition.start();
@@ -12261,6 +12279,14 @@ async function toggleMemorizationRecording() {
     _memResetMicUI('Ready when you are.');
     document.getElementById('memFeedback').innerHTML = `<div class="mem-feedback-card needs-work"><strong>Mic could not start</strong><p>${_memEsc(err?.message || 'Check microphone permission and try again.')}</p></div>`;
   }
+}
+
+// Combine every captured chunk (finalized + any trailing interim words) and score.
+function _memFinalizeRecitation() {
+  _memRecording = false;
+  const transcript = `${_memFinalTranscript} ${_memInterimTranscript}`.trim();
+  _memResetMicUI(transcript ? 'Scored. Try again whenever you want.' : 'I did not catch enough to score.');
+  if (transcript) scoreMemorizationRecitation(transcript);
 }
 
 const LESSON_HEADER_FACTS = [
@@ -21249,7 +21275,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.218";
+const APP_VERSION = "3.0.219";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21270,6 +21296,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.219 &mdash; Recitation Keeps Listening</div>
+<ul>
+  <li><strong>No more cutting off mid-verse</strong> &mdash; A pause, a stumble, or a filler word used to make the recognizer quit and score a half-finished attempt. Now it keeps listening through pauses and stumbles and only scores the full thing when you tap <em>Stop</em>.</li>
+  <li><strong>Quiet hiccups are ignored</strong> &mdash; Brief &ldquo;no speech&rdquo; gaps no longer end the session; the mic simply keeps going so the rest of the verse is still heard and matched.</li>
+</ul>
 <div class="un-version-label">v3.0.218 &mdash; Stop Re-asking to Link Calendar</div>
 <ul>
   <li><strong>One-and-done Google Calendar link</strong> &mdash; The app no longer nags you to relink after a momentary hiccup. A brief network/cold-start blip when checking your link status used to look like &ldquo;you unlinked,&rdquo; popping the relink prompt; now it only ever asks once, and only when the server truly reports no link.</li>
