@@ -4653,6 +4653,13 @@ body.dark .triple-item span {
   gap: 4px; /* was 6px */
 }
 
+/* 3-column variant: row label + Greek form + translation (e.g. εἰμί
+   conjugation). Without this it inherits the 4-column declension grid and
+   sprouts a phantom empty column that throws the rows off. */
+.case-ending-chart.chart-3col {
+  grid-template-columns: 1fr 1fr 1.4fr;
+}
+
 /* headers */
 .chart-head {
   padding: 6px 5px; /* was 10px */
@@ -21280,9 +21287,7 @@ body.dark .quiz-answer-correct { color: #a5d6a7; }
 #advVerbsLearnMenu .adv-verb-lesson.active .lesson-block-header::after {
   right: 16px !important;
   top: 50% !important;
-  transform: translateY(-50%) rotate(315deg) !important;
-  width: 9px !important;
-  height: 9px !important;
+  transform: translateY(-50%) !important; /* point straight down, no angle */
   border-color: var(--lesson-accent) !important;
   opacity: 0.9 !important;
 }
@@ -21291,7 +21296,7 @@ body.dark .quiz-answer-correct { color: #a5d6a7; }
 #basicVerbsLearnMenu .basic-verb-lesson.active .lesson-block.open .lesson-block-header::after,
 #advancedLearnMenu .adv-learn-lesson.active .lesson-block.open .lesson-block-header::after,
 #advVerbsLearnMenu .adv-verb-lesson.active .lesson-block.open .lesson-block-header::after {
-  transform: translateY(-35%) rotate(135deg) !important;
+  transform: translateY(-50%) rotate(180deg) !important; /* flip straight up when open */
 }
 
 #newLearnMenu .learn-lesson.active .block-time,
