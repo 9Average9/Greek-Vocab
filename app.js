@@ -8091,7 +8091,7 @@ let currentSentence = null;
 
 
 const screens = [
-  "homeScreen", "profilePage", "habitsPage", "memorizationPage", "merciesPage", "communityPage", "csDetailPage",
+  "homeScreen", "profilePage", "habitsPage", "memorizationPage", "readingPlanPage", "merciesPage", "communityPage", "csDetailPage",
   "sermonsPage", "newLearnMenu", "advancedLearnMenu",
   "basicVerbsLearnMenu", "advVerbsLearnMenu",
   "learnMenu", "learnScreen", "translateMenu", "translateScreen",
@@ -10380,6 +10380,8 @@ function showScreen(id) {
   _syncHomeViewportState(id);
   document.body?.classList.toggle('memorization-active', id === 'memorizationPage');
   document.documentElement?.classList.toggle('memorization-active', id === 'memorizationPage');
+  document.body?.classList.toggle('reading-plan-active', id === 'readingPlanPage');
+  document.documentElement?.classList.toggle('reading-plan-active', id === 'readingPlanPage');
   _updateAppHeaderForScreen(id);
 }
 
@@ -10391,6 +10393,651 @@ function _syncHomeViewportState(id) {
   } else {
     _clearPageHomeBackdrop();
   }
+}
+
+/* =========================
+   READING PLAN
+   A full-screen tool that turns a scripture goal (whole Bible, a testament,
+   the gospels, or any custom selection) plus a deadline into a daily reading
+   pace, with optional commit to the Habit Builder. Self-contained: it carries
+   its own canonical book + chapter-count table so it never waits on the large
+   Rhema text files to load.
+========================= */
+
+const RP_BOOKS = [
+  { code:"GEN", name:"Genesis", t:"OT", ch:50 },   { code:"EXO", name:"Exodus", t:"OT", ch:40 },
+  { code:"LEV", name:"Leviticus", t:"OT", ch:27 }, { code:"NUM", name:"Numbers", t:"OT", ch:36 },
+  { code:"DEU", name:"Deuteronomy", t:"OT", ch:34 }, { code:"JOS", name:"Joshua", t:"OT", ch:24 },
+  { code:"JDG", name:"Judges", t:"OT", ch:21 },    { code:"RUT", name:"Ruth", t:"OT", ch:4 },
+  { code:"1SA", name:"1 Samuel", t:"OT", ch:31 },  { code:"2SA", name:"2 Samuel", t:"OT", ch:24 },
+  { code:"1KI", name:"1 Kings", t:"OT", ch:22 },   { code:"2KI", name:"2 Kings", t:"OT", ch:25 },
+  { code:"1CH", name:"1 Chronicles", t:"OT", ch:29 }, { code:"2CH", name:"2 Chronicles", t:"OT", ch:36 },
+  { code:"EZR", name:"Ezra", t:"OT", ch:10 },      { code:"NEH", name:"Nehemiah", t:"OT", ch:13 },
+  { code:"EST", name:"Esther", t:"OT", ch:10 },    { code:"JOB", name:"Job", t:"OT", ch:42 },
+  { code:"PSA", name:"Psalms", t:"OT", ch:150 },   { code:"PRO", name:"Proverbs", t:"OT", ch:31 },
+  { code:"ECC", name:"Ecclesiastes", t:"OT", ch:12 }, { code:"SNG", name:"Song of Solomon", t:"OT", ch:8 },
+  { code:"ISA", name:"Isaiah", t:"OT", ch:66 },    { code:"JER", name:"Jeremiah", t:"OT", ch:52 },
+  { code:"LAM", name:"Lamentations", t:"OT", ch:5 }, { code:"EZK", name:"Ezekiel", t:"OT", ch:48 },
+  { code:"DAN", name:"Daniel", t:"OT", ch:12 },    { code:"HOS", name:"Hosea", t:"OT", ch:14 },
+  { code:"JOL", name:"Joel", t:"OT", ch:3 },       { code:"AMO", name:"Amos", t:"OT", ch:9 },
+  { code:"OBA", name:"Obadiah", t:"OT", ch:1 },    { code:"JON", name:"Jonah", t:"OT", ch:4 },
+  { code:"MIC", name:"Micah", t:"OT", ch:7 },      { code:"NAM", name:"Nahum", t:"OT", ch:3 },
+  { code:"HAB", name:"Habakkuk", t:"OT", ch:3 },   { code:"ZEP", name:"Zephaniah", t:"OT", ch:3 },
+  { code:"HAG", name:"Haggai", t:"OT", ch:2 },     { code:"ZEC", name:"Zechariah", t:"OT", ch:14 },
+  { code:"MAL", name:"Malachi", t:"OT", ch:4 },
+  { code:"MAT", name:"Matthew", t:"NT", ch:28 },   { code:"MRK", name:"Mark", t:"NT", ch:16 },
+  { code:"LUK", name:"Luke", t:"NT", ch:24 },      { code:"JHN", name:"John", t:"NT", ch:21 },
+  { code:"ACT", name:"Acts", t:"NT", ch:28 },      { code:"ROM", name:"Romans", t:"NT", ch:16 },
+  { code:"1CO", name:"1 Corinthians", t:"NT", ch:16 }, { code:"2CO", name:"2 Corinthians", t:"NT", ch:13 },
+  { code:"GAL", name:"Galatians", t:"NT", ch:6 },  { code:"EPH", name:"Ephesians", t:"NT", ch:6 },
+  { code:"PHP", name:"Philippians", t:"NT", ch:4 }, { code:"COL", name:"Colossians", t:"NT", ch:4 },
+  { code:"1TH", name:"1 Thessalonians", t:"NT", ch:5 }, { code:"2TH", name:"2 Thessalonians", t:"NT", ch:3 },
+  { code:"1TI", name:"1 Timothy", t:"NT", ch:6 },  { code:"2TI", name:"2 Timothy", t:"NT", ch:4 },
+  { code:"TIT", name:"Titus", t:"NT", ch:3 },      { code:"PHM", name:"Philemon", t:"NT", ch:1 },
+  { code:"HEB", name:"Hebrews", t:"NT", ch:13 },   { code:"JAS", name:"James", t:"NT", ch:5 },
+  { code:"1PE", name:"1 Peter", t:"NT", ch:5 },    { code:"2PE", name:"2 Peter", t:"NT", ch:3 },
+  { code:"1JN", name:"1 John", t:"NT", ch:5 },     { code:"2JN", name:"2 John", t:"NT", ch:1 },
+  { code:"3JN", name:"3 John", t:"NT", ch:1 },     { code:"JUD", name:"Jude", t:"NT", ch:1 },
+  { code:"REV", name:"Revelation", t:"NT", ch:22 }
+];
+const RP_BOOK_BY_CODE = Object.fromEntries(RP_BOOKS.map(b => [b.code, b]));
+const RP_CANON_INDEX = Object.fromEntries(RP_BOOKS.map((b, i) => [b.code, i]));
+const RP_GOSPELS = ["MAT","MRK","LUK","JHN"];
+// Book-level chronological-ish order (approximate — good enough for "read it in
+// roughly the order events happened / letters were written").
+const RP_CHRONO = [
+  "JOB","GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","PSA","1CH","2CH",
+  "PRO","ECC","SNG","1KI","2KI","JON","AMO","HOS","ISA","MIC","NAM","ZEP","HAB","JER",
+  "LAM","OBA","EZK","DAN","EZR","EST","NEH","HAG","ZEC","MAL","JOL",
+  "LUK","MRK","MAT","JHN","ACT","1TH","2TH","1CO","2CO","GAL","ROM","EPH","PHP","COL",
+  "PHM","1TI","TIT","1PE","JAS","2TI","HEB","2PE","JUD","1JN","2JN","3JN","REV"
+];
+const RP_CHRONO_INDEX = Object.fromEntries(RP_CHRONO.map((c, i) => [c, i]));
+const RP_PLANS_KEY = "rp_plans_v1";
+
+let _rpState = null;
+function _rpFreshState() {
+  return {
+    scope: "whole",          // whole | ot | nt | gospels | custom
+    customMode: "browse",    // browse | type
+    browseBooks: new Set(),  // Set<code> whole-book selection
+    typeText: "",
+    timeframe: "year",       // year | month | m3 | m6 | y1 | custom
+    customDate: "",          // YYYY-MM-DD
+    order: "straight",       // straight | chronological | fresh
+    name: "",
+    nameEdited: false,
+    editingId: null,
+    committedHabitId: null
+  };
+}
+
+function openReadingPlanPage() {
+  setNavActive('reading-plan');
+  hideBottomNav();
+  showScreen('readingPlanPage');
+  hideBottomNav();
+  if (!_rpState) _rpState = _rpFreshState();
+  setReadingPlanTab('new');
+  rpRenderForm();
+  rpRenderSaved();
+  setTimeout(_applyPendingAppUpdateReload, 50);
+}
+function closeReadingPlan() { showNavPage('home'); }
+
+function setReadingPlanTab(tab) {
+  document.getElementById('rpTabNew')?.classList.toggle('active', tab === 'new');
+  document.getElementById('rpTabSaved')?.classList.toggle('active', tab === 'saved');
+  document.getElementById('rpNewView')?.classList.toggle('hidden', tab !== 'new');
+  document.getElementById('rpSavedView')?.classList.toggle('hidden', tab !== 'saved');
+  if (tab === 'saved') rpRenderSaved();
+  const scroll = document.querySelector('#readingPlanPage .rp-scroll');
+  if (scroll) scroll.scrollTop = 0;
+}
+
+/* ---------- selection → chapter math ---------- */
+function _rpScopeBooks() {
+  const s = _rpState;
+  if (s.scope === "whole") return RP_BOOKS.map(b => b.code);
+  if (s.scope === "ot") return RP_BOOKS.filter(b => b.t === "OT").map(b => b.code);
+  if (s.scope === "nt") return RP_BOOKS.filter(b => b.t === "NT").map(b => b.code);
+  if (s.scope === "gospels") return RP_GOSPELS.slice();
+  return null; // custom handled separately
+}
+
+// Returns normalized segments [{code, from, to}] honoring scope/custom selection.
+function rpSegments() {
+  const s = _rpState;
+  const codes = _rpScopeBooks();
+  if (codes) return codes.map(code => ({ code, from: 1, to: RP_BOOK_BY_CODE[code].ch }));
+  // custom
+  if (s.customMode === "type") {
+    const parsed = rpParseReferences(s.typeText);
+    if (parsed.length) return parsed;
+    return [];
+  }
+  return [...s.browseBooks]
+    .sort((a, b) => RP_CANON_INDEX[a] - RP_CANON_INDEX[b])
+    .map(code => ({ code, from: 1, to: RP_BOOK_BY_CODE[code].ch }));
+}
+
+// Flat ordered chapter list for the chosen reading order.
+function rpFlatChapters(segments, order) {
+  // canonical flat list first
+  let flat = [];
+  segments
+    .slice()
+    .sort((a, b) => RP_CANON_INDEX[a.code] - RP_CANON_INDEX[b.code])
+    .forEach(seg => {
+      const b = RP_BOOK_BY_CODE[seg.code];
+      const from = Math.max(1, seg.from || 1);
+      const to = Math.min(b.ch, seg.to || b.ch);
+      for (let c = from; c <= to; c++) flat.push({ code: seg.code, name: b.name, ch: c });
+    });
+  if (order === "chronological") {
+    flat.sort((a, b) => {
+      const ia = RP_CHRONO_INDEX[a.code] ?? 999, ib = RP_CHRONO_INDEX[b.code] ?? 999;
+      return ia !== ib ? ia - ib : a.ch - b.ch;
+    });
+  } else if (order === "fresh") {
+    // Spread each book evenly across the whole plan so you bounce between books.
+    const groups = {};
+    flat.forEach(it => { (groups[it.code] = groups[it.code] || []).push(it); });
+    const keyed = [];
+    Object.keys(groups).forEach(code => {
+      const arr = groups[code];
+      arr.forEach((it, i) => keyed.push({ it, pos: (i + 0.5) / arr.length, ci: RP_CANON_INDEX[code] }));
+    });
+    keyed.sort((a, b) => (a.pos !== b.pos ? a.pos - b.pos : a.ci - b.ci));
+    flat = keyed.map(k => k.it);
+  }
+  return flat;
+}
+
+function _rpStartOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function rpEndDate() {
+  const s = _rpState;
+  const now = _rpStartOfDay(new Date());
+  if (s.timeframe === "year") return new Date(now.getFullYear(), 11, 31);
+  if (s.timeframe === "month") return new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  if (s.timeframe === "m3") { const d = new Date(now); d.setMonth(d.getMonth() + 3); return d; }
+  if (s.timeframe === "m6") { const d = new Date(now); d.setMonth(d.getMonth() + 6); return d; }
+  if (s.timeframe === "y1") { const d = new Date(now); d.setFullYear(d.getFullYear() + 1); return d; }
+  if (s.timeframe === "custom" && s.customDate) return _rpStartOfDay(s.customDate + "T00:00:00");
+  return null;
+}
+function rpDaysAvailable() {
+  const end = rpEndDate();
+  if (!end) return null;
+  const now = _rpStartOfDay(new Date());
+  const diff = Math.round((end - now) / 86400000) + 1; // inclusive of today
+  return diff;
+}
+
+function rpCompute() {
+  const segments = rpSegments();
+  const flat = rpFlatChapters(segments, _rpState.order);
+  const total = flat.length;
+  const days = rpDaysAvailable();
+  const end = rpEndDate();
+  let perDay = null, finishDate = null;
+  if (total > 0 && days && days > 0) {
+    perDay = Math.max(1, Math.ceil(total / days));
+    const daysNeeded = Math.ceil(total / perDay);
+    finishDate = new Date(_rpStartOfDay(new Date()).getTime() + (daysNeeded - 1) * 86400000);
+  }
+  return { segments, flat, total, days, perDay, end, finishDate };
+}
+
+/* ---------- formatting ---------- */
+function rpFmtDate(d) {
+  if (!d) return "—";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+function rpScopeLabel() {
+  const s = _rpState;
+  if (s.scope === "whole") return "Whole Bible";
+  if (s.scope === "ot") return "Old Testament";
+  if (s.scope === "nt") return "New Testament";
+  if (s.scope === "gospels") return "The Gospels";
+  const segs = rpSegments();
+  if (!segs.length) return "Custom selection";
+  if (segs.length <= 3) return segs.map(rpSegLabel).join(", ");
+  return `${segs.length} selections`;
+}
+function rpSegLabel(seg) {
+  const b = RP_BOOK_BY_CODE[seg.code];
+  if (!b) return "";
+  if ((seg.from || 1) === 1 && (seg.to || b.ch) === b.ch) return b.name;
+  if ((seg.from || 1) === (seg.to || b.ch)) return `${b.name} ${seg.from}`;
+  return `${b.name} ${seg.from || 1}–${seg.to || b.ch}`;
+}
+function rpOrderLabel(o) {
+  return o === "chronological" ? "Chronological" : o === "fresh" ? "Fresh mix" : "Straight through";
+}
+// Compress a chapter list (one day's reading) into "Genesis 1–4, Exodus 1".
+function rpFmtReading(items) {
+  if (!items || !items.length) return "—";
+  const out = [];
+  let cur = null;
+  items.forEach(it => {
+    if (cur && cur.code === it.code && it.ch === cur.last + 1) { cur.last = it.ch; return; }
+    if (cur) out.push(cur);
+    cur = { code: it.code, name: it.name, first: it.ch, last: it.ch };
+  });
+  if (cur) out.push(cur);
+  return out.map(r => r.first === r.last ? `${r.name} ${r.first}` : `${r.name} ${r.first}–${r.last}`).join(", ");
+}
+
+/* ---------- reference text parser ---------- */
+function _rpNormName(s) { return String(s).toLowerCase().replace(/\s+/g, " ").trim(); }
+const RP_NAME_LOOKUP = (() => {
+  const map = {};
+  RP_BOOKS.forEach(b => {
+    map[_rpNormName(b.name)] = b.code;
+    map[_rpNormName(b.name).replace(/\s/g, "")] = b.code;
+  });
+  // common abbreviations / alternates
+  Object.assign(map, {
+    "gen":"GEN","ex":"EXO","exod":"EXO","lev":"LEV","num":"NUM","deut":"DEU","dt":"DEU",
+    "josh":"JOS","judg":"JDG","jdg":"JDG","1 sam":"1SA","2 sam":"2SA","1sam":"1SA","2sam":"2SA",
+    "1 kgs":"1KI","2 kgs":"2KI","1kgs":"1KI","2kgs":"2KI","1 chr":"1CH","2 chr":"2CH","ps":"PSA","psalm":"PSA",
+    "prov":"PRO","eccl":"ECC","song":"SNG","song of songs":"SNG","isa":"ISA","jer":"JER","lam":"LAM",
+    "ezek":"EZK","dan":"DAN","hos":"HOS","joel":"JOL","amos":"AMO","obad":"OBA","jonah":"JON","mic":"MIC",
+    "nah":"NAM","hab":"HAB","zeph":"ZEP","hag":"HAG","zech":"ZEC","mal":"MAL",
+    "matt":"MAT","mt":"MAT","mk":"MRK","mark":"MRK","lk":"LUK","luke":"LUK","jn":"JHN","john":"JHN",
+    "acts":"ACT","rom":"ROM","1 cor":"1CO","2 cor":"2CO","1cor":"1CO","2cor":"2CO","gal":"GAL","eph":"EPH",
+    "phil":"PHP","php":"PHP","col":"COL","1 thess":"1TH","2 thess":"2TH","1thess":"1TH","2thess":"2TH",
+    "1 tim":"1TI","2 tim":"2TI","1tim":"1TI","2tim":"2TI","tit":"TIT","phlm":"PHM","heb":"HEB","jas":"JAS",
+    "1 pet":"1PE","2 pet":"2PE","1pet":"1PE","2pet":"2PE","1 jn":"1JN","2 jn":"2JN","3 jn":"3JN",
+    "1jn":"1JN","2jn":"2JN","3jn":"3JN","jude":"JUD","rev":"REV"
+  });
+  return map;
+})();
+function rpParseReferences(text) {
+  if (!text) return [];
+  const segs = [];
+  String(text).split(/[,;\n]+/).forEach(rawTok => {
+    const tok = _rpNormName(rawTok);
+    if (!tok) return;
+    // split trailing chapter spec: e.g. "1 john 1-3" -> name="1 john" range="1-3"
+    const m = tok.match(/^(.*?)(?:\s+(\d+)\s*(?:[-–]\s*(\d+))?(?::\d+)?)?$/);
+    if (!m) return;
+    let namePart = (m[1] || "").trim();
+    const chA = m[2] ? parseInt(m[2], 10) : null;
+    const chB = m[3] ? parseInt(m[3], 10) : null;
+    if (!namePart && chA) { namePart = (m[0] || "").replace(/[\d\s:–-]+$/, "").trim(); }
+    let code = RP_NAME_LOOKUP[namePart] || RP_NAME_LOOKUP[namePart.replace(/\s/g, "")];
+    if (!code) return;
+    const b = RP_BOOK_BY_CODE[code];
+    let from = chA ? Math.max(1, Math.min(b.ch, chA)) : 1;
+    let to = chB ? Math.max(from, Math.min(b.ch, chB)) : (chA ? from : b.ch);
+    segs.push({ code, from, to });
+  });
+  return segs;
+}
+
+/* ---------- form rendering ---------- */
+function rpChip(label, active, onclick, sub) {
+  return `<button type="button" class="rp-chip${active ? " active" : ""}" onclick="${onclick}">${label}${sub ? `<span class="rp-chip-sub">${sub}</span>` : ""}</button>`;
+}
+function rpRenderForm() {
+  const host = document.getElementById('rpNewView');
+  if (!host) return;
+  const s = _rpState;
+  const calc = rpCompute();
+
+  const scopeChips = [
+    ["whole","Whole Bible","1,189 ch"],
+    ["ot","Old Testament","929 ch"],
+    ["nt","New Testament","260 ch"],
+    ["gospels","Gospels","89 ch"],
+    ["custom","Custom","Pick your own"]
+  ].map(([v,l,sub]) => rpChip(l, s.scope === v, `rpSetScope('${v}')`, sub)).join("");
+
+  const tfChips = [
+    ["year","By end of year",`${new Date().getFullYear()}`],
+    ["month","By end of month",""],
+    ["m3","3 months",""],
+    ["m6","6 months",""],
+    ["y1","One year",""],
+    ["custom","Custom date",""]
+  ].map(([v,l,sub]) => rpChip(l, s.timeframe === v, `rpSetTimeframe('${v}')`, sub)).join("");
+
+  const orderChips = [
+    ["straight","Straight through","In canonical order"],
+    ["chronological","Chronological","Roughly in time order"],
+    ["fresh","Fresh mix","Bounce between books"]
+  ].map(([v,l,sub]) => rpChip(l, s.order === v, `rpSetOrder('${v}')`, sub)).join("");
+
+  let customBlock = "";
+  if (s.scope === "custom") {
+    const segs = rpSegments();
+    const summary = segs.length
+      ? segs.map(rpSegLabel).join(", ")
+      : `<span class="rp-muted">Nothing selected yet</span>`;
+    customBlock = `
+      <div class="rp-subcard">
+        <div class="rp-mode-toggle">
+          <button class="${s.customMode==='browse'?'active':''}" onclick="rpSetCustomMode('browse')"><span class="material-symbols-outlined">checklist</span>Pick books</button>
+          <button class="${s.customMode==='type'?'active':''}" onclick="rpSetCustomMode('type')"><span class="material-symbols-outlined">edit</span>Type references</button>
+        </div>
+        ${s.customMode === "browse"
+          ? `<button class="rp-picker-open" onclick="openRpBookPicker()"><span class="material-symbols-outlined">menu_book</span>Choose books &amp; ranges</button>
+             <div class="rp-selection-summary">${summary}</div>`
+          : `<textarea id="rpTypeInput" class="rp-textarea" placeholder="e.g. John, Romans 1–8, Psalms 1-50, 1 John" oninput="rpOnTypeInput(this.value)">${s.typeText.replace(/</g,"&lt;")}</textarea>
+             <div class="rp-selection-summary">${segs.length ? `Recognized: ${summary}` : `<span class="rp-muted">Type book names with optional chapter ranges, separated by commas.</span>`}</div>`}
+      </div>`;
+  }
+
+  const customDateBlock = s.timeframe === "custom"
+    ? `<input type="date" id="rpCustomDate" class="rp-date" value="${s.customDate}" min="${_rpTodayKeyLocal()}" onchange="rpOnCustomDate(this.value)"/>`
+    : "";
+
+  host.innerHTML = `
+    <p class="rp-welcome">Set a scripture goal and we'll work out the daily pace to finish on time.</p>
+
+    <div class="rp-step">
+      <div class="rp-step-label"><span class="rp-step-num">1</span> What do you want to read?</div>
+      <div class="rp-chip-row">${scopeChips}</div>
+      ${customBlock}
+    </div>
+
+    <div class="rp-step">
+      <div class="rp-step-label"><span class="rp-step-num">2</span> Finish by when?</div>
+      <div class="rp-chip-row">${tfChips}</div>
+      ${customDateBlock}
+    </div>
+
+    <div class="rp-step">
+      <div class="rp-step-label"><span class="rp-step-num">3</span> Reading order</div>
+      <div class="rp-chip-row">${orderChips}</div>
+    </div>
+
+    <div class="rp-calc" id="rpCalc">${rpCalcInner(calc)}</div>
+
+    <div class="rp-step">
+      <div class="rp-step-label"><span class="rp-step-num">4</span> Name this plan</div>
+      <input type="text" id="rpNameInput" class="rp-name-input" placeholder="${rpDefaultName(calc)}" value="${(s.name||"").replace(/"/g,'&quot;')}" oninput="rpOnNameInput(this.value)"/>
+    </div>
+
+    <div class="rp-actions">
+      <button class="rp-btn rp-btn-ghost" onclick="rpSavePlan(false)" id="rpSaveBtn"><span class="material-symbols-outlined">bookmark_add</span>${s.editingId ? "Update plan" : "Save plan"}</button>
+      <button class="rp-btn rp-btn-primary" onclick="rpSavePlan(true)" id="rpCommitBtn"><span class="material-symbols-outlined">add_task</span>Commit to Habit Builder</button>
+    </div>
+    ${s.editingId ? `<button class="rp-cancel-edit" onclick="rpCancelEdit()">Cancel edit</button>` : ""}
+  `;
+}
+
+function rpCalcInner(calc) {
+  if (!calc.total) {
+    return `<div class="rp-calc-empty"><span class="material-symbols-outlined">menu_book</span> Pick what to read to see your daily pace.</div>`;
+  }
+  if (!calc.days || calc.days <= 0) {
+    return `<div class="rp-calc-empty rp-calc-warn"><span class="material-symbols-outlined">event_busy</span> That deadline is in the past — pick a later date.</div>`;
+  }
+  const day1 = calc.flat.slice(0, calc.perDay);
+  const day2 = calc.flat.slice(calc.perDay, calc.perDay * 2);
+  const finishEarly = calc.finishDate && calc.end && (calc.finishDate < _rpStartOfDay(calc.end));
+  return `
+    <div class="rp-calc-hero">
+      <div class="rp-calc-big"><strong>${calc.perDay}</strong><span>chapter${calc.perDay>1?"s":""} / day</span></div>
+      <div class="rp-calc-meta">
+        <div><span class="material-symbols-outlined">menu_book</span> ${calc.total.toLocaleString()} chapters total</div>
+        <div><span class="material-symbols-outlined">event</span> Finish by ${rpFmtDate(calc.end)}</div>
+        <div><span class="material-symbols-outlined">calendar_month</span> ${calc.days.toLocaleString()} days available</div>
+        ${finishEarly ? `<div class="rp-calc-good"><span class="material-symbols-outlined">check_circle</span> At this pace you'd finish ${rpFmtDate(calc.finishDate)}</div>` : ""}
+      </div>
+    </div>
+    <div class="rp-preview">
+      <div class="rp-preview-title">Sample days</div>
+      <div class="rp-preview-row"><span>Day 1</span> ${rpFmtReading(day1)}</div>
+      ${day2.length ? `<div class="rp-preview-row"><span>Day 2</span> ${rpFmtReading(day2)}</div>` : ""}
+    </div>`;
+}
+
+function rpRefreshCalc() {
+  const el = document.getElementById('rpCalc');
+  if (el) el.innerHTML = rpCalcInner(rpCompute());
+  // keep the name placeholder fresh
+  const nameInput = document.getElementById('rpNameInput');
+  if (nameInput && !_rpState.name) nameInput.placeholder = rpDefaultName(rpCompute());
+}
+
+function rpDefaultName(calc) {
+  const s = _rpState;
+  if (s.scope === "whole" && (s.timeframe === "year" || s.timeframe === "y1")) return "Bible in a Year";
+  if (s.scope === "nt") return "New Testament Journey";
+  if (s.scope === "ot") return "Old Testament Journey";
+  if (s.scope === "gospels") return "Through the Gospels";
+  return `${rpScopeLabel()} Reading Plan`;
+}
+
+/* ---------- form input handlers ---------- */
+function rpSetScope(v) { _rpState.scope = v; rpRenderForm(); }
+function rpSetTimeframe(v) { _rpState.timeframe = v; rpRenderForm(); }
+function rpSetOrder(v) { _rpState.order = v; rpRefreshCalc(); _rpSyncOrderChips(); }
+function _rpSyncOrderChips() {
+  document.querySelectorAll('#rpNewView .rp-chip-row')[2]?.querySelectorAll('.rp-chip').forEach((c, i) => {
+    c.classList.toggle('active', ["straight","chronological","fresh"][i] === _rpState.order);
+  });
+}
+function rpSetCustomMode(m) { _rpState.customMode = m; rpRenderForm(); }
+function rpOnTypeInput(v) { _rpState.typeText = v; rpRefreshCalc(); _rpUpdateTypeSummary(); }
+function _rpUpdateTypeSummary() {
+  const segs = rpSegments();
+  const el = document.querySelector('#rpNewView .rp-subcard .rp-selection-summary');
+  if (el) el.innerHTML = segs.length ? `Recognized: ${segs.map(rpSegLabel).join(", ")}` : `<span class="rp-muted">Type book names with optional chapter ranges, separated by commas.</span>`;
+}
+function rpOnCustomDate(v) { _rpState.customDate = v; rpRefreshCalc(); }
+function rpOnNameInput(v) { _rpState.name = v; _rpState.nameEdited = true; }
+function _rpTodayKeyLocal() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+/* ---------- book picker ---------- */
+let _rpPickerSel = null;
+function openRpBookPicker() {
+  _rpPickerSel = new Set(_rpState.browseBooks);
+  document.getElementById('rpBookPickerOverlay')?.classList.remove('hidden');
+  rpRenderQuickRow();
+  rpRenderBookList();
+  rpUpdatePickerCount();
+}
+function closeRpBookPicker() { document.getElementById('rpBookPickerOverlay')?.classList.add('hidden'); }
+function rpRenderQuickRow() {
+  const row = document.getElementById('rpQuickRow');
+  if (!row) return;
+  const quick = [
+    ["All", "all"], ["Old Testament","ot"], ["New Testament","nt"],
+    ["Gospels","gospels"], ["Torah","torah"], ["Clear","clear"]
+  ];
+  row.innerHTML = quick.map(([l,v]) => `<button class="rp-quick" onclick="rpQuickSelect('${v}')">${l}</button>`).join("");
+}
+function rpQuickSelect(kind) {
+  if (kind === "clear") _rpPickerSel = new Set();
+  else if (kind === "all") _rpPickerSel = new Set(RP_BOOKS.map(b => b.code));
+  else if (kind === "ot") RP_BOOKS.filter(b => b.t==="OT").forEach(b => _rpPickerSel.add(b.code));
+  else if (kind === "nt") RP_BOOKS.filter(b => b.t==="NT").forEach(b => _rpPickerSel.add(b.code));
+  else if (kind === "gospels") RP_GOSPELS.forEach(c => _rpPickerSel.add(c));
+  else if (kind === "torah") ["GEN","EXO","LEV","NUM","DEU"].forEach(c => _rpPickerSel.add(c));
+  rpRenderBookList();
+  rpUpdatePickerCount();
+}
+function rpRenderBookList(filter) {
+  const list = document.getElementById('rpBookList');
+  if (!list) return;
+  const q = _rpNormName(filter || "");
+  let html = "";
+  let lastT = null;
+  RP_BOOKS.forEach(b => {
+    if (q && !_rpNormName(b.name).includes(q)) return;
+    if (b.t !== lastT) {
+      html += `<div class="rp-book-sep">${b.t === "OT" ? "Old Testament" : "New Testament"}</div>`;
+      lastT = b.t;
+    }
+    const on = _rpPickerSel.has(b.code);
+    html += `<button class="rp-book-row${on ? " selected" : ""}" onclick="rpToggleBook('${b.code}')">
+      <span class="rp-book-check"><span class="material-symbols-outlined">${on ? "check_circle" : "radio_button_unchecked"}</span></span>
+      <span class="rp-book-name">${b.name}</span>
+      <span class="rp-book-ch">${b.ch} ch</span>
+    </button>`;
+  });
+  list.innerHTML = html || `<div class="rp-muted" style="padding:18px;text-align:center">No books match.</div>`;
+}
+function rpFilterBooks(v) { rpRenderBookList(v); }
+function rpToggleBook(code) {
+  if (_rpPickerSel.has(code)) _rpPickerSel.delete(code); else _rpPickerSel.add(code);
+  rpRenderBookList(document.getElementById('rpBookSearch')?.value || "");
+  rpUpdatePickerCount();
+}
+function rpUpdatePickerCount() {
+  const el = document.getElementById('rpPickerCount');
+  if (!el) return;
+  const codes = [..._rpPickerSel];
+  const ch = codes.reduce((sum, c) => sum + (RP_BOOK_BY_CODE[c]?.ch || 0), 0);
+  el.textContent = codes.length ? `${codes.length} book${codes.length>1?"s":""} · ${ch.toLocaleString()} chapters` : "Nothing selected";
+}
+function applyRpBookPicker() {
+  _rpState.browseBooks = new Set(_rpPickerSel);
+  closeRpBookPicker();
+  rpRenderForm();
+}
+
+/* ---------- save / commit ---------- */
+async function rpSavePlan(commit) {
+  const calc = rpCompute();
+  if (!calc.total) { _showStudyToast("Pick what to read first"); return; }
+  if (!calc.days || calc.days <= 0) { _showStudyToast("Pick a deadline in the future"); return; }
+  const s = _rpState;
+  const name = (s.name || rpDefaultName(calc)).trim() || rpDefaultName(calc);
+  const now = Date.now();
+  const plan = {
+    id: s.editingId || ("rp_" + now.toString(36) + Math.random().toString(36).slice(2, 6)),
+    name,
+    scope: s.scope,
+    customMode: s.customMode,
+    browseBooks: [...s.browseBooks],
+    typeText: s.typeText,
+    timeframe: s.timeframe,
+    customDate: s.customDate,
+    order: s.order,
+    scopeLabel: rpScopeLabel(),
+    total: calc.total,
+    perDay: calc.perDay,
+    days: calc.days,
+    startDate: _rpTodayKeyLocal(),
+    endDate: calc.end ? `${calc.end.getFullYear()}-${String(calc.end.getMonth()+1).padStart(2,"0")}-${String(calc.end.getDate()).padStart(2,"0")}` : "",
+    habitId: s.committedHabitId || null,
+    createdAt: now,
+    updatedAt: now
+  };
+
+  const plans = rpLoadPlans();
+  const existingIdx = plans.findIndex(p => p.id === plan.id);
+  if (existingIdx >= 0) { plan.createdAt = plans[existingIdx].createdAt || now; plan.habitId = plans[existingIdx].habitId || plan.habitId; }
+
+  if (commit || plan.habitId) {
+    const habitId = await rpCommitToHabit(plan);
+    if (habitId) plan.habitId = habitId;
+  }
+
+  if (existingIdx >= 0) plans[existingIdx] = plan; else plans.push(plan);
+  rpPersistPlans(plans);
+
+  _rpState = _rpFreshState();
+  rpRenderForm();
+  rpRenderSaved();
+  setReadingPlanTab('saved');
+  _showStudyToast(plan.habitId ? "Plan saved & added to habits" : "Reading plan saved");
+}
+
+async function rpCommitToHabit(plan) {
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!uid) { _showStudyToast("Sign in to add it to Habit Builder"); return null; }
+  const desc = `${plan.scopeLabel} · ${plan.total.toLocaleString()} chapters · ~${plan.perDay}/day · ${rpOrderLabel(plan.order)} · finish by ${rpFmtDate(plan.endDate ? _rpStartOfDay(plan.endDate + "T00:00:00") : null)}`;
+  try {
+    if (plan.habitId) {
+      const ok = await window.Habits?.update?.(uid, plan.habitId, {
+        name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488"
+      });
+      return ok ? plan.habitId : plan.habitId;
+    }
+    const habitId = await window.Habits?.create?.(uid, {
+      name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488"
+    });
+    return habitId || null;
+  } catch (e) { console.warn("reading plan habit commit failed", e); _showStudyToast("Could not reach Habit Builder"); return null; }
+}
+
+/* ---------- saved plans ---------- */
+function rpLoadPlans() {
+  try { return JSON.parse(localStorage.getItem(RP_PLANS_KEY) || "[]"); } catch { return []; }
+}
+function rpPersistPlans(plans) {
+  try { localStorage.setItem(RP_PLANS_KEY, JSON.stringify(plans)); } catch {}
+}
+function rpRenderSaved() {
+  const host = document.getElementById('rpSavedView');
+  if (!host) return;
+  const plans = rpLoadPlans().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  if (!plans.length) {
+    host.innerHTML = `<div class="rp-empty"><span class="material-symbols-outlined">bookmarks</span><p>No saved plans yet.</p><button class="rp-btn rp-btn-primary" onclick="setReadingPlanTab('new')">Create a plan</button></div>`;
+    return;
+  }
+  host.innerHTML = plans.map(p => {
+    const end = p.endDate ? _rpStartOfDay(p.endDate + "T00:00:00") : null;
+    return `<div class="rp-saved-card">
+      <div class="rp-saved-top">
+        <strong>${(p.name||"Reading plan").replace(/</g,"&lt;")}</strong>
+        ${p.habitId ? `<span class="rp-badge"><span class="material-symbols-outlined">task_alt</span> Habit</span>` : ""}
+      </div>
+      <div class="rp-saved-sub">${p.scopeLabel || ""}</div>
+      <div class="rp-saved-stats">
+        <span><strong>${p.perDay}</strong>/day</span>
+        <span>${(p.total||0).toLocaleString()} ch</span>
+        <span>by ${rpFmtDate(end)}</span>
+        <span>${rpOrderLabel(p.order)}</span>
+      </div>
+      <div class="rp-saved-actions">
+        <button onclick="rpEditPlan('${p.id}')"><span class="material-symbols-outlined">edit</span>Edit</button>
+        ${p.habitId ? "" : `<button onclick="rpCommitSaved('${p.id}')"><span class="material-symbols-outlined">add_task</span>Add habit</button>`}
+        <button class="rp-del" onclick="rpDeletePlan('${p.id}')"><span class="material-symbols-outlined">delete</span></button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function rpEditPlan(id) {
+  const plan = rpLoadPlans().find(p => p.id === id);
+  if (!plan) return;
+  _rpState = _rpFreshState();
+  Object.assign(_rpState, {
+    scope: plan.scope, customMode: plan.customMode || "browse",
+    browseBooks: new Set(plan.browseBooks || []), typeText: plan.typeText || "",
+    timeframe: plan.timeframe, customDate: plan.customDate || "",
+    order: plan.order, name: plan.name, nameEdited: true,
+    editingId: plan.id, committedHabitId: plan.habitId || null
+  });
+  setReadingPlanTab('new');
+  rpRenderForm();
+}
+function rpCancelEdit() { _rpState = _rpFreshState(); rpRenderForm(); }
+async function rpCommitSaved(id) {
+  const plans = rpLoadPlans();
+  const plan = plans.find(p => p.id === id);
+  if (!plan) return;
+  const habitId = await rpCommitToHabit(plan);
+  if (habitId) { plan.habitId = habitId; plan.updatedAt = Date.now(); rpPersistPlans(plans); rpRenderSaved(); _showStudyToast("Added to Habit Builder"); }
+}
+async function rpDeletePlan(id) {
+  const plans = rpLoadPlans();
+  const plan = plans.find(p => p.id === id);
+  if (!plan) return;
+  if (!confirm(`Delete "${plan.name}"?${plan.habitId ? "\n\n(The linked habit will stay in Habit Builder.)" : ""}`)) return;
+  rpPersistPlans(plans.filter(p => p.id !== id));
+  rpRenderSaved();
+  _showStudyToast("Plan deleted");
 }
 
 /* =========================
@@ -21337,7 +21984,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.230";
+const APP_VERSION = "3.0.231";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21358,6 +22005,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.231 &mdash; Reading Plan</div>
+<ul>
+  <li><strong>New Reading Plan tool</strong> &mdash; A new home-screen tool that turns a scripture goal into a daily pace. Pick the whole Bible, a testament, the Gospels, or a custom selection of books and chapter ranges.</li>
+  <li><strong>Smart pace calculator</strong> &mdash; Choose a deadline (end of year, end of month, 3/6 months, a year, or a custom date) and it works out how many chapters a day you need, with a sample of your first days.</li>
+  <li><strong>Reading order</strong> &mdash; Read straight through, roughly chronologically, or as a &ldquo;fresh mix&rdquo; that bounces between books so you&rsquo;re never stuck in one place.</li>
+  <li><strong>Commit to habits</strong> &mdash; Save plans and optionally commit them to the Habit Builder as a daily habit; editing a saved plan updates its linked habit automatically.</li>
+</ul>
 <div class="un-version-label">v3.0.230 &mdash; Lesson Block Checkmarks</div>
 <ul>
   <li><strong>Opened blocks stay checked</strong> &mdash; A lesson block shows a straight-down chevron until you open it, then turns into a green checkmark and keeps it &mdash; even after you collapse the block again.</li>

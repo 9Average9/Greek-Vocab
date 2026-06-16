@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.230" rel="stylesheet"/>
+<link href="style.css?v=3.0.231" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -562,6 +562,13 @@ Habit Builder</span>
 <div class="hat-text"><strong>Memorize</strong><small>Train your memory</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
+<button class="home-action-tile quick-action-reading" id="readingPlanHomeBtn" onclick="openReadingPlanPage()">
+<div class="hat-icon hat-icon-reading">
+<img class="qa-img" src="assets/icons/quick-reading-plan.png?v=3.0.231" alt="" loading="lazy"/>
+</div>
+<div class="hat-text"><strong>Reading<br/>Plan</strong><small>Set scripture goals</small></div>
+<span class="hat-chev">&rarr;</span>
+</button>
 <button class="home-action-tile locked-feature-btn quick-action-vocab" id="vocabHomeBtn" onclick="tryOpenLockedFeature('vocab')">
 <div class="hat-icon hat-icon-vocab">
 <img class="qa-img" src="assets/icons/quick-vocab.png" alt="" loading="lazy"/>
@@ -734,6 +741,41 @@ Habit Builder</span>
 </div>
 </div>
 
+</div>
+</section>
+<section class="screen" id="readingPlanPage">
+<div class="rp-page">
+<header class="rp-topbar">
+<button class="rp-icon-btn" onclick="closeReadingPlan()" aria-label="Home"><span class="material-symbols-outlined">home</span></button>
+<div class="rp-title-stack">
+<span class="rp-kicker">Reading Plan</span>
+<strong id="rpTopTitle">Scripture goals</strong>
+</div>
+<span class="rp-icon-btn rp-icon-ghost" aria-hidden="true"><span class="material-symbols-outlined">menu_book</span></span>
+</header>
+<div class="rp-tabs" role="tablist" aria-label="Reading plan sections">
+<button class="active" id="rpTabNew" onclick="setReadingPlanTab('new')"><span class="material-symbols-outlined">add_circle</span>New plan</button>
+<button id="rpTabSaved" onclick="setReadingPlanTab('saved')"><span class="material-symbols-outlined">bookmarks</span>Saved plans</button>
+</div>
+<div class="rp-scroll">
+<div class="rp-view" id="rpNewView"></div>
+<div class="rp-view hidden" id="rpSavedView"></div>
+</div>
+</div>
+<div class="rp-picker-overlay hidden" id="rpBookPickerOverlay" onclick="if(event.target===this)closeRpBookPicker()">
+<div class="rp-picker-sheet">
+<div class="rp-picker-hdr">
+<strong>Choose books &amp; chapters</strong>
+<button class="rp-picker-close" onclick="closeRpBookPicker()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="rp-quick-row" id="rpQuickRow"></div>
+<div class="rp-picker-search-row"><span class="material-symbols-outlined">search</span><input id="rpBookSearch" class="rp-picker-search" placeholder="Search books" oninput="rpFilterBooks(this.value)"/></div>
+<div class="rp-book-list" id="rpBookList"></div>
+<div class="rp-picker-foot">
+<span class="rp-picker-count" id="rpPickerCount"></span>
+<button class="rp-btn rp-btn-primary" onclick="applyRpBookPicker()">Done</button>
+</div>
+</div>
 </div>
 </section>
 <section class="screen" id="habitsPage">
@@ -16684,7 +16726,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.230"></script>
+<script src="app.js?v=3.0.231"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
