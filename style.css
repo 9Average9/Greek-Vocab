@@ -5492,6 +5492,18 @@ body.dark .big-lock .material-symbols-outlined {
   background: none;
   box-shadow: none;
   transform: none;
+  isolation: isolate; /* contain the color-tint blend to this artwork only */
+}
+
+/* Recolor the habit artwork to the selected theme: the tint keeps the image's
+   shading (luminance) but takes the theme hue/saturation via "color" blend. */
+.habits-hero-tint,
+.hhw-art-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--secondary-color);
+  mix-blend-mode: color;
 }
 
 .habits-hero-art::after {
@@ -5519,7 +5531,7 @@ body.dark .big-lock .material-symbols-outlined {
   object-position: 74% 30%;
   opacity: 0.95;
   filter: saturate(1.06) contrast(1.02);
-  mix-blend-mode: multiply;
+  mix-blend-mode: normal;
 }
 
 body.dark .habits-hero-art,
@@ -5531,9 +5543,9 @@ body.dark .hhw-art {
 
 body.dark .habits-hero-art img,
 body.dark .hhw-art img {
-  opacity: 0.78;
-  mix-blend-mode: screen;
-  filter: saturate(1.08) contrast(1.05) brightness(0.92);
+  opacity: 0.9;
+  mix-blend-mode: normal;
+  filter: saturate(1.05) contrast(1.03) brightness(0.96);
 }
 
 .habits-kicker {
@@ -19115,6 +19127,7 @@ body.dark .bn-item::before {
     0 12px 24px color-mix(in srgb, var(--secondary-color) 14%, transparent);
   pointer-events: none;
   z-index: 0;
+  isolation: isolate; /* contain the color-tint blend to this artwork only */
 }
 .hhw-art::after {
   content: "";
@@ -19134,7 +19147,7 @@ body.dark .bn-item::before {
   object-position: 58% 50%;
   opacity: 0.9;
   filter: saturate(1.08) contrast(1.03);
-  mix-blend-mode: multiply;
+  mix-blend-mode: normal;
 }
 
 /* ── Studies bookshelf ── */
