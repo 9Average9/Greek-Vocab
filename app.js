@@ -10465,6 +10465,8 @@ function _rpFreshState() {
     timeframe: "year",       // year | month | m3 | m6 | y1 | custom
     customDate: "",          // YYYY-MM-DD
     order: "straight",       // straight | chronological | fresh
+    reminderOn: false,
+    reminderTime: "08:00",
     name: "",
     nameEdited: false,
     editingId: null,
@@ -10496,8 +10498,8 @@ function setReadingPlanTab(tab) {
 }
 
 /* ---------- selection → chapter math ---------- */
-function _rpScopeBooks() {
-  const s = _rpState;
+function _rpScopeBooks(st = _rpState) {
+  const s = st;
   if (s.scope === "whole") return RP_BOOKS.map(b => b.code);
   if (s.scope === "ot") return RP_BOOKS.filter(b => b.t === "OT").map(b => b.code);
   if (s.scope === "nt") return RP_BOOKS.filter(b => b.t === "NT").map(b => b.code);
@@ -10506,9 +10508,9 @@ function _rpScopeBooks() {
 }
 
 // Returns normalized segments [{code, from, to}] honoring scope/custom selection.
-function rpSegments() {
-  const s = _rpState;
-  const codes = _rpScopeBooks();
+function rpSegments(st = _rpState) {
+  const s = st;
+  const codes = _rpScopeBooks(s);
   if (codes) return codes.map(code => ({ code, from: 1, to: RP_BOOK_BY_CODE[code].ch }));
   // custom
   if (s.customMode === "type") {
@@ -10516,7 +10518,8 @@ function rpSegments() {
     if (parsed.length) return parsed;
     return [];
   }
-  return [...s.browseBooks]
+  const books = s.browseBooks instanceof Set ? [...s.browseBooks] : (s.browseBooks || []);
+  return books
     .sort((a, b) => RP_CANON_INDEX[a] - RP_CANON_INDEX[b])
     .map(code => ({ code, from: 1, to: RP_BOOK_BY_CODE[code].ch }));
 }
@@ -10555,8 +10558,8 @@ function rpFlatChapters(segments, order) {
 }
 
 function _rpStartOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
-function rpEndDate() {
-  const s = _rpState;
+function rpEndDate(st = _rpState) {
+  const s = st;
   const now = _rpStartOfDay(new Date());
   if (s.timeframe === "year") return new Date(now.getFullYear(), 11, 31);
   if (s.timeframe === "month") return new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -10566,20 +10569,20 @@ function rpEndDate() {
   if (s.timeframe === "custom" && s.customDate) return _rpStartOfDay(s.customDate + "T00:00:00");
   return null;
 }
-function rpDaysAvailable() {
-  const end = rpEndDate();
+function rpDaysAvailable(st = _rpState) {
+  const end = rpEndDate(st);
   if (!end) return null;
   const now = _rpStartOfDay(new Date());
   const diff = Math.round((end - now) / 86400000) + 1; // inclusive of today
   return diff;
 }
 
-function rpCompute() {
-  const segments = rpSegments();
-  const flat = rpFlatChapters(segments, _rpState.order);
+function rpCompute(st = _rpState) {
+  const segments = rpSegments(st);
+  const flat = rpFlatChapters(segments, st.order);
   const total = flat.length;
-  const days = rpDaysAvailable();
-  const end = rpEndDate();
+  const days = rpDaysAvailable(st);
+  const end = rpEndDate(st);
   let perDay = null, finishDate = null;
   if (total > 0 && days && days > 0) {
     perDay = Math.max(1, Math.ceil(total / days));
@@ -10589,18 +10592,42 @@ function rpCompute() {
   return { segments, flat, total, days, perDay, end, finishDate };
 }
 
+// Build the per-day schedule starting today: [{ date:'YYYY-MM-DD', reading:'Genesis 1–4' }].
+function rpDailySchedule(calc) {
+  const out = [];
+  if (!calc.total || !calc.perDay) return out;
+  const start = _rpStartOfDay(new Date());
+  let day = 0;
+  for (let i = 0; i < calc.flat.length; i += calc.perDay) {
+    const chunk = calc.flat.slice(i, i + calc.perDay);
+    const d = new Date(start.getTime() + day * 86400000);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    out.push({ date: key, reading: rpFmtReading(chunk) });
+    day++;
+  }
+  return out;
+}
+// Rebuild a transient state object from a stored plan so we can recompute it.
+function rpCfgFromPlan(p) {
+  return {
+    scope: p.scope, customMode: p.customMode || "browse",
+    browseBooks: new Set(p.browseBooks || []), typeText: p.typeText || "",
+    timeframe: p.timeframe, customDate: p.customDate || "", order: p.order
+  };
+}
+
 /* ---------- formatting ---------- */
 function rpFmtDate(d) {
   if (!d) return "—";
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
-function rpScopeLabel() {
-  const s = _rpState;
+function rpScopeLabel(st = _rpState) {
+  const s = st;
   if (s.scope === "whole") return "Whole Bible";
   if (s.scope === "ot") return "Old Testament";
   if (s.scope === "nt") return "New Testament";
   if (s.scope === "gospels") return "The Gospels";
-  const segs = rpSegments();
+  const segs = rpSegments(s);
   if (!segs.length) return "Custom selection";
   if (segs.length <= 3) return segs.map(rpSegLabel).join(", ");
   return `${segs.length} selections`;
@@ -10761,6 +10788,21 @@ function rpRenderForm() {
       <input type="text" id="rpNameInput" class="rp-name-input" placeholder="${rpDefaultName(calc)}" value="${(s.name||"").replace(/"/g,'&quot;')}" oninput="rpOnNameInput(this.value)"/>
     </div>
 
+    <div class="rp-step">
+      <div class="rp-step-label"><span class="rp-step-num">5</span> Reminder</div>
+      <div class="rp-reminder">
+        <button type="button" class="rp-switch${s.reminderOn ? " on" : ""}" role="switch" aria-checked="${s.reminderOn}" onclick="rpToggleReminder()">
+          <span class="rp-switch-track"><span class="rp-switch-thumb"></span></span>
+          <span class="rp-switch-label">Daily reading reminder</span>
+        </button>
+        ${s.reminderOn ? `<div class="rp-reminder-time">
+          <label for="rpReminderTime">Remind me at</label>
+          <input type="time" id="rpReminderTime" class="rp-date" value="${s.reminderTime}" onchange="rpOnReminderTime(this.value)"/>
+          <p class="rp-reminder-hint">You'll get a daily “Reading Plan” notification — <em>“It's ${rpFmtDate(_rpStartOfDay(new Date()))}, time to read ${rpFmtReading((calc.flat||[]).slice(0, calc.perDay||1))}.”</em></p>
+        </div>` : ""}
+      </div>
+    </div>
+
     <div class="rp-actions">
       <button class="rp-btn rp-btn-ghost" onclick="rpSavePlan(false)" id="rpSaveBtn"><span class="material-symbols-outlined">bookmark_add</span>${s.editingId ? "Update plan" : "Save plan"}</button>
       <button class="rp-btn rp-btn-primary" onclick="rpSavePlan(true)" id="rpCommitBtn"><span class="material-symbols-outlined">add_task</span>Commit to Habit Builder</button>
@@ -10831,6 +10873,8 @@ function _rpUpdateTypeSummary() {
 }
 function rpOnCustomDate(v) { _rpState.customDate = v; rpRefreshCalc(); }
 function rpOnNameInput(v) { _rpState.name = v; _rpState.nameEdited = true; }
+function rpToggleReminder() { _rpState.reminderOn = !_rpState.reminderOn; rpRenderForm(); }
+function rpOnReminderTime(v) { _rpState.reminderTime = v || "08:00"; }
 function _rpTodayKeyLocal() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -10923,6 +10967,8 @@ async function rpSavePlan(commit) {
     timeframe: s.timeframe,
     customDate: s.customDate,
     order: s.order,
+    reminderOn: s.reminderOn,
+    reminderTime: s.reminderTime,
     scopeLabel: rpScopeLabel(),
     total: calc.total,
     perDay: calc.perDay,
@@ -10939,7 +10985,7 @@ async function rpSavePlan(commit) {
   if (existingIdx >= 0) { plan.createdAt = plans[existingIdx].createdAt || now; plan.habitId = plans[existingIdx].habitId || plan.habitId; }
 
   if (commit || plan.habitId) {
-    const habitId = await rpCommitToHabit(plan);
+    const habitId = await rpCommitToHabit(plan, { askCalendar: commit || !plan.habitId });
     if (habitId) plan.habitId = habitId;
   }
 
@@ -10953,22 +10999,61 @@ async function rpSavePlan(commit) {
   _showStudyToast(plan.habitId ? "Plan saved & added to habits" : "Reading plan saved");
 }
 
-async function rpCommitToHabit(plan) {
+async function rpCommitToHabit(plan, opts = {}) {
   const uid = window.Auth?.getCurrentUser?.()?.uid;
   if (!uid) { _showStudyToast("Sign in to add it to Habit Builder"); return null; }
-  const desc = `${plan.scopeLabel} · ${plan.total.toLocaleString()} chapters · ~${plan.perDay}/day · ${rpOrderLabel(plan.order)} · finish by ${rpFmtDate(plan.endDate ? _rpStartOfDay(plan.endDate + "T00:00:00") : null)}`;
+  const endDateObj = plan.endDate ? _rpStartOfDay(plan.endDate + "T00:00:00") : null;
+  const desc = `${plan.scopeLabel} · ${plan.total.toLocaleString()} chapters · ~${plan.perDay}/day · ${rpOrderLabel(plan.order)} · finish by ${rpFmtDate(endDateObj)}`;
+  let habitId = plan.habitId || null;
   try {
-    if (plan.habitId) {
-      const ok = await window.Habits?.update?.(uid, plan.habitId, {
+    if (habitId) {
+      await window.Habits?.update?.(uid, habitId, {
         name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488"
       });
-      return ok ? plan.habitId : plan.habitId;
+    } else {
+      habitId = await window.Habits?.create?.(uid, {
+        name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488"
+      }) || null;
     }
-    const habitId = await window.Habits?.create?.(uid, {
-      name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488"
-    });
-    return habitId || null;
   } catch (e) { console.warn("reading plan habit commit failed", e); _showStudyToast("Could not reach Habit Builder"); return null; }
+  if (!habitId) return null;
+
+  // Optional: write each day's reference into the habit note calendar.
+  if (opts.askCalendar) {
+    const wantCal = confirm("Would you like to add the daily references to your habit note calendar?\n\nEach day will show that day's reading right inside the habit's calendar.");
+    if (wantCal) {
+      try {
+        const calc = rpCompute(rpCfgFromPlan(plan));
+        const schedule = rpDailySchedule(calc).slice(0, 400);
+        const entries = schedule.map(d => ({ date: d.date, status: "open", comment: `📖 ${d.reading}` }));
+        const ok = await window.Habits?.setEntriesBulk?.(uid, habitId, entries);
+        _showStudyToast(ok ? "References added to your habit calendar" : "Couldn't sync the calendar");
+      } catch (e) { console.warn("reading plan calendar sync failed", e); }
+    }
+  }
+
+  // Optional: daily reminder at the chosen time.
+  if (plan.reminderOn && plan.reminderTime) {
+    await rpRegisterReminder(uid, habitId, plan);
+  }
+  return habitId;
+}
+
+async function rpRegisterReminder(uid, habitId, plan) {
+  try {
+    if (typeof Notification === "undefined") { _showStudyToast("Reminders aren't supported on this device"); return; }
+    let permission = Notification.permission;
+    if (permission !== "granted") {
+      try { permission = await Notification.requestPermission(); } catch { permission = "denied"; }
+    }
+    if (permission !== "granted") { _showStudyToast("Allow notifications to get reading reminders"); return; }
+    try { await window.FCM?.registerToken?.(uid); } catch {}
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const ok = await window.HabitReminders?.save?.(uid, habitId, plan.name, {
+      enabled: true, frequency: "daily", times: [plan.reminderTime], timezone
+    });
+    if (ok) _showStudyToast(`Daily reminder set for ${plan.reminderTime}`);
+  } catch (e) { console.warn("reading plan reminder failed", e); }
 }
 
 /* ---------- saved plans ---------- */
@@ -11016,7 +11101,8 @@ function rpEditPlan(id) {
     scope: plan.scope, customMode: plan.customMode || "browse",
     browseBooks: new Set(plan.browseBooks || []), typeText: plan.typeText || "",
     timeframe: plan.timeframe, customDate: plan.customDate || "",
-    order: plan.order, name: plan.name, nameEdited: true,
+    order: plan.order, reminderOn: !!plan.reminderOn, reminderTime: plan.reminderTime || "08:00",
+    name: plan.name, nameEdited: true,
     editingId: plan.id, committedHabitId: plan.habitId || null
   });
   setReadingPlanTab('new');
@@ -11027,8 +11113,8 @@ async function rpCommitSaved(id) {
   const plans = rpLoadPlans();
   const plan = plans.find(p => p.id === id);
   if (!plan) return;
-  const habitId = await rpCommitToHabit(plan);
-  if (habitId) { plan.habitId = habitId; plan.updatedAt = Date.now(); rpPersistPlans(plans); rpRenderSaved(); _showStudyToast("Added to Habit Builder"); }
+  const habitId = await rpCommitToHabit(plan, { askCalendar: true });
+  if (habitId) { plan.habitId = habitId; plan.updatedAt = Date.now(); rpPersistPlans(plans); rpRenderSaved(); }
 }
 async function rpDeletePlan(id) {
   const plans = rpLoadPlans();
@@ -21984,7 +22070,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.231";
+const APP_VERSION = "3.0.232";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22005,6 +22091,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.232 &mdash; Reading Plan: reminders &amp; calendar sync</div>
+<ul>
+  <li><strong>Daily reminder</strong> &mdash; A new Reminder step lets you toggle on a daily reading nudge and pick the time of day.</li>
+  <li><strong>References on your habit calendar</strong> &mdash; When you commit a plan to the Habit Builder, you can add each day's reading to the habit's note calendar, so every day shows exactly what to read.</li>
+  <li><strong>Tidier date picker</strong> &mdash; The custom-date field no longer overflows the screen or causes a sideways scroll.</li>
+</ul>
 <div class="un-version-label">v3.0.231 &mdash; Reading Plan</div>
 <ul>
   <li><strong>New Reading Plan tool</strong> &mdash; A new home-screen tool that turns a scripture goal into a daily pace. Pick the whole Bible, a testament, the Gospels, or a custom selection of books and chapter ranges.</li>
