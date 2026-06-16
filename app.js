@@ -21337,7 +21337,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.225";
+const APP_VERSION = "3.0.226";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21358,6 +21358,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.226 &mdash; Mobile Tools Cleanup</div>
+<ul>
+  <li><strong>Full tool artwork</strong> &mdash; Home tool images are centered and fully shown instead of being cropped.</li>
+  <li><strong>Mobile bottom strip removed</strong> &mdash; Home no longer reserves a fake nav-height bar at the bottom of the mobile scroll area.</li>
+</ul>
 <div class="un-version-label">v3.0.225 &mdash; Memorization Bottom Space</div>
 <ul>
   <li><strong>Tighter memorization bottom</strong> &mdash; The Memorization hub and workshop now use only the needed safe-area space at the bottom instead of an extra empty strip.</li>

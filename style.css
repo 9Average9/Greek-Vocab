@@ -22042,19 +22042,20 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   align-items: center !important;
   justify-content: center !important;
   color: var(--qa-title) !important;
-  overflow: hidden;
+  overflow: visible;
   transition: transform 0.12s ease !important;
 }
 
 #homeScreen .home-action-tile .qa-img {
   display: block !important;
-  width: 126% !important;
+  width: 100% !important;
   max-width: none !important;
-  height: 126% !important;
+  height: 100% !important;
   object-fit: contain !important;
+  object-position: center center !important;
   mix-blend-mode: multiply;
   filter: saturate(1.08) contrast(1.03) drop-shadow(0 12px 18px var(--qa-image-shadow));
-  transform: translateY(-3%) scale(1.02);
+  transform: none;
   transform-origin: center;
 }
 
@@ -24688,7 +24689,7 @@ body .app:has(#homeScreen.screen.active) #statusBarBg,
   padding:
     calc(env(safe-area-inset-top, 0px) + 18px)
     20px
-    calc(env(safe-area-inset-bottom, 0px) + 112px) !important;
+    max(12px, env(safe-area-inset-bottom, 0px)) !important;
   background: transparent !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -24767,11 +24768,15 @@ body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-n
 }
 
 body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 118px) !important;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
 }
 
 body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 112px) !important;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+body:has(#homeScreen.screen.active) #homeScreen.screen.active {
+  padding-bottom: 0 !important;
 }
 
 /* Final polish: lesson contrast, backdrop thumbnails, active nav icon */
