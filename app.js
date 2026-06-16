@@ -21249,7 +21249,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.217";
+const APP_VERSION = "3.0.218";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21270,6 +21270,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.218 &mdash; Stop Re-asking to Link Calendar</div>
+<ul>
+  <li><strong>One-and-done Google Calendar link</strong> &mdash; The app no longer nags you to relink after a momentary hiccup. A brief network/cold-start blip when checking your link status used to look like &ldquo;you unlinked,&rdquo; popping the relink prompt; now it only ever asks once, and only when the server truly reports no link.</li>
+</ul>
 <div class="un-version-label">v3.0.217 &mdash; Redesigned Record Bar</div>
 <ul>
   <li><strong>Fresh record bar</strong> &mdash; The recite control is now a sleek gradient pill with a round mic button, and turns red while recording.</li>
@@ -24240,10 +24244,19 @@ function _tryGCalSilentRefresh() {
     return;
   }
   window.Events.gcalStatus().then(status => {
-    const linked = !!status?.linked;
+    // A transient failure (cold start, momentary offline, auth not ready yet)
+    // must NOT look like "you unlinked." Only act on a definitive answer from
+    // the server, otherwise keep trusting the existing link and stay quiet.
+    if (!status || status.ok === false) {
+      if (hadLegacyLocalLink) _updateGCalProfileStatus(true);
+      return;
+    }
+    const linked = !!status.linked;
     _setGCalLinked(linked);
-    if (!linked && hadLegacyLocalLink) {
-      localStorage.removeItem('calSyncPromptSeen');
+    // Genuinely unlinked after having linked before → offer to relink ONCE.
+    // We mark it seen immediately so this is one-and-done and never nags again.
+    if (!linked && hadLegacyLocalLink && !localStorage.getItem('calSyncPromptSeen')) {
+      localStorage.setItem('calSyncPromptSeen', '1');
       setTimeout(() => openCalendarSyncModal(), 500);
     }
   }).catch(() => {
