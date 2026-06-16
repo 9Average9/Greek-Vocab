@@ -21337,7 +21337,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.227";
+const APP_VERSION = "3.0.228";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21358,6 +21358,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.228 &mdash; Lighter Quick Action Icons</div>
+<ul>
+  <li><strong>Faster home screen</strong> &mdash; The Quick Action tile icons are now lightweight versions of the same artwork (about 6.7&nbsp;MB down to ~0.3&nbsp;MB total). The tiles look identical but load and cache far quicker, especially on a fresh install.</li>
+</ul>
 <div class="un-version-label">v3.0.227 &mdash; Home Tools Integration</div>
 <ul>
   <li><strong>Shorter nav</strong> &mdash; The bottom nav is slimmer with less vertical whitespace.</li>
