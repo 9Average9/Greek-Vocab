@@ -8617,13 +8617,14 @@ function _renderStudyLibrary() {
   const countEl = document.getElementById('slCount');
   if (countEl) countEl.textContent = _myStudies.length === 1 ? '1 study' : `${_myStudies.length} studies`;
 
-  const shelves = [];
+  // The bookcase is now a 3D shelf illustration; study "books" sit on its two
+  // empty middle shelves (each a horizontal-scroll row) and overflow sideways.
+  let rowA, rowB;
   if (!_myStudies.length) {
-    // An empty library is still a bookcase — the start button waits on the
-    // top shelf.
-    shelves.push([`<button class="hs-start-btn" onclick="openStudyCreateSheet()">
+    rowA = [`<button class="hs-start-btn" onclick="openStudyCreateSheet()">
       <span class="material-symbols-outlined">add</span><span>Start a Study</span>
-    </button>`]);
+    </button>`];
+    rowB = [];
   } else {
     const books = _myStudies.map(_studyBookHtml);
     if (!_studyDeleteMode) {
@@ -8631,27 +8632,17 @@ function _renderStudyLibrary() {
         <span class="material-symbols-outlined">add</span><span>New Study</span>
       </button>`);
     }
-    // Chunk the books into full shelf rows that fit the bookcase width.
-    // Bookcase frame padding (13px) + shelf side padding (10px) on each side;
-    // books are 94px wide with a 12px gap (the slim add-book still gets a
-    // slot so rows stay even).
-    const caseWidth = bookcase.clientWidth || bookcase.parentElement?.clientWidth || 320;
-    const avail = caseWidth - 26 - 20;
-    const perShelf = Math.max(2, Math.floor((avail + 12) / (94 + 12)));
-    for (let i = 0; i < books.length; i += perShelf) shelves.push(books.slice(i, i + perShelf));
+    const half = Math.ceil(books.length / 2);
+    rowA = books.slice(0, half);
+    rowB = books.slice(half);
   }
 
-  // Pad the case with empty shelves so it always stands as one tall bookcase
-  // against the wall.
-  const MIN_SHELVES = 4;
-  while (shelves.length < MIN_SHELVES) shelves.push([]);
-
-  bookcase.innerHTML = shelves.map(row =>
-    `<div class="hs-shelf-unit hs-has-books sl-shelf-unit">
-      <div class="hs-shelf sl-shelf">${row.join('')}</div>
-      <div class="hs-shelf-plank" aria-hidden="true"></div>
-    </div>`
-  ).join('');
+  bookcase.innerHTML = `
+    <div class="sl-shelf-tint" aria-hidden="true"></div>
+    <div class="sl-shelf-row sl-shelf-row-a"><div class="hs-shelf sl-img-shelf">${rowA.join('')}</div></div>
+    <div class="sl-shelf-row sl-shelf-row-b"><div class="hs-shelf sl-img-shelf">${rowB.join('')}</div></div>
+  `;
+  bookcase.querySelectorAll('.sl-img-shelf').forEach(_initShelfLean);
 }
 
 // ── Study Sandbox ─────────────────────────────────────────────────────────────
@@ -22074,7 +22065,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.237";
+const APP_VERSION = "3.0.238";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22095,6 +22086,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.238 &mdash; New Studies bookshelf</div>
+<ul>
+  <li><strong>New bookshelf</strong> &mdash; The Study Library now uses a clean 3D bookshelf, with your studies sitting as books on its shelves.</li>
+  <li><strong>Matches your theme</strong> &mdash; The shelf recolors to your selected theme, like the Habit Builder art.</li>
+</ul>
 <div class="un-version-label">v3.0.237 &mdash; Themed Habit Builder art</div>
 <ul>
   <li><strong>Art follows your theme</strong> &mdash; The Habit Builder artwork (home card &amp; screen banner) now recolors to match your selected theme, while keeping its 3D shading. The tool button icons stay as they are.</li>
