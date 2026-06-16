@@ -10747,8 +10747,27 @@ function _memSaveProgress(score, details = {}) {
   };
   localStorage.setItem(_memStorageKey(_memCurrent.id), JSON.stringify(next));
   _memUpsertSavedPassage(_memCurrent, next);
+  _memAwardMemorizedXP(_memCurrent, next.best);
   updateMemorizationProgressUI();
   renderMemorizationProgress();
+}
+
+// Award XP the first time a passage is truly memorized (a perfect spoken
+// recitation, best === 100). Longer references are worth more, so a single
+// short verse earns far less than a long multi-verse passage.
+const MEM_XP_KEY_PREFIX = 'memorizationXPAwarded:';
+function _memAwardMemorizedXP(passage, best) {
+  if (!passage?.id || !passage?.text || Number(best || 0) < 100) return;
+  const key = MEM_XP_KEY_PREFIX + passage.id;
+  if (localStorage.getItem(key) === '1') return; // one-and-done per passage
+  // Don't burn the one-time flag if the profile/XP system isn't ready yet.
+  if (typeof addXP !== 'function' || typeof profileData === 'undefined' || !profileData) return;
+  localStorage.setItem(key, '1');
+  const words = _memReciteWords(passage.text).length;
+  // Base reward + per-word scaling, capped so it stays reasonable — longer
+  // references are worth meaningfully more than a single short verse.
+  const xp = Math.max(20, Math.min(400, Math.round(20 + words * 5)));
+  addXP(xp, `Memorized ${passage.ref || 'a passage'}! (${words} words)`, true);
 }
 
 function _memSavedList() {
@@ -12132,6 +12151,7 @@ function _memReviseLastRecitation(score, details = {}) {
   };
   localStorage.setItem(_memStorageKey(_memCurrent.id), JSON.stringify(next));
   _memUpsertSavedPassage(_memCurrent, next);
+  _memAwardMemorizedXP(_memCurrent, next.best);
   updateMemorizationProgressUI();
   renderMemorizationProgress();
 }
@@ -21275,7 +21295,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.219";
+const APP_VERSION = "3.0.220";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21296,6 +21316,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.220 &mdash; XP for Memorized Verses</div>
+<ul>
+  <li><strong>Earn XP for memorizing</strong> &mdash; The first time you nail a passage with a perfect spoken recitation, you earn XP toward your profile rank.</li>
+  <li><strong>Longer passages, more XP</strong> &mdash; Reward scales with word count, so a long multi-verse reference is worth far more than a single short verse (awarded once per passage).</li>
+</ul>
 <div class="un-version-label">v3.0.219 &mdash; Recitation Keeps Listening</div>
 <ul>
   <li><strong>No more cutting off mid-verse</strong> &mdash; A pause, a stumble, or a filler word used to make the recognizer quit and score a half-finished attempt. Now it keeps listening through pauses and stumbles and only scores the full thing when you tap <em>Stop</em>.</li>
