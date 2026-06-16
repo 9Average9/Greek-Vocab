@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.221" rel="stylesheet"/>
+<link href="style.css?v=3.0.222" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -548,38 +548,40 @@ Habit Builder</span>
 </div>
 <div class="home-section-label">Quick Actions</div>
 <div class="home-actions-grid">
-<button class="home-action-tile" id="studyLibraryHomeBtn" onclick="openStudyLibrary()">
+<button class="home-action-tile quick-action-study" id="studyLibraryHomeBtn" onclick="openStudyLibrary()">
 <div class="hat-icon hat-icon-library">
-<svg class="qa-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4.5h3.2v12.5H4.5z"/><path d="M10 4.5h3.2v12.5H10z"/><path d="m15.4 5.6 3.1-.83 3 11.6-3.1.83z"/><path d="M3 20.5h18"/><path d="M6.1 7.5v1"/><path d="M11.6 7.5v1"/></svg>
+<img class="qa-img" src="assets/icons/quick-study-library.png" alt="" loading="lazy"/>
 </div>
-<div class="hat-text"><strong>Study<br/>Library</strong></div>
+<div class="hat-text"><strong>Study<br/>Library</strong><small>Explore</small></div>
+<span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile" id="memorizationHomeBtn" onclick="openMemorizationPage()">
+<button class="home-action-tile quick-action-memorize" id="memorizationHomeBtn" onclick="openMemorizationPage()">
 <div class="hat-icon hat-icon-memorization">
-<svg class="qa-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5.5c2.4-1 4.7-.9 7 .3 2.3-1.2 4.6-1.3 7-.3v12.7c-2.4-.9-4.7-.8-7 .4-2.3-1.2-4.6-1.3-7-.4z"/><path d="M12 5.8v12.8"/><path d="M7.6 9.2h2.2"/><path d="M14.4 9.2h2.2"/><path d="M7.6 12.5h2.2"/><path d="M14.4 12.5h2.2"/><path d="M8.5 16.5c1.4-.4 2.6-.2 3.5.5 1-.7 2.2-.9 3.5-.5"/></svg>
+<img class="qa-img" src="assets/icons/quick-memorize.png" alt="" loading="lazy"/>
 </div>
-<div class="hat-text"><strong>Memorize</strong></div>
+<div class="hat-text"><strong>Memorize</strong><small>Train your memory</small></div>
+<span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile locked-feature-btn" id="vocabHomeBtn" onclick="tryOpenLockedFeature('vocab')">
+<button class="home-action-tile locked-feature-btn quick-action-vocab" id="vocabHomeBtn" onclick="tryOpenLockedFeature('vocab')">
 <div class="hat-icon hat-icon-vocab">
-<span class="material-symbols-outlined lock-icon">sort_by_alpha</span>
-<svg class="qa-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 6.5c2.4-1.2 4.9-1.2 7.5 0v12c-2.6-1.2-5.1-1.2-7.5 0z"/><path d="M19.5 6.5c-2.4-1.2-4.9-1.2-7.5 0v12c2.6-1.2 5.1-1.2 7.5 0z"/><path d="M12 6.5v12"/></svg>
+<img class="qa-img" src="assets/icons/quick-vocab.png" alt="" loading="lazy"/>
 </div>
-<div class="hat-text"><strong>Vocab</strong></div>
+<div class="hat-text"><strong>Vocab</strong><small>Grow your words</small></div>
+<span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile locked-feature-btn" id="translateHomeBtn" onclick="tryOpenLockedFeature('translate')">
+<button class="home-action-tile locked-feature-btn quick-action-translate" id="translateHomeBtn" onclick="tryOpenLockedFeature('translate')">
 <div class="hat-icon hat-icon-translate">
-<span class="material-symbols-outlined lock-icon">translate</span>
-<svg class="qa-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M8 3v2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M6 5c.6 2.9 2.8 5.2 6 6.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M11 5c-.6 2.3-2.2 4.2-5 5.7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M14.4 19l3-8 3.1 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.5 16.1h3.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6.5 15.5h4.3l-1.4-1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.5 8.5h-4.3l1.4 1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<img class="qa-img" src="assets/icons/quick-translate.png" alt="" loading="lazy"/>
 </div>
-<div class="hat-text"><strong>Translate</strong></div>
+<div class="hat-text"><strong>Translate</strong><small>Break language barriers</small></div>
+<span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile locked-feature-btn" id="testHomeBtn" onclick="tryOpenLockedFeature('test')">
+<button class="home-action-tile locked-feature-btn quick-action-test" id="testHomeBtn" onclick="tryOpenLockedFeature('test')">
 <div class="hat-icon hat-icon-test">
-<span class="material-symbols-outlined lock-icon">quiz</span>
-<svg class="qa-svg qa-svg-clipboard" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="4.8" width="14" height="16.2" rx="2.4" stroke="currentColor" stroke-width="1.9"/><path d="M9.4 4.8V4a2.6 2.6 0 0 1 5.2 0v.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><rect x="8.1" y="3.6" width="7.8" height="3.6" rx="1.4" fill="var(--qa-bg-fill, #ffedda)" stroke="currentColor" stroke-width="1.7"/><path d="m8.7 11.5 1.4 1.4 2.3-2.7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.2 12h2.3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="m8.7 16.2 1.4 1.4 2.3-2.7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.2 16.7h2.3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+<img class="qa-img" src="assets/icons/quick-test.png" alt="" loading="lazy"/>
 </div>
-<div class="hat-text"><strong>Test</strong></div>
+<div class="hat-text"><strong>Test</strong><small>Check your progress</small></div>
+<span class="hat-chev">&rarr;</span>
 </button>
 </div>
 <div style="height:88px"></div>
@@ -16683,7 +16685,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.221"></script>
+<script src="app.js?v=3.0.222"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>

@@ -21295,7 +21295,7 @@ function backToProfileFromProgress() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.221";
+const APP_VERSION = "3.0.222";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21316,6 +21316,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.222 &mdash; Quick Action Artwork</div>
+<ul>
+  <li><strong>New home action cards</strong> &mdash; Quick Actions now use the new colorful 3D artwork cards for Study Library, Memorize, Vocab, Translate, and Test.</li>
+</ul>
 <div class="un-version-label">v3.0.221 &mdash; Portrait Only</div>
 <ul>
   <li><strong>Portrait-locked</strong> &mdash; The app is built for portrait, so on phones a friendly &ldquo;rotate to portrait&rdquo; prompt now appears if you turn sideways, keeping every screen laid out the way it should be.</li>
