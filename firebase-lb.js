@@ -2277,8 +2277,8 @@ async function evtGCalStatus() {
   try {
     const fn = httpsCallable(functionsApp, "googleCalendarStatus");
     const res = await fn({});
-    return res.data || { linked: false, configured: false };
-  } catch (e) { console.warn("evtGCalStatus:", e); return { linked: false, configured: false }; }
+    return { ok: true, linked: false, configured: false, ...(res.data || {}) };
+  } catch (e) { console.warn("evtGCalStatus:", e); return { ok: false, linked: false, configured: false }; }
 }
 
 async function evtGCalConnect(code) {

@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.217";
+const CACHE_NAME = "disciple-builder-v3.0.218";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -49,9 +49,9 @@ const CACHE_NAME = "disciple-builder-v3.0.217";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.217",
+  "./style.css?v=3.0.218",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.217",
+  "./app.js?v=3.0.218",
   "./verse-structure.js?v=3.0.133",
   "./vs-structure.js?v=3.0.133",
   // Rhema Greek text (pinned data versions)
@@ -72,7 +72,7 @@ const FILES_TO_CACHE = [
   "./rhema-scripture-notes.js?v=3.0.160",
   "./rhema-crossrefs-ui.js?v=3.0.160",
   "./greek-verbs.js?v=3.0.152",
-  "./firebase-lb.js?v=3.0.152",
+  "./firebase-lb.js?v=3.0.218",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",
