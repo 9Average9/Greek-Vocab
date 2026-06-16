@@ -21337,7 +21337,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.223";
+const APP_VERSION = "3.0.224";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21358,15 +21358,21 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.223 &mdash; Swipeable Quick Actions</div>
+<div class="un-version-label">v3.0.224 &mdash; Tools Row Polish</div>
 <ul>
-  <li><strong>Bigger action artwork</strong> &mdash; Home Quick Actions now crop away the white image edges and let each icon fill more of the card.</li>
-  <li><strong>Swipe row</strong> &mdash; The action cards now scroll horizontally with snap points and a soft edge bounce when you hit either side.</li>
-  <li><strong>Press feedback</strong> &mdash; Quick Action cards and the Habit Builder widget now animate when pressed so the home screen feels more alive.</li>
+  <li><strong>Whole artwork visible</strong> &mdash; Tool cards now show the full icon artwork while blending away the white image canvas.</li>
+  <li><strong>Cleaner Home bottom</strong> &mdash; Removed the extra spacer under Tools and lowered the floating Home nav so it stays out of the row.</li>
+  <li><strong>Tools label</strong> &mdash; The Home shortcut section is now called Tools.</li>
 </ul>
-<div class="un-version-label">v3.0.222 &mdash; Quick Action Artwork</div>
+<div class="un-version-label">v3.0.223 &mdash; Swipeable Tools</div>
 <ul>
-  <li><strong>New home action cards</strong> &mdash; Quick Actions now use the new colorful 3D artwork cards for Study Library, Memorize, Vocab, Translate, and Test.</li>
+  <li><strong>Bigger action artwork</strong> &mdash; Home Tools now crop away the white image edges and let each icon fill more of the card.</li>
+  <li><strong>Swipe row</strong> &mdash; The action cards now scroll horizontally with snap points and a soft edge bounce when you hit either side.</li>
+  <li><strong>Press feedback</strong> &mdash; Tool cards and the Habit Builder widget now animate when pressed so the home screen feels more alive.</li>
+</ul>
+<div class="un-version-label">v3.0.222 &mdash; Tool Artwork</div>
+<ul>
+  <li><strong>New home action cards</strong> &mdash; Tools now use the new colorful 3D artwork cards for Study Library, Memorize, Vocab, Translate, and Test.</li>
 </ul>
 <div class="un-version-label">v3.0.221 &mdash; Portrait Only</div>
 <ul>
@@ -29462,7 +29468,7 @@ const APP_WELCOME_COACH_STEPS = [
   { before: () => { showNavPage('community'); showLbTab('posts'); }, target: () => _coachFirst(['.community-post-add', '#lbPanePosts', '.comm-tabs']), title: 'Community posts', body: 'Posts are the main community feed: share verses, questions, links, prayer notes, and encouragements with friends. Attach MSB or BSB verses, react to one another, optionally alert your friends, and keep the board fresh as posts clear after 7 days.' },
   { before: () => { showNavPage('community'); showLbTab('xp'); }, target: () => _coachFirst(['button[data-tab="xp"]', '#lbPaneXP']), title: 'XP leaderboard', body: 'XP rewards steady work: lessons, tests, vocab, translation, and study habits. It is not the goal, but it helps your progress feel visible.' },
   { before: () => { showNavPage('community'); showLbTab('scholar'); }, target: () => _coachFirst(['button[data-tab="scholar"]', '#lbPaneScholar']), title: 'Scholar board', body: 'The Scholar board highlights careful practice quality, not just activity. It gives deeper testing and review work its own place.' },
-  { before: () => showNavPage('home'), target: () => _coachFirst(['.home-actions-grid', '#notifBtn']), title: 'Home quick actions', body: 'Home is the launch point. Quick Actions open notifications, vocabulary, translation, and tests. The Notifications button is where app updates and activity notices live.' },
+  { before: () => showNavPage('home'), target: () => _coachFirst(['.home-actions-grid', '#notifBtn']), title: 'Home tools', body: 'Home is the launch point. Tools open notifications, vocabulary, translation, and tests. The Notifications button is where app updates and activity notices live.' },
   { target: () => _coachFirst(['#studyLibraryHomeBtn', '.home-actions-grid']), title: 'Create studies here', body: 'The Study Library holds your focused study spaces. A study can hold Rhema work, saved verses, word logs, scripture trails, and notes.' },
   { target: () => _coachFirst(['#homeContinueCard', '#homeContinueEmpty']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. You can open a passage, tap words, compare English, use syntax, and explore cross references. Rhema has its own first-time coach when opened.' },
   { before: () => showNavPage('profile'), target: () => _coachFirst(['#profileJourneySection', '.profile-action-row', '.profile-header']), title: 'Profile tracks your journey', body: 'Your profile keeps XP, rank, streak, lesson progress, known words, translation attempts, achievements, settings, reminders, and reset controls.' }
@@ -29508,7 +29514,7 @@ APP_WELCOME_COACH_STEPS[3].before = () => {
 };
 APP_WELCOME_COACH_STEPS[3].body = 'XP rewards steady work: lessons, tests, vocabulary, translation, and study habits. It is not the point of Greek study, but it gives your effort a visible shape. Sometimes a little scoreboard keeps the lamp on.';
 APP_WELCOME_COACH_STEPS[4].body = 'The Scholar board is more about careful practice than raw activity. It helps deeper testing and review work show up, so someone doing slow, thoughtful study is not invisible beside someone farming XP.';
-APP_WELCOME_COACH_STEPS[5].body = 'Home is the launch point. Quick Actions open notifications, vocabulary, translation, and tests. The Notifications button is where app updates and activity notices live, so it is worth checking when the app feels different.';
+APP_WELCOME_COACH_STEPS[5].body = 'Home is the launch point. Tools open notifications, vocabulary, translation, and tests. The Notifications button is where app updates and activity notices live, so it is worth checking when the app feels different.';
 APP_WELCOME_COACH_STEPS[6].body = 'Your Studies is where you make focused study spaces. Use this when you want to work through a passage seriously, invite people in, save trail discoveries, and keep your notes tied to the actual text.';
 APP_WELCOME_COACH_STEPS[7].body = 'Rhema is the Greek word-study reader. It is special because it stays inside your study flow: tap words, compare English, inspect parsing, check lexicons, use syntax, open cross references, and keep a trail without leaving the app.';
 APP_WELCOME_COACH_STEPS[8].body = 'Your profile keeps XP, rank, streak, lesson progress, known words, translation attempts, achievements, settings, reminders, and reset controls. It is also where you can replay these coach tours later.';

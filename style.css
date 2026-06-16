@@ -22033,7 +22033,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 
 #homeScreen .home-action-tile .hat-icon {
   width: 100% !important;
-  height: clamp(106px, 28vw, 132px) !important;
+  height: clamp(114px, 30vw, 140px) !important;
   border-radius: 18px !important;
   background: transparent !important;
   border: 0 !important;
@@ -22048,12 +22048,13 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 
 #homeScreen .home-action-tile .qa-img {
   display: block !important;
-  width: 142% !important;
+  width: 126% !important;
   max-width: none !important;
-  height: 142% !important;
-  object-fit: cover !important;
-  filter: drop-shadow(0 12px 18px var(--qa-image-shadow));
-  transform: translateY(-5%) scale(1.02);
+  height: 126% !important;
+  object-fit: contain !important;
+  mix-blend-mode: multiply;
+  filter: saturate(1.08) contrast(1.03) drop-shadow(0 12px 18px var(--qa-image-shadow));
+  transform: translateY(-3%) scale(1.02);
   transform-origin: center;
 }
 
@@ -22227,7 +22228,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
 .bottom-nav.home-collapsed {
   left: 50% !important;
   right: auto !important;
-  bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
   width: 112px !important;
   height: 68px !important;
   padding: 0 !important;
@@ -23534,7 +23535,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 .bottom-nav {
   left: 50% !important;
   right: auto !important;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
   width: min(calc(100% - 34px), 440px) !important;
   height: 66px;
   align-items: center !important;
