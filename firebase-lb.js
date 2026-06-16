@@ -1411,6 +1411,36 @@ async function setHabitEntry(uid, habitId, { date, status, comment = "", source 
   }
 }
 
+// Bulk-write per-day entries (used by Reading Plan to seed each day's reference
+// into the habit note calendar). entries: [{ date, comment, status }].
+async function setHabitEntriesBulk(uid, habitId, entries = []) {
+  try {
+    let batch = writeBatch(db);
+    let writes = 0;
+    for (const e of entries) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(e.date || ""))) continue;
+      batch.set(doc(db, "users", uid, "habits", habitId, "entries", e.date), {
+        date: e.date,
+        status: e.status || "open",
+        comment: String(e.comment || ""),
+        source: "reading-plan",
+        updatedAt: serverTimestamp(),
+        updatedAtMs: Date.now()
+      }, { merge: true });
+      writes++;
+      if (writes >= 400) { await batch.commit(); batch = writeBatch(db); writes = 0; }
+    }
+    if (writes > 0) await batch.commit();
+    await setDoc(doc(db, "users", uid, "habits", habitId), {
+      updatedAt: serverTimestamp(), updatedAtMs: Date.now()
+    }, { merge: true });
+    return true;
+  } catch (e) {
+    console.warn("setHabitEntriesBulk:", e);
+    return false;
+  }
+}
+
 async function importHabitShare(uid, rows = []) {
   try {
     const byHabit = {};
@@ -1506,6 +1536,7 @@ window.Habits = {
   listen: listenHabits,
   create: createHabit,
   setEntry: setHabitEntry,
+  setEntriesBulk: setHabitEntriesBulk,
   update: updateHabit,
   delete: deleteHabit,
   awardMilestone: awardHabitMilestone,

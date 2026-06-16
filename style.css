@@ -29987,7 +29987,7 @@ body.reading-plan-active #studyTabBar { display: none !important; }
 }
 
 .rp-scroll {
-  flex: 1; min-height: 0; overflow-y: auto;
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
   padding: 4px 16px calc(env(safe-area-inset-bottom, 0px) + 36px);
   -webkit-overflow-scrolling: touch;
 }
@@ -30053,14 +30053,18 @@ body.reading-plan-active #studyTabBar { display: none !important; }
 }
 .rp-selection-summary { margin-top: 10px; font-size: 0.86rem; color: var(--font-color); line-height: 1.4; }
 .rp-textarea, .rp-name-input, .rp-date {
-  width: 100%; box-sizing: border-box;
+  width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;
   padding: 12px 14px; border-radius: 12px;
   border: 1.5px solid var(--border-color);
   background: var(--card-color); color: var(--font-color);
   font-size: 0.92rem; font-family: inherit;
+  -webkit-appearance: none; appearance: none;
 }
 .rp-textarea { min-height: 72px; resize: vertical; }
-.rp-date { margin-top: 10px; }
+/* Native date inputs carry an intrinsic min-width that can overflow the
+   page and trigger a horizontal scroll — pin it to the container width. */
+.rp-date { margin-top: 10px; display: block; }
+.rp-date::-webkit-date-and-time-value { text-align: left; }
 
 .rp-calc {
   margin: 6px 0 20px; padding: 16px;
@@ -30196,6 +30200,36 @@ body.reading-plan-active #studyTabBar { display: none !important; }
 .rp-picker-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); margin-top: 6px; }
 .rp-picker-count { font-size: 0.82rem; font-weight: 800; color: var(--muted-color); }
 .rp-picker-foot .rp-btn { padding: 12px 28px; }
+
+/* reminder toggle */
+.rp-reminder {
+  padding: 12px 14px; border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--secondary-color) 4%, var(--card-color));
+}
+.rp-switch {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 0; border: 0; background: transparent; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rp-switch-track {
+  flex: 0 0 auto; width: 48px; height: 28px; border-radius: 999px;
+  background: color-mix(in srgb, var(--muted-color) 38%, transparent);
+  position: relative; transition: background 0.18s;
+}
+.rp-switch-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+  transition: transform 0.18s;
+}
+.rp-switch.on .rp-switch-track { background: var(--secondary-color); }
+.rp-switch.on .rp-switch-thumb { transform: translateX(20px); }
+.rp-switch-label { font-weight: 800; font-size: 0.92rem; color: var(--font-color); }
+.rp-reminder-time { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+.rp-reminder-time label { display: block; font-size: 0.8rem; font-weight: 800; color: var(--muted-color); margin-bottom: 6px; }
+.rp-reminder-hint { margin: 10px 0 0; font-size: 0.8rem; color: var(--muted-color); line-height: 1.45; }
+.rp-reminder-hint em { color: var(--font-color); font-style: italic; }
 
 body.dark #readingPlanPage.screen.active,
 html.dark.reading-plan-active,
