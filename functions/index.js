@@ -914,12 +914,19 @@ exports.sendScheduledReminders = functions.pubsub
         ? await db.getAll(...Object.values(entryRefsByKey))
         : [];
       const completedHabitDays = {};
+      const entryInfoByKey = {};
       entrySnaps.forEach(snap => {
-        if (snap.exists && snap.data().status === "success") {
-          const path = snap.ref.path.split("/");
-          const uid = path[1];
-          const habitId = path[3];
-          const dayKey = snap.id;
+        if (!snap.exists) return;
+        const path = snap.ref.path.split("/");
+        const uid = path[1];
+        const habitId = path[3];
+        const dayKey = snap.id;
+        const data = snap.data();
+        entryInfoByKey[`${uid}|${habitId}|${dayKey}`] = {
+          comment: data.comment || "",
+          source: data.source || ""
+        };
+        if (data.status === "success") {
           completedHabitDays[`${uid}|${habitId}|${dayKey}`] = true;
         }
       });
@@ -945,12 +952,31 @@ exports.sendScheduledReminders = functions.pubsub
           const dayKey = mercyDateKey(now.getTime(), slot.timezone || "UTC");
           if (completedHabitDays[`${uid}|${slot.habitId}|${dayKey}`]) continue;
           if (!tokens.length) continue;
-          const body = randomHabitReminderMessage(slot.habitName || "your habit");
+          const info = entryInfoByKey[`${uid}|${slot.habitId}|${dayKey}`] || {};
+          // Reading Plan reminders carry a per-day reference in the entry comment
+          // (written by the app, prefixed with 📖 and sourced "reading-plan").
+          const isReadingPlan = slot.kind === "reading-plan"
+            || info.source === "reading-plan"
+            || (typeof info.comment === "string" && info.comment.startsWith("📖"));
+          let title = slot.habitName || "Habit Reminder";
+          let body = randomHabitReminderMessage(slot.habitName || "your habit");
+          let link = "/Greek-Vocab/?open=habits";
+          if (isReadingPlan) {
+            const tz = slot.timezone || "UTC";
+            let pretty;
+            try {
+              pretty = new Intl.DateTimeFormat("en-US", { timeZone: tz, month: "long", day: "numeric", year: "numeric" }).format(now);
+            } catch (e) { pretty = mercyDateKey(now.getTime(), tz); }
+            const ref = String(info.comment || "").replace(/^📖\s*/, "").trim();
+            title = "Reading Plan";
+            body = ref ? `It's ${pretty}, time to read ${ref}.` : `It's ${pretty}, time to read today's passage.`;
+            link = "/Greek-Vocab/?open=reading-plan";
+          }
           slotUpdates.push(
             sendToUserTokens(userRefMap[uid], tokens, {
-              notification: { title: slot.habitName || "Habit Reminder", body },
+              notification: { title, body },
               webpush: {
-                fcmOptions: { link: "/Greek-Vocab/?open=habits" },
+                fcmOptions: { link },
                 notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] }
               }
             }, `habit reminder ${uid}`)

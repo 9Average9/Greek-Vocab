@@ -10798,7 +10798,7 @@ function rpRenderForm() {
         ${s.reminderOn ? `<div class="rp-reminder-time">
           <label for="rpReminderTime">Remind me at</label>
           <input type="time" id="rpReminderTime" class="rp-date" value="${s.reminderTime}" onchange="rpOnReminderTime(this.value)"/>
-          <p class="rp-reminder-hint">You'll get a daily “Reading Plan” notification — <em>“It's ${rpFmtDate(_rpStartOfDay(new Date()))}, time to read ${rpFmtReading((calc.flat||[]).slice(0, calc.perDay||1))}.”</em></p>
+          <p class="rp-reminder-hint">You'll get a daily “Reading Plan” notification — <em>“It's ${rpFmtDate(_rpStartOfDay(new Date()))}, time to read ${rpFmtReading((calc.flat||[]).slice(0, calc.perDay||1))}.”</em> Turning this on also adds each day's reference to your habit calendar.</p>
         </div>` : ""}
       </div>
     </div>
@@ -11018,22 +11018,26 @@ async function rpCommitToHabit(plan, opts = {}) {
   } catch (e) { console.warn("reading plan habit commit failed", e); _showStudyToast("Could not reach Habit Builder"); return null; }
   if (!habitId) return null;
 
-  // Optional: write each day's reference into the habit note calendar.
-  if (opts.askCalendar) {
-    const wantCal = confirm("Would you like to add the daily references to your habit note calendar?\n\nEach day will show that day's reading right inside the habit's calendar.");
-    if (wantCal) {
-      try {
-        const calc = rpCompute(rpCfgFromPlan(plan));
-        const schedule = rpDailySchedule(calc).slice(0, 400);
-        const entries = schedule.map(d => ({ date: d.date, status: "open", comment: `📖 ${d.reading}` }));
-        const ok = await window.Habits?.setEntriesBulk?.(uid, habitId, entries);
-        _showStudyToast(ok ? "References added to your habit calendar" : "Couldn't sync the calendar");
-      } catch (e) { console.warn("reading plan calendar sync failed", e); }
-    }
+  // Write each day's reference into the habit note calendar. Always do this when
+  // a reminder is on (the daily notification reads today's reference from there);
+  // otherwise ask first.
+  const reminderOn = !!(plan.reminderOn && plan.reminderTime);
+  let wantCal = reminderOn;
+  if (opts.askCalendar && !reminderOn) {
+    wantCal = confirm("Would you like to add the daily references to your habit note calendar?\n\nEach day will show that day's reading right inside the habit's calendar.");
+  }
+  if (wantCal) {
+    try {
+      const calc = rpCompute(rpCfgFromPlan(plan));
+      const schedule = rpDailySchedule(calc).slice(0, 400);
+      const entries = schedule.map(d => ({ date: d.date, status: "open", comment: `📖 ${d.reading}` }));
+      const ok = await window.Habits?.setEntriesBulk?.(uid, habitId, entries);
+      if (!reminderOn) _showStudyToast(ok ? "References added to your habit calendar" : "Couldn't sync the calendar");
+    } catch (e) { console.warn("reading plan calendar sync failed", e); }
   }
 
-  // Optional: daily reminder at the chosen time.
-  if (plan.reminderOn && plan.reminderTime) {
+  // Daily reminder at the chosen time.
+  if (reminderOn) {
     await rpRegisterReminder(uid, habitId, plan);
   }
   return habitId;
@@ -11050,7 +11054,7 @@ async function rpRegisterReminder(uid, habitId, plan) {
     try { await window.FCM?.registerToken?.(uid); } catch {}
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const ok = await window.HabitReminders?.save?.(uid, habitId, plan.name, {
-      enabled: true, frequency: "daily", times: [plan.reminderTime], timezone
+      enabled: true, frequency: "daily", times: [plan.reminderTime], timezone, kind: "reading-plan"
     });
     if (ok) _showStudyToast(`Daily reminder set for ${plan.reminderTime}`);
   } catch (e) { console.warn("reading plan reminder failed", e); }
@@ -22070,7 +22074,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.232";
+const APP_VERSION = "3.0.233";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22091,6 +22095,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.233 &mdash; Reading Plan reminder messages</div>
+<ul>
+  <li><strong>Personalized reminders</strong> &mdash; Reading Plan reminders now arrive titled “Reading Plan” and read <em>“It's [date], time to read [today's reference].”</em> Tap it to jump straight into the Reading Plan.</li>
+</ul>
 <div class="un-version-label">v3.0.232 &mdash; Reading Plan: reminders &amp; calendar sync</div>
 <ul>
   <li><strong>Daily reminder</strong> &mdash; A new Reminder step lets you toggle on a daily reading nudge and pick the time of day.</li>
@@ -23923,6 +23931,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (openParam === 'habits') {
     setTimeout(() => showNavPage('habits'), 900);
+  }
+  if (openParam === 'reading-plan') {
+    setTimeout(() => openReadingPlanPage(), 900);
   }
   if (openParam === 'calendar') {
     setTimeout(() => handleCalendarNotificationOpen(), 900);

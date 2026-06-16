@@ -2089,7 +2089,7 @@ window.FCM = {
 
 // ── Habit Reminder Slots ─────────────────────────────────────────────────────
 
-async function saveHabitReminderSlots(uid, habitId, habitName, { enabled, frequency, times, timezone }) {
+async function saveHabitReminderSlots(uid, habitId, habitName, { enabled, frequency, times, timezone, kind }) {
   try {
     const batch = writeBatch(db);
     for (let i = 0; i < 10; i++) {
@@ -2110,6 +2110,7 @@ async function saveHabitReminderSlots(uid, habitId, habitName, { enabled, freque
           frequency: frequency || "daily",
           timezone: tz,
           enabled: true,
+          ...(kind ? { kind } : {}),
           nextSendAt,
           lastSent: null,
           updatedAt: serverTimestamp()
