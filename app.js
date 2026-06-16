@@ -21337,7 +21337,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.229";
+const APP_VERSION = "3.0.230";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21358,6 +21358,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.230 &mdash; Lesson Block Checkmarks</div>
+<ul>
+  <li><strong>Opened blocks stay checked</strong> &mdash; A lesson block shows a straight-down chevron until you open it, then turns into a green checkmark and keeps it &mdash; even after you collapse the block again.</li>
+</ul>
 <div class="un-version-label">v3.0.229 &mdash; Lesson Chart &amp; Chevron Fixes</div>
 <ul>
   <li><strong>εἰμί chart fixed</strong> &mdash; The &ldquo;to be&rdquo; verb table in Lesson 6 (Prepositions) no longer sprouts a phantom fourth column; its three columns now line up cleanly.</li>

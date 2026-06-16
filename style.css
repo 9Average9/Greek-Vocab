@@ -21234,6 +21234,7 @@ body.dark .quiz-answer-correct { color: #a5d6a7; }
 #basicVerbsLearnMenu .basic-verb-lesson.active .lesson-block-header,
 #advancedLearnMenu .adv-learn-lesson.active .lesson-block-header,
 #advVerbsLearnMenu .adv-verb-lesson.active .lesson-block-header {
+  position: relative; /* anchor the chevron/checkmark ::after to the header */
   min-height: 66px;
   display: grid !important;
   grid-template-columns: auto 1fr auto;
@@ -21285,10 +21286,17 @@ body.dark .quiz-answer-correct { color: #a5d6a7; }
 #basicVerbsLearnMenu .basic-verb-lesson.active .lesson-block-header::after,
 #advancedLearnMenu .adv-learn-lesson.active .lesson-block-header::after,
 #advVerbsLearnMenu .adv-verb-lesson.active .lesson-block-header::after {
-  right: 16px !important;
+  /* Sit in the exact same anchored box as the opened-state checkmark below
+     so the chevron and checkmark occupy the identical spot. */
+  position: absolute !important;
+  right: 12px !important;
   top: 50% !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: grid !important;
+  place-items: center !important;
   transform: translateY(-50%) !important; /* point straight down, no angle */
-  border-color: var(--lesson-accent) !important;
+  color: var(--lesson-accent) !important;
   opacity: 0.9 !important;
 }
 
@@ -21677,10 +21685,8 @@ body.dark #advVerbsLearnMenu .adv-verb-lesson.active .lesson-block {
 #basicVerbsLearnMenu .basic-verb-lesson.active .lesson-block.visited .lesson-block-header::after,
 #advancedLearnMenu .adv-learn-lesson.active .lesson-block.visited .lesson-block-header::after,
 #advVerbsLearnMenu .adv-verb-lesson.active .lesson-block.visited .lesson-block-header::after,
-#newLearnMenu .learn-lesson.active .lesson-block.visited.open .lesson-block-header::after,
-#basicVerbsLearnMenu .basic-verb-lesson.active .lesson-block.visited.open .lesson-block-header::after,
-#advancedLearnMenu .adv-learn-lesson.active .lesson-block.visited.open .lesson-block-header::after,
-#advVerbsLearnMenu .adv-verb-lesson.active .lesson-block.visited.open .lesson-block-header::after {
+#newLearnMenu .learn-lesson.active .lesson-block.visited .lesson-block-header::after,
+#basicVerbsLearnMenu .basic-verb-lesson.active .lesson-block.visited .lesson-block-header::after {
   content: "✓" !important;
   width: 28px !important;
   height: 28px !important;
