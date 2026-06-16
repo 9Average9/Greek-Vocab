@@ -28632,7 +28632,7 @@ body.memorization-active #statusBarBg {
   overscroll-behavior-y: contain;
   background: var(--memorization-page-color, var(--primary-light));
 }
-.mem-hub-scroll { padding: 14px max(16px, env(safe-area-inset-left, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+.mem-hub-scroll { padding: 14px max(16px, env(safe-area-inset-left, 0px)) max(4px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
 .mem-topbar {
   flex: 0 0 auto;
   z-index: 6;
@@ -28745,11 +28745,12 @@ body.memorization-active #statusBarBg {
 /* The last band must not paint a stray divider line near the bottom of the screen. */
 .mem-workshop-scroll > section:last-child {
   border-bottom: 0;
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
 }
 .mem-workshop-scroll {
-  /* Just enough to clear the home indicator — no fat empty strip that could
-     read as a stray bottom bar. */
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  /* The last section handles safe-area clearance, so the scroll container
+     itself does not add a second empty strip. */
+  padding-bottom: 0;
 }
 /* Belt-and-suspenders: no global fixed bottom bar should ever bleed into the
    full-screen memorization workspace. */
