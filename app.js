@@ -21292,10 +21292,52 @@ function backToProfileFromProgress() {
   showNavPage('profile');
 }
 
+function initHomeQuickActionCarousel() {
+  const row = document.querySelector('#homeScreen .home-actions-grid');
+  if (!row || row.dataset.carouselReady === '1') return;
+  row.dataset.carouselReady = '1';
+
+  let startX = 0;
+  let startScroll = 0;
+  let bounceTimer = null;
+
+  const maxScroll = () => Math.max(0, row.scrollWidth - row.clientWidth);
+  const atStart = () => row.scrollLeft <= 2;
+  const atEnd = () => row.scrollLeft >= maxScroll() - 2;
+  const bounce = (side) => {
+    window.clearTimeout(bounceTimer);
+    row.classList.remove('home-actions-bounce-left', 'home-actions-bounce-right');
+    // Restart the animation even when the same edge is hit repeatedly.
+    void row.offsetWidth;
+    row.classList.add(side === 'left' ? 'home-actions-bounce-left' : 'home-actions-bounce-right');
+    bounceTimer = window.setTimeout(() => {
+      row.classList.remove('home-actions-bounce-left', 'home-actions-bounce-right');
+    }, 360);
+  };
+
+  row.addEventListener('pointerdown', (event) => {
+    startX = event.clientX;
+    startScroll = row.scrollLeft;
+  }, { passive: true });
+
+  row.addEventListener('pointerup', (event) => {
+    const dx = event.clientX - startX;
+    if (Math.abs(dx) < 18) return;
+    if (startScroll <= 2 && dx > 0) bounce('left');
+    if (startScroll >= maxScroll() - 2 && dx < 0) bounce('right');
+  }, { passive: true });
+
+  row.addEventListener('wheel', (event) => {
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    if (delta < -10 && atStart()) bounce('left');
+    if (delta > 10 && atEnd()) bounce('right');
+  }, { passive: true });
+}
+
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.222";
+const APP_VERSION = "3.0.223";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -21316,6 +21358,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.223 &mdash; Swipeable Quick Actions</div>
+<ul>
+  <li><strong>Bigger action artwork</strong> &mdash; Home Quick Actions now crop away the white image edges and let each icon fill more of the card.</li>
+  <li><strong>Swipe row</strong> &mdash; The action cards now scroll horizontally with snap points and a soft edge bounce when you hit either side.</li>
+  <li><strong>Press feedback</strong> &mdash; Quick Action cards and the Habit Builder widget now animate when pressed so the home screen feels more alive.</li>
+</ul>
 <div class="un-version-label">v3.0.222 &mdash; Quick Action Artwork</div>
 <ul>
   <li><strong>New home action cards</strong> &mdash; Quick Actions now use the new colorful 3D artwork cards for Study Library, Memorize, Vocab, Translate, and Test.</li>
@@ -23075,6 +23123,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize home screen and bottom nav state
   populateHomeScreen();
+  initHomeQuickActionCarousel();
   setNavActive('home');
   showBottomNav();
   bindHomeNavCollapse();

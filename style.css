@@ -18971,9 +18971,14 @@ body.dark .bn-item::before {
   box-shadow: 0 10px 24px color-mix(in srgb, var(--secondary-color) 12%, transparent);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.12s ease;
+  transform-origin: center;
+  transition: transform 0.16s cubic-bezier(.2, .85, .25, 1), box-shadow 0.16s ease, filter 0.16s ease;
 }
-.home-habit-widget:active { transform: scale(0.985); }
+.home-habit-widget:active {
+  animation: home-press-pop 0.34s cubic-bezier(.2, .9, .2, 1);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--secondary-color) 16%, transparent);
+  filter: saturate(1.04);
+}
 .hhw-kicker {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 0.68rem; font-weight: 800;
@@ -21968,15 +21973,39 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 /* Home quick actions: artwork cards. */
 #homeScreen .home-actions-grid {
   display: grid !important;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  gap: clamp(8px, 2.2vw, 13px) !important;
-  margin: 8px 0 22px !important;
+  grid-auto-flow: column !important;
+  grid-auto-columns: clamp(126px, 34vw, 158px) !important;
+  grid-template-columns: none !important;
+  gap: clamp(12px, 3.2vw, 16px) !important;
+  margin: 8px calc(var(--app-padding, 20px) * -1) 24px !important;
+  padding: 2px var(--app-padding, 20px) 12px !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--app-padding, 20px);
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+}
+
+#homeScreen .home-actions-grid::-webkit-scrollbar {
+  display: none;
+}
+
+#homeScreen .home-actions-grid.home-actions-bounce-left .home-action-tile {
+  animation: home-carousel-bounce-left 0.34s cubic-bezier(.2, .9, .2, 1);
+}
+
+#homeScreen .home-actions-grid.home-actions-bounce-right .home-action-tile {
+  animation: home-carousel-bounce-right 0.34s cubic-bezier(.2, .9, .2, 1);
 }
 
 #homeScreen .home-action-tile {
   min-width: 0;
-  min-height: clamp(158px, 36vw, 192px);
-  padding: clamp(7px, 1.8vw, 11px) clamp(5px, 1.4vw, 8px) 9px !important;
+  min-height: clamp(178px, 45vw, 212px);
+  padding: clamp(5px, 1.4vw, 8px) clamp(7px, 1.8vw, 10px) 10px !important;
   border: 1px solid var(--qa-card-border) !important;
   background: var(--qa-card-bg) !important;
   box-shadow:
@@ -21987,21 +22016,24 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   grid-template-rows: auto auto 1fr auto !important;
   align-items: start !important;
   justify-items: center !important;
-  gap: 5px !important;
+  gap: 4px !important;
   text-align: center !important;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease !important;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  transform-origin: center;
+  transition: transform 0.16s cubic-bezier(.2, .85, .25, 1), box-shadow 0.16s ease, filter 0.16s ease !important;
 }
 
 #homeScreen .home-action-tile:active {
-  transform: translateY(1px) scale(0.985);
+  animation: home-press-pop 0.34s cubic-bezier(.2, .9, .2, 1);
   filter: saturate(1.04);
 }
 
 #homeScreen .home-action-tile .hat-icon {
   width: 100% !important;
-  height: clamp(70px, 18vw, 98px) !important;
+  height: clamp(106px, 28vw, 132px) !important;
   border-radius: 18px !important;
   background: transparent !important;
   border: 0 !important;
@@ -22010,17 +22042,19 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   align-items: center !important;
   justify-content: center !important;
   color: var(--qa-title) !important;
-  overflow: visible;
+  overflow: hidden;
   transition: transform 0.12s ease !important;
 }
 
 #homeScreen .home-action-tile .qa-img {
   display: block !important;
-  width: min(100%, 96px) !important;
-  height: 100% !important;
-  object-fit: contain !important;
+  width: 142% !important;
+  max-width: none !important;
+  height: 142% !important;
+  object-fit: cover !important;
   filter: drop-shadow(0 12px 18px var(--qa-image-shadow));
-  transform: translateY(-2px);
+  transform: translateY(-5%) scale(1.02);
+  transform-origin: center;
 }
 
 #homeScreen .home-action-tile .hat-icon .qa-svg,
@@ -22097,6 +22131,27 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   --qa-image-shadow: rgba(34, 101, 210, 0.16);
   --qa-title: #1476d8;
   --qa-subtitle: #2c6fa5;
+}
+
+@keyframes home-press-pop {
+  0% { transform: translateY(0) scale(1); }
+  42% { transform: translateY(2px) scale(0.965); }
+  76% { transform: translateY(-1px) scale(1.018); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes home-carousel-bounce-left {
+  0% { transform: translateX(0); }
+  38% { transform: translateX(12px); }
+  72% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes home-carousel-bounce-right {
+  0% { transform: translateX(0); }
+  38% { transform: translateX(-12px); }
+  72% { transform: translateX(3px); }
+  100% { transform: translateX(0); }
 }
 
 #homeScreen .quick-action-memorize {
