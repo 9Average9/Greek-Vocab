@@ -19394,9 +19394,12 @@ body.dark .bn-item::before {
 }
 .sl-body {
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* the shelf fills one screen; only book rows scroll */
   -webkit-overflow-scrolling: touch;
-  padding: 24px 18px calc(46px + env(safe-area-inset-bottom, 0px));
+  padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px));
   /* clean, theme-matched room behind the shelf */
   background:
     radial-gradient(130% 60% at 50% 0%, color-mix(in srgb, var(--secondary-color) 10%, transparent), transparent 62%),
@@ -19408,18 +19411,21 @@ body.dark .sl-body {
     linear-gradient(180deg, #1f2937 0%, #111827 100%);
 }
 
-/* The bookcase is a 3D shelf illustration; study books sit on its two empty
-   middle shelves. Geometry is tunable via the CSS variables below. */
+/* The bookcase is a 3D shelf illustration that fills the whole page below the
+   header; study books sit on its two empty middle shelves. The image stretches
+   to fill so the shelves are large enough to hold the books naturally.
+   Geometry is tunable via the CSS variables below. */
 .sl-bookcase {
   position: relative;
-  width: min(86vw, 360px);
-  max-width: 360px;
-  margin: 6px auto 18px;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: url("assets/icons/studies-bookshelf.png?v=3.0.238") center / 100% 100% no-repeat;
-  aspect-ratio: 1023 / 1537;
   box-shadow: none;
   isolation: isolate; /* contain the theme tint to the shelf image */
   /* shelf geometry as fractions of the image */
