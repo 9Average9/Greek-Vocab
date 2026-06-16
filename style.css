@@ -22005,7 +22005,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 #homeScreen .home-action-tile {
   min-width: 0;
   min-height: clamp(178px, 45vw, 212px);
-  padding: clamp(5px, 1.4vw, 8px) clamp(7px, 1.8vw, 10px) 10px !important;
+  padding: clamp(7px, 1.8vw, 10px) clamp(8px, 2vw, 11px) 10px !important;
   border: 1px solid var(--qa-card-border) !important;
   background: var(--qa-card-bg) !important;
   box-shadow:
@@ -22033,11 +22033,17 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 
 #homeScreen .home-action-tile .hat-icon {
   width: 100% !important;
-  height: clamp(114px, 30vw, 140px) !important;
+  height: clamp(112px, 29vw, 136px) !important;
   border-radius: 18px !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
+  padding: clamp(6px, 1.8vw, 10px) !important;
+  background:
+    radial-gradient(115% 95% at 50% 14%, rgba(255,255,255,0.74), rgba(255,255,255,0.22) 58%, transparent 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--qa-title) 8%, rgba(255,255,255,0.78)), color-mix(in srgb, var(--qa-title) 3%, rgba(255,255,255,0.38))) !important;
+  border: 1px solid color-mix(in srgb, var(--qa-title) 10%, rgba(255,255,255,0.72)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.86),
+    inset 0 -16px 28px color-mix(in srgb, var(--qa-title) 8%, transparent),
+    0 10px 18px color-mix(in srgb, var(--qa-title) 9%, transparent) !important;
   display: grid !important;
   align-items: center !important;
   justify-content: center !important;
@@ -22048,13 +22054,13 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 
 #homeScreen .home-action-tile .qa-img {
   display: block !important;
-  width: 100% !important;
+  width: 94% !important;
   max-width: none !important;
-  height: 100% !important;
+  height: 94% !important;
   object-fit: contain !important;
   object-position: center center !important;
   mix-blend-mode: multiply;
-  filter: saturate(1.08) contrast(1.03) drop-shadow(0 12px 18px var(--qa-image-shadow));
+  filter: saturate(1.08) contrast(1.03) drop-shadow(0 10px 15px var(--qa-image-shadow));
   transform: none;
   transform-origin: center;
 }
@@ -22230,8 +22236,8 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
   left: 50% !important;
   right: auto !important;
   bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
-  width: 112px !important;
-  height: 68px !important;
+  width: 104px !important;
+  height: 60px !important;
   padding: 0 !important;
   border-radius: 999px !important;
   transform: translateX(-50%) !important;
@@ -22241,7 +22247,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
 .bottom-nav.home-collapsed .bn-item {
   position: absolute !important;
   inset: 0 !important;
-  height: 68px !important;
+  height: 60px !important;
   opacity: 0 !important;
   pointer-events: none !important;
   transform: scale(.5) !important;
@@ -22280,7 +22286,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
 }
 
 .bottom-nav.home-collapsed .bn-item .material-symbols-outlined {
-  font-size: 1.82rem !important;
+  font-size: 1.72rem !important;
 }
 
 /* Habits page — same collapsed nav pill as home */
@@ -23538,9 +23544,9 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   right: auto !important;
   bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
   width: min(calc(100% - 34px), 440px) !important;
-  height: 66px;
+  height: 58px;
   align-items: center !important;
-  padding: 7px 10px 8px !important;
+  padding: 5px 9px 6px !important;
   border-radius: 999px !important;
   border: 1px solid color-mix(in srgb, var(--secondary-color) 14%, rgba(255,255,255,0.72)) !important;
   background:
@@ -23559,11 +23565,11 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 .bottom-nav::before {
   content: "";
   position: absolute;
-  top: -13px;
-  left: calc((100% - 20px) / 10);
-  width: calc((100% - 20px) / 5);
-  height: 44px;
-  border-radius: 999px 999px 24px 24px;
+  top: -9px;
+  left: calc((100% - 18px) / 10);
+  width: calc((100% - 18px) / 5);
+  height: 34px;
+  border-radius: 999px 999px 20px 20px;
   background:
     radial-gradient(120% 96% at 50% 0%, color-mix(in srgb, var(--secondary-color) 13%, rgba(255,255,255,0.84)), rgba(255,255,255,0.5) 72%),
     color-mix(in srgb, var(--card-color) 72%, rgba(255,255,255,0.74));
@@ -23586,9 +23592,9 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 .bottom-nav:has(.bn-item:nth-child(5).active)::before { transform: translateX(400%); opacity: 1; }
 
 .bn-item {
-  height: 52px;
-  padding: 6px 2px 7px !important;
-  gap: 2px !important;
+  height: 46px;
+  padding: 4px 2px 5px !important;
+  gap: 1px !important;
   color: color-mix(in srgb, var(--muted-color) 88%, var(--font-color)) !important;
   font-size: 0.62rem !important;
   font-weight: 700 !important;
@@ -23605,7 +23611,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 }
 
 .bn-item .material-symbols-outlined {
-  font-size: 1.42rem !important;
+  font-size: 1.32rem !important;
   color: currentColor !important;
   font-variation-settings: 'FILL' 0, 'wght' 430, 'GRAD' 0, 'opsz' 24 !important;
 }
@@ -23622,7 +23628,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 }
 
 .bn-item::after {
-  bottom: 2px !important;
+  bottom: 1px !important;
   width: 4px !important;
   height: 4px !important;
   background: var(--secondary-color) !important;
