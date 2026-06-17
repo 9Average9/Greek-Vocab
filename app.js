@@ -10516,7 +10516,7 @@ function rpSegments(st = _rpState) {
 }
 
 // Flat ordered chapter list for the chosen reading order.
-function rpFlatChapters(segments, order) {
+function rpFlatChapters(segments, order, perDayHint = null) {
   // canonical flat list first
   let flat = [];
   segments
@@ -10534,16 +10534,25 @@ function rpFlatChapters(segments, order) {
       return ia !== ib ? ia - ib : a.ch - b.ch;
     });
   } else if (order === "fresh") {
-    // Spread each book evenly across the whole plan so you bounce between books.
+    // Spread book-runs evenly across the whole plan so it still bounces between
+    // books, but without forcing every single chapter to come from a different
+    // book. This keeps days readable, e.g. "Genesis 1-4, 2 Kings 3-4".
     const groups = {};
     flat.forEach(it => { (groups[it.code] = groups[it.code] || []).push(it); });
     const keyed = [];
+    const blockSize = Math.max(1, Math.min(6, perDayHint || 1, Math.ceil((perDayHint || 1) / 2)));
     Object.keys(groups).forEach(code => {
       const arr = groups[code];
-      arr.forEach((it, i) => keyed.push({ it, pos: (i + 0.5) / arr.length, ci: RP_CANON_INDEX[code] }));
+      const chunks = [];
+      for (let i = 0; i < arr.length; i += blockSize) chunks.push(arr.slice(i, i + blockSize));
+      chunks.forEach((chunk, i) => keyed.push({
+        chunk,
+        pos: (i + 0.5) / chunks.length,
+        ci: RP_CANON_INDEX[code]
+      }));
     });
     keyed.sort((a, b) => (a.pos !== b.pos ? a.pos - b.pos : a.ci - b.ci));
-    flat = keyed.map(k => k.it);
+    flat = keyed.flatMap(k => k.chunk);
   }
   return flat;
 }
@@ -10570,8 +10579,8 @@ function rpDaysAvailable(st = _rpState) {
 
 function rpCompute(st = _rpState) {
   const segments = rpSegments(st);
-  const flat = rpFlatChapters(segments, st.order);
-  const total = flat.length;
+  const baseFlat = rpFlatChapters(segments, st.order === "chronological" ? "chronological" : "straight");
+  const total = baseFlat.length;
   const days = rpDaysAvailable(st);
   const end = rpEndDate(st);
   let perDay = null, finishDate = null;
@@ -10580,6 +10589,7 @@ function rpCompute(st = _rpState) {
     const daysNeeded = Math.ceil(total / perDay);
     finishDate = new Date(_rpStartOfDay(new Date()).getTime() + (daysNeeded - 1) * 86400000);
   }
+  const flat = st.order === "fresh" ? rpFlatChapters(segments, st.order, perDay) : baseFlat;
   return { segments, flat, total, days, perDay, end, finishDate };
 }
 
@@ -22065,7 +22075,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.242";
+const APP_VERSION = "3.0.243";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22086,6 +22096,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.243 &mdash; Books &amp; Fresh Mix</div>
+<ul>
+  <li><strong>Study books feel more real</strong> &mdash; Study Library books are slightly smaller, sit better on the shelves, show delete buttons cleanly, and keep a visible spine during the opening animation.</li>
+  <li><strong>Fresh mix reads smoother</strong> &mdash; Reading Plan fresh mix now groups adjacent chapters from the same book before bouncing, so a day can show readings like Genesis 1-4 instead of only one chapter per book.</li>
+</ul>
 <div class="un-version-label">v3.0.242 &mdash; Study Shelf Fit</div>
 <ul>
   <li><strong>Bigger bookshelf</strong> &mdash; The Study Library bookshelf now fills more of the phone screen by trimming the soft outer margin.</li>
