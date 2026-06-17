@@ -22207,10 +22207,10 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   padding: 2px var(--app-padding, 20px) 12px !important;
   overflow-x: auto !important;
   overflow-y: visible !important;
-  overscroll-behavior-x: contain;
+  overscroll-behavior-x: auto;
   scroll-padding-inline: var(--app-padding, 20px);
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   touch-action: pan-x pan-y;
@@ -22247,7 +22247,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
+  scroll-snap-stop: normal;
   transform-origin: center;
   transition: transform 0.16s cubic-bezier(.2, .85, .25, 1), box-shadow 0.16s ease, filter 0.16s ease !important;
 }
@@ -25010,16 +25010,60 @@ body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-n
     var(--primary-color) !important;
 }
 
-body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
-}
-
-body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
-}
-
 body:has(#homeScreen.screen.active) #homeScreen.screen.active {
   padding-bottom: 0 !important;
+}
+
+body:has(#homeScreen.screen.active) #bottomNav {
+  bottom: max(2px, calc(env(safe-area-inset-bottom, 0px) - 10px)) !important;
+  transform: translateX(-50%) !important;
+}
+
+body:has(#homeScreen.screen.active) #bottomNav.home-collapsed {
+  width: min(calc(100% - 34px), 440px) !important;
+  height: 58px !important;
+  padding: 5px 9px 6px !important;
+}
+
+body:has(#homeScreen.screen.active) #bottomNav.home-collapsed .bn-item {
+  position: relative !important;
+  inset: auto !important;
+  height: 46px !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: none !important;
+  display: flex !important;
+}
+
+body:has(#homeScreen.screen.active) #bottomNav.home-collapsed .bn-item > span:not(.material-symbols-outlined),
+body:has(#homeScreen.screen.active) #bottomNav.home-collapsed .bn-dot,
+body:has(#homeScreen.screen.active) #bottomNav.home-collapsed .bn-item::after {
+  display: block !important;
+}
+
+body:has(#homeScreen.screen.active),
+body:has(#homeScreen.screen.active) .app,
+body:has(#homeScreen.screen.active) #homeScreen.screen.active {
+  min-height: 100dvh !important;
+}
+
+body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
+  background: transparent !important;
+}
+
+html:has(> body #homeScreen.screen.active.home-backdrop-none),
+body:has(#homeScreen.screen.active.home-backdrop-none),
+body:has(#homeScreen.screen.active.home-backdrop-none) .app,
+body:has(#homeScreen.screen.active.home-backdrop-none) #homeScreen.screen.active {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light)) fixed !important;
+}
+
+body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-none)) .app,
+body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-none)) #homeScreen.screen.active {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)),
+    var(--home-backdrop-image) center / cover fixed no-repeat,
+    var(--primary-color) !important;
 }
 
 /* Final polish: lesson contrast, backdrop thumbnails, active nav icon */

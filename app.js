@@ -10206,8 +10206,7 @@ function setMerciesNavCollapsed(collapsed) {
 function setHomeNavCollapsed(collapsed) {
   const nav = document.getElementById('bottomNav');
   if (!nav) return;
-  const isHome = document.getElementById('homeScreen')?.classList.contains('active');
-  nav.classList.toggle('home-collapsed', !!collapsed && isHome);
+  nav.classList.remove('home-collapsed');
 }
 
 function expandMerciesNavTemporarily() {
@@ -10244,26 +10243,18 @@ function bindMerciesNavCollapse() {
 function expandHomeNavTemporarily() {
   setHomeNavCollapsed(false);
   clearTimeout(_homeNavCollapseTimer);
-  _homeNavCollapseTimer = setTimeout(() => setHomeNavCollapsed(true), 3000);
 }
 
 function expandHomeNavOnEntry() {
   setHomeNavCollapsed(false);
   clearTimeout(_homeNavCollapseTimer);
-  _homeNavCollapseTimer = setTimeout(() => setHomeNavCollapsed(true), 500);
 }
 
 function bindHomeNavCollapse() {
   const nav = document.getElementById('bottomNav');
   if (!nav || _homeNavScrollBound) return;
   _homeNavScrollBound = true;
-  nav.addEventListener('click', e => {
-    if (nav.classList.contains('home-collapsed')) {
-      e.preventDefault();
-      e.stopPropagation();
-      expandHomeNavTemporarily();
-    }
-  }, true);
+  nav.classList.remove('home-collapsed');
 }
 
 function setHabitsNavCollapsed(collapsed) {
@@ -22034,48 +22025,13 @@ function initHomeQuickActionCarousel() {
   const row = document.querySelector('#homeScreen .home-actions-grid');
   if (!row || row.dataset.carouselReady === '1') return;
   row.dataset.carouselReady = '1';
-
-  let startX = 0;
-  let startScroll = 0;
-  let bounceTimer = null;
-
-  const maxScroll = () => Math.max(0, row.scrollWidth - row.clientWidth);
-  const atStart = () => row.scrollLeft <= 2;
-  const atEnd = () => row.scrollLeft >= maxScroll() - 2;
-  const bounce = (side) => {
-    window.clearTimeout(bounceTimer);
-    row.classList.remove('home-actions-bounce-left', 'home-actions-bounce-right');
-    // Restart the animation even when the same edge is hit repeatedly.
-    void row.offsetWidth;
-    row.classList.add(side === 'left' ? 'home-actions-bounce-left' : 'home-actions-bounce-right');
-    bounceTimer = window.setTimeout(() => {
-      row.classList.remove('home-actions-bounce-left', 'home-actions-bounce-right');
-    }, 360);
-  };
-
-  row.addEventListener('pointerdown', (event) => {
-    startX = event.clientX;
-    startScroll = row.scrollLeft;
-  }, { passive: true });
-
-  row.addEventListener('pointerup', (event) => {
-    const dx = event.clientX - startX;
-    if (Math.abs(dx) < 18) return;
-    if (startScroll <= 2 && dx > 0) bounce('left');
-    if (startScroll >= maxScroll() - 2 && dx < 0) bounce('right');
-  }, { passive: true });
-
-  row.addEventListener('wheel', (event) => {
-    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-    if (delta < -10 && atStart()) bounce('left');
-    if (delta > 10 && atEnd()) bounce('right');
-  }, { passive: true });
+  row.classList.remove('home-actions-bounce-left', 'home-actions-bounce-right');
 }
 
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.243";
+const APP_VERSION = "3.0.248";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22096,6 +22052,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.248 &mdash; Home Nav &amp; Tools Polish</div>
+<ul>
+  <li><strong>Home nav stays open</strong> &mdash; The Home bottom nav no longer collapses into the small pill and now sits lower near the bottom edge.</li>
+  <li><strong>Smoother Tools row</strong> &mdash; The Home Tools carousel now uses native scrolling without the sticky edge-bounce behavior.</li>
+</ul>
 <div class="un-version-label">v3.0.247 &mdash; Fixed the bottom gap on Home</div>
 <ul>
   <li><strong>No more bar behind the nav</strong> &mdash; Home, Profile, Community, Mercies, and Habits now track the browser's real visible height, so the pale gap that flashed in behind the floating nav while scrolling (as Safari's toolbar collapsed) is gone.</li>
