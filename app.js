@@ -22096,6 +22096,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.252 &mdash; English highlighting fixed</div>
+<ul>
+  <li><strong>English part-of-speech highlighting works again</strong> &mdash; A bad reference was throwing an error whenever English text was highlighted, which stopped the colors from appearing. Highlighting now works across English, Greek, and Hebrew.</li>
+</ul>
 <div class="un-version-label">v3.0.251 &mdash; Restore study sandbox spacing</div>
 <ul>
   <li><strong>Sandbox padding back to normal</strong> &mdash; Restored the original bottom spacing in the study sandbox (tabs, panes, compose bar, word sheet, writing modal, and word lookup) that was changed by the app-wide bottom-strip update.</li>
@@ -28575,7 +28579,7 @@ function _rhemaEnglishPosKey(pos) {
 
 function _rhemaEnglishTokenCat(token) {
   const value = String(token?.value || '').toLowerCase();
-  if (_RHEMA_ENGLISH_NEGATIONS.has(value)) return 'NEG';
+  if (RHEMA_ENGLISH_NEGATIONS.has(value)) return 'NEG';
   return _rhemaEnglishPosKey(token?.pos);
 }
 
@@ -31948,7 +31952,7 @@ function _englishSyntaxRole(token, index, rows) {
   const value = String(token.value || '');
   const lower = value.toLowerCase();
   const pos = token.pos;
-  if (_RHEMA_ENGLISH_NEGATIONS.has(lower)) return { role: 'negation', label: 'Negation', color: 'other' };
+  if (RHEMA_ENGLISH_NEGATIONS.has(lower)) return { role: 'negation', label: 'Negation', color: 'other' };
   if (['SCONJ', 'CCONJ'].includes(pos)) return { role: 'connector', label: 'Connector', color: 'conjunction' };
   if (pos === 'ADP') return { role: 'prep', label: 'Preposition', color: 'other' };
   if (['VERB', 'AUX'].includes(pos)) return { role: 'predicate', label: 'Predicate', color: 'main' };
