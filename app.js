@@ -22065,7 +22065,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.240";
+const APP_VERSION = "3.0.241";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22086,6 +22086,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.241 &mdash; Study Book Covers</div>
+<ul>
+  <li><strong>New study books</strong> &mdash; Study Library books now use the new 3D cover artwork and recolor to each study's selected color.</li>
+  <li><strong>Bigger mobile shelf</strong> &mdash; The Study Library header is tighter and the shelf rows have more room for books without cropping the bookshelf art.</li>
+</ul>
 <div class="un-version-label">v3.0.240 &mdash; Full-bleed Studies bookshelf</div>
 <ul>
   <li><strong>Even bigger shelf</strong> &mdash; The Study Library bookshelf now fills edge to edge below the header, with roomier shelves for your study books.</li>
