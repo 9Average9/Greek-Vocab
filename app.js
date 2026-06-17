@@ -22096,6 +22096,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.244 &mdash; Home Tools Reach</div>
+<ul>
+  <li><strong>Buttons no longer hidden</strong> &mdash; The Home scroll now leaves room for the floating nav, so the bottom Tools buttons can scroll clear of it instead of slipping behind it. The page still fills the whole screen with the nav floating on top.</li>
+</ul>
 <div class="un-version-label">v3.0.243 &mdash; Books &amp; Fresh Mix</div>
 <ul>
   <li><strong>Study books feel more real</strong> &mdash; Study Library books are slightly smaller, sit better on the shelves, show delete buttons cleanly, and keep a visible spine during the opening animation.</li>
