@@ -5441,7 +5441,7 @@ body.dark .big-lock .material-symbols-outlined {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: 100svh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--primary-color) !important;
   border-radius: 0 !important;
@@ -17530,7 +17530,7 @@ body .app:has(#habitsPage.screen.active) {
   padding: 0 !important;
   overflow: hidden;
   height: 100vh;
-  height: 100svh;
+  height: 100dvh;
 }
 
 /* Hide the app-header on nav screens (each screen has its own header) */
@@ -17553,7 +17553,7 @@ body .app:has(#habitsPage.screen.active) #habitsPage {
 
 #homeScreen.screen.active {
   height: 100vh;
-  height: 100svh;
+  height: 100dvh;
   overflow: hidden !important;
 }
 
@@ -17561,7 +17561,7 @@ body .app:has(#habitsPage.screen.active) #habitsPage {
 #communityPage.screen.active,
 #profilePage.screen.active {
   display: flex; flex-direction: column;
-  height: 100vh; height: 100svh; overflow: hidden;
+  height: 100vh; height: 100dvh; overflow: hidden;
   background: var(--primary-color) !important;
   border-radius: 0 !important; box-shadow: none !important;
   border: none !important; padding: 0 !important;
@@ -22838,7 +22838,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
     radial-gradient(circle at 8% 18%, color-mix(in srgb, var(--secondary-color) 10%, transparent), transparent 30%),
     linear-gradient(180deg, color-mix(in srgb, var(--primary-light) 92%, white), color-mix(in srgb, var(--primary-light) 78%, white)) !important;
   min-height: 100dvh !important;
-  height: 100svh !important;
+  height: 100dvh !important;
   padding: max(18px, env(safe-area-inset-top)) 18px calc(140px + env(safe-area-inset-bottom)) !important;
   border: none !important;
   border-radius: 0 !important;

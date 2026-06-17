@@ -22096,6 +22096,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.247 &mdash; Fixed the bottom gap on Home</div>
+<ul>
+  <li><strong>No more bar behind the nav</strong> &mdash; Home, Profile, Community, Mercies, and Habits now track the browser's real visible height, so the pale gap that flashed in behind the floating nav while scrolling (as Safari's toolbar collapsed) is gone.</li>
+</ul>
 <div class="un-version-label">v3.0.246 &mdash; Truly floating Home nav</div>
 <ul>
   <li><strong>No more bottom panel</strong> &mdash; Removed the faded strip at the bottom of Home that sat behind the nav and dimmed the lower buttons as you scrolled. The nav pill now truly floats over the page.</li>
