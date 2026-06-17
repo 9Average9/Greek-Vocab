@@ -18549,11 +18549,6 @@ body.dark .bn-item::before {
   background: linear-gradient(to bottom, var(--primary-color) 30%, transparent);
   z-index: 10; pointer-events: none; opacity: 0; transition: opacity 0.2s;
 }
-#homeScreen::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 72px;
-  background: linear-gradient(to top, var(--primary-color) 20%, transparent);
-  z-index: 10; pointer-events: none;
-}
 #homeScreen.scrolled-top::before { opacity: 1; }
 .home-greeting-wrap { margin: 12px 0 10px; }
 .home-greeting-block {
@@ -24905,7 +24900,9 @@ body.dark .bottom-nav::before {
   }
 }
 
-body .app:has(#homeScreen.screen.active) #statusBarBg,
+body .app:has(#homeScreen.screen.active) #statusBarBg {
+  display: none !important;
+}
 #homeScreen::before,
 #homeScreen::after,
 #homeScreen .home-scroll::before,
