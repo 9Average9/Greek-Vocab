@@ -22096,6 +22096,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.251 &mdash; Restore study sandbox spacing</div>
+<ul>
+  <li><strong>Sandbox padding back to normal</strong> &mdash; Restored the original bottom spacing in the study sandbox (tabs, panes, compose bar, word sheet, writing modal, and word lookup) that was changed by the app-wide bottom-strip update.</li>
+</ul>
 <div class="un-version-label">v3.0.250 &mdash; Nav bar tweaks</div>
 <ul>
   <li><strong>Nav sits a little higher</strong> &mdash; The floating nav bar is raised about 15px off the bottom edge.</li>
