@@ -6506,7 +6506,7 @@ button.habit-week-day-wrap,
   border-radius: 22px 22px 0 0;
   width: 100%;
   max-width: 560px;
-  padding: 20px 20px calc(100px + env(safe-area-inset-bottom, 0px));
+  padding: 20px 20px calc(100px + 0px);
   transform: translateY(24px);
   transition: transform 0.26s cubic-bezier(0.34,1.26,0.64,1);
   box-shadow: 0 -6px 40px rgba(0,0,0,0.18);
@@ -8892,7 +8892,7 @@ body {
 /* ══ Home screen ═══════════════════════════════════════════════════════════ */
 
 #homeScreen.screen.active {
-  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 32px) !important;
+  padding: 0 0 calc(0px + 32px) !important;
   border-radius: 0 !important;
   background: transparent !important;
   border: none !important;
@@ -9334,7 +9334,7 @@ body {
   align-items: center !important;
   justify-content: center !important;
   padding-top: max(18px, env(safe-area-inset-top)) !important;
-  padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+  padding-bottom: max(18px, 0px) !important;
 }
 
 #installAppModal .install-modal-card {
@@ -9586,7 +9586,7 @@ body {
   align-items: center !important;
   justify-content: center !important;
   padding-top: max(16px, env(safe-area-inset-top)) !important;
-  padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+  padding-bottom: max(16px, 0px) !important;
 }
 #lockedFeatureModal .modal-card {
   margin: auto !important;
@@ -14130,7 +14130,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 .rx-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 22px);
+  padding: 10px 16px calc(0px + 22px);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -15728,13 +15728,13 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   z-index: 1060;
   display: flex;
   align-items: flex-end;
-  padding: 0 0 env(safe-area-inset-bottom, 16px);
+  padding: 0 0 0px;
 }
 .rhema-grammar-modal.hidden { display: none; }
 .rhema-grammar-card {
   background: var(--card-color);
   border-radius: 24px 24px 0 0;
-  padding: 24px 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  padding: 24px 20px calc(0px + 20px);
   width: 100%;
   position: relative;
   max-height: 70vh;
@@ -15999,7 +15999,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   background: var(--card-color);
   border-radius: 22px 22px 0 0;
   border-top: 1.5px solid var(--border-color);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0px;
   max-height: 80svh;
   display: flex;
   flex-direction: column;
@@ -16150,7 +16150,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
-  padding: 8px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  padding: 8px 16px calc(0px + 16px);
   overflow-y: auto;
   touch-action: pan-y;
   overscroll-behavior: none;
@@ -16436,7 +16436,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   background: var(--card-color);
   border-radius: 22px 22px 0 0;
   border-top: 1px solid var(--border-color);
-  padding: 18px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  padding: 18px 16px calc(20px + 0px);
   transform: translateY(100%);
   transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1);
   box-shadow: 0 -18px 40px rgba(0,0,0,0.22);
@@ -16631,7 +16631,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 .rhema-sandbox-arrows {
   position: fixed;
   left: 0; right: 0;
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 12px);
+  bottom: calc(56px + 0px + 12px);
   display: none;
   justify-content: space-between;
   align-items: center;
@@ -16664,7 +16664,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 14px calc(env(safe-area-inset-bottom, 0px) + 10px);
+  padding: 8px 14px calc(0px + 10px);
   background: transparent;
   border-top: none;
   touch-action: none;
@@ -16845,7 +16845,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0px;
 }
 .rhema-sheet.open {
   transform: translateY(0);
@@ -17606,7 +17606,7 @@ body .app:has(#settingsScreen.screen.active) {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overscroll-behavior: contain;
-  padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 32px);
+  padding: 12px 16px calc(0px + 32px);
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -18177,7 +18177,7 @@ body.dark .theme-wheel-tile {
   position: fixed;
   left: 50%;
   right: auto;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(12px + 0px);
   z-index: 900;
   display: flex;
   align-items: stretch;
@@ -18201,14 +18201,14 @@ body.dark .theme-wheel-tile {
 .bottom-nav.hidden {
   opacity: 0;
   pointer-events: none;
-  transform: translate(-50%, calc(100% + 24px + env(safe-area-inset-bottom, 0px)));
+  transform: translate(-50%, calc(100% + 24px + 0px));
 }
 .bottom-nav.mercies-collapsed {
   width: 76px !important;
   height: 76px !important;
   right: 16px !important;
   left: auto !important;
-  bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(18px + 0px) !important;
   padding: 0 !important;
   border-radius: 50% !important;
   transform: translateX(0) !important;
@@ -18902,7 +18902,7 @@ body.dark .bn-item::before {
 .profile-page-scroll {
   overflow-y: auto; overflow-x: hidden;
   flex: 1 1 0; min-height: 0;
-  padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 80px);
+  padding: 0 16px calc(0px + 80px);
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
@@ -19409,7 +19409,7 @@ body.dark .bn-item::before {
   flex-direction: column;
   overflow: hidden; /* the shelf fills one screen; only book rows scroll */
   -webkit-overflow-scrolling: touch;
-  padding: 0 0 calc(env(safe-area-inset-bottom, 0px));
+  padding: 0 0 calc(0px);
   /* clean, theme-matched room behind the shelf */
   background:
     radial-gradient(130% 60% at 50% 0%, color-mix(in srgb, var(--secondary-color) 10%, transparent), transparent 62%),
@@ -19801,7 +19801,7 @@ body.dark .sl-body {
   position: relative;
   background: var(--card-color);
   border-radius: 24px 24px 0 0;
-  padding: 20px 20px calc(env(safe-area-inset-bottom,0px) + 24px);
+  padding: 20px 20px calc(0px + 24px);
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
   max-height: 85vh;
@@ -20099,7 +20099,7 @@ label.study-color-swatch.custom-color-dot {
   background: var(--card-color);
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0px;
 }
 
 /* Study tab bar — fixed at bottom, in root stacking context, always above Rhema modal */
@@ -20112,12 +20112,12 @@ label.study-color-swatch.custom-color-dot {
 
 /* Push sandbox pane content up so nothing hides behind the fixed tab bar */
 body.sandbox-open .ss-pane {
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(56px + 0px) !important;
 }
 
 /* Shrink the Rhema modal to stop above the study tab bar — all children adapt automatically */
 body.sandbox-open #rhemaModal {
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(56px + 0px);
 }
 
 /* Extra bottom padding so long verses can scroll clear of the floating prev/next arrows.
@@ -20170,7 +20170,7 @@ body.sandbox-open .rhema-english-display {
 
 .ss-compose {
   display: flex; gap: 8px; align-items: flex-end;
-  padding: 10px 16px calc(env(safe-area-inset-bottom,0px) + 12px);
+  padding: 10px 16px calc(0px + 12px);
   border-top: 1px solid var(--border-color);
   background: var(--card-color); flex-shrink: 0;
 }
@@ -20394,7 +20394,7 @@ body.sandbox-open .rhema-english-display {
   transition: transform 0.28s cubic-bezier(0.32, 0, 0.67, 0), visibility 0s linear 0.28s;
   max-height: 78svh;
   display: flex; flex-direction: column; overflow: hidden;
-  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(56px + 0px);
 }
 .ss-wd-sheet.open {
   transform: translateY(0);
@@ -20640,7 +20640,7 @@ body.sandbox-open .rhema-english-display {
 }
 .swm-textarea:focus { border-color: var(--accent-color, #4f8cff); }
 .swm-footer {
-  padding: 12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);
+  padding: 12px 16px calc(0px + 12px);
   flex-shrink: 0;
 }
 .swm-save-btn {
@@ -20826,7 +20826,7 @@ body.sandbox-open .rhema-english-display {
 .hs-info-btn .material-symbols-outlined { font-size: 1rem; }
 
 .wl-results {
-  flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0 calc(env(safe-area-inset-bottom,0px) + 18px);
+  flex: 1; min-height: 0; overflow-y: auto; padding: 4px 0 calc(0px + 18px);
   overscroll-behavior: contain;
   background: var(--primary-color);
 }
@@ -21968,7 +21968,7 @@ body.dark #advVerbsLearnMenu .adv-verb-lesson.active .lesson-block {
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
-  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+  padding: 0 0 calc(0px + 20px) !important;
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
@@ -22142,7 +22142,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 .bottom-nav.mercies-collapsed {
   left: auto !important;
   right: 16px !important;
-  bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(18px + 0px) !important;
   width: 76px !important;
   height: 76px !important;
   padding: 0 !important;
@@ -22470,7 +22470,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
 .bottom-nav.home-collapsed {
   left: 50% !important;
   right: auto !important;
-  bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(8px + 0px) !important;
   width: 104px !important;
   height: 60px !important;
   padding: 0 !important;
@@ -22528,7 +22528,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
 .bottom-nav.habits-collapsed {
   left: 50% !important;
   right: auto !important;
-  bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(18px + 0px) !important;
   width: 112px !important;
   height: 68px !important;
   padding: 0 !important;
@@ -22839,7 +22839,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
     linear-gradient(180deg, color-mix(in srgb, var(--primary-light) 92%, white), color-mix(in srgb, var(--primary-light) 78%, white)) !important;
   min-height: 100dvh !important;
   height: 100dvh !important;
-  padding: max(18px, env(safe-area-inset-top)) 18px calc(140px + env(safe-area-inset-bottom)) !important;
+  padding: max(18px, env(safe-area-inset-top)) 18px calc(140px + 0px) !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -22848,7 +22848,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
   overflow-y: auto !important;
   box-sizing: border-box;
 }
-.mercies-scroll { width: min(100%, 520px); max-width: 520px; margin: 0 auto; display: grid; gap: 18px; padding-bottom: calc(140px + env(safe-area-inset-bottom)); overflow-x: hidden; box-sizing: border-box; }
+.mercies-scroll { width: min(100%, 520px); max-width: 520px; margin: 0 auto; display: grid; gap: 18px; padding-bottom: calc(140px + 0px); overflow-x: hidden; box-sizing: border-box; }
 .mercies-hero {
   display: flex;
   align-items: flex-start;
@@ -23493,7 +23493,7 @@ body.dark .cpc-alert-row small { color: #cbd5e1 !important; }
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
-  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+  padding: 0 0 calc(0px + 20px) !important;
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
@@ -23777,7 +23777,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 .bottom-nav {
   left: 50% !important;
   right: auto !important;
-  bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+  bottom: calc(6px + 0px) !important;
   width: min(calc(100% - 34px), 440px) !important;
   height: 58px;
   align-items: center !important;
@@ -24932,7 +24932,7 @@ body .app:has(#homeScreen.screen.active) #statusBarBg {
   padding:
     calc(env(safe-area-inset-top, 0px) + 18px)
     20px
-    max(12px, env(safe-area-inset-bottom, 0px)) !important;
+    max(12px, 0px) !important;
   background: transparent !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -25011,11 +25011,11 @@ body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-n
 }
 
 body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom: max(12px, 0px) !important;
 }
 
 body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom: max(12px, 0px) !important;
 }
 
 body:has(#homeScreen.screen.active) #homeScreen.screen.active {
@@ -25184,7 +25184,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 #advancedLearnMenu #advLearnDashboard,
 #basicVerbsLearnMenu #verbBasicDashboard,
 #advVerbsLearnMenu #verbAdvDashboard {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  padding-bottom: calc(0px + 24px);
 }
 
 #newLearnMenu .learn-path-grid,
@@ -25555,7 +25555,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
-  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+  padding: 0 0 calc(0px + 20px) !important;
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
@@ -27044,7 +27044,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 }
 
 #settingsScreen .sett-scroll {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 56px) !important;
+  padding-bottom: calc(0px + 56px) !important;
 }
 
 /* ── Verse Structure Modal ────────────────────────────────────────────────────*/
@@ -27204,7 +27204,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 .vs-verse-nav {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 16px;
-  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  padding-bottom: max(10px, 0px);
   background: var(--primary-color);
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
@@ -27365,7 +27365,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   border-radius: 24px 24px 0 0;
   border-top: 1.5px solid var(--border-color);
   overflow-y: auto;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0px;
   -webkit-overflow-scrolling: touch;
 }
 .vs-range-hdr {
@@ -27508,7 +27508,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   flex: 1; overflow: auto; position: relative;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0px;
   background: var(--primary-color);
 }
 .vs-struct-canvas {
@@ -27601,7 +27601,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   width: 100%; max-width: 480px;
   background: var(--card-color);
   border-radius: 20px 20px 0 0;
-  padding: 20px 20px calc(32px + env(safe-area-inset-bottom, 0px));
+  padding: 20px 20px calc(32px + 0px);
   transform: translateY(30px);
   transition: transform 0.22s cubic-bezier(0.32,0.72,0,1);
 }
@@ -27683,7 +27683,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   width: 100%; max-width: 480px;
   background: var(--card-color);
   border-radius: 20px 20px 0 0;
-  padding: 0 0 calc(40px + env(safe-area-inset-bottom, 0px));
+  padding: 0 0 calc(40px + 0px);
   max-height: 78vh;
   display: flex; flex-direction: column;
   transform: translateY(30px);
@@ -27820,7 +27820,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   width: 100%; max-width: 480px;
   background: var(--card-color);
   border-radius: 20px 20px 0 0;
-  padding: 0 0 calc(20px + env(safe-area-inset-bottom, 0px));
+  padding: 0 0 calc(20px + 0px);
   max-height: 78vh;
   display: flex; flex-direction: column;
   transform: translateY(30px);
@@ -28149,7 +28149,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 42px);
+  padding: 16px 16px calc(0px + 42px);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -28652,7 +28652,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   border-bottom: 1px solid var(--border-color, rgba(0,0,0,0.08));
 }
 .cal-picker-body {
-  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(16px + 0px);
   height: calc(100% - 55px);
   box-sizing: border-box;
 }
@@ -28880,7 +28880,7 @@ body.memorization-active #statusBarBg {
   overscroll-behavior-y: contain;
   background: var(--memorization-page-color, var(--primary-light));
 }
-.mem-hub-scroll { padding: 14px max(16px, env(safe-area-inset-left, 0px)) max(4px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+.mem-hub-scroll { padding: 14px max(16px, env(safe-area-inset-left, 0px)) max(4px, 0px) max(16px, env(safe-area-inset-right, 0px)); }
 .mem-topbar {
   flex: 0 0 auto;
   z-index: 6;
@@ -28993,7 +28993,7 @@ body.memorization-active #statusBarBg {
 /* The last band must not paint a stray divider line near the bottom of the screen. */
 .mem-workshop-scroll > section:last-child {
   border-bottom: 0;
-  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(8px, 0px);
 }
 .mem-workshop-scroll {
   /* The last section handles safe-area clearance, so the scroll container
@@ -29851,7 +29851,7 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   align-items: flex-end;
   justify-content: center;
   background: rgba(15,23,42,0.72) !important;
-  padding: 0 max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-right, 0px));
+  padding: 0 max(10px, env(safe-area-inset-left, 0px)) max(10px, 0px) max(10px, env(safe-area-inset-right, 0px));
   box-sizing: border-box;
   opacity: 1;
 }
@@ -29889,7 +29889,7 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   max-height: calc(min(82vh, 720px) - 88px);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 14px 14px calc(18px + env(safe-area-inset-bottom, 0px));
+  padding: 14px 14px calc(18px + 0px);
   box-sizing: border-box;
   display: grid;
   gap: 11px;
@@ -30205,7 +30205,7 @@ body.reading-plan-active #studyTabBar { display: none !important; }
 
 .rp-scroll {
   flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
-  padding: 4px 16px calc(env(safe-area-inset-bottom, 0px) + 36px);
+  padding: 4px 16px calc(0px + 36px);
   -webkit-overflow-scrolling: touch;
 }
 .rp-view.hidden { display: none; }
@@ -30383,7 +30383,7 @@ body.reading-plan-active #studyTabBar { display: none !important; }
   display: flex; flex-direction: column;
   background: var(--card-solid-color, #fff);
   border-radius: 22px 22px 0 0;
-  padding: 14px 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  padding: 14px 16px calc(0px + 14px);
   box-shadow: 0 -16px 40px rgba(0,0,0,0.28);
   animation: rp-sheet-up 0.22s ease;
 }
