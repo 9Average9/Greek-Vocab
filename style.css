@@ -18177,7 +18177,7 @@ body.dark .theme-wheel-tile {
   position: fixed;
   left: 50%;
   right: auto;
-  bottom: calc(12px + 0px);
+  bottom: calc(27px + 0px);
   z-index: 900;
   display: flex;
   align-items: stretch;
@@ -23777,7 +23777,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 .bottom-nav {
   left: 50% !important;
   right: auto !important;
-  bottom: calc(6px + 0px) !important;
+  bottom: calc(21px + 0px) !important;
   width: min(calc(100% - 34px), 440px) !important;
   height: 58px;
   align-items: center !important;

@@ -10206,8 +10206,8 @@ function setMerciesNavCollapsed(collapsed) {
 function setHomeNavCollapsed(collapsed) {
   const nav = document.getElementById('bottomNav');
   if (!nav) return;
-  const isHome = document.getElementById('homeScreen')?.classList.contains('active');
-  nav.classList.toggle('home-collapsed', !!collapsed && isHome);
+  // The Home nav should always stay open and never collapse.
+  nav.classList.remove('home-collapsed');
 }
 
 function expandMerciesNavTemporarily() {
@@ -22096,6 +22096,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.250 &mdash; Nav bar tweaks</div>
+<ul>
+  <li><strong>Nav sits a little higher</strong> &mdash; The floating nav bar is raised about 15px off the bottom edge.</li>
+  <li><strong>Home nav stays open</strong> &mdash; On the Home screen the nav no longer collapses into a pill; it always stays fully open.</li>
+</ul>
 <div class="un-version-label">v3.0.249 &mdash; Cache refresh</div>
 <ul>
   <li><strong>Latest assets</strong> &mdash; Bumped the cache version so every device pulls the newest styles and scripts, including the edge-to-edge bottom fix.</li>
