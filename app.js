@@ -22096,6 +22096,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.246 &mdash; Truly floating Home nav</div>
+<ul>
+  <li><strong>No more bottom panel</strong> &mdash; Removed the faded strip at the bottom of Home that sat behind the nav and dimmed the lower buttons as you scrolled. The nav pill now truly floats over the page.</li>
+</ul>
 <div class="un-version-label">v3.0.245 &mdash; Full-bleed Home</div>
 <ul>
   <li><strong>Home fills the screen</strong> &mdash; The Home scroll no longer reserves extra space at the bottom for the floating nav, so the page scrolls edge-to-edge with the nav simply floating on top.</li>
