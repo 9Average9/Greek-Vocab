@@ -22096,6 +22096,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.248 &mdash; No more bottom safe-area strip</div>
+<ul>
+  <li><strong>Edge-to-edge bottom</strong> &mdash; Removed the reserved Safari home-indicator (safe-area) strip from the bottom of every page. Since this runs as an installed PWA, that space is no longer held back, so content reaches the bottom edge throughout the app.</li>
+</ul>
 <div class="un-version-label">v3.0.247 &mdash; Fixed the bottom gap on Home</div>
 <ul>
   <li><strong>No more bar behind the nav</strong> &mdash; Home, Profile, Community, Mercies, and Habits now track the browser's real visible height, so the pale gap that flashed in behind the floating nav while scrolling (as Safari's toolbar collapsed) is gone.</li>
