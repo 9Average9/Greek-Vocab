@@ -19439,15 +19439,15 @@ body.dark .sl-body {
   padding: 0;
   border: 0;
   border-radius: 0;
-  background: url("assets/icons/studies-bookshelf.png?v=3.0.238") center / 100% 100% no-repeat;
+  background: url("assets/icons/studies-bookshelf.png?v=3.0.238") center / 108% 104% no-repeat;
   box-shadow: none;
   isolation: isolate; /* contain the theme tint to the shelf image */
   /* shelf geometry as fractions of the image */
-  --sl-inset: 10%;
-  --sl-rowA-top: 30%;
-  --sl-rowA-h: 21%;   /* book bottoms land on the ~51% board */
-  --sl-rowB-top: 51%;
-  --sl-rowB-h: 21%;   /* book bottoms land on the ~72% board */
+  --sl-inset: 8%;
+  --sl-rowA-top: 31%;
+  --sl-rowA-h: 18.5%;   /* book bottoms land on the middle shelf board */
+  --sl-rowB-top: 52%;
+  --sl-rowB-h: 18.5%;   /* book bottoms land on the lower shelf board */
 }
 .sl-bookcase::before,
 .sl-bookcase::after { content: none !important; display: none !important; }
@@ -19475,8 +19475,8 @@ body.dark .sl-body {
   display: flex;
   align-items: flex-end;       /* books rest on the shelf board */
   justify-content: flex-start;
-  gap: 5px;
-  padding: 0 2px;
+  gap: 6px;
+  padding: 0 4px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
@@ -19487,13 +19487,13 @@ body.dark .sl-body {
 .sl-img-shelf .hs-book {
   flex: 0 0 auto;
   width: auto;
-  height: 96%;
+  height: 94%;
   aspect-ratio: 0.6 / 1;
   min-width: 0;
   margin: 0;
 }
 .sl-img-shelf .hs-book:nth-child(3n),
-.sl-img-shelf .hs-book:nth-child(3n+2) { height: 96%; }
+.sl-img-shelf .hs-book:nth-child(3n+2) { height: 94%; }
 .sl-img-shelf .hs-book-icon { font-size: 0.95rem; }
 .sl-img-shelf .hs-book-title { font-size: 0.48rem; padding: 2px 1px; -webkit-line-clamp: 3; }
 .sl-img-shelf .hs-book-foot { display: none; }
@@ -19503,7 +19503,7 @@ body.dark .sl-body {
 @media (max-width: 700px) {
   .sl-header {
     gap: 10px;
-    padding: calc(env(safe-area-inset-top, 0px) + 9px) 12px 8px;
+    padding: calc(env(safe-area-inset-top, 0px) + 7px) 10px 6px;
   }
   .sl-back-btn {
     width: 32px;
@@ -19516,21 +19516,21 @@ body.dark .sl-body {
     font-size: 0.68rem;
   }
   .sl-bookcase {
-    background-size: 100% 100%;
-    --sl-inset: 7%;
-    --sl-rowA-top: 28%;
-    --sl-rowA-h: 23%;
-    --sl-rowB-top: 50%;
-    --sl-rowB-h: 23%;
+    background-size: 114% 106%;
+    --sl-inset: 6.5%;
+    --sl-rowA-top: 30.5%;
+    --sl-rowA-h: 19%;
+    --sl-rowB-top: 51.8%;
+    --sl-rowB-h: 19%;
   }
   .sl-img-shelf {
-    gap: 6px;
-    padding: 0 4px;
+    gap: 7px;
+    padding: 0 5px;
   }
   .sl-img-shelf .hs-book,
   .sl-img-shelf .hs-book:nth-child(3n),
   .sl-img-shelf .hs-book:nth-child(3n+2) {
-    height: 99%;
+    height: 95%;
   }
   .sl-img-shelf .hs-add-book {
     height: 90%;
@@ -19623,13 +19623,20 @@ body.dark .sl-body {
   transition: transform 0.52s cubic-bezier(0.6, 0, 0.85, 0.4);
 }
 .book-page {
-  position: absolute; inset: 0;
-  border-radius: 3px 9px 9px 3px;
+  position: absolute;
+  inset: 2px 2px 2px 5px;
+  border-radius: 8px 10px 12px 8px;
   background:
-    linear-gradient(90deg, rgba(0,0,0,0.12), transparent 16%),
+    linear-gradient(90deg, color-mix(in srgb, var(--study-color, #4f8cff) 10%, rgba(0,0,0,0.10)), transparent 16%),
     repeating-linear-gradient(180deg, transparent 0 14px, rgba(120,100,60,0.10) 14px 15px),
     #fbf6ea;
   box-shadow: inset 0 0 16px rgba(0,0,0,0.08);
+  opacity: 0;
+  transition: opacity 0.18s ease 0.18s;
+}
+.book-fly.open .book-page,
+.book-open-overlay.dive .book-page {
+  opacity: 1;
 }
 .book-cover {
   position: absolute; inset: 0;
@@ -19686,8 +19693,11 @@ body.dark .sl-body {
 .book-fly.open .book-cover-title { opacity: 0; }
 .book-cover-back {
   transform: rotateY(180deg);
-  border-radius: 9px 3px 3px 9px;
-  background: linear-gradient(90deg, #f4eddd, #ece3cf);
+  inset: 1px 0 1px 1px;
+  border-radius: 8px 10px 12px 8px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--study-color, #4f8cff) 10%, #e9dfcd), #f4eddd);
+  box-shadow: inset 8px 0 12px rgba(0,0,0,0.08);
 }
 .hs-delete-btn {
   position: absolute; top: -7px; right: -7px; z-index: 10;
