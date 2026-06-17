@@ -24935,7 +24935,7 @@ body .app:has(#homeScreen.screen.active) #statusBarBg,
   padding:
     calc(env(safe-area-inset-top, 0px) + 18px)
     20px
-    calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+    max(12px, env(safe-area-inset-bottom, 0px)) !important;
   background: transparent !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -25014,11 +25014,11 @@ body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-n
 }
 
 body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
 }
 
 body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
 }
 
 body:has(#homeScreen.screen.active) #homeScreen.screen.active {
