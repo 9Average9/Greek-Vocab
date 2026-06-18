@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.254";
+const CACHE_NAME = "disciple-builder-v3.0.255";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -112,10 +112,10 @@ const FILES_TO_CACHE = [
   "./assets/home-backgrounds/waves-thumb.jpg",
   "./manifest.json",
   "./PWAicon.png",
-  "./assets/icons/disciple-builder-icon-180.png",
-  "./assets/icons/disciple-builder-icon-192.png",
-  "./assets/icons/disciple-builder-icon-512.png",
-  "./assets/icons/disciple-builder-icon-1024.png",
+  "./assets/icons/disciple-builder-icon-180.png?v=3.0.255",
+  "./assets/icons/disciple-builder-icon-192.png?v=3.0.255",
+  "./assets/icons/disciple-builder-icon-512.png?v=3.0.255",
+  "./assets/icons/disciple-builder-icon-1024.png?v=3.0.255",
   "./assetsbranddisciple-builder-launch.png"
 ];
 
