@@ -23941,7 +23941,7 @@ async function submitForgotPassword() {
   btn.textContent = "Sending…";
   try {
     await window.Auth.sendPasswordReset(email);
-    okEl.textContent = "If an account is connected to that email, a reset link is on its way. Check your inbox.";
+    okEl.textContent = "If an account is connected to that email, a reset link is on its way. Check your inbox — and your spam/junk folder if you don't see it shortly.";
     okEl.style.display = "block";
   } catch (e) {
     errEl.textContent = e.message || "Could not send a reset link. Please try again.";
@@ -24192,7 +24192,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 function closeSettingsMenu() {
-  showNavPage('home');
+  // Settings is opened from the profile screen, so back should return there.
+  showNavPage('profile');
 }
 function openNewsFromProfile() {
   const modal = document.getElementById("updateModal");
