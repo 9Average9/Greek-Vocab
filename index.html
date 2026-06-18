@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.253" rel="stylesheet"/>
+<link href="style.css?v=3.0.256" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -350,10 +350,31 @@ antique: {
 <p>Disciple Builder is designed for portrait mode. Turn your device upright to continue.</p>
 </div>
 <div class="app-launch-screen" id="appLaunchScreen" aria-live="polite" aria-label="Loading Disciple Builder">
-<img class="app-launch-art" src="assetsbranddisciple-builder-launch.png" alt="Disciple Builder"/>
+<div class="app-launch-emblem" aria-hidden="true">
+<svg viewBox="0 0 240 240" width="100%" height="100%">
+<defs>
+<linearGradient id="dbCrossGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#33496b"/><stop offset="100%" stop-color="#0a1a2e"/></linearGradient>
+<linearGradient id="dbRingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#213c5b"/><stop offset="100%" stop-color="#0a1a2e"/></linearGradient>
+<linearGradient id="dbBookGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4a9a6e"/><stop offset="100%" stop-color="#2a6044"/></linearGradient>
+<filter id="dbSoft" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="3" stdDeviation="3.4" flood-color="#0a1a2e" flood-opacity="0.30"/></filter>
+</defs>
+<circle cx="120" cy="98" r="64" fill="none" stroke="#0a1a2e" stroke-opacity="0.11" stroke-width="12"/>
+<g filter="url(#dbSoft)">
+<rect x="110.5" y="46" width="19" height="118" rx="4.5" fill="url(#dbCrossGrad)"/>
+<rect x="86" y="76" width="68" height="19" rx="4.5" fill="url(#dbCrossGrad)"/>
+</g>
+<g filter="url(#dbSoft)">
+<path d="M120,170 C98,160 70,158 47,168 L55,187 C77,177 100,179 120,188 Z" fill="url(#dbBookGrad)"/>
+<path d="M120,170 C142,160 170,158 193,168 L185,187 C163,177 140,179 120,188 Z" fill="url(#dbBookGrad)"/>
+<path d="M120,188 C100,179 77,177 55,187 L55,191 C77,181 100,183 120,192 Z" fill="#21503a" opacity="0.6"/>
+<path d="M120,188 C140,179 163,177 185,187 L185,191 C163,181 140,183 120,192 Z" fill="#21503a" opacity="0.6"/>
+<path d="M120,170 L120,191" stroke="#1c4734" stroke-width="2.2" opacity="0.65"/>
+</g>
+<circle id="appLaunchRing" cx="120" cy="98" r="64" fill="none" stroke="url(#dbRingGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="402.12" stroke-dashoffset="402.12" transform="rotate(-90 120 98)"/>
+</svg>
+</div>
 <div class="app-launch-status">
 <span id="appLaunchText">Preparing your discipleship tools</span>
-<span class="app-launch-progress" aria-hidden="true"><span></span></span>
 </div>
 </div>
 <main class="app">
@@ -16782,7 +16803,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.254"></script>
+<script src="app.js?v=3.0.256"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
