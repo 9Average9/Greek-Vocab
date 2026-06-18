@@ -22053,6 +22053,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.263 &mdash; Rhema English study (phase 1)</div>
+<ul>
+  <li><strong>OT translation switch hidden</strong> &mdash; MSB and BSB share the same Old Testament text, so the version switch now only appears in the New Testament.</li>
+</ul>
 <div class="un-version-label">v3.0.262 &mdash; Lessons page fixes</div>
 <ul>
   <li><strong>Back button</strong> &mdash; The lessons header no longer shows the home and back icons at the same time.</li>
@@ -29336,6 +29340,9 @@ function _syncRhemaChapterUi() {
   const versionBtn = document.getElementById('rhemaEnglishVersionBtn');
   const versionLabel = document.getElementById('rhemaEnglishVersionLabel');
   if (versionBtn) {
+    // MSB and BSB share the exact same Old Testament text, so the switch is
+    // only meaningful in the New Testament — hide it for OT books.
+    versionBtn.style.display = isRhemaOTBook(_rhemaBook) ? 'none' : '';
     versionBtn.classList.toggle('active', _rhemaEnglishVersion() === 'BSB');
     versionBtn.title = `English translation: ${_rhemaEnglishLabel()}. Tap to switch to ${_rhemaEnglishVersion() === 'BSB' ? 'MSB' : 'BSB'}.`;
   }
