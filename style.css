@@ -25089,8 +25089,9 @@ body:has(#homeScreen.screen.active) #homeScreen.screen.active {
   border-radius: 0 !important;
   box-shadow: none !important;
   overflow: hidden !important;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--primary-light) 82%, white), var(--primary-color)) !important;
+  /* Solid light fill — the old gradient ended in the dark primary colour,
+     which showed as a bar along the bottom of the lessons page. */
+  background: color-mix(in srgb, var(--primary-light) 82%, white) !important;
 }
 
 #newLearnMenu .nav-bar,
@@ -25116,7 +25117,8 @@ body:has(#homeScreen.screen.active) #homeScreen.screen.active {
 #advVerbsLearnMenu .learn-content {
   height: calc(100dvh - 62px - env(safe-area-inset-top, 0px)) !important;
   margin-top: 0 !important;
-  padding: 16px 18px max(24px, env(safe-area-inset-bottom, 0px)) !important;
+  /* Standalone PWA — no browser chrome, so no safe-area padding needed at the bottom. */
+  padding: 16px 18px 20px !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
