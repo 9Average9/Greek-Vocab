@@ -26965,7 +26965,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   display: flex !important;
   flex-direction: column !important;
   height: 100vh !important;
-  height: 100svh !important;
+  height: 100dvh !important;
   overflow: hidden !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -26996,7 +26996,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   display: flex !important;
   flex-direction: column !important;
   height: 100vh !important;
-  height: 100svh !important;
+  height: 100dvh !important;
   overflow: hidden !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -27019,7 +27019,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   display: flex !important;
   flex-direction: column !important;
   height: 100vh !important;
-  height: 100svh !important;
+  height: 100dvh !important;
   overflow: hidden !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -27049,7 +27049,9 @@ body .app:has(#advVerbsLearnMenu.screen.active) {
   padding: 0 !important;
   overflow: hidden;
   height: 100vh;
-  height: 100svh;
+  /* dvh tracks the actually-visible viewport, so the lesson page fills to the
+     very bottom with no white strip below it. */
+  height: 100dvh;
   /* Override the base .app min-height:100vh so the container can't grow taller
      than the screen, which was leaving a page-coloured bar at the bottom. */
   min-height: 0 !important;
@@ -27064,20 +27066,21 @@ body:has(#advVerbsLearnMenu.screen.active) #statusBarBg {
 }
 
 /* Lesson menu back button: home icon on the selector, back arrow inside a lesson.
-   Driven purely by whether a lesson section is active in that menu. */
-.learn-back-arrow { display: none; }
-.learn-back-home { display: inline-flex; }
+   Driven purely by whether a lesson section is active in that menu.
+   !important so the generic .material-symbols-outlined rules can't reveal both. */
+.learn-back-btn .learn-back-arrow { display: none !important; }
+.learn-back-btn .learn-back-home { display: inline-flex !important; }
 #newLearnMenu:has(.learn-lesson.active) .learn-back-home,
 #advancedLearnMenu:has(.adv-learn-lesson.active) .learn-back-home,
 #basicVerbsLearnMenu:has(.basic-verb-lesson.active) .learn-back-home,
 #advVerbsLearnMenu:has(.adv-verb-lesson.active) .learn-back-home {
-  display: none;
+  display: none !important;
 }
 #newLearnMenu:has(.learn-lesson.active) .learn-back-arrow,
 #advancedLearnMenu:has(.adv-learn-lesson.active) .learn-back-arrow,
 #basicVerbsLearnMenu:has(.basic-verb-lesson.active) .learn-back-arrow,
 #advVerbsLearnMenu:has(.adv-verb-lesson.active) .learn-back-arrow {
-  display: inline-flex;
+  display: inline-flex !important;
 }
 
 body .app:has(#settingsScreen.screen.active) .app-header,
@@ -27094,7 +27097,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 #basicVerbsLearnMenu.screen.active,
 #advVerbsLearnMenu.screen.active {
   max-height: 100vh !important;
-  max-height: 100svh !important;
+  max-height: 100dvh !important;
 }
 
 #settingsScreen .home-backdrop-card {
