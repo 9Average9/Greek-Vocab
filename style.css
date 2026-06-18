@@ -27061,6 +27061,23 @@ body:has(#advVerbsLearnMenu.screen.active) #statusBarBg {
   display: none !important;
 }
 
+/* Lesson menu back button: home icon on the selector, back arrow inside a lesson.
+   Driven purely by whether a lesson section is active in that menu. */
+.learn-back-arrow { display: none; }
+.learn-back-home { display: inline-flex; }
+#newLearnMenu:has(.learn-lesson.active) .learn-back-home,
+#advancedLearnMenu:has(.adv-learn-lesson.active) .learn-back-home,
+#basicVerbsLearnMenu:has(.basic-verb-lesson.active) .learn-back-home,
+#advVerbsLearnMenu:has(.adv-verb-lesson.active) .learn-back-home {
+  display: none;
+}
+#newLearnMenu:has(.learn-lesson.active) .learn-back-arrow,
+#advancedLearnMenu:has(.adv-learn-lesson.active) .learn-back-arrow,
+#basicVerbsLearnMenu:has(.basic-verb-lesson.active) .learn-back-arrow,
+#advVerbsLearnMenu:has(.adv-verb-lesson.active) .learn-back-arrow {
+  display: inline-flex;
+}
+
 body .app:has(#settingsScreen.screen.active) .app-header,
 body .app:has(#newLearnMenu.screen.active) .app-header,
 body .app:has(#advancedLearnMenu.screen.active) .app-header,
