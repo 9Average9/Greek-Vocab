@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.252" rel="stylesheet"/>
+<link href="style.css?v=3.0.253" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -9242,6 +9242,16 @@ Verb Endings
 <!-- ACCOUNT -->
 <div class="sett-section-label">Account</div>
 <div class="sett-card">
+<button class="sett-row" id="connectEmailSettingsRow" onclick="openConnectEmailModal()">
+<span class="sett-row-icon-wrap">
+<span class="material-symbols-outlined">mail_lock</span>
+</span>
+<span class="sett-row-text">
+<span class="sett-row-name">Email &amp; Account Recovery</span>
+<span class="sett-row-sub" id="connectEmailSettingsSub">Connect an email to recover your account</span>
+</span>
+<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
+</button>
 <button class="sett-row sett-row-danger" id="profileResetBtn" onclick="resetAllAppData()">
 <span class="sett-row-icon-wrap sett-icon-danger">
 <span class="material-symbols-outlined">person_off</span>
@@ -10073,8 +10083,8 @@ Verb Endings
 </div>
 <div class="auth-form" id="authLoginForm" style="display:none">
 <div class="auth-field">
-<label class="auth-label">Username</label>
-<input autocomplete="username" class="auth-input" id="authLoginUsername" placeholder="Your username" type="text"/>
+<label class="auth-label">Username or email</label>
+<input autocomplete="username" class="auth-input" id="authLoginUsername" placeholder="Your username or email" type="text"/>
 </div>
 <div class="auth-field">
 <label class="auth-label">Password</label>
@@ -10082,7 +10092,52 @@ Verb Endings
 </div>
 <p class="auth-error" id="authLoginError"></p>
 <button class="auth-submit-btn" onclick="submitLogin()">Sign In</button>
+<button class="auth-link-btn" onclick="openForgotPasswordModal()" type="button" style="width:100%;margin-top:10px;background:none;border:none;color:var(--muted-color);font-size:13px;cursor:pointer;text-decoration:underline">Forgot password?</button>
 </div>
+</div>
+</div>
+<!-- Connect Email / Account Recovery -->
+<div class="modal-overlay" id="connectEmailModal" onclick="closeConnectEmailModal(event)">
+<div class="auth-card" onclick="event.stopPropagation()" style="max-width:380px">
+<div id="connectEmailIntro">
+<div class="auth-logo" style="margin-bottom:8px">
+<span class="material-symbols-outlined auth-logo-icon">mail_lock</span>
+<h3 style="margin:8px 0 4px">Connect your email</h3>
+</div>
+<p style="margin:0 0 14px;color:var(--muted-color);font-size:14px;line-height:1.5">Your account was set up without an email. Connecting one secures your account and lets you <strong>reset your password</strong> if you ever forget it. Without a connected email, a forgotten password <strong>can't be recovered</strong>.</p>
+<div class="auth-field">
+<label class="auth-label">Email address</label>
+<input autocomplete="email" class="auth-input" id="connectEmailInput" placeholder="you@example.com" type="email"/>
+</div>
+<div class="auth-field">
+<label class="auth-label">Current password <span class="auth-label-hint">to confirm it's you</span></label>
+<input autocomplete="current-password" class="auth-input" id="connectEmailPassword" placeholder="Your password" type="password"/>
+</div>
+<p class="auth-error" id="connectEmailError"></p>
+<button class="auth-submit-btn" onclick="submitConnectEmail()">Connect Email</button>
+<button class="sett-row" onclick="dismissConnectEmailPrompt()" style="width:100%;margin-top:8px;justify-content:center;border:none;color:var(--muted-color)">Maybe later</button>
+</div>
+<div id="connectEmailSuccess" style="display:none;text-align:center">
+<span class="material-symbols-outlined" style="font-size:48px;color:#43a047">mark_email_read</span>
+<h3 style="margin:8px 0 4px">Check your inbox</h3>
+<p style="margin:0 0 14px;color:var(--muted-color);font-size:14px;line-height:1.5">We sent a verification link to <strong id="connectEmailSentAddr"></strong>. Click it to finish connecting your email.<br><br><strong>Important:</strong> after you confirm, sign in using your <strong>email</strong> (not your username) from now on.</p>
+<button class="auth-submit-btn" onclick="closeConnectEmailModal()">Done</button>
+</div>
+</div>
+</div>
+<!-- Forgot Password -->
+<div class="modal-overlay" id="forgotPasswordModal" onclick="closeForgotPasswordModal(event)">
+<div class="auth-card" onclick="event.stopPropagation()" style="max-width:360px">
+<h3 style="margin:0 0 8px">Reset your password</h3>
+<p style="margin:0 0 14px;color:var(--muted-color);font-size:14px;line-height:1.5">Enter the email address connected to your account and we'll send you a reset link.<br><br>If you never connected an email, your password can't be reset here — contact the developer for help.</p>
+<div class="auth-field">
+<label class="auth-label">Email address</label>
+<input autocomplete="email" class="auth-input" id="forgotPasswordEmail" placeholder="you@example.com" type="email"/>
+</div>
+<p class="auth-error" id="forgotPasswordError"></p>
+<p id="forgotPasswordSuccess" style="display:none;color:#43a047;font-size:14px;margin:0 0 8px;line-height:1.5"></p>
+<button class="auth-submit-btn" onclick="submitForgotPassword()">Send Reset Link</button>
+<button class="sett-row" onclick="closeForgotPasswordModal()" style="width:100%;margin-top:8px;justify-content:center;border:none;color:var(--muted-color)">Cancel</button>
 </div>
 </div>
 <!-- Delete Account Confirmation -->
@@ -16727,12 +16782,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.252"></script>
+<script src="app.js?v=3.0.253"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.233" type="module"></script>
+<script src="firebase-lb.js?v=3.0.253" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
