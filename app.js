@@ -22053,6 +22053,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.261 &mdash; Lessons page bottom fix</div>
+<ul>
+  <li><strong>No more bottom bar</strong> &mdash; Removed the dark strip along the bottom of the lessons page; it now fills the screen with a clean, even background.</li>
+</ul>
 <div class="un-version-label">v3.0.260 &mdash; Consistent lesson navigation</div>
 <ul>
   <li><strong>Home button on every track</strong> &mdash; All four lesson selectors (Basic, Advanced, and both Verb tracks) now show a home icon, switching to a back arrow once you're inside a lesson.</li>
