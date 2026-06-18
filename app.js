@@ -22053,6 +22053,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.258 &mdash; Home tools tidy-up</div>
+<ul>
+  <li><strong>Home tools back in place</strong> &mdash; The Tools row sits where it should again, and the tile shadows are now very subtle.</li>
+</ul>
 <div class="un-version-label">v3.0.257 &mdash; Fresh look</div>
 <ul>
   <li><strong>New app icon</strong> &mdash; A cleaner, modern emblem with a subtle 3D look.</li>
