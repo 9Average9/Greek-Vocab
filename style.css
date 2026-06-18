@@ -7732,6 +7732,12 @@ body.dark .xp-bar {
   opacity: 0.85;
 }
 
+/* When there's no title change, don't reserve space — keeps the toast
+   content vertically centered in the banner instead of sitting high. */
+.xp-title-change:empty {
+  display: none;
+}
+
 .xp-modal-bar {
   height: 9px;
   border-radius: 999px;
@@ -27042,6 +27048,17 @@ body .app:has(#advVerbsLearnMenu.screen.active) {
   overflow: hidden;
   height: 100vh;
   height: 100svh;
+  /* Override the base .app min-height:100vh so the container can't grow taller
+     than the screen, which was leaving a page-coloured bar at the bottom. */
+  min-height: 0 !important;
+}
+
+/* Let the lesson header reach the very top — drop the dark status-bar strip. */
+body:has(#newLearnMenu.screen.active) #statusBarBg,
+body:has(#advancedLearnMenu.screen.active) #statusBarBg,
+body:has(#basicVerbsLearnMenu.screen.active) #statusBarBg,
+body:has(#advVerbsLearnMenu.screen.active) #statusBarBg {
+  display: none !important;
 }
 
 body .app:has(#settingsScreen.screen.active) .app-header,
