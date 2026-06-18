@@ -114,10 +114,19 @@ body {
   aspect-ratio: 1 / 1;
 }
 
-.app-launch-emblem svg {
-  display: block;
+/* The progress ring sits behind the icon artwork so the open Bible overlaps
+   the ring's lower edge, exactly like the app icon. */
+.app-launch-emblem .app-launch-ring-svg,
+.app-launch-emblem .app-launch-emblem-art {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  display: block;
+}
+
+.app-launch-emblem-art {
+  object-fit: contain;
 }
 
 .app-launch-status {

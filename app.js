@@ -22096,7 +22096,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.256 &mdash; Fresh look</div>
+<div class="un-version-label">v3.0.257 &mdash; Fresh look</div>
 <ul>
   <li><strong>New app icon</strong> &mdash; A cleaner, modern emblem with a subtle 3D look.</li>
   <li><strong>New loading screen</strong> &mdash; The emblem's circle now fills as the app loads, completing the moment you're ready.</li>
