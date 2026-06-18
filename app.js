@@ -22053,6 +22053,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.262 &mdash; Lessons page fixes</div>
+<ul>
+  <li><strong>Back button</strong> &mdash; The lessons header no longer shows the home and back icons at the same time.</li>
+  <li><strong>Bottom of the page</strong> &mdash; Removed the white strip at the bottom; lessons now fill all the way to the bottom edge when you scroll.</li>
+</ul>
 <div class="un-version-label">v3.0.261 &mdash; Lessons page bottom fix</div>
 <ul>
   <li><strong>No more bottom bar</strong> &mdash; Removed the dark strip along the bottom of the lessons page; it now fills the screen with a clean, even background.</li>
