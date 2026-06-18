@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.256" rel="stylesheet"/>
+<link href="style.css?v=3.0.257" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -350,10 +350,19 @@ antique: {
 <p>Disciple Builder is designed for portrait mode. Turn your device upright to continue.</p>
 </div>
 <div class="app-launch-screen" id="appLaunchScreen" aria-live="polite" aria-label="Loading Disciple Builder">
-<img class="app-launch-art" src="assetsbranddisciple-builder-launch.png" alt="Disciple Builder"/>
+<div class="app-launch-emblem" aria-hidden="true">
+<svg class="app-launch-ring-svg" viewBox="0 0 600 600">
+<defs>
+<linearGradient id="dbRingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#28456a"/><stop offset="100%" stop-color="#0a1a2e"/></linearGradient>
+<filter id="dbRingShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0a1a2e" flood-opacity="0.30"/></filter>
+</defs>
+<circle cx="300.5" cy="286.7" r="164.5" fill="none" stroke="#0a1a2e" stroke-opacity="0.10" stroke-width="17.3"/>
+<circle id="appLaunchRing" cx="300.5" cy="286.7" r="164.5" fill="none" stroke="url(#dbRingGrad)" stroke-width="17.3" stroke-linecap="round" stroke-dasharray="1033.6" stroke-dashoffset="1033.6" transform="rotate(-90 300.5 286.7)" filter="url(#dbRingShadow)"/>
+</svg>
+<img class="app-launch-emblem-art" src="assets/icons/disciple-builder-splash.png?v=3.0.257" alt=""/>
+</div>
 <div class="app-launch-status">
 <span id="appLaunchText">Preparing your discipleship tools</span>
-<span class="app-launch-progress" aria-hidden="true"><span></span></span>
 </div>
 </div>
 <main class="app">
@@ -16782,7 +16791,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.256"></script>
+<script src="app.js?v=3.0.257"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>

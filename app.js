@@ -22053,6 +22053,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.257 &mdash; Fresh look</div>
+<ul>
+  <li><strong>New app icon</strong> &mdash; A cleaner, modern emblem with a subtle 3D look.</li>
+  <li><strong>New loading screen</strong> &mdash; The emblem's circle now fills as the app loads, completing the moment you're ready.</li>
+  <li><strong>Home screen name</strong> &mdash; Installing now shows the full name "Disciple Builder".</li>
+</ul>
 <div class="un-version-label">v3.0.256 &mdash; UI Theme Polish</div>
 <ul>
   <li><strong>Themed XP banner</strong> &mdash; XP gains now use the selected app theme instead of the old fixed cream/gold styling.</li>
@@ -23133,6 +23139,57 @@ const UPDATE_NOTES_HTML = `
 
 let deferredInstallPrompt = null;
 
+// ── Launch progress ring ──────────────────────────────────────────────────
+// The emblem's circle doubles as the loading indicator: it draws from the top
+// clockwise as the app loads, then completes the full circle once ready.
+let _launchRingC = 402.12;   // ring circumference (matches r=64 in the splash SVG)
+let _launchProg = 0;         // eased displayed progress 0..1
+let _launchTarget = 0;       // value the ring eases toward
+let _launchRAF = null;
+let _launchFinishing = false;
+
+function _setLaunchRing(p) {
+  const ring = document.getElementById('appLaunchRing');
+  if (ring) ring.setAttribute('stroke-dashoffset',
+    (_launchRingC * (1 - Math.max(0, Math.min(1, p)))).toFixed(2));
+}
+
+function _launchTick() {
+  _launchProg += (_launchTarget - _launchProg) * 0.05;
+  if (_launchTarget - _launchProg < 0.001) _launchProg = _launchTarget;
+  _setLaunchRing(_launchProg);
+  if (_launchFinishing && _launchProg >= _launchTarget) { _launchRAF = null; return; }
+  _launchRAF = requestAnimationFrame(_launchTick);
+}
+
+function initLaunchRing() {
+  const ring = document.getElementById('appLaunchRing');
+  if (!ring) return;
+  const r = ring.r?.baseVal?.value || 64;
+  _launchRingC = 2 * Math.PI * r;
+  ring.setAttribute('stroke-dasharray', _launchRingC.toFixed(2));
+  _launchProg = 0; _launchFinishing = false;
+  _setLaunchRing(0);
+  // Creep toward ~90% while loading so it never looks stalled; jump to 100% on ready.
+  _launchTarget = 0.9;
+  if (!_launchRAF) _launchRAF = requestAnimationFrame(_launchTick);
+}
+
+function completeLaunchRing(done) {
+  _launchFinishing = true;
+  _launchTarget = 1;
+  if (!_launchRAF) _launchRAF = requestAnimationFrame(_launchTick);
+  let called = false;
+  const finish = () => { if (called) return; called = true; _setLaunchRing(1); done && done(); };
+  const start = Date.now();
+  const check = () => {
+    if (_launchProg >= 0.985 || Date.now() - start > 480) finish();
+    else requestAnimationFrame(check);
+  };
+  requestAnimationFrame(check);
+  setTimeout(finish, 650); // hard fallback if rAF is throttled (e.g. backgrounded tab)
+}
+
 function setAppLaunchText(text) {
   const el = document.getElementById('appLaunchText');
   if (el && text) el.textContent = text;
@@ -23144,6 +23201,7 @@ function showAppLaunchScreen(text = 'Preparing your discipleship tools') {
   if (_appLaunchReleased) return;
   setAppLaunchText(text);
   splash.classList.remove('dismissed', 'hidden');
+  initLaunchRing();
 }
 
 function hideAppLaunchScreen(reason = 'ready') {
@@ -23155,8 +23213,11 @@ function hideAppLaunchScreen(reason = 'ready') {
   const wait = Math.max(0, minVisible - (Date.now() - _appLaunchStartedAt));
   setTimeout(() => {
     _appLaunchReleased = true;
-    splash.classList.add('dismissed');
-    setTimeout(() => splash.classList.add('hidden'), 380);
+    // Finish the ring all the way around, then dismiss.
+    completeLaunchRing(() => {
+      splash.classList.add('dismissed');
+      setTimeout(() => splash.classList.add('hidden'), 380);
+    });
   }, wait);
 }
 
@@ -24076,6 +24137,7 @@ if (window.__pendingAuthResolved) {
 document.addEventListener("DOMContentLoaded", () => {
   _appLaunchStartedAt = Date.now();
   setAppLaunchText('Preparing your discipleship tools');
+  initLaunchRing();
   setTimeout(() => hideAppLaunchScreen('timeout'), 2800);
   registerServiceWorker();
   initFCMForeground();
