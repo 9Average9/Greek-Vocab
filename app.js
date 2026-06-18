@@ -17675,6 +17675,10 @@ function showLearnLesson(lesson) {
   lessonSection.classList.add("active");
   currentLearnLesson = lesson;
 
+  // Inside a lesson, "back" returns to the selector — show a back arrow.
+  const backIcon = document.getElementById("learnBackIcon");
+  if (backIcon) backIcon.textContent = "arrow_back";
+
   updateLessonTopBar(lesson);
   _updateAppHeaderForScreen("newLearnMenu");
 
@@ -17880,6 +17884,9 @@ function showLearnDashboard() {
     action.title = "About this track";
     action.onclick = showBasicTrackInfoModal;
   }
+  // On the lessons selector itself, "back" goes home — show a home icon.
+  const backIcon = document.getElementById("learnBackIcon");
+  if (backIcon) backIcon.textContent = "home";
   _updateAppHeaderForScreen("newLearnMenu");
 }
 function handleLearnBack() {
@@ -22053,6 +22060,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.259 &mdash; Full-screen lessons</div>
+<ul>
+  <li><strong>Lessons fill the screen</strong> &mdash; The lessons page now runs edge to edge: the header reaches the top and the lessons extend to the bottom, with no framing bars cutting them off.</li>
+  <li><strong>Home button on the lessons menu</strong> &mdash; The lessons selector now shows a home icon (it takes you home); a back arrow appears once you're inside a lesson.</li>
+  <li><strong>Centered XP banner</strong> &mdash; The XP popup content now sits centered in its card.</li>
+</ul>
 <div class="un-version-label">v3.0.258 &mdash; Home tools tidy-up</div>
 <ul>
   <li><strong>Home tools back in place</strong> &mdash; The Tools row sits where it should again, and the tile shadows are now very subtle.</li>
