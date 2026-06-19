@@ -14049,6 +14049,20 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 }
 .rhema-wheel-item .material-symbols-outlined { font-size: 22px; }
 .rwi-label { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; opacity: 0.8; line-height: 1.05; }
+#wheelItemHighlightsNotes {
+  gap: 2px;
+  text-align: center;
+}
+#wheelItemHighlightsNotes .material-symbols-outlined {
+  font-size: 20px;
+  line-height: 1;
+}
+#wheelItemHighlightsNotes .rwi-label {
+  max-width: 58px;
+  font-size: 0.48rem;
+  line-height: 0.98;
+  letter-spacing: 0.01em;
+}
 .rhema-wheel-item.active {
   background: var(--secondary-color);
   border-color: var(--secondary-color);
