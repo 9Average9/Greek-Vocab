@@ -368,6 +368,31 @@ async function deleteRhemaMark(uid, ref) {
   await deleteDoc(doc(db, "users", uid, "rhemaMarks", _rhemaMarkId(ref)));
 }
 
+// Saved verse comparisons ("trails"): users/{uid}/rhemaTrails/{trailId}.
+function listenRhemaTrails(uid, callback) {
+  return onSnapshot(
+    query(collection(db, "users", uid, "rhemaTrails"), orderBy("createdAt", "desc")),
+    snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+    err => console.warn("listenRhemaTrails:", err)
+  );
+}
+
+async function saveRhemaTrail(uid, trail) {
+  if (!uid) return null;
+  const id = trail.id || _rhemaMarkId(`${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+  await setDoc(
+    doc(db, "users", uid, "rhemaTrails", id),
+    { ...trail, id, createdAt: trail.createdAt || Date.now(), updatedAt: serverTimestamp() },
+    { merge: true }
+  );
+  return id;
+}
+
+async function deleteRhemaTrail(uid, id) {
+  if (!uid || !id) return;
+  await deleteDoc(doc(db, "users", uid, "rhemaTrails", id));
+}
+
 async function syncUserData(uid, data) {
   try {
     await setDoc(doc(db, "users", uid), { ...data, updatedAt: serverTimestamp() }, { merge: true });
@@ -2299,6 +2324,9 @@ window.Auth = {
   listenRhemaMarks,
   saveRhemaMark,
   deleteRhemaMark,
+  listenRhemaTrails,
+  saveRhemaTrail,
+  deleteRhemaTrail,
   uploadAvatarPhoto
 };
 

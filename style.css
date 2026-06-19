@@ -30722,3 +30722,104 @@ body.dark .rp-book-sep { background: #1f2937; }
 .rhema-note-save { background: var(--secondary-color, #243447); color: #fff; }
 .rhema-note-cancel { background: rgba(120, 120, 120, 0.14); color: var(--font-color, #20303f); }
 .rhema-note-delete { background: #e5534b; color: #fff; margin-right: auto; }
+
+/* ── Phase 4: English-first chrome — hide Greek-only tools, frame "go deeper" ── */
+#rhemaModal.rhema-english-mode #wheelItemSyntax,
+#rhemaModal.rhema-english-mode #wheelItemGreek,
+#rhemaModal.rhema-english-mode #wheelItemCritical,
+#rhemaModal.rhema-english-mode #wheelItemLxx,
+#rhemaModal.rhema-english-mode #wheelItemWordlib { display: none !important; }
+#rhemaModal.rhema-english-mode .rhema-swap-deeper::after { content: " \2728"; }
+
+/* ── Phase 3: Compare → Trails ─────────────────────────────────────────────── */
+.rhema-compare-chip {
+  position: absolute;
+  right: 16px;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  z-index: 55;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--secondary-color, #243447);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  box-shadow: 0 8px 20px rgba(8, 18, 28, 0.28);
+  cursor: pointer;
+}
+.rhema-compare-chip.hidden { display: none; }
+.rhema-compare-chip-count {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.8rem;
+}
+.rhema-compare-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 75;
+  background: rgba(8, 18, 28, 0.42);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.rhema-compare-overlay.open { display: flex; }
+.rhema-compare-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: 86%;
+  margin: 0 14px;
+  display: flex;
+  flex-direction: column;
+  background: var(--card-color, #fffdf7);
+  color: var(--font-color, #20303f);
+  border-radius: 18px;
+  box-shadow: 0 18px 44px rgba(8, 18, 28, 0.3);
+  overflow: hidden;
+}
+.rhema-compare-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(120, 120, 120, 0.18);
+}
+.rhema-compare-title { font-weight: 800; font-size: 1.05rem; }
+.rhema-compare-x { border: none; background: transparent; cursor: pointer; color: var(--font-color, #20303f); }
+.rhema-compare-list { padding: 12px 16px; overflow-y: auto; flex: 1; min-height: 0; }
+.rhema-compare-empty { color: var(--muted-color, #8a8a8a); font-size: 0.9rem; line-height: 1.5; padding: 18px 4px; text-align: center; }
+.rhema-compare-item {
+  border: 1px solid rgba(120, 120, 120, 0.2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: rgba(120, 120, 120, 0.04);
+}
+.rhema-compare-item-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.rhema-compare-ref { font-weight: 800; font-size: 0.9rem; color: var(--secondary-color, #243447); }
+.rhema-compare-ctrls { display: inline-flex; gap: 2px; }
+.rhema-compare-ctrls button {
+  border: none; background: transparent; cursor: pointer;
+  color: var(--muted-color, #8a8a8a); padding: 4px; border-radius: 6px;
+  display: inline-flex; align-items: center;
+}
+.rhema-compare-ctrls button:disabled { opacity: 0.3; cursor: default; }
+.rhema-compare-ctrls .material-symbols-outlined { font-size: 20px; }
+.rhema-compare-text { font-size: 0.92rem; line-height: 1.5; }
+.rhema-compare-saved { padding: 0 16px; }
+.rhema-compare-saved-row { display: flex; align-items: center; gap: 6px; margin: 6px 0; }
+.rhema-compare-saved-open {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  border: 1px solid rgba(120, 120, 120, 0.2); background: transparent;
+  border-radius: 10px; padding: 9px 11px; cursor: pointer;
+  color: var(--font-color, #20303f); font-weight: 600; font-size: 0.9rem; text-align: left;
+}
+.rhema-compare-saved-open small { color: var(--muted-color, #8a8a8a); font-weight: 600; }
+.rhema-compare-saved-del { border: none; background: transparent; cursor: pointer; color: var(--muted-color, #8a8a8a); padding: 6px; }
+.rhema-compare-actions { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(120, 120, 120, 0.18); }
+.rhema-compare-clear { flex: 0 0 auto; padding: 11px 16px; border: none; border-radius: 10px; background: rgba(120, 120, 120, 0.14); color: var(--font-color, #20303f); font-weight: 700; cursor: pointer; }
+.rhema-compare-save { flex: 1; padding: 11px 16px; border: none; border-radius: 10px; background: var(--secondary-color, #243447); color: #fff; font-weight: 700; cursor: pointer; }
+.rhema-compare-save:disabled { opacity: 0.45; cursor: default; }

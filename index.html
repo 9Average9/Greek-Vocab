@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.264" rel="stylesheet"/>
+<link href="style.css?v=3.0.265" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -10540,11 +10540,36 @@ Verb Endings
 <span class="material-symbols-outlined">edit_note</span>
 <span id="rhemaVerseSheetNoteLabel">Add note</span>
 </button>
+<button class="rhema-vsheet-action" onclick="rhemaAddToCompareFromMenu()">
+<span class="material-symbols-outlined">library_add</span>
+<span>Compare</span>
+</button>
 <button class="rhema-vsheet-action" onclick="rhemaFocusVerseFromMenu()">
 <span class="material-symbols-outlined">center_focus_strong</span>
 <span>Focus this verse</span>
 </button>
 <button class="rhema-vsheet-cancel" onclick="closeRhemaVerseSheet()">Close</button>
+</div>
+</div>
+<!-- Compare floating chip -->
+<button class="rhema-compare-chip hidden" id="rhemaCompareChip" onclick="rhemaOpenCompare()">
+<span class="material-symbols-outlined">format_list_bulleted</span>
+<span>Compare</span>
+<span class="rhema-compare-chip-count" id="rhemaCompareChipCount">0</span>
+</button>
+<!-- Compare overlay -->
+<div class="rhema-compare-overlay" id="rhemaCompareOverlay" onclick="closeRhemaCompare(event)">
+<div class="rhema-compare-card" onclick="event.stopPropagation()">
+<div class="rhema-compare-hd">
+<span class="rhema-compare-title">Compare verses</span>
+<button class="rhema-compare-x" onclick="closeRhemaCompare()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="rhema-compare-list" id="rhemaCompareList"></div>
+<div class="rhema-compare-saved" id="rhemaCompareSaved"></div>
+<div class="rhema-compare-actions">
+<button class="rhema-compare-clear" onclick="rhemaCompareClear()">Clear</button>
+<button class="rhema-compare-save" id="rhemaCompareSaveBtn" onclick="rhemaSaveCompareTrail()">Save to Trails</button>
+</div>
 </div>
 </div>
 <!-- Verse note editor / viewer -->
@@ -16828,12 +16853,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.264"></script>
+<script src="app.js?v=3.0.265"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.264" type="module"></script>
+<script src="firebase-lb.js?v=3.0.265" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
