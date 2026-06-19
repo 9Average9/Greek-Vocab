@@ -9720,7 +9720,7 @@ function _updateSandboxRhemaPreview() {
   if (posText) {
     posText.textContent = pos
       ? `${_rhemaBookName(pos.book)} ${pos.chapter}:${pos.verse}`
-      : 'Not started yet';
+      : 'Open the English reader to begin';
   }
 }
 
@@ -22074,7 +22074,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.272";
+const APP_VERSION = "3.0.273";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22095,6 +22095,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.273 &mdash; Rhema polish and cleaner saved context</div>
+<ul>
+  <li><strong>Rhema UI fixes</strong> &mdash; Compare drafts now stay isolated between main Rhema and each study, Focus this verse returns cleanly to full chapter, and the English verse sheet has more bottom room.</li>
+  <li><strong>Highlights &amp; Notes</strong> &mdash; The Rhema wand now has a Highlights/Notes list sorted from Genesis to Revelation inside the current reader or study.</li>
+  <li><strong>More Bible Context</strong> &mdash; Added more Bible-world words, names, places, objects, feasts, and phrase catchers for English word lookup.</li>
+</ul>
 <div class="un-version-label">v3.0.272 &mdash; Bible idiom and old-English catchers</div>
 <ul>
   <li><strong>More Bible-world help</strong> &mdash; Added context notes for covenant/legal terms, social roles, family/inheritance language, older English words, symbolic body-part idioms, and ancient peoples.</li>
@@ -28987,6 +28993,17 @@ function _rhemaCurMarks() {
   const s = _rhemaMarkScope();
   return (_rhemaScopedMarks[s] = _rhemaScopedMarks[s] || {});
 }
+function _rhemaBookSortIndex(book) {
+  const order = (typeof RHEMA_BOOKS !== 'undefined' ? RHEMA_BOOKS : [])
+    .map(b => b.code || b);
+  const idx = order.indexOf(book);
+  return idx >= 0 ? idx : 999;
+}
+function _rhemaRefSortValue(ref) {
+  const p = _rhemaParseRef(ref);
+  if (!p) return 999999999;
+  return (_rhemaBookSortIndex(p.book) * 1000000) + (Number(p.chapter) * 1000) + Number(p.verse);
+}
 function _rhemaLoadLocalMarks() {
   try {
     const raw = JSON.parse(localStorage.getItem('rhemaMarks') || '{}') || {};
@@ -29110,7 +29127,9 @@ function rhemaFocusVerseFromMenu() {
 }
 function rhemaBackToFullChapter() {
   _rhemaFullChapter = true;
-  _rhemaVerseFocus = true;
+  _rhemaVerseFocus = false;
+  _rhemaHighlightStrongs = null;
+  _rhemaMarkActiveVerse(null);
   renderRhemaVerse();
 }
 
@@ -29184,9 +29203,12 @@ function rhemaDeleteNote() {
 // Collect verses (in any order) into a comparison, reorder them, and save the
 // list as a named Trail. Trails persist to localStorage + Firestore.
 let _rhemaCompare = [];        // ordered array of { ref, version }
+let _rhemaCompareScopes = {};
+let _rhemaCompareScopeKey = null;
 let _rhemaTrails = [];         // saved comparisons [{id,title,items,createdAt}]
 let _rhemaTrailsUnsub = null;
 let _rhemaCompareAdding = false;
+let _rhemaCompareOpenedFromMenu = false;
 let _rhemaSuppressVerseTap = false;
 let _rhemaCompareTab = 'current';
 let _rhemaWordPickMode = 'lookup';
@@ -29855,14 +29877,238 @@ Object.assign(RHEMA_ENGLISH_BIBLE_PHRASES, {
   'fear of the lord': 'wisdom',
   'oracle breastpiece': 'oraclebreastpiece'
 });
+Object.assign(RHEMA_ENGLISH_BIBLE_DICT, {
+  chiefpriest: 'A leading priestly official connected with temple leadership. In the Gospels/Acts, chief priests often appear in Jerusalem leadership scenes.',
+  highpriest: 'The chief priestly office, especially associated with the Day of Atonement and temple leadership.',
+  governor: 'A political ruler or administrator. In NT Roman settings, governors like Pilate or Felix represent imperial authority.',
+  tetrarch: 'A regional ruler, literally ruler of a fourth. Herod Antipas is called tetrarch in the Gospels.',
+  proconsul: 'A Roman provincial governor, especially in senatorial provinces.',
+  asiarch: 'A civic/religious official in Roman Asia mentioned in Acts. Exact duties varied, but they were prominent regional figures.',
+  townclerk: 'A city official or secretary; in Acts 19 the town clerk quiets the crowd in Ephesus.',
+  jailer: 'Keeper of a prison. In Acts 16 the Philippian jailer is part of a major conversion narrative.',
+  synagogueofficial: 'Leader or official connected with synagogue order and worship.',
+  rulerofsynagogue: 'A synagogue leader responsible for aspects of synagogue order, reading, or administration.',
+  cupbearer: 'Royal official who served wine to a king. The role could imply close trust and access to the king.',
+  armorbearer: 'Attendant who carried a warrior or king\'s weapons/armor.',
+  commander: 'Military leader. Context determines rank and army structure.',
+  captain: 'Military or guard leader. In temple/NT contexts, captain can refer to leadership over guards.',
+  centurion: 'A Roman military officer, commonly over about one hundred soldiers.',
+  cohort: 'A Roman military unit. Size varied, but often around several hundred soldiers.',
+  praetorian: 'Related to the Roman governor\'s guard or imperial guard depending on context.',
+  synagogue: 'A local Jewish gathering place for Scripture reading, teaching, prayer, and community life.',
+  portico: 'A covered porch or colonnade. Solomon\'s Portico was a known area in the temple complex.',
+  colonnade: 'A row of columns supporting a roof; some translations use it for temple/public spaces.',
+  pavement: 'A stone-paved place. In John 19, the Pavement/Gabbatha is associated with Pilate\'s judgment scene.',
+  gabbatha: 'Aramaic/Hebrew name associated with the Pavement in John 19, where Pilate sits in judgment.',
+  lithostrotos: 'Greek term meaning stone pavement, connected with John 19.',
+  aceldama: 'Means field of blood, associated with Judas traditions in Acts 1.',
+  pottersfield: 'Field associated with burial of strangers in Matthew 27; linked with Judas money traditions.',
+  purim: 'Jewish feast connected with Esther, celebrating deliverance from Haman\'s plot.',
+  dedication: 'In John 10, Feast of Dedication refers to Hanukkah, remembering temple rededication.',
+  hanukkah: 'Feast of Dedication, remembering the rededication of the temple in the Maccabean period.',
+  newmoon: 'Beginning of a lunar month; in OT worship calendars it could involve special observance or offerings.',
+  roshchodesh: 'Hebrew phrase for new moon/month beginning.',
+  shewbread: 'Older English for the bread of the Presence placed before the Lord in the tabernacle/temple.',
+  showbread: 'Bread of the Presence; sacred bread set before the Lord in tabernacle/temple worship.',
+  frankincense: 'Fragrant resin used in offerings and gifts. Appears in temple/offering contexts and in the gifts to Jesus.',
+  myrrh: 'Fragrant resin used for perfume, burial, and gifts. Appears in Jesus\' birth and burial narratives.',
+  aloes: 'Aromatic substance used in burial/perfume contexts, not the same as modern aloe vera usage in every case.',
+  hyssop: 'Plant used in purification/sprinkling rituals; exact botanical identification is debated.',
+  gall: 'Bitter substance. In passion narratives it can refer to a bitter drink offered to Jesus.',
+  wormwood: 'Bitter plant/substance; often symbolic of bitterness or judgment.',
+  bitterherbs: 'Herbs eaten with Passover meal, recalling the bitterness of slavery in Egypt.',
+  lentils: 'Legumes; famously connected with Esau selling his birthright for stew.',
+  parchedgrain: 'Roasted grain used as food in ancient settings.',
+  cakes: 'Small baked items; context decides whether ordinary food, offering, or travel provision.',
+  unleavenedcakes: 'Flat bread/cakes without leaven, often connected with offerings or Passover/haste contexts.',
+  wineskin: 'Animal-skin container for wine. New/old wineskins become imagery in Jesus\' teaching.',
+  millstone: 'Heavy stone used for grinding grain. Jesus uses millstone imagery in warning sayings.',
+  handmill: 'Small grinding mill operated by hand, part of everyday food preparation.',
+  plow: 'Farm tool for breaking soil. Biblical imagery can use plowing for work, readiness, or judgment.',
+  sickle: 'Harvesting tool. In prophetic/apocalyptic imagery it can signal harvest or judgment.',
+  pruninghook: 'Tool for pruning vines; appears in peace imagery with swords beaten into plowshares.',
+  plowshare: 'Metal blade of a plow; appears in prophetic peace/judgment imagery.',
+  mattock: 'Digging/chopping agricultural tool.',
+  winnowingfork: 'Tool used to toss grain so wind separates wheat from chaff. John the Baptist uses this as judgment imagery.',
+  fan: 'Older English for winnowing fork or winnowing tool, not an electric fan.',
+  granary: 'Storehouse for grain.',
+  storehouse: 'Storage place for food, goods, or temple tithes depending on context.',
+  barn: 'Storage building for grain or goods; in parables it can symbolize security or harvest.',
+  cistern: 'A pit or reservoir for collecting water, sometimes dry and used as a holding place.',
+  well: 'A water source. Wells often become meeting places and important narrative settings.',
+  spring: 'A source of flowing water; often literal and sometimes life/provision imagery.',
+  fountain: 'A flowing water source; can be literal or symbolic of life/cleansing.',
+  livingwater: 'Flowing/fresh water; in John 4 and 7 it carries spiritual imagery.',
+  bronze: 'Metal alloy often translated bronze or copper. Used in weapons, temple items, and imagery.',
+  brass: 'Older English often used where modern translations say bronze or copper.',
+  iron: 'Strong metal used for tools, weapons, bondage imagery, or strength.',
+  flint: 'Hard stone used for sharp edges or imagery of hardness/determination.',
+  sapphire: 'Precious blue stone; ancient gem identifications are sometimes uncertain.',
+  onyx: 'Precious stone used in priestly/tabernacle contexts; exact ancient identification can vary.',
+  bdellium: 'A substance mentioned in Genesis/Numbers; likely aromatic resin or precious material, exact identification debated.',
+  jasper: 'Precious stone used in Revelation imagery; ancient gem color/identity may differ from modern jasper.',
+  sardius: 'Precious reddish stone, often translated carnelian or sardius.',
+  chalcedony: 'Precious stone in Revelation 21; ancient identification may not match modern mineral categories exactly.',
+  emerald: 'Precious green stone; appears in priestly and Revelation imagery.',
+  sardonyx: 'Layered precious stone in Revelation 21.',
+  chrysolite: 'Precious stone in Revelation 21; ancient identification debated.',
+  beryl: 'Precious stone in priestly/Revelation lists.',
+  topaz: 'Precious stone; ancient topaz may not be identical with modern topaz.',
+  chrysoprase: 'Precious greenish stone in Revelation 21.',
+  jacinth: 'Precious stone, likely blue/purple/red-orange depending on ancient usage.',
+  amethyst: 'Purple precious stone in priestly/Revelation lists.',
+  tunic: 'Basic garment worn next to the body.',
+  cloak: 'Outer garment; could also serve as covering/blanket.',
+  mantle: 'Outer cloak or robe, sometimes associated with prophetic succession, as with Elijah/Elisha.',
+  robe: 'Long garment; context may signal honor, office, wealth, mockery, or worship.',
+  linen: 'Cloth made from flax; used for ordinary garments and priestly/temple contexts.',
+  sackcloth: 'Coarse cloth worn as a sign of mourning, grief, repentance, or humiliation.',
+  phylactery: 'Small Scripture-containing box worn by some Jews in prayer; Jesus mentions phylacteries in critique of showy piety.',
+  tassel: 'Fringe on garments commanded in the Law as a reminder of God\'s commands.',
+  fringe: 'Garment edge/tassel. In the Gospels people touch the fringe of Jesus\' garment.',
+  signetring: 'Ring used to seal documents, symbolizing authority or ownership.',
+  turban: 'Head covering; in priestly contexts it can be part of official garments.',
+  mitre: 'Older English for priestly turban/headpiece.',
+  diadem: 'Royal headband/crown, often symbolizing authority.',
+  crown: 'Can mean royal crown, victory wreath, honor, or authority depending on context.',
+  wreath: 'Victory/award crown in athletic imagery.',
+  purple: 'Color associated with royalty, wealth, or mockery of kingship depending on context.',
+  scarlet: 'Red color/dye/fabric. Can appear in luxury, temple, sin imagery, or mocking royal clothing.',
+  nomad: 'A mobile herder/traveler lifestyle; useful background for patriarchal stories.',
+  tent: 'Portable dwelling. In biblical imagery it can also refer to temporary life or body.',
+  booth: 'Temporary shelter. Connected especially with Feast of Booths/Tabernacles.',
+  inn: 'Lodging place. In Luke 2 the word may mean guest room/lodging space depending on translation.',
+  guestroom: 'A room or lodging space for guests; relevant to Luke 2 and Last Supper settings.',
+  upperroom: 'A room upstairs, often used for meals/gatherings in NT narratives.',
+  housetop: 'Flat roof area used for work, rest, prayer, or public visibility in ancient houses.',
+  parapet: 'Low protective wall around a flat roof, required in Deuteronomy for safety.',
+  lamp: 'Oil lamp used for light; often appears in watchfulness, witness, or guidance imagery.',
+  bushel: 'Older English measure/container used in sayings about hiding a lamp; modern translations often say basket.',
+  basket: 'Container; in Gospel miracle accounts baskets of leftovers use different Greek terms in different stories.',
+  alabaster: 'Stone/jar material associated with expensive ointment/perfume in Gospel anointing scenes.',
+  ointment: 'Perfumed oil or salve; often used for anointing, hospitality, healing, or burial preparation.',
+  alabasterjar: 'A jar made of alabaster, often associated with costly ointment/perfume in Gospel scenes.',
+  legiondemons: 'In Mark 5/Luke 8, Legion is the name given by demons, signaling a great number and echoing military language.',
+  tables: 'Can mean tables for meals or money-changing tables depending on context.',
+  moneychanger: 'Person exchanging currency, especially in temple contexts where specific coinage may be needed.',
+  templetax: 'Tax associated with temple support. In Matthew 17 it becomes part of a teaching moment with Peter.',
+  didrachma: 'Two-drachma coin; associated with the temple tax in Matthew 17.',
+  tribute: 'Payment to a ruler or empire. In NT questions about tribute often involve Rome, politics, and loyalty.',
+  caesar: 'Title/name for Roman emperor. In the NT, Caesar represents imperial authority.',
+  herod: 'Name used by several rulers in the Herodian dynasty. Context decides which Herod is meant.',
+  pilate: 'Pontius Pilate, Roman governor involved in Jesus\' trial and crucifixion.',
+  felix: 'Roman governor in Acts before whom Paul appears.',
+  festus: 'Roman governor in Acts who hears Paul\'s case after Felix.',
+  agrippa: 'Herodian ruler in Acts who hears Paul\'s defense.',
+  bernice: 'Sister/companion of Agrippa II in Acts 25.',
+  gamaliel: 'Respected Pharisee/teacher in Acts 5; Paul later says he studied under Gamaliel.',
+  nicodemus: 'Pharisee and ruler of the Jews in John who speaks with Jesus at night.',
+  caiaphas: 'High priest involved in Jesus\' trial.',
+  annas: 'Former high priest and influential priestly figure in Jesus\' trial narratives.',
+  barabbas: 'Prisoner released instead of Jesus; name may mean son of the father.',
+  simon: 'Common Jewish name. Several Simons appear in the NT, so context matters.',
+  mary: 'Common female name in the NT. Several Marys appear, so context matters.',
+  martha: 'Sister of Mary and Lazarus in Luke/John narratives.',
+  lazarus: 'Name of the man raised in John 11 and also a character in Jesus\' Luke 16 story; not necessarily the same person.',
+  judas: 'Common name related to Judah. Multiple men named Judas/Jude appear; context matters.',
+  jude: 'Short form/name related to Judas/Judah; identifies the author of Jude traditionally.',
+  james: 'English form related to Jacob. Several Jameses appear in the NT.',
+  john: 'Name meaning Yahweh is gracious. Multiple Johns appear, especially John the Baptist and John the apostle.',
+  andrew: 'One of the Twelve, brother of Peter.',
+  philip: 'Name of an apostle and also an evangelist in Acts; context decides.',
+  nathanael: 'Disciple in John, often associated with Bartholomew by tradition.',
+  bartholomew: 'One of the Twelve; name means son of Tolmai.',
+  matthew: 'Name meaning gift of Yahweh; one of the Twelve and traditionally associated with the Gospel of Matthew.',
+  levi: 'Tribal/name connection with Levi; in the Gospels Levi is also the tax collector called by Jesus.',
+  mark: 'John Mark, associated with Acts and traditionally with the Gospel of Mark.',
+  luke: 'Companion of Paul and traditionally associated with Luke-Acts.',
+  timothy: 'Paul\'s coworker; name means honoring God.',
+  titus: 'Paul\'s coworker and recipient of the letter to Titus.',
+  silas: 'Paul\'s coworker in Acts, also called Silvanus.',
+  apollos: 'Eloquent Alexandrian teacher in Acts and Corinthians.',
+  priscilla: 'Coworker with Paul, often mentioned with Aquila.',
+  aquila: 'Coworker with Paul, often mentioned with Priscilla.',
+  phoebe: 'Servant/deacon-like figure commended by Paul in Romans 16.',
+  lydia: 'Seller of purple goods in Acts 16 and early believer in Philippi.',
+  sapphira: 'Wife of Ananias in Acts 5.',
+  ananias: 'Several men in Acts have this name; context matters.',
+  sapphiraananias: 'Ananias and Sapphira are associated with a warning narrative in Acts 5.',
+  matthias: 'Chosen to replace Judas among the Twelve in Acts 1.'
+});
+Object.assign(RHEMA_ENGLISH_BIBLE_ALIASES, {
+  chiefpriests: 'chiefpriest', highpriests: 'highpriest', governors: 'governor',
+  tetrarchs: 'tetrarch', proconsuls: 'proconsul', asiarchs: 'asiarch',
+  townclerks: 'townclerk', jailers: 'jailer', commanders: 'commander',
+  captains: 'captain', cohorts: 'cohort', porticoes: 'portico', colonnades: 'colonnade',
+  pavements: 'pavement', pottersfield: 'pottersfield', newmoons: 'newmoon',
+  shewbread: 'shewbread', showbread: 'showbread', aloes: 'aloes', bitterherb: 'bitterherbs',
+  lentil: 'lentils', wineskins: 'wineskin', millstones: 'millstone',
+  handmills: 'handmill', plows: 'plow', plough: 'plow', ploughs: 'plow',
+  sickles: 'sickle', pruninghooks: 'pruninghook', plowshares: 'plowshare',
+  mattocks: 'mattock', fans: 'fan', granaries: 'granary', barns: 'barn',
+  wells: 'well', springs: 'spring', fountains: 'fountain', brass: 'brass',
+  tunics: 'tunic', cloaks: 'cloak', mantles: 'mantle', robes: 'robe',
+  linens: 'linen', phylacteries: 'phylactery', tassels: 'tassel', fringes: 'fringe',
+  signetrings: 'signetring', turbans: 'turban', mitres: 'mitre', diadems: 'diadem',
+  crowns: 'crown', wreaths: 'wreath', tents: 'tent', booths: 'booth',
+  inns: 'inn', guestrooms: 'guestroom', housetops: 'housetop', parapets: 'parapet',
+  lamps: 'lamp', bushels: 'bushel', baskets: 'basket', ointments: 'ointment',
+  moneychangers: 'moneychanger', didrachmas: 'didrachma', caesars: 'caesar'
+});
+Object.assign(RHEMA_ENGLISH_BIBLE_PHRASES, {
+  'chief priest': 'chiefpriest',
+  'chief priests': 'chiefpriest',
+  'high priest': 'highpriest',
+  'high priests': 'highpriest',
+  'ruler of the synagogue': 'rulerofsynagogue',
+  'synagogue official': 'synagogueofficial',
+  'town clerk': 'townclerk',
+  'solomon s portico': 'portico',
+  'solomon\u2019s portico': 'portico',
+  'the pavement': 'pavement',
+  'field of blood': 'aceldama',
+  'potter s field': 'pottersfield',
+  'potter\u2019s field': 'pottersfield',
+  'feast of dedication': 'dedication',
+  'new moon': 'newmoon',
+  'bread of the presence': 'showbread',
+  'show bread': 'showbread',
+  'shew bread': 'shewbread',
+  'bitter herbs': 'bitterherbs',
+  'parched grain': 'parchedgrain',
+  'unleavened cakes': 'unleavenedcakes',
+  'new wineskins': 'wineskin',
+  'old wineskins': 'wineskin',
+  'winnowing fork': 'winnowingfork',
+  'pruning hook': 'pruninghook',
+  'pruning hooks': 'pruninghook',
+  'plow share': 'plowshare',
+  'plow shares': 'plowshare',
+  'living water': 'livingwater',
+  'precious stones': 'sapphire',
+  'signet ring': 'signetring',
+  'alabaster jar': 'alabasterjar',
+  'temple tax': 'templetax',
+  'money changer': 'moneychanger',
+  'money changers': 'moneychanger',
+  'tribute money': 'tribute',
+  'pontius pilate': 'pilate',
+  'john the baptist': 'john',
+  'john mark': 'mark',
+  'judas iscariot': 'judas',
+  'mary magdalene': 'mary',
+  'ananias and sapphira': 'sapphiraananias'
+});
 
 function _rhemaParseRef(ref) {
   const m = String(ref).match(/^(.*) (\d+):(\d+)$/);
   return m ? { book: m[1], chapter: m[2], verse: m[3] } : null;
 }
 function _rhemaAddCompareRef(ref) {
+  _rhemaActivateCompareScope();
   if (!ref || _rhemaCompare.some(c => c.ref === ref)) return;
   _rhemaCompare.push({ ref, version: _rhemaEnglishVersion() });
+  _rhemaCommitCompareScope();
   _rhemaSyncCompareChip();
 }
 function _rhemaLoadLocalTrails() {
@@ -29888,10 +30134,12 @@ function _rhemaStartTrailsSync() {
 
 function rhemaAddToCompareFromMenu() {
   _rhemaAddCompareRef(_rhemaMenuRef);
+  _rhemaCompareOpenedFromMenu = true;
   closeRhemaVerseSheet();
   rhemaOpenCompare();
 }
 function rhemaOpenCompare() {
+  _rhemaActivateCompareScope();
   _rhemaCompareAdding = false;
   _rhemaCompareTab = _rhemaCompare.length ? 'current' : 'saved';
   _rhemaRenderCompare();
@@ -29900,10 +30148,17 @@ function rhemaOpenCompare() {
 function closeRhemaCompare(e) {
   if (e && e.target !== document.getElementById('rhemaCompareOverlay')) return;
   document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
+  if (_rhemaCompareOpenedFromMenu && !_rhemaCompareAdding && _rhemaCompare.length <= 1) {
+    _rhemaCompare = [];
+    _rhemaCommitCompareScope();
+  }
+  _rhemaCompareOpenedFromMenu = false;
+  _rhemaSyncCompareChip();
 }
 // "Add another verse": hop back to the reader; the next verse tapped is added
 // to the comparison and reopens this list automatically.
 function rhemaCompareAddAnother() {
+  _rhemaCompareOpenedFromMenu = false;
   _rhemaCompareAdding = true;
   document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
   if (typeof _showStudyToast === 'function') _showStudyToast('Tap a verse to add it to the comparison');
@@ -29915,15 +30170,18 @@ function rhemaCompareMove(idx, dir) {
   const j = idx + dir;
   if (j < 0 || j >= _rhemaCompare.length) return;
   const tmp = _rhemaCompare[idx]; _rhemaCompare[idx] = _rhemaCompare[j]; _rhemaCompare[j] = tmp;
+  _rhemaCommitCompareScope();
   _rhemaRenderCompare();
 }
 function rhemaCompareRemove(idx) {
   _rhemaCompare.splice(idx, 1);
+  _rhemaCommitCompareScope();
   _rhemaRenderCompare();
   _rhemaSyncCompareChip();
 }
 function rhemaCompareClear() {
   _rhemaCompare = [];
+  _rhemaCommitCompareScope();
   _rhemaRenderCompare();
   _rhemaSyncCompareChip();
 }
@@ -29994,6 +30252,7 @@ function _rhemaRenderCompare() {
   if (saveBtn) saveBtn.disabled = _rhemaCompare.length < 1;
 }
 function rhemaLoadTrail(id) {
+  _rhemaActivateCompareScope();
   const t = _rhemaTrails.find(x => x.id === id);
   if (!t) return;
   // Support both the new {items:[{ref,version}]} and legacy {refs:[ref]} shapes.
@@ -30001,6 +30260,7 @@ function rhemaLoadTrail(id) {
     ? t.items.map(x => ({ ref: x.ref, version: x.version || 'MSB' }))
     : (t.refs || []).map(r => ({ ref: r, version: 'MSB' }));
   _rhemaCompareTab = 'current';
+  _rhemaCommitCompareScope();
   _rhemaRenderCompare();
   _rhemaSyncCompareChip();
 }
@@ -30012,6 +30272,7 @@ async function rhemaDeleteTrail(id) {
   if (uid) window.Auth.deleteRhemaTrail?.(uid, id).catch(() => {});
 }
 async function rhemaSaveCompareTrail() {
+  _rhemaActivateCompareScope();
   if (!_rhemaCompare.length) return;
   const first = _rhemaDisplayRefFromKey(_rhemaCompare[0].ref) || _rhemaCompare[0].ref;
   const title = (prompt('Name this comparison:', `${first} comparison`) || '').trim();
@@ -30046,11 +30307,58 @@ async function rhemaSaveCompareTrail() {
   _rhemaRenderCompare();
 }
 function _rhemaSyncCompareChip() {
+  _rhemaActivateCompareScope();
   const chip = document.getElementById('rhemaCompareChip');
   if (!chip) return;
   chip.classList.toggle('hidden', _rhemaCompare.length === 0);
   const n = document.getElementById('rhemaCompareChipCount');
   if (n) n.textContent = String(_rhemaCompare.length);
+}
+
+function rhemaOpenHighlightsNotes() {
+  const modal = document.getElementById('rhemaHighlightsNotesModal');
+  const list = document.getElementById('rhemaMarksList');
+  const label = document.getElementById('rhemaMarksScopeLabel');
+  if (!modal || !list) return;
+  const marks = Object.entries(_rhemaCurMarks())
+    .filter(([, mark]) => mark && (mark.color || mark.note))
+    .sort((a, b) => _rhemaRefSortValue(a[0]) - _rhemaRefSortValue(b[0]));
+  if (label) label.textContent = _studySandboxId ? 'Saved in this study' : 'Saved in main Rhema';
+  list.innerHTML = marks.length ? marks.map(([ref, mark]) => {
+    const p = _rhemaParseRef(ref);
+    const text = p ? (_rhemaEnglishText(p.book, p.chapter, p.verse) || '') : '';
+    const note = mark.note ? `<p class="rhema-mark-note">${_escapeRhemaAttr(mark.note)}</p>` : '';
+    const color = mark.color || mark.noteColor || 'var(--secondary-color)';
+    return `<button class="rhema-mark-row" onclick="rhemaOpenSavedMark('${_escapeRhemaAttr(ref)}')" style="--mark-color:${_escapeRhemaAttr(color)}">
+      <span class="rhema-mark-dot"></span>
+      <span class="rhema-mark-copy">
+        <strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(ref) || ref)}</strong>
+        ${text ? `<span>${_escapeRhemaAttr(text)}</span>` : ''}
+        ${note}
+      </span>
+      <span class="material-symbols-outlined">chevron_right</span>
+    </button>`;
+  }).join('') : `<div class="rhema-compare-empty">No highlights or notes saved in this reader yet.</div>`;
+  modal.classList.add('open');
+}
+
+function closeRhemaHighlightsNotes(e) {
+  if (e && e.target !== document.getElementById('rhemaHighlightsNotesModal')) return;
+  document.getElementById('rhemaHighlightsNotesModal')?.classList.remove('open');
+}
+
+function rhemaOpenSavedMark(ref) {
+  const p = _rhemaParseRef(ref);
+  if (!p) return;
+  closeRhemaHighlightsNotes();
+  _rhemaBook = p.book;
+  _rhemaChapter = String(p.chapter);
+  _rhemaVerse = String(p.verse);
+  _rhemaFullChapter = true;
+  _rhemaVerseFocus = true;
+  _rhemaHighlightStrongs = null;
+  syncRhemaPicker?.();
+  renderRhemaVerse();
 }
 
 // ── Phase 5: English verse/word into the study (reuse existing study logic) ────
@@ -30065,6 +30373,18 @@ function rhemaStudyCaptureFromMenu() {
 }
 function _rhemaCompareScope() {
   return _studySandboxId ? `study:${_studySandboxId}` : 'main';
+}
+function _rhemaActivateCompareScope(scope = _rhemaCompareScope()) {
+  if (_rhemaCompareScopeKey === scope) return;
+  if (_rhemaCompareScopeKey) _rhemaCompareScopes[_rhemaCompareScopeKey] = _rhemaCompare;
+  _rhemaCompareScopeKey = scope;
+  _rhemaCompare = _rhemaCompareScopes[scope] || [];
+  _rhemaCompareScopes[scope] = _rhemaCompare;
+  _rhemaCompareAdding = false;
+  _rhemaCompareOpenedFromMenu = false;
+}
+function _rhemaCommitCompareScope() {
+  _rhemaCompareScopes[_rhemaCompareScopeKey || _rhemaCompareScope()] = _rhemaCompare;
 }
 function _rhemaSavedComparisonsForScope() {
   const scope = _rhemaCompareScope();
@@ -30692,6 +31012,7 @@ async function showRhema() {
   modal.classList.add('open');
   _rhemaStartMarksSync();
   _rhemaStartTrailsSync();
+  _rhemaActivateCompareScope();
   _rhemaSyncCompareChip();
 
   // Main entry opens as a plain-English chapter reader; the swap control takes
@@ -30740,6 +31061,7 @@ function closeRhema(keepSandbox = false) {
     return;
   }
   _saveRhemaPosition();
+  _rhemaCommitCompareScope();
   if (typeof _closeRhemaXrefShell === 'function') _closeRhemaXrefShell();
   // If opened from a study sandbox, hide Save Verse button and update preview
   if (_studySandboxId) {
@@ -30780,6 +31102,7 @@ function closeRhema(keepSandbox = false) {
     }
     if (!keepSandbox) _studySandboxId = null;
   }
+  _rhemaActivateCompareScope();
   document.getElementById('rhemaModal')?.classList.remove('open');
   closeRhemaSheet();
   closeRhemaReaderNote();
@@ -31017,6 +31340,41 @@ function rhemaSelectVerse(v) {
   renderRhemaVerse();
 }
 
+function _rhemaAdjacentBook(dir) {
+  const books = _rhemaBookOrder();
+  const idx = books.indexOf(_rhemaBook);
+  if (idx < 0) return null;
+  return books[idx + dir] || null;
+}
+
+function _rhemaFirstVerseOfChapter(book, chapter) {
+  const verses = Object.keys((_rhemaText()[book] || {})[chapter] || {}).sort((a, b) => +a - +b);
+  return verses[0] || '1';
+}
+
+function _rhemaLastChapterOfBook(book) {
+  const chapters = Object.keys(_rhemaText()[book] || {}).sort((a, b) => +a - +b);
+  return chapters[chapters.length - 1] || '1';
+}
+
+function _rhemaLastVerseOfChapter(book, chapter) {
+  const verses = Object.keys((_rhemaText()[book] || {})[chapter] || {}).sort((a, b) => +a - +b);
+  return verses[verses.length - 1] || '1';
+}
+
+function _rhemaAnimateChapterSwipe(dir) {
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  if (!body) return;
+  body.classList.remove('rhema-swipe-left', 'rhema-swipe-right');
+  void body.offsetWidth;
+  body.classList.add(dir < 0 ? 'rhema-swipe-left' : 'rhema-swipe-right');
+  setTimeout(() => body.classList.remove('rhema-swipe-left', 'rhema-swipe-right'), 360);
+}
+
+function _rhemaHandleBookBoundaryLayer(nextBook, prevBook) {
+  if (isRhemaOTBook(nextBook) && !isRhemaOTBook(prevBook)) _rhemaOTLayer = 'hebrew';
+}
+
 // ── Verse swipe navigation ────────────────────────────────────────────────────
 
 function updateRhemaVerseNav() {
@@ -31068,25 +31426,48 @@ function rhemaPrevVerse() {
   if (!_rhemaData()) return;
   const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a - +b);
   const chIdx = chapters.indexOf(_rhemaChapter);
+  let changed = false;
   if (_rhemaFullChapter) {
     if (chIdx > 0) {
       _rhemaChapter = chapters[chIdx - 1];
-      _rhemaVerse = '1';
+      _rhemaVerse = _rhemaFirstVerseOfChapter(_rhemaBook, _rhemaChapter);
       _rhemaVerseFocus = false;
-    } else return;
+      changed = true;
+    } else {
+      const prevBook = _rhemaAdjacentBook(-1);
+      if (!prevBook) return;
+      _rhemaHandleBookBoundaryLayer(prevBook, _rhemaBook);
+      _rhemaBook = prevBook;
+      _rhemaChapter = _rhemaLastChapterOfBook(prevBook);
+      _rhemaVerse = _rhemaFirstVerseOfChapter(prevBook, _rhemaChapter);
+      _rhemaVerseFocus = false;
+      changed = true;
+    }
   } else {
     const verses = Object.keys((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {}).sort((a,b) => +a - +b);
     const idx = verses.indexOf(_rhemaVerse);
     if (idx > 0) {
       _rhemaVerse = verses[idx - 1];
+      changed = true;
     } else {
       if (chIdx > 0) {
         _rhemaChapter = chapters[chIdx - 1];
-        const prevVerses = Object.keys((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {}).sort((a,b) => +a - +b);
-        _rhemaVerse = prevVerses[prevVerses.length - 1];
-      } else return;
+        _rhemaVerse = _rhemaLastVerseOfChapter(_rhemaBook, _rhemaChapter);
+        changed = true;
+      } else {
+        const prevBook = _rhemaAdjacentBook(-1);
+        if (!prevBook) return;
+        _rhemaHandleBookBoundaryLayer(prevBook, _rhemaBook);
+        _rhemaBook = prevBook;
+        _rhemaChapter = _rhemaLastChapterOfBook(prevBook);
+        _rhemaVerse = _rhemaLastVerseOfChapter(prevBook, _rhemaChapter);
+        changed = true;
+      }
     }
   }
+  if (!changed) return;
+  _rhemaHighlightStrongs = null;
+  _rhemaAnimateChapterSwipe(-1);
   syncRhemaPicker();
   renderRhemaVerse();
 }
@@ -31095,24 +31476,48 @@ function rhemaNextVerse() {
   if (!_rhemaData()) return;
   const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a - +b);
   const chIdx = chapters.indexOf(_rhemaChapter);
+  let changed = false;
   if (_rhemaFullChapter) {
     if (chIdx < chapters.length - 1) {
       _rhemaChapter = chapters[chIdx + 1];
-      _rhemaVerse = '1';
+      _rhemaVerse = _rhemaFirstVerseOfChapter(_rhemaBook, _rhemaChapter);
       _rhemaVerseFocus = false;
-    } else return;
+      changed = true;
+    } else {
+      const nextBook = _rhemaAdjacentBook(1);
+      if (!nextBook) return;
+      _rhemaHandleBookBoundaryLayer(nextBook, _rhemaBook);
+      _rhemaBook = nextBook;
+      _rhemaChapter = '1';
+      _rhemaVerse = _rhemaFirstVerseOfChapter(nextBook, _rhemaChapter);
+      _rhemaVerseFocus = false;
+      changed = true;
+    }
   } else {
     const verses = Object.keys((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {}).sort((a,b) => +a - +b);
     const idx = verses.indexOf(_rhemaVerse);
     if (idx < verses.length - 1) {
       _rhemaVerse = verses[idx + 1];
+      changed = true;
     } else {
       if (chIdx < chapters.length - 1) {
         _rhemaChapter = chapters[chIdx + 1];
-        _rhemaVerse = '1';
-      } else return;
+        _rhemaVerse = _rhemaFirstVerseOfChapter(_rhemaBook, _rhemaChapter);
+        changed = true;
+      } else {
+        const nextBook = _rhemaAdjacentBook(1);
+        if (!nextBook) return;
+        _rhemaHandleBookBoundaryLayer(nextBook, _rhemaBook);
+        _rhemaBook = nextBook;
+        _rhemaChapter = '1';
+        _rhemaVerse = _rhemaFirstVerseOfChapter(nextBook, _rhemaChapter);
+        changed = true;
+      }
     }
   }
+  if (!changed) return;
+  _rhemaHighlightStrongs = null;
+  _rhemaAnimateChapterSwipe(1);
   syncRhemaPicker();
   renderRhemaVerse();
 }

@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.272" rel="stylesheet"/>
+<link href="style.css?v=3.0.273" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -10482,7 +10482,7 @@ Verb Endings
 </button>
 <button class="rhema-wheel-item" id="wheelItemHighlight" onclick="toggleWheelTool('highlight')">
 <span class="material-symbols-outlined">ink_highlighter</span>
-<span class="rwi-label">Highlight</span>
+<span class="rwi-label">Parts of Speech</span>
 </button>
 <button class="rhema-wheel-item" id="wheelItemGreek" onclick="toggleWheelTool('greek-only')">
 <span class="material-symbols-outlined">translate</span>
@@ -10507,6 +10507,10 @@ Verb Endings
 <button class="rhema-wheel-item" id="wheelItemTrails" onclick="closeRhemaWheel();rhemaOpenCompare()">
 <span class="material-symbols-outlined">compare_arrows</span>
 <span class="rwi-label">Compare</span>
+</button>
+<button class="rhema-wheel-item" id="wheelItemHighlightsNotes" onclick="closeRhemaWheel();rhemaOpenHighlightsNotes()">
+<span class="material-symbols-outlined">sticky_note_2</span>
+<span class="rwi-label">Highlights/Notes</span>
 </button>
 <button class="rhema-wheel-item" id="wheelItemCopyVerse" onclick="copyRhemaVerseOrChapter()">
 <span class="material-symbols-outlined">content_copy</span>
@@ -10550,7 +10554,7 @@ Verb Endings
 </button>
 <button class="rhema-vsheet-action" id="rhemaVerseSheetWordBtn" onclick="rhemaOpenEnglishWordPicker()">
 <span class="material-symbols-outlined">dictionary</span>
-<span>Select an English word</span>
+<span>Define an English word</span>
 </button>
 <button class="rhema-vsheet-action" onclick="rhemaFocusVerseFromMenu()">
 <span class="material-symbols-outlined">center_focus_strong</span>
@@ -10612,6 +10616,15 @@ Verb Endings
 <button class="rhema-compare-add" onclick="rhemaCompareAddAnother()">+ Add another verse</button>
 <button class="rhema-compare-save" id="rhemaCompareSaveBtn" onclick="rhemaSaveCompareTrail()">Save comparison</button>
 </div>
+</div>
+</div>
+<!-- Highlights / notes list -->
+<div class="rhema-note-overlay" id="rhemaHighlightsNotesModal" onclick="closeRhemaHighlightsNotes(event)">
+<div class="rhema-note-card rhema-marks-card" onclick="event.stopPropagation()">
+<button class="rhema-note-x" onclick="closeRhemaHighlightsNotes()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+<div class="rhema-note-ref">Highlights &amp; Notes</div>
+<div class="rhema-vsheet-label" id="rhemaMarksScopeLabel">Saved in this reader</div>
+<div class="rhema-marks-list" id="rhemaMarksList"></div>
 </div>
 </div>
 <!-- Verse note editor / viewer -->
@@ -16895,12 +16908,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.272"></script>
+<script src="app.js?v=3.0.273"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.272" type="module"></script>
+<script src="firebase-lb.js?v=3.0.273" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -17018,9 +17031,9 @@ Verb Endings
 <div class="ss-pane active ss-rhema-pane" id="ssPaneRhema">
 <div class="ss-rhema-position" id="ssRhemaPosition">
 <span class="material-symbols-outlined">auto_stories</span>
-<span id="ssRhemaPositionText">Tap Rhema below to begin</span>
+<span id="ssRhemaPositionText">Open the English reader to begin</span>
 </div>
-<p class="ss-hint">Your reading position is saved separately for each study. Tap the Rhema tab to open it.</p>
+<p class="ss-hint">Each study keeps its own reader position, highlights, notes, and comparisons.</p>
 </div>
 <!-- Saved Verses -->
 <div class="ss-pane" id="ssPaneVerses">

@@ -14065,14 +14065,17 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 }
 .rhema-wheel-item.rw-placeholder { opacity: 0; }
 .rhema-wheel-overlay.open .rhema-wheel-item.rw-placeholder { opacity: 0.45; }
-/* Heptagon positions (r=110px, clockwise from top, 7 items) */
-.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(1) { transform: translate(calc(-50% + 0px),    calc(-50% + -110px)) scale(1); opacity: 1; transition-delay: 0s; }
-.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(2) { transform: translate(calc(-50% + 86px),   calc(-50% + -69px))  scale(1); opacity: 1; transition-delay: 0.04s; }
-.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(3) { transform: translate(calc(-50% + 107px),  calc(-50% + 24px))   scale(1); opacity: 1; transition-delay: 0.08s; }
-.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(4) { transform: translate(calc(-50% + 48px),   calc(-50% + 99px))   scale(1); opacity: 1; transition-delay: 0.12s; }
-.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(5) { transform: translate(calc(-50% + -48px),  calc(-50% + 99px))   scale(1); opacity: 1; transition-delay: 0.16s; }
-.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(6) { transform: translate(calc(-50% + -107px), calc(-50% + 24px))   scale(1); opacity: 1; transition-delay: 0.2s; }
-.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(7) { transform: translate(calc(-50% + -86px),  calc(-50% + -69px))  scale(1); opacity: 1; transition-delay: 0.24s; }
+/* Decagon positions (r=128px, clockwise from top) */
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(1) { transform: translate(calc(-50% + 0px),    calc(-50% + -128px)) scale(1); opacity: 1; transition-delay: 0s; }
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(2) { transform: translate(calc(-50% + 75px),   calc(-50% + -104px)) scale(1); opacity: 1; transition-delay: 0.03s; }
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(3) { transform: translate(calc(-50% + 122px),  calc(-50% + -40px))  scale(1); opacity: 1; transition-delay: 0.06s; }
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(4) { transform: translate(calc(-50% + 122px),  calc(-50% + 40px))   scale(1); opacity: 1; transition-delay: 0.09s; }
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(5) { transform: translate(calc(-50% + 75px),   calc(-50% + 104px))  scale(1); opacity: 1; transition-delay: 0.12s; }
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(6) { transform: translate(calc(-50% + 0px),    calc(-50% + 128px))  scale(1); opacity: 1; transition-delay: 0.15s; }
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(7) { transform: translate(calc(-50% + -75px),  calc(-50% + 104px))  scale(1); opacity: 1; transition-delay: 0.18s; }
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(8) { transform: translate(calc(-50% + -122px), calc(-50% + 40px))   scale(1); opacity: 1; transition-delay: 0.21s; }
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(9) { transform: translate(calc(-50% + -122px), calc(-50% + -40px))  scale(1); opacity: 1; transition-delay: 0.24s; }
+.rhema-wheel-overlay.open .rhema-wheel-item:nth-child(10){ transform: translate(calc(-50% + -75px),  calc(-50% + -104px)) scale(1); opacity: 1; transition-delay: 0.27s; }
 
 /* Scripture Trail Cross References */
 .rhema-xref-page {
@@ -14403,12 +14406,21 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 .rx-arrow-btn {
   width: 42px;
   height: 42px;
+  flex: 0 0 42px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--secondary-color) 9%, var(--card-color));
   color: var(--secondary-color);
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
+}
+.rx-arrow-btn.material-symbols-outlined { font-size: 22px; }
+.rx-card-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 .rx-save-trail-btn,
 .rx-primary-btn {
@@ -16066,6 +16078,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   overflow-y: auto;
   touch-action: pan-y;
   overscroll-behavior: none;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
 }
 
 .rhema-picker-back {
@@ -16183,6 +16196,16 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   width: 100%;
   user-select: none;
   -webkit-user-select: none;
+}
+.rhema-body.rhema-swipe-left .rhema-content-area,
+.rhema-body.rhema-swipe-right .rhema-content-area {
+  animation: rhemaChapterNudge 0.34s ease;
+}
+.rhema-body.rhema-swipe-left .rhema-content-area { --rhema-swipe-x: -18px; }
+.rhema-body.rhema-swipe-right .rhema-content-area { --rhema-swipe-x: 18px; }
+@keyframes rhemaChapterNudge {
+  0% { transform: translateX(var(--rhema-swipe-x)); opacity: 0.72; }
+  100% { transform: translateX(0); opacity: 1; }
 }
 
 .rhema-content-area {
@@ -30619,7 +30642,7 @@ body.dark .rp-book-sep { background: #1f2937; }
 }
 .rhema-vsheet {
   border-radius: 20px 20px 0 0;
-  padding: 18px 18px 22px;
+  padding: 18px 18px calc(34px + env(safe-area-inset-bottom, 0px));
   position: relative;
 }
 .rhema-note-card {
@@ -30938,6 +30961,60 @@ body.dark .rp-book-sep { background: #1f2937; }
   margin-top: 3px;
   color: var(--muted-color, #8a8a8a);
   font-size: 0.86rem;
+}
+.rhema-marks-card {
+  max-height: 82%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.rhema-marks-list {
+  display: grid;
+  gap: 10px;
+  overflow-y: auto;
+  margin-top: 12px;
+  padding: 2px 2px 4px;
+}
+.rhema-mark-row {
+  width: 100%;
+  border: 1px solid rgba(120, 120, 120, 0.18);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--mark-color, var(--secondary-color)) 7%, var(--card-color));
+  color: var(--font-color, #20303f);
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.rhema-mark-dot {
+  width: 10px;
+  height: 42px;
+  border-radius: 999px;
+  background: var(--mark-color, var(--secondary-color));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mark-color, var(--secondary-color)) 16%, transparent);
+}
+.rhema-mark-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.rhema-mark-copy strong {
+  color: var(--secondary-color, #243447);
+  font-size: 0.92rem;
+}
+.rhema-mark-copy span {
+  color: var(--font-color, #20303f);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.rhema-mark-note {
+  margin: 2px 0 0;
+  color: var(--muted-color, #8a8a8a);
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
 .rhema-full-chapter-back {
   width: calc(100% - 24px);
