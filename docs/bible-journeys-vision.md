@@ -4,9 +4,11 @@ This feature helps users follow the movement of biblical stories, not just inspe
 
 ## Current Implementation
 
-- The first version lives in `index.html`, `style.css`, and `app.js`.
-- Route data is held in the `BIBLE_JOURNEYS` array in `app.js`.
-- The map is currently an offline-safe schematic SVG renderer. That keeps the app fast, deployable on GitHub Pages, and free from tile-provider terms while the data model is being refined.
+- The feature lives in `index.html`, `style.css`, and `app.js`.
+- Route data is held in the `BIBLE_JOURNEYS` array in `app.js`. There are currently 16 curated journeys spanning Genesis through Acts.
+- Each journey now carries a `sources` array of short notes explaining the geography/archaeology decisions behind the route; these render in a "Sources & notes" section.
+- The map is an offline-safe schematic SVG renderer. That keeps the app fast, deployable on GitHub Pages, and free from tile-provider terms while the data model is being refined.
+- A "Play route" control walks a marker along the polyline at a steady pace, lighting up each stop and its matching Scripture step (with a `prefers-reduced-motion` fallback). The route line also has a subtle continuous flow animation.
 - Rhema verse sheets show a "Follow this journey" action only when the selected reference belongs to one of the curated journey ranges.
 
 ## Data Rules
@@ -23,8 +25,15 @@ If this becomes a true interactive map, prefer MapLibre GL JS with hosted vector
 
 ## Expansion Ideas
 
-- Add more journeys: Jacob, Joseph's family to Egypt, Israel's conquest movements, David's flight, Elijah/Elisha routes, exile movements, Jesus' Galilean ministry loops, and Paul's other missionary journeys.
-- Add a stepper animation that moves along each route as the user reads each Scripture step.
-- Add source notes per journey for archaeology/geography decisions.
+Done so far:
+
+- Added Jacob, Joseph's family to Egypt, the conquest entry (Jericho/Ai/Gibeon), David's flight from Saul, Elijah to Horeb, Jesus' Galilean ministry loop, and Paul's second and third missionary journeys.
+- Added a stepper/traveler animation that moves along each route and lights up the matching Scripture step.
+- Added `sources` notes per journey for archaeology/geography decisions.
+
+Still open:
+
+- Add more journeys (Elisha routes, Israel's wider conquest movements, David's later campaigns, additional exile movements).
 - Add per-verse journey markers inside Rhema when a passage is part of a route.
-- Add modern travel comparison only as context, not as the main teaching claim.
+- Keep modern travel comparison only as context, not as the main teaching claim.
+- When moving to MapLibre, derive point positions from real coordinates rather than the current per-journey schematic placement.
