@@ -21,7 +21,31 @@ This feature helps users follow the movement of biblical stories, not just inspe
 
 ## Future Map Direction
 
-If this becomes a true interactive map, prefer MapLibre GL JS with hosted vector/raster tiles and custom styles. Do not hotlink OpenStreetMap public tiles directly for app traffic. Keep the same curated journey data and add richer layers for ancient roads, regions, terrain, and modern borders as reliable sources become available.
+The move to a true interactive map is underway and uses **MapLibre GL JS with a
+self-hosted Protomaps `.pmtiles` basemap** — free forever, no API key, and no
+hotlinking of public OpenStreetMap tiles.
+
+Current state of that work:
+
+- Every journey point now carries real `lat`/`lon` (alongside the schematic
+  `x`/`y` used by the offline fallback).
+- `bible-map.js` is the MapLibre renderer. It draws each curated route, stops, and
+  an animated traveler over the basemap, and swaps a parchment "ancient" theme for
+  a "modern" theme. The basemap is geometry-only (no glyph fonts needed); our own
+  curated markers carry the ancient/modern place names.
+- `maplibre-gl` and `pmtiles` are vendored under `assets/maplibre/` and lazy-loaded
+  only when the Journeys page opens, so the rest of the app is unaffected.
+- The renderer is behind the `BIBLE_WORLD_PMTILES_URL` flag in `app.js`. While it
+  is empty, the schematic SVG map stays in charge. Set it to a hosted
+  `bibleworld.pmtiles` to turn the real map on (online only; schematic is still the
+  offline fallback).
+- See `scripts/build-bibleworld-pmtiles.md` for how to generate and host that file
+  (a single `pmtiles extract` over the Bible-world bounding box, hosted as a free
+  GitHub Release asset).
+
+Next: host the tile file, verify rendering on real devices, then iterate on the
+ancient-vs-modern styling and add richer layers (ancient roads, regions, terrain)
+as reliable sources become available.
 
 ## Expansion Ideas
 
