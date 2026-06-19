@@ -11360,6 +11360,59 @@ function openBibleJourneyFromRhemaMenu() {
   else openBibleJourneysPage();
 }
 
+// Which story step (if any) a given reference falls on, so the peek can point
+// to the relevant leg of the route.
+function _journeyStepForRef(journey, chapter, verse) {
+  const ch = Number(chapter), v = Number(verse || 1);
+  const steps = journey.steps || [];
+  let best = -1;
+  steps.forEach((step, i) => {
+    const m = String(step.ref || '').match(/(\d+):(\d+)/);
+    if (m && Number(m[1]) === ch && Number(m[2]) <= v) best = i;
+    else if (m && Number(m[1]) < ch) best = i;
+  });
+  return best;
+}
+
+// Pop up a quick map of the verse's journey, right from the reader.
+function openJourneyPeek(book, chapter, verse) {
+  const journey = (typeof journeyForReference === 'function') ? journeyForReference(book, chapter, verse) : null;
+  if (!journey) return;
+  document.getElementById('journeyPeekOverlay')?.remove();
+  const refName = (typeof _rhemaBookName === 'function' ? _rhemaBookName(book) : book) + ' ' + chapter + ':' + verse;
+  const stepIdx = _journeyStepForRef(journey, chapter, verse);
+  const step = (journey.steps || [])[stepIdx];
+  const ov = document.createElement('div');
+  ov.id = 'journeyPeekOverlay';
+  ov.className = 'journey-peek-overlay';
+  ov.onclick = (e) => { if (e.target === ov) closeJourneyPeek(); };
+  ov.innerHTML = `<div class="journey-peek-card" role="dialog" aria-label="Journey map">
+    <button class="journey-peek-x" onclick="closeJourneyPeek()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+    <span class="journey-kicker">Journey map</span>
+    <strong class="journey-peek-title">${_journeyEsc(journey.title)}</strong>
+    <small class="journey-peek-ref">${_journeyEsc(refName)} &middot; ${_journeyEsc(journey.certainty || 'Approximate')}</small>
+    <div class="journey-peek-map">${_journeyRenderMap(journey)}</div>
+    ${step ? `<p class="journey-peek-step"><strong>${_journeyEsc(step.label)}</strong>${_journeyEsc(step.copy)}</p>` : `<p class="journey-peek-step">${_journeyEsc(journey.subtitle)}</p>`}
+    <button class="journey-peek-open" onclick="openJourneyFromPeek('${_journeyEsc(journey.id)}')"><span class="material-symbols-outlined">explore</span>Open full journey</button>
+  </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('open'));
+}
+
+function closeJourneyPeek() {
+  const o = document.getElementById('journeyPeekOverlay');
+  if (!o) return;
+  o.classList.remove('open');
+  setTimeout(() => o.remove(), 200);
+}
+
+function openJourneyFromPeek(id) {
+  closeJourneyPeek();
+  closeRhemaVerseSheet?.();
+  closeRhema?.();
+  openBibleJourneysPage(id);
+}
+
 function showBibleJourneyVisionNote() {
   const modal = document.getElementById('journeyInfoModal');
   if (!modal) return;
@@ -23030,7 +23083,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.285";
+const APP_VERSION = "3.0.286";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23051,6 +23104,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.286 &mdash; Journey maps in Rhema + tighter flow</div>
+<ul>
+  <li><strong>Map icon on verses</strong> &mdash; In Rhema, verses that belong to a curated journey now show a small map icon. Tap it to pop up that verse&apos;s route, with a button to open the full journey.</li>
+  <li><strong>Tighter journey page</strong> &mdash; The journey picker is now a slim swipeable strip and the map leads the page, so each journey feels more focused with less scrolling.</li>
+</ul>
 <div class="un-version-label">v3.0.285 &mdash; Bible Journey route picker</div>
 <ul>
   <li><strong>Journey selector</strong> &mdash; Reworked the route picker into a vertical, easy-to-scan list with readable subtitles, distance, stop count, and starting reference.</li>
@@ -31713,6 +31771,10 @@ function _rhemaInlineNoteHtml(book, chapter, verse) {
   if (notes.length) {
     const title = `${notes.length} Scripture note${notes.length === 1 ? '' : 's'}`;
     html += `<button class="rhema-reader-note-btn rhema-reader-note-btn-curated" onclick="event.stopPropagation();openRhemaReaderNote('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="${title}" aria-label="${title}"><span class="material-symbols-outlined">sticky_note_2</span></button>`;
+  }
+  // Journey map: only on verses that belong to a curated route.
+  if (typeof journeyForReference === 'function' && journeyForReference(book, chapter, verse)) {
+    html += `<button class="rhema-reader-note-btn rhema-reader-map-btn" onclick="event.stopPropagation();openJourneyPeek('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="See this on the journey map" aria-label="Journey map"><span class="material-symbols-outlined">map</span></button>`;
   }
   return html;
 }

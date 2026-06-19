@@ -16477,6 +16477,82 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   vertical-align: text-top;
 }
 .rhema-reader-note-btn .material-symbols-outlined { font-size: 13px; }
+.rhema-reader-map-btn {
+  border-color: color-mix(in srgb, #2f9e6f 45%, transparent);
+  background: color-mix(in srgb, #2f9e6f 14%, transparent);
+  color: #1f7d54;
+}
+body.dark .rhema-reader-map-btn { color: #6fd6a6; }
+
+/* Journey peek — quick map popup from a verse in the reader. */
+.journey-peek-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(8, 18, 28, 0.5);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+.journey-peek-overlay.open { opacity: 1; }
+.journey-peek-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  background: var(--card-color, #fffdf7);
+  color: var(--font-color, #20303f);
+  border-radius: 22px;
+  padding: 18px 16px 16px;
+  box-shadow: 0 24px 60px rgba(8, 18, 28, 0.4);
+  transform: translateY(12px) scale(0.98);
+  transition: transform 0.2s ease;
+}
+.journey-peek-overlay.open .journey-peek-card { transform: none; }
+.journey-peek-x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--font-color) 10%, transparent);
+  color: var(--font-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.journey-peek-title { display: block; font-size: 1.18rem; font-weight: 950; line-height: 1.1; margin-top: 2px; padding-right: 38px; }
+.journey-peek-ref { display: block; color: var(--secondary-color); font-weight: 850; font-size: 0.78rem; margin: 3px 0 12px; }
+.journey-peek-map { border-radius: 16px; overflow: hidden; }
+.journey-peek-map svg { display: block; width: 100%; aspect-ratio: 1.18 / 1; border-radius: 16px; }
+.journey-peek-step { margin: 12px 0 14px; color: var(--muted-color); line-height: 1.45; font-size: 0.9rem; }
+.journey-peek-step strong { display: block; color: var(--font-color); font-weight: 900; margin-bottom: 2px; }
+.journey-peek-open {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: none;
+  border-radius: 14px;
+  background: var(--secondary-color);
+  color: var(--btn-text-color);
+  font-weight: 900;
+  font-size: 0.95rem;
+  padding: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.journey-peek-open:active { transform: scale(0.98); }
 .rhema-reader-note-overlay {
   position: absolute;
   inset: 0;
@@ -30787,8 +30863,8 @@ body.journeys-active #studyTabBar { display: none !important; }
 }
 .journey-hero {
   display: grid;
-  gap: 14px;
-  padding: 18px 14px 16px;
+  gap: 12px;
+  padding: 14px 14px 14px;
   border-radius: 0 0 24px 24px;
   background:
     radial-gradient(120% 100% at 86% 6%, color-mix(in srgb, var(--secondary-color) 16%, transparent), transparent 52%),
@@ -30799,17 +30875,21 @@ body.journeys-active #studyTabBar { display: none !important; }
   margin: -8px -8px 0;
 }
 .journey-hero h2 {
-  margin: 4px 0 6px;
-  font-size: clamp(1.5rem, 8vw, 2.4rem);
-  line-height: 1.03;
+  margin: 2px 0 4px;
+  font-size: clamp(1.35rem, 6.4vw, 2rem);
+  line-height: 1.05;
   font-weight: 950;
   letter-spacing: 0;
 }
 .journey-hero p {
   margin: 0;
   color: var(--muted-color);
-  line-height: 1.48;
-  font-size: 0.94rem;
+  line-height: 1.4;
+  font-size: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .journey-mode-toggle {
   display: grid;
@@ -30831,20 +30911,25 @@ body.journeys-active #studyTabBar { display: none !important; }
   border-color: var(--secondary-color);
   color: var(--btn-text-color);
 }
-.journey-layout { display: grid; gap: 12px; margin-top: 12px; }
+/* Mobile: a slim swipeable picker strip on top, then the selected journey's
+   map leads, with its details below. Far less scrolling than a tall list. */
+.journey-layout { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
 .journey-list {
   display: grid;
-  grid-auto-flow: row;
-  gap: 8px;
-  margin: 0;
-  padding: 0 2px 2px;
-  max-height: min(48vh, 430px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(78%, 300px);
+  gap: 10px;
+  margin: 0 -8px;
+  padding: 2px 8px 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
+.journey-list-heading { display: none; }
+.journey-list-card { scroll-snap-align: start; }
 .journey-list::-webkit-scrollbar { display: none; }
 .journey-list-heading {
   display: grid;
@@ -31216,8 +31301,19 @@ body.journeys-active #studyTabBar { display: none !important; }
   .journey-step-num { transition: none; }
 }
 @media (min-width: 760px) {
-  .journey-layout { grid-template-columns: minmax(220px, 0.34fr) minmax(0, 1fr); align-items: start; }
-  .journey-list { position: sticky; top: 12px; max-height: calc(100dvh - 132px); }
+  .journey-layout { display: grid; grid-template-columns: minmax(220px, 0.34fr) minmax(0, 1fr); align-items: start; }
+  .journey-list {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    margin: 0;
+    padding: 0 2px 2px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: sticky;
+    top: 12px;
+    max-height: calc(100dvh - 132px);
+  }
+  .journey-list-heading { display: grid; }
   .journey-stats { grid-template-columns: repeat(3, 1fr); }
 }
 body.dark #journeysPage.screen.active,
