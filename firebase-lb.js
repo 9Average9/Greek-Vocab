@@ -339,6 +339,35 @@ function listenUserDoc(uid, callback) {
   });
 }
 
+// ── Rhema verse marks (user highlights + notes) ───────────────────────────────
+// One doc per marked verse under users/{uid}/rhemaMarks, keyed by a sanitized
+// "Book chapter:verse" reference. Stores highlight colour and/or a note.
+function _rhemaMarkId(ref) {
+  return String(ref).replace(/[^A-Za-z0-9]+/g, "_");
+}
+
+function listenRhemaMarks(uid, callback) {
+  return onSnapshot(collection(db, "users", uid, "rhemaMarks"), snap => {
+    const map = {};
+    snap.docs.forEach(d => { const x = d.data(); if (x && x.ref) map[x.ref] = x; });
+    callback(map);
+  }, err => console.warn("listenRhemaMarks:", err));
+}
+
+async function saveRhemaMark(uid, ref, data) {
+  if (!uid || !ref) return;
+  await setDoc(
+    doc(db, "users", uid, "rhemaMarks", _rhemaMarkId(ref)),
+    { ref, ...data, updatedAt: serverTimestamp() },
+    { merge: true }
+  );
+}
+
+async function deleteRhemaMark(uid, ref) {
+  if (!uid || !ref) return;
+  await deleteDoc(doc(db, "users", uid, "rhemaMarks", _rhemaMarkId(ref)));
+}
+
 async function syncUserData(uid, data) {
   try {
     await setDoc(doc(db, "users", uid), { ...data, updatedAt: serverTimestamp() }, { merge: true });
@@ -2267,6 +2296,9 @@ window.Auth = {
   checkUsernameTaken,
   checkDisplayNameTaken,
   listenUserDoc,
+  listenRhemaMarks,
+  saveRhemaMark,
+  deleteRhemaMark,
   uploadAvatarPhoto
 };
 
