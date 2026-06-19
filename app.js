@@ -10354,6 +10354,7 @@ function showNavPage(page) {
     expandHomeNavOnEntry();
   } else if (page === 'profile') {
     showScreen('profilePage');
+    hideBottomNav();
     updateProfileUI();
   } else if (page === 'habits') {
     showScreen('habitsPage');
@@ -11050,6 +11051,7 @@ function openBibleJourneysPage(id = _journeySelectedId) {
 
 function closeBibleJourneysPage() {
   _journeyStopPlay();
+  closeBibleJourneyInfo();
   showNavPage('home');
 }
 
@@ -11132,11 +11134,19 @@ function renderBibleJourneysPage() {
   if (mapKicker) mapKicker.textContent = journey.title;
   if (cert) cert.textContent = journey.certainty || 'Approximate';
   if (list) {
-    list.innerHTML = BIBLE_JOURNEYS.map(j => `<button class="journey-list-card${j.id === journey.id ? ' active' : ''}" onclick="selectBibleJourney('${_journeyEsc(j.id)}')">
-      <span class="material-symbols-outlined">route</span>
+    list.innerHTML = BIBLE_JOURNEYS.map(j => {
+      const miles = _journeyTotalMiles(j);
+      const stops = (j.steps || []).length;
+      return `<button class="journey-list-card${j.id === journey.id ? ' active' : ''}" onclick="selectBibleJourney('${_journeyEsc(j.id)}')">
+      <span class="material-symbols-outlined">${j.id === journey.id ? 'near_me' : 'route'}</span>
       <strong>${_journeyEsc(j.title)}</strong>
       <small>${_journeyEsc(j.subtitle)}</small>
-    </button>`).join('');
+      <div class="journey-list-meta"><span>${miles.toLocaleString()} mi</span><span>${stops} stops</span></div>
+      <i class="material-symbols-outlined journey-list-arrow">chevron_right</i>
+    </button>`;
+    }).join('');
+    const activeCard = list.querySelector('.journey-list-card.active');
+    if (activeCard) setTimeout(() => activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }), 40);
   }
   _journeyStopPlay();
   if (shell) shell.innerHTML = _journeyRenderMap(journey) +
@@ -11310,9 +11320,18 @@ function openBibleJourneyFromRhemaMenu() {
 }
 
 function showBibleJourneyVisionNote() {
-  const msg = 'Journey maps are curated teaching aids. Routes show likely story movement, not exact GPS certainty. Future versions can swap this schematic renderer for MapLibre with hosted tiles while keeping the same journey data.';
-  if (typeof showRhemaVariant === 'function') showRhemaVariant('Bible Journeys', msg);
-  else alert(msg);
+  const modal = document.getElementById('journeyInfoModal');
+  if (!modal) return;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeBibleJourneyInfo(e) {
+  if (e && e.target !== document.getElementById('journeyInfoModal')) return;
+  const modal = document.getElementById('journeyInfoModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
 }
 
 /* =========================
@@ -22970,7 +22989,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.279";
+const APP_VERSION = "3.0.280";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22991,6 +23010,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.280 &mdash; Journey UI polish</div>
+<ul>
+  <li><strong>Bible Journeys</strong> &mdash; The Journey page now fills mobile/PWA screens more cleanly, removes the bottom safe-area strip, adds a real info modal, and gives the journey selector a richer swipeable list.</li>
+  <li><strong>Rhema polish</strong> &mdash; Verse sheets now include Copy Verse, the English tool wheel spaces its actions evenly, and chapter bottoms get a theme-colored pull wave.</li>
+  <li><strong>Navigation fixes</strong> &mdash; Profile hides the bottom nav and adds a Home button, while the Home search button animates on the first tap.</li>
+</ul>
 <div class="un-version-label">v3.0.279 &mdash; Home tool image alignment</div>
 <ul>
   <li><strong>Tool artwork</strong> &mdash; Restored the previous centered image sizing/stage so Home tools no longer overlap their labels, while keeping the new Bible Journeys globe image.</li>
@@ -29491,7 +29516,14 @@ function toggleHomeSearch(event) {
   if (!wrap) return;
   if (wrap.classList.contains('open')) { closeHomeSearch(); return; }
   _initHomeSearchBehavior();
-  wrap.classList.add('open');
+  const btn = document.getElementById('homeSearchToggle');
+  if (btn) {
+    btn.classList.remove('his-pressing');
+    void btn.offsetWidth;
+    btn.classList.add('his-pressing');
+    setTimeout(() => btn.classList.remove('his-pressing'), 460);
+  }
+  requestAnimationFrame(() => wrap.classList.add('open'));
   // Focus inside the tap gesture so the keyboard opens right away
   document.getElementById('homeRhemaSearchInput')?.focus({ preventScroll: true });
 }
@@ -30001,6 +30033,44 @@ function _rhemaScrollVerseToTop(verse, { smooth = true } = {}) {
 }
 
 // Tap on an English verse → action sheet (highlight / note / compare / focus).
+let _rhemaBottomWaveBound = false;
+let _rhemaBottomWaveTimer = null;
+
+function _rhemaBodyAtBottom(body) {
+  if (!body) return false;
+  return body.scrollTop + body.clientHeight >= body.scrollHeight - 4;
+}
+
+function _showRhemaBottomWave(clientX) {
+  const wave = document.getElementById('rhemaBottomWave');
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  if (!wave || !body || !_rhemaBodyAtBottom(body)) return;
+  const rect = body.getBoundingClientRect();
+  const pct = rect.width ? Math.max(8, Math.min(92, ((clientX - rect.left) / rect.width) * 100)) : 50;
+  wave.style.setProperty('--wave-x', `${pct.toFixed(1)}%`);
+  wave.classList.add('show');
+  clearTimeout(_rhemaBottomWaveTimer);
+  _rhemaBottomWaveTimer = setTimeout(() => wave.classList.remove('show'), 360);
+}
+
+function _bindRhemaBottomWave() {
+  if (_rhemaBottomWaveBound) return;
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  if (!body) return;
+  _rhemaBottomWaveBound = true;
+  body.addEventListener('wheel', (e) => {
+    if (e.deltaY > 0) _showRhemaBottomWave(e.clientX || window.innerWidth / 2);
+  }, { passive: true });
+  body.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'mouse' && !e.buttons) return;
+    _showRhemaBottomWave(e.clientX || window.innerWidth / 2);
+  }, { passive: true });
+  body.addEventListener('touchmove', (e) => {
+    const touch = e.touches?.[0];
+    _showRhemaBottomWave(touch?.clientX || window.innerWidth / 2);
+  }, { passive: true });
+}
+
 function rhemaOpenVerseMenu(v, ev) {
   ev?.stopPropagation?.();
   if (_rhemaSuppressVerseTap) { _rhemaSuppressVerseTap = false; return; }
@@ -32950,6 +33020,7 @@ function renderRhemaVerse() {
   if (!_rhemaData()) return;
   closeRhemaSheet();
   closeRhemaSyntaxSheet();
+  _bindRhemaBottomWave();
 
   const display = document.getElementById('rhemaVerseDisplay');
   const EnglishDiv  = document.getElementById('rhemaEnglishDisplay');
@@ -35295,6 +35366,38 @@ function copyRhemaVerseOrChapter() {
   const showToast = () => {
     const toast = document.getElementById('rhemaChapterToast');
     if (toast) { toast.textContent = 'Copied!'; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 2000); }
+  };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(showToast).catch(() => _fallbackCopy(text, showToast));
+  } else {
+    _fallbackCopy(text, showToast);
+  }
+}
+
+function rhemaCopyVerseFromMenu() {
+  const parsed = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
+  if (!parsed) return;
+  const bookName = _rhemaBookName(parsed.book);
+  const ref = `${bookName} ${parsed.chapter}:${parsed.verse}`;
+  let verseText = '';
+  if (_rhemaShowEnglish) {
+    verseText = _rhemaEnglishText(parsed.book, parsed.chapter, parsed.verse) || '';
+  } else {
+    const words = (_rhemaText()[parsed.book] || {})[String(parsed.chapter)]?.[String(parsed.verse)] || [];
+    verseText = words.map(w => w[0]).join(' ');
+  }
+  const text = `${ref}\n${verseText}`.trim();
+  if (!verseText || !text) return;
+  const showToast = () => {
+    closeRhemaVerseSheet();
+    const toast = document.getElementById('rhemaChapterToast');
+    if (toast) {
+      toast.textContent = 'Verse copied!';
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 2000);
+    } else if (typeof _showStudyToast === 'function') {
+      _showStudyToast('Verse copied!');
+    }
   };
   if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(text).then(showToast).catch(() => _fallbackCopy(text, showToast));

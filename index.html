@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.279" rel="stylesheet"/>
+<link href="style.css?v=3.0.280" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -621,6 +621,19 @@ Habit Builder</span>
 </div>
 <button class="journey-icon-btn journey-info-btn" onclick="showBibleJourneyVisionNote()" aria-label="About journey maps"><span class="material-symbols-outlined">info</span></button>
 </header>
+<div class="journey-info-modal" id="journeyInfoModal" onclick="closeBibleJourneyInfo(event)" aria-hidden="true">
+<div class="journey-info-card" onclick="event.stopPropagation()">
+<button class="journey-info-close" onclick="closeBibleJourneyInfo()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+<span class="journey-kicker">How it works</span>
+<h3>Bible Journeys</h3>
+<p>These maps help you follow the movement of a Bible story: the ancient route, the modern geography, the rough distance, and the Scripture steps tied to each stop.</p>
+<div class="journey-info-grid">
+<div><span class="material-symbols-outlined">route</span><strong>Likely routes</strong><small>Lines are teaching aids based on the story movement, not exact GPS tracks.</small></div>
+<div><span class="material-symbols-outlined">public</span><strong>Then and now</strong><small>Switch between Bible-world names and modern comparison labels.</small></div>
+<div><span class="material-symbols-outlined">menu_book</span><strong>Receipts</strong><small>Story steps and notes stay connected to the passages that shape the route.</small></div>
+</div>
+</div>
+</div>
 <div class="journeys-scroll">
 <section class="journey-hero">
 <div>
@@ -9326,7 +9339,7 @@ Verb Endings
 <div class="nav-bar">
 <div></div>
 <div class="nav-title">Profile</div>
-<div></div>
+<div><button class="profile-home-btn" onclick="showNavPage('home')" aria-label="Home"><span class="material-symbols-outlined">home</span></button></div>
 </div>
 <div class="profile-page-scroll">
 <div class="profile-header">
@@ -10437,6 +10450,7 @@ Verb Endings
 <div class="rhema-english-display hidden" id="rhemaEnglishDisplay"></div>
 </div>
 </div>
+<div class="rhema-bottom-wave" id="rhemaBottomWave" aria-hidden="true"></div>
 <!-- Verse nav: last flex child of #rhemaSlide — always at physical screen bottom -->
 <div class="rhema-verse-nav hidden" id="rhemaVerseNav">
 <div class="rhema-verse-nav-row">
@@ -10598,6 +10612,10 @@ Verb Endings
 <button class="rhema-vsheet-action" onclick="rhemaAddToCompareFromMenu()">
 <span class="material-symbols-outlined">library_add</span>
 <span>Compare</span>
+</button>
+<button class="rhema-vsheet-action" onclick="rhemaCopyVerseFromMenu()">
+<span class="material-symbols-outlined">content_copy</span>
+<span>Copy verse</span>
 </button>
 <button class="rhema-vsheet-action" id="rhemaVerseSheetJourneyBtn" onclick="openBibleJourneyFromRhemaMenu()" style="display:none">
 <span class="material-symbols-outlined">travel_explore</span>
@@ -16959,12 +16977,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.279"></script>
+<script src="app.js?v=3.0.280"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.279" type="module"></script>
+<script src="firebase-lb.js?v=3.0.280" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
