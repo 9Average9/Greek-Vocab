@@ -31072,6 +31072,16 @@ body.journeys-active #studyTabBar { display: none !important; }
 }
 .journey-map-note strong { color: var(--secondary-color); font-size: 0.8rem; font-weight: 950; }
 .journey-map-note span { color: var(--muted-color); line-height: 1.42; font-size: 0.86rem; }
+.journey-diag {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--muted-color) 80%, transparent);
+  opacity: 0.75;
+  word-break: break-word;
+}
 .journey-stats { display: grid; grid-template-columns: 1fr; gap: 8px; }
 .journey-stats > div {
   display: grid;

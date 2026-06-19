@@ -10991,14 +10991,21 @@ function _journeyGLFallback() {
   document.getElementById('journeyMapShell')?.classList.remove('gl-ready', 'gl-mounting');
 }
 
+// Tiny on-screen status line (version + why the real map did/didn't load) so the
+// feature can be diagnosed on a device without a developer console.
+function _journeySetDiag(status) {
+  const el = document.getElementById('journeyDiag');
+  if (el) el.textContent = 'v' + APP_VERSION + ' · ' + status;
+}
+
 function _journeyMountGL(journey) {
   const shell = document.getElementById('journeyMapShell');
   if (!shell) return;
   _journeyGLActive = false;
   shell.classList.remove('gl-ready', 'gl-mounting');
-  if (!_bibleMapEnabled() || !(journey.points || []).some(p => typeof p.lat === 'number')) {
-    return;
-  }
+  if (!_bibleMapConfigured()) { _journeySetDiag('real map off (no tiles set)'); return; }
+  if (navigator.onLine === false) { _journeySetDiag('real map needs internet (offline)'); return; }
+  if (!(journey.points || []).some(p => typeof p.lat === 'number')) { _journeySetDiag('no coordinates for this route'); return; }
   let host = shell.querySelector('#journeyGLMap');
   if (!host) {
     host = document.createElement('div');
@@ -11011,23 +11018,38 @@ function _journeyMountGL(journey) {
   // MapLibre initialises into a sized, visible element — a hidden container makes
   // the GL canvas render at 0x0 and never appear.
   shell.classList.add('gl-mounting');
+  _journeySetDiag('loading real map…');
   // pmtiles needs an absolute URL; resolve a same-origin relative path here.
   const pmtilesUrl = /^https?:/i.test(BIBLE_WORLD_PMTILES_URL)
     ? BIBLE_WORLD_PMTILES_URL
     : new URL(BIBLE_WORLD_PMTILES_URL, document.baseURI).href;
   _ensureBibleMapLibs().then(() => {
     if (_journeySelectedId !== journey.id) return null;     // user moved on
-    if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('bible map unsupported');
+    if (!window.BibleMap) throw new Error('module not loaded');
+    if (!window.BibleMap.supported()) throw new Error('WebGL not supported');
     return window.BibleMap.render(host, journey, {
       mode: _journeyMode,
       pmtilesUrl: pmtilesUrl,
       labelFor: _journeyLabelFor,
-      onError: () => _journeyGLFallback()
+      onError: (err) => {
+        _journeySetDiag('tile/style error: ' + _journeyErrText(err));
+        _journeyGLFallback();
+      }
     });
   }).then((map) => {
-    if (map) { _journeyGLActive = true; shell.classList.add('gl-ready'); }
+    if (map) { _journeyGLActive = true; shell.classList.add('gl-ready'); _journeySetDiag('real map ON'); }
     else { shell.classList.remove('gl-mounting'); }
-  }).catch(() => { _journeyGLFallback(); });
+  }).catch((e) => {
+    _journeySetDiag('could not start map: ' + _journeyErrText(e));
+    _journeyGLFallback();
+  });
+}
+
+function _journeyErrText(err) {
+  if (!err) return 'unknown';
+  if (typeof err === 'string') return err;
+  const status = err.status || err.statusCode || (err.error && err.error.status);
+  return (err.message || (err.error && err.error.message) || 'error') + (status ? ' [' + status + ']' : '');
 }
 
 // Step highlighting shared by both the schematic and the real-map traveler.
@@ -11163,7 +11185,8 @@ function renderBibleJourneysPage() {
   _journeyStopPlay();
   if (shell) shell.innerHTML = _journeyRenderMap(journey) +
     `<div class="journey-map-controls"><button type="button" class="journey-play-btn" id="journeyPlayBtn" onclick="toggleJourneyPlay()"><span class="material-symbols-outlined">play_arrow</span><span>Play route</span></button></div>` +
-    `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>`;
+    `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>` +
+    `<div class="journey-diag" id="journeyDiag"></div>`;
   _journeyRenderStats(journey);
   if (steps) {
     steps.innerHTML = `<div class="journey-section-head"><span class="journey-kicker">Story steps</span><strong>Follow the movement</strong></div>` +
@@ -23001,7 +23024,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.282";
+const APP_VERSION = "3.0.283";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23022,6 +23045,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.283 &mdash; Map diagnostics</div>
+<ul>
+  <li><strong>Journey map status</strong> &mdash; Added a small status line under the journey map showing the app version and whether the real map loaded, to help pin down map issues.</li>
+</ul>
 <div class="un-version-label">v3.0.282 &mdash; Map refresh</div>
 <ul>
   <li><strong>Real Bible-world map</strong> &mdash; Forcing a fresh update so the new top-down journey maps load. Open a journey and tap between Bible Map and Modern to see the real geography.</li>
