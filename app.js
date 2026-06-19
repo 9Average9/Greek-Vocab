@@ -22970,7 +22970,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.277";
+const APP_VERSION = "3.0.278";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22991,11 +22991,15 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.277 &mdash; Real Bible-world maps (foundation)</div>
+<div class="un-version-label">v3.0.278 &mdash; Real Bible-world maps</div>
 <ul>
   <li><strong>Accurate coordinates</strong> &mdash; Every journey stop now has a real latitude and longitude, so routes can be drawn on a true map instead of only a stylized one.</li>
   <li><strong>Real map renderer</strong> &mdash; The journey maps can now draw each route over a true top-down map (a self-hosted, free, offline-friendly basemap with no map keys or tracking), with the fast schematic map as the offline fallback.</li>
   <li><strong>Ancient vs modern</strong> &mdash; The real map swaps between a parchment Bible-world look and a modern-geography look, keeping the same routes, distances, and story steps.</li>
+<div class="un-version-label">v3.0.277 &mdash; Home tools artwork polish</div>
+<ul>
+  <li><strong>Bible Journeys tile</strong> &mdash; The Home tool now uses the new globe journey artwork.</li>
+  <li><strong>Tool images</strong> &mdash; Removed the extra white image stage behind Home tool artwork so icons blend into their themed cards more naturally.</li>
 </ul>
 <div class="un-version-label">v3.0.276 &mdash; More Bible Journeys</div>
 <ul>
