@@ -30919,6 +30919,26 @@ body.dark .rp-book-sep { background: #1f2937; }
 }
 .rhema-meaning-section p { margin: 0; line-height: 1.5; }
 .rhema-meaning-section ul { margin: 6px 0 0 18px; padding: 0; line-height: 1.45; }
+.rhema-def-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 10px;
+}
+.rhema-def-list li { line-height: 1.45; }
+.rhema-def-list strong {
+  display: inline-flex;
+  margin-right: 6px;
+  color: var(--secondary-color, #243447);
+  text-transform: capitalize;
+}
+.rhema-def-list span { display: inline; }
+.rhema-def-list em {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted-color, #8a8a8a);
+  font-size: 0.86rem;
+}
 .rhema-full-chapter-back {
   width: calc(100% - 24px);
   margin: 12px;

@@ -22074,7 +22074,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.267";
+const APP_VERSION = "3.0.268";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22095,6 +22095,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.268 &mdash; Better English definitions</div>
+<ul>
+  <li><strong>Smarter dictionary cards</strong> &mdash; English word lookup now ranks common modern meanings first and pushes niche technical senses lower.</li>
+  <li><strong>Cleaner meaning display</strong> &mdash; Rhema now shows multiple short definitions with part-of-speech labels instead of trusting the first dictionary result.</li>
+</ul>
 <div class="un-version-label">v3.0.267 &mdash; Rhema English tools cleanup</div>
 <ul>
   <li><strong>Focused English reading</strong> &mdash; Focused English verses now have a clear <strong>Back to full chapter</strong> button.</li>
@@ -29459,6 +29464,48 @@ function rhemaPickEnglishWord(word) {
 function _rhemaCleanEnglishLookupWord(word) {
   return String(word || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/g, '').replace(/\u2019/g, "'");
 }
+function _rhemaRankModernDefinitions(data, cleanWord) {
+  const nicheTerms = [
+    'long position', 'financial instrument', 'stock exchange', 'securities',
+    'computing', 'programming', 'heraldry', 'obsolete', 'archaic'
+  ];
+  const exact = String(cleanWord || '').toLowerCase();
+  const rows = [];
+  (Array.isArray(data) ? data : []).forEach((entry, entryIdx) => {
+    const entryWord = String(entry?.word || '').toLowerCase();
+    (entry?.meanings || []).forEach((meaning, meaningIdx) => {
+      const pos = String(meaning?.partOfSpeech || '').toLowerCase();
+      (meaning?.definitions || []).forEach((def, defIdx) => {
+        const definition = String(def?.definition || '').trim();
+        if (!definition) return;
+        const lower = definition.toLowerCase();
+        let score = 100 - (entryIdx * 4) - meaningIdx - (defIdx * 0.5);
+        if (entryWord === exact) score += 12;
+        if (exact.endsWith('ing') && pos === 'noun') score += 18;
+        if (exact.endsWith('ing') && pos === 'verb') score -= 5;
+        if (['noun', 'verb', 'adjective', 'adverb'].includes(pos)) score += 4;
+        if (nicheTerms.some(term => lower.includes(term))) score -= 85;
+        if (lower.startsWith('to be appropriate to') || lower === 'to belong.') score -= 35;
+        rows.push({
+          pos: pos || 'definition',
+          definition,
+          example: String(def?.example || '').trim(),
+          score
+        });
+      });
+    });
+  });
+  const seen = new Set();
+  return rows
+    .sort((a, b) => b.score - a.score)
+    .filter(row => {
+      const key = row.definition.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 4);
+}
 async function rhemaShowEnglishMeaning(word) {
   const clean = _rhemaCleanEnglishLookupWord(word);
   if (!clean) return;
@@ -29472,21 +29519,23 @@ async function rhemaShowEnglishMeaning(word) {
   if (logBtn) logBtn.classList.toggle('hidden', !_studySandboxId);
   document.getElementById('rhemaEnglishMeaningModal')?.classList.add('open');
   let modern = '';
-  let examples = [];
+  let modernDefs = [];
   try {
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(clean)}`);
     if (res.ok) {
       const data = await res.json();
-      const first = data?.[0]?.meanings?.[0];
-      modern = first?.definitions?.[0]?.definition || '';
-      examples = (first?.definitions || []).map(d => d.example).filter(Boolean).slice(0, 2);
+      modernDefs = _rhemaRankModernDefinitions(data, clean);
+      modern = modernDefs[0]?.definition || '';
     }
   } catch {}
   const bible = RHEMA_ENGLISH_BIBLE_DICT[clean] || RHEMA_ENGLISH_BIBLE_DICT[clean.replace(/s$/, '')] || '';
   if (!modern) modern = `A readable English dictionary definition was not available offline for "${clean}". Use the verse context and the Bible/theology note below when present.`;
   if (body) {
+    const modernHtml = modernDefs.length
+      ? `<ol class="rhema-def-list">${modernDefs.map(item => `<li><strong>${_escapeRhemaAttr(item.pos)}</strong><span>${_escapeRhemaAttr(item.definition)}</span>${item.example ? `<em>${_escapeRhemaAttr(item.example)}</em>` : ''}</li>`).join('')}</ol>`
+      : `<p>${_escapeRhemaAttr(modern)}</p>`;
     body.innerHTML = `
-      <div class="rhema-meaning-section"><h4>Modern English</h4><p>${_escapeRhemaAttr(modern)}</p>${examples.length ? `<ul>${examples.map(ex => `<li>${_escapeRhemaAttr(ex)}</li>`).join('')}</ul>` : ''}</div>
+      <div class="rhema-meaning-section"><h4>Modern English</h4>${modernHtml}</div>
       <div class="rhema-meaning-section"><h4>Bible / Theology</h4><p>${_escapeRhemaAttr(bible || 'No special theological note is built in for this word yet. Read it by its normal English sense and the immediate verse context.')}</p></div>
       <div class="rhema-meaning-section"><h4>In This Verse</h4><p>${_escapeRhemaAttr(_rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '')}</p></div>`;
   }
