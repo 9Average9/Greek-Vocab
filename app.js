@@ -8948,6 +8948,9 @@ function _initStudyLongPress() {
       _miniWheelLongPressTimer = setTimeout(() => {
         if (_miniWheelLongPressActive) {
           e.preventDefault?.();
+          // Suppress the trailing click so the verse action sheet doesn't also open.
+          _rhemaSuppressVerseTap = true;
+          setTimeout(() => { _rhemaSuppressVerseTap = false; }, 700);
           openStudyMiniWheel();
         }
       }, 520);
@@ -22053,6 +22056,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.266 &mdash; Study Rhema in English</div>
+<ul>
+  <li><strong>English in your studies</strong> &mdash; In a study's Rhema you can save English verses, add English words to the word log, and capture Observation/Interpretation/Application/Question — all from tapping a verse.</li>
+  <li><strong>Study highlights stay in the study</strong> &mdash; Highlights and notes made inside a study no longer appear in other studies or the main reader.</li>
+  <li><strong>Pressing a verse</strong> underlines it in your theme colour so it's clear which verse you're marking.</li>
+  <li><strong>Trails</strong> &mdash; The English tool wand now has a Trails button, and Compare has an "Add another verse" step so building a comparison is clearer. Saving in a study goes to that study's Trails.</li>
+</ul>
 <div class="un-version-label">v3.0.265 &mdash; Rhema compare &amp; English focus</div>
 <ul>
   <li><strong>Compare verses</strong> &mdash; Tap a verse and choose <strong>Compare</strong> to collect verses into a list you can reorder and save as a Trail.</li>
@@ -28889,17 +28899,30 @@ function _rhemaXrefKeyForVerse(book = _rhemaBook, chapter = _rhemaChapter, verse
 // colour and/or a note (with its own icon colour + timestamps). Persisted to
 // localStorage for everyone and synced to Firestore for signed-in users.
 const RHEMA_MARK_COLORS = ['#ffe08a', '#ffb0b8', '#a9d8ff', '#bdeab2', '#e6c6ff', '#ffc69a', '#b9efe6'];
-let _rhemaMarks = {};
+let _rhemaScopedMarks = {};     // { scope: { ref: mark } } — home vs per-study
 let _rhemaMarksUnsub = null;
 let _rhemaMenuRef = null;       // verse ref currently open in the sheet/editor
 let _rhemaNoteColor = RHEMA_MARK_COLORS[0];
 
+// Marks are scoped: a study sandbox keeps its own highlights/notes that never
+// leak to other studies or to the main (home) Rhema.
+function _rhemaMarkScope() {
+  return _studySandboxId ? ('study:' + _studySandboxId) : 'home';
+}
+function _rhemaCurMarks() {
+  const s = _rhemaMarkScope();
+  return (_rhemaScopedMarks[s] = _rhemaScopedMarks[s] || {});
+}
 function _rhemaLoadLocalMarks() {
-  try { _rhemaMarks = JSON.parse(localStorage.getItem('rhemaMarks') || '{}') || {}; }
-  catch { _rhemaMarks = {}; }
+  try {
+    const raw = JSON.parse(localStorage.getItem('rhemaMarks') || '{}') || {};
+    // Migrate the old flat {ref:mark} format into the 'home' scope.
+    const looksFlat = Object.values(raw).some(v => v && (v.color || v.note));
+    _rhemaScopedMarks = looksFlat ? { home: raw } : raw;
+  } catch { _rhemaScopedMarks = {}; }
 }
 function _rhemaPersistLocalMarks() {
-  try { localStorage.setItem('rhemaMarks', JSON.stringify(_rhemaMarks)); } catch {}
+  try { localStorage.setItem('rhemaMarks', JSON.stringify(_rhemaScopedMarks)); } catch {}
 }
 function _rhemaStartMarksSync() {
   _rhemaLoadLocalMarks();
@@ -28907,20 +28930,26 @@ function _rhemaStartMarksSync() {
   _rhemaMarksUnsub?.(); _rhemaMarksUnsub = null;
   if (!uid || !window.Auth?.listenRhemaMarks) return;
   _rhemaMarksUnsub = window.Auth.listenRhemaMarks(uid, (cloud) => {
-    _rhemaMarks = { ..._rhemaMarks, ...cloud };
+    // cloud is a flat map keyed by ref, each carrying its own scope.
+    Object.values(cloud).forEach(m => {
+      const s = m.scope || 'home';
+      (_rhemaScopedMarks[s] = _rhemaScopedMarks[s] || {})[m.ref] = m;
+    });
     _rhemaPersistLocalMarks();
     if (document.getElementById('rhemaModal')?.classList.contains('open')) renderRhemaVerse();
   });
 }
 function _rhemaSetMark(ref, patch) {
-  const next = { ...(_rhemaMarks[ref] || {}), ...patch };
-  if (!next.color && !next.note) delete _rhemaMarks[ref];
-  else _rhemaMarks[ref] = next;
+  const scope = _rhemaMarkScope();
+  const bucket = _rhemaCurMarks();
+  const next = { ...(bucket[ref] || {}), ...patch, scope };
+  if (!next.color && !next.note) delete bucket[ref];
+  else bucket[ref] = next;
   _rhemaPersistLocalMarks();
   const uid = window.Auth?.getCurrentUser?.()?.uid;
   if (uid) {
-    if (_rhemaMarks[ref]) window.Auth.saveRhemaMark?.(uid, ref, _rhemaMarks[ref]).catch(() => {});
-    else window.Auth.deleteRhemaMark?.(uid, ref).catch(() => {});
+    if (bucket[ref]) window.Auth.saveRhemaMark?.(uid, ref, scope, bucket[ref]).catch(() => {});
+    else window.Auth.deleteRhemaMark?.(uid, ref, scope).catch(() => {});
   }
 }
 function _rhemaFmtNoteDate(ts) {
@@ -28929,19 +28958,38 @@ function _rhemaFmtNoteDate(ts) {
   catch { return ''; }
 }
 
-// Tap on an English verse → action sheet (highlight / note / focus).
+// Underline the verse being acted on, in the theme colour, as a visual cue.
+function _rhemaMarkActiveVerse(verse) {
+  document.querySelectorAll('.rhema-english-verse.rhema-verse-acting')
+    .forEach(el => el.classList.remove('rhema-verse-acting'));
+  if (verse == null) return;
+  document.querySelectorAll(`#rhemaEnglishDisplay .rhema-english-verse[data-verse="${verse}"]`)
+    .forEach(el => el.classList.add('rhema-verse-acting'));
+}
+
+// Tap on an English verse → action sheet (highlight / note / compare / focus).
 function rhemaOpenVerseMenu(v, ev) {
   ev?.stopPropagation?.();
+  if (_rhemaSuppressVerseTap) { _rhemaSuppressVerseTap = false; return; }
   const verse = String(v);
   _rhemaVerse = verse;
   syncRhemaPicker?.();
   _rhemaMenuRef = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, verse);
+  // When "Add another verse" is active, tapping a verse drops it straight into
+  // the comparison and reopens that list — keeping the same train of thought.
+  if (_rhemaCompareAdding) {
+    _rhemaCompareAdding = false;
+    _rhemaAddCompareRef(_rhemaMenuRef);
+    rhemaOpenCompare();
+    return;
+  }
+  _rhemaMarkActiveVerse(verse);
   _rhemaRenderVerseSheet();
   document.getElementById('rhemaVerseSheet')?.classList.add('open');
 }
 function _rhemaRenderVerseSheet() {
   const ref = _rhemaMenuRef; if (!ref) return;
-  const mark = _rhemaMarks[ref] || {};
+  const mark = _rhemaCurMarks()[ref] || {};
   const refEl = document.getElementById('rhemaVerseSheetRef');
   if (refEl) refEl.textContent = _rhemaDisplayRefFromKey(ref) || ref;
   const sw = document.getElementById('rhemaVerseSheetColors');
@@ -28953,10 +29001,14 @@ function _rhemaRenderVerseSheet() {
   }
   const noteLabel = document.getElementById('rhemaVerseSheetNoteLabel');
   if (noteLabel) noteLabel.textContent = mark.note ? 'Edit note' : 'Add note';
+  // Study-only actions (reuse the existing save-verse / OIAQ / word-log logic).
+  const study = document.getElementById('rhemaVerseSheetStudy');
+  if (study) study.style.display = _studySandboxId ? '' : 'none';
 }
 function closeRhemaVerseSheet(e) {
   if (e && e.target !== document.getElementById('rhemaVerseSheet')) return;
   document.getElementById('rhemaVerseSheet')?.classList.remove('open');
+  _rhemaMarkActiveVerse(null);
 }
 function rhemaSetVerseHighlight(color) {
   if (!_rhemaMenuRef) return;
@@ -28990,7 +29042,7 @@ function rhemaAddNoteFromMenu() {
 }
 function _rhemaOpenNoteEditor() {
   const ref = _rhemaMenuRef; if (!ref) return;
-  const mark = _rhemaMarks[ref] || {};
+  const mark = _rhemaCurMarks()[ref] || {};
   document.getElementById('rhemaNoteModalRef').textContent = _rhemaDisplayRefFromKey(ref) || ref;
   const ta = document.getElementById('rhemaNoteText');
   if (ta) ta.value = mark.note || '';
@@ -29021,7 +29073,7 @@ function closeRhemaNoteModal(e) {
 function rhemaSaveNote() {
   const ref = _rhemaMenuRef; if (!ref) return;
   const text = (document.getElementById('rhemaNoteText')?.value || '').trim();
-  const existing = _rhemaMarks[ref] || {};
+  const existing = _rhemaCurMarks()[ref] || {};
   if (!text) {
     _rhemaSetMark(ref, { note: null, noteColor: null, noteTs: null, noteUpdatedAt: null });
   } else {
@@ -29045,13 +29097,20 @@ function rhemaDeleteNote() {
 // ── Compare → Trails ──────────────────────────────────────────────────────────
 // Collect verses (in any order) into a comparison, reorder them, and save the
 // list as a named Trail. Trails persist to localStorage + Firestore.
-let _rhemaCompare = [];     // ordered array of refs ("John 3:16")
-let _rhemaTrails = [];      // saved comparisons [{id,title,refs,createdAt}]
+let _rhemaCompare = [];        // ordered array of { ref, version }
+let _rhemaTrails = [];         // saved comparisons [{id,title,items,createdAt}]
 let _rhemaTrailsUnsub = null;
+let _rhemaCompareAdding = false;
+let _rhemaSuppressVerseTap = false;
 
 function _rhemaParseRef(ref) {
   const m = String(ref).match(/^(.*) (\d+):(\d+)$/);
   return m ? { book: m[1], chapter: m[2], verse: m[3] } : null;
+}
+function _rhemaAddCompareRef(ref) {
+  if (!ref || _rhemaCompare.some(c => c.ref === ref)) return;
+  _rhemaCompare.push({ ref, version: _rhemaEnglishVersion() });
+  _rhemaSyncCompareChip();
 }
 function _rhemaLoadLocalTrails() {
   try { _rhemaTrails = JSON.parse(localStorage.getItem('rhemaTrails') || '[]') || []; }
@@ -29075,17 +29134,28 @@ function _rhemaStartTrailsSync() {
 }
 
 function rhemaAddToCompareFromMenu() {
-  if (_rhemaMenuRef && !_rhemaCompare.includes(_rhemaMenuRef)) _rhemaCompare.push(_rhemaMenuRef);
+  _rhemaAddCompareRef(_rhemaMenuRef);
   closeRhemaVerseSheet();
   rhemaOpenCompare();
 }
 function rhemaOpenCompare() {
+  _rhemaCompareAdding = false;
   _rhemaRenderCompare();
   document.getElementById('rhemaCompareOverlay')?.classList.add('open');
 }
 function closeRhemaCompare(e) {
   if (e && e.target !== document.getElementById('rhemaCompareOverlay')) return;
   document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
+}
+// "Add another verse": hop back to the reader; the next verse tapped is added
+// to the comparison and reopens this list automatically.
+function rhemaCompareAddAnother() {
+  _rhemaCompareAdding = true;
+  document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
+  if (typeof _showStudyToast === 'function') _showStudyToast('Tap a verse to add it to the comparison');
+}
+function rhemaCompareVersionHint() {
+  if (typeof _showStudyToast === 'function') _showStudyToast('Per-verse version switching is coming soon.');
 }
 function rhemaCompareMove(idx, dir) {
   const j = idx + dir;
@@ -29109,12 +29179,14 @@ function _rhemaRenderCompare() {
     if (!_rhemaCompare.length) {
       list.innerHTML = `<div class="rhema-compare-empty">No verses yet. Tap a verse in the reader and choose <strong>Compare</strong> to add it here.</div>`;
     } else {
-      list.innerHTML = _rhemaCompare.map((ref, i) => {
+      list.innerHTML = _rhemaCompare.map((item, i) => {
+        const ref = item.ref;
         const p = _rhemaParseRef(ref);
-        const text = p ? (_rhemaEnglishText(p.book, p.chapter, p.verse) || '') : '';
+        const text = p ? (_rhemaEnglishText(p.book, p.chapter, p.verse, item.version) || '') : '';
         return `<div class="rhema-compare-item">
           <div class="rhema-compare-item-hd">
             <span class="rhema-compare-ref">${_escapeRhemaAttr(_rhemaDisplayRefFromKey(ref) || ref)}</span>
+            <button class="rhema-compare-ver" onclick="rhemaCompareVersionHint()" title="Translation (switching coming soon)">${_escapeRhemaAttr(item.version || 'MSB')}</button>
             <span class="rhema-compare-ctrls">
               <button onclick="rhemaCompareMove(${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="Move up"><span class="material-symbols-outlined">arrow_upward</span></button>
               <button onclick="rhemaCompareMove(${i},1)" ${i === _rhemaCompare.length - 1 ? 'disabled' : ''} aria-label="Move down"><span class="material-symbols-outlined">arrow_downward</span></button>
@@ -29126,15 +29198,16 @@ function _rhemaRenderCompare() {
       }).join('');
     }
   }
-  // saved trails
+  // Saved comparisons — only in the main (home) Rhema; in a study they live in
+  // the study's own Trails area.
   const saved = document.getElementById('rhemaCompareSaved');
   if (saved) {
-    saved.innerHTML = _rhemaTrails.length
+    saved.innerHTML = (!_studySandboxId && _rhemaTrails.length)
       ? `<div class="rhema-vsheet-label">Saved comparisons</div>` + _rhemaTrails.map(t =>
           `<div class="rhema-compare-saved-row">
             <button class="rhema-compare-saved-open" onclick="rhemaLoadTrail('${_escapeRhemaAttr(t.id)}')">
               <span class="material-symbols-outlined">route</span>
-              <span>${_escapeRhemaAttr(t.title || 'Untitled')} <small>(${(t.refs || []).length})</small></span>
+              <span>${_escapeRhemaAttr(t.title || 'Untitled')} <small>(${((t.items || t.refs) || []).length})</small></span>
             </button>
             <button class="rhema-compare-saved-del" onclick="rhemaDeleteTrail('${_escapeRhemaAttr(t.id)}')" aria-label="Delete"><span class="material-symbols-outlined">delete</span></button>
           </div>`).join('')
@@ -29146,7 +29219,10 @@ function _rhemaRenderCompare() {
 function rhemaLoadTrail(id) {
   const t = _rhemaTrails.find(x => x.id === id);
   if (!t) return;
-  _rhemaCompare = [...(t.refs || [])];
+  // Support both the new {items:[{ref,version}]} and legacy {refs:[ref]} shapes.
+  _rhemaCompare = (t.items && t.items.length)
+    ? t.items.map(x => ({ ref: x.ref, version: x.version || 'MSB' }))
+    : (t.refs || []).map(r => ({ ref: r, version: 'MSB' }));
   _rhemaRenderCompare();
   _rhemaSyncCompareChip();
 }
@@ -29159,15 +29235,29 @@ async function rhemaDeleteTrail(id) {
 }
 async function rhemaSaveCompareTrail() {
   if (!_rhemaCompare.length) return;
-  const first = _rhemaDisplayRefFromKey(_rhemaCompare[0]) || _rhemaCompare[0];
+  const first = _rhemaDisplayRefFromKey(_rhemaCompare[0].ref) || _rhemaCompare[0].ref;
   const title = (prompt('Name this comparison:', `${first} comparison`) || '').trim();
   if (!title) return;
-  const trail = { id: 'rt_' + Date.now().toString(36), title, refs: [..._rhemaCompare], createdAt: Date.now() };
-  _rhemaTrails = [trail, ..._rhemaTrails];
-  _rhemaPersistLocalTrails();
-  _rhemaRenderCompare();
+  const items = _rhemaCompare.map(c => ({ ref: c.ref, version: c.version }));
   const uid = window.Auth?.getCurrentUser?.()?.uid;
-  if (uid) window.Auth.saveRhemaTrail?.(uid, trail).catch(() => {});
+  if (_studySandboxId) {
+    // In a study, save into the study's own Trails area (reuse Studies.saveTrail).
+    const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
+    await window.Studies?.saveTrail?.(_studySandboxId, uid, displayName, {
+      title,
+      items,
+      breadcrumbTrail: items.map(i => _rhemaDisplayRefFromKey(i.ref) || i.ref),
+      rawBreadcrumbTrail: items.map(i => i.ref),
+      kind: 'compare'
+    });
+    if (typeof _showStudyToast === 'function') _showStudyToast('Saved to this study’s Trails');
+  } else {
+    const trail = { id: 'rt_' + Date.now().toString(36), title, items, createdAt: Date.now() };
+    _rhemaTrails = [trail, ..._rhemaTrails];
+    _rhemaPersistLocalTrails();
+    if (uid) window.Auth.saveRhemaTrail?.(uid, trail).catch(() => {});
+  }
+  _rhemaRenderCompare();
 }
 function _rhemaSyncCompareChip() {
   const chip = document.getElementById('rhemaCompareChip');
@@ -29175,6 +29265,47 @@ function _rhemaSyncCompareChip() {
   chip.classList.toggle('hidden', _rhemaCompare.length === 0);
   const n = document.getElementById('rhemaCompareChipCount');
   if (n) n.textContent = String(_rhemaCompare.length);
+}
+
+// ── Phase 5: English verse/word into the study (reuse existing study logic) ────
+function rhemaStudySaveVerseFromMenu() {
+  closeRhemaVerseSheet();
+  saveCurrentVerseToStudy();
+  if (typeof _showStudyToast === 'function') _showStudyToast('Verse saved to study');
+}
+function rhemaStudyCaptureFromMenu() {
+  closeRhemaVerseSheet();
+  if (typeof openStudyMiniWheel === 'function') openStudyMiniWheel();
+}
+function rhemaStudyLogWordFromMenu() {
+  const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
+  if (!p) return;
+  const text = _rhemaEnglishText(p.book, p.chapter, p.verse) || '';
+  const words = [...new Set(text.replace(/[^A-Za-z'’\- ]/g, ' ').split(/\s+/).filter(w => w.length > 1))];
+  const wrap = document.getElementById('rhemaWordPickChips');
+  if (wrap) wrap.innerHTML = words.map(w =>
+    `<button class="rhema-word-chip" onclick="rhemaLogEnglishWord('${_escapeRhemaAttr(w)}')">${_escapeRhemaAttr(w)}</button>`).join('');
+  document.getElementById('rhemaWordPickRef').textContent = _rhemaDisplayRefFromKey(_rhemaMenuRef) || _rhemaMenuRef;
+  closeRhemaVerseSheet();
+  document.getElementById('rhemaWordPickModal')?.classList.add('open');
+}
+function closeRhemaWordPick(e) {
+  if (e && e.target !== document.getElementById('rhemaWordPickModal')) return;
+  document.getElementById('rhemaWordPickModal')?.classList.remove('open');
+}
+async function rhemaLogEnglishWord(word) {
+  document.getElementById('rhemaWordPickModal')?.classList.remove('open');
+  if (!_studySandboxId) return;
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
+  await window.Studies?.logWord?.(_studySandboxId, uid, displayName, {
+    lemma: word,
+    strongs: 'en:' + word.toLowerCase(),
+    surface: word,
+    definition: '',
+    translit: ''
+  });
+  if (typeof _showStudyToast === 'function') _showStudyToast(`“${word}” added to the word log`);
 }
 
 function _rhemaCuratedScriptureNotesForKey(key) {
@@ -29232,7 +29363,7 @@ function _rhemaInlineNoteHtml(book, chapter, verse) {
   const key = _rhemaXrefKeyForVerse(book, chapter, verse);
   let html = '';
   // The user's own note (tap to view date + text and edit).
-  const mark = _rhemaMarks[key];
+  const mark = _rhemaCurMarks()[key];
   if (mark && mark.note) {
     const color = mark.noteColor || RHEMA_MARK_COLORS[0];
     html += `<button class="rhema-reader-note-btn rhema-reader-note-btn-user" style="--rhema-note-color:${color}" onclick="event.stopPropagation();rhemaOpenNoteFor('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}', event)" title="Your note" aria-label="Your note"><span class="material-symbols-outlined">edit_note</span></button>`;
@@ -30560,7 +30691,7 @@ function renderRhemaVerse() {
           const engContent = engText
             ? _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, v)
             : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
-          const _vhl = _rhemaMarks[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, v)]?.color;
+          const _vhl = _rhemaCurMarks()[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, v)]?.color;
           return `<div class="rhema-chapter-block rhema-english-verse${v === focusVerse ? ' rhema-chapter-block-target' : ''}${_vhl ? ' rhema-verse-highlighted' : ''}" data-verse="${v}"${_vhl ? ` style="--rhema-hl:${_vhl}"` : ''} onclick="rhemaOpenVerseMenu('${v}', event)">` +
                  `<sup class="rhema-english-vnum">${vn}</sup>${engContent}${_rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, v)}</div>`;
         }).join('');
@@ -30599,7 +30730,7 @@ function renderRhemaVerse() {
       display.innerHTML = _rhemaLayerBadge() + _renderVerseWords(words, null);
       if (EnglishDiv) {
         const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
-        const _svhl = _rhemaMarks[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse)]?.color;
+        const _svhl = _rhemaCurMarks()[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse)]?.color;
         EnglishDiv.innerHTML = engText
           ? `<div class="rhema-chapter-block rhema-english-verse${_svhl ? ' rhema-verse-highlighted' : ''}" data-verse="${_rhemaVerse}"${_svhl ? ` style="--rhema-hl:${_svhl}"` : ''} onclick="rhemaOpenVerseMenu('${_rhemaVerse}', event)">` +
             `<sup class="rhema-english-vnum">${_rhemaVerse}</sup>` +

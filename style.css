@@ -30823,3 +30823,52 @@ body.dark .rp-book-sep { background: #1f2937; }
 .rhema-compare-clear { flex: 0 0 auto; padding: 11px 16px; border: none; border-radius: 10px; background: rgba(120, 120, 120, 0.14); color: var(--font-color, #20303f); font-weight: 700; cursor: pointer; }
 .rhema-compare-save { flex: 1; padding: 11px 16px; border: none; border-radius: 10px; background: var(--secondary-color, #243447); color: #fff; font-weight: 700; cursor: pointer; }
 .rhema-compare-save:disabled { opacity: 0.45; cursor: default; }
+
+/* ── Phase 5 + Rhema compare/notes enhancements ───────────────────────────── */
+/* Underline the verse being acted on, in the theme colour. */
+.rhema-english-verse.rhema-verse-acting {
+  text-decoration: underline;
+  text-decoration-color: var(--secondary-color, #243447);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+/* Version chip beside a compared verse's reference (pressable for the future). */
+.rhema-compare-ver {
+  border: 1px solid var(--secondary-color, #243447);
+  color: var(--secondary-color, #243447);
+  background: transparent;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+.rhema-compare-item-hd { flex-wrap: wrap; }
+.rhema-compare-item-hd .rhema-compare-ctrls { margin-left: auto; }
+/* Three-button compare action row. */
+.rhema-compare-actions { flex-wrap: wrap; }
+.rhema-compare-add {
+  flex: 1 1 100%;
+  order: -1;
+  padding: 11px 16px;
+  border: 1px dashed var(--secondary-color, #243447);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--secondary-color, #243447);
+  font-weight: 700;
+  cursor: pointer;
+}
+/* English word picker chips (study word log). */
+.rhema-word-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0 4px; max-height: 220px; overflow-y: auto; }
+.rhema-word-chip {
+  border: 1px solid rgba(120, 120, 120, 0.28);
+  background: rgba(120, 120, 120, 0.06);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.9rem;
+  color: var(--font-color, #20303f);
+  cursor: pointer;
+}
+.rhema-word-chip:active { background: var(--secondary-color, #243447); color: #fff; }
