@@ -8091,7 +8091,7 @@ let currentSentence = null;
 
 
 const screens = [
-  "homeScreen", "profilePage", "habitsPage", "memorizationPage", "readingPlanPage", "merciesPage", "communityPage", "csDetailPage",
+  "homeScreen", "profilePage", "habitsPage", "journeysPage", "memorizationPage", "readingPlanPage", "merciesPage", "communityPage", "csDetailPage",
   "sermonsPage", "newLearnMenu", "advancedLearnMenu",
   "basicVerbsLearnMenu", "advVerbsLearnMenu",
   "learnMenu", "learnScreen", "translateMenu", "translateScreen",
@@ -10406,6 +10406,8 @@ function showScreen(id) {
   document.documentElement?.classList.toggle('memorization-active', id === 'memorizationPage');
   document.body?.classList.toggle('reading-plan-active', id === 'readingPlanPage');
   document.documentElement?.classList.toggle('reading-plan-active', id === 'readingPlanPage');
+  document.body?.classList.toggle('journeys-active', id === 'journeysPage');
+  document.documentElement?.classList.toggle('journeys-active', id === 'journeysPage');
   _updateAppHeaderForScreen(id);
 }
 
@@ -10417,6 +10419,361 @@ function _syncHomeViewportState(id) {
   } else {
     _clearPageHomeBackdrop();
   }
+}
+
+/* =========================
+   BIBLE JOURNEYS
+   Curated follow-along maps for passages where travel is part of the story.
+   Accuracy rule: routes are teaching aids, not claims of exact GPS certainty.
+   Keep each journey explicit and sourced by Scripture ranges instead of trying
+   to infer routes from verse text automatically.
+========================= */
+
+const BIBLE_JOURNEYS = [
+  {
+    id: 'abraham-ur-to-canaan',
+    title: "Abraham's Journey to Canaan",
+    subtitle: 'Ur to Haran to the land God promised',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 11, chTo: 13 }],
+    distance: 1100,
+    mode: 'Caravan pace',
+    days: '70-95 travel days',
+    modern: 'Southern Iraq, Syria/Turkey border region, Lebanon/Israel/West Bank region',
+    note: 'Ur, Haran, Shechem, Bethel, and Egypt are shown as a teaching route. Exact roads and stopping points are not preserved.',
+    points: [
+      { ancient: 'Ur of the Chaldeans', modern: 'near Nasiriyah, Iraq', x: 82, y: 78 },
+      { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 56, y: 25 },
+      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 39, y: 55 },
+      { ancient: 'Bethel/Ai', modern: 'central highlands', x: 38, y: 60 },
+      { ancient: 'Egypt', modern: 'Nile Delta / Egypt', x: 22, y: 77 }
+    ],
+    steps: [
+      { label: 'Ur to Haran', ref: 'Genesis 11:31', copy: 'Terah takes Abram, Sarai, and Lot out from Ur toward Canaan, stopping in Haran.', miles: 600 },
+      { label: 'Haran to Canaan', ref: 'Genesis 12:1-6', copy: 'Abram obeys the call and enters Canaan, reaching Shechem.', miles: 430 },
+      { label: 'South through the land', ref: 'Genesis 12:8-9', copy: 'Abram moves toward Bethel/Ai and then the Negev.', miles: 70 },
+      { label: 'Down to Egypt', ref: 'Genesis 12:10', copy: 'Famine drives Abram temporarily toward Egypt.', miles: 250 }
+    ]
+  },
+  {
+    id: 'exodus-egypt-to-sinai',
+    title: 'The Exodus Route',
+    subtitle: 'From slavery in Egypt toward Sinai and the wilderness',
+    certainty: 'Highly debated',
+    refs: [{ book: 'EXO', chFrom: 12, chTo: 19 }, { book: 'NUM', chFrom: 10, chTo: 14 }],
+    distance: 300,
+    mode: 'Large mixed camp',
+    days: 'Weeks of travel, then extended wilderness time',
+    modern: 'Egypt and the Sinai region; exact mountain and sea-crossing locations are debated',
+    note: 'This is a conservative schematic route. Exodus geography has several debated proposals, so the map emphasizes sequence, not certainty.',
+    points: [
+      { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42 },
+      { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47 },
+      { ancient: 'Sea Crossing', modern: 'Red Sea / Reed Sea proposals', x: 39, y: 56 },
+      { ancient: 'Marah / Elim', modern: 'Sinai wilderness region', x: 51, y: 65 },
+      { ancient: 'Sinai', modern: 'Sinai Peninsula region', x: 63, y: 76 }
+    ],
+    steps: [
+      { label: 'Rameses to Succoth', ref: 'Exodus 12:37', copy: 'Israel leaves Egypt as a large company.', miles: 30 },
+      { label: 'Toward the sea', ref: 'Exodus 14:1-2', copy: 'The people are led to a place where escape looks impossible.', miles: 60 },
+      { label: 'Through the sea', ref: 'Exodus 14:21-31', copy: 'The crossing becomes the defining rescue moment.', miles: 8 },
+      { label: 'Wilderness to Sinai', ref: 'Exodus 15:22; 19:1-2', copy: 'The route moves through thirst, provision, and covenant preparation.', miles: 200 }
+    ]
+  },
+  {
+    id: 'ruth-moab-to-bethlehem',
+    title: 'Ruth and Naomi Return',
+    subtitle: 'From Moab back to Bethlehem',
+    certainty: 'Approximate route',
+    refs: [{ book: 'RUT', chFrom: 1, chTo: 1 }],
+    distance: 60,
+    mode: 'Walking',
+    days: '4-7 travel days',
+    modern: 'Jordan to the Bethlehem area',
+    note: 'The route likely crossed rugged terrain around the Dead Sea/Jordan region. The line is simplified for clarity.',
+    points: [
+      { ancient: 'Moab', modern: 'central Jordan', x: 70, y: 58 },
+      { ancient: 'Jordan crossing region', modern: 'Jordan Valley', x: 50, y: 55 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 36, y: 52 }
+    ],
+    steps: [
+      { label: 'Leaving Moab', ref: 'Ruth 1:6-7', copy: 'Naomi begins the return after hearing the Lord has visited His people with food.', miles: 30 },
+      { label: 'Ruth clings to Naomi', ref: 'Ruth 1:14-18', copy: 'The journey becomes a covenant loyalty moment.', miles: 0 },
+      { label: 'Arrival in Bethlehem', ref: 'Ruth 1:19-22', copy: 'They arrive at the beginning of barley harvest.', miles: 30 }
+    ]
+  },
+  {
+    id: 'mary-joseph-nazareth-bethlehem',
+    title: 'Mary and Joseph to Bethlehem',
+    subtitle: 'Nazareth to Bethlehem before Jesus is born',
+    certainty: 'Approximate route',
+    refs: [{ book: 'LUK', chFrom: 2, chTo: 2 }],
+    distance: 90,
+    mode: 'Walking / family travel',
+    days: '5-8 travel days',
+    modern: 'Northern Israel to the Bethlehem area',
+    note: 'The direct hill-country route and Jordan Valley route are both discussed. This simplified path shows the story movement.',
+    points: [
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24 },
+      { ancient: 'Samaria/Judea road region', modern: 'central highlands', x: 43, y: 45 },
+      { ancient: 'Jerusalem region', modern: 'Jerusalem area', x: 39, y: 62 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68 }
+    ],
+    steps: [
+      { label: 'Nazareth departure', ref: 'Luke 2:1-4', copy: 'Joseph goes up from Galilee to Judea because of the census.', miles: 70 },
+      { label: "Toward David's city", ref: 'Luke 2:4', copy: "Bethlehem matters because Joseph belongs to David's house and lineage.", miles: 15 },
+      { label: 'Birth in Bethlehem', ref: 'Luke 2:6-7', copy: 'The travel setting frames the birth narrative.', miles: 5 }
+    ]
+  },
+  {
+    id: 'jesus-galilee-to-jerusalem',
+    title: 'Jesus Goes Up to Jerusalem',
+    subtitle: 'From Galilee toward Jerusalem',
+    certainty: 'Representative route',
+    refs: [{ book: 'LUK', chFrom: 9, chTo: 19 }, { book: 'MAT', chFrom: 19, chTo: 21 }, { book: 'MRK', chFrom: 10, chTo: 11 }],
+    distance: 95,
+    mode: 'Walking',
+    days: '5-8 travel days plus ministry stops',
+    modern: 'Northern Israel through the Jordan/Judea region to Jerusalem',
+    note: 'The Gospels arrange the travel material theologically as well as geographically. This route is a reading aid, not a full itinerary.',
+    points: [
+      { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22 },
+      { ancient: 'Jordan Valley', modern: 'Jordan River valley', x: 55, y: 50 },
+      { ancient: 'Jericho', modern: 'Jericho', x: 51, y: 65 },
+      { ancient: 'Bethany', modern: 'al-Eizariya area', x: 41, y: 70 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 38, y: 68 }
+    ],
+    steps: [
+      { label: 'Face set toward Jerusalem', ref: 'Luke 9:51', copy: 'Luke frames the journey as purposeful movement toward Jerusalem.', miles: 0 },
+      { label: 'Teaching on the way', ref: 'Luke 10-18', copy: 'Much of the journey is filled with discipleship teaching.', miles: 70 },
+      { label: 'Jericho to Jerusalem', ref: 'Luke 18:35; 19:28', copy: 'The route climbs from Jericho toward Jerusalem.', miles: 17 },
+      { label: 'Arrival near Bethany', ref: 'Mark 11:1', copy: 'Bethphage/Bethany set the stage for the triumphal entry.', miles: 2 }
+    ]
+  },
+  {
+    id: 'paul-first-journey',
+    title: "Paul's First Missionary Journey",
+    subtitle: 'Antioch to Cyprus and southern Galatia',
+    certainty: 'Mostly known cities, simplified route',
+    refs: [{ book: 'ACT', chFrom: 13, chTo: 14 }],
+    distance: 1250,
+    mode: 'Walking + sailing',
+    days: 'Several months including ministry stays',
+    modern: 'Syria/Turkey, Cyprus, and southern Turkey',
+    note: 'Major city locations are known, while exact roads, sea lanes, and stop durations are simplified.',
+    points: [
+      { ancient: 'Antioch', modern: 'Antakya, Turkey region', x: 53, y: 36 },
+      { ancient: 'Seleucia', modern: 'Samandag coast region', x: 50, y: 42 },
+      { ancient: 'Salamis', modern: 'eastern Cyprus', x: 43, y: 58 },
+      { ancient: 'Paphos', modern: 'western Cyprus', x: 28, y: 64 },
+      { ancient: 'Perga', modern: 'near Antalya, Turkey', x: 49, y: 24 },
+      { ancient: 'Pisidian Antioch', modern: 'Yalvac region, Turkey', x: 56, y: 16 },
+      { ancient: 'Iconium / Lystra / Derbe', modern: 'Konya/Karaman region', x: 67, y: 20 }
+    ],
+    steps: [
+      { label: 'Sent from Antioch', ref: 'Acts 13:1-4', copy: "The church sends Barnabas and Saul by the Spirit's direction.", miles: 16 },
+      { label: 'Across Cyprus', ref: 'Acts 13:5-12', copy: 'They proclaim the word from Salamis to Paphos.', miles: 110 },
+      { label: 'Into Pamphylia', ref: 'Acts 13:13', copy: 'They sail north to Perga.', miles: 180 },
+      { label: 'Southern Galatia cities', ref: 'Acts 13:14; 14:1-21', copy: 'The route moves through Pisidian Antioch, Iconium, Lystra, and Derbe.', miles: 300 },
+      { label: 'Return strengthening disciples', ref: 'Acts 14:21-26', copy: 'They retrace much of the route before reporting back.', miles: 640 }
+    ]
+  },
+  {
+    id: 'paul-voyage-to-rome',
+    title: "Paul's Voyage to Rome",
+    subtitle: 'From Caesarea toward Rome through storm and shipwreck',
+    certainty: 'Known ports, weather route simplified',
+    refs: [{ book: 'ACT', chFrom: 27, chTo: 28 }],
+    distance: 2200,
+    mode: 'Sea voyage + walking',
+    days: 'Several months with delays',
+    modern: 'Israel, Turkey, Greece/Crete, Malta, Italy',
+    note: 'Acts names many ports. The storm drift is represented simply; ancient sailing depended heavily on season and wind.',
+    points: [
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 72, y: 68 },
+      { ancient: 'Sidon', modern: 'Sidon, Lebanon', x: 70, y: 55 },
+      { ancient: 'Myra', modern: 'Demre, Turkey', x: 54, y: 42 },
+      { ancient: 'Fair Havens', modern: 'Crete, Greece', x: 42, y: 62 },
+      { ancient: 'Malta', modern: 'Malta', x: 25, y: 66 },
+      { ancient: 'Puteoli', modern: 'Pozzuoli, Italy', x: 21, y: 32 },
+      { ancient: 'Rome', modern: 'Rome, Italy', x: 19, y: 24 }
+    ],
+    steps: [
+      { label: 'Caesarea to Sidon', ref: 'Acts 27:1-3', copy: 'Paul begins the voyage as a prisoner under Roman guard.', miles: 70 },
+      { label: 'Along Asia Minor', ref: 'Acts 27:4-6', copy: 'The ship changes at Myra.', miles: 500 },
+      { label: 'Crete and warning', ref: 'Acts 27:7-12', copy: 'Fair Havens becomes the key decision point before the storm.', miles: 350 },
+      { label: 'Storm and Malta', ref: 'Acts 27:13-44; 28:1', copy: 'The storm drives the ship until the wreck at Malta.', miles: 600 },
+      { label: 'To Rome', ref: 'Acts 28:11-16', copy: 'Paul finally reaches Rome.', miles: 680 }
+    ]
+  },
+  {
+    id: 'exile-return',
+    title: 'Return from Exile',
+    subtitle: 'Babylon back to Jerusalem',
+    certainty: 'Approximate imperial route',
+    refs: [{ book: 'EZR', chFrom: 1, chTo: 8 }, { book: 'NEH', chFrom: 1, chTo: 2 }],
+    distance: 900,
+    mode: 'Caravan pace',
+    days: 'About 4 months in Ezra 7:8-9',
+    modern: 'Iraq through Syria/Jordan/Israel region',
+    note: 'Caravans usually followed safer river and trade routes rather than cutting straight across desert.',
+    points: [
+      { ancient: 'Babylon', modern: 'near Hillah, Iraq', x: 82, y: 71 },
+      { ancient: 'Euphrates route', modern: 'Iraq/Syria river corridor', x: 66, y: 42 },
+      { ancient: 'Damascus region', modern: 'Syria', x: 49, y: 49 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 36, y: 65 }
+    ],
+    steps: [
+      { label: 'Decree and return', ref: 'Ezra 1:1-4', copy: 'Cyrus permits return and rebuilding.', miles: 0 },
+      { label: 'Caravan route west', ref: 'Ezra 7:8-9', copy: "Ezra's journey is remembered as a months-long trip under God's hand.", miles: 750 },
+      { label: 'Arrival at Jerusalem', ref: 'Ezra 8:31-32', copy: 'The group arrives and rests after the journey.', miles: 150 },
+      { label: 'Nehemiah follows later', ref: 'Nehemiah 2:11', copy: 'Nehemiah arrives for wall rebuilding work.', miles: 900 }
+    ]
+  }
+];
+
+let _journeySelectedId = BIBLE_JOURNEYS[0]?.id || '';
+let _journeyMode = 'ancient';
+
+function _journeyEsc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function _journeyById(id) {
+  return BIBLE_JOURNEYS.find(j => j.id === id) || BIBLE_JOURNEYS[0];
+}
+
+function openBibleJourneysPage(id = _journeySelectedId) {
+  if (id) _journeySelectedId = id;
+  setNavActive('journeys');
+  hideBottomNav();
+  showScreen('journeysPage');
+  hideBottomNav();
+  renderBibleJourneysPage();
+  setTimeout(_applyPendingAppUpdateReload, 50);
+}
+
+function closeBibleJourneysPage() {
+  showNavPage('home');
+}
+
+function setBibleJourneyMode(mode) {
+  _journeyMode = mode === 'modern' ? 'modern' : 'ancient';
+  renderBibleJourneysPage();
+}
+
+function selectBibleJourney(id) {
+  _journeySelectedId = id;
+  renderBibleJourneysPage();
+  document.querySelector('.journeys-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function _journeyTotalMiles(journey) {
+  return Number(journey.distance || (journey.steps || []).reduce((sum, step) => sum + Number(step.miles || 0), 0));
+}
+
+function _journeyPointLabel(point) {
+  return _journeyMode === 'modern' ? point.modern : point.ancient;
+}
+
+function _journeyPolyline(points) {
+  return points.map(p => `${p.x},${p.y}`).join(' ');
+}
+
+function _journeyRenderMap(journey) {
+  const points = journey.points || [];
+  const labels = points.map((p, i) => `
+    <g class="journey-map-point ${i === 0 ? 'first' : ''} ${i === points.length - 1 ? 'last' : ''}">
+      <circle cx="${p.x}" cy="${p.y}" r="${i === 0 || i === points.length - 1 ? 3.8 : 3}" />
+      <text x="${Math.min(92, Math.max(8, p.x + (p.x > 68 ? -18 : 4)))}" y="${Math.max(8, p.y - 3)}">${_journeyEsc(_journeyPointLabel(p))}</text>
+    </g>`).join('');
+  const terrain = _journeyMode === 'modern'
+    ? '<path class="journey-modern-shape" d="M8 18 C25 4 46 10 62 18 C82 28 90 50 84 72 C76 92 54 96 35 88 C14 78 2 50 8 18Z"/><path class="journey-modern-border" d="M46 12 C42 28 45 41 39 56 C34 68 36 82 28 92"/><path class="journey-modern-border" d="M61 19 C54 35 58 53 51 69 C47 79 48 87 44 94"/>'
+    : '<path class="journey-ancient-land" d="M11 22 C28 10 47 12 63 22 C78 31 88 48 85 69 C81 87 62 94 43 90 C24 86 9 72 7 51 C6 39 4 30 11 22Z"/><path class="journey-river" d="M66 12 C58 25 62 42 55 55 C49 66 52 79 45 90"/><path class="journey-river soft" d="M29 18 C35 31 33 45 37 57 C42 70 35 80 38 91"/>';
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="${_journeyEsc(journey.title)} route map">
+    <defs>
+      <filter id="journeyGlow"><feGaussianBlur stdDeviation="1.7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <rect class="journey-map-bg" x="0" y="0" width="100" height="100" rx="8"></rect>
+    ${terrain}
+    <polyline class="journey-route-shadow" points="${_journeyPolyline(points)}" />
+    <polyline class="journey-route-line" points="${_journeyPolyline(points)}" />
+    ${labels}
+  </svg>`;
+}
+
+function renderBibleJourneysPage() {
+  const journey = _journeyById(_journeySelectedId);
+  if (!journey) return;
+  const list = document.getElementById('journeyList');
+  const shell = document.getElementById('journeyMapShell');
+  const stats = document.getElementById('journeyStats');
+  const steps = document.getElementById('journeySteps');
+  document.getElementById('journeyModeAncient')?.classList.toggle('active', _journeyMode === 'ancient');
+  document.getElementById('journeyModeModern')?.classList.toggle('active', _journeyMode === 'modern');
+  const heroTitle = document.getElementById('journeyHeroTitle');
+  const heroCopy = document.getElementById('journeyHeroCopy');
+  const mapTitle = document.getElementById('journeyMapTitle');
+  const mapKicker = document.getElementById('journeyMapKicker');
+  const cert = document.getElementById('journeyCertainty');
+  if (heroTitle) heroTitle.textContent = journey.title;
+  if (heroCopy) heroCopy.textContent = journey.subtitle;
+  if (mapTitle) mapTitle.textContent = _journeyMode === 'modern' ? 'Modern comparison' : 'Bible-world route';
+  if (mapKicker) mapKicker.textContent = journey.title;
+  if (cert) cert.textContent = journey.certainty || 'Approximate';
+  if (list) {
+    list.innerHTML = BIBLE_JOURNEYS.map(j => `<button class="journey-list-card${j.id === journey.id ? ' active' : ''}" onclick="selectBibleJourney('${_journeyEsc(j.id)}')">
+      <span class="material-symbols-outlined">route</span>
+      <strong>${_journeyEsc(j.title)}</strong>
+      <small>${_journeyEsc(j.subtitle)}</small>
+    </button>`).join('');
+  }
+  if (shell) shell.innerHTML = _journeyRenderMap(journey) + `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>`;
+  if (stats) {
+    const miles = _journeyTotalMiles(journey);
+    stats.innerHTML = `
+      <div><span class="material-symbols-outlined">straighten</span><strong>${miles.toLocaleString()} mi</strong><small>approx distance</small></div>
+      <div><span class="material-symbols-outlined">hiking</span><strong>${_journeyEsc(journey.days)}</strong><small>${_journeyEsc(journey.mode)}</small></div>
+      <div><span class="material-symbols-outlined">public</span><strong>${_journeyMode === 'modern' ? 'Today' : 'Then'}</strong><small>${_journeyEsc(_journeyMode === 'modern' ? journey.modern : 'Ancient place names shown')}</small></div>`;
+  }
+  if (steps) {
+    steps.innerHTML = `<div class="journey-section-head"><span class="journey-kicker">Story steps</span><strong>Follow the movement</strong></div>` +
+      (journey.steps || []).map((step, i) => `<article class="journey-step">
+        <span class="journey-step-num">${i + 1}</span>
+        <div><strong>${_journeyEsc(step.label)}</strong><small>${_journeyEsc(step.ref)}${step.miles ? ` · about ${Number(step.miles).toLocaleString()} mi` : ''}</small><p>${_journeyEsc(step.copy)}</p></div>
+      </article>`).join('');
+  }
+}
+
+function _journeyRefMatches(ref, book, chapter, verse) {
+  if (!ref || ref.book !== book) return false;
+  const ch = Number(chapter);
+  const v = Number(verse || 1);
+  if (ch < Number(ref.chFrom || 1) || ch > Number(ref.chTo || ref.chFrom || 1)) return false;
+  if (ref.vFrom && ch === Number(ref.chFrom) && v < Number(ref.vFrom)) return false;
+  if (ref.vTo && ch === Number(ref.chTo || ref.chFrom) && v > Number(ref.vTo)) return false;
+  return true;
+}
+
+function journeyForReference(book, chapter, verse) {
+  return BIBLE_JOURNEYS.find(j => (j.refs || []).some(ref => _journeyRefMatches(ref, book, chapter, verse))) || null;
+}
+
+function openBibleJourneyFromRhemaMenu() {
+  const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
+  const journey = p ? journeyForReference(p.book, p.chapter, p.verse) : null;
+  closeRhemaVerseSheet?.();
+  closeRhema?.();
+  if (journey) openBibleJourneysPage(journey.id);
+  else openBibleJourneysPage();
+}
+
+function showBibleJourneyVisionNote() {
+  const msg = 'Journey maps are curated teaching aids. Routes show likely story movement, not exact GPS certainty. Future versions can swap this schematic renderer for MapLibre with hosted tiles while keeping the same journey data.';
+  if (typeof showRhemaVariant === 'function') showRhemaVariant('Bible Journeys', msg);
+  else alert(msg);
 }
 
 /* =========================
@@ -22074,7 +22431,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.273";
+const APP_VERSION = "3.0.274";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22095,6 +22452,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.274 &mdash; Bible Journey maps</div>
+<ul>
+  <li><strong>Bible Journeys</strong> &mdash; Added a new Tools page with curated follow-along route maps for Abraham, the Exodus, Ruth and Naomi, Mary and Joseph, Jesus going to Jerusalem, Paul&apos;s journeys, and the return from exile.</li>
+  <li><strong>Ancient and modern views</strong> &mdash; Each journey can switch between Bible-world labels and modern comparison notes, with approximate distance and travel-time context.</li>
+  <li><strong>Rhema shortcut</strong> &mdash; When a selected Rhema verse belongs to a mapped journey, the verse sheet can jump straight to that route.</li>
+</ul>
 <div class="un-version-label">v3.0.273 &mdash; Rhema polish and cleaner saved context</div>
 <ul>
   <li><strong>Rhema UI fixes</strong> &mdash; Compare drafts now stay isolated between main Rhema and each study, Focus this verse returns cleanly to full chapter, and the English verse sheet has more bottom room.</li>
@@ -29098,6 +29461,13 @@ function _rhemaRenderVerseSheet() {
   if (study) study.style.display = _studySandboxId ? '' : 'none';
   const wordBtn = document.getElementById('rhemaVerseSheetWordBtn');
   if (wordBtn) wordBtn.style.display = _rhemaShowEnglish ? '' : 'none';
+  const journeyBtn = document.getElementById('rhemaVerseSheetJourneyBtn');
+  if (journeyBtn) {
+    const p = _rhemaParseRef(ref);
+    const journey = p ? journeyForReference(p.book, p.chapter, p.verse) : null;
+    journeyBtn.style.display = journey ? '' : 'none';
+    journeyBtn.querySelector('span:last-child').textContent = journey ? `Follow ${journey.title}` : 'Follow this journey';
+  }
 }
 function closeRhemaVerseSheet(e) {
   if (e && e.target !== document.getElementById('rhemaVerseSheet')) return;
