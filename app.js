@@ -22431,7 +22431,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.274";
+const APP_VERSION = "3.0.275";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22452,6 +22452,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.275 &mdash; Rhema highlight navigation cleanup</div>
+<ul>
+  <li><strong>Highlights/Notes wand</strong> &mdash; The tool-wheel button is centered better inside its circle.</li>
+  <li><strong>Verse press behavior</strong> &mdash; Pressing an English verse now brings that verse to the top of the reader before opening actions.</li>
+  <li><strong>Saved highlights</strong> &mdash; Opening a saved highlight or note now jumps straight to the verse without adding a second temporary highlight cue or leaving stale selection state behind.</li>
+</ul>
 <div class="un-version-label">v3.0.274 &mdash; Bible Journey maps</div>
 <ul>
   <li><strong>Bible Journeys</strong> &mdash; Added a new Tools page with curated follow-along route maps for Abraham, the Exodus, Ruth and Naomi, Mary and Joseph, Jesus going to Jerusalem, Paul&apos;s journeys, and the return from exile.</li>
@@ -29421,12 +29427,27 @@ function _rhemaMarkActiveVerse(verse) {
     .forEach(el => el.classList.add('rhema-verse-acting'));
 }
 
+function _rhemaScrollVerseToTop(verse, { smooth = true } = {}) {
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  if (!body) return;
+  const englishDisplay = document.getElementById('rhemaEnglishDisplay');
+  const originalDisplay = document.getElementById('rhemaVerseDisplay');
+  const display = (_rhemaShowEnglish && !_rhemaSyntaxMode && englishDisplay) ? englishDisplay : originalDisplay;
+  const target = display?.querySelector(`.rhema-chapter-block[data-verse="${String(verse)}"]`);
+  if (!target) return;
+  const top = Math.max(0, _rhemaBlockScrollTop(body, target) - 8);
+  try { body.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' }); }
+  catch { body.scrollTop = top; }
+}
+
 // Tap on an English verse → action sheet (highlight / note / compare / focus).
 function rhemaOpenVerseMenu(v, ev) {
   ev?.stopPropagation?.();
   if (_rhemaSuppressVerseTap) { _rhemaSuppressVerseTap = false; return; }
   const verse = String(v);
   _rhemaVerse = verse;
+  _rhemaVerseFocus = false;
+  _rhemaHighlightStrongs = null;
   syncRhemaPicker?.();
   _rhemaMenuRef = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, verse);
   // When "Add another verse" is active, tapping a verse drops it straight into
@@ -29438,6 +29459,7 @@ function rhemaOpenVerseMenu(v, ev) {
     return;
   }
   _rhemaMarkActiveVerse(verse);
+  _rhemaScrollVerseToTop(verse);
   _rhemaRenderVerseSheet();
   document.getElementById('rhemaVerseSheet')?.classList.add('open');
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
@@ -30721,14 +30743,17 @@ function rhemaOpenSavedMark(ref) {
   const p = _rhemaParseRef(ref);
   if (!p) return;
   closeRhemaHighlightsNotes();
+  closeRhemaVerseSheet();
+  _rhemaMarkActiveVerse(null);
   _rhemaBook = p.book;
   _rhemaChapter = String(p.chapter);
   _rhemaVerse = String(p.verse);
   _rhemaFullChapter = true;
-  _rhemaVerseFocus = true;
+  _rhemaVerseFocus = false;
   _rhemaHighlightStrongs = null;
   syncRhemaPicker?.();
   renderRhemaVerse();
+  requestAnimationFrame(() => requestAnimationFrame(() => _rhemaScrollVerseToTop(_rhemaVerse, { smooth: false })));
 }
 
 // ── Phase 5: English verse/word into the study (reuse existing study logic) ────
