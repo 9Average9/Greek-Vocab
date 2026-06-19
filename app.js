@@ -10441,6 +10441,11 @@ const BIBLE_JOURNEYS = [
     days: '70-95 travel days',
     modern: 'Southern Iraq, Syria/Turkey border region, Lebanon/Israel/West Bank region',
     note: 'Ur, Haran, Shechem, Bethel, and Egypt are shown as a teaching route. Exact roads and stopping points are not preserved.',
+    sources: [
+      'Ur is most often identified with Tell el-Muqayyar in southern Iraq; an alternative northern Ur near Haran is argued by a minority of scholars.',
+      'Haran (Genesis 11:31) sits on the Balikh River in southeastern Turkey, a known caravan hub on the route between Mesopotamia and the Levant.',
+      'Caravans followed the watered Fertile Crescent arc rather than crossing the Arabian desert directly, which is why the line bends north through Haran.'
+    ],
     points: [
       { ancient: 'Ur of the Chaldeans', modern: 'near Nasiriyah, Iraq', x: 82, y: 78 },
       { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 56, y: 25 },
@@ -10466,6 +10471,11 @@ const BIBLE_JOURNEYS = [
     days: 'Weeks of travel, then extended wilderness time',
     modern: 'Egypt and the Sinai region; exact mountain and sea-crossing locations are debated',
     note: 'This is a conservative schematic route. Exodus geography has several debated proposals, so the map emphasizes sequence, not certainty.',
+    sources: [
+      'The sea-crossing site is genuinely unsettled: proposals range from the Bitter Lakes / Reed Sea in the Egyptian isthmus to gulfs of the Red Sea.',
+      'Mount Sinai has at least three serious candidates (traditional Jebel Musa, Jebel Sin Bisher, and northern Arabian sites); this map uses the traditional southern location.',
+      'Rameses and Succoth are tied to eastern Delta sites (Qantir and Tell el-Maskhuta), but the wilderness stations between them are reconstructed from the itinerary in Numbers 33.'
+    ],
     points: [
       { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42 },
       { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47 },
@@ -10491,6 +10501,11 @@ const BIBLE_JOURNEYS = [
     days: '4-7 travel days',
     modern: 'Jordan to the Bethlehem area',
     note: 'The route likely crossed rugged terrain around the Dead Sea/Jordan region. The line is simplified for clarity.',
+    sources: [
+      'Moab lay east of the Dead Sea in modern Jordan; the text does not name a specific Moabite town for Naomi, so a central location is used.',
+      'A return from Moab would normally descend to the Jordan Valley, ford the river near Jericho, then climb the Judean hills to Bethlehem.',
+      'The arrival "at the beginning of barley harvest" (Ruth 1:22) points to spring, which fits a walkable few-day journey.'
+    ],
     points: [
       { ancient: 'Moab', modern: 'central Jordan', x: 70, y: 58 },
       { ancient: 'Jordan crossing region', modern: 'Jordan Valley', x: 50, y: 55 },
@@ -10513,6 +10528,11 @@ const BIBLE_JOURNEYS = [
     days: '5-8 travel days',
     modern: 'Northern Israel to the Bethlehem area',
     note: 'The direct hill-country route and Jordan Valley route are both discussed. This simplified path shows the story movement.',
+    sources: [
+      'Luke 2 names Nazareth and Bethlehem but not the road taken; travelers commonly chose either the central ridge route through Samaria or the longer but flatter Jordan Valley route to avoid Samaritan territory.',
+      'Bethlehem is singled out because it is the ancestral town of David’s line (Luke 2:4; Micah 5:2), not because of a preserved itinerary.',
+      'Distance and timing assume an ordinary family walking pace; the Gospel gives no travel duration.'
+    ],
     points: [
       { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24 },
       { ancient: 'Samaria/Judea road region', modern: 'central highlands', x: 43, y: 45 },
@@ -10536,6 +10556,11 @@ const BIBLE_JOURNEYS = [
     days: '5-8 travel days plus ministry stops',
     modern: 'Northern Israel through the Jordan/Judea region to Jerusalem',
     note: 'The Gospels arrange the travel material theologically as well as geographically. This route is a reading aid, not a full itinerary.',
+    sources: [
+      'Luke’s "travel narrative" (Luke 9:51–19:27) is arranged as much around teaching themes as around geography, so it is not a strict step-by-step map.',
+      'Jericho and Bethany/Bethphage are firmly located; the climb from Jericho (about 850 ft below sea level) to Jerusalem (about 2,500 ft) is a real and steep ascent of roughly 3,300 ft.',
+      'Pilgrims heading to Jerusalem feasts often used the Jordan Valley road, which the Jericho stop reflects.'
+    ],
     points: [
       { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22 },
       { ancient: 'Jordan Valley', modern: 'Jordan River valley', x: 55, y: 50 },
@@ -10561,6 +10586,11 @@ const BIBLE_JOURNEYS = [
     days: 'Several months including ministry stays',
     modern: 'Syria/Turkey, Cyprus, and southern Turkey',
     note: 'Major city locations are known, while exact roads, sea lanes, and stop durations are simplified.',
+    sources: [
+      'Acts 13–14 names the cities directly, and most are archaeologically located (Pisidian Antioch at Yalvaç, Lystra and Derbe confirmed by inscriptions).',
+      'The crossing from Seleucia to Salamis and the sail to Perga follow normal first-century shipping lanes; exact vessels and stop lengths are not recorded.',
+      'The return leg retraces the outbound cities (Acts 14:21–26) rather than taking a new road, so the southern Galatia loop is doubled in the distance estimate.'
+    ],
     points: [
       { ancient: 'Antioch', modern: 'Antakya, Turkey region', x: 53, y: 36 },
       { ancient: 'Seleucia', modern: 'Samandag coast region', x: 50, y: 42 },
@@ -10589,6 +10619,11 @@ const BIBLE_JOURNEYS = [
     days: 'Several months with delays',
     modern: 'Israel, Turkey, Greece/Crete, Malta, Italy',
     note: 'Acts names many ports. The storm drift is represented simply; ancient sailing depended heavily on season and wind.',
+    sources: [
+      'Acts 27–28 is unusually detailed for an ancient voyage and names real ports (Sidon, Myra, Fair Havens, Malta, Puteoli, Rome).',
+      'The fourteen-day storm drift (Acts 27:27) is famously analyzed in James Smith’s "The Voyage and Shipwreck of St Paul," which models the wind and distance toward Malta.',
+      'St Paul’s Bay in northern Malta is the traditional landing site, though the exact wreck point is debated; the drift line here is schematic.'
+    ],
     points: [
       { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 72, y: 68 },
       { ancient: 'Sidon', modern: 'Sidon, Lebanon', x: 70, y: 55 },
@@ -10617,6 +10652,11 @@ const BIBLE_JOURNEYS = [
     days: 'About 4 months in Ezra 7:8-9',
     modern: 'Iraq through Syria/Jordan/Israel region',
     note: 'Caravans usually followed safer river and trade routes rather than cutting straight across desert.',
+    sources: [
+      'Ezra 7:8–9 gives a roughly four-month travel window (first month to fifth month), which fits the long arc up the Euphrates rather than a direct desert crossing.',
+      'Babylon is securely located near Hillah, Iraq; the intermediate "Euphrates corridor" and Damascus-region waypoints stand for the watered trade route, not named stops.',
+      'Nehemiah’s separate journey (Nehemiah 2) came years later under Artaxerxes; it is shown only to mark the second return wave.'
+    ],
     points: [
       { ancient: 'Babylon', modern: 'near Hillah, Iraq', x: 82, y: 71 },
       { ancient: 'Euphrates route', modern: 'Iraq/Syria river corridor', x: 66, y: 42 },
@@ -10629,11 +10669,264 @@ const BIBLE_JOURNEYS = [
       { label: 'Arrival at Jerusalem', ref: 'Ezra 8:31-32', copy: 'The group arrives and rests after the journey.', miles: 150 },
       { label: 'Nehemiah follows later', ref: 'Nehemiah 2:11', copy: 'Nehemiah arrives for wall rebuilding work.', miles: 900 }
     ]
+  },
+  {
+    id: 'jacob-canaan-haran',
+    title: "Jacob's Journey to Haran and Back",
+    subtitle: 'Beersheba to Haran, then home to Shechem',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 28, chTo: 35 }],
+    distance: 900,
+    mode: 'Walking + flocks',
+    days: 'Weeks each way; 20 years in Haran',
+    modern: 'The Negev and central hills up to Haran in southeast Turkey',
+    note: 'Bethel, Shechem, and Haran are known; Peniel and the exact fords across the Jordan and Jabbok are approximate.',
+    sources: [
+      'Haran and Shechem are firmly located; Bethel is generally placed at Beitin in the central highlands.',
+      'Peniel/Penuel lay along the Jabbok River east of the Jordan (Genesis 32:22-31), but its precise site is uncertain.',
+      'Both the outbound and return routes follow the watered Fertile Crescent arc rather than a direct desert line.'
+    ],
+    points: [
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 15, y: 85 },
+      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 22, y: 77 },
+      { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 85, y: 15 },
+      { ancient: 'Peniel', modern: 'Jabbok River, Jordan', x: 32, y: 73 },
+      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 24, y: 72 }
+    ],
+    steps: [
+      { label: 'Fleeing toward Haran', ref: 'Genesis 28:10', copy: 'Jacob leaves Beersheba for Laban’s home.', miles: 60 },
+      { label: 'The dream at Bethel', ref: 'Genesis 28:11-19', copy: 'He sees the stairway to heaven and meets God.', miles: 0 },
+      { label: 'Twenty years with Laban', ref: 'Genesis 29-31', copy: 'He marries and grows wealthy in Haran.', miles: 390 },
+      { label: 'Wrestling at Peniel', ref: 'Genesis 32:22-31', copy: 'He is renamed Israel before meeting Esau.', miles: 400 },
+      { label: 'Safe arrival at Shechem', ref: 'Genesis 33:18-20', copy: 'He settles back in the land of promise.', miles: 25 }
+    ]
+  },
+  {
+    id: 'joseph-family-egypt',
+    title: "Jacob's Family Moves to Egypt",
+    subtitle: 'Hebron through the Negev down to Goshen',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 46, chTo: 47 }],
+    distance: 270,
+    mode: 'Pharaoh’s wagons + flocks',
+    days: '1-2 weeks for the whole household',
+    modern: 'Hebron and the Negev down to Egypt’s eastern Delta',
+    note: 'Goshen is placed in the eastern Nile Delta near Rameses, the best-supported location; the exact district boundaries are uncertain.',
+    sources: [
+      'Jacob stops at Beersheba to worship before leaving the land (Genesis 46:1), fixing the first leg in the northern Negev.',
+      'Goshen is generally located in the eastern Delta around Qantir/Rameses, prime grazing land near the Wadi Tumilat, though its extent is debated.',
+      'Pharaoh’s wagons (Genesis 45:21) imply a cart-worthy road, i.e. the coastal "Way to Shur" rather than open desert.'
+    ],
+    points: [
+      { ancient: 'Hebron', modern: 'Hebron, West Bank', x: 85, y: 50 },
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 78, y: 62 },
+      { ancient: 'Goshen', modern: 'eastern Nile Delta, Egypt', x: 15, y: 80 }
+    ],
+    steps: [
+      { label: 'Worship at Beersheba', ref: 'Genesis 46:1-4', copy: 'God reassures Jacob on the edge of the land.', miles: 25 },
+      { label: 'The household goes down', ref: 'Genesis 46:5-7', copy: 'The whole family travels in Pharaoh’s wagons.', miles: 200 },
+      { label: 'Settling in Goshen', ref: 'Genesis 46:28-47:6', copy: 'Joseph meets them and they settle in the best land.', miles: 20 }
+    ]
+  },
+  {
+    id: 'conquest-jericho-gibeon',
+    title: 'Into the Promised Land',
+    subtitle: 'Crossing the Jordan to Jericho, Ai, and Gibeon',
+    certainty: 'Approximate; some sites debated',
+    refs: [{ book: 'JOS', chFrom: 3, chTo: 10 }],
+    distance: 45,
+    mode: 'Israel’s army + camp',
+    days: 'A campaign of days, not one march',
+    modern: 'Jordan Valley up into the West Bank hill country',
+    note: 'Gilgal and Ai are debated; Jericho and Gibeon are well located. The line shows the early campaign’s movement, not every skirmish.',
+    sources: [
+      'Gilgal’s exact spot near Jericho is uncertain, but it served as Israel’s base camp east of the city (Joshua 4:19).',
+      'Ai’s identification is debated: et-Tell is traditional, while some argue for nearby Khirbet el-Maqatir.',
+      'Gibeon is securely identified with el-Jib, where jar handles inscribed "Gibeon" were excavated.'
+    ],
+    points: [
+      { ancient: 'Shittim', modern: 'Plains of Moab, Jordan', x: 85, y: 60 },
+      { ancient: 'Gilgal', modern: 'near Jericho', x: 66, y: 58 },
+      { ancient: 'Jericho', modern: 'Jericho', x: 58, y: 56 },
+      { ancient: 'Ai', modern: 'et-Tell area, West Bank', x: 30, y: 40 },
+      { ancient: 'Gibeon', modern: 'el-Jib, West Bank', x: 15, y: 45 }
+    ],
+    steps: [
+      { label: 'Crossing the Jordan', ref: 'Joshua 3:14-17', copy: 'The river is cut off and Israel crosses on dry ground.', miles: 6 },
+      { label: 'Camp at Gilgal', ref: 'Joshua 4:19-20', copy: 'Twelve stones are set up as a memorial.', miles: 3 },
+      { label: 'Jericho falls', ref: 'Joshua 6:20', copy: 'The walls collapse after the silent march and shout.', miles: 2 },
+      { label: 'Ai taken on the second try', ref: 'Joshua 7-8', copy: 'Defeat over hidden sin, then victory in the hills.', miles: 12 },
+      { label: 'Defending Gibeon', ref: 'Joshua 10:6-14', copy: 'Israel marches by night to rescue its new allies.', miles: 10 }
+    ]
+  },
+  {
+    id: 'david-flight-saul',
+    title: "David's Flight from Saul",
+    subtitle: 'On the run through Judah and the wilderness',
+    certainty: 'Representative route',
+    refs: [{ book: '1SA', chFrom: 19, chTo: 24 }],
+    distance: 120,
+    mode: 'Fugitive, often by night',
+    days: 'Months on the run',
+    modern: 'Judean hills, the Philistine plain, and the Dead Sea cliffs',
+    note: 'David’s movements cover many caves and camps; this shows a representative arc of his flight, not every stop.',
+    sources: [
+      'Gath, Adullam, and En Gedi are located with reasonable confidence; the cave and stronghold sites are approximate.',
+      'Nob, the priestly town near Jerusalem (1 Samuel 21-22), has no certain modern identification.',
+      'En Gedi’s springs and cliffs above the Dead Sea (1 Samuel 24) match the "Crags of the Wild Goats" setting well.'
+    ],
+    points: [
+      { ancient: 'Gibeah', modern: 'near Jerusalem', x: 64, y: 15 },
+      { ancient: 'Nob', modern: 'near Jerusalem', x: 65, y: 21 },
+      { ancient: 'Gath', modern: 'Tell es-Safi, Israel', x: 15, y: 38 },
+      { ancient: 'Adullam', modern: 'Judean foothills', x: 32, y: 48 },
+      { ancient: 'En Gedi', modern: 'En Gedi, Dead Sea', x: 85, y: 85 }
+    ],
+    steps: [
+      { label: 'Escaping Saul’s court', ref: '1 Samuel 19:11-18', copy: 'Michal lowers David through a window to flee Gibeah.', miles: 3 },
+      { label: 'Bread at Nob', ref: '1 Samuel 21:1-9', copy: 'The priest gives David the consecrated bread and Goliath’s sword.', miles: 5 },
+      { label: 'Among the Philistines', ref: '1 Samuel 21:10-15', copy: 'He feigns madness before the king of Gath.', miles: 25 },
+      { label: 'The cave of Adullam', ref: '1 Samuel 22:1-2', copy: 'Outcasts gather to him and he forms a band.', miles: 12 },
+      { label: 'Sparing Saul at En Gedi', ref: '1 Samuel 24:1-7', copy: 'David cuts Saul’s robe but refuses to kill him.', miles: 35 }
+    ]
+  },
+  {
+    id: 'elijah-cherith-horeb',
+    title: "Elijah's Journey to Horeb",
+    subtitle: 'From Cherith and Carmel to the mountain of God',
+    certainty: 'Approximate route; some sites uncertain',
+    refs: [{ book: '1KI', chFrom: 17, chTo: 19 }],
+    distance: 350,
+    mode: 'On foot, sometimes in haste',
+    days: 'Spread across the drought; 40 days to Horeb',
+    modern: 'Northern Israel and Lebanon down to the Sinai',
+    note: 'The Brook Cherith and Elijah’s exact paths are not firmly located; Zarephath, Carmel, Beersheba, and Horeb anchor the route.',
+    sources: [
+      'The Brook Cherith is placed east of the Jordan (1 Kings 17:3,5) but has no certain modern identification.',
+      'Zarephath lay between Tyre and Sidon on the Phoenician coast (1 Kings 17:9), deep in Baal’s heartland.',
+      'The "forty days and forty nights" to Horeb (1 Kings 19:8) echoes Moses and is theological, not a measured travel log.'
+    ],
+    points: [
+      { ancient: 'Brook Cherith', modern: 'east of the Jordan', x: 85, y: 43 },
+      { ancient: 'Zarephath', modern: 'near Sidon, Lebanon', x: 71, y: 25 },
+      { ancient: 'Mount Carmel', modern: 'Mount Carmel, Israel', x: 61, y: 34 },
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 50, y: 52 },
+      { ancient: 'Horeb / Sinai', modern: 'Sinai Peninsula region', x: 15, y: 85 }
+    ],
+    steps: [
+      { label: 'Hidden by the brook', ref: '1 Kings 17:2-6', copy: 'Ravens feed Elijah during the drought at Cherith.', miles: 0 },
+      { label: 'Sent to Zarephath', ref: '1 Kings 17:8-9', copy: 'A widow in Sidon’s region sustains him.', miles: 90 },
+      { label: 'Showdown on Carmel', ref: '1 Kings 18:19-39', copy: 'Fire falls from heaven and the drought breaks.', miles: 60 },
+      { label: 'Fleeing to Beersheba', ref: '1 Kings 19:3', copy: 'Jezebel’s threat sends him running south.', miles: 95 },
+      { label: 'Forty days to Horeb', ref: '1 Kings 19:8-12', copy: 'He meets God in a gentle whisper.', miles: 170 }
+    ]
+  },
+  {
+    id: 'jesus-galilee-ministry',
+    title: "Jesus' Ministry Around Galilee",
+    subtitle: 'Capernaum and the towns ringing the lake',
+    certainty: 'Representative ministry area',
+    refs: [{ book: 'MRK', chFrom: 1, chTo: 6 }, { book: 'MAT', chFrom: 4, chTo: 9 }],
+    distance: 40,
+    mode: 'Walking + boat across the lake',
+    days: 'Repeated circuits over many months',
+    modern: 'The Sea of Galilee region, northern Israel',
+    note: 'Jesus circled the lake many times; this shows representative towns, not a single trip.',
+    sources: [
+      'Capernaum became Jesus’ base (Matthew 4:13); its synagogue and a house traditionally linked to Peter have been excavated.',
+      'Bethsaida, Magdala, and Chorazin ring the lake within a few miles, so circuits were short and frequent.',
+      'The region of the Gerasenes/Gadarenes on the east shore is debated; Kursi is a leading candidate.'
+    ],
+    points: [
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 15, y: 85 },
+      { ancient: 'Cana', modern: 'Kafr Kanna area', x: 23, y: 71 },
+      { ancient: 'Capernaum', modern: 'Capernaum, north shore', x: 69, y: 34 },
+      { ancient: 'Bethsaida', modern: 'northeast shore', x: 81, y: 25 },
+      { ancient: 'Region of the Gerasenes', modern: 'east shore (Kursi?)', x: 85, y: 48 },
+      { ancient: 'Magdala', modern: 'west shore', x: 59, y: 48 }
+    ],
+    steps: [
+      { label: 'Rejected at Nazareth', ref: 'Luke 4:16-30', copy: 'His hometown turns on him in the synagogue.', miles: 0 },
+      { label: 'Base at Capernaum', ref: 'Matthew 4:13-17', copy: 'He settles by the lake and begins to preach.', miles: 20 },
+      { label: 'Calling the fishermen', ref: 'Mark 1:16-20', copy: 'Peter, Andrew, James, and John leave their nets.', miles: 0 },
+      { label: 'Crossing to the other side', ref: 'Mark 4:35-5:20', copy: 'The storm is stilled; the Gerasene man is freed.', miles: 8 },
+      { label: 'Feeding the five thousand', ref: 'Luke 9:10-17', copy: 'A great crowd is fed near Bethsaida.', miles: 6 }
+    ]
+  },
+  {
+    id: 'paul-second-journey',
+    title: "Paul's Second Missionary Journey",
+    subtitle: 'Antioch and Galatia across to Greece',
+    certainty: 'Known cities, route simplified',
+    refs: [{ book: 'ACT', chFrom: 15, chTo: 18 }],
+    distance: 2800,
+    mode: 'Walking + sailing',
+    days: 'About 2-3 years, including 18 months in Corinth',
+    modern: 'Turkey, then northern and southern Greece',
+    note: 'Macedonian and Greek cities are well located; the Macedonian Call (Acts 16:9-10) marks the crossing from Asia into Europe.',
+    sources: [
+      'Philippi, Thessalonica, Berea, Athens, and Corinth are securely identified; the Bema at Corinth where Paul stood before Gallio survives.',
+      'The Gallio inscription from Delphi independently dates Paul’s Corinth stay to about AD 51-52.',
+      'Acts 16:8-11 marks Troas as the turning point where the gospel crosses from Asia into Europe.'
+    ],
+    points: [
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 85 },
+      { ancient: 'Lystra & Derbe', modern: 'Konya/Karaman region', x: 69, y: 67 },
+      { ancient: 'Troas', modern: 'northwest Turkey coast', x: 35, y: 37 },
+      { ancient: 'Philippi', modern: 'Philippi, Greece', x: 25, y: 20 },
+      { ancient: 'Thessalonica', modern: 'Thessaloniki, Greece', x: 19, y: 25 },
+      { ancient: 'Berea', modern: 'Veria, Greece', x: 15, y: 27 },
+      { ancient: 'Athens', modern: 'Athens, Greece', x: 23, y: 61 },
+      { ancient: 'Corinth', modern: 'Corinth, Greece', x: 18, y: 62 }
+    ],
+    steps: [
+      { label: 'Revisiting Galatia', ref: 'Acts 15:36-16:5', copy: 'Paul strengthens the churches from the first journey.', miles: 550 },
+      { label: 'The Macedonian call', ref: 'Acts 16:8-12', copy: 'A vision redirects the team to Europe.', miles: 350 },
+      { label: 'Philippi to Berea', ref: 'Acts 16:12-17:14', copy: 'Jail, riots, and new believers across Macedonia.', miles: 90 },
+      { label: 'On the Areopagus', ref: 'Acts 17:15-34', copy: 'Paul reasons with the philosophers of Athens.', miles: 220 },
+      { label: 'A year and a half in Corinth', ref: 'Acts 18:1-11', copy: 'A long, settled ministry before sailing home.', miles: 50 }
+    ]
+  },
+  {
+    id: 'paul-third-journey',
+    title: "Paul's Third Missionary Journey",
+    subtitle: 'Ephesus, Greece, and the road to Jerusalem',
+    certainty: 'Known cities, route simplified',
+    refs: [{ book: 'ACT', chFrom: 19, chTo: 21 }],
+    distance: 2700,
+    mode: 'Walking + sailing',
+    days: 'About 3-4 years, including 3 years in Ephesus',
+    modern: 'Turkey and Greece, ending in Israel',
+    note: 'Ephesus (about 3 years, Acts 20:31) anchors this journey; the return sail and Miletus farewell are well documented.',
+    sources: [
+      'Ephesus is extensively excavated; its great theater (Acts 19:29) seated around 25,000 and still stands.',
+      'Paul’s farewell to the Ephesian elders at Miletus (Acts 20:17-38) and the named coastal stops give this leg a firm itinerary.',
+      'The route deliberately heads to Jerusalem despite repeated warnings (Acts 21:10-14), framing it as a path of obedience.'
+    ],
+    points: [
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 54 },
+      { ancient: 'Ephesus', modern: 'Selcuk, Turkey', x: 39, y: 42 },
+      { ancient: 'Macedonia', modern: 'northern Greece', x: 22, y: 20 },
+      { ancient: 'Greece (Corinth)', modern: 'southern Greece', x: 15, y: 42 },
+      { ancient: 'Miletus', modern: 'western Turkey coast', x: 38, y: 44 },
+      { ancient: 'Tyre', modern: 'Tyre, Lebanon', x: 80, y: 74 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 78, y: 80 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 80, y: 85 }
+    ],
+    steps: [
+      { label: 'Three years in Ephesus', ref: 'Acts 19:1-20', copy: 'The word spreads through all of Asia.', miles: 850 },
+      { label: 'Through Macedonia and Greece', ref: 'Acts 20:1-3', copy: 'He encourages the churches once more.', miles: 700 },
+      { label: 'Farewell at Miletus', ref: 'Acts 20:17-38', copy: 'He warns the Ephesian elders he will not return.', miles: 350 },
+      { label: 'Set toward Jerusalem', ref: 'Acts 21:1-14', copy: 'He presses on despite the prophets’ warnings.', miles: 600 },
+      { label: 'Arrival in Jerusalem', ref: 'Acts 21:15-17', copy: 'The journey ends among the brothers there.', miles: 70 }
+    ]
   }
 ];
 
 let _journeySelectedId = BIBLE_JOURNEYS[0]?.id || '';
 let _journeyMode = 'ancient';
+// Follow-along route animation state (a single traveler dot walks the polyline).
+const _journeyAnim = { raf: 0, playing: false };
 
 function _journeyEsc(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -10656,6 +10949,7 @@ function openBibleJourneysPage(id = _journeySelectedId) {
 }
 
 function closeBibleJourneysPage() {
+  _journeyStopPlay();
   showNavPage('home');
 }
 
@@ -10701,6 +10995,7 @@ function _journeyRenderMap(journey) {
     <polyline class="journey-route-shadow" points="${_journeyPolyline(points)}" />
     <polyline class="journey-route-line" points="${_journeyPolyline(points)}" />
     ${labels}
+    <circle class="journey-traveler" id="journeyTraveler" cx="${points[0]?.x ?? 50}" cy="${points[0]?.y ?? 50}" r="2.7" />
   </svg>`;
 }
 
@@ -10730,7 +11025,10 @@ function renderBibleJourneysPage() {
       <small>${_journeyEsc(j.subtitle)}</small>
     </button>`).join('');
   }
-  if (shell) shell.innerHTML = _journeyRenderMap(journey) + `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>`;
+  _journeyStopPlay();
+  if (shell) shell.innerHTML = _journeyRenderMap(journey) +
+    `<div class="journey-map-controls"><button type="button" class="journey-play-btn" id="journeyPlayBtn" onclick="toggleJourneyPlay()"><span class="material-symbols-outlined">play_arrow</span><span>Play route</span></button></div>` +
+    `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>`;
   if (stats) {
     const miles = _journeyTotalMiles(journey);
     stats.innerHTML = `
@@ -10740,11 +11038,121 @@ function renderBibleJourneysPage() {
   }
   if (steps) {
     steps.innerHTML = `<div class="journey-section-head"><span class="journey-kicker">Story steps</span><strong>Follow the movement</strong></div>` +
-      (journey.steps || []).map((step, i) => `<article class="journey-step">
+      (journey.steps || []).map((step, i) => `<article class="journey-step" data-step="${i}">
         <span class="journey-step-num">${i + 1}</span>
         <div><strong>${_journeyEsc(step.label)}</strong><small>${_journeyEsc(step.ref)}${step.miles ? ` · about ${Number(step.miles).toLocaleString()} mi` : ''}</small><p>${_journeyEsc(step.copy)}</p></div>
       </article>`).join('');
   }
+  const srcEl = document.getElementById('journeySources');
+  if (srcEl) {
+    const sources = journey.sources || [];
+    srcEl.style.display = sources.length ? '' : 'none';
+    srcEl.innerHTML = sources.length
+      ? `<div class="journey-section-head"><span class="journey-kicker">Sources &amp; notes</span><strong>Why the route is drawn this way</strong></div>` +
+        sources.map(s => `<div class="journey-source-item"><span class="material-symbols-outlined">menu_book</span><p>${_journeyEsc(s)}</p></div>`).join('')
+      : '';
+  }
+}
+
+// ── Follow-along route animation ──────────────────────────────────────────────
+// A single glowing dot walks the polyline at a steady pace, lighting up each
+// stop and its matching story step. Pure rAF + SVG so it stays offline-safe.
+function _journeySetPlayBtn(state) {
+  const btn = document.getElementById('journeyPlayBtn');
+  if (!btn) return;
+  const icon = btn.querySelector('.material-symbols-outlined');
+  const label = btn.querySelector('span:last-child');
+  const text = state === 'playing' ? 'Stop' : (state === 'done' ? 'Replay route' : 'Play route');
+  if (icon) icon.textContent = state === 'playing' ? 'stop' : (state === 'done' ? 'replay' : 'play_arrow');
+  if (label) label.textContent = text;
+  btn.classList.toggle('playing', state === 'playing');
+}
+
+function _journeyStopPlay() {
+  if (_journeyAnim.raf) cancelAnimationFrame(_journeyAnim.raf);
+  _journeyAnim.raf = 0;
+  _journeyAnim.playing = false;
+}
+
+function toggleJourneyPlay() {
+  if (_journeyAnim.playing) {
+    _journeyStopPlay();
+    _journeySetPlayBtn('idle');
+    return;
+  }
+  _journeyStartPlay();
+}
+
+function _journeyPosAt(pts, segLens, total, frac) {
+  let d = Math.max(0, Math.min(1, frac)) * total;
+  for (let i = 0; i < segLens.length; i++) {
+    if (d <= segLens[i] || i === segLens.length - 1) {
+      const t = segLens[i] ? d / segLens[i] : 0;
+      const a = pts[i], b = pts[i + 1];
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, seg: i };
+    }
+    d -= segLens[i];
+  }
+  const last = pts[pts.length - 1];
+  return { x: last.x, y: last.y, seg: Math.max(0, segLens.length - 1) };
+}
+
+function _journeyStartPlay() {
+  const shell = document.getElementById('journeyMapShell');
+  const traveler = shell?.querySelector('#journeyTraveler');
+  const journey = _journeyById(_journeySelectedId);
+  const pts = (journey?.points || []);
+  if (!traveler || pts.length < 2) return;
+  const segLens = [];
+  let total = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const L = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+    segLens.push(L);
+    total += L;
+  }
+  if (total <= 0) return;
+  const pointEls = [...shell.querySelectorAll('.journey-map-point')];
+  const stepEls = [...document.querySelectorAll('#journeySteps .journey-step')];
+  const stepCount = stepEls.length;
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  const duration = reduce ? 600 : Math.min(9000, Math.max(2800, total / 18 * 1000));
+  traveler.classList.add('on');
+  _journeyStopPlay();
+  _journeyAnim.playing = true;
+  _journeySetPlayBtn('playing');
+  const start = performance.now();
+  const apply = (frac) => {
+    const ease = frac < 0.5 ? 2 * frac * frac : 1 - Math.pow(-2 * frac + 2, 2) / 2;
+    const pos = _journeyPosAt(pts, segLens, total, ease);
+    traveler.setAttribute('cx', pos.x.toFixed(2));
+    traveler.setAttribute('cy', pos.y.toFixed(2));
+    const done = frac >= 1;
+    const target = done ? pts.length - 1 : pos.seg + 1;
+    pointEls.forEach((el, i) => {
+      el.classList.toggle('passed', i <= pos.seg || (done && i <= target));
+      el.classList.toggle('current', i === target);
+    });
+    if (stepCount) {
+      const active = done ? stepCount - 1 : Math.min(pos.seg, stepCount - 1);
+      stepEls.forEach((el, i) => {
+        el.classList.toggle('passed', i < active);
+        el.classList.toggle('current', i === active);
+      });
+    }
+  };
+  const frame = (now) => {
+    if (!_journeyAnim.playing) return;
+    const frac = Math.min(1, (now - start) / duration);
+    apply(frac);
+    if (frac >= 1) {
+      _journeyAnim.playing = false;
+      _journeyAnim.raf = 0;
+      _journeySetPlayBtn('done');
+      return;
+    }
+    _journeyAnim.raf = requestAnimationFrame(frame);
+  };
+  _journeyAnim.raf = requestAnimationFrame(frame);
 }
 
 function _journeyRefMatches(ref, book, chapter, verse) {
@@ -22431,7 +22839,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.274";
+const APP_VERSION = "3.0.275";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22452,6 +22860,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.275 &mdash; More Bible Journeys</div>
+<ul>
+  <li><strong>Eight new journeys</strong> &mdash; Added Jacob to Haran and back, Jacob&apos;s family to Egypt, the entry into the Promised Land, David&apos;s flight from Saul, Elijah to Horeb, Jesus&apos; ministry around Galilee, and Paul&apos;s second and third missionary journeys.</li>
+  <li><strong>Play the route</strong> &mdash; Each map now has a Play button that walks a marker along the path, lighting up every stop and its matching Scripture step.</li>
+  <li><strong>Sources &amp; notes</strong> &mdash; Every journey lists why its route is drawn the way it is, with honest notes on debated or approximate locations.</li>
+</ul>
 <div class="un-version-label">v3.0.274 &mdash; Bible Journey maps</div>
 <ul>
   <li><strong>Bible Journeys</strong> &mdash; Added a new Tools page with curated follow-along route maps for Abraham, the Exodus, Ruth and Naomi, Mary and Joseph, Jesus going to Jerusalem, Paul&apos;s journeys, and the return from exile.</li>
