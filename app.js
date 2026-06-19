@@ -22839,7 +22839,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.276";
+const APP_VERSION = "3.0.277";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22860,6 +22860,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.277 &mdash; Home tools artwork polish</div>
+<ul>
+  <li><strong>Bible Journeys tile</strong> &mdash; The Home tool now uses the new globe journey artwork.</li>
+  <li><strong>Tool images</strong> &mdash; Removed the extra white image stage behind Home tool artwork so icons blend into their themed cards more naturally.</li>
+</ul>
 <div class="un-version-label">v3.0.276 &mdash; More Bible Journeys</div>
 <ul>
   <li><strong>Eight new journeys</strong> &mdash; Added Jacob to Haran and back, Jacob&apos;s family to Egypt, the entry into the Promised Land, David&apos;s flight from Saul, Elijah to Horeb, Jesus&apos; ministry around Galilee, and Paul&apos;s second and third missionary journeys.</li>
