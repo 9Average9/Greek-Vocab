@@ -30859,7 +30859,9 @@ body.journeys-active #studyTabBar { display: none !important; }
   overflow: hidden;
   background: var(--card-color);
 }
+.journey-map-shell.gl-mounting .journey-gl-map,
 .journey-map-shell.gl-ready .journey-gl-map { display: block; }
+.journey-map-shell.gl-mounting svg,
 .journey-map-shell.gl-ready svg { display: none; }
 .journey-gl-map .maplibregl-ctrl-attrib {
   font-size: 0.62rem;

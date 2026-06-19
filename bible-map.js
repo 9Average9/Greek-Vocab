@@ -263,6 +263,7 @@
         });
         map.on('load', function () {
           try {
+            map.resize();   // container may have been sized just before init
             _addOverlays();
             _addMarkers();
             map.fitBounds(_bounds(state.coords), { padding: 46, maxZoom: 9, animate: false });

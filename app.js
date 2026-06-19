@@ -10932,7 +10932,10 @@ const _journeyAnim = { raf: 0, playing: false };
    Set BIBLE_WORLD_PMTILES_URL to the hosted .pmtiles file (see
    scripts/build-bibleworld-pmtiles.md). While it is empty, the offline-safe
    schematic SVG map stays in charge and nothing below this point runs. */
-const BIBLE_WORLD_PMTILES_URL = 'https://github.com/9Average9/Greek-Vocab/releases/download/bibleworld-tiles/bibleworld.pmtiles';
+// Same-origin path to the hosted Bible-world tiles (must live next to the app so
+// the browser allows the fetch — cross-origin hosts like GitHub Releases are
+// blocked by CORS). Empty string keeps the offline-safe schematic map.
+const BIBLE_WORLD_PMTILES_URL = 'bibleworld.pmtiles';
 let _journeyGLActive = false;          // true once a real map is mounted + loaded
 let _bibleMapLibsPromise = null;
 
@@ -10984,14 +10987,15 @@ function _ensureBibleMapLibs() {
 
 function _journeyGLFallback() {
   _journeyGLActive = false;
-  document.getElementById('journeyMapShell')?.classList.remove('gl-ready');
+  document.getElementById('journeyMapShell')?.classList.remove('gl-ready', 'gl-mounting');
 }
 
 function _journeyMountGL(journey) {
   const shell = document.getElementById('journeyMapShell');
   if (!shell) return;
+  _journeyGLActive = false;
+  shell.classList.remove('gl-ready', 'gl-mounting');
   if (!_bibleMapEnabled() || !(journey.points || []).some(p => typeof p.lat === 'number')) {
-    _journeyGLFallback();
     return;
   }
   let host = shell.querySelector('#journeyGLMap');
@@ -11002,18 +11006,26 @@ function _journeyMountGL(journey) {
     const svg = shell.querySelector('svg');
     if (svg) svg.insertAdjacentElement('afterend', host); else shell.prepend(host);
   }
-  shell.classList.remove('gl-ready');
+  // Show the map container (and hide the schematic) BEFORE creating the map, so
+  // MapLibre initialises into a sized, visible element — a hidden container makes
+  // the GL canvas render at 0x0 and never appear.
+  shell.classList.add('gl-mounting');
+  // pmtiles needs an absolute URL; resolve a same-origin relative path here.
+  const pmtilesUrl = /^https?:/i.test(BIBLE_WORLD_PMTILES_URL)
+    ? BIBLE_WORLD_PMTILES_URL
+    : new URL(BIBLE_WORLD_PMTILES_URL, document.baseURI).href;
   _ensureBibleMapLibs().then(() => {
     if (_journeySelectedId !== journey.id) return null;     // user moved on
     if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('bible map unsupported');
     return window.BibleMap.render(host, journey, {
       mode: _journeyMode,
-      pmtilesUrl: BIBLE_WORLD_PMTILES_URL,
+      pmtilesUrl: pmtilesUrl,
       labelFor: _journeyLabelFor,
       onError: () => _journeyGLFallback()
     });
   }).then((map) => {
     if (map) { _journeyGLActive = true; shell.classList.add('gl-ready'); }
+    else { shell.classList.remove('gl-mounting'); }
   }).catch(() => { _journeyGLFallback(); });
 }
 
@@ -22970,7 +22982,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.279";
+const APP_VERSION = "3.0.280";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22991,6 +23003,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.280 &mdash; Real map fixes</div>
+<ul>
+  <li><strong>Map now loads</strong> &mdash; Fixed the Bible Journeys real map so it draws correctly instead of falling back to the simple map (it was being created in a hidden box, and the tile file is now read from the app&apos;s own site).</li>
+</ul>
 <div class="un-version-label">v3.0.279 &mdash; Home tool image alignment</div>
 <ul>
   <li><strong>Tool artwork</strong> &mdash; Restored the previous centered image sizing/stage so Home tools no longer overlap their labels, while keeping the new Bible Journeys globe image.</li>
