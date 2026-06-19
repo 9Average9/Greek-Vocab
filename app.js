@@ -22074,7 +22074,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.270";
+const APP_VERSION = "3.0.271";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22095,6 +22095,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.271 &mdash; More Bible context catchers</div>
+<ul>
+  <li><strong>More confusing Bible terms covered</strong> &mdash; Added context notes for prophetic words, apocalyptic imagery, Roman/legal terms, geography, family/inheritance language, and worship idioms.</li>
+  <li><strong>Smarter phrases</strong> &mdash; The English word picker now catches phrases like Holy of Holies, Day of the Lord, Book of Life, abomination of desolation, casting lots, and kinsman redeemer.</li>
+  <li><strong>Cleaner matching</strong> &mdash; Phrase detection now checks word boundaries so the picker only surfaces real phrase matches.</li>
+</ul>
 <div class="un-version-label">v3.0.270 &mdash; Bible-world context glossary</div>
 <ul>
   <li><strong>More Bible Context</strong> &mdash; English word lookup now covers many Bible-specific terms modern dictionaries may not explain well, including OT weights, measures, coins, feasts, tabernacle/temple vocabulary, and clean/unclean language.</li>
@@ -29427,6 +29433,187 @@ const RHEMA_ENGLISH_BIBLE_PHRASES = {
   'feast of tabernacles': 'tabernacles',
   'feast of weeks': 'pentecost'
 };
+Object.assign(RHEMA_ENGLISH_BIBLE_DICT, {
+  adar: 'Twelfth month of the Hebrew calendar, roughly February/March.',
+  nisan: 'First month of the Hebrew religious calendar, roughly March/April. Passover occurs in this month.',
+  sivan: 'Third month of the Hebrew calendar, roughly May/June.',
+  tammuz: 'Fourth month of the Hebrew calendar, roughly June/July.',
+  av: 'Fifth month of the Hebrew calendar, roughly July/August.',
+  elul: 'Sixth month of the Hebrew calendar, roughly August/September.',
+  tishri: 'Seventh month of the Hebrew calendar, roughly September/October.',
+  chislev: 'Ninth month of the Hebrew calendar, roughly November/December.',
+  tevet: 'Tenth month of the Hebrew calendar, roughly December/January.',
+  shebat: 'Eleventh month of the Hebrew calendar, roughly January/February.',
+  lot: 'Can mean an object used for decision-making or an assigned portion/share. In names, Lot is also Abraham\'s nephew.',
+  lots: 'Objects used for making a decision or assigning portions. The practice appears in both OT and NT settings.',
+  oracle: 'A message or revelation from God. In some contexts it can refer to the inner sanctuary or sacred utterances.',
+  burden: 'In prophetic books, "burden" can mean an oracle or weighty message, not just something carried.',
+  woe: 'A serious warning, lament, or announcement of coming trouble; stronger than casual sadness.',
+  remnant: 'A surviving or remaining group. In prophetic contexts it often refers to those preserved after judgment or exile.',
+  exile: 'Forced removal from homeland. In the OT it especially refers to Israel/Judah being taken by foreign powers.',
+  diaspora: 'The scattered Jewish communities living outside the land of Israel.',
+  sojourner: 'A resident foreigner or temporary dweller. OT law often gives special concern for sojourners.',
+  stranger: 'Often means foreigner or resident outsider rather than an unknown person. Context decides.',
+  proselyte: 'A Gentile convert to Judaism.',
+  eunuch: 'A castrated male or court official; in some contexts the term may refer broadly to a royal official.',
+  concubine: 'A secondary wife or woman in a recognized but lower-status marriage arrangement in ancient settings.',
+  betrothal: 'A binding marriage pledge stronger than modern engagement. Breaking betrothal could require formal divorce.',
+  dowry: 'Marriage payment or gift, depending on culture and context.',
+  kinsman: 'A relative, often with family responsibility. In Ruth, the kinsman-redeemer concept is important.',
+  goel: 'Hebrew term often translated kinsman-redeemer or redeemer, referring to a relative who acts to restore family loss or rights.',
+  birthright: 'The special inheritance/status of the firstborn son in ancient family structures.',
+  firstborn: 'Can mean the first child born or a status of rank/inheritance. Context matters.',
+  genealogy: 'A family line or ancestry list. Biblical genealogies often show identity, promise, legitimacy, and continuity.',
+  tribe: 'A major kinship group in Israel descended from one of Jacob\'s sons, or a broad people-group division.',
+  clan: 'A family subdivision within a tribe.',
+  lotinheritance: 'Land or portion assigned by lot, especially in Joshua and tribal inheritance contexts.',
+  inheritance: 'Can mean land, family possession, promised blessing, or future share from God depending on context.',
+  threshingfloor: 'A flat place where grain was separated from chaff. It can become a significant setting for judgment, provision, or worship.',
+  winepress: 'A place for pressing grapes. Prophets may use winepress imagery for harvest, abundance, or judgment.',
+  cistern: 'A pit or reservoir for collecting water, sometimes dry and used as a holding place.',
+  threshing: 'Separating grain from husks/chaff. Often used literally and as imagery for judgment or separation.',
+  chaff: 'The husk/waste separated from grain; often imagery for what is worthless or blown away.',
+  yoke: 'A wooden bar for animals pulling together. Figuratively it can mean burden, service, slavery, or discipleship.',
+  horn: 'Can mean an animal horn, altar horn, musical horn, or a symbol of strength/power.',
+  signet: 'A seal ring or stamp used to mark authority, ownership, or approval.',
+  sackcloth: 'Coarse cloth worn as a sign of mourning, grief, repentance, or humiliation.',
+  ashes: 'Often associated with mourning, grief, repentance, or human frailty.',
+  fast: 'To abstain from food for a time, often connected with mourning, prayer, humility, or seeking God.',
+  fasting: 'The practice of abstaining from food for a time, often with prayer, mourning, or humility.',
+  lament: 'A cry of grief, protest, or sorrow directed to God or spoken over loss.',
+  selah: 'A term in Psalms. Exact meaning is uncertain; likely a musical/liturgical marker or pause.',
+  maskil: 'A heading in some Psalms. Meaning uncertain; often associated with instruction, contemplation, or a skillful psalm.',
+  miktam: 'A Psalm heading term with uncertain meaning.',
+  shigionoth: 'A musical/liturgical term in Habakkuk 3; exact meaning uncertain.',
+  hessed: 'Often transliterated hesed. Refers to loyal love, covenant kindness, mercy, or steadfast love depending on context.',
+  shalom: 'Peace, wholeness, well-being, completeness, and harmony.',
+  amen: 'Means truly, surely, or so be it. It can affirm truth, agreement, or solemn certainty.',
+  hallelujah: 'Means praise Yah or praise the LORD.',
+  maranatha: 'Aramaic expression usually understood as Our Lord, come or Our Lord has come; context and spacing are debated.',
+  abba: 'Aramaic address meaning father. In NT prayer language it expresses direct address to God as Father.',
+  hosanna: 'Originally save, please; in the Gospels it functions as praise/acclamation.',
+  corban: 'A gift dedicated to God. In Mark 7 it appears in a controversy about using religious dedication to avoid family responsibility.',
+  raca: 'An insult in Matthew 5. Exact force is debated, but it is contemptuous speech.',
+  gehenna: 'A term associated with judgment in NT usage, drawn from the Valley of Hinnom imagery near Jerusalem.',
+  beatitudes: 'Blessing statements, especially Jesus\' "Blessed are..." sayings.',
+  woes: 'Serious warnings or lament-like announcements of coming trouble.',
+  antichrist: 'A term in John\'s letters for one opposed to Christ or denying Him; later Christian usage also connects it with end-time opposition.',
+  beast: 'In apocalyptic passages, a symbolic figure or empire-like power opposed to God. Context and genre matter.',
+  dragon: 'In Revelation, a symbolic figure identified with Satan.',
+  lampstands: 'In Revelation, lampstands symbolize churches; in OT/temple settings the lampstand is a worship object.',
+  seals: 'Can mean marks of ownership/authority or, in Revelation, sealed judgments/scroll seals.',
+  trumpet: 'Can be a musical/signal instrument. In biblical imagery it can announce worship, war, warning, or divine action.',
+  vial: 'Older translation term for bowl in Revelation judgments.',
+  bowl: 'A vessel; in Revelation, bowls are symbolic containers of judgment.',
+  scroll: 'A rolled writing material. In Scripture it can refer to written revelation, legal records, or symbolic heavenly records.',
+  bookoflife: 'A symbolic record of those belonging to life/God. Context shapes the details.',
+  lamb: 'Can mean a young sheep or sacrificial imagery. In John/Revelation, Lamb is a major title/image for Jesus.',
+  lionofjudah: 'Messianic image from Judah imagery, especially Genesis 49 and Revelation 5.',
+  rootofdavid: 'Messianic title/image connected with Davidic promise and Isaiah imagery.',
+  branch: 'A messianic image in several prophets, using growth/shoot imagery for the promised ruler.',
+  cornerstone: 'A key stone in a building. Biblically it can symbolize foundation, honor, rejection, or Christ depending on context.',
+  stumblingstone: 'Stone imagery for offense or stumbling, used in prophetic/NT texts for rejection of God\'s chosen stone.',
+  newcovenant: 'A covenant promise especially associated with Jeremiah 31 and picked up in the NT. Context determines the emphasis.',
+  oldcovenant: 'Usually refers to the Mosaic covenant or prior covenant arrangement in contrast with the new covenant.',
+  dayofthelord: 'Prophetic phrase for decisive divine intervention, often involving judgment, rescue, or both.',
+  lastdays: 'A phrase for the climactic period of God\'s purposes. NT writers can speak of the last days as already underway.',
+  age: 'Can mean a time period, world order, or era. Context decides whether it is this age, the age to come, or a general period.',
+  ageofages: 'A phrase expressing eternity or ages upon ages, depending on translation.',
+  lakeoffire: 'Apocalyptic image in Revelation associated with final judgment.',
+  seconddeath: 'Phrase in Revelation associated with final judgment.',
+  tribulation: 'Pressure, distress, trouble, or affliction. Context determines whether ordinary suffering or a specific end-time period is meant.',
+  abomination: 'Something detestable, often connected to idolatry or severe covenant violation.',
+  desolation: 'Devastation or abandonment. In prophetic phrases it can connect with judgment imagery.',
+  abominationofdesolation: 'Prophetic phrase from Daniel used by Jesus. It points to a desecrating event connected with judgment; details are debated.',
+  judgmentseat: 'A place of official judgment. In NT settings it can refer to Roman authority or God/Christ\'s evaluative judgment depending on context.',
+  bema: 'Greek term for judgment seat or tribunal platform; often used of official evaluation or public judgment.',
+  praetorium: 'Governor\'s headquarters or official residence in Roman administration.',
+  scourge: 'To whip or flog. Roman scourging was severe and often part of punishment before crucifixion.',
+  crucifixion: 'Roman execution by being fixed to a cross. It was public, shameful, and brutal.',
+  cross: 'Roman instrument of execution. In NT teaching it also becomes a symbol of Jesus\' death and of discipleship cost.',
+  veil: 'A curtain or covering. In temple contexts, the veil separated sacred space; in 2 Corinthians it can be used figuratively.',
+  veiltemple: 'Temple curtain separating holy spaces; its tearing at Jesus\' death is narratively significant.',
+  holies: 'In "Holy of Holies," the innermost sanctuary of tabernacle/temple.',
+  holyofholies: 'The innermost sanctuary of the tabernacle/temple, associated with God\'s special presence and the ark.',
+  dayofatonement: 'Annual day in Leviticus 16 centered on purification/atonement for Israel and the sanctuary.',
+  scapegoat: 'The goat sent away on the Day of Atonement ritual in Leviticus 16. Exact translation and symbolism are discussed.',
+  azazel: 'Term in Leviticus 16 connected with the sent-away goat. Meaning is debated.',
+  manna: 'Food provided for Israel in the wilderness. Later Scripture can use it as provision imagery.',
+  quail: 'Birds provided as food in wilderness narratives.',
+  jordan: 'Major river in Israel\'s story. Crossings of the Jordan often mark transition into promise or new stages.',
+  galilee: 'Northern region of Israel where much of Jesus\' ministry occurs.',
+  samaria: 'Central region between Judea and Galilee; loaded with Jewish-Samaritan history and tension.',
+  judea: 'Southern region around Jerusalem in NT geography.',
+  decapolis: 'A group of largely Greco-Roman cities east/southeast of Galilee.',
+  caesarea: 'Important Roman administrative city on the Mediterranean coast.',
+  capernaum: 'Town on the Sea of Galilee that served as a major base in Jesus\' ministry.',
+  nazareth: 'Town in Galilee where Jesus grew up.',
+  bethany: 'Village near Jerusalem associated with Mary, Martha, Lazarus, and events near Jesus\' final week.',
+  bethsaida: 'Fishing village/town near the Sea of Galilee; associated with several disciples and miracles.',
+  jericho: 'Ancient city near the Jordan valley, important in both OT conquest narratives and NT stories.',
+  cana: 'Village in Galilee associated with Jesus turning water into wine.',
+  patmos: 'Island associated with John receiving Revelation.',
+  ephesus: 'Major city in Asia Minor, important in Acts, Ephesians, and Revelation.',
+  corinth: 'Major Greek city known for commerce; Paul ministered there and wrote to its church.',
+  philippi: 'Roman colony in Macedonia where Paul founded a church.',
+  thessalonica: 'Major Macedonian city where Paul founded a church.',
+  antioch: 'Important early Christian center; there are multiple cities named Antioch, so context matters.',
+  tarsus: 'City in Cilicia, known as Paul\'s hometown.',
+  areopagus: 'Hill/council in Athens where Paul speaks in Acts 17.',
+  stoic: 'Member of a Greek philosophical school emphasizing virtue, reason, and living according to nature.',
+  epicurean: 'Member of a Greek philosophical school often associated with seeking tranquility and avoiding fear of gods/death.'
+});
+Object.assign(RHEMA_ENGLISH_BIBLE_ALIASES, {
+  oracles: 'oracle', burdens: 'burden', remnants: 'remnant', exiles: 'exile',
+  sojourners: 'sojourner', strangers: 'stranger', proselytes: 'proselyte',
+  eunuchs: 'eunuch', concubines: 'concubine', betrothed: 'betrothal',
+  kinsmen: 'kinsman', kinsmanredeemer: 'goel', redeemer: 'goel', redeemers: 'goel',
+  birthrights: 'birthright', firstborns: 'firstborn', genealogies: 'genealogy',
+  tribes: 'tribe', clans: 'clan', inheritances: 'inheritance',
+  threshingfloors: 'threshingfloor', winepresses: 'winepress', cisterns: 'cistern',
+  yokes: 'yoke', horns: 'horn', signets: 'signet', fasted: 'fast', fasting: 'fasting',
+  laments: 'lament', halleluia: 'hallelujah', alleluia: 'hallelujah',
+  antichrists: 'antichrist', beasts: 'beast', dragons: 'dragon', trumpets: 'trumpet',
+  vials: 'vial', bowls: 'bowl', scrolls: 'scroll', lambs: 'lamb',
+  cornerstones: 'cornerstone', branch: 'branch', branches: 'branch',
+  ages: 'age', tribulations: 'tribulation', abominations: 'abomination',
+  desolations: 'desolation', scourged: 'scourge', scourging: 'scourge',
+  crucified: 'crucifixion', veils: 'veil', scapegoats: 'scapegoat',
+  nazarene: 'nazareth', nazarenes: 'nazareth', galileans: 'galilee',
+  stoics: 'stoic', epicureans: 'epicurean'
+});
+Object.assign(RHEMA_ENGLISH_BIBLE_PHRASES, {
+  'holy of holies': 'holyofholies',
+  'most holy place': 'holyofholies',
+  'day of atonement': 'dayofatonement',
+  'book of life': 'bookoflife',
+  'lion of judah': 'lionofjudah',
+  'root of david': 'rootofdavid',
+  'stumbling stone': 'stumblingstone',
+  'new covenant': 'newcovenant',
+  'old covenant': 'oldcovenant',
+  'day of the lord': 'dayofthelord',
+  'last days': 'lastdays',
+  'lake of fire': 'lakeoffire',
+  'second death': 'seconddeath',
+  'abomination of desolation': 'abominationofdesolation',
+  'judgment seat': 'judgmentseat',
+  'holy place': 'holies',
+  'holy places': 'holies',
+  'veil of the temple': 'veiltemple',
+  'holy spirit': 'holyspirit',
+  'son of david': 'rootofdavid',
+  'tax collector': 'taxcollector',
+  'tax collectors': 'taxcollector',
+  'threshing floor': 'threshingfloor',
+  'threshing floors': 'threshingfloor',
+  'wine press': 'winepress',
+  'kinsman redeemer': 'goel',
+  'casting lots': 'lots',
+  'cast lots': 'lots',
+  'this age': 'age',
+  'age to come': 'age'
+});
 
 function _rhemaParseRef(ref) {
   const m = String(ref).match(/^(.*) (\d+):(\d+)$/);
@@ -29648,7 +29835,7 @@ function _rhemaEnglishWordsForMenuRef() {
   const text = _rhemaEnglishText(p.book, p.chapter, p.verse) || '';
   const normalized = text.toLowerCase().replace(/[^a-z'\u2019\- ]/g, ' ').replace(/\s+/g, ' ').trim();
   const phrases = Object.keys(RHEMA_ENGLISH_BIBLE_PHRASES)
-    .filter(phrase => normalized.includes(phrase))
+    .filter(phrase => new RegExp(`(^| )${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}( |$)`).test(normalized))
     .map(phrase => phrase.replace(/\b\w/g, ch => ch.toUpperCase()));
   const words = text.replace(/[^A-Za-z'\u2019\- ]/g, ' ').split(/\s+/).filter(w => w.length > 1);
   return [...new Set([...phrases, ...words])];
