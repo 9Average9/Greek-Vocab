@@ -22053,6 +22053,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.265 &mdash; Rhema compare &amp; English focus</div>
+<ul>
+  <li><strong>Compare verses</strong> &mdash; Tap a verse and choose <strong>Compare</strong> to collect verses into a list you can reorder and save as a Trail.</li>
+  <li><strong>Cleaner English reading</strong> &mdash; In English the Greek/Hebrew tools tuck away, with a "go deeper" swap to open the original language when you want it.</li>
+</ul>
 <div class="un-version-label">v3.0.264 &mdash; Rhema highlights &amp; notes</div>
 <ul>
   <li><strong>Highlight verses</strong> &mdash; Tap any English verse to highlight it in a colour of your choice.</li>
@@ -24055,8 +24060,9 @@ window.__onAuthStateReady = async (user) => {
     updateConnectEmailSettingsRow();
     maybeShowConnectEmailPrompt();
 
-    // Sync the user's Rhema highlights/notes from the cloud.
+    // Sync the user's Rhema highlights/notes + saved comparisons from the cloud.
     _rhemaStartMarksSync();
+    _rhemaStartTrailsSync();
 
     // Re-prompt for notifications when a returning user signs in on a new PWA install
     // where permission hasn't been granted yet (e.g. after reinstalling the app)
@@ -29036,6 +29042,141 @@ function rhemaDeleteNote() {
   renderRhemaVerse();
 }
 
+// ── Compare → Trails ──────────────────────────────────────────────────────────
+// Collect verses (in any order) into a comparison, reorder them, and save the
+// list as a named Trail. Trails persist to localStorage + Firestore.
+let _rhemaCompare = [];     // ordered array of refs ("John 3:16")
+let _rhemaTrails = [];      // saved comparisons [{id,title,refs,createdAt}]
+let _rhemaTrailsUnsub = null;
+
+function _rhemaParseRef(ref) {
+  const m = String(ref).match(/^(.*) (\d+):(\d+)$/);
+  return m ? { book: m[1], chapter: m[2], verse: m[3] } : null;
+}
+function _rhemaLoadLocalTrails() {
+  try { _rhemaTrails = JSON.parse(localStorage.getItem('rhemaTrails') || '[]') || []; }
+  catch { _rhemaTrails = []; }
+}
+function _rhemaPersistLocalTrails() {
+  try { localStorage.setItem('rhemaTrails', JSON.stringify(_rhemaTrails)); } catch {}
+}
+function _rhemaStartTrailsSync() {
+  _rhemaLoadLocalTrails();
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  _rhemaTrailsUnsub?.(); _rhemaTrailsUnsub = null;
+  if (!uid || !window.Auth?.listenRhemaTrails) return;
+  _rhemaTrailsUnsub = window.Auth.listenRhemaTrails(uid, (cloud) => {
+    const byId = {};
+    [..._rhemaTrails, ...cloud].forEach(t => { if (t && t.id) byId[t.id] = t; });
+    _rhemaTrails = Object.values(byId).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    _rhemaPersistLocalTrails();
+    if (document.getElementById('rhemaCompareOverlay')?.classList.contains('open')) _rhemaRenderCompare();
+  });
+}
+
+function rhemaAddToCompareFromMenu() {
+  if (_rhemaMenuRef && !_rhemaCompare.includes(_rhemaMenuRef)) _rhemaCompare.push(_rhemaMenuRef);
+  closeRhemaVerseSheet();
+  rhemaOpenCompare();
+}
+function rhemaOpenCompare() {
+  _rhemaRenderCompare();
+  document.getElementById('rhemaCompareOverlay')?.classList.add('open');
+}
+function closeRhemaCompare(e) {
+  if (e && e.target !== document.getElementById('rhemaCompareOverlay')) return;
+  document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
+}
+function rhemaCompareMove(idx, dir) {
+  const j = idx + dir;
+  if (j < 0 || j >= _rhemaCompare.length) return;
+  const tmp = _rhemaCompare[idx]; _rhemaCompare[idx] = _rhemaCompare[j]; _rhemaCompare[j] = tmp;
+  _rhemaRenderCompare();
+}
+function rhemaCompareRemove(idx) {
+  _rhemaCompare.splice(idx, 1);
+  _rhemaRenderCompare();
+  _rhemaSyncCompareChip();
+}
+function rhemaCompareClear() {
+  _rhemaCompare = [];
+  _rhemaRenderCompare();
+  _rhemaSyncCompareChip();
+}
+function _rhemaRenderCompare() {
+  const list = document.getElementById('rhemaCompareList');
+  if (list) {
+    if (!_rhemaCompare.length) {
+      list.innerHTML = `<div class="rhema-compare-empty">No verses yet. Tap a verse in the reader and choose <strong>Compare</strong> to add it here.</div>`;
+    } else {
+      list.innerHTML = _rhemaCompare.map((ref, i) => {
+        const p = _rhemaParseRef(ref);
+        const text = p ? (_rhemaEnglishText(p.book, p.chapter, p.verse) || '') : '';
+        return `<div class="rhema-compare-item">
+          <div class="rhema-compare-item-hd">
+            <span class="rhema-compare-ref">${_escapeRhemaAttr(_rhemaDisplayRefFromKey(ref) || ref)}</span>
+            <span class="rhema-compare-ctrls">
+              <button onclick="rhemaCompareMove(${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="Move up"><span class="material-symbols-outlined">arrow_upward</span></button>
+              <button onclick="rhemaCompareMove(${i},1)" ${i === _rhemaCompare.length - 1 ? 'disabled' : ''} aria-label="Move down"><span class="material-symbols-outlined">arrow_downward</span></button>
+              <button onclick="rhemaCompareRemove(${i})" aria-label="Remove"><span class="material-symbols-outlined">close</span></button>
+            </span>
+          </div>
+          <div class="rhema-compare-text">${_escapeRhemaAttr(text)}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+  // saved trails
+  const saved = document.getElementById('rhemaCompareSaved');
+  if (saved) {
+    saved.innerHTML = _rhemaTrails.length
+      ? `<div class="rhema-vsheet-label">Saved comparisons</div>` + _rhemaTrails.map(t =>
+          `<div class="rhema-compare-saved-row">
+            <button class="rhema-compare-saved-open" onclick="rhemaLoadTrail('${_escapeRhemaAttr(t.id)}')">
+              <span class="material-symbols-outlined">route</span>
+              <span>${_escapeRhemaAttr(t.title || 'Untitled')} <small>(${(t.refs || []).length})</small></span>
+            </button>
+            <button class="rhema-compare-saved-del" onclick="rhemaDeleteTrail('${_escapeRhemaAttr(t.id)}')" aria-label="Delete"><span class="material-symbols-outlined">delete</span></button>
+          </div>`).join('')
+      : '';
+  }
+  const saveBtn = document.getElementById('rhemaCompareSaveBtn');
+  if (saveBtn) saveBtn.disabled = _rhemaCompare.length < 1;
+}
+function rhemaLoadTrail(id) {
+  const t = _rhemaTrails.find(x => x.id === id);
+  if (!t) return;
+  _rhemaCompare = [...(t.refs || [])];
+  _rhemaRenderCompare();
+  _rhemaSyncCompareChip();
+}
+async function rhemaDeleteTrail(id) {
+  _rhemaTrails = _rhemaTrails.filter(t => t.id !== id);
+  _rhemaPersistLocalTrails();
+  _rhemaRenderCompare();
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (uid) window.Auth.deleteRhemaTrail?.(uid, id).catch(() => {});
+}
+async function rhemaSaveCompareTrail() {
+  if (!_rhemaCompare.length) return;
+  const first = _rhemaDisplayRefFromKey(_rhemaCompare[0]) || _rhemaCompare[0];
+  const title = (prompt('Name this comparison:', `${first} comparison`) || '').trim();
+  if (!title) return;
+  const trail = { id: 'rt_' + Date.now().toString(36), title, refs: [..._rhemaCompare], createdAt: Date.now() };
+  _rhemaTrails = [trail, ..._rhemaTrails];
+  _rhemaPersistLocalTrails();
+  _rhemaRenderCompare();
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (uid) window.Auth.saveRhemaTrail?.(uid, trail).catch(() => {});
+}
+function _rhemaSyncCompareChip() {
+  const chip = document.getElementById('rhemaCompareChip');
+  if (!chip) return;
+  chip.classList.toggle('hidden', _rhemaCompare.length === 0);
+  const n = document.getElementById('rhemaCompareChipCount');
+  if (n) n.textContent = String(_rhemaCompare.length);
+}
+
 function _rhemaCuratedScriptureNotesForKey(key) {
   const version = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
   const official = window.RhemaScriptureNotes?.[version]?.[key]
@@ -29487,6 +29628,8 @@ async function showRhema() {
   if (!modal) return;
   modal.classList.add('open');
   _rhemaStartMarksSync();
+  _rhemaStartTrailsSync();
+  _rhemaSyncCompareChip();
 
   // Main entry opens as a plain-English chapter reader; the swap control takes
   // you into the Greek. Sandbox and sermon flows manage their own modes.
@@ -32556,13 +32699,17 @@ function updateRhemaSwapVisibility() {
   const btn = document.getElementById('rhemaSwapBtn');
   if (gr)   gr.classList.toggle('hidden', _rhemaShowEnglish);
   if (English)  English.classList.toggle('hidden', !_rhemaShowEnglish);
+  // English-reading mode tucks the Greek/Hebrew-only tools away and frames the
+  // swap as an inviting "go deeper" into the original language.
+  const englishReading = _rhemaShowEnglish && !_rhemaSyntaxMode && !_rhemaGreekOnly;
+  document.getElementById('rhemaModal')?.classList.toggle('rhema-english-mode', englishReading);
   if (btn) {
     const original = _rhemaOriginalLabel();
     btn.innerHTML =
       `<span class="rhema-swap-seg${_rhemaShowEnglish ? ' active' : ''}">English</span>` +
-      `<span class="rhema-swap-seg${_rhemaShowEnglish ? '' : ' active'}">${original}</span>`;
+      `<span class="rhema-swap-seg rhema-swap-deeper${_rhemaShowEnglish ? '' : ' active'}">${original}</span>`;
     btn.title = _rhemaShowEnglish
-      ? `Swap to the ${original} text`
+      ? `Go deeper — open the ${original} text`
       : `Swap to English (${_rhemaEnglishLabel()})`;
   }
 }

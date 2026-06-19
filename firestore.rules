@@ -44,6 +44,12 @@ service cloud.firestore {
           && request.auth.uid == uid;
       }
 
+      // Rhema saved verse comparisons (trails) — private to the owner.
+      match /rhemaTrails/{trailId} {
+        allow read, create, update, delete: if request.auth != null
+          && request.auth.uid == uid;
+      }
+
       match /habitReminderSlots/{slotId} {
         allow read, create, update, delete: if request.auth != null
           && request.auth.uid == uid;
