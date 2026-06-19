@@ -10932,7 +10932,7 @@ const _journeyAnim = { raf: 0, playing: false };
    Set BIBLE_WORLD_PMTILES_URL to the hosted .pmtiles file (see
    scripts/build-bibleworld-pmtiles.md). While it is empty, the offline-safe
    schematic SVG map stays in charge and nothing below this point runs. */
-const BIBLE_WORLD_PMTILES_URL = '';
+const BIBLE_WORLD_PMTILES_URL = 'https://github.com/9Average9/Greek-Vocab/releases/download/bibleworld-tiles/bibleworld.pmtiles';
 let _journeyGLActive = false;          // true once a real map is mounted + loaded
 let _bibleMapLibsPromise = null;
 
@@ -22994,7 +22994,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.277 &mdash; Real Bible-world maps (foundation)</div>
 <ul>
   <li><strong>Accurate coordinates</strong> &mdash; Every journey stop now has a real latitude and longitude, so routes can be drawn on a true map instead of only a stylized one.</li>
-  <li><strong>Real map renderer</strong> &mdash; Added an optional MapLibre map that draws each route over a self-hosted, free, offline-friendly basemap (no map keys, no tracking). It turns on once the Bible-world map file is hosted; until then the fast schematic map stays in place.</li>
+  <li><strong>Real map renderer</strong> &mdash; The journey maps can now draw each route over a true top-down map (a self-hosted, free, offline-friendly basemap with no map keys or tracking), with the fast schematic map as the offline fallback.</li>
   <li><strong>Ancient vs modern</strong> &mdash; The real map swaps between a parchment Bible-world look and a modern-geography look, keeping the same routes, distances, and story steps.</li>
 </ul>
 <div class="un-version-label">v3.0.276 &mdash; More Bible Journeys</div>
