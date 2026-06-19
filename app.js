@@ -22074,7 +22074,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.269";
+const APP_VERSION = "3.0.270";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22095,6 +22095,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.270 &mdash; Bible-world context glossary</div>
+<ul>
+  <li><strong>More Bible Context</strong> &mdash; English word lookup now covers many Bible-specific terms modern dictionaries may not explain well, including OT weights, measures, coins, feasts, tabernacle/temple vocabulary, and clean/unclean language.</li>
+  <li><strong>Name meanings</strong> &mdash; Added concise notes for common biblical names and places, with debated meanings marked carefully.</li>
+  <li><strong>Better matching</strong> &mdash; Plurals and variants like cubits, shekels, Levites, Pharisees, and tax collectors now resolve to their base context notes.</li>
+</ul>
 <div class="un-version-label">v3.0.269 &mdash; Neutral Bible context notes</div>
 <ul>
   <li><strong>English word cards</strong> &mdash; The interpretive helper is now labelled <strong>Bible Context</strong> and reads as a usage note, not a theological definition.</li>
@@ -29210,6 +29216,217 @@ const RHEMA_ENGLISH_BIBLE_DICT = {
   fellowship: 'Shared participation, partnership, and communion.',
   wisdom: 'Skill, insight, or practical understanding for living rightly. Biblical wisdom is often tied to fearing God.'
 };
+Object.assign(RHEMA_ENGLISH_BIBLE_DICT, {
+  // OT weights, measures, money, and time.
+  cubit: 'A common ancient length based on the forearm, roughly 18 inches or 45 cm, though exact values varied. A long cubit could be larger.',
+  span: 'A small length from thumb to little finger with the hand spread, roughly 9 inches or 23 cm.',
+  handbreadth: 'A small length about the width of a hand, roughly 3 inches or 7.5 cm.',
+  reed: 'A measuring rod. In Ezekiel it is usually about 6 long cubits, roughly 10 feet or 3 meters; exact value depends on the passage.',
+  ephah: 'A dry measure for grain, roughly 22 liters or about 5.8 gallons. Treat conversions as approximate.',
+  bath: 'A liquid measure roughly equal to an ephah, about 22 liters or 5.8 gallons.',
+  homer: 'A large dry or liquid measure, about 10 ephahs or 10 baths, roughly 220 liters or 58 gallons.',
+  kor: 'A large measure roughly equal to a homer, about 220 liters or 58 gallons.',
+  omer: 'A dry measure equal to one-tenth of an ephah, roughly 2.2 liters or about 2 quarts.',
+  seah: 'A dry measure about one-third of an ephah, roughly 7 liters or 7.5 quarts.',
+  hin: 'A liquid measure of roughly 3.7 liters or about 1 gallon.',
+  log: 'A small liquid measure, roughly one-third liter or about 0.3 liter.',
+  shekel: 'A weight and later a money term. As a weight it was roughly 11 grams or 0.4 oz, but standards varied.',
+  gerah: 'A small weight equal to one-twentieth of a shekel.',
+  bekah: 'A half-shekel weight.',
+  mina: 'A large weight or money unit. In OT settings it is often about 50 or 60 shekels depending on the standard; conversions vary.',
+  talent: 'A very large weight or money unit, often about 3,000 shekels. Approximate weight around 75 lb or 34 kg, with variation by standard.',
+  denarius: 'A Roman silver coin commonly treated as about a day wage for a laborer in NT settings.',
+  drachma: 'A Greek silver coin, roughly comparable to a denarius in many NT-era settings.',
+  stater: 'A coin worth several drachmas; in Matthew 17 it is enough for the temple tax for two people.',
+  lepton: 'A tiny copper coin, the smallest Jewish coin mentioned in the NT; often translated mite.',
+  mite: 'An older English word for a very small coin, usually referring to the lepton in the widow story.',
+  quadrant: 'A small Roman coin, worth two lepta.',
+  watch: 'A division of the night for keeping guard. Jewish and Roman systems divided the night differently, so check the setting.',
+  passover: 'Israelite feast remembering deliverance from Egypt. In the NT it also forms the setting for Jesus\' death.',
+  pentecost: 'A feast fifty days after Passover, also called Weeks. In Acts 2 it is the setting for the Spirit being given.',
+  tabernacles: 'Feast of Booths/Shelters, remembering wilderness dwelling and celebrating harvest.',
+  unleavened: 'Bread made without leaven. In Exodus and Passover contexts it is tied to haste, separation, and remembrance.',
+  sabbath: 'The seventh day of rest. In Scripture it can mark creation rest, covenant rhythm, worship, and mercy.',
+  jubilee: 'The fiftieth-year release described in Leviticus 25, involving rest, release, and return of inherited land.',
+
+  // OT place, worship, priesthood, and object terms.
+  tabernacle: 'The portable sanctuary used by Israel in the wilderness, centered on God dwelling among His people.',
+  temple: 'The permanent sanctuary in Jerusalem. Depending on context it can also refer figuratively to God\'s dwelling among His people.',
+  altar: 'A place of offering or sacrifice. Context decides whether it is for burnt offerings, incense, or another use.',
+  ark: 'Can refer to Noah\'s boat or the ark of the covenant. In worship contexts, the ark represented God\'s covenant presence with Israel.',
+  mercyseat: 'The cover of the ark of the covenant, associated with atonement imagery in the tabernacle/temple system.',
+  ephod: 'A priestly garment. In some passages it is connected with seeking guidance; in others, misuse of an ephod becomes idolatrous.',
+  breastpiece: 'A priestly item worn by the high priest, associated with the tribes of Israel and priestly representation.',
+  urim: 'Part of the Urim and Thummim, priestly means of seeking judgment or guidance. Exact mechanics are not fully known.',
+  thummim: 'Part of the Urim and Thummim, priestly means of seeking judgment or guidance. Exact mechanics are not fully known.',
+  laver: 'A basin for washing in tabernacle/temple service.',
+  menorah: 'A lampstand, especially the seven-branched lampstand in the tabernacle/temple.',
+  lampstand: 'A stand holding lamps. In worship contexts it often refers to the tabernacle/temple lampstand.',
+  incense: 'Fragrant material burned in worship. It can be associated with priestly service and prayer imagery.',
+  offering: 'A gift or sacrifice brought to God. The kind of offering matters: burnt, grain, peace, sin, guilt, wave, or freewill.',
+  burnt: 'In "burnt offering," the whole animal offering was burned on the altar, often expressing dedication to God.',
+  grain: 'In "grain offering," a gift from produce, often flour, oil, and frankincense. Context tells whether ordinary food or offering is meant.',
+  peaceoffering: 'A sacrifice associated with fellowship, thanksgiving, vow, or freewill worship. Often includes a shared meal.',
+  sinoffering: 'An offering connected with purification and dealing with sin/uncleanness under the Mosaic system.',
+  guiltoffering: 'An offering associated with guilt, restitution, and repair under the Mosaic system.',
+  waveoffering: 'An offering presented before the Lord by a waving motion. It marked something as given or set apart.',
+  firstfruits: 'The first part of produce given to God, recognizing Him as source and owner of the harvest.',
+  tithe: 'A tenth. In OT law it is tied to support for Levites, worship, and care; details vary by passage.',
+  levite: 'A member of the tribe of Levi, often associated with tabernacle/temple service.',
+  priest: 'One who serves in worship and represents people before God. In Israel this role is tied especially to Aaron\'s line.',
+  nazirite: 'A person under a special vow involving separation, usually avoiding wine, hair cutting, and contact with the dead.',
+  unclean: 'A ritual status in OT law, not always the same as morally sinful. Context shows whether ritual, moral, or symbolic concerns are in view.',
+  clean: 'In OT law, a status allowing participation in worship/community life. It can be ritual, dietary, or moral depending on context.',
+  leprosy: 'Older Bible translation term for various skin diseases or surface conditions, not always modern Hansen\'s disease.',
+  circumcision: 'The covenant sign given to Abraham and his male descendants. In the NT it can be discussed literally or as a symbol.',
+  cherubim: 'Heavenly beings associated with God\'s presence, throne imagery, and guarding sacred space.',
+  seraphim: 'Heavenly beings in Isaiah 6 associated with God\'s holiness and worship.',
+  teraphim: 'Household idols or images. Biblical passages usually present them negatively or ambiguously.',
+  asherah: 'A Canaanite goddess or cult object associated with idolatrous worship in Israel\'s surroundings.',
+  baal: 'A Canaanite title/name meaning lord/master, often referring to a storm/fertility deity opposed in Israel\'s worship.',
+  molech: 'A deity associated with forbidden child sacrifice in OT texts.',
+  highplace: 'A worship site, often elevated. In OT narratives high places may be condemned when tied to idolatry or unauthorized worship.',
+  gehenna: 'A term associated with final judgment in NT usage, drawn from the Valley of Hinnom imagery near Jerusalem.',
+  hades: 'The realm of the dead in biblical usage; not always identical with final judgment.',
+  sheol: 'The OT term for the realm of the dead or grave. It can describe death broadly, not necessarily final judgment.',
+
+  // OT names and places. Meanings are traditional and sometimes debated.
+  adam: 'Name related to humanity/man and the ground word in Hebrew. In context it may mean Adam personally or humanity.',
+  eve: 'Traditionally connected with life/living, because she is called mother of all living.',
+  noah: 'Traditionally connected with rest or comfort in Genesis 5:29.',
+  abram: 'Traditionally understood as exalted father.',
+  abraham: 'Genesis explains the name as father of a multitude.',
+  sarai: 'Earlier name of Sarah; traditional meanings are debated, often connected with princess/noblewoman.',
+  sarah: 'Means princess or noblewoman.',
+  isaac: 'Connected with laughter in Genesis.',
+  jacob: 'Connected with heel/grasping and later with his story of struggle and striving.',
+  israel: 'Given to Jacob after wrestling; commonly explained as he struggles with God or God strives. Exact nuance is debated.',
+  joseph: 'Connected with the idea may he add in Genesis 30:24.',
+  moses: 'Explained in Exodus as drawn out, connected with being drawn from the water.',
+  joshua: 'Means Yahweh saves or the LORD saves; same basic name behind Jesus in Greek form.',
+  caleb: 'Name meaning is debated; sometimes connected with dog, but the biblical character is known for wholehearted faithfulness.',
+  david: 'Traditionally understood as beloved.',
+  solomon: 'Related to peace/shalom.',
+  samuel: 'Traditionally connected with heard by God or asked of God.',
+  saul: 'Means asked for or requested.',
+  elijah: 'Means my God is Yahweh.',
+  elisha: 'Means God is salvation.',
+  isaiah: 'Means Yahweh saves.',
+  jeremiah: 'Meaning is debated; often explained as Yahweh appoints/exalts/throws.',
+  ezekiel: 'Means God strengthens.',
+  daniel: 'Means God is my judge.',
+  hosea: 'Related to salvation/rescue.',
+  joel: 'Means Yahweh is God.',
+  jonah: 'Means dove.',
+  micah: 'Shortened form meaning who is like Yahweh?',
+  nahum: 'Means comfort.',
+  habakkuk: 'Meaning uncertain; often associated with embrace.',
+  zephaniah: 'Means Yahweh has hidden/protected.',
+  haggai: 'Related to festival/feast.',
+  zechariah: 'Means Yahweh remembers.',
+  malachi: 'Means my messenger.',
+  bethlehem: 'Means house of bread.',
+  bethel: 'Means house of God.',
+  jerusalem: 'Name meaning is debated; often connected with foundation/city of peace.',
+  zion: 'A hill/fortress name in Jerusalem, later used for Jerusalem, God\'s people, or future hope depending on context.',
+  egypt: 'A major ancient nation; in biblical narrative it can be literal Egypt or a symbol of bondage/rescue depending on context.',
+  babylon: 'Ancient empire/city. Later biblical usage can symbolize proud human power opposed to God.',
+
+  // NT context terms and names.
+  pharisee: 'A Jewish religious group known for attention to law, purity, and tradition. The NT portrays individuals differently, so do not flatten every Pharisee into one stereotype.',
+  sadducee: 'A Jewish priestly/aristocratic group associated with the temple and denial of resurrection.',
+  scribe: 'A trained expert in Scripture or legal interpretation.',
+  synagogue: 'A local Jewish gathering place for Scripture reading, teaching, prayer, and community life.',
+  sanhedrin: 'The Jewish ruling council in Jerusalem in NT settings.',
+  gentile: 'A non-Jew. Context decides whether the emphasis is ethnic, covenantal, social, or mission-related.',
+  samaritan: 'A person from Samaria. Jews and Samaritans had deep historical and religious tensions in the NT period.',
+  publican: 'Older term for tax collector. Tax collectors were often socially despised because of association with Rome and abuses.',
+  tax: 'In NT settings, taxes often relate to Roman rule, local collectors, social tension, and questions about loyalty or justice.',
+  collector: 'In "tax collector," this refers to someone collecting taxes. NT tax collectors were often socially despised because of Roman association and possible exploitation.',
+  taxcollector: 'A collector of taxes, often viewed negatively in NT settings because of Roman association and possible exploitation.',
+  centurion: 'A Roman military officer, commonly over about one hundred soldiers.',
+  praetorium: 'A governor\'s headquarters or official residence.',
+  legion: 'A large Roman military unit. In ordinary Roman use it could be several thousand soldiers; in Mark 5 it signals a great number.',
+  apostle: 'A sent messenger or authorized representative; in the NT often a commissioned witness of Christ.',
+  deacon: 'A servant or minister. In church contexts it can refer to an appointed servant-leader.',
+  elder: 'A recognized leader. In church contexts, elders shepherd and oversee; in Jewish contexts, elders can be civic/religious leaders.',
+  overseer: 'A guardian or supervisor. In church context, a pastoral leadership term.',
+  parable: 'A comparison or story used to make a point, often inviting the hearer to respond.',
+  beatitude: 'A blessing statement, especially the "Blessed are..." sayings of Jesus.',
+  hosanna: 'A Hebrew/Aramaic expression originally meaning save, please; in the Gospels it functions as praise/acclamation.',
+  amen: 'Means truly or so be it. Jesus often uses it to introduce solemn, reliable statements.',
+  rabbi: 'Teacher or master, used as a respectful address for a Jewish teacher.',
+  messiah: 'Anointed one. In Greek this is Christ.',
+  holyspirit: 'Refers to the Spirit of God. Context determines whether the verse emphasizes presence, empowerment, guidance, holiness, or God\'s personal action.',
+  sonofman: 'A title Jesus uses often. It can echo ordinary humanity and Daniel 7\'s figure who receives authority, so context matters.',
+  sonofgod: 'A title used in several ways, including royal/Messianic identity and unique relationship to God. Let the passage shape the emphasis.',
+  kingdomofgod: 'A phrase for God\'s reign/rule and the life associated with it. Context decides whether the focus is present reality, future hope, or authority.',
+  kingdomofheaven: 'Matthew\'s common phrase, usually parallel to kingdom of God, emphasizing God\'s reign/rule.',
+  jesus: 'Greek form of Joshua, meaning Yahweh saves or the LORD saves.',
+  peter: 'Means rock/stone, a name Jesus gives Simon.',
+  cephas: 'Aramaic name meaning rock, equivalent to Peter.',
+  paul: 'Roman name meaning small or little; Saul is his Hebrew/Jewish name.',
+  barnabas: 'Acts explains the name as son of encouragement.',
+  thomas: 'Means twin.',
+  boanerges: 'Explained in Mark as sons of thunder.',
+  immanuel: 'Means God with us.',
+  golgotha: 'Means place of a skull.',
+  calvary: 'Traditional English/Latin-derived name corresponding to Golgotha, place of a skull.',
+  gethsemane: 'Traditionally understood as oil press, the garden area where Jesus prayed before arrest.',
+  mammon: 'Wealth or possessions, often personified as a rival master in Jesus\' teaching.',
+  gehenna: 'A term associated with judgment in NT usage, drawn from the Valley of Hinnom imagery near Jerusalem.'
+});
+const RHEMA_ENGLISH_BIBLE_ALIASES = {
+  cubits: 'cubit', spans: 'span', handbreadths: 'handbreadth', reeds: 'reed',
+  ephahs: 'ephah', baths: 'bath', homers: 'homer', kors: 'kor', omers: 'omer',
+  seahs: 'seah', hins: 'hin', logs: 'log', shekels: 'shekel', gerahs: 'gerah',
+  bekahs: 'bekah', minas: 'mina', talents: 'talent', denarii: 'denarius',
+  drachmas: 'drachma', staters: 'stater', lepta: 'lepton', mites: 'mite',
+  quadrants: 'quadrant', watches: 'watch',
+  unleavenedbread: 'unleavened', feastofbooths: 'tabernacles', feastofweeks: 'pentecost',
+  feastoftabernacles: 'tabernacles', booths: 'tabernacles', sabbaths: 'sabbath',
+  altars: 'altar', arkofthecovenant: 'ark', mercyseat: 'mercyseat', mercyseats: 'mercyseat',
+  ephods: 'ephod', breastplate: 'breastpiece', breastplates: 'breastpiece',
+  lampstands: 'lampstand', offerings: 'offering', burntoffering: 'burnt',
+  grainoffering: 'grain', peaceoffering: 'peaceoffering', peaceofferings: 'peaceoffering',
+  sinoffering: 'sinoffering', sinofferings: 'sinoffering', guiltoffering: 'guiltoffering',
+  guiltofferings: 'guiltoffering', waveoffering: 'waveoffering', waveofferings: 'waveoffering',
+  tithes: 'tithe', levites: 'levite', priests: 'priest', nazirites: 'nazirite',
+  cleansed: 'clean', cleansing: 'clean', leprous: 'leprosy', circumcised: 'circumcision',
+  cherub: 'cherubim', seraph: 'seraphim', highplaces: 'highplace', highplace: 'highplace',
+  grave: 'sheol', pit: 'sheol',
+  abram: 'abram', abraham: 'abraham', sarah: 'sarah', sarai: 'sarai',
+  pharisees: 'pharisee', sadducees: 'sadducee', scribes: 'scribe', synagogues: 'synagogue',
+  gentiles: 'gentile', samaritans: 'samaritan', publicans: 'publican',
+  taxes: 'tax', taxation: 'tax', collectors: 'collector', taxcollectors: 'taxcollector',
+  centurions: 'centurion', legions: 'legion',
+  apostles: 'apostle', deacons: 'deacon', elders: 'elder', overseers: 'overseer',
+  parables: 'parable', beatitudes: 'beatitude', rabbis: 'rabbi',
+  christ: 'messiah', emmanuel: 'immanuel'
+};
+const RHEMA_ENGLISH_BIBLE_PHRASES = {
+  'ark of the covenant': 'ark',
+  'ark of covenant': 'ark',
+  'mercy seat': 'mercyseat',
+  'burnt offering': 'burnt',
+  'grain offering': 'grain',
+  'peace offering': 'peaceoffering',
+  'sin offering': 'sinoffering',
+  'guilt offering': 'guiltoffering',
+  'wave offering': 'waveoffering',
+  'high place': 'highplace',
+  'high places': 'highplace',
+  'tax collector': 'taxcollector',
+  'tax collectors': 'taxcollector',
+  'son of man': 'sonofman',
+  'son of god': 'sonofgod',
+  'holy spirit': 'holyspirit',
+  'kingdom of god': 'kingdomofgod',
+  'kingdom of heaven': 'kingdomofheaven',
+  'feast of booths': 'tabernacles',
+  'feast of tabernacles': 'tabernacles',
+  'feast of weeks': 'pentecost'
+};
 
 function _rhemaParseRef(ref) {
   const m = String(ref).match(/^(.*) (\d+):(\d+)$/);
@@ -29429,7 +29646,12 @@ function _rhemaEnglishWordsForMenuRef() {
   const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
   if (!p) return [];
   const text = _rhemaEnglishText(p.book, p.chapter, p.verse) || '';
-  return [...new Set(text.replace(/[^A-Za-z'\u2019\- ]/g, ' ').split(/\s+/).filter(w => w.length > 1))];
+  const normalized = text.toLowerCase().replace(/[^a-z'\u2019\- ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const phrases = Object.keys(RHEMA_ENGLISH_BIBLE_PHRASES)
+    .filter(phrase => normalized.includes(phrase))
+    .map(phrase => phrase.replace(/\b\w/g, ch => ch.toUpperCase()));
+  const words = text.replace(/[^A-Za-z'\u2019\- ]/g, ' ').split(/\s+/).filter(w => w.length > 1);
+  return [...new Set([...phrases, ...words])];
 }
 function _rhemaOpenWordPicker(mode = 'lookup') {
   const words = _rhemaEnglishWordsForMenuRef();
@@ -29468,6 +29690,28 @@ function rhemaPickEnglishWord(word) {
 }
 function _rhemaCleanEnglishLookupWord(word) {
   return String(word || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/g, '').replace(/\u2019/g, "'");
+}
+function _rhemaBibleContextKey(word) {
+  const clean = _rhemaCleanEnglishLookupWord(word).replace(/[^a-z]/g, '');
+  if (!clean) return '';
+  const candidates = [
+    clean,
+    RHEMA_ENGLISH_BIBLE_ALIASES[clean],
+    clean.endsWith('ies') ? clean.slice(0, -3) + 'y' : '',
+    clean.endsWith('es') ? clean.slice(0, -2) : '',
+    clean.endsWith('s') ? clean.slice(0, -1) : '',
+    clean.endsWith('ed') ? clean.slice(0, -2) : '',
+    clean.endsWith('ing') ? clean.slice(0, -3) : ''
+  ].filter(Boolean);
+  for (const key of candidates) {
+    const alias = RHEMA_ENGLISH_BIBLE_ALIASES[key] || key;
+    if (RHEMA_ENGLISH_BIBLE_DICT[alias]) return alias;
+  }
+  return '';
+}
+function _rhemaBibleContextForWord(word) {
+  const key = _rhemaBibleContextKey(word);
+  return key ? RHEMA_ENGLISH_BIBLE_DICT[key] : '';
 }
 function _rhemaRankModernDefinitions(data, cleanWord) {
   const nicheTerms = [
@@ -29533,7 +29777,7 @@ async function rhemaShowEnglishMeaning(word) {
       modern = modernDefs[0]?.definition || '';
     }
   } catch {}
-  const bible = RHEMA_ENGLISH_BIBLE_DICT[clean] || RHEMA_ENGLISH_BIBLE_DICT[clean.replace(/s$/, '')] || '';
+  const bible = _rhemaBibleContextForWord(clean);
   if (!modern) modern = `A readable English dictionary definition was not available offline for "${clean}". Use the verse itself and any Bible context note below as supporting context.`;
   if (body) {
     const modernHtml = modernDefs.length
