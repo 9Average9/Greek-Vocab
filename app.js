@@ -11168,19 +11168,25 @@ function renderBibleJourneysPage() {
   if (mapKicker) mapKicker.textContent = journey.title;
   if (cert) cert.textContent = journey.certainty || 'Approximate';
   if (list) {
-    list.innerHTML = BIBLE_JOURNEYS.map(j => {
+    list.innerHTML = `<div class="journey-list-heading">
+      <span class="journey-kicker">Choose a route</span>
+      <strong>Pick the story you want to follow</strong>
+    </div>` + BIBLE_JOURNEYS.map(j => {
       const miles = _journeyTotalMiles(j);
       const stops = (j.steps || []).length;
+      const firstRef = (j.steps || [])[0]?.ref || '';
       return `<button class="journey-list-card${j.id === journey.id ? ' active' : ''}" onclick="selectBibleJourney('${_journeyEsc(j.id)}')">
-      <span class="material-symbols-outlined">${j.id === journey.id ? 'near_me' : 'route'}</span>
-      <strong>${_journeyEsc(j.title)}</strong>
-      <small>${_journeyEsc(j.subtitle)}</small>
-      <div class="journey-list-meta"><span>${miles.toLocaleString()} mi</span><span>${stops} stops</span></div>
-      <i class="material-symbols-outlined journey-list-arrow">chevron_right</i>
+      <span class="journey-list-orb"><span class="material-symbols-outlined">${j.id === journey.id ? 'near_me' : 'route'}</span></span>
+      <span class="journey-list-copy">
+        <strong>${_journeyEsc(j.title)}</strong>
+        <small>${_journeyEsc(j.subtitle)}</small>
+        <span class="journey-list-meta"><em>${miles.toLocaleString()} mi</em><em>${stops} stops</em>${firstRef ? `<em>${_journeyEsc(firstRef)}</em>` : ''}</span>
+      </span>
+      <span class="journey-list-state">${j.id === journey.id ? 'Open' : 'View'}</span>
     </button>`;
     }).join('');
     const activeCard = list.querySelector('.journey-list-card.active');
-    if (activeCard) setTimeout(() => activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }), 40);
+    if (activeCard) setTimeout(() => activeCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 40);
   }
   _journeyStopPlay();
   if (shell) shell.innerHTML = _journeyRenderMap(journey) +
@@ -23024,7 +23030,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.284";
+const APP_VERSION = "3.0.285";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23045,6 +23051,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.285 &mdash; Bible Journey route picker</div>
+<ul>
+  <li><strong>Journey selector</strong> &mdash; Reworked the route picker into a vertical, easy-to-scan list with readable subtitles, distance, stop count, and starting reference.</li>
+  <li><strong>Journey layout</strong> &mdash; Widened the Bible Journey content, reduced the nested-card feel, and made the map/stats/steps feel more natural on mobile.</li>
+  <li><strong>Profile polish</strong> &mdash; Nudged the Profile Home button inward so the header feels balanced.</li>
+</ul>
 <div class="un-version-label">v3.0.284 &mdash; Real map fix</div>
 <ul>
   <li><strong>Bible Journeys map</strong> &mdash; Fixed a style error that stopped the real top-down map from drawing. Journeys now show the real Bible-world geography.</li>
