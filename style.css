@@ -22301,10 +22301,15 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   width: 100% !important;
   height: clamp(112px, 29vw, 136px) !important;
   border-radius: 18px !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
+  padding: clamp(6px, 1.8vw, 10px) !important;
+  background:
+    radial-gradient(115% 95% at 50% 14%, rgba(255,255,255,0.74), rgba(255,255,255,0.22) 58%, transparent 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--qa-title) 8%, rgba(255,255,255,0.78)), color-mix(in srgb, var(--qa-title) 3%, rgba(255,255,255,0.38))) !important;
+  border: 1px solid color-mix(in srgb, var(--qa-title) 10%, rgba(255,255,255,0.72)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.86),
+    inset 0 -16px 28px color-mix(in srgb, var(--qa-title) 8%, transparent),
+    0 10px 18px color-mix(in srgb, var(--qa-title) 9%, transparent) !important;
   display: grid !important;
   align-items: center !important;
   justify-content: center !important;
@@ -22315,13 +22320,13 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 
 #homeScreen .home-action-tile .qa-img {
   display: block !important;
-  width: min(118%, 150px) !important;
+  width: 94% !important;
   max-width: none !important;
-  height: min(118%, 150px) !important;
+  height: 94% !important;
   object-fit: contain !important;
   object-position: center center !important;
   mix-blend-mode: multiply;
-  filter: saturate(1.1) contrast(1.04) drop-shadow(0 12px 16px var(--qa-image-shadow));
+  filter: saturate(1.08) contrast(1.03) drop-shadow(0 10px 15px var(--qa-image-shadow));
   transform: none;
   transform-origin: center;
 }
