@@ -349,23 +349,24 @@ function _rhemaMarkId(ref) {
 function listenRhemaMarks(uid, callback) {
   return onSnapshot(collection(db, "users", uid, "rhemaMarks"), snap => {
     const map = {};
-    snap.docs.forEach(d => { const x = d.data(); if (x && x.ref) map[x.ref] = x; });
+    snap.docs.forEach(d => { const x = d.data(); if (x && x.ref) map[d.id] = x; });
     callback(map);
   }, err => console.warn("listenRhemaMarks:", err));
 }
 
-async function saveRhemaMark(uid, ref, data) {
+async function saveRhemaMark(uid, ref, scope, data) {
   if (!uid || !ref) return;
+  const id = _rhemaMarkId((scope || "home") + "__" + ref);
   await setDoc(
-    doc(db, "users", uid, "rhemaMarks", _rhemaMarkId(ref)),
-    { ref, ...data, updatedAt: serverTimestamp() },
+    doc(db, "users", uid, "rhemaMarks", id),
+    { ref, scope: scope || "home", ...data, updatedAt: serverTimestamp() },
     { merge: true }
   );
 }
 
-async function deleteRhemaMark(uid, ref) {
+async function deleteRhemaMark(uid, ref, scope) {
   if (!uid || !ref) return;
-  await deleteDoc(doc(db, "users", uid, "rhemaMarks", _rhemaMarkId(ref)));
+  await deleteDoc(doc(db, "users", uid, "rhemaMarks", _rhemaMarkId((scope || "home") + "__" + ref)));
 }
 
 // Saved verse comparisons ("trails"): users/{uid}/rhemaTrails/{trailId}.
