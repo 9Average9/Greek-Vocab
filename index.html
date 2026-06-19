@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.266" rel="stylesheet"/>
+<link href="style.css?v=3.0.267" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -10505,8 +10505,8 @@ Verb Endings
 <span class="rwi-label">Word Library</span>
 </button>
 <button class="rhema-wheel-item" id="wheelItemTrails" onclick="closeRhemaWheel();rhemaOpenCompare()">
-<span class="material-symbols-outlined">route</span>
-<span class="rwi-label">Trails</span>
+<span class="material-symbols-outlined">compare_arrows</span>
+<span class="rwi-label">Compare</span>
 </button>
 <button class="rhema-wheel-item" id="wheelItemCopyVerse" onclick="copyRhemaVerseOrChapter()">
 <span class="material-symbols-outlined">content_copy</span>
@@ -10536,7 +10536,7 @@ Verb Endings
 <!-- Verse action sheet (highlight / note / focus) -->
 <div class="rhema-vsheet-overlay" id="rhemaVerseSheet" onclick="closeRhemaVerseSheet(event)">
 <div class="rhema-vsheet" onclick="event.stopPropagation()">
-<div class="rhema-vsheet-handle"></div>
+<button class="rhema-vsheet-x" onclick="closeRhemaVerseSheet()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
 <div class="rhema-vsheet-ref" id="rhemaVerseSheetRef"></div>
 <div class="rhema-vsheet-label">Highlight</div>
 <div class="rhema-vsheet-colors" id="rhemaVerseSheetColors"></div>
@@ -10547,6 +10547,10 @@ Verb Endings
 <button class="rhema-vsheet-action" onclick="rhemaAddToCompareFromMenu()">
 <span class="material-symbols-outlined">library_add</span>
 <span>Compare</span>
+</button>
+<button class="rhema-vsheet-action" id="rhemaVerseSheetWordBtn" onclick="rhemaOpenEnglishWordPicker()">
+<span class="material-symbols-outlined">dictionary</span>
+<span>Select an English word</span>
 </button>
 <button class="rhema-vsheet-action" onclick="rhemaFocusVerseFromMenu()">
 <span class="material-symbols-outlined">center_focus_strong</span>
@@ -10562,23 +10566,26 @@ Verb Endings
 <span class="material-symbols-outlined">spellcheck</span>
 <span>Add a word to the word log</span>
 </button>
-<button class="rhema-vsheet-action" onclick="rhemaStudyCaptureFromMenu()">
-<span class="material-symbols-outlined">edit_square</span>
-<span>Observe / Interpret / Apply / Question</span>
-</button>
-</div>
-<button class="rhema-vsheet-cancel" onclick="closeRhemaVerseSheet()">Close</button>
 </div>
 </div>
-<!-- English word picker (study word log) -->
+</div>
+<!-- English word picker / meaning lookup -->
 <div class="rhema-note-overlay" id="rhemaWordPickModal" onclick="closeRhemaWordPick(event)">
 <div class="rhema-note-card" onclick="event.stopPropagation()">
 <div class="rhema-note-ref" id="rhemaWordPickRef"></div>
-<div class="rhema-vsheet-label">Tap a word to add it to the study's word log</div>
+<div class="rhema-vsheet-label" id="rhemaWordPickLabel">Tap a word to see its meaning</div>
 <div class="rhema-word-chips" id="rhemaWordPickChips"></div>
 <div class="rhema-note-actions">
 <button class="rhema-note-cancel" onclick="closeRhemaWordPick()">Close</button>
 </div>
+</div>
+</div>
+<div class="rhema-note-overlay" id="rhemaEnglishMeaningModal" onclick="closeRhemaEnglishMeaning(event)">
+<div class="rhema-note-card rhema-meaning-card" onclick="event.stopPropagation()">
+<button class="rhema-note-x" onclick="closeRhemaEnglishMeaning()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+<div class="rhema-note-ref" id="rhemaMeaningWord">Word</div>
+<div class="rhema-meaning-body" id="rhemaMeaningBody"></div>
+<button class="rhema-note-save hidden" id="rhemaMeaningLogBtn" onclick="rhemaAddCurrentEnglishMeaningToStudy()">Add to study word log</button>
 </div>
 </div>
 <!-- Compare floating chip -->
@@ -10591,15 +10598,19 @@ Verb Endings
 <div class="rhema-compare-overlay" id="rhemaCompareOverlay" onclick="closeRhemaCompare(event)">
 <div class="rhema-compare-card" onclick="event.stopPropagation()">
 <div class="rhema-compare-hd">
-<span class="rhema-compare-title">Compare verses</span>
+<span class="rhema-compare-title">Comparisons</span>
 <button class="rhema-compare-x" onclick="closeRhemaCompare()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="rhema-compare-tabs">
+<button id="rhemaCompareTabCurrent" onclick="rhemaSetCompareTab('current')">Current</button>
+<button id="rhemaCompareTabSaved" onclick="rhemaSetCompareTab('saved')">Saved</button>
 </div>
 <div class="rhema-compare-list" id="rhemaCompareList"></div>
 <div class="rhema-compare-saved" id="rhemaCompareSaved"></div>
 <div class="rhema-compare-actions">
 <button class="rhema-compare-clear" onclick="rhemaCompareClear()">Clear</button>
 <button class="rhema-compare-add" onclick="rhemaCompareAddAnother()">+ Add another verse</button>
-<button class="rhema-compare-save" id="rhemaCompareSaveBtn" onclick="rhemaSaveCompareTrail()">Save to Trails</button>
+<button class="rhema-compare-save" id="rhemaCompareSaveBtn" onclick="rhemaSaveCompareTrail()">Save comparison</button>
 </div>
 </div>
 </div>
@@ -16884,12 +16895,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.266"></script>
+<script src="app.js?v=3.0.267"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.266" type="module"></script>
+<script src="firebase-lb.js?v=3.0.267" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

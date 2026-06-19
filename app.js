@@ -8928,6 +8928,10 @@ async function deleteWorkspaceEntry(entryId) {
 }
 
 function _getVerseSnippet() {
+  if (_rhemaShowEnglish) {
+    const eng = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '';
+    return eng.length > 90 ? eng.slice(0, 87) + '...' : eng;
+  }
   const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
   if (!words.length) return '';
   const greek = words.slice(0, 10).map(w => w[0]).join(' ');
@@ -8945,6 +8949,12 @@ function _initStudyLongPress() {
       if (!_studySandboxId || _sandboxTab !== 'rhema') return;
       if (e.target.closest('.rsx-diagram') || e.target.closest('.rhema-sheet')) return;
       _miniWheelLongPressActive = true;
+      const verseEl = e.target.closest('.rhema-chapter-block[data-verse]');
+      if (verseEl?.dataset?.verse) {
+        _rhemaVerse = String(verseEl.dataset.verse);
+        _rhemaMenuRef = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse);
+        syncRhemaPicker?.();
+      }
       _miniWheelLongPressTimer = setTimeout(() => {
         if (_miniWheelLongPressActive) {
           e.preventDefault?.();
@@ -9014,15 +9024,29 @@ function openWritingModal(type) {
 function _updateSwmVerseDisplay() {
   const card = document.getElementById('swmVerseCard');
   const English = document.getElementById('swmEnglishText');
+  let swmSnippet = '';
+  let swmWordCount = 0;
+  let swmSourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel() : 'Greek';
   if (card) {
     const bookName = _rhemaBookName(_swmDisplayBook);
     const words = (_rhemaText()[_swmDisplayBook] || {})[_swmDisplayChapter]?.[_swmDisplayVerse] || [];
-    const snippet = words.slice(0, 14).map(w => w[0]).join(' ');
+    const sourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel() : 'Greek';
+    const snippet = _rhemaShowEnglish
+      ? (_rhemaEnglishText(_swmDisplayBook, _swmDisplayChapter, _swmDisplayVerse) || '')
+      : words.slice(0, 14).map(w => w[0]).join(' ');
+    swmSnippet = snippet;
+    swmWordCount = words.length;
+    swmSourceLabel = sourceLabel;
     card.innerHTML = `<div class="swm-verse-ref">${bookName} ${_swmDisplayChapter}:${_swmDisplayVerse}</div>
       <div class="swm-verse-text">${snippet}${words.length > 14 ? '…' : ''}</div>`;
   }
+  if (card) {
+    card.innerHTML = `<div class="swm-verse-ref">${_escapeRhemaAttr(_rhemaBookName(_swmDisplayBook))} ${_escapeRhemaAttr(_swmDisplayChapter)}:${_escapeRhemaAttr(_swmDisplayVerse)}</div>
+      <div class="swm-verse-text">${_escapeRhemaAttr(swmSnippet)}${(!_rhemaShowEnglish && swmWordCount > 14) ? '...' : ''}</div>
+      <div class="swm-source-label">${_escapeRhemaAttr(swmSourceLabel)}</div>`;
+  }
   if (English) {
-    English.textContent = (_swmDisplayBook && _swmDisplayChapter && _swmDisplayVerse)
+    English.textContent = (!_rhemaShowEnglish && _swmDisplayBook && _swmDisplayChapter && _swmDisplayVerse)
       ? _rhemaEnglishText(_swmDisplayBook, _swmDisplayChapter, _swmDisplayVerse) : '';
   }
 }
@@ -9054,8 +9078,20 @@ async function saveWritingModal() {
   const text = ta?.value?.trim();
   if (!text) { ta?.focus(); return; }
   const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
-  const verseRef = { book: _swmSavedBook, chapter: _swmSavedChapter, verse: _swmSavedVerse, bookName: _rhemaBookName(_swmSavedBook) };
+  const sourceLanguage = _rhemaShowEnglish ? 'english' : 'greek';
+  const verseRef = {
+    book: _swmSavedBook,
+    chapter: _swmSavedChapter,
+    verse: _swmSavedVerse,
+    bookName: _rhemaBookName(_swmSavedBook),
+    sourceLanguage,
+    version: _rhemaShowEnglish ? _rhemaEnglishVersion() : 'Greek'
+  };
   const verseSnippet = (() => {
+    if (_rhemaShowEnglish) {
+      const eng = _rhemaEnglishText(_swmSavedBook, _swmSavedChapter, _swmSavedVerse) || '';
+      return eng.length > 90 ? eng.slice(0, 87) + '...' : eng;
+    }
     const words = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter]?.[_swmSavedVerse] || [];
     if (!words.length) return '';
     const greek = words.slice(0, 10).map(w => w[0]).join(' ');
@@ -9700,13 +9736,15 @@ function openSandboxRhema() {
     syntaxMode: _rhemaSyntaxMode, showEnglish: _rhemaShowEnglish, greekOnly: _rhemaGreekOnly
   };
   // Start study Rhema clean — no modes carry in from main
-  _rhemaSyntaxMode = false;
-  _rhemaShowEnglish = false;
-  _rhemaGreekOnly = false;
+  const pos = (_activeSandboxStudy.rhemaPositions || {})[uid];
+  // Start Study Rhema in English the first time. After that, respect the last
+  // mode this user left inside this study.
+  _rhemaSyntaxMode = !!pos?.syntaxMode;
+  _rhemaShowEnglish = pos?.showEnglish !== undefined ? !!pos.showEnglish : true;
+  _rhemaGreekOnly = !!pos?.greekOnly;
   _rhemaPosHighlights.clear();
   _rhemaHighlightBarOn = false;
   // Load this study's saved position (or stay wherever main Rhema was as a fallback)
-  const pos = (_activeSandboxStudy.rhemaPositions || {})[uid];
   if (pos) { _rhemaBook = pos.book; _rhemaChapter = pos.chapter; _rhemaVerse = pos.verse; }
   document.getElementById('rhemaSaveToStudyBtn')?.classList.remove('hidden');
   showRhema();
@@ -14683,12 +14721,13 @@ function _saveRhemaPosition() {
     // Capture values now — close handler restores main position before the timer fires
     const sandboxId = _studySandboxId;
     const book = _rhemaBook, chapter = _rhemaChapter, verse = _rhemaVerse;
+    const showEnglish = !!_rhemaShowEnglish, syntaxMode = !!_rhemaSyntaxMode, greekOnly = !!_rhemaGreekOnly;
     clearTimeout(_rhemaPosSaveTimer);
     _rhemaPosSaveTimer = setTimeout(() => {
-      const posKey = `${book}|${chapter}|${verse}`;
+      const posKey = `${book}|${chapter}|${verse}|${showEnglish}|${syntaxMode}|${greekOnly}`;
       if (posKey === _lastSavedSandboxPos) return;
       _lastSavedSandboxPos = posKey;
-      window.Studies?.saveRhemaPos(sandboxId, uid, book, chapter, verse);
+      window.Studies?.saveRhemaPos(sandboxId, uid, book, chapter, verse, { showEnglish, syntaxMode, greekOnly });
     }, 2000);
     return;
   }
@@ -22035,7 +22074,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.256";
+const APP_VERSION = "3.0.267";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22056,6 +22095,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.267 &mdash; Rhema English tools cleanup</div>
+<ul>
+  <li><strong>Focused English reading</strong> &mdash; Focused English verses now have a clear <strong>Back to full chapter</strong> button.</li>
+  <li><strong>Cleaner verse sheet</strong> &mdash; The verse action sheet now closes from a top-right X, and study writing moves to the long-press flow.</li>
+  <li><strong>Study Rhema remembers mode</strong> &mdash; Studies open in English by default, then remember if you leave that study in Greek/original mode.</li>
+  <li><strong>English word meanings</strong> &mdash; Tap an English verse and select a word to see modern English and Bible/theology meaning notes.</li>
+  <li><strong>Comparisons separated</strong> &mdash; Saved comparisons now live in the Comparisons modal instead of mixing into cross-reference Trails.</li>
+</ul>
 <div class="un-version-label">v3.0.266 &mdash; Study Rhema in English</div>
 <ul>
   <li><strong>English in your studies</strong> &mdash; In a study's Rhema you can save English verses, add English words to the word log, and capture Observation/Interpretation/Application/Question — all from tapping a verse.</li>
@@ -28986,6 +29033,7 @@ function rhemaOpenVerseMenu(v, ev) {
   _rhemaMarkActiveVerse(verse);
   _rhemaRenderVerseSheet();
   document.getElementById('rhemaVerseSheet')?.classList.add('open');
+  document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
 }
 function _rhemaRenderVerseSheet() {
   const ref = _rhemaMenuRef; if (!ref) return;
@@ -29004,11 +29052,17 @@ function _rhemaRenderVerseSheet() {
   // Study-only actions (reuse the existing save-verse / OIAQ / word-log logic).
   const study = document.getElementById('rhemaVerseSheetStudy');
   if (study) study.style.display = _studySandboxId ? '' : 'none';
+  const wordBtn = document.getElementById('rhemaVerseSheetWordBtn');
+  if (wordBtn) wordBtn.style.display = _rhemaShowEnglish ? '' : 'none';
 }
 function closeRhemaVerseSheet(e) {
   if (e && e.target !== document.getElementById('rhemaVerseSheet')) return;
   document.getElementById('rhemaVerseSheet')?.classList.remove('open');
   _rhemaMarkActiveVerse(null);
+  updateRhemaVerseNav?.();
+}
+function _rhemaVerseSheetOpen() {
+  return !!document.getElementById('rhemaVerseSheet')?.classList.contains('open');
 }
 function rhemaSetVerseHighlight(color) {
   if (!_rhemaMenuRef) return;
@@ -29026,6 +29080,11 @@ function rhemaFocusVerseFromMenu() {
     syncRhemaPicker?.();
     renderRhemaVerse();
   }
+}
+function rhemaBackToFullChapter() {
+  _rhemaFullChapter = true;
+  _rhemaVerseFocus = true;
+  renderRhemaVerse();
 }
 
 // Note editor (also serves as viewer — shows when the note was made).
@@ -29102,6 +29161,45 @@ let _rhemaTrails = [];         // saved comparisons [{id,title,items,createdAt}]
 let _rhemaTrailsUnsub = null;
 let _rhemaCompareAdding = false;
 let _rhemaSuppressVerseTap = false;
+let _rhemaCompareTab = 'current';
+let _rhemaWordPickMode = 'lookup';
+let _rhemaCurrentEnglishMeaningWord = '';
+const RHEMA_ENGLISH_BIBLE_DICT = {
+  faith: 'Trust, allegiance, and reliance. In biblical usage it is not bare opinion; it is a whole-person response to God and His promises.',
+  grace: 'God\'s favor and generous action toward people who do not earn it. It often carries both pardon and empowering help.',
+  gospel: 'Good news, especially the announcement of what God has done in Jesus the Messiah.',
+  righteousness: 'Right standing and right conduct before God. Depending on context it can describe God\'s justice, covenant faithfulness, or a person being counted or living rightly.',
+  justify: 'To declare or treat as righteous. In Paul it often has courtroom and covenant overtones.',
+  salvation: 'Rescue and restoration from sin, judgment, and death into life with God.',
+  covenant: 'A binding relationship established by God, often with promises, obligations, and signs.',
+  sin: 'Failure, rebellion, or distortion against God\'s will. It can describe acts, a condition, and a ruling power.',
+  flesh: 'Can mean the physical body, human weakness, or fallen human orientation depending on context.',
+  spirit: 'Can refer to the Holy Spirit, the human spirit, breath, life, or an inner disposition depending on context.',
+  law: 'Can mean instruction, the Mosaic Law, Scripture, a principle, or a governing power depending on context.',
+  glory: 'Weight, honor, splendor, or manifest excellence; often the visible greatness of God.',
+  mercy: 'Compassion expressed in concrete help, especially toward the needy or guilty.',
+  peace: 'Wholeness, well-being, reconciliation, and settled harmony, not merely the absence of conflict.',
+  love: 'Self-giving concern and covenant loyalty expressed in action.',
+  hope: 'Confident expectation rooted in God\'s character and promises.',
+  repent: 'To turn, change mind and direction, and reorient toward God.',
+  holy: 'Set apart for God; morally pure and belonging to His purpose.',
+  word: 'Can mean a spoken saying, message, matter, or divine self-expression depending on context.',
+  truth: 'Reality, reliability, faithfulness, and what corresponds to God and His revelation.',
+  life: 'Existence and vitality; in John and Paul often the life of the age to come shared by God.',
+  light: 'Revelation, purity, life, and God\'s presence, often contrasted with darkness.',
+  world: 'Can mean creation, humanity, or the fallen human order opposed to God depending on context.',
+  church: 'The gathered people called by God; an assembly, not primarily a building.',
+  kingdom: 'God\'s reign, rule, and realm breaking into history through the Messiah.',
+  lord: 'Master, owner, ruler, or divine title depending on context.',
+  christ: 'Messiah, the anointed king promised in Israel\'s Scriptures.',
+  apostle: 'A sent messenger or authorized representative; in the NT often a commissioned witness of Christ.',
+  disciple: 'A learner and follower whose life is shaped by the teacher.',
+  baptism: 'A washing/immersion sign connected with repentance, union with Christ, and belonging to God\'s people.',
+  resurrection: 'Rising from the dead; centrally Jesus\' resurrection and the future bodily resurrection of believers.',
+  redemption: 'Release by payment or rescue, often from slavery-like bondage.',
+  fellowship: 'Shared participation, partnership, and communion.',
+  wisdom: 'Skill for faithful living according to God\'s order and purposes.'
+};
 
 function _rhemaParseRef(ref) {
   const m = String(ref).match(/^(.*) (\d+):(\d+)$/);
@@ -29140,6 +29238,7 @@ function rhemaAddToCompareFromMenu() {
 }
 function rhemaOpenCompare() {
   _rhemaCompareAdding = false;
+  _rhemaCompareTab = _rhemaCompare.length ? 'current' : 'saved';
   _rhemaRenderCompare();
   document.getElementById('rhemaCompareOverlay')?.classList.add('open');
 }
@@ -29173,9 +29272,16 @@ function rhemaCompareClear() {
   _rhemaRenderCompare();
   _rhemaSyncCompareChip();
 }
+function rhemaSetCompareTab(tab) {
+  _rhemaCompareTab = tab === 'saved' ? 'saved' : 'current';
+  _rhemaRenderCompare();
+}
 function _rhemaRenderCompare() {
+  document.getElementById('rhemaCompareTabCurrent')?.classList.toggle('active', _rhemaCompareTab !== 'saved');
+  document.getElementById('rhemaCompareTabSaved')?.classList.toggle('active', _rhemaCompareTab === 'saved');
   const list = document.getElementById('rhemaCompareList');
   if (list) {
+    list.style.display = _rhemaCompareTab === 'saved' ? 'none' : '';
     if (!_rhemaCompare.length) {
       list.innerHTML = `<div class="rhema-compare-empty">No verses yet. Tap a verse in the reader and choose <strong>Compare</strong> to add it here.</div>`;
     } else {
@@ -29214,6 +29320,22 @@ function _rhemaRenderCompare() {
       : '';
   }
   const saveBtn = document.getElementById('rhemaCompareSaveBtn');
+  if (saved) {
+    const scoped = _rhemaSavedComparisonsForScope();
+    saved.style.display = _rhemaCompareTab === 'saved' ? '' : 'none';
+    saved.innerHTML = scoped.length
+      ? `<div class="rhema-vsheet-label">Saved comparisons</div>` + scoped.map(t =>
+          `<div class="rhema-compare-saved-row">
+            <button class="rhema-compare-saved-open" onclick="rhemaLoadTrail('${_escapeRhemaAttr(t.id)}')">
+              <span class="material-symbols-outlined">compare_arrows</span>
+              <span>${_escapeRhemaAttr(t.title || 'Untitled')} <small>(${((t.items || t.refs) || []).length})</small></span>
+            </button>
+            <button class="rhema-compare-saved-del" onclick="rhemaDeleteTrail('${_escapeRhemaAttr(t.id)}')" aria-label="Delete"><span class="material-symbols-outlined">delete</span></button>
+          </div>`).join('')
+      : `<div class="rhema-compare-empty">No saved comparisons here yet.</div>`;
+  }
+  const actions = document.querySelector('.rhema-compare-actions');
+  if (actions) actions.style.display = _rhemaCompareTab === 'saved' ? 'none' : '';
   if (saveBtn) saveBtn.disabled = _rhemaCompare.length < 1;
 }
 function rhemaLoadTrail(id) {
@@ -29223,6 +29345,7 @@ function rhemaLoadTrail(id) {
   _rhemaCompare = (t.items && t.items.length)
     ? t.items.map(x => ({ ref: x.ref, version: x.version || 'MSB' }))
     : (t.refs || []).map(r => ({ ref: r, version: 'MSB' }));
+  _rhemaCompareTab = 'current';
   _rhemaRenderCompare();
   _rhemaSyncCompareChip();
 }
@@ -29240,6 +29363,14 @@ async function rhemaSaveCompareTrail() {
   if (!title) return;
   const items = _rhemaCompare.map(c => ({ ref: c.ref, version: c.version }));
   const uid = window.Auth?.getCurrentUser?.()?.uid;
+  const trail = { id: 'rt_' + Date.now().toString(36), title, items, scope: _rhemaCompareScope(), createdAt: Date.now() };
+  _rhemaTrails = [trail, ..._rhemaTrails];
+  _rhemaPersistLocalTrails();
+  if (uid) window.Auth.saveRhemaTrail?.(uid, trail).catch(() => {});
+  _rhemaCompareTab = 'saved';
+  _rhemaRenderCompare();
+  if (typeof _showStudyToast === 'function') _showStudyToast('Saved to Comparisons');
+  return;
   if (_studySandboxId) {
     // In a study, save into the study's own Trails area (reuse Studies.saveTrail).
     const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
@@ -29277,7 +29408,35 @@ function rhemaStudyCaptureFromMenu() {
   closeRhemaVerseSheet();
   if (typeof openStudyMiniWheel === 'function') openStudyMiniWheel();
 }
+function _rhemaCompareScope() {
+  return _studySandboxId ? `study:${_studySandboxId}` : 'main';
+}
+function _rhemaSavedComparisonsForScope() {
+  const scope = _rhemaCompareScope();
+  return _rhemaTrails.filter(t => (t.scope || 'main') === scope);
+}
+function _rhemaEnglishWordsForMenuRef() {
+  const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
+  if (!p) return [];
+  const text = _rhemaEnglishText(p.book, p.chapter, p.verse) || '';
+  return [...new Set(text.replace(/[^A-Za-z'\u2019\- ]/g, ' ').split(/\s+/).filter(w => w.length > 1))];
+}
+function _rhemaOpenWordPicker(mode = 'lookup') {
+  const words = _rhemaEnglishWordsForMenuRef();
+  if (!words.length) return;
+  _rhemaWordPickMode = mode;
+  const wrap = document.getElementById('rhemaWordPickChips');
+  if (wrap) wrap.innerHTML = words.map(w =>
+    `<button class="rhema-word-chip" onclick="rhemaPickEnglishWord(decodeURIComponent('${encodeURIComponent(w)}'))">${_escapeRhemaAttr(w)}</button>`).join('');
+  document.getElementById('rhemaWordPickRef').textContent = _rhemaDisplayRefFromKey(_rhemaMenuRef) || _rhemaMenuRef;
+  const label = document.getElementById('rhemaWordPickLabel');
+  if (label) label.textContent = mode === 'log' ? "Tap a word to add it to the study's word log" : 'Tap a word to see its meaning';
+  closeRhemaVerseSheet();
+  document.getElementById('rhemaWordPickModal')?.classList.add('open');
+}
+function rhemaOpenEnglishWordPicker() { _rhemaOpenWordPicker('lookup'); }
 function rhemaStudyLogWordFromMenu() {
+  return _rhemaOpenWordPicker('log');
   const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
   if (!p) return;
   const text = _rhemaEnglishText(p.book, p.chapter, p.verse) || '';
@@ -29292,6 +29451,53 @@ function rhemaStudyLogWordFromMenu() {
 function closeRhemaWordPick(e) {
   if (e && e.target !== document.getElementById('rhemaWordPickModal')) return;
   document.getElementById('rhemaWordPickModal')?.classList.remove('open');
+}
+function rhemaPickEnglishWord(word) {
+  if (_rhemaWordPickMode === 'log') return rhemaLogEnglishWord(word);
+  return rhemaShowEnglishMeaning(word);
+}
+function _rhemaCleanEnglishLookupWord(word) {
+  return String(word || '').toLowerCase().replace(/^[^a-z]+|[^a-z]+$/g, '').replace(/\u2019/g, "'");
+}
+async function rhemaShowEnglishMeaning(word) {
+  const clean = _rhemaCleanEnglishLookupWord(word);
+  if (!clean) return;
+  _rhemaCurrentEnglishMeaningWord = clean;
+  document.getElementById('rhemaWordPickModal')?.classList.remove('open');
+  const title = document.getElementById('rhemaMeaningWord');
+  const body = document.getElementById('rhemaMeaningBody');
+  const logBtn = document.getElementById('rhemaMeaningLogBtn');
+  if (title) title.textContent = clean;
+  if (body) body.innerHTML = `<div class="rhema-meaning-section"><h4>Loading</h4><p>Checking the English meaning...</p></div>`;
+  if (logBtn) logBtn.classList.toggle('hidden', !_studySandboxId);
+  document.getElementById('rhemaEnglishMeaningModal')?.classList.add('open');
+  let modern = '';
+  let examples = [];
+  try {
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(clean)}`);
+    if (res.ok) {
+      const data = await res.json();
+      const first = data?.[0]?.meanings?.[0];
+      modern = first?.definitions?.[0]?.definition || '';
+      examples = (first?.definitions || []).map(d => d.example).filter(Boolean).slice(0, 2);
+    }
+  } catch {}
+  const bible = RHEMA_ENGLISH_BIBLE_DICT[clean] || RHEMA_ENGLISH_BIBLE_DICT[clean.replace(/s$/, '')] || '';
+  if (!modern) modern = `A readable English dictionary definition was not available offline for "${clean}". Use the verse context and the Bible/theology note below when present.`;
+  if (body) {
+    body.innerHTML = `
+      <div class="rhema-meaning-section"><h4>Modern English</h4><p>${_escapeRhemaAttr(modern)}</p>${examples.length ? `<ul>${examples.map(ex => `<li>${_escapeRhemaAttr(ex)}</li>`).join('')}</ul>` : ''}</div>
+      <div class="rhema-meaning-section"><h4>Bible / Theology</h4><p>${_escapeRhemaAttr(bible || 'No special theological note is built in for this word yet. Read it by its normal English sense and the immediate verse context.')}</p></div>
+      <div class="rhema-meaning-section"><h4>In This Verse</h4><p>${_escapeRhemaAttr(_rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '')}</p></div>`;
+  }
+}
+function closeRhemaEnglishMeaning(e) {
+  if (e && e.target !== document.getElementById('rhemaEnglishMeaningModal')) return;
+  document.getElementById('rhemaEnglishMeaningModal')?.classList.remove('open');
+}
+function rhemaAddCurrentEnglishMeaningToStudy() {
+  if (_rhemaCurrentEnglishMeaningWord) rhemaLogEnglishWord(_rhemaCurrentEnglishMeaningWord);
+  document.getElementById('rhemaEnglishMeaningModal')?.classList.remove('open');
 }
 async function rhemaLogEnglishWord(word) {
   document.getElementById('rhemaWordPickModal')?.classList.remove('open');
@@ -29819,7 +30025,14 @@ function closeRhema(keepSandbox = false) {
         const uid = window.Auth?.getCurrentUser()?.uid;
         if (uid) {
           if (!_activeSandboxStudy.rhemaPositions) _activeSandboxStudy.rhemaPositions = {};
-          _activeSandboxStudy.rhemaPositions[uid] = { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse };
+          _activeSandboxStudy.rhemaPositions[uid] = {
+            book: _rhemaBook,
+            chapter: _rhemaChapter,
+            verse: _rhemaVerse,
+            showEnglish: !!_rhemaShowEnglish,
+            syntaxMode: !!_rhemaSyntaxMode,
+            greekOnly: !!_rhemaGreekOnly
+          };
         }
         _updateSandboxRhemaPreview();
       }
@@ -30088,7 +30301,7 @@ function updateRhemaVerseNav() {
   if (_studySandboxId) {
     // In study sandbox: hide the full bar and show floating arrow pair instead
     nav.classList.add('hidden');
-    arrows?.classList.add('visible');
+    arrows?.classList.toggle('visible', !_rhemaVerseSheetOpen());
   } else {
     nav.classList.remove('hidden');
     arrows?.classList.remove('visible');
@@ -30735,7 +30948,8 @@ function renderRhemaVerse() {
           ? `<div class="rhema-chapter-block rhema-english-verse${_svhl ? ' rhema-verse-highlighted' : ''}" data-verse="${_rhemaVerse}"${_svhl ? ` style="--rhema-hl:${_svhl}"` : ''} onclick="rhemaOpenVerseMenu('${_rhemaVerse}', event)">` +
             `<sup class="rhema-english-vnum">${_rhemaVerse}</sup>` +
             _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, _rhemaVerse) +
-            _rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, _rhemaVerse) + `</div>`
+            _rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, _rhemaVerse) + `</div>` +
+            `<button class="rhema-full-chapter-back" onclick="rhemaBackToFullChapter()">Back to full chapter</button>`
           : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
       }
     }

@@ -844,10 +844,10 @@ async function studyOpenSession(uid, studyId, { displayName, friendsList }) {
   } catch (e) { console.warn("studyOpenSession:", e); }
 }
 
-async function studySaveRhemaPos(studyId, uid, book, chapter, verse) {
+async function studySaveRhemaPos(studyId, uid, book, chapter, verse, extra = {}) {
   try {
     await updateDoc(doc(db, "studies", studyId), {
-      [`rhemaPositions.${uid}`]: { book, chapter, verse }
+      [`rhemaPositions.${uid}`]: { book, chapter, verse, ...extra }
     });
   } catch (e) { console.warn("studySaveRhemaPos:", e); }
 }
