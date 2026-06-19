@@ -84,7 +84,8 @@
     }
     return {
       version: 8,
-      glyphs: undefined,          // no symbol layers => glyphs not required
+      // No `glyphs` key on purpose: there are no symbol/text layers, so no font
+      // glyphs are needed. MapLibre rejects glyphs:undefined, so it must be omitted.
       sources: {
         protomaps: {
           type: 'vector',

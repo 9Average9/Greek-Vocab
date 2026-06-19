@@ -23024,7 +23024,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.283";
+const APP_VERSION = "3.0.284";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23045,6 +23045,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.284 &mdash; Real map fix</div>
+<ul>
+  <li><strong>Bible Journeys map</strong> &mdash; Fixed a style error that stopped the real top-down map from drawing. Journeys now show the real Bible-world geography.</li>
+</ul>
 <div class="un-version-label">v3.0.283 &mdash; Map diagnostics</div>
 <ul>
   <li><strong>Journey map status</strong> &mdash; Added a small status line under the journey map showing the app version and whether the real map loaded, to help pin down map issues.</li>
