@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.262" rel="stylesheet"/>
+<link href="style.css?v=3.0.264" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -10529,6 +10529,39 @@ Verb Endings
 </div>
 </div>
 </div>
+<!-- Verse action sheet (highlight / note / focus) -->
+<div class="rhema-vsheet-overlay" id="rhemaVerseSheet" onclick="closeRhemaVerseSheet(event)">
+<div class="rhema-vsheet" onclick="event.stopPropagation()">
+<div class="rhema-vsheet-handle"></div>
+<div class="rhema-vsheet-ref" id="rhemaVerseSheetRef"></div>
+<div class="rhema-vsheet-label">Highlight</div>
+<div class="rhema-vsheet-colors" id="rhemaVerseSheetColors"></div>
+<button class="rhema-vsheet-action" onclick="rhemaAddNoteFromMenu()">
+<span class="material-symbols-outlined">edit_note</span>
+<span id="rhemaVerseSheetNoteLabel">Add note</span>
+</button>
+<button class="rhema-vsheet-action" onclick="rhemaFocusVerseFromMenu()">
+<span class="material-symbols-outlined">center_focus_strong</span>
+<span>Focus this verse</span>
+</button>
+<button class="rhema-vsheet-cancel" onclick="closeRhemaVerseSheet()">Close</button>
+</div>
+</div>
+<!-- Verse note editor / viewer -->
+<div class="rhema-note-overlay" id="rhemaNoteModal" onclick="closeRhemaNoteModal(event)">
+<div class="rhema-note-card" onclick="event.stopPropagation()">
+<div class="rhema-note-ref" id="rhemaNoteModalRef"></div>
+<div class="rhema-note-date" id="rhemaNoteDate" style="display:none"></div>
+<textarea id="rhemaNoteText" class="rhema-note-text" placeholder="Write your note… What stands out? What does this say about God? How might it apply?"></textarea>
+<div class="rhema-vsheet-label">Note colour</div>
+<div class="rhema-vsheet-colors" id="rhemaNoteColors"></div>
+<div class="rhema-note-actions">
+<button class="rhema-note-delete" id="rhemaNoteDeleteBtn" onclick="rhemaDeleteNote()" style="display:none">Delete</button>
+<button class="rhema-note-cancel" onclick="closeRhemaNoteModal()">Cancel</button>
+<button class="rhema-note-save" onclick="rhemaSaveNote()">Save</button>
+</div>
+</div>
+</div>
 <!-- ── Book picker ── -->
 <!-- Scripture Trail Cross References -->
 <div class="rhema-picker-overlay hidden" id="rhemaBookPickerOverlay" onclick="closeRhemaPickerSheet()">
@@ -16795,12 +16828,12 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.263"></script>
+<script src="app.js?v=3.0.264"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.160"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.253" type="module"></script>
+<script src="firebase-lb.js?v=3.0.264" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

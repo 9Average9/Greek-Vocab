@@ -30570,3 +30570,155 @@ body.dark.reading-plan-active .app { background: #111827 !important; }
 body.dark .rp-topbar, body.dark.reading-plan-active .rp-topbar { background: #111827; }
 body.dark .rp-picker-sheet { background: #1f2937; }
 body.dark .rp-book-sep { background: #1f2937; }
+
+/* ── Rhema verse marks: highlights, note icons, action sheet, note editor ──── */
+.rhema-verse-highlighted {
+  background: var(--rhema-hl, #ffe08a);
+  border-radius: 8px;
+}
+.rhema-reader-note-btn-user {
+  background: var(--rhema-note-color, #ffe08a);
+  border-radius: 7px;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+.rhema-reader-note-btn-user .material-symbols-outlined {
+  color: #20303f;
+}
+
+.rhema-vsheet-overlay,
+.rhema-note-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  background: rgba(8, 18, 28, 0.42);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.rhema-note-overlay { align-items: center; }
+.rhema-vsheet-overlay.open,
+.rhema-note-overlay.open { display: flex; }
+
+.rhema-vsheet,
+.rhema-note-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--card-color, #fffdf7);
+  color: var(--font-color, #20303f);
+  box-shadow: 0 -10px 30px rgba(8, 18, 28, 0.22);
+}
+.rhema-vsheet {
+  border-radius: 20px 20px 0 0;
+  padding: 12px 18px 22px;
+}
+.rhema-note-card {
+  border-radius: 18px;
+  margin: 0 16px;
+  padding: 18px;
+  box-shadow: 0 18px 44px rgba(8, 18, 28, 0.28);
+}
+.rhema-vsheet-handle {
+  width: 42px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(120, 120, 120, 0.35);
+  margin: 0 auto 12px;
+}
+.rhema-vsheet-ref,
+.rhema-note-ref {
+  font-weight: 800;
+  font-size: 1.02rem;
+  margin-bottom: 8px;
+}
+.rhema-vsheet-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted-color, #8a8a8a);
+}
+.rhema-vsheet-colors {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0 14px;
+}
+.rhema-vs-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.rhema-vs-swatch.active {
+  border-color: var(--secondary-color, #243447);
+  box-shadow: 0 0 0 2px var(--secondary-color, #243447);
+}
+.rhema-vs-none {
+  background: transparent;
+  color: var(--muted-color, #8a8a8a);
+}
+.rhema-vsheet-action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
+  border: none;
+  background: rgba(120, 120, 120, 0.1);
+  border-radius: 12px;
+  margin-top: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--font-color, #20303f);
+  cursor: pointer;
+}
+.rhema-vsheet-cancel {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: var(--muted-color, #8a8a8a);
+  font-weight: 700;
+  cursor: pointer;
+}
+.rhema-note-text {
+  width: 100%;
+  min-height: 120px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  padding: 11px;
+  margin: 8px 0 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  line-height: 1.45;
+  resize: vertical;
+  color: var(--font-color, #20303f);
+  background: var(--card-color, #fffdf7);
+}
+.rhema-note-date {
+  font-size: 0.75rem;
+  color: var(--muted-color, #8a8a8a);
+  margin-bottom: 8px;
+}
+.rhema-note-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
+.rhema-note-actions button {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rhema-note-save { background: var(--secondary-color, #243447); color: #fff; }
+.rhema-note-cancel { background: rgba(120, 120, 120, 0.14); color: var(--font-color, #20303f); }
+.rhema-note-delete { background: #e5534b; color: #fff; margin-right: auto; }

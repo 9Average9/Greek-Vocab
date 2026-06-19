@@ -22053,6 +22053,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.264 &mdash; Rhema highlights &amp; notes</div>
+<ul>
+  <li><strong>Highlight verses</strong> &mdash; Tap any English verse to highlight it in a colour of your choice.</li>
+  <li><strong>Personal notes</strong> &mdash; Add a note to any verse; a coloured note marker appears at the end of the verse. Tap it later to see when you wrote it, read it, and edit it.</li>
+  <li>Your highlights and notes are saved on your device and synced to your account when you're signed in.</li>
+</ul>
 <div class="un-version-label">v3.0.263 &mdash; Rhema English study (phase 1)</div>
 <ul>
   <li><strong>OT translation switch hidden</strong> &mdash; MSB and BSB share the same Old Testament text, so the version switch now only appears in the New Testament.</li>
@@ -24048,6 +24054,9 @@ window.__onAuthStateReady = async (user) => {
     // Prompt users on an auto-generated email to connect a real one for account recovery.
     updateConnectEmailSettingsRow();
     maybeShowConnectEmailPrompt();
+
+    // Sync the user's Rhema highlights/notes from the cloud.
+    _rhemaStartMarksSync();
 
     // Re-prompt for notifications when a returning user signs in on a new PWA install
     // where permission hasn't been granted yet (e.g. after reinstalling the app)
@@ -28869,6 +28878,164 @@ function _rhemaXrefKeyForVerse(book = _rhemaBook, chapter = _rhemaChapter, verse
   return `${book} ${chapter}:${verse}`;
 }
 
+// ── Rhema verse marks: user highlights + notes ────────────────────────────────
+// Stored per verse reference ("John 3:16"). Each mark can carry a highlight
+// colour and/or a note (with its own icon colour + timestamps). Persisted to
+// localStorage for everyone and synced to Firestore for signed-in users.
+const RHEMA_MARK_COLORS = ['#ffe08a', '#ffb0b8', '#a9d8ff', '#bdeab2', '#e6c6ff', '#ffc69a', '#b9efe6'];
+let _rhemaMarks = {};
+let _rhemaMarksUnsub = null;
+let _rhemaMenuRef = null;       // verse ref currently open in the sheet/editor
+let _rhemaNoteColor = RHEMA_MARK_COLORS[0];
+
+function _rhemaLoadLocalMarks() {
+  try { _rhemaMarks = JSON.parse(localStorage.getItem('rhemaMarks') || '{}') || {}; }
+  catch { _rhemaMarks = {}; }
+}
+function _rhemaPersistLocalMarks() {
+  try { localStorage.setItem('rhemaMarks', JSON.stringify(_rhemaMarks)); } catch {}
+}
+function _rhemaStartMarksSync() {
+  _rhemaLoadLocalMarks();
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  _rhemaMarksUnsub?.(); _rhemaMarksUnsub = null;
+  if (!uid || !window.Auth?.listenRhemaMarks) return;
+  _rhemaMarksUnsub = window.Auth.listenRhemaMarks(uid, (cloud) => {
+    _rhemaMarks = { ..._rhemaMarks, ...cloud };
+    _rhemaPersistLocalMarks();
+    if (document.getElementById('rhemaModal')?.classList.contains('open')) renderRhemaVerse();
+  });
+}
+function _rhemaSetMark(ref, patch) {
+  const next = { ...(_rhemaMarks[ref] || {}), ...patch };
+  if (!next.color && !next.note) delete _rhemaMarks[ref];
+  else _rhemaMarks[ref] = next;
+  _rhemaPersistLocalMarks();
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (uid) {
+    if (_rhemaMarks[ref]) window.Auth.saveRhemaMark?.(uid, ref, _rhemaMarks[ref]).catch(() => {});
+    else window.Auth.deleteRhemaMark?.(uid, ref).catch(() => {});
+  }
+}
+function _rhemaFmtNoteDate(ts) {
+  if (!ts) return '';
+  try { return new Date(ts).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); }
+  catch { return ''; }
+}
+
+// Tap on an English verse → action sheet (highlight / note / focus).
+function rhemaOpenVerseMenu(v, ev) {
+  ev?.stopPropagation?.();
+  const verse = String(v);
+  _rhemaVerse = verse;
+  syncRhemaPicker?.();
+  _rhemaMenuRef = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, verse);
+  _rhemaRenderVerseSheet();
+  document.getElementById('rhemaVerseSheet')?.classList.add('open');
+}
+function _rhemaRenderVerseSheet() {
+  const ref = _rhemaMenuRef; if (!ref) return;
+  const mark = _rhemaMarks[ref] || {};
+  const refEl = document.getElementById('rhemaVerseSheetRef');
+  if (refEl) refEl.textContent = _rhemaDisplayRefFromKey(ref) || ref;
+  const sw = document.getElementById('rhemaVerseSheetColors');
+  if (sw) {
+    sw.innerHTML = RHEMA_MARK_COLORS.map(c =>
+      `<button class="rhema-vs-swatch${mark.color === c ? ' active' : ''}" style="background:${c}" onclick="rhemaSetVerseHighlight('${c}')" aria-label="Highlight"></button>`
+    ).join('') +
+      `<button class="rhema-vs-swatch rhema-vs-none${!mark.color ? ' active' : ''}" onclick="rhemaSetVerseHighlight('')" title="No highlight"><span class="material-symbols-outlined">format_color_reset</span></button>`;
+  }
+  const noteLabel = document.getElementById('rhemaVerseSheetNoteLabel');
+  if (noteLabel) noteLabel.textContent = mark.note ? 'Edit note' : 'Add note';
+}
+function closeRhemaVerseSheet(e) {
+  if (e && e.target !== document.getElementById('rhemaVerseSheet')) return;
+  document.getElementById('rhemaVerseSheet')?.classList.remove('open');
+}
+function rhemaSetVerseHighlight(color) {
+  if (!_rhemaMenuRef) return;
+  _rhemaSetMark(_rhemaMenuRef, { color: color || null });
+  _rhemaRenderVerseSheet();
+  renderRhemaVerse();
+}
+function rhemaFocusVerseFromMenu() {
+  closeRhemaVerseSheet();
+  if (_rhemaMenuRef) {
+    const verse = _rhemaMenuRef.split(':').pop();
+    _rhemaFullChapter = false;
+    _rhemaVerse = String(verse);
+    _rhemaVerseFocus = false;
+    syncRhemaPicker?.();
+    renderRhemaVerse();
+  }
+}
+
+// Note editor (also serves as viewer — shows when the note was made).
+function rhemaOpenNoteFor(book, chapter, verse, ev) {
+  ev?.stopPropagation?.();
+  _rhemaVerse = String(verse);
+  _rhemaMenuRef = _rhemaXrefKeyForVerse(book, chapter, verse);
+  syncRhemaPicker?.();
+  _rhemaOpenNoteEditor();
+}
+function rhemaAddNoteFromMenu() {
+  closeRhemaVerseSheet();
+  _rhemaOpenNoteEditor();
+}
+function _rhemaOpenNoteEditor() {
+  const ref = _rhemaMenuRef; if (!ref) return;
+  const mark = _rhemaMarks[ref] || {};
+  document.getElementById('rhemaNoteModalRef').textContent = _rhemaDisplayRefFromKey(ref) || ref;
+  const ta = document.getElementById('rhemaNoteText');
+  if (ta) ta.value = mark.note || '';
+  const dateEl = document.getElementById('rhemaNoteDate');
+  if (dateEl) {
+    dateEl.textContent = mark.noteTs ? `Noted ${_rhemaFmtNoteDate(mark.noteTs)}` : '';
+    dateEl.style.display = mark.noteTs ? '' : 'none';
+  }
+  _rhemaNoteColor = mark.noteColor || RHEMA_MARK_COLORS[0];
+  _rhemaRenderNoteColors();
+  const del = document.getElementById('rhemaNoteDeleteBtn');
+  if (del) del.style.display = mark.note ? '' : 'none';
+  document.getElementById('rhemaNoteModal')?.classList.add('open');
+  setTimeout(() => document.getElementById('rhemaNoteText')?.focus(), 60);
+}
+function _rhemaRenderNoteColors() {
+  const cr = document.getElementById('rhemaNoteColors');
+  if (!cr) return;
+  cr.innerHTML = RHEMA_MARK_COLORS.map(c =>
+    `<button class="rhema-vs-swatch${c === _rhemaNoteColor ? ' active' : ''}" style="background:${c}" onclick="rhemaPickNoteColor('${c}')" aria-label="Note colour"></button>`
+  ).join('');
+}
+function rhemaPickNoteColor(c) { _rhemaNoteColor = c; _rhemaRenderNoteColors(); }
+function closeRhemaNoteModal(e) {
+  if (e && e.target !== document.getElementById('rhemaNoteModal')) return;
+  document.getElementById('rhemaNoteModal')?.classList.remove('open');
+}
+function rhemaSaveNote() {
+  const ref = _rhemaMenuRef; if (!ref) return;
+  const text = (document.getElementById('rhemaNoteText')?.value || '').trim();
+  const existing = _rhemaMarks[ref] || {};
+  if (!text) {
+    _rhemaSetMark(ref, { note: null, noteColor: null, noteTs: null, noteUpdatedAt: null });
+  } else {
+    _rhemaSetMark(ref, {
+      note: text,
+      noteColor: _rhemaNoteColor,
+      noteTs: existing.noteTs || Date.now(),
+      noteUpdatedAt: Date.now()
+    });
+  }
+  document.getElementById('rhemaNoteModal')?.classList.remove('open');
+  renderRhemaVerse();
+}
+function rhemaDeleteNote() {
+  const ref = _rhemaMenuRef; if (!ref) return;
+  _rhemaSetMark(ref, { note: null, noteColor: null, noteTs: null, noteUpdatedAt: null });
+  document.getElementById('rhemaNoteModal')?.classList.remove('open');
+  renderRhemaVerse();
+}
+
 function _rhemaCuratedScriptureNotesForKey(key) {
   const version = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
   const official = window.RhemaScriptureNotes?.[version]?.[key]
@@ -28922,12 +29089,20 @@ function _rhemaExpandedCrossRefsForKey(key) {
 
 function _rhemaInlineNoteHtml(book, chapter, verse) {
   const key = _rhemaXrefKeyForVerse(book, chapter, verse);
+  let html = '';
+  // The user's own note (tap to view date + text and edit).
+  const mark = _rhemaMarks[key];
+  if (mark && mark.note) {
+    const color = mark.noteColor || RHEMA_MARK_COLORS[0];
+    html += `<button class="rhema-reader-note-btn rhema-reader-note-btn-user" style="--rhema-note-color:${color}" onclick="event.stopPropagation();rhemaOpenNoteFor('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}', event)" title="Your note" aria-label="Your note"><span class="material-symbols-outlined">edit_note</span></button>`;
+  }
+  // Curated Scripture notes (editorial).
   const notes = _rhemaCuratedScriptureNotesForKey(key);
-  if (!notes.length) return '';
-  const title = `${notes.length} Scripture note${notes.length === 1 ? '' : 's'}`;
-  return `<button class="rhema-reader-note-btn rhema-reader-note-btn-curated" onclick="event.stopPropagation();openRhemaReaderNote('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="${title}" aria-label="${title}">
-    <span class="material-symbols-outlined">sticky_note_2</span>
-  </button>`;
+  if (notes.length) {
+    const title = `${notes.length} Scripture note${notes.length === 1 ? '' : 's'}`;
+    html += `<button class="rhema-reader-note-btn rhema-reader-note-btn-curated" onclick="event.stopPropagation();openRhemaReaderNote('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="${title}" aria-label="${title}"><span class="material-symbols-outlined">sticky_note_2</span></button>`;
+  }
+  return html;
 }
 
 function _rhemaDisplayRefFromKey(key) {
@@ -29311,6 +29486,7 @@ async function showRhema() {
   const modal = document.getElementById('rhemaModal');
   if (!modal) return;
   modal.classList.add('open');
+  _rhemaStartMarksSync();
 
   // Main entry opens as a plain-English chapter reader; the swap control takes
   // you into the Greek. Sandbox and sermon flows manage their own modes.
@@ -30241,7 +30417,8 @@ function renderRhemaVerse() {
           const engContent = engText
             ? _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, v)
             : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
-          return `<div class="rhema-chapter-block rhema-english-verse${v === focusVerse ? ' rhema-chapter-block-target' : ''}" data-verse="${v}" onclick="rhemaFocusEnglishVerse('${v}')">` +
+          const _vhl = _rhemaMarks[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, v)]?.color;
+          return `<div class="rhema-chapter-block rhema-english-verse${v === focusVerse ? ' rhema-chapter-block-target' : ''}${_vhl ? ' rhema-verse-highlighted' : ''}" data-verse="${v}"${_vhl ? ` style="--rhema-hl:${_vhl}"` : ''} onclick="rhemaOpenVerseMenu('${v}', event)">` +
                  `<sup class="rhema-english-vnum">${vn}</sup>${engContent}${_rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, v)}</div>`;
         }).join('');
     }
@@ -30279,8 +30456,9 @@ function renderRhemaVerse() {
       display.innerHTML = _rhemaLayerBadge() + _renderVerseWords(words, null);
       if (EnglishDiv) {
         const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
+        const _svhl = _rhemaMarks[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse)]?.color;
         EnglishDiv.innerHTML = engText
-          ? `<div class="rhema-chapter-block rhema-english-verse" data-verse="${_rhemaVerse}">` +
+          ? `<div class="rhema-chapter-block rhema-english-verse${_svhl ? ' rhema-verse-highlighted' : ''}" data-verse="${_rhemaVerse}"${_svhl ? ` style="--rhema-hl:${_svhl}"` : ''} onclick="rhemaOpenVerseMenu('${_rhemaVerse}', event)">` +
             `<sup class="rhema-english-vnum">${_rhemaVerse}</sup>` +
             _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, _rhemaVerse) +
             _rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, _rhemaVerse) + `</div>`
