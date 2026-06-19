@@ -22074,7 +22074,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.268";
+const APP_VERSION = "3.0.269";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22095,6 +22095,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.269 &mdash; Neutral Bible context notes</div>
+<ul>
+  <li><strong>English word cards</strong> &mdash; The interpretive helper is now labelled <strong>Bible Context</strong> and reads as a usage note, not a theological definition.</li>
+  <li><strong>Safer wording</strong> &mdash; Built-in notes now point users back to the modern definition, the verse, and the author&apos;s context, while keeping salvation/faith wording Free Grace-friendly.</li>
+</ul>
 <div class="un-version-label">v3.0.268 &mdash; Better English definitions</div>
 <ul>
   <li><strong>Smarter dictionary cards</strong> &mdash; English word lookup now ranks common modern meanings first and pushes niche technical senses lower.</li>
@@ -29170,40 +29175,40 @@ let _rhemaCompareTab = 'current';
 let _rhemaWordPickMode = 'lookup';
 let _rhemaCurrentEnglishMeaningWord = '';
 const RHEMA_ENGLISH_BIBLE_DICT = {
-  faith: 'Trust, allegiance, and reliance. In biblical usage it is not bare opinion; it is a whole-person response to God and His promises.',
-  grace: 'God\'s favor and generous action toward people who do not earn it. It often carries both pardon and empowering help.',
-  gospel: 'Good news, especially the announcement of what God has done in Jesus the Messiah.',
-  righteousness: 'Right standing and right conduct before God. Depending on context it can describe God\'s justice, covenant faithfulness, or a person being counted or living rightly.',
-  justify: 'To declare or treat as righteous. In Paul it often has courtroom and covenant overtones.',
-  salvation: 'Rescue and restoration from sin, judgment, and death into life with God.',
-  covenant: 'A binding relationship established by God, often with promises, obligations, and signs.',
-  sin: 'Failure, rebellion, or distortion against God\'s will. It can describe acts, a condition, and a ruling power.',
+  faith: 'Often used for believing, trust, or reliance. In passages about receiving eternal life, read carefully whether the context is speaking about believing Christ\'s promise, ongoing discipleship, or faithful living.',
+  grace: 'Often points to favor or gift rather than something earned. Watch whether the verse is emphasizing God\'s generosity, enablement, or kindness.',
+  gospel: 'Means good news. In the NT, context usually connects it to the message about Jesus Christ and what God has done through Him.',
+  righteousness: 'Can refer to what is right, God\'s justice, right standing, or righteous conduct. Context decides which sense is in view.',
+  justify: 'Can mean to declare, show, or regard as right/righteous. Watch the surrounding argument before deciding whether the focus is legal standing, vindication, or ordinary usage.',
+  salvation: 'Can refer broadly to rescue or deliverance. Context decides whether the passage is about eternal life, deliverance from danger, present growth, or final rescue.',
+  covenant: 'A binding arrangement or relationship, often with promises and obligations. Let the passage identify which covenant or promise is being discussed.',
+  sin: 'Can refer to a wrong act, rebellion against God, a condition, or a ruling power. Context gives the level of meaning.',
   flesh: 'Can mean the physical body, human weakness, or fallen human orientation depending on context.',
   spirit: 'Can refer to the Holy Spirit, the human spirit, breath, life, or an inner disposition depending on context.',
-  law: 'Can mean instruction, the Mosaic Law, Scripture, a principle, or a governing power depending on context.',
-  glory: 'Weight, honor, splendor, or manifest excellence; often the visible greatness of God.',
-  mercy: 'Compassion expressed in concrete help, especially toward the needy or guilty.',
-  peace: 'Wholeness, well-being, reconciliation, and settled harmony, not merely the absence of conflict.',
-  love: 'Self-giving concern and covenant loyalty expressed in action.',
-  hope: 'Confident expectation rooted in God\'s character and promises.',
-  repent: 'To turn, change mind and direction, and reorient toward God.',
-  holy: 'Set apart for God; morally pure and belonging to His purpose.',
+  law: 'Can mean instruction, the Mosaic Law, Scripture, a principle, or a governing power. Check the author and argument.',
+  glory: 'Can mean honor, splendor, praise, or visible greatness. Context determines whether it is human honor, divine glory, or future glory.',
+  mercy: 'Compassion or help shown to someone in need. It may include pity, kindness, or rescue.',
+  peace: 'Can mean calm, wholeness, reconciliation, or well-being. It is broader than simply no conflict.',
+  love: 'Can refer to affection, loyal concern, or self-giving action. Context and object matter.',
+  hope: 'Often confident expectation rather than wishful thinking, especially when grounded in God\'s promise.',
+  repent: 'Can mean to change one\'s mind, turn, or reorient. Let the verse decide what is being turned from or toward.',
+  holy: 'Set apart, dedicated, or pure. Context decides whether the stress is status, conduct, or God\'s own holiness.',
   word: 'Can mean a spoken saying, message, matter, or divine self-expression depending on context.',
-  truth: 'Reality, reliability, faithfulness, and what corresponds to God and His revelation.',
-  life: 'Existence and vitality; in John and Paul often the life of the age to come shared by God.',
-  light: 'Revelation, purity, life, and God\'s presence, often contrasted with darkness.',
+  truth: 'Can mean what is real, reliable, faithful, or in accord with God\'s revelation.',
+  life: 'Can mean physical life, eternal life, or fullness of life. In John especially, eternal life is a major theme.',
+  light: 'Can suggest revelation, goodness, life, or God\'s presence, often contrasted with darkness.',
   world: 'Can mean creation, humanity, or the fallen human order opposed to God depending on context.',
-  church: 'The gathered people called by God; an assembly, not primarily a building.',
-  kingdom: 'God\'s reign, rule, and realm breaking into history through the Messiah.',
-  lord: 'Master, owner, ruler, or divine title depending on context.',
-  christ: 'Messiah, the anointed king promised in Israel\'s Scriptures.',
+  church: 'A gathered assembly or community. In the NT it usually refers to God\'s people rather than a building.',
+  kingdom: 'Can refer to rule, reign, realm, or kingdom life. Context decides whether the stress is present rule, future kingdom, or authority.',
+  lord: 'Can mean master, owner, ruler, or a divine title depending on context.',
+  christ: 'Means Messiah or Anointed One; a title, not Jesus\' last name.',
   apostle: 'A sent messenger or authorized representative; in the NT often a commissioned witness of Christ.',
-  disciple: 'A learner and follower whose life is shaped by the teacher.',
-  baptism: 'A washing/immersion sign connected with repentance, union with Christ, and belonging to God\'s people.',
-  resurrection: 'Rising from the dead; centrally Jesus\' resurrection and the future bodily resurrection of believers.',
-  redemption: 'Release by payment or rescue, often from slavery-like bondage.',
+  disciple: 'A learner or follower. Context decides whether it is describing general followers, committed students, or the Twelve.',
+  baptism: 'A washing or immersion. Context decides whether the focus is water, identification, cleansing, or a figurative use.',
+  resurrection: 'Rising from the dead. Context may point to Jesus\' resurrection, future resurrection, or resurrection life.',
+  redemption: 'Release, rescue, or buying back. Often uses marketplace or slavery-release imagery.',
   fellowship: 'Shared participation, partnership, and communion.',
-  wisdom: 'Skill for faithful living according to God\'s order and purposes.'
+  wisdom: 'Skill, insight, or practical understanding for living rightly. Biblical wisdom is often tied to fearing God.'
 };
 
 function _rhemaParseRef(ref) {
@@ -29529,14 +29534,14 @@ async function rhemaShowEnglishMeaning(word) {
     }
   } catch {}
   const bible = RHEMA_ENGLISH_BIBLE_DICT[clean] || RHEMA_ENGLISH_BIBLE_DICT[clean.replace(/s$/, '')] || '';
-  if (!modern) modern = `A readable English dictionary definition was not available offline for "${clean}". Use the verse context and the Bible/theology note below when present.`;
+  if (!modern) modern = `A readable English dictionary definition was not available offline for "${clean}". Use the verse itself and any Bible context note below as supporting context.`;
   if (body) {
     const modernHtml = modernDefs.length
       ? `<ol class="rhema-def-list">${modernDefs.map(item => `<li><strong>${_escapeRhemaAttr(item.pos)}</strong><span>${_escapeRhemaAttr(item.definition)}</span>${item.example ? `<em>${_escapeRhemaAttr(item.example)}</em>` : ''}</li>`).join('')}</ol>`
       : `<p>${_escapeRhemaAttr(modern)}</p>`;
     body.innerHTML = `
       <div class="rhema-meaning-section"><h4>Modern English</h4>${modernHtml}</div>
-      <div class="rhema-meaning-section"><h4>Bible / Theology</h4><p>${_escapeRhemaAttr(bible || 'No special theological note is built in for this word yet. Read it by its normal English sense and the immediate verse context.')}</p></div>
+      <div class="rhema-meaning-section"><h4>Bible Context</h4><p>${_escapeRhemaAttr(bible || 'No built-in Bible context note for this word yet. Start with the modern definition, then read the immediate verse and paragraph for how the author is using it.')}</p></div>
       <div class="rhema-meaning-section"><h4>In This Verse</h4><p>${_escapeRhemaAttr(_rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '')}</p></div>`;
   }
 }
