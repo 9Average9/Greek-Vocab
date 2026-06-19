@@ -10447,11 +10447,11 @@ const BIBLE_JOURNEYS = [
       'Caravans followed the watered Fertile Crescent arc rather than crossing the Arabian desert directly, which is why the line bends north through Haran.'
     ],
     points: [
-      { ancient: 'Ur of the Chaldeans', modern: 'near Nasiriyah, Iraq', x: 82, y: 78 },
-      { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 56, y: 25 },
-      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 39, y: 55 },
-      { ancient: 'Bethel/Ai', modern: 'central highlands', x: 38, y: 60 },
-      { ancient: 'Egypt', modern: 'Nile Delta / Egypt', x: 22, y: 77 }
+      { ancient: 'Ur of the Chaldeans', modern: 'near Nasiriyah, Iraq', x: 82, y: 78, lat: 30.96, lon: 46.10 },
+      { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 56, y: 25, lat: 36.87, lon: 39.03 },
+      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 39, y: 55, lat: 32.21, lon: 35.28 },
+      { ancient: 'Bethel/Ai', modern: 'central highlands', x: 38, y: 60, lat: 31.93, lon: 35.22 },
+      { ancient: 'Egypt', modern: 'Nile Delta / Egypt', x: 22, y: 77, lat: 30.80, lon: 31.30 }
     ],
     steps: [
       { label: 'Ur to Haran', ref: 'Genesis 11:31', copy: 'Terah takes Abram, Sarai, and Lot out from Ur toward Canaan, stopping in Haran.', miles: 600 },
@@ -10477,11 +10477,11 @@ const BIBLE_JOURNEYS = [
       'Rameses and Succoth are tied to eastern Delta sites (Qantir and Tell el-Maskhuta), but the wilderness stations between them are reconstructed from the itinerary in Numbers 33.'
     ],
     points: [
-      { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42 },
-      { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47 },
-      { ancient: 'Sea Crossing', modern: 'Red Sea / Reed Sea proposals', x: 39, y: 56 },
-      { ancient: 'Marah / Elim', modern: 'Sinai wilderness region', x: 51, y: 65 },
-      { ancient: 'Sinai', modern: 'Sinai Peninsula region', x: 63, y: 76 }
+      { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42, lat: 30.80, lon: 31.83 },
+      { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47, lat: 30.55, lon: 32.10 },
+      { ancient: 'Sea Crossing', modern: 'Red Sea / Reed Sea proposals', x: 39, y: 56, lat: 30.10, lon: 32.55 },
+      { ancient: 'Marah / Elim', modern: 'Sinai wilderness region', x: 51, y: 65, lat: 29.20, lon: 33.05 },
+      { ancient: 'Sinai', modern: 'Sinai Peninsula region', x: 63, y: 76, lat: 28.54, lon: 33.97 }
     ],
     steps: [
       { label: 'Rameses to Succoth', ref: 'Exodus 12:37', copy: 'Israel leaves Egypt as a large company.', miles: 30 },
@@ -10507,9 +10507,9 @@ const BIBLE_JOURNEYS = [
       'The arrival "at the beginning of barley harvest" (Ruth 1:22) points to spring, which fits a walkable few-day journey.'
     ],
     points: [
-      { ancient: 'Moab', modern: 'central Jordan', x: 70, y: 58 },
-      { ancient: 'Jordan crossing region', modern: 'Jordan Valley', x: 50, y: 55 },
-      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 36, y: 52 }
+      { ancient: 'Moab', modern: 'central Jordan', x: 70, y: 58, lat: 31.30, lon: 35.75 },
+      { ancient: 'Jordan crossing region', modern: 'Jordan Valley', x: 50, y: 55, lat: 31.85, lon: 35.50 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 36, y: 52, lat: 31.70, lon: 35.20 }
     ],
     steps: [
       { label: 'Leaving Moab', ref: 'Ruth 1:6-7', copy: 'Naomi begins the return after hearing the Lord has visited His people with food.', miles: 30 },
@@ -10534,10 +10534,10 @@ const BIBLE_JOURNEYS = [
       'Distance and timing assume an ordinary family walking pace; the Gospel gives no travel duration.'
     ],
     points: [
-      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24 },
-      { ancient: 'Samaria/Judea road region', modern: 'central highlands', x: 43, y: 45 },
-      { ancient: 'Jerusalem region', modern: 'Jerusalem area', x: 39, y: 62 },
-      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68 }
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24, lat: 32.70, lon: 35.30 },
+      { ancient: 'Samaria/Judea road region', modern: 'central highlands', x: 43, y: 45, lat: 32.10, lon: 35.28 },
+      { ancient: 'Jerusalem region', modern: 'Jerusalem area', x: 39, y: 62, lat: 31.78, lon: 35.23 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68, lat: 31.70, lon: 35.20 }
     ],
     steps: [
       { label: 'Nazareth departure', ref: 'Luke 2:1-4', copy: 'Joseph goes up from Galilee to Judea because of the census.', miles: 70 },
@@ -10562,11 +10562,11 @@ const BIBLE_JOURNEYS = [
       'Pilgrims heading to Jerusalem feasts often used the Jordan Valley road, which the Jericho stop reflects.'
     ],
     points: [
-      { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22 },
-      { ancient: 'Jordan Valley', modern: 'Jordan River valley', x: 55, y: 50 },
-      { ancient: 'Jericho', modern: 'Jericho', x: 51, y: 65 },
-      { ancient: 'Bethany', modern: 'al-Eizariya area', x: 41, y: 70 },
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 38, y: 68 }
+      { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22, lat: 32.80, lon: 35.55 },
+      { ancient: 'Jordan Valley', modern: 'Jordan River valley', x: 55, y: 50, lat: 32.20, lon: 35.55 },
+      { ancient: 'Jericho', modern: 'Jericho', x: 51, y: 65, lat: 31.87, lon: 35.44 },
+      { ancient: 'Bethany', modern: 'al-Eizariya area', x: 41, y: 70, lat: 31.77, lon: 35.26 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 38, y: 68, lat: 31.78, lon: 35.23 }
     ],
     steps: [
       { label: 'Face set toward Jerusalem', ref: 'Luke 9:51', copy: 'Luke frames the journey as purposeful movement toward Jerusalem.', miles: 0 },
@@ -10592,13 +10592,13 @@ const BIBLE_JOURNEYS = [
       'The return leg retraces the outbound cities (Acts 14:21–26) rather than taking a new road, so the southern Galatia loop is doubled in the distance estimate.'
     ],
     points: [
-      { ancient: 'Antioch', modern: 'Antakya, Turkey region', x: 53, y: 36 },
-      { ancient: 'Seleucia', modern: 'Samandag coast region', x: 50, y: 42 },
-      { ancient: 'Salamis', modern: 'eastern Cyprus', x: 43, y: 58 },
-      { ancient: 'Paphos', modern: 'western Cyprus', x: 28, y: 64 },
-      { ancient: 'Perga', modern: 'near Antalya, Turkey', x: 49, y: 24 },
-      { ancient: 'Pisidian Antioch', modern: 'Yalvac region, Turkey', x: 56, y: 16 },
-      { ancient: 'Iconium / Lystra / Derbe', modern: 'Konya/Karaman region', x: 67, y: 20 }
+      { ancient: 'Antioch', modern: 'Antakya, Turkey region', x: 53, y: 36, lat: 36.20, lon: 36.16 },
+      { ancient: 'Seleucia', modern: 'Samandag coast region', x: 50, y: 42, lat: 36.12, lon: 35.93 },
+      { ancient: 'Salamis', modern: 'eastern Cyprus', x: 43, y: 58, lat: 35.18, lon: 33.90 },
+      { ancient: 'Paphos', modern: 'western Cyprus', x: 28, y: 64, lat: 34.76, lon: 32.42 },
+      { ancient: 'Perga', modern: 'near Antalya, Turkey', x: 49, y: 24, lat: 36.96, lon: 30.85 },
+      { ancient: 'Pisidian Antioch', modern: 'Yalvac region, Turkey', x: 56, y: 16, lat: 38.30, lon: 31.19 },
+      { ancient: 'Iconium / Lystra / Derbe', modern: 'Konya/Karaman region', x: 67, y: 20, lat: 37.87, lon: 32.49 }
     ],
     steps: [
       { label: 'Sent from Antioch', ref: 'Acts 13:1-4', copy: "The church sends Barnabas and Saul by the Spirit's direction.", miles: 16 },
@@ -10625,13 +10625,13 @@ const BIBLE_JOURNEYS = [
       'St Paul’s Bay in northern Malta is the traditional landing site, though the exact wreck point is debated; the drift line here is schematic.'
     ],
     points: [
-      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 72, y: 68 },
-      { ancient: 'Sidon', modern: 'Sidon, Lebanon', x: 70, y: 55 },
-      { ancient: 'Myra', modern: 'Demre, Turkey', x: 54, y: 42 },
-      { ancient: 'Fair Havens', modern: 'Crete, Greece', x: 42, y: 62 },
-      { ancient: 'Malta', modern: 'Malta', x: 25, y: 66 },
-      { ancient: 'Puteoli', modern: 'Pozzuoli, Italy', x: 21, y: 32 },
-      { ancient: 'Rome', modern: 'Rome, Italy', x: 19, y: 24 }
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 72, y: 68, lat: 32.50, lon: 34.89 },
+      { ancient: 'Sidon', modern: 'Sidon, Lebanon', x: 70, y: 55, lat: 33.56, lon: 35.37 },
+      { ancient: 'Myra', modern: 'Demre, Turkey', x: 54, y: 42, lat: 36.26, lon: 29.98 },
+      { ancient: 'Fair Havens', modern: 'Crete, Greece', x: 42, y: 62, lat: 34.91, lon: 24.80 },
+      { ancient: 'Malta', modern: 'Malta', x: 25, y: 66, lat: 35.90, lon: 14.40 },
+      { ancient: 'Puteoli', modern: 'Pozzuoli, Italy', x: 21, y: 32, lat: 40.82, lon: 14.12 },
+      { ancient: 'Rome', modern: 'Rome, Italy', x: 19, y: 24, lat: 41.90, lon: 12.50 }
     ],
     steps: [
       { label: 'Caesarea to Sidon', ref: 'Acts 27:1-3', copy: 'Paul begins the voyage as a prisoner under Roman guard.', miles: 70 },
@@ -10658,10 +10658,10 @@ const BIBLE_JOURNEYS = [
       'Nehemiah’s separate journey (Nehemiah 2) came years later under Artaxerxes; it is shown only to mark the second return wave.'
     ],
     points: [
-      { ancient: 'Babylon', modern: 'near Hillah, Iraq', x: 82, y: 71 },
-      { ancient: 'Euphrates route', modern: 'Iraq/Syria river corridor', x: 66, y: 42 },
-      { ancient: 'Damascus region', modern: 'Syria', x: 49, y: 49 },
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 36, y: 65 }
+      { ancient: 'Babylon', modern: 'near Hillah, Iraq', x: 82, y: 71, lat: 32.54, lon: 44.42 },
+      { ancient: 'Euphrates route', modern: 'Iraq/Syria river corridor', x: 66, y: 42, lat: 35.00, lon: 40.50 },
+      { ancient: 'Damascus region', modern: 'Syria', x: 49, y: 49, lat: 33.51, lon: 36.29 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 36, y: 65, lat: 31.78, lon: 35.23 }
     ],
     steps: [
       { label: 'Decree and return', ref: 'Ezra 1:1-4', copy: 'Cyrus permits return and rebuilding.', miles: 0 },
@@ -10687,11 +10687,11 @@ const BIBLE_JOURNEYS = [
       'Both the outbound and return routes follow the watered Fertile Crescent arc rather than a direct desert line.'
     ],
     points: [
-      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 15, y: 85 },
-      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 22, y: 77 },
-      { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 85, y: 15 },
-      { ancient: 'Peniel', modern: 'Jabbok River, Jordan', x: 32, y: 73 },
-      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 24, y: 72 }
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 15, y: 85, lat: 31.25, lon: 34.79 },
+      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 22, y: 77, lat: 31.93, lon: 35.22 },
+      { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 85, y: 15, lat: 36.87, lon: 39.03 },
+      { ancient: 'Peniel', modern: 'Jabbok River, Jordan', x: 32, y: 73, lat: 32.18, lon: 35.62 },
+      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 24, y: 72, lat: 32.21, lon: 35.28 }
     ],
     steps: [
       { label: 'Fleeing toward Haran', ref: 'Genesis 28:10', copy: 'Jacob leaves Beersheba for Laban’s home.', miles: 60 },
@@ -10718,9 +10718,9 @@ const BIBLE_JOURNEYS = [
       'Pharaoh’s wagons (Genesis 45:21) imply a cart-worthy road, i.e. the coastal "Way to Shur" rather than open desert.'
     ],
     points: [
-      { ancient: 'Hebron', modern: 'Hebron, West Bank', x: 85, y: 50 },
-      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 78, y: 62 },
-      { ancient: 'Goshen', modern: 'eastern Nile Delta, Egypt', x: 15, y: 80 }
+      { ancient: 'Hebron', modern: 'Hebron, West Bank', x: 85, y: 50, lat: 31.53, lon: 35.10 },
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 78, y: 62, lat: 31.25, lon: 34.79 },
+      { ancient: 'Goshen', modern: 'eastern Nile Delta, Egypt', x: 15, y: 80, lat: 30.80, lon: 31.85 }
     ],
     steps: [
       { label: 'Worship at Beersheba', ref: 'Genesis 46:1-4', copy: 'God reassures Jacob on the edge of the land.', miles: 25 },
@@ -10745,11 +10745,11 @@ const BIBLE_JOURNEYS = [
       'Gibeon is securely identified with el-Jib, where jar handles inscribed "Gibeon" were excavated.'
     ],
     points: [
-      { ancient: 'Shittim', modern: 'Plains of Moab, Jordan', x: 85, y: 60 },
-      { ancient: 'Gilgal', modern: 'near Jericho', x: 66, y: 58 },
-      { ancient: 'Jericho', modern: 'Jericho', x: 58, y: 56 },
-      { ancient: 'Ai', modern: 'et-Tell area, West Bank', x: 30, y: 40 },
-      { ancient: 'Gibeon', modern: 'el-Jib, West Bank', x: 15, y: 45 }
+      { ancient: 'Shittim', modern: 'Plains of Moab, Jordan', x: 85, y: 60, lat: 31.83, lon: 35.62 },
+      { ancient: 'Gilgal', modern: 'near Jericho', x: 66, y: 58, lat: 31.87, lon: 35.50 },
+      { ancient: 'Jericho', modern: 'Jericho', x: 58, y: 56, lat: 31.87, lon: 35.44 },
+      { ancient: 'Ai', modern: 'et-Tell area, West Bank', x: 30, y: 40, lat: 31.92, lon: 35.26 },
+      { ancient: 'Gibeon', modern: 'el-Jib, West Bank', x: 15, y: 45, lat: 31.85, lon: 35.18 }
     ],
     steps: [
       { label: 'Crossing the Jordan', ref: 'Joshua 3:14-17', copy: 'The river is cut off and Israel crosses on dry ground.', miles: 6 },
@@ -10776,11 +10776,11 @@ const BIBLE_JOURNEYS = [
       'En Gedi’s springs and cliffs above the Dead Sea (1 Samuel 24) match the "Crags of the Wild Goats" setting well.'
     ],
     points: [
-      { ancient: 'Gibeah', modern: 'near Jerusalem', x: 64, y: 15 },
-      { ancient: 'Nob', modern: 'near Jerusalem', x: 65, y: 21 },
-      { ancient: 'Gath', modern: 'Tell es-Safi, Israel', x: 15, y: 38 },
-      { ancient: 'Adullam', modern: 'Judean foothills', x: 32, y: 48 },
-      { ancient: 'En Gedi', modern: 'En Gedi, Dead Sea', x: 85, y: 85 }
+      { ancient: 'Gibeah', modern: 'near Jerusalem', x: 64, y: 15, lat: 31.82, lon: 35.23 },
+      { ancient: 'Nob', modern: 'near Jerusalem', x: 65, y: 21, lat: 31.79, lon: 35.24 },
+      { ancient: 'Gath', modern: 'Tell es-Safi, Israel', x: 15, y: 38, lat: 31.70, lon: 34.85 },
+      { ancient: 'Adullam', modern: 'Judean foothills', x: 32, y: 48, lat: 31.65, lon: 34.98 },
+      { ancient: 'En Gedi', modern: 'En Gedi, Dead Sea', x: 85, y: 85, lat: 31.46, lon: 35.39 }
     ],
     steps: [
       { label: 'Escaping Saul’s court', ref: '1 Samuel 19:11-18', copy: 'Michal lowers David through a window to flee Gibeah.', miles: 3 },
@@ -10807,11 +10807,11 @@ const BIBLE_JOURNEYS = [
       'The "forty days and forty nights" to Horeb (1 Kings 19:8) echoes Moses and is theological, not a measured travel log.'
     ],
     points: [
-      { ancient: 'Brook Cherith', modern: 'east of the Jordan', x: 85, y: 43 },
-      { ancient: 'Zarephath', modern: 'near Sidon, Lebanon', x: 71, y: 25 },
-      { ancient: 'Mount Carmel', modern: 'Mount Carmel, Israel', x: 61, y: 34 },
-      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 50, y: 52 },
-      { ancient: 'Horeb / Sinai', modern: 'Sinai Peninsula region', x: 15, y: 85 }
+      { ancient: 'Brook Cherith', modern: 'east of the Jordan', x: 85, y: 43, lat: 32.00, lon: 35.62 },
+      { ancient: 'Zarephath', modern: 'near Sidon, Lebanon', x: 71, y: 25, lat: 33.45, lon: 35.30 },
+      { ancient: 'Mount Carmel', modern: 'Mount Carmel, Israel', x: 61, y: 34, lat: 32.73, lon: 35.05 },
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 50, y: 52, lat: 31.25, lon: 34.79 },
+      { ancient: 'Horeb / Sinai', modern: 'Sinai Peninsula region', x: 15, y: 85, lat: 28.54, lon: 33.97 }
     ],
     steps: [
       { label: 'Hidden by the brook', ref: '1 Kings 17:2-6', copy: 'Ravens feed Elijah during the drought at Cherith.', miles: 0 },
@@ -10838,12 +10838,12 @@ const BIBLE_JOURNEYS = [
       'The region of the Gerasenes/Gadarenes on the east shore is debated; Kursi is a leading candidate.'
     ],
     points: [
-      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 15, y: 85 },
-      { ancient: 'Cana', modern: 'Kafr Kanna area', x: 23, y: 71 },
-      { ancient: 'Capernaum', modern: 'Capernaum, north shore', x: 69, y: 34 },
-      { ancient: 'Bethsaida', modern: 'northeast shore', x: 81, y: 25 },
-      { ancient: 'Region of the Gerasenes', modern: 'east shore (Kursi?)', x: 85, y: 48 },
-      { ancient: 'Magdala', modern: 'west shore', x: 59, y: 48 }
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 15, y: 85, lat: 32.70, lon: 35.30 },
+      { ancient: 'Cana', modern: 'Kafr Kanna area', x: 23, y: 71, lat: 32.75, lon: 35.34 },
+      { ancient: 'Capernaum', modern: 'Capernaum, north shore', x: 69, y: 34, lat: 32.88, lon: 35.57 },
+      { ancient: 'Bethsaida', modern: 'northeast shore', x: 81, y: 25, lat: 32.91, lon: 35.63 },
+      { ancient: 'Region of the Gerasenes', modern: 'east shore (Kursi?)', x: 85, y: 48, lat: 32.83, lon: 35.65 },
+      { ancient: 'Magdala', modern: 'west shore', x: 59, y: 48, lat: 32.83, lon: 35.52 }
     ],
     steps: [
       { label: 'Rejected at Nazareth', ref: 'Luke 4:16-30', copy: 'His hometown turns on him in the synagogue.', miles: 0 },
@@ -10870,14 +10870,14 @@ const BIBLE_JOURNEYS = [
       'Acts 16:8-11 marks Troas as the turning point where the gospel crosses from Asia into Europe.'
     ],
     points: [
-      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 85 },
-      { ancient: 'Lystra & Derbe', modern: 'Konya/Karaman region', x: 69, y: 67 },
-      { ancient: 'Troas', modern: 'northwest Turkey coast', x: 35, y: 37 },
-      { ancient: 'Philippi', modern: 'Philippi, Greece', x: 25, y: 20 },
-      { ancient: 'Thessalonica', modern: 'Thessaloniki, Greece', x: 19, y: 25 },
-      { ancient: 'Berea', modern: 'Veria, Greece', x: 15, y: 27 },
-      { ancient: 'Athens', modern: 'Athens, Greece', x: 23, y: 61 },
-      { ancient: 'Corinth', modern: 'Corinth, Greece', x: 18, y: 62 }
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 85, lat: 36.20, lon: 36.16 },
+      { ancient: 'Lystra & Derbe', modern: 'Konya/Karaman region', x: 69, y: 67, lat: 37.50, lon: 32.80 },
+      { ancient: 'Troas', modern: 'northwest Turkey coast', x: 35, y: 37, lat: 39.75, lon: 26.16 },
+      { ancient: 'Philippi', modern: 'Philippi, Greece', x: 25, y: 20, lat: 41.01, lon: 24.29 },
+      { ancient: 'Thessalonica', modern: 'Thessaloniki, Greece', x: 19, y: 25, lat: 40.64, lon: 22.94 },
+      { ancient: 'Berea', modern: 'Veria, Greece', x: 15, y: 27, lat: 40.52, lon: 22.20 },
+      { ancient: 'Athens', modern: 'Athens, Greece', x: 23, y: 61, lat: 37.98, lon: 23.73 },
+      { ancient: 'Corinth', modern: 'Corinth, Greece', x: 18, y: 62, lat: 37.91, lon: 22.88 }
     ],
     steps: [
       { label: 'Revisiting Galatia', ref: 'Acts 15:36-16:5', copy: 'Paul strengthens the churches from the first journey.', miles: 550 },
@@ -10904,14 +10904,14 @@ const BIBLE_JOURNEYS = [
       'The route deliberately heads to Jerusalem despite repeated warnings (Acts 21:10-14), framing it as a path of obedience.'
     ],
     points: [
-      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 54 },
-      { ancient: 'Ephesus', modern: 'Selcuk, Turkey', x: 39, y: 42 },
-      { ancient: 'Macedonia', modern: 'northern Greece', x: 22, y: 20 },
-      { ancient: 'Greece (Corinth)', modern: 'southern Greece', x: 15, y: 42 },
-      { ancient: 'Miletus', modern: 'western Turkey coast', x: 38, y: 44 },
-      { ancient: 'Tyre', modern: 'Tyre, Lebanon', x: 80, y: 74 },
-      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 78, y: 80 },
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 80, y: 85 }
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 54, lat: 36.20, lon: 36.16 },
+      { ancient: 'Ephesus', modern: 'Selcuk, Turkey', x: 39, y: 42, lat: 37.94, lon: 27.34 },
+      { ancient: 'Macedonia', modern: 'northern Greece', x: 22, y: 20, lat: 40.80, lon: 23.50 },
+      { ancient: 'Greece (Corinth)', modern: 'southern Greece', x: 15, y: 42, lat: 37.91, lon: 22.88 },
+      { ancient: 'Miletus', modern: 'western Turkey coast', x: 38, y: 44, lat: 37.53, lon: 27.28 },
+      { ancient: 'Tyre', modern: 'Tyre, Lebanon', x: 80, y: 74, lat: 33.27, lon: 35.20 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 78, y: 80, lat: 32.50, lon: 34.89 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 80, y: 85, lat: 31.78, lon: 35.23 }
     ],
     steps: [
       { label: 'Three years in Ephesus', ref: 'Acts 19:1-20', copy: 'The word spreads through all of Asia.', miles: 850 },
@@ -10927,6 +10927,106 @@ let _journeySelectedId = BIBLE_JOURNEYS[0]?.id || '';
 let _journeyMode = 'ancient';
 // Follow-along route animation state (a single traveler dot walks the polyline).
 const _journeyAnim = { raf: 0, playing: false };
+
+/* Real map (MapLibre + self-hosted Protomaps tiles) — optional accurate renderer.
+   Set BIBLE_WORLD_PMTILES_URL to the hosted .pmtiles file (see
+   scripts/build-bibleworld-pmtiles.md). While it is empty, the offline-safe
+   schematic SVG map stays in charge and nothing below this point runs. */
+const BIBLE_WORLD_PMTILES_URL = '';
+let _journeyGLActive = false;          // true once a real map is mounted + loaded
+let _bibleMapLibsPromise = null;
+
+function _bibleMapConfigured() {
+  return typeof BIBLE_WORLD_PMTILES_URL === 'string' && BIBLE_WORLD_PMTILES_URL.trim().length > 0;
+}
+function _bibleMapEnabled() {
+  // Real tiles need the network; offline always falls back to the schematic.
+  return _bibleMapConfigured() && navigator.onLine !== false;
+}
+function _journeyLabelFor(point, mode) {
+  return mode === 'modern' ? (point.modern || point.ancient || '') : (point.ancient || point.modern || '');
+}
+
+// Lazy-load the vendored maplibre + pmtiles + bible-map module (only when needed).
+function _ensureBibleMapLibs() {
+  if (_bibleMapLibsPromise) return _bibleMapLibsPromise;
+  _bibleMapLibsPromise = new Promise((resolve, reject) => {
+    try {
+      if (!document.getElementById('maplibreCss')) {
+        const link = document.createElement('link');
+        link.id = 'maplibreCss';
+        link.rel = 'stylesheet';
+        link.href = 'assets/maplibre/maplibre-gl.css?v=' + APP_VERSION;
+        document.head.appendChild(link);
+      }
+      const need = [
+        { id: 'maplibreJs', src: 'assets/maplibre/maplibre-gl.js?v=' + APP_VERSION, ready: () => typeof maplibregl !== 'undefined' },
+        { id: 'pmtilesJs', src: 'assets/maplibre/pmtiles.js?v=' + APP_VERSION, ready: () => typeof pmtiles !== 'undefined' },
+        { id: 'bibleMapJs', src: 'bible-map.js?v=' + APP_VERSION, ready: () => !!window.BibleMap }
+      ];
+      let i = 0;
+      const next = () => {
+        if (i >= need.length) { resolve(); return; }
+        const spec = need[i++];
+        if (spec.ready() || document.getElementById(spec.id)) { next(); return; }
+        const s = document.createElement('script');
+        s.id = spec.id;
+        s.src = spec.src;
+        s.onload = next;
+        s.onerror = () => reject(new Error('failed to load ' + spec.src));
+        document.head.appendChild(s);
+      };
+      next();
+    } catch (e) { reject(e); }
+  });
+  return _bibleMapLibsPromise;
+}
+
+function _journeyGLFallback() {
+  _journeyGLActive = false;
+  document.getElementById('journeyMapShell')?.classList.remove('gl-ready');
+}
+
+function _journeyMountGL(journey) {
+  const shell = document.getElementById('journeyMapShell');
+  if (!shell) return;
+  if (!_bibleMapEnabled() || !(journey.points || []).some(p => typeof p.lat === 'number')) {
+    _journeyGLFallback();
+    return;
+  }
+  let host = shell.querySelector('#journeyGLMap');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'journeyGLMap';
+    host.className = 'journey-gl-map';
+    const svg = shell.querySelector('svg');
+    if (svg) svg.insertAdjacentElement('afterend', host); else shell.prepend(host);
+  }
+  shell.classList.remove('gl-ready');
+  _ensureBibleMapLibs().then(() => {
+    if (_journeySelectedId !== journey.id) return null;     // user moved on
+    if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('bible map unsupported');
+    return window.BibleMap.render(host, journey, {
+      mode: _journeyMode,
+      pmtilesUrl: BIBLE_WORLD_PMTILES_URL,
+      labelFor: _journeyLabelFor,
+      onError: () => _journeyGLFallback()
+    });
+  }).then((map) => {
+    if (map) { _journeyGLActive = true; shell.classList.add('gl-ready'); }
+  }).catch(() => { _journeyGLFallback(); });
+}
+
+// Step highlighting shared by both the schematic and the real-map traveler.
+function _journeyHighlightStep(seg, done) {
+  const stepEls = [...document.querySelectorAll('#journeySteps .journey-step')];
+  if (!stepEls.length) return;
+  const active = done ? stepEls.length - 1 : Math.min(Math.max(0, seg), stepEls.length - 1);
+  stepEls.forEach((el, i) => {
+    el.classList.toggle('passed', i < active);
+    el.classList.toggle('current', i === active);
+  });
+}
 
 function _journeyEsc(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -10955,6 +11055,19 @@ function closeBibleJourneysPage() {
 
 function setBibleJourneyMode(mode) {
   _journeyMode = mode === 'modern' ? 'modern' : 'ancient';
+  if (_journeyGLActive && window.BibleMap) {
+    // Real map is mounted: swap its basemap theme + labels in place instead of
+    // tearing the whole page down (which would re-create the map).
+    _journeyStopPlay();
+    _journeySetPlayBtn('idle');
+    document.getElementById('journeyModeAncient')?.classList.toggle('active', _journeyMode === 'ancient');
+    document.getElementById('journeyModeModern')?.classList.toggle('active', _journeyMode === 'modern');
+    const mapTitle = document.getElementById('journeyMapTitle');
+    if (mapTitle) mapTitle.textContent = _journeyMode === 'modern' ? 'Modern comparison' : 'Bible-world route';
+    _journeyRenderStats(_journeyById(_journeySelectedId));
+    window.BibleMap.setMode(_journeyMode);
+    return;
+  }
   renderBibleJourneysPage();
 }
 
@@ -11029,13 +11142,7 @@ function renderBibleJourneysPage() {
   if (shell) shell.innerHTML = _journeyRenderMap(journey) +
     `<div class="journey-map-controls"><button type="button" class="journey-play-btn" id="journeyPlayBtn" onclick="toggleJourneyPlay()"><span class="material-symbols-outlined">play_arrow</span><span>Play route</span></button></div>` +
     `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>`;
-  if (stats) {
-    const miles = _journeyTotalMiles(journey);
-    stats.innerHTML = `
-      <div><span class="material-symbols-outlined">straighten</span><strong>${miles.toLocaleString()} mi</strong><small>approx distance</small></div>
-      <div><span class="material-symbols-outlined">hiking</span><strong>${_journeyEsc(journey.days)}</strong><small>${_journeyEsc(journey.mode)}</small></div>
-      <div><span class="material-symbols-outlined">public</span><strong>${_journeyMode === 'modern' ? 'Today' : 'Then'}</strong><small>${_journeyEsc(_journeyMode === 'modern' ? journey.modern : 'Ancient place names shown')}</small></div>`;
-  }
+  _journeyRenderStats(journey);
   if (steps) {
     steps.innerHTML = `<div class="journey-section-head"><span class="journey-kicker">Story steps</span><strong>Follow the movement</strong></div>` +
       (journey.steps || []).map((step, i) => `<article class="journey-step" data-step="${i}">
@@ -11052,6 +11159,19 @@ function renderBibleJourneysPage() {
         sources.map(s => `<div class="journey-source-item"><span class="material-symbols-outlined">menu_book</span><p>${_journeyEsc(s)}</p></div>`).join('')
       : '';
   }
+  _journeyMountGL(journey);
+}
+
+// Stats row (distance / timing / then-vs-now) — depends on the active mode, so
+// it is shared by the full render and the lighter mode-toggle path.
+function _journeyRenderStats(journey) {
+  const stats = document.getElementById('journeyStats');
+  if (!stats) return;
+  const miles = _journeyTotalMiles(journey);
+  stats.innerHTML = `
+    <div><span class="material-symbols-outlined">straighten</span><strong>${miles.toLocaleString()} mi</strong><small>approx distance</small></div>
+    <div><span class="material-symbols-outlined">hiking</span><strong>${_journeyEsc(journey.days)}</strong><small>${_journeyEsc(journey.mode)}</small></div>
+    <div><span class="material-symbols-outlined">public</span><strong>${_journeyMode === 'modern' ? 'Today' : 'Then'}</strong><small>${_journeyEsc(_journeyMode === 'modern' ? journey.modern : 'Ancient place names shown')}</small></div>`;
 }
 
 // ── Follow-along route animation ──────────────────────────────────────────────
@@ -11072,12 +11192,23 @@ function _journeyStopPlay() {
   if (_journeyAnim.raf) cancelAnimationFrame(_journeyAnim.raf);
   _journeyAnim.raf = 0;
   _journeyAnim.playing = false;
+  if (_journeyGLActive && window.BibleMap) { try { window.BibleMap.stop(); } catch (e) {} }
 }
 
 function toggleJourneyPlay() {
   if (_journeyAnim.playing) {
     _journeyStopPlay();
     _journeySetPlayBtn('idle');
+    return;
+  }
+  if (_journeyGLActive && window.BibleMap) {
+    // Animate the traveler on the real map; reuse the shared step highlighting.
+    _journeyAnim.playing = true;
+    _journeySetPlayBtn('playing');
+    window.BibleMap.play((seg, done) => {
+      _journeyHighlightStep(seg, done);
+      if (done) { _journeyAnim.playing = false; _journeySetPlayBtn('done'); }
+    });
     return;
   }
   _journeyStartPlay();
@@ -22839,7 +22970,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.276";
+const APP_VERSION = "3.0.277";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -22860,6 +22991,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.277 &mdash; Real Bible-world maps (foundation)</div>
+<ul>
+  <li><strong>Accurate coordinates</strong> &mdash; Every journey stop now has a real latitude and longitude, so routes can be drawn on a true map instead of only a stylized one.</li>
+  <li><strong>Real map renderer</strong> &mdash; Added an optional MapLibre map that draws each route over a self-hosted, free, offline-friendly basemap (no map keys, no tracking). It turns on once the Bible-world map file is hosted; until then the fast schematic map stays in place.</li>
+  <li><strong>Ancient vs modern</strong> &mdash; The real map swaps between a parchment Bible-world look and a modern-geography look, keeping the same routes, distances, and story steps.</li>
+</ul>
 <div class="un-version-label">v3.0.276 &mdash; More Bible Journeys</div>
 <ul>
   <li><strong>Eight new journeys</strong> &mdash; Added Jacob to Haran and back, Jacob&apos;s family to Egypt, the entry into the Promised Land, David&apos;s flight from Saul, Elijah to Horeb, Jesus&apos; ministry around Galilee, and Paul&apos;s second and third missionary journeys.</li>

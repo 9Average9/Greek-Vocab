@@ -30850,6 +30850,36 @@ body.journeys-active #studyTabBar { display: none !important; }
   border-radius: 18px;
   overflow: hidden;
 }
+/* Real MapLibre map swaps in over the schematic SVG when configured + online. */
+.journey-gl-map {
+  display: none;
+  width: 100%;
+  aspect-ratio: 1.18 / 1;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--card-color);
+}
+.journey-map-shell.gl-ready .journey-gl-map { display: block; }
+.journey-map-shell.gl-ready svg { display: none; }
+.journey-gl-map .maplibregl-ctrl-attrib {
+  font-size: 0.62rem;
+  background: color-mix(in srgb, var(--card-color) 82%, transparent);
+}
+.journey-gl-map .maplibregl-ctrl-attrib a { color: var(--muted-color); }
+.bible-map-label {
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1.05;
+  color: var(--font-color);
+  white-space: nowrap;
+  pointer-events: none;
+  padding-left: 2px;
+  text-shadow:
+    0 0 2px var(--card-color), 0 0 2px var(--card-color),
+    0 0 3px var(--card-color), 0 1px 2px var(--card-color);
+}
+.bible-map-label.first { color: #16a34a; }
+.bible-map-label.last { color: #dc2626; }
 .journey-map-bg { fill: color-mix(in srgb, var(--secondary-color) 10%, #f4ead7); }
 .journey-ancient-land {
   fill: color-mix(in srgb, var(--secondary-color) 12%, #ead6ad);
