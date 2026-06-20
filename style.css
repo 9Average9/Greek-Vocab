@@ -16493,11 +16493,9 @@ body.dark .rhema-reader-map-btn { color: #6fd6a6; }
   align-items: center;
   justify-content: center;
   padding: 18px;
-  background: rgba(8, 18, 28, 0.5);
+  background: rgba(8, 18, 28, 0.62);
   opacity: 0;
   transition: opacity 0.18s ease;
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
 }
 .journey-peek-overlay.open { opacity: 1; }
 .journey-peek-card {
@@ -16511,7 +16509,7 @@ body.dark .rhema-reader-map-btn { color: #6fd6a6; }
   border-radius: 22px;
   padding: 18px 16px 16px;
   box-shadow: 0 24px 60px rgba(8, 18, 28, 0.4);
-  transform: translateY(12px) scale(0.98);
+  transform: translateY(14px);
   transition: transform 0.2s ease;
 }
 .journey-peek-overlay.open .journey-peek-card { transform: none; }
