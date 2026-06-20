@@ -30943,25 +30943,25 @@ body.journeys-active #studyTabBar { display: none !important; }
   border-color: var(--secondary-color);
   color: var(--btn-text-color);
 }
-/* Mobile: a vertical route picker that is easy to scan, then the selected
-   journey's map and details below. */
+/* Mobile: a swipeable route picker strip, then the selected journey's map and details below. */
 .journey-layout { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
 .journey-list {
   display: grid;
-  grid-auto-flow: row;
-  gap: 8px;
-  margin: 0;
-  padding: 0 2px 2px;
-  max-height: min(48vh, 430px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(82%, 320px);
+  gap: 10px;
+  margin: 0 -8px;
+  padding: 2px 8px 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 .journey-list::-webkit-scrollbar { display: none; }
 .journey-list-heading {
-  display: grid;
+  display: none;
   gap: 2px;
   padding: 2px 4px 6px;
   position: sticky;
@@ -30991,6 +30991,7 @@ body.journeys-active #studyTabBar { display: none !important; }
   -webkit-tap-highlight-color: transparent;
   box-shadow: 0 8px 20px color-mix(in srgb, var(--secondary-color) 7%, transparent);
   transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  scroll-snap-align: start;
 }
 .journey-list-card:active { transform: scale(0.97); }
 .journey-list-orb {

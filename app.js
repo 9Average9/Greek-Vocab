@@ -11266,7 +11266,7 @@ function renderBibleJourneysPage() {
     </button>`;
     }).join('');
     const activeCard = list.querySelector('.journey-list-card.active');
-    if (activeCard) setTimeout(() => activeCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 40);
+    if (activeCard) setTimeout(() => activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }), 40);
   }
   _journeyStopPlay();
   const altHtml = (journey.alternates && journey.alternates.length)
@@ -11281,8 +11281,7 @@ function renderBibleJourneysPage() {
     (_journeyMode === 'modern' && _journeyModernContext(journey)
       ? `<div class="journey-modern-context"><strong>Nearby today</strong><span>${_journeyEsc(_journeyModernContext(journey))}</span></div>`
       : '') +
-    altHtml +
-    `<div class="journey-diag" id="journeyDiag"></div>`;
+    altHtml;
   _journeyRenderStats(journey);
   if (steps) {
     steps.innerHTML = `<div class="journey-section-head"><span class="journey-kicker">Story steps</span><strong>Follow the movement</strong></div>` +
@@ -11471,7 +11470,10 @@ function _journeyParsePoint(s) {
   return parts.length > 1 ? { ch: Number(parts[0]), v: Number(parts[1]) } : { ch: Number(parts[0]), v: null };
 }
 // Does a single ref segment (e.g. "12:1-6", "29-31", "46:28-47:6", "11:31") cover (ch,v)?
-function _journeySegMatch(seg, ch, v) {
+// Rhema markers are intentionally stricter than the full Journey page: broad
+// chapter ranges can describe context, but only verse-specific refs should put
+// a map button beside an individual verse.
+function _journeySegMatch(seg, ch, v, opts = {}) {
   const parts = String(seg).trim().split('-');
   const L = _journeyParsePoint(parts[0]);
   let R;
@@ -11480,6 +11482,7 @@ function _journeySegMatch(seg, ch, v) {
     else if (L.v != null) R = { ch: L.ch, v: Number(parts[1]) };   // "12:1-6"
     else R = { ch: Number(parts[1]), v: null };                    // "29-31"
   } else R = { ch: L.ch, v: L.v };
+  if (opts.requireVerseSpecific && L.v == null && R.v == null) return false;
   const startCh = L.ch, startV = (L.v == null ? 1 : L.v);
   const endCh = R.ch, endV = (R.v == null ? Infinity : R.v);
   const after = ch > startCh || (ch === startCh && v >= startV);
@@ -11487,16 +11490,16 @@ function _journeySegMatch(seg, ch, v) {
   return after && before;
 }
 // Does a journey step's ref string cover (code,ch,v)? Handles multi-book-safe ';' lists.
-function _journeyStepRefMatches(refStr, code, ch, v) {
+function _journeyStepRefMatches(refStr, code, ch, v, opts = {}) {
   const m = String(refStr).match(/^([1-3]?\s?[A-Za-z][A-Za-z ]*?)\s+(\d.*)$/);
   if (!m) return false;
   if (_journeyBookCode(m[1].trim()) !== code) return false;
-  return m[2].split(';').some(seg => _journeySegMatch(seg, Number(ch), Number(v || 1)));
+  return m[2].split(';').some(seg => _journeySegMatch(seg, Number(ch), Number(v || 1), opts));
 }
-function _journeyStepIndexForVerse(journey, code, ch, v) {
+function _journeyStepIndexForVerse(journey, code, ch, v, opts = {}) {
   const steps = journey.steps || [];
   for (let i = 0; i < steps.length; i++) {
-    if (_journeyStepRefMatches(steps[i].ref, code, ch, v)) return i;
+    if (_journeyStepRefMatches(steps[i].ref, code, ch, v, opts)) return i;
   }
   return -1;
 }
@@ -11504,11 +11507,13 @@ function _journeyStepIndexForVerse(journey, code, ch, v) {
 // steps — not just anywhere in the chapter range (so e.g. Babel in Genesis 11
 // does not get a journey marker).
 function _journeyMatchVerse(code, chapter, verse) {
-  const journey = journeyForReference(code, chapter, verse);
-  if (!journey) return null;
-  const stepIdx = _journeyStepIndexForVerse(journey, code, Number(chapter), Number(verse || 1));
-  if (stepIdx < 0) return null;
-  return { journey, stepIdx };
+  const ch = Number(chapter);
+  const v = Number(verse || 1);
+  for (const journey of BIBLE_JOURNEYS) {
+    const stepIdx = _journeyStepIndexForVerse(journey, code, ch, v, { requireVerseSpecific: true });
+    if (stepIdx >= 0) return { journey, stepIdx };
+  }
+  return null;
 }
 
 function _journeyResolvePmtiles() {
@@ -11554,7 +11559,6 @@ function openJourneyPeek(book, chapter, verse) {
   document.body.appendChild(ov);
   requestAnimationFrame(() => {
     ov.classList.add('open');
-    setTimeout(() => _journeyPeekMountGL(journey, _journeyPeekMode), 90);
   });
 }
 
@@ -11572,11 +11576,22 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
       mode,
       pmtilesUrl: _journeyResolvePmtiles(),
       labelFor: _journeyLabelFor,
-      onError: () => {}
+      onError: () => {
+        wrap.classList.remove('gl-ready');
+        host.replaceChildren();
+      }
     });
   }).then((map) => {
-    if (map && document.getElementById('journeyPeekMap')) wrap.classList.add('gl-ready');
-  }).catch(() => {});
+    if (map && document.getElementById('journeyPeekMap')) {
+      setTimeout(() => {
+        const canvas = host.querySelector('canvas');
+        if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0) wrap.classList.add('gl-ready');
+      }, 80);
+    }
+  }).catch(() => {
+    wrap.classList.remove('gl-ready');
+    host.replaceChildren();
+  });
 }
 
 function setJourneyPeekMode(mode) {
@@ -11594,17 +11609,7 @@ function setJourneyPeekMode(mode) {
     const target = ctx.querySelector('span');
     if (target) target.textContent = context;
   }
-  const wrap = document.getElementById('journeyPeekMap');
-  if (window.BibleMap && wrap?.classList.contains('gl-ready')) {
-    try { window.BibleMap.setMode(next); }
-    catch {
-      wrap.classList.remove('gl-ready');
-      if (journey) _journeyPeekMountGL(journey, next);
-    }
-  } else if (journey) {
-    wrap?.classList.remove('gl-ready');
-    _journeyPeekMountGL(journey, next);
-  }
+  document.getElementById('journeyPeekMap')?.classList.remove('gl-ready');
 }
 
 function closeJourneyPeek() {
@@ -23293,7 +23298,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.290";
+const APP_VERSION = "3.0.291";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23314,6 +23319,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.291 &mdash; Journey markers tightened</div>
+<ul>
+  <li><strong>Precise Rhema journey markers</strong> &mdash; Journey map buttons now come only from verse-specific route steps, so broad chapter context no longer marks every verse.</li>
+  <li><strong>Reliable mini maps</strong> &mdash; The Rhema journey popup now uses the instant in-app route map with a Bible Map / Modern toggle, avoiding blank tile-map panels.</li>
+  <li><strong>Journey picker restored</strong> &mdash; The route chooser is back to a horizontal swipe strip, and the visible real-map/version diagnostic line has been removed.</li>
+</ul>
 <div class="un-version-label">v3.0.290 &mdash; Journey map popup polish</div>
 <ul>
   <li><strong>Rhema journey popup</strong> &mdash; The mini journey map now waits for the sheet to open before loading the real map, and it includes its own Bible Map / Modern toggle.</li>
