@@ -272,7 +272,11 @@
             attributionControl: false,
             dragRotate: false,
             pitchWithRotate: false,
-            cooperativeGestures: false
+            cooperativeGestures: false,
+            // Keep the WebGL buffer — iOS Safari otherwise composites a blank
+            // canvas when the map sits inside a modal/animated container.
+            preserveDrawingBuffer: true,
+            fadeDuration: 0
           });
         } catch (e) { reject(e); return; }
         state.map = map;
@@ -286,6 +290,8 @@
             _addOverlays();
             _addMarkers();
             map.fitBounds(_bounds(state.coords), { padding: 46, maxZoom: 9, animate: false });
+            map.triggerRepaint();   // force a paint (blank-canvas guard on iOS)
+            setTimeout(function () { try { map.resize(); map.triggerRepaint(); } catch (e) {} }, 180);
             resolve(map);
           } catch (e) { reject(e); }
         });

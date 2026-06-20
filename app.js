@@ -11604,10 +11604,10 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
   }).then((map) => {
     if (map && document.getElementById('journeyPeekMap')) {
       wrap.classList.add('gl-ready');                 // keep the real map shown
-      requestAnimationFrame(() => { try { map.resize(); } catch (e) {} });
+      requestAnimationFrame(() => { try { map.resize(); map.triggerRepaint(); } catch (e) {} });
       // Report the canvas size so a blank-but-"ON" map is diagnosable on device.
       setTimeout(() => {
-        try { map.resize(); } catch (e) {}
+        try { map.resize(); map.triggerRepaint(); } catch (e) {}
         const c = host.querySelector('canvas');
         const dim = c ? (c.clientWidth + '×' + c.clientHeight) : 'no canvas';
         _journeyPeekSetDiag('real map ON · ' + dim);
@@ -23327,7 +23327,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.295";
+const APP_VERSION = "3.0.296";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23348,6 +23348,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.296 &mdash; Mini-map paint fix</div>
+<ul>
+  <li><strong>Mini-map rendering</strong> &mdash; The popup map loaded but drew a blank canvas on iPhone; now it keeps its draw buffer and forces a repaint so the real map actually shows.</li>
+</ul>
 <div class="un-version-label">v3.0.295 &mdash; Verse mini-map blank fix</div>
 <ul>
   <li><strong>Mini-map rendering</strong> &mdash; Removed the popup blur and zoom effects that left the map a blank white box on iPhone (a known issue with WebGL maps inside blurred/scaled containers).</li>
