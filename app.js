@@ -11019,10 +11019,7 @@ function _journeyMountGL(journey) {
   // the GL canvas render at 0x0 and never appear.
   shell.classList.add('gl-mounting');
   _journeySetDiag('loading real map…');
-  // pmtiles needs an absolute URL; resolve a same-origin relative path here.
-  const pmtilesUrl = /^https?:/i.test(BIBLE_WORLD_PMTILES_URL)
-    ? BIBLE_WORLD_PMTILES_URL
-    : new URL(BIBLE_WORLD_PMTILES_URL, document.baseURI).href;
+  const pmtilesUrl = _journeyResolvePmtiles();
   _ensureBibleMapLibs().then(() => {
     if (_journeySelectedId !== journey.id) return null;     // user moved on
     if (!window.BibleMap) throw new Error('module not loaded');
@@ -11360,28 +11357,72 @@ function openBibleJourneyFromRhemaMenu() {
   else openBibleJourneysPage();
 }
 
-// Which story step (if any) a given reference falls on, so the peek can point
-// to the relevant leg of the route.
-function _journeyStepForRef(journey, chapter, verse) {
-  const ch = Number(chapter), v = Number(verse || 1);
+// Map a book NAME (as used in journey step refs) to its code, e.g. "1 Samuel" -> "1SA".
+const RP_NAME_TO_CODE = Object.fromEntries((typeof RP_BOOKS !== 'undefined' ? RP_BOOKS : []).map(b => [b.name, b.code]));
+
+// Parse a "chapter:verse" or bare "chapter" point.
+function _journeyParsePoint(s) {
+  const parts = String(s).split(':');
+  return parts.length > 1 ? { ch: Number(parts[0]), v: Number(parts[1]) } : { ch: Number(parts[0]), v: null };
+}
+// Does a single ref segment (e.g. "12:1-6", "29-31", "46:28-47:6", "11:31") cover (ch,v)?
+function _journeySegMatch(seg, ch, v) {
+  const parts = String(seg).trim().split('-');
+  const L = _journeyParsePoint(parts[0]);
+  let R;
+  if (parts.length > 1) {
+    if (parts[1].includes(':')) R = _journeyParsePoint(parts[1]);
+    else if (L.v != null) R = { ch: L.ch, v: Number(parts[1]) };   // "12:1-6"
+    else R = { ch: Number(parts[1]), v: null };                    // "29-31"
+  } else R = { ch: L.ch, v: L.v };
+  const startCh = L.ch, startV = (L.v == null ? 1 : L.v);
+  const endCh = R.ch, endV = (R.v == null ? Infinity : R.v);
+  const after = ch > startCh || (ch === startCh && v >= startV);
+  const before = ch < endCh || (ch === endCh && v <= endV);
+  return after && before;
+}
+// Does a journey step's ref string cover (code,ch,v)? Handles multi-book-safe ';' lists.
+function _journeyStepRefMatches(refStr, code, ch, v) {
+  const m = String(refStr).match(/^([1-3]?\s?[A-Za-z][A-Za-z ]*?)\s+(\d.*)$/);
+  if (!m) return false;
+  if (RP_NAME_TO_CODE[m[1].trim()] !== code) return false;
+  return m[2].split(';').some(seg => _journeySegMatch(seg, Number(ch), Number(v || 1)));
+}
+function _journeyStepIndexForVerse(journey, code, ch, v) {
   const steps = journey.steps || [];
-  let best = -1;
-  steps.forEach((step, i) => {
-    const m = String(step.ref || '').match(/(\d+):(\d+)/);
-    if (m && Number(m[1]) === ch && Number(m[2]) <= v) best = i;
-    else if (m && Number(m[1]) < ch) best = i;
-  });
-  return best;
+  for (let i = 0; i < steps.length; i++) {
+    if (_journeyStepRefMatches(steps[i].ref, code, ch, v)) return i;
+  }
+  return -1;
+}
+// A verse "belongs" to a journey only if it falls on one of the curated story
+// steps — not just anywhere in the chapter range (so e.g. Babel in Genesis 11
+// does not get a journey marker).
+function _journeyMatchVerse(code, chapter, verse) {
+  const journey = journeyForReference(code, chapter, verse);
+  if (!journey) return null;
+  const stepIdx = _journeyStepIndexForVerse(journey, code, Number(chapter), Number(verse || 1));
+  if (stepIdx < 0) return null;
+  return { journey, stepIdx };
 }
 
-// Pop up a quick map of the verse's journey, right from the reader.
+function _journeyResolvePmtiles() {
+  return /^https?:/i.test(BIBLE_WORLD_PMTILES_URL)
+    ? BIBLE_WORLD_PMTILES_URL
+    : new URL(BIBLE_WORLD_PMTILES_URL, document.baseURI).href;
+}
+
+// Pop up a quick map of the verse's journey, right from the reader. Uses the real
+// tile map (fast) and only shows the schematic underneath until tiles load / when
+// there is no connection.
 function openJourneyPeek(book, chapter, verse) {
-  const journey = (typeof journeyForReference === 'function') ? journeyForReference(book, chapter, verse) : null;
-  if (!journey) return;
+  const match = _journeyMatchVerse(book, chapter, verse);
+  if (!match) return;
+  const journey = match.journey;
+  const step = (journey.steps || [])[match.stepIdx];
   document.getElementById('journeyPeekOverlay')?.remove();
+  if (window.BibleMap) { try { window.BibleMap.destroy(); } catch (e) {} }
   const refName = (typeof _rhemaBookName === 'function' ? _rhemaBookName(book) : book) + ' ' + chapter + ':' + verse;
-  const stepIdx = _journeyStepForRef(journey, chapter, verse);
-  const step = (journey.steps || [])[stepIdx];
   const ov = document.createElement('div');
   ov.id = 'journeyPeekOverlay';
   ov.className = 'journey-peek-overlay';
@@ -11391,15 +11432,39 @@ function openJourneyPeek(book, chapter, verse) {
     <span class="journey-kicker">Journey map</span>
     <strong class="journey-peek-title">${_journeyEsc(journey.title)}</strong>
     <small class="journey-peek-ref">${_journeyEsc(refName)} &middot; ${_journeyEsc(journey.certainty || 'Approximate')}</small>
-    <div class="journey-peek-map">${_journeyRenderMap(journey)}</div>
+    <div class="journey-peek-map" id="journeyPeekMap">
+      <div class="journey-peek-mapsvg">${_journeyRenderMap(journey)}</div>
+      <div class="journey-peek-mapgl" id="journeyPeekMapGL"></div>
+    </div>
     ${step ? `<p class="journey-peek-step"><strong>${_journeyEsc(step.label)}</strong>${_journeyEsc(step.copy)}</p>` : `<p class="journey-peek-step">${_journeyEsc(journey.subtitle)}</p>`}
     <button class="journey-peek-open" onclick="openJourneyFromPeek('${_journeyEsc(journey.id)}')"><span class="material-symbols-outlined">explore</span>Open full journey</button>
   </div>`;
   document.body.appendChild(ov);
-  requestAnimationFrame(() => ov.classList.add('open'));
+  requestAnimationFrame(() => { ov.classList.add('open'); _journeyPeekMountGL(journey); });
+}
+
+// Load the real tile map into the peek (schematic stays as the instant + offline fallback).
+function _journeyPeekMountGL(journey) {
+  if (!_bibleMapEnabled() || !(journey.points || []).some(p => typeof p.lat === 'number')) return;
+  const wrap = document.getElementById('journeyPeekMap');
+  const host = document.getElementById('journeyPeekMapGL');
+  if (!wrap || !host) return;
+  _ensureBibleMapLibs().then(() => {
+    if (!document.getElementById('journeyPeekMap')) return null;   // closed already
+    if (!window.BibleMap || !window.BibleMap.supported()) return null;
+    return window.BibleMap.render(host, journey, {
+      mode: _journeyMode,
+      pmtilesUrl: _journeyResolvePmtiles(),
+      labelFor: _journeyLabelFor,
+      onError: () => {}
+    });
+  }).then((map) => {
+    if (map && document.getElementById('journeyPeekMap')) wrap.classList.add('gl-ready');
+  }).catch(() => {});
 }
 
 function closeJourneyPeek() {
+  if (window.BibleMap) { try { window.BibleMap.destroy(); } catch (e) {} }
   const o = document.getElementById('journeyPeekOverlay');
   if (!o) return;
   o.classList.remove('open');
@@ -23083,7 +23148,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.286";
+const APP_VERSION = "3.0.287";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23104,6 +23169,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.287 &mdash; Sharper journey markers</div>
+<ul>
+  <li><strong>Verse-precise map icon</strong> &mdash; The Rhema journey map icon now appears only on the verses that actually sit on a route step, not the whole chapter (so Genesis 11&apos;s Babel verses no longer show it).</li>
+  <li><strong>Real map in the popup</strong> &mdash; The mini-map that opens from a verse now uses the real Bible-world tiles, falling back to the simple map only when offline.</li>
+</ul>
 <div class="un-version-label">v3.0.286 &mdash; Journey maps in Rhema + tighter flow</div>
 <ul>
   <li><strong>Map icon on verses</strong> &mdash; In Rhema, verses that belong to a curated journey now show a small map icon. Tap it to pop up that verse&apos;s route, with a button to open the full journey.</li>
@@ -31772,8 +31842,8 @@ function _rhemaInlineNoteHtml(book, chapter, verse) {
     const title = `${notes.length} Scripture note${notes.length === 1 ? '' : 's'}`;
     html += `<button class="rhema-reader-note-btn rhema-reader-note-btn-curated" onclick="event.stopPropagation();openRhemaReaderNote('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="${title}" aria-label="${title}"><span class="material-symbols-outlined">sticky_note_2</span></button>`;
   }
-  // Journey map: only on verses that belong to a curated route.
-  if (typeof journeyForReference === 'function' && journeyForReference(book, chapter, verse)) {
+  // Journey map: only on verses that fall on a curated story step (not the whole chapter).
+  if (typeof _journeyMatchVerse === 'function' && _journeyMatchVerse(book, chapter, verse)) {
     html += `<button class="rhema-reader-note-btn rhema-reader-map-btn" onclick="event.stopPropagation();openJourneyPeek('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="See this on the journey map" aria-label="Journey map"><span class="material-symbols-outlined">map</span></button>`;
   }
   return html;
