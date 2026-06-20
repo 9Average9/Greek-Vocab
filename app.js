@@ -11559,6 +11559,7 @@ function openJourneyPeek(book, chapter, verse) {
   document.body.appendChild(ov);
   requestAnimationFrame(() => {
     ov.classList.add('open');
+    setTimeout(() => _journeyPeekMountGL(journey, _journeyPeekMode), 30);
   });
 }
 
@@ -11610,6 +11611,8 @@ function setJourneyPeekMode(mode) {
     if (target) target.textContent = context;
   }
   document.getElementById('journeyPeekMap')?.classList.remove('gl-ready');
+  // Reload the real tile map in the newly selected mode.
+  if (journey) _journeyPeekMountGL(journey, next);
 }
 
 function closeJourneyPeek() {
@@ -23298,7 +23301,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.291";
+const APP_VERSION = "3.0.292";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23319,6 +23322,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.292 &mdash; Verse mini-map loads the real map</div>
+<ul>
+  <li><strong>Real tiles in the popup</strong> &mdash; The map that pops up from a Rhema verse now loads the real Bible-world tiles (it was staying on the simple map), and the Bible Map / Modern toggle reloads it in the chosen view.</li>
+</ul>
 <div class="un-version-label">v3.0.291 &mdash; Journey markers tightened</div>
 <ul>
   <li><strong>Precise Rhema journey markers</strong> &mdash; Journey map buttons now come only from verse-specific route steps, so broad chapter context no longer marks every verse.</li>
