@@ -16552,17 +16552,19 @@ body.dark .rhema-reader-map-btn { color: #6fd6a6; }
   background: var(--secondary-color);
   color: var(--btn-text-color);
 }
-.journey-peek-map { position: relative; border-radius: 16px; overflow: hidden; }
-.journey-peek-map svg { display: block; width: 100%; aspect-ratio: 1.18 / 1; border-radius: 16px; }
-.journey-peek-mapgl {
-  position: absolute;
-  inset: 0;
+/* Definite size so MapLibre initializes with a non-zero canvas (it otherwise
+   stays on the schematic). Both layers fill the same aspect-ratio box. */
+.journey-peek-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.18 / 1;
   border-radius: 16px;
   overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
 }
+.journey-peek-mapsvg,
+.journey-peek-mapgl { position: absolute; inset: 0; border-radius: 16px; overflow: hidden; }
+.journey-peek-mapsvg svg { display: block; width: 100%; height: 100%; }
+.journey-peek-mapgl { opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
 .journey-peek-map.gl-ready .journey-peek-mapgl { opacity: 1; pointer-events: auto; }
 .journey-peek-map.gl-ready .journey-peek-mapsvg { visibility: hidden; }
 .journey-peek-step { margin: 12px 0 14px; color: var(--muted-color); line-height: 1.45; font-size: 0.9rem; }
