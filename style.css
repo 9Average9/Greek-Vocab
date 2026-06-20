@@ -16502,7 +16502,7 @@ body.dark .rhema-reader-map-btn { color: #6fd6a6; }
   position: relative;
   width: 100%;
   max-width: 440px;
-  max-height: 90dvh;
+  max-height: 86dvh;
   overflow-y: auto;
   background: var(--card-color, #fffdf7);
   color: var(--font-color, #20303f);

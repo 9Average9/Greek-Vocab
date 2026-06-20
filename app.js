@@ -11513,6 +11513,411 @@ const BIBLE_JOURNEYS = [
       { label: 'By night to Antipatris', ref: 'Acts 23:31', copy: 'The infantry bring him down to Antipatris.', miles: 35 },
       { label: 'On to Caesarea', ref: 'Acts 23:32-33', copy: 'The horsemen deliver him and the letter to Felix.', miles: 30 }
     ]
+  },
+  {
+    id: 'lot-flees-sodom',
+    title: 'Lot Flees Sodom',
+    subtitle: 'Out of the doomed city to the little town of Zoar',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 19, chTo: 19 }],
+    distance: 12,
+    mode: 'Fleeing on foot at dawn',
+    days: 'A single morning',
+    modern: 'The southern Dead Sea plain up into the hills',
+    note: 'Sodom and Zoar are placed by most near the south end of the Dead Sea; the exact sites are debated.',
+    sources: [
+      'The cities of the plain lay in the Jordan valley near the Dead Sea (Genesis 13:10-12).',
+      'The angels send Lot to Zoar, a small town close enough to reach before sunrise (Genesis 19:22-23).',
+      'Lot afterward leaves Zoar to live in the hills with his two daughters (Genesis 19:30).'
+    ],
+    points: [
+      { ancient: 'Sodom', modern: 'Southern Dead Sea plain', x: 16, y: 59.9, lat: 31.05, lon: 35.4 },
+      { ancient: 'Zoar', modern: 'Ghor es-Safi area, Jordan', x: 50, y: 59.9, lat: 31.05, lon: 35.5 },
+      { ancient: 'The hills', modern: 'Highlands east of the Dead Sea', x: 84, y: 40.1, lat: 31.1, lon: 35.6 }
+    ],
+    steps: [
+      { label: 'Seized by the hand', ref: 'Genesis 19:15-16', copy: 'The angels grab Lot, his wife, and daughters and rush them out of the city.', miles: 1 },
+      { label: 'Escape to Zoar', ref: 'Genesis 19:22-23', copy: 'Lot reaches the little town just as the sun rises over the land.', miles: 8 },
+      { label: 'Up to the hills', ref: 'Genesis 19:30', copy: 'Afraid to stay in Zoar, Lot goes up to live in a cave in the highlands.', miles: 3 }
+    ]
+  },
+  {
+    id: 'abraham-rescue-lot',
+    title: 'Abraham Rescues Lot',
+    subtitle: 'A night pursuit of four kings as far as Dan and beyond',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 14, chTo: 14 }],
+    distance: 150,
+    mode: 'Armed pursuit',
+    days: 'Several days of pursuit and return',
+    modern: 'Hebron north to the Dan/Damascus region and back',
+    note: 'Hobah is located "north of Damascus"; its precise site is unknown.',
+    sources: [
+      'Abram was living by the oaks of Mamre at Hebron when he heard Lot was captured (Genesis 14:13-14).',
+      'He pursued the kings as far as Dan in the far north of Canaan (Genesis 14:14).',
+      'The chase continued to Hobah, north of Damascus, before Abram returned (Genesis 14:15-17).'
+    ],
+    points: [
+      { ancient: 'Hebron (Mamre)', modern: 'Hebron, West Bank', x: 32.7, y: 84, lat: 31.53, lon: 35.1 },
+      { ancient: 'Dan', modern: 'Tel Dan, Israel', x: 47.9, y: 27.5, lat: 33.25, lon: 35.65 },
+      { ancient: 'Hobah', modern: 'North of Damascus, Syria', x: 67.3, y: 16, lat: 33.6, lon: 36.35 },
+      { ancient: 'King\'s Valley', modern: 'Near Jerusalem', x: 36.3, y: 76.1, lat: 31.77, lon: 35.23 }
+    ],
+    steps: [
+      { label: 'News at Mamre', ref: 'Genesis 14:13-14', copy: 'Abram arms 318 trained men born in his household and sets out.', miles: 0 },
+      { label: 'Pursuit to Dan', ref: 'Genesis 14:14-15', copy: 'He overtakes the kings, divides his forces by night, and routs them.', miles: 120 },
+      { label: 'Beyond Damascus', ref: 'Genesis 14:15', copy: 'He chases them to Hobah, north of Damascus, recovering all the people and goods.', miles: 30 },
+      { label: 'Met by Melchizedek', ref: 'Genesis 14:17-20', copy: 'Returning, he is blessed by Melchizedek in the King’s Valley.', miles: 0 }
+    ]
+  },
+  {
+    id: 'balaam-pethor-moab',
+    title: 'Balaam Comes to Moab',
+    subtitle: 'From Pethor on the Euphrates to bless or curse Israel',
+    certainty: 'Approximate route',
+    refs: [{ book: 'NUM', chFrom: 22, chTo: 24 }],
+    distance: 400,
+    mode: 'Riding a donkey',
+    days: 'Many days of travel',
+    modern: 'The upper Euphrates down to the plains of Moab',
+    note: 'Pethor lay near the Euphrates in Aram-Naharaim; the exact tell is uncertain.',
+    sources: [
+      'Balak’s messengers summon Balaam from Pethor, near the River, in his native land (Numbers 22:5).',
+      'Balaam saddles his donkey and travels to the princes of Moab (Numbers 22:21).',
+      'He meets Balak at the edge of his territory by the Arnon and goes up to the high places (Numbers 22:36-41).'
+    ],
+    points: [
+      { ancient: 'Pethor', modern: 'Upper Euphrates, Syria', x: 63.1, y: 16, lat: 36.5, lon: 38 },
+      { ancient: 'City of Moab (Arnon)', modern: 'Arnon gorge, Jordan', x: 36.9, y: 84, lat: 31.46, lon: 35.65 },
+      { ancient: 'Pisgah / Peor', modern: 'Heights of Moab', x: 37.6, y: 79.8, lat: 31.77, lon: 35.72 }
+    ],
+    steps: [
+      { label: 'Summoned from Pethor', ref: 'Numbers 22:5-6', copy: 'Balak sends for Balaam to curse the people camped before him.', miles: 0 },
+      { label: 'The donkey and the angel', ref: 'Numbers 22:21-31', copy: 'On the way the donkey sees the angel of the Lord and turns aside.', miles: 380 },
+      { label: 'Met at the border', ref: 'Numbers 22:36', copy: 'Balak goes out to meet him at the city of Moab on the Arnon.', miles: 15 },
+      { label: 'Blessing on the heights', ref: 'Numbers 23:11-12', copy: 'From the high places Balaam blesses Israel instead of cursing.', miles: 5 }
+    ]
+  },
+  {
+    id: 'israel-edom-detour',
+    title: 'Israel Skirts Edom',
+    subtitle: 'From Kadesh around Edom to the plains of Moab',
+    certainty: 'Approximate route',
+    refs: [{ book: 'NUM', chFrom: 20, chTo: 21 }],
+    distance: 180,
+    mode: 'Wilderness march',
+    days: 'A long detour of many weeks',
+    modern: 'The Negev wilderness around to the Jordan valley',
+    note: 'Mount Hor and the exact line around Edom are approximate; the route avoids Edomite territory.',
+    sources: [
+      'Edom refuses passage, so Israel turns away from its border (Numbers 20:18-21).',
+      'Aaron dies on Mount Hor on the edge of Edom (Numbers 20:22-28).',
+      'They go around Edom by the Red Sea road and camp in the plains of Moab (Numbers 21:4; 22:1).'
+    ],
+    points: [
+      { ancient: 'Kadesh', modern: 'Wilderness of Zin', x: 29.3, y: 70.8, lat: 30.6, lon: 34.5 },
+      { ancient: 'Mount Hor', modern: 'Edom border highlands', x: 63.2, y: 84, lat: 30.3, lon: 35.4 },
+      { ancient: 'Plains of Moab', modern: 'Jordan valley by Jericho', x: 70.7, y: 16, lat: 31.85, lon: 35.6 }
+    ],
+    steps: [
+      { label: 'Turned back at Edom', ref: 'Numbers 20:20-21', copy: 'Edom comes out with a strong army, and Israel turns aside.', miles: 40 },
+      { label: 'Aaron dies on Mount Hor', ref: 'Numbers 20:27-28', copy: 'Aaron is stripped of his garments; Eleazar takes his place.', miles: 30 },
+      { label: 'Around to Moab', ref: 'Numbers 21:4', copy: 'They set out by way of the Red Sea to go around the land of Edom.', miles: 90 },
+      { label: 'Camped by the Jordan', ref: 'Numbers 22:1', copy: 'Israel encamps in the plains of Moab beyond the Jordan at Jericho.', miles: 20 }
+    ]
+  },
+  {
+    id: 'joshua-spies-jericho',
+    title: 'The Spies at Jericho',
+    subtitle: 'From the camp at Shittim across to Jericho and back',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JOS', chFrom: 2, chTo: 3 }],
+    distance: 14,
+    mode: 'Secret scouting on foot',
+    days: 'About three days',
+    modern: 'The eastern Jordan plain across to Jericho',
+    note: 'Shittim (Abel-shittim) and the Jordan crossing point are placed in the plains opposite Jericho.',
+    sources: [
+      'Joshua sends two spies from Shittim to view the land and Jericho (Joshua 2:1).',
+      'Rahab hides them and they escape to the hills for three days (Joshua 2:15-16, 22).',
+      'Israel then crosses the Jordan from Shittim opposite Jericho (Joshua 3:1, 16).'
+    ],
+    points: [
+      { ancient: 'Shittim', modern: 'Plains of Moab', x: 84, y: 55.5, lat: 31.87, lon: 35.62 },
+      { ancient: 'Jericho', modern: 'Tell es-Sultan, Jericho', x: 28.4, y: 55.5, lat: 31.87, lon: 35.44 },
+      { ancient: 'The hills', modern: 'Judean wilderness ridge', x: 16, y: 44.5, lat: 31.9, lon: 35.4 }
+    ],
+    steps: [
+      { label: 'Sent from Shittim', ref: 'Joshua 2:1', copy: 'Two spies enter Jericho and lodge at the house of Rahab.', miles: 6 },
+      { label: 'Let down the wall', ref: 'Joshua 2:15-16', copy: 'Rahab lowers them by a rope and tells them to hide in the hills.', miles: 5 },
+      { label: 'Crossing the Jordan', ref: 'Joshua 3:16-17', copy: 'The waters stand in a heap and Israel crosses over on dry ground.', miles: 3 }
+    ]
+  },
+  {
+    id: 'gideon-midian-pursuit',
+    title: 'Gideon Pursues Midian',
+    subtitle: 'From the spring of Harod across the Jordan to Karkor',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JDG', chFrom: 7, chTo: 8 }],
+    distance: 100,
+    mode: 'Pursuit with 300 men',
+    days: 'A relentless chase',
+    modern: 'The Jezreel valley east across the Jordan into Gilead',
+    note: 'Karkor lay east of the Jordan; its exact site in the eastern desert is uncertain.',
+    sources: [
+      'Gideon’s 300 are chosen by how they drank at the spring of Harod (Judges 7:5-7).',
+      'The Midianites flee toward the Jordan and the fords are seized (Judges 7:22-24).',
+      'Gideon crosses the Jordan and overtakes the kings at Karkor (Judges 8:4-12).'
+    ],
+    points: [
+      { ancient: 'Spring of Harod', modern: 'Ain Jalut, Jezreel valley', x: 16, y: 29.7, lat: 32.55, lon: 35.36 },
+      { ancient: 'Jordan fords', modern: 'Jordan crossing', x: 32.8, y: 52.3, lat: 32.3, lon: 35.58 },
+      { ancient: 'Karkor', modern: 'Eastern desert, Jordan', x: 84, y: 70.3, lat: 32.1, lon: 36.25 }
+    ],
+    steps: [
+      { label: 'The 300 at the spring', ref: 'Judges 7:7', copy: 'God keeps only the men who lapped the water, sending the rest home.', miles: 0 },
+      { label: 'Rout toward the Jordan', ref: 'Judges 7:22-24', copy: 'The host flees; the men of Ephraim seize the waters as far as Beth-barah.', miles: 20 },
+      { label: 'Crossing in pursuit', ref: 'Judges 8:4', copy: 'Gideon and his men cross the Jordan, faint yet pursuing.', miles: 30 },
+      { label: 'Overtaking at Karkor', ref: 'Judges 8:10-12', copy: 'He surprises the camp and captures the two kings of Midian.', miles: 40 }
+    ]
+  },
+  {
+    id: 'david-goliath-elah',
+    title: 'David and Goliath',
+    subtitle: 'From Bethlehem to the Valley of Elah and on to Jerusalem',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 17, chTo: 17 }],
+    distance: 25,
+    mode: 'Errand on foot',
+    days: 'A day each way',
+    modern: 'The Judean hills west to the Elah valley',
+    note: 'The Valley of Elah is securely located; Goliath’s head was later brought to Jerusalem.',
+    sources: [
+      'Jesse sends David from Bethlehem to his brothers in the camp (1 Samuel 17:17-20).',
+      'The armies face off in the Valley of Elah between Socoh and Azekah (1 Samuel 17:1-3).',
+      'David takes the Philistine’s head to Jerusalem afterward (1 Samuel 17:54).'
+    ],
+    points: [
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 76.4, y: 60.4, lat: 31.7, lon: 35.2 },
+      { ancient: 'Valley of Elah', modern: 'Wadi es-Sunt', x: 16, y: 63.3, lat: 31.69, lon: 34.96 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 84, y: 36.7, lat: 31.78, lon: 35.23 }
+    ],
+    steps: [
+      { label: 'Sent with provisions', ref: '1 Samuel 17:17-18', copy: 'David carries bread and cheeses to his brothers and the commander.', miles: 12 },
+      { label: 'The stone and the sling', ref: '1 Samuel 17:48-49', copy: 'David runs to meet Goliath and strikes him down with a single stone.', miles: 0 },
+      { label: 'The head to Jerusalem', ref: '1 Samuel 17:54', copy: 'David takes the Philistine’s head and brings it to Jerusalem.', miles: 13 }
+    ]
+  },
+  {
+    id: 'absalom-david-flight',
+    title: 'David Flees Absalom',
+    subtitle: 'Out of Jerusalem across the Jordan to Mahanaim',
+    certainty: 'Approximate route',
+    refs: [{ book: '2SA', chFrom: 15, chTo: 17 }],
+    distance: 60,
+    mode: 'Fleeing on foot, weeping',
+    days: 'A hurried flight over days',
+    modern: 'Jerusalem down the Kidron, across the Jordan into Gilead',
+    note: 'Mahanaim is located in Gilead east of the Jordan; the precise tell is debated.',
+    sources: [
+      'David leaves Jerusalem, crossing the Kidron toward the wilderness (2 Samuel 15:23, 30).',
+      'He is told to cross the Jordan quickly that night (2 Samuel 17:21-22).',
+      'David comes to Mahanaim as Absalom crosses the Jordan after him (2 Samuel 17:24).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16.4, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Jordan fords', modern: 'Jordan valley', x: 60.3, y: 56.5, lat: 31.95, lon: 35.55 },
+      { ancient: 'Mahanaim', modern: 'Gilead, Jordan', x: 83.6, y: 16, lat: 32.2, lon: 35.72 }
+    ],
+    steps: [
+      { label: 'Out by the Kidron', ref: '2 Samuel 15:30', copy: 'David goes up the Mount of Olives weeping, head covered and barefoot.', miles: 15 },
+      { label: 'Cross by night', ref: '2 Samuel 17:22', copy: 'By morning not one is left who has not crossed the Jordan.', miles: 25 },
+      { label: 'Safe at Mahanaim', ref: '2 Samuel 17:24', copy: 'David reaches Mahanaim while Absalom crosses the Jordan in pursuit.', miles: 20 }
+    ]
+  },
+  {
+    id: 'jesus-baptism-jordan',
+    title: 'Baptism and Temptation',
+    subtitle: 'From Nazareth to the Jordan and into the wilderness',
+    certainty: 'Approximate route',
+    refs: [{ book: 'MAT', chFrom: 3, chTo: 4 }],
+    distance: 75,
+    mode: 'Walking',
+    days: 'Several days, then forty in the wilderness',
+    modern: 'Galilee down to the lower Jordan and the Judean desert',
+    note: 'The baptism site near the Jordan and the wilderness of the temptation are placed by tradition near Jericho.',
+    sources: [
+      'Jesus comes from Galilee to the Jordan to be baptized by John (Matthew 3:13).',
+      'After his baptism he is led up by the Spirit into the wilderness (Matthew 4:1).',
+      'John was baptizing in the Jordan in the region around Judea (Matthew 3:5-6).'
+    ],
+    points: [
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 42, y: 16, lat: 32.7, lon: 35.3 },
+      { ancient: 'The Jordan', modern: 'Jordan near Jericho', x: 58, y: 81, lat: 31.84, lon: 35.55 },
+      { ancient: 'Wilderness', modern: 'Judean desert', x: 48.4, y: 84, lat: 31.8, lon: 35.4 }
+    ],
+    steps: [
+      { label: 'Coming to the Jordan', ref: 'Matthew 3:13', copy: 'Jesus comes from Galilee to John to be baptized.', miles: 65 },
+      { label: 'The heavens opened', ref: 'Matthew 3:16-17', copy: 'The Spirit descends like a dove and a voice speaks from heaven.', miles: 0 },
+      { label: 'Into the wilderness', ref: 'Matthew 4:1', copy: 'He is led up to be tempted, fasting forty days and forty nights.', miles: 10 }
+    ]
+  },
+  {
+    id: 'jesus-cana-capernaum',
+    title: 'First Sign and Capernaum',
+    subtitle: 'From Cana down to Capernaum on the lake',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JHN', chFrom: 2, chTo: 2 }],
+    distance: 20,
+    mode: 'Walking',
+    days: 'A short journey',
+    modern: 'Galilean hills down to the Sea of Galilee shore',
+    note: 'Cana is most often identified with Khirbet Qana; Capernaum is securely located on the lake.',
+    sources: [
+      'Jesus turns water to wine at a wedding in Cana of Galilee (John 2:1-11).',
+      'After this he goes down to Capernaum with his family and disciples (John 2:12).',
+      'Capernaum becomes his base by the sea (Matthew 4:13).'
+    ],
+    points: [
+      { ancient: 'Cana', modern: 'Khirbet Qana, Galilee', x: 16, y: 62.1, lat: 32.81, lon: 35.34 },
+      { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 84, y: 37.9, lat: 32.88, lon: 35.575 }
+    ],
+    steps: [
+      { label: 'Water into wine', ref: 'John 2:7-9', copy: 'Jesus has the jars filled with water, and it becomes good wine.', miles: 0 },
+      { label: 'The first sign', ref: 'John 2:11', copy: 'This first of his signs manifests his glory, and his disciples believe.', miles: 0 },
+      { label: 'Down to Capernaum', ref: 'John 2:12', copy: 'He goes down to Capernaum and stays there a few days.', miles: 20 }
+    ]
+  },
+  {
+    id: 'jesus-gerasenes',
+    title: 'Crossing to the Gerasenes',
+    subtitle: 'Across the Sea of Galilee to the country of the Gerasenes',
+    certainty: 'Approximate route',
+    refs: [{ book: 'MRK', chFrom: 4, chTo: 5 }],
+    distance: 9,
+    mode: 'Crossing by boat',
+    days: 'An evening crossing',
+    modern: 'Capernaum across the lake to the eastern shore',
+    note: 'The eastern landing is often placed near Kursi (Gergesa) on the lake’s steep east bank.',
+    sources: [
+      'Jesus says, "Let us go across to the other side," and they leave the crowd (Mark 4:35-36).',
+      'A great storm rises and he stills it on the way (Mark 4:37-39).',
+      'They arrive at the country of the Gerasenes on the other side (Mark 5:1).'
+    ],
+    points: [
+      { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 16, y: 23, lat: 32.88, lon: 35.575 },
+      { ancient: 'Country of the Gerasenes', modern: 'Kursi, eastern shore', x: 84, y: 77, lat: 32.83, lon: 35.65 }
+    ],
+    steps: [
+      { label: 'Across to the other side', ref: 'Mark 4:35', copy: 'When evening comes, Jesus tells them to cross to the far shore.', miles: 0 },
+      { label: 'Peace, be still', ref: 'Mark 4:39', copy: 'He rebukes the wind and the sea, and there is a great calm.', miles: 7 },
+      { label: 'Among the tombs', ref: 'Mark 5:1-2', copy: 'On the eastern shore a man with an unclean spirit meets him.', miles: 2 }
+    ]
+  },
+  {
+    id: 'jesus-caesarea-philippi',
+    title: 'Peter\'s Confession',
+    subtitle: 'North to the villages of Caesarea Philippi',
+    certainty: 'Approximate route',
+    refs: [{ book: 'MAT', chFrom: 16, chTo: 16 }],
+    distance: 30,
+    mode: 'Walking',
+    days: 'A journey of a day or two',
+    modern: 'The north shore of Galilee up to the slopes of Hermon',
+    note: 'Caesarea Philippi (Banias) lies at the foot of Mount Hermon, near a spring of the Jordan.',
+    sources: [
+      'Jesus comes into the district of Caesarea Philippi and questions his disciples (Matthew 16:13).',
+      'Peter confesses, "You are the Christ, the Son of the living God" (Matthew 16:16).',
+      'Mark places the conversation on the way to the villages of Caesarea Philippi (Mark 8:27).'
+    ],
+    points: [
+      { ancient: 'Bethsaida', modern: 'Et-Tell, north of the lake', x: 45, y: 84, lat: 32.91, lon: 35.63 },
+      { ancient: 'Caesarea Philippi', modern: 'Banias, Golan', x: 55, y: 16, lat: 33.25, lon: 35.69 }
+    ],
+    steps: [
+      { label: 'Who do you say I am?', ref: 'Matthew 16:13-15', copy: 'On the way north Jesus asks the disciples who people say he is.', miles: 25 },
+      { label: 'Peter\'s confession', ref: 'Matthew 16:16', copy: 'Peter declares him the Christ, the Son of the living God.', miles: 0 },
+      { label: 'On this rock', ref: 'Matthew 16:18', copy: 'Jesus promises to build his church, and the gates of hell will not prevail.', miles: 5 }
+    ]
+  },
+  {
+    id: 'jesus-triumphal-entry',
+    title: 'The Triumphal Entry',
+    subtitle: 'Up from Jericho through Bethany into Jerusalem',
+    certainty: 'Well attested',
+    refs: [{ book: 'LUK', chFrom: 19, chTo: 19 }],
+    distance: 18,
+    mode: 'Walking, then riding a colt',
+    days: 'The final approach to Jerusalem',
+    modern: 'Jericho climbing the desert road to Jerusalem',
+    note: 'The Jericho-to-Jerusalem ascent and Bethany/Bethphage on the Mount of Olives are securely located.',
+    sources: [
+      'Jesus passes through Jericho and heals Zacchaeus on the way up (Luke 19:1-10).',
+      'He approaches Bethphage and Bethany at the Mount of Olives and sends for a colt (Luke 19:28-30).',
+      'He descends the Mount of Olives and enters Jerusalem to shouts of praise (Luke 19:37-40).'
+    ],
+    points: [
+      { ancient: 'Jericho', modern: 'Jericho, West Bank', x: 84, y: 30.5, lat: 31.87, lon: 35.44 },
+      { ancient: 'Bethany', modern: 'Al-Eizariya', x: 24.3, y: 69.5, lat: 31.77, lon: 35.26 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 65.6, lat: 31.78, lon: 35.235 }
+    ],
+    steps: [
+      { label: 'Through Jericho', ref: 'Luke 19:1-5', copy: 'Zacchaeus climbs a sycamore, and Jesus calls him down to host him.', miles: 14 },
+      { label: 'The colt at Bethphage', ref: 'Luke 19:29-35', copy: 'Disciples bring a colt; they set Jesus on it for the descent.', miles: 3 },
+      { label: 'Down the Mount of Olives', ref: 'Luke 19:37-38', copy: 'The crowd praises God, crying, "Blessed is the King who comes!"', miles: 1 }
+    ]
+  },
+  {
+    id: 'peter-john-samaria',
+    title: 'Peter and John to Samaria',
+    subtitle: 'From Jerusalem to confirm the new believers in Samaria',
+    certainty: 'Approximate route',
+    refs: [{ book: 'ACT', chFrom: 8, chTo: 8 }],
+    distance: 40,
+    mode: 'Walking',
+    days: 'A journey of two to three days',
+    modern: 'Jerusalem north through the hills to Samaria',
+    note: 'The city of Samaria (Sebaste) is securely located in the central hill country.',
+    sources: [
+      'Philip preaches Christ in a city of Samaria, and many believe (Acts 8:5-8).',
+      'The apostles send Peter and John down from Jerusalem (Acts 8:14).',
+      'They lay hands on the believers, who receive the Holy Spirit (Acts 8:15-17).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 52.3, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Samaria', modern: 'Sebastia, West Bank', x: 47.7, y: 16, lat: 32.28, lon: 35.19 }
+    ],
+    steps: [
+      { label: 'Sent from Jerusalem', ref: 'Acts 8:14', copy: 'Hearing Samaria has received the word, the apostles send Peter and John.', miles: 35 },
+      { label: 'Prayer for the Spirit', ref: 'Acts 8:15-17', copy: 'They lay hands on the believers, who receive the Holy Spirit.', miles: 0 },
+      { label: 'Preaching on the way back', ref: 'Acts 8:25', copy: 'Returning, they preach in many Samaritan villages.', miles: 5 }
+    ]
+  },
+  {
+    id: 'barnabas-saul-antioch',
+    title: 'Barnabas Brings Saul to Antioch',
+    subtitle: 'From Tarsus to teach the new church at Antioch',
+    certainty: 'Approximate route',
+    refs: [{ book: 'ACT', chFrom: 11, chTo: 11 }],
+    distance: 90,
+    mode: 'Walking the coastal road',
+    days: 'Several days of travel',
+    modern: 'Tarsus along the coast to Antioch on the Orontes',
+    note: 'Tarsus and Syrian Antioch are securely located; the road ran around the gulf of Issus.',
+    sources: [
+      'Barnabas goes to Tarsus to look for Saul (Acts 11:25).',
+      'He brings him to Antioch, where they teach the church for a year (Acts 11:26).',
+      'There the disciples are first called Christians (Acts 11:26).'
+    ],
+    points: [
+      { ancient: 'Tarsus', modern: 'Tarsus, Turkey', x: 16, y: 25.8, lat: 36.92, lon: 34.9 },
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 84, y: 74.2, lat: 36.2, lon: 36.16 }
+    ],
+    steps: [
+      { label: 'Searching in Tarsus', ref: 'Acts 11:25', copy: 'Barnabas travels to Tarsus to find Saul.', miles: 80 },
+      { label: 'A year of teaching', ref: 'Acts 11:26', copy: 'They meet with the church and teach a great many people.', miles: 0 },
+      { label: 'Called Christians', ref: 'Acts 11:26', copy: 'In Antioch the disciples are first called Christians.', miles: 0 }
+    ]
   }
 ];
 
@@ -24054,7 +24459,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.300";
+const APP_VERSION = "3.0.301";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -24075,6 +24480,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.301 &mdash; 15 more Bible Journeys</div>
+<ul>
+  <li><strong>15 new journeys</strong> &mdash; Added 8 more Old Testament and 7 New Testament routes, each with the full map: ancient and modern places, distance, travel time, route certainty, Scripture steps, and source notes &mdash; bringing the collection to 51 journeys.</li>
+  <li><strong>Old Testament</strong> &mdash; Lot fleeing Sodom, Abraham rescuing Lot, Balaam coming to Moab, Israel skirting Edom, the spies at Jericho, Gideon pursuing Midian, David and Goliath, and David fleeing Absalom.</li>
+  <li><strong>New Testament</strong> &mdash; The baptism and temptation, the first sign at Cana, the crossing to the Gerasenes, Peter's confession at Caesarea Philippi, the triumphal entry, Peter and John to Samaria, and Barnabas bringing Saul to Antioch.</li>
+  <li><strong>iOS fit</strong> &mdash; Trimmed the verse Journey popup height slightly so it no longer overlaps the top floating island on newer iPhones.</li>
+</ul>
 <div class="un-version-label">v3.0.300 &mdash; 20 more Bible Journeys</div>
 <ul>
   <li><strong>20 new journeys</strong> &mdash; Added 10 Old Testament and 10 New Testament routes, each with the full map: ancient and modern places, distance, travel time, route certainty, Scripture steps, and source notes.</li>
