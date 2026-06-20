@@ -31291,6 +31291,19 @@ body.journeys-active #studyTabBar { display: none !important; }
   box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
 .bible-map-landmark em { font-style: normal; }
+/* Modern cities read as solid square pins; seas/regions stay as soft round dots. */
+.bible-map-landmark.landmark-city span {
+  border-radius: 2px;
+  width: 6px;
+  height: 6px;
+  background: color-mix(in srgb, var(--secondary-color) 86%, #000000);
+  border-color: color-mix(in srgb, #ffffff 88%, var(--secondary-color));
+}
+.bible-map-landmark.landmark-sea span,
+.bible-map-landmark.landmark-lake span,
+.bible-map-landmark.landmark-river span {
+  background: color-mix(in srgb, #2b9fd6 78%, #ffffff);
+}
 .journey-map-bg { fill: color-mix(in srgb, var(--secondary-color) 10%, #f4ead7); }
 .journey-ancient-land {
   fill: color-mix(in srgb, var(--secondary-color) 12%, #ead6ad);
