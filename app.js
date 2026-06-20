@@ -10985,6 +10985,26 @@ const JOURNEY_MODERN_CONTEXT_PLACES = [
   { name: 'Saudi Arabia', capital: 'Riyadh', lat: 24.71, lon: 46.67 }
 ];
 
+const JOURNEY_MODERN_LANDMARKS = [
+  { name: 'Mediterranean Sea', kind: 'sea', lat: 34.20, lon: 25.80 },
+  { name: 'Eastern Mediterranean', kind: 'sea', lat: 35.00, lon: 32.20 },
+  { name: 'Nile Delta', kind: 'region', lat: 30.80, lon: 31.20 },
+  { name: 'Sinai Peninsula', kind: 'region', lat: 29.50, lon: 33.80 },
+  { name: 'Red Sea', kind: 'sea', lat: 27.70, lon: 34.60 },
+  { name: 'Dead Sea', kind: 'sea', lat: 31.50, lon: 35.50 },
+  { name: 'Jordan River', kind: 'river', lat: 32.05, lon: 35.56 },
+  { name: 'Sea of Galilee', kind: 'lake', lat: 32.82, lon: 35.59 },
+  { name: 'Euphrates River', kind: 'river', lat: 35.20, lon: 40.70 },
+  { name: 'Tigris River', kind: 'river', lat: 33.70, lon: 43.70 },
+  { name: 'Cyprus', kind: 'island', lat: 35.05, lon: 33.20 },
+  { name: 'Crete', kind: 'island', lat: 35.20, lon: 24.90 },
+  { name: 'Malta', kind: 'island', lat: 35.90, lon: 14.40 },
+  { name: 'Aegean Sea', kind: 'sea', lat: 38.80, lon: 25.20 },
+  { name: 'Taurus Mountains', kind: 'region', lat: 37.20, lon: 32.50 },
+  { name: 'Arabian Desert', kind: 'region', lat: 29.00, lon: 40.50 },
+  { name: 'Anatolia', kind: 'region', lat: 38.50, lon: 32.00 }
+];
+
 /* Real map (MapLibre + self-hosted Protomaps tiles) — optional accurate renderer.
    Set BIBLE_WORLD_PMTILES_URL to the hosted .pmtiles file (see
    scripts/build-bibleworld-pmtiles.md). While it is empty, the offline-safe
@@ -11084,6 +11104,7 @@ function _journeyMountGL(journey) {
       mode: _journeyMode,
       pmtilesUrl: pmtilesUrl,
       labelFor: _journeyLabelFor,
+      landmarks: _journeyModernLandmarks(journey, 4),
       onError: (err) => {
         _journeySetDiag('tile/style error: ' + _journeyErrText(err));
         _journeyGLFallback();
@@ -11203,6 +11224,49 @@ function _journeyModernContext(journey) {
   return hits.map(p => `${p.name} (${p.capital})`).join(' · ');
 }
 
+function _journeyGeoBounds(journey, padLat = 2.2, padLon = 2.8) {
+  const pts = (journey?.points || []).filter(p => typeof p.lat === 'number' && typeof p.lon === 'number');
+  if (!pts.length) return null;
+  const lats = pts.map(p => p.lat), lons = pts.map(p => p.lon);
+  return {
+    minLat: Math.min(...lats) - padLat,
+    maxLat: Math.max(...lats) + padLat,
+    minLon: Math.min(...lons) - padLon,
+    maxLon: Math.max(...lons) + padLon
+  };
+}
+
+function _journeyModernLandmarks(journey, limit = 5) {
+  const b = _journeyGeoBounds(journey);
+  if (!b) return [];
+  const centerLat = (b.minLat + b.maxLat) / 2;
+  const centerLon = (b.minLon + b.maxLon) / 2;
+  const routePts = (journey?.points || []).filter(p => typeof p.lat === 'number' && typeof p.lon === 'number');
+  return JOURNEY_MODERN_LANDMARKS
+    .filter(p => p.lat >= b.minLat && p.lat <= b.maxLat && p.lon >= b.minLon && p.lon <= b.maxLon)
+    .map(p => {
+      const routeDistance = routePts.length
+        ? Math.min(...routePts.map(r => Math.abs(p.lat - r.lat) + Math.abs(p.lon - r.lon)))
+        : 0;
+      const centerDistance = Math.abs(p.lat - centerLat) + Math.abs(p.lon - centerLon);
+      return { ...p, score: routeDistance * 1.8 + centerDistance * 0.35 };
+    })
+    .sort((a, b) => a.score - b.score)
+    .slice(0, limit);
+}
+
+function _journeyProjectLandmark(journey, landmark) {
+  const b = _journeyGeoBounds(journey, 0.8, 1.0);
+  if (!b || b.maxLat === b.minLat || b.maxLon === b.minLon) return null;
+  const x = 10 + ((landmark.lon - b.minLon) / (b.maxLon - b.minLon)) * 80;
+  const y = 90 - ((landmark.lat - b.minLat) / (b.maxLat - b.minLat)) * 80;
+  return {
+    ...landmark,
+    x: Math.min(92, Math.max(8, x)),
+    y: Math.min(92, Math.max(8, y))
+  };
+}
+
 function _journeyGeographyHtml(journey, mode = _journeyMode) {
   const nearby = mode === 'modern' ? _journeyModernContext(journey) : '';
   const modern = journey?.modern || '';
@@ -11217,15 +11281,24 @@ function _journeyPeekFactsHtml(journey, step) {
   const totalMiles = _journeyMilesText(_journeyTotalMiles(journey));
   const stepMiles = step?.miles ? ` · about ${Number(step.miles).toLocaleString()} mi` : '';
   const sources = (journey.sources || []).slice(0, 2);
+  const points = journey.points || [];
+  const first = points[0], last = points[points.length - 1];
+  const anchors = first && last ? `${_journeyLabelFor(first, _journeyPeekMode)} → ${_journeyLabelFor(last, _journeyPeekMode)}` : '';
+  const landmarks = _journeyModernLandmarks(journey, 4);
+  const routeSeq = points.slice(0, 5).map(p => _journeyLabelFor(p, _journeyPeekMode)).filter(Boolean);
+  if (points.length > 5) routeSeq.push('...');
   return `<div class="journey-peek-facts" aria-label="Journey context">
     <div class="journey-peek-statgrid">
       <div><span class="material-symbols-outlined">straighten</span><strong>${_journeyEsc(totalMiles)}</strong><small>whole route</small></div>
       <div><span class="material-symbols-outlined">schedule</span><strong>${_journeyEsc(journey.days || 'timing varies')}</strong><small>${_journeyEsc(journey.mode || 'travel pace')}</small></div>
+      <div><span class="material-symbols-outlined">route</span><strong>${Number(points.length || 0).toLocaleString()} stops</strong><small>${_journeyEsc(anchors || 'route anchors')}</small></div>
+      <div><span class="material-symbols-outlined">explore</span><strong>${landmarks.length ? `${landmarks.length} landmarks` : 'landmarks'}</strong><small>${_journeyEsc(landmarks.map(l => l.name).join(' · ') || 'modern reference points')}</small></div>
     </div>
     ${step ? `<div class="journey-peek-step-card">
       <span class="material-symbols-outlined">menu_book</span>
       <div><strong>${_journeyEsc(step.label)}</strong><small>${_journeyEsc(step.ref)}${_journeyEsc(stepMiles)}</small><p>${_journeyEsc(step.copy)}</p></div>
     </div>` : ''}
+    ${routeSeq.length ? `<div class="journey-peek-route-seq"><strong>Route flow</strong><span>${_journeyEsc(routeSeq.join(' → '))}</span></div>` : ''}
     <div class="journey-peek-note"><strong>${_journeyEsc(journey.certainty || 'Route note')}</strong><span>${_journeyEsc(journey.note || journey.subtitle || '')}</span></div>
     ${_journeyGeographyHtml(journey, _journeyPeekMode)}
     ${sources.length ? `<div class="journey-peek-receipts"><strong>Scripture + geography</strong>${sources.map(s => `<p>${_journeyEsc(s)}</p>`).join('')}</div>` : ''}
@@ -11238,6 +11311,15 @@ function _journeyPolyline(points) {
 
 function _journeyRenderMap(journey) {
   const points = journey.points || [];
+  const landmarkLabels = _journeyMode === 'modern'
+    ? _journeyModernLandmarks(journey, 4)
+        .map(l => _journeyProjectLandmark(journey, l))
+        .filter(Boolean)
+        .map(l => `<g class="journey-map-landmark journey-map-landmark-${_journeyEsc(l.kind)}">
+          <circle cx="${l.x}" cy="${l.y}" r="1.8" />
+          <text x="${Math.min(91, Math.max(9, l.x + (l.x > 68 ? -21 : 3)))}" y="${Math.max(8, l.y - 2.7)}">${_journeyEsc(l.name)}</text>
+        </g>`).join('')
+    : '';
   const labels = points.map((p, i) => `
     <g class="journey-map-point ${i === 0 ? 'first' : ''} ${i === points.length - 1 ? 'last' : ''}">
       <circle cx="${p.x}" cy="${p.y}" r="${i === 0 || i === points.length - 1 ? 3.8 : 3}" />
@@ -11259,6 +11341,7 @@ function _journeyRenderMap(journey) {
     <rect class="journey-map-bg" x="0" y="0" width="100" height="100" rx="8"></rect>
     ${terrain}
     ${alts}
+    ${landmarkLabels}
     <polyline class="journey-route-shadow" points="${_journeyPolyline(points)}" />
     <polyline class="journey-route-line" points="${_journeyPolyline(points)}" />
     ${labels}
@@ -11634,6 +11717,7 @@ function _journeyPeekMountGLLegacy(journey, mode = _journeyPeekMode) {
       mode,
       pmtilesUrl: _journeyResolvePmtiles(),
       labelFor: _journeyLabelFor,
+      landmarks: _journeyModernLandmarks(journey, 4),
       onError: (err) => { wrap.classList.remove('gl-mounting', 'gl-ready'); _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err)); }
     });
   }).then((map) => {
@@ -11675,6 +11759,7 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
       mode,
       pmtilesUrl: _journeyResolvePmtiles(),
       labelFor: _journeyLabelFor,
+      landmarks: _journeyModernLandmarks(journey, 4),
       onError: (err) => {
         wrap.classList.remove('gl-mounting', 'gl-ready');
         _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err));
@@ -23414,7 +23499,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.298";
+const APP_VERSION = "3.0.299";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23435,6 +23520,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.299 &mdash; Journey landmarks and facts</div>
+<ul>
+  <li><strong>More Journey facts</strong> &mdash; Rhema journey popups now also show stop count, route anchors, route flow, and nearby landmark names for quick orientation.</li>
+  <li><strong>Modern map landmarks</strong> &mdash; Modern Journey maps now include nearby seas, rivers, islands, deserts, and regions as reference points in both the simple map and real tile map.</li>
+</ul>
 <div class="un-version-label">v3.0.298 &mdash; Richer Journey context</div>
 <ul>
   <li><strong>Rhema journey context</strong> &mdash; The verse mini-map now includes route distance, travel timing, pace, the active Scripture step, route certainty, modern geography, and short Scripture/geography receipts.</li>

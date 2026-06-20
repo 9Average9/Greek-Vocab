@@ -16668,6 +16668,25 @@ body.dark .rhema-reader-map-btn { color: #6fd6a6; }
   line-height: 1.38;
   font-weight: 720;
 }
+.journey-peek-route-seq {
+  display: grid;
+  gap: 3px;
+  padding: 9px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--secondary-color) 5%, transparent);
+}
+.journey-peek-route-seq strong {
+  display: block;
+  color: var(--secondary-color);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+.journey-peek-route-seq span {
+  color: var(--muted-color);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  font-weight: 760;
+}
 .journey-peek-receipts {
   display: grid;
   gap: 6px;
@@ -31248,6 +31267,30 @@ body.journeys-active #studyTabBar { display: none !important; }
 }
 .bible-map-label.first { color: #16a34a; }
 .bible-map-label.last { color: #dc2626; }
+.bible-map-landmark {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  color: color-mix(in srgb, var(--font-color) 78%, var(--secondary-color));
+  font-size: 0.68rem;
+  font-weight: 850;
+  white-space: nowrap;
+  text-shadow:
+    0 0 2px var(--card-color),
+    0 0 3px var(--card-color),
+    0 1px 2px var(--card-color);
+  pointer-events: none;
+}
+.bible-map-landmark.visible { display: inline-flex; }
+.bible-map-landmark span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary-color) 76%, #ffffff);
+  border: 1px solid color-mix(in srgb, #ffffff 82%, var(--secondary-color));
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+.bible-map-landmark em { font-style: normal; }
 .journey-map-bg { fill: color-mix(in srgb, var(--secondary-color) 10%, #f4ead7); }
 .journey-ancient-land {
   fill: color-mix(in srgb, var(--secondary-color) 12%, #ead6ad);
@@ -31334,6 +31377,21 @@ body.journeys-active #studyTabBar { display: none !important; }
 .journey-map-point.passed:not(.first):not(.last) circle { fill: var(--secondary-color); }
 .journey-map-point.current circle { stroke: var(--secondary-color); stroke-width: 2.4; }
 .journey-map-point.current text { font-weight: 950; }
+.journey-map-landmark { opacity: 0.72; }
+.journey-map-landmark circle {
+  fill: color-mix(in srgb, var(--secondary-color) 65%, #ffffff);
+  stroke: color-mix(in srgb, var(--card-color) 86%, #ffffff);
+  stroke-width: 0.8;
+}
+.journey-map-landmark text {
+  fill: color-mix(in srgb, var(--font-color) 76%, var(--secondary-color));
+  font-size: 2.8px;
+  font-weight: 820;
+  paint-order: stroke;
+  stroke: color-mix(in srgb, var(--card-color) 94%, transparent);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
 .journey-map-controls { display: flex; justify-content: flex-end; padding: 2px 4px 0; }
 .journey-play-btn {
   display: inline-flex;

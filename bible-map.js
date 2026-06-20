@@ -22,7 +22,7 @@
      play(onStep)                        -> animate the traveler along the route
      stop()                              -> halt the animation
      destroy()                           -> tear the map down
-   opts: { mode, pmtilesUrl, labelFor(point, mode), onError() }
+   opts: { mode, pmtilesUrl, labelFor(point, mode), landmarks, onError() }
 ========================================================================= */
 (function () {
   'use strict';
@@ -36,6 +36,7 @@
     journey: null,
     mode: 'ancient',
     markers: [],
+    landmarkMarkers: [],
     raf: 0,
     opts: null,
     coords: []                    // [[lon,lat], ...] in journey order
@@ -212,6 +213,8 @@
   function _clearMarkers() {
     state.markers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.markers = [];
+    state.landmarkMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
+    state.landmarkMarkers = [];
   }
   function _addMarkers() {
     _clearMarkers();
@@ -230,6 +233,15 @@
         .setLngLat([p.lon, p.lat]).addTo(map);
       state.markers.push(marker);
     });
+    ((state.opts && state.opts.landmarks) || []).forEach(function (p) {
+      if (typeof p.lon !== 'number' || typeof p.lat !== 'number') return;
+      var el = document.createElement('div');
+      el.className = 'bible-map-landmark ' + (state.mode === 'modern' ? 'visible' : '');
+      el.innerHTML = '<span></span><em>' + _escape(p.name || '') + '</em>';
+      var marker = new maplibregl.Marker({ element: el, anchor: 'center', offset: [0, 0] })
+        .setLngLat([p.lon, p.lat]).addTo(map);
+      state.landmarkMarkers.push(marker);
+    });
   }
   function _refreshMarkerText() {
     var pts = (state.journey.points || []).filter(function (p) {
@@ -240,6 +252,15 @@
     };
     state.markers.forEach(function (m, i) {
       if (pts[i]) m.getElement().textContent = labelFor(pts[i], state.mode);
+    });
+    state.landmarkMarkers.forEach(function (m) {
+      m.getElement().classList.toggle('visible', state.mode === 'modern');
+    });
+  }
+
+  function _escape(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
     });
   }
 
