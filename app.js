@@ -11409,7 +11409,18 @@ function openBibleJourneyFromRhemaMenu() {
 }
 
 // Map a book NAME (as used in journey step refs) to its code, e.g. "1 Samuel" -> "1SA".
-const RP_NAME_TO_CODE = Object.fromEntries((typeof RP_BOOKS !== 'undefined' ? RP_BOOKS : []).map(b => [b.name, b.code]));
+// Computed lazily: RP_BOOKS is declared later in this file, so building this at
+// load time would hit the temporal dead zone and crash the whole app.
+let _rpNameToCodeCache = null;
+function _journeyBookCode(name) {
+  if (!_rpNameToCodeCache) {
+    _rpNameToCodeCache = {};
+    if (typeof RP_BOOKS !== 'undefined') {
+      RP_BOOKS.forEach(b => { _rpNameToCodeCache[b.name] = b.code; });
+    }
+  }
+  return _rpNameToCodeCache[name];
+}
 
 // Parse a "chapter:verse" or bare "chapter" point.
 function _journeyParsePoint(s) {
@@ -11436,7 +11447,7 @@ function _journeySegMatch(seg, ch, v) {
 function _journeyStepRefMatches(refStr, code, ch, v) {
   const m = String(refStr).match(/^([1-3]?\s?[A-Za-z][A-Za-z ]*?)\s+(\d.*)$/);
   if (!m) return false;
-  if (RP_NAME_TO_CODE[m[1].trim()] !== code) return false;
+  if (_journeyBookCode(m[1].trim()) !== code) return false;
   return m[2].split(';').some(seg => _journeySegMatch(seg, Number(ch), Number(v || 1)));
 }
 function _journeyStepIndexForVerse(journey, code, ch, v) {
@@ -23199,7 +23210,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.288";
+const APP_VERSION = "3.0.289";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23220,6 +23231,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.289 &mdash; Critical load fix</div>
+<ul>
+  <li><strong>App now loads</strong> &mdash; Fixed a startup crash introduced with the journey verse markers that could stop the whole app from loading.</li>
+</ul>
 <div class="un-version-label">v3.0.288 &mdash; Possible routes</div>
 <ul>
   <li><strong>Alternate routes</strong> &mdash; Where Scripture doesn&apos;t fix the exact path, journeys now show a faint dashed "possible route" alongside the main line, with the reason. Added for the Exodus (Arabian Sinai view), Mary &amp; Joseph (Jordan Valley), and Jesus to Jerusalem (through Samaria).</li>
