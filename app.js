@@ -10958,6 +10958,561 @@ const BIBLE_JOURNEYS = [
       { label: 'Set toward Jerusalem', ref: 'Acts 21:1-14', copy: 'He presses on despite the prophets’ warnings.', miles: 600 },
       { label: 'Arrival in Jerusalem', ref: 'Acts 21:15-17', copy: 'The journey ends among the brothers there.', miles: 70 }
     ]
+  },
+  {
+    id: 'abraham-moriah',
+    title: 'Abraham and Isaac to Moriah',
+    subtitle: 'Beersheba up to the mountain of testing',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 22, chTo: 22 }],
+    distance: 50,
+    mode: 'Walking with a donkey',
+    days: 'A three-day journey (Genesis 22:4)',
+    modern: 'Beersheba up to the Jerusalem area',
+    note: 'Moriah is linked with the temple mount in 2 Chronicles 3:1; the exact peak Abraham climbed is not pinpointed.',
+    sources: [
+      'Beersheba is securely located in the northern Negev where Abraham settled (Genesis 22:19).',
+      '2 Chronicles 3:1 identifies Mount Moriah with the temple mount in Jerusalem, which fixes the destination region.',
+      'The "third day" (Genesis 22:4) fits the roughly 45–50 mile walk from Beersheba to the Jerusalem hills.'
+    ],
+    points: [
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 25.7, y: 84, lat: 31.25, lon: 34.79 },
+      { ancient: 'Land of Moriah', modern: 'Judean hills', x: 59.6, y: 26.3, lat: 31.7, lon: 35.1 },
+      { ancient: 'Mount Moriah', modern: 'Jerusalem (temple mount)', x: 74.3, y: 16, lat: 31.78, lon: 35.235 }
+    ],
+    steps: [
+      { label: 'Setting out from Beersheba', ref: 'Genesis 22:3', copy: 'Abraham rises early, splits the wood, and starts toward the place God showed him.', miles: 20 },
+      { label: 'The third day', ref: 'Genesis 22:4', copy: 'He lifts his eyes and sees the place far off.', miles: 25 },
+      { label: 'On the mountain', ref: 'Genesis 22:9-14', copy: 'God provides the ram; the place is named "The Lord will provide."', miles: 5 }
+    ]
+  },
+  {
+    id: 'rebekah-to-isaac',
+    title: 'Rebekah\'s Journey to Isaac',
+    subtitle: 'From Haran to the Negev to become Isaac’s wife',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 24, chTo: 24 }],
+    distance: 550,
+    mode: 'Camel caravan',
+    days: 'Weeks of caravan travel',
+    modern: 'Southeast Turkey down to Israel’s Negev',
+    note: 'The servant’s outbound and return route followed the watered Fertile Crescent arc; Beer-lahai-roi is approximate.',
+    sources: [
+      'Abraham’s servant travels to Nahor’s city in Aram-Naharaim (Genesis 24:10), the Haran region.',
+      'Isaac was living in the Negev near Beer-lahai-roi when Rebekah arrived (Genesis 24:62).',
+      'Camel caravans of the period followed the river-and-trade route, not a straight desert line.'
+    ],
+    points: [
+      { ancient: 'Haran (city of Nahor)', modern: 'near Sanliurfa, Turkey', x: 69.5, y: 16, lat: 36.87, lon: 39.03 },
+      { ancient: 'Fertile Crescent route', modern: 'Syria corridor', x: 55.4, y: 47.9, lat: 34, lon: 37.5 },
+      { ancient: 'Canaan', modern: 'central highlands', x: 34.2, y: 72.3, lat: 31.8, lon: 35.2 },
+      { ancient: 'Beer-lahai-roi (Negev)', modern: 'northern Negev', x: 30.5, y: 84, lat: 30.75, lon: 34.8 }
+    ],
+    steps: [
+      { label: 'The servant reaches Nahor’s city', ref: 'Genesis 24:10-14', copy: 'He stops at the well and prays for a sign.', miles: 0 },
+      { label: 'Rebekah agrees to go', ref: 'Genesis 24:58', copy: '"I will go," she says, and sets out with the caravan.', miles: 450 },
+      { label: 'Meeting Isaac in the Negev', ref: 'Genesis 24:62-67', copy: 'Isaac is meditating in the field at evening when the camels arrive.', miles: 100 }
+    ]
+  },
+  {
+    id: 'joseph-sold-egypt',
+    title: 'Joseph Sold into Egypt',
+    subtitle: 'From Hebron to Dothan to slavery in Egypt',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 37, chTo: 37 }],
+    distance: 300,
+    mode: 'On foot, then a slave caravan',
+    days: 'About 2 weeks for the caravan',
+    modern: 'Hebron north to Dothan, then down to Egypt',
+    note: 'Hebron, Shechem, and Dothan are located; the Ishmaelite/Midianite caravan took the trade road to Egypt.',
+    sources: [
+      'Joseph is sent from the Valley of Hebron and looks for his brothers at Shechem, then Dothan (Genesis 37:14-17).',
+      'Dothan sits on the caravan route from Gilead toward Egypt, fitting the traders Joseph was sold to (Genesis 37:25).',
+      'The "Way of the Sea" trade road is the natural path the caravan would have followed into Egypt.'
+    ],
+    points: [
+      { ancient: 'Hebron', modern: 'Hebron, West Bank', x: 80.8, y: 49.5, lat: 31.53, lon: 35.1 },
+      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 84, y: 35.1, lat: 32.21, lon: 35.28 },
+      { ancient: 'Dothan', modern: 'Tell Dothan', x: 83.1, y: 30.9, lat: 32.41, lon: 35.23 },
+      { ancient: 'Egypt', modern: 'Nile Delta, Egypt', x: 16, y: 69.1, lat: 30.6, lon: 31.5 }
+    ],
+    steps: [
+      { label: 'Sent from Hebron', ref: 'Genesis 37:14', copy: 'Jacob sends Joseph to check on his brothers and the flocks.', miles: 50 },
+      { label: 'Found at Dothan', ref: 'Genesis 37:17', copy: 'A man tells him the brothers have moved on to Dothan.', miles: 15 },
+      { label: 'Sold to the traders', ref: 'Genesis 37:28', copy: 'He is sold for twenty pieces of silver to a caravan bound for Egypt.', miles: 0 },
+      { label: 'Down to Egypt', ref: 'Genesis 37:36', copy: 'The Midianites sell him to Potiphar in Egypt.', miles: 230 }
+    ]
+  },
+  {
+    id: 'moses-flees-midian',
+    title: 'Moses Flees to Midian',
+    subtitle: 'From Egypt into the wilderness of Midian',
+    certainty: 'Approximate route',
+    refs: [{ book: 'EXO', chFrom: 2, chTo: 2 }],
+    distance: 250,
+    mode: 'Fleeing on foot',
+    days: 'Weeks across the wilderness',
+    modern: 'Egypt’s Delta across Sinai toward NW Arabia',
+    note: 'Midian is generally placed in northwest Arabia, east of the Gulf of Aqaba; the exact wells are unknown.',
+    sources: [
+      'Moses flees Pharaoh and settles in the land of Midian (Exodus 2:15).',
+      'Midian is usually located in northwest Arabia, which is why the route crosses the Sinai toward the Gulf of Aqaba.',
+      'He meets Jethro’s daughters at a well (Exodus 2:16), a typical desert oasis stop.'
+    ],
+    points: [
+      { ancient: 'Egypt', modern: 'eastern Nile Delta', x: 16, y: 27.2, lat: 30.8, lon: 31.6 },
+      { ancient: 'Wilderness of Sinai', modern: 'Sinai Peninsula', x: 52.8, y: 59, lat: 29.3, lon: 33.6 },
+      { ancient: 'Midian', modern: 'NW Arabia (Gulf of Aqaba)', x: 84, y: 72.8, lat: 28.65, lon: 35.3 }
+    ],
+    steps: [
+      { label: 'Fleeing Pharaoh', ref: 'Exodus 2:15', copy: 'After killing the Egyptian, Moses runs from Pharaoh.', miles: 120 },
+      { label: 'At the well of Midian', ref: 'Exodus 2:16-21', copy: 'He helps Jethro’s daughters and is welcomed into the family.', miles: 130 }
+    ]
+  },
+  {
+    id: 'twelve-spies',
+    title: 'The Twelve Spies',
+    subtitle: 'From Kadesh into Canaan and back',
+    certainty: 'Approximate route',
+    refs: [{ book: 'NUM', chFrom: 13, chTo: 14 }],
+    distance: 250,
+    mode: 'Reconnaissance on foot',
+    days: 'Forty days (Numbers 13:25)',
+    modern: 'Northern Sinai/Negev up into the West Bank hills',
+    note: 'Kadesh-Barnea and Hebron are reasonably located; the spies ranged from the Negev to the far north.',
+    sources: [
+      'The spies go up from the Wilderness of Paran / Kadesh through the Negev to Hebron (Numbers 13:22).',
+      'They cut a cluster of grapes at the Valley of Eshcol near Hebron (Numbers 13:23-24).',
+      'The forty-day survey (Numbers 13:25) reached as far as Rehob toward Lebo-hamath in the north.'
+    ],
+    points: [
+      { ancient: 'Kadesh-Barnea', modern: 'northern Sinai/Negev', x: 27.2, y: 84, lat: 30.68, lon: 34.42 },
+      { ancient: 'The Negev', modern: 'Negev highlands', x: 59.4, y: 59, lat: 31, lon: 34.9 },
+      { ancient: 'Hebron', modern: 'Hebron, West Bank', x: 72.8, y: 17.6, lat: 31.53, lon: 35.1 },
+      { ancient: 'Valley of Eshcol', modern: 'near Hebron', x: 70.7, y: 16, lat: 31.55, lon: 35.07 }
+    ],
+    steps: [
+      { label: 'Sent from Kadesh', ref: 'Numbers 13:17-20', copy: 'Moses sends one leader from each tribe to scout the land.', miles: 60 },
+      { label: 'Up to Hebron', ref: 'Numbers 13:22', copy: 'They pass through the Negev and come to Hebron.', miles: 25 },
+      { label: 'The cluster of Eshcol', ref: 'Numbers 13:23-24', copy: 'They carry back a single cluster of grapes on a pole.', miles: 5 },
+      { label: 'The bad report', ref: 'Numbers 13:31-33', copy: 'Ten spies spread fear; only Caleb and Joshua trust God.', miles: 90 }
+    ]
+  },
+  {
+    id: 'ark-philistines',
+    title: 'The Ark Among the Philistines',
+    subtitle: 'Captured at Ebenezer, returned to Israel',
+    certainty: 'Known cities, simplified route',
+    refs: [{ book: '1SA', chFrom: 4, chTo: 6 }],
+    distance: 70,
+    mode: 'Carried, then a new cart',
+    days: 'Seven months in Philistia (1 Samuel 6:1)',
+    modern: 'Israel’s coastal plain and the Sorek valley',
+    note: 'Ashdod, Gath, and Ekron (the Philistine cities) are archaeologically known; Beth Shemesh received the returning ark.',
+    sources: [
+      'Israel is defeated at Ebenezer and the ark is captured near Aphek (1 Samuel 4:1-11).',
+      'The ark afflicts Ashdod, Gath, and Ekron in turn (1 Samuel 5), all securely identified Philistine cities.',
+      'Guided by cows, the cart returns the ark to Beth Shemesh in the Sorek valley (1 Samuel 6:12-14).'
+    ],
+    points: [
+      { ancient: 'Ebenezer / Aphek', modern: 'Rosh HaAyin area', x: 66.6, y: 16, lat: 32.1, lon: 34.93 },
+      { ancient: 'Ashdod', modern: 'Ashdod, Israel', x: 26.2, y: 67, lat: 31.8, lon: 34.65 },
+      { ancient: 'Gath', modern: 'Tell es-Safi', x: 55.1, y: 84, lat: 31.7, lon: 34.85 },
+      { ancient: 'Ekron', modern: 'Tel Miqne', x: 55.1, y: 70.4, lat: 31.78, lon: 34.85 },
+      { ancient: 'Beth Shemesh', modern: 'Beit Shemesh', x: 73.8, y: 75.5, lat: 31.75, lon: 34.98 }
+    ],
+    steps: [
+      { label: 'The ark is captured', ref: '1 Samuel 4:10-11', copy: 'Israel is routed and the ark is taken at Ebenezer.', miles: 25 },
+      { label: 'Dagon falls in Ashdod', ref: '1 Samuel 5:1-4', copy: 'The idol of Dagon topples before the ark.', miles: 20 },
+      { label: 'Passed to Gath and Ekron', ref: '1 Samuel 5:8-10', copy: 'Plague follows the ark from city to city.', miles: 15 },
+      { label: 'Returned to Beth Shemesh', ref: '1 Samuel 6:12-14', copy: 'Two cows pull the cart straight back to Israel.', miles: 10 }
+    ]
+  },
+  {
+    id: 'ark-to-jerusalem',
+    title: 'David Brings the Ark to Jerusalem',
+    subtitle: 'From Kiriath-Jearim to the city of David',
+    certainty: 'Approximate route',
+    refs: [{ book: '2SA', chFrom: 6, chTo: 6 }],
+    distance: 12,
+    mode: 'Procession with cart, then carried',
+    days: 'Two stages, three months apart',
+    modern: 'Judean hills west of Jerusalem',
+    note: 'Kiriath-Jearim (Baale-Judah) is located west of Jerusalem; Obed-Edom’s house was a stop along the way.',
+    sources: [
+      'David gathers the ark from Baale-Judah / Kiriath-Jearim (2 Samuel 6:2).',
+      'After Uzzah’s death the ark stays three months at the house of Obed-Edom (2 Samuel 6:10-11).',
+      'It is then carried with rejoicing into the City of David (2 Samuel 6:12-15).'
+    ],
+    points: [
+      { ancient: 'Kiriath-Jearim', modern: 'Abu Ghosh area', x: 16, y: 41.1, lat: 31.8, lon: 35.1 },
+      { ancient: 'House of Obed-Edom', modern: 'Judean hills', x: 46.2, y: 47, lat: 31.79, lon: 35.16 },
+      { ancient: 'City of David', modern: 'Jerusalem', x: 84, y: 58.9, lat: 31.77, lon: 35.235 }
+    ],
+    steps: [
+      { label: 'Lifting the ark', ref: '2 Samuel 6:3-7', copy: 'The new cart sets out; Uzzah dies when he steadies the ark.', miles: 4 },
+      { label: 'Resting at Obed-Edom', ref: '2 Samuel 6:10-11', copy: 'The Lord blesses the household for three months.', miles: 3 },
+      { label: 'Dancing into Jerusalem', ref: '2 Samuel 6:14-15', copy: 'David dances before the Lord as the ark enters the city.', miles: 5 }
+    ]
+  },
+  {
+    id: 'elijah-taken-up',
+    title: 'Elijah Taken Up to Heaven',
+    subtitle: 'A final walk from Gilgal to the Jordan',
+    certainty: 'Approximate route',
+    refs: [{ book: '2KI', chFrom: 2, chTo: 2 }],
+    distance: 25,
+    mode: 'Walking with Elisha',
+    days: 'A single day',
+    modern: 'Central highlands down to the Jordan near Jericho',
+    note: 'This Gilgal lay in the hills near Bethel; the descent runs to Jericho and the Jordan where Elijah is taken up.',
+    sources: [
+      'Elijah and Elisha go down from Gilgal to Bethel, then Jericho (2 Kings 2:1-5).',
+      'Elijah parts the Jordan with his cloak (2 Kings 2:8) near the Jericho crossing.',
+      'He is taken up by a whirlwind and chariot of fire as Elisha watches (2 Kings 2:11).'
+    ],
+    points: [
+      { ancient: 'Gilgal (in the hills)', modern: 'near Bethel', x: 16, y: 27.3, lat: 32.02, lon: 35.22 },
+      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 16, y: 51.3, lat: 31.93, lon: 35.22 },
+      { ancient: 'Jericho', modern: 'Jericho', x: 65.9, y: 67.4, lat: 31.87, lon: 35.44 },
+      { ancient: 'The Jordan', modern: 'Jordan River', x: 84, y: 72.7, lat: 31.85, lon: 35.52 }
+    ],
+    steps: [
+      { label: 'Down to Bethel', ref: '2 Kings 2:1-3', copy: 'Elisha refuses to leave his master’s side.', miles: 10 },
+      { label: 'On to Jericho', ref: '2 Kings 2:4-5', copy: 'The company of prophets watches them pass.', miles: 12 },
+      { label: 'Crossing the Jordan', ref: '2 Kings 2:8', copy: 'Elijah strikes the water and they cross on dry ground.', miles: 3 },
+      { label: 'Taken up', ref: '2 Kings 2:11-12', copy: 'A chariot of fire separates them and Elijah goes up.', miles: 0 }
+    ]
+  },
+  {
+    id: 'naaman-healed',
+    title: 'Naaman Comes to Be Healed',
+    subtitle: 'From Damascus to the Jordan and clean again',
+    certainty: 'Known cities, simplified route',
+    refs: [{ book: '2KI', chFrom: 5, chTo: 5 }],
+    distance: 140,
+    mode: 'Chariots and horses',
+    days: 'Several travel days each way',
+    modern: 'Damascus down to Samaria and the Jordan',
+    note: 'Damascus and Samaria are firmly located; Naaman washed in the Jordan, the river of Israel he first despised.',
+    sources: [
+      'Naaman, commander of Aram, comes from Damascus to the king of Israel in Samaria (2 Kings 5:5-6).',
+      'Elisha sends him to wash seven times in the Jordan (2 Kings 5:10).',
+      'He prefers the rivers of Damascus at first, but obeys and is healed (2 Kings 5:12-14).'
+    ],
+    points: [
+      { ancient: 'Damascus', modern: 'Damascus, Syria', x: 70.8, y: 16, lat: 33.51, lon: 36.29 },
+      { ancient: 'Samaria', modern: 'Sebastia, West Bank', x: 29.2, y: 71.4, lat: 32.28, lon: 35.19 },
+      { ancient: 'The Jordan', modern: 'Jordan River', x: 42.8, y: 84, lat: 32, lon: 35.55 }
+    ],
+    steps: [
+      { label: 'Leaving Damascus', ref: '2 Kings 5:5', copy: 'Naaman sets out with silver, gold, and a letter to the king.', miles: 90 },
+      { label: 'Sent to the Jordan', ref: '2 Kings 5:9-10', copy: 'Elisha tells him to wash in the Jordan seven times.', miles: 35 },
+      { label: 'Healed in the river', ref: '2 Kings 5:14', copy: 'His flesh is restored like a little child’s.', miles: 15 }
+    ]
+  },
+  {
+    id: 'jonah-nineveh',
+    title: 'Jonah Flees, Then Goes to Nineveh',
+    subtitle: 'Joppa toward Tarshish, redirected to Nineveh',
+    certainty: 'Known ports, Tarshish debated',
+    refs: [{ book: 'JON', chFrom: 1, chTo: 3 }],
+    distance: 600,
+    mode: 'Ship, then overland',
+    days: 'Weeks, with three days inside the fish',
+    modern: 'Israel’s coast, the sea, then northern Iraq',
+    note: 'Tarshish is debated (often Spain); the map shows the westward flight, the storm, and the eastward call to Nineveh.',
+    sources: [
+      'Jonah goes down to Joppa to sail for Tarshish, away from the Lord (Jonah 1:3).',
+      'Tarshish is usually identified with the far western Mediterranean (Spain), the opposite direction from Nineveh.',
+      'Nineveh, the great Assyrian city, is securely located across the Tigris from modern Mosul (Jonah 3:3).'
+    ],
+    points: [
+      { ancient: 'Joppa', modern: 'Jaffa, Tel Aviv', x: 46.3, y: 61.7, lat: 32.05, lon: 34.75 },
+      { ancient: 'Toward Tarshish', modern: 'open Mediterranean', x: 16, y: 54.4, lat: 33.4, lon: 28 },
+      { ancient: 'Cast into the sea', modern: 'Mediterranean Sea', x: 27.2, y: 56.5, lat: 33, lon: 30.5 },
+      { ancient: 'Nineveh', modern: 'near Mosul, Iraq', x: 84, y: 38.3, lat: 36.36, lon: 43.15 }
+    ],
+    steps: [
+      { label: 'Sailing from Joppa', ref: 'Jonah 1:3', copy: 'Jonah pays the fare and boards a ship heading the wrong way.', miles: 200 },
+      { label: 'The storm and the sea', ref: 'Jonah 1:15-17', copy: 'He is thrown overboard and swallowed by a great fish.', miles: 0 },
+      { label: 'Preaching in Nineveh', ref: 'Jonah 3:3-4', copy: 'He finally crosses to Nineveh and the city repents.', miles: 600 }
+    ]
+  },
+  {
+    id: 'magi-to-bethlehem',
+    title: 'The Magi to Bethlehem',
+    subtitle: 'From the East to Jerusalem and the child',
+    certainty: 'Origin debated, cities known',
+    refs: [{ book: 'MAT', chFrom: 2, chTo: 2 }],
+    distance: 900,
+    mode: 'Long caravan from the East',
+    days: 'Months of caravan travel',
+    modern: 'From the region of Iraq/Iran to the Bethlehem area',
+    note: 'The Magi’s homeland "in the East" is unnamed (often Babylon or Persia); only Jerusalem and Bethlehem are fixed.',
+    sources: [
+      'The Magi come "from the East" to Jerusalem following a star (Matthew 2:1-2); their exact country is not named.',
+      'Herod’s scribes point them to Bethlehem from Micah 5:2 (Matthew 2:5-6).',
+      'Bethlehem lies about six miles south of Jerusalem, a short final leg.'
+    ],
+    points: [
+      { ancient: 'The East', modern: 'Babylon/Persia region', x: 84, y: 45.7, lat: 33, lon: 45.5 },
+      { ancient: 'Desert caravan route', modern: 'Syrian desert corridor', x: 44.4, y: 44.1, lat: 33.2, lon: 39.5 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16.2, y: 55.2, lat: 31.78, lon: 35.23 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 16, y: 55.9, lat: 31.7, lon: 35.2 }
+    ],
+    steps: [
+      { label: 'Following the star', ref: 'Matthew 2:1-2', copy: 'Wise men arrive in Jerusalem asking for the newborn king.', miles: 850 },
+      { label: 'Sent to Bethlehem', ref: 'Matthew 2:8', copy: 'Herod directs them to Bethlehem and asks for a report.', miles: 6 },
+      { label: 'Worship and warning', ref: 'Matthew 2:11-12', copy: 'They worship the child and return home another way.', miles: 0 }
+    ]
+  },
+  {
+    id: 'flight-to-egypt',
+    title: 'The Flight to Egypt',
+    subtitle: 'Bethlehem to Egypt, then home to Nazareth',
+    certainty: 'Representative route',
+    refs: [{ book: 'MAT', chFrom: 2, chTo: 2 }],
+    distance: 350,
+    mode: 'Family travel by night',
+    days: 'Days of travel each way',
+    modern: 'Bethlehem down to Egypt, back up to Galilee',
+    note: 'The Gospel names the destinations (Egypt, then Nazareth) but not the road; a coastal route is most likely.',
+    sources: [
+      'An angel warns Joseph to flee to Egypt from Herod (Matthew 2:13-14).',
+      'They stay until Herod dies, fulfilling "Out of Egypt I called my son" (Matthew 2:15).',
+      'Warned again, they settle in Nazareth in Galilee rather than Judea (Matthew 2:22-23).'
+    ],
+    points: [
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 82.3, y: 49, lat: 31.7, lon: 35.2 },
+      { ancient: 'Egypt', modern: 'Nile Delta, Egypt', x: 16, y: 71.5, lat: 30.6, lon: 31.4 },
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 84, y: 28.5, lat: 32.7, lon: 35.3 }
+    ],
+    steps: [
+      { label: 'Fleeing by night', ref: 'Matthew 2:14', copy: 'Joseph takes the child and his mother and leaves for Egypt.', miles: 200 },
+      { label: 'Safe until Herod dies', ref: 'Matthew 2:15', copy: 'They remain in Egypt until it is safe to return.', miles: 0 },
+      { label: 'Home to Nazareth', ref: 'Matthew 2:22-23', copy: 'They settle in Galilee, in the town of Nazareth.', miles: 150 }
+    ]
+  },
+  {
+    id: 'boy-jesus-temple',
+    title: 'The Boy Jesus at the Temple',
+    subtitle: 'A Passover pilgrimage from Nazareth to Jerusalem',
+    certainty: 'Representative pilgrim route',
+    refs: [{ book: 'LUK', chFrom: 2, chTo: 2 }],
+    distance: 90,
+    mode: 'Pilgrim caravan on foot',
+    days: '4-5 travel days each way',
+    modern: 'Nazareth down to Jerusalem and back',
+    note: 'Galilean pilgrims commonly used the Jordan Valley road to Jerusalem for the feasts; the line is simplified.',
+    sources: [
+      'Jesus’ family went to Jerusalem every year for the Passover (Luke 2:41).',
+      'At twelve he stayed behind; they found him after three days in the temple (Luke 2:46).',
+      'Pilgrim companies traveled together, which is why he was missed only after a day’s journey (Luke 2:44).'
+    ],
+    points: [
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 45.9, y: 16, lat: 32.7, lon: 35.3 },
+      { ancient: 'Jordan Valley road', modern: 'Jordan Valley', x: 58.4, y: 60.3, lat: 32.1, lon: 35.5 },
+      { ancient: 'Jericho', modern: 'Jericho', x: 54.7, y: 77.3, lat: 31.87, lon: 35.44 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 41.6, y: 84, lat: 31.78, lon: 35.23 }
+    ],
+    steps: [
+      { label: 'Up for the Passover', ref: 'Luke 2:41-42', copy: 'The family travels to Jerusalem for the feast.', miles: 75 },
+      { label: 'Left behind', ref: 'Luke 2:43-45', copy: 'They travel a day before realizing he is missing.', miles: 15 },
+      { label: 'Found in the temple', ref: 'Luke 2:46-49', copy: 'He is among the teachers, "about my Father’s business."', miles: 0 }
+    ]
+  },
+  {
+    id: 'road-to-damascus',
+    title: 'Saul on the Road to Damascus',
+    subtitle: 'From Jerusalem toward Damascus, struck by light',
+    certainty: 'Known cities, route simplified',
+    refs: [{ book: 'ACT', chFrom: 9, chTo: 9 }],
+    distance: 150,
+    mode: 'Mounted with companions',
+    days: 'About a week of travel',
+    modern: 'Jerusalem northeast to Damascus, Syria',
+    note: 'Jerusalem and Damascus are fixed; the conversion happened as Saul "neared Damascus" (Acts 9:3).',
+    sources: [
+      'Saul gets letters to the synagogues in Damascus to arrest believers (Acts 9:1-2).',
+      'A light from heaven stops him as he approaches the city (Acts 9:3-6).',
+      'Blinded, he is led the rest of the way into Damascus to Straight Street (Acts 9:8-11).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 32.5, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Northern road', modern: 'Galilee/Golan region', x: 48, y: 43.9, lat: 32.8, lon: 35.7 },
+      { ancient: 'Near Damascus', modern: 'approach to Damascus', x: 64.6, y: 18.4, lat: 33.45, lon: 36.2 },
+      { ancient: 'Damascus', modern: 'Damascus, Syria', x: 67.5, y: 16, lat: 33.51, lon: 36.29 }
+    ],
+    steps: [
+      { label: 'Setting out to persecute', ref: 'Acts 9:1-2', copy: 'Saul heads for Damascus, breathing threats against the church.', miles: 120 },
+      { label: 'The light from heaven', ref: 'Acts 9:3-6', copy: '"Saul, Saul, why do you persecute me?"', miles: 25 },
+      { label: 'Led into the city', ref: 'Acts 9:8-9', copy: 'Blinded, he is led by the hand into Damascus.', miles: 5 }
+    ]
+  },
+  {
+    id: 'philip-ethiopian',
+    title: 'Philip and the Ethiopian',
+    subtitle: 'On the desert road from Jerusalem to Gaza',
+    certainty: 'Approximate route',
+    refs: [{ book: 'ACT', chFrom: 8, chTo: 8 }],
+    distance: 60,
+    mode: 'Chariot meeting on the road',
+    days: 'A day’s journey',
+    modern: 'Jerusalem southwest toward Gaza, then the coast',
+    note: 'The "desert road" to Gaza is named in Acts 8:26; Philip is then carried up the coast to Azotus and Caesarea.',
+    sources: [
+      'An angel sends Philip to the road that goes down from Jerusalem to Gaza (Acts 8:26).',
+      'He meets an Ethiopian official reading Isaiah and explains the gospel (Acts 8:27-35).',
+      'After the baptism Philip is found at Azotus and preaches up to Caesarea (Acts 8:40).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 84, y: 36.3, lat: 31.78, lon: 35.23 },
+      { ancient: 'The desert road', modern: 'road toward Gaza', x: 50, y: 53.2, lat: 31.62, lon: 34.85 },
+      { ancient: 'Gaza', modern: 'Gaza', x: 16, y: 65.8, lat: 31.5, lon: 34.47 },
+      { ancient: 'Azotus', modern: 'Ashdod, Israel', x: 32.1, y: 34.2, lat: 31.8, lon: 34.65 }
+    ],
+    steps: [
+      { label: 'Sent to the Gaza road', ref: 'Acts 8:26', copy: 'Philip goes to the desert road as the angel directs.', miles: 25 },
+      { label: 'The chariot and Isaiah', ref: 'Acts 8:30-35', copy: 'He explains the suffering servant of Isaiah 53.', miles: 10 },
+      { label: 'Baptism and beyond', ref: 'Acts 8:38-40', copy: 'The eunuch is baptized; Philip preaches on to Azotus.', miles: 25 }
+    ]
+  },
+  {
+    id: 'peter-cornelius',
+    title: 'Peter to Cornelius',
+    subtitle: 'From Joppa up the coast to Caesarea',
+    certainty: 'Known cities, simplified route',
+    refs: [{ book: 'ACT', chFrom: 10, chTo: 10 }],
+    distance: 35,
+    mode: 'Walking the coastal road',
+    days: 'About two days (Acts 10:23-24)',
+    modern: 'Jaffa up the coast to Caesarea, Israel',
+    note: 'Joppa and Caesarea are firmly located on the coast; this short trip opened the gospel to the Gentiles.',
+    sources: [
+      'Peter is staying in Joppa with Simon the tanner when messengers arrive (Acts 10:5-6, 17-18).',
+      'He travels with them to Caesarea, the Roman provincial capital, the next day (Acts 10:23-24).',
+      'At Cornelius’ house the Spirit falls on the Gentiles (Acts 10:44-48).'
+    ],
+    points: [
+      { ancient: 'Joppa', modern: 'Jaffa, Tel Aviv', x: 41.1, y: 84, lat: 32.05, lon: 34.75 },
+      { ancient: 'Coastal road', modern: 'Sharon plain', x: 53.8, y: 46.2, lat: 32.3, lon: 34.85 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 58.9, y: 16, lat: 32.5, lon: 34.89 }
+    ],
+    steps: [
+      { label: 'The vision in Joppa', ref: 'Acts 10:9-16', copy: 'Peter sees the sheet of animals: "Do not call unclean."', miles: 0 },
+      { label: 'Going to Caesarea', ref: 'Acts 10:23-24', copy: 'He travels up the coast with the messengers.', miles: 30 },
+      { label: 'The Spirit on the Gentiles', ref: 'Acts 10:44-48', copy: 'Cornelius’ household believes and is baptized.', miles: 5 }
+    ]
+  },
+  {
+    id: 'road-to-emmaus',
+    title: 'The Road to Emmaus',
+    subtitle: 'Two disciples meet the risen Jesus',
+    certainty: 'Emmaus location debated',
+    refs: [{ book: 'LUK', chFrom: 24, chTo: 24 }],
+    distance: 14,
+    mode: 'Walking and back',
+    days: 'A single afternoon and evening',
+    modern: 'Jerusalem out to a nearby village and back',
+    note: 'Emmaus is "about seven miles" from Jerusalem (Luke 24:13); several sites are proposed for it.',
+    sources: [
+      'Two disciples walk to Emmaus, about sixty stadia (seven miles) from Jerusalem (Luke 24:13).',
+      'The risen Jesus joins them unrecognized and opens the Scriptures (Luke 24:27).',
+      'They recognize him in the breaking of bread and hurry back to Jerusalem (Luke 24:31-33).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 84, y: 60, lat: 31.78, lon: 35.23 },
+      { ancient: 'On the way', modern: 'Judean hills', x: 52.8, y: 46.7, lat: 31.82, lon: 35.12 },
+      { ancient: 'Emmaus', modern: 'Emmaus-Nicopolis (debated)', x: 16, y: 40, lat: 31.84, lon: 34.99 }
+    ],
+    steps: [
+      { label: 'Walking and talking', ref: 'Luke 24:13-16', copy: 'They discuss the crucifixion as a stranger draws near.', miles: 5 },
+      { label: 'Opening the Scriptures', ref: 'Luke 24:27', copy: 'He explains all that was written about himself.', miles: 2 },
+      { label: 'Known in the bread', ref: 'Luke 24:30-33', copy: 'Their eyes are opened; they rush back to Jerusalem.', miles: 7 }
+    ]
+  },
+  {
+    id: 'jesus-through-samaria',
+    title: 'Jesus Through Samaria',
+    subtitle: 'Judea to Galilee by the well of Sychar',
+    certainty: 'Representative route',
+    refs: [{ book: 'JHN', chFrom: 4, chTo: 4 }],
+    distance: 70,
+    mode: 'Walking the ridge road',
+    days: '2-3 travel days',
+    modern: 'Judea north through the West Bank to Galilee',
+    note: 'John 4:4 says Jesus "had to pass through Samaria," the direct ridge route most Jews avoided.',
+    sources: [
+      'Jesus leaves Judea for Galilee and goes through Samaria (John 4:3-4).',
+      'He rests at Jacob’s well near Sychar (Shechem) and speaks with the Samaritan woman (John 4:5-6).',
+      'Many Samaritans believe, and he continues on into Galilee (John 4:39-43).'
+    ],
+    points: [
+      { ancient: 'Judea', modern: 'near Jerusalem', x: 46.7, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Sychar (Jacob’s well)', modern: 'near Nablus, West Bank', x: 49.7, y: 53.9, lat: 32.21, lon: 35.28 },
+      { ancient: 'Galilee', modern: 'Cana / Galilee', x: 53.3, y: 16, lat: 32.75, lon: 35.34 }
+    ],
+    steps: [
+      { label: 'Leaving Judea', ref: 'John 4:3-4', copy: 'He sets out for Galilee, passing through Samaria.', miles: 30 },
+      { label: 'The woman at the well', ref: 'John 4:7-14', copy: '"Whoever drinks the water I give will never thirst."', miles: 0 },
+      { label: 'Samaritans believe', ref: 'John 4:39-42', copy: 'The town confesses him as the Savior of the world.', miles: 40 }
+    ]
+  },
+  {
+    id: 'jesus-tyre-sidon',
+    title: 'Jesus Withdraws to Tyre and Sidon',
+    subtitle: 'North to the coast, back through the Decapolis',
+    certainty: 'Representative route',
+    refs: [{ book: 'MRK', chFrom: 7, chTo: 7 }],
+    distance: 120,
+    mode: 'Walking with the disciples',
+    days: 'Several days with ministry stops',
+    modern: 'Galilee up to Lebanon’s coast and back east',
+    note: 'Mark 7 traces a wide northern loop: from Galilee to Tyre and Sidon, then back to the Sea of Galilee via the Decapolis.',
+    sources: [
+      'Jesus withdraws to the region of Tyre (Mark 7:24) and heals the Syrophoenician woman’s daughter.',
+      'He returns through Sidon and the region of the Decapolis (Mark 7:31).',
+      'Tyre and Sidon are well-known Phoenician coastal cities north of Galilee.'
+    ],
+    points: [
+      { ancient: 'Capernaum', modern: 'north shore of Galilee', x: 58.5, y: 69.1, lat: 32.88, lon: 35.57 },
+      { ancient: 'Tyre', modern: 'Tyre, Lebanon', x: 34.3, y: 38.7, lat: 33.27, lon: 35.2 },
+      { ancient: 'Sidon', modern: 'Sidon, Lebanon', x: 45.4, y: 16, lat: 33.56, lon: 35.37 },
+      { ancient: 'Decapolis', modern: 'east of the Sea of Galilee', x: 65.7, y: 84, lat: 32.69, lon: 35.68 }
+    ],
+    steps: [
+      { label: 'To the region of Tyre', ref: 'Mark 7:24', copy: 'He withdraws north and cannot be kept hidden.', miles: 35 },
+      { label: 'The Syrophoenician woman', ref: 'Mark 7:26-30', copy: 'Her faith wins healing for her daughter.', miles: 0 },
+      { label: 'Back through the Decapolis', ref: 'Mark 7:31', copy: 'He returns east of the lake to the Ten Cities.', miles: 85 }
+    ]
+  },
+  {
+    id: 'paul-night-caesarea',
+    title: 'Paul’s Night March to Caesarea',
+    subtitle: 'Escorted from Jerusalem to escape a plot',
+    certainty: 'Known cities, route simplified',
+    refs: [{ book: 'ACT', chFrom: 23, chTo: 23 }],
+    distance: 65,
+    mode: 'Roman escort, by night then horse',
+    days: 'Through the night and next day',
+    modern: 'Jerusalem down to Antipatris and Caesarea',
+    note: 'Acts names the route: foot-soldiers to Antipatris by night, then cavalry on to Caesarea.',
+    sources: [
+      'Over forty men vow to kill Paul, so the commander sends him out under heavy guard (Acts 23:12-23).',
+      'The soldiers bring him by night to Antipatris (Acts 23:31).',
+      'The cavalry take him the rest of the way to Caesarea and Governor Felix (Acts 23:32-33).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 63.6, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Antipatris', modern: 'Rosh HaAyin area', x: 39.6, y: 53.8, lat: 32.1, lon: 34.93 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 36.4, y: 16, lat: 32.5, lon: 34.89 }
+    ],
+    steps: [
+      { label: 'The plot and the guard', ref: 'Acts 23:23-24', copy: 'Two hundred soldiers escort Paul out under cover of night.', miles: 0 },
+      { label: 'By night to Antipatris', ref: 'Acts 23:31', copy: 'The infantry bring him down to Antipatris.', miles: 35 },
+      { label: 'On to Caesarea', ref: 'Acts 23:32-33', copy: 'The horsemen deliver him and the letter to Felix.', miles: 30 }
+    ]
   }
 ];
 
@@ -23499,7 +24054,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.299";
+const APP_VERSION = "3.0.300";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23520,6 +24075,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.300 &mdash; 20 more Bible Journeys</div>
+<ul>
+  <li><strong>20 new journeys</strong> &mdash; Added 10 Old Testament and 10 New Testament routes, each with the full map: ancient and modern places, distance, travel time, route certainty, Scripture steps, and source notes.</li>
+  <li><strong>Old Testament</strong> &mdash; Abraham to Moriah, Rebekah to Isaac, Joseph sold into Egypt, Moses fleeing to Midian, the twelve spies, the ark among the Philistines, the ark to Jerusalem, Elijah taken up, Naaman healed, and Jonah to Nineveh.</li>
+  <li><strong>New Testament</strong> &mdash; The magi to Bethlehem, the flight to Egypt, the boy Jesus at the temple, the road to Damascus, Philip and the Ethiopian, Peter to Cornelius, the road to Emmaus, Jesus through Samaria, Jesus to Tyre and Sidon, and Paul's night march to Caesarea.</li>
+</ul>
 <div class="un-version-label">v3.0.299 &mdash; Journey landmarks and facts</div>
 <ul>
   <li><strong>More Journey facts</strong> &mdash; Rhema journey popups now also show stop count, route anchors, route flow, and nearby landmark names for quick orientation.</li>
