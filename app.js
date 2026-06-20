@@ -12473,6 +12473,292 @@ const BIBLE_JOURNEYS = [
       { label: 'He will return', ref: 'Acts 1:11', copy: 'Two men say he will come back as they saw him go.', miles: 0 },
       { label: 'Back with joy', ref: 'Luke 24:52-53', copy: 'They return to Jerusalem and bless God in the temple.', miles: 2 }
     ]
+  },
+  {
+    id: 'good-samaritan-road',
+    title: 'The Road to Jericho',
+    subtitle: 'The dangerous descent of the Good Samaritan parable',
+    certainty: 'Well attested',
+    refs: [{ book: 'LUK', chFrom: 10, chTo: 10 }],
+    distance: 18,
+    mode: 'Walking the desert road',
+    days: 'A day’s descent',
+    modern: 'Jerusalem dropping down to Jericho through the wilderness',
+    note: 'The Jerusalem–Jericho road is real and notoriously dangerous; the inn is a traditional site.',
+    sources: [
+      'Jesus sets the parable on the road "going down from Jerusalem to Jericho" (Luke 10:30).',
+      'The road drops over 3,000 feet through bandit-prone wilderness in about 18 miles.',
+      'The Samaritan brings the wounded man to an inn along the way (Luke 10:34).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 67.1, lat: 31.78, lon: 35.23 },
+      { ancient: 'The inn', modern: 'Maale Adummim area', x: 58.1, y: 55.7, lat: 31.81, lon: 35.36 },
+      { ancient: 'Jericho', modern: 'Jericho, West Bank', x: 84, y: 32.9, lat: 31.87, lon: 35.44 }
+    ],
+    steps: [
+      { label: 'Going down', ref: 'Luke 10:30', copy: 'A man falls among robbers who strip and beat him, leaving him half dead.', miles: 8 },
+      { label: 'Passed by', ref: 'Luke 10:31-32', copy: 'A priest and a Levite both see him and pass by on the other side.', miles: 4 },
+      { label: 'The Samaritan’s mercy', ref: 'Luke 10:33-34', copy: 'A Samaritan binds his wounds and sets him on his own animal.', miles: 4 },
+      { label: 'Care at the inn', ref: 'Luke 10:35', copy: 'He pays the innkeeper and promises to repay any more.', miles: 2 }
+    ]
+  },
+  {
+    id: 'red-sea-crossing',
+    title: 'Crossing the Red Sea',
+    subtitle: 'Out of Egypt through the sea on dry ground',
+    certainty: 'Disputed location',
+    refs: [{ book: 'EXO', chFrom: 14, chTo: 15 }],
+    distance: 90,
+    mode: 'A nation on the move',
+    days: 'The first days out of Egypt',
+    modern: 'The eastern Nile Delta toward the Sinai wilderness',
+    note: 'The exact crossing point is debated; the camps and route here follow the traditional southern reconstruction.',
+    sources: [
+      'God leads the people by the wilderness road toward the Red Sea (Exodus 13:18).',
+      'They camp before Pi-hahiroth, hemmed between Migdol and the sea (Exodus 14:2).',
+      'The sea divides and Israel passes through on dry ground (Exodus 14:21-22).'
+    ],
+    points: [
+      { ancient: 'Rameses / Succoth', modern: 'Eastern Nile Delta', x: 17.6, y: 16, lat: 30.8, lon: 31.9 },
+      { ancient: 'Etham', modern: 'Edge of the wilderness', x: 42.3, y: 41.1, lat: 30.45, lon: 32.3 },
+      { ancient: 'Pi-hahiroth', modern: 'By the sea (debated)', x: 57.7, y: 69.7, lat: 30.05, lon: 32.55 },
+      { ancient: 'Wilderness of Shur', modern: 'NW Sinai', x: 82.4, y: 84, lat: 29.85, lon: 32.95 }
+    ],
+    steps: [
+      { label: 'The long way round', ref: 'Exodus 13:18', copy: 'God leads them by the desert road toward the Red Sea, not the short coast road.', miles: 30 },
+      { label: 'Hemmed in', ref: 'Exodus 14:2-3', copy: 'They camp by the sea, and Pharaoh thinks they are trapped.', miles: 25 },
+      { label: 'Through the sea', ref: 'Exodus 14:21-22', copy: 'A strong east wind parts the waters and Israel walks across on dry ground.', miles: 5 },
+      { label: 'The waters return', ref: 'Exodus 14:27-28', copy: 'The sea sweeps back over Pharaoh’s chariots and horsemen.', miles: 0 },
+      { label: 'Into the wilderness', ref: 'Exodus 15:22', copy: 'Moses leads Israel on into the wilderness of Shur.', miles: 30 }
+    ]
+  },
+  {
+    id: 'seven-churches-revelation',
+    title: 'The Seven Churches',
+    subtitle: 'The circuit of the seven churches of Revelation',
+    certainty: 'Well attested',
+    refs: [{ book: 'REV', chFrom: 1, chTo: 3 }],
+    distance: 320,
+    mode: 'A messenger’s circuit',
+    days: 'A week or more by road',
+    modern: 'Western Turkey along the old Roman roads of Asia',
+    note: 'The letters are addressed in the natural order a courier would travel, looping north then inland and south.',
+    sources: [
+      'John is told to write to the seven churches and name them (Revelation 1:11).',
+      'The cities lie along a circular Roman road in the province of Asia.',
+      'Each receives a letter tailored to its situation (Revelation 2–3).'
+    ],
+    points: [
+      { ancient: 'Ephesus', modern: 'Selçuk, Turkey', x: 22.9, y: 74, lat: 37.94, lon: 27.34 },
+      { ancient: 'Smyrna', modern: 'Izmir, Turkey', x: 16, y: 52.9, lat: 38.42, lon: 27.14 },
+      { ancient: 'Pergamum', modern: 'Bergama, Turkey', x: 17.4, y: 21.6, lat: 39.13, lon: 27.18 },
+      { ancient: 'Thyatira', modern: 'Akhisar, Turkey', x: 40.2, y: 30.8, lat: 38.92, lon: 27.84 },
+      { ancient: 'Sardis', modern: 'Sart, Turkey', x: 47.1, y: 49.8, lat: 38.49, lon: 28.04 },
+      { ancient: 'Philadelphia', modern: 'Alaşehir, Turkey', x: 63.6, y: 56, lat: 38.35, lon: 28.52 },
+      { ancient: 'Laodicea', modern: 'Denizli, Turkey', x: 84, y: 78.4, lat: 37.84, lon: 29.11 }
+    ],
+    steps: [
+      { label: 'Write the seven', ref: 'Revelation 1:11', copy: 'John is to send the scroll to the seven churches by name.', miles: 0 },
+      { label: 'Ephesus', ref: 'Revelation 2:1', copy: 'The church that left its first love.', miles: 35 },
+      { label: 'Smyrna', ref: 'Revelation 2:8', copy: 'Be faithful unto death, and receive the crown of life.', miles: 55 },
+      { label: 'Pergamum', ref: 'Revelation 2:12', copy: 'Holding fast his name where Satan’s throne is.', miles: 45 },
+      { label: 'Thyatira', ref: 'Revelation 2:18', copy: 'Commended for love and service, warned about Jezebel.', miles: 35 },
+      { label: 'Sardis', ref: 'Revelation 3:1', copy: 'A name for being alive, yet dead; wake up.', miles: 30 },
+      { label: 'Philadelphia', ref: 'Revelation 3:7', copy: 'An open door no one can shut.', miles: 45 },
+      { label: 'Laodicea', ref: 'Revelation 3:14', copy: 'Neither cold nor hot — the lukewarm church.', miles: 40 }
+    ]
+  },
+  {
+    id: 'jesus-transfiguration',
+    title: 'The Transfiguration',
+    subtitle: 'Up a high mountain and back to Galilee',
+    certainty: 'Traditional site (debated)',
+    refs: [{ book: 'MAT', chFrom: 17, chTo: 17 }],
+    distance: 40,
+    mode: 'Walking',
+    days: 'Six days after Caesarea Philippi',
+    modern: 'The far north of Israel down toward the Sea of Galilee',
+    note: 'Scripture says only "a high mountain"; tradition favors Mount Tabor, while many point to Mount Hermon near Caesarea Philippi.',
+    sources: [
+      'After six days Jesus leads Peter, James, and John up a high mountain (Matthew 17:1).',
+      'He is transfigured, and Moses and Elijah appear (Matthew 17:2-3).',
+      'Coming down, he tells them to keep the vision quiet until he is raised (Matthew 17:9).'
+    ],
+    points: [
+      { ancient: 'Caesarea Philippi', modern: 'Banias, Golan', x: 47.6, y: 37.4, lat: 33.25, lon: 35.69 },
+      { ancient: 'The high mountain', modern: 'Mount Hermon slopes', x: 64.5, y: 16, lat: 33.42, lon: 35.85 },
+      { ancient: 'Galilee', modern: 'Sea of Galilee region', x: 35.5, y: 84, lat: 32.88, lon: 35.575 }
+    ],
+    steps: [
+      { label: 'Up the mountain', ref: 'Matthew 17:1', copy: 'He takes the three disciples up a high mountain by themselves.', miles: 12 },
+      { label: 'Transfigured', ref: 'Matthew 17:2', copy: 'His face shines like the sun and his clothes become white as light.', miles: 0 },
+      { label: 'The voice in the cloud', ref: 'Matthew 17:5', copy: '"This is my beloved Son; listen to him."', miles: 0 },
+      { label: 'Down again', ref: 'Matthew 17:9', copy: 'He charges them to tell no one until the Son of Man is raised.', miles: 28 }
+    ]
+  },
+  {
+    id: 'moses-views-promised-land',
+    title: 'Moses on Mount Nebo',
+    subtitle: 'Up from the plains of Moab to see the land',
+    certainty: 'Well attested',
+    refs: [{ book: 'DEU', chFrom: 34, chTo: 34 }],
+    distance: 8,
+    mode: 'A final ascent on foot',
+    days: 'A single day',
+    modern: 'The Jordan valley up to Mount Nebo',
+    note: 'Mount Nebo is securely located overlooking the Jordan; Moses’ burial place is deliberately unknown.',
+    sources: [
+      'Moses goes up from the plains of Moab to Mount Nebo, the top of Pisgah (Deuteronomy 34:1).',
+      'The Lord shows him the whole land from Gilead to the western sea (Deuteronomy 34:1-3).',
+      'Moses dies there in Moab and is buried in a valley no one can find (Deuteronomy 34:5-6).'
+    ],
+    points: [
+      { ancient: 'Plains of Moab', modern: 'Jordan valley, Jordan', x: 16, y: 20.9, lat: 31.85, lon: 35.62 },
+      { ancient: 'Mount Nebo (Pisgah)', modern: 'Mount Nebo, Jordan', x: 84, y: 79.1, lat: 31.77, lon: 35.73 }
+    ],
+    steps: [
+      { label: 'Up to the summit', ref: 'Deuteronomy 34:1', copy: 'Moses climbs from the plains of Moab to the top of Pisgah.', miles: 6 },
+      { label: 'The whole land shown', ref: 'Deuteronomy 34:4', copy: 'The Lord says, "This is the land I swore to give your offspring."', miles: 0 },
+      { label: 'Moses dies in Moab', ref: 'Deuteronomy 34:5', copy: 'The servant of the Lord dies there, as the Lord had said.', miles: 0 },
+      { label: 'A hidden grave', ref: 'Deuteronomy 34:6', copy: 'He is buried in the valley, and no one knows the place to this day.', miles: 0 }
+    ]
+  },
+  {
+    id: 'deborah-barak-tabor',
+    title: 'Deborah and Barak',
+    subtitle: 'Mustering at Mount Tabor against Sisera by the Kishon',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JDG', chFrom: 4, chTo: 5 }],
+    distance: 55,
+    mode: 'Army on the march',
+    days: 'The day of battle',
+    modern: 'Upper Galilee down to Mount Tabor and the Jezreel valley',
+    note: 'The battle is by the Kishon near Megiddo/Taanach; Jael’s tent is placed near Kedesh.',
+    sources: [
+      'Barak is summoned to gather ten thousand at Mount Tabor (Judges 4:6).',
+      'He charges down from Tabor and the Lord routs Sisera (Judges 4:14-15).',
+      'The river Kishon sweeps the enemy away (Judges 5:21).'
+    ],
+    points: [
+      { ancient: 'Kedesh', modern: 'Tel Kedesh, Galilee', x: 67, y: 16, lat: 33.11, lon: 35.53 },
+      { ancient: 'Mount Tabor', modern: 'Mount Tabor, Israel', x: 51.6, y: 70.9, lat: 32.69, lon: 35.39 },
+      { ancient: 'River Kishon', modern: 'Jezreel valley', x: 33, y: 84, lat: 32.59, lon: 35.22 }
+    ],
+    steps: [
+      { label: 'Called to Tabor', ref: 'Judges 4:6', copy: 'Deborah sends for Barak to draw out ten thousand to Mount Tabor.', miles: 30 },
+      { label: 'Down from the mountain', ref: 'Judges 4:14', copy: 'Barak charges down Tabor with his ten thousand behind him.', miles: 12 },
+      { label: 'The Lord routs Sisera', ref: 'Judges 4:15', copy: 'Sisera’s whole army falls into panic before Barak.', miles: 8 },
+      { label: 'The Kishon sweeps them', ref: 'Judges 5:21', copy: 'The ancient river Kishon swept the enemy away.', miles: 5 }
+    ]
+  },
+  {
+    id: 'samson-gates-hebron',
+    title: 'Samson Carries the Gates',
+    subtitle: 'From Gaza uphill toward Hebron with the city gates',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JDG', chFrom: 16, chTo: 16 }],
+    distance: 40,
+    mode: 'A feat of strength on foot',
+    days: 'A single night',
+    modern: 'The Philistine coast up into the Judean hills',
+    note: 'He carries the gates "to the top of the hill before Hebron"; the exact hill is unnamed.',
+    sources: [
+      'Samson goes to Gaza and the men lie in wait at the gate to kill him (Judges 16:1-2).',
+      'At midnight he seizes the doors of the city gate, posts and all (Judges 16:3).',
+      'He carries them up to the hill that faces Hebron (Judges 16:3).'
+    ],
+    points: [
+      { ancient: 'Gaza', modern: 'Gaza', x: 16, y: 51.9, lat: 31.5, lon: 34.47 },
+      { ancient: 'Hill before Hebron', modern: 'Judean hills near Hebron', x: 84, y: 48.1, lat: 31.53, lon: 35.1 }
+    ],
+    steps: [
+      { label: 'Trapped in Gaza', ref: 'Judges 16:1-2', copy: 'The Gazites surround the place and wait at the gate all night.', miles: 0 },
+      { label: 'Lifting the gates', ref: 'Judges 16:3', copy: 'At midnight Samson tears the gate doors loose, bar and all.', miles: 0 },
+      { label: 'Up toward Hebron', ref: 'Judges 16:3', copy: 'He carries them on his shoulders to the hill facing Hebron.', miles: 40 }
+    ]
+  },
+  {
+    id: 'elisha-dothan-chariots',
+    title: 'Chariots of Fire at Dothan',
+    subtitle: 'A blinded army led from Dothan into Samaria',
+    certainty: 'Well attested',
+    refs: [{ book: '2KI', chFrom: 6, chTo: 6 }],
+    distance: 12,
+    mode: 'Walking',
+    days: 'A single day',
+    modern: 'The hills of Dothan down to Samaria',
+    note: 'Dothan and Samaria are securely located in the central hill country.',
+    sources: [
+      'The king of Aram sends horses and chariots by night to surround Dothan (2 Kings 6:13-14).',
+      'Elisha’s servant sees the hills full of horses and chariots of fire (2 Kings 6:17).',
+      'The blinded Arameans are led into the middle of Samaria (2 Kings 6:18-19).'
+    ],
+    points: [
+      { ancient: 'Dothan', modern: 'Tel Dotan, West Bank', x: 56.6, y: 16, lat: 32.41, lon: 35.22 },
+      { ancient: 'Samaria', modern: 'Sebastia, West Bank', x: 43.4, y: 84, lat: 32.28, lon: 35.19 }
+    ],
+    steps: [
+      { label: 'Surrounded at night', ref: '2 Kings 6:14', copy: 'A great army with horses and chariots encircles the city.', miles: 0 },
+      { label: 'More with us', ref: '2 Kings 6:16', copy: '"Those who are with us are more than those who are with them."', miles: 0 },
+      { label: 'Chariots of fire', ref: '2 Kings 6:17', copy: 'The servant’s eyes open to see the mountain full of fiery chariots.', miles: 0 },
+      { label: 'Led into Samaria', ref: '2 Kings 6:19-20', copy: 'Elisha leads the blinded army to Samaria, where their eyes are opened.', miles: 11 }
+    ]
+  },
+  {
+    id: 'david-wilderness-strongholds',
+    title: 'David in the Wilderness',
+    subtitle: 'Hiding from Saul among the Judean strongholds',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 23, chTo: 24 }],
+    distance: 45,
+    mode: 'Fugitive on foot',
+    days: 'Many weeks of hiding',
+    modern: 'The Judean hill country east toward the Dead Sea',
+    note: 'Keilah, Ziph, Maon, and En Gedi are placed in the Judean wilderness; the cave at En Gedi is traditional.',
+    sources: [
+      'David saves Keilah from the Philistines, then flees Saul (1 Samuel 23:5, 13).',
+      'He stays in the strongholds of the wildernesses of Ziph and Maon (1 Samuel 23:14, 24-25).',
+      'In a cave at En Gedi he spares Saul’s life (1 Samuel 24:1-4).'
+    ],
+    points: [
+      { ancient: 'Keilah', modern: 'Khirbet Qila', x: 16, y: 28.5, lat: 31.61, lon: 35 },
+      { ancient: 'Wilderness of Ziph', modern: 'Tel Ziph area', x: 36.9, y: 61.2, lat: 31.45, lon: 35.12 },
+      { ancient: 'Wilderness of Maon', modern: 'Tell Main area', x: 38.7, y: 71.5, lat: 31.4, lon: 35.13 },
+      { ancient: 'En Gedi', modern: 'Ein Gedi, Dead Sea', x: 84, y: 59.2, lat: 31.46, lon: 35.39 }
+    ],
+    steps: [
+      { label: 'Rescuing Keilah', ref: '1 Samuel 23:5', copy: 'David strikes the Philistines and saves the town.', miles: 0 },
+      { label: 'Hunted in Ziph', ref: '1 Samuel 23:14', copy: 'He stays in the hill country of Ziph as Saul seeks him daily.', miles: 15 },
+      { label: 'Escape at Maon', ref: '1 Samuel 23:26-27', copy: 'As Saul closes in, news of a Philistine raid pulls him away.', miles: 8 },
+      { label: 'Sparing Saul at En Gedi', ref: '1 Samuel 24:4', copy: 'In the cave David cuts Saul’s robe but refuses to harm him.', miles: 22 }
+    ]
+  },
+  {
+    id: 'philip-azotus-caesarea',
+    title: 'Philip Preaches the Coast',
+    subtitle: 'From Azotus up the seaboard to Caesarea',
+    certainty: 'Approximate route',
+    refs: [{ book: 'ACT', chFrom: 8, chTo: 8 }],
+    distance: 60,
+    mode: 'Walking the coast road',
+    days: 'Several days of preaching',
+    modern: 'Ashdod up the Israeli coast to Caesarea',
+    note: 'After the Ethiopian, Philip appears at Azotus and evangelizes every town up to Caesarea.',
+    sources: [
+      'Philip is found at Azotus after baptizing the Ethiopian (Acts 8:40).',
+      'He preaches in all the towns as he goes (Acts 8:40).',
+      'He continues until he reaches Caesarea (Acts 8:40).'
+    ],
+    points: [
+      { ancient: 'Azotus', modern: 'Ashdod, Israel', x: 40.1, y: 84, lat: 31.8, lon: 34.65 },
+      { ancient: 'Lydda / Joppa coast', modern: 'Tel Aviv–Jaffa area', x: 49.2, y: 59.7, lat: 32.05, lon: 34.76 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 59.9, y: 16, lat: 32.5, lon: 34.89 }
+    ],
+    steps: [
+      { label: 'Found at Azotus', ref: 'Acts 8:40', copy: 'Philip is found at Azotus after the Spirit carries him away.', miles: 0 },
+      { label: 'Town by town', ref: 'Acts 8:40', copy: 'He preaches the gospel in every town along the coast.', miles: 35 },
+      { label: 'On to Caesarea', ref: 'Acts 8:40', copy: 'He keeps on until he comes to Caesarea, his home base.', miles: 25 }
+    ]
   }
 ];
 
@@ -25089,7 +25375,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.302";
+const APP_VERSION = "3.0.303";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -25110,6 +25396,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.303 &mdash; 10 most-asked journeys</div>
+<ul>
+  <li><strong>10 new journeys</strong> &mdash; Added ten of the most commonly read, map-helpful passages &mdash; bringing the collection to 81 journeys, each with the full map, Scripture steps, and source notes.</li>
+  <li><strong>Highlights</strong> &mdash; The road of the Good Samaritan (Jerusalem to Jericho), the crossing of the Red Sea, the circuit of the Seven Churches of Revelation, the Transfiguration, Moses on Mount Nebo, Deborah and Barak at Mount Tabor, Samson carrying the gates of Gaza, the chariots of fire at Dothan, David hiding in the wilderness, and Philip preaching up the coast to Caesarea.</li>
+</ul>
 <div class="un-version-label">v3.0.302 &mdash; 20 more Journeys + clearer maps</div>
 <ul>
   <li><strong>20 new journeys</strong> &mdash; Added 11 more Old Testament and 9 New Testament routes &mdash; bringing the collection to 71 journeys, each with the full map, Scripture steps, and source notes.</li>
