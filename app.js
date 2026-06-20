@@ -11555,6 +11555,7 @@ function openJourneyPeek(book, chapter, verse) {
     <div class="journey-peek-modern" id="journeyPeekModernContext" style="${_journeyPeekMode === 'modern' && _journeyModernContext(journey) ? '' : 'display:none'}"><strong>Nearby today</strong><span>${_journeyEsc(_journeyModernContext(journey))}</span></div>
     ${step ? `<p class="journey-peek-step"><strong>${_journeyEsc(step.label)}</strong>${_journeyEsc(step.copy)}</p>` : `<p class="journey-peek-step">${_journeyEsc(journey.subtitle)}</p>`}
     <button class="journey-peek-open" onclick="openJourneyFromPeek('${_journeyEsc(journey.id)}')"><span class="material-symbols-outlined">explore</span>Open full journey</button>
+    <div class="journey-diag" id="journeyPeekDiag"></div>
   </div>`;
   document.body.appendChild(ov);
   requestAnimationFrame(() => {
@@ -11563,35 +11564,41 @@ function openJourneyPeek(book, chapter, verse) {
   });
 }
 
-// Load the real tile map into the peek (schematic stays as the instant + offline fallback).
+function _journeyPeekSetDiag(status) {
+  const el = document.getElementById('journeyPeekDiag');
+  if (el) el.textContent = 'v' + APP_VERSION + ' · ' + status;
+}
+
+// Load the real tile map into the peek. Mirrors the (working) journeys-page
+// mount: render into the sized host, then reveal + resize on success. The
+// schematic underneath stays as the instant placeholder / offline fallback.
 function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
-  if (!_bibleMapEnabled() || !(journey.points || []).some(p => typeof p.lat === 'number')) return;
   const wrap = document.getElementById('journeyPeekMap');
   const host = document.getElementById('journeyPeekMapGL');
   if (!wrap || !host) return;
   wrap.classList.remove('gl-ready');
+  if (!_bibleMapConfigured()) { _journeyPeekSetDiag('real map off (no tiles)'); return; }
+  if (navigator.onLine === false) { _journeyPeekSetDiag('needs internet (offline)'); return; }
+  if (!(journey.points || []).some(p => typeof p.lat === 'number')) { _journeyPeekSetDiag('no coordinates'); return; }
+  _journeyPeekSetDiag('loading real map…');
   _ensureBibleMapLibs().then(() => {
     if (!document.getElementById('journeyPeekMap')) return null;   // closed already
-    if (!window.BibleMap || !window.BibleMap.supported()) return null;
+    if (!window.BibleMap) throw new Error('module not loaded');
+    if (!window.BibleMap.supported()) throw new Error('WebGL not supported');
     return window.BibleMap.render(host, journey, {
       mode,
       pmtilesUrl: _journeyResolvePmtiles(),
       labelFor: _journeyLabelFor,
-      onError: () => {
-        wrap.classList.remove('gl-ready');
-        host.replaceChildren();
-      }
+      onError: (err) => { _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err)); }
     });
   }).then((map) => {
     if (map && document.getElementById('journeyPeekMap')) {
-      setTimeout(() => {
-        const canvas = host.querySelector('canvas');
-        if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0) wrap.classList.add('gl-ready');
-      }, 80);
+      wrap.classList.add('gl-ready');                 // reveal the real map
+      requestAnimationFrame(() => { try { map.resize(); } catch (e) {} });
+      _journeyPeekSetDiag('real map ON');
     }
-  }).catch(() => {
-    wrap.classList.remove('gl-ready');
-    host.replaceChildren();
+  }).catch((e) => {
+    _journeyPeekSetDiag('could not start: ' + _journeyErrText(e));
   });
 }
 
@@ -23301,7 +23308,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.292";
+const APP_VERSION = "3.0.293";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23322,6 +23329,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.293 &mdash; Verse mini-map loads reliably</div>
+<ul>
+  <li><strong>Mini-map fix</strong> &mdash; The map that pops up from a Rhema verse now reliably loads the real tiles (it was being kept hidden by a size check). A small status line under it shows what is happening if anything goes wrong.</li>
+  <li><strong>Verse markers</strong> &mdash; Audited every journey: the map icon only appears on the specific travel passages, never broad teaching chapters.</li>
+</ul>
 <div class="un-version-label">v3.0.292 &mdash; Verse mini-map loads the real map</div>
 <ul>
   <li><strong>Real tiles in the popup</strong> &mdash; The map that pops up from a Rhema verse now loads the real Bible-world tiles (it was staying on the simple map), and the Bible Map / Modern toggle reloads it in the chosen view.</li>
