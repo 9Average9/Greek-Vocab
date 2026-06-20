@@ -11918,6 +11918,561 @@ const BIBLE_JOURNEYS = [
       { label: 'A year of teaching', ref: 'Acts 11:26', copy: 'They meet with the church and teach a great many people.', miles: 0 },
       { label: 'Called Christians', ref: 'Acts 11:26', copy: 'In Antioch the disciples are first called Christians.', miles: 0 }
     ]
+  },
+  {
+    id: 'abram-egypt-famine',
+    title: 'Abram in Egypt',
+    subtitle: 'Down to Egypt in a famine and back to Bethel',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 12, chTo: 13 }],
+    distance: 480,
+    mode: 'Caravan with flocks',
+    days: 'A long sojourn',
+    modern: 'The Negev down into Egypt and back to the central hills',
+    note: 'The specific place in Egypt is unnamed; the route follows the coastal way to the Nile and back.',
+    sources: [
+      'A famine drives Abram down to Egypt to sojourn there (Genesis 12:10).',
+      'Pharaoh takes Sarai, is plagued, and sends Abram away (Genesis 12:15-20).',
+      'Abram returns by stages to Bethel, where he had first built an altar (Genesis 13:3-4).'
+    ],
+    points: [
+      { ancient: 'The Negev', modern: 'Negev, Israel', x: 77.6, y: 51.3, lat: 30.95, lon: 34.85 },
+      { ancient: 'Egypt', modern: 'Lower Egypt / Nile', x: 16, y: 68.5, lat: 30.1, lon: 31.3 },
+      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 84, y: 31.5, lat: 31.93, lon: 35.22 }
+    ],
+    steps: [
+      { label: 'Down to Egypt', ref: 'Genesis 12:10', copy: 'A severe famine drives Abram to sojourn in Egypt.', miles: 200 },
+      { label: 'Sarai taken', ref: 'Genesis 12:14-16', copy: 'Sarai is taken into Pharaoh’s house and Abram is treated well for her sake.', miles: 0 },
+      { label: 'Sent away', ref: 'Genesis 12:20', copy: 'Pharaoh, plagued, sends Abram on his way with all he has.', miles: 200 },
+      { label: 'Back to Bethel', ref: 'Genesis 13:3-4', copy: 'He returns to the altar between Bethel and Ai and calls on the Lord.', miles: 80 }
+    ]
+  },
+  {
+    id: 'isaac-gerar',
+    title: 'Isaac in Gerar',
+    subtitle: 'A famine sojourn among the Philistines and the wells of strife',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 26, chTo: 26 }],
+    distance: 35,
+    mode: 'Herding on foot',
+    days: 'A season of sojourn',
+    modern: 'The western Negev around Gerar back to Beersheba',
+    note: 'Gerar is placed in the western Negev; the contested wells are not all precisely located.',
+    sources: [
+      'In a famine Isaac goes to Abimelech, king of the Philistines, at Gerar (Genesis 26:1).',
+      'He sows and reaps a hundredfold, and the Philistines envy him (Genesis 26:12-14).',
+      'After the wells of strife he digs Rehoboth and goes up to Beersheba (Genesis 26:22-23).'
+    ],
+    points: [
+      { ancient: 'Beersheba region', modern: 'Northern Negev', x: 68.6, y: 35, lat: 31.33, lon: 34.75 },
+      { ancient: 'Gerar', modern: 'Tel Haror area', x: 29.1, y: 16, lat: 31.4, lon: 34.58 },
+      { ancient: 'Rehoboth', modern: 'Western Negev wells', x: 22.1, y: 84, lat: 31.15, lon: 34.55 },
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 77.9, y: 56.8, lat: 31.25, lon: 34.79 }
+    ],
+    steps: [
+      { label: 'Told to stay', ref: 'Genesis 26:2-3', copy: 'The Lord tells Isaac not to go to Egypt but to sojourn in the land.', miles: 12 },
+      { label: 'A hundredfold harvest', ref: 'Genesis 26:12', copy: 'Isaac reaps a hundredfold that year, and the Lord blesses him.', miles: 0 },
+      { label: 'Room at last', ref: 'Genesis 26:22', copy: 'He digs Rehoboth and says the Lord has made room for them.', miles: 14 },
+      { label: 'Up to Beersheba', ref: 'Genesis 26:23-25', copy: 'He goes up to Beersheba, where the Lord appears and he builds an altar.', miles: 9 }
+    ]
+  },
+  {
+    id: 'jacob-peniel',
+    title: 'Jacob Wrestles at Peniel',
+    subtitle: 'From Mahanaim across the Jabbok to meet Esau and on to Shechem',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 32, chTo: 33 }],
+    distance: 45,
+    mode: 'Travelling with family and flocks',
+    days: 'A few tense days',
+    modern: 'The Gilead highlands across the Jabbok into the central hills',
+    note: 'Peniel and Succoth lie along the Jabbok; the precise tells are debated.',
+    sources: [
+      'Angels meet Jacob at Mahanaim as he returns (Genesis 32:1-2).',
+      'He wrestles till daybreak and names the place Peniel (Genesis 32:24-30).',
+      'After meeting Esau he moves to Succoth and then to Shechem (Genesis 33:17-18).'
+    ],
+    points: [
+      { ancient: 'Mahanaim', modern: 'Gilead, Jordan', x: 84, y: 41.8, lat: 32.2, lon: 35.72 },
+      { ancient: 'Peniel (Jabbok)', modern: 'Jabbok river, Jordan', x: 68.5, y: 60, lat: 32.1, lon: 35.62 },
+      { ancient: 'Succoth', modern: 'Jordan valley, Jordan', x: 60.8, y: 41.8, lat: 32.2, lon: 35.57 },
+      { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 16, y: 40, lat: 32.21, lon: 35.28 }
+    ],
+    steps: [
+      { label: 'Angels at Mahanaim', ref: 'Genesis 32:1-2', copy: 'The angels of God meet him and he names the place "two camps."', miles: 0 },
+      { label: 'Wrestling till dawn', ref: 'Genesis 32:24-28', copy: 'A man wrestles with Jacob and renames him Israel.', miles: 10 },
+      { label: 'Face to face with Esau', ref: 'Genesis 33:4', copy: 'Esau runs to meet him, embraces him, and they weep.', miles: 0 },
+      { label: 'On to Shechem', ref: 'Genesis 33:17-18', copy: 'He builds at Succoth, then comes safely to the city of Shechem.', miles: 35 }
+    ]
+  },
+  {
+    id: 'moses-return-egypt',
+    title: 'Moses Returns to Egypt',
+    subtitle: 'From Midian back to Egypt to confront Pharaoh',
+    certainty: 'Approximate route',
+    refs: [{ book: 'EXO', chFrom: 4, chTo: 4 }],
+    distance: 280,
+    mode: 'Travelling with family on a donkey',
+    days: 'Many days across the wilderness',
+    modern: 'Northwest Arabia across Sinai to the Nile Delta',
+    note: 'Midian lay east of the Gulf of Aqaba; the route crosses the Sinai wilderness to Goshen.',
+    sources: [
+      'Moses asks Jethro’s leave and returns to Egypt (Exodus 4:18).',
+      'He sets his wife and sons on a donkey and carries the staff of God (Exodus 4:20).',
+      'Aaron meets him at the mountain of God, and together they go to the elders (Exodus 4:27-29).'
+    ],
+    points: [
+      { ancient: 'Midian', modern: 'NW Arabia', x: 84, y: 77.6, lat: 28.4, lon: 35.3 },
+      { ancient: 'Mountain of God', modern: 'Sinai wilderness', x: 57.4, y: 74.4, lat: 28.54, lon: 33.97 },
+      { ancient: 'Egypt (Goshen)', modern: 'Eastern Nile Delta', x: 16, y: 22.4, lat: 30.8, lon: 31.9 }
+    ],
+    steps: [
+      { label: 'Leave to go', ref: 'Exodus 4:18', copy: 'Jethro sends Moses off in peace to return to his people.', miles: 60 },
+      { label: 'The staff of God', ref: 'Exodus 4:20', copy: 'Moses takes his family and the staff of God in his hand.', miles: 120 },
+      { label: 'Aaron at the mountain', ref: 'Exodus 4:27', copy: 'Aaron meets him at the mountain of God and kisses him.', miles: 0 },
+      { label: 'Before the elders', ref: 'Exodus 4:29-31', copy: 'They gather the elders, who believe and bow in worship.', miles: 100 }
+    ]
+  },
+  {
+    id: 'saul-donkeys-samuel',
+    title: 'Saul Seeks the Donkeys',
+    subtitle: 'An errand through Ephraim that ends with an anointing',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 9, chTo: 10 }],
+    distance: 35,
+    mode: 'Searching on foot',
+    days: 'About three days',
+    modern: 'The Benjamin plateau north into the hills of Ephraim',
+    note: 'The land of Zuph and Samuel’s town are placed near Ramah; the exact route wanders through several districts.',
+    sources: [
+      'Saul searches for his father’s lost donkeys through the hill country of Ephraim (1 Samuel 9:3-4).',
+      'A servant suggests asking the man of God in the city (1 Samuel 9:6).',
+      'Samuel meets Saul, hosts him, and the next day anoints him (1 Samuel 9:17-19; 10:1).'
+    ],
+    points: [
+      { ancient: 'Gibeah', modern: 'Tell el-Ful area', x: 55.2, y: 84, lat: 31.82, lon: 35.23 },
+      { ancient: 'Hill country of Ephraim', modern: 'Central highlands', x: 44.8, y: 16, lat: 32.1, lon: 35.18 },
+      { ancient: 'Land of Zuph (Ramah)', modern: 'Er-Ram area', x: 49, y: 71.9, lat: 31.87, lon: 35.2 }
+    ],
+    steps: [
+      { label: 'The lost donkeys', ref: '1 Samuel 9:3-4', copy: 'Saul passes through Ephraim and other districts but finds nothing.', miles: 20 },
+      { label: 'The man of God', ref: '1 Samuel 9:6', copy: 'The servant proposes they ask the honored seer in the city.', miles: 12 },
+      { label: 'Samuel’s welcome', ref: '1 Samuel 9:17-19', copy: 'The Lord shows Samuel that this is the man to govern Israel.', miles: 0 },
+      { label: 'The anointing', ref: '1 Samuel 10:1', copy: 'Samuel pours oil on Saul’s head and kisses him as prince.', miles: 0 }
+    ]
+  },
+  {
+    id: 'david-ziklag',
+    title: 'David Recovers at Ziklag',
+    subtitle: 'A raid pursued from Ziklag to the brook Besor',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 30, chTo: 30 }],
+    distance: 40,
+    mode: 'Hard pursuit',
+    days: 'A three-day chase',
+    modern: 'The western Negev toward the Besor ravine',
+    note: 'Ziklag and the brook Besor are placed in the western Negev; the raiders’ camp is approximate.',
+    sources: [
+      'Amalekites burn Ziklag and carry off the families (1 Samuel 30:1-3).',
+      'Two hundred men are too faint to cross the brook Besor (1 Samuel 30:9-10).',
+      'David strikes the raiders and recovers all that was taken (1 Samuel 30:18-19).'
+    ],
+    points: [
+      { ancient: 'Ziklag', modern: 'Western Negev', x: 84, y: 19, lat: 31.3, lon: 34.62 },
+      { ancient: 'Brook Besor', modern: 'Nahal Besor', x: 47.9, y: 38.8, lat: 31.22, lon: 34.45 },
+      { ancient: 'Amalekite camp', modern: 'Negev toward Shur', x: 16, y: 81, lat: 31.05, lon: 34.3 }
+    ],
+    steps: [
+      { label: 'Ziklag in ashes', ref: '1 Samuel 30:3-4', copy: 'David and his men weep until they have no strength left.', miles: 0 },
+      { label: 'Left at the brook', ref: '1 Samuel 30:9-10', copy: 'Two hundred stay behind, too exhausted to cross the Besor.', miles: 15 },
+      { label: 'All recovered', ref: '1 Samuel 30:18-19', copy: 'David recovers everything; nothing is missing, small or great.', miles: 20 },
+      { label: 'Sharing the spoil', ref: '1 Samuel 30:26', copy: 'He sends gifts from the plunder to the elders of Judah.', miles: 5 }
+    ]
+  },
+  {
+    id: 'solomon-gibeon',
+    title: 'Solomon Asks for Wisdom',
+    subtitle: 'Up to the great high place at Gibeon and back',
+    certainty: 'Well attested',
+    refs: [{ book: '1KI', chFrom: 3, chTo: 3 }],
+    distance: 12,
+    mode: 'Royal procession',
+    days: 'A short journey to sacrifice',
+    modern: 'Jerusalem out to Gibeon and back',
+    note: 'Gibeon (el-Jib) is securely located a few miles northwest of Jerusalem.',
+    sources: [
+      'Solomon goes to Gibeon, the great high place, to sacrifice (1 Kings 3:4).',
+      'The Lord appears to him there in a dream by night (1 Kings 3:5).',
+      'He returns to Jerusalem and stands before the ark (1 Kings 3:15).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 70.6, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Gibeon', modern: 'El-Jib, West Bank', x: 29.4, y: 16, lat: 31.85, lon: 35.18 }
+    ],
+    steps: [
+      { label: 'To the high place', ref: '1 Kings 3:4', copy: 'Solomon offers a thousand burnt offerings at Gibeon.', miles: 6 },
+      { label: 'A dream at night', ref: '1 Kings 3:5', copy: 'God says, "Ask what I shall give you."', miles: 0 },
+      { label: 'A listening heart', ref: '1 Kings 3:9', copy: 'Solomon asks for wisdom to govern and discern good from evil.', miles: 0 },
+      { label: 'Back before the ark', ref: '1 Kings 3:15', copy: 'He returns to Jerusalem and offers offerings before the ark.', miles: 6 }
+    ]
+  },
+  {
+    id: 'elijah-carmel-jezreel',
+    title: 'Elijah Outruns the Rain',
+    subtitle: 'From the top of Carmel ahead of Ahab’s chariot to Jezreel',
+    certainty: 'Approximate route',
+    refs: [{ book: '1KI', chFrom: 18, chTo: 18 }],
+    distance: 17,
+    mode: 'Running on foot',
+    days: 'A single afternoon',
+    modern: 'Mount Carmel across the Jezreel valley to Jezreel',
+    note: 'Mount Carmel and Jezreel are securely located; the running route crosses the valley.',
+    sources: [
+      'Elijah bows to the ground at the top of Carmel and prays for rain (1 Kings 18:42).',
+      'A cloud the size of a hand rises from the sea (1 Kings 18:44).',
+      'The hand of the Lord empowers Elijah to outrun Ahab to Jezreel (1 Kings 18:46).'
+    ],
+    points: [
+      { ancient: 'Mount Carmel', modern: 'Mount Carmel, Israel', x: 16, y: 25.5, lat: 32.73, lon: 35.05 },
+      { ancient: 'Jezreel', modern: 'Tel Yizre’el', x: 84, y: 74.5, lat: 32.56, lon: 35.33 }
+    ],
+    steps: [
+      { label: 'Praying for rain', ref: '1 Kings 18:42', copy: 'Elijah crouches with his face between his knees.', miles: 0 },
+      { label: 'A cloud like a hand', ref: '1 Kings 18:44', copy: 'His servant sees a small cloud rising from the sea.', miles: 0 },
+      { label: 'The sky goes black', ref: '1 Kings 18:45', copy: 'A great rain comes as Ahab rides for Jezreel.', miles: 8 },
+      { label: 'Outrunning the chariot', ref: '1 Kings 18:46', copy: 'Elijah runs ahead of Ahab all the way to Jezreel.', miles: 9 }
+    ]
+  },
+  {
+    id: 'rehoboam-shechem',
+    title: 'The Kingdom Divides',
+    subtitle: 'Rehoboam goes up to Shechem and Israel breaks away',
+    certainty: 'Well attested',
+    refs: [{ book: '1KI', chFrom: 12, chTo: 12 }],
+    distance: 30,
+    mode: 'Royal journey',
+    days: 'A few days',
+    modern: 'Jerusalem north to Shechem',
+    note: 'Jerusalem and Shechem are securely located on the central ridge route.',
+    sources: [
+      'All Israel comes to Shechem to make Rehoboam king (1 Kings 12:1).',
+      'They ask him to lighten the heavy yoke of his father (1 Kings 12:4).',
+      'When he answers harshly, Israel departs to their tents (1 Kings 12:16).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 46.6, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 53.4, y: 16, lat: 32.21, lon: 35.28 }
+    ],
+    steps: [
+      { label: 'Up to Shechem', ref: '1 Kings 12:1', copy: 'Rehoboam goes to Shechem, where all Israel has gathered.', miles: 20 },
+      { label: 'Lighten the yoke', ref: '1 Kings 12:4', copy: 'The people ask him to ease the heavy service of Solomon.', miles: 0 },
+      { label: 'A harsher answer', ref: '1 Kings 12:14', copy: 'He threatens to make their yoke heavier still.', miles: 0 },
+      { label: 'To your tents', ref: '1 Kings 12:16', copy: 'Israel cries, "To your tents!" and rejects the house of David.', miles: 10 }
+    ]
+  },
+  {
+    id: 'josiah-megiddo',
+    title: 'Josiah at Megiddo',
+    subtitle: 'Out to meet Pharaoh Neco at the pass of Megiddo',
+    certainty: 'Approximate route',
+    refs: [{ book: '2KI', chFrom: 23, chTo: 23 }],
+    distance: 55,
+    mode: 'Army on the march',
+    days: 'A few days north',
+    modern: 'Jerusalem up the central route to the Megiddo pass',
+    note: 'Megiddo guards a key pass on the international highway; Josiah dies there meeting Neco.',
+    sources: [
+      'Pharaoh Neco marches up; Josiah goes out to meet him (2 Kings 23:29).',
+      'Neco kills Josiah at Megiddo when they meet (2 Kings 23:29).',
+      'His servants carry him dead in a chariot to Jerusalem (2 Kings 23:30).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 51.8, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Megiddo', modern: 'Tel Megiddo, Israel', x: 48.2, y: 16, lat: 32.58, lon: 35.18 }
+    ],
+    steps: [
+      { label: 'Out to meet Neco', ref: '2 Kings 23:29', copy: 'Josiah marches north to confront Pharaoh at Megiddo.', miles: 50 },
+      { label: 'Killed at the pass', ref: '2 Kings 23:29', copy: 'Neco kills him as soon as they meet at Megiddo.', miles: 0 },
+      { label: 'Carried home', ref: '2 Kings 23:30', copy: 'His servants bring his body in a chariot back to Jerusalem.', miles: 50 }
+    ]
+  },
+  {
+    id: 'ezra-return',
+    title: 'Ezra Returns from Babylon',
+    subtitle: 'Up from Babylon with the exiles to Jerusalem',
+    certainty: 'Approximate route',
+    refs: [{ book: 'EZR', chFrom: 7, chTo: 8 }],
+    distance: 900,
+    mode: 'Caravan of returning exiles',
+    days: 'About four months (Ezra 7:9)',
+    modern: 'Iraq up the Fertile Crescent to Jerusalem',
+    note: 'The caravan followed the watered arc of the Fertile Crescent rather than the direct desert.',
+    sources: [
+      'Ezra sets out from Babylon on the first day of the first month (Ezra 7:9).',
+      'He proclaims a fast at the river Ahava to seek a safe journey (Ezra 8:21).',
+      'They come to Jerusalem in the fifth month, the good hand of God upon them (Ezra 7:9; 8:32).'
+    ],
+    points: [
+      { ancient: 'Babylon', modern: 'Hillah, Iraq', x: 84, y: 49.1, lat: 32.54, lon: 44.42 },
+      { ancient: 'River Ahava', modern: 'Canal near Babylon', x: 80.2, y: 44.2, lat: 33.1, lon: 43.9 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 55.8, lat: 31.78, lon: 35.23 }
+    ],
+    steps: [
+      { label: 'Out of Babylon', ref: 'Ezra 7:9', copy: 'On the first day of the first month the journey from Babylon begins.', miles: 60 },
+      { label: 'A fast at Ahava', ref: 'Ezra 8:21', copy: 'Ezra calls a fast to seek from God a safe road.', miles: 0 },
+      { label: 'Delivered on the way', ref: 'Ezra 8:31', copy: 'God’s hand protects them from enemies and ambush along the road.', miles: 800 },
+      { label: 'Arrival in Jerusalem', ref: 'Ezra 8:32', copy: 'They come to Jerusalem and rest three days.', miles: 40 }
+    ]
+  },
+  {
+    id: 'jesus-nazareth-rejected',
+    title: 'Rejected at Nazareth',
+    subtitle: 'From his hometown synagogue down to Capernaum',
+    certainty: 'Approximate route',
+    refs: [{ book: 'LUK', chFrom: 4, chTo: 4 }],
+    distance: 20,
+    mode: 'Walking',
+    days: 'A short journey',
+    modern: 'Nazareth in the hills down to Capernaum on the lake',
+    note: 'Nazareth sits on a hill; Capernaum is on the lakeshore, so the trip is literally "down."',
+    sources: [
+      'Jesus comes to Nazareth and reads in the synagogue on the Sabbath (Luke 4:16).',
+      'The crowd is enraged and drives him to the brow of the hill (Luke 4:28-29).',
+      'He goes down to Capernaum and teaches there (Luke 4:31).'
+    ],
+    points: [
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 16, y: 76.5, lat: 32.7, lon: 35.3 },
+      { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 84, y: 23.5, lat: 32.88, lon: 35.575 }
+    ],
+    steps: [
+      { label: 'Reading the scroll', ref: 'Luke 4:16-19', copy: 'Jesus reads from Isaiah about good news to the poor.', miles: 0 },
+      { label: 'Fulfilled today', ref: 'Luke 4:21', copy: 'He says the Scripture is fulfilled in their hearing.', miles: 0 },
+      { label: 'Driven to the cliff', ref: 'Luke 4:29', copy: 'They take him to the brow of the hill to throw him down.', miles: 0 },
+      { label: 'Down to Capernaum', ref: 'Luke 4:31', copy: 'He goes down to Capernaum and teaches on the Sabbath.', miles: 20 }
+    ]
+  },
+  {
+    id: 'jesus-feeding-5000',
+    title: 'Feeding the Five Thousand',
+    subtitle: 'Across the lake to a solitary place and back over the water',
+    certainty: 'Approximate route',
+    refs: [{ book: 'MRK', chFrom: 6, chTo: 6 }],
+    distance: 12,
+    mode: 'By boat and on foot',
+    days: 'A single long day and night',
+    modern: 'The north end of the Sea of Galilee',
+    note: 'The solitary place is placed on the quiet northeast shore; the landing is at Gennesaret.',
+    sources: [
+      'They withdraw by boat to a solitary place to rest (Mark 6:31-32).',
+      'Five loaves and two fish feed the five thousand (Mark 6:41-44).',
+      'In the night Jesus walks on the sea and they land at Gennesaret (Mark 6:48, 53).'
+    ],
+    points: [
+      { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 50, y: 42.6, lat: 32.88, lon: 35.575 },
+      { ancient: 'Solitary place', modern: 'NE shore near Bethsaida', x: 84, y: 20.6, lat: 32.91, lon: 35.63 },
+      { ancient: 'Gennesaret', modern: 'Ginosar plain', x: 16, y: 79.4, lat: 32.83, lon: 35.52 }
+    ],
+    steps: [
+      { label: 'Away to rest', ref: 'Mark 6:31-32', copy: 'So many come and go that they leave by boat for a quiet place.', miles: 4 },
+      { label: 'Loaves and fish', ref: 'Mark 6:41-42', copy: 'He blesses five loaves and two fish, and all eat and are filled.', miles: 0 },
+      { label: 'Walking on the sea', ref: 'Mark 6:48', copy: 'In the fourth watch he comes to them walking on the water.', miles: 5 },
+      { label: 'Landing at Gennesaret', ref: 'Mark 6:53', copy: 'They cross over and moor at the shore of Gennesaret.', miles: 3 }
+    ]
+  },
+  {
+    id: 'jesus-decapolis-4000',
+    title: 'Feeding the Four Thousand',
+    subtitle: 'From Sidon through the Decapolis to the Sea of Galilee',
+    certainty: 'Approximate route',
+    refs: [{ book: 'MRK', chFrom: 7, chTo: 8 }],
+    distance: 70,
+    mode: 'Walking',
+    days: 'Several days, then three with the crowd',
+    modern: 'The Phoenician coast around to the eastern shore of Galilee',
+    note: 'Mark traces a wide circuit from Sidon through the Decapolis; Dalmanutha’s exact site is unknown.',
+    sources: [
+      'Jesus returns from Tyre through Sidon to the Sea of Galilee, in the Decapolis (Mark 7:31).',
+      'He heals a deaf man, saying "Ephphatha" (Mark 7:34).',
+      'Seven loaves feed four thousand, then he crosses to Dalmanutha (Mark 8:6-10).'
+    ],
+    points: [
+      { ancient: 'Sidon', modern: 'Saida, Lebanon', x: 35.8, y: 16, lat: 33.56, lon: 35.37 },
+      { ancient: 'Decapolis', modern: 'East of the Sea of Galilee', x: 64.2, y: 84, lat: 32.6, lon: 35.85 },
+      { ancient: 'Dalmanutha', modern: 'Western Sea of Galilee', x: 44.7, y: 69.8, lat: 32.8, lon: 35.52 }
+    ],
+    steps: [
+      { label: 'Through the Decapolis', ref: 'Mark 7:31', copy: 'He travels from Tyre by way of Sidon to the Sea of Galilee.', miles: 45 },
+      { label: 'Ephphatha', ref: 'Mark 7:34-35', copy: 'He looks up, sighs, and says "Be opened," and the man hears.', miles: 0 },
+      { label: 'Seven loaves', ref: 'Mark 8:6-8', copy: 'Four thousand eat from seven loaves and a few fish.', miles: 20 },
+      { label: 'Over to Dalmanutha', ref: 'Mark 8:10', copy: 'He gets into the boat and goes to the district of Dalmanutha.', miles: 5 }
+    ]
+  },
+  {
+    id: 'jesus-bethany-lazarus',
+    title: 'The Raising of Lazarus',
+    subtitle: 'From beyond the Jordan back to Bethany near Jerusalem',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JHN', chFrom: 11, chTo: 11 }],
+    distance: 20,
+    mode: 'Walking',
+    days: 'A few days’ delay, then the journey',
+    modern: 'The lower Jordan up to Bethany on the Mount of Olives',
+    note: 'Bethany beyond the Jordan and Bethany near Jerusalem are two different places about a day apart.',
+    sources: [
+      'Jesus is beyond the Jordan where John had baptized (John 10:40).',
+      'He decides to go back into Judea despite the danger (John 11:7-8).',
+      'He arrives to find Lazarus four days in the tomb and raises him (John 11:17, 43-44).'
+    ],
+    points: [
+      { ancient: 'Beyond the Jordan', modern: 'Lower Jordan (Bethany beyond)', x: 84, y: 40.3, lat: 31.84, lon: 35.55 },
+      { ancient: 'Bethany', modern: 'Al-Eizariya, West Bank', x: 16, y: 59.7, lat: 31.77, lon: 35.26 }
+    ],
+    steps: [
+      { label: 'Beyond the Jordan', ref: 'John 10:40-42', copy: 'Many come to him there and believe.', miles: 0 },
+      { label: 'Back to Judea', ref: 'John 11:7', copy: 'He tells the disciples, "Let us go to Judea again."', miles: 18 },
+      { label: 'Four days in the tomb', ref: 'John 11:17', copy: 'He arrives to find Lazarus already buried four days.', miles: 0 },
+      { label: 'Lazarus, come out', ref: 'John 11:43-44', copy: 'He calls in a loud voice and the dead man comes out.', miles: 0 }
+    ]
+  },
+  {
+    id: 'paul-macedonian-call',
+    title: 'The Call to Macedonia',
+    subtitle: 'From Troas across the sea to Philippi',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 16, chTo: 16 }],
+    distance: 150,
+    mode: 'Sailing and walking',
+    days: 'A few days by sea',
+    modern: 'Northwest Turkey across the north Aegean into Greece',
+    note: 'Luke’s "we" begins here; the sea route by Samothrace to Neapolis is precisely given.',
+    sources: [
+      'A vision of a man of Macedonia calls Paul over to help (Acts 16:9).',
+      'They sail from Troas straight to Samothrace and then Neapolis (Acts 16:11).',
+      'They go on to Philippi, a leading city of the district (Acts 16:12).'
+    ],
+    points: [
+      { ancient: 'Troas', modern: 'Dalyan, Turkey', x: 84, y: 80.1, lat: 39.75, lon: 26.16 },
+      { ancient: 'Samothrace', modern: 'Samothraki, Greece', x: 61.1, y: 45.2, lat: 40.48, lon: 25.53 },
+      { ancient: 'Neapolis', modern: 'Kavala, Greece', x: 20.4, y: 23.3, lat: 40.94, lon: 24.41 },
+      { ancient: 'Philippi', modern: 'Filippoi, Greece', x: 16, y: 19.9, lat: 41.01, lon: 24.29 }
+    ],
+    steps: [
+      { label: 'The Macedonian vision', ref: 'Acts 16:9', copy: 'A man pleads, "Come over to Macedonia and help us."', miles: 0 },
+      { label: 'Across to Neapolis', ref: 'Acts 16:11', copy: 'They make a straight run by Samothrace to Neapolis.', miles: 120 },
+      { label: 'On to Philippi', ref: 'Acts 16:12', copy: 'They reach Philippi and stay some days.', miles: 10 },
+      { label: 'Lydia believes', ref: 'Acts 16:14-15', copy: 'The Lord opens Lydia’s heart and her household is baptized.', miles: 0 }
+    ]
+  },
+  {
+    id: 'paul-athens-areopagus',
+    title: 'Paul at the Areopagus',
+    subtitle: 'From Berea down to Athens and on to Corinth',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 17, chTo: 18 }],
+    distance: 300,
+    mode: 'Sailing and walking',
+    days: 'Several days',
+    modern: 'Northern Greece down to Athens and Corinth',
+    note: 'Berea, Athens, and Corinth are securely located; Paul travels partly by sea to Athens.',
+    sources: [
+      'The brothers send Paul away to Berea by night (Acts 17:10).',
+      'Those who escort Paul bring him as far as Athens (Acts 17:15).',
+      'He reasons in the Areopagus, then goes to Corinth (Acts 17:22; 18:1).'
+    ],
+    points: [
+      { ancient: 'Berea', modern: 'Veria, Greece', x: 34.4, y: 16, lat: 40.52, lon: 22.2 },
+      { ancient: 'Athens', modern: 'Athens, Greece', x: 65.6, y: 82.9, lat: 37.98, lon: 23.73 },
+      { ancient: 'Corinth', modern: 'Corinth, Greece', x: 49.3, y: 84, lat: 37.94, lon: 22.93 }
+    ],
+    steps: [
+      { label: 'Away by night', ref: 'Acts 17:10', copy: 'The believers send Paul and Silas off to Berea.', miles: 0 },
+      { label: 'Brought to Athens', ref: 'Acts 17:15', copy: 'His escorts conduct him all the way to Athens.', miles: 190 },
+      { label: 'On Mars Hill', ref: 'Acts 17:22-23', copy: 'He stands in the Areopagus and proclaims the unknown God.', miles: 0 },
+      { label: 'On to Corinth', ref: 'Acts 18:1', copy: 'After this he leaves Athens and goes to Corinth.', miles: 50 }
+    ]
+  },
+  {
+    id: 'saul-jerusalem-to-tarsus',
+    title: 'Saul Sent to Tarsus',
+    subtitle: 'From Jerusalem down to Caesarea and home to Tarsus',
+    certainty: 'Approximate route',
+    refs: [{ book: 'ACT', chFrom: 9, chTo: 9 }],
+    distance: 520,
+    mode: 'Walking and sailing',
+    days: 'Many days',
+    modern: 'Jerusalem to the coast and north to southern Turkey',
+    note: 'After his conversion the new believer is sent home to Tarsus for safety.',
+    sources: [
+      'Saul comes to Jerusalem and tries to join the disciples (Acts 9:26).',
+      'When the Hellenists seek to kill him, the brothers act (Acts 9:29).',
+      'They bring him down to Caesarea and send him off to Tarsus (Acts 9:30).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 51.9, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 48.1, y: 74.5, lat: 32.5, lon: 34.89 },
+      { ancient: 'Tarsus', modern: 'Tarsus, Turkey', x: 48.3, y: 16, lat: 36.92, lon: 34.9 }
+    ],
+    steps: [
+      { label: 'Trying to join', ref: 'Acts 9:26', copy: 'The disciples are afraid of him, not believing he is a disciple.', miles: 0 },
+      { label: 'A plot to kill', ref: 'Acts 9:29', copy: 'He disputes with the Hellenists, who try to kill him.', miles: 60 },
+      { label: 'Down to Caesarea', ref: 'Acts 9:30', copy: 'The brothers bring him to the coast at Caesarea.', miles: 0 },
+      { label: 'Home to Tarsus', ref: 'Acts 9:30', copy: 'From there they send him off to his home city.', miles: 460 }
+    ]
+  },
+  {
+    id: 'paul-jerusalem-council',
+    title: 'The Jerusalem Council',
+    subtitle: 'From Antioch up to the council and back with the letter',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 15, chTo: 15 }],
+    distance: 300,
+    mode: 'Walking the coastal route',
+    days: 'Many days each way',
+    modern: 'Antioch down the Levant coast to Jerusalem',
+    note: 'Paul and Barnabas pass through Phoenicia and Samaria on the way to the Jerusalem council.',
+    sources: [
+      'Paul and Barnabas are sent up to Jerusalem about the question (Acts 15:2).',
+      'They pass through Phoenicia and Samaria, telling of the conversions (Acts 15:3).',
+      'The council writes a letter, and they return to Antioch (Acts 15:30-31).'
+    ],
+    points: [
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 55.9, y: 16, lat: 36.2, lon: 36.16 },
+      { ancient: 'Phoenicia', modern: 'Lebanese coast', x: 46.2, y: 57.5, lat: 33.5, lon: 35.4 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 44.1, y: 84, lat: 31.78, lon: 35.23 }
+    ],
+    steps: [
+      { label: 'Sent to Jerusalem', ref: 'Acts 15:2', copy: 'The church appoints Paul and Barnabas to take the question up.', miles: 0 },
+      { label: 'Through Phoenicia', ref: 'Acts 15:3', copy: 'They report the conversion of the Gentiles, bringing great joy.', miles: 200 },
+      { label: 'Peter speaks', ref: 'Acts 15:7-11', copy: 'Peter recalls how God gave the Spirit to the Gentiles.', miles: 100 },
+      { label: 'Back with the letter', ref: 'Acts 15:30-31', copy: 'They deliver the letter at Antioch, and the people rejoice.', miles: 0 }
+    ]
+  },
+  {
+    id: 'ascension-from-bethany',
+    title: 'The Ascension',
+    subtitle: 'Out to Bethany on the Mount of Olives and back to the city',
+    certainty: 'Well attested',
+    refs: [{ book: 'LUK', chFrom: 24, chTo: 24 }],
+    distance: 4,
+    mode: 'Walking',
+    days: 'A single day',
+    modern: 'Jerusalem out to the Mount of Olives',
+    note: 'Bethany lies on the eastern slope of the Mount of Olives, a Sabbath day’s walk from the city.',
+    sources: [
+      'Jesus leads them out as far as Bethany and blesses them (Luke 24:50).',
+      'As he blesses them he is carried up into heaven (Luke 24:51).',
+      'They return to Jerusalem from the Mount of Olives with great joy (Acts 1:12; Luke 24:52).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 36.7, lat: 31.78, lon: 35.23 },
+      { ancient: 'Bethany (Mount of Olives)', modern: 'Mount of Olives', x: 84, y: 63.3, lat: 31.77, lon: 35.26 }
+    ],
+    steps: [
+      { label: 'Led out to Bethany', ref: 'Luke 24:50', copy: 'He lifts his hands and blesses them.', miles: 2 },
+      { label: 'Carried up', ref: 'Luke 24:51', copy: 'While blessing them he parts from them and is taken to heaven.', miles: 0 },
+      { label: 'He will return', ref: 'Acts 1:11', copy: 'Two men say he will come back as they saw him go.', miles: 0 },
+      { label: 'Back with joy', ref: 'Luke 24:52-53', copy: 'They return to Jerusalem and bless God in the temple.', miles: 2 }
+    ]
   }
 ];
 
@@ -11945,24 +12500,62 @@ const JOURNEY_MODERN_CONTEXT_PLACES = [
   { name: 'Saudi Arabia', capital: 'Riyadh', lat: 24.71, lon: 46.67 }
 ];
 
+// Modern reference points. Coordinates are the visual CENTROID of each feature
+// (not an edge) so the label reads correctly at every zoom level on the real
+// map. Seas/regions sit over the middle of the feature; cities are point sites.
 const JOURNEY_MODERN_LANDMARKS = [
-  { name: 'Mediterranean Sea', kind: 'sea', lat: 34.20, lon: 25.80 },
-  { name: 'Eastern Mediterranean', kind: 'sea', lat: 35.00, lon: 32.20 },
-  { name: 'Nile Delta', kind: 'region', lat: 30.80, lon: 31.20 },
-  { name: 'Sinai Peninsula', kind: 'region', lat: 29.50, lon: 33.80 },
-  { name: 'Red Sea', kind: 'sea', lat: 27.70, lon: 34.60 },
-  { name: 'Dead Sea', kind: 'sea', lat: 31.50, lon: 35.50 },
-  { name: 'Jordan River', kind: 'river', lat: 32.05, lon: 35.56 },
+  // ── Seas, lakes & rivers (centroids) ──
+  { name: 'Mediterranean Sea', kind: 'sea', lat: 34.00, lon: 24.50 },
+  { name: 'Eastern Mediterranean', kind: 'sea', lat: 34.10, lon: 31.40 },
+  { name: 'Aegean Sea', kind: 'sea', lat: 38.40, lon: 25.00 },
+  { name: 'Red Sea', kind: 'sea', lat: 27.20, lon: 35.30 },
+  { name: 'Gulf of Aqaba', kind: 'sea', lat: 28.80, lon: 34.65 },
+  { name: 'Dead Sea', kind: 'sea', lat: 31.30, lon: 35.47 },
   { name: 'Sea of Galilee', kind: 'lake', lat: 32.82, lon: 35.59 },
-  { name: 'Euphrates River', kind: 'river', lat: 35.20, lon: 40.70 },
-  { name: 'Tigris River', kind: 'river', lat: 33.70, lon: 43.70 },
+  { name: 'Jordan River', kind: 'river', lat: 32.20, lon: 35.57 },
+  { name: 'Nile River', kind: 'river', lat: 28.20, lon: 30.80 },
+  { name: 'Nile Delta', kind: 'region', lat: 30.90, lon: 31.20 },
+  { name: 'Euphrates River', kind: 'river', lat: 35.10, lon: 40.10 },
+  { name: 'Tigris River', kind: 'river', lat: 34.40, lon: 43.30 },
+  // ── Islands ──
   { name: 'Cyprus', kind: 'island', lat: 35.05, lon: 33.20 },
   { name: 'Crete', kind: 'island', lat: 35.20, lon: 24.90 },
   { name: 'Malta', kind: 'island', lat: 35.90, lon: 14.40 },
-  { name: 'Aegean Sea', kind: 'sea', lat: 38.80, lon: 25.20 },
-  { name: 'Taurus Mountains', kind: 'region', lat: 37.20, lon: 32.50 },
-  { name: 'Arabian Desert', kind: 'region', lat: 29.00, lon: 40.50 },
-  { name: 'Anatolia', kind: 'region', lat: 38.50, lon: 32.00 }
+  { name: 'Rhodes', kind: 'island', lat: 36.20, lon: 28.00 },
+  // ── Regions, deserts & mountains ──
+  { name: 'Sinai Peninsula', kind: 'region', lat: 29.50, lon: 33.80 },
+  { name: 'Negev Desert', kind: 'region', lat: 30.60, lon: 34.90 },
+  { name: 'Arabian Desert', kind: 'region', lat: 28.50, lon: 40.00 },
+  { name: 'Syrian Desert', kind: 'region', lat: 33.20, lon: 38.50 },
+  { name: 'Mesopotamia', kind: 'region', lat: 34.40, lon: 42.20 },
+  { name: 'Anatolia', kind: 'region', lat: 38.60, lon: 32.50 },
+  { name: 'Taurus Mountains', kind: 'mountain', lat: 37.30, lon: 33.80 },
+  { name: 'Mount Hermon', kind: 'mountain', lat: 33.42, lon: 35.86 },
+  { name: 'Mount Sinai', kind: 'mountain', lat: 28.54, lon: 33.97 },
+  { name: 'Galilee', kind: 'region', lat: 32.90, lon: 35.42 },
+  { name: 'Samaria', kind: 'region', lat: 32.30, lon: 35.25 },
+  { name: 'Judea', kind: 'region', lat: 31.55, lon: 35.10 },
+  { name: 'Gilead', kind: 'region', lat: 32.15, lon: 35.80 },
+  { name: 'Lebanon Mtns', kind: 'mountain', lat: 33.80, lon: 35.85 },
+  // ── Modern cities (orientation points) ──
+  { name: 'Jerusalem', kind: 'city', lat: 31.78, lon: 35.23 },
+  { name: 'Tel Aviv', kind: 'city', lat: 32.07, lon: 34.78 },
+  { name: 'Gaza', kind: 'city', lat: 31.50, lon: 34.47 },
+  { name: 'Beersheba', kind: 'city', lat: 31.25, lon: 34.79 },
+  { name: 'Amman', kind: 'city', lat: 31.95, lon: 35.93 },
+  { name: 'Damascus', kind: 'city', lat: 33.51, lon: 36.29 },
+  { name: 'Beirut', kind: 'city', lat: 33.89, lon: 35.50 },
+  { name: 'Cairo', kind: 'city', lat: 30.04, lon: 31.24 },
+  { name: 'Alexandria', kind: 'city', lat: 31.20, lon: 29.92 },
+  { name: 'Antakya (Antioch)', kind: 'city', lat: 36.20, lon: 36.16 },
+  { name: 'Aleppo', kind: 'city', lat: 36.20, lon: 37.16 },
+  { name: 'Mosul (Nineveh)', kind: 'city', lat: 36.34, lon: 43.13 },
+  { name: 'Baghdad', kind: 'city', lat: 33.31, lon: 44.36 },
+  { name: 'Athens', kind: 'city', lat: 37.98, lon: 23.73 },
+  { name: 'Rome', kind: 'city', lat: 41.90, lon: 12.50 },
+  { name: 'Istanbul', kind: 'city', lat: 41.01, lon: 28.98 },
+  { name: 'Izmir (Smyrna)', kind: 'city', lat: 38.42, lon: 27.14 },
+  { name: 'Nicosia', kind: 'city', lat: 35.17, lon: 33.36 }
 ];
 
 /* Real map (MapLibre + self-hosted Protomaps tiles) — optional accurate renderer.
@@ -12064,7 +12657,7 @@ function _journeyMountGL(journey) {
       mode: _journeyMode,
       pmtilesUrl: pmtilesUrl,
       labelFor: _journeyLabelFor,
-      landmarks: _journeyModernLandmarks(journey, 4),
+      landmarks: _journeyModernLandmarks(journey, 7),
       onError: (err) => {
         _journeySetDiag('tile/style error: ' + _journeyErrText(err));
         _journeyGLFallback();
@@ -12209,21 +12802,58 @@ function _journeyModernLandmarks(journey, limit = 5) {
         ? Math.min(...routePts.map(r => Math.abs(p.lat - r.lat) + Math.abs(p.lon - r.lon)))
         : 0;
       const centerDistance = Math.abs(p.lat - centerLat) + Math.abs(p.lon - centerLon);
-      return { ...p, score: routeDistance * 1.8 + centerDistance * 0.35 };
+      return { ...p, routeDistance, score: routeDistance * 1.8 + centerDistance * 0.35 };
     })
+    // Drop a landmark that sits essentially on top of a route stop — the route
+    // already labels that place, so a second label would just collide.
+    .filter(p => p.kind === 'city' ? p.routeDistance > 0.18 : p.routeDistance > 0.04)
     .sort((a, b) => a.score - b.score)
     .slice(0, limit);
 }
 
+// Project a landmark onto the schematic SVG using the SAME transform the route
+// points were baked with (aspect-preserving, equal scale on both axes). We
+// recover that transform from the journey's own points — which carry both
+// lat/lon and x/y — so landmarks line up with the route at every zoom instead
+// of drifting (the old independent stretch put e.g. the Dead Sea off-mark).
+function _journeyFitProjection(journey) {
+  const pts = (journey?.points || []).filter(p =>
+    typeof p.lat === 'number' && typeof p.lon === 'number' &&
+    typeof p.x === 'number' && typeof p.y === 'number');
+  if (pts.length < 2) return null;
+  const n = pts.length;
+  const mean = (sel) => pts.reduce((s, p) => s + sel(p), 0) / n;
+  const meanLat = mean(p => p.lat), meanLon = mean(p => p.lon);
+  const meanX = mean(p => p.x), meanY = mean(p => p.y);
+  // slope of a least-squares line out -> in for one axis
+  const slope = (inSel, outSel, meanIn, meanOut) => {
+    let num = 0, den = 0;
+    for (const p of pts) { const di = inSel(p) - meanIn; num += di * (outSel(p) - meanOut); den += di * di; }
+    return den > 1e-9 ? num / den : null;
+  };
+  let ay = slope(p => p.lat, p => p.y, meanLat, meanY); // y per degree lat (negative: north is up)
+  let ax = slope(p => p.lon, p => p.x, meanLon, meanX); // x per degree lon
+  const cos = Math.cos(meanLat * Math.PI / 180) || 1;
+  // The generator uses one shared scale with cos-correction on longitude. If one
+  // axis is degenerate (a near-straight N–S or E–W route), derive it from the other.
+  if (ay == null && ax == null) return null;
+  if (ay == null) ay = -Math.abs(ax) / (cos || 1);
+  if (ax == null) ax = Math.abs(ay) * cos;
+  const bx = meanX - ax * meanLon;
+  const by = meanY - ay * meanLat;
+  return { ax, bx, ay, by };
+}
+
 function _journeyProjectLandmark(journey, landmark) {
-  const b = _journeyGeoBounds(journey, 0.8, 1.0);
-  if (!b || b.maxLat === b.minLat || b.maxLon === b.minLon) return null;
-  const x = 10 + ((landmark.lon - b.minLon) / (b.maxLon - b.minLon)) * 80;
-  const y = 90 - ((landmark.lat - b.minLat) / (b.maxLat - b.minLat)) * 80;
+  const proj = _journeyFitProjection(journey);
+  if (!proj) return null;
+  const x = proj.ax * landmark.lon + proj.bx;
+  const y = proj.ay * landmark.lat + proj.by;
+  if (!isFinite(x) || !isFinite(y)) return null;
   return {
     ...landmark,
-    x: Math.min(92, Math.max(8, x)),
-    y: Math.min(92, Math.max(8, y))
+    x: Math.min(95, Math.max(5, x)),
+    y: Math.min(95, Math.max(5, y))
   };
 }
 
@@ -12272,7 +12902,7 @@ function _journeyPolyline(points) {
 function _journeyRenderMap(journey) {
   const points = journey.points || [];
   const landmarkLabels = _journeyMode === 'modern'
-    ? _journeyModernLandmarks(journey, 4)
+    ? _journeyModernLandmarks(journey, 5)
         .map(l => _journeyProjectLandmark(journey, l))
         .filter(Boolean)
         .map(l => `<g class="journey-map-landmark journey-map-landmark-${_journeyEsc(l.kind)}">
@@ -12677,7 +13307,7 @@ function _journeyPeekMountGLLegacy(journey, mode = _journeyPeekMode) {
       mode,
       pmtilesUrl: _journeyResolvePmtiles(),
       labelFor: _journeyLabelFor,
-      landmarks: _journeyModernLandmarks(journey, 4),
+      landmarks: _journeyModernLandmarks(journey, 5),
       onError: (err) => { wrap.classList.remove('gl-mounting', 'gl-ready'); _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err)); }
     });
   }).then((map) => {
@@ -12719,7 +13349,7 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
       mode,
       pmtilesUrl: _journeyResolvePmtiles(),
       labelFor: _journeyLabelFor,
-      landmarks: _journeyModernLandmarks(journey, 4),
+      landmarks: _journeyModernLandmarks(journey, 5),
       onError: (err) => {
         wrap.classList.remove('gl-mounting', 'gl-ready');
         _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err));
@@ -24459,7 +25089,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.301";
+const APP_VERSION = "3.0.302";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -24480,6 +25110,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.302 &mdash; 20 more Journeys + clearer maps</div>
+<ul>
+  <li><strong>20 new journeys</strong> &mdash; Added 11 more Old Testament and 9 New Testament routes &mdash; bringing the collection to 71 journeys, each with the full map, Scripture steps, and source notes.</li>
+  <li><strong>More modern landmarks</strong> &mdash; Modern maps now show many more reference points, including modern cities (Jerusalem, Cairo, Damascus, Amman, Athens, Rome and more) alongside seas, rivers, deserts, and regions, so it is easier to see where everything is.</li>
+  <li><strong>Accurate at any zoom</strong> &mdash; Landmark labels now sit on the true center of each feature, so places like the Dead Sea line up with the map even when zoomed far out.</li>
+  <li><strong>Old Testament</strong> &mdash; Abram in Egypt, Isaac in Gerar, Jacob at Peniel, Moses returning to Egypt, Saul seeking the donkeys, David recovering at Ziklag, Solomon at Gibeon, Elijah outrunning the rain, the kingdom dividing at Shechem, Josiah at Megiddo, and Ezra's return.</li>
+  <li><strong>New Testament</strong> &mdash; Rejected at Nazareth, the feeding of the five thousand, the feeding of the four thousand, the raising of Lazarus, the call to Macedonia, Paul at the Areopagus, Saul sent to Tarsus, the Jerusalem council, and the Ascension.</li>
+</ul>
 <div class="un-version-label">v3.0.301 &mdash; 15 more Bible Journeys</div>
 <ul>
   <li><strong>15 new journeys</strong> &mdash; Added 8 more Old Testament and 7 New Testament routes, each with the full map: ancient and modern places, distance, travel time, route certainty, Scripture steps, and source notes &mdash; bringing the collection to 51 journeys.</li>

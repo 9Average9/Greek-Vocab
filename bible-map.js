@@ -236,7 +236,8 @@
     ((state.opts && state.opts.landmarks) || []).forEach(function (p) {
       if (typeof p.lon !== 'number' || typeof p.lat !== 'number') return;
       var el = document.createElement('div');
-      el.className = 'bible-map-landmark ' + (state.mode === 'modern' ? 'visible' : '');
+      el.className = 'bible-map-landmark landmark-' + (p.kind || 'place') +
+        (state.mode === 'modern' ? ' visible' : '');
       el.innerHTML = '<span></span><em>' + _escape(p.name || '') + '</em>';
       var marker = new maplibregl.Marker({ element: el, anchor: 'center', offset: [0, 0] })
         .setLngLat([p.lon, p.lat]).addTo(map);
