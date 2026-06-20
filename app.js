@@ -11555,7 +11555,6 @@ function openJourneyPeek(book, chapter, verse) {
     <div class="journey-peek-modern" id="journeyPeekModernContext" style="${_journeyPeekMode === 'modern' && _journeyModernContext(journey) ? '' : 'display:none'}"><strong>Nearby today</strong><span>${_journeyEsc(_journeyModernContext(journey))}</span></div>
     ${step ? `<p class="journey-peek-step"><strong>${_journeyEsc(step.label)}</strong>${_journeyEsc(step.copy)}</p>` : `<p class="journey-peek-step">${_journeyEsc(journey.subtitle)}</p>`}
     <button class="journey-peek-open" onclick="openJourneyFromPeek('${_journeyEsc(journey.id)}')"><span class="material-symbols-outlined">explore</span>Open full journey</button>
-    <div class="journey-diag" id="journeyPeekDiag"></div>
   </div>`;
   document.body.appendChild(ov);
   requestAnimationFrame(() => {
@@ -11579,7 +11578,7 @@ function _journeyPeekSetDiag(status) {
 // Load the real tile map into the peek. Mirrors the (working) journeys-page
 // mount: render into the sized host, then reveal + resize on success. The
 // schematic underneath stays as the instant placeholder / offline fallback.
-function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
+function _journeyPeekMountGLLegacy(journey, mode = _journeyPeekMode) {
   const wrap = document.getElementById('journeyPeekMap');
   const host = document.getElementById('journeyPeekMapGL');
   if (!wrap || !host) return;
@@ -11617,6 +11616,59 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
     }
   }).catch((e) => {
     wrap.classList.remove('gl-mounting');
+    _journeyPeekSetDiag('could not start: ' + _journeyErrText(e));
+  });
+}
+
+function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
+  const wrap = document.getElementById('journeyPeekMap');
+  const host = document.getElementById('journeyPeekMapGL');
+  if (!wrap || !host) return;
+  wrap.classList.remove('gl-ready', 'gl-mounting');
+  if (!_bibleMapConfigured()) { _journeyPeekSetDiag('real map off (no tiles)'); return; }
+  if (navigator.onLine === false) { _journeyPeekSetDiag('needs internet (offline)'); return; }
+  if (!(journey.points || []).some(p => typeof p.lat === 'number')) { _journeyPeekSetDiag('no coordinates'); return; }
+
+  wrap.classList.add('gl-mounting');
+  _journeyPeekSetDiag('loading real map...');
+  _ensureBibleMapLibs().then(() => {
+    if (!document.getElementById('journeyPeekMap')) return null;
+    if (!window.BibleMap) throw new Error('module not loaded');
+    if (!window.BibleMap.supported()) throw new Error('WebGL not supported');
+    return window.BibleMap.render(host, journey, {
+      mode,
+      pmtilesUrl: _journeyResolvePmtiles(),
+      labelFor: _journeyLabelFor,
+      onError: (err) => {
+        wrap.classList.remove('gl-mounting', 'gl-ready');
+        _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err));
+      }
+    });
+  }).then((map) => {
+    if (!map || !document.getElementById('journeyPeekMap')) {
+      wrap.classList.remove('gl-mounting');
+      return;
+    }
+    const revealIfSized = () => {
+      try { map.resize(); map.triggerRepaint(); } catch (e) {}
+      const hostRect = host.getBoundingClientRect();
+      const c = host.querySelector('canvas');
+      const dim = c ? (c.clientWidth + 'x' + c.clientHeight) : 'no canvas';
+      const hostReady = hostRect.width > 0 && hostRect.height > 0;
+      const canvasReady = !!(c && c.clientWidth > 0 && c.clientHeight > 0);
+      if (hostReady && canvasReady) {
+        wrap.classList.remove('gl-mounting');
+        wrap.classList.add('gl-ready');
+        _journeyPeekSetDiag('real map ON · ' + dim);
+      } else {
+        wrap.classList.remove('gl-ready');
+        _journeyPeekSetDiag('map fallback · host ' + Math.round(hostRect.width) + 'x' + Math.round(hostRect.height) + ' · canvas ' + dim);
+      }
+    };
+    requestAnimationFrame(revealIfSized);
+    setTimeout(revealIfSized, 220);
+  }).catch((e) => {
+    wrap.classList.remove('gl-mounting', 'gl-ready');
     _journeyPeekSetDiag('could not start: ' + _journeyErrText(e));
   });
 }
@@ -23327,7 +23379,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.296";
+const APP_VERSION = "3.0.297";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23348,6 +23400,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.297 &mdash; Rhema mini-map tile fix</div>
+<ul>
+  <li><strong>Real tiles in Rhema</strong> &mdash; Fixed the Journey mini-map host sizing inside the verse popup so MapLibre keeps a real height in PWA/modal rendering.</li>
+  <li><strong>No blank popup</strong> &mdash; The schematic route now stays visible while tiles load, and the app only switches to the real map after the map host and canvas are both properly sized.</li>
+  <li><strong>Cleaner popup</strong> &mdash; Removed the temporary mini-map diagnostic text from the normal Rhema view.</li>
+</ul>
 <div class="un-version-label">v3.0.296 &mdash; Mini-map paint fix</div>
 <ul>
   <li><strong>Mini-map rendering</strong> &mdash; The popup map loaded but drew a blank canvas on iPhone; now it keeps its draw buffer and forces a repaint so the real map actually shows.</li>
