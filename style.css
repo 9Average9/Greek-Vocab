@@ -16532,8 +16532,19 @@ body.dark .rhema-reader-map-btn { color: #6fd6a6; }
 }
 .journey-peek-title { display: block; font-size: 1.18rem; font-weight: 950; line-height: 1.1; margin-top: 2px; padding-right: 38px; }
 .journey-peek-ref { display: block; color: var(--secondary-color); font-weight: 850; font-size: 0.78rem; margin: 3px 0 12px; }
-.journey-peek-map { border-radius: 16px; overflow: hidden; }
+.journey-peek-map { position: relative; border-radius: 16px; overflow: hidden; }
 .journey-peek-map svg { display: block; width: 100%; aspect-ratio: 1.18 / 1; border-radius: 16px; }
+.journey-peek-mapgl {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.journey-peek-map.gl-ready .journey-peek-mapgl { opacity: 1; pointer-events: auto; }
+.journey-peek-map.gl-ready .journey-peek-mapsvg { visibility: hidden; }
 .journey-peek-step { margin: 12px 0 14px; color: var(--muted-color); line-height: 1.45; font-size: 0.9rem; }
 .journey-peek-step strong { display: block; color: var(--font-color); font-weight: 900; margin-bottom: 2px; }
 .journey-peek-open {
