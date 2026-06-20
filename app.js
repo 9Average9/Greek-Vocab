@@ -10965,6 +10965,7 @@ let _journeySelectedId = BIBLE_JOURNEYS[0]?.id || '';
 let _journeyMode = 'ancient';
 let _journeyPeekMode = 'ancient';
 let _journeyPeekCurrentId = '';
+let _journeyPeekCurrentStepIndex = -1;
 // Follow-along route animation state (a single traveler dot walks the polyline).
 const _journeyAnim = { raf: 0, playing: false };
 
@@ -11152,7 +11153,10 @@ function setBibleJourneyMode(mode) {
     document.getElementById('journeyModeModern')?.classList.toggle('active', _journeyMode === 'modern');
     const mapTitle = document.getElementById('journeyMapTitle');
     if (mapTitle) mapTitle.textContent = _journeyMode === 'modern' ? 'Modern comparison' : 'Bible-world route';
-    _journeyRenderStats(_journeyById(_journeySelectedId));
+    const journey = _journeyById(_journeySelectedId);
+    _journeyRenderStats(journey);
+    const geo = document.querySelector('#journeyMapShell .journey-geography-note');
+    if (geo) geo.outerHTML = _journeyGeographyHtml(journey, _journeyMode);
     window.BibleMap.setMode(_journeyMode);
     return;
   }
@@ -11167,6 +11171,11 @@ function selectBibleJourney(id) {
 
 function _journeyTotalMiles(journey) {
   return Number(journey.distance || (journey.steps || []).reduce((sum, step) => sum + Number(step.miles || 0), 0));
+}
+
+function _journeyMilesText(value) {
+  const miles = Number(value || 0);
+  return miles ? `${miles.toLocaleString()} mi` : 'route moment';
 }
 
 function _journeyPointLabel(point) {
@@ -11192,6 +11201,35 @@ function _journeyModernContext(journey) {
     .slice(0, 6);
   if (!hits.length) return '';
   return hits.map(p => `${p.name} (${p.capital})`).join(' · ');
+}
+
+function _journeyGeographyHtml(journey, mode = _journeyMode) {
+  const nearby = mode === 'modern' ? _journeyModernContext(journey) : '';
+  const modern = journey?.modern || '';
+  if (!modern && !nearby) return '';
+  return `<div class="journey-modern-context journey-geography-note">
+    <strong>${mode === 'modern' && nearby ? 'Nearby today' : 'Modern geography'}</strong>
+    <span>${_journeyEsc(nearby || modern)}</span>
+  </div>`;
+}
+
+function _journeyPeekFactsHtml(journey, step) {
+  const totalMiles = _journeyMilesText(_journeyTotalMiles(journey));
+  const stepMiles = step?.miles ? ` · about ${Number(step.miles).toLocaleString()} mi` : '';
+  const sources = (journey.sources || []).slice(0, 2);
+  return `<div class="journey-peek-facts" aria-label="Journey context">
+    <div class="journey-peek-statgrid">
+      <div><span class="material-symbols-outlined">straighten</span><strong>${_journeyEsc(totalMiles)}</strong><small>whole route</small></div>
+      <div><span class="material-symbols-outlined">schedule</span><strong>${_journeyEsc(journey.days || 'timing varies')}</strong><small>${_journeyEsc(journey.mode || 'travel pace')}</small></div>
+    </div>
+    ${step ? `<div class="journey-peek-step-card">
+      <span class="material-symbols-outlined">menu_book</span>
+      <div><strong>${_journeyEsc(step.label)}</strong><small>${_journeyEsc(step.ref)}${_journeyEsc(stepMiles)}</small><p>${_journeyEsc(step.copy)}</p></div>
+    </div>` : ''}
+    <div class="journey-peek-note"><strong>${_journeyEsc(journey.certainty || 'Route note')}</strong><span>${_journeyEsc(journey.note || journey.subtitle || '')}</span></div>
+    ${_journeyGeographyHtml(journey, _journeyPeekMode)}
+    ${sources.length ? `<div class="journey-peek-receipts"><strong>Scripture + geography</strong>${sources.map(s => `<p>${_journeyEsc(s)}</p>`).join('')}</div>` : ''}
+  </div>`;
 }
 
 function _journeyPolyline(points) {
@@ -11278,9 +11316,7 @@ function renderBibleJourneysPage() {
   if (shell) shell.innerHTML = _journeyRenderMap(journey) +
     `<div class="journey-map-controls"><button type="button" class="journey-play-btn" id="journeyPlayBtn" onclick="toggleJourneyPlay()"><span class="material-symbols-outlined">play_arrow</span><span>Play route</span></button></div>` +
     `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>` +
-    (_journeyMode === 'modern' && _journeyModernContext(journey)
-      ? `<div class="journey-modern-context"><strong>Nearby today</strong><span>${_journeyEsc(_journeyModernContext(journey))}</span></div>`
-      : '') +
+    _journeyGeographyHtml(journey, _journeyMode) +
     altHtml;
   _journeyRenderStats(journey);
   if (steps) {
@@ -11530,6 +11566,7 @@ function openJourneyPeek(book, chapter, verse) {
   if (!match) return;
   const journey = match.journey;
   _journeyPeekCurrentId = journey.id;
+  _journeyPeekCurrentStepIndex = match.stepIdx;
   _journeyPeekMode = _journeyMode === 'modern' ? 'modern' : 'ancient';
   const step = (journey.steps || [])[match.stepIdx];
   document.getElementById('journeyPeekOverlay')?.remove();
@@ -11552,8 +11589,7 @@ function openJourneyPeek(book, chapter, verse) {
       <div class="journey-peek-mapsvg" id="journeyPeekMapSvg">${_journeyRenderMapForMode(journey, _journeyPeekMode)}</div>
       <div class="journey-peek-mapgl" id="journeyPeekMapGL"></div>
     </div>
-    <div class="journey-peek-modern" id="journeyPeekModernContext" style="${_journeyPeekMode === 'modern' && _journeyModernContext(journey) ? '' : 'display:none'}"><strong>Nearby today</strong><span>${_journeyEsc(_journeyModernContext(journey))}</span></div>
-    ${step ? `<p class="journey-peek-step"><strong>${_journeyEsc(step.label)}</strong>${_journeyEsc(step.copy)}</p>` : `<p class="journey-peek-step">${_journeyEsc(journey.subtitle)}</p>`}
+    <div id="journeyPeekFacts">${_journeyPeekFactsHtml(journey, step)}</div>
     <button class="journey-peek-open" onclick="openJourneyFromPeek('${_journeyEsc(journey.id)}')"><span class="material-symbols-outlined">explore</span>Open full journey</button>
   </div>`;
   document.body.appendChild(ov);
@@ -11681,12 +11717,10 @@ function setJourneyPeekMode(mode) {
   document.getElementById('journeyPeekModern')?.classList.toggle('active', next === 'modern');
   const svg = document.getElementById('journeyPeekMapSvg');
   if (svg && journey) svg.innerHTML = _journeyRenderMapForMode(journey, next);
-  const ctx = document.getElementById('journeyPeekModernContext');
-  const context = journey ? _journeyModernContext(journey) : '';
-  if (ctx) {
-    ctx.style.display = next === 'modern' && context ? '' : 'none';
-    const target = ctx.querySelector('span');
-    if (target) target.textContent = context;
+  const facts = document.getElementById('journeyPeekFacts');
+  if (facts && journey) {
+    const activeStep = (journey.steps || [])[_journeyPeekCurrentStepIndex] || null;
+    facts.innerHTML = _journeyPeekFactsHtml(journey, activeStep);
   }
   document.getElementById('journeyPeekMap')?.classList.remove('gl-ready');
   // Reload the real tile map in the newly selected mode.
@@ -11695,6 +11729,7 @@ function setJourneyPeekMode(mode) {
 
 function closeJourneyPeek() {
   _journeyPeekCurrentId = '';
+  _journeyPeekCurrentStepIndex = -1;
   if (window.BibleMap) { try { window.BibleMap.destroy(); } catch (e) {} }
   const o = document.getElementById('journeyPeekOverlay');
   if (!o) return;
@@ -23379,7 +23414,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.297";
+const APP_VERSION = "3.0.298";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23400,6 +23435,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.298 &mdash; Richer Journey context</div>
+<ul>
+  <li><strong>Rhema journey context</strong> &mdash; The verse mini-map now includes route distance, travel timing, pace, the active Scripture step, route certainty, modern geography, and short Scripture/geography receipts.</li>
+  <li><strong>Full Journey geography</strong> &mdash; Bible Journey pages now keep modern geography visible alongside the route note, even before switching to the Modern map.</li>
+</ul>
 <div class="un-version-label">v3.0.297 &mdash; Rhema mini-map tile fix</div>
 <ul>
   <li><strong>Real tiles in Rhema</strong> &mdash; Fixed the Journey mini-map host sizing inside the verse popup so MapLibre keeps a real height in PWA/modal rendering.</li>
