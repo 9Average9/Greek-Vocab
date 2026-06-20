@@ -16532,6 +16532,26 @@ body.dark .rhema-reader-map-btn { color: #6fd6a6; }
 }
 .journey-peek-title { display: block; font-size: 1.18rem; font-weight: 950; line-height: 1.1; margin-top: 2px; padding-right: 38px; }
 .journey-peek-ref { display: block; color: var(--secondary-color); font-weight: 850; font-size: 0.78rem; margin: 3px 0 12px; }
+.journey-peek-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin: 0 0 10px;
+}
+.journey-peek-toggle button {
+  border: 1px solid var(--border-color);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--secondary-color) 6%, var(--card-color));
+  color: var(--muted-color);
+  padding: 9px 8px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.journey-peek-toggle button.active {
+  border-color: var(--secondary-color);
+  background: var(--secondary-color);
+  color: var(--btn-text-color);
+}
 .journey-peek-map { position: relative; border-radius: 16px; overflow: hidden; }
 .journey-peek-map svg { display: block; width: 100%; aspect-ratio: 1.18 / 1; border-radius: 16px; }
 .journey-peek-mapgl {
@@ -30822,6 +30842,7 @@ body.journeys-active #studyTabBar { display: none !important; }
   flex-direction: column;
   overflow: hidden;
   color: var(--font-color);
+  padding-bottom: 0;
 }
 .journeys-topbar {
   flex: 0 0 auto;
@@ -30869,7 +30890,7 @@ body.journeys-active #studyTabBar { display: none !important; }
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 8px 8px 16px;
+  padding: 8px 8px 8px;
   -webkit-overflow-scrolling: touch;
 }
 .journey-hero {
@@ -30922,25 +30943,22 @@ body.journeys-active #studyTabBar { display: none !important; }
   border-color: var(--secondary-color);
   color: var(--btn-text-color);
 }
-/* Mobile: a slim swipeable picker strip on top, then the selected journey's
-   map leads, with its details below. Far less scrolling than a tall list. */
+/* Mobile: a vertical route picker that is easy to scan, then the selected
+   journey's map and details below. */
 .journey-layout { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
 .journey-list {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(78%, 300px);
-  gap: 10px;
-  margin: 0 -8px;
-  padding: 2px 8px 6px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
+  grid-auto-flow: row;
+  gap: 8px;
+  margin: 0;
+  padding: 0 2px 2px;
+  max-height: min(48vh, 430px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
-.journey-list-heading { display: none; }
-.journey-list-card { scroll-snap-align: start; }
 .journey-list::-webkit-scrollbar { display: none; }
 .journey-list-heading {
   display: grid;
@@ -31244,6 +31262,29 @@ body.journeys-active #studyTabBar { display: none !important; }
 }
 .journey-map-note strong { color: var(--secondary-color); font-size: 0.8rem; font-weight: 950; }
 .journey-map-note span { color: var(--muted-color); line-height: 1.42; font-size: 0.86rem; }
+.journey-modern-context,
+.journey-peek-modern {
+  display: grid;
+  gap: 3px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--secondary-color) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, var(--border-color));
+}
+.journey-modern-context strong,
+.journey-peek-modern strong {
+  color: var(--secondary-color);
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+.journey-modern-context span,
+.journey-peek-modern span {
+  color: var(--muted-color);
+  line-height: 1.35;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
 .journey-diag {
   margin-top: 6px;
   text-align: center;
@@ -31372,7 +31413,7 @@ body.dark .journey-modern-shape { fill: #202c42; }
   inset: 0;
   z-index: 1200;
   display: none;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   padding: 16px 12px;
   background: rgba(8, 18, 28, 0.42);
@@ -31437,6 +31478,14 @@ body.dark .journey-modern-shape { fill: #202c42; }
 }
 .journey-info-grid strong { font-weight: 950; }
 .journey-info-grid small { color: var(--muted-color); line-height: 1.32; font-weight: 700; }
+.journey-info-attribution {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--secondary-color) 12%, var(--border-color));
+  font-size: 0.76rem;
+  color: var(--muted-color);
+  line-height: 1.4;
+}
 
 .rhema-verse-highlighted {
   background: var(--rhema-hl, #ffe08a);

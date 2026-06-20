@@ -10963,8 +10963,26 @@ const BIBLE_JOURNEYS = [
 
 let _journeySelectedId = BIBLE_JOURNEYS[0]?.id || '';
 let _journeyMode = 'ancient';
+let _journeyPeekMode = 'ancient';
+let _journeyPeekCurrentId = '';
 // Follow-along route animation state (a single traveler dot walks the polyline).
 const _journeyAnim = { raf: 0, playing: false };
+
+const JOURNEY_MODERN_CONTEXT_PLACES = [
+  { name: 'Israel', capital: 'Jerusalem', lat: 31.78, lon: 35.23 },
+  { name: 'West Bank', capital: 'Ramallah', lat: 31.90, lon: 35.20 },
+  { name: 'Jordan', capital: 'Amman', lat: 31.95, lon: 35.93 },
+  { name: 'Egypt', capital: 'Cairo', lat: 30.04, lon: 31.24 },
+  { name: 'Lebanon', capital: 'Beirut', lat: 33.89, lon: 35.50 },
+  { name: 'Syria', capital: 'Damascus', lat: 33.51, lon: 36.29 },
+  { name: 'Turkey', capital: 'Ankara', lat: 39.93, lon: 32.86 },
+  { name: 'Iraq', capital: 'Baghdad', lat: 33.31, lon: 44.36 },
+  { name: 'Cyprus', capital: 'Nicosia', lat: 35.19, lon: 33.38 },
+  { name: 'Greece', capital: 'Athens', lat: 37.98, lon: 23.73 },
+  { name: 'Italy', capital: 'Rome', lat: 41.90, lon: 12.50 },
+  { name: 'Malta', capital: 'Valletta', lat: 35.90, lon: 14.51 },
+  { name: 'Saudi Arabia', capital: 'Riyadh', lat: 24.71, lon: 46.67 }
+];
 
 /* Real map (MapLibre + self-hosted Protomaps tiles) — optional accurate renderer.
    Set BIBLE_WORLD_PMTILES_URL to the hosted .pmtiles file (see
@@ -11155,6 +11173,27 @@ function _journeyPointLabel(point) {
   return _journeyMode === 'modern' ? point.modern : point.ancient;
 }
 
+function _journeyRenderMapForMode(journey, mode) {
+  const prev = _journeyMode;
+  _journeyMode = mode === 'modern' ? 'modern' : 'ancient';
+  const html = _journeyRenderMap(journey);
+  _journeyMode = prev;
+  return html;
+}
+
+function _journeyModernContext(journey) {
+  const pts = (journey?.points || []).filter(p => typeof p.lat === 'number' && typeof p.lon === 'number');
+  if (!pts.length) return '';
+  const lats = pts.map(p => p.lat), lons = pts.map(p => p.lon);
+  const minLat = Math.min(...lats) - 2.6, maxLat = Math.max(...lats) + 2.6;
+  const minLon = Math.min(...lons) - 3.2, maxLon = Math.max(...lons) + 3.2;
+  const hits = JOURNEY_MODERN_CONTEXT_PLACES
+    .filter(p => p.lat >= minLat && p.lat <= maxLat && p.lon >= minLon && p.lon <= maxLon)
+    .slice(0, 6);
+  if (!hits.length) return '';
+  return hits.map(p => `${p.name} (${p.capital})`).join(' · ');
+}
+
 function _journeyPolyline(points) {
   return points.map(p => `${p.x},${p.y}`).join(' ');
 }
@@ -11239,6 +11278,9 @@ function renderBibleJourneysPage() {
   if (shell) shell.innerHTML = _journeyRenderMap(journey) +
     `<div class="journey-map-controls"><button type="button" class="journey-play-btn" id="journeyPlayBtn" onclick="toggleJourneyPlay()"><span class="material-symbols-outlined">play_arrow</span><span>Play route</span></button></div>` +
     `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>` +
+    (_journeyMode === 'modern' && _journeyModernContext(journey)
+      ? `<div class="journey-modern-context"><strong>Nearby today</strong><span>${_journeyEsc(_journeyModernContext(journey))}</span></div>`
+      : '') +
     altHtml +
     `<div class="journey-diag" id="journeyDiag"></div>`;
   _journeyRenderStats(journey);
@@ -11401,7 +11443,8 @@ function journeyForReference(book, chapter, verse) {
 
 function openBibleJourneyFromRhemaMenu() {
   const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
-  const journey = p ? journeyForReference(p.book, p.chapter, p.verse) : null;
+  const match = p ? _journeyMatchVerse(p.book, p.chapter, p.verse) : null;
+  const journey = match?.journey || null;
   closeRhemaVerseSheet?.();
   closeRhema?.();
   if (journey) openBibleJourneysPage(journey.id);
@@ -11481,6 +11524,8 @@ function openJourneyPeek(book, chapter, verse) {
   const match = _journeyMatchVerse(book, chapter, verse);
   if (!match) return;
   const journey = match.journey;
+  _journeyPeekCurrentId = journey.id;
+  _journeyPeekMode = _journeyMode === 'modern' ? 'modern' : 'ancient';
   const step = (journey.steps || [])[match.stepIdx];
   document.getElementById('journeyPeekOverlay')?.remove();
   if (window.BibleMap) { try { window.BibleMap.destroy(); } catch (e) {} }
@@ -11494,28 +11539,37 @@ function openJourneyPeek(book, chapter, verse) {
     <span class="journey-kicker">Journey map</span>
     <strong class="journey-peek-title">${_journeyEsc(journey.title)}</strong>
     <small class="journey-peek-ref">${_journeyEsc(refName)} &middot; ${_journeyEsc(journey.certainty || 'Approximate')}</small>
+    <div class="journey-peek-toggle" role="tablist" aria-label="Map view">
+      <button class="${_journeyPeekMode === 'ancient' ? 'active' : ''}" id="journeyPeekAncient" onclick="setJourneyPeekMode('ancient')">Bible Map</button>
+      <button class="${_journeyPeekMode === 'modern' ? 'active' : ''}" id="journeyPeekModern" onclick="setJourneyPeekMode('modern')">Modern</button>
+    </div>
     <div class="journey-peek-map" id="journeyPeekMap">
-      <div class="journey-peek-mapsvg">${_journeyRenderMap(journey)}</div>
+      <div class="journey-peek-mapsvg" id="journeyPeekMapSvg">${_journeyRenderMapForMode(journey, _journeyPeekMode)}</div>
       <div class="journey-peek-mapgl" id="journeyPeekMapGL"></div>
     </div>
+    <div class="journey-peek-modern" id="journeyPeekModernContext" style="${_journeyPeekMode === 'modern' && _journeyModernContext(journey) ? '' : 'display:none'}"><strong>Nearby today</strong><span>${_journeyEsc(_journeyModernContext(journey))}</span></div>
     ${step ? `<p class="journey-peek-step"><strong>${_journeyEsc(step.label)}</strong>${_journeyEsc(step.copy)}</p>` : `<p class="journey-peek-step">${_journeyEsc(journey.subtitle)}</p>`}
     <button class="journey-peek-open" onclick="openJourneyFromPeek('${_journeyEsc(journey.id)}')"><span class="material-symbols-outlined">explore</span>Open full journey</button>
   </div>`;
   document.body.appendChild(ov);
-  requestAnimationFrame(() => { ov.classList.add('open'); _journeyPeekMountGL(journey); });
+  requestAnimationFrame(() => {
+    ov.classList.add('open');
+    setTimeout(() => _journeyPeekMountGL(journey, _journeyPeekMode), 90);
+  });
 }
 
 // Load the real tile map into the peek (schematic stays as the instant + offline fallback).
-function _journeyPeekMountGL(journey) {
+function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
   if (!_bibleMapEnabled() || !(journey.points || []).some(p => typeof p.lat === 'number')) return;
   const wrap = document.getElementById('journeyPeekMap');
   const host = document.getElementById('journeyPeekMapGL');
   if (!wrap || !host) return;
+  wrap.classList.remove('gl-ready');
   _ensureBibleMapLibs().then(() => {
     if (!document.getElementById('journeyPeekMap')) return null;   // closed already
     if (!window.BibleMap || !window.BibleMap.supported()) return null;
     return window.BibleMap.render(host, journey, {
-      mode: _journeyMode,
+      mode,
       pmtilesUrl: _journeyResolvePmtiles(),
       labelFor: _journeyLabelFor,
       onError: () => {}
@@ -11525,7 +11579,36 @@ function _journeyPeekMountGL(journey) {
   }).catch(() => {});
 }
 
+function setJourneyPeekMode(mode) {
+  const next = mode === 'modern' ? 'modern' : 'ancient';
+  _journeyPeekMode = next;
+  const journey = _journeyById(_journeyPeekCurrentId || _journeySelectedId);
+  document.getElementById('journeyPeekAncient')?.classList.toggle('active', next === 'ancient');
+  document.getElementById('journeyPeekModern')?.classList.toggle('active', next === 'modern');
+  const svg = document.getElementById('journeyPeekMapSvg');
+  if (svg && journey) svg.innerHTML = _journeyRenderMapForMode(journey, next);
+  const ctx = document.getElementById('journeyPeekModernContext');
+  const context = journey ? _journeyModernContext(journey) : '';
+  if (ctx) {
+    ctx.style.display = next === 'modern' && context ? '' : 'none';
+    const target = ctx.querySelector('span');
+    if (target) target.textContent = context;
+  }
+  const wrap = document.getElementById('journeyPeekMap');
+  if (window.BibleMap && wrap?.classList.contains('gl-ready')) {
+    try { window.BibleMap.setMode(next); }
+    catch {
+      wrap.classList.remove('gl-ready');
+      if (journey) _journeyPeekMountGL(journey, next);
+    }
+  } else if (journey) {
+    wrap?.classList.remove('gl-ready');
+    _journeyPeekMountGL(journey, next);
+  }
+}
+
 function closeJourneyPeek() {
+  _journeyPeekCurrentId = '';
   if (window.BibleMap) { try { window.BibleMap.destroy(); } catch (e) {} }
   const o = document.getElementById('journeyPeekOverlay');
   if (!o) return;
@@ -23210,7 +23293,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.289";
+const APP_VERSION = "3.0.290";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23231,6 +23314,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.290 &mdash; Journey map popup polish</div>
+<ul>
+  <li><strong>Rhema journey popup</strong> &mdash; The mini journey map now waits for the sheet to open before loading the real map, and it includes its own Bible Map / Modern toggle.</li>
+  <li><strong>Precise journey prompts</strong> &mdash; The verse sheet now uses the curated verse-step matcher, so journey prompts only appear on verses that actually belong to the mapped travel step.</li>
+  <li><strong>Cleaner maps</strong> &mdash; Removed the floating map attribution button and moved attribution into the Journey info modal; Modern view now shows nearby present-day countries and capitals when available.</li>
+</ul>
 <div class="un-version-label">v3.0.289 &mdash; Critical load fix</div>
 <ul>
   <li><strong>App now loads</strong> &mdash; Fixed a startup crash introduced with the journey verse markers that could stop the whole app from loading.</li>
@@ -30378,7 +30467,8 @@ function _rhemaRenderVerseSheet() {
   const journeyBtn = document.getElementById('rhemaVerseSheetJourneyBtn');
   if (journeyBtn) {
     const p = _rhemaParseRef(ref);
-    const journey = p ? journeyForReference(p.book, p.chapter, p.verse) : null;
+    const match = p ? _journeyMatchVerse(p.book, p.chapter, p.verse) : null;
+    const journey = match?.journey || null;
     journeyBtn.style.display = journey ? '' : 'none';
     journeyBtn.querySelector('span:last-child').textContent = journey ? `Follow ${journey.title}` : 'Follow this journey';
   }

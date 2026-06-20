@@ -269,7 +269,7 @@
             style: _buildStyle(state.mode, pmtilesUrl),
             bounds: _bounds(state.coords),
             fitBoundsOptions: { padding: 46, maxZoom: 9 },
-            attributionControl: { compact: true },
+            attributionControl: false,
             dragRotate: false,
             pitchWithRotate: false,
             cooperativeGestures: false
