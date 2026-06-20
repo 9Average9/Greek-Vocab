@@ -11605,8 +11605,13 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
     if (map && document.getElementById('journeyPeekMap')) {
       wrap.classList.add('gl-ready');                 // keep the real map shown
       requestAnimationFrame(() => { try { map.resize(); } catch (e) {} });
-      setTimeout(() => { try { map.resize(); } catch (e) {} }, 150);
-      _journeyPeekSetDiag('real map ON');
+      // Report the canvas size so a blank-but-"ON" map is diagnosable on device.
+      setTimeout(() => {
+        try { map.resize(); } catch (e) {}
+        const c = host.querySelector('canvas');
+        const dim = c ? (c.clientWidth + '×' + c.clientHeight) : 'no canvas';
+        _journeyPeekSetDiag('real map ON · ' + dim);
+      }, 220);
     } else {
       wrap.classList.remove('gl-mounting');
     }
