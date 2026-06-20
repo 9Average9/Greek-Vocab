@@ -16565,7 +16565,9 @@ body.dark .rhema-reader-map-btn { color: #6fd6a6; }
 .journey-peek-mapgl { position: absolute; inset: 0; border-radius: 16px; overflow: hidden; }
 .journey-peek-mapsvg svg { display: block; width: 100%; height: 100%; }
 .journey-peek-mapgl { opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+.journey-peek-map.gl-mounting .journey-peek-mapgl,
 .journey-peek-map.gl-ready .journey-peek-mapgl { opacity: 1; pointer-events: auto; }
+.journey-peek-map.gl-mounting .journey-peek-mapsvg,
 .journey-peek-map.gl-ready .journey-peek-mapsvg { visibility: hidden; }
 .journey-peek-step { margin: 12px 0 14px; color: var(--muted-color); line-height: 1.45; font-size: 0.9rem; }
 .journey-peek-step strong { display: block; color: var(--font-color); font-weight: 900; margin-bottom: 2px; }
