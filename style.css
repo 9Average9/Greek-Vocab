@@ -31157,6 +31157,37 @@ body.journeys-active #studyTabBar { display: none !important; }
   animation: journeyRouteFlow 2.6s linear infinite;
 }
 @keyframes journeyRouteFlow { to { stroke-dashoffset: -16; } }
+.journey-route-alt {
+  fill: none;
+  stroke: var(--secondary-color);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 2 2.4;
+  opacity: 0.5;
+}
+.journey-alt-dot {
+  fill: var(--card-color);
+  stroke: var(--secondary-color);
+  stroke-width: 1;
+  opacity: 0.65;
+}
+.journey-alt-block {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--secondary-color) 5%, transparent);
+}
+.journey-alt-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; }
+.journey-alt-key { display: inline-flex; align-items: center; gap: 7px; font-size: 0.74rem; font-weight: 850; color: var(--muted-color); }
+.journey-alt-key::before { content: ""; width: 20px; height: 0; border-top-width: 3px; border-top-style: solid; border-radius: 2px; }
+.journey-alt-key.primary::before { border-top-color: var(--secondary-color); }
+.journey-alt-key.alt::before { border-top-style: dashed; border-top-width: 2px; border-top-color: color-mix(in srgb, var(--secondary-color) 60%, transparent); }
+.journey-alt-item { padding: 7px 0; border-top: 1px solid var(--border-color); }
+.journey-alt-item:first-of-type { border-top: 0; }
+.journey-alt-item strong { display: block; font-size: 0.88rem; font-weight: 900; color: var(--secondary-color); }
+.journey-alt-item p { margin: 2px 0 0; color: var(--muted-color); line-height: 1.42; font-size: 0.85rem; }
 .journey-traveler {
   fill: #fff;
   stroke: var(--secondary-color);

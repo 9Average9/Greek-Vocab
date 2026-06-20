@@ -10489,6 +10489,18 @@ const BIBLE_JOURNEYS = [
       { label: 'Toward the sea', ref: 'Exodus 14:1-2', copy: 'The people are led to a place where escape looks impossible.', miles: 60 },
       { label: 'Through the sea', ref: 'Exodus 14:21-31', copy: 'The crossing becomes the defining rescue moment.', miles: 8 },
       { label: 'Wilderness to Sinai', ref: 'Exodus 15:22; 19:1-2', copy: 'The route moves through thirst, provision, and covenant preparation.', miles: 200 }
+    ],
+    alternates: [
+      {
+        label: 'Arabian Sinai view',
+        reason: 'Some place the sea crossing at the Gulf of Aqaba and Mount Sinai in Arabia (Galatians 4:25), giving an eastern route across the gulf. The traditional southern Sinai is kept as the main line.',
+        points: [
+          { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42, lat: 30.80, lon: 31.83 },
+          { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47, lat: 30.55, lon: 32.10 },
+          { ancient: 'Gulf of Aqaba crossing', modern: 'Gulf of Aqaba (debated)', x: 77, y: 71, lat: 28.90, lon: 34.65 },
+          { ancient: 'Mount Sinai in Arabia', modern: 'NW Saudi Arabia (debated)', x: 88, y: 74, lat: 28.65, lon: 35.30 }
+        ]
+      }
     ]
   },
   {
@@ -10544,6 +10556,19 @@ const BIBLE_JOURNEYS = [
       { label: 'Nazareth departure', ref: 'Luke 2:1-4', copy: 'Joseph goes up from Galilee to Judea because of the census.', miles: 70 },
       { label: "Toward David's city", ref: 'Luke 2:4', copy: "Bethlehem matters because Joseph belongs to David's house and lineage.", miles: 15 },
       { label: 'Birth in Bethlehem', ref: 'Luke 2:6-7', copy: 'The travel setting frames the birth narrative.', miles: 5 }
+    ],
+    alternates: [
+      {
+        label: 'Jordan Valley route',
+        reason: 'A longer but flatter path down the Jordan Valley and up from Jericho, avoiding Samaria. Luke does not name the road taken, so both this and the hill-country route are possible.',
+        points: [
+          { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24, lat: 32.70, lon: 35.30 },
+          { ancient: 'Beth Shean', modern: 'Beit She’an, Jordan Valley', x: 58, y: 33, lat: 32.50, lon: 35.50 },
+          { ancient: 'Jericho', modern: 'Jericho', x: 52, y: 60, lat: 31.87, lon: 35.44 },
+          { ancient: 'Jerusalem', modern: 'Jerusalem', x: 39, y: 62, lat: 31.78, lon: 35.23 },
+          { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68, lat: 31.70, lon: 35.20 }
+        ]
+      }
     ]
   },
   {
@@ -10574,6 +10599,18 @@ const BIBLE_JOURNEYS = [
       { label: 'Teaching on the way', ref: 'Luke 10-18', copy: 'Much of the journey is filled with discipleship teaching.', miles: 70 },
       { label: 'Jericho to Jerusalem', ref: 'Luke 18:35; 19:28', copy: 'The route climbs from Jericho toward Jerusalem.', miles: 17 },
       { label: 'Arrival near Bethany', ref: 'Mark 11:1', copy: 'Bethphage/Bethany set the stage for the triumphal entry.', miles: 2 }
+    ],
+    alternates: [
+      {
+        label: 'Direct through Samaria',
+        reason: 'The shorter ridge road runs straight through Samaria (John 4:4). Many Galilean pilgrims instead took the Jordan Valley route shown as the main line to avoid Samaritan territory.',
+        points: [
+          { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22, lat: 32.80, lon: 35.55 },
+          { ancient: 'Samaria', modern: 'near Nablus, West Bank', x: 40, y: 48, lat: 32.21, lon: 35.28 },
+          { ancient: 'Bethel hills', modern: 'central highlands', x: 38, y: 61, lat: 31.93, lon: 35.22 },
+          { ancient: 'Jerusalem', modern: 'Jerusalem', x: 38, y: 68, lat: 31.78, lon: 35.23 }
+        ]
+      }
     ]
   },
   {
@@ -11132,12 +11169,19 @@ function _journeyRenderMap(journey) {
   const terrain = _journeyMode === 'modern'
     ? '<path class="journey-modern-shape" d="M8 18 C25 4 46 10 62 18 C82 28 90 50 84 72 C76 92 54 96 35 88 C14 78 2 50 8 18Z"/><path class="journey-modern-border" d="M46 12 C42 28 45 41 39 56 C34 68 36 82 28 92"/><path class="journey-modern-border" d="M61 19 C54 35 58 53 51 69 C47 79 48 87 44 94"/>'
     : '<path class="journey-ancient-land" d="M11 22 C28 10 47 12 63 22 C78 31 88 48 85 69 C81 87 62 94 43 90 C24 86 9 72 7 51 C6 39 4 30 11 22Z"/><path class="journey-river" d="M66 12 C58 25 62 42 55 55 C49 66 52 79 45 90"/><path class="journey-river soft" d="M29 18 C35 31 33 45 37 57 C42 70 35 80 38 91"/>';
+  const alts = (journey.alternates || []).map(alt => {
+    const pts = alt.points || [];
+    if (pts.length < 2) return '';
+    const dots = pts.map(p => `<circle class="journey-alt-dot" cx="${p.x}" cy="${p.y}" r="2.1" />`).join('');
+    return `<polyline class="journey-route-alt" points="${_journeyPolyline(pts)}" />${dots}`;
+  }).join('');
   return `<svg viewBox="0 0 100 100" role="img" aria-label="${_journeyEsc(journey.title)} route map">
     <defs>
       <filter id="journeyGlow"><feGaussianBlur stdDeviation="1.7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
     <rect class="journey-map-bg" x="0" y="0" width="100" height="100" rx="8"></rect>
     ${terrain}
+    ${alts}
     <polyline class="journey-route-shadow" points="${_journeyPolyline(points)}" />
     <polyline class="journey-route-line" points="${_journeyPolyline(points)}" />
     ${labels}
@@ -11186,9 +11230,16 @@ function renderBibleJourneysPage() {
     if (activeCard) setTimeout(() => activeCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }), 40);
   }
   _journeyStopPlay();
+  const altHtml = (journey.alternates && journey.alternates.length)
+    ? `<div class="journey-alt-block">
+        <div class="journey-alt-legend"><span class="journey-alt-key primary">Main route</span><span class="journey-alt-key alt">Possible route</span></div>
+        ${journey.alternates.map(a => `<div class="journey-alt-item"><strong>${_journeyEsc(a.label)}</strong><p>${_journeyEsc(a.reason)}</p></div>`).join('')}
+      </div>`
+    : '';
   if (shell) shell.innerHTML = _journeyRenderMap(journey) +
     `<div class="journey-map-controls"><button type="button" class="journey-play-btn" id="journeyPlayBtn" onclick="toggleJourneyPlay()"><span class="material-symbols-outlined">play_arrow</span><span>Play route</span></button></div>` +
     `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>` +
+    altHtml +
     `<div class="journey-diag" id="journeyDiag"></div>`;
   _journeyRenderStats(journey);
   if (steps) {
@@ -23148,7 +23199,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.287";
+const APP_VERSION = "3.0.288";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23169,6 +23220,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.288 &mdash; Possible routes</div>
+<ul>
+  <li><strong>Alternate routes</strong> &mdash; Where Scripture doesn&apos;t fix the exact path, journeys now show a faint dashed "possible route" alongside the main line, with the reason. Added for the Exodus (Arabian Sinai view), Mary &amp; Joseph (Jordan Valley), and Jesus to Jerusalem (through Samaria).</li>
+  <li><strong>Faithful by default</strong> &mdash; The solid main line stays the straightforward reading of the text; alternates are clearly labeled as possibilities.</li>
+</ul>
 <div class="un-version-label">v3.0.287 &mdash; Sharper journey markers</div>
 <ul>
   <li><strong>Verse-precise map icon</strong> &mdash; The Rhema journey map icon now appears only on the verses that actually sit on a route step, not the whole chapter (so Genesis 11&apos;s Babel verses no longer show it).</li>

@@ -147,6 +147,24 @@
       map.addSource('journey-traveler', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Point', coordinates: coords[0] } } });
     }
 
+    // Alternate / "possible" routes — faint dashed lines under the main route.
+    ((state.journey && state.journey.alternates) || []).forEach(function (alt, i) {
+      var ac = (alt.points || [])
+        .filter(function (p) { return typeof p.lon === 'number' && typeof p.lat === 'number'; })
+        .map(function (p) { return [p.lon, p.lat]; });
+      if (ac.length < 2) return;
+      var sid = 'journey-alt-' + i;
+      if (!map.getSource(sid)) map.addSource(sid, { type: 'geojson', data: _routeGeoJSON(ac) });
+      else map.getSource(sid).setData(_routeGeoJSON(ac));
+      if (!map.getLayer(sid + '-line')) {
+        map.addLayer({
+          id: sid + '-line', type: 'line', source: sid,
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': accent, 'line-width': 2, 'line-opacity': 0.5, 'line-dasharray': [1.4, 1.6] }
+        });
+      }
+    });
+
     if (!map.getLayer('journey-route-casing')) {
       map.addLayer({
         id: 'journey-route-casing', type: 'line', source: 'journey-route',
