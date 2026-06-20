@@ -11560,7 +11560,14 @@ function openJourneyPeek(book, chapter, verse) {
   document.body.appendChild(ov);
   requestAnimationFrame(() => {
     ov.classList.add('open');
-    setTimeout(() => _journeyPeekMountGL(journey, _journeyPeekMode), 30);
+    // Mount the real map AFTER the card's open transition settles — MapLibre
+    // renders blank if it initializes while an ancestor is still being
+    // transformed/scaled in (the journeys page has no such transform).
+    const card = ov.querySelector('.journey-peek-card');
+    let mounted = false;
+    const doMount = () => { if (mounted) return; mounted = true; _journeyPeekMountGL(journey, _journeyPeekMode); };
+    if (card) card.addEventListener('transitionend', doMount, { once: true });
+    setTimeout(doMount, 340);   // fallback if transitionend doesn't fire
   });
 }
 
@@ -11576,10 +11583,13 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
   const wrap = document.getElementById('journeyPeekMap');
   const host = document.getElementById('journeyPeekMapGL');
   if (!wrap || !host) return;
-  wrap.classList.remove('gl-ready');
+  wrap.classList.remove('gl-ready', 'gl-mounting');
   if (!_bibleMapConfigured()) { _journeyPeekSetDiag('real map off (no tiles)'); return; }
   if (navigator.onLine === false) { _journeyPeekSetDiag('needs internet (offline)'); return; }
   if (!(journey.points || []).some(p => typeof p.lat === 'number')) { _journeyPeekSetDiag('no coordinates'); return; }
+  // Make the GL host fully visible (and hide the schematic) BEFORE init, exactly
+  // like the working journeys page — MapLibre needs a visible, sized container.
+  wrap.classList.add('gl-mounting');
   _journeyPeekSetDiag('loading real map…');
   _ensureBibleMapLibs().then(() => {
     if (!document.getElementById('journeyPeekMap')) return null;   // closed already
@@ -11589,15 +11599,19 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
       mode,
       pmtilesUrl: _journeyResolvePmtiles(),
       labelFor: _journeyLabelFor,
-      onError: (err) => { _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err)); }
+      onError: (err) => { wrap.classList.remove('gl-mounting', 'gl-ready'); _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err)); }
     });
   }).then((map) => {
     if (map && document.getElementById('journeyPeekMap')) {
-      wrap.classList.add('gl-ready');                 // reveal the real map
+      wrap.classList.add('gl-ready');                 // keep the real map shown
       requestAnimationFrame(() => { try { map.resize(); } catch (e) {} });
+      setTimeout(() => { try { map.resize(); } catch (e) {} }, 150);
       _journeyPeekSetDiag('real map ON');
+    } else {
+      wrap.classList.remove('gl-mounting');
     }
   }).catch((e) => {
+    wrap.classList.remove('gl-mounting');
     _journeyPeekSetDiag('could not start: ' + _journeyErrText(e));
   });
 }
@@ -23308,7 +23322,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.293";
+const APP_VERSION = "3.0.294";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -23329,6 +23343,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.294 &mdash; Verse mini-map fix</div>
+<ul>
+  <li><strong>Mini-map now draws</strong> &mdash; The popup map from a Rhema verse was initializing while the card was still animating in, which left it blank on iPhone. It now waits for the popup to settle and builds the map in a fully visible container, like the main journey map.</li>
+</ul>
 <div class="un-version-label">v3.0.293 &mdash; Verse mini-map loads reliably</div>
 <ul>
   <li><strong>Mini-map fix</strong> &mdash; The map that pops up from a Rhema verse now reliably loads the real tiles (it was being kept hidden by a size check). A small status line under it shows what is happening if anything goes wrong.</li>
