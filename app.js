@@ -12789,6 +12789,1391 @@ const BIBLE_JOURNEYS = [
       { label: 'Out to Golgotha', ref: 'John 19:16-17', copy: 'Carrying his own cross, he goes out to the Place of a Skull.', miles: 0 },
       { label: 'There they crucified him', ref: 'John 19:18', copy: 'They crucify him there, and two others with him, one on either side.', miles: 0 }
     ]
+  },
+  {
+    id: 'hagar-flees-sarai',
+    title: 'Hagar in the Wilderness',
+    subtitle: 'Fleeing Sarai toward Shur and the well of seeing',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 16, chTo: 16 }],
+    distance: 60,
+    mode: 'Fleeing on foot',
+    days: 'A desperate flight',
+    modern: 'Hebron south into the Negev toward Egypt',
+    note: 'Shur is the wilderness toward Egypt; Beer-lahai-roi is in the Negev, exact site uncertain.',
+    sources: [
+      'Sarai deals harshly with Hagar, who flees (Genesis 16:6).',
+      'The angel of the Lord finds her by a spring on the way to Shur (Genesis 16:7).',
+      'She names the well Beer-lahai-roi (Genesis 16:14).'
+    ],
+    points: [
+      { ancient: 'Hebron (Mamre)', modern: 'Hebron, West Bank', x: 75.1, y: 16, lat: 31.53, lon: 35.1 },
+      { ancient: 'Way to Shur', modern: 'Negev wilderness', x: 24.9, y: 76.7, lat: 30.7, lon: 34.3 },
+      { ancient: 'Beer-lahai-roi', modern: 'Negev well', x: 43.7, y: 84, lat: 30.6, lon: 34.6 }
+    ],
+    steps: [
+      { label: 'Fleeing Sarai', ref: 'Genesis 16:6', copy: 'Treated harshly, Hagar runs away into the wilderness.', miles: 35 },
+      { label: 'The angel at the spring', ref: 'Genesis 16:7', copy: 'The angel finds her by a spring on the way to Shur.', miles: 15 },
+      { label: 'The God who sees', ref: 'Genesis 16:13', copy: 'She calls him "You are the God who sees me."', miles: 0 },
+      { label: 'The well named', ref: 'Genesis 16:14', copy: 'The well is called Beer-lahai-roi.', miles: 10 }
+    ]
+  },
+  {
+    id: 'abram-tours-canaan',
+    title: 'Abram\'s First Tour of Canaan',
+    subtitle: 'From Shechem to Bethel and on to the Negev',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 12, chTo: 12 }],
+    distance: 90,
+    mode: 'Caravan with flocks',
+    days: 'A first survey of the land',
+    modern: 'The central hill country down to the Negev',
+    note: 'Abram pitches at the great trees and builds altars at Shechem and Bethel.',
+    sources: [
+      'Abram passes to the oak of Moreh at Shechem (Genesis 12:6).',
+      'The Lord appears and Abram builds an altar (Genesis 12:7).',
+      'He journeys on toward the Negev (Genesis 12:9).'
+    ],
+    points: [
+      { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 59.5, y: 16, lat: 32.21, lon: 35.28 },
+      { ancient: 'Bethel / Ai', modern: 'Beitin, West Bank', x: 56.9, y: 30.5, lat: 31.93, lon: 35.22 },
+      { ancient: 'The Negev', modern: 'Negev, Israel', x: 40.5, y: 84, lat: 30.9, lon: 34.85 }
+    ],
+    steps: [
+      { label: 'The oak of Moreh', ref: 'Genesis 12:6', copy: 'Abram reaches Shechem, where Canaanites still live.', miles: 0 },
+      { label: 'An altar at Shechem', ref: 'Genesis 12:7', copy: 'The Lord appears: "To your offspring I will give this land."', miles: 20 },
+      { label: 'Between Bethel and Ai', ref: 'Genesis 12:8', copy: 'He pitches his tent and calls on the name of the Lord.', miles: 0 },
+      { label: 'On to the Negev', ref: 'Genesis 12:9', copy: 'Abram journeys by stages toward the south.', miles: 70 }
+    ]
+  },
+  {
+    id: 'jacob-bethel-return',
+    title: 'Jacob Returns to Bethel',
+    subtitle: 'From Shechem to Bethel, then to Ephrath and Hebron',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 35, chTo: 35 }],
+    distance: 55,
+    mode: 'Travelling with family and flocks',
+    days: 'A journey of grief and worship',
+    modern: 'The central hills from Shechem down to Hebron',
+    note: 'Rachel dies on the way to Ephrath (Bethlehem); Jacob reaches Isaac at Hebron.',
+    sources: [
+      'God tells Jacob to go up to Bethel and make an altar (Genesis 35:1).',
+      'He builds an altar and names the place El-bethel (Genesis 35:7).',
+      'Rachel dies on the way to Ephrath (Genesis 35:19).'
+    ],
+    points: [
+      { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 57.6, y: 16, lat: 32.21, lon: 35.28 },
+      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 52.5, y: 44, lat: 31.93, lon: 35.22 },
+      { ancient: 'Ephrath (Bethlehem)', modern: 'Bethlehem', x: 50.8, y: 67, lat: 31.7, lon: 35.2 },
+      { ancient: 'Hebron (Mamre)', modern: 'Hebron', x: 42.4, y: 84, lat: 31.53, lon: 35.1 }
+    ],
+    steps: [
+      { label: 'Go up to Bethel', ref: 'Genesis 35:1', copy: 'God calls Jacob back to the place of his vow.', miles: 18 },
+      { label: 'The altar at Bethel', ref: 'Genesis 35:7', copy: 'He builds an altar where God revealed himself.', miles: 0 },
+      { label: 'Rachel dies', ref: 'Genesis 35:19', copy: 'Rachel dies giving birth on the way to Ephrath.', miles: 25 },
+      { label: 'Home to Isaac', ref: 'Genesis 35:27', copy: 'Jacob comes at last to his father at Hebron.', miles: 12 }
+    ]
+  },
+  {
+    id: 'jacob-funeral-canaan',
+    title: 'Jacob\'s Burial Procession',
+    subtitle: 'Carrying Jacob from Egypt to the cave of Machpelah',
+    certainty: 'Approximate route',
+    refs: [{ book: 'GEN', chFrom: 50, chTo: 50 }],
+    distance: 350,
+    mode: 'A great funeral caravan',
+    days: 'A long mourning journey',
+    modern: 'Egypt up around the Dead Sea to Hebron',
+    note: 'The route went up by way of the Jordan; the threshing floor of Atad is debated.',
+    sources: [
+      'Joseph goes up to bury his father with a great company (Genesis 50:7).',
+      'They mourn at the threshing floor of Atad beyond the Jordan (Genesis 50:10).',
+      'He is buried in the cave of Machpelah near Mamre (Genesis 50:13).'
+    ],
+    points: [
+      { ancient: 'Egypt (Goshen)', modern: 'Eastern Nile Delta', x: 16, y: 61.4, lat: 30.8, lon: 31.9 },
+      { ancient: 'Atad', modern: 'Beyond the Jordan', x: 84, y: 38.6, lat: 31.85, lon: 35.55 },
+      { ancient: 'Machpelah (Hebron)', modern: 'Hebron', x: 75.6, y: 45.5, lat: 31.53, lon: 35.1 }
+    ],
+    steps: [
+      { label: 'Up from Egypt', ref: 'Genesis 50:7', copy: 'A great company of Egypt and Israel goes up to bury Jacob.', miles: 300 },
+      { label: 'Mourning at Atad', ref: 'Genesis 50:10', copy: 'They lament seven days beyond the Jordan.', miles: 30 },
+      { label: 'Carried into Canaan', ref: 'Genesis 50:12', copy: 'His sons do for him just as he commanded.', miles: 0 },
+      { label: 'Buried at Machpelah', ref: 'Genesis 50:13', copy: 'They lay him in the cave Abraham bought as a burial place.', miles: 20 }
+    ]
+  },
+  {
+    id: 'marah-elim',
+    title: 'Marah and Elim',
+    subtitle: 'From the bitter water to the twelve springs',
+    certainty: 'Approximate route',
+    refs: [{ book: 'EXO', chFrom: 15, chTo: 15 }],
+    distance: 45,
+    mode: 'A nation on the move',
+    days: 'The first stops after the sea',
+    modern: 'The northwest Sinai wilderness',
+    note: 'Marah and Elim are placed along the Sinai coast; exact sites are uncertain.',
+    sources: [
+      'Three days in the wilderness of Shur with no water (Exodus 15:22).',
+      'The water of Marah is bitter (Exodus 15:23).',
+      'At Elim are twelve springs and seventy palms (Exodus 15:27).'
+    ],
+    points: [
+      { ancient: 'Wilderness of Shur', modern: 'NW Sinai', x: 43.2, y: 16, lat: 29.85, lon: 32.95 },
+      { ancient: 'Marah', modern: 'Sinai coast', x: 56.8, y: 42.2, lat: 29.6, lon: 33.1 },
+      { ancient: 'Elim', modern: 'Sinai oasis', x: 47.7, y: 84, lat: 29.2, lon: 33 }
+    ],
+    steps: [
+      { label: 'No water', ref: 'Exodus 15:22', copy: 'Three days into the wilderness they find no water.', miles: 25 },
+      { label: 'Bitter Marah', ref: 'Exodus 15:23', copy: 'They cannot drink the water, for it is bitter.', miles: 0 },
+      { label: 'The log', ref: 'Exodus 15:25', copy: 'The Lord shows Moses a log that makes the water sweet.', miles: 0 },
+      { label: 'Rest at Elim', ref: 'Exodus 15:27', copy: 'They camp by twelve springs and seventy palm trees.', miles: 20 }
+    ]
+  },
+  {
+    id: 'rephidim-amalek',
+    title: 'Water and War at Rephidim',
+    subtitle: 'Water from the rock and the battle with Amalek',
+    certainty: 'Approximate route',
+    refs: [{ book: 'EXO', chFrom: 17, chTo: 17 }],
+    distance: 35,
+    mode: 'Wilderness march',
+    days: 'A halt on the way to Sinai',
+    modern: 'The southern Sinai wilderness',
+    note: 'Rephidim is placed near Horeb; the exact site is debated.',
+    sources: [
+      'Israel camps at Rephidim and finds no water (Exodus 17:1).',
+      'Water comes from the rock at Horeb (Exodus 17:6).',
+      'Joshua defeats Amalek while Moses lifts his hands (Exodus 17:11-13).'
+    ],
+    points: [
+      { ancient: 'Wilderness of Sin', modern: 'Southern Sinai', x: 16.9, y: 16, lat: 28.9, lon: 33.4 },
+      { ancient: 'Rephidim', modern: 'Near Horeb', x: 83.1, y: 84, lat: 28.72, lon: 33.6 }
+    ],
+    steps: [
+      { label: 'No water to drink', ref: 'Exodus 17:1', copy: 'The people quarrel with Moses at Rephidim.', miles: 25 },
+      { label: 'Water from the rock', ref: 'Exodus 17:6', copy: 'Moses strikes the rock at Horeb and water flows out.', miles: 0 },
+      { label: 'Hands lifted up', ref: 'Exodus 17:11', copy: 'When Moses raises his hands, Israel prevails.', miles: 0 },
+      { label: 'Amalek defeated', ref: 'Exodus 17:13', copy: 'Joshua overwhelms Amalek with the sword.', miles: 0 }
+    ]
+  },
+  {
+    id: 'sihon-og',
+    title: 'Victory over Sihon and Og',
+    subtitle: 'Battles east of the Jordan from Heshbon to Bashan',
+    certainty: 'Approximate route',
+    refs: [{ book: 'NUM', chFrom: 21, chTo: 21 }],
+    distance: 120,
+    mode: 'Army on the march',
+    days: 'The conquest of the east',
+    modern: 'Central Jordan north to the Bashan plateau',
+    note: 'Heshbon and Edrei are securely located east of the Jordan.',
+    sources: [
+      'Israel asks Sihon for passage and is refused (Numbers 21:21-23).',
+      'They strike Sihon and take Heshbon (Numbers 21:24).',
+      'Og of Bashan comes out at Edrei and is defeated (Numbers 21:33-35).'
+    ],
+    points: [
+      { ancient: 'Heshbon', modern: 'Hisban, Jordan', x: 39.8, y: 84, lat: 31.8, lon: 35.81 },
+      { ancient: 'Jazer', modern: 'Gilead, Jordan', x: 33.5, y: 70.3, lat: 32, lon: 35.7 },
+      { ancient: 'Edrei (Bashan)', modern: 'Daraa, Syria', x: 66.5, y: 16, lat: 32.79, lon: 36.27 }
+    ],
+    steps: [
+      { label: 'Refused passage', ref: 'Numbers 21:23', copy: 'Sihon gathers his army and fights Israel in the wilderness.', miles: 0 },
+      { label: 'Heshbon taken', ref: 'Numbers 21:24', copy: 'Israel strikes Sihon and seizes his land.', miles: 40 },
+      { label: 'Turning to Bashan', ref: 'Numbers 21:33', copy: 'They go up the road to Bashan, and Og comes out at Edrei.', miles: 70 },
+      { label: 'Og defeated', ref: 'Numbers 21:35', copy: 'They strike him down and possess his land.', miles: 10 }
+    ]
+  },
+  {
+    id: 'joshua-northern-campaign',
+    title: 'The Northern Campaign',
+    subtitle: 'From Gilgal to the waters of Merom and Hazor',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JOS', chFrom: 11, chTo: 11 }],
+    distance: 90,
+    mode: 'Army on the march',
+    days: 'A swift northern strike',
+    modern: 'The Jordan valley up to upper Galilee',
+    note: 'Hazor and the waters of Merom are in upper Galilee.',
+    sources: [
+      'Kings gather at the waters of Merom against Israel (Joshua 11:5).',
+      'Joshua falls on them suddenly (Joshua 11:7).',
+      'He captures and burns Hazor, head of those kingdoms (Joshua 11:10-11).'
+    ],
+    points: [
+      { ancient: 'Gilgal', modern: 'Jordan valley', x: 49.5, y: 84, lat: 31.87, lon: 35.5 },
+      { ancient: 'Waters of Merom', modern: 'Upper Galilee', x: 47, y: 17.2, lat: 33, lon: 35.45 },
+      { ancient: 'Hazor', modern: 'Tel Hazor', x: 53, y: 16, lat: 33.02, lon: 35.57 }
+    ],
+    steps: [
+      { label: 'Kings at Merom', ref: 'Joshua 11:5', copy: 'The northern kings camp together by the waters of Merom.', miles: 75 },
+      { label: 'A sudden attack', ref: 'Joshua 11:7', copy: 'Joshua comes against them suddenly and falls upon them.', miles: 0 },
+      { label: 'Hazor captured', ref: 'Joshua 11:10', copy: 'He takes Hazor and strikes its king with the sword.', miles: 15 },
+      { label: 'Hazor burned', ref: 'Joshua 11:11', copy: 'He burns Hazor, the head of all those kingdoms.', miles: 0 }
+    ]
+  },
+  {
+    id: 'ehud-eglon',
+    title: 'Ehud and Eglon',
+    subtitle: 'Tribute to Jericho and escape to the Ephraim hills',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JDG', chFrom: 3, chTo: 3 }],
+    distance: 25,
+    mode: 'Secret mission on foot',
+    days: 'A daring deliverance',
+    modern: 'Jericho up into the central highlands',
+    note: 'Eglon held the City of Palms (Jericho); Seirah is in the Ephraim hills.',
+    sources: [
+      'Ehud brings tribute to Eglon king of Moab (Judges 3:15-17).',
+      'He kills Eglon with a hidden dagger (Judges 3:21).',
+      'He escapes to Seirah and rallies Israel (Judges 3:26-27).'
+    ],
+    points: [
+      { ancient: 'Jericho', modern: 'Jericho, West Bank', x: 84, y: 66.9, lat: 31.87, lon: 35.44 },
+      { ancient: 'Seirah', modern: 'Ephraim hills', x: 16, y: 33.1, lat: 31.95, lon: 35.25 }
+    ],
+    steps: [
+      { label: 'Bringing tribute', ref: 'Judges 3:15', copy: 'Ehud, a left-handed man, brings tribute to Eglon.', miles: 0 },
+      { label: 'The hidden dagger', ref: 'Judges 3:21', copy: 'He thrusts the sword into the very fat king.', miles: 0 },
+      { label: 'Escape to Seirah', ref: 'Judges 3:26', copy: 'Ehud slips away while the servants wait.', miles: 18 },
+      { label: 'The trumpet of Ephraim', ref: 'Judges 3:27', copy: 'He sounds the trumpet and Israel goes down after him.', miles: 7 }
+    ]
+  },
+  {
+    id: 'jephthah-ammon',
+    title: 'Jephthah Fights Ammon',
+    subtitle: 'From Mizpah of Gilead against the Ammonites',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JDG', chFrom: 11, chTo: 11 }],
+    distance: 60,
+    mode: 'Army on the march',
+    days: 'A campaign in Gilead',
+    modern: 'The Gilead highlands of Jordan',
+    note: 'Mizpah of Gilead and Aroer are east of the Jordan; sites are approximate.',
+    sources: [
+      'The people make Jephthah head at Mizpah (Judges 11:11).',
+      'The Spirit of the Lord comes on him (Judges 11:29).',
+      'He strikes Ammon from Aroer to Minnith (Judges 11:32-33).'
+    ],
+    points: [
+      { ancient: 'Mizpah of Gilead', modern: 'Gilead, Jordan', x: 47.1, y: 16, lat: 32.3, lon: 35.75 },
+      { ancient: 'Aroer', modern: 'Near the Arnon, Jordan', x: 52.9, y: 84, lat: 31.5, lon: 35.83 }
+    ],
+    steps: [
+      { label: 'Made head at Mizpah', ref: 'Judges 11:11', copy: 'Jephthah speaks all his words before the Lord at Mizpah.', miles: 0 },
+      { label: 'The Spirit comes', ref: 'Judges 11:29', copy: 'He passes through Gilead and Manasseh to meet Ammon.', miles: 40 },
+      { label: 'Crossing to battle', ref: 'Judges 11:32', copy: 'The Lord gives the Ammonites into his hand.', miles: 15 },
+      { label: 'Struck to Aroer', ref: 'Judges 11:33', copy: 'He defeats them from Aroer as far as Minnith.', miles: 5 }
+    ]
+  },
+  {
+    id: 'danites-migrate-laish',
+    title: 'The Danites Migrate',
+    subtitle: 'From Zorah and Eshtaol to far-northern Laish',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JDG', chFrom: 18, chTo: 18 }],
+    distance: 100,
+    mode: 'A tribe on the move',
+    days: 'A migration north',
+    modern: 'The Shephelah all the way to the foot of Hermon',
+    note: 'Laish (renamed Dan) lay at the far north of the land near the Jordan springs.',
+    sources: [
+      'Five Danites are sent to spy out the land (Judges 18:2).',
+      'Six hundred armed men set out from Zorah and Eshtaol (Judges 18:11).',
+      'They strike Laish and rename it Dan (Judges 18:27-29).'
+    ],
+    points: [
+      { ancient: 'Zorah / Eshtaol', modern: 'Shephelah, Israel', x: 37, y: 84, lat: 31.77, lon: 34.98 },
+      { ancient: 'Kiriath-jearim', modern: 'Judean hills', x: 41.7, y: 82.2, lat: 31.81, lon: 35.1 },
+      { ancient: 'Laish (Dan)', modern: 'Tel Dan, Israel', x: 63, y: 16, lat: 33.25, lon: 35.65 }
+    ],
+    steps: [
+      { label: 'Spies sent out', ref: 'Judges 18:2', copy: 'Five strong men are sent to explore the land.', miles: 0 },
+      { label: 'Six hundred march', ref: 'Judges 18:11', copy: 'Armed men of Dan set out from Zorah and Eshtaol.', miles: 15 },
+      { label: 'Laish struck', ref: 'Judges 18:27', copy: 'They fall on the quiet, unsuspecting city and burn it.', miles: 85 },
+      { label: 'Renamed Dan', ref: 'Judges 18:29', copy: 'They name the city Dan after their ancestor.', miles: 0 }
+    ]
+  },
+  {
+    id: 'hannah-shiloh',
+    title: 'Hannah at Shiloh',
+    subtitle: 'The yearly pilgrimage from Ramah to the tabernacle',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 1, chTo: 1 }],
+    distance: 18,
+    mode: 'Family pilgrimage',
+    days: 'A yearly journey',
+    modern: 'The Benjamin hills up to Shiloh',
+    note: 'Shiloh held the tabernacle in the central hill country.',
+    sources: [
+      'Elkanah goes up yearly to worship at Shiloh (1 Samuel 1:3).',
+      'Hannah prays in bitterness of soul for a son (1 Samuel 1:10).',
+      'She brings the boy Samuel to the house of the Lord (1 Samuel 1:24).'
+    ],
+    points: [
+      { ancient: 'Ramah', modern: 'Er-Ram, West Bank', x: 36.3, y: 84, lat: 31.87, lon: 35.2 },
+      { ancient: 'Shiloh', modern: 'Khirbet Seilun', x: 63.7, y: 16, lat: 32.06, lon: 35.29 }
+    ],
+    steps: [
+      { label: 'Up to Shiloh', ref: '1 Samuel 1:3', copy: 'Elkanah goes up year by year to worship and sacrifice.', miles: 14 },
+      { label: 'Hannah prays', ref: '1 Samuel 1:10', copy: 'Deeply distressed, she weeps and prays to the Lord.', miles: 0 },
+      { label: 'Samuel is born', ref: '1 Samuel 1:20', copy: 'She bears a son and names him Samuel.', miles: 0 },
+      { label: 'Given to the Lord', ref: '1 Samuel 1:24', copy: 'She brings the weaned child to the house of the Lord.', miles: 14 }
+    ]
+  },
+  {
+    id: 'ark-returns-beth-shemesh',
+    title: 'The Ark Comes Home',
+    subtitle: 'From Ekron to Beth-shemesh and Kiriath-jearim',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 6, chTo: 7 }],
+    distance: 25,
+    mode: 'Drawn by a new cart',
+    days: 'A single day',
+    modern: 'The Philistine plain up into the Judean hills',
+    note: 'The cows pull the cart straight toward Israel without guidance.',
+    sources: [
+      'The Philistines send the ark on a new cart from Ekron (1 Samuel 6:10-11).',
+      'The cows go straight to Beth-shemesh (1 Samuel 6:12).',
+      'The ark is taken up to Kiriath-jearim (1 Samuel 7:1).'
+    ],
+    points: [
+      { ancient: 'Ekron', modern: 'Tel Miqne, Israel', x: 16, y: 50, lat: 31.78, lon: 34.85 },
+      { ancient: 'Beth-shemesh', modern: 'Tel Beit Shemesh', x: 51.4, y: 59.6, lat: 31.75, lon: 34.98 },
+      { ancient: 'Kiriath-jearim', modern: 'Judean hills', x: 84, y: 40.4, lat: 31.81, lon: 35.1 }
+    ],
+    steps: [
+      { label: 'Sent on a cart', ref: '1 Samuel 6:11', copy: 'The ark and the golden offerings are set on the cart.', miles: 0 },
+      { label: 'Straight to Beth-shemesh', ref: '1 Samuel 6:12', copy: 'The cows go straight up the road, lowing as they go.', miles: 8 },
+      { label: 'A holy fear', ref: '1 Samuel 6:19', copy: 'Some are struck for looking into the ark of the Lord.', miles: 0 },
+      { label: 'Up to Kiriath-jearim', ref: '1 Samuel 7:1', copy: 'They take the ark to the house of Abinadab on the hill.', miles: 10 }
+    ]
+  },
+  {
+    id: 'saul-rescues-jabesh',
+    title: 'Saul Rescues Jabesh-Gilead',
+    subtitle: 'Saul\'s first victory across the Jordan',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 11, chTo: 11 }],
+    distance: 50,
+    mode: 'Army on the march',
+    days: 'A night march to battle',
+    modern: 'Benjamin across the Jordan into Gilead',
+    note: 'Jabesh-gilead lay east of the Jordan; Saul musters Israel at Bezek.',
+    sources: [
+      'Messengers reach Gibeah and the people weep (1 Samuel 11:4).',
+      'Saul musters Israel at Bezek (1 Samuel 11:8).',
+      'He routs the Ammonites by the morning watch (1 Samuel 11:11).'
+    ],
+    points: [
+      { ancient: 'Gibeah', modern: 'Tell el-Ful', x: 30.8, y: 84, lat: 31.82, lon: 35.23 },
+      { ancient: 'Bezek', modern: 'Central hills', x: 46.3, y: 37.6, lat: 32.25, lon: 35.4 },
+      { ancient: 'Jabesh-gilead', modern: 'Gilead, Jordan', x: 69.2, y: 16, lat: 32.45, lon: 35.65 }
+    ],
+    steps: [
+      { label: 'News at Gibeah', ref: '1 Samuel 11:4', copy: 'The people of Gibeah weep at the threat to Jabesh.', miles: 0 },
+      { label: 'Mustered at Bezek', ref: '1 Samuel 11:8', copy: 'Saul numbers the army of Israel and Judah at Bezek.', miles: 30 },
+      { label: 'The dawn attack', ref: '1 Samuel 11:11', copy: 'He strikes the Ammonites until the heat of the day.', miles: 20 },
+      { label: 'The kingdom renewed', ref: '1 Samuel 11:15', copy: 'All the people make Saul king before the Lord at Gilgal.', miles: 0 }
+    ]
+  },
+  {
+    id: 'jonathan-michmash',
+    title: 'Jonathan\'s Climb at Michmash',
+    subtitle: 'A daring raid through the rocky pass',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 14, chTo: 14 }],
+    distance: 8,
+    mode: 'Climbing the pass',
+    days: 'A single bold day',
+    modern: 'The ravines north of Jerusalem',
+    note: 'The crags Bozez and Seneh guard the pass between Geba and Michmash.',
+    sources: [
+      'Between the passes are two rocky crags, Bozez and Seneh (1 Samuel 14:4).',
+      'Jonathan trusts the Lord to save by many or by few (1 Samuel 14:6).',
+      'He climbs up and the Philistines fall before him (1 Samuel 14:13).'
+    ],
+    points: [
+      { ancient: 'Gibeah', modern: 'Tell el-Ful', x: 16, y: 83.4, lat: 31.82, lon: 35.23 },
+      { ancient: 'Geba', modern: 'Jaba, West Bank', x: 61.3, y: 30, lat: 31.86, lon: 35.27 },
+      { ancient: 'Michmash', modern: 'Mukhmas, West Bank', x: 84, y: 16.6, lat: 31.87, lon: 35.29 }
+    ],
+    steps: [
+      { label: 'The rocky pass', ref: '1 Samuel 14:4', copy: 'Sharp crags rise on either side of the pass.', miles: 5 },
+      { label: 'By many or by few', ref: '1 Samuel 14:6', copy: 'Jonathan says nothing can hinder the Lord from saving.', miles: 0 },
+      { label: 'The climb', ref: '1 Samuel 14:13', copy: 'He climbs up on hands and feet, and they fall before him.', miles: 2 },
+      { label: 'The Lord saves Israel', ref: '1 Samuel 14:23', copy: 'So the Lord saves Israel that day.', miles: 0 }
+    ]
+  },
+  {
+    id: 'samuel-anoints-david',
+    title: 'Samuel Anoints David',
+    subtitle: 'From Ramah to Bethlehem to anoint a shepherd-king',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 16, chTo: 16 }],
+    distance: 20,
+    mode: 'Walking',
+    days: 'A single journey',
+    modern: 'The Benjamin hills down to Bethlehem',
+    note: 'Samuel goes to Jesse of Bethlehem at the Lord’s command.',
+    sources: [
+      'The Lord sends Samuel to Jesse in Bethlehem (1 Samuel 16:1).',
+      'The elders of Bethlehem tremble at his coming (1 Samuel 16:4).',
+      'Samuel anoints David among his brothers (1 Samuel 16:13).'
+    ],
+    points: [
+      { ancient: 'Ramah', modern: 'Er-Ram, West Bank', x: 50, y: 16, lat: 31.87, lon: 35.2 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem', x: 50, y: 84, lat: 31.7, lon: 35.2 }
+    ],
+    steps: [
+      { label: 'Sent to Bethlehem', ref: '1 Samuel 16:1', copy: '"Fill your horn with oil; I have chosen a king from Jesse’s sons."', miles: 14 },
+      { label: 'The elders tremble', ref: '1 Samuel 16:4', copy: 'Samuel comes in peace to sacrifice at Bethlehem.', miles: 0 },
+      { label: 'The youngest son', ref: '1 Samuel 16:11', copy: 'David is out keeping the sheep and is sent for.', miles: 0 },
+      { label: 'Anointed with oil', ref: '1 Samuel 16:13', copy: 'The Spirit of the Lord rushes upon David from that day.', miles: 0 }
+    ]
+  },
+  {
+    id: 'david-nob-gath',
+    title: 'David Flees to Nob and Gath',
+    subtitle: 'From the priests at Nob to the Philistine king',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 21, chTo: 21 }],
+    distance: 35,
+    mode: 'Fugitive on foot',
+    days: 'A frightened flight',
+    modern: 'Jerusalem’s edge down to the Philistine plain',
+    note: 'At Gath David feigns madness before Achish to escape.',
+    sources: [
+      'David comes to Ahimelech the priest at Nob (1 Samuel 21:1).',
+      'He is given the holy bread and the sword of Goliath (1 Samuel 21:6,9).',
+      'At Gath he pretends to be insane before Achish (1 Samuel 21:13).'
+    ],
+    points: [
+      { ancient: 'Nob', modern: 'Near Jerusalem', x: 84, y: 40.8, lat: 31.79, lon: 35.24 },
+      { ancient: 'Gath', modern: 'Tell es-Safi', x: 16, y: 59.2, lat: 31.7, lon: 34.85 }
+    ],
+    steps: [
+      { label: 'Bread at Nob', ref: '1 Samuel 21:6', copy: 'Ahimelech gives David the holy bread to eat.', miles: 0 },
+      { label: 'Goliath\'s sword', ref: '1 Samuel 21:9', copy: 'David takes the sword of Goliath, wrapped behind the ephod.', miles: 0 },
+      { label: 'Fleeing to Gath', ref: '1 Samuel 21:10', copy: 'David rises and flees to Achish king of Gath.', miles: 30 },
+      { label: 'Feigning madness', ref: '1 Samuel 21:13', copy: 'He acts insane, scratching the gate and drooling.', miles: 0 }
+    ]
+  },
+  {
+    id: 'david-adullam-moab',
+    title: 'David at the Cave of Adullam',
+    subtitle: 'Gathering a band, then sheltering his family in Moab',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 22, chTo: 22 }],
+    distance: 70,
+    mode: 'Fugitive on foot',
+    days: 'The outlaw years begin',
+    modern: 'The Shephelah caves east to Moab',
+    note: 'Adullam and the forest of Hereth are in Judah; Mizpeh is in Moab.',
+    sources: [
+      'David escapes to the cave of Adullam (1 Samuel 22:1).',
+      'Four hundred distressed men gather to him (1 Samuel 22:2).',
+      'He brings his parents to the king of Moab (1 Samuel 22:3).'
+    ],
+    points: [
+      { ancient: 'Cave of Adullam', modern: 'Shephelah, Israel', x: 16, y: 41.9, lat: 31.65, lon: 34.96 },
+      { ancient: 'Mizpeh of Moab', modern: 'Moab plateau, Jordan', x: 84, y: 58.1, lat: 31.5, lon: 35.7 },
+      { ancient: 'Forest of Hereth', modern: 'Judean hills', x: 19.7, y: 47.3, lat: 31.6, lon: 35 }
+    ],
+    steps: [
+      { label: 'The cave of Adullam', ref: '1 Samuel 22:1', copy: 'David escapes, and his family goes down to him.', miles: 0 },
+      { label: 'Four hundred gather', ref: '1 Samuel 22:2', copy: 'The distressed and indebted rally to him as captain.', miles: 0 },
+      { label: 'Parents to Moab', ref: '1 Samuel 22:3', copy: 'He asks the king of Moab to shelter his father and mother.', miles: 45 },
+      { label: 'Back to Hereth', ref: '1 Samuel 22:5', copy: 'The prophet Gad sends him to the forest of Hereth.', miles: 25 }
+    ]
+  },
+  {
+    id: 'saul-endor',
+    title: 'Saul and the Medium of Endor',
+    subtitle: 'A desperate night journey before the last battle',
+    certainty: 'Approximate route',
+    refs: [{ book: '1SA', chFrom: 28, chTo: 28 }],
+    distance: 10,
+    mode: 'By night, in disguise',
+    days: 'A fateful night',
+    modern: 'The Jezreel valley to the slopes of Moreh',
+    note: 'The armies camp at Shunem and Gilboa; Endor lies behind enemy lines.',
+    sources: [
+      'The Philistines camp at Shunem, Israel at Gilboa (1 Samuel 28:4).',
+      'Saul seeks a medium at Endor (1 Samuel 28:7).',
+      'He goes by night in disguise (1 Samuel 28:8).'
+    ],
+    points: [
+      { ancient: 'Mount Gilboa', modern: 'Mount Gilboa, Israel', x: 62.7, y: 84, lat: 32.46, lon: 35.42 },
+      { ancient: 'Shunem', modern: 'Sulam, Israel', x: 37.3, y: 31.1, lat: 32.6, lon: 35.34 },
+      { ancient: 'Endor', modern: 'Ein Dor area', x: 56.4, y: 16, lat: 32.64, lon: 35.4 }
+    ],
+    steps: [
+      { label: 'Armies face off', ref: '1 Samuel 28:4', copy: 'The Philistines gather at Shunem; Saul trembles at Gilboa.', miles: 6 },
+      { label: 'Seeking a medium', ref: '1 Samuel 28:7', copy: 'Saul orders his servants to find a medium at Endor.', miles: 0 },
+      { label: 'By night, disguised', ref: '1 Samuel 28:8', copy: 'He goes in disguise under cover of darkness.', miles: 4 },
+      { label: 'Samuel appears', ref: '1 Samuel 28:14', copy: 'The old prophet rises and pronounces Saul’s doom.', miles: 0 }
+    ]
+  },
+  {
+    id: 'david-king-hebron',
+    title: 'David Becomes King at Hebron',
+    subtitle: 'From Ziklag up to be anointed king of Judah',
+    certainty: 'Approximate route',
+    refs: [{ book: '2SA', chFrom: 2, chTo: 2 }],
+    distance: 30,
+    mode: 'Royal move with households',
+    days: 'A new beginning',
+    modern: 'The western Negev up to Hebron',
+    note: 'David inquires of the Lord and is told to go up to Hebron.',
+    sources: [
+      'David asks the Lord, who says, "Go up to Hebron" (2 Samuel 2:1).',
+      'He brings his men and their households (2 Samuel 2:3).',
+      'The men of Judah anoint him king at Hebron (2 Samuel 2:4).'
+    ],
+    points: [
+      { ancient: 'Ziklag', modern: 'Western Negev', x: 16, y: 69.1, lat: 31.3, lon: 34.62 },
+      { ancient: 'Hebron', modern: 'Hebron', x: 84, y: 30.9, lat: 31.53, lon: 35.1 }
+    ],
+    steps: [
+      { label: '"Go up to Hebron"', ref: '2 Samuel 2:1', copy: 'David inquires of the Lord and is sent to Hebron.', miles: 0 },
+      { label: 'Households resettle', ref: '2 Samuel 2:3', copy: 'He brings his men to live in the towns of Hebron.', miles: 30 },
+      { label: 'Anointed over Judah', ref: '2 Samuel 2:4', copy: 'The men of Judah anoint David king.', miles: 0 },
+      { label: 'Seven years at Hebron', ref: '2 Samuel 2:11', copy: 'He reigns over Judah there seven years and six months.', miles: 0 }
+    ]
+  },
+  {
+    id: 'david-rabbah-ammon',
+    title: 'The Siege of Rabbah',
+    subtitle: 'While Joab besieges Ammon\'s capital, David stays home',
+    certainty: 'Approximate route',
+    refs: [{ book: '2SA', chFrom: 11, chTo: 12 }],
+    distance: 45,
+    mode: 'Army on the march',
+    days: 'A spring campaign',
+    modern: 'Jerusalem east to modern Amman',
+    note: 'Rabbah of the Ammonites is modern Amman; David joins the siege at its end.',
+    sources: [
+      'Joab besieges Rabbah while David remains in Jerusalem (2 Samuel 11:1).',
+      'Joab takes the royal city and calls for David (2 Samuel 12:26-28).',
+      'David captures Rabbah and takes its crown (2 Samuel 12:29-30).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 59.7, lat: 31.78, lon: 35.23 },
+      { ancient: 'Rabbah', modern: 'Amman, Jordan', x: 84, y: 40.3, lat: 31.95, lon: 35.93 }
+    ],
+    steps: [
+      { label: 'David stays behind', ref: '2 Samuel 11:1', copy: 'In the spring the army goes out, but David stays in Jerusalem.', miles: 0 },
+      { label: 'The city falls', ref: '2 Samuel 12:26', copy: 'Joab takes the royal citadel of Rabbah.', miles: 40 },
+      { label: 'David called up', ref: '2 Samuel 12:28', copy: 'Joab summons David to take the city himself.', miles: 0 },
+      { label: 'Rabbah captured', ref: '2 Samuel 12:29', copy: 'David gathers the army, goes to Rabbah, and takes it.', miles: 5 }
+    ]
+  },
+  {
+    id: 'sheba-revolt',
+    title: 'Sheba\'s Revolt',
+    subtitle: 'Joab pursues a rebel to Abel of Beth-maacah',
+    certainty: 'Approximate route',
+    refs: [{ book: '2SA', chFrom: 20, chTo: 20 }],
+    distance: 110,
+    mode: 'Army in pursuit',
+    days: 'A pursuit to the far north',
+    modern: 'Jerusalem all the way to the Lebanese border',
+    note: 'Abel-beth-maacah lay at the far north; a wise woman ends the siege.',
+    sources: [
+      'Israel follows Sheba while Judah stays with David (2 Samuel 20:2).',
+      'Sheba flees to Abel of Beth-maacah (2 Samuel 20:14).',
+      'A wise woman ends the siege (2 Samuel 20:22).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 43.2, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Abel-beth-maacah', modern: 'Tel Abel, N. Israel', x: 56.8, y: 16, lat: 33.26, lon: 35.58 }
+    ],
+    steps: [
+      { label: 'Israel follows Sheba', ref: '2 Samuel 20:2', copy: 'The men of Israel desert David to follow Sheba.', miles: 0 },
+      { label: 'Flight to the north', ref: '2 Samuel 20:14', copy: 'Sheba goes through all Israel to Abel of Beth-maacah.', miles: 100 },
+      { label: 'Joab lays siege', ref: '2 Samuel 20:15', copy: 'They build a siege ramp against the city wall.', miles: 10 },
+      { label: 'A wise woman', ref: '2 Samuel 20:22', copy: 'She persuades the city, and Sheba’s head is thrown out.', miles: 0 }
+    ]
+  },
+  {
+    id: 'solomon-cedars-lebanon',
+    title: 'Cedars for the Temple',
+    subtitle: 'Hiram\'s timber floated from Lebanon to Jerusalem',
+    certainty: 'Approximate route',
+    refs: [{ book: '1KI', chFrom: 5, chTo: 5 }],
+    distance: 120,
+    mode: 'Rafts by sea, then overland',
+    days: 'A great building effort',
+    modern: 'Lebanon down the coast to Jerusalem',
+    note: 'Logs were floated by sea to the coast, then carried up to Jerusalem.',
+    sources: [
+      'Solomon asks Hiram for cedars of Lebanon (1 Kings 5:6).',
+      'The logs are floated by sea to the appointed place (1 Kings 5:9).',
+      'Thirty thousand laborers work in relays in Lebanon (1 Kings 5:13-14).'
+    ],
+    points: [
+      { ancient: 'Lebanon (Tyre)', modern: 'Tyre, Lebanon', x: 58.1, y: 16, lat: 33.27, lon: 35.2 },
+      { ancient: 'Joppa', modern: 'Jaffa, Israel', x: 40.8, y: 71.7, lat: 32.05, lon: 34.75 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 59.2, y: 84, lat: 31.78, lon: 35.23 }
+    ],
+    steps: [
+      { label: 'Cedars of Lebanon', ref: '1 Kings 5:6', copy: 'Solomon asks for cedar, for none can cut timber like the Sidonians.', miles: 0 },
+      { label: 'Floated by sea', ref: '1 Kings 5:9', copy: 'The logs are bound into rafts and floated down the coast.', miles: 80 },
+      { label: 'Laborers in relays', ref: '1 Kings 5:14', copy: 'Ten thousand a month go up to Lebanon in shifts.', miles: 0 },
+      { label: 'Stone and timber', ref: '1 Kings 5:18', copy: 'The builders prepare the timber and stone for the house.', miles: 40 }
+    ]
+  },
+  {
+    id: 'elisha-shunem',
+    title: 'Elisha and the Shunammite',
+    subtitle: 'Between Shunem and Mount Carmel to raise a child',
+    certainty: 'Approximate route',
+    refs: [{ book: '2KI', chFrom: 4, chTo: 4 }],
+    distance: 30,
+    mode: 'Riding and walking',
+    days: 'A day of grief and joy',
+    modern: 'The Jezreel valley to Mount Carmel',
+    note: 'Shunem and Mount Carmel are securely located in the north.',
+    sources: [
+      'The woman of Shunem prepares a room for Elisha (2 Kings 4:8-10).',
+      'Her son dies on her knees (2 Kings 4:20).',
+      'She rides to Elisha at Mount Carmel (2 Kings 4:25).'
+    ],
+    points: [
+      { ancient: 'Shunem', modern: 'Sulam, Israel', x: 84, y: 68.1, lat: 32.6, lon: 35.34 },
+      { ancient: 'Mount Carmel', modern: 'Mount Carmel, Israel', x: 16, y: 31.9, lat: 32.73, lon: 35.05 }
+    ],
+    steps: [
+      { label: 'A room for the prophet', ref: '2 Kings 4:10', copy: 'She builds a small roof chamber for Elisha to stay in.', miles: 0 },
+      { label: 'The child dies', ref: '2 Kings 4:20', copy: 'The boy sits on her lap till noon, and then he dies.', miles: 0 },
+      { label: 'Riding to Carmel', ref: '2 Kings 4:25', copy: 'She saddles the donkey and rides to the man of God.', miles: 18 },
+      { label: 'The boy raised', ref: '2 Kings 4:35', copy: 'The child sneezes seven times and opens his eyes.', miles: 12 }
+    ]
+  },
+  {
+    id: 'jehu-revolt',
+    title: 'Jehu\'s Furious Drive',
+    subtitle: 'From Ramoth-gilead racing to Jezreel',
+    certainty: 'Approximate route',
+    refs: [{ book: '2KI', chFrom: 9, chTo: 9 }],
+    distance: 45,
+    mode: 'Charging by chariot',
+    days: 'A single violent day',
+    modern: 'Gilead across the Jordan to Jezreel',
+    note: 'Jehu drives from Ramoth-gilead to seize the throne at Jezreel.',
+    sources: [
+      'Jehu is anointed king at Ramoth-gilead (2 Kings 9:6).',
+      'He rides furiously toward Jezreel (2 Kings 9:16).',
+      'He is recognized by his mad driving (2 Kings 9:20).'
+    ],
+    points: [
+      { ancient: 'Ramoth-gilead', modern: 'Gilead, Jordan', x: 84, y: 46.9, lat: 32.6, lon: 35.85 },
+      { ancient: 'Jezreel', modern: 'Tel Yizre’el', x: 16, y: 53.1, lat: 32.56, lon: 35.33 }
+    ],
+    steps: [
+      { label: 'Anointed in secret', ref: '2 Kings 9:6', copy: 'The young prophet pours oil on Jehu’s head.', miles: 0 },
+      { label: 'Riding to Jezreel', ref: '2 Kings 9:16', copy: 'Jehu mounts his chariot and drives to where Joram lies.', miles: 40 },
+      { label: '"He drives like a madman"', ref: '2 Kings 9:20', copy: 'The watchman knows the furious driving of Jehu.', miles: 0 },
+      { label: 'Joram struck down', ref: '2 Kings 9:24', copy: 'Jehu draws his bow and strikes Joram in the field.', miles: 5 }
+    ]
+  },
+  {
+    id: 'sennacherib-jerusalem',
+    title: 'Sennacherib Threatens Jerusalem',
+    subtitle: 'The Assyrian army from Lachish to Hezekiah\'s walls',
+    certainty: 'Well attested',
+    refs: [{ book: '2KI', chFrom: 18, chTo: 19 }],
+    distance: 30,
+    mode: 'Assyrian army on the march',
+    days: 'A siege crisis',
+    modern: 'The Shephelah up to Jerusalem',
+    note: 'Lachish was the Assyrian base; the angel of the Lord delivers Jerusalem.',
+    sources: [
+      'Hezekiah sends tribute to Sennacherib at Lachish (2 Kings 18:14).',
+      'The Assyrians come up to Jerusalem (2 Kings 18:17).',
+      'The angel of the Lord strikes the Assyrian camp (2 Kings 19:35).'
+    ],
+    points: [
+      { ancient: 'Lachish', modern: 'Tel Lachish', x: 16, y: 73.1, lat: 31.56, lon: 34.85 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 84, y: 26.9, lat: 31.78, lon: 35.23 }
+    ],
+    steps: [
+      { label: 'Tribute from Lachish', ref: '2 Kings 18:14', copy: 'Hezekiah sends silver and gold to the Assyrian king.', miles: 0 },
+      { label: 'The army at the wall', ref: '2 Kings 18:17', copy: 'A great force comes up and stands by the conduit.', miles: 28 },
+      { label: 'The letter spread out', ref: '2 Kings 19:14', copy: 'Hezekiah lays the threatening letter before the Lord.', miles: 0 },
+      { label: 'The camp struck', ref: '2 Kings 19:35', copy: 'That night the angel of the Lord strikes the Assyrian host.', miles: 0 }
+    ]
+  },
+  {
+    id: 'zedekiah-flight',
+    title: 'Zedekiah\'s Flight',
+    subtitle: 'The last king flees Jerusalem and is caught near Jericho',
+    certainty: 'Approximate route',
+    refs: [{ book: '2KI', chFrom: 25, chTo: 25 }],
+    distance: 230,
+    mode: 'Fleeing by night, then captive',
+    days: 'The fall of Jerusalem',
+    modern: 'Jerusalem to Jericho, then far north to Syria',
+    note: 'Riblah, where Nebuchadnezzar held court, lay on the Orontes in Syria.',
+    sources: [
+      'The army flees by night toward the Arabah (2 Kings 25:4).',
+      'The Chaldeans overtake Zedekiah in the plains of Jericho (2 Kings 25:5).',
+      'He is brought to the king of Babylon at Riblah (2 Kings 25:6).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 35.9, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Plains of Jericho', modern: 'Jericho valley', x: 40.8, y: 82, lat: 31.86, lon: 35.46 },
+      { ancient: 'Riblah', modern: 'Riblah, Syria', x: 64.1, y: 16, lat: 34.45, lon: 36.55 }
+    ],
+    steps: [
+      { label: 'Flight by night', ref: '2 Kings 25:4', copy: 'The soldiers slip out by the gate toward the Arabah.', miles: 18 },
+      { label: 'Caught near Jericho', ref: '2 Kings 25:5', copy: 'The Chaldean army overtakes the king in the plains of Jericho.', miles: 0 },
+      { label: 'Brought to Riblah', ref: '2 Kings 25:6', copy: 'He is taken to Nebuchadnezzar, who passes sentence on him.', miles: 210 },
+      { label: 'Blinded and bound', ref: '2 Kings 25:7', copy: 'His sons are killed, his eyes put out, and he is bound in chains.', miles: 0 }
+    ]
+  },
+  {
+    id: 'jeremiah-to-egypt',
+    title: 'Jeremiah Taken to Egypt',
+    subtitle: 'The remnant flees to Tahpanhes against the word',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JER', chFrom: 43, chTo: 43 }],
+    distance: 280,
+    mode: 'A fearful migration',
+    days: 'A long flight south',
+    modern: 'The Judean hills across Sinai to the Nile Delta',
+    note: 'Tahpanhes was a fortress city in the eastern Nile Delta.',
+    sources: [
+      'The remnant takes everyone to the land of Egypt (Jeremiah 43:5).',
+      'They take Jeremiah and Baruch with them (Jeremiah 43:6).',
+      'They come to Tahpanhes (Jeremiah 43:7).'
+    ],
+    points: [
+      { ancient: 'Mizpah', modern: 'Tell en-Nasbeh', x: 84, y: 37, lat: 31.83, lon: 35.18 },
+      { ancient: 'Tahpanhes', modern: 'Eastern Nile Delta', x: 16, y: 63, lat: 30.85, lon: 32.18 }
+    ],
+    steps: [
+      { label: 'Refusing the word', ref: 'Jeremiah 43:5', copy: 'The leaders take all the remnant of Judah toward Egypt.', miles: 0 },
+      { label: 'Jeremiah carried along', ref: 'Jeremiah 43:6', copy: 'They take the prophet and Baruch against their will.', miles: 240 },
+      { label: 'Arrival at Tahpanhes', ref: 'Jeremiah 43:7', copy: 'They enter the land of Egypt as far as Tahpanhes.', miles: 40 },
+      { label: 'Stones in the pavement', ref: 'Jeremiah 43:9', copy: 'Jeremiah hides stones as a sign of Babylon’s coming throne.', miles: 0 }
+    ]
+  },
+  {
+    id: 'jonah-flees-tarshish',
+    title: 'Jonah Flees to Tarshish',
+    subtitle: 'Down to Joppa and out to sea away from God',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JON', chFrom: 1, chTo: 1 }],
+    distance: 600,
+    mode: 'By ship',
+    days: 'A flight cut short by a storm',
+    modern: 'Joppa out into the open Mediterranean',
+    note: 'Tarshish lay far to the west; Jonah sails the opposite way from Nineveh.',
+    sources: [
+      'Jonah goes down to Joppa and boards a ship for Tarshish (Jonah 1:3).',
+      'A great storm threatens the ship (Jonah 1:4).',
+      'A great fish swallows him three days and nights (Jonah 1:17).'
+    ],
+    points: [
+      { ancient: 'Joppa', modern: 'Jaffa, Israel', x: 84, y: 56.8, lat: 32.05, lon: 34.75 },
+      { ancient: 'The Great Sea', modern: 'Open Mediterranean', x: 52.9, y: 48.8, lat: 33.5, lon: 28 },
+      { ancient: 'Toward Tarshish', modern: 'The far western sea', x: 16, y: 43.2, lat: 34.5, lon: 20 }
+    ],
+    steps: [
+      { label: 'Down to Joppa', ref: 'Jonah 1:3', copy: 'Jonah pays the fare and boards a ship to flee from the Lord.', miles: 0 },
+      { label: 'The great storm', ref: 'Jonah 1:4', copy: 'The Lord hurls a mighty wind, and the ship threatens to break.', miles: 300 },
+      { label: 'Cast into the sea', ref: 'Jonah 1:15', copy: 'They throw Jonah overboard and the sea grows calm.', miles: 0 },
+      { label: 'The great fish', ref: 'Jonah 1:17', copy: 'The Lord appoints a great fish to swallow him.', miles: 0 }
+    ]
+  },
+  {
+    id: 'daniel-exile-babylon',
+    title: 'Daniel Taken to Babylon',
+    subtitle: 'From Jerusalem into exile in the land of Shinar',
+    certainty: 'Approximate route',
+    refs: [{ book: 'DAN', chFrom: 1, chTo: 1 }],
+    distance: 900,
+    mode: 'Captives on the long road',
+    days: 'The road of exile',
+    modern: 'Jerusalem up the Fertile Crescent to Iraq',
+    note: 'The captives followed the watered arc of the Fertile Crescent to Babylon.',
+    sources: [
+      'Nebuchadnezzar besieges Jerusalem (Daniel 1:1).',
+      'He carries the vessels of God’s house to Shinar (Daniel 1:2).',
+      'Daniel and his friends are chosen for the king’s service (Daniel 1:6).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 61.8, lat: 31.78, lon: 35.23 },
+      { ancient: 'Riblah / Hamath', modern: 'Orontes valley, Syria', x: 25.8, y: 38.2, lat: 34.45, lon: 36.55 },
+      { ancient: 'Babylon', modern: 'Hillah, Iraq', x: 84, y: 55.1, lat: 32.54, lon: 44.42 }
+    ],
+    steps: [
+      { label: 'Jerusalem besieged', ref: 'Daniel 1:1', copy: 'Nebuchadnezzar comes against Jerusalem and besieges it.', miles: 0 },
+      { label: 'Vessels to Shinar', ref: 'Daniel 1:2', copy: 'He carries off the temple vessels to the land of Shinar.', miles: 850 },
+      { label: 'Chosen youths', ref: 'Daniel 1:4', copy: 'The best young men are taken to learn the ways of Babylon.', miles: 50 },
+      { label: 'Daniel among them', ref: 'Daniel 1:6', copy: 'Daniel, Hananiah, Mishael, and Azariah are among the exiles.', miles: 0 }
+    ]
+  },
+  {
+    id: 'mary-visits-elizabeth',
+    title: 'Mary Visits Elizabeth',
+    subtitle: 'From Nazareth to the hill country of Judah',
+    certainty: 'Approximate route',
+    refs: [{ book: 'LUK', chFrom: 1, chTo: 1 }],
+    distance: 80,
+    mode: 'Walking with haste',
+    days: 'A journey of joy',
+    modern: 'Galilee down to the Judean hills near Jerusalem',
+    note: 'The unnamed town of Judah is traditionally Ein Karem near Jerusalem.',
+    sources: [
+      'Mary goes with haste to a town in the hill country of Judah (Luke 1:39).',
+      'The baby leaps in Elizabeth’s womb (Luke 1:41).',
+      'Mary sings the Magnificat (Luke 1:46).'
+    ],
+    points: [
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 54.3, y: 16, lat: 32.7, lon: 35.3 },
+      { ancient: 'Hill country of Judah', modern: 'Ein Karem area', x: 45.7, y: 84, lat: 31.77, lon: 35.16 }
+    ],
+    steps: [
+      { label: 'Going with haste', ref: 'Luke 1:39', copy: 'Mary sets out quickly for the hill country of Judah.', miles: 70 },
+      { label: 'The baby leaps', ref: 'Luke 1:41', copy: 'At Mary’s greeting John leaps in Elizabeth’s womb.', miles: 0 },
+      { label: 'The Magnificat', ref: 'Luke 1:46', copy: '"My soul magnifies the Lord," Mary sings.', miles: 0 },
+      { label: 'Three months’ stay', ref: 'Luke 1:56', copy: 'Mary remains about three months, then returns home.', miles: 10 }
+    ]
+  },
+  {
+    id: 'presentation-temple',
+    title: 'Presented at the Temple',
+    subtitle: 'From Bethlehem to Jerusalem to meet Simeon and Anna',
+    certainty: 'Well attested',
+    refs: [{ book: 'LUK', chFrom: 2, chTo: 2 }],
+    distance: 6,
+    mode: 'Walking',
+    days: 'A short journey of devotion',
+    modern: 'Bethlehem up to the Jerusalem temple',
+    note: 'The temple and Bethlehem are securely located, a short walk apart.',
+    sources: [
+      'They bring him to Jerusalem to present him to the Lord (Luke 2:22).',
+      'Simeon waits for the consolation of Israel (Luke 2:25).',
+      'Anna gives thanks and speaks of the child (Luke 2:38).'
+    ],
+    points: [
+      { ancient: 'Bethlehem', modern: 'Bethlehem', x: 37.3, y: 84, lat: 31.7, lon: 35.2 },
+      { ancient: 'Jerusalem (temple)', modern: 'Temple Mount', x: 62.7, y: 16, lat: 31.78, lon: 35.235 }
+    ],
+    steps: [
+      { label: 'Up to the temple', ref: 'Luke 2:22', copy: 'They bring the child to present him to the Lord.', miles: 6 },
+      { label: 'Simeon waiting', ref: 'Luke 2:25', copy: 'A righteous man awaits the consolation of Israel.', miles: 0 },
+      { label: 'Nunc Dimittis', ref: 'Luke 2:28', copy: 'Simeon takes him in his arms and blesses God.', miles: 0 },
+      { label: 'Anna gives thanks', ref: 'Luke 2:38', copy: 'The aged prophetess speaks of him to all who wait.', miles: 0 }
+    ]
+  },
+  {
+    id: 'widow-of-nain',
+    title: 'The Widow of Nain',
+    subtitle: 'Jesus comes to Nain and raises a widow’s only son',
+    certainty: 'Approximate route',
+    refs: [{ book: 'LUK', chFrom: 7, chTo: 7 }],
+    distance: 25,
+    mode: 'Walking with a crowd',
+    days: 'A day of compassion',
+    modern: 'Capernaum south to the village of Nain',
+    note: 'Nain sits on the slope of the hill of Moreh, securely located.',
+    sources: [
+      'Jesus goes to a town called Nain with his disciples (Luke 7:11).',
+      'A widow’s only son is being carried out dead (Luke 7:12).',
+      'He says, "Young man, arise" (Luke 7:14).'
+    ],
+    points: [
+      { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 76.8, y: 16, lat: 32.88, lon: 35.575 },
+      { ancient: 'Nain', modern: 'Nein, Israel', x: 23.2, y: 84, lat: 32.64, lon: 35.35 }
+    ],
+    steps: [
+      { label: 'On the way to Nain', ref: 'Luke 7:11', copy: 'A great crowd goes with Jesus toward the town.', miles: 23 },
+      { label: 'A funeral at the gate', ref: 'Luke 7:12', copy: 'A dead man is carried out, his mother a widow.', miles: 0 },
+      { label: '"Young man, arise"', ref: 'Luke 7:14', copy: 'Jesus touches the bier and speaks, and the dead man sits up.', miles: 0 },
+      { label: 'Fear and praise', ref: 'Luke 7:16', copy: 'Fear seizes them all and they glorify God.', miles: 0 }
+    ]
+  },
+  {
+    id: 'ten-lepers',
+    title: 'The Ten Lepers',
+    subtitle: 'Healed on the road between Samaria and Galilee',
+    certainty: 'Approximate route',
+    refs: [{ book: 'LUK', chFrom: 17, chTo: 17 }],
+    distance: 40,
+    mode: 'Walking toward Jerusalem',
+    days: 'On the road south',
+    modern: 'The borderlands between Samaria and Galilee',
+    note: 'Jesus travels the Samaria–Galilee border on the way to Jerusalem.',
+    sources: [
+      'He passes between Samaria and Galilee (Luke 17:11).',
+      'Ten lepers cry, "Master, have mercy" (Luke 17:13).',
+      'One, a Samaritan, returns to give thanks (Luke 17:16).'
+    ],
+    points: [
+      { ancient: 'Samaria–Galilee border', modern: 'N. West Bank hills', x: 52.9, y: 16, lat: 32.45, lon: 35.3 },
+      { ancient: 'Toward Jerusalem', modern: 'Central highlands', x: 47.1, y: 84, lat: 31.95, lon: 35.25 }
+    ],
+    steps: [
+      { label: 'On the border road', ref: 'Luke 17:11', copy: 'Jesus passes along between Samaria and Galilee.', miles: 5 },
+      { label: 'Ten cry for mercy', ref: 'Luke 17:13', copy: 'Ten lepers stand at a distance and lift their voices.', miles: 0 },
+      { label: 'Cleansed as they go', ref: 'Luke 17:14', copy: '"Go, show yourselves to the priests," and they are cleansed.', miles: 0 },
+      { label: 'One returns', ref: 'Luke 17:16', copy: 'A Samaritan falls at his feet, giving thanks.', miles: 0 }
+    ]
+  },
+  {
+    id: 'jesus-feast-tabernacles',
+    title: 'Up to the Feast in Secret',
+    subtitle: 'Jesus goes to Jerusalem for the Feast of Tabernacles',
+    certainty: 'Approximate route',
+    refs: [{ book: 'JHN', chFrom: 7, chTo: 7 }],
+    distance: 80,
+    mode: 'Walking, privately',
+    days: 'During the autumn feast',
+    modern: 'Galilee up to Jerusalem',
+    note: 'Jesus goes up not publicly but in private, then teaches at the temple.',
+    sources: [
+      'He goes up to the feast, not publicly but in private (John 7:10).',
+      'Midway through the feast he teaches in the temple (John 7:14).',
+      '"If anyone thirsts, let him come to me and drink" (John 7:37).'
+    ],
+    points: [
+      { ancient: 'Galilee', modern: 'Sea of Galilee region', x: 56.2, y: 16, lat: 32.8, lon: 35.45 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 43.8, y: 84, lat: 31.78, lon: 35.23 }
+    ],
+    steps: [
+      { label: 'Going up in private', ref: 'John 7:10', copy: 'After his brothers go, Jesus also goes up, but quietly.', miles: 75 },
+      { label: 'Teaching at the feast', ref: 'John 7:14', copy: 'Midway through the feast he begins teaching in the temple.', miles: 0 },
+      { label: 'Rivers of living water', ref: 'John 7:37', copy: 'On the last day he cries out the invitation to come and drink.', miles: 0 },
+      { label: 'A division', ref: 'John 7:43', copy: 'The crowd is divided over who he is.', miles: 0 }
+    ]
+  },
+  {
+    id: 'blind-bartimaeus-jericho',
+    title: 'Blind Bartimaeus',
+    subtitle: 'Healed by the road as Jesus leaves Jericho',
+    certainty: 'Approximate route',
+    refs: [{ book: 'MRK', chFrom: 10, chTo: 10 }],
+    distance: 16,
+    mode: 'Walking with a crowd',
+    days: 'On the way up to Jerusalem',
+    modern: 'Jericho climbing toward Jerusalem',
+    note: 'Bartimaeus sits by the Jericho road on the final ascent to Jerusalem.',
+    sources: [
+      'Leaving Jericho, blind Bartimaeus sits by the road (Mark 10:46).',
+      'He cries, "Jesus, Son of David, have mercy" (Mark 10:47).',
+      '"Your faith has made you well," and he follows on the way (Mark 10:52).'
+    ],
+    points: [
+      { ancient: 'Jericho', modern: 'Jericho, West Bank', x: 84, y: 26.7, lat: 31.87, lon: 35.44 },
+      { ancient: 'Road to Jerusalem', modern: 'Judean ascent', x: 16, y: 73.3, lat: 31.8, lon: 35.32 }
+    ],
+    steps: [
+      { label: 'By the roadside', ref: 'Mark 10:46', copy: 'Blind Bartimaeus is begging beside the road out of Jericho.', miles: 1 },
+      { label: 'Son of David', ref: 'Mark 10:47', copy: 'He cries out all the more for mercy.', miles: 0 },
+      { label: '"What do you want?"', ref: 'Mark 10:51', copy: '"Rabbi, let me recover my sight."', miles: 0 },
+      { label: 'Following on the way', ref: 'Mark 10:52', copy: 'Immediately he sees and follows Jesus up the road.', miles: 14 }
+    ]
+  },
+  {
+    id: 'great-commission-galilee',
+    title: 'The Great Commission',
+    subtitle: 'The eleven go to the mountain in Galilee',
+    certainty: 'Approximate route',
+    refs: [{ book: 'MAT', chFrom: 28, chTo: 28 }],
+    distance: 75,
+    mode: 'Walking',
+    days: 'After the resurrection',
+    modern: 'Jerusalem back up to a Galilean mountain',
+    note: 'The risen Jesus directs the disciples to a mountain in Galilee.',
+    sources: [
+      'The angel says he is going before them to Galilee (Matthew 28:7).',
+      'The eleven go to the mountain Jesus appointed (Matthew 28:16).',
+      '"Go and make disciples of all nations" (Matthew 28:19).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 42.4, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Mountain in Galilee', modern: 'Galilee highlands', x: 57.6, y: 16, lat: 32.8, lon: 35.5 }
+    ],
+    steps: [
+      { label: 'Sent to Galilee', ref: 'Matthew 28:7', copy: 'The angel tells the women he goes before them to Galilee.', miles: 70 },
+      { label: 'On the mountain', ref: 'Matthew 28:16', copy: 'The eleven go to the mountain Jesus appointed.', miles: 0 },
+      { label: 'Worship and doubt', ref: 'Matthew 28:17', copy: 'They worship him, but some doubt.', miles: 0 },
+      { label: 'All authority', ref: 'Matthew 28:19', copy: '"Make disciples of all nations, baptizing them."', miles: 0 }
+    ]
+  },
+  {
+    id: 'peter-lydda-joppa',
+    title: 'Peter at Lydda and Joppa',
+    subtitle: 'Healing Aeneas and raising Tabitha on the coastal plain',
+    certainty: 'Approximate route',
+    refs: [{ book: 'ACT', chFrom: 9, chTo: 9 }],
+    distance: 12,
+    mode: 'Walking the plain',
+    days: 'Two coastal miracles',
+    modern: 'The Israeli coastal plain from Lod to Jaffa',
+    note: 'Lydda and Joppa are securely located on the coastal plain.',
+    sources: [
+      'Peter comes to the saints at Lydda and heals Aeneas (Acts 9:32-34).',
+      'The disciples at Joppa send for him (Acts 9:38).',
+      '"Tabitha, arise," and she opens her eyes (Acts 9:40).'
+    ],
+    points: [
+      { ancient: 'Lydda', modern: 'Lod, Israel', x: 84, y: 78.6, lat: 31.95, lon: 34.89 },
+      { ancient: 'Joppa', modern: 'Jaffa, Israel', x: 16, y: 21.4, lat: 32.05, lon: 34.75 }
+    ],
+    steps: [
+      { label: 'Aeneas healed', ref: 'Acts 9:34', copy: '"Jesus Christ heals you; rise and make your bed."', miles: 0 },
+      { label: 'Sent for from Joppa', ref: 'Acts 9:38', copy: 'The disciples urge Peter to come without delay.', miles: 11 },
+      { label: '"Tabitha, arise"', ref: 'Acts 9:40', copy: 'Peter prays, and the dead woman opens her eyes.', miles: 0 },
+      { label: 'Many believe', ref: 'Acts 9:42', copy: 'It becomes known and many believe in the Lord.', miles: 0 }
+    ]
+  },
+  {
+    id: 'herod-agrippa-caesarea',
+    title: 'Herod\'s Death at Caesarea',
+    subtitle: 'Herod Agrippa goes down from Judea to Caesarea',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 12, chTo: 12 }],
+    distance: 65,
+    mode: 'Royal journey',
+    days: 'A king’s downfall',
+    modern: 'Jerusalem down to the coast at Caesarea',
+    note: 'Caesarea was the Roman seat of government on the coast.',
+    sources: [
+      'Herod goes down from Judea to Caesarea (Acts 12:19).',
+      'He addresses the people in royal robes (Acts 12:21).',
+      'An angel strikes him and he dies (Acts 12:23).'
+    ],
+    points: [
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 63.6, y: 84, lat: 31.78, lon: 35.23 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 36.4, y: 16, lat: 32.5, lon: 34.89 }
+    ],
+    steps: [
+      { label: 'Down to Caesarea', ref: 'Acts 12:19', copy: 'Herod leaves Judea and stays at Caesarea.', miles: 65 },
+      { label: 'The royal address', ref: 'Acts 12:21', copy: 'In royal robes he delivers an oration to the people.', miles: 0 },
+      { label: '"The voice of a god"', ref: 'Acts 12:22', copy: 'The crowd shouts that it is a god, not a man.', miles: 0 },
+      { label: 'Struck by an angel', ref: 'Acts 12:23', copy: 'Because he does not give God glory, he is struck down.', miles: 0 }
+    ]
+  },
+  {
+    id: 'paul-cyprus',
+    title: 'Paul on Cyprus',
+    subtitle: 'The first missionary leg from Antioch across Cyprus',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 13, chTo: 13 }],
+    distance: 200,
+    mode: 'Sailing and walking',
+    days: 'The first journey begins',
+    modern: 'Antioch by sea to Cyprus',
+    note: 'Barnabas and Saul are sent out by the Spirit through the island of Cyprus.',
+    sources: [
+      'The Spirit sends them down to Seleucia, then by ship to Cyprus (Acts 13:4).',
+      'They proclaim the word at Salamis (Acts 13:5).',
+      'At Paphos the proconsul Sergius Paulus believes (Acts 13:7,12).'
+    ],
+    points: [
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 84, y: 33.9, lat: 36.2, lon: 36.16 },
+      { ancient: 'Seleucia', modern: 'Samandağ, Turkey', x: 79.8, y: 35.6, lat: 36.12, lon: 35.93 },
+      { ancient: 'Salamis', modern: 'Cyprus (east)', x: 43, y: 56.6, lat: 35.18, lon: 33.9 },
+      { ancient: 'Paphos', modern: 'Cyprus (west)', x: 16, y: 66.1, lat: 34.75, lon: 32.41 }
+    ],
+    steps: [
+      { label: 'Down to the sea', ref: 'Acts 13:4', copy: 'Sent by the Spirit, they sail from Seleucia to Cyprus.', miles: 130 },
+      { label: 'Salamis synagogues', ref: 'Acts 13:5', copy: 'They proclaim the word of God in the synagogues.', miles: 0 },
+      { label: 'Elymas at Paphos', ref: 'Acts 13:6', copy: 'They meet a magician who opposes them.', miles: 90 },
+      { label: 'The proconsul believes', ref: 'Acts 13:12', copy: 'Sergius Paulus believes, astonished at the teaching.', miles: 0 }
+    ]
+  },
+  {
+    id: 'paul-pisidian-antioch',
+    title: 'Paul at Pisidian Antioch',
+    subtitle: 'From Paphos to Perga and up to the highlands',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 13, chTo: 13 }],
+    distance: 180,
+    mode: 'Sailing and walking',
+    days: 'Inland into Asia Minor',
+    modern: 'Cyprus to the mountains of southern Turkey',
+    note: 'John Mark turns back at Perga; Paul preaches in the synagogue at Antioch.',
+    sources: [
+      'They sail from Paphos to Perga, where John leaves them (Acts 13:13).',
+      'They go on to Antioch in Pisidia (Acts 13:14).',
+      'Paul preaches and the Gentiles rejoice (Acts 13:16,48).'
+    ],
+    points: [
+      { ancient: 'Paphos', modern: 'Cyprus (west)', x: 62, y: 84, lat: 34.75, lon: 32.41 },
+      { ancient: 'Perga', modern: 'Perge, Turkey', x: 38, y: 41.8, lat: 36.96, lon: 30.85 },
+      { ancient: 'Pisidian Antioch', modern: 'Yalvaç, Turkey', x: 43.2, y: 16, lat: 38.31, lon: 31.19 }
+    ],
+    steps: [
+      { label: 'John turns back', ref: 'Acts 13:13', copy: 'At Perga, John Mark leaves and returns to Jerusalem.', miles: 130 },
+      { label: 'Up to Antioch', ref: 'Acts 13:14', copy: 'They go on to Pisidian Antioch and enter the synagogue.', miles: 90 },
+      { label: 'Paul preaches', ref: 'Acts 13:16', copy: 'He stands and tells Israel’s story leading to Jesus.', miles: 0 },
+      { label: 'The Gentiles rejoice', ref: 'Acts 13:48', copy: 'The Gentiles are glad and glorify the word of the Lord.', miles: 0 }
+    ]
+  },
+  {
+    id: 'paul-lystra-stoned',
+    title: 'Paul Stoned at Lystra',
+    subtitle: 'From Iconium to Lystra and on to Derbe',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 14, chTo: 14 }],
+    distance: 90,
+    mode: 'Walking',
+    days: 'Mid-journey trials',
+    modern: 'The plains of south-central Turkey',
+    note: 'At Lystra the crowd first hails them as gods, then stones Paul.',
+    sources: [
+      'They flee to Lystra and Derbe and preach (Acts 14:6).',
+      'The crowds call them Hermes and Zeus (Acts 14:11).',
+      'Paul is stoned and dragged out as dead (Acts 14:19).'
+    ],
+    points: [
+      { ancient: 'Iconium', modern: 'Konya, Turkey', x: 19.3, y: 22.8, lat: 37.87, lon: 32.49 },
+      { ancient: 'Lystra', modern: 'Hatunsaray area', x: 16, y: 53.1, lat: 37.58, lon: 32.45 },
+      { ancient: 'Derbe', modern: 'Kerti Hüyük', x: 84, y: 77.2, lat: 37.35, lon: 33.27 }
+    ],
+    steps: [
+      { label: 'On to Lystra', ref: 'Acts 14:6', copy: 'They flee to Lystra and Derbe and keep preaching.', miles: 25 },
+      { label: 'Hailed as gods', ref: 'Acts 14:11', copy: 'After a healing the crowds call them Hermes and Zeus.', miles: 0 },
+      { label: 'Stoned and left', ref: 'Acts 14:19', copy: 'Paul is stoned and dragged out, supposed to be dead.', miles: 0 },
+      { label: 'Rising for Derbe', ref: 'Acts 14:20', copy: 'He gets up and the next day goes on to Derbe.', miles: 40 }
+    ]
+  },
+  {
+    id: 'paul-first-return',
+    title: 'Strengthening the Churches',
+    subtitle: 'Retracing the first journey home to Antioch',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 14, chTo: 14 }],
+    distance: 350,
+    mode: 'Walking and sailing',
+    days: 'The return leg',
+    modern: 'South-central Turkey back to Antioch',
+    note: 'They revisit the new churches, appoint elders, and sail home from Attalia.',
+    sources: [
+      'They return through Lystra, Iconium, and Antioch strengthening the disciples (Acts 14:21-22).',
+      'They go down to Attalia (Acts 14:25).',
+      'They sail back to Antioch, where they had been commended (Acts 14:26).'
+    ],
+    points: [
+      { ancient: 'Derbe', modern: 'Kerti Hüyük', x: 48, y: 48.5, lat: 37.35, lon: 33.27 },
+      { ancient: 'Pisidian Antioch', modern: 'Yalvaç, Turkey', x: 22.1, y: 33.5, lat: 38.31, lon: 31.19 },
+      { ancient: 'Attalia', modern: 'Antalya, Turkey', x: 16, y: 55.9, lat: 36.88, lon: 30.7 },
+      { ancient: 'Antioch (Syria)', modern: 'Antakya, Turkey', x: 84, y: 66.5, lat: 36.2, lon: 36.16 }
+    ],
+    steps: [
+      { label: 'Strengthening souls', ref: 'Acts 14:22', copy: '"Through many tribulations we must enter the kingdom of God."', miles: 120 },
+      { label: 'Elders appointed', ref: 'Acts 14:23', copy: 'They appoint elders in every church with prayer and fasting.', miles: 60 },
+      { label: 'Down to Attalia', ref: 'Acts 14:25', copy: 'They preach in Perga and go down to the port of Attalia.', miles: 80 },
+      { label: 'Home to Antioch', ref: 'Acts 14:26', copy: 'They sail back and report all that God has done.', miles: 90 }
+    ]
+  },
+  {
+    id: 'paul-thessalonica-berea',
+    title: 'Thessalonica and Berea',
+    subtitle: 'From Philippi along the Egnatian Way',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 17, chTo: 17 }],
+    distance: 120,
+    mode: 'Walking the Roman road',
+    days: 'Through Macedonia',
+    modern: 'Northern Greece along the old highway',
+    note: 'The Bereans are noble, examining the Scriptures daily.',
+    sources: [
+      'Through Amphipolis and Apollonia to Thessalonica (Acts 17:1).',
+      'Paul reasons in the synagogue three Sabbaths (Acts 17:2).',
+      'The believers send them by night to Berea (Acts 17:10).'
+    ],
+    points: [
+      { ancient: 'Philippi', modern: 'Filippoi, Greece', x: 84, y: 39.5, lat: 41.01, lon: 24.29 },
+      { ancient: 'Thessalonica', modern: 'Thessaloniki, Greece', x: 40.1, y: 55.4, lat: 40.64, lon: 22.94 },
+      { ancient: 'Berea', modern: 'Veria, Greece', x: 16, y: 60.5, lat: 40.52, lon: 22.2 }
+    ],
+    steps: [
+      { label: 'To Thessalonica', ref: 'Acts 17:1', copy: 'They travel the road to the city with a synagogue.', miles: 90 },
+      { label: 'Three Sabbaths', ref: 'Acts 17:2', copy: 'Paul reasons from the Scriptures that Jesus is the Christ.', miles: 0 },
+      { label: 'An uproar', ref: 'Acts 17:5', copy: 'A jealous mob sets the city in turmoil.', miles: 0 },
+      { label: 'Sent to Berea', ref: 'Acts 17:10', copy: 'The brothers send them on, and the Bereans search the word.', miles: 30 }
+    ]
+  },
+  {
+    id: 'paul-corinth-cenchreae',
+    title: 'From Corinth to Antioch',
+    subtitle: 'Closing the second journey by Ephesus and Caesarea',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 18, chTo: 18 }],
+    distance: 900,
+    mode: 'Sailing',
+    days: 'The long voyage home',
+    modern: 'Greece across the sea to the Levant',
+    note: 'Paul sails from Cenchreae, stops at Ephesus, and lands at Caesarea.',
+    sources: [
+      'Paul stays a year and a half in Corinth (Acts 18:11).',
+      'He sails from Cenchreae, having cut his hair for a vow (Acts 18:18).',
+      'He lands at Caesarea and goes up to greet the church (Acts 18:22).'
+    ],
+    points: [
+      { ancient: 'Corinth', modern: 'Corinth, Greece', x: 16, y: 31.1, lat: 37.94, lon: 22.93 },
+      { ancient: 'Cenchreae', modern: 'Kechries, Greece', x: 16.3, y: 31.5, lat: 37.88, lon: 22.99 },
+      { ancient: 'Ephesus', modern: 'Selçuk, Turkey', x: 41.1, y: 31.1, lat: 37.94, lon: 27.34 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 84, y: 68.9, lat: 32.5, lon: 34.89 }
+    ],
+    steps: [
+      { label: 'A year and a half', ref: 'Acts 18:11', copy: 'Paul settles in Corinth, teaching the word of God.', miles: 0 },
+      { label: 'Sailing from Cenchreae', ref: 'Acts 18:18', copy: 'He cuts his hair for a vow and sets sail for Syria.', miles: 5 },
+      { label: 'A stop at Ephesus', ref: 'Acts 18:19', copy: 'He reasons with the Jews and promises to return.', miles: 250 },
+      { label: 'Up to greet the church', ref: 'Acts 18:22', copy: 'He lands at Caesarea and goes up before returning to Antioch.', miles: 600 }
+    ]
+  },
+  {
+    id: 'paul-troas-miletus',
+    title: 'Troas to Miletus',
+    subtitle: 'Coastal sailing and the farewell to the Ephesian elders',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 20, chTo: 20 }],
+    distance: 140,
+    mode: 'Sailing the Aegean coast',
+    days: 'The journey toward Jerusalem',
+    modern: 'The west coast of Turkey',
+    note: 'At Miletus Paul calls the elders of Ephesus for a farewell.',
+    sources: [
+      'At Troas Eutychus falls and is raised (Acts 20:9-10).',
+      'Paul goes by land to Assos to meet the ship (Acts 20:13).',
+      'From Miletus he sends for the Ephesian elders (Acts 20:17).'
+    ],
+    points: [
+      { ancient: 'Troas', modern: 'Dalyan, Turkey', x: 36.6, y: 16, lat: 39.75, lon: 26.16 },
+      { ancient: 'Assos', modern: 'Behramkale, Turkey', x: 40.9, y: 24, lat: 39.49, lon: 26.34 },
+      { ancient: 'Mitylene', modern: 'Lesbos, Greece', x: 45.9, y: 35.6, lat: 39.11, lon: 26.55 },
+      { ancient: 'Miletus', modern: 'Balat, Turkey', x: 63.4, y: 84, lat: 37.53, lon: 27.28 }
+    ],
+    steps: [
+      { label: 'Eutychus raised', ref: 'Acts 20:10', copy: 'Paul takes the fallen young man in his arms; he lives.', miles: 0 },
+      { label: 'Walking to Assos', ref: 'Acts 20:13', copy: 'Paul goes by land and is taken aboard at Assos.', miles: 20 },
+      { label: 'Past Mitylene', ref: 'Acts 20:15', copy: 'They sail day by day down the coast to Miletus.', miles: 90 },
+      { label: 'The elders summoned', ref: 'Acts 20:17', copy: 'From Miletus he calls the elders of Ephesus to him.', miles: 0 }
+    ]
+  },
+  {
+    id: 'paul-tyre-caesarea',
+    title: 'The Voyage to Caesarea',
+    subtitle: 'Sailing past Cyprus to Tyre, Ptolemais, and Caesarea',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 21, chTo: 21 }],
+    distance: 400,
+    mode: 'Sailing',
+    days: 'The last leg before Jerusalem',
+    modern: 'SW Turkey down the Levant coast',
+    note: 'At Caesarea Agabus binds himself with Paul’s belt to warn him.',
+    sources: [
+      'They sail past Cyprus to Syria, landing at Tyre (Acts 21:3).',
+      'The disciples warn Paul not to go to Jerusalem (Acts 21:4).',
+      'At Caesarea they stay with Philip the evangelist (Acts 21:8).'
+    ],
+    points: [
+      { ancient: 'Patara', modern: 'Gelemiş, Turkey', x: 16, y: 23.6, lat: 36.27, lon: 29.31 },
+      { ancient: 'Tyre', modern: 'Tyre, Lebanon', x: 84, y: 65.6, lat: 33.27, lon: 35.2 },
+      { ancient: 'Ptolemais', modern: 'Acre, Israel', x: 82.5, y: 70.5, lat: 32.92, lon: 35.07 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 80.4, y: 76.4, lat: 32.5, lon: 34.89 }
+    ],
+    steps: [
+      { label: 'Past Cyprus to Tyre', ref: 'Acts 21:3', copy: 'They sail by Cyprus and land at Tyre to unload cargo.', miles: 300 },
+      { label: 'A warning at Tyre', ref: 'Acts 21:4', copy: 'The disciples urge Paul not to go up to Jerusalem.', miles: 0 },
+      { label: 'Staying with Philip', ref: 'Acts 21:8', copy: 'At Caesarea they lodge with Philip the evangelist.', miles: 60 },
+      { label: 'Agabus\'s belt', ref: 'Acts 21:11', copy: 'The prophet binds himself with Paul’s belt as a sign.', miles: 0 }
+    ]
+  },
+  {
+    id: 'paul-malta-rome',
+    title: 'From Malta to Rome',
+    subtitle: 'The final voyage into the imperial capital',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 28, chTo: 28 }],
+    distance: 600,
+    mode: 'Sailing and the Appian Way',
+    days: 'The journey ends at Rome',
+    modern: 'Malta up through Italy to Rome',
+    note: 'Brothers meet Paul at the Forum of Appius and Three Taverns.',
+    sources: [
+      'After three months they sail from Malta (Acts 28:11).',
+      'By Syracuse and Rhegium they reach Puteoli (Acts 28:12-13).',
+      'Brothers meet them, and they come to Rome (Acts 28:15-16).'
+    ],
+    points: [
+      { ancient: 'Malta', modern: 'Malta', x: 52.9, y: 84, lat: 35.9, lon: 14.4 },
+      { ancient: 'Syracuse', modern: 'Siracusa, Italy', x: 60.7, y: 70.7, lat: 37.07, lon: 15.29 },
+      { ancient: 'Rhegium', modern: 'Reggio Calabria', x: 63.9, y: 59, lat: 38.11, lon: 15.65 },
+      { ancient: 'Puteoli', modern: 'Pozzuoli, Italy', x: 50.4, y: 28.2, lat: 40.82, lon: 14.12 },
+      { ancient: 'Rome', modern: 'Rome, Italy', x: 36.1, y: 16, lat: 41.9, lon: 12.5 }
+    ],
+    steps: [
+      { label: 'Setting sail', ref: 'Acts 28:11', copy: 'After three months they leave Malta on an Alexandrian ship.', miles: 90 },
+      { label: 'By Syracuse', ref: 'Acts 28:12', copy: 'They put in at Syracuse and stay three days.', miles: 80 },
+      { label: 'On to Puteoli', ref: 'Acts 28:13', copy: 'By Rhegium they reach Puteoli and find brothers.', miles: 200 },
+      { label: 'Met on the road', ref: 'Acts 28:15', copy: 'Believers come to meet him; Paul thanks God and takes courage.', miles: 140 },
+      { label: 'Arrival at Rome', ref: 'Acts 28:16', copy: 'They come at last into Rome, where Paul is allowed to stay.', miles: 130 }
+    ]
+  },
+  {
+    id: 'paul-macedonia-greece',
+    title: 'Through Macedonia to Greece',
+    subtitle: 'Leaving Ephesus to encourage the churches',
+    certainty: 'Well attested',
+    refs: [{ book: 'ACT', chFrom: 20, chTo: 20 }],
+    distance: 700,
+    mode: 'Walking and sailing',
+    days: 'Three months in Greece',
+    modern: 'Western Turkey across to Greece and back',
+    note: 'A plot against Paul makes him return north through Macedonia.',
+    sources: [
+      'After the uproar Paul leaves for Macedonia (Acts 20:1).',
+      'He encourages the believers through the region (Acts 20:2).',
+      'He spends three months in Greece, then returns through Macedonia (Acts 20:3).'
+    ],
+    points: [
+      { ancient: 'Ephesus', modern: 'Selçuk, Turkey', x: 84, y: 80.7, lat: 37.94, lon: 27.34 },
+      { ancient: 'Macedonia (Philippi)', modern: 'Filippoi, Greece', x: 37, y: 19.3, lat: 41.01, lon: 24.29 },
+      { ancient: 'Greece (Corinth)', modern: 'Corinth, Greece', x: 16, y: 80.7, lat: 37.94, lon: 22.93 }
+    ],
+    steps: [
+      { label: 'Leaving Ephesus', ref: 'Acts 20:1', copy: 'After the riot Paul says farewell and sets out for Macedonia.', miles: 350 },
+      { label: 'Words of encouragement', ref: 'Acts 20:2', copy: 'He travels the region giving the believers much encouragement.', miles: 200 },
+      { label: 'Three months in Greece', ref: 'Acts 20:3', copy: 'He stays three months, then a plot turns him back north.', miles: 150 }
+    ]
+  },
+  {
+    id: 'ahab-ramoth-gilead',
+    title: 'Ahab\'s Last Battle',
+    subtitle: 'From Samaria to Ramoth-gilead against the warning of Micaiah',
+    certainty: 'Approximate route',
+    refs: [{ book: '1KI', chFrom: 22, chTo: 22 }],
+    distance: 45,
+    mode: 'Army on the march',
+    days: 'A single fatal battle',
+    modern: 'Samaria across the Jordan to Gilead',
+    note: 'Ahab disguises himself, but a random arrow finds him at Ramoth-gilead.',
+    sources: [
+      'Jehoshaphat joins Ahab to take Ramoth-gilead (1 Kings 22:4).',
+      'Micaiah foresees Israel scattered like sheep (1 Kings 22:17).',
+      'A random arrow strikes Ahab between the armor (1 Kings 22:34).'
+    ],
+    points: [
+      { ancient: 'Samaria', modern: 'Sebastia, West Bank', x: 16, y: 69.5, lat: 32.28, lon: 35.19 },
+      { ancient: 'Ramoth-gilead', modern: 'Gilead, Jordan', x: 84, y: 30.5, lat: 32.6, lon: 35.85 }
+    ],
+    steps: [
+      { label: 'A call to war', ref: '1 Kings 22:4', copy: 'Ahab asks Jehoshaphat to go up with him to Ramoth-gilead.', miles: 0 },
+      { label: 'Micaiah\'s vision', ref: '1 Kings 22:17', copy: '"I saw all Israel scattered, as sheep with no shepherd."', miles: 0 },
+      { label: 'Up to battle', ref: '1 Kings 22:29', copy: 'The two kings go up to Ramoth-gilead in disguise.', miles: 40 },
+      { label: 'A chance arrow', ref: '1 Kings 22:34', copy: 'A man draws his bow at random and strikes the king.', miles: 5 }
+    ]
   }
 ];
 
@@ -25405,7 +26790,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.305";
+const APP_VERSION = "3.0.306";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -25426,6 +26811,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.306 &mdash; 50 more journeys</div>
+<ul>
+  <li><strong>50 new journeys</strong> &mdash; A big expansion of Bible Journeys — now 132 in all — each with the full map, Scripture steps, and source notes.</li>
+  <li><strong>Old Testament</strong> &mdash; Hagar in the wilderness, Jacob's burial procession, the Red Sea aftermath, Sihon and Og, the northern conquest, the Danite migration, Hannah at Shiloh, the ark's homecoming, David's outlaw years, Jehu's furious drive, Sennacherib at the walls, Zedekiah's flight, the exile to Babylon, and many more.</li>
+  <li><strong>New Testament</strong> &mdash; Mary's visit to Elizabeth, the presentation at the temple, the widow of Nain, the ten lepers, blind Bartimaeus, the Great Commission, Peter at Lydda and Joppa, and Paul's journeys across Cyprus, Asia Minor, Greece, and on to Rome.</li>
+</ul>
 <div class="un-version-label">v3.0.305 &mdash; Sharper cross references</div>
 <ul>
   <li><strong>Reliable categories</strong> &mdash; Cross-reference categories no longer repeat the same verses. Each reference now appears in just one place — Direct, OT/NT Links, Prophecy, or Thematic — based on how it actually connects, so every list is distinct and trustworthy.</li>
