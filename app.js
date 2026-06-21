@@ -25405,7 +25405,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.304";
+const APP_VERSION = "3.0.305";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -25426,6 +25426,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.305 &mdash; Sharper cross references</div>
+<ul>
+  <li><strong>Reliable categories</strong> &mdash; Cross-reference categories no longer repeat the same verses. Each reference now appears in just one place — Direct, OT/NT Links, Prophecy, or Thematic — based on how it actually connects, so every list is distinct and trustworthy.</li>
+  <li><strong>Clearer buckets</strong> &mdash; The redundant "Parallel Ideas" tab was merged into "Thematic & Parallel Links," and category descriptions were rewritten to make the difference obvious.</li>
+  <li><strong>No more scroll bleed</strong> &mdash; Scrolling inside a cross-reference list no longer scrolls the reader in the background.</li>
+  <li><strong>Centered arrows</strong> &mdash; The follow arrow on each cross-reference verse is now properly centered.</li>
+</ul>
 <div class="un-version-label">v3.0.304 &mdash; The Passion route</div>
 <ul>
   <li><strong>Gethsemane to Golgotha</strong> &mdash; A new short journey traces the night and morning of the Passion across Jerusalem: the garden, the high priest’s house, Pilate’s headquarters, and the place of the cross (John 18–19).</li>

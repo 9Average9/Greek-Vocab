@@ -1,10 +1,9 @@
 const RHEMA_XREF_CATEGORIES = [
-  { key: 'quoted', title: 'Quoted / Alluded Scripture', short: 'Quoted', icon: 'format_quote', desc: 'Places where this verse quotes, cites, or strongly echoes another Scripture passage.' },
-  { key: 'direct', title: 'Direct Cross References', short: 'Direct', icon: 'menu_book', desc: 'Verses that directly reference or relate to this verse.' },
-  { key: 'themes', title: 'Thematic Links', short: 'Themes', icon: 'hub', desc: 'Verses connected by common themes and topics.' },
-  { key: 'otNt', title: 'Old Testament / New Testament Connections', short: 'OT/NT Connections', icon: 'link', desc: 'Verses connected across the Old and New Testament.' },
-  { key: 'parallel', title: 'Parallel Ideas', short: 'Parallel Ideas', icon: 'sync_alt', desc: 'Verses with similar ideas or parallel concepts.' },
-  { key: 'prophecy', title: 'Prophecy Fulfillment Links', short: 'Prophecy', icon: 'workspace_premium', desc: 'Verses that show prophecy and its fulfillment.' }
+  { key: 'quoted', title: 'Quoted / Alluded Scripture', short: 'Quoted', icon: 'format_quote', desc: 'Passages this verse directly quotes, cites, or clearly echoes.' },
+  { key: 'direct', title: 'Direct Cross References', short: 'Direct', icon: 'menu_book', desc: 'Closely related passages — the same event, wording, or immediate context.' },
+  { key: 'otNt', title: 'Old & New Testament Links', short: 'OT/NT', icon: 'link', desc: 'Connections that bridge the Old and New Testaments.' },
+  { key: 'prophecy', title: 'Prophecy & Fulfillment', short: 'Prophecy', icon: 'workspace_premium', desc: 'A prophecy paired with the passage that fulfills it.' },
+  { key: 'themes', title: 'Thematic & Parallel Links', short: 'Themes', icon: 'hub', desc: 'Verses that share a theme, topic, or parallel idea.' }
 ];
 
 let _rhemaXrefCursor = 0;
@@ -65,21 +64,74 @@ function _xrefEnglishText(refOrObj) {
   return verses.join(' ');
 }
 
+// Source data labels (the "|N" suffix on each ref) and how they map to a single
+// display category. The raw buckets (d/t/o/p/f) overlap heavily — the generator
+// puts the same verses in "direct", "themes", and "parallel" with rotating
+// labels — so showing the buckets as-is makes every category look identical.
+// Instead we collapse to ONE category per verse, chosen by its strongest
+// relationship label, so each tab holds a distinct, trustworthy set.
+//   0 Immediate context · 1 Same book · 2 Related reference  -> direct
+//   3 NT connection      · 4 OT foundation                   -> otNt
+//   5 Prophecy connection                                    -> prophecy
+//   6 Parallel idea      · 7 Related theme                   -> themes
+function _xrefCategoryForLabels(labelSet) {
+  if (labelSet.has(5)) return { key: 'prophecy', label: 5 };
+  if (labelSet.has(4)) return { key: 'otNt', label: 4 };
+  if (labelSet.has(3)) return { key: 'otNt', label: 3 };
+  if (labelSet.has(7)) return { key: 'themes', label: 7 };
+  if (labelSet.has(6)) return { key: 'themes', label: 6 };
+  if (labelSet.has(0)) return { key: 'direct', label: 0 };
+  if (labelSet.has(1)) return { key: 'direct', label: 1 };
+  return { key: 'direct', label: 2 };
+}
+
 function _xrefCurrentData() {
-  const raw = window.RhemaCrossRefs?.[_xrefKey()] || {};
+  const key = _xrefKey();
+  const raw = window.RhemaCrossRefs?.[key] || {};
+  // Rare pre-expanded/curated form: still enforce single-category membership.
   if (raw.direct || raw.themes || raw.otNt || raw.parallel || raw.prophecy || raw.quoted) {
-    return _xrefApplyCuratedScriptureNotes(raw, _xrefKey());
+    return _xrefApplyCuratedScriptureNotes(_xrefDedupeExpanded(raw), key);
   }
-  const map = { d: 'direct', t: 'themes', o: 'otNt', p: 'parallel', f: 'prophecy' };
   const labels = window.RhemaCrossRefLabels || [];
-  const expanded = {};
-  for (const [shortKey, category] of Object.entries(map)) {
-    expanded[category] = (raw[shortKey] || []).map(value => {
-      const [ref, labelIndex] = String(value).split('|');
-      return { ref, label: labels[Number(labelIndex)] || 'Related reference' };
-    });
+  // Gather every target verse once, unioning the labels it carries across buckets.
+  const seen = new Map(); // ref -> { ref, labels:Set<number>, order:number }
+  let order = 0;
+  const ingest = (arr) => (arr || []).forEach(value => {
+    const [ref, li] = String(value).split('|');
+    if (!ref) return;
+    let entry = seen.get(ref);
+    if (!entry) { entry = { ref, labels: new Set(), order: order++ }; seen.set(ref, entry); }
+    const idx = Number(li);
+    if (!Number.isNaN(idx)) entry.labels.add(idx);
+  });
+  ['d', 't', 'o', 'p', 'f'].forEach(k => ingest(raw[k]));
+  const cats = { quoted: [], direct: [], otNt: [], prophecy: [], themes: [] };
+  for (const entry of seen.values()) {
+    const pick = _xrefCategoryForLabels(entry.labels);
+    cats[pick.key].push({ ref: entry.ref, label: labels[pick.label] || 'Related reference', order: entry.order });
   }
-  return _xrefApplyCuratedScriptureNotes(expanded, _xrefKey());
+  Object.values(cats).forEach(list => list.sort((a, b) => a.order - b.order));
+  return _xrefApplyCuratedScriptureNotes(cats, key);
+}
+
+// Enforce one-category membership for the (rare) pre-expanded data shape, so the
+// same ref never appears under two tabs. Higher-priority categories win, and any
+// leftover "parallel" data is folded into "themes".
+function _xrefDedupeExpanded(raw) {
+  const priority = ['quoted', 'prophecy', 'otNt', 'themes', 'direct', 'parallel'];
+  const claimed = new Set();
+  const out = {};
+  RHEMA_XREF_CATEGORIES.forEach(c => { out[c.key] = []; });
+  priority.forEach(catKey => {
+    const target = catKey === 'parallel' ? 'themes' : catKey;
+    (raw[catKey] || []).forEach(item => {
+      const ref = item && item.ref ? item.ref : null;
+      if (!ref || claimed.has(ref)) return;
+      claimed.add(ref);
+      (out[target] = out[target] || []).push(item);
+    });
+  });
+  return out;
 }
 
 function _xrefCuratedScriptureNotes(key) {
@@ -158,6 +210,10 @@ function setRhemaXrefEnglishVersion(version) {
 function _showRhemaXrefShell(view) {
   document.getElementById('rhemaXrefPage')?.classList.toggle('hidden', view === 'select');
   document.getElementById('rhemaXrefSelectPage')?.classList.toggle('hidden', view !== 'select');
+  // Lock the page behind the full-screen overlay so a scroll gesture inside the
+  // cross-reference panel can't leak through and scroll the reader in the back.
+  document.body.classList.add('rx-scroll-lock');
+  document.documentElement.classList.add('rx-scroll-lock');
   const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
   if (!inVsCtx) {
     document.getElementById('rhemaModal')?.classList.add('xref-open');
@@ -169,6 +225,8 @@ function _closeRhemaXrefShell() {
   document.getElementById('rhemaXrefPage')?.classList.add('hidden');
   document.getElementById('rhemaXrefSelectPage')?.classList.add('hidden');
   document.getElementById('rhemaXrefInfoModal')?.classList.add('hidden');
+  document.body.classList.remove('rx-scroll-lock');
+  document.documentElement.classList.remove('rx-scroll-lock');
   const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
   if (!inVsCtx) {
     document.getElementById('rhemaModal')?.classList.remove('xref-open');

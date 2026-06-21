@@ -14100,6 +14100,15 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   flex-direction: column;
   background: var(--primary-color);
   color: var(--text-color);
+  overscroll-behavior: none;
+}
+/* While a cross-reference overlay is open, freeze the page underneath so a
+   scroll inside the panel never bleeds through to the reader in the back. */
+html.rx-scroll-lock,
+body.rx-scroll-lock {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 .rhema-xref-page.hidden,
 .rhema-xref-info.hidden { display: none; }
@@ -14427,6 +14436,8 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: center;
+  align-self: center;
   line-height: 1;
 }
 .rx-arrow-btn.material-symbols-outlined { font-size: 22px; }
