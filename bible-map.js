@@ -273,9 +273,12 @@
     state.mode = opts.mode === 'modern' ? 'modern' : 'ancient';
     state.coords = _journeyCoords(journey);
     var pmtilesUrl = opts.pmtilesUrl;
-    if (!pmtilesUrl || state.coords.length < 2) {
+    if (!pmtilesUrl || state.coords.length < 1) {
       return Promise.reject(new Error('bible-map: missing pmtiles url or coordinates'));
     }
+    // A single coordinate is a "place pin" (Atlas) — center on it instead of
+    // fitting a route's bounds, which would zoom to the maximum on one point.
+    var single = state.coords.length === 1;
 
     stop();
     if (state.map) { try { state.map.remove(); } catch (e) {} state.map = null; }
@@ -285,12 +288,9 @@
       _registerProtocol();
       return new Promise(function (resolve, reject) {
         var map;
-        try {
-          map = new maplibregl.Map({
+        var mapOpts = {
             container: container,
             style: _buildStyle(state.mode, pmtilesUrl),
-            bounds: _bounds(state.coords),
-            fitBoundsOptions: { padding: 46, maxZoom: 12 },
             attributionControl: false,
             dragRotate: false,
             pitchWithRotate: false,
@@ -299,7 +299,11 @@
             // canvas when the map sits inside a modal/animated container.
             preserveDrawingBuffer: true,
             fadeDuration: 0
-          });
+          };
+        if (single) { mapOpts.center = state.coords[0]; mapOpts.zoom = (opts.pinZoom || 7); }
+        else { mapOpts.bounds = _bounds(state.coords); mapOpts.fitBoundsOptions = { padding: 46, maxZoom: 12 }; }
+        try {
+          map = new maplibregl.Map(mapOpts);
         } catch (e) { reject(e); return; }
         state.map = map;
         map.on('error', function (e) {
@@ -311,7 +315,8 @@
             map.resize();   // container may have been sized just before init
             _addOverlays();
             _addMarkers();
-            map.fitBounds(_bounds(state.coords), { padding: 46, maxZoom: 12, animate: false });
+            if (single) { map.setCenter(state.coords[0]); map.setZoom(opts.pinZoom || 7); }
+            else { map.fitBounds(_bounds(state.coords), { padding: 46, maxZoom: 12, animate: false }); }
             map.triggerRepaint();   // force a paint (blank-canvas guard on iOS)
             setTimeout(function () { try { map.resize(); map.triggerRepaint(); } catch (e) {} }, 180);
             resolve(map);

@@ -8091,7 +8091,7 @@ let currentSentence = null;
 
 
 const screens = [
-  "homeScreen", "profilePage", "habitsPage", "journeysPage", "memorizationPage", "readingPlanPage", "merciesPage", "communityPage", "csDetailPage",
+  "homeScreen", "profilePage", "habitsPage", "journeysPage", "atlasPage", "memorizationPage", "readingPlanPage", "merciesPage", "communityPage", "csDetailPage",
   "sermonsPage", "newLearnMenu", "advancedLearnMenu",
   "basicVerbsLearnMenu", "advVerbsLearnMenu",
   "learnMenu", "learnScreen", "translateMenu", "translateScreen",
@@ -10407,8 +10407,8 @@ function showScreen(id) {
   document.documentElement?.classList.toggle('memorization-active', id === 'memorizationPage');
   document.body?.classList.toggle('reading-plan-active', id === 'readingPlanPage');
   document.documentElement?.classList.toggle('reading-plan-active', id === 'readingPlanPage');
-  document.body?.classList.toggle('journeys-active', id === 'journeysPage');
-  document.documentElement?.classList.toggle('journeys-active', id === 'journeysPage');
+  document.body?.classList.toggle('journeys-active', id === 'journeysPage' || id === 'atlasPage');
+  document.documentElement?.classList.toggle('journeys-active', id === 'journeysPage' || id === 'atlasPage');
   _updateAppHeaderForScreen(id);
 }
 
@@ -15803,6 +15803,143 @@ function selectBibleJourney(id) {
   _journeySelectedId = id;
   renderBibleJourneysPage();
   document.querySelector('.journeys-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Bible Atlas (single-place pin lookup) ───────────────────────────────────
+let _atlasSelected = null;
+let _atlasGLToken = 0;
+
+function _atlasPlaces() { return Array.isArray(window.BIBLE_ATLAS) ? window.BIBLE_ATLAS : []; }
+function _atlasInTiles(p) { return p && p.lon >= 9 && p.lon <= 48 && p.lat >= 24 && p.lat <= 43; }
+function _atlasKindLabel(k) { return String(k || 'place').replace(/(^|\s)\w/g, c => c.toUpperCase()); }
+
+function openBibleAtlasPage() {
+  setNavActive('journeys');
+  hideBottomNav();
+  showScreen('atlasPage');
+  hideBottomNav();
+  const input = document.getElementById('atlasSearchInput');
+  if (input && !input.value && !_atlasSelected) input.value = '';
+  renderAtlasList(input ? input.value : '');
+  if (_atlasSelected) _atlasRenderDetail(_atlasSelected);
+  document.getElementById('atlasScroll')?.scrollTo({ top: 0 });
+}
+
+function closeBibleAtlasPage() {
+  _atlasGLToken++;                       // cancel any in-flight map mount
+  try { window.BibleMap?.destroy?.(); } catch (e) {}
+  openBibleJourneysPage();
+}
+
+function renderAtlasList(query) {
+  const list = document.getElementById('atlasList');
+  if (!list) return;
+  const q = String(query || '').trim().toLowerCase();
+  const places = _atlasPlaces().filter(p => {
+    if (!q) return true;
+    return (p.name + ' ' + p.modern + ' ' + p.kind + ' ' + (p.note || '')).toLowerCase().includes(q);
+  }).sort((a, b) => a.name.localeCompare(b.name));
+  const count = document.getElementById('atlasCount');
+  if (count) count.textContent = `${places.length} place${places.length === 1 ? '' : 's'}`;
+  if (!places.length) {
+    list.innerHTML = `<p class="atlas-empty">No places match "${_journeyEsc(query)}". Try a city, region, river, or modern name.</p>`;
+    return;
+  }
+  list.innerHTML = places.map(p => `<button class="atlas-row${_atlasSelected && _atlasSelected.name === p.name ? ' active' : ''}" onclick="selectAtlasPlace('${p.name.replace(/'/g, "\\'")}')">
+      <span class="atlas-row-icon"><span class="material-symbols-outlined">${_atlasKindIcon(p.kind)}</span></span>
+      <span class="atlas-row-copy"><strong>${_journeyEsc(p.name)}</strong><small>${_journeyEsc(_atlasKindLabel(p.kind))} &middot; ${_journeyEsc(p.modern)}</small></span>
+      <span class="material-symbols-outlined atlas-row-arrow">chevron_right</span>
+    </button>`).join('');
+}
+
+function _atlasKindIcon(kind) {
+  switch (kind) {
+    case 'mountain': return 'landscape';
+    case 'river': return 'water';
+    case 'lake': case 'sea': return 'waves';
+    case 'region': case 'nation': return 'public';
+    case 'island': return 'tsunami';
+    case 'valley': return 'terrain';
+    case 'port': return 'anchor';
+    case 'fortress': return 'fort';
+    case 'site': return 'place';
+    default: return 'location_city';
+  }
+}
+
+function selectAtlasPlace(name) {
+  const place = _atlasPlaces().find(p => p.name === name);
+  if (!place) return;
+  _atlasSelected = place;
+  _atlasRenderDetail(place);
+  renderAtlasList(document.getElementById('atlasSearchInput')?.value || '');
+  document.getElementById('atlasScroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearAtlasSelection() {
+  _atlasGLToken++;
+  try { window.BibleMap?.destroy?.(); } catch (e) {}
+  _atlasSelected = null;
+  const detail = document.getElementById('atlasDetail');
+  if (detail) detail.innerHTML = '';
+  renderAtlasList(document.getElementById('atlasSearchInput')?.value || '');
+}
+
+function _atlasRenderDetail(place) {
+  const detail = document.getElementById('atlasDetail');
+  if (!detail) return;
+  const refs = (place.refs || []).map(r => `<span>${_journeyEsc(r)}</span>`).join('');
+  detail.innerHTML = `<div class="atlas-card">
+    <div class="atlas-card-head">
+      <div><span class="journey-kicker">${_journeyEsc(_atlasKindLabel(place.kind))}</span><h2>${_journeyEsc(place.name)}</h2></div>
+      <button class="atlas-card-close" onclick="clearAtlasSelection()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="atlas-map" id="atlasMapShell"></div>
+    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>Modern location</strong><span>${_journeyEsc(place.modern)}</span></div></div>
+    ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
+    ${refs ? `<div class="atlas-refs"><strong>Where it appears</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
+  </div>`;
+  _atlasMountGL(place);
+}
+
+function _atlasMountGL(place) {
+  const shell = document.getElementById('atlasMapShell');
+  if (!shell) return;
+  const token = ++_atlasGLToken;
+  const inTiles = _atlasInTiles(place);
+  if (!inTiles || !_bibleMapConfigured() || navigator.onLine === false) {
+    shell.classList.add('atlas-map-flat');
+    shell.innerHTML = `<div class="atlas-map-note"><span class="material-symbols-outlined">${inTiles ? 'wifi_off' : 'travel_explore'}</span><p>${inTiles ? 'The live map needs an internet connection.' : 'This place lies beyond the detailed map area — see the modern location above.'}</p></div>`;
+    return;
+  }
+  shell.classList.remove('atlas-map-flat');
+  shell.innerHTML = '';
+  const host = document.createElement('div');
+  host.className = 'atlas-gl-map';
+  shell.appendChild(host);
+  shell.classList.add('gl-mounting');
+  const pseudo = { id: 'atlas', title: place.name, points: [{ ancient: place.name, modern: place.modern, lat: place.lat, lon: place.lon }] };
+  _ensureBibleMapLibs().then(() => {
+    if (token !== _atlasGLToken) return null;
+    if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('map unavailable');
+    return window.BibleMap.render(host, pseudo, {
+      mode: 'ancient',
+      pmtilesUrl: _journeyResolvePmtiles(),
+      labelFor: _journeyLabelFor,
+      landmarks: _journeyModernLandmarks(pseudo, 6),
+      pinZoom: 7,
+      onError: () => { shell.classList.remove('gl-mounting'); }
+    });
+  }).then(() => {
+    if (token !== _atlasGLToken) return;
+    shell.classList.remove('gl-mounting');
+    shell.classList.add('gl-ready');
+  }).catch(() => {
+    if (token !== _atlasGLToken) return;
+    shell.classList.remove('gl-mounting');
+    shell.classList.add('atlas-map-flat');
+    shell.innerHTML = `<div class="atlas-map-note"><span class="material-symbols-outlined">map</span><p>Map could not load right now. ${_journeyEsc(place.modern)}</p></div>`;
+  });
 }
 
 function _journeyTotalMiles(journey) {
@@ -28151,7 +28288,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.307";
+const APP_VERSION = "3.0.308";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28172,6 +28309,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.308 &mdash; The Bible Atlas</div>
+<ul>
+  <li><strong>New: Bible Atlas</strong> &mdash; A searchable map of biblical places. Open it from the Bible Journeys page, search any city, region, river, or mountain, and see a pin on the real map with its modern-day location and the verses where it appears.</li>
+  <li><strong>200+ places to start</strong> &mdash; From Jerusalem and Capernaum to Babylon, Ephesus, and Rome — covering cities, regions, mountains, rivers, seas, and nations, with more being added.</li>
+  <li><strong>Beyond the map</strong> &mdash; Distant places like Tarshish and Sheba still show their modern reference even where the detailed map doesn’t reach.</li>
+</ul>
 <div class="un-version-label">v3.0.307 &mdash; 50 more journeys (182 total)</div>
 <ul>
   <li><strong>50 new journeys</strong> &mdash; Another big expansion toward mapping nearly every place in the Bible — now 182 routes, each with the full map, Scripture steps, and source notes.</li>
