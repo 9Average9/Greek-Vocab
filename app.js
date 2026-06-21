@@ -12759,6 +12759,36 @@ const BIBLE_JOURNEYS = [
       { label: 'Town by town', ref: 'Acts 8:40', copy: 'He preaches the gospel in every town along the coast.', miles: 35 },
       { label: 'On to Caesarea', ref: 'Acts 8:40', copy: 'He keeps on until he comes to Caesarea, his home base.', miles: 25 }
     ]
+  },
+  {
+    id: 'jesus-trial-to-golgotha',
+    title: 'From Gethsemane to Golgotha',
+    subtitle: 'The night and morning of the Passion across Jerusalem',
+    certainty: 'Traditional sites',
+    refs: [{ book: 'JHN', chFrom: 18, chTo: 19 }],
+    distance: 2,
+    mode: 'Walking under arrest',
+    days: 'A single night into morning',
+    modern: 'The Old City of Jerusalem and just outside its walls',
+    note: 'The exact sites of the high priest’s house, the Praetorium, and Golgotha are debated; these follow the traditional locations, all within a mile or so.',
+    sources: [
+      'Jesus crosses the Kidron Valley to a garden (John 18:1).',
+      'He is led to Annas and then to Caiaphas the high priest (John 18:13, 24).',
+      'He is taken to the Praetorium before Pilate, then out to Golgotha (John 18:28; 19:16-17).'
+    ],
+    points: [
+      { ancient: 'Gethsemane', modern: 'Garden at the Mount of Olives', x: 81.7, y: 24.9, lat: 31.7795, lon: 35.2396 },
+      { ancient: 'House of Caiaphas', modern: 'Mount Zion (traditional)', x: 18.3, y: 84, lat: 31.7715, lon: 35.2295 },
+      { ancient: 'The Praetorium', modern: 'Pilate’s headquarters (traditional)', x: 34, y: 16, lat: 31.7807, lon: 35.232 },
+      { ancient: 'Golgotha', modern: 'Church of the Holy Sepulchre', x: 20.2, y: 33, lat: 31.7784, lon: 35.2298 }
+    ],
+    steps: [
+      { label: 'Across the Kidron', ref: 'John 18:1', copy: 'Jesus crosses the Kidron Valley with his disciples to a garden.', miles: 1 },
+      { label: 'Before the high priest', ref: 'John 18:13', copy: 'They bind him and lead him first to Annas, then to Caiaphas.', miles: 1 },
+      { label: 'To the Praetorium', ref: 'John 18:28', copy: 'Early in the morning they bring him to Pilate’s headquarters.', miles: 0 },
+      { label: 'Out to Golgotha', ref: 'John 19:16-17', copy: 'Carrying his own cross, he goes out to the Place of a Skull.', miles: 0 },
+      { label: 'There they crucified him', ref: 'John 19:18', copy: 'They crucify him there, and two others with him, one on either side.', miles: 0 }
+    ]
   }
 ];
 
@@ -25375,7 +25405,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.303";
+const APP_VERSION = "3.0.304";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -25396,6 +25426,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.304 &mdash; The Passion route</div>
+<ul>
+  <li><strong>Gethsemane to Golgotha</strong> &mdash; A new short journey traces the night and morning of the Passion across Jerusalem: the garden, the high priest’s house, Pilate’s headquarters, and the place of the cross (John 18–19).</li>
+  <li><strong>Close-up maps</strong> &mdash; Very short, city-scale routes now zoom in further on the real map so the stops are easy to tell apart.</li>
+</ul>
 <div class="un-version-label">v3.0.303 &mdash; 10 most-asked journeys</div>
 <ul>
   <li><strong>10 new journeys</strong> &mdash; Added ten of the most commonly read, map-helpful passages &mdash; bringing the collection to 81 journeys, each with the full map, Scripture steps, and source notes.</li>
