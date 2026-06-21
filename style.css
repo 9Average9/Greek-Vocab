@@ -30951,7 +30951,8 @@ body.dark .rp-book-sep { background: #1f2937; }
 /* =========================================================================
    BIBLE JOURNEYS - curated follow-along maps
    ========================================================================= */
-#journeysPage.screen.active {
+#journeysPage.screen.active,
+#atlasPage.screen.active {
   display: block;
   position: fixed;
   inset: 0;
@@ -30961,6 +30962,141 @@ body.dark .rp-book-sep { background: #1f2937; }
   overflow: hidden;
   background: var(--primary-light) !important;
 }
+
+/* ── Bible Atlas ── */
+.atlas-searchbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 12px 4px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--card-color);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, var(--border-color));
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--secondary-color) 7%, transparent);
+}
+.atlas-searchbar .material-symbols-outlined { color: var(--secondary-color); }
+.atlas-searchbar input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  color: var(--font-color);
+  outline: none;
+}
+.atlas-count {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted-color);
+  white-space: nowrap;
+}
+.atlas-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 6px 12px calc(env(safe-area-inset-bottom, 0px) + 22px);
+}
+.atlas-list { display: flex; flex-direction: column; gap: 8px; }
+.atlas-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 10%, var(--border-color));
+  background: var(--card-color);
+  color: var(--font-color);
+  text-align: left;
+  cursor: pointer;
+}
+.atlas-row.active { border-color: var(--secondary-color); background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color)); }
+.atlas-row-icon {
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color));
+  color: var(--secondary-color);
+}
+.atlas-row-copy { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.atlas-row-copy strong { font-size: 1rem; font-weight: 850; }
+.atlas-row-copy small { font-size: 0.78rem; color: var(--muted-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atlas-row-arrow { color: var(--muted-color); }
+.atlas-empty { text-align: center; color: var(--muted-color); padding: 28px 16px; font-weight: 600; }
+.atlas-detail:empty { display: none; }
+.atlas-card {
+  background: var(--card-color);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, var(--border-color));
+  border-radius: 20px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--secondary-color) 10%, transparent);
+}
+.atlas-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.atlas-card-head h2 { margin: 2px 0 0; font-size: 1.4rem; font-weight: 950; }
+.atlas-card-close {
+  flex: 0 0 auto;
+  width: 34px; height: 34px;
+  border: none; border-radius: 50%;
+  background: color-mix(in srgb, var(--font-color) 9%, transparent);
+  color: var(--font-color);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.atlas-map {
+  position: relative;
+  height: 260px;
+  margin: 12px 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color));
+}
+.atlas-gl-map { position: absolute; inset: 0; }
+.atlas-map.gl-mounting::after {
+  content: 'Loading map…';
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: var(--muted-color); font-weight: 700; font-size: 0.85rem;
+}
+.atlas-map-flat { display: grid; place-items: center; }
+.atlas-map-note { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 18px; color: var(--muted-color); }
+.atlas-map-note .material-symbols-outlined { font-size: 34px; color: var(--secondary-color); }
+.atlas-map-note p { margin: 0; font-weight: 600; }
+.atlas-modern {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 13px;
+  background: color-mix(in srgb, var(--secondary-color) 7%, var(--card-color));
+}
+.atlas-modern .material-symbols-outlined { color: var(--secondary-color); }
+.atlas-modern strong { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--secondary-color); }
+.atlas-modern span { font-weight: 700; }
+.atlas-note { margin: 12px 2px; line-height: 1.5; }
+.atlas-refs strong { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--secondary-color); margin: 0 2px 6px; }
+.atlas-ref-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.atlas-ref-chips span {
+  font-size: 0.82rem; font-weight: 750;
+  padding: 5px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary-color) 10%, var(--card-color));
+  color: var(--secondary-color);
+}
+.atlas-open-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 12px;
+  padding: 11px 16px;
+  border: none; border-radius: 14px;
+  background: var(--secondary-color);
+  color: var(--btn-text-color, #fff);
+  font-weight: 850; font-size: 0.92rem;
+  cursor: pointer;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--secondary-color) 30%, transparent);
+}
+.atlas-open-pill:active { transform: scale(0.97); }
 html.journeys-active { background: var(--primary-light) !important; }
 body.journeys-active,
 body.journeys-active .app {

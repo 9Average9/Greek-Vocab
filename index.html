@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.307" rel="stylesheet"/>
+<link href="style.css?v=3.0.308" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -646,6 +646,7 @@ Habit Builder</span>
 <button class="active" id="journeyModeAncient" onclick="setBibleJourneyMode('ancient')">Bible Map</button>
 <button id="journeyModeModern" onclick="setBibleJourneyMode('modern')">Modern</button>
 </div>
+<button class="atlas-open-pill" onclick="openBibleAtlasPage()"><span class="material-symbols-outlined">travel_explore</span>Open Bible Atlas — find any place</button>
 </section>
 <div class="journey-layout">
 <aside class="journey-list" id="journeyList"></aside>
@@ -662,6 +663,27 @@ Habit Builder</span>
 <section class="journey-sources" id="journeySources" style="display:none"></section>
 </main>
 </div>
+</div>
+</div>
+</section>
+<section class="screen" id="atlasPage">
+<div class="journeys-page atlas-page">
+<header class="journeys-topbar">
+<button class="journey-icon-btn" onclick="closeBibleAtlasPage()" aria-label="Back to journeys"><span class="material-symbols-outlined">arrow_back</span></button>
+<div class="journeys-title-stack">
+<span>Bible Atlas</span>
+<strong>Find any place</strong>
+</div>
+<button class="journey-icon-btn" onclick="closeBibleAtlasPage()" aria-label="Journeys"><span class="material-symbols-outlined">route</span></button>
+</header>
+<div class="atlas-searchbar">
+<span class="material-symbols-outlined">search</span>
+<input id="atlasSearchInput" type="search" autocomplete="off" placeholder="Search a city, region, river, mountain…" oninput="renderAtlasList(this.value)"/>
+<span class="atlas-count" id="atlasCount"></span>
+</div>
+<div class="atlas-scroll" id="atlasScroll">
+<div class="atlas-detail" id="atlasDetail"></div>
+<div class="atlas-list" id="atlasList"></div>
 </div>
 </div>
 </section>
@@ -16978,12 +17000,13 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.307"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.307"></script>
+<script src="app.js?v=3.0.308"></script>
+<script src="bible-atlas.js?v=3.0.308"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.308"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.307" type="module"></script>
+<script src="firebase-lb.js?v=3.0.308" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
