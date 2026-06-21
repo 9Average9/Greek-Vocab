@@ -290,7 +290,7 @@
             container: container,
             style: _buildStyle(state.mode, pmtilesUrl),
             bounds: _bounds(state.coords),
-            fitBoundsOptions: { padding: 46, maxZoom: 9 },
+            fitBoundsOptions: { padding: 46, maxZoom: 12 },
             attributionControl: false,
             dragRotate: false,
             pitchWithRotate: false,
@@ -311,7 +311,7 @@
             map.resize();   // container may have been sized just before init
             _addOverlays();
             _addMarkers();
-            map.fitBounds(_bounds(state.coords), { padding: 46, maxZoom: 9, animate: false });
+            map.fitBounds(_bounds(state.coords), { padding: 46, maxZoom: 12, animate: false });
             map.triggerRepaint();   // force a paint (blank-canvas guard on iOS)
             setTimeout(function () { try { map.resize(); map.triggerRepaint(); } catch (e) {} }, 180);
             resolve(map);
