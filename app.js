@@ -28627,7 +28627,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.318";
+const APP_VERSION = "3.0.319";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28648,6 +28648,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.319 &mdash; Matching status bar</div>
+<ul>
+  <li><strong>Clean top edge</strong> &mdash; On the Atlas and Journeys pages the safe-area bar at the very top now matches the white header instead of the app color, while still leaving room for the notch on every phone.</li>
+</ul>
 <div class="un-version-label">v3.0.318 &mdash; Cleaner Atlas header</div>
 <ul>
   <li><strong>One button on the list</strong> &mdash; The Journeys / Places finder now shows a single Home button at the top-left, instead of a redundant back-and-home pair.</li>
