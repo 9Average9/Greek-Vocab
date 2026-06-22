@@ -15846,11 +15846,14 @@ function renderAtlasList(query) {
     list.innerHTML = `<p class="atlas-empty">No places match "${_journeyEsc(query)}". Try a city, region, river, or modern name.</p>`;
     return;
   }
-  list.innerHTML = places.map(p => `<button class="atlas-row${_atlasSelected && _atlasSelected.name === p.name ? ' active' : ''}" onclick="selectAtlasPlace('${p.name.replace(/'/g, "\\'")}')">
+  list.innerHTML = places.map(p => {
+    const conf = _atlasConfidence(p);
+    return `<button class="atlas-row${_atlasSelected && _atlasSelected.name === p.name ? ' active' : ''}" onclick="selectAtlasPlace('${p.name.replace(/'/g, "\\'")}')">
       <span class="atlas-row-icon"><span class="material-symbols-outlined">${_atlasKindIcon(p.kind)}</span></span>
-      <span class="atlas-row-copy"><strong>${_journeyEsc(p.name)}</strong><small>${_journeyEsc(_atlasKindLabel(p.kind))} &middot; ${_journeyEsc(p.modern)}</small></span>
+      <span class="atlas-row-copy"><strong>${_journeyEsc(p.name)}</strong><small><span class="atlas-row-dot ${conf.cls}" title="${conf.label}"></span>${_journeyEsc(_atlasKindLabel(p.kind))} &middot; ${_journeyEsc(p.modern)}</small></span>
       <span class="material-symbols-outlined atlas-row-arrow">chevron_right</span>
-    </button>`).join('');
+    </button>`;
+  }).join('');
 }
 
 function _atlasKindIcon(kind) {
@@ -15904,7 +15907,8 @@ function _atlasRenderDetail(place) {
       <button class="active" onclick="setAtlasDetailMode('modern')">Modern</button>
     </div>` : ''}
     <div class="atlas-map" id="atlasMapShell"></div>
-    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>Where it is today</strong><span>${_journeyEsc(place.modern)}</span></div></div>
+    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>${conf.tier === 'debated' ? 'Most-accepted location' : 'Where it is today'}</strong><span>${_journeyEsc(place.modern)}</span></div></div>
+    ${_atlasAltsHtml(place)}
     ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
     ${refs ? `<div class="atlas-refs"><strong>Where it appears in Scripture</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
   </div>`;
@@ -15971,15 +15975,24 @@ let _atlasPeekPlaces = [];
 let _atlasPeekIndex = 0;
 let _atlasPeekMode = 'modern';
 
-// Heuristic confidence label so the peek is honest about how sure the
-// identification is. Most major places are securely located; many minor or
-// single-mention sites are debated, which the modern/note text usually flags.
+// Confidence tier for how sure the identification is. Set per-place in the
+// gazetteer (certain | likely | debated); falls back to a text heuristic for
+// any older cached entry without the field.
 function _atlasConfidence(place) {
-  const t = `${place.modern || ''} ${place.note || ''}`.toLowerCase();
-  if (/debated|approximate|uncertain|\?|traditional/.test(t)) {
-    return { label: 'Location debated', icon: 'help', cls: 'atlas-conf-soft' };
+  let conf = place.conf;
+  if (!conf) {
+    const t = `${place.modern || ''} ${place.note || ''}`.toLowerCase();
+    conf = /debated|approximate|uncertain|unidentified|unlocated/.test(t) ? 'debated' : 'likely';
   }
-  return { label: 'Widely accepted site', icon: 'verified', cls: 'atlas-conf-firm' };
+  if (conf === 'certain') return { tier: 'certain', label: 'Confirmed location', icon: 'verified', cls: 'atlas-conf-firm' };
+  if (conf === 'debated') return { tier: 'debated', label: 'Debated location', icon: 'help', cls: 'atlas-conf-soft' };
+  return { tier: 'likely', label: 'Likely location', icon: 'check_circle', cls: 'atlas-conf-mid' };
+}
+
+// Block listing the competing identifications for a debated place.
+function _atlasAltsHtml(place) {
+  if (!Array.isArray(place.alts) || !place.alts.length) return '';
+  return `<div class="atlas-alts"><strong><span class="material-symbols-outlined">alt_route</span>Possible locations</strong><ul>${place.alts.map(a => `<li>${_journeyEsc(a)}</li>`).join('')}</ul></div>`;
 }
 
 function _atlasBuildRefIndex() {
@@ -16046,7 +16059,8 @@ function _atlasPeekSelect(i) {
       <button class="${_atlasPeekMode === 'modern' ? 'active' : ''}" onclick="setAtlasPeekMode('modern')">Modern</button>
     </div>` : ''}
     <div class="atlas-peek-map" id="atlasPeekMap"></div>
-    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>Where it is today</strong><span>${_journeyEsc(place.modern)}</span></div></div>
+    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>${conf.tier === 'debated' ? 'Most-accepted location' : 'Where it is today'}</strong><span>${_journeyEsc(place.modern)}</span></div></div>
+    ${_atlasAltsHtml(place)}
     ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
     ${refs ? `<div class="atlas-refs"><strong>Where it appears in Scripture</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
     <button class="atlas-peek-full" onclick="_atlasJumpToFull('${place.name.replace(/'/g, "\\'")}')">Open in the full Atlas<span class="material-symbols-outlined">arrow_forward</span></button>`;
@@ -28468,7 +28482,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.312";
+const APP_VERSION = "3.0.313";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28489,6 +28503,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.313 &mdash; How sure is each place?</div>
+<ul>
+  <li><strong>Confidence tags</strong> &mdash; Every Atlas place now says how certain its location is: <em>Confirmed</em>, <em>Likely</em>, or <em>Debated</em>. The search list shows a colored dot, and the pin popup shows the full tag.</li>
+  <li><strong>Possible locations</strong> &mdash; For debated places (like Mount Sinai, Ai, Emmaus, Cana, Tarshish, Ophir, Sodom), the popup now lists the competing candidate sites so you can see the options scholars propose.</li>
+</ul>
 <div class="un-version-label">v3.0.312 &mdash; Clearer place pins</div>
 <ul>
   <li><strong>Bible Map / Modern toggle</strong> &mdash; The place pin popup (and the full Atlas) now has a Bible Map / Modern switch, so you can flip between the ancient view and a present-day map.</li>
