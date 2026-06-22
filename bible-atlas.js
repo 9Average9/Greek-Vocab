@@ -11,8 +11,8 @@
    ========================================================================== */
 window.BIBLE_ATLAS = [
   // ── Jerusalem & Judah ──
-  { name:'Jerusalem', modern:'Jerusalem, Israel', lat:31.78, lon:35.23, kind:'city', note:'The City of David and site of the temple; capital of Judah.', refs:['2 Samuel 5:7','Psalm 122:6'] },
-  { name:'Mount Zion', modern:'Jerusalem (southern hill)', lat:31.77, lon:35.23, kind:'mountain', note:'The hill of the City of David, often a name for Jerusalem itself.', refs:['Psalm 48:2','Isaiah 2:3'] },
+  { name:'Jerusalem', modern:'Jerusalem, Israel', lat:31.78, lon:35.23, kind:'city', note:'The City of David and site of the temple; capital of Judah.', refs:['2 Samuel 5:7','Psalms 122:6'] },
+  { name:'Mount Zion', modern:'Jerusalem (southern hill)', lat:31.77, lon:35.23, kind:'mountain', note:'The hill of the City of David, often a name for Jerusalem itself.', refs:['Psalms 48:2','Isaiah 2:3'] },
   { name:'Mount Moriah', modern:'Temple Mount, Jerusalem', lat:31.778, lon:35.235, kind:'mountain', note:'Where Abraham bound Isaac and Solomon built the temple.', refs:['Genesis 22:2','2 Chronicles 3:1'] },
   { name:'Mount of Olives', modern:'East of Jerusalem', lat:31.77, lon:35.25, kind:'mountain', note:'Ridge east of Jerusalem; Jesus taught, prayed, and ascended here.', refs:['Zechariah 14:4','Acts 1:12'] },
   { name:'Gethsemane', modern:'Mount of Olives, Jerusalem', lat:31.779, lon:35.24, kind:'site', note:'The garden where Jesus prayed before his arrest.', refs:['Matthew 26:36'] },
@@ -92,7 +92,7 @@ window.BIBLE_ATLAS = [
   { name:'Hazor', modern:'Tel Hazor', lat:33.02, lon:35.57, kind:'city', note:'Great northern city Joshua burned.', refs:['Joshua 11:10'] },
   { name:'Kedesh', modern:'Tel Kedesh, Galilee', lat:33.11, lon:35.53, kind:'city', note:'City of refuge; Barak’s home.', refs:['Joshua 20:7','Judges 4:6'] },
   { name:'Abel-beth-maacah', modern:'Tel Abel, N. Israel', lat:33.26, lon:35.58, kind:'city', note:'Far-northern city where a wise woman ended a siege.', refs:['2 Samuel 20:14'] },
-  { name:'Mount Hermon', modern:'Hermon range', lat:33.42, lon:35.86, kind:'mountain', note:'Snow-capped peak at the land’s northern edge.', refs:['Psalm 133:3'] },
+  { name:'Mount Hermon', modern:'Hermon range', lat:33.42, lon:35.86, kind:'mountain', note:'Snow-capped peak at the land’s northern edge.', refs:['Psalms 133:3'] },
   // ── Transjordan ──
   { name:'Mahanaim', modern:'Gilead, Jordan', lat:32.20, lon:35.72, kind:'town', note:'Where angels met Jacob; David’s refuge from Absalom.', refs:['Genesis 32:2','2 Samuel 17:24'] },
   { name:'Penuel (Peniel)', modern:'Jabbok river, Jordan', lat:32.10, lon:35.62, kind:'site', note:'Where Jacob wrestled with God.', refs:['Genesis 32:30'] },
@@ -222,7 +222,7 @@ window.BIBLE_ATLAS = [
   { name:'Moab', modern:'West-central Jordan', lat:31.50, lon:35.70, kind:'region', note:'Land east of the Dead Sea; Ruth’s homeland.', refs:['Ruth 1:1'] },
   { name:'Ammon', modern:'Amman region, Jordan', lat:31.95, lon:35.90, kind:'region', note:'Land of the Ammonites, around Rabbah.', refs:['Judges 11:4'] },
   { name:'Gilead', modern:'Northern Jordan', lat:32.20, lon:35.75, kind:'region', note:'Highland east of the Jordan, known for its balm.', refs:['Jeremiah 8:22'] },
-  { name:'Bashan', modern:'Golan / S. Syria', lat:32.80, lon:36.00, kind:'region', note:'Fertile northern plateau famed for its cattle.', refs:['Psalm 22:12'] },
+  { name:'Bashan', modern:'Golan / S. Syria', lat:32.80, lon:36.00, kind:'region', note:'Fertile northern plateau famed for its cattle.', refs:['Psalms 22:12'] },
   { name:'Midian', modern:'NW Arabia', lat:28.40, lon:35.30, kind:'region', note:'Where Moses fled and married Zipporah.', refs:['Exodus 2:15'] },
   { name:'Philistia', modern:'SW coastal plain', lat:31.60, lon:34.60, kind:'region', note:'Coastal land of the five Philistine cities.', refs:['Exodus 13:17'] },
   { name:'Assyria', modern:'Northern Iraq', lat:36.30, lon:43.10, kind:'nation', note:'Empire that exiled the northern kingdom.', refs:['2 Kings 17:6'] },

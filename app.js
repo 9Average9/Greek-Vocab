@@ -15942,6 +15942,115 @@ function _atlasMountGL(place) {
   });
 }
 
+// ── Atlas: per-verse place pins ─────────────────────────────────────────────
+// Verses get a pin when the gazetteer lists them under a place. Matching is
+// exact (curated refs), not fuzzy text, so no false hits on ambiguous names.
+let _atlasRefIndex = null;
+let _atlasPeekPlaces = [];
+
+function _atlasBuildRefIndex() {
+  _atlasRefIndex = {};
+  (window.BIBLE_ATLAS || []).forEach(place => {
+    (place.refs || []).forEach(r => {
+      const m = String(r).match(/^([1-3]?\s?[A-Za-z][A-Za-z ]*?)\s+(\d+):(\d+)/);
+      if (!m) return;
+      let code = _journeyBookCode(m[1].trim()) || _journeyBookCode(m[1].trim() + 's');
+      if (!code) return;
+      const key = `${code} ${Number(m[2])}:${Number(m[3])}`;
+      (_atlasRefIndex[key] = _atlasRefIndex[key] || []).push(place.name);
+    });
+  });
+}
+
+function _atlasPlacesForVerse(book, chapter, verse) {
+  if (!Array.isArray(window.BIBLE_ATLAS)) return [];
+  if (!_atlasRefIndex) _atlasBuildRefIndex();
+  const names = _atlasRefIndex[`${book} ${Number(chapter)}:${Number(verse)}`] || [];
+  const seen = new Set();
+  return names.map(n => window.BIBLE_ATLAS.find(p => p.name === n))
+    .filter(p => p && !seen.has(p.name) && seen.add(p.name));
+}
+
+function openAtlasPeek(book, chapter, verse) {
+  const places = _atlasPlacesForVerse(book, chapter, verse);
+  if (!places.length) return;
+  _atlasPeekPlaces = places;
+  document.getElementById('atlasPeekOverlay')?.remove();
+  const refLabel = `${typeof _rhemaBookName === 'function' ? _rhemaBookName(book) : book} ${chapter}:${verse}`;
+  const ov = document.createElement('div');
+  ov.className = 'journey-peek-overlay';
+  ov.id = 'atlasPeekOverlay';
+  ov.onclick = (e) => { if (e.target === ov) closeAtlasPeek(); };
+  ov.innerHTML = `<div class="journey-peek-card atlas-peek-card">
+    <button class="journey-peek-x" onclick="closeAtlasPeek()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+    <span class="journey-peek-ref">${_journeyEsc(refLabel)} &middot; ${places.length} place${places.length > 1 ? 's' : ''} on the map</span>
+    ${places.length > 1 ? `<div class="atlas-peek-chips" id="atlasPeekChips">${places.map((p, i) => `<button class="${i === 0 ? 'active' : ''}" onclick="_atlasPeekSelect(${i})">${_journeyEsc(p.name)}</button>`).join('')}</div>` : ''}
+    <div id="atlasPeekBody"></div>
+  </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('open'));
+  _atlasPeekSelect(0);
+}
+
+function _atlasPeekSelect(i) {
+  const place = _atlasPeekPlaces[i];
+  if (!place) return;
+  document.querySelectorAll('#atlasPeekChips button').forEach((b, idx) => b.classList.toggle('active', idx === i));
+  const body = document.getElementById('atlasPeekBody');
+  if (!body) return;
+  const refs = (place.refs || []).map(r => `<span>${_journeyEsc(r)}</span>`).join('');
+  body.innerHTML = `<span class="journey-peek-title">${_journeyEsc(place.name)}</span>
+    <div class="atlas-peek-map" id="atlasPeekMap"></div>
+    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>Modern location</strong><span>${_journeyEsc(place.modern)}</span></div></div>
+    ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
+    ${refs ? `<div class="atlas-refs"><strong>Where it appears</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
+    <button class="atlas-peek-full" onclick="closeAtlasPeek();openBibleAtlasPage();selectAtlasPlace('${place.name.replace(/'/g, "\\'")}')">Open in the full Atlas<span class="material-symbols-outlined">arrow_forward</span></button>`;
+  _atlasPeekMountGL(place);
+}
+
+function _atlasPeekMountGL(place) {
+  const shell = document.getElementById('atlasPeekMap');
+  if (!shell) return;
+  const token = ++_atlasGLToken;
+  const inTiles = _atlasInTiles(place);
+  if (!inTiles || !_bibleMapConfigured() || navigator.onLine === false) {
+    shell.classList.add('atlas-map-flat');
+    shell.innerHTML = `<div class="atlas-map-note"><span class="material-symbols-outlined">${inTiles ? 'wifi_off' : 'travel_explore'}</span><p>${inTiles ? 'The live map needs internet.' : 'Beyond the detailed map area — see the modern location below.'}</p></div>`;
+    return;
+  }
+  shell.innerHTML = '';
+  const host = document.createElement('div');
+  host.className = 'atlas-peek-gl';
+  shell.appendChild(host);
+  shell.classList.add('gl-mounting');
+  const pseudo = { id: 'atlaspeek', title: place.name, points: [{ ancient: place.name, modern: place.modern, lat: place.lat, lon: place.lon }] };
+  _ensureBibleMapLibs().then(() => {
+    if (token !== _atlasGLToken || !document.getElementById('atlasPeekMap')) return null;
+    if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('map unavailable');
+    return window.BibleMap.render(host, pseudo, {
+      mode: 'ancient', pmtilesUrl: _journeyResolvePmtiles(), labelFor: _journeyLabelFor,
+      landmarks: _journeyModernLandmarks(pseudo, 6), pinZoom: 7,
+      onError: () => { shell.classList.remove('gl-mounting'); }
+    });
+  }).then(() => {
+    if (token !== _atlasGLToken) return;
+    shell.classList.remove('gl-mounting'); shell.classList.add('gl-ready');
+  }).catch(() => {
+    if (token !== _atlasGLToken) return;
+    shell.classList.remove('gl-mounting'); shell.classList.add('atlas-map-flat');
+    shell.innerHTML = `<div class="atlas-map-note"><span class="material-symbols-outlined">map</span><p>Map could not load. ${_journeyEsc(place.modern)}</p></div>`;
+  });
+}
+
+function closeAtlasPeek() {
+  _atlasGLToken++;
+  try { window.BibleMap?.destroy?.(); } catch (e) {}
+  const ov = document.getElementById('atlasPeekOverlay');
+  if (!ov) return;
+  ov.classList.remove('open');
+  setTimeout(() => ov.remove(), 180);
+}
+
 function _journeyTotalMiles(journey) {
   return Number(journey.distance || (journey.steps || []).reduce((sum, step) => sum + Number(step.miles || 0), 0));
 }
@@ -28288,7 +28397,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.308";
+const APP_VERSION = "3.0.309";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28309,6 +28418,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.309 &mdash; Place pins in the reader</div>
+<ul>
+  <li><strong>Tap a place, see the map</strong> &mdash; Verses that name a place now show a small pin icon in Rhema. Tap it to pop up that place on the map with its modern-day location and the verses where it appears.</li>
+  <li><strong>Atlas map fix</strong> &mdash; Fixed the Atlas detail map showing blank; the map now loads correctly.</li>
+</ul>
 <div class="un-version-label">v3.0.308 &mdash; The Bible Atlas</div>
 <ul>
   <li><strong>New: Bible Atlas</strong> &mdash; A searchable map of biblical places. Open it from the Bible Journeys page, search any city, region, river, or mountain, and see a pin on the real map with its modern-day location and the verses where it appears.</li>
@@ -37100,6 +37214,10 @@ function _rhemaInlineNoteHtml(book, chapter, verse) {
   // Journey map: only on verses that fall on a curated story step (not the whole chapter).
   if (typeof _journeyMatchVerse === 'function' && _journeyMatchVerse(book, chapter, verse)) {
     html += `<button class="rhema-reader-note-btn rhema-reader-map-btn" onclick="event.stopPropagation();openJourneyPeek('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="See this on the journey map" aria-label="Journey map"><span class="material-symbols-outlined">map</span></button>`;
+  }
+  // Atlas place pin: verses that name a place in the gazetteer (exact ref match).
+  if (typeof _atlasPlacesForVerse === 'function' && _atlasPlacesForVerse(book, chapter, verse).length) {
+    html += `<button class="rhema-reader-note-btn rhema-reader-place-btn" onclick="event.stopPropagation();openAtlasPeek('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="See this place on the map" aria-label="Place on map"><span class="material-symbols-outlined">location_on</span></button>`;
   }
   return html;
 }
