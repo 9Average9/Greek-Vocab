@@ -28482,7 +28482,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.314";
+const APP_VERSION = "3.0.315";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28503,6 +28503,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.315 &mdash; Atlas: 516 places</div>
+<ul>
+  <li><strong>66 more places</strong> &mdash; The Bible Atlas now covers 516 places, with over 500 verses showing a place pin. Added more patriarchal sites, wilderness camps, Moabite oracle towns, judges-era and prophetic towns, exile cities, and New Testament regions and sites (Phoenicia, Idumea, Abilene, Ituraea, Trachonitis, the Upper Room, the Antonia Fortress, and Arimathea).</li>
+</ul>
 <div class="un-version-label">v3.0.314 &mdash; Bottom wave fix</div>
 <ul>
   <li><strong>Nicer wave</strong> &mdash; The pull wave at the end of a chapter now looks like an actual cresting wave rising from the bottom.</li>
