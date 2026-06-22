@@ -16557,6 +16557,26 @@ body.dark .rhema-reader-place-btn { color: #f0a58e; }
   font-weight: 850; font-size: 0.88rem;
   cursor: pointer;
 }
+.journey-peek-ref .material-symbols-outlined { font-size: 16px; vertical-align: -3px; margin-right: 3px; }
+.atlas-peek-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 2px; }
+.atlas-kind-tag {
+  font-size: 0.72rem; font-weight: 850; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color));
+  color: var(--secondary-color);
+}
+.atlas-conf-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.72rem; font-weight: 800;
+  padding: 3px 9px; border-radius: 999px;
+}
+.atlas-conf-tag .material-symbols-outlined { font-size: 15px; }
+.atlas-conf-firm { background: color-mix(in srgb, #2f9e6f 16%, transparent); color: #1f7d54; }
+.atlas-conf-soft { background: color-mix(in srgb, #c08a3b 18%, transparent); color: #9a6b1e; }
+body.dark .atlas-conf-firm { color: #6fd6a6; }
+body.dark .atlas-conf-soft { color: #e3b466; }
+.atlas-peek-explain { margin: 8px 2px 10px; font-size: 0.86rem; color: var(--muted-color); line-height: 1.45; }
+.atlas-peek-toggle, .atlas-detail-toggle { margin-bottom: 10px; }
 
 /* Journey peek — quick map popup from a verse in the reader. */
 .journey-peek-overlay {
