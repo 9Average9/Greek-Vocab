@@ -28397,7 +28397,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.310";
+const APP_VERSION = "3.0.311";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28418,6 +28418,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.311 &mdash; Atlas: 450 places</div>
+<ul>
+  <li><strong>105 more places</strong> &mdash; The Bible Atlas now covers 450 places, and over 440 verses show a place pin. Added more towns, valleys, wilderness camps, Decapolis cities, Jerusalem sites (the Field of Blood, the Pool of Bethesda, the Stone Pavement), and far lands named in the prophets.</li>
+</ul>
 <div class="un-version-label">v3.0.310 &mdash; Bigger Bible Atlas</div>
 <ul>
   <li><strong>119 more places</strong> &mdash; The Atlas now covers 345 places — more towns, valleys, rivers, wilderness camps, and far cities — so many more verses now show a place pin (over 350 verses).</li>
