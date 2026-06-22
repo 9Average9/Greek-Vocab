@@ -31153,6 +31153,55 @@ body.dark .rp-book-sep { background: #1f2937; }
 .atlas-row-arrow { color: var(--muted-color); }
 .atlas-empty { text-align: center; color: var(--muted-color); padding: 28px 16px; font-weight: 600; }
 .atlas-detail:empty { display: none; }
+
+/* Two-tab Atlas hub: browser (tabs + search + list) vs. a full place detail page */
+.atlas-browser { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.atlas-browser.hidden, .atlas-detailpage.hidden { display: none; }
+.atlas-detailpage {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 12px 12px calc(env(safe-area-inset-bottom, 0px) + 22px);
+}
+.atlas-tabs {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 10px 12px 0;
+  padding: 4px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color));
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, var(--border-color));
+}
+.atlas-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted-color);
+  font-weight: 850;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.atlas-tabs button .material-symbols-outlined { font-size: 19px; }
+.atlas-tabs button.active {
+  background: var(--secondary-color);
+  color: var(--btn-text-color, #fff);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--secondary-color) 32%, transparent);
+}
+.atlas-row-icon-journey { background: color-mix(in srgb, var(--secondary-color) 18%, var(--card-color)); }
+
+/* Journeys are now browsed in the Atlas, so the old in-page route list is hidden;
+   the journey page is a clean detail view with its map, toggle, steps and notes. */
+.journey-list { display: none !important; }
+.journey-layout { display: block !important; }
 .atlas-card {
   background: var(--card-color);
   border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, var(--border-color));

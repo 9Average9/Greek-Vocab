@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.316" rel="stylesheet"/>
+<link href="style.css?v=3.0.317" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -578,7 +578,7 @@ Habit Builder</span>
 <div class="hat-text"><strong>Reading<br/>Plan</strong><small>Set scripture goals</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile quick-action-journeys" id="journeysHomeBtn" onclick="openBibleJourneysPage()">
+<button class="home-action-tile quick-action-journeys" id="journeysHomeBtn" onclick="openBibleAtlasPage()">
 <div class="hat-icon hat-icon-journeys">
 <img class="qa-img" src="assets/icons/0ed7ea05-32dd-4542-b042-c80a7f47169b.png" alt="" loading="lazy"/>
 </div>
@@ -614,7 +614,7 @@ Habit Builder</span>
 <section class="screen" id="journeysPage">
 <div class="journeys-page">
 <header class="journeys-topbar">
-<button class="journey-icon-btn" onclick="closeBibleJourneysPage()" aria-label="Home"><span class="material-symbols-outlined">home</span></button>
+<button class="journey-icon-btn" onclick="bibleJourneyBack()" aria-label="Back"><span class="material-symbols-outlined">arrow_back</span></button>
 <div class="journeys-title-stack">
 <span>Follow Along Maps</span>
 <strong>Bible Journeys</strong>
@@ -646,7 +646,6 @@ Habit Builder</span>
 <button class="active" id="journeyModeAncient" onclick="setBibleJourneyMode('ancient')">Bible Map</button>
 <button id="journeyModeModern" onclick="setBibleJourneyMode('modern')">Modern</button>
 </div>
-<button class="atlas-open-pill" onclick="openBibleAtlasPage()"><span class="material-symbols-outlined">travel_explore</span>Open Bible Atlas — find any place</button>
 </section>
 <div class="journey-layout">
 <aside class="journey-list" id="journeyList"></aside>
@@ -669,22 +668,28 @@ Habit Builder</span>
 <section class="screen" id="atlasPage">
 <div class="journeys-page atlas-page">
 <header class="journeys-topbar">
-<button class="journey-icon-btn" onclick="closeBibleAtlasPage()" aria-label="Back to journeys"><span class="material-symbols-outlined">arrow_back</span></button>
+<button class="journey-icon-btn" id="atlasBackBtn" onclick="atlasBack()" aria-label="Back"><span class="material-symbols-outlined">arrow_back</span></button>
 <div class="journeys-title-stack">
 <span>Bible Atlas</span>
-<strong>Find any place</strong>
+<strong id="atlasHeaderTitle">Journeys &amp; places</strong>
 </div>
-<button class="journey-icon-btn" onclick="closeBibleAtlasPage()" aria-label="Journeys"><span class="material-symbols-outlined">route</span></button>
+<button class="journey-icon-btn" onclick="showNavPage('home')" aria-label="Home"><span class="material-symbols-outlined">home</span></button>
 </header>
+<div class="atlas-browser" id="atlasBrowser">
+<div class="atlas-tabs" id="atlasTabs" role="tablist">
+<button id="atlasTabJourneys" class="active" onclick="setAtlasTab('journeys')"><span class="material-symbols-outlined">route</span>Journeys</button>
+<button id="atlasTabPlaces" onclick="setAtlasTab('places')"><span class="material-symbols-outlined">location_on</span>Places</button>
+</div>
 <div class="atlas-searchbar">
 <span class="material-symbols-outlined">search</span>
-<input id="atlasSearchInput" type="search" autocomplete="off" placeholder="Search a city, region, river, mountain…" oninput="renderAtlasList(this.value)"/>
+<input id="atlasSearchInput" type="search" autocomplete="off" placeholder="Search journeys — name, place, or idea…" oninput="renderAtlasTab(this.value)"/>
 <span class="atlas-count" id="atlasCount"></span>
 </div>
 <div class="atlas-scroll" id="atlasScroll">
-<div class="atlas-detail" id="atlasDetail"></div>
 <div class="atlas-list" id="atlasList"></div>
 </div>
+</div>
+<div class="atlas-detailpage hidden" id="atlasDetailPage"></div>
 </div>
 </section>
 <section class="screen" id="memorizationPage">
@@ -17000,13 +17005,13 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.316"></script>
-<script src="bible-atlas.js?v=3.0.316"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.316"></script>
+<script src="app.js?v=3.0.317"></script>
+<script src="bible-atlas.js?v=3.0.317"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.317"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.316" type="module"></script>
+<script src="firebase-lb.js?v=3.0.317" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

@@ -15809,36 +15809,95 @@ function selectBibleJourney(id) {
 let _atlasSelected = null;
 let _atlasGLToken = 0;
 let _atlasDetailMode = 'modern';
+let _atlasTab = 'journeys';        // 'journeys' | 'places'
+let _atlasView = 'list';           // 'list' | 'place'
+let _atlasScrollMemory = 0;
+let _journeyFromAtlas = false;      // did we enter the journey detail from the Atlas?
 
 function _atlasPlaces() { return Array.isArray(window.BIBLE_ATLAS) ? window.BIBLE_ATLAS : []; }
 function _atlasInTiles(p) { return p && p.lon >= 9 && p.lon <= 48 && p.lat >= 24 && p.lat <= 43; }
 function _atlasKindLabel(k) { return String(k || 'place').replace(/(^|\s)\w/g, c => c.toUpperCase()); }
 
-function openBibleAtlasPage() {
+function openBibleAtlasPage(opts = {}) {
   setNavActive('journeys');
   hideBottomNav();
   showScreen('atlasPage');
   hideBottomNav();
+  if (opts && opts.restore) {
+    // Returning from a detail: keep the tab, search, and scroll exactly as left.
+    _atlasShowList();
+    return;
+  }
+  _atlasView = 'list';
+  _atlasShowList();
   const input = document.getElementById('atlasSearchInput');
-  if (input && !input.value && !_atlasSelected) input.value = '';
-  renderAtlasList(input ? input.value : '');
-  if (_atlasSelected) _atlasRenderDetail(_atlasSelected);
+  if (input) input.value = '';
+  renderAtlasTab('');
   document.getElementById('atlasScroll')?.scrollTo({ top: 0 });
 }
 
-function closeBibleAtlasPage() {
-  _atlasGLToken++;                       // cancel any in-flight map mount
-  try { window.BibleMap?.destroy?.(); } catch (e) {}
-  openBibleJourneysPage();
+function _atlasShowList() {
+  _atlasView = 'list';
+  document.getElementById('atlasBrowser')?.classList.remove('hidden');
+  document.getElementById('atlasDetailPage')?.classList.add('hidden');
+  const t = document.getElementById('atlasHeaderTitle');
+  if (t) t.textContent = 'Journeys & places';
 }
 
-function renderAtlasList(query) {
+// Top-left back: from a place detail go back to the list (same tab + scroll);
+// from the list itself, leave the Atlas for home.
+function atlasBack() {
+  if (_atlasView === 'place') {
+    _atlasGLToken++;
+    try { window.BibleMap?.destroy?.(); } catch (e) {}
+    _atlasSelected = null;
+    _atlasShowList();
+    const s = document.getElementById('atlasScroll');
+    if (s) s.scrollTop = _atlasScrollMemory;
+  } else {
+    showNavPage('home');
+  }
+}
+
+function closeBibleAtlasPage() {
+  _atlasGLToken++;
+  try { window.BibleMap?.destroy?.(); } catch (e) {}
+  showNavPage('home');
+}
+
+function setAtlasTab(tab) {
+  _atlasTab = tab === 'places' ? 'places' : 'journeys';
+  document.getElementById('atlasTabJourneys')?.classList.toggle('active', _atlasTab === 'journeys');
+  document.getElementById('atlasTabPlaces')?.classList.toggle('active', _atlasTab === 'places');
+  const input = document.getElementById('atlasSearchInput');
+  if (input) {
+    input.value = '';
+    input.placeholder = _atlasTab === 'journeys'
+      ? 'Search journeys — name, place, or idea…'
+      : 'Search places — name, modern, or region…';
+  }
+  renderAtlasTab('');
+  document.getElementById('atlasScroll')?.scrollTo({ top: 0 });
+}
+
+// Smart search: lowercase, split into words, require EVERY word to appear in the
+// item's combined text (so partial names, places, keywords, and ideas all hit).
+function _atlasQueryTokens(q) { return String(q || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean); }
+function _atlasBlobHas(blob, tokens) { return tokens.every(t => blob.includes(t)); }
+
+function renderAtlasTab(query) {
+  if (_atlasTab === 'places') renderAtlasPlaceList(query);
+  else renderAtlasJourneyList(query);
+}
+
+function renderAtlasPlaceList(query) {
   const list = document.getElementById('atlasList');
   if (!list) return;
-  const q = String(query || '').trim().toLowerCase();
+  const tokens = _atlasQueryTokens(query);
   const places = _atlasPlaces().filter(p => {
-    if (!q) return true;
-    return (p.name + ' ' + p.modern + ' ' + p.kind + ' ' + (p.note || '')).toLowerCase().includes(q);
+    if (!tokens.length) return true;
+    const blob = `${p.name} ${p.modern} ${p.kind} ${p.note || ''} ${(p.alts || []).join(' ')} ${(p.refs || []).join(' ')}`.toLowerCase();
+    return _atlasBlobHas(blob, tokens);
   }).sort((a, b) => a.name.localeCompare(b.name));
   const count = document.getElementById('atlasCount');
   if (count) count.textContent = `${places.length} place${places.length === 1 ? '' : 's'}`;
@@ -15848,12 +15907,68 @@ function renderAtlasList(query) {
   }
   list.innerHTML = places.map(p => {
     const conf = _atlasConfidence(p);
-    return `<button class="atlas-row${_atlasSelected && _atlasSelected.name === p.name ? ' active' : ''}" onclick="selectAtlasPlace('${p.name.replace(/'/g, "\\'")}')">
+    return `<button class="atlas-row" onclick="selectAtlasPlace('${p.name.replace(/'/g, "\\'")}')">
       <span class="atlas-row-icon"><span class="material-symbols-outlined">${_atlasKindIcon(p.kind)}</span></span>
       <span class="atlas-row-copy"><strong>${_journeyEsc(p.name)}</strong><small><span class="atlas-row-dot ${conf.cls}" title="${conf.label}"></span>${_journeyEsc(_atlasKindLabel(p.kind))} &middot; ${_journeyEsc(p.modern)}</small></span>
       <span class="material-symbols-outlined atlas-row-arrow">chevron_right</span>
     </button>`;
   }).join('');
+}
+
+// Build (once) a searchable blob per journey: title, subtitle, modern geography,
+// every stop name (ancient + modern), step labels/copy/refs, and the route note.
+function _journeySearchBlob(j) {
+  if (j.__blob) return j.__blob;
+  const parts = [j.title, j.subtitle, j.modern, j.certainty, j.note];
+  (j.points || []).forEach(p => { parts.push(p.ancient, p.modern); });
+  (j.steps || []).forEach(s => { parts.push(s.label, s.copy, s.ref); });
+  (j.refs || []).forEach(r => parts.push(r.book));
+  return (j.__blob = parts.filter(Boolean).join(' ').toLowerCase());
+}
+
+function renderAtlasJourneyList(query) {
+  const list = document.getElementById('atlasList');
+  if (!list) return;
+  const tokens = _atlasQueryTokens(query);
+  const journeys = BIBLE_JOURNEYS.filter(j => {
+    if (!tokens.length) return true;
+    return _atlasBlobHas(_journeySearchBlob(j), tokens);
+  }).slice().sort((a, b) => a.title.localeCompare(b.title));
+  const count = document.getElementById('atlasCount');
+  if (count) count.textContent = `${journeys.length} journey${journeys.length === 1 ? '' : 's'}`;
+  if (!journeys.length) {
+    list.innerHTML = `<p class="atlas-empty">No journeys match "${_journeyEsc(query)}". Try a name, a place on the route, or an idea.</p>`;
+    return;
+  }
+  list.innerHTML = journeys.map(j => {
+    const miles = _journeyTotalMiles(j);
+    const stops = (j.steps || []).length;
+    return `<button class="atlas-row" onclick="selectAtlasJourney('${_journeyEsc(j.id)}')">
+      <span class="atlas-row-icon atlas-row-icon-journey"><span class="material-symbols-outlined">route</span></span>
+      <span class="atlas-row-copy"><strong>${_journeyEsc(j.title)}</strong><small>${_journeyEsc(j.subtitle)} &middot; ${miles.toLocaleString()} mi &middot; ${stops} stops</small></span>
+      <span class="material-symbols-outlined atlas-row-arrow">chevron_right</span>
+    </button>`;
+  }).join('');
+}
+
+function selectAtlasJourney(id) {
+  _journeyFromAtlas = true;
+  _atlasGLToken++;
+  try { window.BibleMap?.destroy?.(); } catch (e) {}
+  openBibleJourneysPage(id);
+}
+
+// Smart back for the journey detail page: return to the Atlas (Journeys tab,
+// same scroll) when we came from there, otherwise go home.
+function bibleJourneyBack() {
+  if (typeof _journeyStopPlay === 'function') _journeyStopPlay();
+  if (typeof closeBibleJourneyInfo === 'function') closeBibleJourneyInfo();
+  if (_journeyFromAtlas) {
+    _journeyFromAtlas = false;
+    openBibleAtlasPage({ restore: true });
+  } else {
+    showNavPage('home');
+  }
 }
 
 function _atlasKindIcon(kind) {
@@ -15875,22 +15990,22 @@ function selectAtlasPlace(name) {
   const place = _atlasPlaces().find(p => p.name === name);
   if (!place) return;
   _atlasSelected = place;
+  _atlasScrollMemory = document.getElementById('atlasScroll')?.scrollTop || 0;
+  _atlasView = 'place';
+  document.getElementById('atlasBrowser')?.classList.add('hidden');
+  document.getElementById('atlasDetailPage')?.classList.remove('hidden');
+  const t = document.getElementById('atlasHeaderTitle');
+  if (t) t.textContent = place.name;
   _atlasRenderDetail(place);
-  renderAtlasList(document.getElementById('atlasSearchInput')?.value || '');
-  document.getElementById('atlasScroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('atlasDetailPage')?.scrollTo({ top: 0 });
 }
 
 function clearAtlasSelection() {
-  _atlasGLToken++;
-  try { window.BibleMap?.destroy?.(); } catch (e) {}
-  _atlasSelected = null;
-  const detail = document.getElementById('atlasDetail');
-  if (detail) detail.innerHTML = '';
-  renderAtlasList(document.getElementById('atlasSearchInput')?.value || '');
+  atlasBack();
 }
 
 function _atlasRenderDetail(place) {
-  const detail = document.getElementById('atlasDetail');
+  const detail = document.getElementById('atlasDetailPage');
   if (!detail) return;
   _atlasDetailMode = 'modern';
   const refs = (place.refs || []).map(r => `<span>${_journeyEsc(r)}</span>`).join('');
@@ -15899,7 +16014,7 @@ function _atlasRenderDetail(place) {
   detail.innerHTML = `<div class="atlas-card">
     <div class="atlas-card-head">
       <div><span class="journey-kicker">${_journeyEsc(_atlasKindLabel(place.kind))}</span><h2>${_journeyEsc(place.name)}</h2></div>
-      <button class="atlas-card-close" onclick="clearAtlasSelection()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+      <button class="atlas-card-close" onclick="atlasBack()" aria-label="Back to list"><span class="material-symbols-outlined">close</span></button>
     </div>
     <div class="atlas-peek-sub"><span class="atlas-conf-tag ${conf.cls}"><span class="material-symbols-outlined">${conf.icon}</span>${conf.label}</span></div>
     ${inTiles ? `<div class="journey-peek-toggle atlas-detail-toggle" role="tablist" aria-label="Map view">
@@ -16548,6 +16663,7 @@ function openBibleJourneyFromRhemaMenu() {
   const journey = match?.journey || null;
   closeRhemaVerseSheet?.();
   closeRhema?.();
+  _journeyFromAtlas = false;
   if (journey) openBibleJourneysPage(journey.id);
   else openBibleJourneysPage();
 }
@@ -16809,6 +16925,7 @@ function openJourneyFromPeek(id) {
   closeJourneyPeek();
   closeRhemaVerseSheet?.();
   closeRhema?.();
+  _journeyFromAtlas = false;
   openBibleJourneysPage(id);
 }
 
@@ -28482,7 +28599,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.316";
+const APP_VERSION = "3.0.317";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28503,6 +28620,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.317 &mdash; Find any journey or place</div>
+<ul>
+  <li><strong>Two Atlas tabs</strong> &mdash; The Bible Atlas now opens to a clean finder with two tabs: <em>Journeys</em> and <em>Places</em>. Each is sorted alphabetically so nothing hides in an endless side-scroll.</li>
+  <li><strong>Smart search</strong> &mdash; Type a name, a modern or ancient place, or just an idea or keyword — the search matches across titles, stops, regions, and notes to surface the right journey or pin.</li>
+  <li><strong>Its own page</strong> &mdash; Tapping a result opens a dedicated page with everything laid out cleanly, and an easy Bible / Modern map toggle. A back arrow at the top-left returns you to whichever tab you were in, right where you left off.</li>
+</ul>
 <div class="un-version-label">v3.0.316 &mdash; Living pull wave</div>
 <ul>
   <li><strong>Follows your finger</strong> &mdash; The end-of-chapter wave now rises live under your finger: its crest sits in your finger's column and grows the harder you pull past the bottom.</li>
