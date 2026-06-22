@@ -16242,27 +16242,43 @@ body.rx-scroll-lock {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 82px;
+  height: 76px;
   z-index: 36;
   pointer-events: none;
   opacity: 0;
-  transform: translateY(42%);
-  background:
-    radial-gradient(96px 44px at var(--wave-x, 50%) 100%,
-      color-mix(in srgb, var(--secondary-color) 34%, transparent),
-      transparent 72%);
-  transition: opacity 0.16s ease, transform 0.22s ease;
+  transform: translateY(60%);
+  transition: opacity 0.16s ease, transform 0.30s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
+/* The body of water, shaped into a cresting wave by an SVG mask so the top
+   edge ripples instead of being a flat blob. */
+.rhema-bottom-wave::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  bottom: 0;
+  height: 46px;
+  background: linear-gradient(to top,
+    color-mix(in srgb, var(--secondary-color) 44%, transparent),
+    color-mix(in srgb, var(--secondary-color) 16%, transparent) 68%,
+    transparent);
+  --wave-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20180%2030'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0%2018%20Q22.5%207%2045%2018%20Q67.5%2029%2090%2018%20Q112.5%207%20135%2018%20Q157.5%2029%20180%2018%20L180%2030%20L0%2030%20Z'%20fill='%23fff'/%3E%3C/svg%3E");
+  -webkit-mask: var(--wave-mask) bottom / 100% 100% no-repeat;
+          mask: var(--wave-mask) bottom / 100% 100% no-repeat;
+}
+/* A brighter foam crest that lifts toward where the finger is. */
 .rhema-bottom-wave::before {
   content: "";
   position: absolute;
-  left: calc(var(--wave-x, 50%) - 62px);
-  bottom: 2px;
-  width: 124px;
-  height: 34px;
-  border-radius: 50% 50% 0 0;
-  border-top: 3px solid color-mix(in srgb, var(--secondary-color) 58%, transparent);
-  filter: blur(0.2px);
+  left: calc(var(--wave-x, 50%) - 78px);
+  bottom: 22px;
+  width: 156px;
+  height: 30px;
+  background: radial-gradient(78px 30px at 50% 100%,
+    color-mix(in srgb, var(--secondary-color) 55%, #ffffff),
+    transparent 70%);
+  opacity: 0.65;
+  transition: left 0.12s ease;
 }
 .rhema-bottom-wave.show {
   opacity: 1;
