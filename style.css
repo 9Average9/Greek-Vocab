@@ -16494,6 +16494,69 @@ body.rx-scroll-lock {
   color: #1f7d54;
 }
 body.dark .rhema-reader-map-btn { color: #6fd6a6; }
+.rhema-reader-place-btn {
+  border-color: color-mix(in srgb, #c0563b 45%, transparent);
+  background: color-mix(in srgb, #c0563b 14%, transparent);
+  color: #b14228;
+}
+body.dark .rhema-reader-place-btn { color: #f0a58e; }
+
+/* Atlas peek — quick place pin popup from a verse (reuses journey-peek shell). */
+.atlas-peek-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 12px;
+}
+.atlas-peek-chips button {
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--card-color);
+  color: var(--muted-color);
+  padding: 6px 12px;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.atlas-peek-chips button.active {
+  border-color: var(--secondary-color);
+  background: var(--secondary-color);
+  color: var(--btn-text-color, #fff);
+}
+.atlas-peek-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.3 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 4px 0 12px;
+  background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color));
+}
+.atlas-peek-gl { position: absolute; inset: 0; width: 100%; height: 100%; }
+.atlas-peek-map > .atlas-peek-gl.maplibregl-map {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+.atlas-peek-map.gl-mounting::after {
+  content: 'Loading map…';
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: var(--muted-color); font-weight: 700; font-size: 0.85rem;
+}
+.atlas-peek-map.atlas-map-flat { display: grid; place-items: center; }
+.atlas-peek-full {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--secondary-color);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--secondary-color);
+  font-weight: 850; font-size: 0.88rem;
+  cursor: pointer;
+}
 
 /* Journey peek — quick map popup from a verse in the reader. */
 .journey-peek-overlay {
@@ -31057,7 +31120,16 @@ body.dark .rp-book-sep { background: #1f2937; }
   overflow: hidden;
   background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color));
 }
-.atlas-gl-map { position: absolute; inset: 0; }
+.atlas-gl-map { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* MapLibre adds .maplibregl-map to the host and its stylesheet (loaded after
+   ours) sets position:relative, which would collapse the absolutely-positioned
+   host to zero height and blank the map. Force the fill back. */
+.atlas-map > .atlas-gl-map.maplibregl-map {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
 .atlas-map.gl-mounting::after {
   content: 'Loading map…';
   position: absolute; inset: 0;
