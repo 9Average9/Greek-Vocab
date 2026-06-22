@@ -15808,6 +15808,7 @@ function selectBibleJourney(id) {
 // ── Bible Atlas (single-place pin lookup) ───────────────────────────────────
 let _atlasSelected = null;
 let _atlasGLToken = 0;
+let _atlasDetailMode = 'modern';
 
 function _atlasPlaces() { return Array.isArray(window.BIBLE_ATLAS) ? window.BIBLE_ATLAS : []; }
 function _atlasInTiles(p) { return p && p.lon >= 9 && p.lon <= 48 && p.lat >= 24 && p.lat <= 43; }
@@ -15888,18 +15889,38 @@ function clearAtlasSelection() {
 function _atlasRenderDetail(place) {
   const detail = document.getElementById('atlasDetail');
   if (!detail) return;
+  _atlasDetailMode = 'modern';
   const refs = (place.refs || []).map(r => `<span>${_journeyEsc(r)}</span>`).join('');
+  const conf = _atlasConfidence(place);
+  const inTiles = _atlasInTiles(place);
   detail.innerHTML = `<div class="atlas-card">
     <div class="atlas-card-head">
       <div><span class="journey-kicker">${_journeyEsc(_atlasKindLabel(place.kind))}</span><h2>${_journeyEsc(place.name)}</h2></div>
       <button class="atlas-card-close" onclick="clearAtlasSelection()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
     </div>
+    <div class="atlas-peek-sub"><span class="atlas-conf-tag ${conf.cls}"><span class="material-symbols-outlined">${conf.icon}</span>${conf.label}</span></div>
+    ${inTiles ? `<div class="journey-peek-toggle atlas-detail-toggle" role="tablist" aria-label="Map view">
+      <button onclick="setAtlasDetailMode('ancient')">Bible Map</button>
+      <button class="active" onclick="setAtlasDetailMode('modern')">Modern</button>
+    </div>` : ''}
     <div class="atlas-map" id="atlasMapShell"></div>
-    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>Modern location</strong><span>${_journeyEsc(place.modern)}</span></div></div>
+    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>Where it is today</strong><span>${_journeyEsc(place.modern)}</span></div></div>
     ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
-    ${refs ? `<div class="atlas-refs"><strong>Where it appears</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
+    ${refs ? `<div class="atlas-refs"><strong>Where it appears in Scripture</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
   </div>`;
   _atlasMountGL(place);
+}
+
+function setAtlasDetailMode(mode) {
+  _atlasDetailMode = mode === 'ancient' ? 'ancient' : 'modern';
+  document.querySelectorAll('.atlas-detail-toggle button').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().toLowerCase().startsWith(_atlasDetailMode === 'ancient' ? 'bible' : 'modern'));
+  });
+  const shell = document.getElementById('atlasMapShell');
+  if (shell && shell.classList.contains('gl-ready') && window.BibleMap) {
+    try { window.BibleMap.setMode(_atlasDetailMode); return; } catch (e) {}
+  }
+  if (_atlasSelected) _atlasMountGL(_atlasSelected);
 }
 
 function _atlasMountGL(place) {
@@ -15923,7 +15944,7 @@ function _atlasMountGL(place) {
     if (token !== _atlasGLToken) return null;
     if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('map unavailable');
     return window.BibleMap.render(host, pseudo, {
-      mode: 'ancient',
+      mode: _atlasDetailMode,
       pmtilesUrl: _journeyResolvePmtiles(),
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(pseudo, 6),
@@ -15947,6 +15968,19 @@ function _atlasMountGL(place) {
 // exact (curated refs), not fuzzy text, so no false hits on ambiguous names.
 let _atlasRefIndex = null;
 let _atlasPeekPlaces = [];
+let _atlasPeekIndex = 0;
+let _atlasPeekMode = 'modern';
+
+// Heuristic confidence label so the peek is honest about how sure the
+// identification is. Most major places are securely located; many minor or
+// single-mention sites are debated, which the modern/note text usually flags.
+function _atlasConfidence(place) {
+  const t = `${place.modern || ''} ${place.note || ''}`.toLowerCase();
+  if (/debated|approximate|uncertain|\?|traditional/.test(t)) {
+    return { label: 'Location debated', icon: 'help', cls: 'atlas-conf-soft' };
+  }
+  return { label: 'Widely accepted site', icon: 'verified', cls: 'atlas-conf-firm' };
+}
 
 function _atlasBuildRefIndex() {
   _atlasRefIndex = {};
@@ -15975,6 +16009,7 @@ function openAtlasPeek(book, chapter, verse) {
   const places = _atlasPlacesForVerse(book, chapter, verse);
   if (!places.length) return;
   _atlasPeekPlaces = places;
+  _atlasPeekMode = 'modern';
   document.getElementById('atlasPeekOverlay')?.remove();
   const refLabel = `${typeof _rhemaBookName === 'function' ? _rhemaBookName(book) : book} ${chapter}:${verse}`;
   const ov = document.createElement('div');
@@ -15983,7 +16018,7 @@ function openAtlasPeek(book, chapter, verse) {
   ov.onclick = (e) => { if (e.target === ov) closeAtlasPeek(); };
   ov.innerHTML = `<div class="journey-peek-card atlas-peek-card">
     <button class="journey-peek-x" onclick="closeAtlasPeek()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
-    <span class="journey-peek-ref">${_journeyEsc(refLabel)} &middot; ${places.length} place${places.length > 1 ? 's' : ''} on the map</span>
+    <span class="journey-peek-ref"><span class="material-symbols-outlined">location_on</span>Place${places.length > 1 ? 's' : ''} named in ${_journeyEsc(refLabel)}</span>
     ${places.length > 1 ? `<div class="atlas-peek-chips" id="atlasPeekChips">${places.map((p, i) => `<button class="${i === 0 ? 'active' : ''}" onclick="_atlasPeekSelect(${i})">${_journeyEsc(p.name)}</button>`).join('')}</div>` : ''}
     <div id="atlasPeekBody"></div>
   </div>`;
@@ -15995,17 +16030,53 @@ function openAtlasPeek(book, chapter, verse) {
 function _atlasPeekSelect(i) {
   const place = _atlasPeekPlaces[i];
   if (!place) return;
+  _atlasPeekIndex = i;
   document.querySelectorAll('#atlasPeekChips button').forEach((b, idx) => b.classList.toggle('active', idx === i));
   const body = document.getElementById('atlasPeekBody');
   if (!body) return;
+  const conf = _atlasConfidence(place);
+  const kind = _atlasKindLabel(place.kind);
   const refs = (place.refs || []).map(r => `<span>${_journeyEsc(r)}</span>`).join('');
+  const inTiles = _atlasInTiles(place);
   body.innerHTML = `<span class="journey-peek-title">${_journeyEsc(place.name)}</span>
+    <div class="atlas-peek-sub"><span class="atlas-kind-tag">${_journeyEsc(kind)}</span><span class="atlas-conf-tag ${conf.cls}"><span class="material-symbols-outlined">${conf.icon}</span>${conf.label}</span></div>
+    <p class="atlas-peek-explain">The pin shows where this Bible place sits on a present-day map.</p>
+    ${inTiles ? `<div class="journey-peek-toggle atlas-peek-toggle" role="tablist" aria-label="Map view">
+      <button class="${_atlasPeekMode === 'ancient' ? 'active' : ''}" onclick="setAtlasPeekMode('ancient')">Bible Map</button>
+      <button class="${_atlasPeekMode === 'modern' ? 'active' : ''}" onclick="setAtlasPeekMode('modern')">Modern</button>
+    </div>` : ''}
     <div class="atlas-peek-map" id="atlasPeekMap"></div>
-    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>Modern location</strong><span>${_journeyEsc(place.modern)}</span></div></div>
+    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>Where it is today</strong><span>${_journeyEsc(place.modern)}</span></div></div>
     ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
-    ${refs ? `<div class="atlas-refs"><strong>Where it appears</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
-    <button class="atlas-peek-full" onclick="closeAtlasPeek();openBibleAtlasPage();selectAtlasPlace('${place.name.replace(/'/g, "\\'")}')">Open in the full Atlas<span class="material-symbols-outlined">arrow_forward</span></button>`;
+    ${refs ? `<div class="atlas-refs"><strong>Where it appears in Scripture</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
+    <button class="atlas-peek-full" onclick="_atlasJumpToFull('${place.name.replace(/'/g, "\\'")}')">Open in the full Atlas<span class="material-symbols-outlined">arrow_forward</span></button>`;
   _atlasPeekMountGL(place);
+}
+
+function setAtlasPeekMode(mode) {
+  _atlasPeekMode = mode === 'ancient' ? 'ancient' : 'modern';
+  document.querySelectorAll('.atlas-peek-toggle button').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().toLowerCase().startsWith(_atlasPeekMode === 'ancient' ? 'bible' : 'modern'));
+  });
+  if (_journeyGLActiveForPeek() && window.BibleMap) {
+    try { window.BibleMap.setMode(_atlasPeekMode); return; } catch (e) {}
+  }
+  const place = _atlasPeekPlaces[_atlasPeekIndex];
+  if (place) _atlasPeekMountGL(place);
+}
+function _journeyGLActiveForPeek() {
+  const shell = document.getElementById('atlasPeekMap');
+  return !!(shell && shell.classList.contains('gl-ready'));
+}
+
+// Actually leave the reader and land on the full Atlas page (closing the peek
+// and the Rhema modal first, so the Atlas isn't hidden behind them).
+function _atlasJumpToFull(name) {
+  closeAtlasPeek();
+  if (typeof closeRhemaVerseSheet === 'function') { try { closeRhemaVerseSheet(); } catch (e) {} }
+  if (typeof closeRhema === 'function') { try { closeRhema(); } catch (e) {} }
+  openBibleAtlasPage();
+  selectAtlasPlace(name);
 }
 
 function _atlasPeekMountGL(place) {
@@ -16028,7 +16099,7 @@ function _atlasPeekMountGL(place) {
     if (token !== _atlasGLToken || !document.getElementById('atlasPeekMap')) return null;
     if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('map unavailable');
     return window.BibleMap.render(host, pseudo, {
-      mode: 'ancient', pmtilesUrl: _journeyResolvePmtiles(), labelFor: _journeyLabelFor,
+      mode: _atlasPeekMode, pmtilesUrl: _journeyResolvePmtiles(), labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(pseudo, 6), pinZoom: 7,
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
@@ -28397,7 +28468,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.311";
+const APP_VERSION = "3.0.312";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28418,6 +28489,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.312 &mdash; Clearer place pins</div>
+<ul>
+  <li><strong>Bible Map / Modern toggle</strong> &mdash; The place pin popup (and the full Atlas) now has a Bible Map / Modern switch, so you can flip between the ancient view and a present-day map.</li>
+  <li><strong>Clearer labels</strong> &mdash; Each place shows what it is, a short "where it is today" line, how confident the location is (widely accepted vs. debated), and a one-line explanation of what the pin means.</li>
+  <li><strong>"Open in the full Atlas" now jumps</strong> &mdash; It properly leaves the reader and lands on the Atlas page instead of opening behind it.</li>
+</ul>
 <div class="un-version-label">v3.0.311 &mdash; Atlas: 450 places</div>
 <ul>
   <li><strong>105 more places</strong> &mdash; The Bible Atlas now covers 450 places, and over 440 verses show a place pin. Added more towns, valleys, wilderness camps, Decapolis cities, Jerusalem sites (the Field of Blood, the Pool of Bethesda, the Stone Pavement), and far lands named in the prophets.</li>
