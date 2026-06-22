@@ -28397,7 +28397,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.309";
+const APP_VERSION = "3.0.310";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28418,6 +28418,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.310 &mdash; Bigger Bible Atlas</div>
+<ul>
+  <li><strong>119 more places</strong> &mdash; The Atlas now covers 345 places — more towns, valleys, rivers, wilderness camps, and far cities — so many more verses now show a place pin (over 350 verses).</li>
+</ul>
 <div class="un-version-label">v3.0.309 &mdash; Place pins in the reader</div>
 <ul>
   <li><strong>Tap a place, see the map</strong> &mdash; Verses that name a place now show a small pin icon in Rhema. Tap it to pop up that place on the map with its modern-day location and the verses where it appears.</li>
