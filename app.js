@@ -15842,6 +15842,33 @@ function _atlasShowList() {
   document.getElementById('atlasDetailPage')?.classList.add('hidden');
   const t = document.getElementById('atlasHeaderTitle');
   if (t) t.textContent = 'Journeys & places';
+  _atlasSetHeaderButtons('list');
+}
+
+// On the list the top-left is a Home button (nothing to go back to);
+// once a place detail is open it becomes a Back arrow with an Info button.
+function _atlasSetHeaderButtons(view) {
+  const left = document.getElementById('atlasBackBtn');
+  const icon = document.getElementById('atlasBackIcon');
+  const info = document.getElementById('atlasInfoBtn');
+  const isPlace = view === 'place';
+  if (icon) icon.textContent = isPlace ? 'arrow_back' : 'home';
+  if (left) left.setAttribute('aria-label', isPlace ? 'Back' : 'Home');
+  if (info) info.classList.toggle('hidden', !isPlace);
+}
+
+function showAtlasPlaceInfo() {
+  const modal = document.getElementById('atlasPlaceInfoModal');
+  if (!modal) return;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+}
+function closeAtlasPlaceInfo(e) {
+  if (e && e.target !== document.getElementById('atlasPlaceInfoModal')) return;
+  const modal = document.getElementById('atlasPlaceInfoModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
 }
 
 // Top-left back: from a place detail go back to the list (same tab + scroll);
@@ -15996,6 +16023,7 @@ function selectAtlasPlace(name) {
   document.getElementById('atlasDetailPage')?.classList.remove('hidden');
   const t = document.getElementById('atlasHeaderTitle');
   if (t) t.textContent = place.name;
+  _atlasSetHeaderButtons('place');
   _atlasRenderDetail(place);
   document.getElementById('atlasDetailPage')?.scrollTo({ top: 0 });
 }
@@ -28599,7 +28627,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.317";
+const APP_VERSION = "3.0.318";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28620,6 +28648,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.318 &mdash; Cleaner Atlas header</div>
+<ul>
+  <li><strong>One button on the list</strong> &mdash; The Journeys / Places finder now shows a single Home button at the top-left, instead of a redundant back-and-home pair.</li>
+  <li><strong>Back + Info when open</strong> &mdash; Opening a place or journey now shows a Back arrow and an Info button, so the header matches what you're looking at.</li>
+</ul>
 <div class="un-version-label">v3.0.317 &mdash; Find any journey or place</div>
 <ul>
   <li><strong>Two Atlas tabs</strong> &mdash; The Bible Atlas now opens to a clean finder with two tabs: <em>Journeys</em> and <em>Places</em>. Each is sorted alphabetically so nothing hides in an endless side-scroll.</li>
