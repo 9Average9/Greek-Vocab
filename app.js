@@ -28482,7 +28482,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.315";
+const APP_VERSION = "3.0.316";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28503,6 +28503,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.316 &mdash; Living pull wave</div>
+<ul>
+  <li><strong>Follows your finger</strong> &mdash; The end-of-chapter wave now rises live under your finger: its crest sits in your finger's column and grows the harder you pull past the bottom.</li>
+  <li><strong>Holds while you hold</strong> &mdash; It stays up as long as you keep pulling and recedes smoothly when you let go, instead of flashing and vanishing.</li>
+</ul>
 <div class="un-version-label">v3.0.315 &mdash; Atlas: 516 places</div>
 <ul>
   <li><strong>66 more places</strong> &mdash; The Bible Atlas now covers 516 places, with over 500 verses showing a place pin. Added more patriarchal sites, wilderness camps, Moabite oracle towns, judges-era and prophetic towns, exile cities, and New Testament regions and sites (Phoenicia, Idumea, Abilene, Ituraea, Trachonitis, the Upper Room, the Antonia Fortress, and Arimathea).</li>
@@ -35713,16 +35718,52 @@ function _rhemaBodyAtBottom(body) {
   return body.scrollTop + body.clientHeight >= body.scrollHeight - 4;
 }
 
-function _showRhemaBottomWave(clientX) {
-  const wave = document.getElementById('rhemaBottomWave');
+// ── End-of-chapter pull wave ────────────────────────────────────────────────
+// A live water swell that follows the finger: its crest sits in the finger's
+// column and rises with how far you pull past the bottom. It stays up while you
+// hold the position and recedes smoothly when you let go — driven by a rAF loop
+// so it animates rather than flashing a static shape.
+const _RHEMA_WAVE_PULL_MAX = 96;   // finger px to reach a full crest
+const _RHEMA_WAVE_LIFT_MAX = 46;   // max crest rise in px
+let _rhemaWaveActive = false;
+let _rhemaWaveTargetX = 50, _rhemaWaveTargetLift = 0;
+let _rhemaWaveX = 50, _rhemaWaveLift = 0;
+let _rhemaWaveRAF = 0;
+let _rhemaWaveReleaseTimer = null;
+
+function _rhemaWaveLoop() {
+  const el = document.getElementById('rhemaBottomWave');
+  if (!el) { _rhemaWaveRAF = 0; return; }
+  // Ease the displayed values toward their targets so it glides with the finger.
+  _rhemaWaveX += (_rhemaWaveTargetX - _rhemaWaveX) * 0.4;
+  _rhemaWaveLift += (_rhemaWaveTargetLift - _rhemaWaveLift) * (_rhemaWaveActive ? 0.28 : 0.16);
+  el.style.setProperty('--wave-x', `${_rhemaWaveX.toFixed(1)}%`);
+  el.style.setProperty('--wave-lift', `${Math.max(0, _rhemaWaveLift).toFixed(1)}px`);
+  el.classList.toggle('show', _rhemaWaveLift > 0.6);
+  if (_rhemaWaveActive || _rhemaWaveLift > 0.6) {
+    _rhemaWaveRAF = requestAnimationFrame(_rhemaWaveLoop);
+  } else {
+    _rhemaWaveLift = 0;
+    el.style.setProperty('--wave-lift', '0px');
+    el.classList.remove('show');
+    _rhemaWaveRAF = 0;
+  }
+}
+function _rhemaWaveKick() { if (!_rhemaWaveRAF) _rhemaWaveRAF = requestAnimationFrame(_rhemaWaveLoop); }
+
+function _rhemaWaveSet(clientX, pullPx) {
   const body = document.querySelector('#rhemaModal .rhema-body');
-  if (!wave || !body || !_rhemaBodyAtBottom(body)) return;
+  if (!body) return;
   const rect = body.getBoundingClientRect();
-  const pct = rect.width ? Math.max(8, Math.min(92, ((clientX - rect.left) / rect.width) * 100)) : 50;
-  wave.style.setProperty('--wave-x', `${pct.toFixed(1)}%`);
-  wave.classList.add('show');
-  clearTimeout(_rhemaBottomWaveTimer);
-  _rhemaBottomWaveTimer = setTimeout(() => wave.classList.remove('show'), 360);
+  _rhemaWaveTargetX = rect.width ? Math.max(3, Math.min(97, ((clientX - rect.left) / rect.width) * 100)) : 50;
+  _rhemaWaveTargetLift = Math.max(0, Math.min(1, pullPx / _RHEMA_WAVE_PULL_MAX)) * _RHEMA_WAVE_LIFT_MAX;
+  _rhemaWaveActive = true;
+  _rhemaWaveKick();
+}
+function _rhemaWaveRelease() {
+  _rhemaWaveActive = false;
+  _rhemaWaveTargetLift = 0;
+  _rhemaWaveKick();
 }
 
 function _bindRhemaBottomWave() {
@@ -35730,24 +35771,42 @@ function _bindRhemaBottomWave() {
   const body = document.querySelector('#rhemaModal .rhema-body');
   if (!body) return;
   _rhemaBottomWaveBound = true;
-  let lastY = null;
-  // Only reveal the wave when the user is actively trying to scroll PAST the
-  // bottom (an overscroll pull), never when scrolling back up toward the top.
-  body.addEventListener('wheel', (e) => {
-    if (e.deltaY > 4 && _rhemaBodyAtBottom(body)) _showRhemaBottomWave(e.clientX || window.innerWidth / 2);
-  }, { passive: true });
+  let lastY = null, pullAnchorY = null;
+
+  // Touch: track the pull past the bottom live, sustained until release.
   body.addEventListener('touchstart', (e) => {
     lastY = e.touches?.[0]?.clientY ?? null;
+    pullAnchorY = null;
   }, { passive: true });
   body.addEventListener('touchmove', (e) => {
-    const touch = e.touches?.[0];
-    if (!touch) return;
-    if (lastY == null) { lastY = touch.clientY; return; }
-    const movingUp = touch.clientY < lastY - 1.5;   // finger up = pulling past the bottom
-    lastY = touch.clientY;
-    if (movingUp && _rhemaBodyAtBottom(body)) _showRhemaBottomWave(touch.clientX || window.innerWidth / 2);
+    const t = e.touches?.[0];
+    if (!t) return;
+    if (lastY == null) { lastY = t.clientY; return; }
+    const movingUp = t.clientY < lastY;
+    lastY = t.clientY;
+    if (_rhemaBodyAtBottom(body) && (movingUp || pullAnchorY != null)) {
+      // Anchor the moment overscroll begins, then measure the pull distance.
+      if (pullAnchorY == null) pullAnchorY = t.clientY;
+      const pull = pullAnchorY - t.clientY;     // how far the finger has dragged up
+      if (pull > 0) _rhemaWaveSet(t.clientX || window.innerWidth / 2, pull);
+      else { pullAnchorY = t.clientY; _rhemaWaveRelease(); }
+    } else if (pullAnchorY != null) {
+      pullAnchorY = null;
+      _rhemaWaveRelease();
+    }
   }, { passive: true });
-  body.addEventListener('touchend', () => { lastY = null; }, { passive: true });
+  const endTouch = () => { lastY = null; pullAnchorY = null; _rhemaWaveRelease(); };
+  body.addEventListener('touchend', endTouch, { passive: true });
+  body.addEventListener('touchcancel', endTouch, { passive: true });
+
+  // Wheel (desktop): a momentary swell that recedes shortly after scrolling stops.
+  body.addEventListener('wheel', (e) => {
+    if (e.deltaY > 4 && _rhemaBodyAtBottom(body)) {
+      _rhemaWaveSet(e.clientX || window.innerWidth / 2, Math.min(_RHEMA_WAVE_PULL_MAX, e.deltaY * 1.4));
+      clearTimeout(_rhemaWaveReleaseTimer);
+      _rhemaWaveReleaseTimer = setTimeout(_rhemaWaveRelease, 160);
+    }
+  }, { passive: true });
 }
 
 function rhemaOpenVerseMenu(v, ev) {

@@ -16242,47 +16242,44 @@ body.rx-scroll-lock {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 76px;
+  height: 150px;
   z-index: 36;
   pointer-events: none;
   opacity: 0;
-  transform: translateY(60%);
-  transition: opacity 0.16s ease, transform 0.30s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: opacity 0.2s ease;
 }
-/* The body of water, shaped into a cresting wave by an SVG mask so the top
-   edge ripples instead of being a flat blob. */
-.rhema-bottom-wave::after {
-  content: "";
-  position: absolute;
-  left: -8px;
-  right: -8px;
-  bottom: 0;
-  height: 46px;
-  background: linear-gradient(to top,
-    color-mix(in srgb, var(--secondary-color) 44%, transparent),
-    color-mix(in srgb, var(--secondary-color) 16%, transparent) 68%,
-    transparent);
-  --wave-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20180%2030'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0%2018%20Q22.5%207%2045%2018%20Q67.5%2029%2090%2018%20Q112.5%207%20135%2018%20Q157.5%2029%20180%2018%20L180%2030%20L0%2030%20Z'%20fill='%23fff'/%3E%3C/svg%3E");
-  -webkit-mask: var(--wave-mask) bottom / 100% 100% no-repeat;
-          mask: var(--wave-mask) bottom / 100% 100% no-repeat;
-}
-/* A brighter foam crest that lifts toward where the finger is. */
+.rhema-bottom-wave.show { opacity: 1; }
+/* The body of water: a swell that peaks under the finger (--wave-x) and rises
+   with how far you pull past the bottom (--wave-lift). The JS rAF loop updates
+   both each frame, so the crest glides with the finger and holds while held. */
 .rhema-bottom-wave::before {
   content: "";
   position: absolute;
-  left: calc(var(--wave-x, 50%) - 78px);
-  bottom: 22px;
-  width: 156px;
-  height: 30px;
-  background: radial-gradient(78px 30px at 50% 100%,
-    color-mix(in srgb, var(--secondary-color) 55%, #ffffff),
-    transparent 70%);
-  opacity: 0.65;
-  transition: left 0.12s ease;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(34px + var(--wave-lift, 0px));
+  background:
+    radial-gradient(150px calc(30px + var(--wave-lift, 0px) * 1.5) at var(--wave-x, 50%) 100%,
+      color-mix(in srgb, var(--secondary-color) 42%, transparent) 0%,
+      color-mix(in srgb, var(--secondary-color) 26%, transparent) 44%,
+      transparent 76%),
+    linear-gradient(to top,
+      color-mix(in srgb, var(--secondary-color) 24%, transparent),
+      transparent 90%);
 }
-.rhema-bottom-wave.show {
-  opacity: 1;
-  transform: translateY(0);
+/* A brighter foam cap riding the top of the crest, also tracking the finger. */
+.rhema-bottom-wave::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--wave-x, 50%) - 70px);
+  bottom: calc(20px + var(--wave-lift, 0px) * 0.92);
+  width: 140px;
+  height: 20px;
+  background: radial-gradient(70px 20px at 50% 100%,
+    color-mix(in srgb, var(--secondary-color) 58%, #ffffff) 0%,
+    transparent 72%);
+  opacity: 0.7;
 }
 
 .rhema-loading {
