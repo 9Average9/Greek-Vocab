@@ -31296,6 +31296,9 @@ body.journeys-active .app-header,
 body.journeys-active .bottom-nav,
 body.journeys-active #bottomNav,
 body.journeys-active #studyTabBar { display: none !important; }
+/* On the Atlas/Journeys pages the header is white, so match the safe-area
+   status bar to it instead of the app's primary color (keeps the safe space). */
+body.journeys-active #statusBarBg { background: var(--card-color); }
 
 .journeys-page {
   width: 100%;
@@ -31919,6 +31922,7 @@ html.dark.journeys-active,
 body.dark.journeys-active,
 body.dark.journeys-active .app { background: #111827 !important; }
 body.dark .journeys-topbar { background: #1f2937; }
+body.dark.journeys-active #statusBarBg { background: #1f2937; }
 body.dark .journey-map-bg { fill: #1f2937; }
 body.dark .journey-ancient-land { fill: #253044; }
 body.dark .journey-modern-shape { fill: #202c42; }
