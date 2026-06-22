@@ -28482,7 +28482,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.313";
+const APP_VERSION = "3.0.314";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28503,6 +28503,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.314 &mdash; Bottom wave fix</div>
+<ul>
+  <li><strong>Nicer wave</strong> &mdash; The pull wave at the end of a chapter now looks like an actual cresting wave rising from the bottom.</li>
+  <li><strong>Only when you overscroll</strong> &mdash; The wave now appears only when you pull past the very bottom — scrolling back up toward the top no longer triggers it.</li>
+</ul>
 <div class="un-version-label">v3.0.313 &mdash; How sure is each place?</div>
 <ul>
   <li><strong>Confidence tags</strong> &mdash; Every Atlas place now says how certain its location is: <em>Confirmed</em>, <em>Likely</em>, or <em>Debated</em>. The search list shows a colored dot, and the pin popup shows the full tag.</li>
@@ -35721,17 +35726,24 @@ function _bindRhemaBottomWave() {
   const body = document.querySelector('#rhemaModal .rhema-body');
   if (!body) return;
   _rhemaBottomWaveBound = true;
+  let lastY = null;
+  // Only reveal the wave when the user is actively trying to scroll PAST the
+  // bottom (an overscroll pull), never when scrolling back up toward the top.
   body.addEventListener('wheel', (e) => {
-    if (e.deltaY > 0) _showRhemaBottomWave(e.clientX || window.innerWidth / 2);
+    if (e.deltaY > 4 && _rhemaBodyAtBottom(body)) _showRhemaBottomWave(e.clientX || window.innerWidth / 2);
   }, { passive: true });
-  body.addEventListener('pointermove', (e) => {
-    if (e.pointerType === 'mouse' && !e.buttons) return;
-    _showRhemaBottomWave(e.clientX || window.innerWidth / 2);
+  body.addEventListener('touchstart', (e) => {
+    lastY = e.touches?.[0]?.clientY ?? null;
   }, { passive: true });
   body.addEventListener('touchmove', (e) => {
     const touch = e.touches?.[0];
-    _showRhemaBottomWave(touch?.clientX || window.innerWidth / 2);
+    if (!touch) return;
+    if (lastY == null) { lastY = touch.clientY; return; }
+    const movingUp = touch.clientY < lastY - 1.5;   // finger up = pulling past the bottom
+    lastY = touch.clientY;
+    if (movingUp && _rhemaBodyAtBottom(body)) _showRhemaBottomWave(touch.clientX || window.innerWidth / 2);
   }, { passive: true });
+  body.addEventListener('touchend', () => { lastY = null; }, { passive: true });
 }
 
 function rhemaOpenVerseMenu(v, ev) {
