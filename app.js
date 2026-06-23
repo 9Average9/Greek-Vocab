@@ -28627,7 +28627,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.319";
+const APP_VERSION = "3.0.320";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28648,6 +28648,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.320 &mdash; Faster + cleaner edges</div>
+<ul>
+  <li><strong>Much faster updates</strong> &mdash; The app no longer re-downloads ~60MB of Scripture data on every update; those files now load only when you open the reader, so installs and updates are quick.</li>
+  <li><strong>Consistent safe areas</strong> &mdash; The notch and home-indicator spacing is now handled the same way everywhere: backgrounds run edge-to-edge while buttons and text stay clear of the notch and the home bar, with nothing hidden or crowded.</li>
+  <li><strong>Lighter floating nav</strong> &mdash; The bottom navigation pill now sits clear of the home indicator and has a softer, less heavy shadow.</li>
+  <li><strong>Quicker first paint</strong> &mdash; Core scripts now load in parallel instead of blocking each other.</li>
+</ul>
 <div class="un-version-label">v3.0.319 &mdash; Matching status bar</div>
 <ul>
   <li><strong>Clean top edge</strong> &mdash; On the Atlas and Journeys pages the safe-area bar at the very top now matches the white header instead of the app color, while still leaving room for the notch on every phone.</li>
