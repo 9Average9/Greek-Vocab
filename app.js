@@ -28721,7 +28721,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.321";
+const APP_VERSION = "3.0.322";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28742,6 +28742,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.322 &mdash; No more right-edge shading</div>
+<ul>
+  <li><strong>Even background</strong> &mdash; The app background now fades straight top-to-bottom instead of diagonally, so there's no lighter "shadow" band down the right side of the Profile and Settings screens.</li>
+</ul>
 <div class="un-version-label">v3.0.321 &mdash; Readable theme names &amp; cleaner profile edge</div>
 <ul>
   <li><strong>Full theme names</strong> &mdash; Preset theme names now show in full on one line (no more mid-word breaks like "Bluep rint"), with a slightly smaller font and a corner check on the selected one.</li>
