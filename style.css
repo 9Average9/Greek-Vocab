@@ -23481,11 +23481,24 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
   z-index: 12;
   /* Break out of the page's 18px side padding to span edge-to-edge */
   margin: 0 -18px;
-  display: flex;
-  gap: 8px;
-  padding: calc(env(safe-area-inset-top, 0px) + 9px) 18px 9px;
+  padding: calc(env(safe-area-inset-top, 0px) + 9px) 0 9px;
   background: color-mix(in srgb, var(--primary-light) 92%, white);
   border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 9%, transparent);
+  box-sizing: border-box;
+  /* Shadow only appears once the feed scrolls under it */
+  transition: box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.praises-tabbar.scrolled {
+  border-bottom-color: transparent;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.09);
+}
+/* Tabs centered with a max width so they don't stretch on large screens */
+.praises-tabbar-inner {
+  display: flex;
+  gap: 8px;
+  width: min(100%, 560px);
+  margin: 0 auto;
+  padding: 0 18px;
   box-sizing: border-box;
 }
 .praises-tab {
