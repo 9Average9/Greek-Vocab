@@ -28766,7 +28766,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.327";
+const APP_VERSION = "3.0.328";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28787,10 +28787,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.328 &mdash; Pinned Praises tabs</div>
+<ul>
+  <li><strong>Sticky tab bar</strong> &mdash; The Praises / Disciple Group tabs now pin to the top of the page under the Dynamic Island instead of scrolling away. The safe-area bar extends down to hold the tabs, all in the page's matching color.</li>
+</ul>
 <div class="un-version-label">v3.0.327 &mdash; Disciple Group in Praises</div>
 <ul>
   <li><strong>Disciple Group tab</strong> &mdash; The Praises page now has a tab bar at the top: <em>Praises</em> and <em>Disciple Group</em>. The Disciple Group tab opens the full Community feed (posts, studies, XP, scholar) right inside Praises.</li>
-  <li><strong>Seamless top</strong> &mdash; On Praises, the safe-area bar at the very top now matches the page's own light color instead of the app color, so the screen reads continuously to the top.</li>
+  <li><strong>Seamless top</strong> &mdash; On Praises, the safe-area bar at the very top now matches the page's own light color instead of the app color.</li>
 </ul>
 <div class="un-version-label">v3.0.326 &mdash; Friends on Home</div>
 <ul>
