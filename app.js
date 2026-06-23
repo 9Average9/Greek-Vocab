@@ -28721,7 +28721,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.323";
+const APP_VERSION = "3.0.324";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28742,9 +28742,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.323 &mdash; No more right-edge strip</div>
+<div class="un-version-label">v3.0.324 &mdash; Flat solid background</div>
 <ul>
-  <li><strong>Hidden scrollbars</strong> &mdash; The viewport scrollbar is now fully hidden, so no faint strip can show down the right edge of the Profile or Settings screens.</li>
+  <li><strong>No edge band</strong> &mdash; The app background is now a single solid color instead of a gradient, so no lighter/darker band can appear along the right edge of any screen.</li>
+</ul>
+<div class="un-version-label">v3.0.323 &mdash; Hidden scrollbars</div>
+<ul>
+  <li><strong>Hidden scrollbars</strong> &mdash; The viewport scrollbar is fully hidden so no strip shows down the right edge.</li>
 </ul>
 <div class="un-version-label">v3.0.322 &mdash; Even background</div>
 <ul>
