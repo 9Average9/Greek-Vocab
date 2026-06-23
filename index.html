@@ -18099,17 +18099,17 @@ Save
 <button class="modal-close" onclick="closeRhemaNerdModal()">&times;</button>
 <div class="nerd-kicker"><span class="material-symbols-outlined">science</span> Source Notes</div>
 <h2>Rhema Nerd Page</h2>
-<p class="nerd-lead">A transparent look at what Rhema is doing under the hood: paired Greek and English texts, lexicons, grammar parsing, cross references, and saved study work. This is the little control-room window for the curious ones.</p>
+<p class="nerd-lead">Rhema is a Bible study tool first. Open a passage and everything you need to understand it sits right beside the text — and when you want to go deeper, the original Greek and Hebrew are one tap away. This page is the transparent, behind-the-scenes look for the curious: where the texts, lexicons, grammar, and cross references come from.</p>
 
 <div class="nerd-section nerd-hero-note">
-<strong>What makes Rhema different?</strong>
-<p>Rhema tries to put the Greek text, the matching English translation, the word forms, lexicons, syntax, cross references, and your own notes in one calm flow. The vision is not to force one manuscript tradition on the user, but to make the relationship visible: Majority Text Greek pairs naturally with the MSB (Majority Standard Bible), while Critical Text Greek pairs naturally with the BSB (Berean Standard Bible).</p>
-<p>That means the English button follows the Greek mode you are studying. In Majority Text mode, Rhema defaults to MSB so the English reading is aligned with the Byzantine/Majority tradition. If you switch to Critical Text mode, Rhema uses BSB so the English reading follows the critical-text tradition behind many modern translations. You can compare the differences without leaving the passage or breaking your study flow.</p>
+<strong>Study first — language depth when you want it</strong>
+<p>Rhema is built to feel calm and intuitive for <em>any</em> reader. You don't need to know a word of Greek or Hebrew to benefit: read the passage, tap anything you're curious about, and Rhema explains it in plain English. The original languages are there as an extra layer to go deeper — never a wall you have to get past first. Whether you've never seen a Greek letter or you study the languages every day, the same screen meets you where you are.</p>
+<p>It also keeps the Greek text and its matching English translation in one flow instead of forcing a single manuscript tradition on you. Majority Text Greek pairs naturally with the MSB (Majority Standard Bible); Critical Text Greek pairs naturally with the BSB (Berean Standard Bible). The English follows the Greek mode you're studying, so you can compare the two traditions without ever leaving the passage or breaking your study flow.</p>
 </div>
 
 <div class="nerd-section">
 <h3>How the word sheets work</h3>
-<p>When you tap a Greek word, Rhema reads the word's Strong's number, lemma, surface form, and morphology code from the bundled Greek text data. It then turns the morphology into plain-English grammar, pulls matching lexicon entries, shows related forms and occurrences, and keeps the full definitions visible so the user can see the range of meaning.</p>
+<p>When you tap a word, Rhema reads its Strong's number, lemma, surface form, and morphology code from the bundled text data. It leads with plain-English grammar and a clear gloss so the meaning lands first, then pulls matching lexicon entries, related forms, and occurrences, and keeps the fuller definitions visible so you can see the whole range of meaning when you want it. Simple on top, deep underneath.</p>
 </div>
 
 <div class="nerd-source-grid">
@@ -18125,8 +18125,8 @@ Save
 </div>
 <div class="nerd-source-item">
 <span class="material-symbols-outlined">auto_stories</span>
-<strong>Septuagint / LXX</strong>
-<p>A local Septuagint text dataset powers Old Testament Greek navigation. It gives Rhema a path toward OT Greek study alongside the New Testament tools.</p>
+<strong>Old Testament (Hebrew &amp; Greek)</strong>
+<p>Local Hebrew Old Testament data and a Septuagint (LXX) Greek text power OT study, with a Hebrew lexicon for word-level help — so you can go just as deep in the Old Testament as the New, in either language.</p>
 </div>
 <div class="nerd-source-item">
 <span class="material-symbols-outlined">dictionary</span>
@@ -18147,14 +18147,14 @@ Save
 
 <div class="nerd-section">
 <h3>Credits and source families</h3>
-<p><strong>Lexical credit:</strong> James Strong's numbering system, John Jeffrey Dodson's Greek-English gloss work, G. Abbott-Smith's manual Greek lexicon, and J. H. Moulton with George Milligan's vocabulary work are used as source families for Rhema's definitions and usage notes.</p>
+<p><strong>Lexical credit:</strong> James Strong's numbering system (Greek and Hebrew), John Jeffrey Dodson's Greek-English gloss work, G. Abbott-Smith's manual Greek lexicon, and J. H. Moulton with George Milligan's vocabulary work are used as source families for Rhema's definitions and usage notes, alongside public-domain Hebrew lexical data for Old Testament study.</p>
 <p><strong>Bible and reference credit:</strong> The BSB and MSB are public-domain English Bible texts. MSB is used with the Majority Text stream, and BSB is used with the Critical Text stream, so Rhema can keep Greek and English aligned while still letting the user compare traditions. Cross-reference data is built from public-domain and open cross-reference traditions, including OpenBible.info Cross References and Treasury of Scripture Knowledge-style datasets. Syntax work follows the kind of clause and phrase analysis used by open Greek NT projects such as Macula/Clear Bible data where available.</p>
 </div>
 
 <div class="nerd-section nerd-flow">
 <h3>What happens when Rhema loads?</h3>
 <ol>
-<li>It loads local JavaScript datasets for Majority Text Greek, Critical Text Greek, MSB, BSB, Greek forms, lexicons, syntax, and cross references.</li>
+<li>It loads local datasets for Majority Text Greek, Critical Text Greek, the Hebrew Old Testament, the Septuagint, MSB, BSB, word forms, Greek and Hebrew lexicons, syntax, and cross references.</li>
 <li>It indexes verse and word data in the browser so taps feel fast and much of the experience can work offline after caching.</li>
 <li>It keeps the paired English version in sync with the active Greek text: MSB with Majority Text by default, BSB with Critical Text when you switch.</li>
 <li>It saves personal material separately: notes, trails, progress, studies, reminders, and profile data belong to the user, not the public source datasets.</li>
