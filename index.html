@@ -9512,12 +9512,6 @@ Verb Endings
 <span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
 </button>
 <div class="prof-menu-sep"></div>
-<button class="prof-menu-row" id="profileNotificationBtn" onclick="openReminderModal()">
-<span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">notifications</span></span>
-<span class="prof-menu-name" id="profileNotificationBtnText">Reminders</span>
-<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
-</button>
-<div class="prof-menu-sep"></div>
 <button class="prof-menu-row" onclick="signOutAccount()">
 <span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">logout</span></span>
 <span class="prof-menu-name">Sign Out</span>
@@ -10807,7 +10801,10 @@ Verb Endings
 <div class="modal-overlay notif-panel-overlay" id="notifPanel" onclick="if(event.target===this)closeNotifications()">
 <div class="notif-panel" onclick="event.stopPropagation()">
 <div class="notif-panel-header">
-<h3>Notifications</h3>
+<div class="notif-tabs">
+<span class="notif-tab active">Notifications</span>
+<button class="notif-tab notif-tab-btn" onclick="openRemindersTab()">Reminders</button>
+</div>
 <button class="notif-close-btn" onclick="closeNotifications()"><span class="material-symbols-outlined">close</span></button>
 </div>
 <div class="notif-list" id="notifList"><p class="lb-loading">Loading…</p></div>

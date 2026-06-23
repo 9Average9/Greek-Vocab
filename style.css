@@ -19451,6 +19451,14 @@ body.dark .bn-item::before {
   background: var(--card-color);
 }
 .notif-panel-header h3 { margin: 0; font-size: 1rem; font-weight: 800; }
+.notif-tabs { display: flex; gap: 4px; }
+.notif-tab {
+  font-size: 0.9rem; font-weight: 800; padding: 6px 12px; border-radius: 999px;
+  border: none; background: transparent; color: var(--muted-color);
+  cursor: pointer; -webkit-tap-highlight-color: transparent; font-family: inherit;
+}
+.notif-tab.active { color: var(--font-color); background: color-mix(in srgb, var(--secondary-color) 12%, transparent); }
+.notif-tab-btn:active { transform: scale(0.96); }
 .notif-close-btn { background: none; border: none; cursor: pointer; padding: 4px; color: var(--muted-color); }
 .notif-close-btn .material-symbols-outlined { font-size: 1.2rem; }
 .notif-list { padding: 8px 0; }
@@ -27643,6 +27651,7 @@ body:has(#advVerbsLearnMenu.screen.active) #statusBarBg {
 }
 
 body .app:has(#settingsScreen.screen.active) .app-header,
+body .app:has(#progressScreen.screen.active) .app-header,
 body .app:has(#newLearnMenu.screen.active) .app-header,
 body .app:has(#advancedLearnMenu.screen.active) .app-header,
 body .app:has(#basicVerbsLearnMenu.screen.active) .app-header,
@@ -27673,6 +27682,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 }
 
 #settingsScreen.screen.active .nav-bar,
+#progressScreen.screen.active .nav-bar,
 #newLearnMenu.screen.active .nav-bar,
 #advancedLearnMenu.screen.active .nav-bar,
 #basicVerbsLearnMenu.screen.active .nav-bar,
@@ -27685,6 +27695,14 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   border-bottom: 1px solid color-mix(in srgb, var(--border-color) 55%, transparent);
   position: relative;
   z-index: 20;
+}
+
+/* Settings + Progress: the fixed status-bar backer must match the light header so
+   the Dynamic Island / notch area isn't a colored strip — it reads as one
+   continuous header up to the very top of the screen. */
+body:has(#settingsScreen.screen.active) #statusBarBg,
+body:has(#progressScreen.screen.active) #statusBarBg {
+  background: var(--primary-light) !important;
 }
 
 #newLearnMenu.screen.active .nav-bar,
