@@ -81,7 +81,7 @@ select,
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-   background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+   background: linear-gradient(180deg, var(--primary-color), var(--primary-light));
   color: var(--font-color);
 }
 
@@ -8902,7 +8902,7 @@ body {
   width: 100%;
   min-height: 100%;
   overflow-x: hidden;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light)) !important;
+  background: linear-gradient(180deg, var(--primary-color), var(--primary-light)) !important;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -18098,6 +18098,13 @@ body .app:has(#settingsScreen.screen.active) {
   display: flex;
   flex-direction: column;
   gap: 0;
+  /* Hide the scrollbar so no track/strip shows on the right edge */
+  scrollbar-width: none;
+}
+.sett-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 /* Section label */
@@ -24572,7 +24579,7 @@ body.dark .bottom-nav::before {
     background:
       radial-gradient(circle at 14% 10%, color-mix(in srgb, var(--secondary-color) 14%, transparent), transparent 32%),
       radial-gradient(circle at 86% 2%, color-mix(in srgb, var(--accent-color) 12%, transparent), transparent 30%),
-      linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      linear-gradient(180deg, var(--primary-color), var(--primary-light));
   }
 
   #statusBarBg,
@@ -25076,7 +25083,7 @@ body.dark .bottom-nav::before {
   #rhemaModal.open {
     background:
       radial-gradient(circle at 14% 8%, color-mix(in srgb, var(--secondary-color) 14%, transparent), transparent 34%),
-      linear-gradient(135deg, var(--primary-color), var(--primary-light));
+      linear-gradient(180deg, var(--primary-color), var(--primary-light));
   }
 
   #rhemaModal.open #rhemaSlide {
@@ -25582,7 +25589,7 @@ body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-n
 
 html:not(:has(> body #homeScreen.screen.active)),
 body:not(:has(#homeScreen.screen.active)) {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light)) !important;
+  background: linear-gradient(180deg, var(--primary-color), var(--primary-light)) !important;
 }
 
 body:has(#homeScreen.screen.active) #statusBarBg {
