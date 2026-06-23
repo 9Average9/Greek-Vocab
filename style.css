@@ -18851,21 +18851,33 @@ body.dark .bn-item::before {
   position: absolute;
   top: 0;
   right: 0;
-  display: flex; align-items: flex-start; gap: 2px;
+  display: flex; align-items: flex-start; gap: 7px;
 }
 /* Normalize the two legacy buttons (different paddings/heights/icon sizes)
    so calendar and bell sit on exactly the same line. */
 .home-top-actions .ht-btn {
-  width: 36px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   padding: 0;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Theme-matching pill background (matches the home search pill) */
+  border-radius: 12px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--card-color) 96%, #fff) 0%,
+    color-mix(in srgb, var(--primary-color) 72%, var(--card-color)) 100%);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 16%, rgba(255,255,255,0.72));
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.85);
+  color: var(--secondary-color);
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
 }
+.home-top-actions .ht-btn:active { transform: scale(0.94); }
 .home-top-actions .ht-btn .material-symbols-outlined {
-  font-size: 1.5rem;
+  font-size: 1.32rem;
   line-height: 1;
+  color: var(--secondary-color);
 }
 .ht-btn {
   background: none; border: none; cursor: pointer; padding: 6px;

@@ -28721,7 +28721,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.325";
+const APP_VERSION = "3.0.326";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28742,9 +28742,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.326 &mdash; Friends on Home</div>
+<ul>
+  <li><strong>Friends button</strong> &mdash; The Home screen top bar now has a Friends button alongside the calendar and notifications, each on a theme-matching pill. It opens your friends just like the Community tab, with a badge for pending requests.</li>
+</ul>
 <div class="un-version-label">v3.0.325 &mdash; Scrollbar band fixed</div>
 <ul>
-  <li><strong>No right-edge band</strong> &mdash; The Profile/Settings page scrollbar was painting a colored track down the right edge. Its scrollbar is now fully hidden and scrollbar tracks are transparent everywhere, so the band is gone.</li>
+  <li><strong>No right-edge band</strong> &mdash; Hid the Profile/Settings page scrollbar and made scrollbar tracks transparent so no colored strip shows on the right edge.</li>
 </ul>
 <div class="un-version-label">v3.0.324 &mdash; Flat solid background</div>
 <ul>
@@ -34707,7 +34711,7 @@ function _frStatus(uid) {
 
 function updateFriendsBadge() {
   const count = (friendRequestsIn || []).length;
-  ["commFriendsBadge", "friendsReqTabBadge"].forEach(id => {
+  ["commFriendsBadge", "friendsReqTabBadge", "homeFriendsBadge"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.textContent = count > 0 ? String(count) : "";
