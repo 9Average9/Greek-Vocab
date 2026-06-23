@@ -8902,7 +8902,9 @@ body {
   width: 100%;
   min-height: 100%;
   overflow-x: hidden;
-  background: linear-gradient(180deg, var(--primary-color), var(--primary-light)) !important;
+  /* Solid (not a gradient) and matched to the screen colour so any sliver of body
+     showing past a screen's content on the right edge is invisible — no "band". */
+  background: var(--primary-color) !important;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -25589,7 +25591,9 @@ body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-n
 
 html:not(:has(> body #homeScreen.screen.active)),
 body:not(:has(#homeScreen.screen.active)) {
-  background: linear-gradient(180deg, var(--primary-color), var(--primary-light)) !important;
+  /* Solid flat color (not a gradient), matched to the screen colour, so a sliver
+     of body showing past a screen on the right edge can't read as a "band". */
+  background: var(--primary-color) !important;
 }
 
 body:has(#homeScreen.screen.active) #statusBarBg {
