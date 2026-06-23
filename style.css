@@ -32771,3 +32771,12 @@ body::-webkit-scrollbar,
   height: 0 !important;
   display: none !important;
 }
+
+/* Praises collapsed nav dock: show ONLY the home button — no peeking profile or
+   other icons behind it. (Overrides both the base and the max-width:760px peek
+   rules, including their !important opacity.) */
+.bottom-nav.mercies-collapsed .bn-item:not([data-page="home"]) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.5) !important;
+}

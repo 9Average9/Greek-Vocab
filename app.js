@@ -28781,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.331";
+const APP_VERSION = "3.0.332";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,6 +28802,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.332 &mdash; Tidier Praises dock</div>
+<ul>
+  <li><strong>Just Home</strong> &mdash; The collapsed nav dock on the Praises screen now shows only the Home button, with no extra icon peeking behind it.</li>
+</ul>
 <div class="un-version-label">v3.0.331 &mdash; Cleaner launch</div>
 <ul>
   <li><strong>No nav flash</strong> &mdash; The bottom nav no longer flickers in and out while the app is loading. Now only the splash screen shows until everything is ready, then the nav fades in.</li>
