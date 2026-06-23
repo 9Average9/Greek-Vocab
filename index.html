@@ -8930,20 +8930,6 @@ Verb Endings
 <span class="slider"></span>
 </label>
 </div>
-<div class="sett-sep"></div>
-<div class="sett-row">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">palette</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Match Home Theme</span>
-<span class="sett-row-sub">Use the current theme on Home studies and tools</span>
-</span>
-<label class="switch">
-<input id="matchHomeThemeToggle" onchange="toggleMatchHomeTheme()" type="checkbox"/>
-<span class="slider"></span>
-</label>
-</div>
 </div>
 <!-- APP THEME -->
 <div class="sett-section-label">App Theme</div>
@@ -9365,6 +9351,18 @@ Verb Endings
 </span>
 <span class="material-symbols-outlined sett-row-chev">chevron_right</span>
 </button>
+<div class="sett-sep"></div>
+<button class="sett-row" id="settingsCalendarRow" onclick="openCalendarSyncModal()">
+<span class="sett-row-icon-wrap">
+<span class="material-symbols-outlined">calendar_month</span>
+</span>
+<span class="sett-row-text">
+<span class="sett-row-name">Sync Google Calendar</span>
+<span class="sett-row-sub">Add study reminders to your calendar</span>
+</span>
+<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
+</button>
+<div class="sett-sep"></div>
 <button class="sett-row sett-row-danger" id="profileResetBtn" onclick="resetAllAppData()">
 <span class="sett-row-icon-wrap sett-icon-danger">
 <span class="material-symbols-outlined">person_off</span>
@@ -9379,9 +9377,9 @@ Verb Endings
 </section>
 <section class="screen" id="profilePage">
 <div class="nav-bar">
-<div></div>
+<div><button class="prof-nav-icon" onclick="openSettingsFromProfile()" aria-label="Settings"><span class="material-symbols-outlined">settings</span></button></div>
 <div class="nav-title">Profile</div>
-<div><button class="profile-home-btn" onclick="showNavPage('home')" aria-label="Home"><span class="material-symbols-outlined">home</span></button></div>
+<div><button class="prof-nav-icon" onclick="showNavPage('home')" aria-label="Home"><span class="material-symbols-outlined">home</span></button></div>
 </div>
 <div class="profile-page-scroll">
 <div class="profile-header">
@@ -9398,8 +9396,9 @@ Verb Endings
 <div class="profile-badge-row" id="profileBadgeRow"></div>
 <div class="profile-title-row">
 <div class="profile-title" id="profileTitle">
-    Beginner
-  </div>
+<span class="material-symbols-outlined profile-rank-icon" id="profileRankIcon">shield</span>
+<span id="profileTitleText">Beginner</span>
+</div>
 <button class="rank-info-btn" onclick="showRanksModal()" title="View ranks">
 <span class="material-symbols-outlined">military_tech</span>
 </button>
@@ -9416,10 +9415,12 @@ Verb Endings
 </div>
 </div>
 <div class="profile-journey-card" id="profileJourneySection">
-<div class="journey-header">
+<button class="journey-header journey-toggle" id="journeyToggleBtn" onclick="toggleJourneyCard()" aria-expanded="true">
 <span class="material-symbols-outlined">map</span>
 <strong>Your Greek Journey</strong>
-</div>
+<span class="material-symbols-outlined journey-chev">expand_less</span>
+</button>
+<div class="journey-collapse" id="journeyCollapse">
 <div class="journey-stats-grid">
 <button class="journey-stat clickable-stat" onclick="showLessonsBreakdownModal(getLessonMode(), false)">
 <strong id="profileLessonsStat">0 / 6</strong>
@@ -9475,6 +9476,7 @@ Verb Endings
 </button>
 </div>
 </div>
+</div>
 <label class="label">Profile Color</label>
 <div class="profile-color-grid">
 <button class="color-dot blue" data-color="#4f8cff" onclick="setProfileColor('#4f8cff')" title="Blue"></button>
@@ -9510,21 +9512,9 @@ Verb Endings
 <span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
 </button>
 <div class="prof-menu-sep"></div>
-<button class="prof-menu-row" id="profileSettingsBtn" onclick="openSettingsFromProfile()">
-<span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">settings</span></span>
-<span class="prof-menu-name">Settings</span>
-<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
-</button>
-<div class="prof-menu-sep"></div>
 <button class="prof-menu-row" id="profileNotificationBtn" onclick="openReminderModal()">
 <span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">notifications</span></span>
 <span class="prof-menu-name" id="profileNotificationBtnText">Reminders</span>
-<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
-</button>
-<div class="prof-menu-sep"></div>
-<button class="prof-menu-row" id="profileCalendarBtn" onclick="openCalendarSyncModal()">
-<span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">calendar_month</span></span>
-<span class="prof-menu-name">Sync Google Calendar</span>
 <span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
 </button>
 <div class="prof-menu-sep"></div>
