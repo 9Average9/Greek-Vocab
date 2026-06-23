@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.326" rel="stylesheet"/>
+<link href="style.css?v=3.0.327" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -9529,6 +9529,10 @@ Verb Endings
 </div>
 </section>
 <section class="screen" id="merciesPage">
+<div class="praises-tabbar" id="praisesTabbar">
+<button class="praises-tab active" data-ptab="praises" onclick="showPraisesTab('praises')"><span class="material-symbols-outlined">volunteer_activism</span><span>Praises</span></button>
+<button class="praises-tab" data-ptab="disciple" onclick="showPraisesTab('disciple')"><span class="material-symbols-outlined">groups</span><span>Disciple Group</span></button>
+</div>
 <div class="mercies-scroll" id="merciesScroll">
 <div class="mercies-hero">
 <div>
@@ -9588,6 +9592,7 @@ Verb Endings
 </div>
 </div>
 </div>
+<div class="disciple-group-pane" id="discipleGroupPane" hidden></div>
 </section>
 <section class="screen" id="communityPage">
 <div class="comm-scroll" id="commScroll">
@@ -17010,13 +17015,13 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.326"></script>
-<script src="bible-atlas.js?v=3.0.326"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.326"></script>
+<script src="app.js?v=3.0.327"></script>
+<script src="bible-atlas.js?v=3.0.327"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.327"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.326" type="module"></script>
+<script src="firebase-lb.js?v=3.0.327" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
