@@ -28781,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.330";
+const APP_VERSION = "3.0.331";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,6 +28802,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.331 &mdash; Cleaner launch</div>
+<ul>
+  <li><strong>No nav flash</strong> &mdash; The bottom nav no longer flickers in and out while the app is loading. Now only the splash screen shows until everything is ready, then the nav fades in.</li>
+</ul>
 <div class="un-version-label">v3.0.330 &mdash; Rhema in the nav bar</div>
 <ul>
   <li><strong>Rhema tab</strong> &mdash; The bottom nav's Community button is now a Rhema button (book icon). Tapping it opens Rhema exactly like the Home card — picking up your last passage — and the nav bar tucks away. (The community feed lives on as the Disciple Group tab in Praises.)</li>

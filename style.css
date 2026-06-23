@@ -18715,6 +18715,14 @@ body.dark .theme-wheel-tile {
   pointer-events: none;
   transform: translate(-50%, calc(100% + 24px + 0px));
 }
+/* While the launch splash is still up (even mid fade-out), keep the bottom nav
+   fully hidden so it never flashes in/out before the app has finished loading.
+   Once the splash gets .hidden, the nav fades into its normal state. */
+body:has(#appLaunchScreen:not(.hidden)) .bottom-nav {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translate(-50%, calc(100% + 24px + 0px)) !important;
+}
 .bottom-nav.mercies-collapsed {
   width: 76px !important;
   height: 76px !important;
