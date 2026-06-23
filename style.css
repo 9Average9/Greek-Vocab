@@ -32631,3 +32631,32 @@ body.dark .journey-modern-shape { fill: #202c42; }
     transform: none;
   }
 }
+
+/* ============================================================
+   Kill any viewport-edge scrollbar strip. This app is a fixed
+   shell (each screen scrolls inside its own container), so the
+   html/body/.app should never show a scrollbar. A reserved or
+   overlay scrollbar here renders as a faint lighter strip down
+   the right edge of screens like Profile and Settings.
+   ============================================================ */
+html,
+body,
+.app,
+#profilePage.screen.active,
+#communityPage.screen.active,
+#merciesPage.screen.active,
+#settingsScreen.screen.active {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.app::-webkit-scrollbar,
+#profilePage.screen.active::-webkit-scrollbar,
+#communityPage.screen.active::-webkit-scrollbar,
+#merciesPage.screen.active::-webkit-scrollbar,
+#settingsScreen.screen.active::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
