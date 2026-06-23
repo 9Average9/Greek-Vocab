@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.320";
+const CACHE_NAME = "disciple-builder-v3.0.319";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -49,20 +49,31 @@ const CACHE_NAME = "disciple-builder-v3.0.320";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.320",
+  "./style.css?v=3.0.319",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.320",
-  "./bible-atlas.js?v=3.0.320",
+  "./app.js?v=3.0.319",
+  "./bible-atlas.js?v=3.0.319",
   "./verse-structure.js?v=3.0.133",
   "./vs-structure.js?v=3.0.133",
-  // Rhema text + data files (~60MB total) are NOT precached on install — they are
-  // loaded on demand when the Rhema reader opens and cached at runtime by the fetch
-  // handler below. Precaching them forced a ~60MB download on every version update
-  // for no load-speed benefit (the fetch handler is network-first), so they are
-  // intentionally omitted here to keep installs/updates fast.
-  "./rhema-crossrefs-ui.js?v=3.0.320",
+  // Rhema Greek text (pinned data versions)
+  "./rhema-nt.js?v=3.0.65",
+  "./rhema-critical.js?v=3.0.23",
+  "./rhema-critical-fallbacks.js?v=3.0.177",
+  "./rhema-ot-hebrew.js?v=3.0.81",
+  "./rhema-hebrew-lexicon.js?v=3.0.81",
+  "./rhema-lxx.js?v=3.0.65",
+  // Rhema English translations (pinned)
+  "./rhema-msb.js?v=3.0.65",
+  "./rhema-bsb.js?v=3.0.65",
+  // Rhema support data (pinned)
+  "./rhema-lexicon.js?v=3.0.65",
+  "./rhema-mm.js?v=3.0.65",
+  "./rhema-syntax.js?v=3.0.65",
+  "./rhema-crossrefs.js?v=3.0.65",
+  "./rhema-scripture-notes.js?v=3.0.160",
+  "./rhema-crossrefs-ui.js?v=3.0.319",
   "./greek-verbs.js?v=3.0.152",
-  "./firebase-lb.js?v=3.0.320",
+  "./firebase-lb.js?v=3.0.319",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",
