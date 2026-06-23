@@ -1054,6 +1054,16 @@ body.dark .small-btn {
   color: var(--font-color);
 }
 
+/* Ranks modal close button: center the × glyph in a fixed box */
+.ranks-card .modal-close {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  line-height: 1;
+}
+
 @keyframes modalPop {
   from {
     opacity: 0;
@@ -7494,6 +7504,14 @@ body.dark .lesson-unlock-progress-text {
   opacity: 0.7;
   font-weight: 700;
   margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.profile-rank-icon {
+  font-size: 19px;
+  color: var(--secondary-color);
+  opacity: 0.95;
 }
 
 .xp-section {
@@ -7874,6 +7892,39 @@ body.dark .xp-modal-bar {
 
 .journey-header .material-symbols-outlined {
   color: var(--profile-color, #4f8cff);
+}
+
+/* Collapsible "Your Greek Journey" card */
+.journey-toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.journey-chev {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  opacity: 0.75;
+}
+.profile-journey-card.collapsed .journey-chev {
+  transform: rotate(180deg);
+}
+.profile-journey-card.collapsed .journey-header {
+  margin-bottom: 0;
+}
+.journey-collapse {
+  overflow: hidden;
+  transition: max-height 0.28s ease, opacity 0.2s ease;
+  max-height: 1600px;
+  opacity: 1;
+}
+.profile-journey-card.collapsed .journey-collapse {
+  max-height: 0;
+  opacity: 0;
 }
 
 .journey-stats-grid {
@@ -18277,10 +18328,12 @@ body.high-contrast-theme .sett-theme-card {
 .theme-wheel-tile strong,
 .theme-wheel-tile small {
   min-width: 0;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .theme-wheel-tile strong {
@@ -19344,26 +19397,33 @@ body.dark .bn-item::before {
   background: var(--primary-color); z-index: 10; flex-shrink: 0;
   padding-top: max(10px, env(safe-area-inset-top));
 }
-#profilePage .nav-bar > div:last-child {
-  display: flex;
-  justify-content: flex-start;
-  transform: translateX(-8px);
-}
-.profile-home-btn {
-  width: 38px;
-  height: 38px;
+#profilePage .nav-bar > div:first-child { display: flex; justify-content: flex-start; }
+#profilePage .nav-bar > div:last-child { display: flex; justify-content: flex-end; }
+.prof-nav-icon {
+  width: 40px;
+  height: 40px;
   display: inline-grid;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 14%, var(--border-color));
-  border-radius: 14px;
-  background: var(--card-color);
+  border: none;
+  border-radius: 12px;
+  background: transparent;
   color: var(--secondary-color);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--secondary-color) 8%, transparent);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease, background 0.12s ease;
 }
-.profile-home-btn:active { transform: scale(0.94); }
-.profile-home-btn .material-symbols-outlined { font-size: 21px; }
+.prof-nav-icon:active {
+  transform: scale(0.92);
+  background: color-mix(in srgb, var(--secondary-color) 12%, transparent);
+}
+.prof-nav-icon .material-symbols-outlined { font-size: 23px; }
+/* legacy alias kept flat in case any cached markup references it */
+.profile-home-btn {
+  width: 40px; height: 40px; display: inline-grid; place-items: center;
+  border: none; background: transparent; color: var(--secondary-color);
+  border-radius: 12px; cursor: pointer; box-shadow: none;
+}
+.profile-home-btn .material-symbols-outlined { font-size: 23px; }
 .profile-page-scroll {
   overflow-y: auto; overflow-x: hidden;
   flex: 1 1 0; min-height: 0;

@@ -27596,6 +27596,21 @@ const PROFILE_RANKS = [
   { xp: 250000, title: "Rhema Legend", desc: "A summit rank for a long, serious Greek journey." }
 ];
 
+// Assign an escalating military-style medal icon to each rank tier so the badge
+// visibly "levels up" as XP climbs (3 ranks per icon, capped at the top icon).
+(function _assignRankIcons() {
+  const tiers = ["shield", "military_tech", "workspace_premium", "stars", "verified", "emoji_events", "diamond"];
+  PROFILE_RANKS.forEach((rank, i) => {
+    rank.icon = tiers[Math.min(tiers.length - 1, Math.floor(i / 3))];
+  });
+})();
+
+function getRankIconFromXP(xp) {
+  let icon = PROFILE_RANKS[0].icon;
+  PROFILE_RANKS.forEach(rank => { if (xp >= rank.xp) icon = rank.icon; });
+  return icon;
+}
+
 function getProfileTitleFromXP(xp) {
   let currentRank = PROFILE_RANKS[0];
 
@@ -27644,7 +27659,11 @@ function updateProfileUI() {
   const usernameEl = document.getElementById("profileUsername");
   if (usernameEl) usernameEl.textContent = username ? `@${username}` : "";
 
-  document.getElementById("profileTitle").textContent = getProfileTitle();
+  const titleTextEl = document.getElementById("profileTitleText");
+  if (titleTextEl) titleTextEl.textContent = getProfileTitle();
+  else document.getElementById("profileTitle").textContent = getProfileTitle();
+  const rankIconEl = document.getElementById("profileRankIcon");
+  if (rankIconEl) rankIconEl.textContent = getRankIconFromXP(profileData.xp || 0);
 
   const xpText = document.getElementById("profileXPText");
   if (xpText) xpText.textContent = `${profileData.xp} XP`;
@@ -27720,6 +27739,7 @@ function updateProfileUI() {
 
   updateProfileAttention();
   updateReminderButtonUI();
+  applyJourneyCardState();
 }
 
 function resetAllAppData() {
@@ -28599,7 +28619,7 @@ function renderRanksList() {
     div.innerHTML = `
       <div class="rank-medal">
         <span class="material-symbols-outlined">
-          ${unlocked ? "military_tech" : "lock"}
+          ${unlocked ? rank.icon : "lock"}
         </span>
       </div>
 
@@ -28615,6 +28635,24 @@ function renderRanksList() {
 
 function backToProfileFromProgress() {
   showNavPage('profile');
+}
+
+function toggleJourneyCard() {
+  const card = document.getElementById("profileJourneySection");
+  const btn = document.getElementById("journeyToggleBtn");
+  if (!card) return;
+  const collapsed = card.classList.toggle("collapsed");
+  if (btn) btn.setAttribute("aria-expanded", String(!collapsed));
+  localStorage.setItem("journeyCardCollapsed", collapsed ? "true" : "false");
+}
+
+function applyJourneyCardState() {
+  const card = document.getElementById("profileJourneySection");
+  const btn = document.getElementById("journeyToggleBtn");
+  if (!card) return;
+  const collapsed = localStorage.getItem("journeyCardCollapsed") === "true";
+  card.classList.toggle("collapsed", collapsed);
+  if (btn) btn.setAttribute("aria-expanded", String(!collapsed));
 }
 
 function initHomeQuickActionCarousel() {
