@@ -23469,6 +23469,60 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
   box-sizing: border-box;
 }
 .mercies-scroll { width: min(100%, 520px); max-width: 520px; margin: 0 auto; display: grid; gap: 18px; padding-bottom: calc(140px + 0px); overflow-x: hidden; box-sizing: border-box; }
+
+/* ── Praises page tab bar (Praises / Disciple Group) ─────────────────────────
+   Sleek segmented control that matches the active theme. */
+.praises-tabbar {
+  width: min(100%, 520px);
+  margin: 0 auto 16px;
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--card-color) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, transparent);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+.praises-tab {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted-color);
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+}
+.praises-tab .material-symbols-outlined { font-size: 1.15rem; }
+.praises-tab.active {
+  background: var(--secondary-color);
+  color: var(--btn-text-color);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--secondary-color) 32%, transparent);
+}
+.praises-tab:not(.active):active { transform: scale(0.97); }
+
+/* Disciple Group pane hosts the live Community content. Cancel the Praises page's
+   horizontal padding so the community feed reads full-width like the real tab,
+   and let it flow inside the page scroller instead of its own nested scroll. */
+.disciple-group-pane { margin: 0 -18px; }
+.disciple-group-pane[hidden] { display: none; }
+.disciple-group-pane .comm-scroll {
+  flex: none;
+  height: auto;
+  overflow: visible;
+}
+.disciple-group-pane .comm-hero {
+  padding-top: 4px;
+}
+#merciesPage.dg-active .mercies-scroll { display: none; }
 .mercies-hero {
   display: flex;
   align-items: flex-start;
@@ -27765,6 +27819,13 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 body:has(#settingsScreen.screen.active) #statusBarBg,
 body:has(#progressScreen.screen.active) #statusBarBg {
   background: var(--primary-light) !important;
+}
+
+/* Praises page: the safe-area / Dynamic Island bar matches the light Praises
+   background (the top of its gradient) so the page reads continuously to the top
+   instead of showing the app's primary colour as a separate bar. */
+body:has(#merciesPage.screen.active) #statusBarBg {
+  background: color-mix(in srgb, var(--primary-light) 92%, white) !important;
 }
 
 #newLearnMenu.screen.active .nav-bar,

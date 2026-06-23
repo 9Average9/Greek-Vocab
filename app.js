@@ -10333,8 +10333,52 @@ function bindHabitsNavCollapse() {
 
 let _prevNavPage = 'home';
 
+// Move the live Community content back into its own page. The Disciple Group tab
+// inside Praises borrows the real #commScroll element (so every community handler
+// and element id keeps working with no duplicates); this returns it home.
+function _restoreCommScrollHome() {
+  const cs = document.getElementById('commScroll');
+  const home = document.getElementById('communityPage');
+  if (cs && home && cs.parentElement !== home) home.appendChild(cs);
+  const title = document.querySelector('#commScroll .comm-hero-title');
+  if (title) title.textContent = 'Community';
+}
+
+// Praises page tabs: "Praises" (the native feed) and "Disciple Group" (a live copy
+// of the Community feed, just retitled). Disciple Group relocates the real
+// #commScroll into the Praises page so it stays a single source of truth.
+function showPraisesTab(tab) {
+  const tabbar = document.getElementById('praisesTabbar');
+  tabbar?.querySelectorAll('.praises-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.ptab === tab);
+  });
+  const feed = document.getElementById('merciesScroll');
+  const dgPane = document.getElementById('discipleGroupPane');
+  const page = document.getElementById('merciesPage');
+
+  if (tab === 'disciple') {
+    const cs = document.getElementById('commScroll');
+    if (cs && dgPane && cs.parentElement !== dgPane) dgPane.appendChild(cs);
+    const title = document.querySelector('#commScroll .comm-hero-title');
+    if (title) title.textContent = 'Disciple Group';
+    if (feed) feed.hidden = true;
+    if (dgPane) dgPane.hidden = false;
+    page?.classList.add('dg-active');
+    if (typeof showLbTab === 'function') showLbTab('posts');
+  } else {
+    _restoreCommScrollHome();
+    if (dgPane) dgPane.hidden = true;
+    if (feed) feed.hidden = false;
+    page?.classList.remove('dg-active');
+  }
+  if (page) page.scrollTop = 0;
+}
+
 function showNavPage(page) {
   if (page !== 'home') closeHomeSearch();
+  // The Disciple Group tab may have borrowed the community content — return it
+  // before showing the real Community page so that page is never left empty.
+  if (page === 'community') _restoreCommScrollHome();
   // Keep habits and mercies feed listeners alive across navigation so data renders
   // instantly on return. They are torn down on sign-out inside __onAuthStateReady.
   if (page !== 'mercies' && _merciesJournalUnsub) { _merciesJournalUnsub(); _merciesJournalUnsub = null; }
@@ -10370,6 +10414,7 @@ function showNavPage(page) {
     showLbTab('posts');
   } else if (page === 'mercies') {
     showScreen('merciesPage');
+    showPraisesTab('praises');
     updatePraiseStreakUI();
     startMerciesFeed();
     bindMerciesNavCollapse();
@@ -28721,7 +28766,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.326";
+const APP_VERSION = "3.0.327";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28742,6 +28787,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.327 &mdash; Disciple Group in Praises</div>
+<ul>
+  <li><strong>Disciple Group tab</strong> &mdash; The Praises page now has a tab bar at the top: <em>Praises</em> and <em>Disciple Group</em>. The Disciple Group tab opens the full Community feed (posts, studies, XP, scholar) right inside Praises.</li>
+  <li><strong>Seamless top</strong> &mdash; On Praises, the safe-area bar at the very top now matches the page's own light color instead of the app color, so the screen reads continuously to the top.</li>
+</ul>
 <div class="un-version-label">v3.0.326 &mdash; Friends on Home</div>
 <ul>
   <li><strong>Friends button</strong> &mdash; The Home screen top bar now has a Friends button alongside the calendar and notifications, each on a theme-matching pill. It opens your friends just like the Community tab, with a badge for pending requests.</li>
