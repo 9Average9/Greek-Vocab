@@ -23459,7 +23459,8 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
     linear-gradient(180deg, color-mix(in srgb, var(--primary-light) 92%, white), color-mix(in srgb, var(--primary-light) 78%, white)) !important;
   min-height: 100dvh !important;
   height: 100dvh !important;
-  padding: max(18px, env(safe-area-inset-top)) 18px calc(140px + 0px) !important;
+  /* No top padding — the sticky tab bar owns the safe-area / Dynamic Island space. */
+  padding: 0 18px calc(140px + 0px) !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -23471,19 +23472,20 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
 .mercies-scroll { width: min(100%, 520px); max-width: 520px; margin: 0 auto; display: grid; gap: 18px; padding-bottom: calc(140px + 0px); overflow-x: hidden; box-sizing: border-box; }
 
 /* ── Praises page tab bar (Praises / Disciple Group) ─────────────────────────
-   Sleek segmented control that matches the active theme. */
+   Full-width sticky header pinned under the Dynamic Island. It owns the safe
+   area and matches the Praises background so the page reads continuously to the
+   very top, while the feed scrolls beneath it. */
 .praises-tabbar {
-  width: min(100%, 520px);
-  margin: 0 auto 16px;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  /* Break out of the page's 18px side padding to span edge-to-edge */
+  margin: 0 -18px;
   display: flex;
-  gap: 6px;
-  padding: 5px;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--card-color) 72%, transparent);
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, transparent);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  gap: 8px;
+  padding: calc(env(safe-area-inset-top, 0px) + 9px) 18px 9px;
+  background: color-mix(in srgb, var(--primary-light) 92%, white);
+  border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 9%, transparent);
   box-sizing: border-box;
 }
 .praises-tab {
@@ -23492,7 +23494,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
   padding: 10px 8px;
   border: none;
   border-radius: 12px;
-  background: transparent;
+  background: color-mix(in srgb, var(--secondary-color) 7%, transparent);
   color: var(--muted-color);
   font-family: inherit;
   font-weight: 800;
@@ -23520,7 +23522,7 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
   overflow: visible;
 }
 .disciple-group-pane .comm-hero {
-  padding-top: 4px;
+  padding-top: 16px;
 }
 #merciesPage.dg-active .mercies-scroll { display: none; }
 .mercies-hero {
