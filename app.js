@@ -21527,6 +21527,13 @@ function openNotifications() {
   if (panel) panel.classList.add('open');
   _loadNotifications();
 }
+
+// Reminders tab inside the notifications panel: open the reminders modal.
+// Opened from Home, so closing it returns to Home (not the profile screen).
+function openRemindersTab() {
+  closeNotifications();
+  openReminderModal();
+}
 function closeNotifications() {
   document.getElementById('notifPanel')?.classList.remove('open');
 }
