@@ -28704,7 +28704,9 @@ function applyJourneyCardState() {
   const card = document.getElementById("profileJourneySection");
   const btn = document.getElementById("journeyToggleBtn");
   if (!card) return;
-  const collapsed = localStorage.getItem("journeyCardCollapsed") === "true";
+  // Collapsed by default; only expanded if the user has explicitly chosen so.
+  const stored = localStorage.getItem("journeyCardCollapsed");
+  const collapsed = stored === null ? true : stored === "true";
   card.classList.toggle("collapsed", collapsed);
   if (btn) btn.setAttribute("aria-expanded", String(!collapsed));
 }
@@ -39370,7 +39372,7 @@ const APP_WELCOME_COACH_STEPS = [
   { before: () => showNavPage('home'), target: () => _coachFirst(['.home-actions-grid', '#notifBtn']), title: 'Home tools', body: 'Home is the launch point. Tools open vocabulary, translation, and tests. The bell opens Notifications — app updates and activity — and also holds a Reminders tab for your study reminders.' },
   { target: () => _coachFirst(['#studyLibraryHomeBtn', '.home-actions-grid']), title: 'Create studies here', body: 'The Study Library holds your focused study spaces. A study can hold Rhema work, saved verses, word logs, scripture trails, and notes.' },
   { target: () => _coachFirst(['#homeContinueCard', '#homeContinueEmpty']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. You can open a passage, tap words, compare English, use syntax, and explore cross references. Rhema has its own first-time coach when opened.' },
-  { before: () => showNavPage('profile'), target: () => _coachFirst(['#profileJourneySection', '.profile-action-row', '.profile-header']), title: 'Profile tracks your journey', body: 'Your profile keeps your XP, rank, streak, lesson progress, known words, translation attempts, and achievements. The settings gear in the top-left holds appearance, account, and calendar options.' }
+  { before: () => { showNavPage('profile'); document.getElementById('profileJourneySection')?.classList.remove('collapsed'); }, target: () => _coachFirst(['#profileJourneySection', '.profile-action-row', '.profile-header']), title: 'Profile tracks your journey', body: 'Your profile keeps your XP, rank, streak, lesson progress, known words, translation attempts, and achievements — tap "Your Greek Journey" to expand it anytime. The settings gear in the top-left holds appearance, account, and calendar options.' }
 ];
 
 const STUDY_RHEMA_COACH_STEPS = [
@@ -39416,7 +39418,7 @@ APP_WELCOME_COACH_STEPS[4].body = 'The Scholar board is more about careful pract
 APP_WELCOME_COACH_STEPS[5].body = 'Home is the launch point. Tools open vocabulary, translation, and tests. The bell opens Notifications — where app updates and activity notices live — and it also holds a Reminders tab for setting your daily study reminders.';
 APP_WELCOME_COACH_STEPS[6].body = 'Your Studies is where you make focused study spaces. Use this when you want to work through a passage seriously, invite people in, save trail discoveries, and keep your notes tied to the actual text.';
 APP_WELCOME_COACH_STEPS[7].body = 'Rhema is the Greek word-study reader. It is special because it stays inside your study flow: tap words, compare English, inspect parsing, check lexicons, use syntax, open cross references, and keep a trail without leaving the app.';
-APP_WELCOME_COACH_STEPS[8].body = 'Your profile keeps your XP, rank, streak, lesson progress, known words, translation attempts, and achievements. The settings gear in the top-left holds appearance, account, and calendar options — and you can replay these coach tours from here anytime.';
+APP_WELCOME_COACH_STEPS[8].body = 'Your profile keeps your XP, rank, streak, lesson progress, known words, translation attempts, and achievements — tap "Your Greek Journey" to expand it anytime. The settings gear in the top-left holds appearance, account, and calendar options, and you can replay these coach tours from here.';
 
 STUDY_RHEMA_COACH_STEPS[1] = {
   before: () => switchSandboxTab('rhema'),
