@@ -10372,6 +10372,20 @@ function showPraisesTab(tab) {
     page?.classList.remove('dg-active');
   }
   if (page) page.scrollTop = 0;
+  document.getElementById('praisesTabbar')?.classList.remove('scrolled');
+}
+
+// Drop a subtle shadow under the sticky Praises tab bar once the feed scrolls.
+let _praisesScrollBound = false;
+function _bindPraisesScrollShadow() {
+  if (_praisesScrollBound) return;
+  const page = document.getElementById('merciesPage');
+  const bar = document.getElementById('praisesTabbar');
+  if (!page || !bar) return;
+  _praisesScrollBound = true;
+  page.addEventListener('scroll', () => {
+    bar.classList.toggle('scrolled', page.scrollTop > 4);
+  }, { passive: true });
 }
 
 function showNavPage(page) {
@@ -10414,6 +10428,7 @@ function showNavPage(page) {
     showLbTab('posts');
   } else if (page === 'mercies') {
     showScreen('merciesPage');
+    _bindPraisesScrollShadow();
     showPraisesTab('praises');
     updatePraiseStreakUI();
     startMerciesFeed();
@@ -28766,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.328";
+const APP_VERSION = "3.0.329";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28787,6 +28802,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.329 &mdash; Praises tab polish</div>
+<ul>
+  <li><strong>Sleeker pinned tabs</strong> &mdash; The sticky Praises / Disciple Group tabs now drop a soft shadow only once you start scrolling, and the tabs are centered with a max width so they look right on larger screens.</li>
+</ul>
 <div class="un-version-label">v3.0.328 &mdash; Pinned Praises tabs</div>
 <ul>
   <li><strong>Sticky tab bar</strong> &mdash; The Praises / Disciple Group tabs now pin to the top of the page under the Dynamic Island instead of scrolling away. The safe-area bar extends down to hold the tabs, all in the page's matching color.</li>
