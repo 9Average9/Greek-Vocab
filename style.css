@@ -18293,12 +18293,12 @@ body.high-contrast-theme .sett-theme-card {
 .theme-wheel-tile {
   position: relative;
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) 18px;
+  grid-template-columns: 26px minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-items: center;
-  gap: 1px 8px;
-  min-height: 58px;
-  padding: 8px 8px;
+  gap: 2px 8px;
+  min-height: 54px;
+  padding: 8px 10px 8px 8px;
   border: 1px solid color-mix(in srgb, var(--border-color) 56%, transparent);
   border-radius: 14px;
   background: color-mix(in srgb, var(--card-color) 88%, rgba(255,255,255,0.42));
@@ -18317,8 +18317,8 @@ body.high-contrast-theme .sett-theme-card {
 
 .theme-wheel-tile > span:first-child {
   grid-row: 1 / 3;
-  width: 30px !important;
-  height: 30px !important;
+  width: 26px !important;
+  height: 26px !important;
   border-radius: 50% !important;
   background: var(--tile-gradient) !important;
   border: 2px solid color-mix(in srgb, white 52%, var(--border-color)) !important;
@@ -18337,14 +18337,17 @@ body.high-contrast-theme .sett-theme-card {
 
 .theme-wheel-tile strong {
   min-width: 0;
-  font-size: clamp(0.64rem, 2.3vw, 0.74rem);
-  line-height: 1.05;
+  max-width: 100%;
+  /* Smaller single-line name so the full word fits without breaking mid-word */
+  font-size: clamp(0.56rem, 2.05vw, 0.68rem);
+  line-height: 1.12;
   font-weight: 850;
   color: var(--font-color);
-  /* Show the whole theme name — wrap instead of truncating to "B…" */
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 .theme-wheel-tile small {
@@ -18354,8 +18357,9 @@ body.high-contrast-theme .sett-theme-card {
 }
 
 .theme-wheel-check {
-  grid-row: 1 / 3;
-  grid-column: 3;
+  position: absolute;
+  top: 5px;
+  right: 5px;
   align-self: center;
   justify-self: center;
   display: none !important;
@@ -18421,23 +18425,23 @@ body.dark .theme-wheel-tile {
   }
 
   .theme-wheel-tile {
-    grid-template-columns: 26px minmax(0, 1fr) 15px;
-    min-height: 54px;
-    padding: 7px;
-    gap: 1px 6px;
+    grid-template-columns: 24px minmax(0, 1fr);
+    min-height: 52px;
+    padding: 7px 9px 7px 7px;
+    gap: 2px 6px;
   }
 
   .theme-wheel-tile > span:first-child {
-    width: 26px !important;
-    height: 26px !important;
+    width: 24px !important;
+    height: 24px !important;
   }
 
   .theme-wheel-tile strong {
-    font-size: 0.72rem;
+    font-size: 0.66rem;
   }
 
   .theme-wheel-tile small {
-    font-size: 0.61rem;
+    font-size: 0.58rem;
   }
 }
 
@@ -19449,7 +19453,14 @@ body.dark .bn-item::before {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
-  scrollbar-gutter: stable;
+  /* No reserved scrollbar gutter / visible scrollbar — that strip read as a
+     "shadow" down the right edge of the profile screen. */
+  scrollbar-width: none;
+}
+.profile-page-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 .profile-page-scroll .profile-card { box-shadow: none; border-radius: 0; background: transparent; padding: 0; max-height: none; overflow: visible; }
 

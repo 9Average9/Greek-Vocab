@@ -28721,7 +28721,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.320";
+const APP_VERSION = "3.0.321";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28742,6 +28742,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.321 &mdash; Readable theme names &amp; cleaner profile edge</div>
+<ul>
+  <li><strong>Full theme names</strong> &mdash; Preset theme names now show in full on one line (no more mid-word breaks like "Bluep rint"), with a slightly smaller font and a corner check on the selected one.</li>
+  <li><strong>No edge shading</strong> &mdash; Removed the reserved scrollbar strip that showed as a faint shadow down the right side of the Profile screen.</li>
+</ul>
 <div class="un-version-label">v3.0.320 &mdash; Profile, settings &amp; night mode polish</div>
 <ul>
   <li><strong>Cleaner profile</strong> &mdash; A flat home button and a settings gear in the top-left, pulled in from the screen edges. "Your Greek Journey" now starts tidy and collapsed, and rank badges show your tier at a glance.</li>
