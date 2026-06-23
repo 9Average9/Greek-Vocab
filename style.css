@@ -18101,12 +18101,17 @@ body .app:has(#settingsScreen.screen.active) {
   flex-direction: column;
   gap: 0;
   /* Hide the scrollbar so no track/strip shows on the right edge */
-  scrollbar-width: none;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
-.sett-scroll::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+.sett-scroll::-webkit-scrollbar,
+.sett-scroll::-webkit-scrollbar-track,
+.sett-scroll::-webkit-scrollbar-thumb,
+.sett-scroll::-webkit-scrollbar-corner {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
 }
 
 /* Section label */
@@ -19463,13 +19468,19 @@ body.dark .bn-item::before {
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
   /* No reserved scrollbar gutter / visible scrollbar — that strip read as a
-     "shadow" down the right edge of the profile screen. */
-  scrollbar-width: none;
+     "shadow" down the right edge of the profile screen. The desktop scrollbar
+     theming paints a --primary-color track, so we must override it explicitly. */
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
-.profile-page-scroll::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+.profile-page-scroll::-webkit-scrollbar,
+.profile-page-scroll::-webkit-scrollbar-track,
+.profile-page-scroll::-webkit-scrollbar-thumb,
+.profile-page-scroll::-webkit-scrollbar-corner {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
 }
 .profile-page-scroll .profile-card { box-shadow: none; border-radius: 0; background: transparent; padding: 0; max-height: none; overflow: visible; }
 
@@ -27208,7 +27219,7 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: color-mix(in srgb, var(--primary-color) 60%, transparent);
+    background: transparent;
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb {
