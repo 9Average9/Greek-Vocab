@@ -28721,7 +28721,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.324";
+const APP_VERSION = "3.0.325";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28742,9 +28742,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.325 &mdash; Scrollbar band fixed</div>
+<ul>
+  <li><strong>No right-edge band</strong> &mdash; The Profile/Settings page scrollbar was painting a colored track down the right edge. Its scrollbar is now fully hidden and scrollbar tracks are transparent everywhere, so the band is gone.</li>
+</ul>
 <div class="un-version-label">v3.0.324 &mdash; Flat solid background</div>
 <ul>
-  <li><strong>No edge band</strong> &mdash; The app background is now a single solid color instead of a gradient, so no lighter/darker band can appear along the right edge of any screen.</li>
+  <li><strong>Even background</strong> &mdash; The app background is now a single solid color instead of a gradient.</li>
 </ul>
 <div class="un-version-label">v3.0.323 &mdash; Hidden scrollbars</div>
 <ul>
