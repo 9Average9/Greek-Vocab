@@ -28721,7 +28721,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.319";
+const APP_VERSION = "3.0.320";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28742,6 +28742,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.320 &mdash; Profile, settings &amp; night mode polish</div>
+<ul>
+  <li><strong>Cleaner profile</strong> &mdash; A flat home button and a settings gear in the top-left, pulled in from the screen edges. "Your Greek Journey" now starts tidy and collapsed, and rank badges show your tier at a glance.</li>
+  <li><strong>Reminders on Home</strong> &mdash; Reminders now live in a tab inside the Home notifications bell, so they're one tap away and closing them keeps you on Home.</li>
+  <li><strong>Premium night mode</strong> &mdash; Dark Mode now darkens your chosen color theme instead of swapping to a fixed one, keeping your accent color while making every surface easy to read.</li>
+  <li><strong>Little touches</strong> &mdash; Theme names show in full, the settings status bar matches its header to the very top, and buttons give a lively press when tapped.</li>
+</ul>
 <div class="un-version-label">v3.0.319 &mdash; Matching status bar</div>
 <ul>
   <li><strong>Clean top edge</strong> &mdash; On the Atlas and Journeys pages the safe-area bar at the very top now matches the white header instead of the app color, while still leaving room for the notch on every phone.</li>
