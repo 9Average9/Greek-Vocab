@@ -22961,16 +22961,17 @@ function resetTestData() {
 }
 function toggleDarkMode() {
   const isDark = document.getElementById("darkModeToggle").checked;
+  localStorage.setItem("darkMode", isDark ? "true" : "false");
 
-  if (isDark) {
-    localStorage.setItem("darkMode", "true");
-    localStorage.setItem("appTheme", "midnight");
-    applyAppTheme("midnight");
-  } else {
-    localStorage.setItem("darkMode", "false");
-    localStorage.setItem("appTheme", "parchment");
-    applyAppTheme("parchment");
+  // Legacy migration: older builds forced appTheme to "midnight" for dark mode.
+  // If the user turns dark off while still on that forced theme, fall back to a
+  // light default so "Dark Mode off" actually looks light.
+  if (!isDark && localStorage.getItem("appTheme") === "midnight") {
+    localStorage.setItem("appTheme", "royal");
   }
+
+  // Keep the user's chosen color theme; darkening is handled by applyAppTheme.
+  applyAppTheme(localStorage.getItem("appTheme") || "royal");
   syncUserData();
 }
 
@@ -23632,6 +23633,47 @@ function getHighContrastMode() {
   return localStorage.getItem("highContrastMode") === "true";
 }
 
+function _hexToRgba(hex, alpha) {
+  const c = _hexToRgb(hex);
+  return c ? `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})` : hex;
+}
+
+// Premium "Dark Mode": instead of swapping to a fixed dark theme, this darkens
+// the user's CURRENTLY selected color theme — keeping its accent identity while
+// turning every surface, border, and text token into a proper dark-friendly
+// value. Because the theme tokens are applied as inline CSS variables (highest
+// priority), darkening them here flips every variable-driven component at once,
+// fixing the "light background + light text" gaps consistently.
+function darkenTheme(theme) {
+  // Already a dark theme (e.g. midnight, charcoal)? Leave it untouched.
+  if (_hexLuminance(theme.light) < 0.22) return theme;
+
+  const identity = theme.secondary;
+
+  // Brighten the identity + accent so they stay legible on dark surfaces.
+  let secondary = _boostHexColor(identity, { saturation: 0.10, lightness: 0.20 });
+  if (_hexLuminance(secondary) < 0.32) secondary = _mixHex(secondary, "#ffffff", 0.38);
+
+  let accent = _boostHexColor(theme.accent, { saturation: 0.08, lightness: 0.12 });
+  if (_hexLuminance(accent) < 0.30) accent = _mixHex(accent, "#ffffff", 0.32);
+
+  // Dark neutral bases, subtly tinted with the identity color for warmth.
+  const tint = (base, amt) => _mixHex(base, identity, amt);
+
+  return {
+    ...theme,
+    primary: tint("#1a1f29", 0.10),          // nav/header backgrounds
+    light: tint("#0f131a", 0.06),            // page background
+    secondary,
+    accent,
+    card: _hexToRgba(tint("#191e27", 0.07), 0.96),
+    border: tint("#2b313c", 0.16),
+    text: "#f1f4f9",
+    muted: "#9aa6b5",
+    buttonText: "#ffffff"
+  };
+}
+
 function enhanceThemeContrast(theme) {
   const darkTheme = _hexLuminance(theme.primary) < 0.28;
   const secondary = _boostHexColor(theme.secondary, {
@@ -23663,7 +23705,10 @@ function enhanceThemeContrast(theme) {
 
 function applyAppTheme(themeName) {
   const baseTheme = APP_THEMES[themeName] || APP_THEMES.parchment;
-  const theme = getHighContrastMode() ? enhanceThemeContrast(baseTheme) : baseTheme;
+  let theme = getHighContrastMode() ? enhanceThemeContrast(baseTheme) : baseTheme;
+  const darkModeOn = localStorage.getItem("darkMode") === "true";
+  if (darkModeOn) theme = darkenTheme(theme);
+  const darkSurfaces = darkModeOn || _hexLuminance(baseTheme.light) < 0.22;
   const solidThemeColor = value => {
     const match = String(value || "").match(/rgba?\(([^)]+)\)/i);
     if (!match) return value;
@@ -23682,7 +23727,7 @@ function applyAppTheme(themeName) {
   document.documentElement.style.setProperty("--muted-color", theme.muted);
   document.documentElement.style.setProperty("--btn-text-color", theme.buttonText);
 
-  document.body.classList.toggle("dark", themeName === "midnight");
+  document.body.classList.toggle("dark", darkSurfaces);
   document.body.classList.toggle("high-contrast-theme", getHighContrastMode());
   applyMatchHomeThemeMode();
 
@@ -23814,7 +23859,9 @@ function setHomeBackdrop(backdropName) {
 // load saved preference
 window.addEventListener("load", () => {
   const savedTheme = localStorage.getItem("appTheme") || "royal";
-  const isDark = savedTheme === "midnight";
+  // Dark mode is now independent of the chosen color theme. Treat the legacy
+  // forced "midnight" theme as dark-on for backward compatibility.
+  const isDark = localStorage.getItem("darkMode") === "true" || savedTheme === "midnight";
 
   const toggle = document.getElementById("darkModeToggle");
   if (toggle) toggle.checked = isDark;
@@ -30455,7 +30502,7 @@ async function restoreUserFromFirestore(user) {
     localStorage.setItem("appTheme", data.appTheme);
     applyAppTheme(data.appTheme);
     const toggle = document.getElementById("darkModeToggle");
-    if (toggle) toggle.checked = data.appTheme === "midnight";
+    if (toggle) toggle.checked = localStorage.getItem("darkMode") === "true" || data.appTheme === "midnight";
   }
   if (data.homeBackdrop) {
     localStorage.setItem("homeBackdrop", data.homeBackdrop);
