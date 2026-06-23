@@ -18325,7 +18325,6 @@ body.high-contrast-theme .sett-theme-card {
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12), 0 5px 12px rgba(0,0,0,0.12) !important;
 }
 
-.theme-wheel-tile strong,
 .theme-wheel-tile small {
   min-width: 0;
   max-width: 100%;
@@ -18337,10 +18336,15 @@ body.high-contrast-theme .sett-theme-card {
 }
 
 .theme-wheel-tile strong {
-  font-size: clamp(0.66rem, 2.45vw, 0.76rem);
-  line-height: 1.08;
+  min-width: 0;
+  font-size: clamp(0.64rem, 2.3vw, 0.74rem);
+  line-height: 1.05;
   font-weight: 850;
   color: var(--font-color);
+  /* Show the whole theme name — wrap instead of truncating to "B…" */
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .theme-wheel-tile small {
@@ -19396,6 +19400,10 @@ body.dark .bn-item::before {
 #profilePage .nav-bar {
   background: var(--primary-color); z-index: 10; flex-shrink: 0;
   padding-top: max(10px, env(safe-area-inset-top));
+  /* Pull the gear + home buttons in from the very edges of the screen */
+  padding-left: 18px;
+  padding-right: 18px;
+  box-shadow: none;
 }
 #profilePage .nav-bar > div:first-child { display: flex; justify-content: flex-start; }
 #profilePage .nav-bar > div:last-child { display: flex; justify-content: flex-end; }
@@ -19410,7 +19418,16 @@ body.dark .bn-item::before {
   color: var(--secondary-color);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  /* No resting elevation/outline — the buttons are completely flat until pressed */
+  box-shadow: none;
+  filter: none;
+  outline: none;
   transition: transform 0.12s ease, background 0.12s ease;
+}
+.prof-nav-icon:focus,
+.prof-nav-icon:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 .prof-nav-icon:active {
   transform: scale(0.92);
@@ -32531,4 +32548,68 @@ body.dark .journey-modern-shape { fill: #202c42; }
   font-weight: 800;
   box-shadow: 0 10px 22px rgba(8, 18, 28, 0.18);
   cursor: pointer;
+}
+
+/* ============================================================
+   Lively tap feedback — buttons gently press in when tapped so
+   every press feels responsive and alive. Press-in matches the
+   app's existing :active convention and never overflows its box.
+   ============================================================ */
+.main-btn,
+.secondary,
+.prof-menu-row,
+.profile-action-card,
+.journey-stat,
+.rank-info-btn,
+.collapse-btn,
+.mercies-primary,
+.mercies-secondary,
+.theme-preset {
+  transition:
+    transform 0.13s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+.main-btn:active,
+.secondary:active,
+.prof-menu-row:active,
+.profile-action-card:active,
+.journey-stat:active,
+.rank-info-btn:active,
+.collapse-btn:active,
+.mercies-primary:active,
+.mercies-secondary:active {
+  transform: scale(0.96);
+}
+/* Theme tiles already nudge on press — keep their swatch lively too */
+.theme-preset:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .main-btn,
+  .secondary,
+  .prof-menu-row,
+  .profile-action-card,
+  .journey-stat,
+  .rank-info-btn,
+  .collapse-btn,
+  .mercies-primary,
+  .mercies-secondary,
+  .theme-preset {
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  .main-btn:active,
+  .secondary:active,
+  .prof-menu-row:active,
+  .profile-action-card:active,
+  .journey-stat:active,
+  .rank-info-btn:active,
+  .collapse-btn:active,
+  .mercies-primary:active,
+  .mercies-secondary:active,
+  .theme-preset:active {
+    transform: none;
+  }
 }
