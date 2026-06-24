@@ -19648,9 +19648,9 @@ body.dark .bn-item::before {
 .home-journey-widget {
   position: relative;
   overflow: hidden;
-  margin: 4px 0 22px;
-  min-height: 110px;
-  padding: 16px min(42vw, 150px) 16px 16px;
+  margin: 4px 0 12px;
+  min-height: 92px;
+  padding: 11px min(42vw, 150px) 11px 16px;
   border-radius: 20px;
   border: 1.5px solid color-mix(in srgb, var(--secondary-color) 24%, var(--border-color));
   background:
@@ -19663,8 +19663,8 @@ body.dark .bn-item::before {
   transition: transform 0.16s cubic-bezier(.2, .85, .25, 1), box-shadow 0.16s ease, filter 0.16s ease;
 }
 .home-journey-widget {
-  margin-top: -6px;
-  min-height: 110px;
+  margin-top: -2px;
+  min-height: 92px;
   padding-right: min(47vw, 168px);
   border-color: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
   background:
@@ -25709,7 +25709,7 @@ body .app:has(#homeScreen.screen.active) #statusBarBg {
   padding:
     calc(env(safe-area-inset-top, 0px) + 18px)
     20px
-    max(12px, 0px) !important;
+    66px !important;
   background: transparent !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -25790,11 +25790,11 @@ body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-n
 }
 
 body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: max(12px, 0px) !important;
+  padding-bottom: 66px !important;
 }
 
 body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
-  padding-bottom: max(12px, 0px) !important;
+  padding-bottom: 66px !important;
 }
 
 body:has(#homeScreen.screen.active) #homeScreen.screen.active {
