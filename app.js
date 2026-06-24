@@ -28781,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.332";
+const APP_VERSION = "3.0.336";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,6 +28802,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.336 &mdash; Home back to normal</div>
+<ul>
+  <li><strong>No bottom safe bar</strong> &mdash; Reverted the recent fixed-height Home redesign that lifted the nav and left a strip of color in the bottom safe area. The Home screen is back to its normal layout, the nav sits low again, and content runs edge-to-edge at the bottom.</li>
+</ul>
 <div class="un-version-label">v3.0.332 &mdash; Tidier Praises dock</div>
 <ul>
   <li><strong>Just Home</strong> &mdash; The collapsed nav dock on the Praises screen now shows only the Home button, with no extra icon peeking behind it.</li>
