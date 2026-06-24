@@ -28781,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.336";
+const APP_VERSION = "3.0.337";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,6 +28802,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.337 &mdash; Journey Maps on Home</div>
+<ul>
+  <li><strong>Journey Maps widget</strong> &mdash; The Home screen now features a Journey Maps widget (in place of the old Rhema reading card) that opens the Bible Atlas. Rhema is still one tap away via the book icon in the nav bar.</li>
+  <li><strong>Cleaner launch</strong> &mdash; No more themed strip at the very bottom of the screen while the app is loading.</li>
+</ul>
 <div class="un-version-label">v3.0.336 &mdash; Home back to normal</div>
 <ul>
   <li><strong>No bottom safe bar</strong> &mdash; Reverted the recent fixed-height Home redesign that lifted the nav and left a strip of color in the bottom safe area. The Home screen is back to its normal layout, the nav sits low again, and content runs edge-to-edge at the bottom.</li>
@@ -39492,7 +39497,7 @@ const APP_WELCOME_COACH_STEPS = [
   { before: () => { showNavPage('community'); showLbTab('scholar'); }, target: () => _coachFirst(['button[data-tab="scholar"]', '#lbPaneScholar']), title: 'Scholar board', body: 'The Scholar board highlights careful practice quality, not just activity. It gives deeper testing and review work its own place.' },
   { before: () => showNavPage('home'), target: () => _coachFirst(['.home-actions-grid', '#notifBtn']), title: 'Home tools', body: 'Home is the launch point. Tools open vocabulary, translation, and tests. The bell opens Notifications — app updates and activity — and also holds a Reminders tab for your study reminders.' },
   { target: () => _coachFirst(['#studyLibraryHomeBtn', '.home-actions-grid']), title: 'Create studies here', body: 'The Study Library holds your focused study spaces. A study can hold Rhema work, saved verses, word logs, scripture trails, and notes.' },
-  { target: () => _coachFirst(['#homeContinueCard', '#homeContinueEmpty']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. You can open a passage, tap words, compare English, use syntax, and explore cross references. Rhema has its own first-time coach when opened.' },
+  { target: () => _coachFirst(['.bn-item[data-page="rhema"]', '#homeSearchToggle']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. Open it from the nav bar to read a passage, tap words, compare English, use syntax, and explore cross references.' },
   { before: () => { showNavPage('profile'); document.getElementById('profileJourneySection')?.classList.remove('collapsed'); }, target: () => _coachFirst(['#profileJourneySection', '.profile-action-row', '.profile-header']), title: 'Profile tracks your journey', body: 'Your profile keeps your XP, rank, streak, lesson progress, known words, translation attempts, and achievements — tap "Your Greek Journey" to expand it anytime. The settings gear in the top-left holds appearance, account, and calendar options.' }
 ];
 

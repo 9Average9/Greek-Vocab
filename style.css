@@ -18723,6 +18723,13 @@ body:has(#appLaunchScreen:not(.hidden)) .bottom-nav {
   pointer-events: none !important;
   transform: translate(-50%, calc(100% + 24px + 0px)) !important;
 }
+/* While the splash is up, match the page background to the splash colour so the
+   themed page colour can never show as a strip in the bottom safe area while the
+   app is loading. (Matches the splash gradient's outer tone / manifest bg.) */
+html:has(#appLaunchScreen:not(.hidden)),
+body:has(#appLaunchScreen:not(.hidden)) {
+  background: #ecdec7 !important;
+}
 .bottom-nav.mercies-collapsed {
   width: 76px !important;
   height: 76px !important;
@@ -19637,7 +19644,8 @@ body.dark .bn-item::before {
   cursor: pointer; padding: 0 4px;
 }
 /* ── Habit Builder home widget ── */
-.home-habit-widget {
+.home-habit-widget,
+.home-journey-widget {
   position: relative;
   overflow: hidden;
   margin: 4px 0 22px;
@@ -19654,7 +19662,17 @@ body.dark .bn-item::before {
   transform-origin: center;
   transition: transform 0.16s cubic-bezier(.2, .85, .25, 1), box-shadow 0.16s ease, filter 0.16s ease;
 }
-.home-habit-widget::after {
+.home-journey-widget {
+  margin-top: -6px;
+  min-height: 148px;
+  padding-right: min(47vw, 168px);
+  border-color: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
+  background:
+    radial-gradient(110% 130% at 100% 100%, color-mix(in srgb, var(--secondary-color) 18%, transparent), transparent 58%),
+    linear-gradient(160deg, color-mix(in srgb, var(--secondary-color) 8%, var(--card-color)), var(--card-color) 74%);
+}
+.home-habit-widget::after,
+.home-journey-widget::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -19664,11 +19682,22 @@ body.dark .bn-item::before {
   pointer-events: none;
   z-index: 1;
 }
+.home-journey-widget::after {
+  background:
+    linear-gradient(90deg, var(--card-color) 0%, color-mix(in srgb, var(--card-color) 84%, transparent) 43%, transparent 72%),
+    radial-gradient(80% 95% at 91% 58%, color-mix(in srgb, var(--secondary-color) 22%, transparent), transparent 74%);
+}
 .hhw-main {
   position: relative;
   z-index: 2;
 }
-.home-habit-widget:active {
+.hjw-main {
+  position: relative;
+  z-index: 2;
+  max-width: min(56vw, 230px);
+}
+.home-habit-widget:active,
+.home-journey-widget:active {
   animation: home-press-pop 0.34s cubic-bezier(.2, .9, .2, 1);
   box-shadow: 0 8px 18px color-mix(in srgb, var(--secondary-color) 16%, transparent);
   filter: saturate(1.04);
@@ -19680,6 +19709,11 @@ body.dark .bn-item::before {
   color: var(--secondary-color);
 }
 .hhw-sprout { width: 16px; height: 16px; flex-shrink: 0; }
+.hjw-kicker .material-symbols-outlined {
+  font-size: 17px !important;
+  line-height: 1;
+  color: var(--secondary-color);
+}
 .hhw-headline {
   margin: 6px 0 2px;
   font-size: 1.06rem; font-weight: 800;
@@ -19707,7 +19741,8 @@ body.dark .bn-item::before {
   transition: width 0.4s ease;
 }
 .hhw-count { font-size: 0.74rem; font-weight: 800; color: var(--secondary-color); }
-.hhw-art {
+.hhw-art,
+.hjw-art {
   position: absolute;
   right: -44px;
   top: 0;
@@ -19725,7 +19760,16 @@ body.dark .bn-item::before {
   z-index: 0;
   isolation: isolate; /* contain the color-tint blend to this artwork only */
 }
-.hhw-art::after {
+.hjw-art {
+  right: -34px;
+  width: min(68vw, 272px);
+  border-radius: 24px;
+  background:
+    radial-gradient(100% 86% at 58% 12%, rgba(255,255,255,0.66), transparent 64%),
+    color-mix(in srgb, var(--secondary-color) 10%, rgba(255,255,255,0.48));
+}
+.hhw-art::after,
+.hjw-art::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -19735,7 +19779,13 @@ body.dark .bn-item::before {
   mix-blend-mode: soft-light;
   pointer-events: none;
 }
-.hhw-art img {
+.hjw-art::after {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--card-color) 66%, transparent), transparent 34%),
+    radial-gradient(90% 100% at 82% 54%, color-mix(in srgb, var(--secondary-color) 24%, transparent), transparent 72%);
+}
+.hhw-art img,
+.hjw-art img {
   display: block;
   width: 100%;
   height: 100%;
@@ -19744,6 +19794,36 @@ body.dark .bn-item::before {
   opacity: 0.9;
   filter: saturate(1.08) contrast(1.03);
   mix-blend-mode: normal;
+}
+.hjw-art img {
+  object-position: 52% 54%;
+  opacity: 0.82;
+  filter: saturate(1.08) contrast(1.02) hue-rotate(var(--home-widget-hue, 0deg));
+}
+.hjw-art-tint {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 38%, color-mix(in srgb, var(--secondary-color) 22%, transparent) 100%);
+  mix-blend-mode: color;
+  opacity: 0.28;
+  pointer-events: none;
+}
+.hjw-arrow {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 3;
+  width: 42px;
+  height: 42px;
+  display: grid !important;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--secondary-color);
+  background: color-mix(in srgb, var(--card-color) 88%, rgba(255,255,255,0.88));
+  box-shadow:
+    0 10px 22px color-mix(in srgb, var(--secondary-color) 14%, rgba(15,23,42,0.1)),
+    inset 0 1px 0 rgba(255,255,255,0.82);
 }
 
 /* ── Studies bookshelf ── */
