@@ -19649,7 +19649,7 @@ body.dark .bn-item::before {
   position: relative;
   overflow: hidden;
   margin: 4px 0 22px;
-  min-height: 154px;
+  min-height: 110px;
   padding: 16px min(42vw, 150px) 16px 16px;
   border-radius: 20px;
   border: 1.5px solid color-mix(in srgb, var(--secondary-color) 24%, var(--border-color));
