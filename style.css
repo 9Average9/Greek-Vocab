@@ -18857,7 +18857,7 @@ body.dark .bn-item::before {
   display: flex; align-items: flex-start; justify-content: flex-start;
   gap: 2px;
   padding: calc(env(safe-area-inset-top, 20px) + 12px) 0 0;
-  margin-bottom: 14px;
+  margin-bottom: 6px;
 }
 .home-top-row .home-greeting-wrap { margin: 0; flex: 1 1 auto; min-width: 0; }
 .home-top-actions { /* hugs the very top right, level with the "Good" line.
@@ -19095,10 +19095,10 @@ body.dark .bn-item::before {
   line-height: 1.08; margin: 0 0 6px;
 }
 .home-greeting-good {
-  display: block; font-size: 2.6rem; font-weight: 700; color: var(--font-color);
+  display: block; font-size: 2.15rem; font-weight: 700; color: var(--font-color);
 }
 .home-greeting-time {
-  display: block; font-size: 2.6rem; font-weight: 700; color: var(--secondary-color);
+  display: block; font-size: 2.15rem; font-weight: 700; color: var(--secondary-color);
 }
 .home-greeting-name {
   font-size: clamp(1.22rem, 5.4vw, 1.5rem); font-weight: 800; color: var(--font-color);
@@ -19648,9 +19648,9 @@ body.dark .bn-item::before {
 .home-journey-widget {
   position: relative;
   overflow: hidden;
-  margin: 4px 0 12px;
-  min-height: 92px;
-  padding: 11px min(42vw, 150px) 11px 16px;
+  margin: 2px 0 8px;
+  min-height: 80px;
+  padding: 10px min(42vw, 150px) 10px 16px;
   border-radius: 20px;
   border: 1.5px solid color-mix(in srgb, var(--secondary-color) 24%, var(--border-color));
   background:
@@ -19664,7 +19664,7 @@ body.dark .bn-item::before {
 }
 .home-journey-widget {
   margin-top: -2px;
-  min-height: 92px;
+  min-height: 80px;
   padding-right: min(47vw, 168px);
   border-color: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
   background:
@@ -25702,12 +25702,15 @@ body .app:has(#homeScreen.screen.active) #statusBarBg {
 
 #homeScreen .home-scroll {
   width: 100% !important;
+  height: 100% !important;
   min-height: 0 !important;
-  overflow-y: auto !important;
+  /* No vertical scroll on Home — it's a fixed dashboard. Any minor overflow is
+     absorbed by the 66px bottom padding buffer, so the tools stay visible. */
+  overflow-y: hidden !important;
   overflow-x: hidden !important;
   box-sizing: border-box !important;
   padding:
-    calc(env(safe-area-inset-top, 0px) + 18px)
+    calc(env(safe-area-inset-top, 0px) + 10px)
     20px
     66px !important;
   background: transparent !important;
