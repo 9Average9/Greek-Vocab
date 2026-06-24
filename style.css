@@ -19664,7 +19664,7 @@ body.dark .bn-item::before {
 }
 .home-journey-widget {
   margin-top: -6px;
-  min-height: 148px;
+  min-height: 110px;
   padding-right: min(47vw, 168px);
   border-color: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
   background:
