@@ -28781,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.340";
+const APP_VERSION = "3.0.341";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,6 +28802,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.341 &mdash; Journey widget matches your theme</div>
+<ul>
+  <li><strong>Themed Journey Maps widget</strong> &mdash; The Journey Maps widget on Home now takes on your selected theme color, the same way the Habit Builder widget does (in light and dark mode).</li>
+</ul>
 <div class="un-version-label">v3.0.340 &mdash; Home fits on one screen</div>
 <ul>
   <li><strong>No more scrolling</strong> &mdash; Home is now a fixed dashboard that fits on one screen with no vertical scroll. Trimmed the greeting and the two widgets a little more so the tool buttons sit comfortably above the nav bar.</li>
