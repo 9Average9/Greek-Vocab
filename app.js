@@ -28781,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.337";
+const APP_VERSION = "3.0.338";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,6 +28802,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.338 &mdash; Slimmer Home widgets</div>
+<ul>
+  <li><strong>Shorter widgets</strong> &mdash; The Habit Builder and Journey Maps widgets on Home are now more compact, taking up less vertical space.</li>
+</ul>
 <div class="un-version-label">v3.0.337 &mdash; Journey Maps on Home</div>
 <ul>
   <li><strong>Journey Maps widget</strong> &mdash; The Home screen now features a Journey Maps widget (in place of the old Rhema reading card) that opens the Bible Atlas. Rhema is still one tap away via the book icon in the nav bar.</li>
