@@ -28781,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.339";
+const APP_VERSION = "3.0.340";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,9 +28802,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.339 &mdash; Home fits without scrolling</div>
+<div class="un-version-label">v3.0.340 &mdash; Home fits on one screen</div>
 <ul>
-  <li><strong>More room for tools</strong> &mdash; Made the Habit Builder and Journey Maps widgets a bit smaller and added clearance so the tool buttons sit above the nav bar instead of behind it — and Home fits without scrolling.</li>
+  <li><strong>No more scrolling</strong> &mdash; Home is now a fixed dashboard that fits on one screen with no vertical scroll. Trimmed the greeting and the two widgets a little more so the tool buttons sit comfortably above the nav bar.</li>
 </ul>
 <div class="un-version-label">v3.0.338 &mdash; Slimmer Home widgets</div>
 <ul>
