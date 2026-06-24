@@ -19790,7 +19790,7 @@ body.dark .bn-item::before {
   mix-blend-mode: normal;
 }
 .hjw-art img {
-  object-fit: contain;
+  object-fit: cover;
   object-position: center center;
   opacity: 0.82;
   filter: saturate(1.08) contrast(1.02);
@@ -24810,7 +24810,7 @@ body.dark .bottom-nav::before {
   }
 
   #homeScreen .hjw-art img {
-    object-fit: contain;
+    object-fit: cover;
     object-position: center center;
   }
 
@@ -24831,7 +24831,7 @@ body.dark .bottom-nav::before {
 
   #homeScreen .home-actions-grid {
     flex: 0 0 auto;
-    grid-auto-columns: clamp(104px, 28vw, 132px) !important;
+    grid-auto-columns: clamp(108px, 29.5vw, 138px) !important;
     gap: clamp(9px, 2.8vw, 13px) !important;
     margin: 0 calc(var(--app-padding, 20px) * -1) 0 !important;
     padding: 1px var(--app-padding, 20px) 4px !important;
@@ -24841,21 +24841,21 @@ body.dark .bottom-nav::before {
   }
 
   #homeScreen .home-action-tile {
-    min-height: clamp(126px, 19svh, 166px);
+    min-height: clamp(136px, 20.5svh, 176px);
     padding: clamp(5px, 1.3svh, 8px) clamp(6px, 1.8vw, 9px) clamp(7px, 1.2svh, 9px) !important;
     border-radius: clamp(16px, 4.4vw, 21px) !important;
     gap: clamp(2px, 0.7svh, 4px) !important;
   }
 
   #homeScreen .home-action-tile .hat-icon {
-    height: clamp(72px, 11.5svh, 102px) !important;
+    height: clamp(78px, 12.2svh, 108px) !important;
     border-radius: clamp(14px, 4vw, 18px) !important;
     padding: clamp(4px, 1.1svh, 7px) !important;
   }
 
   #homeScreen .home-action-tile .qa-img {
-    width: 90% !important;
-    height: 90% !important;
+    width: 92% !important;
+    height: 92% !important;
   }
 
   #homeScreen .home-action-tile .hat-text {
@@ -24908,11 +24908,11 @@ body.dark .bottom-nav::before {
   }
 
   #homeScreen .home-action-tile {
-    min-height: clamp(112px, 18svh, 134px);
+    min-height: clamp(120px, 19svh, 142px);
   }
 
   #homeScreen .home-action-tile .hat-icon {
-    height: clamp(62px, 10.5svh, 78px) !important;
+    height: clamp(68px, 11.2svh, 84px) !important;
   }
 
   #homeScreen .home-action-tile .hat-text small {
@@ -33116,7 +33116,7 @@ body::-webkit-scrollbar,
 
   body:has(#homeScreen.screen.active) .bottom-nav {
     position: fixed !important;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+    bottom: 4px !important;
     transform: translateX(-50%) !important;
   }
 }

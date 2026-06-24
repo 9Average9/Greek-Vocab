@@ -28781,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.334";
+const APP_VERSION = "3.0.335";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,6 +28802,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.335 &mdash; Home nav and tools balance</div>
+<ul>
+  <li><strong>Nav back down</strong> &mdash; The Home nav bar sits near the bottom again with a small fixed gap, instead of being lifted by the phone safe area.</li>
+  <li><strong>Better Home fit</strong> &mdash; Tool cards are slightly larger while Journey Maps artwork fills the widget side cleanly and still shows the flag.</li>
+</ul>
 <div class="un-version-label">v3.0.334 &mdash; Tighter Home fit</div>
 <ul>
   <li><strong>No-scroll Home</strong> &mdash; The mobile Home layout now compresses the greeting, widgets, and Tools row to fit above the nav without vertical scrolling.</li>
