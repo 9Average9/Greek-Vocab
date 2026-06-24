@@ -5495,8 +5495,7 @@ body.dark .big-lock .material-symbols-outlined {
 /* Recolor the habit artwork to the selected theme: the tint keeps the image's
    shading (luminance) but takes the theme hue/saturation via "color" blend. */
 .habits-hero-tint,
-.hhw-art-tint,
-.hjw-art-tint {
+.hhw-art-tint {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -19638,8 +19637,7 @@ body.dark .bn-item::before {
   cursor: pointer; padding: 0 4px;
 }
 /* ── Habit Builder home widget ── */
-.home-habit-widget,
-.home-journey-widget {
+.home-habit-widget {
   position: relative;
   overflow: hidden;
   margin: 4px 0 22px;
@@ -19656,17 +19654,7 @@ body.dark .bn-item::before {
   transform-origin: center;
   transition: transform 0.16s cubic-bezier(.2, .85, .25, 1), box-shadow 0.16s ease, filter 0.16s ease;
 }
-.home-journey-widget {
-  margin-top: -6px;
-  min-height: 148px;
-  padding-right: min(47vw, 168px);
-  border-color: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
-  background:
-    radial-gradient(110% 130% at 100% 100%, color-mix(in srgb, var(--secondary-color) 18%, transparent), transparent 58%),
-    linear-gradient(160deg, color-mix(in srgb, var(--secondary-color) 8%, var(--card-color)), var(--card-color) 74%);
-}
-.home-habit-widget::after,
-.home-journey-widget::after {
+.home-habit-widget::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -19676,22 +19664,11 @@ body.dark .bn-item::before {
   pointer-events: none;
   z-index: 1;
 }
-.home-journey-widget::after {
-  background:
-    linear-gradient(90deg, var(--card-color) 0%, color-mix(in srgb, var(--card-color) 84%, transparent) 43%, transparent 72%),
-    radial-gradient(80% 95% at 91% 58%, color-mix(in srgb, var(--secondary-color) 22%, transparent), transparent 74%);
-}
 .hhw-main {
   position: relative;
   z-index: 2;
 }
-.hjw-main {
-  position: relative;
-  z-index: 2;
-  max-width: min(56vw, 230px);
-}
-.home-habit-widget:active,
-.home-journey-widget:active {
+.home-habit-widget:active {
   animation: home-press-pop 0.34s cubic-bezier(.2, .9, .2, 1);
   box-shadow: 0 8px 18px color-mix(in srgb, var(--secondary-color) 16%, transparent);
   filter: saturate(1.04);
@@ -19703,11 +19680,6 @@ body.dark .bn-item::before {
   color: var(--secondary-color);
 }
 .hhw-sprout { width: 16px; height: 16px; flex-shrink: 0; }
-.hjw-kicker .material-symbols-outlined {
-  font-size: 17px !important;
-  line-height: 1;
-  color: var(--secondary-color);
-}
 .hhw-headline {
   margin: 6px 0 2px;
   font-size: 1.06rem; font-weight: 800;
@@ -19735,8 +19707,7 @@ body.dark .bn-item::before {
   transition: width 0.4s ease;
 }
 .hhw-count { font-size: 0.74rem; font-weight: 800; color: var(--secondary-color); }
-.hhw-art,
-.hjw-art {
+.hhw-art {
   position: absolute;
   right: -44px;
   top: 0;
@@ -19754,16 +19725,7 @@ body.dark .bn-item::before {
   z-index: 0;
   isolation: isolate; /* contain the color-tint blend to this artwork only */
 }
-.hjw-art {
-  right: -8px;
-  width: min(68vw, 272px);
-  border-radius: 24px;
-  background:
-    radial-gradient(100% 86% at 58% 12%, rgba(255,255,255,0.66), transparent 64%),
-    color-mix(in srgb, var(--secondary-color) 10%, rgba(255,255,255,0.48));
-}
-.hhw-art::after,
-.hjw-art::after {
+.hhw-art::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -19773,13 +19735,7 @@ body.dark .bn-item::before {
   mix-blend-mode: soft-light;
   pointer-events: none;
 }
-.hjw-art::after {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--card-color) 66%, transparent), transparent 34%),
-    radial-gradient(90% 100% at 82% 54%, color-mix(in srgb, var(--secondary-color) 24%, transparent), transparent 72%);
-}
-.hhw-art img,
-.hjw-art img {
+.hhw-art img {
   display: block;
   width: 100%;
   height: 100%;
@@ -19788,39 +19744,6 @@ body.dark .bn-item::before {
   opacity: 0.9;
   filter: saturate(1.08) contrast(1.03);
   mix-blend-mode: normal;
-}
-.hjw-art img {
-  object-fit: cover;
-  object-position: center center;
-  opacity: 0.82;
-  filter: saturate(1.08) contrast(1.02);
-}
-.hjw-art-tint {
-  position: absolute;
-  inset: 0;
-  background: var(--secondary-color);
-  mix-blend-mode: color;
-  opacity: 0.54;
-  pointer-events: none;
-}
-.hjw-arrow {
-  position: absolute;
-  right: 16px;
-  bottom: 16px;
-  z-index: 3;
-  width: 36px;
-  height: 36px;
-  display: grid !important;
-  place-items: center;
-  border-radius: 999px;
-  color: var(--secondary-color);
-  font-size: 1.35rem !important;
-  font-weight: 900;
-  font-variation-settings: 'FILL' 1, 'wght' 800, 'GRAD' 0, 'opsz' 24 !important;
-  background: color-mix(in srgb, var(--card-color) 88%, rgba(255,255,255,0.88));
-  box-shadow:
-    0 10px 22px color-mix(in srgb, var(--secondary-color) 14%, rgba(15,23,42,0.1)),
-    inset 0 1px 0 rgba(255,255,255,0.82);
 }
 
 /* ── Studies bookshelf ── */
@@ -24670,253 +24593,6 @@ body.dark .bottom-nav::before {
   .bn-item.active {
     background: color-mix(in srgb, var(--secondary-color) 8%, transparent);
     border-radius: 999px;
-  }
-}
-
-/* v3.0.334: fixed-height mobile Home layout. Keep Home visually complete above
-   the nav without vertical scrolling, while desktop keeps its study-desk layout. */
-@media (max-width: 899px) {
-  html:has(> body #homeScreen.screen.active),
-  body:has(#homeScreen.screen.active) {
-    height: 100%;
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
-  }
-
-  #homeScreen.screen.active {
-    height: 100svh !important;
-    max-height: 100svh !important;
-    overflow: hidden !important;
-  }
-
-  #homeScreen .home-scroll {
-    height: 100svh !important;
-    max-height: 100svh !important;
-    overflow-x: hidden !important;
-    overflow-y: hidden !important;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box !important;
-    padding:
-      calc(env(safe-area-inset-top, 0px) + clamp(7px, 1.2svh, 14px))
-      clamp(14px, 4.8vw, 20px)
-      0 !important;
-    touch-action: none;
-  }
-
-  #homeScreen .home-top-row {
-    flex: 0 0 auto;
-    padding-top: 0 !important;
-    margin-bottom: clamp(6px, 1.1svh, 10px) !important;
-  }
-
-  #homeScreen .home-top-actions .ht-btn {
-    width: clamp(32px, 8.8vw, 38px);
-    height: clamp(32px, 8.8vw, 38px);
-    border-radius: clamp(10px, 3vw, 12px);
-  }
-
-  #homeScreen .home-top-actions .ht-btn .material-symbols-outlined {
-    font-size: clamp(1.1rem, 5vw, 1.32rem) !important;
-  }
-
-  #homeScreen .home-greeting-good,
-  #homeScreen .home-greeting-time {
-    font-size: clamp(1.82rem, 6.2svh, 2.52rem);
-    line-height: 0.98;
-  }
-
-  #homeScreen .home-greeting-block {
-    margin-bottom: clamp(2px, 0.55svh, 6px);
-    line-height: 0.98;
-  }
-
-  #homeScreen .home-greeting-name-row {
-    min-height: clamp(30px, 5.2svh, 38px);
-  }
-
-  #homeScreen .home-greeting-name {
-    font-size: clamp(1.05rem, 3.4svh, 1.42rem);
-    line-height: 1.02;
-  }
-
-  #homeScreen .his-pill {
-    width: clamp(32px, 8.8vw, 38px);
-    height: clamp(32px, 8.8vw, 38px);
-  }
-
-  #homeScreen .home-habit-widget,
-  #homeScreen .home-journey-widget {
-    flex: 0 0 auto;
-    min-height: clamp(106px, 16.2svh, 134px);
-    margin: 0 0 clamp(8px, 1.15svh, 12px) !important;
-    padding:
-      clamp(10px, 1.55svh, 14px)
-      min(40vw, 138px)
-      clamp(10px, 1.55svh, 14px)
-      clamp(12px, 3.8vw, 16px);
-    border-radius: clamp(17px, 4.4vw, 20px);
-  }
-
-  #homeScreen .home-journey-widget {
-    min-height: clamp(102px, 15.2svh, 126px);
-    padding-right: min(46vw, 154px);
-  }
-
-  #homeScreen .hhw-kicker {
-    font-size: clamp(0.56rem, 1.8svh, 0.68rem);
-    gap: 5px;
-  }
-
-  #homeScreen .hjw-kicker .material-symbols-outlined {
-    font-size: clamp(14px, 3.8vw, 17px) !important;
-  }
-
-  #homeScreen .hhw-headline {
-    margin: clamp(3px, 0.7svh, 6px) 0 1px;
-    font-size: clamp(0.88rem, 2.65svh, 1.06rem);
-    line-height: 1.12;
-  }
-
-  #homeScreen .hhw-sub {
-    margin-bottom: clamp(5px, 0.9svh, 9px);
-    font-size: clamp(0.67rem, 2svh, 0.78rem);
-    line-height: 1.28;
-    max-width: 29ch;
-  }
-
-  #homeScreen .hhw-progress {
-    gap: 7px;
-  }
-
-  #homeScreen .hhw-bar {
-    height: clamp(6px, 1.2svh, 8px);
-  }
-
-  #homeScreen .hhw-art,
-  #homeScreen .hjw-art {
-    right: -12px;
-    width: min(58vw, 220px);
-    border-radius: clamp(18px, 5vw, 24px);
-  }
-
-  #homeScreen .hjw-art {
-    right: -2px;
-    width: min(62vw, 240px);
-  }
-
-  #homeScreen .hhw-art img {
-    object-position: 62% 50%;
-  }
-
-  #homeScreen .hjw-art img {
-    object-fit: cover;
-    object-position: center center;
-  }
-
-  #homeScreen .hjw-arrow {
-    right: clamp(10px, 3vw, 14px);
-    bottom: clamp(10px, 3vw, 14px);
-    width: clamp(30px, 8.2vw, 34px);
-    height: clamp(30px, 8.2vw, 34px);
-    font-size: clamp(1.12rem, 4.6vw, 1.3rem) !important;
-  }
-
-  #homeScreen .home-section-label {
-    flex: 0 0 auto;
-    margin: clamp(0px, 0.4svh, 4px) 0 clamp(6px, 0.9svh, 10px) !important;
-    font-size: clamp(0.86rem, 2.55svh, 1rem);
-    line-height: 1;
-  }
-
-  #homeScreen .home-actions-grid {
-    flex: 0 0 auto;
-    grid-auto-columns: clamp(108px, 29.5vw, 138px) !important;
-    gap: clamp(9px, 2.8vw, 13px) !important;
-    margin: 0 calc(var(--app-padding, 20px) * -1) 0 !important;
-    padding: 1px var(--app-padding, 20px) 4px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    touch-action: pan-x;
-  }
-
-  #homeScreen .home-action-tile {
-    min-height: clamp(136px, 20.5svh, 176px);
-    padding: clamp(5px, 1.3svh, 8px) clamp(6px, 1.8vw, 9px) clamp(7px, 1.2svh, 9px) !important;
-    border-radius: clamp(16px, 4.4vw, 21px) !important;
-    gap: clamp(2px, 0.7svh, 4px) !important;
-  }
-
-  #homeScreen .home-action-tile .hat-icon {
-    height: clamp(78px, 12.2svh, 108px) !important;
-    border-radius: clamp(14px, 4vw, 18px) !important;
-    padding: clamp(4px, 1.1svh, 7px) !important;
-  }
-
-  #homeScreen .home-action-tile .qa-img {
-    width: 92% !important;
-    height: 92% !important;
-  }
-
-  #homeScreen .home-action-tile .hat-text {
-    gap: 1px;
-  }
-
-  #homeScreen .home-action-tile .hat-text strong {
-    font-size: clamp(0.68rem, 2.05svh, 0.9rem) !important;
-    line-height: 1.02;
-  }
-
-  #homeScreen .home-action-tile .hat-text small {
-    font-size: clamp(0.52rem, 1.55svh, 0.66rem) !important;
-    min-height: 1.12em;
-    -webkit-line-clamp: 1;
-  }
-
-  #homeScreen .home-action-tile .hat-chev {
-    width: clamp(22px, 5.8vw, 28px);
-    height: clamp(22px, 5.8vw, 28px);
-    font-size: clamp(0.92rem, 2.6vw, 1.08rem);
-  }
-}
-
-@media (max-width: 899px) and (max-height: 700px) {
-  #homeScreen .home-scroll {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 6px) !important;
-  }
-
-  #homeScreen .home-greeting-good,
-  #homeScreen .home-greeting-time {
-    font-size: clamp(1.68rem, 5.8svh, 2.2rem);
-  }
-
-  #homeScreen .home-greeting-name-row {
-    min-height: 28px;
-  }
-
-  #homeScreen .home-habit-widget,
-  #homeScreen .home-journey-widget {
-    min-height: clamp(94px, 15svh, 110px);
-    margin-bottom: 7px !important;
-  }
-
-  #homeScreen .hhw-sub {
-    -webkit-line-clamp: 2;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  #homeScreen .home-action-tile {
-    min-height: clamp(120px, 19svh, 142px);
-  }
-
-  #homeScreen .home-action-tile .hat-icon {
-    height: clamp(68px, 11.2svh, 84px) !important;
-  }
-
-  #homeScreen .home-action-tile .hat-text small {
-    display: none !important;
   }
 }
 
@@ -33103,20 +32779,4 @@ body::-webkit-scrollbar,
   opacity: 0 !important;
   pointer-events: none !important;
   transform: scale(0.5) !important;
-}
-
-@media (max-width: 899px) {
-  body:has(#homeScreen.screen.active),
-  html:has(> body #homeScreen.screen.active),
-  #homeScreen.screen.active,
-  #homeScreen .home-scroll {
-    overflow-y: hidden !important;
-    overscroll-behavior-y: none !important;
-  }
-
-  body:has(#homeScreen.screen.active) .bottom-nav {
-    position: fixed !important;
-    bottom: 4px !important;
-    transform: translateX(-50%) !important;
-  }
 }

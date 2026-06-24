@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.335" rel="stylesheet"/>
+<link href="style.css?v=3.0.336" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -520,6 +520,30 @@ Start a New Study
 </div>
 </div>
 <div class="home-rhema-search-results" id="homeRhemaSearchResults"></div>
+<!-- Continue Studying card (shown after first Rhema use) -->
+<div class="home-continue-card" id="homeContinueCard" onclick="resumeRhema()" style="display:none">
+<div class="hcc-body">
+<div class="hcc-icon-wrap"><span class="material-symbols-outlined">auto_stories</span></div>
+<div class="hcc-info">
+<span class="hcc-label">Continue Reading</span>
+<span class="hcc-passage" id="hccPassage">John 1:1</span>
+<span class="hcc-sub">Bible Reader · Greek Word Study</span>
+</div>
+<span class="material-symbols-outlined hcc-book-deco">menu_book</span>
+</div>
+<div class="hcc-footer">
+<span class="hcc-snippet" id="hccSnippet"></span>
+<button class="hcc-resume-btn" onclick="event.stopPropagation();resumeRhema()">Resume</button>
+</div>
+</div>
+<!-- First-time prompt (shown before any Rhema use) -->
+<div class="home-continue-card home-continue-empty" id="homeContinueEmpty" onclick="showRhema()">
+<span class="material-symbols-outlined hce-icon">auto_stories</span>
+<div class="hce-text">
+<strong>Open the Bible</strong>
+<span>Read in plain English — tap any word to go deeper into the Greek →</span>
+</div>
+</div>
 <!-- Habit Builder widget -->
 <div class="home-habit-widget" id="homeHabitWidget" onclick="showNavPage('habits')" role="button" tabindex="0">
 <div class="hhw-main">
@@ -534,18 +558,6 @@ Habit Builder</span>
 </div>
 </div>
 <div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-art.png" alt="" width="260" height="163"/><span class="hhw-art-tint"></span></div>
-</div>
-<!-- Journey Maps widget -->
-<div class="home-journey-widget" id="homeJourneyWidget" onclick="openBibleAtlasPage()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBibleAtlasPage()}">
-<div class="hjw-main">
-<span class="hhw-kicker hjw-kicker">
-<span class="material-symbols-outlined">location_on</span>
-Journey Maps</span>
-<h3 class="hhw-headline hjw-headline">Follow the story</h3>
-<p class="hhw-sub hjw-sub">Trace Bible routes with ancient and modern maps, distances, and Scripture steps.</p>
-</div>
-<div class="hjw-art" aria-hidden="true"><img src="assets/icons/ChatGPT Image Jun 23, 2026, 10_26_34 PM.png" alt="" width="260" height="163"/><span class="hjw-art-tint"></span></div>
-<span class="hjw-arrow material-symbols-outlined" aria-hidden="true">arrow_forward</span>
 </div>
 <div class="home-section-label">Tools</div>
 <div class="home-actions-grid">
@@ -568,6 +580,13 @@ Journey Maps</span>
 <img class="qa-img" src="assets/icons/quick-reading-plan.png?v=3.0.231" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Reading<br/>Plan</strong><small>Set scripture goals</small></div>
+<span class="hat-chev">&rarr;</span>
+</button>
+<button class="home-action-tile quick-action-journeys" id="journeysHomeBtn" onclick="openBibleAtlasPage()">
+<div class="hat-icon hat-icon-journeys">
+<img class="qa-img" src="assets/icons/0ed7ea05-32dd-4542-b042-c80a7f47169b.png" alt="" loading="lazy"/>
+</div>
+<div class="hat-text"><strong>Bible<br/>Journeys</strong><small>Follow the story</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile locked-feature-btn quick-action-vocab" id="vocabHomeBtn" onclick="tryOpenLockedFeature('vocab')">
@@ -16997,13 +17016,13 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.335"></script>
-<script src="bible-atlas.js?v=3.0.335"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.335"></script>
+<script src="app.js?v=3.0.336"></script>
+<script src="bible-atlas.js?v=3.0.336"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.336"></script>
 <script src="verse-structure.js?v=3.0.127"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="firebase-lb.js?v=3.0.335" type="module"></script>
+<script src="firebase-lb.js?v=3.0.336" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

@@ -28781,7 +28781,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.335";
+const APP_VERSION = "3.0.336";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,20 +28802,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.335 &mdash; Home nav and tools balance</div>
+<div class="un-version-label">v3.0.336 &mdash; Home back to normal</div>
 <ul>
-  <li><strong>Nav back down</strong> &mdash; The Home nav bar sits near the bottom again with a small fixed gap, instead of being lifted by the phone safe area.</li>
-  <li><strong>Better Home fit</strong> &mdash; Tool cards are slightly larger while Journey Maps artwork fills the widget side cleanly and still shows the flag.</li>
-</ul>
-<div class="un-version-label">v3.0.334 &mdash; Tighter Home fit</div>
-<ul>
-  <li><strong>No-scroll Home</strong> &mdash; The mobile Home layout now compresses the greeting, widgets, and Tools row to fit above the nav without vertical scrolling.</li>
-  <li><strong>Journey widget polish</strong> &mdash; The Journey Maps artwork is shifted to show the flag, follows the selected theme color more closely, and uses a smaller rounded arrow.</li>
-</ul>
-<div class="un-version-label">v3.0.333 &mdash; Journey Maps on Home</div>
-<ul>
-  <li><strong>Home redesign</strong> &mdash; Rhema now lives in the nav bar, so the Home reader widget was removed and Habit Builder moves up.</li>
-  <li><strong>Journey Maps widget</strong> &mdash; Added a theme-matched Journey Maps card on Home using the new artwork, while the Tools row stays focused on the remaining shortcuts.</li>
+  <li><strong>No bottom safe bar</strong> &mdash; Reverted the recent fixed-height Home redesign that lifted the nav and left a strip of color in the bottom safe area. The Home screen is back to its normal layout, the nav sits low again, and content runs edge-to-edge at the bottom.</li>
 </ul>
 <div class="un-version-label">v3.0.332 &mdash; Tidier Praises dock</div>
 <ul>
@@ -39503,7 +39492,7 @@ const APP_WELCOME_COACH_STEPS = [
   { before: () => { showNavPage('community'); showLbTab('scholar'); }, target: () => _coachFirst(['button[data-tab="scholar"]', '#lbPaneScholar']), title: 'Scholar board', body: 'The Scholar board highlights careful practice quality, not just activity. It gives deeper testing and review work its own place.' },
   { before: () => showNavPage('home'), target: () => _coachFirst(['.home-actions-grid', '#notifBtn']), title: 'Home tools', body: 'Home is the launch point. Tools open vocabulary, translation, and tests. The bell opens Notifications — app updates and activity — and also holds a Reminders tab for your study reminders.' },
   { target: () => _coachFirst(['#studyLibraryHomeBtn', '.home-actions-grid']), title: 'Create studies here', body: 'The Study Library holds your focused study spaces. A study can hold Rhema work, saved verses, word logs, scripture trails, and notes.' },
-  { target: () => _coachFirst(['.bn-item[data-page="rhema"]', '#homeSearchToggle']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. Open it from the nav bar to read a passage, tap words, compare English, use syntax, and explore cross references.' },
+  { target: () => _coachFirst(['#homeContinueCard', '#homeContinueEmpty']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. You can open a passage, tap words, compare English, use syntax, and explore cross references. Rhema has its own first-time coach when opened.' },
   { before: () => { showNavPage('profile'); document.getElementById('profileJourneySection')?.classList.remove('collapsed'); }, target: () => _coachFirst(['#profileJourneySection', '.profile-action-row', '.profile-header']), title: 'Profile tracks your journey', body: 'Your profile keeps your XP, rank, streak, lesson progress, known words, translation attempts, and achievements — tap "Your Greek Journey" to expand it anytime. The settings gear in the top-left holds appearance, account, and calendar options.' }
 ];
 
