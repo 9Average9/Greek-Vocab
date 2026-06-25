@@ -16126,7 +16126,7 @@ function renderAtlasJourneyList(query) {
     const miles = _journeyTotalMiles(j);
     const stops = (j.steps || []).length;
     return `<button class="atlas-row" onclick="selectAtlasJourney('${_journeyEsc(j.id)}')">
-      <span class="atlas-row-icon atlas-row-icon-journey"><span class="material-symbols-outlined">route</span></span>
+      <span class="atlas-row-icon atlas-row-icon-journey"><span class="material-symbols-outlined">hiking</span></span>
       <span class="atlas-row-copy"><strong>${_journeyEsc(j.title)}</strong><small>${_journeyEsc(j.subtitle)} &middot; ${miles.toLocaleString()} mi &middot; ${stops} stops</small></span>
       <span class="material-symbols-outlined atlas-row-arrow">chevron_right</span>
     </button>`;
@@ -16197,7 +16197,6 @@ function _atlasRenderDetail(place) {
   detail.innerHTML = `<div class="atlas-card">
     <div class="atlas-card-head">
       <div><span class="journey-kicker">${_journeyEsc(_atlasKindLabel(place.kind))}</span><h2>${_journeyEsc(place.name)}</h2></div>
-      <button class="atlas-card-close" onclick="atlasBack()" aria-label="Back to list"><span class="material-symbols-outlined">close</span></button>
     </div>
     <div class="atlas-peek-sub"><span class="atlas-conf-tag ${conf.cls}"><span class="material-symbols-outlined">${conf.icon}</span>${conf.label}</span></div>
     ${inTiles ? `<div class="journey-peek-toggle atlas-detail-toggle" role="tablist" aria-label="Map view">
@@ -16691,7 +16690,7 @@ function renderBibleJourneysPage() {
       const stops = (j.steps || []).length;
       const firstRef = (j.steps || [])[0]?.ref || '';
       return `<button class="journey-list-card${j.id === journey.id ? ' active' : ''}" onclick="selectBibleJourney('${_journeyEsc(j.id)}')">
-      <span class="journey-list-orb"><span class="material-symbols-outlined">${j.id === journey.id ? 'near_me' : 'route'}</span></span>
+      <span class="journey-list-orb"><span class="material-symbols-outlined">${j.id === journey.id ? 'near_me' : 'hiking'}</span></span>
       <span class="journey-list-copy">
         <strong>${_journeyEsc(j.title)}</strong>
         <small>${_journeyEsc(j.subtitle)}</small>
@@ -28919,7 +28918,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.346";
+const APP_VERSION = "3.0.347";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28940,6 +28939,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.347 &mdash; Bigger, clearer journey & place maps</div>
+<ul>
+  <li><strong>Working compass</strong> &mdash; A live compass now sits on every journey and place map and always points to true north, even when the 3D view is tilted.</li>
+  <li><strong>Bigger maps, wider cards</strong> &mdash; Journey and place maps are larger and the whole layout uses more of the screen width.</li>
+  <li><strong>Places open on the modern map</strong> &mdash; Place maps default to the modern view and also carry the new compass.</li>
+  <li><strong>Cinematic zoom-in</strong> &mdash; Maps now open pulled far back and glide slowly in toward the chosen route or place.</li>
+  <li><strong>Cleaner chrome</strong> &mdash; Map credits moved into the info button at the top, the redundant close button is gone from place pages, and journeys use a new travel icon.</li>
+</ul>
 <div class="un-version-label">v3.0.346 &mdash; Easier to find your place on the map</div>
 <ul>
   <li><strong>More orientation markers</strong> &mdash; The Modern map view now labels far more modern cities and landmarks (Haifa, Nazareth, Tyre, Tarsus, Konya, Petra, Babylon, Corinth, and many more) so it is much easier to see where a journey sits today.</li>

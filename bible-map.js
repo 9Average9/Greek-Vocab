@@ -38,7 +38,8 @@
     fatalErrorNoted: false,
     coords: [],
     routeCoords: [],
-    routeSegmentMap: []
+    routeSegmentMap: [],
+    compassRose: null
   };
 
   function supported() {
@@ -113,20 +114,30 @@
       " &middot; <a href='https://maplibre.org' target='_blank' rel='noopener'>MapLibre</a>";
   }
 
-  function _syncAttributionOverlay(container) {
+  // A small compass rosette that always points to true north. Because the map
+  // can be pitched/bearing-rotated for the 3D view, the rose counter-rotates by
+  // the live map bearing so "N" keeps pointing north. Source attribution lives
+  // in the page's info panel instead of on the map itself.
+  function _syncCompass(container) {
     if (!container) return;
-    var old = container.querySelector('.bible-map-attribution');
+    var old = container.querySelector('.bible-map-compass');
     if (old) old.remove();
     var el = document.createElement('div');
-    el.className = 'bible-map-attribution';
-    el.innerHTML = _attributionHtml();
+    el.className = 'bible-map-compass';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = '<div class="bible-map-compass-rose">' +
+      '<span class="bible-map-compass-n">N</span>' +
+      '<span class="bible-map-compass-needle"></span></div>';
     container.appendChild(el);
+    state.compassRose = el.querySelector('.bible-map-compass-rose');
+    _updateCompass();
   }
 
-  function _removeAttributionOverlay(container) {
-    if (!container) return;
-    var old = container.querySelector('.bible-map-attribution');
-    if (old) old.remove();
+  function _updateCompass() {
+    if (!state.compassRose || !state.map) return;
+    var bearing = 0;
+    try { bearing = state.map.getBearing() || 0; } catch (e) {}
+    state.compassRose.style.transform = 'rotate(' + (-bearing) + 'deg)';
   }
 
   function _terrainSourceSpec(terrain, includeAttribution) {
@@ -428,13 +439,14 @@
       if (coords.length === 1) {
         var singleTarget = {
           center: coords[0],
-          zoom: Number(opts && opts.pinZoom ? opts.pinZoom : (terrain.enabled ? 8.1 : 7)),
+          zoom: Number(opts && opts.pinZoom ? opts.pinZoom : (terrain.enabled ? 8.6 : 7.6)),
           pitch: pitch,
           bearing: bearing
         };
         if (animateOpen && !reduce) {
-          map.jumpTo({ center: coords[0], zoom: Math.max(3, singleTarget.zoom - 1.35), pitch: Math.max(20, pitch - 22), bearing: bearing });
-          map.easeTo(Object.assign({}, singleTarget, { duration: 950, easing: function (t) { return 1 - Math.pow(1 - t, 3); } }));
+          // Start well pulled back and flat, then slowly settle in close to the place.
+          map.jumpTo({ center: coords[0], zoom: Math.max(2.6, singleTarget.zoom - 3.6), pitch: Math.max(0, pitch - 34), bearing: bearing });
+          map.easeTo(Object.assign({}, singleTarget, { duration: 2300, easing: function (t) { return 1 - Math.pow(1 - t, 3); } }));
         } else {
           map.jumpTo(singleTarget);
         }
@@ -453,20 +465,22 @@
       });
       var target = {
         center: map.getCenter(),
-        zoom: Math.min(map.getZoom() + (terrain.enabled ? 0.28 : 0), terrain.enabled ? 11.05 : 12),
+        zoom: Math.min(map.getZoom() + (terrain.enabled ? 0.5 : 0.25), terrain.enabled ? 11.4 : 12),
         pitch: pitch,
         bearing: bearing
       };
       if (animateOpen && !reduce) {
         var start = coords[0];
+        // Begin zoomed far out and flat over the start point, then glide the
+        // whole route into frame so the journey "arrives" instead of snapping.
         map.jumpTo({
           center: start,
-          zoom: Math.max(3.2, target.zoom - 1.55),
-          pitch: terrain.enabled ? Math.max(22, pitch - 24) : 0,
+          zoom: Math.max(2.8, target.zoom - 3.2),
+          pitch: terrain.enabled ? Math.max(0, pitch - 34) : 0,
           bearing: bearing
         });
         map.easeTo(Object.assign({}, target, {
-          duration: 1150,
+          duration: 2500,
           easing: function (t) { return 1 - Math.pow(1 - t, 3); }
         }));
       } else {
@@ -648,21 +662,26 @@
             opts.onError(err);
           }
         });
+        map.on('rotate', _updateCompass);
+        map.on('pitch', _updateCompass);
         map.on('load', function () {
           try {
             map.resize();
             if (state.terrain.enabled && !_supportsTerrain(map)) state.terrain.enabled = false;
-            _syncAttributionOverlay(container);
+            _syncCompass(container);
             _restoreMapEnhancements(false);
             _applyJourneyCamera(map, state.coords, state.opts || {}, true);
             map.triggerRepaint();
+            // Early resize keeps the canvas filled while the intro plays; the
+            // final re-fit runs after the (slower) fly-in so it isn't cut short.
+            setTimeout(function () { try { map.resize(); map.triggerRepaint(); } catch (e) {} }, 400);
             setTimeout(function () {
               try {
                 map.resize();
                 _applyJourneyCamera(map, state.coords, state.opts || {}, false);
                 map.triggerRepaint();
               } catch (e) {}
-            }, 900);
+            }, 2700);
             resolve(map);
           } catch (e) { reject(e); }
         });
@@ -770,8 +789,7 @@
   function destroy() {
     stop();
     _clearMarkers();
-    var container = state.map && state.map.getContainer ? state.map.getContainer() : null;
-    _removeAttributionOverlay(container);
+    state.compassRose = null;
     if (state.map) { try { state.map.remove(); } catch (e) {} state.map = null; }
     state.journey = null;
     state.coords = [];
