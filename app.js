@@ -16124,9 +16124,17 @@ function _appSetExpandOrigin(el, rect) {
   el.style.setProperty('--exp-l', Math.max(0, Math.round(rect.left)) + 'px');
 }
 
-function _appExpandTargetFromElement(target, launcher) {
-  if (!target || !launcher || _appReduceMotion()) return;
-  _appSetExpandOrigin(target, launcher.getBoundingClientRect());
+function _appLauncherRect(launcher) {
+  if (!launcher) return null;
+  const rect = launcher.getBoundingClientRect();
+  return rect && rect.width > 0 && rect.height > 0 ? rect : null;
+}
+
+function _appExpandTargetFromElement(target, launcher, savedRect = null) {
+  if (!target || _appReduceMotion()) return;
+  const rect = savedRect || _appLauncherRect(launcher);
+  if (!rect) return;
+  _appSetExpandOrigin(target, rect);
   _appPlayAnim(target, 'app-screen-expanding', 540, { bodyClass: 'app-launch-motion' });
 }
 
@@ -16164,12 +16172,14 @@ function _appSlideHomeFromCurrent() {
 }
 
 function openHabitBuilderFromWidget(launcher) {
+  const launchRect = _appLauncherRect(launcher);
   _appSuppressNextSlideIn = true;
   try { showNavPage('habits'); } finally { _appSuppressNextSlideIn = false; }
-  _appExpandTargetFromElement(document.getElementById('habitsPage'), launcher);
+  _appExpandTargetFromElement(document.getElementById('habitsPage'), launcher, launchRect);
 }
 
 function openHomeToolFromElement(launcher, tool) {
+  const launchRect = _appLauncherRect(launcher);
   const targetByTool = {
     study: 'studyLibraryModal',
     memorization: 'memorizationPage',
@@ -16180,7 +16190,7 @@ function openHomeToolFromElement(launcher, tool) {
   };
   if (tool === 'study') {
     openStudyLibrary();
-    _appExpandTargetFromElement(document.getElementById('studyLibraryModal'), launcher);
+    _appExpandTargetFromElement(document.getElementById('studyLibraryModal'), launcher, launchRect);
     return;
   }
   if (tool === 'memorization') openMemorizationPage();
@@ -16189,7 +16199,7 @@ function openHomeToolFromElement(launcher, tool) {
   else if (tool === 'translate') tryOpenLockedFeature('translate');
   else if (tool === 'test') tryOpenLockedFeature('test');
   const target = document.getElementById(targetByTool[tool]);
-  if (target?.classList.contains('active')) _appExpandTargetFromElement(target, launcher);
+  if (target?.classList.contains('active')) _appExpandTargetFromElement(target, launcher, launchRect);
 }
 // Home widget → Atlas, expanding the page out of the widget's footprint.
 // Remember the widget's screen rect so the page can collapse back into it on close.
@@ -29296,7 +29306,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.354";
+const APP_VERSION = "3.0.355";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29317,7 +29327,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.354 &mdash; Smoother journey maps</div>
+<div class="un-version-label">v3.0.355 &mdash; Smoother journey maps</div>
 <ul>
   <li><strong>Cleaner open &amp; close</strong> &mdash; The Journey Maps page expands out of the home tile and folds back into it, with no clipping flicker.</li>
   <li><strong>Polished swipes</strong> &mdash; Opening a journey or place slides in from the right and the back button slides cleanly back, with a quick swap when switching Journeys/Places.</li>
@@ -29325,6 +29335,10 @@ const UPDATE_NOTES_HTML = `
   <li><strong>Whole journey in frame</strong> &mdash; The opening zoom now settles with the entire route in view instead of the middle.</li>
   <li><strong>Smoother route playback</strong> &mdash; The travelling marker and follow camera move more evenly.</li>
   <li><strong>Tidier home tile</strong> &mdash; Removed the extra arrow on the Journey Maps tile.</li>
+</ul>
+<div class="un-version-label">v3.0.354 &mdash; Tool launch origin fix</div>
+<ul>
+  <li><strong>Expands from the button</strong> &mdash; Home tools now capture the pressed button's position before navigation, so the launch no longer starts from the top-left corner.</li>
 </ul>
 <div class="un-version-label">v3.0.353 &mdash; Cleaner swipe openings</div>
 <ul>
