@@ -28808,7 +28808,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.343";
+const APP_VERSION = "3.0.344";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28829,6 +28829,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.344 &mdash; Cleaner map attribution</div>
+<ul>
+  <li><strong>Less map clutter</strong> &mdash; Bible Journeys now uses a tiny app-styled attribution strip instead of the default map info control, with fuller source notes in the Journey info panel.</li>
+</ul>
 <div class="un-version-label">v3.0.343 &mdash; Bigger Bible Journeys terrain</div>
 <ul>
   <li><strong>More immersive maps</strong> &mdash; Journey maps now zoom in with a smoother 3D terrain entrance, stronger elevation, and richer roads/rivers over the atlas.</li>

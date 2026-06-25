@@ -103,6 +103,32 @@
     return '';
   }
 
+  function _attributionHtml() {
+    var terrain = state.terrain && state.terrain.enabled
+      ? " &middot; <a href='https://mapterhorn.com/attribution' target='_blank' rel='noopener'>Mapterhorn terrain</a>"
+      : '';
+    return "<a href='https://www.openstreetmap.org/copyright' target='_blank' rel='noopener'>&copy; OSM</a>" +
+      " &middot; <a href='https://protomaps.com' target='_blank' rel='noopener'>Protomaps</a>" +
+      terrain +
+      " &middot; <a href='https://maplibre.org' target='_blank' rel='noopener'>MapLibre</a>";
+  }
+
+  function _syncAttributionOverlay(container) {
+    if (!container) return;
+    var old = container.querySelector('.bible-map-attribution');
+    if (old) old.remove();
+    var el = document.createElement('div');
+    el.className = 'bible-map-attribution';
+    el.innerHTML = _attributionHtml();
+    container.appendChild(el);
+  }
+
+  function _removeAttributionOverlay(container) {
+    if (!container) return;
+    var old = container.querySelector('.bible-map-attribution');
+    if (old) old.remove();
+  }
+
   function _terrainSourceSpec(terrain, includeAttribution) {
     var spec = {
       type: 'raster-dem',
@@ -592,7 +618,7 @@
         var mapOpts = {
           container: container,
           style: _buildStyle(state.mode, pmtilesUrl, state.terrain),
-          attributionControl: true,
+          attributionControl: false,
           dragRotate: false,
           pitchWithRotate: false,
           cooperativeGestures: false,
@@ -626,6 +652,7 @@
           try {
             map.resize();
             if (state.terrain.enabled && !_supportsTerrain(map)) state.terrain.enabled = false;
+            _syncAttributionOverlay(container);
             _restoreMapEnhancements(false);
             _applyJourneyCamera(map, state.coords, state.opts || {}, true);
             map.triggerRepaint();
@@ -743,6 +770,8 @@
   function destroy() {
     stop();
     _clearMarkers();
+    var container = state.map && state.map.getContainer ? state.map.getContainer() : null;
+    _removeAttributionOverlay(container);
     if (state.map) { try { state.map.remove(); } catch (e) {} state.map = null; }
     state.journey = null;
     state.coords = [];

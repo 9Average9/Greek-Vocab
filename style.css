@@ -31895,19 +31895,32 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
 .journey-map-shell.gl-ready .journey-gl-map { display: block; }
 .journey-map-shell.gl-mounting svg,
 .journey-map-shell.gl-ready svg { display: none; }
-.journey-gl-map .maplibregl-ctrl-attrib,
-.atlas-gl-map .maplibregl-ctrl-attrib,
-.atlas-peek-gl .maplibregl-ctrl-attrib,
-.journey-peek-mapgl .maplibregl-ctrl-attrib {
-  font-size: 0.62rem;
-  background: color-mix(in srgb, var(--card-color) 86%, transparent);
+.bible-map-attribution {
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  z-index: 5;
+  max-width: calc(100% - 16px);
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card-color) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 12%, transparent);
+  color: color-mix(in srgb, var(--muted-color) 90%, var(--font-color));
+  font-size: 0.56rem;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: 0;
+  box-shadow: 0 4px 12px rgba(20, 28, 34, 0.12);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  pointer-events: auto;
+  white-space: nowrap;
 }
-.journey-gl-map .maplibregl-ctrl-attrib a,
-.atlas-gl-map .maplibregl-ctrl-attrib a,
-.atlas-peek-gl .maplibregl-ctrl-attrib a,
-.journey-peek-mapgl .maplibregl-ctrl-attrib a { color: var(--muted-color); }
+.bible-map-attribution a {
+  color: inherit;
+  text-decoration: none;
+}
+.bible-map-attribution a:hover { text-decoration: underline; }
 .bible-map-label {
   font-size: 0.74rem;
   font-weight: 900;
