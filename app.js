@@ -29316,7 +29316,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.356";
+const APP_VERSION = "3.0.357";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29337,6 +29337,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.357 &mdash; Styles restored</div>
+<ul>
+  <li><strong>Fixed broken styling</strong> &mdash; A missing bracket in the previous update stopped a large chunk of the app's styles and animations from loading. Everything is back.</li>
+</ul>
 <div class="un-version-label">v3.0.356 &mdash; Satisfying, themed transitions</div>
 <ul>
   <li><strong>Cleaner returns home</strong> &mdash; Closing Journey Maps now folds back into the tile while the home screen shows underneath — no blank backdrop or freeze.</li>

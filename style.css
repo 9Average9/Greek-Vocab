@@ -31429,6 +31429,7 @@ body.dark .rp-book-sep { background: #1f2937; }
   box-shadow:
     inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 55%, transparent),
     inset 0 0 34px color-mix(in srgb, var(--secondary-color) 20%, transparent);
+}
 /* Slide a place detail in/out as an overlay above the Atlas list (which stays
    visible underneath, so there's no blank flash on the way back). */
 @keyframes atlasDetailIn { from { transform: translateX(100%); opacity: 0.65; } to { transform: translateX(0); opacity: 1; } }
