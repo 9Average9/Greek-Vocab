@@ -31395,6 +31395,10 @@ body.dark .rp-book-sep { background: #1f2937; }
   padding: 0;
   border-radius: 0;
   box-shadow: none;
+  /* Cancel the generic .screen fade — these pages drive their own open/close/slide
+     transitions. Leaving screenFade in re-fires it when a transition class is
+     removed, which caused a post-open "reposition" flicker. */
+  animation: none;
   background: var(--primary-light) !important;
 }
 /* Press-to-expand: the page grows out of the home widget's footprint. */
@@ -31402,26 +31406,55 @@ body.dark .rp-book-sep { background: #1f2937; }
   from { clip-path: inset(var(--exp-t, 35%) var(--exp-r, 8%) var(--exp-b, 40%) var(--exp-l, 8%) round 22px); opacity: 0.5; }
   to   { clip-path: inset(0px 0px 0px 0px round 0px); opacity: 1; }
 }
+/* Collapse: the reverse, folding the page back into the widget on the way home. */
+@keyframes journeyScreenCollapse {
+  from { clip-path: inset(0px 0px 0px 0px round 0px); opacity: 1; }
+  to   { clip-path: inset(var(--exp-t, 35%) var(--exp-r, 8%) var(--exp-b, 40%) var(--exp-l, 8%) round 22px); opacity: 0.25; }
+}
 #atlasPage.screen.active.screen-expanding,
 #journeysPage.screen.active.screen-expanding {
-  animation: journeyScreenExpand 0.46s cubic-bezier(.4, 0, .2, 1);
+  animation: journeyScreenExpand 0.46s cubic-bezier(.4, 0, .2, 1) both;
+}
+#atlasPage.screen.active.screen-collapsing,
+#journeysPage.screen.active.screen-collapsing {
+  animation: journeyScreenCollapse 0.40s cubic-bezier(.4, 0, .2, 1) forwards;
+  z-index: 1002;
 }
 /* Push/pop slide between the list and a selected journey. */
 @keyframes journeyScreenInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
 @keyframes journeyScreenOutRight { from { transform: translateX(0); } to { transform: translateX(100%); } }
-#journeysPage.screen.active.screen-slide-in-right { animation: journeyScreenInRight 0.34s cubic-bezier(.4, 0, .2, 1); }
-#journeysPage.screen.active.screen-slide-out-right { animation: journeyScreenOutRight 0.30s cubic-bezier(.4, 0, .2, 1) forwards; }
-/* Slide a place detail in/out over the Atlas list. */
+#journeysPage.screen.active.screen-slide-in-right { animation: journeyScreenInRight 0.34s cubic-bezier(.4, 0, .2, 1) both; }
+/* While sliding back out, ride above the destination screen so it shows cleanly underneath. */
+#journeysPage.screen.active.screen-slide-out-right { animation: journeyScreenOutRight 0.30s cubic-bezier(.4, 0, .2, 1) forwards; z-index: 1002; }
+/* Slide a place detail in/out as an overlay above the Atlas list (which stays
+   visible underneath, so there's no blank flash on the way back). */
 @keyframes atlasDetailIn { from { transform: translateX(100%); opacity: 0.65; } to { transform: translateX(0); opacity: 1; } }
 @keyframes atlasDetailOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0.65; } }
+.atlas-content { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
+.atlas-detailpage.detail-in,
+.atlas-detailpage.detail-out {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--primary-light);
+}
 .atlas-detailpage.detail-in { animation: atlasDetailIn 0.32s cubic-bezier(.4, 0, .2, 1); }
-.atlas-detailpage.detail-out { animation: atlasDetailOut 0.28s cubic-bezier(.4, 0, .2, 1) forwards; }
+.atlas-detailpage.detail-out { animation: atlasDetailOut 0.30s cubic-bezier(.4, 0, .2, 1) forwards; }
+/* Atlas tab swap (Journeys ⇄ Places). */
+@keyframes atlasListInRight { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+@keyframes atlasListInLeft { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+.atlas-list.swap-right { animation: atlasListInRight 0.24s cubic-bezier(.4, 0, .2, 1); }
+.atlas-list.swap-left { animation: atlasListInLeft 0.24s cubic-bezier(.4, 0, .2, 1); }
 @media (prefers-reduced-motion: reduce) {
   #atlasPage.screen.active.screen-expanding,
+  #atlasPage.screen.active.screen-collapsing,
+  #journeysPage.screen.active.screen-collapsing,
   #journeysPage.screen.active.screen-slide-in-right,
   #journeysPage.screen.active.screen-slide-out-right,
   .atlas-detailpage.detail-in,
-  .atlas-detailpage.detail-out { animation: none; }
+  .atlas-detailpage.detail-out,
+  .atlas-list.swap-right,
+  .atlas-list.swap-left { animation: none; }
 }
 
 /* ── Bible Atlas ── */
@@ -32011,6 +32044,40 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
     var(--secondary-color) 0 50%,
     color-mix(in srgb, var(--muted-color) 50%, var(--card-color)) 50% 100%);
 }
+/* Reset-view button: appears top-right once the user pans/zooms the map away
+   from its opening framing, and flies the camera back when tapped. */
+.bible-map-reset {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 7;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 30%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card-color) 90%, transparent);
+  color: var(--secondary-color);
+  font-weight: 850;
+  font-size: 0.78rem;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(20, 28, 34, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.bible-map-reset.visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.bible-map-reset .material-symbols-outlined { font-size: 18px; }
+.bible-map-reset:active { transform: scale(0.95); }
 .bible-map-attribution {
   position: absolute;
   left: 8px;
