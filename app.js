@@ -29355,6 +29355,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.354 &mdash; Tool launch origin fix</div>
 <ul>
   <li><strong>Expands from the button</strong> &mdash; Home tools now capture the pressed button's position before navigation, so the launch no longer starts from the top-left corner.</li>
+  <li><strong>Cleaner launch timing</strong> &mdash; Habit Builder uses the same saved launch position so it opens from its card too.</li>
 </ul>
 <div class="un-version-label">v3.0.353 &mdash; Cleaner swipe openings</div>
 <ul>

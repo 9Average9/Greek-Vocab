@@ -31429,20 +31429,6 @@ body.dark .rp-book-sep { background: #1f2937; }
   box-shadow:
     inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 55%, transparent),
     inset 0 0 34px color-mix(in srgb, var(--secondary-color) 20%, transparent);
-}
-/* Push/pop slide between the list and a selected journey. */
-@keyframes journeyScreenInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
-@keyframes journeyScreenOutRight { from { transform: translateX(0); } to { transform: translateX(100%); } }
-#journeysPage.screen.active.screen-slide-in-right {
-  animation: journeyScreenInRight 0.34s cubic-bezier(.4, 0, .2, 1) both;
-  box-shadow: -14px 0 36px color-mix(in srgb, var(--secondary-color) 28%, transparent);
-}
-/* While sliding back out, ride above the destination screen so it shows cleanly underneath. */
-#journeysPage.screen.active.screen-slide-out-right {
-  animation: journeyScreenOutRight 0.30s cubic-bezier(.4, 0, .2, 1) forwards;
-  z-index: 1002;
-  box-shadow: -14px 0 36px color-mix(in srgb, var(--secondary-color) 28%, transparent);
-}
 /* Slide a place detail in/out as an overlay above the Atlas list (which stays
    visible underneath, so there's no blank flash on the way back). */
 @keyframes atlasDetailIn { from { transform: translateX(100%); opacity: 0.65; } to { transform: translateX(0); opacity: 1; } }
