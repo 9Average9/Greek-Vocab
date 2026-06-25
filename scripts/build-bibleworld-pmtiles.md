@@ -81,3 +81,22 @@ That's the only switch. While it is an empty string, the app keeps using the
 offline-safe schematic SVG map. Once it points at a reachable file, the Journeys
 page shows the real top-down map when the device is online, and still falls back to
 the schematic when offline.
+
+## 5. Optional 3D terrain
+
+The vector `.pmtiles` basemap is not elevation data. The 3D terrain upgrade uses
+a separate MapLibre `raster-dem` source configured through `BIBLE_TERRAIN_OPTIONS`
+in `app.js`.
+
+For development, the app can point at the public Mapterhorn TileJSON used by the
+MapLibre terrain examples:
+
+```js
+tilejsonUrl: 'https://tiles.mapterhorn.com/tilejson.json'
+```
+
+Before production, verify the elevation provider's usage terms, attribution,
+commercial permission, caching permission, and availability. If you self-host a
+Bible-world DEM, keep the same app architecture and replace `tilejsonUrl` with
+your own TileJSON URL or direct `tiles: [...]` template. See
+`docs/bible-journeys-terrain.md`.

@@ -12,3 +12,8 @@ offline-friendly and never hotlinks third-party CDNs.
 
 Regenerate the style layers with `node scripts/build-pm-style.js`.
 Generate/host the tile data per `scripts/build-bibleworld-pmtiles.md`.
+
+3D terrain is a separate raster DEM source layered with MapLibre terrain; it is
+not embedded in the Protomaps PMTiles basemap. See
+`docs/bible-journeys-terrain.md` for the configurable elevation source and
+self-hosting notes.

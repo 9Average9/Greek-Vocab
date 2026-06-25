@@ -61,3 +61,10 @@ Still open:
 - Add per-verse journey markers inside Rhema when a passage is part of a route.
 - Keep modern travel comparison only as context, not as the main teaching claim.
 - When moving to MapLibre, derive point positions from real coordinates rather than the current per-journey schematic placement.
+
+## Terrain Notes
+
+The MapLibre renderer now supports true 3D terrain from a separate raster DEM
+source while preserving the existing Protomaps PMTiles basemap and schematic SVG
+fallback. See `docs/bible-journeys-terrain.md` for the source configuration,
+licensing cautions, replacement path, and testing checklist.

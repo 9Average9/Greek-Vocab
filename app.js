@@ -15688,6 +15688,21 @@ const JOURNEY_MODERN_LANDMARKS = [
 // the browser allows the fetch — cross-origin hosts like GitHub Releases are
 // blocked by CORS). Empty string keeps the offline-safe schematic map.
 const BIBLE_WORLD_PMTILES_URL = 'bibleworld.pmtiles';
+const BIBLE_TERRAIN_OPTIONS = {
+  enabled: true,
+  tilejsonUrl: 'https://tiles.mapterhorn.com/tilejson.json',
+  tiles: null,
+  encoding: 'terrarium',
+  tileSize: 512,
+  minzoom: 0,
+  maxzoom: 14,
+  exaggeration: 1.28,
+  pitch: 48,
+  bearing: -16,
+  maxPitch: 65,
+  hillshade: true,
+  attribution: "<a href='https://mapterhorn.com/attribution'>Terrain: &copy; Mapterhorn</a>"
+};
 let _journeyGLActive = false;          // true once a real map is mounted + loaded
 let _bibleMapLibsPromise = null;
 
@@ -15778,6 +15793,8 @@ function _journeyMountGL(journey) {
     return window.BibleMap.render(host, journey, {
       mode: _journeyMode,
       pmtilesUrl: pmtilesUrl,
+      terrain: BIBLE_TERRAIN_OPTIONS,
+      followTraveler: true,
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(journey, 7),
       onError: (err) => {
@@ -16153,6 +16170,8 @@ function _atlasMountGL(place) {
     return window.BibleMap.render(host, pseudo, {
       mode: _atlasDetailMode,
       pmtilesUrl: _journeyResolvePmtiles(),
+      terrain: BIBLE_TERRAIN_OPTIONS,
+      followTraveler: false,
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(pseudo, 6),
       pinZoom: 7,
@@ -16317,6 +16336,7 @@ function _atlasPeekMountGL(place) {
     if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('map unavailable');
     return window.BibleMap.render(host, pseudo, {
       mode: _atlasPeekMode, pmtilesUrl: _journeyResolvePmtiles(), labelFor: _journeyLabelFor,
+      terrain: BIBLE_TERRAIN_OPTIONS, followTraveler: false,
       landmarks: _journeyModernLandmarks(pseudo, 6), pinZoom: 7,
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
@@ -16903,6 +16923,8 @@ function _journeyPeekMountGLLegacy(journey, mode = _journeyPeekMode) {
     return window.BibleMap.render(host, journey, {
       mode,
       pmtilesUrl: _journeyResolvePmtiles(),
+      terrain: BIBLE_TERRAIN_OPTIONS,
+      followTraveler: false,
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(journey, 5),
       onError: (err) => { wrap.classList.remove('gl-mounting', 'gl-ready'); _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err)); }
@@ -16945,6 +16967,8 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
     return window.BibleMap.render(host, journey, {
       mode,
       pmtilesUrl: _journeyResolvePmtiles(),
+      terrain: BIBLE_TERRAIN_OPTIONS,
+      followTraveler: false,
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(journey, 5),
       onError: (err) => {
@@ -28781,7 +28805,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.341";
+const APP_VERSION = "3.0.342";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28802,6 +28826,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.342 &mdash; 3D Bible Journeys terrain</div>
+<ul>
+  <li><strong>Terrain atlas maps</strong> &mdash; Bible Journeys now opens with a pitched 3D terrain camera, subtle hillshade, and route styling that stays readable over mountains and valleys.</li>
+  <li><strong>Safer fallbacks</strong> &mdash; If elevation tiles fail, the real PMTiles map stays usable; if the real map fails, the schematic fallback still takes over.</li>
+  <li><strong>Future-ready terrain config</strong> &mdash; The DEM source is configurable so the current testing source can be swapped for a self-hosted Bible-world terrain set later.</li>
+</ul>
 <div class="un-version-label">v3.0.341 &mdash; Journey widget matches your theme</div>
 <ul>
   <li><strong>Themed Journey Maps widget</strong> &mdash; The Journey Maps widget on Home now takes on your selected theme color, the same way the Habit Builder widget does (in light and dark mode).</li>
