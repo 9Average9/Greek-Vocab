@@ -19763,7 +19763,7 @@ body.dark .bn-item::before {
   isolation: isolate; /* contain the color-tint blend to this artwork only */
 }
 .hjw-art {
-  right: -34px;
+  right: -12px;
   width: min(68vw, 272px);
   border-radius: 24px;
   background:
@@ -19798,7 +19798,7 @@ body.dark .bn-item::before {
   mix-blend-mode: normal;
 }
 .hjw-art img {
-  object-position: 52% 54%;
+  object-position: 62% 26%;
   opacity: 0.9;
   filter: saturate(1.08) contrast(1.03);
 }
@@ -31390,7 +31390,38 @@ body.dark .rp-book-sep { background: #1f2937; }
   height: 100dvh;
   z-index: 1000;
   overflow: hidden;
+  /* Full-bleed: drop the generic .screen card frame (padding/radius/shadow) so the
+     top bar and content run edge to edge instead of sitting in an inset box. */
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
   background: var(--primary-light) !important;
+}
+/* Press-to-expand: the page grows out of the home widget's footprint. */
+@keyframes journeyScreenExpand {
+  from { clip-path: inset(var(--exp-t, 35%) var(--exp-r, 8%) var(--exp-b, 40%) var(--exp-l, 8%) round 22px); opacity: 0.5; }
+  to   { clip-path: inset(0px 0px 0px 0px round 0px); opacity: 1; }
+}
+#atlasPage.screen.active.screen-expanding,
+#journeysPage.screen.active.screen-expanding {
+  animation: journeyScreenExpand 0.46s cubic-bezier(.4, 0, .2, 1);
+}
+/* Push/pop slide between the list and a selected journey. */
+@keyframes journeyScreenInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes journeyScreenOutRight { from { transform: translateX(0); } to { transform: translateX(100%); } }
+#journeysPage.screen.active.screen-slide-in-right { animation: journeyScreenInRight 0.34s cubic-bezier(.4, 0, .2, 1); }
+#journeysPage.screen.active.screen-slide-out-right { animation: journeyScreenOutRight 0.30s cubic-bezier(.4, 0, .2, 1) forwards; }
+/* Slide a place detail in/out over the Atlas list. */
+@keyframes atlasDetailIn { from { transform: translateX(100%); opacity: 0.65; } to { transform: translateX(0); opacity: 1; } }
+@keyframes atlasDetailOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0.65; } }
+.atlas-detailpage.detail-in { animation: atlasDetailIn 0.32s cubic-bezier(.4, 0, .2, 1); }
+.atlas-detailpage.detail-out { animation: atlasDetailOut 0.28s cubic-bezier(.4, 0, .2, 1) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  #atlasPage.screen.active.screen-expanding,
+  #journeysPage.screen.active.screen-slide-in-right,
+  #journeysPage.screen.active.screen-slide-out-right,
+  .atlas-detailpage.detail-in,
+  .atlas-detailpage.detail-out { animation: none; }
 }
 
 /* ── Bible Atlas ── */
@@ -31622,10 +31653,10 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
   grid-template-columns: 46px minmax(0, 1fr) 46px;
   align-items: center;
   gap: 10px;
-  padding: calc(env(safe-area-inset-top, 0px) + 12px) 12px 12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 12px;
   background: var(--card-color);
-  border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 10%, var(--border-color));
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--secondary-color) 8%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 12%, var(--border-color));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--secondary-color) 6%, transparent);
   z-index: 2;
 }
 .journey-icon-btn {

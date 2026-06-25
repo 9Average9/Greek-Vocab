@@ -15915,6 +15915,56 @@ function _journeyById(id) {
   return BIBLE_JOURNEYS.find(j => j.id === id) || BIBLE_JOURNEYS[0];
 }
 
+// ── Journey/Atlas screen transitions ────────────────────────────────────────
+function _journeyReduceMotion() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+// Play a one-shot CSS animation class, restarting it cleanly each time.
+function _journeyPlayAnim(el, cls) {
+  if (!el || _journeyReduceMotion()) return;
+  el.classList.remove(cls);
+  void el.offsetWidth;                 // force reflow so the animation re-fires
+  el.classList.add(cls);
+  el.addEventListener('animationend', function h() {
+    el.classList.remove(cls);
+    el.removeEventListener('animationend', h);
+  }, { once: true });
+}
+// Slide an element out, then run done() (with a timeout safety net).
+function _journeySlideOutThen(el, cls, done) {
+  if (!el || _journeyReduceMotion()) { done(); return; }
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    el.classList.remove(cls);
+    el.removeEventListener('animationend', finish);
+    done();
+  };
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+  el.addEventListener('animationend', finish, { once: true });
+  setTimeout(finish, 420);
+}
+// Home widget → Atlas, expanding the page out of the widget's footprint.
+function openJourneysFromWidget() {
+  const w = document.getElementById('homeJourneyWidget');
+  const page = document.getElementById('atlasPage');
+  // Capture the widget's footprint BEFORE navigating (it gets hidden on open).
+  let rect = null;
+  if (w && page && !_journeyReduceMotion()) rect = w.getBoundingClientRect();
+  openBibleAtlasPage();
+  if (rect && page) {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    page.style.setProperty('--exp-t', Math.max(0, Math.round(rect.top)) + 'px');
+    page.style.setProperty('--exp-r', Math.max(0, Math.round(vw - rect.right)) + 'px');
+    page.style.setProperty('--exp-b', Math.max(0, Math.round(vh - rect.bottom)) + 'px');
+    page.style.setProperty('--exp-l', Math.max(0, Math.round(rect.left)) + 'px');
+    _journeyPlayAnim(page, 'screen-expanding');
+  }
+}
+
 function openBibleJourneysPage(id = _journeySelectedId) {
   if (id) _journeySelectedId = id;
   _journeyMode = 'ancient';
@@ -15924,6 +15974,9 @@ function openBibleJourneysPage(id = _journeySelectedId) {
   showScreen('journeysPage');
   hideBottomNav();
   renderBibleJourneysPage();
+  // Always open a freshly selected journey scrolled to the top.
+  document.querySelector('.journeys-scroll')?.scrollTo({ top: 0 });
+  _journeyPlayAnim(document.getElementById('journeysPage'), 'screen-slide-in-right');
   setTimeout(_applyPendingAppUpdateReload, 50);
 }
 
@@ -16030,12 +16083,15 @@ function closeAtlasPlaceInfo(e) {
 // from the list itself, leave the Atlas for home.
 function atlasBack() {
   if (_atlasView === 'place') {
-    _atlasGLToken++;
-    try { window.BibleMap?.destroy?.(); } catch (e) {}
-    _atlasSelected = null;
-    _atlasShowList();
-    const s = document.getElementById('atlasScroll');
-    if (s) s.scrollTop = _atlasScrollMemory;
+    const finish = () => {
+      _atlasGLToken++;
+      try { window.BibleMap?.destroy?.(); } catch (e) {}
+      _atlasSelected = null;
+      _atlasShowList();
+      const s = document.getElementById('atlasScroll');
+      if (s) s.scrollTop = _atlasScrollMemory;
+    };
+    _journeySlideOutThen(document.getElementById('atlasDetailPage'), 'detail-out', finish);
   } else {
     showNavPage('home');
   }
@@ -16145,12 +16201,15 @@ function selectAtlasJourney(id) {
 function bibleJourneyBack() {
   if (typeof _journeyStopPlay === 'function') _journeyStopPlay();
   if (typeof closeBibleJourneyInfo === 'function') closeBibleJourneyInfo();
-  if (_journeyFromAtlas) {
-    _journeyFromAtlas = false;
-    openBibleAtlasPage({ restore: true });
-  } else {
-    showNavPage('home');
-  }
+  const done = () => {
+    if (_journeyFromAtlas) {
+      _journeyFromAtlas = false;
+      openBibleAtlasPage({ restore: true });
+    } else {
+      showNavPage('home');
+    }
+  };
+  _journeySlideOutThen(document.getElementById('journeysPage'), 'screen-slide-out-right', done);
 }
 
 function _atlasKindIcon(kind) {
@@ -16180,7 +16239,9 @@ function selectAtlasPlace(name) {
   if (t) t.textContent = place.name;
   _atlasSetHeaderButtons('place');
   _atlasRenderDetail(place);
-  document.getElementById('atlasDetailPage')?.scrollTo({ top: 0 });
+  const detail = document.getElementById('atlasDetailPage');
+  detail?.scrollTo({ top: 0 });
+  _journeyPlayAnim(detail, 'detail-in');
 }
 
 function clearAtlasSelection() {
@@ -28918,7 +28979,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.348";
+const APP_VERSION = "3.0.349";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28939,6 +29000,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.349 &mdash; Sleeker, full-width journey maps</div>
+<ul>
+  <li><strong>Edge-to-edge layout</strong> &mdash; The journeys and places pages now run full width; the top bar, lists, and map cards no longer sit in an inset box.</li>
+  <li><strong>Smooth transitions</strong> &mdash; The Journey Maps home widget now expands open from the tile, and opening a journey or place slides in from the right (back slides it away).</li>
+  <li><strong>Always start at the top</strong> &mdash; Opening a journey or place now begins at the top of the page instead of a remembered scroll spot.</li>
+  <li><strong>Polished widget art</strong> &mdash; The Journey Maps tile artwork is repositioned so the whole flag shows.</li>
+</ul>
 <div class="un-version-label">v3.0.348 &mdash; Open on the Bible-times map</div>
 <ul>
   <li><strong>Bible-times map by default</strong> &mdash; Journeys and places now all open on the Bible Map view; tap Modern any time to compare with today.</li>
