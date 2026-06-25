@@ -16192,21 +16192,44 @@ function openHomeToolFromElement(launcher, tool) {
   if (target?.classList.contains('active')) _appExpandTargetFromElement(target, launcher);
 }
 // Home widget → Atlas, expanding the page out of the widget's footprint.
+// Remember the widget's screen rect so the page can collapse back into it on close.
+let _lastWidgetRect = null;
+function _setExpandVars(page, r) {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  page.style.setProperty('--exp-t', Math.max(0, Math.round(r.top)) + 'px');
+  page.style.setProperty('--exp-r', Math.max(0, Math.round(vw - r.right)) + 'px');
+  page.style.setProperty('--exp-b', Math.max(0, Math.round(vh - r.bottom)) + 'px');
+  page.style.setProperty('--exp-l', Math.max(0, Math.round(r.left)) + 'px');
+}
 function openJourneysFromWidget() {
   const w = document.getElementById('homeJourneyWidget');
   const page = document.getElementById('atlasPage');
   // Capture the widget's footprint BEFORE navigating (it gets hidden on open).
-  let rect = null;
-  if (w && page && !_journeyReduceMotion()) rect = w.getBoundingClientRect();
+  if (w && !_journeyReduceMotion()) _lastWidgetRect = w.getBoundingClientRect();
   openBibleAtlasPage();
-  if (rect && page) {
-    const vw = window.innerWidth, vh = window.innerHeight;
-    page.style.setProperty('--exp-t', Math.max(0, Math.round(rect.top)) + 'px');
-    page.style.setProperty('--exp-r', Math.max(0, Math.round(vw - rect.right)) + 'px');
-    page.style.setProperty('--exp-b', Math.max(0, Math.round(vh - rect.bottom)) + 'px');
-    page.style.setProperty('--exp-l', Math.max(0, Math.round(rect.left)) + 'px');
+  if (_lastWidgetRect && page && !_journeyReduceMotion()) {
+    _setExpandVars(page, _lastWidgetRect);
     _journeyPlayAnim(page, 'screen-expanding');
   }
+}
+// Collapse a full-screen journey/atlas page back into the widget, then go home.
+function _collapseToHome(pageId) {
+  const page = document.getElementById(pageId);
+  if (!page || _journeyReduceMotion() || !_lastWidgetRect) { showNavPage('home'); return; }
+  _setExpandVars(page, _lastWidgetRect);
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    page.classList.remove('screen-collapsing');
+    page.removeEventListener('animationend', finish);
+    showNavPage('home');
+  };
+  page.classList.remove('screen-collapsing');
+  void page.offsetWidth;
+  page.classList.add('screen-collapsing');
+  page.addEventListener('animationend', finish, { once: true });
+  setTimeout(finish, 520);
 }
 
 function openBibleJourneysPage(id = _journeySelectedId) {
@@ -16327,17 +16350,21 @@ function closeAtlasPlaceInfo(e) {
 // from the list itself, leave the Atlas for home.
 function atlasBack() {
   if (_atlasView === 'place') {
+    const detail = document.getElementById('atlasDetailPage');
+    // Reveal the list underneath first so the detail slides off over it cleanly.
+    document.getElementById('atlasBrowser')?.classList.remove('hidden');
     const finish = () => {
       _atlasGLToken++;
       try { window.BibleMap?.destroy?.(); } catch (e) {}
       _atlasSelected = null;
+      detail?.classList.remove('detail-out');
       _atlasShowList();
       const s = document.getElementById('atlasScroll');
       if (s) s.scrollTop = _atlasScrollMemory;
     };
-    _journeySlideOutThen(document.getElementById('atlasDetailPage'), 'detail-out', finish);
+    _journeySlideOutThen(detail, 'detail-out', finish);
   } else {
-    showNavPage('home');
+    _collapseToHome('atlasPage');
   }
 }
 
@@ -16360,6 +16387,9 @@ function setAtlasTab(tab) {
   }
   renderAtlasTab('');
   document.getElementById('atlasScroll')?.scrollTo({ top: 0 });
+  // Slide the list in from the side of the tab that was tapped (Journeys is left,
+  // Places is right) so switching tabs reads as a quick swap.
+  _journeyPlayAnim(document.getElementById('atlasList'), _atlasTab === 'places' ? 'swap-right' : 'swap-left');
 }
 
 // Smart search: lowercase, split into words, require EVERY word to appear in the
@@ -16445,15 +16475,18 @@ function selectAtlasJourney(id) {
 function bibleJourneyBack() {
   if (typeof _journeyStopPlay === 'function') _journeyStopPlay();
   if (typeof closeBibleJourneyInfo === 'function') closeBibleJourneyInfo();
-  const done = () => {
-    if (_journeyFromAtlas) {
-      _journeyFromAtlas = false;
-      openBibleAtlasPage({ restore: true });
-    } else {
-      showNavPage('home');
-    }
-  };
-  _journeySlideOutThen(document.getElementById('journeysPage'), 'screen-slide-out-right', done);
+  const jp = document.getElementById('journeysPage');
+  if (_journeyFromAtlas) {
+    _journeyFromAtlas = false;
+    if (!jp || _journeyReduceMotion()) { openBibleAtlasPage({ restore: true }); return; }
+    // Reveal the Atlas underneath, then slide the journey page off to the right
+    // (it rides above via z-index) so there's no blank flash on the way back.
+    openBibleAtlasPage({ restore: true });
+    jp.classList.add('active');
+    _journeySlideOutThen(jp, 'screen-slide-out-right', () => { jp.classList.remove('active'); });
+  } else {
+    _collapseToHome('journeysPage');
+  }
 }
 
 function _atlasKindIcon(kind) {
@@ -16477,15 +16510,30 @@ function selectAtlasPlace(name) {
   _atlasSelected = place;
   _atlasScrollMemory = document.getElementById('atlasScroll')?.scrollTop || 0;
   _atlasView = 'place';
-  document.getElementById('atlasBrowser')?.classList.add('hidden');
-  document.getElementById('atlasDetailPage')?.classList.remove('hidden');
+  const browser = document.getElementById('atlasBrowser');
+  const detail = document.getElementById('atlasDetailPage');
+  detail?.classList.remove('hidden');
   const t = document.getElementById('atlasHeaderTitle');
   if (t) t.textContent = place.name;
   _atlasSetHeaderButtons('place');
   _atlasRenderDetail(place);
-  const detail = document.getElementById('atlasDetailPage');
   detail?.scrollTo({ top: 0 });
-  _journeyPlayAnim(detail, 'detail-in');
+  const hideBrowser = () => browser?.classList.add('hidden');
+  // Slide the detail in as an overlay; keep the list underneath until it lands.
+  if (!detail || _journeyReduceMotion()) { hideBrowser(); return; }
+  detail.classList.remove('detail-in');
+  void detail.offsetWidth;
+  detail.classList.add('detail-in');
+  let done = false;
+  const fin = () => {
+    if (done) return;
+    done = true;
+    detail.classList.remove('detail-in');
+    detail.removeEventListener('animationend', fin);
+    hideBrowser();
+  };
+  detail.addEventListener('animationend', fin, { once: true });
+  setTimeout(fin, 420);
 }
 
 function clearAtlasSelection() {
@@ -29248,7 +29296,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.353";
+const APP_VERSION = "3.0.354";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29269,6 +29317,15 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.354 &mdash; Smoother journey maps</div>
+<ul>
+  <li><strong>Cleaner open &amp; close</strong> &mdash; The Journey Maps page expands out of the home tile and folds back into it, with no clipping flicker.</li>
+  <li><strong>Polished swipes</strong> &mdash; Opening a journey or place slides in from the right and the back button slides cleanly back, with a quick swap when switching Journeys/Places.</li>
+  <li><strong>Reset view button</strong> &mdash; Pan or zoom a map and a Reset button appears top-right to fly the camera back to the opening view.</li>
+  <li><strong>Whole journey in frame</strong> &mdash; The opening zoom now settles with the entire route in view instead of the middle.</li>
+  <li><strong>Smoother route playback</strong> &mdash; The travelling marker and follow camera move more evenly.</li>
+  <li><strong>Tidier home tile</strong> &mdash; Removed the extra arrow on the Journey Maps tile.</li>
+</ul>
 <div class="un-version-label">v3.0.353 &mdash; Cleaner swipe openings</div>
 <ul>
   <li><strong>Rhema-style swipes</strong> &mdash; App pages now slide over a solid theme stage instead of letting the previous screen peek through.</li>

@@ -39,7 +39,10 @@
     coords: [],
     routeCoords: [],
     routeSegmentMap: [],
-    compassRose: null
+    compassRose: null,
+    homeCamera: null,
+    resetBtn: null,
+    userMoved: false
   };
 
   function supported() {
@@ -138,6 +141,42 @@
     var bearing = 0;
     try { bearing = state.map.getBearing() || 0; } catch (e) {}
     state.compassRose.style.transform = 'rotate(' + (-bearing) + 'deg)';
+  }
+
+  // Reset-view control: hidden until the user drags/zooms the map, then flies the
+  // camera back to the framing it opened with.
+  function _syncResetButton(container) {
+    if (!container) return;
+    var old = container.querySelector('.bible-map-reset');
+    if (old) old.remove();
+    var el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'bible-map-reset';
+    el.setAttribute('aria-label', 'Reset map view');
+    el.innerHTML = '<span class="material-symbols-outlined">recenter</span><span>Reset</span>';
+    el.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      _resetCamera();
+    });
+    container.appendChild(el);
+    state.resetBtn = el;
+  }
+
+  function _showReset(show) {
+    if (state.resetBtn) state.resetBtn.classList.toggle('visible', !!show);
+  }
+
+  function _resetCamera() {
+    if (!state.map || !state.homeCamera) return;
+    state.userMoved = false;
+    _showReset(false);
+    try {
+      state.map.easeTo(Object.assign({}, state.homeCamera, {
+        duration: 1000,
+        easing: function (t) { return 1 - Math.pow(1 - t, 3); }
+      }));
+    } catch (e) {}
   }
 
   function _terrainSourceSpec(terrain, includeAttribution) {
@@ -420,12 +459,16 @@
     var rect = c ? c.getBoundingClientRect() : { width: 360, height: 260 };
     var w = Math.max(1, rect.width || 360);
     var h = Math.max(1, rect.height || 260);
-    var narrow = w < 430;
+    var terrain = state.terrain || { enabled: false };
+    // Generous, roughly even padding so the whole route (both endpoints) sits
+    // comfortably inside the frame. A pitched 3D view foreshortens the far edge,
+    // so give the top extra room when terrain is on.
+    var base = Math.round(Math.max(34, w * 0.1));
     return {
-      top: Math.round(narrow ? 30 : 34),
-      left: Math.round(narrow ? 34 : 36),
-      right: Math.round(narrow ? 38 : 38),
-      bottom: Math.round(Math.max(42, h * (narrow ? 0.16 : 0.13)))
+      top: Math.round(base + (terrain.enabled ? h * 0.14 : h * 0.04)),
+      left: base,
+      right: base,
+      bottom: Math.round(base + h * (terrain.enabled ? 0.1 : 0.08))
     };
   }
 
@@ -443,6 +486,7 @@
           pitch: pitch,
           bearing: bearing
         };
+        state.homeCamera = { center: coords[0], zoom: singleTarget.zoom, pitch: pitch, bearing: bearing };
         if (animateOpen && !reduce) {
           // Start well pulled back and flat, then slowly settle in close to the place.
           map.jumpTo({ center: coords[0], zoom: Math.max(2.6, singleTarget.zoom - 3.6), pitch: Math.max(0, pitch - 34), bearing: bearing });
@@ -452,6 +496,9 @@
         }
         return;
       }
+      // Frame the WHOLE route. fitBounds (run at the final pitch/bearing) already
+      // fits both endpoints; we then ease back a touch instead of zooming past it,
+      // so the start and end never get cropped out of view.
       map.jumpTo({
         center: map.getCenter(),
         zoom: map.getZoom(),
@@ -460,27 +507,28 @@
       });
       map.fitBounds(_bounds(coords), {
         padding: (opts && opts.cameraPadding) || _cameraPadding(map),
-        maxZoom: terrain.enabled ? Number((opts && opts.maxZoom3d) || 10.9) : Number((opts && opts.maxZoom) || 12),
+        maxZoom: terrain.enabled ? Number((opts && opts.maxZoom3d) || 10.6) : Number((opts && opts.maxZoom) || 12),
         animate: false
       });
+      var fitZoom = map.getZoom();
       var target = {
         center: map.getCenter(),
-        zoom: Math.min(map.getZoom() + (terrain.enabled ? 0.5 : 0.25), terrain.enabled ? 11.4 : 12),
+        zoom: Math.max(2, fitZoom - (terrain.enabled ? 0.35 : 0.12)),
         pitch: pitch,
         bearing: bearing
       };
+      state.homeCamera = { center: target.center, zoom: target.zoom, pitch: pitch, bearing: bearing };
       if (animateOpen && !reduce) {
-        var start = coords[0];
-        // Begin zoomed far out and flat over the start point, then glide the
-        // whole route into frame so the journey "arrives" instead of snapping.
+        // Begin zoomed far out and flat, centered on the finished framing, then
+        // glide the whole route into view so the journey "arrives" gracefully.
         map.jumpTo({
-          center: start,
-          zoom: Math.max(2.8, target.zoom - 3.2),
-          pitch: terrain.enabled ? Math.max(0, pitch - 34) : 0,
+          center: target.center,
+          zoom: Math.max(2.6, target.zoom - 2.8),
+          pitch: terrain.enabled ? Math.max(0, pitch - 32) : 0,
           bearing: bearing
         });
         map.easeTo(Object.assign({}, target, {
-          duration: 2500,
+          duration: 2400,
           easing: function (t) { return 1 - Math.pow(1 - t, 3); }
         }));
       } else {
@@ -664,11 +712,22 @@
         });
         map.on('rotate', _updateCompass);
         map.on('pitch', _updateCompass);
+        // Surface the reset control once the user drags/zooms/rotates by hand
+        // (programmatic camera moves have no originalEvent, so they don't count).
+        map.on('movestart', function (e) {
+          if (e && e.originalEvent && !state.userMoved) {
+            state.userMoved = true;
+            _showReset(true);
+          }
+        });
         map.on('load', function () {
           try {
             map.resize();
             if (state.terrain.enabled && !_supportsTerrain(map)) state.terrain.enabled = false;
             _syncCompass(container);
+            _syncResetButton(container);
+            state.userMoved = false;
+            _showReset(false);
             _restoreMapEnhancements(false);
             _applyJourneyCamera(map, state.coords, state.opts || {}, true);
             map.triggerRepaint();
@@ -678,7 +737,8 @@
             setTimeout(function () {
               try {
                 map.resize();
-                _applyJourneyCamera(map, state.coords, state.opts || {}, false);
+                // Don't yank the camera back if the user already grabbed it.
+                if (!state.userMoved) _applyJourneyCamera(map, state.coords, state.opts || {}, false);
                 map.triggerRepaint();
               } catch (e) {}
             }, 2700);
@@ -732,7 +792,8 @@
     if (total <= 0) return;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var followTraveler = !reduce && state.opts && state.opts.followTraveler === true;
-    var duration = reduce ? 900 : Math.min(24000, Math.max(7200, total * 12));
+    // A touch slower and with a higher floor so short routes don't whip past.
+    var duration = reduce ? 900 : Math.min(28000, Math.max(9500, total * 14));
     var proximityThreshold = Math.max(28, Math.min(95, total / 18));
     map.setPaintProperty('journey-traveler-circle', 'circle-opacity', 1);
     var start = performance.now();
@@ -756,15 +817,18 @@
       var src = map.getSource('journey-traveler');
       if (src) src.setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] } });
       _updateMarkerProximity(p, proximityThreshold);
-      if (followTraveler && state.terrain && state.terrain.enabled && now - state.followTick > 360) {
+      // Smooth, constant-speed follow: short linear eases that chain seamlessly
+      // (the old cubic eases re-accelerated every tick, which looked blocky).
+      if (followTraveler && state.terrain && state.terrain.enabled && now - state.followTick > 260) {
         state.followTick = now;
         try {
           map.easeTo({
             center: [p.lng, p.lat],
             pitch: state.terrain.pitch,
             bearing: state.terrain.bearing,
-            duration: 820,
-            essential: false
+            duration: 300,
+            easing: function (t) { return t; },
+            essential: true
           });
         } catch (e) {}
       }
@@ -790,6 +854,9 @@
     stop();
     _clearMarkers();
     state.compassRose = null;
+    state.resetBtn = null;
+    state.homeCamera = null;
+    state.userMoved = false;
     if (state.map) { try { state.map.remove(); } catch (e) {} state.map = null; }
     state.journey = null;
     state.coords = [];
