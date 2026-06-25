@@ -16099,6 +16099,10 @@ function _appAnimateActiveWithPrevious(previous, enterClass, duration = 420) {
   target.classList.remove('app-screen-animating', 'app-slide-in-right', 'app-slide-in-left');
   previous?.classList.remove('app-screen-underlay', 'app-screen-animating', 'app-slide-in-right', 'app-slide-in-left');
 
+  // Keep the previous screen painted underneath so the new one slides over real
+  // content (a clean push) instead of a blank theme veil.
+  if (previous && previous !== target) previous.classList.add('app-screen-underlay');
+
   void target.offsetWidth;
   target.classList.add('app-screen-animating', enterClass);
 
@@ -16222,24 +16226,30 @@ function openJourneysFromWidget() {
     _journeyPlayAnim(page, 'screen-expanding');
   }
 }
-// Collapse a full-screen journey/atlas page back into the widget, then go home.
+// Collapse a full-screen journey/atlas page back into the widget, revealing the
+// home screen underneath the whole time (no blank backdrop, no end-of-anim jump).
 function _collapseToHome(pageId) {
   const page = document.getElementById(pageId);
   if (!page || _journeyReduceMotion() || !_lastWidgetRect) { showNavPage('home'); return; }
   _setExpandVars(page, _lastWidgetRect);
+  // Reveal the (already-rendered) home screen beneath the folding page. The page
+  // stays .active on top (its own rule keeps it full-bleed), so home shows through
+  // the shrinking clip immediately instead of a blank theme color.
+  const home = document.getElementById('homeScreen');
+  if (home) home.classList.add('active');
   let done = false;
   const finish = () => {
     if (done) return;
     done = true;
-    page.classList.remove('screen-collapsing');
     page.removeEventListener('animationend', finish);
+    page.classList.remove('screen-collapsing');
     showNavPage('home');
   };
   page.classList.remove('screen-collapsing');
   void page.offsetWidth;
   page.classList.add('screen-collapsing');
   page.addEventListener('animationend', finish, { once: true });
-  setTimeout(finish, 520);
+  setTimeout(finish, 460);
 }
 
 function openBibleJourneysPage(id = _journeySelectedId) {
@@ -29306,7 +29316,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.355";
+const APP_VERSION = "3.0.356";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29327,6 +29337,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.356 &mdash; Satisfying, themed transitions</div>
+<ul>
+  <li><strong>Cleaner returns home</strong> &mdash; Closing Journey Maps now folds back into the tile while the home screen shows underneath — no blank backdrop or freeze.</li>
+  <li><strong>Consistent everywhere</strong> &mdash; Tools and pages across the app now open and slide with the same smooth motion as Journey Maps, revealing the real screen underneath instead of flashing blank.</li>
+  <li><strong>Themed open &amp; close</strong> &mdash; Opening and closing now carry a soft border and glow in your selected theme color for a more satisfying feel.</li>
+</ul>
 <div class="un-version-label">v3.0.355 &mdash; Smoother journey maps</div>
 <ul>
   <li><strong>Cleaner open &amp; close</strong> &mdash; The Journey Maps page expands out of the home tile and folds back into it, with no clipping flicker.</li>
