@@ -15963,7 +15963,7 @@ function selectBibleJourney(id) {
 // ── Bible Atlas (single-place pin lookup) ───────────────────────────────────
 let _atlasSelected = null;
 let _atlasGLToken = 0;
-let _atlasDetailMode = 'modern';
+let _atlasDetailMode = 'ancient';
 let _atlasTab = 'journeys';        // 'journeys' | 'places'
 let _atlasView = 'list';           // 'list' | 'place'
 let _atlasScrollMemory = 0;
@@ -16190,7 +16190,7 @@ function clearAtlasSelection() {
 function _atlasRenderDetail(place) {
   const detail = document.getElementById('atlasDetailPage');
   if (!detail) return;
-  _atlasDetailMode = 'modern';
+  _atlasDetailMode = 'ancient';
   const refs = (place.refs || []).map(r => `<span>${_journeyEsc(r)}</span>`).join('');
   const conf = _atlasConfidence(place);
   const inTiles = _atlasInTiles(place);
@@ -16200,8 +16200,8 @@ function _atlasRenderDetail(place) {
     </div>
     <div class="atlas-peek-sub"><span class="atlas-conf-tag ${conf.cls}"><span class="material-symbols-outlined">${conf.icon}</span>${conf.label}</span></div>
     ${inTiles ? `<div class="journey-peek-toggle atlas-detail-toggle" role="tablist" aria-label="Map view">
-      <button onclick="setAtlasDetailMode('ancient')">Bible Map</button>
-      <button class="active" onclick="setAtlasDetailMode('modern')">Modern</button>
+      <button class="active" onclick="setAtlasDetailMode('ancient')">Bible Map</button>
+      <button onclick="setAtlasDetailMode('modern')">Modern</button>
     </div>` : ''}
     <div class="atlas-map" id="atlasMapShell"></div>
     <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>${conf.tier === 'debated' ? 'Most-accepted location' : 'Where it is today'}</strong><span>${_journeyEsc(place.modern)}</span></div></div>
@@ -16272,7 +16272,7 @@ function _atlasMountGL(place) {
 let _atlasRefIndex = null;
 let _atlasPeekPlaces = [];
 let _atlasPeekIndex = 0;
-let _atlasPeekMode = 'modern';
+let _atlasPeekMode = 'ancient';
 
 // Confidence tier for how sure the identification is. Set per-place in the
 // gazetteer (certain | likely | debated); falls back to a text heuristic for
@@ -16321,7 +16321,7 @@ function openAtlasPeek(book, chapter, verse) {
   const places = _atlasPlacesForVerse(book, chapter, verse);
   if (!places.length) return;
   _atlasPeekPlaces = places;
-  _atlasPeekMode = 'modern';
+  _atlasPeekMode = 'ancient';
   document.getElementById('atlasPeekOverlay')?.remove();
   const refLabel = `${typeof _rhemaBookName === 'function' ? _rhemaBookName(book) : book} ${chapter}:${verse}`;
   const ov = document.createElement('div');
@@ -28918,7 +28918,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.347";
+const APP_VERSION = "3.0.348";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28939,11 +28939,15 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.348 &mdash; Open on the Bible-times map</div>
+<ul>
+  <li><strong>Bible-times map by default</strong> &mdash; Journeys and places now all open on the Bible Map view; tap Modern any time to compare with today.</li>
+</ul>
 <div class="un-version-label">v3.0.347 &mdash; Bigger, clearer journey & place maps</div>
 <ul>
   <li><strong>Working compass</strong> &mdash; A live compass now sits on every journey and place map and always points to true north, even when the 3D view is tilted.</li>
   <li><strong>Bigger maps, wider cards</strong> &mdash; Journey and place maps are larger and the whole layout uses more of the screen width.</li>
-  <li><strong>Places open on the modern map</strong> &mdash; Place maps default to the modern view and also carry the new compass.</li>
+  <li><strong>Places carry the compass</strong> &mdash; Place maps also carry the new north-pointing compass.</li>
   <li><strong>Cinematic zoom-in</strong> &mdash; Maps now open pulled far back and glide slowly in toward the chosen route or place.</li>
   <li><strong>Cleaner chrome</strong> &mdash; Map credits moved into the info button at the top, the redundant close button is gone from place pages, and journeys use a new travel icon.</li>
 </ul>
