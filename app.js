@@ -15696,9 +15696,9 @@ const BIBLE_TERRAIN_OPTIONS = {
   tileSize: 512,
   minzoom: 0,
   maxzoom: 14,
-  exaggeration: 1.28,
-  pitch: 48,
-  bearing: -16,
+  exaggeration: 1.42,
+  pitch: 54,
+  bearing: -18,
   maxPitch: 65,
   hillshade: true,
   attribution: "<a href='https://mapterhorn.com/attribution'>Terrain: &copy; Mapterhorn</a>"
@@ -15841,6 +15841,8 @@ function _journeyById(id) {
 
 function openBibleJourneysPage(id = _journeySelectedId) {
   if (id) _journeySelectedId = id;
+  _journeyMode = 'ancient';
+  closeBibleJourneyInfo();
   setNavActive('journeys');
   hideBottomNav();
   showScreen('journeysPage');
@@ -16558,6 +16560,7 @@ function _journeyRenderMap(journey) {
 function renderBibleJourneysPage() {
   const journey = _journeyById(_journeySelectedId);
   if (!journey) return;
+  closeBibleJourneyInfo();
   const list = document.getElementById('journeyList');
   const shell = document.getElementById('journeyMapShell');
   const stats = document.getElementById('journeyStats');
@@ -16711,7 +16714,7 @@ function _journeyStartPlay() {
   const stepEls = [...document.querySelectorAll('#journeySteps .journey-step')];
   const stepCount = stepEls.length;
   const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-  const duration = reduce ? 600 : Math.min(9000, Math.max(2800, total / 18 * 1000));
+  const duration = reduce ? 900 : Math.min(16000, Math.max(5200, total / 11 * 1000));
   traveler.classList.add('on');
   _journeyStopPlay();
   _journeyAnim.playing = true;
@@ -16857,7 +16860,7 @@ function openJourneyPeek(book, chapter, verse) {
   const journey = match.journey;
   _journeyPeekCurrentId = journey.id;
   _journeyPeekCurrentStepIndex = match.stepIdx;
-  _journeyPeekMode = _journeyMode === 'modern' ? 'modern' : 'ancient';
+  _journeyPeekMode = 'ancient';
   const step = (journey.steps || [])[match.stepIdx];
   document.getElementById('journeyPeekOverlay')?.remove();
   if (window.BibleMap) { try { window.BibleMap.destroy(); } catch (e) {} }
@@ -28805,7 +28808,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.342";
+const APP_VERSION = "3.0.343";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28826,6 +28829,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.343 &mdash; Bigger Bible Journeys terrain</div>
+<ul>
+  <li><strong>More immersive maps</strong> &mdash; Journey maps now zoom in with a smoother 3D terrain entrance, stronger elevation, and richer roads/rivers over the atlas.</li>
+  <li><strong>Better route playback</strong> &mdash; Route lines are geographically densified for smoother terrain-following, playback is slower, and the camera follows the traveler more gently.</li>
+  <li><strong>Cleaner Bible Map default</strong> &mdash; Journey maps open in Bible Map mode with the info panel closed, while labels tuck away briefly as the traveler passes nearby.</li>
+</ul>
 <div class="un-version-label">v3.0.342 &mdash; 3D Bible Journeys terrain</div>
 <ul>
   <li><strong>Terrain atlas maps</strong> &mdash; Bible Journeys now opens with a pitched 3D terrain camera, subtle hillshade, and route styling that stays readable over mountains and valleys.</li>

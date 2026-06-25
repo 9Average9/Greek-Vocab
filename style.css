@@ -31866,7 +31866,7 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
   font-weight: 900;
 }
 .journey-map-shell {
-  padding: 0 6px 12px;
+  padding: 0 2px 12px;
   background:
     radial-gradient(120% 100% at 80% 0%, color-mix(in srgb, var(--secondary-color) 10%, transparent), transparent 58%),
     color-mix(in srgb, var(--secondary-color) 4%, var(--card-color));
@@ -31874,7 +31874,7 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
 .journey-map-shell svg {
   display: block;
   width: 100%;
-  aspect-ratio: 1.18 / 1;
+  aspect-ratio: 1.04 / 1;
   border-radius: 18px;
   overflow: hidden;
 }
@@ -31882,7 +31882,7 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
 .journey-gl-map {
   display: none;
   width: 100%;
-  aspect-ratio: 1.18 / 1;
+  aspect-ratio: 1.04 / 1;
   border-radius: 18px;
   overflow: hidden;
   background:
@@ -31909,7 +31909,7 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
 .atlas-peek-gl .maplibregl-ctrl-attrib a,
 .journey-peek-mapgl .maplibregl-ctrl-attrib a { color: var(--muted-color); }
 .bible-map-label {
-  font-size: 0.69rem;
+  font-size: 0.74rem;
   font-weight: 900;
   line-height: 1;
   color: var(--font-color);
@@ -31924,6 +31924,7 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
     inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
 }
 .bible-map-label.first {
   color: #126c35;
@@ -31951,8 +31952,14 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
   box-shadow: 0 3px 9px rgba(20, 28, 34, 0.13);
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
 }
 .bible-map-landmark.visible { display: inline-flex; }
+.bible-map-label.near-traveler,
+.bible-map-landmark.near-traveler {
+  opacity: 0;
+  transform: scale(0.82) translateY(-4px);
+}
 .bible-map-landmark span {
   width: 7px;
   height: 7px;

@@ -36,7 +36,9 @@
     terrain: { enabled: false },
     terrainErrorNoted: false,
     fatalErrorNoted: false,
-    coords: []
+    coords: [],
+    routeCoords: [],
+    routeSegmentMap: []
   };
 
   function supported() {
@@ -83,8 +85,8 @@
       minzoom: Number(raw.minzoom == null ? 0 : raw.minzoom),
       maxzoom: Number(raw.maxzoom == null ? 14 : raw.maxzoom),
       bounds: Array.isArray(raw.bounds) ? raw.bounds : null,
-      exaggeration: _clamp(Number(raw.exaggeration || 1.3), 0.25, 2.2),
-      pitch: _clamp(Number(raw.pitch || 48), 0, 65),
+      exaggeration: _clamp(Number(raw.exaggeration || 1.42), 0.25, 2.2),
+      pitch: _clamp(Number(raw.pitch || 54), 0, 65),
       bearing: _clamp(Number(raw.bearing == null ? -16 : raw.bearing), -180, 180),
       hillshade: raw.hillshade !== false,
       attribution: raw.attribution || '',
@@ -122,7 +124,7 @@
   function _hillshadePaint(mode) {
     if (mode === 'modern') {
       return {
-        'hillshade-exaggeration': 0.28,
+        'hillshade-exaggeration': 0.38,
         'hillshade-shadow-color': '#54606a',
         'hillshade-highlight-color': '#f0f7fb',
         'hillshade-accent-color': '#91a4a9',
@@ -130,7 +132,7 @@
       };
     }
     return {
-      'hillshade-exaggeration': 0.34,
+      'hillshade-exaggeration': 0.44,
       'hillshade-shadow-color': '#6f6048',
       'hillshade-highlight-color': '#f7edcf',
       'hillshade-accent-color': '#a89a73',
@@ -169,18 +171,40 @@
   function _buildStyle(mode, pmtilesUrl, terrain) {
     var layers = (mode === 'modern' ? _styleLayers.modern : _styleLayers.ancient) || [];
     layers = JSON.parse(JSON.stringify(layers));
-    if (mode === 'ancient') {
-      layers = layers.filter(function (l) {
-        var sl = l['source-layer'];
-        return sl !== 'roads' && sl !== 'buildings';
-      }).map(function (l) {
+    layers = layers.filter(function (l) {
+      if (mode !== 'ancient') return true;
+      var sl = l['source-layer'];
+      if (sl === 'buildings') return false;
+      if (/runway|taxiway|aerodrome|rail/i.test(l.id || '')) return false;
+      return true;
+    }).map(function (l) {
+      if (mode === 'ancient') {
         if (l['source-layer'] === 'boundaries') {
           l.paint = l.paint || {};
-          l.paint['line-opacity'] = 0.18;
+          l.paint['line-opacity'] = 0.12;
         }
-        return l;
-      });
-    }
+        if (l['source-layer'] === 'roads' && l.type === 'line') {
+          l.paint = l.paint || {};
+          l.paint['line-color'] = '#a98958';
+          l.paint['line-opacity'] = ['interpolate', ['linear'], ['zoom'], 5, 0.08, 8, 0.18, 12, 0.28];
+          if (/minor|other|path|service|link/i.test(l.id || '')) {
+            l.paint['line-opacity'] = ['interpolate', ['linear'], ['zoom'], 8, 0, 11, 0.12, 14, 0.2];
+          }
+        }
+        if (l['source-layer'] === 'water' && l.type === 'line') {
+          l.minzoom = Math.min(Number(l.minzoom || 0), /river/i.test(l.id || '') ? 6 : 10);
+          l.paint = l.paint || {};
+          l.paint['line-color'] = '#7fb3c7';
+          l.paint['line-opacity'] = ['interpolate', ['linear'], ['zoom'], 5, 0.45, 9, 0.78, 13, 0.9];
+          l.paint['line-width'] = ['interpolate', ['exponential', 1.45], ['zoom'], 6, 0.45, 9, 1.1, 14, 4.8, 18, 11];
+        }
+      } else {
+        if (l['source-layer'] === 'water' && l.type === 'line') {
+          l.minzoom = Math.min(Number(l.minzoom || 0), /river/i.test(l.id || '') ? 6 : 10);
+        }
+      }
+      return l;
+    });
     var style = {
       version: 8,
       sources: {
@@ -205,6 +229,28 @@
     var b = new maplibregl.LngLatBounds();
     coords.forEach(function (c) { b.extend(c); });
     return b;
+  }
+
+  function _lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function _densifyRoute(coords) {
+    var out = [];
+    var segmentMap = [];
+    if (!coords || !coords.length) return { coords: [], segmentMap: [] };
+    out.push(coords[0]);
+    for (var i = 0; i < coords.length - 1; i++) {
+      var a = coords[i], b = coords[i + 1];
+      var km = _haversine(a, b);
+      var steps = Math.max(4, Math.min(64, Math.ceil(km / 32)));
+      for (var s = 1; s <= steps; s++) {
+        var t = s / steps;
+        out.push([_lerp(a[0], b[0], t), _lerp(a[1], b[1], t)]);
+        segmentMap.push(i);
+      }
+    }
+    return { coords: out, segmentMap: segmentMap };
   }
 
   function _routeGeoJSON(coords) {
@@ -239,12 +285,12 @@
 
   function _addOverlays() {
     var map = state.map;
-    var coords = state.coords;
-    if (!map || coords.length < 2) return;
+    var coords = state.routeCoords && state.routeCoords.length ? state.routeCoords : state.coords;
+    if (!map || state.coords.length < 2) return;
     var accent = _cssVar('--secondary-color', '#3a6ea5');
 
     _addOrUpdateGeoJsonSource(map, 'journey-route', _routeGeoJSON(coords));
-    _addOrUpdateGeoJsonSource(map, 'journey-stops', _stopsGeoJSON(state.journey, coords));
+    _addOrUpdateGeoJsonSource(map, 'journey-stops', _stopsGeoJSON(state.journey, state.coords));
     _addOrUpdateGeoJsonSource(map, 'journey-traveler', {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: coords[0] }
@@ -255,6 +301,7 @@
         .filter(function (p) { return typeof p.lon === 'number' && typeof p.lat === 'number'; })
         .map(function (p) { return [p.lon, p.lat]; });
       if (ac.length < 2) return;
+      ac = _densifyRoute(ac).coords;
       var sid = 'journey-alt-' + i;
       _addOrUpdateGeoJsonSource(map, sid, _routeGeoJSON(ac));
       if (!map.getLayer(sid + '-line')) {
@@ -281,7 +328,7 @@
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
           'line-color': 'rgba(55,43,28,0.48)',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 4, 4.8, 8, 6.8, 12, 8.2],
+          'line-width': ['interpolate', ['linear'], ['zoom'], 4, 5.2, 8, 7.8, 12, 9.4],
           'line-blur': 1.2,
           'line-opacity': 0.72
         }
@@ -295,8 +342,8 @@
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
           'line-color': accent,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 4, 2.6, 8, 3.6, 12, 4.4],
-          'line-dasharray': [2, 1.35],
+          'line-width': ['interpolate', ['linear'], ['zoom'], 4, 3.1, 8, 4.4, 12, 5.2],
+          'line-dasharray': [2.2, 1.25],
           'line-opacity': 0.96
         }
       });
@@ -338,26 +385,33 @@
     var h = Math.max(1, rect.height || 260);
     var narrow = w < 430;
     return {
-      top: Math.round(narrow ? 42 : 42),
-      left: Math.round(narrow ? 54 : 42),
-      right: Math.round(narrow ? 64 : 44),
-      bottom: Math.round(Math.max(58, h * (narrow ? 0.24 : 0.18)))
+      top: Math.round(narrow ? 30 : 34),
+      left: Math.round(narrow ? 34 : 36),
+      right: Math.round(narrow ? 38 : 38),
+      bottom: Math.round(Math.max(42, h * (narrow ? 0.16 : 0.13)))
     };
   }
 
-  function _applyJourneyCamera(map, coords, opts) {
+  function _applyJourneyCamera(map, coords, opts, animateOpen) {
     if (!map || !coords || !coords.length) return;
     var terrain = state.terrain || { enabled: false };
     var pitch = terrain.enabled ? terrain.pitch : 0;
     var bearing = terrain.enabled ? terrain.bearing : 0;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     try {
       if (coords.length === 1) {
-        map.jumpTo({
+        var singleTarget = {
           center: coords[0],
-          zoom: Number(opts && opts.pinZoom ? opts.pinZoom : (terrain.enabled ? 7.2 : 7)),
+          zoom: Number(opts && opts.pinZoom ? opts.pinZoom : (terrain.enabled ? 8.1 : 7)),
           pitch: pitch,
           bearing: bearing
-        });
+        };
+        if (animateOpen && !reduce) {
+          map.jumpTo({ center: coords[0], zoom: Math.max(3, singleTarget.zoom - 1.35), pitch: Math.max(20, pitch - 22), bearing: bearing });
+          map.easeTo(Object.assign({}, singleTarget, { duration: 950, easing: function (t) { return 1 - Math.pow(1 - t, 3); } }));
+        } else {
+          map.jumpTo(singleTarget);
+        }
         return;
       }
       map.jumpTo({
@@ -368,15 +422,30 @@
       });
       map.fitBounds(_bounds(coords), {
         padding: (opts && opts.cameraPadding) || _cameraPadding(map),
-        maxZoom: terrain.enabled ? Number((opts && opts.maxZoom3d) || 9.8) : Number((opts && opts.maxZoom) || 12),
+        maxZoom: terrain.enabled ? Number((opts && opts.maxZoom3d) || 10.9) : Number((opts && opts.maxZoom) || 12),
         animate: false
       });
-      map.jumpTo({
+      var target = {
         center: map.getCenter(),
-        zoom: map.getZoom(),
+        zoom: Math.min(map.getZoom() + (terrain.enabled ? 0.28 : 0), terrain.enabled ? 11.05 : 12),
         pitch: pitch,
         bearing: bearing
-      });
+      };
+      if (animateOpen && !reduce) {
+        var start = coords[0];
+        map.jumpTo({
+          center: start,
+          zoom: Math.max(3.2, target.zoom - 1.55),
+          pitch: terrain.enabled ? Math.max(22, pitch - 24) : 0,
+          bearing: bearing
+        });
+        map.easeTo(Object.assign({}, target, {
+          duration: 1150,
+          easing: function (t) { return 1 - Math.pow(1 - t, 3); }
+        }));
+      } else {
+        map.jumpTo(target);
+      }
     } catch (e) {}
   }
 
@@ -414,6 +483,31 @@
     state.markers = [];
     state.landmarkMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.landmarkMarkers = [];
+  }
+
+  function _clearMarkerProximity() {
+    state.markers.forEach(function (m) { try { m.getElement().classList.remove('near-traveler'); } catch (e) {} });
+    state.landmarkMarkers.forEach(function (m) { try { m.getElement().classList.remove('near-traveler'); } catch (e) {} });
+  }
+
+  function _updateMarkerProximity(point, thresholdKm) {
+    if (!point) { _clearMarkerProximity(); return; }
+    var coord = [point.lng, point.lat];
+    var pts = (state.journey.points || []).filter(function (p) {
+      return typeof p.lon === 'number' && typeof p.lat === 'number';
+    });
+    state.markers.forEach(function (m, i) {
+      if (!pts[i]) return;
+      var near = _haversine(coord, [pts[i].lon, pts[i].lat]) <= thresholdKm;
+      m.getElement().classList.toggle('near-traveler', near);
+    });
+    var landmarks = (state.opts && state.opts.landmarks) || [];
+    state.landmarkMarkers.forEach(function (m, i) {
+      var p = landmarks[i];
+      if (!p || typeof p.lon !== 'number' || typeof p.lat !== 'number') return;
+      var near = _haversine(coord, [p.lon, p.lat]) <= thresholdKm;
+      m.getElement().classList.toggle('near-traveler', near);
+    });
   }
 
   function _addMarkers() {
@@ -475,6 +569,9 @@
     state.opts = opts;
     state.mode = opts.mode === 'modern' ? 'modern' : 'ancient';
     state.coords = _journeyCoords(journey);
+    var dense = _densifyRoute(state.coords);
+    state.routeCoords = dense.coords;
+    state.routeSegmentMap = dense.segmentMap;
     state.terrain = _normalizeTerrainOptions(opts);
     state.terrainErrorNoted = false;
     state.fatalErrorNoted = false;
@@ -529,15 +626,16 @@
           try {
             map.resize();
             if (state.terrain.enabled && !_supportsTerrain(map)) state.terrain.enabled = false;
-            _restoreMapEnhancements(true);
+            _restoreMapEnhancements(false);
+            _applyJourneyCamera(map, state.coords, state.opts || {}, true);
             map.triggerRepaint();
             setTimeout(function () {
               try {
                 map.resize();
-                _applyJourneyCamera(map, state.coords, state.opts || {});
+                _applyJourneyCamera(map, state.coords, state.opts || {}, false);
                 map.triggerRepaint();
               } catch (e) {}
-            }, 180);
+            }, 900);
             resolve(map);
           } catch (e) { reject(e); }
         });
@@ -577,7 +675,7 @@
 
   function play(onStep) {
     var map = state.map;
-    var coords = state.coords;
+    var coords = state.routeCoords && state.routeCoords.length ? state.routeCoords : state.coords;
     if (!map || coords.length < 2 || !map.getSource('journey-traveler')) return;
     stop();
     var segLens = [], total = 0;
@@ -588,7 +686,8 @@
     if (total <= 0) return;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var followTraveler = !reduce && state.opts && state.opts.followTraveler === true;
-    var duration = reduce ? 700 : Math.min(11000, Math.max(3200, total * 6));
+    var duration = reduce ? 900 : Math.min(24000, Math.max(7200, total * 12));
+    var proximityThreshold = Math.max(28, Math.min(95, total / 18));
     map.setPaintProperty('journey-traveler-circle', 'circle-opacity', 1);
     var start = performance.now();
     function posAt(frac) {
@@ -597,7 +696,7 @@
         if (d <= segLens[i] || i === segLens.length - 1) {
           var t = segLens[i] ? d / segLens[i] : 0;
           var a = coords[i], b = coords[i + 1];
-          return { lng: a[0] + (b[0] - a[0]) * t, lat: a[1] + (b[1] - a[1]) * t, seg: i };
+          return { lng: a[0] + (b[0] - a[0]) * t, lat: a[1] + (b[1] - a[1]) * t, seg: i, storySeg: state.routeSegmentMap[i] || 0 };
         }
         d -= segLens[i];
       }
@@ -610,20 +709,25 @@
       var p = posAt(ease);
       var src = map.getSource('journey-traveler');
       if (src) src.setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] } });
-      if (followTraveler && state.terrain && state.terrain.enabled && now - state.followTick > 520) {
+      _updateMarkerProximity(p, proximityThreshold);
+      if (followTraveler && state.terrain && state.terrain.enabled && now - state.followTick > 360) {
         state.followTick = now;
         try {
           map.easeTo({
             center: [p.lng, p.lat],
             pitch: state.terrain.pitch,
             bearing: state.terrain.bearing,
-            duration: 430,
+            duration: 820,
             essential: false
           });
         } catch (e) {}
       }
-      if (typeof onStep === 'function') onStep(p.seg, frac >= 1);
-      if (frac >= 1) { state.raf = 0; return; }
+      if (typeof onStep === 'function') onStep(p.storySeg, frac >= 1);
+      if (frac >= 1) {
+        state.raf = 0;
+        setTimeout(function () { _clearMarkerProximity(); }, 520);
+        return;
+      }
       state.raf = requestAnimationFrame(frame);
     }
     state.raf = requestAnimationFrame(frame);
@@ -633,6 +737,7 @@
     if (state.raf) cancelAnimationFrame(state.raf);
     state.raf = 0;
     state.followTick = 0;
+    _clearMarkerProximity();
   }
 
   function destroy() {
@@ -641,6 +746,8 @@
     if (state.map) { try { state.map.remove(); } catch (e) {} state.map = null; }
     state.journey = null;
     state.coords = [];
+    state.routeCoords = [];
+    state.routeSegmentMap = [];
   }
 
   window.BibleMap = {
