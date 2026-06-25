@@ -8605,8 +8605,10 @@ function closeStudyLibrary() {
   const modal = document.getElementById('studyLibraryModal');
   if (!modal) return;
   if (_studyDeleteMode) _exitStudyDeleteMode();
-  modal.classList.remove('open');
-  setTimeout(() => modal.classList.add('hidden'), 240);
+  _journeySlideOutThen(modal, 'screen-slide-out-right', () => {
+    modal.classList.remove('open');
+    modal.classList.add('hidden');
+  });
 }
 
 function _renderStudyLibrary() {
@@ -10459,6 +10461,8 @@ function _bindPraisesScrollShadow() {
 }
 
 function showNavPage(page) {
+  const fromId = document.querySelector('.screen.active')?.id || _activeScreenId;
+  if (page === 'home' && _appSlideHomeFromCurrent()) return;
   if (page !== 'home') closeHomeSearch();
   // The Disciple Group tab may have borrowed the community content — return it
   // before showing the real Community page so that page is never left empty.
@@ -10484,11 +10488,13 @@ function showNavPage(page) {
     showScreen('profilePage');
     hideBottomNav();
     updateProfileUI();
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appSlideInScreen('profilePage');
   } else if (page === 'habits') {
     showScreen('habitsPage');
     startHabitsPage();
     bindHabitsNavCollapse();
     expandHabitsNavOnEntry();
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appSlideInScreen('habitsPage');
   } else if (page === 'memorization') {
     openMemorizationPage();
   } else if (page === 'community') {
@@ -10504,10 +10510,15 @@ function showNavPage(page) {
     startMerciesFeed();
     bindMerciesNavCollapse();
     expandMerciesNavOnEntry();
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appSlideInScreen('merciesPage');
     setTimeout(() => startPraisesCoach(false), 650);
   } else if (page === 'lessons') {
     hideBottomNav();
     showNewLearnMenu();
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) {
+      const activeId = document.querySelector('.screen.active')?.id;
+      if (activeId && activeId !== fromId && activeId !== 'homeScreen') _appSlideInScreen(activeId);
+    }
   } else if (page === 'rhema') {
     showRhema();
   } else if (page === 'sermons') {
@@ -10521,14 +10532,11 @@ function showScreen(id) {
   if (id !== 'homeScreen') _stopHomeFlip();
   closeLearnSideMenu();
 
-  const previous = document.getElementById(_activeScreenId) || document.querySelector('.screen.active');
-  const transition = _nextScreenTransition || _inferScreenTransition(previous?.id, id);
-  _nextScreenTransition = null;
   _activeScreenId = id;
 
   screens.forEach(screen => {
     const el = document.getElementById(screen);
-    if (el && el !== previous) {
+    if (el) {
       el.classList.remove("active");
       _clearScreenTransitionClasses(el);
     }
@@ -10536,11 +10544,6 @@ function showScreen(id) {
 
   const target = document.getElementById(id);
   if (target) target.classList.add("active");
-  if (previous && previous !== target) {
-    _animateScreenSwap(previous, target, transition);
-  } else if (target) {
-    _clearScreenTransitionClasses(target);
-  }
   if (id !== 'merciesPage') setMerciesNavCollapsed(false);
   if (id !== 'homeScreen') setHomeNavCollapsed(false);
   if (id !== 'habitsPage') setHabitsNavCollapsed(false);
@@ -16042,6 +16045,86 @@ function _journeySlideOutThen(el, cls, done) {
   el.classList.add(cls);
   el.addEventListener('animationend', finish, { once: true });
   setTimeout(finish, 420);
+}
+
+let _appHomeSlideBypass = false;
+let _appSuppressNextSlideIn = false;
+
+function _appSetExpandOrigin(el, rect) {
+  if (!el || !rect) return;
+  const vw = window.innerWidth || document.documentElement.clientWidth || rect.right;
+  const vh = window.innerHeight || document.documentElement.clientHeight || rect.bottom;
+  el.style.setProperty('--exp-t', Math.max(0, Math.round(rect.top)) + 'px');
+  el.style.setProperty('--exp-r', Math.max(0, Math.round(vw - rect.right)) + 'px');
+  el.style.setProperty('--exp-b', Math.max(0, Math.round(vh - rect.bottom)) + 'px');
+  el.style.setProperty('--exp-l', Math.max(0, Math.round(rect.left)) + 'px');
+}
+
+function _appExpandTargetFromElement(target, launcher) {
+  if (!target || !launcher || _journeyReduceMotion()) return;
+  _appSetExpandOrigin(target, launcher.getBoundingClientRect());
+  _journeyPlayAnim(target, 'screen-expanding');
+}
+
+function _appSlideInScreen(screenId) {
+  _journeyPlayAnim(document.getElementById(screenId), 'screen-slide-in-right');
+}
+
+function _appSlideHomeFromCurrent() {
+  if (_appHomeSlideBypass) return false;
+  const active = document.querySelector('.screen.active');
+  const slideHomeScreens = new Set([
+    'profilePage',
+    'habitsPage',
+    'merciesPage',
+    'communityPage',
+    'newLearnMenu',
+    'advancedLearnMenu',
+    'basicVerbsLearnMenu',
+    'advVerbsLearnMenu',
+    'memorizationPage',
+    'readingPlanPage',
+    'learnMenu',
+    'translateMenu',
+    'translateScreen',
+    'testMenu',
+    'testScreen'
+  ]);
+  if (!active || !slideHomeScreens.has(active.id)) return false;
+  _journeySlideOutThen(active, 'screen-slide-out-right', () => {
+    _appHomeSlideBypass = true;
+    try { showNavPage('home'); } finally { _appHomeSlideBypass = false; }
+  });
+  return true;
+}
+
+function openHabitBuilderFromWidget(launcher) {
+  _appSuppressNextSlideIn = true;
+  try { showNavPage('habits'); } finally { _appSuppressNextSlideIn = false; }
+  _appExpandTargetFromElement(document.getElementById('habitsPage'), launcher);
+}
+
+function openHomeToolFromElement(launcher, tool) {
+  const targetByTool = {
+    study: 'studyLibraryModal',
+    memorization: 'memorizationPage',
+    reading: 'readingPlanPage',
+    vocab: 'learnMenu',
+    translate: 'translateMenu',
+    test: 'testMenu'
+  };
+  if (tool === 'study') {
+    openStudyLibrary();
+    _appExpandTargetFromElement(document.getElementById('studyLibraryModal'), launcher);
+    return;
+  }
+  if (tool === 'memorization') openMemorizationPage();
+  else if (tool === 'reading') openReadingPlanPage();
+  else if (tool === 'vocab') tryOpenLockedFeature('vocab');
+  else if (tool === 'translate') tryOpenLockedFeature('translate');
+  else if (tool === 'test') tryOpenLockedFeature('test');
+  const target = document.getElementById(targetByTool[tool]);
+  if (target?.classList.contains('active')) _appExpandTargetFromElement(target, launcher);
 }
 // Home widget → Atlas, expanding the page out of the widget's footprint.
 function openJourneysFromWidget() {
@@ -23287,8 +23370,10 @@ html += `</div>`;
 }
 
 function showSettings() {
+  const fromId = document.querySelector('.screen.active')?.id;
   hideBottomNav();
   showScreen("settingsScreen");
+  if (fromId === 'profilePage') _appSlideInScreen('settingsScreen');
   requestAnimationFrame(() => {
     document.querySelector("#settingsScreen .sett-scroll")?.scrollTo?.(0, 0);
   });
@@ -29097,7 +29182,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.350";
+const APP_VERSION = "3.0.351";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29118,6 +29203,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.351 &mdash; Journey-style app openings</div>
+<ul>
+  <li><strong>Real Journey motion reused</strong> &mdash; Habit Builder and Home tools now expand from the pressed tile using the same animation system as the Journey Maps widget.</li>
+  <li><strong>Cleaner screen slides</strong> &mdash; Profile, Settings, Praises, Lessons, Rhema, and returns Home now use the same right-slide timing as opening a Journey map.</li>
+  <li><strong>No more clipped handoff</strong> &mdash; Removed the generic transition layer that was fighting the app shell and causing the motion to feel broken.</li>
+</ul>
 <div class="un-version-label">v3.0.350 &mdash; Smoother app motion</div>
 <ul>
   <li><strong>Smoother openings</strong> &mdash; Habit Builder, Home tools, Profile, Settings, Praises, Lessons, and Rhema now use softer app-style entrance motion.</li>
@@ -31747,7 +31838,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function closeSettingsMenu() {
   // Settings is opened from the profile screen, so back should return there.
-  showNavPage('profile');
+  const settings = document.getElementById('settingsScreen');
+  _journeySlideOutThen(settings, 'screen-slide-out-right', () => showNavPage('profile'));
 }
 function openNewsFromProfile() {
   const modal = document.getElementById("updateModal");
@@ -31767,6 +31859,7 @@ function openNewsFromProfile() {
 
   updateProfileAttention();
   modal.classList.add("open");
+  _journeyPlayAnim(modal, 'screen-slide-in-right');
 }
 
 
@@ -40006,7 +40099,9 @@ function startPraisesCoach(force = false) {
 }
 
 function openCoachReplayModal() {
-  document.getElementById('coachReplayModal')?.classList.add('open');
+  const modal = document.getElementById('coachReplayModal');
+  modal?.classList.add('open');
+  _journeyPlayAnim(modal, 'screen-slide-in-right');
 }
 
 function closeCoachReplayModal(event) {
@@ -40016,7 +40111,9 @@ function closeCoachReplayModal(event) {
 }
 
 function openRhemaNerdModal() {
-  document.getElementById('rhemaNerdModal')?.classList.add('open');
+  const modal = document.getElementById('rhemaNerdModal');
+  modal?.classList.add('open');
+  _journeyPlayAnim(modal, 'screen-slide-in-right');
 }
 
 function closeRhemaNerdModal(event) {

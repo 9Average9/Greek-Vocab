@@ -33302,3 +33302,46 @@ body.tools-theme-match #homeScreen .home-action-tile .hat-text small {
   from { transform: translateY(18px) scale(.965); opacity: 0; }
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
+
+/* Reuse the exact Journey animation classes across the rest of the app shell. */
+.screen.active.screen-expanding,
+.study-library.open.screen-expanding {
+  animation: journeyScreenExpand 0.46s cubic-bezier(.4, 0, .2, 1);
+}
+
+.screen.active.screen-slide-in-right {
+  animation: journeyScreenInRight 0.34s cubic-bezier(.4, 0, .2, 1);
+}
+
+.screen.active.screen-slide-out-right {
+  animation: journeyScreenOutRight 0.30s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
+.study-library.open.screen-slide-out-right {
+  animation: journeyScreenOutRight 0.30s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
+.modal-overlay.open.screen-slide-in-right .modal-card,
+#updateModal.open.screen-slide-in-right .modal-card,
+#coachReplayModal.open.screen-slide-in-right .modal-card,
+#rhemaNerdModal.open.screen-slide-in-right .modal-card {
+  animation: atlasDetailIn 0.32s cubic-bezier(.4, 0, .2, 1);
+}
+
+#rhemaModal.screen-slide-in-right #rhemaSlide,
+#rhemaModal.rhema-nav-enter #rhemaSlide {
+  animation: journeyScreenInRight 0.34s cubic-bezier(.4, 0, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen.active.screen-expanding,
+  .study-library.open.screen-expanding,
+  .screen.active.screen-slide-in-right,
+  .screen.active.screen-slide-out-right,
+  .study-library.open.screen-slide-out-right,
+  .modal-overlay.open.screen-slide-in-right .modal-card,
+  #rhemaModal.screen-slide-in-right #rhemaSlide,
+  #rhemaModal.rhema-nav-enter #rhemaSlide {
+    animation: none !important;
+  }
+}

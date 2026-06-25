@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.350" rel="stylesheet"/>
+<link href="style.css?v=3.0.351" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -521,7 +521,7 @@ Start a New Study
 </div>
 <div class="home-rhema-search-results" id="homeRhemaSearchResults"></div>
 <!-- Habit Builder widget -->
-<div class="home-habit-widget" id="homeHabitWidget" onclick="showNavPage('habits')" role="button" tabindex="0">
+<div class="home-habit-widget" id="homeHabitWidget" onclick="openHabitBuilderFromWidget(this)" role="button" tabindex="0">
 <div class="hhw-main">
 <span class="hhw-kicker">
 <svg class="hhw-sprout" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20.5V13" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M12 13c-3.9-.4-6.6-2.8-7.8-7.1 4.4.1 7.2 2.4 7.8 7.1Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 13c.7-4.2 3.4-6.8 7.9-7.8-1 4.6-3.7 7.2-7.9 7.8Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.2 20.5h9.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
@@ -549,42 +549,42 @@ Journey Maps</span>
 </div>
 <div class="home-section-label">Tools</div>
 <div class="home-actions-grid">
-<button class="home-action-tile quick-action-study" id="studyLibraryHomeBtn" onclick="openStudyLibrary()">
+<button class="home-action-tile quick-action-study" id="studyLibraryHomeBtn" onclick="openHomeToolFromElement(this, 'study')">
 <div class="hat-icon hat-icon-library">
 <img class="qa-img" src="assets/icons/quick-study-library.png" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Study<br/>Library</strong><small>Explore</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile quick-action-memorize" id="memorizationHomeBtn" onclick="openMemorizationPage()">
+<button class="home-action-tile quick-action-memorize" id="memorizationHomeBtn" onclick="openHomeToolFromElement(this, 'memorization')">
 <div class="hat-icon hat-icon-memorization">
 <img class="qa-img" src="assets/icons/quick-memorize.png" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Memorize</strong><small>Train your memory</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile quick-action-reading" id="readingPlanHomeBtn" onclick="openReadingPlanPage()">
+<button class="home-action-tile quick-action-reading" id="readingPlanHomeBtn" onclick="openHomeToolFromElement(this, 'reading')">
 <div class="hat-icon hat-icon-reading">
 <img class="qa-img" src="assets/icons/quick-reading-plan.png?v=3.0.231" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Reading<br/>Plan</strong><small>Set scripture goals</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile locked-feature-btn quick-action-vocab" id="vocabHomeBtn" onclick="tryOpenLockedFeature('vocab')">
+<button class="home-action-tile locked-feature-btn quick-action-vocab" id="vocabHomeBtn" onclick="openHomeToolFromElement(this, 'vocab')">
 <div class="hat-icon hat-icon-vocab">
 <img class="qa-img" src="assets/icons/quick-vocab.png" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Vocab</strong><small>Grow your words</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile locked-feature-btn quick-action-translate" id="translateHomeBtn" onclick="tryOpenLockedFeature('translate')">
+<button class="home-action-tile locked-feature-btn quick-action-translate" id="translateHomeBtn" onclick="openHomeToolFromElement(this, 'translate')">
 <div class="hat-icon hat-icon-translate">
 <img class="qa-img" src="assets/icons/quick-translate.png" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Translate</strong><small>Break language barriers</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
-<button class="home-action-tile locked-feature-btn quick-action-test" id="testHomeBtn" onclick="tryOpenLockedFeature('test')">
+<button class="home-action-tile locked-feature-btn quick-action-test" id="testHomeBtn" onclick="openHomeToolFromElement(this, 'test')">
 <div class="hat-icon hat-icon-test">
 <img class="qa-img" src="assets/icons/quick-test.png" alt="" loading="lazy"/>
 </div>
@@ -17005,7 +17005,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.350"></script>
+<script src="app.js?v=3.0.351"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.349"></script>
 <script src="verse-structure.js?v=3.0.127"></script>

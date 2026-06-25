@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.350";
+const CACHE_NAME = "disciple-builder-v3.0.351";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -49,9 +49,9 @@ const CACHE_NAME = "disciple-builder-v3.0.350";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.350",
+  "./style.css?v=3.0.351",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.350",
+  "./app.js?v=3.0.351",
   "./bible-atlas.js?v=3.0.349",
   "./bible-map.js?v=3.0.349",
   "./verse-structure.js?v=3.0.133",
