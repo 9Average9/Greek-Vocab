@@ -15639,6 +15639,12 @@ const JOURNEY_MODERN_LANDMARKS = [
   { name: 'Nile Delta', kind: 'region', lat: 30.90, lon: 31.20 },
   { name: 'Euphrates River', kind: 'river', lat: 35.10, lon: 40.10 },
   { name: 'Tigris River', kind: 'river', lat: 34.40, lon: 43.30 },
+  { name: 'Orontes River', kind: 'river', lat: 35.50, lon: 36.30 },
+  { name: 'Litani River', kind: 'river', lat: 33.40, lon: 35.40 },
+  { name: 'Sea of Marmara', kind: 'sea', lat: 40.70, lon: 28.20 },
+  { name: 'Black Sea', kind: 'sea', lat: 41.80, lon: 34.50 },
+  { name: 'Persian Gulf', kind: 'sea', lat: 29.30, lon: 49.40 },
+  { name: 'Lake Van', kind: 'lake', lat: 38.60, lon: 42.90 },
   // ── Islands ──
   { name: 'Cyprus', kind: 'island', lat: 35.05, lon: 33.20 },
   { name: 'Crete', kind: 'island', lat: 35.20, lon: 24.90 },
@@ -15659,6 +15665,23 @@ const JOURNEY_MODERN_LANDMARKS = [
   { name: 'Judea', kind: 'region', lat: 31.55, lon: 35.10 },
   { name: 'Gilead', kind: 'region', lat: 32.15, lon: 35.80 },
   { name: 'Lebanon Mtns', kind: 'mountain', lat: 33.80, lon: 35.85 },
+  { name: 'Moab', kind: 'region', lat: 31.40, lon: 35.75 },
+  { name: 'Edom', kind: 'region', lat: 30.50, lon: 35.40 },
+  { name: 'Bashan', kind: 'region', lat: 32.80, lon: 36.25 },
+  { name: 'Decapolis', kind: 'region', lat: 32.55, lon: 36.00 },
+  { name: 'Philistia', kind: 'region', lat: 31.60, lon: 34.60 },
+  { name: 'Phoenicia', kind: 'region', lat: 33.95, lon: 35.55 },
+  { name: 'Cappadocia', kind: 'region', lat: 38.60, lon: 34.80 },
+  { name: 'Cilicia', kind: 'region', lat: 37.05, lon: 35.10 },
+  { name: 'Pamphylia', kind: 'region', lat: 36.95, lon: 30.90 },
+  { name: 'Galatia', kind: 'region', lat: 39.50, lon: 33.00 },
+  { name: 'Jezreel Valley', kind: 'region', lat: 32.60, lon: 35.30 },
+  { name: 'Plain of Sharon', kind: 'region', lat: 32.30, lon: 34.85 },
+  { name: 'Goshen', kind: 'region', lat: 30.80, lon: 31.80 },
+  { name: 'Mount Carmel', kind: 'mountain', lat: 32.73, lon: 35.05 },
+  { name: 'Mount Tabor', kind: 'mountain', lat: 32.69, lon: 35.39 },
+  { name: 'Mount Nebo', kind: 'mountain', lat: 31.77, lon: 35.73 },
+  { name: 'Mount Ararat', kind: 'mountain', lat: 39.70, lon: 44.30 },
   // ── Modern cities (orientation points) ──
   { name: 'Jerusalem', kind: 'city', lat: 31.78, lon: 35.23 },
   { name: 'Tel Aviv', kind: 'city', lat: 32.07, lon: 34.78 },
@@ -15677,7 +15700,60 @@ const JOURNEY_MODERN_LANDMARKS = [
   { name: 'Rome', kind: 'city', lat: 41.90, lon: 12.50 },
   { name: 'Istanbul', kind: 'city', lat: 41.01, lon: 28.98 },
   { name: 'Izmir (Smyrna)', kind: 'city', lat: 38.42, lon: 27.14 },
-  { name: 'Nicosia', kind: 'city', lat: 35.17, lon: 33.36 }
+  { name: 'Nicosia', kind: 'city', lat: 35.17, lon: 33.36 },
+  // Israel / West Bank
+  { name: 'Haifa', kind: 'city', lat: 32.82, lon: 34.99 },
+  { name: 'Nazareth', kind: 'city', lat: 32.70, lon: 35.30 },
+  { name: 'Tiberias', kind: 'city', lat: 32.79, lon: 35.53 },
+  { name: 'Bethlehem', kind: 'city', lat: 31.70, lon: 35.20 },
+  { name: 'Hebron', kind: 'city', lat: 31.53, lon: 35.10 },
+  { name: 'Jericho', kind: 'city', lat: 31.87, lon: 35.44 },
+  { name: 'Nablus (Shechem)', kind: 'city', lat: 32.22, lon: 35.26 },
+  { name: 'Ashdod', kind: 'city', lat: 31.80, lon: 34.65 },
+  { name: 'Ashkelon', kind: 'city', lat: 31.67, lon: 34.57 },
+  { name: 'Eilat', kind: 'city', lat: 29.56, lon: 34.95 },
+  // Jordan
+  { name: 'Irbid', kind: 'city', lat: 32.55, lon: 35.85 },
+  { name: 'Madaba', kind: 'city', lat: 31.72, lon: 35.79 },
+  { name: 'Aqaba', kind: 'city', lat: 29.53, lon: 35.01 },
+  { name: 'Petra', kind: 'city', lat: 30.33, lon: 35.44 },
+  // Lebanon / Syria
+  { name: 'Tyre', kind: 'city', lat: 33.27, lon: 35.20 },
+  { name: 'Sidon', kind: 'city', lat: 33.56, lon: 35.37 },
+  { name: 'Byblos', kind: 'city', lat: 34.12, lon: 35.65 },
+  { name: 'Tripoli', kind: 'city', lat: 34.44, lon: 35.84 },
+  { name: 'Homs', kind: 'city', lat: 34.73, lon: 36.72 },
+  { name: 'Hama', kind: 'city', lat: 35.13, lon: 36.75 },
+  { name: 'Latakia', kind: 'city', lat: 35.52, lon: 35.79 },
+  { name: 'Palmyra (Tadmor)', kind: 'city', lat: 34.55, lon: 38.27 },
+  // Turkey (Asia Minor)
+  { name: 'Tarsus', kind: 'city', lat: 36.92, lon: 34.89 },
+  { name: 'Adana', kind: 'city', lat: 37.00, lon: 35.32 },
+  { name: 'Mersin', kind: 'city', lat: 36.80, lon: 34.63 },
+  { name: 'Gaziantep', kind: 'city', lat: 37.07, lon: 37.38 },
+  { name: 'Sanliurfa (Edessa)', kind: 'city', lat: 37.17, lon: 38.79 },
+  { name: 'Konya (Iconium)', kind: 'city', lat: 37.87, lon: 32.49 },
+  { name: 'Kayseri', kind: 'city', lat: 38.73, lon: 35.49 },
+  { name: 'Antalya', kind: 'city', lat: 36.90, lon: 30.71 },
+  { name: 'Selcuk (Ephesus)', kind: 'city', lat: 37.95, lon: 27.37 },
+  { name: 'Ankara', kind: 'city', lat: 39.93, lon: 32.86 },
+  // Egypt
+  { name: 'Giza', kind: 'city', lat: 30.01, lon: 31.21 },
+  { name: 'Suez', kind: 'city', lat: 29.97, lon: 32.55 },
+  { name: 'Port Said', kind: 'city', lat: 31.26, lon: 32.30 },
+  { name: 'Ismailia', kind: 'city', lat: 30.60, lon: 32.27 },
+  { name: 'Luxor (Thebes)', kind: 'city', lat: 25.69, lon: 32.64 },
+  // Iraq / Arabia
+  { name: 'Babylon (Hillah)', kind: 'city', lat: 32.47, lon: 44.42 },
+  { name: 'Kirkuk', kind: 'city', lat: 35.47, lon: 44.39 },
+  { name: 'Basra', kind: 'city', lat: 30.51, lon: 47.78 },
+  { name: 'Tabuk', kind: 'city', lat: 28.38, lon: 36.57 },
+  // Greece / Cyprus
+  { name: 'Thessaloniki', kind: 'city', lat: 40.64, lon: 22.94 },
+  { name: 'Corinth', kind: 'city', lat: 37.94, lon: 22.93 },
+  { name: 'Patras', kind: 'city', lat: 38.25, lon: 21.73 },
+  { name: 'Limassol', kind: 'city', lat: 34.71, lon: 33.02 },
+  { name: 'Paphos', kind: 'city', lat: 34.77, lon: 32.42 }
 ];
 
 /* Real map (MapLibre + self-hosted Protomaps tiles) — optional accurate renderer.
@@ -15796,7 +15872,7 @@ function _journeyMountGL(journey) {
       terrain: BIBLE_TERRAIN_OPTIONS,
       followTraveler: true,
       labelFor: _journeyLabelFor,
-      landmarks: _journeyModernLandmarks(journey, 7),
+      landmarks: _journeyModernLandmarks(journey, 12),
       onError: (err) => {
         _journeySetDiag('tile/style error: ' + _journeyErrText(err));
         _journeyGLFallback();
@@ -16050,7 +16126,7 @@ function renderAtlasJourneyList(query) {
     const miles = _journeyTotalMiles(j);
     const stops = (j.steps || []).length;
     return `<button class="atlas-row" onclick="selectAtlasJourney('${_journeyEsc(j.id)}')">
-      <span class="atlas-row-icon atlas-row-icon-journey"><span class="material-symbols-outlined">route</span></span>
+      <span class="atlas-row-icon atlas-row-icon-journey"><span class="material-symbols-outlined">hiking</span></span>
       <span class="atlas-row-copy"><strong>${_journeyEsc(j.title)}</strong><small>${_journeyEsc(j.subtitle)} &middot; ${miles.toLocaleString()} mi &middot; ${stops} stops</small></span>
       <span class="material-symbols-outlined atlas-row-arrow">chevron_right</span>
     </button>`;
@@ -16121,7 +16197,6 @@ function _atlasRenderDetail(place) {
   detail.innerHTML = `<div class="atlas-card">
     <div class="atlas-card-head">
       <div><span class="journey-kicker">${_journeyEsc(_atlasKindLabel(place.kind))}</span><h2>${_journeyEsc(place.name)}</h2></div>
-      <button class="atlas-card-close" onclick="atlasBack()" aria-label="Back to list"><span class="material-symbols-outlined">close</span></button>
     </div>
     <div class="atlas-peek-sub"><span class="atlas-conf-tag ${conf.cls}"><span class="material-symbols-outlined">${conf.icon}</span>${conf.label}</span></div>
     ${inTiles ? `<div class="journey-peek-toggle atlas-detail-toggle" role="tablist" aria-label="Map view">
@@ -16175,7 +16250,7 @@ function _atlasMountGL(place) {
       terrain: BIBLE_TERRAIN_OPTIONS,
       followTraveler: false,
       labelFor: _journeyLabelFor,
-      landmarks: _journeyModernLandmarks(pseudo, 6),
+      landmarks: _journeyModernLandmarks(pseudo, 10),
       pinZoom: 7,
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
@@ -16339,7 +16414,7 @@ function _atlasPeekMountGL(place) {
     return window.BibleMap.render(host, pseudo, {
       mode: _atlasPeekMode, pmtilesUrl: _journeyResolvePmtiles(), labelFor: _journeyLabelFor,
       terrain: BIBLE_TERRAIN_OPTIONS, followTraveler: false,
-      landmarks: _journeyModernLandmarks(pseudo, 6), pinZoom: 7,
+      landmarks: _journeyModernLandmarks(pseudo, 9), pinZoom: 7,
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
   }).then(() => {
@@ -16412,21 +16487,36 @@ function _journeyModernLandmarks(journey, limit = 5) {
   if (!b) return [];
   const centerLat = (b.minLat + b.maxLat) / 2;
   const centerLon = (b.minLon + b.maxLon) / 2;
+  const spanLat = b.maxLat - b.minLat, spanLon = b.maxLon - b.minLon;
+  // Minimum gap between two shown labels, scaled to the map's span so a tight
+  // local journey and a continent-wide one both stay readable. Lets the dataset
+  // be dense without labels piling on top of each other.
+  const minSep = Math.max(0.22, (spanLat + spanLon) * 0.5 * 0.085);
   const routePts = (journey?.points || []).filter(p => typeof p.lat === 'number' && typeof p.lon === 'number');
-  return JOURNEY_MODERN_LANDMARKS
+  const ranked = JOURNEY_MODERN_LANDMARKS
     .filter(p => p.lat >= b.minLat && p.lat <= b.maxLat && p.lon >= b.minLon && p.lon <= b.maxLon)
     .map(p => {
       const routeDistance = routePts.length
         ? Math.min(...routePts.map(r => Math.abs(p.lat - r.lat) + Math.abs(p.lon - r.lon)))
         : 0;
       const centerDistance = Math.abs(p.lat - centerLat) + Math.abs(p.lon - centerLon);
-      return { ...p, routeDistance, score: routeDistance * 1.8 + centerDistance * 0.35 };
+      // Cities are the most useful orientation anchors, so give them a small edge.
+      const kindBias = p.kind === 'city' ? -0.12 : 0;
+      return { ...p, routeDistance, score: routeDistance * 1.8 + centerDistance * 0.35 + kindBias };
     })
     // Drop a landmark that sits essentially on top of a route stop — the route
     // already labels that place, so a second label would just collide.
     .filter(p => p.kind === 'city' ? p.routeDistance > 0.18 : p.routeDistance > 0.04)
-    .sort((a, b) => a.score - b.score)
-    .slice(0, limit);
+    .sort((a, b) => a.score - b.score);
+  // Greedily keep the best-scoring labels while skipping any that crowd one we
+  // already picked, so denser coverage never turns into an unreadable cluster.
+  const out = [];
+  for (const p of ranked) {
+    if (out.length >= limit) break;
+    if (out.some(q => Math.abs(q.lat - p.lat) + Math.abs(q.lon - p.lon) < minSep)) continue;
+    out.push(p);
+  }
+  return out;
 }
 
 // Project a landmark onto the schematic SVG using the SAME transform the route
@@ -16506,7 +16596,7 @@ function _journeyPeekFactsHtml(journey, step) {
   const points = journey.points || [];
   const first = points[0], last = points[points.length - 1];
   const anchors = first && last ? `${_journeyLabelFor(first, _journeyPeekMode)} → ${_journeyLabelFor(last, _journeyPeekMode)}` : '';
-  const landmarks = _journeyModernLandmarks(journey, 4);
+  const landmarks = _journeyModernLandmarks(journey, 6);
   const routeSeq = points.slice(0, 5).map(p => _journeyLabelFor(p, _journeyPeekMode)).filter(Boolean);
   if (points.length > 5) routeSeq.push('...');
   return `<div class="journey-peek-facts" aria-label="Journey context">
@@ -16534,7 +16624,7 @@ function _journeyPolyline(points) {
 function _journeyRenderMap(journey) {
   const points = journey.points || [];
   const landmarkLabels = _journeyMode === 'modern'
-    ? _journeyModernLandmarks(journey, 5)
+    ? _journeyModernLandmarks(journey, 8)
         .map(l => _journeyProjectLandmark(journey, l))
         .filter(Boolean)
         .map(l => `<g class="journey-map-landmark journey-map-landmark-${_journeyEsc(l.kind)}">
@@ -16600,7 +16690,7 @@ function renderBibleJourneysPage() {
       const stops = (j.steps || []).length;
       const firstRef = (j.steps || [])[0]?.ref || '';
       return `<button class="journey-list-card${j.id === journey.id ? ' active' : ''}" onclick="selectBibleJourney('${_journeyEsc(j.id)}')">
-      <span class="journey-list-orb"><span class="material-symbols-outlined">${j.id === journey.id ? 'near_me' : 'route'}</span></span>
+      <span class="journey-list-orb"><span class="material-symbols-outlined">${j.id === journey.id ? 'near_me' : 'hiking'}</span></span>
       <span class="journey-list-copy">
         <strong>${_journeyEsc(j.title)}</strong>
         <small>${_journeyEsc(j.subtitle)}</small>
@@ -16949,7 +17039,7 @@ function _journeyPeekMountGLLegacy(journey, mode = _journeyPeekMode) {
       terrain: BIBLE_TERRAIN_OPTIONS,
       followTraveler: false,
       labelFor: _journeyLabelFor,
-      landmarks: _journeyModernLandmarks(journey, 5),
+      landmarks: _journeyModernLandmarks(journey, 9),
       onError: (err) => { wrap.classList.remove('gl-mounting', 'gl-ready'); _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err)); }
     });
   }).then((map) => {
@@ -16993,7 +17083,7 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
       terrain: BIBLE_TERRAIN_OPTIONS,
       followTraveler: false,
       labelFor: _journeyLabelFor,
-      landmarks: _journeyModernLandmarks(journey, 5),
+      landmarks: _journeyModernLandmarks(journey, 9),
       onError: (err) => {
         wrap.classList.remove('gl-mounting', 'gl-ready');
         _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err));
@@ -28828,7 +28918,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.345";
+const APP_VERSION = "3.0.347";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28849,6 +28939,19 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.347 &mdash; Bigger, clearer journey & place maps</div>
+<ul>
+  <li><strong>Working compass</strong> &mdash; A live compass now sits on every journey and place map and always points to true north, even when the 3D view is tilted.</li>
+  <li><strong>Bigger maps, wider cards</strong> &mdash; Journey and place maps are larger and the whole layout uses more of the screen width.</li>
+  <li><strong>Places open on the modern map</strong> &mdash; Place maps default to the modern view and also carry the new compass.</li>
+  <li><strong>Cinematic zoom-in</strong> &mdash; Maps now open pulled far back and glide slowly in toward the chosen route or place.</li>
+  <li><strong>Cleaner chrome</strong> &mdash; Map credits moved into the info button at the top, the redundant close button is gone from place pages, and journeys use a new travel icon.</li>
+</ul>
+<div class="un-version-label">v3.0.346 &mdash; Easier to find your place on the map</div>
+<ul>
+  <li><strong>More orientation markers</strong> &mdash; The Modern map view now labels far more modern cities and landmarks (Haifa, Nazareth, Tyre, Tarsus, Konya, Petra, Babylon, Corinth, and many more) so it is much easier to see where a journey sits today.</li>
+  <li><strong>Smarter label spacing</strong> &mdash; Labels are spread out based on how far the map is zoomed, so adding more of them keeps the map readable instead of cluttered.</li>
+</ul>
 <div class="un-version-label">v3.0.345 &mdash; Redesigned Bible Journey card</div>
 <ul>
   <li><strong>One sleek journey card</strong> &mdash; The journey title, the Bible Map / Modern toggle, the map, the Play route button, and the route + geography facts now live together in a single clean card.</li>
