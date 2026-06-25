@@ -33359,12 +33359,12 @@ body.tools-theme-match #homeScreen .home-action-tile .hat-text small {
 }
 
 @keyframes appShellInRight {
-  from { transform: translate3d(100%, 0, 0); opacity: .98; }
+  from { transform: translate3d(100%, 0, 0); opacity: 1; }
   to { transform: translate3d(0, 0, 0); opacity: 1; }
 }
 
 @keyframes appShellInLeft {
-  from { transform: translate3d(-100%, 0, 0); opacity: .98; }
+  from { transform: translate3d(-100%, 0, 0); opacity: 1; }
   to { transform: translate3d(0, 0, 0); opacity: 1; }
 }
 
@@ -33376,6 +33376,20 @@ body.tools-theme-match #homeScreen .home-action-tile .hat-text small {
 body.app-screen-motion {
   overflow: hidden !important;
   background: var(--primary-light, #f6fbff);
+}
+
+body.app-screen-motion::before,
+body.app-launch-motion::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  pointer-events: none;
+  background: var(--primary-light, #f6fbff);
+}
+
+body.app-launch-motion {
+  overflow: hidden !important;
 }
 
 .screen.app-screen-underlay,
@@ -33394,7 +33408,8 @@ body.app-screen-motion {
 }
 
 .screen.app-screen-underlay {
-  z-index: 200;
+  z-index: 198;
+  opacity: 0 !important;
   pointer-events: none;
 }
 
@@ -33404,11 +33419,11 @@ body.app-screen-motion {
 }
 
 .screen.active.app-slide-in-right {
-  animation: appShellInRight .34s cubic-bezier(.4, 0, .2, 1) both;
+  animation: appShellInRight .42s cubic-bezier(.2,.82,.18,1) both;
 }
 
 .screen.active.app-slide-in-left {
-  animation: appShellInLeft .34s cubic-bezier(.4, 0, .2, 1) both;
+  animation: appShellInLeft .42s cubic-bezier(.2,.82,.18,1) both;
 }
 
 .screen.active.app-screen-expanding,
@@ -33418,6 +33433,21 @@ body.app-screen-motion {
   backface-visibility: hidden;
   transform: translateZ(0);
   contain: paint;
+}
+
+.screen.active.app-screen-expanding {
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  z-index: 201;
+}
+
+.study-library.open.app-screen-expanding {
+  z-index: 941;
 }
 
 .study-library.open.app-slide-out-right {

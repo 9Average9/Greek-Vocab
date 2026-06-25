@@ -16073,16 +16073,18 @@ function _appReduceMotion() {
   return !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 }
 
-function _appPlayAnim(el, className, duration = 520) {
+function _appPlayAnim(el, className, duration = 520, opts = {}) {
   if (!el || !className || _appReduceMotion()) return;
   el.classList.remove(className);
   void el.offsetWidth;
+  if (opts.bodyClass) document.body?.classList.add(opts.bodyClass);
   el.classList.add(className);
   let done = false;
   const finish = () => {
     if (done) return;
     done = true;
     el.classList.remove(className);
+    if (opts.bodyClass) document.body?.classList.remove(opts.bodyClass);
   };
   el.addEventListener('animationend', finish, { once: true });
   setTimeout(finish, duration);
@@ -16095,11 +16097,7 @@ function _appAnimateActiveWithPrevious(previous, enterClass, duration = 420) {
   clearTimeout(_appMotionTimer);
   document.body?.classList.add('app-screen-motion');
   target.classList.remove('app-screen-animating', 'app-slide-in-right', 'app-slide-in-left');
-
-  if (previous && previous !== target) {
-    previous.classList.remove('app-screen-animating', 'app-slide-in-right', 'app-slide-in-left');
-    previous.classList.add('app-screen-underlay');
-  }
+  previous?.classList.remove('app-screen-underlay', 'app-screen-animating', 'app-slide-in-right', 'app-slide-in-left');
 
   void target.offsetWidth;
   target.classList.add('app-screen-animating', enterClass);
@@ -16129,7 +16127,7 @@ function _appSetExpandOrigin(el, rect) {
 function _appExpandTargetFromElement(target, launcher) {
   if (!target || !launcher || _appReduceMotion()) return;
   _appSetExpandOrigin(target, launcher.getBoundingClientRect());
-  _appPlayAnim(target, 'app-screen-expanding');
+  _appPlayAnim(target, 'app-screen-expanding', 540, { bodyClass: 'app-launch-motion' });
 }
 
 function _appSlideInScreen(screenId) {
@@ -29250,7 +29248,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.352";
+const APP_VERSION = "3.0.353";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29271,6 +29269,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.353 &mdash; Cleaner swipe openings</div>
+<ul>
+  <li><strong>Rhema-style swipes</strong> &mdash; App pages now slide over a solid theme stage instead of letting the previous screen peek through.</li>
+  <li><strong>Smoother tool launches</strong> &mdash; Home tools expand from the pressed button without briefly revealing the other tool buttons underneath.</li>
+</ul>
 <div class="un-version-label">v3.0.352 &mdash; Smoother app openings</div>
 <ul>
   <li><strong>No more blank flash</strong> &mdash; App pages now keep the previous screen painted underneath while the next screen slides in.</li>
