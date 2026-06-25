@@ -10515,11 +10515,13 @@ function showNavPage(page) {
     if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-right');
   } else if (page === 'memorization') {
     openMemorizationPage();
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-right');
   } else if (page === 'community') {
     showScreen('communityPage');
     localStorage.setItem('communityLastVisit', Date.now().toString());
     document.getElementById('commNavDot')?.classList.add('hidden');
     showLbTab('posts');
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-right');
   } else if (page === 'mercies') {
     showScreen('merciesPage');
     _bindPraisesScrollShadow();
@@ -16171,8 +16173,36 @@ function _appSlideHomeFromCurrent() {
   if (!active || !slideHomeScreens.has(active.id)) return false;
   _appHomeSlideBypass = true;
   try { showNavPage('home'); } finally { _appHomeSlideBypass = false; }
-  _appAnimateActiveWithPrevious(active, 'app-slide-in-right');
+  // Back gesture: reveal home underneath and slide the leaving screen off to the
+  // right over it — the same reveal as Journey Maps' back (not a blank veil).
+  _appAnimateLeaving(active, 'app-slide-out-right', document.getElementById('homeScreen'));
   return true;
+}
+
+// Slide a leaving screen off the top while the destination shows underneath.
+function _appAnimateLeaving(leaving, leaveClass, destination, duration = 400) {
+  if (!leaving || _appReduceMotion()) return;
+  clearTimeout(_appMotionTimer);
+  document.body?.classList.add('app-screen-motion');
+  _clearScreenTransitionClasses(leaving);
+  // Promote the destination above the theme veil so it's visible while revealed.
+  if (destination && destination !== leaving) destination.classList.add('app-screen-underlay');
+  // Re-show the leaving screen on top of the now-active destination, then slide it off.
+  leaving.classList.add('active', 'app-screen-animating', leaveClass);
+  void leaving.offsetWidth;
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    leaving.classList.remove('app-screen-animating', leaveClass);
+    // Only drop .active if this screen isn't the one we navigated to (guards
+    // against a stale finish stealing .active after a fast follow-up nav).
+    if (leaving.id !== _activeScreenId) leaving.classList.remove('active');
+    destination?.classList.remove('app-screen-underlay');
+    document.body?.classList.remove('app-screen-motion');
+  };
+  leaving.addEventListener('animationend', finish, { once: true });
+  _appMotionTimer = setTimeout(finish, duration);
 }
 
 function openHabitBuilderFromWidget(launcher) {
@@ -29316,7 +29346,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.357";
+const APP_VERSION = "3.0.358";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29337,6 +29367,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.358 &mdash; Consistent app motion</div>
+<ul>
+  <li><strong>Premium transitions everywhere</strong> &mdash; Profile, Praises, Community, Memorization, tools, and more now open and close with the same smooth, themed motion as Journey Maps.</li>
+  <li><strong>Real back gesture</strong> &mdash; Going home now slides the page off to reveal the home screen underneath, instead of flashing a blank backdrop.</li>
+</ul>
 <div class="un-version-label">v3.0.357 &mdash; Styles restored</div>
 <ul>
   <li><strong>Fixed broken styling</strong> &mdash; A missing bracket in the previous update stopped a large chunk of the app's styles and animations from loading. Everything is back.</li>

@@ -33503,6 +33503,13 @@ body.app-launch-motion {
   box-shadow: 14px 0 36px color-mix(in srgb, var(--secondary-color) 28%, transparent);
 }
 
+/* Back: the leaving screen slides off to the right, revealing the destination
+   (home) underneath — the same reveal as Journey Maps' back gesture. */
+.screen.active.app-slide-out-right {
+  animation: appShellOutRight .38s cubic-bezier(.4, 0, .2, 1) forwards;
+  box-shadow: -14px 0 36px color-mix(in srgb, var(--secondary-color) 28%, transparent);
+}
+
 .screen.active.app-screen-expanding,
 .study-library.open.app-screen-expanding {
   animation: appShellExpand .46s cubic-bezier(.4, 0, .2, 1) both;
@@ -33548,6 +33555,7 @@ body.app-launch-motion {
   .study-library.open.app-screen-expanding,
   .screen.active.app-slide-in-right,
   .screen.active.app-slide-in-left,
+  .screen.active.app-slide-out-right,
   .study-library.open.app-slide-out-right,
   .modal-overlay.open.app-modal-slide-in-right .modal-card {
     animation: none !important;
