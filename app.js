@@ -8605,10 +8605,20 @@ function closeStudyLibrary() {
   const modal = document.getElementById('studyLibraryModal');
   if (!modal) return;
   if (_studyDeleteMode) _exitStudyDeleteMode();
-  _journeySlideOutThen(modal, 'screen-slide-out-right', () => {
+  const finish = () => {
     modal.classList.remove('open');
     modal.classList.add('hidden');
-  });
+    modal.classList.remove('app-slide-out-right');
+  };
+  if (_appReduceMotion()) {
+    finish();
+    return;
+  }
+  modal.classList.remove('app-slide-out-right');
+  void modal.offsetWidth;
+  modal.classList.add('app-slide-out-right');
+  modal.addEventListener('animationend', finish, { once: true });
+  setTimeout(finish, 360);
 }
 
 function _renderStudyLibrary() {
@@ -10379,7 +10389,14 @@ function _clearScreenTransitionClasses(el) {
     'screen-tool-open-enter',
     'screen-tool-open-leave',
     'screen-tool-close-enter',
-    'screen-tool-close-leave'
+    'screen-tool-close-leave',
+    'app-screen-underlay',
+    'app-screen-animating',
+    'app-screen-expanding',
+    'app-slide-in-right',
+    'app-slide-in-left',
+    'app-slide-out-right',
+    'app-slide-out-left'
   );
 }
 
@@ -10461,7 +10478,8 @@ function _bindPraisesScrollShadow() {
 }
 
 function showNavPage(page) {
-  const fromId = document.querySelector('.screen.active')?.id || _activeScreenId;
+  const previousScreen = document.querySelector('.screen.active');
+  const fromId = previousScreen?.id || _activeScreenId;
   if (page === 'home' && _appSlideHomeFromCurrent()) return;
   if (page !== 'home') closeHomeSearch();
   // The Disciple Group tab may have borrowed the community content — return it
@@ -10488,13 +10506,13 @@ function showNavPage(page) {
     showScreen('profilePage');
     hideBottomNav();
     updateProfileUI();
-    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appSlideInScreen('profilePage');
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-left');
   } else if (page === 'habits') {
     showScreen('habitsPage');
     startHabitsPage();
     bindHabitsNavCollapse();
     expandHabitsNavOnEntry();
-    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appSlideInScreen('habitsPage');
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-right');
   } else if (page === 'memorization') {
     openMemorizationPage();
   } else if (page === 'community') {
@@ -10510,14 +10528,14 @@ function showNavPage(page) {
     startMerciesFeed();
     bindMerciesNavCollapse();
     expandMerciesNavOnEntry();
-    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appSlideInScreen('merciesPage');
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-right');
     setTimeout(() => startPraisesCoach(false), 650);
   } else if (page === 'lessons') {
     hideBottomNav();
     showNewLearnMenu();
     if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) {
       const activeId = document.querySelector('.screen.active')?.id;
-      if (activeId && activeId !== fromId && activeId !== 'homeScreen') _appSlideInScreen(activeId);
+      if (activeId && activeId !== fromId && activeId !== 'homeScreen') _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-right');
     }
   } else if (page === 'rhema') {
     showRhema();
@@ -16049,6 +16067,54 @@ function _journeySlideOutThen(el, cls, done) {
 
 let _appHomeSlideBypass = false;
 let _appSuppressNextSlideIn = false;
+let _appMotionTimer = null;
+
+function _appReduceMotion() {
+  return !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+}
+
+function _appPlayAnim(el, className, duration = 520) {
+  if (!el || !className || _appReduceMotion()) return;
+  el.classList.remove(className);
+  void el.offsetWidth;
+  el.classList.add(className);
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    el.classList.remove(className);
+  };
+  el.addEventListener('animationend', finish, { once: true });
+  setTimeout(finish, duration);
+}
+
+function _appAnimateActiveWithPrevious(previous, enterClass, duration = 420) {
+  const target = document.querySelector('.screen.active');
+  if (!target || !enterClass || _appReduceMotion()) return;
+
+  clearTimeout(_appMotionTimer);
+  document.body?.classList.add('app-screen-motion');
+  target.classList.remove('app-screen-animating', 'app-slide-in-right', 'app-slide-in-left');
+
+  if (previous && previous !== target) {
+    previous.classList.remove('app-screen-animating', 'app-slide-in-right', 'app-slide-in-left');
+    previous.classList.add('app-screen-underlay');
+  }
+
+  void target.offsetWidth;
+  target.classList.add('app-screen-animating', enterClass);
+
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    previous?.classList.remove('app-screen-underlay');
+    target.classList.remove('app-screen-animating', enterClass);
+    document.body?.classList.remove('app-screen-motion');
+  };
+  target.addEventListener('animationend', finish, { once: true });
+  _appMotionTimer = setTimeout(finish, duration);
+}
 
 function _appSetExpandOrigin(el, rect) {
   if (!el || !rect) return;
@@ -16061,13 +16127,15 @@ function _appSetExpandOrigin(el, rect) {
 }
 
 function _appExpandTargetFromElement(target, launcher) {
-  if (!target || !launcher || _journeyReduceMotion()) return;
+  if (!target || !launcher || _appReduceMotion()) return;
   _appSetExpandOrigin(target, launcher.getBoundingClientRect());
-  _journeyPlayAnim(target, 'screen-expanding');
+  _appPlayAnim(target, 'app-screen-expanding');
 }
 
 function _appSlideInScreen(screenId) {
-  _journeyPlayAnim(document.getElementById(screenId), 'screen-slide-in-right');
+  const target = document.getElementById(screenId);
+  if (!target) return;
+  _appPlayAnim(target, 'app-slide-in-right', 420);
 }
 
 function _appSlideHomeFromCurrent() {
@@ -16091,10 +16159,9 @@ function _appSlideHomeFromCurrent() {
     'testScreen'
   ]);
   if (!active || !slideHomeScreens.has(active.id)) return false;
-  _journeySlideOutThen(active, 'screen-slide-out-right', () => {
-    _appHomeSlideBypass = true;
-    try { showNavPage('home'); } finally { _appHomeSlideBypass = false; }
-  });
+  _appHomeSlideBypass = true;
+  try { showNavPage('home'); } finally { _appHomeSlideBypass = false; }
+  _appAnimateActiveWithPrevious(active, 'app-slide-in-right');
   return true;
 }
 
@@ -23370,10 +23437,11 @@ html += `</div>`;
 }
 
 function showSettings() {
-  const fromId = document.querySelector('.screen.active')?.id;
+  const previousScreen = document.querySelector('.screen.active');
+  const fromId = previousScreen?.id;
   hideBottomNav();
   showScreen("settingsScreen");
-  if (fromId === 'profilePage') _appSlideInScreen('settingsScreen');
+  if (fromId === 'profilePage') _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-left');
   requestAnimationFrame(() => {
     document.querySelector("#settingsScreen .sett-scroll")?.scrollTo?.(0, 0);
   });
@@ -29182,7 +29250,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.351";
+const APP_VERSION = "3.0.352";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29203,6 +29271,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.352 &mdash; Smoother app openings</div>
+<ul>
+  <li><strong>No more blank flash</strong> &mdash; App pages now keep the previous screen painted underneath while the next screen slides in.</li>
+  <li><strong>Cleaner directions</strong> &mdash; Profile enters from the left, Home returns from the right, and Lessons opens from the right.</li>
+  <li><strong>Tool launch polish</strong> &mdash; Home tools and Habit Builder use the same press-to-expand feel as Study Library.</li>
+</ul>
 <div class="un-version-label">v3.0.351 &mdash; Journey-style app openings</div>
 <ul>
   <li><strong>Real Journey motion reused</strong> &mdash; Habit Builder and Home tools now expand from the pressed tile using the same animation system as the Journey Maps widget.</li>
@@ -31839,7 +31913,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function closeSettingsMenu() {
   // Settings is opened from the profile screen, so back should return there.
   const settings = document.getElementById('settingsScreen');
-  _journeySlideOutThen(settings, 'screen-slide-out-right', () => showNavPage('profile'));
+  showNavPage('profile');
+  _appAnimateActiveWithPrevious(settings, 'app-slide-in-right');
 }
 function openNewsFromProfile() {
   const modal = document.getElementById("updateModal");
@@ -31859,7 +31934,7 @@ function openNewsFromProfile() {
 
   updateProfileAttention();
   modal.classList.add("open");
-  _journeyPlayAnim(modal, 'screen-slide-in-right');
+  _appPlayAnim(modal, 'app-modal-slide-in-right', 420);
 }
 
 
@@ -40101,7 +40176,7 @@ function startPraisesCoach(force = false) {
 function openCoachReplayModal() {
   const modal = document.getElementById('coachReplayModal');
   modal?.classList.add('open');
-  _journeyPlayAnim(modal, 'screen-slide-in-right');
+  _appPlayAnim(modal, 'app-modal-slide-in-right', 420);
 }
 
 function closeCoachReplayModal(event) {
@@ -40113,7 +40188,7 @@ function closeCoachReplayModal(event) {
 function openRhemaNerdModal() {
   const modal = document.getElementById('rhemaNerdModal');
   modal?.classList.add('open');
-  _journeyPlayAnim(modal, 'screen-slide-in-right');
+  _appPlayAnim(modal, 'app-modal-slide-in-right', 420);
 }
 
 function closeRhemaNerdModal(event) {

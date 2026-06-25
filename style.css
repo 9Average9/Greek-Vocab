@@ -33345,3 +33345,99 @@ body.tools-theme-match #homeScreen .home-action-tile .hat-text small {
     animation: none !important;
   }
 }
+
+/* App-shell motion: Journey-style feel without depending on Journey screens. */
+@keyframes appShellExpand {
+  from {
+    clip-path: inset(var(--exp-t, 35%) var(--exp-r, 8%) var(--exp-b, 40%) var(--exp-l, 8%) round 22px);
+    opacity: .52;
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 0);
+    opacity: 1;
+  }
+}
+
+@keyframes appShellInRight {
+  from { transform: translate3d(100%, 0, 0); opacity: .98; }
+  to { transform: translate3d(0, 0, 0); opacity: 1; }
+}
+
+@keyframes appShellInLeft {
+  from { transform: translate3d(-100%, 0, 0); opacity: .98; }
+  to { transform: translate3d(0, 0, 0); opacity: 1; }
+}
+
+@keyframes appShellOutRight {
+  from { transform: translate3d(0, 0, 0); opacity: 1; }
+  to { transform: translate3d(100%, 0, 0); opacity: .98; }
+}
+
+body.app-screen-motion {
+  overflow: hidden !important;
+  background: var(--primary-light, #f6fbff);
+}
+
+.screen.app-screen-underlay,
+.screen.active.app-screen-animating {
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  background: var(--primary-light, #f6fbff) !important;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  contain: paint;
+}
+
+.screen.app-screen-underlay {
+  z-index: 200;
+  pointer-events: none;
+}
+
+.screen.active.app-screen-animating {
+  z-index: 201;
+  will-change: transform;
+}
+
+.screen.active.app-slide-in-right {
+  animation: appShellInRight .34s cubic-bezier(.4, 0, .2, 1) both;
+}
+
+.screen.active.app-slide-in-left {
+  animation: appShellInLeft .34s cubic-bezier(.4, 0, .2, 1) both;
+}
+
+.screen.active.app-screen-expanding,
+.study-library.open.app-screen-expanding {
+  animation: appShellExpand .46s cubic-bezier(.4, 0, .2, 1) both;
+  background: var(--primary-light, #f6fbff) !important;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  contain: paint;
+}
+
+.study-library.open.app-slide-out-right {
+  animation: appShellOutRight .30s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
+.modal-overlay.open.app-modal-slide-in-right .modal-card,
+#updateModal.open.app-modal-slide-in-right .modal-card,
+#coachReplayModal.open.app-modal-slide-in-right .modal-card,
+#rhemaNerdModal.open.app-modal-slide-in-right .modal-card {
+  animation: atlasDetailIn .32s cubic-bezier(.4, 0, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen.active.app-screen-expanding,
+  .study-library.open.app-screen-expanding,
+  .screen.active.app-slide-in-right,
+  .screen.active.app-slide-in-left,
+  .study-library.open.app-slide-out-right,
+  .modal-overlay.open.app-modal-slide-in-right .modal-card {
+    animation: none !important;
+  }
+}
