@@ -10324,6 +10324,7 @@ function bindHabitsNavCollapse() {
   _habitsNavScrollBound = true;
   nav.addEventListener('click', e => {
     if (nav.classList.contains('habits-collapsed')) {
+      if (e.target?.closest?.('.bn-item[data-page="home"]')) return;
       e.preventDefault();
       e.stopPropagation();
       expandHabitsNavTemporarily();
@@ -10332,6 +10333,75 @@ function bindHabitsNavCollapse() {
 }
 
 let _prevNavPage = 'home';
+let _activeScreenId = 'homeScreen';
+let _nextScreenTransition = null;
+let _screenTransitionTimer = null;
+
+function _setNextScreenTransition(type) {
+  _nextScreenTransition = type || null;
+}
+
+function _inferScreenTransition(fromId, toId) {
+  if (!fromId || !toId || fromId === toId) return null;
+
+  if (fromId === 'homeScreen' && toId === 'profilePage') return 'profile-in';
+  if (fromId === 'profilePage' && toId === 'homeScreen') return 'profile-out';
+
+  if (fromId === 'profilePage' && toId === 'settingsScreen') return 'slide-forward';
+  if (fromId === 'settingsScreen' && toId === 'profilePage') return 'slide-back';
+
+  const swipePages = new Set(['merciesPage', 'newLearnMenu', 'advancedLearnMenu', 'basicVerbsLearnMenu', 'advVerbsLearnMenu']);
+  if (fromId === 'homeScreen' && swipePages.has(toId)) return 'slide-forward';
+  if (toId === 'homeScreen' && swipePages.has(fromId)) return 'slide-back';
+
+  const toolPages = new Set(['habitsPage', 'memorizationPage', 'readingPlanPage', 'learnMenu', 'translateMenu', 'translateScreen', 'testMenu', 'testScreen']);
+  if (fromId === 'homeScreen' && toolPages.has(toId)) return 'tool-open';
+  if (toId === 'homeScreen' && toolPages.has(fromId)) return 'tool-close';
+
+  return null;
+}
+
+function _clearScreenTransitionClasses(el) {
+  if (!el) return;
+  el.classList.remove(
+    'screen-entering',
+    'screen-leaving',
+    'screen-profile-in-enter',
+    'screen-profile-in-leave',
+    'screen-profile-out-enter',
+    'screen-profile-out-leave',
+    'screen-slide-forward-enter',
+    'screen-slide-forward-leave',
+    'screen-slide-back-enter',
+    'screen-slide-back-leave',
+    'screen-tool-open-enter',
+    'screen-tool-open-leave',
+    'screen-tool-close-enter',
+    'screen-tool-close-leave'
+  );
+}
+
+function _animateScreenSwap(prev, target, transition) {
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  if (!prev || !target || prev === target || !transition || reduceMotion) {
+    if (prev && prev !== target) prev.classList.remove('active');
+    return;
+  }
+
+  clearTimeout(_screenTransitionTimer);
+  document.body?.classList.add('screen-transitioning');
+  _clearScreenTransitionClasses(prev);
+  _clearScreenTransitionClasses(target);
+  prev.classList.add('screen-leaving', `screen-${transition}-leave`);
+  target.classList.add('screen-entering', `screen-${transition}-enter`);
+
+  _screenTransitionTimer = setTimeout(() => {
+    if (prev !== target && prev.id !== _activeScreenId) prev.classList.remove('active');
+    _clearScreenTransitionClasses(prev);
+    _clearScreenTransitionClasses(target);
+    document.body?.classList.remove('screen-transitioning');
+  }, 430);
+}
 
 // Move the live Community content back into its own page. The Disciple Group tab
 // inside Praises borrows the real #commScroll element (so every community handler
@@ -10451,13 +10521,26 @@ function showScreen(id) {
   if (id !== 'homeScreen') _stopHomeFlip();
   closeLearnSideMenu();
 
+  const previous = document.getElementById(_activeScreenId) || document.querySelector('.screen.active');
+  const transition = _nextScreenTransition || _inferScreenTransition(previous?.id, id);
+  _nextScreenTransition = null;
+  _activeScreenId = id;
+
   screens.forEach(screen => {
     const el = document.getElementById(screen);
-    if (el) el.classList.remove("active");
+    if (el && el !== previous) {
+      el.classList.remove("active");
+      _clearScreenTransitionClasses(el);
+    }
   });
 
   const target = document.getElementById(id);
   if (target) target.classList.add("active");
+  if (previous && previous !== target) {
+    _animateScreenSwap(previous, target, transition);
+  } else if (target) {
+    _clearScreenTransitionClasses(target);
+  }
   if (id !== 'merciesPage') setMerciesNavCollapsed(false);
   if (id !== 'homeScreen') setHomeNavCollapsed(false);
   if (id !== 'habitsPage') setHabitsNavCollapsed(false);
@@ -10480,6 +10563,19 @@ function _syncHomeViewportState(id) {
   } else {
     _clearPageHomeBackdrop();
   }
+}
+
+function _bindHomeLaunchFeedback() {
+  if (window.__homeLaunchFeedbackBound) return;
+  window.__homeLaunchFeedbackBound = true;
+  document.addEventListener('click', event => {
+    const launcher = event.target?.closest?.('#homeScreen .home-habit-widget, #homeScreen .home-action-tile');
+    if (!launcher) return;
+    launcher.classList.remove('launching');
+    void launcher.offsetWidth;
+    launcher.classList.add('launching');
+    setTimeout(() => launcher.classList.remove('launching'), 520);
+  }, true);
 }
 
 /* =========================
@@ -23199,6 +23295,7 @@ function showSettings() {
   updateLessonModeSettingsUI();
   updateHighContrastSettingsUI();
   updateMatchHomeThemeSettingsUI();
+  updateToolsMatchThemeSettingsUI();
 }
 
 function resetTestData() {
@@ -24038,6 +24135,26 @@ function toggleMatchHomeTheme() {
   syncUserData();
 }
 
+function getToolsMatchThemeColorMode() {
+  return localStorage.getItem("toolsMatchThemeColor") === "true";
+}
+
+function applyToolsMatchThemeColorMode() {
+  document.body?.classList.toggle("tools-theme-match", getToolsMatchThemeColorMode());
+}
+
+function updateToolsMatchThemeSettingsUI() {
+  const toggle = document.getElementById("toolsMatchThemeToggle");
+  if (toggle) toggle.checked = getToolsMatchThemeColorMode();
+}
+
+function toggleToolsMatchThemeColor() {
+  const enabled = document.getElementById("toolsMatchThemeToggle")?.checked === true;
+  localStorage.setItem("toolsMatchThemeColor", String(enabled));
+  applyToolsMatchThemeColorMode();
+  syncUserData();
+}
+
 const HOME_BACKDROPS = [
   "none",
   "mountains",
@@ -24128,6 +24245,7 @@ window.addEventListener("load", () => {
 
   applyAppTheme(savedTheme);
   applyMatchHomeThemeMode();
+  applyToolsMatchThemeColorMode();
   applyHomeBackdrop(localStorage.getItem("homeBackdrop") || "none");
   _syncHomeViewportState(document.querySelector(".screen.active")?.id || "homeScreen");
 });
@@ -28979,7 +29097,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.349";
+const APP_VERSION = "3.0.350";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29000,6 +29118,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.350 &mdash; Smoother app motion</div>
+<ul>
+  <li><strong>Smoother openings</strong> &mdash; Habit Builder, Home tools, Profile, Settings, Praises, Lessons, and Rhema now use softer app-style entrance motion.</li>
+  <li><strong>Habit Builder Home button</strong> &mdash; Habit Builder now uses a single floating Home button like Praises, without the extra profile icon peek.</li>
+  <li><strong>Theme-aware taps</strong> &mdash; Button press feedback now follows your selected theme color, and Settings has a new toggle to make Home tool cards match your theme.</li>
+  <li><strong>Friends sheet polish</strong> &mdash; The Friends modal opens as a full-width bottom sheet with more breathing room at the bottom.</li>
+</ul>
 <div class="un-version-label">v3.0.349 &mdash; Sleeker, full-width journey maps</div>
 <ul>
   <li><strong>Edge-to-edge layout</strong> &mdash; The journeys and places pages now run full width; the top bar, lists, and map cards no longer sit in an inset box.</li>
@@ -30882,6 +31007,7 @@ async function restoreUserFromFirestore(user) {
   if (data.darkMode != null) localStorage.setItem("darkMode", String(data.darkMode));
   if (data.highContrastMode != null) localStorage.setItem("highContrastMode", String(data.highContrastMode));
   if (data.matchHomeTheme != null) localStorage.setItem("matchHomeTheme", String(data.matchHomeTheme));
+  if (data.toolsMatchThemeColor != null) localStorage.setItem("toolsMatchThemeColor", String(data.toolsMatchThemeColor));
   if (data.appTheme) {
     localStorage.setItem("appTheme", data.appTheme);
     applyAppTheme(data.appTheme);
@@ -30895,6 +31021,7 @@ async function restoreUserFromFirestore(user) {
     applyHomeBackdrop(localStorage.getItem("homeBackdrop") || "none");
   }
   applyMatchHomeThemeMode();
+  applyToolsMatchThemeColorMode();
   if (data.advQuizScores) localStorage.setItem("advQuizScores", JSON.stringify(data.advQuizScores));
   if (data.merciesSettings) {
     localStorage.setItem("mercyDailyEnabled", String(!!data.merciesSettings.dailyEnabled));
@@ -30978,6 +31105,7 @@ async function syncUserData() {
     darkMode: localStorage.getItem("darkMode") === "true",
     highContrastMode: getHighContrastMode(),
     matchHomeTheme: getMatchHomeThemeMode(),
+    toolsMatchThemeColor: getToolsMatchThemeColorMode(),
     appTheme: localStorage.getItem("appTheme") || null,
     homeBackdrop: localStorage.getItem("homeBackdrop") || "none",
     advQuizScores: (() => { try { return JSON.parse(localStorage.getItem("advQuizScores") || "{}"); } catch { return {}; } })(),
@@ -31024,6 +31152,7 @@ function gatherMigrationData() {
     darkMode: localStorage.getItem("darkMode") === "true",
     highContrastMode: getHighContrastMode(),
     matchHomeTheme: getMatchHomeThemeMode(),
+    toolsMatchThemeColor: getToolsMatchThemeColorMode(),
     appTheme: localStorage.getItem("appTheme") || null,
     homeBackdrop: localStorage.getItem("homeBackdrop") || "none",
     appWelcomeCoachSeenV275: _hasCompletedAppWelcomeCoach(),
@@ -31606,6 +31735,7 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
   updateLessonCompletionUI();
   _syncGCalProfileStatusFromStorage();
+  _bindHomeLaunchFeedback();
 
   REQUIRED_LESSONS.forEach(lessonId => {
     updateCompleteLessonButton(lessonId);
@@ -38417,7 +38547,11 @@ async function showRhema() {
   setNavActive('rhema');
   const modal = document.getElementById('rhemaModal');
   if (!modal) return;
+  modal.classList.remove('rhema-nav-enter');
+  void modal.offsetWidth;
+  modal.classList.add('rhema-nav-enter');
   modal.classList.add('open');
+  setTimeout(() => modal.classList.remove('rhema-nav-enter'), 460);
   _rhemaStartMarksSync();
   _rhemaStartTrailsSync();
   _rhemaActivateCompareScope();

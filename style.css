@@ -33071,3 +33071,234 @@ body::-webkit-scrollbar,
   pointer-events: none !important;
   transform: scale(0.5) !important;
 }
+
+/* Quality motion pass: smooth screen swaps without the hard clipped handoff. */
+body.screen-transitioning .app {
+  position: relative;
+  overflow: hidden !important;
+  contain: paint;
+}
+
+body.screen-transitioning .screen.screen-entering,
+body.screen-transitioning .screen.screen-leaving {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+body.screen-transitioning .screen.screen-entering { z-index: 22; }
+body.screen-transitioning .screen.screen-leaving { z-index: 20; pointer-events: none; }
+
+.screen-profile-in-enter { animation: screenProfileIn .4s cubic-bezier(.2,.82,.18,1) both; }
+.screen-profile-in-leave { animation: screenHomeNudgeRight .4s cubic-bezier(.2,.82,.18,1) both; }
+.screen-profile-out-enter { animation: screenHomeReturnRight .4s cubic-bezier(.2,.82,.18,1) both; }
+.screen-profile-out-leave { animation: screenProfileOut .4s cubic-bezier(.2,.82,.18,1) both; }
+.screen-slide-forward-enter { animation: screenSlideFromRight .38s cubic-bezier(.2,.82,.18,1) both; }
+.screen-slide-forward-leave { animation: screenSlideUnderLeft .38s cubic-bezier(.2,.82,.18,1) both; }
+.screen-slide-back-enter { animation: screenSlideFromLeftSoft .38s cubic-bezier(.2,.82,.18,1) both; }
+.screen-slide-back-leave { animation: screenSlideToRight .38s cubic-bezier(.2,.82,.18,1) both; }
+.screen-tool-open-enter { animation: screenToolOpen .42s cubic-bezier(.16,1,.3,1) both; transform-origin: 50% 82%; }
+.screen-tool-open-leave { animation: screenToolDim .42s cubic-bezier(.16,1,.3,1) both; transform-origin: 50% 80%; }
+.screen-tool-close-enter { animation: screenToolHomeReturn .38s cubic-bezier(.16,1,.3,1) both; transform-origin: 50% 80%; }
+.screen-tool-close-leave { animation: screenToolClose .38s cubic-bezier(.16,1,.3,1) both; transform-origin: 50% 82%; }
+
+@keyframes screenProfileIn {
+  from { transform: translateX(-100%); opacity: .96; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes screenProfileOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(-100%); opacity: .96; }
+}
+@keyframes screenHomeNudgeRight {
+  from { transform: translateX(0) scale(1); opacity: 1; }
+  to { transform: translateX(18%) scale(.985); opacity: .72; }
+}
+@keyframes screenHomeReturnRight {
+  from { transform: translateX(18%) scale(.985); opacity: .72; }
+  to { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes screenSlideFromRight {
+  from { transform: translateX(100%); opacity: .98; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes screenSlideUnderLeft {
+  from { transform: translateX(0) scale(1); opacity: 1; }
+  to { transform: translateX(-14%) scale(.99); opacity: .68; }
+}
+@keyframes screenSlideFromLeftSoft {
+  from { transform: translateX(-14%) scale(.99); opacity: .68; }
+  to { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes screenSlideToRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: .96; }
+}
+@keyframes screenToolOpen {
+  0% { transform: translateY(28px) scale(.955); opacity: 0; border-radius: 34px; }
+  62% { transform: translateY(-4px) scale(1.006); opacity: 1; border-radius: 20px; }
+  100% { transform: translateY(0) scale(1); opacity: 1; border-radius: 0; }
+}
+@keyframes screenToolDim {
+  from { transform: translateY(0) scale(1); opacity: 1; }
+  to { transform: translateY(-12px) scale(.985); opacity: .52; }
+}
+@keyframes screenToolHomeReturn {
+  from { transform: translateY(-10px) scale(.985); opacity: .6; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes screenToolClose {
+  from { transform: translateY(0) scale(1); opacity: 1; }
+  to { transform: translateY(32px) scale(.955); opacity: 0; }
+}
+
+#homeScreen .home-action-tile.launching,
+#homeScreen .home-habit-widget.launching {
+  animation: homeToolLaunch .44s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes homeToolLaunch {
+  0% { transform: scale(1); filter: brightness(1); }
+  42% { transform: translateY(-4px) scale(1.018); filter: brightness(1.03); }
+  100% { transform: translateY(0) scale(1); filter: brightness(1); }
+}
+
+#rhemaModal.rhema-nav-enter #rhemaSlide {
+  animation: rhemaSwipeOpen .42s cubic-bezier(.2,.82,.18,1) both;
+}
+
+@keyframes rhemaSwipeOpen {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.screen-transitioning .screen.screen-entering,
+  body.screen-transitioning .screen.screen-leaving,
+  #homeScreen .home-action-tile.launching,
+  #homeScreen .home-habit-widget.launching,
+  #rhemaModal.rhema-nav-enter #rhemaSlide {
+    animation: none !important;
+  }
+}
+
+/* Habits uses the Praises-style floating Home button only. */
+.bottom-nav.habits-collapsed {
+  left: auto !important;
+  right: calc(16px + env(safe-area-inset-right, 0px)) !important;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  width: 68px !important;
+  height: 68px !important;
+  transform: none !important;
+}
+.bottom-nav.habits-collapsed .bn-item:not([data-page="home"]) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.5) !important;
+}
+.bottom-nav.habits-collapsed .bn-item[data-page="home"] {
+  inset: 0 !important;
+  height: 68px !important;
+}
+
+/* Theme-aware press feedback. */
+:root {
+  --theme-press-highlight: color-mix(in srgb, var(--secondary-color) 16%, transparent);
+}
+
+.icon-btn:active,
+.prof-nav-icon:active,
+.ht-btn:active,
+.home-action-tile:active,
+.home-habit-widget:active,
+.prof-menu-row:active,
+.profile-action-card:active,
+.fr-card:active,
+.friends-tab-btn:active,
+.sett-row:active,
+.praises-tab:active,
+.comm-friends-btn:active,
+.notif-tab:active,
+.notif-close-btn:active {
+  background-color: var(--theme-press-highlight) !important;
+  border-color: color-mix(in srgb, var(--secondary-color) 42%, var(--border-color)) !important;
+}
+
+* {
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--secondary-color) 18%, transparent);
+}
+
+/* Optional Home Tools theme matching. */
+body.tools-theme-match #homeScreen .home-action-tile {
+  --qa-card-bg:
+    radial-gradient(circle at 78% 10%, color-mix(in srgb, var(--secondary-color) 18%, transparent), transparent 40%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--secondary-color) 17%, var(--card-color)),
+      color-mix(in srgb, var(--secondary-color) 6%, var(--primary-light))) !important;
+  --qa-card-border: color-mix(in srgb, var(--secondary-color) 34%, transparent) !important;
+  --qa-card-shadow: color-mix(in srgb, var(--secondary-color) 18%, transparent) !important;
+  --qa-image-shadow: color-mix(in srgb, var(--secondary-color) 18%, transparent) !important;
+  --qa-title: var(--secondary-color) !important;
+  --qa-subtitle: color-mix(in srgb, var(--secondary-color) 72%, var(--font-color)) !important;
+  background: var(--qa-card-bg) !important;
+  border-color: var(--qa-card-border) !important;
+  box-shadow: 0 15px 34px var(--qa-card-shadow) !important;
+}
+
+body.tools-theme-match #homeScreen .home-action-tile .hat-icon {
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--secondary-color) 10%, #fff),
+      color-mix(in srgb, var(--secondary-color) 16%, var(--card-color))) !important;
+  border-color: color-mix(in srgb, var(--secondary-color) 22%, transparent) !important;
+}
+
+body.tools-theme-match #homeScreen .home-action-tile .hat-text strong,
+body.tools-theme-match #homeScreen .home-action-tile .hat-chev {
+  color: var(--secondary-color) !important;
+}
+
+body.tools-theme-match #homeScreen .home-action-tile .hat-text small {
+  color: color-mix(in srgb, var(--secondary-color) 76%, var(--font-color)) !important;
+}
+
+/* Friends sheet: full mobile-width bottom sheet with a softer entrance. */
+.friends-modal-overlay {
+  align-items: flex-end !important;
+  justify-content: stretch !important;
+  padding: 0 !important;
+}
+.friends-modal-overlay.open .friends-modal {
+  animation: friendsSheetOpen .3s cubic-bezier(.16,1,.3,1) both;
+}
+.friends-modal {
+  width: 100vw !important;
+  max-width: none !important;
+  max-height: min(88svh, calc(100svh - env(safe-area-inset-top, 0px) - 18px)) !important;
+  border-radius: 26px 26px 0 0 !important;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.fr-list {
+  padding-bottom: calc(42px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+@keyframes friendsSheetOpen {
+  from { transform: translateY(36px); opacity: .72; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+#updateModal.open .modal-card,
+#coachReplayModal.open .modal-card,
+#rhemaNerdModal.open .modal-card {
+  animation: profileSheetOpen .3s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes profileSheetOpen {
+  from { transform: translateY(18px) scale(.965); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
