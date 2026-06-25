@@ -15871,7 +15871,7 @@ function setBibleJourneyMode(mode) {
     const journey = _journeyById(_journeySelectedId);
     _journeyRenderStats(journey);
     const geo = document.querySelector('#journeyMapShell .journey-geography-note');
-    if (geo) geo.outerHTML = _journeyGeographyHtml(journey, _journeyMode);
+    if (geo) geo.outerHTML = _journeyGeographyFact(journey, _journeyMode);
     window.BibleMap.setMode(_journeyMode);
     return;
   }
@@ -16485,6 +16485,20 @@ function _journeyGeographyHtml(journey, mode = _journeyMode) {
   </div>`;
 }
 
+// Small compass rosette overlaid on the journey map. Themed via --secondary-color.
+function _journeyCompassHtml() {
+  return `<div class="journey-compass" aria-hidden="true"><span class="journey-compass-n">N</span><span class="journey-compass-needle"></span></div>`;
+}
+
+// "Modern geography" fact card for the unified journey card. Keeps the
+// .journey-geography-note hook so setBibleJourneyMode can swap it in place.
+function _journeyGeographyFact(journey, mode = _journeyMode) {
+  const nearby = mode === 'modern' ? _journeyModernContext(journey) : '';
+  const modern = journey?.modern || '';
+  if (!modern && !nearby) return '';
+  return `<div class="journey-fact journey-fact-geo journey-geography-note"><span class="journey-fact-icon"><span class="material-symbols-outlined">public</span></span><strong>${mode === 'modern' && nearby ? 'Nearby today' : 'Modern geography'}</strong><p>${_journeyEsc(nearby || modern)}</p></div>`;
+}
+
 function _journeyPeekFactsHtml(journey, step) {
   const totalMiles = _journeyMilesText(_journeyTotalMiles(journey));
   const stepMiles = step?.miles ? ` · about ${Number(step.miles).toLocaleString()} mi` : '';
@@ -16605,10 +16619,16 @@ function renderBibleJourneysPage() {
         ${journey.alternates.map(a => `<div class="journey-alt-item"><strong>${_journeyEsc(a.label)}</strong><p>${_journeyEsc(a.reason)}</p></div>`).join('')}
       </div>`
     : '';
-  if (shell) shell.innerHTML = _journeyRenderMap(journey) +
-    `<div class="journey-map-controls"><button type="button" class="journey-play-btn" id="journeyPlayBtn" onclick="toggleJourneyPlay()"><span class="material-symbols-outlined">play_arrow</span><span>Play route</span></button></div>` +
-    `<div class="journey-map-note"><strong>${_journeyEsc(journey.certainty)}</strong><span>${_journeyEsc(journey.note)}</span></div>` +
-    _journeyGeographyHtml(journey, _journeyMode) +
+  if (shell) shell.innerHTML =
+    `<div class="journey-map-viewport">` +
+      _journeyRenderMap(journey) +
+      _journeyCompassHtml() +
+    `</div>` +
+    `<button type="button" class="journey-play-btn" id="journeyPlayBtn" onclick="toggleJourneyPlay()"><span class="material-symbols-outlined">play_arrow</span><span>Play route</span></button>` +
+    `<div class="journey-facts">` +
+      `<div class="journey-fact journey-fact-route"><span class="journey-fact-icon"><span class="material-symbols-outlined">landscape</span></span><strong>${_journeyEsc(journey.certainty)}</strong><p>${_journeyEsc(journey.note)}</p></div>` +
+      _journeyGeographyFact(journey, _journeyMode) +
+    `</div>` +
     altHtml;
   _journeyRenderStats(journey);
   if (steps) {
@@ -28808,7 +28828,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.344";
+const APP_VERSION = "3.0.345";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -28829,6 +28849,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.345 &mdash; Redesigned Bible Journey card</div>
+<ul>
+  <li><strong>One sleek journey card</strong> &mdash; The journey title, the Bible Map / Modern toggle, the map, the Play route button, and the route + geography facts now live together in a single clean card.</li>
+  <li><strong>Map compass</strong> &mdash; A small themed compass now sits on the journey map so you always know which way is north.</li>
+  <li><strong>Full-width Play route</strong> &mdash; The Play route button now sits right under the map as a clear primary action, with the route and modern-geography notes below it.</li>
+</ul>
 <div class="un-version-label">v3.0.344 &mdash; Cleaner map attribution</div>
 <ul>
   <li><strong>Less map clutter</strong> &mdash; Bible Journeys now uses a tiny app-styled attribution strip instead of the default map info control, with fuller source notes in the Journey info panel.</li>
