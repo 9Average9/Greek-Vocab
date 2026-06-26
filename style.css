@@ -27924,9 +27924,14 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 /* Settings + Progress: the fixed status-bar backer must match the light header so
    the Dynamic Island / notch area isn't a colored strip — it reads as one
    continuous header up to the very top of the screen. */
-body:has(#settingsScreen.screen.active) #statusBarBg,
 body:has(#progressScreen.screen.active) #statusBarBg {
   background: var(--primary-light) !important;
+}
+/* Settings: drop the separate safe-area/status bar entirely — it read as a weird
+   floating strip and clipped during the open slide. The settings header handles
+   its own safe-area padding. */
+body:has(#settingsScreen.screen.active) #statusBarBg {
+  display: none !important;
 }
 
 /* Praises page: the safe-area / Dynamic Island bar matches the light Praises
@@ -33445,23 +33450,22 @@ body.tools-theme-match #homeScreen .home-action-tile .hat-text small {
   to { transform: translate3d(100%, 0, 0); opacity: .98; }
 }
 
-body.app-screen-motion {
-  overflow: hidden !important;
-  background: var(--primary-light, #f6fbff);
+@keyframes appShellOutLeft {
+  from { transform: translate3d(0, 0, 0); opacity: 1; }
+  to { transform: translate3d(-100%, 0, 0); opacity: .98; }
 }
 
-body.app-screen-motion::before,
-body.app-launch-motion::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 199;
-  pointer-events: none;
-  background: var(--primary-light, #f6fbff);
-}
-
+/* Themed backdrop during motion (no blank veil — the real screen shows through). */
+body.app-screen-motion,
 body.app-launch-motion {
   overflow: hidden !important;
+  background: var(--primary-light, #f6fbff);
+}
+/* Keep the floating bottom nav from sliding/lagging mid-transition: it's revealed
+   cleanly underneath the panels (which now ride above it) instead of animating. */
+body.app-screen-motion .bottom-nav,
+body.app-launch-motion .bottom-nav {
+  transition: none !important;
 }
 
 .screen.app-screen-underlay,
@@ -33480,15 +33484,16 @@ body.app-launch-motion {
 }
 
 .screen.app-screen-underlay {
-  /* Sit above the theme veil and stay visible so the real previous screen shows
-     underneath the one sliding in (a clean push, not a blank flash). */
-  z-index: 200;
+  /* The real previous screen, shown underneath the one sliding in (clean push). */
+  z-index: 1000;
   opacity: 1 !important;
   pointer-events: none;
 }
 
+/* Transitioning panels ride ABOVE the bottom nav (z 900) so it never appears on
+   top of a sliding screen — it's just revealed underneath as the panel moves. */
 .screen.active.app-screen-animating {
-  z-index: 201;
+  z-index: 1002;
   will-change: transform;
 }
 
@@ -33503,11 +33508,16 @@ body.app-launch-motion {
   box-shadow: 14px 0 36px color-mix(in srgb, var(--secondary-color) 28%, transparent);
 }
 
-/* Back: the leaving screen slides off to the right, revealing the destination
-   (home) underneath — the same reveal as Journey Maps' back gesture. */
+/* Back: the leaving screen slides off, revealing the destination (home) underneath
+   — the same reveal as Journey Maps' back gesture. Direction mirrors how the
+   screen entered (right-entering screens exit right; Profile exits left). */
 .screen.active.app-slide-out-right {
   animation: appShellOutRight .38s cubic-bezier(.4, 0, .2, 1) forwards;
   box-shadow: -14px 0 36px color-mix(in srgb, var(--secondary-color) 28%, transparent);
+}
+.screen.active.app-slide-out-left {
+  animation: appShellOutLeft .38s cubic-bezier(.4, 0, .2, 1) forwards;
+  box-shadow: 14px 0 36px color-mix(in srgb, var(--secondary-color) 28%, transparent);
 }
 
 .screen.active.app-screen-expanding,
@@ -33532,7 +33542,7 @@ body.app-launch-motion {
   height: 100dvh !important;
   max-height: 100dvh !important;
   overflow: hidden !important;
-  z-index: 201;
+  z-index: 1002;
 }
 
 .study-library.open.app-screen-expanding {
@@ -33556,6 +33566,7 @@ body.app-launch-motion {
   .screen.active.app-slide-in-right,
   .screen.active.app-slide-in-left,
   .screen.active.app-slide-out-right,
+  .screen.active.app-slide-out-left,
   .study-library.open.app-slide-out-right,
   .modal-overlay.open.app-modal-slide-in-right .modal-card {
     animation: none !important;

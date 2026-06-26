@@ -16171,23 +16171,27 @@ function _appSlideHomeFromCurrent() {
     'testScreen'
   ]);
   if (!active || !slideHomeScreens.has(active.id)) return false;
+  // Enter motion BEFORE showing home so the bottom nav appears instantly underneath
+  // (its transition is suppressed during motion) rather than sliding in mid-anim.
+  if (!_appReduceMotion()) document.body?.classList.add('app-screen-motion');
   _appHomeSlideBypass = true;
   try { showNavPage('home'); } finally { _appHomeSlideBypass = false; }
-  // Back gesture: reveal home underneath and slide the leaving screen off to the
-  // right over it — the same reveal as Journey Maps' back (not a blank veil).
-  _appAnimateLeaving(active, 'app-slide-out-right', document.getElementById('homeScreen'));
+  // Back gesture: reveal home (with its nav) underneath and slide the leaving
+  // screen off over it. Mirror the entry direction — Profile entered from the
+  // left, so it leaves left; everything else entered from the right.
+  const leaveClass = active.id === 'profilePage' ? 'app-slide-out-left' : 'app-slide-out-right';
+  _appAnimateLeaving(active, leaveClass);
   return true;
 }
 
-// Slide a leaving screen off the top while the destination shows underneath.
-function _appAnimateLeaving(leaving, leaveClass, destination, duration = 400) {
+// Slide a leaving screen off the top, revealing the destination (already the
+// active screen, with its bottom nav) cleanly underneath — Apple-style pop.
+function _appAnimateLeaving(leaving, leaveClass, duration = 400) {
   if (!leaving || _appReduceMotion()) return;
   clearTimeout(_appMotionTimer);
   document.body?.classList.add('app-screen-motion');
   _clearScreenTransitionClasses(leaving);
-  // Promote the destination above the theme veil so it's visible while revealed.
-  if (destination && destination !== leaving) destination.classList.add('app-screen-underlay');
-  // Re-show the leaving screen on top of the now-active destination, then slide it off.
+  // Re-show the leaving screen on top (above the nav) and slide it off.
   leaving.classList.add('active', 'app-screen-animating', leaveClass);
   void leaving.offsetWidth;
   let done = false;
@@ -16198,7 +16202,6 @@ function _appAnimateLeaving(leaving, leaveClass, destination, duration = 400) {
     // Only drop .active if this screen isn't the one we navigated to (guards
     // against a stale finish stealing .active after a fast follow-up nav).
     if (leaving.id !== _activeScreenId) leaving.classList.remove('active');
-    destination?.classList.remove('app-screen-underlay');
     document.body?.classList.remove('app-screen-motion');
   };
   leaving.addEventListener('animationend', finish, { once: true });
@@ -16262,17 +16265,25 @@ function _collapseToHome(pageId) {
   const page = document.getElementById(pageId);
   if (!page || _journeyReduceMotion() || !_lastWidgetRect) { showNavPage('home'); return; }
   _setExpandVars(page, _lastWidgetRect);
-  // Reveal the (already-rendered) home screen beneath the folding page. The page
-  // stays .active on top (its own rule keeps it full-bleed), so home shows through
-  // the shrinking clip immediately instead of a blank theme color.
+  // Reveal home AND its bottom nav underneath, settled, before folding the page
+  // away. The page keeps .active (its own rule keeps it full-bleed) and rides on
+  // top via z-index, so home + nav show through the shrinking clip with no blank
+  // gap and no nav popping in at the end. Drop journeys-active so the nav (hidden
+  // while journeys is up) can appear underneath; suppress its slide so it's instant.
+  document.body?.classList.add('app-screen-motion');
+  document.body?.classList.remove('journeys-active');
+  document.documentElement?.classList.remove('journeys-active');
   const home = document.getElementById('homeScreen');
   if (home) home.classList.add('active');
+  showBottomNav();
+  setNavActive('home');
   let done = false;
   const finish = () => {
     if (done) return;
     done = true;
     page.removeEventListener('animationend', finish);
     page.classList.remove('screen-collapsing');
+    document.body?.classList.remove('app-screen-motion');
     showNavPage('home');
   };
   page.classList.remove('screen-collapsing');
@@ -29346,7 +29357,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.358";
+const APP_VERSION = "3.0.359";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29367,6 +29378,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.359 &mdash; Polished app-wide motion</div>
+<ul>
+  <li><strong>No more nav-bar lag</strong> &mdash; The bottom nav no longer pops in mid-animation when closing Journey Maps, Habit Builder, or tools — it's revealed cleanly underneath as the page slides away.</li>
+  <li><strong>Directional back</strong> &mdash; Pages slide back the way they came (Profile from the left, everything else from the right), with the home screen revealed underneath instead of a blank flash.</li>
+  <li><strong>Settings clean-up</strong> &mdash; Removed the odd floating safe-area bar in Settings and the bottom clip when it opened.</li>
+  <li><strong>Smoother transitions everywhere</strong> &mdash; Profile, Praises, Community, Memorization, lessons, and tools now share the same premium open/close motion.</li>
+</ul>
 <div class="un-version-label">v3.0.358 &mdash; Consistent app motion</div>
 <ul>
   <li><strong>Premium transitions everywhere</strong> &mdash; Profile, Praises, Community, Memorization, tools, and more now open and close with the same smooth, themed motion as Journey Maps.</li>
