@@ -33545,6 +33545,27 @@ body.app-launch-motion .bottom-nav {
   z-index: 1002;
 }
 
+/* Reverse of the expand: fold the screen back into the button it grew from. */
+@keyframes appShellCollapse {
+  from { clip-path: inset(0 0 0 0 round 0); opacity: 1; }
+  to   { clip-path: inset(var(--exp-t, 35%) var(--exp-r, 8%) var(--exp-b, 40%) var(--exp-l, 8%) round 22px); opacity: .35; }
+}
+.screen.active.app-screen-collapsing {
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  z-index: 1002;
+  background: var(--primary-light, #f6fbff) !important;
+  animation: appShellCollapse .42s cubic-bezier(.4, 0, .2, 1) forwards;
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 55%, transparent),
+    inset 0 0 34px color-mix(in srgb, var(--secondary-color) 20%, transparent);
+}
+
 .study-library.open.app-screen-expanding {
   z-index: 941;
 }
@@ -33562,6 +33583,7 @@ body.app-launch-motion .bottom-nav {
 
 @media (prefers-reduced-motion: reduce) {
   .screen.active.app-screen-expanding,
+  .screen.active.app-screen-collapsing,
   .study-library.open.app-screen-expanding,
   .screen.active.app-slide-in-right,
   .screen.active.app-slide-in-left,

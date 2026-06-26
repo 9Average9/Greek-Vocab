@@ -10393,6 +10393,7 @@ function _clearScreenTransitionClasses(el) {
     'app-screen-underlay',
     'app-screen-animating',
     'app-screen-expanding',
+    'app-screen-collapsing',
     'app-slide-in-right',
     'app-slide-in-left',
     'app-slide-out-right',
@@ -10481,6 +10482,10 @@ function showNavPage(page) {
   const previousScreen = document.querySelector('.screen.active');
   const fromId = previousScreen?.id || _activeScreenId;
   if (page === 'home' && _appSlideHomeFromCurrent()) return;
+  // Forget any expand-origin from a prior open; a fresh expand (if this open is
+  // one) re-sets it right after. Keeps slide-opened screens closing as slides.
+  _appActiveExpandId = null;
+  _appActiveExpandRect = null;
   if (page !== 'home') closeHomeSearch();
   // The Disciple Group tab may have borrowed the community content — return it
   // before showing the real Community page so that page is never left empty.
@@ -16136,12 +16141,42 @@ function _appLauncherRect(launcher) {
   return rect && rect.width > 0 && rect.height > 0 ? rect : null;
 }
 
+// Track the launcher rect of the screen most recently opened by an expand, so
+// closing it can collapse back into that same button (the reverse of opening).
+let _appActiveExpandId = null;
+let _appActiveExpandRect = null;
 function _appExpandTargetFromElement(target, launcher, savedRect = null) {
   if (!target || _appReduceMotion()) return;
   const rect = savedRect || _appLauncherRect(launcher);
   if (!rect) return;
+  if (target.id) { _appActiveExpandId = target.id; _appActiveExpandRect = rect; }
   _appSetExpandOrigin(target, rect);
   _appPlayAnim(target, 'app-screen-expanding', 540, { bodyClass: 'app-launch-motion' });
+}
+
+// Collapse a screen back into the button it expanded from (reverse of the open),
+// revealing home + nav underneath.
+function _appCollapseToLauncher(leaving, rect, duration = 460) {
+  if (!leaving || _appReduceMotion() || !rect) {
+    _appAnimateLeaving(leaving, 'app-slide-out-right');
+    return;
+  }
+  clearTimeout(_appMotionTimer);
+  document.body?.classList.add('app-screen-motion');
+  _clearScreenTransitionClasses(leaving);
+  _appSetExpandOrigin(leaving, rect);
+  leaving.classList.add('active', 'app-screen-collapsing');
+  void leaving.offsetWidth;
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    leaving.classList.remove('app-screen-collapsing');
+    if (leaving.id !== _activeScreenId) leaving.classList.remove('active');
+    document.body?.classList.remove('app-screen-motion');
+  };
+  leaving.addEventListener('animationend', finish, { once: true });
+  _appMotionTimer = setTimeout(finish, duration);
 }
 
 function _appSlideInScreen(screenId) {
@@ -16171,16 +16206,23 @@ function _appSlideHomeFromCurrent() {
     'testScreen'
   ]);
   if (!active || !slideHomeScreens.has(active.id)) return false;
+  // If this screen was opened by expanding from a button, capture that rect now
+  // (the inner showNavPage will clear the tracker) so we can collapse back into it.
+  const expandRect = (_appActiveExpandId === active.id) ? _appActiveExpandRect : null;
   // Enter motion BEFORE showing home so the bottom nav appears instantly underneath
   // (its transition is suppressed during motion) rather than sliding in mid-anim.
   if (!_appReduceMotion()) document.body?.classList.add('app-screen-motion');
   _appHomeSlideBypass = true;
   try { showNavPage('home'); } finally { _appHomeSlideBypass = false; }
-  // Back gesture: reveal home (with its nav) underneath and slide the leaving
-  // screen off over it. Mirror the entry direction — Profile entered from the
-  // left, so it leaves left; everything else entered from the right.
-  const leaveClass = active.id === 'profilePage' ? 'app-slide-out-left' : 'app-slide-out-right';
-  _appAnimateLeaving(active, leaveClass);
+  if (expandRect) {
+    // Reverse of opening: fold the screen back into the button it grew from.
+    _appCollapseToLauncher(active, expandRect);
+  } else {
+    // Back gesture: slide the leaving screen off, mirroring its entry direction
+    // (Profile entered from the left, so it leaves left; everything else right).
+    const leaveClass = active.id === 'profilePage' ? 'app-slide-out-left' : 'app-slide-out-right';
+    _appAnimateLeaving(active, leaveClass);
+  }
   return true;
 }
 
@@ -29357,7 +29399,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.359";
+const APP_VERSION = "3.0.360";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29378,6 +29420,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.360 &mdash; Tools fold back to their button</div>
+<ul>
+  <li><strong>Reverse close</strong> &mdash; Tools and the Habit Builder opened from a Home button now fold back into that same button when you head home — the exact opposite of how they opened.</li>
+</ul>
 <div class="un-version-label">v3.0.359 &mdash; Polished app-wide motion</div>
 <ul>
   <li><strong>No more nav-bar lag</strong> &mdash; The bottom nav no longer pops in mid-animation when closing Journey Maps, Habit Builder, or tools — it's revealed cleanly underneath as the page slides away.</li>
