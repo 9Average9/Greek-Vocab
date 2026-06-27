@@ -10270,9 +10270,9 @@ function expandMerciesNavTemporarily() {
 }
 
 function expandMerciesNavOnEntry() {
-  setMerciesNavCollapsed(false);
+  // Open with the nav already collapsed (no expand-then-collapse flicker).
   clearTimeout(_merciesNavCollapseTimer);
-  _merciesNavCollapseTimer = setTimeout(() => setMerciesNavCollapsed(true), 500);
+  setMerciesNavCollapsed(true);
 }
 
 function bindMerciesNavCollapse() {
@@ -10325,9 +10325,9 @@ function expandHabitsNavTemporarily() {
 }
 
 function expandHabitsNavOnEntry() {
-  setHabitsNavCollapsed(false);
+  // Open with the nav already collapsed (no expand-then-collapse flicker).
   clearTimeout(_habitsNavCollapseTimer);
-  _habitsNavCollapseTimer = setTimeout(() => setHabitsNavCollapsed(true), 500);
+  setHabitsNavCollapsed(true);
 }
 
 function bindHabitsNavCollapse() {
@@ -16106,10 +16106,10 @@ function _appAnimateActiveWithPrevious(previous, enterClass, duration = 420) {
   target.classList.remove('app-screen-animating', 'app-slide-in-right', 'app-slide-in-left');
   previous?.classList.remove('app-screen-underlay', 'app-screen-animating', 'app-slide-in-right', 'app-slide-in-left');
 
-  // Keep the previous screen painted underneath so the new one slides over real
-  // content (a clean push) instead of a blank theme veil.
-  if (previous && previous !== target) previous.classList.add('app-screen-underlay');
-
+  // Forward (opening) slides over a solid theme backdrop — the incoming screen is
+  // opaque, so we do NOT reveal the previous screen underneath (that made Home
+  // show through behind pages like Lessons). Back navigation handles its own
+  // reveal of the destination.
   void target.offsetWidth;
   target.classList.add('app-screen-animating', enterClass);
 
@@ -29399,7 +29399,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.360";
+const APP_VERSION = "3.0.361";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29420,6 +29420,15 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.361 &mdash; Cleaner closes &amp; smoother motion</div>
+<ul>
+  <li><strong>No closing freeze</strong> &mdash; Journey Maps, Habit Builder, and tools now fully fade out as they close (no frozen last frame), and the close animation is lighter so it doesn't lag.</li>
+  <li><strong>Lessons slide cleanly</strong> &mdash; The Home screen no longer shows behind a page as it slides in; pages slide over a solid backdrop and slide cleanly back.</li>
+  <li><strong>Rhema slides</strong> &mdash; Opening Rhema slides in from the right and going back slides it off to the right.</li>
+  <li><strong>Study Library opens cleanly</strong> &mdash; No more flicker where the Home tools showed through during the open.</li>
+  <li><strong>Collapsed nav on entry</strong> &mdash; Habit Builder and Praises now open with the bottom nav already tucked away.</li>
+  <li><strong>Settings safe bar</strong> &mdash; Removed the Safari safe-area strip at the bottom of Settings (and Memorization).</li>
+</ul>
 <div class="un-version-label">v3.0.360 &mdash; Tools fold back to their button</div>
 <ul>
   <li><strong>Reverse close</strong> &mdash; Tools and the Habit Builder opened from a Home button now fold back into that same button when you head home — the exact opposite of how they opened.</li>
@@ -39007,7 +39016,16 @@ function closeRhema(keepSandbox = false) {
     if (!keepSandbox) _studySandboxId = null;
   }
   _rhemaActivateCompareScope();
-  document.getElementById('rhemaModal')?.classList.remove('open');
+  // Slide the reader back off to the right when closing to a normal page, then
+  // hide it (mirrors the slide-in on open). Other flows close instantly.
+  const _rhemaModalEl = document.getElementById('rhemaModal');
+  const _rhemaReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (_rhemaModalEl && _rhemaModalEl.classList.contains('open') && !keepSandbox && !_studySandboxId && !_rhemaReduce) {
+    _rhemaModalEl.classList.add('rhema-nav-leave');
+    setTimeout(() => _rhemaModalEl.classList.remove('open', 'rhema-nav-leave'), 320);
+  } else {
+    _rhemaModalEl?.classList.remove('open', 'rhema-nav-leave');
+  }
   closeRhemaSheet();
   closeRhemaReaderNote();
   closeRhemaPickerSheet();
