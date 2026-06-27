@@ -8735,7 +8735,7 @@ body #settingsScreen.screen.active {
   display: flex !important;
   flex-direction: column !important;
   height: 100vh !important;
-  height: 100svh !important;
+  height: 100dvh !important;            /* cover the bottom safe area (no Safari strip) */
   overflow: hidden !important;
   padding: 0 !important;
   border-radius: 0 !important;
@@ -18073,7 +18073,7 @@ body .app:has(#habitsPage.screen.active) #habitsPage {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: 100svh;
+  height: 100dvh;
   min-height: 0;
   overflow: hidden;
   touch-action: pan-y;
@@ -29750,7 +29750,7 @@ body.memorization-active .app {
   width: 100%;
   max-width: none !important;
   height: 100vh;
-  height: 100svh;
+  height: 100dvh;
   min-height: 0;
   margin: 0 !important;
   padding: 0 !important;
@@ -31416,7 +31416,7 @@ body.dark .rp-book-sep { background: #1f2937; }
 /* Collapse: the reverse, folding the page back into the widget on the way home. */
 @keyframes journeyScreenCollapse {
   from { clip-path: inset(0px 0px 0px 0px round 0px); opacity: 1; }
-  to   { clip-path: inset(var(--exp-t, 35%) var(--exp-r, 8%) var(--exp-b, 40%) var(--exp-l, 8%) round 22px); opacity: 0.25; }
+  to   { clip-path: inset(var(--exp-t, 35%) var(--exp-r, 8%) var(--exp-b, 40%) var(--exp-l, 8%) round 22px); opacity: 0; }
 }
 /* Themed ring + inner glow that rides the rounded clip edge while the page grows
    or folds, so opening and closing feel deliberate and on-theme. */
@@ -33410,7 +33410,13 @@ body.tools-theme-match #homeScreen .home-action-tile .hat-text small {
   animation: journeyScreenInRight 0.34s cubic-bezier(.4, 0, .2, 1);
 }
 
+/* Closing Rhema slides the reader back off to the right. */
+@keyframes rhemaSwipeClose { from { transform: translateX(0); } to { transform: translateX(100%); } }
+#rhemaModal.rhema-nav-leave #rhemaSlide {
+  animation: rhemaSwipeClose 0.32s cubic-bezier(.4, 0, .2, 1) forwards;
+}
 @media (prefers-reduced-motion: reduce) {
+  #rhemaModal.rhema-nav-leave #rhemaSlide { animation: none; }
   .screen.active.screen-expanding,
   .study-library.open.screen-expanding,
   .screen.active.screen-slide-in-right,
@@ -33527,11 +33533,10 @@ body.app-launch-motion .bottom-nav {
   backface-visibility: hidden;
   transform: translateZ(0);
   contain: paint;
-  /* Themed ring + inner glow that rides the rounded clip edge while it grows,
-     so opening from a button feels deliberate and on-theme. */
-  box-shadow:
-    inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 55%, transparent),
-    inset 0 0 34px color-mix(in srgb, var(--secondary-color) 20%, transparent);
+  /* Thin themed ring only — the big blurred inner glow repainted every frame as
+     the clip animated, which made heavier tool screens lag. Ring keeps the theme
+     accent without the per-frame blur cost. */
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 50%, transparent);
 }
 
 .screen.active.app-screen-expanding {
@@ -33545,10 +33550,11 @@ body.app-launch-motion .bottom-nav {
   z-index: 1002;
 }
 
-/* Reverse of the expand: fold the screen back into the button it grew from. */
+/* Reverse of the expand: fold the screen back into the button it grew from, fading
+   fully out by the end so there's no lingering "last frame" rectangle. */
 @keyframes appShellCollapse {
   from { clip-path: inset(0 0 0 0 round 0); opacity: 1; }
-  to   { clip-path: inset(var(--exp-t, 35%) var(--exp-r, 8%) var(--exp-b, 40%) var(--exp-l, 8%) round 22px); opacity: .35; }
+  to   { clip-path: inset(var(--exp-t, 35%) var(--exp-r, 8%) var(--exp-b, 40%) var(--exp-l, 8%) round 22px); opacity: 0; }
 }
 .screen.active.app-screen-collapsing {
   display: block !important;
@@ -33561,17 +33567,21 @@ body.app-launch-motion .bottom-nav {
   z-index: 1002;
   background: var(--primary-light, #f6fbff) !important;
   animation: appShellCollapse .42s cubic-bezier(.4, 0, .2, 1) forwards;
-  box-shadow:
-    inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 55%, transparent),
-    inset 0 0 34px color-mix(in srgb, var(--secondary-color) 20%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 50%, transparent);
 }
 
 .study-library.open.app-screen-expanding {
   z-index: 941;
+  /* Stay fully opaque while it clips open — the base modal's opacity fade made it
+     briefly see-through, so the Home tools showed through during the expand. */
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
 }
 
 .study-library.open.app-slide-out-right {
   animation: appShellOutRight .30s cubic-bezier(.4, 0, .2, 1) forwards;
+  transition: none !important;
 }
 
 .modal-overlay.open.app-modal-slide-in-right .modal-card,
