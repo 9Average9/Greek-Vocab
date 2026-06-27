@@ -31063,7 +31063,7 @@ body.reading-plan-active,
 body.reading-plan-active .app {
   width: 100%;
   max-width: none !important;
-  height: 100vh; height: 100svh;
+  height: 100vh; height: 100dvh;
   min-height: 0;
   margin: 0 !important;
   padding: 0 !important;
@@ -31076,6 +31076,11 @@ body.reading-plan-active .app-header,
 body.reading-plan-active .bottom-nav,
 body.reading-plan-active #bottomNav,
 body.reading-plan-active #studyTabBar { display: none !important; }
+/* Status-bar backer matches the reading-plan page so the top edge is one
+   continuous color, not a separate bar above the topbar. */
+body.reading-plan-active #statusBarBg {
+  background: var(--primary-light) !important;
+}
 
 .rp-page {
   width: 100%; height: 100%;
@@ -31133,7 +31138,7 @@ body.reading-plan-active #studyTabBar { display: none !important; }
 
 .rp-scroll {
   flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
-  padding: 4px 16px calc(0px + 36px);
+  padding: 4px 16px calc(env(safe-area-inset-bottom, 0px) + 36px);
   -webkit-overflow-scrolling: touch;
 }
 .rp-view.hidden { display: none; }
@@ -31381,6 +31386,7 @@ html.dark.reading-plan-active,
 body.dark.reading-plan-active,
 body.dark.reading-plan-active .app { background: #111827 !important; }
 body.dark .rp-topbar, body.dark.reading-plan-active .rp-topbar { background: #111827; }
+body.dark.reading-plan-active #statusBarBg { background: #111827 !important; }
 body.dark .rp-picker-sheet { background: #1f2937; }
 body.dark .rp-book-sep { background: #1f2937; }
 
@@ -33246,7 +33252,8 @@ body.screen-transitioning .screen.screen-leaving { z-index: 20; pointer-events: 
 }
 
 #rhemaModal.rhema-nav-enter #rhemaSlide {
-  animation: rhemaSwipeOpen .42s cubic-bezier(.2,.82,.18,1) both;
+  animation: rhemaSwipeOpen .5s cubic-bezier(.2,.82,.18,1) both;
+  box-shadow: -16px 0 40px color-mix(in srgb, var(--secondary-color) 22%, transparent);
 }
 
 @keyframes rhemaSwipeOpen {
@@ -33405,8 +33412,7 @@ body.tools-theme-match #homeScreen .home-action-tile .hat-text small {
   animation: atlasDetailIn 0.32s cubic-bezier(.4, 0, .2, 1);
 }
 
-#rhemaModal.screen-slide-in-right #rhemaSlide,
-#rhemaModal.rhema-nav-enter #rhemaSlide {
+#rhemaModal.screen-slide-in-right #rhemaSlide {
   animation: journeyScreenInRight 0.34s cubic-bezier(.4, 0, .2, 1);
 }
 
@@ -33584,6 +33590,17 @@ body.app-launch-motion .bottom-nav {
   transition: none !important;
 }
 
+/* Reverse of the expand: fold the Study Library back into its launch button. Stay
+   fully opaque (no base-modal fade) so nothing shows through while it clips shut. */
+.study-library.open.app-screen-collapsing {
+  z-index: 941;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+  animation: appShellCollapse .42s cubic-bezier(.4, 0, .2, 1) forwards;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 50%, transparent);
+}
+
 .modal-overlay.open.app-modal-slide-in-right .modal-card,
 #updateModal.open.app-modal-slide-in-right .modal-card,
 #coachReplayModal.open.app-modal-slide-in-right .modal-card,
@@ -33595,6 +33612,7 @@ body.app-launch-motion .bottom-nav {
   .screen.active.app-screen-expanding,
   .screen.active.app-screen-collapsing,
   .study-library.open.app-screen-expanding,
+  .study-library.open.app-screen-collapsing,
   .screen.active.app-slide-in-right,
   .screen.active.app-slide-in-left,
   .screen.active.app-slide-out-right,

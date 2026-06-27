@@ -8608,10 +8608,24 @@ function closeStudyLibrary() {
   const finish = () => {
     modal.classList.remove('open');
     modal.classList.add('hidden');
-    modal.classList.remove('app-slide-out-right');
+    modal.classList.remove('app-slide-out-right', 'app-screen-collapsing');
   };
   if (_appReduceMotion()) {
     finish();
+    return;
+  }
+  // Reverse of opening: collapse back into the launch button it grew from
+  // (same fold-away the other tools use), instead of sliding off-screen.
+  const rect = (_appActiveExpandId === 'studyLibraryModal') ? _appActiveExpandRect : null;
+  if (rect) {
+    _appActiveExpandId = null;
+    _appActiveExpandRect = null;
+    _appSetExpandOrigin(modal, rect);
+    modal.classList.remove('app-slide-out-right', 'app-screen-collapsing');
+    void modal.offsetWidth;
+    modal.classList.add('app-screen-collapsing');
+    modal.addEventListener('animationend', finish, { once: true });
+    setTimeout(finish, 460);
     return;
   }
   modal.classList.remove('app-slide-out-right');
@@ -29399,7 +29413,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.361";
+const APP_VERSION = "3.0.362";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29420,6 +29434,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.362 &mdash; Library fold, Reading Plan edges, Rhema slide</div>
+<ul>
+  <li><strong>Study Library folds shut</strong> &mdash; Closing the Library now collapses back into its button (the same fold the other tools use) instead of sliding away.</li>
+  <li><strong>Reading Plan edges</strong> &mdash; Removed the top and bottom safe-area strips so the plan fills the whole screen.</li>
+  <li><strong>Rhema opening</strong> &mdash; A slower, cleaner slide in from the right when you open Rhema from the nav bar.</li>
+</ul>
 <div class="un-version-label">v3.0.361 &mdash; Cleaner closes &amp; smoother motion</div>
 <ul>
   <li><strong>No closing freeze</strong> &mdash; Journey Maps, Habit Builder, and tools now fully fade out as they close (no frozen last frame), and the close animation is lighter so it doesn't lag.</li>
@@ -38922,7 +38942,7 @@ async function showRhema() {
   void modal.offsetWidth;
   modal.classList.add('rhema-nav-enter');
   modal.classList.add('open');
-  setTimeout(() => modal.classList.remove('rhema-nav-enter'), 460);
+  setTimeout(() => modal.classList.remove('rhema-nav-enter'), 540);
   _rhemaStartMarksSync();
   _rhemaStartTrailsSync();
   _rhemaActivateCompareScope();
