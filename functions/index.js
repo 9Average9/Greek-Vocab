@@ -851,11 +851,15 @@ exports.sendScheduledReminders = functions.pubsub
       if (!tokens.length || !friends.length) continue;
       const friendUid = friends[Math.floor(Math.random() * friends.length)];
       const friendSnap = await db.collection("users").doc(friendUid).get();
-      const friendName = friendSnap.exists ? (friendSnap.data().displayName || friendSnap.data().username || "a friend") : "a friend";
+      const friendData = friendSnap.exists ? (friendSnap.data() || {}) : {};
+      const resolvedName = (friendData.displayName || friendData.username || "").trim();
+      const friendName = (resolvedName && resolvedName.toLowerCase() !== "user") ? resolvedName : "a friend";
+      const friendAvatar = friendData.avatar || "";
       const promptText = randomPraiseFriendPrompt(friendName);
       const pendingPrompt = {
         friendUid,
         friendName,
+        friendAvatar,
         promptText,
         createdAtMs: now.getTime(),
         expiresAtMs: now.getTime() + 24 * 60 * 60 * 1000

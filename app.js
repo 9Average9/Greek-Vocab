@@ -29436,7 +29436,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.367";
+const APP_VERSION = "3.0.368";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29457,6 +29457,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.368 &mdash; Friend encouragement shows who</div>
+<ul>
+  <li><strong>Weekly friend prompt</strong> &mdash; The weekly encouragement prompt now shows your friend's actual name and profile picture instead of just "a friend."</li>
+</ul>
 <div class="un-version-label">v3.0.367 &mdash; Edge-to-edge Memorize &amp; Reading Plan</div>
 <ul>
   <li><strong>True full-width</strong> &mdash; Memorize and Reading Plan now run edge-to-edge like the Bible Journey maps, instead of sitting inside an inset card.</li>
@@ -33781,6 +33785,7 @@ function syncPendingMercyFriendEncouragement(pending) {
   const normalized = {
     friendUid: pending.friendUid,
     friendName: pending.friendName || 'your friend',
+    friendAvatar: pending.friendAvatar || '',
     promptText: _mercyFriendPromptText(pending.promptText, pending.friendName || 'your friend'),
     createdAtMs: Number(pending.createdAtMs || Date.now()),
     expiresAtMs: Number(pending.expiresAtMs || Date.now() + 24 * 60 * 60 * 1000)
@@ -33819,8 +33824,48 @@ function refreshPendingMercyFriendEncouragement() {
     const sub = document.getElementById('mercyPendingFriendSub');
     if (title) title.textContent = `Encourage ${name}`;
     if (sub) sub.textContent = `Locked to ${name}. Expires in ${_mercyCountdownText(pending.expiresAtMs)}.`;
+    // Paint a stored avatar immediately if we have one (first paint), then live-resolve.
+    const avEl = document.getElementById('mercyPendingFriendAvatar');
+    if (avEl && pending.friendAvatar) avEl.innerHTML = _renderAvatar(pending.friendAvatar);
+    // The server may have stored a generic "a friend" if it couldn't read the
+    // friend's profile at send time. Re-resolve the real name + photo live from
+    // the friend's user doc so the prompt always shows who it actually is.
+    _resolveMercyPendingFriend(pending);
   }
   return pending;
+}
+
+// Live-resolves a pending friend encouragement's name + avatar from the friend's
+// user doc (cached per uid), then patches the prompt UI and the stored name.
+const _mercyFriendProfileCache = {};
+async function _resolveMercyPendingFriend(pending) {
+  const uid = pending?.friendUid;
+  if (!uid) return;
+  const apply = (prof) => {
+    if (!prof) return;
+    // Only patch if this pending prompt is still the active one.
+    if (_pendingMercyFriendEncouragement?.friendUid !== uid) return;
+    const realName = prof.displayName || prof.username || '';
+    const av = document.getElementById('mercyPendingFriendAvatar');
+    if (av && prof.avatar) av.innerHTML = _renderAvatar(prof.avatar);
+    if (realName && realName.toLowerCase() !== 'user') {
+      const title = document.getElementById('mercyPendingFriendTitle');
+      const sub = document.getElementById('mercyPendingFriendSub');
+      if (title) title.textContent = `Encourage ${realName}`;
+      if (sub) sub.textContent = `Locked to ${realName}. Expires in ${_mercyCountdownText(pending.expiresAtMs)}.`;
+      // Persist the resolved name so the composer + future renders use it too.
+      if (_pendingMercyFriendEncouragement && _pendingMercyFriendEncouragement.friendName !== realName) {
+        _pendingMercyFriendEncouragement.friendName = realName;
+        _pendingMercyFriendEncouragement.friendAvatar = prof.avatar || _pendingMercyFriendEncouragement.friendAvatar;
+        try { localStorage.setItem('pendingMercyFriendEncouragement', JSON.stringify(_pendingMercyFriendEncouragement)); } catch {}
+      }
+    }
+  };
+  if (_mercyFriendProfileCache[uid]) { apply(_mercyFriendProfileCache[uid]); return; }
+  try {
+    const prof = await window.Friends?.getUser?.(uid);
+    if (prof) { _mercyFriendProfileCache[uid] = prof; apply(prof); }
+  } catch {}
 }
 
 setInterval(() => {
