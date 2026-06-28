@@ -10567,6 +10567,11 @@ function showNavPage(page) {
   setTimeout(_applyPendingAppUpdateReload, 50);
 }
 
+// Tool screens that must always open scrolled to the top (full-bleed tools).
+const _scrollTopOnOpenScreens = new Set([
+  'learnMenu', 'learnScreen', 'translateMenu', 'translateScreen',
+  'testMenu', 'testScreen', 'memorizationPage', 'readingPlanPage'
+]);
 function showScreen(id) {
   if (id !== 'homeScreen') _stopHomeFlip();
   closeLearnSideMenu();
@@ -10583,6 +10588,18 @@ function showScreen(id) {
 
   const target = document.getElementById(id);
   if (target) target.classList.add("active");
+  // These full-bleed tools should always open at the very top, never where the
+  // user last left them scrolled.
+  if (target && _scrollTopOnOpenScreens.has(id)) {
+    const resetTop = () => {
+      try {
+        target.scrollTop = 0;
+        target.querySelectorAll('[class*="-scroll"], .learn-content').forEach(el => { el.scrollTop = 0; });
+      } catch {}
+    };
+    resetTop();
+    requestAnimationFrame(resetTop);
+  }
   if (id !== 'merciesPage') setMerciesNavCollapsed(false);
   if (id !== 'homeScreen') setHomeNavCollapsed(false);
   if (id !== 'habitsPage') setHabitsNavCollapsed(false);
@@ -29413,7 +29430,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.364";
+const APP_VERSION = "3.0.365";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29434,6 +29451,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.365 &mdash; Full-screen tools</div>
+<ul>
+  <li><strong>Premium full-screen tools</strong> &mdash; Memorize, Reading Plan, Vocab, Translate, and Test now open edge-to-edge with the same smooth feel as the Bible Journey maps.</li>
+  <li><strong>Cleaner headers</strong> &mdash; Removed the extra app header from Vocab, Translate, and Test so each tool stands on its own.</li>
+  <li><strong>Always start at the top</strong> &mdash; These tools now open scrolled to the top instead of wherever you last left off.</li>
+</ul>
 <div class="un-version-label">v3.0.363 &mdash; Compare across translations</div>
 <ul>
   <li><strong>More translations in Compare</strong> &mdash; Each verse in the compare view can now be shown in NIV, NKJV, or NASB alongside MSB &amp; BSB. Tap a verse's translation chip to switch it.</li>
