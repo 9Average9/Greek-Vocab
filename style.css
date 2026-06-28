@@ -27892,6 +27892,72 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
   max-height: 100dvh !important;
 }
 
+/* ── Vocab / Translate / Test: full-bleed premium tools (match Journey Maps) ──
+   Edge-to-edge with no Disciple Builder app-header; the tool's own nav-bar sits
+   at the very top, and the whole screen scrolls (always reset to top on open). */
+body .app:has(#learnMenu.screen.active),
+body .app:has(#learnScreen.screen.active),
+body .app:has(#translateMenu.screen.active),
+body .app:has(#translateScreen.screen.active),
+body .app:has(#testMenu.screen.active),
+body .app:has(#testScreen.screen.active) {
+  padding: 0 !important;
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0 !important;
+}
+
+body .app:has(#learnMenu.screen.active) .app-header,
+body .app:has(#learnScreen.screen.active) .app-header,
+body .app:has(#translateMenu.screen.active) .app-header,
+body .app:has(#translateScreen.screen.active) .app-header,
+body .app:has(#testMenu.screen.active) .app-header,
+body .app:has(#testScreen.screen.active) .app-header {
+  display: none !important;
+}
+
+body:has(#learnMenu.screen.active) #statusBarBg,
+body:has(#learnScreen.screen.active) #statusBarBg,
+body:has(#translateMenu.screen.active) #statusBarBg,
+body:has(#translateScreen.screen.active) #statusBarBg,
+body:has(#testMenu.screen.active) #statusBarBg,
+body:has(#testScreen.screen.active) #statusBarBg {
+  display: none !important;
+}
+
+#learnMenu.screen.active,
+#learnScreen.screen.active,
+#translateMenu.screen.active,
+#translateScreen.screen.active,
+#testMenu.screen.active,
+#testScreen.screen.active {
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  min-height: 0 !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 18px calc(env(safe-area-inset-bottom, 0px) + 28px);
+  background: var(--primary-color) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* nav-bar flush at the top now that the screen pads for the safe area. */
+#learnMenu.screen.active .nav-bar,
+#learnScreen.screen.active .nav-bar,
+#translateMenu.screen.active .nav-bar,
+#translateScreen.screen.active .nav-bar,
+#testMenu.screen.active .nav-bar,
+#testScreen.screen.active .nav-bar {
+  margin-top: 0;
+}
+
 #settingsScreen .home-backdrop-card {
   min-height: 134px !important;
   align-items: stretch !important;
