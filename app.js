@@ -16801,9 +16801,42 @@ function _atlasBuildRefIndex() {
 // handful of verses listed in each place's curated refs.
 let _atlasNameMatcher = null;
 // Person/tribe names that collide with place names and would create false pins.
-const _ATLAS_NAME_BLOCK = new Set(['Lydia', 'Asher', 'Salem']);
+const _ATLAS_NAME_BLOCK = new Set(['Lydia', 'Asher']);
+// Gentilics / demonyms → the place they name. These forms are unambiguous proper
+// nouns (you never say "Thessalonians" about anything but the people of
+// Thessalonica), so mapping them adds the epistle greetings with no false-
+// positive risk. Only those whose place exists in the gazetteer are used.
+const RHEMA_PLACE_DEMONYMS = {
+  Romans: 'Rome', Roman: 'Rome',
+  Corinthians: 'Corinth', Corinthian: 'Corinth',
+  Ephesians: 'Ephesus', Ephesian: 'Ephesus',
+  Galatians: 'Galatia', Galatian: 'Galatia',
+  Philippians: 'Philippi', Philippian: 'Philippi',
+  Colossians: 'Colossae', Colossian: 'Colossae',
+  Thessalonians: 'Thessalonica', Thessalonian: 'Thessalonica',
+  Laodiceans: 'Laodicea', Laodicean: 'Laodicea',
+  Cretans: 'Crete', Cretan: 'Crete',
+  Macedonians: 'Macedonia', Macedonian: 'Macedonia',
+  Athenians: 'Athens', Athenian: 'Athens',
+  Bereans: 'Berea',
+  Cypriots: 'Cyprus', Cypriot: 'Cyprus',
+  Galileans: 'Galilee', Galilean: 'Galilee',
+  Samaritans: 'Samaria', Samaritan: 'Samaria',
+  Nazarenes: 'Nazareth', Nazarene: 'Nazareth',
+  Egyptians: 'Egypt', Egyptian: 'Egypt',
+  Babylonians: 'Babylon', Babylonian: 'Babylon',
+  Assyrians: 'Assyria', Assyrian: 'Assyria',
+  Philistines: 'Philistia', Philistine: 'Philistia',
+  Edomites: 'Edom', Edomite: 'Edom',
+  Moabites: 'Moab', Moabite: 'Moab',
+  Ammonites: 'Ammon', Ammonite: 'Ammon',
+  Cyrenians: 'Cyrene', Cyrenian: 'Cyrene',
+  Tyrians: 'Tyre', Sidonians: 'Sidon',
+  Antiochians: 'Antioch (Syria)'
+};
 function _atlasBuildNameMatcher() {
   const termToNames = new Map();
+  const placeExists = (name) => (window.BIBLE_ATLAS || []).some(p => p.name === name);
   (window.BIBLE_ATLAS || []).forEach(place => {
     const base = String(place.name || '').trim();
     const terms = new Set();
@@ -16817,6 +16850,13 @@ function _atlasBuildNameMatcher() {
       if (!arr.includes(place.name)) arr.push(place.name);
       termToNames.set(t, arr);
     });
+  });
+  // Layer in demonyms (only when the target place is actually in the gazetteer).
+  Object.entries(RHEMA_PLACE_DEMONYMS).forEach(([term, name]) => {
+    if (!placeExists(name)) return;
+    const arr = termToNames.get(term) || [];
+    if (!arr.includes(name)) arr.push(name);
+    termToNames.set(term, arr);
   });
   const terms = [...termToNames.keys()].sort((a, b) => b.length - a.length);
   const esc = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
@@ -29491,7 +29531,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.371";
+const APP_VERSION = "3.0.372";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29512,6 +29552,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.372 &mdash; Smarter place pins</div>
+<ul>
+  <li><strong>People-of-a-place now pin too</strong> &mdash; Mentions like "Thessalonians," "Corinthians," or "Galileans" now drop a pin on their city/region, while ordinary names stay pin-free.</li>
+</ul>
 <div class="un-version-label">v3.0.371 &mdash; Place pins everywhere</div>
 <ul>
   <li><strong>Location pins in the reader</strong> &mdash; A map pin now appears on any verse that names a place &mdash; including every greeting in Paul's letters (Ephesus, Corinth, Rome, and many more). Tap it to see the spot on the map.</li>
