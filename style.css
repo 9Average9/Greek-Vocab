@@ -32980,8 +32980,6 @@ body.dark .journey-modern-shape { fill: #202c42; }
   text-decoration-color: var(--secondary-color, #243447);
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
-  background: color-mix(in srgb, var(--secondary-color, #243447) 9%, transparent);
-  border-radius: 8px;
 }
 .rhema-selection-bar {
   position: absolute;
@@ -33248,6 +33246,14 @@ body.dark .journey-modern-shape { fill: #202c42; }
   cursor: pointer;
 }
 .rhema-word-chip:active { background: var(--secondary-color, #243447); color: #fff; }
+/* Word picker grouped by verse (multi-select): one labelled section per verse. */
+.rhema-wordpick-group { width: 100%; margin-bottom: 6px; }
+.rhema-wordpick-grouphd {
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--secondary-color, #243447); margin: 8px 2px 2px;
+}
+.rhema-wordpick-group .rhema-word-chips { max-height: none; overflow: visible; margin: 4px 0; }
+#rhemaWordPickChips:has(.rhema-wordpick-group) { max-height: 52vh; }
 .rhema-meaning-card { max-height: 82%; overflow-y: auto; }
 .rhema-meaning-body { display: grid; gap: 12px; margin-top: 8px; }
 .rhema-meaning-section {

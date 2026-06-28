@@ -29436,7 +29436,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.369";
+const APP_VERSION = "3.0.370";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29457,6 +29457,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.370 &mdash; Multi-verse polish</div>
+<ul>
+  <li><strong>Cleaner selection</strong> &mdash; Selected verses just underline now, and closing the sheet clears the selection so your highlight shows right away.</li>
+  <li><strong>Define words across verses</strong> &mdash; "Define an English word" now works across all selected verses, grouped by reference.</li>
+  <li><strong>Tidier Compare</strong> &mdash; The corner Compare shortcut only appears while you're adding another verse.</li>
+</ul>
 <div class="un-version-label">v3.0.369 &mdash; Select multiple verses</div>
 <ul>
   <li><strong>Multi-verse selection</strong> &mdash; In the reader, tap verses to select them (they underline in your theme colour). A button appears at the bottom — tap it to act on the whole selection.</li>
@@ -37176,7 +37182,8 @@ function _rhemaRenderVerseSheet() {
   const study = document.getElementById('rhemaVerseSheetStudy');
   if (study) study.style.display = (_studySandboxId && !multi) ? '' : 'none';
   const wordBtn = document.getElementById('rhemaVerseSheetWordBtn');
-  if (wordBtn) wordBtn.style.display = (_rhemaShowEnglish && !multi) ? '' : 'none';
+  // Works for one or many selected verses (words are grouped per verse).
+  if (wordBtn) wordBtn.style.display = _rhemaShowEnglish ? '' : 'none';
   const journeyBtn = document.getElementById('rhemaVerseSheetJourneyBtn');
   if (journeyBtn) {
     if (multi) { journeyBtn.style.display = 'none'; }
@@ -37194,6 +37201,13 @@ function closeRhemaVerseSheet(e) {
   document.getElementById('rhemaVerseSheet')?.classList.remove('open');
   _rhemaMarkActiveVerse(null);
   updateRhemaVerseNav?.();
+}
+// User-initiated close (X / backdrop): also clears the selection so any highlight
+// just applied is immediately visible (the selection underline no longer covers it).
+function closeRhemaVerseSheetAndDeselect(e) {
+  if (e && e.target !== document.getElementById('rhemaVerseSheet')) return;
+  closeRhemaVerseSheet();
+  rhemaClearSelection();
 }
 function _rhemaVerseSheetOpen() {
   return !!document.getElementById('rhemaVerseSheet')?.classList.contains('open');
@@ -38338,6 +38352,7 @@ function rhemaCompareAddAnother() {
   _rhemaCompareOpenedFromMenu = false;
   _rhemaCompareAdding = true;
   document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
+  _rhemaSyncCompareChip(); // surface the shortcut chip only now, while picking
   if (typeof _showStudyToast === 'function') _showStudyToast('Tap a verse to add it to the comparison');
 }
 // ── Compare: per-row translation (local MSB/BSB + api.bible NIV/NKJV/NASB) ──────
@@ -38598,7 +38613,10 @@ function _rhemaSyncCompareChip() {
   _rhemaActivateCompareScope();
   const chip = document.getElementById('rhemaCompareChip');
   if (!chip) return;
-  chip.classList.toggle('hidden', _rhemaCompare.length === 0);
+  // The floating chip is only a shortcut back to the comparison while the user is
+  // mid "Add another verse" (overlay closed, picking a verse). Once the compare
+  // view is closed normally it should not linger in the corner.
+  chip.classList.toggle('hidden', !(_rhemaCompareAdding && _rhemaCompare.length > 0));
   const n = document.getElementById('rhemaCompareChipCount');
   if (n) n.textContent = String(_rhemaCompare.length);
 }
@@ -38681,8 +38699,8 @@ function _rhemaSavedComparisonsForScope() {
   const scope = _rhemaCompareScope();
   return _rhemaTrails.filter(t => (t.scope || 'main') === scope);
 }
-function _rhemaEnglishWordsForMenuRef() {
-  const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
+function _rhemaEnglishWordsForRef(ref) {
+  const p = ref ? _rhemaParseRef(ref) : null;
   if (!p) return [];
   const text = _rhemaEnglishText(p.book, p.chapter, p.verse) || '';
   const normalized = text.toLowerCase().replace(/[^a-z'\u2019\- ]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -38692,15 +38710,36 @@ function _rhemaEnglishWordsForMenuRef() {
   const words = text.replace(/[^A-Za-z'\u2019\- ]/g, ' ').split(/\s+/).filter(w => w.length > 1);
   return [...new Set([...phrases, ...words])];
 }
+function _rhemaEnglishWordsForMenuRef() { return _rhemaEnglishWordsForRef(_rhemaMenuRef); }
 function _rhemaOpenWordPicker(mode = 'lookup') {
-  const words = _rhemaEnglishWordsForMenuRef();
-  if (!words.length) return;
-  _rhemaWordPickMode = mode;
   const wrap = document.getElementById('rhemaWordPickChips');
-  if (wrap) wrap.innerHTML = words.map(w =>
-    `<button class="rhema-word-chip" onclick="rhemaPickEnglishWord(decodeURIComponent('${encodeURIComponent(w)}'))">${_escapeRhemaAttr(w)}</button>`).join('');
-  document.getElementById('rhemaWordPickRef').textContent = _rhemaDisplayRefFromKey(_rhemaMenuRef) || _rhemaMenuRef;
+  const refEl = document.getElementById('rhemaWordPickRef');
   const label = document.getElementById('rhemaWordPickLabel');
+  // Words come from every selected verse (grouped by reference) when several are
+  // chosen, otherwise just the single verse.
+  const refs = _rhemaSel.size > 1 ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []);
+  if (!refs.length) return;
+  const chip = (w) => `<button class="rhema-word-chip" onclick="rhemaPickEnglishWord(decodeURIComponent('${encodeURIComponent(w)}'))">${_escapeRhemaAttr(w)}</button>`;
+  if (refs.length > 1) {
+    let any = false;
+    const html = refs.map(ref => {
+      const words = _rhemaEnglishWordsForRef(ref);
+      if (!words.length) return '';
+      any = true;
+      return `<div class="rhema-wordpick-group">` +
+        `<div class="rhema-wordpick-grouphd">${_escapeRhemaAttr(_rhemaDisplayRefFromKey(ref) || ref)}</div>` +
+        `<div class="rhema-word-chips">${words.map(chip).join('')}</div></div>`;
+    }).join('');
+    if (!any) return;
+    if (wrap) wrap.innerHTML = html;
+    if (refEl) refEl.textContent = `${refs.length} verses`;
+  } else {
+    const words = _rhemaEnglishWordsForRef(refs[0]);
+    if (!words.length) return;
+    if (wrap) wrap.innerHTML = words.map(chip).join('');
+    if (refEl) refEl.textContent = _rhemaDisplayRefFromKey(refs[0]) || refs[0];
+  }
+  _rhemaWordPickMode = mode;
   if (label) label.textContent = mode === 'log' ? "Tap a word to add it to the study's word log" : 'Tap a word to see its meaning';
   closeRhemaVerseSheet();
   document.getElementById('rhemaWordPickModal')?.classList.add('open');
