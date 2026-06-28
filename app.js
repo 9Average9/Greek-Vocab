@@ -29436,7 +29436,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.368";
+const APP_VERSION = "3.0.369";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29457,6 +29457,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.369 &mdash; Select multiple verses</div>
+<ul>
+  <li><strong>Multi-verse selection</strong> &mdash; In the reader, tap verses to select them (they underline in your theme colour). A button appears at the bottom — tap it to act on the whole selection.</li>
+  <li><strong>Highlight, compare &amp; note many at once</strong> &mdash; Highlight every selected verse, send them all to Compare, or open one note sheet to note several verses — pick which ones, and give each its own note or one note for all.</li>
+</ul>
 <div class="un-version-label">v3.0.368 &mdash; Friend encouragement shows who</div>
 <ul>
   <li><strong>Weekly friend prompt</strong> &mdash; The weekly encouragement prompt now shows your friend's actual name and profile picture instead of just "a friend."</li>
@@ -37054,25 +37059,86 @@ function _bindRhemaBottomWave() {
   }, { passive: true });
 }
 
+// ── Multi-verse selection ───────────────────────────────────────────────────
+// Tapping a verse selects it (theme underline) instead of opening the sheet
+// immediately. A floating arrow appears once anything is selected; pressing it
+// opens the action sheet for the whole selection. Selection is scoped to the
+// current book+chapter and clears when you navigate away.
+let _rhemaSel = new Set();
+let _rhemaSelScope = '';
+
+function _rhemaSelScopeKey() { return `${_rhemaBook}|${_rhemaChapter}`; }
+
+function _rhemaSelectedVersesSorted() {
+  return [..._rhemaSel].map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b).map(String);
+}
+function _rhemaSelectedRefs() {
+  return _rhemaSelectedVersesSorted().map(v => _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, v));
+}
+
+function rhemaToggleVerseSelect(verse) {
+  const v = String(verse);
+  // Reset selection if the chapter changed under us.
+  if (_rhemaSelScope !== _rhemaSelScopeKey()) { _rhemaSel.clear(); _rhemaSelScope = _rhemaSelScopeKey(); }
+  if (_rhemaSel.has(v)) _rhemaSel.delete(v); else _rhemaSel.add(v);
+  _rhemaVerse = v;
+  _rhemaSyncVerseSelectionUI();
+}
+
+function rhemaClearSelection() {
+  _rhemaSel.clear();
+  _rhemaSyncVerseSelectionUI();
+}
+
+// Reflect the selection in the DOM (underline + floating arrow + count). Also
+// prunes any selected verses that aren't on screen (e.g. after navigation).
+function _rhemaSyncVerseSelectionUI() {
+  const blocks = document.querySelectorAll('#rhemaEnglishDisplay .rhema-english-verse[data-verse], #rhemaEnglishDisplay .rhema-chapter-block[data-verse]');
+  const present = new Set();
+  blocks.forEach(el => present.add(el.getAttribute('data-verse')));
+  [..._rhemaSel].forEach(v => { if (!present.has(v)) _rhemaSel.delete(v); });
+  blocks.forEach(el => {
+    const v = el.getAttribute('data-verse');
+    el.classList.toggle('rhema-verse-selected', !!v && _rhemaSel.has(v));
+  });
+  const bar = document.getElementById('rhemaSelectionBar');
+  if (bar) {
+    const n = _rhemaSel.size;
+    bar.classList.toggle('visible', n > 0);
+    const c = document.getElementById('rhemaSelectionCount');
+    if (c) c.textContent = n === 1 ? '1 verse' : `${n} verses`;
+  }
+}
+
 function rhemaOpenVerseMenu(v, ev) {
   ev?.stopPropagation?.();
   if (_rhemaSuppressVerseTap) { _rhemaSuppressVerseTap = false; return; }
   const verse = String(v);
-  _rhemaVerse = verse;
   _rhemaVerseFocus = false;
   _rhemaHighlightStrongs = null;
-  syncRhemaPicker?.();
-  _rhemaMenuRef = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, verse);
-  // When "Add another verse" is active, tapping a verse drops it straight into
-  // the comparison and reopens that list — keeping the same train of thought.
+  // When "Add another verse" (compare) is active, tapping a verse drops it
+  // straight into the comparison and reopens that list.
   if (_rhemaCompareAdding) {
     _rhemaCompareAdding = false;
-    _rhemaAddCompareRef(_rhemaMenuRef);
+    _rhemaVerse = verse;
+    _rhemaAddCompareRef(_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, verse));
     rhemaOpenCompare();
     return;
   }
-  _rhemaMarkActiveVerse(verse);
-  _rhemaScrollVerseToTop(verse);
+  // Default: toggle selection. The bottom arrow opens the sheet.
+  rhemaToggleVerseSelect(verse);
+}
+
+// Opens the action sheet for the current selection (1 or many).
+function rhemaOpenSelectionSheet() {
+  const verses = _rhemaSelectedVersesSorted();
+  if (!verses.length) return;
+  _rhemaVerse = verses[0];
+  _rhemaVerseFocus = false;
+  _rhemaHighlightStrongs = null;
+  syncRhemaPicker?.();
+  _rhemaMenuRef = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, verses[0]);
+  _rhemaMarkActiveVerse(verses[0]);
   _rhemaRenderVerseSheet();
   document.getElementById('rhemaVerseSheet')?.classList.add('open');
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
@@ -37080,8 +37146,23 @@ function rhemaOpenVerseMenu(v, ev) {
 function _rhemaRenderVerseSheet() {
   const ref = _rhemaMenuRef; if (!ref) return;
   const mark = _rhemaCurMarks()[ref] || {};
+  const selCount = _rhemaSel.size || 1;
+  const multi = selCount > 1;
   const refEl = document.getElementById('rhemaVerseSheetRef');
-  if (refEl) refEl.textContent = _rhemaDisplayRefFromKey(ref) || ref;
+  if (refEl) {
+    if (multi) {
+      // e.g. "John 3:14–18 · 3 verses" (range hint for the selected set).
+      const vs = _rhemaSelectedVersesSorted();
+      const range = vs.length ? `${_rhemaBookName(_rhemaBook)} ${_rhemaChapter}:${vs[0]}–${vs[vs.length - 1]}` : '';
+      refEl.textContent = `${range} · ${selCount} verses`;
+    } else {
+      refEl.textContent = _rhemaDisplayRefFromKey(ref) || ref;
+    }
+  }
+  // "Focus this verse" only makes sense for a single verse.
+  document.querySelectorAll('.rhema-vsheet-single-only').forEach(el => {
+    el.style.display = multi ? 'none' : '';
+  });
   const sw = document.getElementById('rhemaVerseSheetColors');
   if (sw) {
     sw.innerHTML = RHEMA_MARK_COLORS.map(c =>
@@ -37090,19 +37171,22 @@ function _rhemaRenderVerseSheet() {
       `<button class="rhema-vs-swatch rhema-vs-none${!mark.color ? ' active' : ''}" onclick="rhemaSetVerseHighlight('')" title="No highlight"><span class="material-symbols-outlined">format_color_reset</span></button>`;
   }
   const noteLabel = document.getElementById('rhemaVerseSheetNoteLabel');
-  if (noteLabel) noteLabel.textContent = mark.note ? 'Edit note' : 'Add note';
+  if (noteLabel) noteLabel.textContent = multi ? 'Add notes' : (mark.note ? 'Edit note' : 'Add note');
   // Study-only actions (reuse the existing save-verse / OIAQ / word-log logic).
   const study = document.getElementById('rhemaVerseSheetStudy');
-  if (study) study.style.display = _studySandboxId ? '' : 'none';
+  if (study) study.style.display = (_studySandboxId && !multi) ? '' : 'none';
   const wordBtn = document.getElementById('rhemaVerseSheetWordBtn');
-  if (wordBtn) wordBtn.style.display = _rhemaShowEnglish ? '' : 'none';
+  if (wordBtn) wordBtn.style.display = (_rhemaShowEnglish && !multi) ? '' : 'none';
   const journeyBtn = document.getElementById('rhemaVerseSheetJourneyBtn');
   if (journeyBtn) {
-    const p = _rhemaParseRef(ref);
-    const match = p ? _journeyMatchVerse(p.book, p.chapter, p.verse) : null;
-    const journey = match?.journey || null;
-    journeyBtn.style.display = journey ? '' : 'none';
-    journeyBtn.querySelector('span:last-child').textContent = journey ? `Follow ${journey.title}` : 'Follow this journey';
+    if (multi) { journeyBtn.style.display = 'none'; }
+    else {
+      const p = _rhemaParseRef(ref);
+      const match = p ? _journeyMatchVerse(p.book, p.chapter, p.verse) : null;
+      const journey = match?.journey || null;
+      journeyBtn.style.display = journey ? '' : 'none';
+      journeyBtn.querySelector('span:last-child').textContent = journey ? `Follow ${journey.title}` : 'Follow this journey';
+    }
   }
 }
 function closeRhemaVerseSheet(e) {
@@ -37115,8 +37199,9 @@ function _rhemaVerseSheetOpen() {
   return !!document.getElementById('rhemaVerseSheet')?.classList.contains('open');
 }
 function rhemaSetVerseHighlight(color) {
-  if (!_rhemaMenuRef) return;
-  _rhemaSetMark(_rhemaMenuRef, { color: color || null });
+  const refs = _rhemaSel.size ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []);
+  if (!refs.length) return;
+  refs.forEach(ref => _rhemaSetMark(ref, { color: color || null }));
   _rhemaRenderVerseSheet();
   renderRhemaVerse();
 }
@@ -37149,6 +37234,7 @@ function rhemaOpenNoteFor(book, chapter, verse, ev) {
 }
 function rhemaAddNoteFromMenu() {
   closeRhemaVerseSheet();
+  if (_rhemaSel.size > 1) { _rhemaOpenBatchNote(); return; }
   _rhemaOpenNoteEditor();
 }
 function _rhemaOpenNoteEditor() {
@@ -37203,6 +37289,89 @@ function rhemaDeleteNote() {
   _rhemaSetMark(ref, { note: null, noteColor: null, noteTs: null, noteUpdatedAt: null });
   document.getElementById('rhemaNoteModal')?.classList.remove('open');
   renderRhemaVerse();
+}
+
+// ── Batch note editor (multi-select) ────────────────────────────────────────
+// One sheet to note several selected verses at once: pick which verses get a
+// note, give each its own text, or flip "Same note for all" to write one note
+// applied to every checked verse.
+let _rhemaBatchNoteColor = RHEMA_MARK_COLORS[0];
+function _rhemaOpenBatchNote() {
+  const verses = _rhemaSelectedVersesSorted();
+  if (!verses.length) return;
+  _rhemaBatchNoteColor = RHEMA_MARK_COLORS[0];
+  const titleEl = document.getElementById('rhemaBatchNoteTitle');
+  if (titleEl) titleEl.textContent = `Add notes to ${verses.length} verses`;
+  const sameAll = document.getElementById('rhemaBatchNoteSameAll');
+  if (sameAll) sameAll.checked = false;
+  const shared = document.getElementById('rhemaBatchNoteShared');
+  if (shared) { shared.value = ''; shared.classList.add('hidden'); }
+  _rhemaRenderBatchNoteColors();
+  _rhemaRenderBatchNoteList();
+  document.getElementById('rhemaBatchNoteModal')?.classList.add('open');
+}
+function _rhemaRenderBatchNoteColors() {
+  const cr = document.getElementById('rhemaBatchNoteColors');
+  if (!cr) return;
+  cr.innerHTML = RHEMA_MARK_COLORS.map(c =>
+    `<button class="rhema-vs-swatch${c === _rhemaBatchNoteColor ? ' active' : ''}" style="background:${c}" onclick="_rhemaPickBatchNoteColor('${c}')" aria-label="Note colour"></button>`
+  ).join('');
+}
+function _rhemaPickBatchNoteColor(c) { _rhemaBatchNoteColor = c; _rhemaRenderBatchNoteColors(); }
+function _rhemaRenderBatchNoteList() {
+  const wrap = document.getElementById('rhemaBatchNoteList');
+  if (!wrap) return;
+  const sameAll = !!document.getElementById('rhemaBatchNoteSameAll')?.checked;
+  const verses = _rhemaSelectedVersesSorted();
+  const marks = _rhemaCurMarks();
+  wrap.innerHTML = verses.map(v => {
+    const ref = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, v);
+    const existing = marks[ref]?.note || '';
+    const label = `${_rhemaBookName(_rhemaBook)} ${_rhemaChapter}:${v}`;
+    return `<div class="rhema-bn-row" data-verse="${v}">
+      <label class="rhema-bn-check">
+        <input type="checkbox" class="rhema-bn-include" checked onchange="_rhemaBatchNoteRowToggle(this)"/>
+        <span class="rhema-bn-ref">${_escapeRhemaAttr(label)}</span>
+        ${existing ? '<span class="rhema-bn-haspill">has note</span>' : ''}
+      </label>
+      <textarea class="rhema-bn-text${sameAll ? ' hidden' : ''}" placeholder="Note for ${_escapeRhemaAttr(label)}…">${_escapeRhemaAttr(existing)}</textarea>
+    </div>`;
+  }).join('');
+}
+function rhemaBatchNoteToggleSameAll() {
+  const sameAll = !!document.getElementById('rhemaBatchNoteSameAll')?.checked;
+  document.getElementById('rhemaBatchNoteShared')?.classList.toggle('hidden', !sameAll);
+  _rhemaRenderBatchNoteList();
+}
+function _rhemaBatchNoteRowToggle(cb) {
+  cb.closest('.rhema-bn-row')?.classList.toggle('rhema-bn-off', !cb.checked);
+}
+function rhemaSaveBatchNote() {
+  const sameAll = !!document.getElementById('rhemaBatchNoteSameAll')?.checked;
+  const sharedText = (document.getElementById('rhemaBatchNoteShared')?.value || '').trim();
+  const rows = document.querySelectorAll('#rhemaBatchNoteList .rhema-bn-row');
+  let applied = 0;
+  rows.forEach(row => {
+    const v = row.getAttribute('data-verse');
+    if (!row.querySelector('.rhema-bn-include')?.checked) return;
+    const ref = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, v);
+    const text = sameAll ? sharedText : (row.querySelector('.rhema-bn-text')?.value || '').trim();
+    const existing = _rhemaCurMarks()[ref] || {};
+    if (!text) {
+      _rhemaSetMark(ref, { note: null, noteColor: null, noteTs: null, noteUpdatedAt: null });
+    } else {
+      _rhemaSetMark(ref, { note: text, noteColor: _rhemaBatchNoteColor, noteTs: existing.noteTs || Date.now(), noteUpdatedAt: Date.now() });
+      applied++;
+    }
+  });
+  document.getElementById('rhemaBatchNoteModal')?.classList.remove('open');
+  rhemaClearSelection();
+  renderRhemaVerse();
+  if (typeof _showStudyToast === 'function' && applied) _showStudyToast(`Saved ${applied} note${applied === 1 ? '' : 's'}`);
+}
+function closeRhemaBatchNote(e) {
+  if (e && e.target !== document.getElementById('rhemaBatchNoteModal')) return;
+  document.getElementById('rhemaBatchNoteModal')?.classList.remove('open');
 }
 
 // ── Compare → Trails ──────────────────────────────────────────────────────────
@@ -38139,8 +38308,10 @@ function _rhemaStartTrailsSync() {
 }
 
 function rhemaAddToCompareFromMenu() {
-  _rhemaAddCompareRef(_rhemaMenuRef);
+  const refs = _rhemaSel.size ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []);
+  refs.forEach(ref => _rhemaAddCompareRef(ref));
   _rhemaCompareOpenedFromMenu = true;
+  rhemaClearSelection();
   closeRhemaVerseSheet();
   rhemaOpenCompare();
 }
@@ -39194,6 +39365,7 @@ function closeRhema(keepSandbox = false) {
   }
   _saveRhemaPosition();
   _rhemaCommitCompareScope();
+  if (typeof rhemaClearSelection === 'function') rhemaClearSelection();
   if (typeof _closeRhemaXrefShell === 'function') _closeRhemaXrefShell();
   // If opened from a study sandbox, hide Save Verse button and update preview
   if (_studySandboxId) {
@@ -40236,6 +40408,10 @@ function renderRhemaVerse() {
   _syncToolWandIndicator();
   _saveRhemaPosition();
   if (_studySandboxId) _initStudyLongPress();
+  // Multi-verse selection: clear it if the chapter changed, then re-apply the
+  // underline + floating arrow to the freshly rendered verses.
+  if (_rhemaSelScope !== _rhemaSelScopeKey()) { _rhemaSel.clear(); _rhemaSelScope = _rhemaSelScopeKey(); }
+  _rhemaSyncVerseSelectionUI();
 }
 
 // Top-most verse currently scrolled into view in a chapter display, so mode
@@ -42494,19 +42670,38 @@ function copyRhemaVerseOrChapter() {
   }
 }
 
+function _rhemaVerseTextFor(book, chapter, verse) {
+  if (_rhemaShowEnglish) return _rhemaEnglishText(book, chapter, verse) || '';
+  const words = (_rhemaText()[book] || {})[String(chapter)]?.[String(verse)] || [];
+  return words.map(w => w[0]).join(' ');
+}
 function rhemaCopyVerseFromMenu() {
+  let text = '';
+  if (_rhemaSel.size > 1) {
+    // Copy all selected verses as one block.
+    const vs = _rhemaSelectedVersesSorted();
+    const bookName = _rhemaBookName(_rhemaBook);
+    const header = `${bookName} ${_rhemaChapter}:${vs[0]}-${vs[vs.length - 1]}`;
+    const body = vs.map(v => `${v} ${_rhemaVerseTextFor(_rhemaBook, _rhemaChapter, v)}`.trim()).join('\n');
+    text = `${header}\n${body}`.trim();
+    if (!body) return;
+    const showToastM = () => {
+      rhemaClearSelection();
+      closeRhemaVerseSheet();
+      const toast = document.getElementById('rhemaChapterToast');
+      if (toast) { toast.textContent = 'Verses copied!'; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 2000); }
+      else if (typeof _showStudyToast === 'function') _showStudyToast('Verses copied!');
+    };
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(showToastM).catch(() => _fallbackCopy(text, showToastM));
+    else _fallbackCopy(text, showToastM);
+    return;
+  }
   const parsed = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
   if (!parsed) return;
   const bookName = _rhemaBookName(parsed.book);
   const ref = `${bookName} ${parsed.chapter}:${parsed.verse}`;
-  let verseText = '';
-  if (_rhemaShowEnglish) {
-    verseText = _rhemaEnglishText(parsed.book, parsed.chapter, parsed.verse) || '';
-  } else {
-    const words = (_rhemaText()[parsed.book] || {})[String(parsed.chapter)]?.[String(parsed.verse)] || [];
-    verseText = words.map(w => w[0]).join(' ');
-  }
-  const text = `${ref}\n${verseText}`.trim();
+  let verseText = _rhemaVerseTextFor(parsed.book, parsed.chapter, parsed.verse);
+  text = `${ref}\n${verseText}`.trim();
   if (!verseText || !text) return;
   const showToast = () => {
     closeRhemaVerseSheet();
