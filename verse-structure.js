@@ -11,7 +11,12 @@ const VS_BOOK_CODE_MAP = {
 };
 
 const VS_LOCAL_SET    = new Set(['MSB', 'BSB']);
-const VS_TRANSLATIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
+// The Verse Structure tool itself is local-only now (MSB/BSB). The api.bible
+// translations (NIV/NKJV/NASB) are reached exclusively through the Rhema compare
+// feature, which calls _vsFetchVerse directly — one call per verse compared.
+const VS_TRANSLATIONS = ['MSB', 'BSB'];
+// Translations the compare feature may request over the network.
+const VS_API_TRANSLATIONS = ['NIV', 'NKJV', 'NASB'];
 
 // Persistent localStorage cache keys for api.bible data
 const VS_LS_BIBLE_IDS   = 'vs_bible_ids_v1';
@@ -44,8 +49,9 @@ let _vsBibleIdsFetch  = null;
 // Verse text cache: "TRANS|BOOK|CH|V" → text
 const _vsTextCache = new Map();
 
-// Tracks chapters currently being background-prefetched to avoid duplicates
-const _vsPrefetchInProgress = new Set();
+// In-flight network fetches keyed by "TRANS|BOOK|CH|V" so a fast re-render or
+// double-tap can't fire the same verse twice.
+const _vsInFlight = new Map();
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 function _vsEsc(s) {
@@ -173,68 +179,77 @@ async function _vsFetchVerse(trans, book, ch, v) {
   // Don't hit the network if the monthly quota is exhausted
   if (_vsIsApiLimited()) return null;
 
-  // Fire-and-forget background prefetch for the whole chapter so future
-  // verse reads in this chapter are instant with zero API calls.
-  _vsPrefetchChapter(trans, book, ch);
+  // De-dupe concurrent requests for the same verse so a fast re-render or
+  // double-tap can't fire (or bill) the same call twice.
+  if (_vsInFlight.has(key)) return _vsInFlight.get(key);
 
-  const ids     = await _vsGetBibleIds();
-  const bibleId = ids[trans];
-  if (!bibleId) return null;
+  const p = (async () => {
+    const ids     = await _vsGetBibleIds();
+    const bibleId = ids[trans];
+    if (!bibleId) return null;
 
-  const verseId = `${_vsApiCode(book)}.${ch}.${v}`;
-  const url     = `${VS_API_BASE}/bibles/${bibleId}/verses/${verseId}` +
-    `?content-type=text&include-notes=false&include-titles=false` +
-    `&include-chapter-numbers=false&include-verse-numbers=false`;
+    const verseId = `${_vsApiCode(book)}.${ch}.${v}`;
+    const url     = `${VS_API_BASE}/bibles/${bibleId}/verses/${verseId}` +
+      `?content-type=text&include-notes=false&include-titles=false` +
+      `&include-chapter-numbers=false&include-verse-numbers=false`;
 
-  try {
-    const r = await fetch(url, { headers: { 'api-key': VS_API_KEY } });
-    if (!r.ok) {
-      // 429 = Too Many Requests; 403 can also mean quota exceeded on api.bible
-      if (r.status === 429 || r.status === 403) _vsSetApiLimited();
+    try {
+      _vsBumpUsage(); // count this real network call (admin-visible only)
+      const r = await fetch(url, { headers: { 'api-key': VS_API_KEY } });
+      if (!r.ok) {
+        // 429 = Too Many Requests; 403 can also mean quota exceeded on api.bible
+        if (r.status === 429 || r.status === 403) _vsSetApiLimited();
+        return null;
+      }
+      const { data } = await r.json();
+      const text = (data?.content || '').trim().replace(/\s+/g, ' ');
+      _vsTextCache.set(key, text);
+      try { localStorage.setItem(VS_LS_VERSE_PFX + key, text); } catch {}
+      return text;
+    } catch {
       return null;
     }
-    const { data } = await r.json();
-    const text = (data?.content || '').trim().replace(/\s+/g, ' ');
-    _vsTextCache.set(key, text);
-    try { localStorage.setItem(VS_LS_VERSE_PFX + key, text); } catch {}
-    return text;
-  } catch {
-    return null;
-  }
+  })();
+
+  _vsInFlight.set(key, p);
+  try { return await p; }
+  finally { _vsInFlight.delete(key); }
 }
 
-// Fetches every verse in a chapter in the background and caches them all.
-// Uses the local MSB/BSB data to know the verse list — no extra API call needed.
-// Batches 5 concurrent requests to avoid overwhelming the API.
-async function _vsPrefetchChapter(trans, book, ch) {
-  if (VS_LOCAL_SET.has(trans)) return; // MSB/BSB are already local
-  const chKey = `${trans}|${book}|${ch}`;
-  if (_vsPrefetchInProgress.has(chKey)) return;
-  try { if (localStorage.getItem(VS_LS_CHAPTER_PFX + chKey)) return; } catch {}
+// NOTE: whole-chapter prefetch was removed. It silently fetched every verse of a
+// chapter on the first single-verse read, which turned a handful of comparisons
+// into thousands of API calls. The only consumer of api.bible now is the Rhema
+// compare feature, which fetches exactly one verse per version compared (results
+// are cached in memory + localStorage, so repeats cost zero calls).
 
-  _vsPrefetchInProgress.add(chKey);
+// ── API Usage Counter (admin-visible only) ──────────────────────────────────────
+// Counts only real network calls (cache hits are free). Stored per calendar month
+// so the developer can see how much of the monthly api.bible budget is used.
+function _vsUsageMonthKey(d = new Date()) {
+  return 'vs_usage_' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function _vsBumpUsage() {
   try {
-    // Verse list comes from local MSB structure — same verse numbers across translations
-    const verses = _vsChapterVerses(book, ch);
-    if (!verses.length) return;
-
-    const uncached = verses.filter(v => {
-      const vKey = `${trans}|${book}|${ch}|${v}`;
-      if (_vsTextCache.has(vKey)) return false;
-      try { return localStorage.getItem(VS_LS_VERSE_PFX + vKey) === null; } catch { return true; }
-    });
-
-    const BATCH = 5;
-    for (let i = 0; i < uncached.length; i += BATCH) {
-      await Promise.all(
-        uncached.slice(i, i + BATCH).map(v => _vsFetchVerse(trans, book, ch, v).catch(() => null))
-      );
+    const k = _vsUsageMonthKey();
+    localStorage.setItem(k, String((parseInt(localStorage.getItem(k) || '0', 10) || 0) + 1));
+    localStorage.setItem('vs_usage_last', String(Date.now()));
+  } catch {}
+}
+function vsGetUsage() {
+  let month = 0, total = 0;
+  try {
+    const mk = _vsUsageMonthKey();
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('vs_usage_') || key === 'vs_usage_last') continue;
+      const n = parseInt(localStorage.getItem(key) || '0', 10) || 0;
+      total += n;
+      if (key === mk) month = n;
     }
-
-    try { localStorage.setItem(VS_LS_CHAPTER_PFX + chKey, '1'); } catch {}
-  } finally {
-    _vsPrefetchInProgress.delete(chKey);
-  }
+  } catch {}
+  let last = 0;
+  try { last = parseInt(localStorage.getItem('vs_usage_last') || '0', 10) || 0; } catch {}
+  return { month, total, last };
 }
 
 // ── POS Highlighting ──────────────────────────────────────────────────────────
