@@ -16795,13 +16795,68 @@ function _atlasBuildRefIndex() {
   });
 }
 
+// Matcher that finds gazetteer place names mentioned in a verse's English text.
+// Built once from BIBLE_ATLAS. This is what lets a pin appear on EVERY verse that
+// names a place (e.g. Paul's greetings — Ephesus, Corinth, Rome…), not just the
+// handful of verses listed in each place's curated refs.
+let _atlasNameMatcher = null;
+// Person/tribe names that collide with place names and would create false pins.
+const _ATLAS_NAME_BLOCK = new Set(['Lydia', 'Asher', 'Salem']);
+function _atlasBuildNameMatcher() {
+  const termToNames = new Map();
+  (window.BIBLE_ATLAS || []).forEach(place => {
+    const base = String(place.name || '').trim();
+    const terms = new Set();
+    if (base) terms.add(base);
+    const noParen = base.replace(/\s*\(.*?\)\s*$/, '').trim();
+    if (noParen && noParen !== base) terms.add(noParen);
+    terms.forEach(t => {
+      // Skip short/ambiguous terms ("No", "On", "Ai", "Dan", …) — too noisy.
+      if (t.length <= 3 || _ATLAS_NAME_BLOCK.has(t)) return;
+      const arr = termToNames.get(t) || [];
+      if (!arr.includes(place.name)) arr.push(place.name);
+      termToNames.set(t, arr);
+    });
+  });
+  const terms = [...termToNames.keys()].sort((a, b) => b.length - a.length);
+  const esc = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // Case-sensitive + word-boundaried: place names are always capitalised in the
+  // text, so this avoids matching ordinary lowercase words.
+  _atlasNameMatcher = { regex: terms.length ? new RegExp(`\\b(${esc.join('|')})\\b`, 'g') : null, termToNames };
+}
+function _atlasPlaceNamesFromText(book, chapter, verse) {
+  if (typeof _rhemaEnglishText !== 'function') return [];
+  const text = _rhemaEnglishText(book, chapter, verse) || '';
+  if (!text) return [];
+  if (!_atlasNameMatcher || (!_atlasNameMatcher.regex && (window.BIBLE_ATLAS || []).length)) _atlasBuildNameMatcher();
+  const { regex, termToNames } = _atlasNameMatcher;
+  if (!regex) return [];
+  regex.lastIndex = 0;
+  const names = new Set();
+  let m;
+  while ((m = regex.exec(text)) !== null) {
+    (termToNames.get(m[1]) || []).forEach(n => names.add(n));
+  }
+  return [...names];
+}
+
+let _atlasVersePlaceCache = {};
 function _atlasPlacesForVerse(book, chapter, verse) {
   if (!Array.isArray(window.BIBLE_ATLAS)) return [];
+  const ver = (typeof _rhemaEnglishVersion === 'function') ? _rhemaEnglishVersion() : 'x';
+  const cacheKey = `${ver}|${book}|${Number(chapter)}|${Number(verse)}`;
+  if (_atlasVersePlaceCache[cacheKey]) return _atlasVersePlaceCache[cacheKey];
   if (!_atlasRefIndex) _atlasBuildRefIndex();
-  const names = _atlasRefIndex[`${book} ${Number(chapter)}:${Number(verse)}`] || [];
+  // Curated ref matches first (kept for accuracy), then anything named in the text.
+  const names = new Set(_atlasRefIndex[`${book} ${Number(chapter)}:${Number(verse)}`] || []);
+  _atlasPlaceNamesFromText(book, chapter, verse).forEach(n => names.add(n));
   const seen = new Set();
-  return names.map(n => window.BIBLE_ATLAS.find(p => p.name === n))
+  const places = [...names].map(n => window.BIBLE_ATLAS.find(p => p.name === n))
     .filter(p => p && !seen.has(p.name) && seen.add(p.name));
+  // Only cache once the gazetteer is actually loaded, so an early empty call
+  // doesn't get frozen in.
+  if ((window.BIBLE_ATLAS || []).length) _atlasVersePlaceCache[cacheKey] = places;
+  return places;
 }
 
 function openAtlasPeek(book, chapter, verse) {
@@ -29436,7 +29491,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.370";
+const APP_VERSION = "3.0.371";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29457,6 +29512,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.371 &mdash; Place pins everywhere</div>
+<ul>
+  <li><strong>Location pins in the reader</strong> &mdash; A map pin now appears on any verse that names a place &mdash; including every greeting in Paul's letters (Ephesus, Corinth, Rome, and many more). Tap it to see the spot on the map.</li>
+  <li><strong>Centered cross-reference arrows</strong> &mdash; Tidied the arrow alignment on cross-reference cards.</li>
+</ul>
 <div class="un-version-label">v3.0.370 &mdash; Multi-verse polish</div>
 <ul>
   <li><strong>Cleaner selection</strong> &mdash; Selected verses just underline now, and closing the sheet clears the selection so your highlight shows right away.</li>
