@@ -31095,6 +31095,67 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   color: var(--muted-color);
   background: transparent;
 }
+
+/* ── Memorization: lively tap feedback + premium entrances ──────────────────────
+   Brings the workshop up to the Journey-Maps feel: every tappable element
+   springs on press, the active mode/tab pops, and views rise in on open. */
+.mem-hub-tabs button,
+.mem-source-tabs button,
+.mem-library-tabs button,
+.mem-icon-btn,
+.mem-secondary-btn,
+.mem-primary-btn,
+.mem-progress-btn,
+.mem-best-chip,
+.mem-mode-wheel button,
+.mem-saved-main,
+.mem-saved-delete {
+  transition: transform 0.14s cubic-bezier(.2, .82, .18, 1),
+              background 0.18s ease, border-color 0.18s ease,
+              box-shadow 0.18s ease, color 0.18s ease, opacity 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.mem-hub-tabs button:active,
+.mem-source-tabs button:active,
+.mem-library-tabs button:active,
+.mem-secondary-btn:active,
+.mem-progress-btn:active,
+.mem-saved-main:active { transform: scale(0.965); }
+.mem-icon-btn:active,
+.mem-saved-delete:active { transform: scale(0.9); }
+.mem-mode-wheel button:active { transform: scale(0.94); }
+.mem-best-chip:active { transform: scale(0.95); }
+
+/* Primary action button: theme-glow that depresses on tap. */
+.mem-primary-btn { box-shadow: 0 8px 20px color-mix(in srgb, var(--secondary-color) 24%, transparent); }
+.mem-primary-btn:active { transform: scale(0.975); box-shadow: 0 3px 10px color-mix(in srgb, var(--secondary-color) 30%, transparent); }
+
+/* Selecting a practice mode pops it. */
+.mem-mode-wheel button.active { animation: memPop 0.26s cubic-bezier(.2, .82, .18, 1); }
+@keyframes memPop {
+  0% { transform: scale(0.92); }
+  60% { transform: scale(1.045); }
+  100% { transform: scale(1); }
+}
+
+/* Views and key cards rise/fade in for a lively, premium entrance. */
+.mem-view:not(.hidden) { animation: memViewIn 0.34s cubic-bezier(.2, .82, .18, 1); }
+@keyframes memViewIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.mem-preview-card, .mem-verse-stage { animation: memCardIn 0.3s cubic-bezier(.2, .82, .18, 1); }
+@keyframes memCardIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mem-view:not(.hidden),
+  .mem-mode-wheel button.active,
+  .mem-preview-card,
+  .mem-verse-stage { animation: none !important; }
+}
 @media (min-width: 520px) {
   .mem-mode-wheel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
@@ -31328,7 +31389,27 @@ body.reading-plan-active #statusBarBg {
 .rp-btn .material-symbols-outlined { font-size: 1.15rem; }
 .rp-btn:active { transform: scale(0.97); }
 .rp-btn-primary { background: var(--secondary-color); color: var(--btn-text-color); box-shadow: 0 10px 22px color-mix(in srgb, var(--secondary-color) 26%, transparent); }
+.rp-btn-primary:active { box-shadow: 0 4px 12px color-mix(in srgb, var(--secondary-color) 30%, transparent); }
 .rp-btn-ghost { background: var(--card-color); color: var(--secondary-color); border-color: var(--secondary-color); }
+
+/* ── Reading Plan: lively entrances to match the premium tools ──────────────── */
+.rp-view:not(.hidden) { animation: rpViewIn 0.32s cubic-bezier(.2, .82, .18, 1); }
+@keyframes rpViewIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.rp-saved-card { transition: transform 0.14s cubic-bezier(.2, .82, .18, 1), box-shadow 0.2s ease; }
+.rp-saved-card:active { transform: scale(0.99); }
+.rp-tabs button {
+  transition: transform 0.14s cubic-bezier(.2, .82, .18, 1),
+              background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.rp-tabs button:active { transform: scale(0.97); }
+.rp-tabs button.active { animation: memPop 0.26s cubic-bezier(.2, .82, .18, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .rp-view:not(.hidden), .rp-tabs button.active { animation: none !important; }
+}
 .rp-cancel-edit {
   display: block; margin: 14px auto 0; padding: 8px 16px;
   background: none; border: 0; color: var(--muted-color);

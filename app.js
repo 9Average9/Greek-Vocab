@@ -24904,6 +24904,9 @@ function markWordAsKnown() {
   if (!knownWords.includes(currentWord.id)) {
     knownWords.push(currentWord.id);
     localStorage.setItem("knownWords", JSON.stringify(knownWords));
+    // Push to the cloud so the change survives a reopen (otherwise the next
+    // cloud sync overwrites local from stale data).
+    if (typeof syncUserData === "function") syncUserData();
   }
 
   nextTestWord(); // skip it immediately
@@ -24967,6 +24970,9 @@ function closeKnownWordsModal(event) {
 function removeKnownWord(wordId) {
   knownWords = knownWords.filter(id => String(id) !== String(wordId));
   localStorage.setItem("knownWords", JSON.stringify(knownWords));
+  // Persist the deletion to the cloud — without this, reopening the app pulls the
+  // old list back from Firestore and the removed word reappears.
+  if (typeof syncUserData === "function") syncUserData();
   showKnownWordsModal();
 }
 
@@ -29430,7 +29436,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.365";
+const APP_VERSION = "3.0.366";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29451,6 +29457,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.366 &mdash; Livelier tools &amp; known-words fix</div>
+<ul>
+  <li><strong>Memorize &amp; Reading Plan feel alive</strong> &mdash; Buttons, tabs, and cards now spring on tap and views ease in, matching the premium feel of the Bible Journey maps.</li>
+  <li><strong>Known words stay deleted</strong> &mdash; Fixed a bug where words removed from your Known list came back after closing and reopening the app.</li>
+</ul>
 <div class="un-version-label">v3.0.365 &mdash; Full-screen tools</div>
 <ul>
   <li><strong>Premium full-screen tools</strong> &mdash; Memorize, Reading Plan, Vocab, Translate, and Test now open edge-to-edge with the same smooth feel as the Bible Journey maps.</li>
