@@ -23612,61 +23612,6 @@ function showSettings() {
   updateHighContrastSettingsUI();
   updateMatchHomeThemeSettingsUI();
   updateToolsMatchThemeSettingsUI();
-  _renderAdminApiUsage();
-}
-
-// ── Admin (developer) gate ──────────────────────────────────────────────────────
-// Only this account ever sees API/usage internals. UID is the primary check
-// (never changes); email is a fallback. Regular users see nothing of this.
-const APP_ADMIN_UID = 'ndR0T8esDzXxFb7ZPfC6LhwCNUM2';
-const APP_ADMIN_EMAIL = 'creamsodadr@gmail.com';
-function _isAppAdmin() {
-  try {
-    const u = window.Auth?.getCurrentUser?.();
-    if (!u) return false;
-    return u.uid === APP_ADMIN_UID || (u.email && u.email.toLowerCase() === APP_ADMIN_EMAIL);
-  } catch { return false; }
-}
-
-// Renders a developer-only api.bible usage card at the bottom of Settings. It is
-// never inserted for non-admin accounts, so other users can't see the API exists.
-function _renderAdminApiUsage() {
-  const existing = document.getElementById('adminApiUsageCard');
-  if (!_isAppAdmin()) { existing?.remove(); return; }
-  const scroll = document.querySelector('#settingsScreen .sett-scroll');
-  if (!scroll) return;
-
-  const usage = typeof vsGetUsage === 'function' ? vsGetUsage() : { month: 0, total: 0, last: 0 };
-  const lastStr = usage.last ? new Date(usage.last).toLocaleString() : 'never';
-  const card = existing || document.createElement('div');
-  card.id = 'adminApiUsageCard';
-  card.className = 'admin-usage-card';
-  card.innerHTML = `
-    <div class="admin-usage-hd"><span class="material-symbols-outlined">key</span> Developer · api.bible usage</div>
-    <div class="admin-usage-grid">
-      <div><span class="admin-usage-num">${usage.month.toLocaleString()}</span><small>this month</small></div>
-      <div><span class="admin-usage-num">${usage.total.toLocaleString()}</span><small>all time</small></div>
-    </div>
-    <div class="admin-usage-last">Last call: ${_escapeRhemaAttr ? _escapeRhemaAttr(lastStr) : lastStr}</div>
-    <div class="admin-usage-actions">
-      <button onclick="_renderAdminApiUsage()">Refresh</button>
-      <button onclick="_adminResetApiUsage()">Reset counter</button>
-    </div>
-    <div class="admin-usage-note">Counts real network calls only (cache hits are free). Visible to you only.</div>`;
-  if (!existing) scroll.appendChild(card);
-}
-function _adminResetApiUsage() {
-  if (!_isAppAdmin()) return;
-  if (!confirm('Reset the api.bible usage counter? (Local count only — does not affect your real quota.)')) return;
-  try {
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && (k.startsWith('vs_usage_'))) keys.push(k);
-    }
-    keys.forEach(k => localStorage.removeItem(k));
-  } catch {}
-  _renderAdminApiUsage();
 }
 
 function resetTestData() {
@@ -29468,7 +29413,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.363";
+const APP_VERSION = "3.0.364";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.

@@ -32982,34 +32982,6 @@ body.dark .journey-modern-shape { fill: #202c42; }
 @media (prefers-reduced-motion: reduce) {
   .rhema-cmp-ver-sheet, .rhema-cmp-ver-card { transition: none !important; }
 }
-
-/* Developer-only api.bible usage card (Settings). Never rendered for other users. */
-.admin-usage-card {
-  margin: 18px 16px 6px;
-  padding: 14px 16px;
-  border: 1px dashed var(--secondary-color, #243447);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--secondary-color, #243447) 6%, transparent);
-}
-.admin-usage-hd {
-  display: flex; align-items: center; gap: 6px;
-  font-weight: 800; font-size: 0.86rem; color: var(--secondary-color, #243447); margin-bottom: 10px;
-}
-.admin-usage-hd .material-symbols-outlined { font-size: 18px; }
-.admin-usage-grid { display: flex; gap: 10px; }
-.admin-usage-grid > div {
-  flex: 1; display: flex; flex-direction: column; align-items: center;
-  padding: 10px; border-radius: 10px; background: var(--card-color, #fff);
-}
-.admin-usage-num { font-size: 1.4rem; font-weight: 900; color: var(--font-color, #20303f); }
-.admin-usage-grid small { color: var(--muted-color, #8a8a8a); font-weight: 700; font-size: 0.7rem; }
-.admin-usage-last { margin-top: 10px; font-size: 0.78rem; color: var(--muted-color, #8a8a8a); }
-.admin-usage-actions { display: flex; gap: 8px; margin-top: 12px; }
-.admin-usage-actions button {
-  flex: 1; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-color, rgba(120,120,120,0.2));
-  background: transparent; color: var(--font-color, #20303f); font-weight: 700; font-size: 0.82rem; cursor: pointer;
-}
-.admin-usage-note { margin-top: 10px; font-size: 0.7rem; color: var(--muted-color, #8a8a8a); line-height: 1.4; }
 /* Three-button compare action row. */
 .rhema-compare-actions { flex-wrap: wrap; }
 .rhema-compare-add {

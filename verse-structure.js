@@ -194,7 +194,6 @@ async function _vsFetchVerse(trans, book, ch, v) {
       `&include-chapter-numbers=false&include-verse-numbers=false`;
 
     try {
-      _vsBumpUsage(); // count this real network call (admin-visible only)
       const r = await fetch(url, { headers: { 'api-key': VS_API_KEY } });
       if (!r.ok) {
         // 429 = Too Many Requests; 403 can also mean quota exceeded on api.bible
@@ -221,36 +220,6 @@ async function _vsFetchVerse(trans, book, ch, v) {
 // into thousands of API calls. The only consumer of api.bible now is the Rhema
 // compare feature, which fetches exactly one verse per version compared (results
 // are cached in memory + localStorage, so repeats cost zero calls).
-
-// ── API Usage Counter (admin-visible only) ──────────────────────────────────────
-// Counts only real network calls (cache hits are free). Stored per calendar month
-// so the developer can see how much of the monthly api.bible budget is used.
-function _vsUsageMonthKey(d = new Date()) {
-  return 'vs_usage_' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-}
-function _vsBumpUsage() {
-  try {
-    const k = _vsUsageMonthKey();
-    localStorage.setItem(k, String((parseInt(localStorage.getItem(k) || '0', 10) || 0) + 1));
-    localStorage.setItem('vs_usage_last', String(Date.now()));
-  } catch {}
-}
-function vsGetUsage() {
-  let month = 0, total = 0;
-  try {
-    const mk = _vsUsageMonthKey();
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith('vs_usage_') || key === 'vs_usage_last') continue;
-      const n = parseInt(localStorage.getItem(key) || '0', 10) || 0;
-      total += n;
-      if (key === mk) month = n;
-    }
-  } catch {}
-  let last = 0;
-  try { last = parseInt(localStorage.getItem('vs_usage_last') || '0', 10) || 0; } catch {}
-  return { month, total, last };
-}
 
 // ── POS Highlighting ──────────────────────────────────────────────────────────
 function _vsNlp() {
