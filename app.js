@@ -23612,6 +23612,61 @@ function showSettings() {
   updateHighContrastSettingsUI();
   updateMatchHomeThemeSettingsUI();
   updateToolsMatchThemeSettingsUI();
+  _renderAdminApiUsage();
+}
+
+// ── Admin (developer) gate ──────────────────────────────────────────────────────
+// Only this account ever sees API/usage internals. UID is the primary check
+// (never changes); email is a fallback. Regular users see nothing of this.
+const APP_ADMIN_UID = 'ndR0T8esDzXxFb7ZPfC6LhwCNUM2';
+const APP_ADMIN_EMAIL = 'creamsodadr@gmail.com';
+function _isAppAdmin() {
+  try {
+    const u = window.Auth?.getCurrentUser?.();
+    if (!u) return false;
+    return u.uid === APP_ADMIN_UID || (u.email && u.email.toLowerCase() === APP_ADMIN_EMAIL);
+  } catch { return false; }
+}
+
+// Renders a developer-only api.bible usage card at the bottom of Settings. It is
+// never inserted for non-admin accounts, so other users can't see the API exists.
+function _renderAdminApiUsage() {
+  const existing = document.getElementById('adminApiUsageCard');
+  if (!_isAppAdmin()) { existing?.remove(); return; }
+  const scroll = document.querySelector('#settingsScreen .sett-scroll');
+  if (!scroll) return;
+
+  const usage = typeof vsGetUsage === 'function' ? vsGetUsage() : { month: 0, total: 0, last: 0 };
+  const lastStr = usage.last ? new Date(usage.last).toLocaleString() : 'never';
+  const card = existing || document.createElement('div');
+  card.id = 'adminApiUsageCard';
+  card.className = 'admin-usage-card';
+  card.innerHTML = `
+    <div class="admin-usage-hd"><span class="material-symbols-outlined">key</span> Developer · api.bible usage</div>
+    <div class="admin-usage-grid">
+      <div><span class="admin-usage-num">${usage.month.toLocaleString()}</span><small>this month</small></div>
+      <div><span class="admin-usage-num">${usage.total.toLocaleString()}</span><small>all time</small></div>
+    </div>
+    <div class="admin-usage-last">Last call: ${_escapeRhemaAttr ? _escapeRhemaAttr(lastStr) : lastStr}</div>
+    <div class="admin-usage-actions">
+      <button onclick="_renderAdminApiUsage()">Refresh</button>
+      <button onclick="_adminResetApiUsage()">Reset counter</button>
+    </div>
+    <div class="admin-usage-note">Counts real network calls only (cache hits are free). Visible to you only.</div>`;
+  if (!existing) scroll.appendChild(card);
+}
+function _adminResetApiUsage() {
+  if (!_isAppAdmin()) return;
+  if (!confirm('Reset the api.bible usage counter? (Local count only — does not affect your real quota.)')) return;
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('vs_usage_'))) keys.push(k);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+  } catch {}
+  _renderAdminApiUsage();
 }
 
 function resetTestData() {
@@ -29413,7 +29468,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.362";
+const APP_VERSION = "3.0.363";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29434,6 +29489,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.363 &mdash; Compare across translations</div>
+<ul>
+  <li><strong>More translations in Compare</strong> &mdash; Each verse in the compare view can now be shown in NIV, NKJV, or NASB alongside MSB &amp; BSB. Tap a verse's translation chip to switch it.</li>
+  <li><strong>Faster &amp; lighter</strong> &mdash; Compare loads each translation a verse at a time and remembers it, so it stays quick and works offline once a verse has been seen.</li>
+</ul>
 <div class="un-version-label">v3.0.362 &mdash; Library fold, Reading Plan edges, Rhema slide</div>
 <ul>
   <li><strong>Study Library folds shut</strong> &mdash; Closing the Library now collapses back into its button (the same fold the other tools use) instead of sliding away.</li>
@@ -38081,8 +38141,105 @@ function rhemaCompareAddAnother() {
   document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
   if (typeof _showStudyToast === 'function') _showStudyToast('Tap a verse to add it to the comparison');
 }
-function rhemaCompareVersionHint() {
-  if (typeof _showStudyToast === 'function') _showStudyToast('Per-verse version switching is coming soon.');
+// ── Compare: per-row translation (local MSB/BSB + api.bible NIV/NKJV/NASB) ──────
+// The api.bible versions are fetched one verse at a time, cached in memory +
+// localStorage (shared with the rest of the app), so each verse-version costs at
+// most one network call ever. Compare is the ONLY place that touches api.bible.
+const RHEMA_COMPARE_VERSIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
+
+function _rhemaCompareIsApiVersion(v) {
+  return typeof VS_API_TRANSLATIONS !== 'undefined'
+    ? VS_API_TRANSLATIONS.includes(v)
+    : ['NIV', 'NKJV', 'NASB'].includes(v);
+}
+
+// Returns cached text for an api.bible verse without ever hitting the network,
+// or null if it isn't cached yet.
+function _rhemaCompareApiCached(ver, p) {
+  const key = `${ver}|${p.book}|${p.chapter}|${p.verse}`;
+  if (typeof _vsTextCache !== 'undefined' && _vsTextCache.has(key)) return _vsTextCache.get(key);
+  try {
+    const stored = localStorage.getItem('vs_v_' + key);
+    if (stored !== null) return stored;
+  } catch {}
+  return null;
+}
+
+// Fetches any pending api.bible verses in the rendered list (one call each) and
+// patches the text in when it lands — mirrors the cross-ref async pattern.
+async function _rhemaCompareLoadAsync() {
+  if (typeof _vsFetchVerse !== 'function') return;
+  const list = document.getElementById('rhemaCompareList');
+  if (!list) return;
+  const pendingEls = Array.from(list.querySelectorAll('.rhema-compare-loading'));
+  if (!pendingEls.length) return;
+
+  const limited = typeof _vsIsApiLimited === 'function' && _vsIsApiLimited();
+
+  await Promise.all(pendingEls.map(async (el) => {
+    const ref = el.dataset.cmpRef;
+    const ver = el.dataset.cmpVer;
+    const p = _rhemaParseRef(ref);
+    if (!p) { el.classList.remove('rhema-compare-loading'); el.textContent = ''; return; }
+
+    if (limited) {
+      // Over quota / offline: fall back to a local version so the row still shows
+      // something useful, with a quiet note.
+      const fallback = _rhemaEnglishText(p.book, p.chapter, p.verse, 'MSB') || '';
+      el.classList.remove('rhema-compare-loading');
+      el.classList.add('rhema-compare-fallback');
+      el.textContent = fallback ? `${fallback}  (showing MSB — ${ver} unavailable right now)` : `${ver} unavailable right now.`;
+      return;
+    }
+
+    const text = await _vsFetchVerse(ver, p.book, p.chapter, p.verse).catch(() => null);
+    el.classList.remove('rhema-compare-loading');
+    if (text) {
+      el.textContent = text;
+    } else {
+      const fallback = _rhemaEnglishText(p.book, p.chapter, p.verse, 'MSB') || '';
+      el.classList.add('rhema-compare-fallback');
+      el.textContent = fallback ? `${fallback}  (showing MSB — ${ver} unavailable)` : `${ver} unavailable.`;
+    }
+  }));
+}
+
+let _rhemaComparePickIdx = -1;
+function rhemaCompareOpenVersionPick(idx) {
+  if (idx < 0 || !_rhemaCompare[idx]) return;
+  _rhemaComparePickIdx = idx;
+  const cur = _rhemaCompare[idx].version || 'MSB';
+  const limited = typeof _vsIsApiLimited === 'function' && _vsIsApiLimited();
+  let sheet = document.getElementById('rhemaCompareVerSheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'rhemaCompareVerSheet';
+    sheet.className = 'rhema-cmp-ver-sheet';
+    sheet.addEventListener('click', (e) => { if (e.target === sheet) rhemaCompareCloseVersionPick(); });
+    document.body.appendChild(sheet);
+  }
+  sheet.innerHTML = `<div class="rhema-cmp-ver-card">
+    <div class="rhema-cmp-ver-title">Translation</div>
+    ${RHEMA_COMPARE_VERSIONS.map(v => {
+      const dis = _rhemaCompareIsApiVersion(v) && limited;
+      return `<button class="rhema-cmp-ver-opt${v === cur ? ' active' : ''}" ${dis ? 'disabled' : ''} onclick="rhemaComparePickVersion('${v}')">
+        <span>${v}</span>
+        ${dis ? '<small>limit reached</small>' : (v === cur ? '<span class="material-symbols-outlined">check</span>' : '')}
+      </button>`;
+    }).join('')}
+  </div>`;
+  requestAnimationFrame(() => sheet.classList.add('open'));
+}
+function rhemaCompareCloseVersionPick() {
+  document.getElementById('rhemaCompareVerSheet')?.classList.remove('open');
+}
+function rhemaComparePickVersion(v) {
+  const idx = _rhemaComparePickIdx;
+  if (idx < 0 || !_rhemaCompare[idx]) { rhemaCompareCloseVersionPick(); return; }
+  _rhemaCompare[idx].version = v;
+  _rhemaCommitCompareScope();
+  rhemaCompareCloseVersionPick();
+  _rhemaRenderCompare();
 }
 function rhemaCompareMove(idx, dir) {
   const j = idx + dir;
@@ -38119,20 +38276,34 @@ function _rhemaRenderCompare() {
       list.innerHTML = _rhemaCompare.map((item, i) => {
         const ref = item.ref;
         const p = _rhemaParseRef(ref);
-        const text = p ? (_rhemaEnglishText(p.book, p.chapter, p.verse, item.version) || '') : '';
+        const ver = item.version || 'MSB';
+        const isApi = _rhemaCompareIsApiVersion(ver);
+        let text = '', pending = false;
+        if (p) {
+          if (isApi) {
+            const cached = _rhemaCompareApiCached(ver, p);
+            if (cached != null) text = cached;
+            else pending = true;
+          } else {
+            text = _rhemaEnglishText(p.book, p.chapter, p.verse, ver) || '';
+          }
+        }
+        const bodyClass = pending ? 'rhema-compare-text rhema-compare-loading' : 'rhema-compare-text';
+        const bodyText = pending ? `Loading ${_escapeRhemaAttr(ver)}…` : _escapeRhemaAttr(text);
         return `<div class="rhema-compare-item">
           <div class="rhema-compare-item-hd">
             <span class="rhema-compare-ref">${_escapeRhemaAttr(_rhemaDisplayRefFromKey(ref) || ref)}</span>
-            <button class="rhema-compare-ver" onclick="rhemaCompareVersionHint()" title="Translation (switching coming soon)">${_escapeRhemaAttr(item.version || 'MSB')}</button>
+            <button class="rhema-compare-ver" onclick="rhemaCompareOpenVersionPick(${i})" title="Tap to change translation">${_escapeRhemaAttr(ver)}<span class="material-symbols-outlined">expand_more</span></button>
             <span class="rhema-compare-ctrls">
               <button onclick="rhemaCompareMove(${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="Move up"><span class="material-symbols-outlined">arrow_upward</span></button>
               <button onclick="rhemaCompareMove(${i},1)" ${i === _rhemaCompare.length - 1 ? 'disabled' : ''} aria-label="Move down"><span class="material-symbols-outlined">arrow_downward</span></button>
               <button onclick="rhemaCompareRemove(${i})" aria-label="Remove"><span class="material-symbols-outlined">close</span></button>
             </span>
           </div>
-          <div class="rhema-compare-text">${_escapeRhemaAttr(text)}</div>
+          <div class="${bodyClass}" data-cmp-ref="${_escapeRhemaAttr(ref)}" data-cmp-ver="${_escapeRhemaAttr(ver)}">${bodyText}</div>
         </div>`;
       }).join('');
+      _rhemaCompareLoadAsync();
     }
   }
   // Saved comparisons — only in the main (home) Rhema; in a study they live in

@@ -196,13 +196,10 @@ async function openRhemaCrossReferences(forceCoach = false) {
 }
 
 function setRhemaXrefEnglishVersion(version) {
-  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
-  if (inVsCtx) {
-    // Accept all 5 translations in VS context
-    _rhemaXrefEnglishVersion = ['MSB','BSB','NIV','NKJV','NASB'].includes(version) ? version : 'MSB';
-  } else {
-    _rhemaXrefEnglishVersion = version === 'BSB' ? 'BSB' : 'MSB';
-  }
+  // Cross-references are local-only (MSB/BSB). The api.bible translations
+  // (NIV/NKJV/NASB) live exclusively in the Rhema compare feature now, to keep
+  // network calls to an absolute minimum.
+  _rhemaXrefEnglishVersion = version === 'BSB' ? 'BSB' : 'MSB';
   if (_rhemaXrefView === 'trail') renderRhemaXrefTrail();
   else renderRhemaCrossReferences();
 }
@@ -300,8 +297,7 @@ async function _xrefLoadAsyncVerseTexts(refs) {
 
 function _xrefTopCardHtml() {
   const ref = _xrefKey();
-  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
-  const versions = inVsCtx ? ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'] : ['MSB', 'BSB'];
+  const versions = ['MSB', 'BSB'];
   return `<div class="rx-top-card" role="button" tabindex="0" onclick="openRhemaCrossRefSelect()" onkeydown="if(event.key==='Enter'||event.key===' ')openRhemaCrossRefSelect()">
     <div class="rx-top-card-copy">
       <h3>${_xrefEscape(_xrefDisplay(ref))}</h3>
