@@ -23703,6 +23703,10 @@ body.home-theme-match #homeScreen .hs-start-btn span:last-child {
 .mercies-action-icon { width: 58px; height: 58px; border-radius: 50%; display: flex !important; align-items: center !important; justify-content: center !important; line-height: 1 !important; padding: 0 !important; text-align: center; background: rgba(255,255,255,0.13); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); flex: 0 0 auto; }
 .mercies-action-icon.material-symbols-outlined { font-size: 2rem; font-variation-settings: 'FILL' 0, 'wght' 450, 'GRAD' 0, 'opsz' 32; }
 .mercies-secondary .mercies-action-icon { background: color-mix(in srgb, var(--secondary-color) 9%, white); color: var(--secondary-color); }
+/* Pending friend prompt: the icon container holds either a material icon or the
+   friend's avatar photo, sized to fill the circle. */
+#mercyPendingFriendAvatar .material-symbols-outlined { font-size: 2rem; font-variation-settings: 'FILL' 0, 'wght' 450, 'GRAD' 0, 'opsz' 32; }
+#mercyPendingFriendAvatar .avatar-photo-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .mercies-action-chev { margin-left: auto; }
 .mercies-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px; }
 .mercies-section-head.hidden { display: none !important; }
