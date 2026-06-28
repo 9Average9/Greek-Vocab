@@ -32911,8 +32911,11 @@ body.dark .journey-modern-shape { fill: #202c42; }
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
 }
-/* Version chip beside a compared verse's reference (pressable for the future). */
+/* Version chip beside a compared verse's reference — tap to change translation. */
 .rhema-compare-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
   border: 1px solid var(--secondary-color, #243447);
   color: var(--secondary-color, #243447);
   background: transparent;
@@ -32920,12 +32923,93 @@ body.dark .journey-modern-shape { fill: #202c42; }
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-  padding: 2px 8px;
+  padding: 2px 6px 2px 8px;
   margin-left: 8px;
   cursor: pointer;
 }
+.rhema-compare-ver .material-symbols-outlined { font-size: 14px; margin-left: 1px; }
+.rhema-compare-ver:active { transform: scale(0.95); }
 .rhema-compare-item-hd { flex-wrap: wrap; }
 .rhema-compare-item-hd .rhema-compare-ctrls { margin-left: auto; }
+
+/* Loading / fallback states for api.bible verses in compare. */
+.rhema-compare-text.rhema-compare-loading { opacity: 0.55; font-style: italic; }
+.rhema-compare-text.rhema-compare-fallback { color: var(--muted-color, #8a8a8a); }
+
+/* Per-row translation picker (bottom sheet, built in JS). */
+.rhema-cmp-ver-sheet {
+  position: fixed; inset: 0;
+  z-index: 1300;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0, 0, 0, 0.34);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+.rhema-cmp-ver-sheet.open { opacity: 1; pointer-events: auto; }
+.rhema-cmp-ver-card {
+  width: 100%; max-width: 460px;
+  background: var(--card-color, #fff);
+  border-radius: 18px 18px 0 0;
+  padding: 14px 14px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.18);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(.2, .82, .18, 1);
+}
+.rhema-cmp-ver-sheet.open .rhema-cmp-ver-card { transform: translateY(0); }
+.rhema-cmp-ver-title {
+  font-weight: 800; font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--muted-color, #8a8a8a); margin: 2px 4px 10px;
+}
+.rhema-cmp-ver-opt {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  border: 1px solid var(--border-color, rgba(120, 120, 120, 0.2));
+  background: transparent;
+  color: var(--font-color, #20303f);
+  border-radius: 12px;
+  padding: 13px 14px; margin-bottom: 8px;
+  font-weight: 800; font-size: 0.96rem; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rhema-cmp-ver-opt:active { transform: scale(0.985); }
+.rhema-cmp-ver-opt.active {
+  border-color: var(--secondary-color, #243447);
+  background: color-mix(in srgb, var(--secondary-color, #243447) 12%, transparent);
+}
+.rhema-cmp-ver-opt[disabled] { opacity: 0.45; cursor: default; }
+.rhema-cmp-ver-opt small { color: var(--muted-color, #8a8a8a); font-weight: 700; font-size: 0.68rem; }
+.rhema-cmp-ver-opt .material-symbols-outlined { font-size: 20px; color: var(--secondary-color, #243447); }
+@media (prefers-reduced-motion: reduce) {
+  .rhema-cmp-ver-sheet, .rhema-cmp-ver-card { transition: none !important; }
+}
+
+/* Developer-only api.bible usage card (Settings). Never rendered for other users. */
+.admin-usage-card {
+  margin: 18px 16px 6px;
+  padding: 14px 16px;
+  border: 1px dashed var(--secondary-color, #243447);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--secondary-color, #243447) 6%, transparent);
+}
+.admin-usage-hd {
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 800; font-size: 0.86rem; color: var(--secondary-color, #243447); margin-bottom: 10px;
+}
+.admin-usage-hd .material-symbols-outlined { font-size: 18px; }
+.admin-usage-grid { display: flex; gap: 10px; }
+.admin-usage-grid > div {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 10px; border-radius: 10px; background: var(--card-color, #fff);
+}
+.admin-usage-num { font-size: 1.4rem; font-weight: 900; color: var(--font-color, #20303f); }
+.admin-usage-grid small { color: var(--muted-color, #8a8a8a); font-weight: 700; font-size: 0.7rem; }
+.admin-usage-last { margin-top: 10px; font-size: 0.78rem; color: var(--muted-color, #8a8a8a); }
+.admin-usage-actions { display: flex; gap: 8px; margin-top: 12px; }
+.admin-usage-actions button {
+  flex: 1; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-color, rgba(120,120,120,0.2));
+  background: transparent; color: var(--font-color, #20303f); font-weight: 700; font-size: 0.82rem; cursor: pointer;
+}
+.admin-usage-note { margin-top: 10px; font-size: 0.7rem; color: var(--muted-color, #8a8a8a); line-height: 1.4; }
 /* Three-button compare action row. */
 .rhema-compare-actions { flex-wrap: wrap; }
 .rhema-compare-add {
