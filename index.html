@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.368" rel="stylesheet"/>
+<link href="style.css?v=3.0.369" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -10652,7 +10652,7 @@ Verb Endings
 <span class="material-symbols-outlined">dictionary</span>
 <span>Define an English word</span>
 </button>
-<button class="rhema-vsheet-action" onclick="rhemaFocusVerseFromMenu()">
+<button class="rhema-vsheet-action rhema-vsheet-single-only" onclick="rhemaFocusVerseFromMenu()">
 <span class="material-symbols-outlined">center_focus_strong</span>
 <span>Focus this verse</span>
 </button>
@@ -10688,6 +10688,11 @@ Verb Endings
 <button class="rhema-note-save hidden" id="rhemaMeaningLogBtn" onclick="rhemaAddCurrentEnglishMeaningToStudy()">Add to study word log</button>
 </div>
 </div>
+<!-- Multi-verse selection arrow (appears when verses are selected) -->
+<button class="rhema-selection-bar" id="rhemaSelectionBar" onclick="rhemaOpenSelectionSheet()" aria-label="Open actions for selected verses">
+<span class="rhema-selection-count" id="rhemaSelectionCount">0</span>
+<span class="rhema-selection-arrow material-symbols-outlined">expand_less</span>
+</button>
 <!-- Compare floating chip -->
 <button class="rhema-compare-chip hidden" id="rhemaCompareChip" onclick="rhemaOpenCompare()">
 <span class="material-symbols-outlined">format_list_bulleted</span>
@@ -10735,6 +10740,23 @@ Verb Endings
 <button class="rhema-note-delete" id="rhemaNoteDeleteBtn" onclick="rhemaDeleteNote()" style="display:none">Delete</button>
 <button class="rhema-note-cancel" onclick="closeRhemaNoteModal()">Cancel</button>
 <button class="rhema-note-save" onclick="rhemaSaveNote()">Save</button>
+</div>
+</div>
+</div>
+<!-- Batch note editor (multiple selected verses) -->
+<div class="rhema-note-overlay" id="rhemaBatchNoteModal" onclick="closeRhemaBatchNote(event)">
+<div class="rhema-note-card rhema-batch-note-card" onclick="event.stopPropagation()">
+<button class="rhema-note-x" onclick="closeRhemaBatchNote()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+<div class="rhema-note-ref" id="rhemaBatchNoteTitle">Add notes</div>
+<label class="rhema-bn-sameall"><input type="checkbox" id="rhemaBatchNoteSameAll" onchange="rhemaBatchNoteToggleSameAll()"/><span>Same note for all selected</span></label>
+<textarea id="rhemaBatchNoteShared" class="rhema-note-text rhema-bn-shared hidden" placeholder="Write one note to apply to every checked verse…"></textarea>
+<div class="rhema-vsheet-label">Note colour</div>
+<div class="rhema-vsheet-colors" id="rhemaBatchNoteColors"></div>
+<div class="rhema-vsheet-label">Verses</div>
+<div class="rhema-bn-list" id="rhemaBatchNoteList"></div>
+<div class="rhema-note-actions">
+<button class="rhema-note-cancel" onclick="closeRhemaBatchNote()">Cancel</button>
+<button class="rhema-note-save" onclick="rhemaSaveBatchNote()">Save notes</button>
 </div>
 </div>
 </div>
@@ -17006,7 +17028,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.368"></script>
+<script src="app.js?v=3.0.369"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.363"></script>
 <script src="verse-structure.js?v=3.0.364"></script>
