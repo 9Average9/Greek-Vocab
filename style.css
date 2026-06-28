@@ -14503,7 +14503,11 @@ body.rx-scroll-lock {
   align-items: center;
   justify-content: center;
   line-height: 1;
+  align-self: center; /* center vertically even though the category grid aligns to the top */
 }
+/* Belt-and-suspenders: keep the verse-card follow arrow vertically centered. */
+.rx-verse-card { align-items: center; }
+.rx-arrow-btn { align-self: center; }
 .rx-save-trail-btn,
 .rx-primary-btn {
   width: 100%;
