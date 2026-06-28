@@ -29807,6 +29807,12 @@ body:has(#merciesPage.screen.active) #statusBarBg {
   z-index: 1000;
   overflow: hidden;
   background: var(--memorization-page-color, var(--primary-light)) !important;
+  /* Strip the generic .screen.active card look (18px padding + rounded corners +
+     shadow) so the page is true full-bleed, like the Journey maps. */
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 html.memorization-active {
   background: var(--memorization-page-color, var(--primary-light)) !important;
@@ -31184,6 +31190,12 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   z-index: 1000;
   overflow: hidden;
   background: var(--primary-light) !important;
+  /* Strip the generic .screen.active card look (18px padding + rounded corners +
+     shadow) so the page is true full-bleed, like the Journey maps. */
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 html.reading-plan-active { background: var(--primary-light) !important; }
 body.reading-plan-active,
