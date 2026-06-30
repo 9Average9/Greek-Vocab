@@ -77,6 +77,7 @@ let _lessonBreakdownNavigate = true;
 let _browseSearch = "";
 let _currentFriendSheetUid = null;
 let _authReady = false;
+let _appInitialDataReady = false;
 let _welcomeCoachQueuedAfterAuth = false;
 let _appLaunchStartedAt = Date.now();
 let _appLaunchReleased = false;
@@ -9754,6 +9755,16 @@ function openSandboxRhema() {
   if (!_activeSandboxStudy) return;
   const uid = window.Auth?.getCurrentUser()?.uid;
   if (!uid) return;
+  const modal = document.getElementById('rhemaModal');
+  if (_studySandboxId === _activeSandboxStudy.id && modal?.classList.contains('open')) {
+    _studySandboxRhemaReturn = true;
+    document.getElementById('rhemaSaveToStudyBtn')?.classList.remove('hidden');
+    document.querySelector('.rhema-sandbox-arrows')?.classList.toggle(
+      'visible',
+      !document.getElementById('rhemaVerseSheet')?.classList.contains('open')
+    );
+    return;
+  }
   _studySandboxId = _activeSandboxStudy.id;
   _studySandboxRhemaReturn = true;
   // Stash the main Rhema position AND modes so we can restore them when sandbox closes
@@ -16125,6 +16136,26 @@ function _appPlayAnim(el, className, duration = 520, opts = {}) {
     if (opts.bodyClass) document.body?.classList.remove(opts.bodyClass);
   };
   el.addEventListener('animationend', finish, { once: true });
+  setTimeout(finish, duration);
+}
+
+function _appOpenModalWithAnim(modal, className = 'app-modal-slide-in-right', duration = 420) {
+  if (!modal) return;
+  if (_appReduceMotion()) {
+    modal.classList.add('open');
+    return;
+  }
+  modal.classList.remove(className);
+  modal.classList.add(className);
+  void modal.offsetWidth;
+  modal.classList.add('open');
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    if (!modal.classList.contains('open')) modal.classList.remove(className);
+  };
+  modal.addEventListener('animationend', finish, { once: true });
   setTimeout(finish, duration);
 }
 
@@ -29531,7 +29562,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.372";
+const APP_VERSION = "3.0.373";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29552,6 +29583,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.373 &mdash; Rhema sandbox polish</div>
+<ul>
+  <li><strong>Cleaner Rhema tool wheels</strong> &mdash; English and Greek tools now show only the actions that belong there, with the remaining buttons balanced around the center.</li>
+  <li><strong>Study Rhema steadied</strong> &mdash; Re-tapping the sandbox Rhema button while Rhema is already open no longer restarts the opening animation or traps the reader.</li>
+  <li><strong>Better comparison flow</strong> &mdash; You can add the same verse more than once to compare it across multiple selected Bible versions on one screen.</li>
+  <li><strong>Small-screen polish</strong> &mdash; Top bars, picker pills, launch theme loading, and settings sheet animations now line up more cleanly across phone sizes.</li>
+</ul>
 <div class="un-version-label">v3.0.372 &mdash; Smarter place pins</div>
 <ul>
   <li><strong>People-of-a-place now pin too</strong> &mdash; Mentions like "Thessalonians," "Corinthians," or "Galileans" now drop a pin on their city/region, while ordinary names stay pin-free.</li>
@@ -31277,6 +31315,11 @@ function showAppLaunchScreen(text = 'Preparing your discipleship tools') {
 function hideAppLaunchScreen(reason = 'ready') {
   if (_appLaunchReleased) return;
   if (_swUpdateFound) return;
+  if (reason === 'timeout' && (!_authReady || !_appInitialDataReady) && Date.now() - _appLaunchStartedAt < 12000) {
+    setAppLaunchText('Finishing setup');
+    setTimeout(() => hideAppLaunchScreen('timeout'), 500);
+    return;
+  }
   const splash = document.getElementById('appLaunchScreen');
   if (!splash) return;
   const minVisible = reason === 'timeout' ? 0 : 650;
@@ -32052,6 +32095,7 @@ async function submitForgotPassword() {
 // Register auth state handler (called by firebase-lb.js when auth resolves)
 window.__onAuthStateReady = async (user) => {
   _authReady = true;
+  _appInitialDataReady = false;
   if (user) {
     setAppLaunchText('Syncing your study space');
     await restoreUserFromFirestore(user);
@@ -32177,6 +32221,7 @@ window.__onAuthStateReady = async (user) => {
     });
     _maybeStartAppWelcomeCoachAfterAuth();
     setTimeout(maybeShowHomeIntroModal, 500);
+    _appInitialDataReady = true;
     hideAppLaunchScreen('ready');
 
     // If a data-dependent page was already visible (e.g. shown before auth resolved),
@@ -32201,6 +32246,7 @@ window.__onAuthStateReady = async (user) => {
     document.getElementById('appCoachOverlay')?.classList.add('hidden');
     _resumeHomeFlipAfterCoach();
     showAuthModal();
+    _appInitialDataReady = true;
     hideAppLaunchScreen('ready');
   }
 };
@@ -32318,8 +32364,7 @@ function openNewsFromProfile() {
   if (badge) badge.classList.add("hidden");
 
   updateProfileAttention();
-  modal.classList.add("open");
-  _appPlayAnim(modal, 'app-modal-slide-in-right', 420);
+  _appOpenModalWithAnim(modal, 'app-modal-slide-in-right', 420);
 }
 
 
@@ -38399,7 +38444,7 @@ function _rhemaParseRef(ref) {
 }
 function _rhemaAddCompareRef(ref) {
   _rhemaActivateCompareScope();
-  if (!ref || _rhemaCompare.some(c => c.ref === ref)) return;
+  if (!ref) return;
   _rhemaCompare.push({ ref, version: _rhemaEnglishVersion() });
   _rhemaCommitCompareScope();
   _rhemaSyncCompareChip();
@@ -39451,11 +39496,14 @@ async function showRhema() {
   setNavActive('rhema');
   const modal = document.getElementById('rhemaModal');
   if (!modal) return;
-  modal.classList.remove('rhema-nav-enter');
-  void modal.offsetWidth;
-  modal.classList.add('rhema-nav-enter');
+  const alreadyOpen = modal.classList.contains('open');
+  if (!alreadyOpen) {
+    modal.classList.remove('rhema-nav-enter');
+    void modal.offsetWidth;
+    modal.classList.add('rhema-nav-enter');
+    setTimeout(() => modal.classList.remove('rhema-nav-enter'), 540);
+  }
   modal.classList.add('open');
-  setTimeout(() => modal.classList.remove('rhema-nav-enter'), 540);
   _rhemaStartMarksSync();
   _rhemaStartTrailsSync();
   _rhemaActivateCompareScope();
@@ -40925,8 +40973,7 @@ function startPraisesCoach(force = false) {
 
 function openCoachReplayModal() {
   const modal = document.getElementById('coachReplayModal');
-  modal?.classList.add('open');
-  _appPlayAnim(modal, 'app-modal-slide-in-right', 420);
+  _appOpenModalWithAnim(modal, 'app-modal-slide-in-right', 420);
 }
 
 function closeCoachReplayModal(event) {
@@ -40937,8 +40984,7 @@ function closeCoachReplayModal(event) {
 
 function openRhemaNerdModal() {
   const modal = document.getElementById('rhemaNerdModal');
-  modal?.classList.add('open');
-  _appPlayAnim(modal, 'app-modal-slide-in-right', 420);
+  _appOpenModalWithAnim(modal, 'app-modal-slide-in-right', 420);
 }
 
 function closeRhemaNerdModal(event) {

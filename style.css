@@ -14985,6 +14985,15 @@ body.rx-scroll-lock {
 }
 
 .rx-arrow-btn {
+  display: inline-grid;
+  place-items: center;
+  line-height: 1;
+  text-align: center;
+}
+
+.rx-arrow-btn.material-symbols-outlined {
+  display: inline-grid;
+  place-items: center;
   line-height: 1;
 }
 
@@ -20805,6 +20814,11 @@ body.sandbox-open .ss-pane {
 /* Shrink the Rhema modal to stop above the study tab bar — all children adapt automatically */
 body.sandbox-open #rhemaModal {
   bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+}
+
+body.sandbox-open #rhemaModal .rhema-picker {
+  padding-top: 18px;
+  padding-bottom: 14px;
 }
 
 /* Extra bottom padding so long verses can scroll clear of the floating prev/next arrows.
@@ -28015,6 +28029,10 @@ body:has(#merciesPage.screen.active) #statusBarBg {
   background: color-mix(in srgb, var(--primary-light) 92%, white) !important;
 }
 
+body:has(.screen.active .nav-bar) #statusBarBg {
+  display: none !important;
+}
+
 #newLearnMenu.screen.active .nav-bar,
 #advancedLearnMenu.screen.active .nav-bar,
 #basicVerbsLearnMenu.screen.active .nav-bar,
@@ -32929,32 +32947,66 @@ body.dark .journey-modern-shape { fill: #202c42; }
 #rhemaModal.rhema-english-mode #wheelItemGreek,
 #rhemaModal.rhema-english-mode #wheelItemCritical,
 #rhemaModal.rhema-english-mode #wheelItemLxx,
-#rhemaModal.rhema-english-mode #wheelItemWordlib { display: none !important; }
+#rhemaModal.rhema-english-mode #wheelItemWordlib,
+#rhemaModal.rhema-english-mode #wheelItemTrails { display: none !important; }
+#rhemaModal:not(.rhema-english-mode) #wheelItemXref,
+#rhemaModal:not(.rhema-english-mode) #wheelItemTrails,
+#rhemaModal:not(.rhema-english-mode) #wheelItemHighlightsNotes { display: none !important; }
 #rhemaModal.rhema-english-mode .rhema-swap-deeper::after { content: " \2728"; }
+#rhemaModal:not(.rhema-english-mode) .rhema-wheel-overlay.open #wheelItemSyntax {
+  transform: translate(calc(-50% + 0px), calc(-50% + -128px)) scale(1);
+  opacity: 1;
+  transition-delay: 0s;
+}
+#rhemaModal:not(.rhema-english-mode) .rhema-wheel-overlay.open #wheelItemHighlight {
+  transform: translate(calc(-50% + 100px), calc(-50% + -80px)) scale(1);
+  opacity: 1;
+  transition-delay: 0.03s;
+}
+#rhemaModal:not(.rhema-english-mode) .rhema-wheel-overlay.open #wheelItemGreek {
+  transform: translate(calc(-50% + 125px), calc(-50% + 0px)) scale(1);
+  opacity: 1;
+  transition-delay: 0.06s;
+}
+#rhemaModal:not(.rhema-english-mode) .rhema-wheel-overlay.open #wheelItemCritical {
+  transform: translate(calc(-50% + 78px), calc(-50% + 100px)) scale(1);
+  opacity: 1;
+  transition-delay: 0.09s;
+}
+#rhemaModal:not(.rhema-english-mode) .rhema-wheel-overlay.open #wheelItemLxx {
+  transform: translate(calc(-50% + -78px), calc(-50% + 100px)) scale(1);
+  opacity: 1;
+  transition-delay: 0.12s;
+}
+#rhemaModal:not(.rhema-english-mode) .rhema-wheel-overlay.open #wheelItemWordlib {
+  transform: translate(calc(-50% + -125px), calc(-50% + 0px)) scale(1);
+  opacity: 1;
+  transition-delay: 0.15s;
+}
+#rhemaModal:not(.rhema-english-mode) .rhema-wheel-overlay.open #wheelItemCopyVerse {
+  transform: translate(calc(-50% + -100px), calc(-50% + -80px)) scale(1);
+  opacity: 1;
+  transition-delay: 0.18s;
+}
 #rhemaModal.rhema-english-mode .rhema-wheel-overlay.open #wheelItemHighlight {
-  transform: translate(calc(-50% + 0px), calc(-50% + -126px)) scale(1);
+  transform: translate(calc(-50% + 0px), calc(-50% + -128px)) scale(1);
   opacity: 1;
   transition-delay: 0s;
 }
 #rhemaModal.rhema-english-mode .rhema-wheel-overlay.open #wheelItemXref {
-  transform: translate(calc(-50% + 120px), calc(-50% + -39px)) scale(1);
+  transform: translate(calc(-50% + 128px), calc(-50% + 0px)) scale(1);
   opacity: 1;
   transition-delay: 0.04s;
 }
-#rhemaModal.rhema-english-mode .rhema-wheel-overlay.open #wheelItemTrails {
-  transform: translate(calc(-50% + 74px), calc(-50% + 104px)) scale(1);
+#rhemaModal.rhema-english-mode .rhema-wheel-overlay.open #wheelItemHighlightsNotes {
+  transform: translate(calc(-50% + 0px), calc(-50% + 128px)) scale(1);
   opacity: 1;
   transition-delay: 0.08s;
 }
-#rhemaModal.rhema-english-mode .rhema-wheel-overlay.open #wheelItemHighlightsNotes {
-  transform: translate(calc(-50% + -74px), calc(-50% + 104px)) scale(1);
+#rhemaModal.rhema-english-mode .rhema-wheel-overlay.open #wheelItemCopyVerse {
+  transform: translate(calc(-50% + -128px), calc(-50% + 0px)) scale(1);
   opacity: 1;
   transition-delay: 0.12s;
-}
-#rhemaModal.rhema-english-mode .rhema-wheel-overlay.open #wheelItemCopyVerse {
-  transform: translate(calc(-50% + -120px), calc(-50% + -39px)) scale(1);
-  opacity: 1;
-  transition-delay: 0.16s;
 }
 
 /* ── Phase 3: Compare → Trails ─────────────────────────────────────────────── */
