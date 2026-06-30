@@ -252,7 +252,7 @@ const OUTPUT_SCHEMA = {
   type: 'object',
   properties: {
     verdict: { type: 'string', enum: ['accurate', 'needs_revision', 'misleading'] },
-    score: { type: 'integer', minimum: 0, maximum: 100 },
+    score: { type: 'integer' },
     issues: { type: 'array', items: { type: 'string' } },
     receipts: {
       type: 'array',
@@ -289,7 +289,7 @@ function requestParams(digest) {
 function validateAudit(parsed) {
   if (!parsed) return 'null response';
   if (!['accurate', 'needs_revision', 'misleading'].includes(parsed.verdict)) return 'invalid verdict';
-  if (typeof parsed.score !== 'number') return 'missing score';
+  if (typeof parsed.score !== 'number' || parsed.score < 0 || parsed.score > 100) return 'missing or out-of-range score';
   if (!Array.isArray(parsed.issues)) return 'missing issues array';
   if (!Array.isArray(parsed.receipts) || parsed.receipts.length < 2) return 'fewer than 2 receipts';
   return null;
