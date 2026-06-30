@@ -29562,7 +29562,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.374";
+const APP_VERSION = "3.0.375";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29583,6 +29583,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.375 &mdash; Sharper Greek &amp; Hebrew word studies</div>
+<ul>
+  <li><strong>Greek definitions audited &amp; corrected</strong> &mdash; All 5,434 Greek word entries were reviewed by AI against their actual corpus evidence. 4,580 definitions have been rewritten for greater accuracy — clearer sense labels, corrected grammatical framing, and proper coverage of author-specific usage (John's Logos theology, Paul's distinctive terms, and more).</li>
+  <li><strong>Hebrew word studies rebuilt from scratch</strong> &mdash; All 8,500+ Hebrew Strong's entries now have full AI-generated definitions, sense labels, and articles grounded in Old Testament corpus data, LXX translation evidence, verb stem (binyan) significance, and book distribution — bringing Hebrew up to the same depth as Greek.</li>
+  <li><strong>Verse receipts on every entry</strong> &mdash; Each audited Greek entry now carries 2–3 specific verse "receipts" that show exactly where and how the word is used in context.</li>
+</ul>
 <div class="un-version-label">v3.0.374 &mdash; Cleaner launch and Study Rhema selection</div>
 <ul>
   <li><strong>No tan launch flash</strong> &mdash; The loading screen now uses your active theme and waits for the themed home/nav UI to paint before fading away.</li>
