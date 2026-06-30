@@ -96,8 +96,8 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   overflow: hidden;
-  background: radial-gradient(circle at 42% 34%, #fffaf1, #ecdec7 78%);
-  color: #081f34;
+  background: radial-gradient(circle at 42% 34%, var(--primary-light), var(--primary-color) 78%);
+  color: var(--font-color);
   transition: opacity 0.32s ease, visibility 0.32s ease;
 }
 
@@ -139,7 +139,7 @@ body {
   align-items: center;
   gap: 12px;
   text-align: center;
-  color: rgba(8, 31, 52, 0.82);
+  color: color-mix(in srgb, var(--font-color) 82%, transparent);
   font-size: 0.82rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -18745,7 +18745,7 @@ body:has(#appLaunchScreen:not(.hidden)) .bottom-nav {
    app is loading. (Matches the splash gradient's outer tone / manifest bg.) */
 html:has(#appLaunchScreen:not(.hidden)),
 body:has(#appLaunchScreen:not(.hidden)) {
-  background: #ecdec7 !important;
+  background: linear-gradient(180deg, var(--primary-color), var(--primary-light)) !important;
 }
 .bottom-nav.mercies-collapsed {
   width: 76px !important;
@@ -33063,6 +33063,21 @@ body.dark .journey-modern-shape { fill: #202c42; }
 .rhema-selection-bar.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
 .rhema-selection-bar:active { transform: translate(-50%, 1px) scale(0.97); }
 .rhema-selection-arrow { font-size: 20px; }
+
+body.sandbox-open #rhemaSelectionBar {
+  position: fixed;
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 12px);
+  z-index: 1051;
+}
+
+body.sandbox-open #rhemaSelectionBar.visible {
+  transform: translate(-50%, 0);
+}
+
+body.sandbox-open #rhemaSelectionBar:active {
+  transform: translate(-50%, 1px) scale(0.97);
+}
+
 .rhema-selection-count {
   background: color-mix(in srgb, #ffffff 26%, transparent);
   border-radius: 999px;

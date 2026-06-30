@@ -29562,7 +29562,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.373";
+const APP_VERSION = "3.0.374";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29583,6 +29583,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.374 &mdash; Cleaner launch and Study Rhema selection</div>
+<ul>
+  <li><strong>No tan launch flash</strong> &mdash; The loading screen now uses your active theme and waits for the themed home/nav UI to paint before fading away.</li>
+  <li><strong>Study Rhema selection moved</strong> &mdash; The selected-verse action pill now sits between the sandbox verse arrows without changing the main Rhema reader.</li>
+</ul>
 <div class="un-version-label">v3.0.373 &mdash; Rhema sandbox polish</div>
 <ul>
   <li><strong>Cleaner Rhema tool wheels</strong> &mdash; English and Greek tools now show only the actions that belong there, with the remaining buttons balanced around the center.</li>
@@ -31325,12 +31330,14 @@ function hideAppLaunchScreen(reason = 'ready') {
   const minVisible = reason === 'timeout' ? 0 : 650;
   const wait = Math.max(0, minVisible - (Date.now() - _appLaunchStartedAt));
   setTimeout(() => {
-    _appLaunchReleased = true;
-    // Finish the ring all the way around, then dismiss.
-    completeLaunchRing(() => {
-      splash.classList.add('dismissed');
-      setTimeout(() => splash.classList.add('hidden'), 380);
-    });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      _appLaunchReleased = true;
+      // Finish the ring all the way around, then dismiss.
+      completeLaunchRing(() => {
+        splash.classList.add('dismissed');
+        setTimeout(() => splash.classList.add('hidden'), 380);
+      });
+    }));
   }, wait);
 }
 
