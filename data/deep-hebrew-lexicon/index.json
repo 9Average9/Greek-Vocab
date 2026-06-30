@@ -1,0 +1,442 @@
+{
+  "shards": [
+    {
+      "file": "shard-0001.json",
+      "from": 1,
+      "to": 102
+    },
+    {
+      "file": "shard-0103.json",
+      "from": 103,
+      "to": 202
+    },
+    {
+      "file": "shard-0203.json",
+      "from": 203,
+      "to": 302
+    },
+    {
+      "file": "shard-0303.json",
+      "from": 303,
+      "to": 404
+    },
+    {
+      "file": "shard-0405.json",
+      "from": 405,
+      "to": 506
+    },
+    {
+      "file": "shard-0507.json",
+      "from": 507,
+      "to": 606
+    },
+    {
+      "file": "shard-0607.json",
+      "from": 607,
+      "to": 707
+    },
+    {
+      "file": "shard-0708.json",
+      "from": 708,
+      "to": 808
+    },
+    {
+      "file": "shard-0809.json",
+      "from": 809,
+      "to": 908
+    },
+    {
+      "file": "shard-0909.json",
+      "from": 909,
+      "to": 1008
+    },
+    {
+      "file": "shard-1009.json",
+      "from": 1009,
+      "to": 1112
+    },
+    {
+      "file": "shard-1113.json",
+      "from": 1113,
+      "to": 1213
+    },
+    {
+      "file": "shard-1214.json",
+      "from": 1214,
+      "to": 1313
+    },
+    {
+      "file": "shard-1314.json",
+      "from": 1314,
+      "to": 1413
+    },
+    {
+      "file": "shard-1414.json",
+      "from": 1414,
+      "to": 1513
+    },
+    {
+      "file": "shard-1514.json",
+      "from": 1514,
+      "to": 1614
+    },
+    {
+      "file": "shard-1615.json",
+      "from": 1615,
+      "to": 1714
+    },
+    {
+      "file": "shard-1715.json",
+      "from": 1715,
+      "to": 1815
+    },
+    {
+      "file": "shard-1816.json",
+      "from": 1816,
+      "to": 1916
+    },
+    {
+      "file": "shard-1917.json",
+      "from": 1917,
+      "to": 2017
+    },
+    {
+      "file": "shard-2018.json",
+      "from": 2018,
+      "to": 2118
+    },
+    {
+      "file": "shard-2119.json",
+      "from": 2119,
+      "to": 2218
+    },
+    {
+      "file": "shard-2219.json",
+      "from": 2219,
+      "to": 2319
+    },
+    {
+      "file": "shard-2320.json",
+      "from": 2320,
+      "to": 2419
+    },
+    {
+      "file": "shard-2420.json",
+      "from": 2420,
+      "to": 2519
+    },
+    {
+      "file": "shard-2520.json",
+      "from": 2520,
+      "to": 2620
+    },
+    {
+      "file": "shard-2621.json",
+      "from": 2621,
+      "to": 2720
+    },
+    {
+      "file": "shard-2721.json",
+      "from": 2721,
+      "to": 2820
+    },
+    {
+      "file": "shard-2821.json",
+      "from": 2821,
+      "to": 2920
+    },
+    {
+      "file": "shard-2921.json",
+      "from": 2921,
+      "to": 3020
+    },
+    {
+      "file": "shard-3021.json",
+      "from": 3021,
+      "to": 3124
+    },
+    {
+      "file": "shard-3125.json",
+      "from": 3125,
+      "to": 3226
+    },
+    {
+      "file": "shard-3227.json",
+      "from": 3227,
+      "to": 3327
+    },
+    {
+      "file": "shard-3328.json",
+      "from": 3328,
+      "to": 3427
+    },
+    {
+      "file": "shard-3428.json",
+      "from": 3428,
+      "to": 3527
+    },
+    {
+      "file": "shard-3528.json",
+      "from": 3528,
+      "to": 3627
+    },
+    {
+      "file": "shard-3628.json",
+      "from": 3628,
+      "to": 3728
+    },
+    {
+      "file": "shard-3729.json",
+      "from": 3729,
+      "to": 3828
+    },
+    {
+      "file": "shard-3829.json",
+      "from": 3829,
+      "to": 3928
+    },
+    {
+      "file": "shard-3929.json",
+      "from": 3929,
+      "to": 4029
+    },
+    {
+      "file": "shard-4030.json",
+      "from": 4030,
+      "to": 4130
+    },
+    {
+      "file": "shard-4131.json",
+      "from": 4131,
+      "to": 4230
+    },
+    {
+      "file": "shard-4231.json",
+      "from": 4231,
+      "to": 4330
+    },
+    {
+      "file": "shard-4331.json",
+      "from": 4331,
+      "to": 4430
+    },
+    {
+      "file": "shard-4431.json",
+      "from": 4431,
+      "to": 4530
+    },
+    {
+      "file": "shard-4531.json",
+      "from": 4531,
+      "to": 4630
+    },
+    {
+      "file": "shard-4631.json",
+      "from": 4631,
+      "to": 4730
+    },
+    {
+      "file": "shard-4731.json",
+      "from": 4731,
+      "to": 4830
+    },
+    {
+      "file": "shard-4831.json",
+      "from": 4831,
+      "to": 4930
+    },
+    {
+      "file": "shard-4931.json",
+      "from": 4931,
+      "to": 5030
+    },
+    {
+      "file": "shard-5031.json",
+      "from": 5031,
+      "to": 5130
+    },
+    {
+      "file": "shard-5131.json",
+      "from": 5131,
+      "to": 5230
+    },
+    {
+      "file": "shard-5231.json",
+      "from": 5231,
+      "to": 5330
+    },
+    {
+      "file": "shard-5331.json",
+      "from": 5331,
+      "to": 5430
+    },
+    {
+      "file": "shard-5431.json",
+      "from": 5431,
+      "to": 5530
+    },
+    {
+      "file": "shard-5531.json",
+      "from": 5531,
+      "to": 5630
+    },
+    {
+      "file": "shard-5631.json",
+      "from": 5631,
+      "to": 5730
+    },
+    {
+      "file": "shard-5731.json",
+      "from": 5731,
+      "to": 5830
+    },
+    {
+      "file": "shard-5831.json",
+      "from": 5831,
+      "to": 5932
+    },
+    {
+      "file": "shard-5933.json",
+      "from": 5933,
+      "to": 6033
+    },
+    {
+      "file": "shard-6034.json",
+      "from": 6034,
+      "to": 6133
+    },
+    {
+      "file": "shard-6134.json",
+      "from": 6134,
+      "to": 6233
+    },
+    {
+      "file": "shard-6234.json",
+      "from": 6234,
+      "to": 6333
+    },
+    {
+      "file": "shard-6334.json",
+      "from": 6334,
+      "to": 6433
+    },
+    {
+      "file": "shard-6434.json",
+      "from": 6434,
+      "to": 6533
+    },
+    {
+      "file": "shard-6534.json",
+      "from": 6534,
+      "to": 6633
+    },
+    {
+      "file": "shard-6634.json",
+      "from": 6634,
+      "to": 6733
+    },
+    {
+      "file": "shard-6734.json",
+      "from": 6734,
+      "to": 6833
+    },
+    {
+      "file": "shard-6834.json",
+      "from": 6834,
+      "to": 6933
+    },
+    {
+      "file": "shard-6934.json",
+      "from": 6934,
+      "to": 7033
+    },
+    {
+      "file": "shard-7034.json",
+      "from": 7034,
+      "to": 7133
+    },
+    {
+      "file": "shard-7134.json",
+      "from": 7134,
+      "to": 7233
+    },
+    {
+      "file": "shard-7234.json",
+      "from": 7234,
+      "to": 7333
+    },
+    {
+      "file": "shard-7334.json",
+      "from": 7334,
+      "to": 7433
+    },
+    {
+      "file": "shard-7434.json",
+      "from": 7434,
+      "to": 7533
+    },
+    {
+      "file": "shard-7534.json",
+      "from": 7534,
+      "to": 7633
+    },
+    {
+      "file": "shard-7634.json",
+      "from": 7634,
+      "to": 7733
+    },
+    {
+      "file": "shard-7734.json",
+      "from": 7734,
+      "to": 7834
+    },
+    {
+      "file": "shard-7835.json",
+      "from": 7835,
+      "to": 7934
+    },
+    {
+      "file": "shard-7935.json",
+      "from": 7935,
+      "to": 8034
+    },
+    {
+      "file": "shard-8035.json",
+      "from": 8035,
+      "to": 8134
+    },
+    {
+      "file": "shard-8135.json",
+      "from": 8135,
+      "to": 8234
+    },
+    {
+      "file": "shard-8235.json",
+      "from": 8235,
+      "to": 8334
+    },
+    {
+      "file": "shard-8335.json",
+      "from": 8335,
+      "to": 8434
+    },
+    {
+      "file": "shard-8435.json",
+      "from": 8435,
+      "to": 8534
+    },
+    {
+      "file": "shard-8535.json",
+      "from": 8535,
+      "to": 8634
+    },
+    {
+      "file": "shard-8635.json",
+      "from": 8635,
+      "to": 8674
+    }
+  ],
+  "buildAt": "2026-06-30T21:23:40.620Z",
+  "totalEntries": 8640,
+  "source": "OSHB/MorphHB (CC BY 4.0) + LXX reverse links from Rhema Greek deep lexicon"
+}

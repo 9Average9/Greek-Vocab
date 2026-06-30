@@ -5,7 +5,9 @@
   "scripts": {
     "build:rhema-critical-fallbacks": "node build-rhema-critical-fallbacks.js",
     "audit:rhema": "node audit-rhema-quality.js",
-    "audit:rhema:2co3": "node audit-rhema-quality.js --book=2CO --chapter=3 --limit=120"
+    "audit:rhema:2co3": "node audit-rhema-quality.js --book=2CO --chapter=3 --limit=120",
+    "audit:definitions": "node audit-deep-definitions.js",
+    "audit:definitions:dry-run": "node audit-deep-definitions.js --dry-run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0"
