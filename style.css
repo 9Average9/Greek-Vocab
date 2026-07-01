@@ -17996,6 +17996,13 @@ body.sepia .rhema-sheet { background: #fffcf2; }
   line-height: 1.65;
 }
 .rhema-def-mm b { font-weight: 700; }
+.rhema-bdb-senses {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  margin: 4px 0 0 0;
+  padding-left: 1.3em;
+}
+.rhema-bdb-senses li { margin-bottom: 3px; }
 
 /* ── Occurrences tab ── */
 .rhema-occ-total {

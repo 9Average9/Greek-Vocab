@@ -29562,7 +29562,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.378";
+const APP_VERSION = "3.0.379";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29572,6 +29572,7 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-critical-fallbacks.js': '3.0.177',
   'rhema-ot-hebrew.js': '3.0.81',
   'rhema-hebrew-lexicon.js': '3.0.81',
+  'rhema-hebrew-bdb.js':    '3.0.379',
   'rhema-lxx.js':       '3.0.65',
   'rhema-lexicon.js':   '3.0.65',
   'rhema-mm.js':        '3.0.65',
@@ -29583,6 +29584,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.379 &mdash; Brown-Driver-Briggs Hebrew lexicon added</div>
+<ul>
+  <li><strong>BDB now shows for every Hebrew word</strong> &mdash; The landmark Brown-Driver-Briggs Hebrew lexicon (1906, public domain) is now displayed in the &ldquo;Full Lexicon Entries&rdquo; panel for every Old Testament word. BDB gives part of speech, core definition, and numbered senses &mdash; the standard scholarly reference for classical Hebrew. Words with multiple distinct meanings show each homonym separately (e.g. I. and II.). Data from the Open Scriptures Hebrew Bible Project (CC BY 4.0).</li>
+</ul>
 <div class="un-version-label">v3.0.378 &mdash; Hebrew word studies now live in Rhema</div>
 <ul>
   <li><strong>Hebrew definitions now show when you tap a word</strong> &mdash; Tap any Hebrew word in an Old Testament verse to see its AI-generated definition, full range of meaning (sense labels), and an &ldquo;About this word&rdquo; article explaining how the word is used across the Old Testament. The interlinear gloss also upgrades to the richer definition once the shard loads.</li>
@@ -39495,7 +39500,7 @@ function loadRhemaScripts() {
     _rhemaLoading = true;
     loadDeepLexiconSpine();
     let loaded = 0;
-    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-critical-fallbacks.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js'];
+    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-critical-fallbacks.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-hebrew-bdb.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js'];
     let failed = false;
     for (const file of files) {
       const s = document.createElement('script');
@@ -43410,6 +43415,32 @@ function renderHebrewDefinition(strongs) {
   }
 
   const refSections = [];
+
+  // BDB (Brown-Driver-Briggs) — loaded alongside the basic Hebrew lexicon
+  const bdbEntry = (window.RhemaHebrewBDB || {})[parseInt(strongs, 10)];
+  if (bdbEntry) {
+    const renderBdbEntry = (e, label) => {
+      const parts = [];
+      if (e.pos) parts.push(`<div class="rhema-def-text" style="opacity:.6;font-style:italic">${esc(e.pos)}</div>`);
+      if (e.def) parts.push(`<div class="rhema-def-text"><strong>${esc(e.def)}</strong></div>`);
+      if (e.senses && e.senses.length) {
+        parts.push(`<ol class="rhema-bdb-senses">${e.senses.map(s => `<li>${esc(s)}</li>`).join('')}</ol>`);
+      }
+      return `<div class="rhema-def-section">
+        <div class="rhema-def-label">${label}</div>
+        ${parts.join('')}
+      </div>`;
+    };
+    if (bdbEntry.entries) {
+      // Multiple homonyms: show as I., II., etc.
+      bdbEntry.entries.forEach((e, i) => {
+        refSections.push(renderBdbEntry(e, `BDB — Brown-Driver-Briggs${bdbEntry.entries.length > 1 ? ` (${['I','II','III','IV'][i] || i+1})` : ''}`));
+      });
+    } else {
+      refSections.push(renderBdbEntry(bdbEntry, 'BDB — Brown-Driver-Briggs'));
+    }
+  }
+
   if (lex.strongs_def || lex.extended) {
     refSections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Strong's Hebrew Definition</div>
@@ -43422,10 +43453,14 @@ function renderHebrewDefinition(strongs) {
       <div class="rhema-def-english">${esc(lex.kjv_def)}</div>
     </div>`);
   }
+
   if (refSections.length) {
+    const lexNames = [];
+    if (bdbEntry) lexNames.push('BDB');
+    lexNames.push("Strong's");
     sections.push(`<button type="button" class="rhema-deep-lexica-btn" onclick="this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
       <span class="material-symbols-outlined">menu_book</span>
-      <span>Full lexicon entries · Strong's</span>
+      <span>Full lexicon entries · ${lexNames.join(', ')}</span>
       <span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
     </button>
     <div class="rhema-deep-lexica hidden">${refSections.join('<div class="rhema-def-sep"></div>')}</div>`);
