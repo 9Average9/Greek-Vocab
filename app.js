@@ -29562,7 +29562,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.375";
+const APP_VERSION = "3.0.376";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29583,6 +29583,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.376 &mdash; Cleaner Rhema language button</div>
+<ul>
+  <li><strong>Sparkle removed</strong> &mdash; The ✨ that appeared next to "Greek" and "Hebrew" on the Rhema swap button is gone.</li>
+</ul>
 <div class="un-version-label">v3.0.375 &mdash; Sharper Greek &amp; Hebrew word studies</div>
 <ul>
   <li><strong>Greek definitions audited &amp; corrected</strong> &mdash; All 5,434 Greek word entries were reviewed by AI against their actual corpus evidence. 4,580 definitions have been rewritten for greater accuracy — clearer sense labels, corrected grammatical framing, and proper coverage of author-specific usage (John's Logos theology, Paul's distinctive terms, and more).</li>
