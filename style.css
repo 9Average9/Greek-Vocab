@@ -32952,7 +32952,7 @@ body.dark .journey-modern-shape { fill: #202c42; }
 #rhemaModal:not(.rhema-english-mode) #wheelItemXref,
 #rhemaModal:not(.rhema-english-mode) #wheelItemTrails,
 #rhemaModal:not(.rhema-english-mode) #wheelItemHighlightsNotes { display: none !important; }
-#rhemaModal.rhema-english-mode .rhema-swap-deeper::after { content: " \2728"; }
+#rhemaModal.rhema-english-mode .rhema-swap-deeper::after { content: ""; }
 #rhemaModal:not(.rhema-english-mode) .rhema-wheel-overlay.open #wheelItemSyntax {
   transform: translate(calc(-50% + 0px), calc(-50% + -128px)) scale(1);
   opacity: 1;
