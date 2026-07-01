@@ -29562,7 +29562,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.377";
+const APP_VERSION = "3.0.378";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29583,6 +29583,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.378 &mdash; Hebrew word studies now live in Rhema</div>
+<ul>
+  <li><strong>Hebrew definitions now show when you tap a word</strong> &mdash; Tap any Hebrew word in an Old Testament verse to see its AI-generated definition, full range of meaning (sense labels), and an &ldquo;About this word&rdquo; article explaining how the word is used across the Old Testament. The interlinear gloss also upgrades to the richer definition once the shard loads.</li>
+</ul>
 <div class="un-version-label">v3.0.377 &mdash; Hebrew word studies complete</div>
 <ul>
   <li><strong>Full Hebrew lexicon now live</strong> &mdash; All 8,500+ Hebrew Strong's entries now have AI-generated definitions, sense labels, articles, and caution notes — grounded in Old Testament corpus data, LXX translation evidence, verb stem (binyan) significance, and book distribution. Hebrew word studies now match the depth of Greek.</li>
@@ -40392,8 +40396,10 @@ function _rhemaMeaningDecision(word = [], {
   const morph = resolved?.[2] || '';
   const lex = _rhemaLexForWord(resolved, layer, book, chapter);
   if (layer === 'hebrew') {
-    const text = getRhemaQuickDefinition(lex);
-    return { word: resolved, lex, gloss: text, definition: text, source: 'Hebrew lexicon', confidence: 'Reference', evidence: [] };
+    const cachedHeb = _deepHebrewEntrySync(strongs);
+    const proseDef = cachedHeb && cachedHeb.prose && cachedHeb.prose.def;
+    const text = proseDef || getRhemaQuickDefinition(lex);
+    return { word: resolved, lex, gloss: text, definition: text, source: proseDef ? 'Hebrew word study' : 'Hebrew lexicon', confidence: proseDef ? 'AI-generated' : 'Reference', evidence: [] };
   }
 
   const pos = String(morph || '').split('-')[0];
@@ -43379,33 +43385,52 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
 function renderHebrewDefinition(strongs) {
   const lex = (window.RhemaHebrewLexicon || {})[strongs];
   if (!lex) return `<p style="opacity:.5;font-size:.85rem">No Hebrew lexicon entry loaded yet.</p>`;
+  const esc = _escapeRhemaAttr;
   const sections = [];
-  const quick = getRhemaQuickDefinition(lex);
+
+  // Async-fill block — populated from deep-hebrew-lexicon shard once it arrives.
+  const answerId = `rhemaDeepAnswer-${strongs}-${++_deepAnswerSeq}`;
+  sections.push(`<div class="rhema-deep-answer hidden" id="${answerId}"></div>`);
+  setTimeout(() => _populateDeepAnswer(answerId, strongs, 'hebrew'), 0);
+
   if (lex.lemma) {
     sections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Hebrew Root</div>
-      <div class="rhema-def-text rhema-hebrew-root">${lex.lemma}</div>
-      ${lex.pronounce ? `<div class="rhema-def-text" style="opacity:.65;font-style:italic">${lex.pronounce}</div>` : ''}
+      <div class="rhema-def-text rhema-hebrew-root">${esc(lex.lemma)}</div>
+      ${lex.pronounce ? `<div class="rhema-def-text" style="opacity:.65;font-style:italic">${esc(lex.pronounce)}</div>` : ''}
     </div>`);
   }
+
+  const quick = getRhemaQuickDefinition(lex);
   if (quick) {
     sections.push(`<div class="rhema-def-section rhema-def-quick">
-      <div class="rhema-def-label">Plain English Meaning</div>
-      <div class="rhema-def-quick-text"><strong>${quick}</strong></div>
+      <div class="rhema-def-label">Quick Definition</div>
+      <div class="rhema-def-quick-text"><strong>${esc(quick)}</strong></div>
     </div>`);
   }
-  if (lex.kjv_def) {
-    sections.push(`<div class="rhema-def-section">
-      <div class="rhema-def-label">English Glosses</div>
-      <div class="rhema-def-english">${lex.kjv_def}</div>
-    </div>`);
-  }
+
+  const refSections = [];
   if (lex.strongs_def || lex.extended) {
-    sections.push(`<div class="rhema-def-section">
+    refSections.push(`<div class="rhema-def-section">
       <div class="rhema-def-label">Strong's Hebrew Definition</div>
-      <div class="rhema-def-text">${lex.strongs_def || lex.extended}</div>
+      <div class="rhema-def-text">${esc(lex.strongs_def || lex.extended)}</div>
+      ${lex.kjv_def ? `<div class="rhema-def-english">Glosses: ${esc(lex.kjv_def)}</div>` : ''}
+    </div>`);
+  } else if (lex.kjv_def) {
+    refSections.push(`<div class="rhema-def-section">
+      <div class="rhema-def-label">English Glosses</div>
+      <div class="rhema-def-english">${esc(lex.kjv_def)}</div>
     </div>`);
   }
+  if (refSections.length) {
+    sections.push(`<button type="button" class="rhema-deep-lexica-btn" onclick="this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
+      <span class="material-symbols-outlined">menu_book</span>
+      <span>Full lexicon entries · Strong's</span>
+      <span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
+    </button>
+    <div class="rhema-deep-lexica hidden">${refSections.join('<div class="rhema-def-sep"></div>')}</div>`);
+  }
+
   return sections.join('<div class="rhema-def-sep"></div>') || `<p style="opacity:.5;font-size:.85rem">No Hebrew lexicon entry loaded yet.</p>`;
 }
 
@@ -44118,6 +44143,49 @@ const DEEP_LEXICON_VERSION = '3.0.166';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
+const DEEP_HEBREW_LEXICON_VERSION = '3.0.377';
+const _deepHebrewShards = new Map();  // shardFile → Promise<object|null>
+const _deepHebrewData = new Map();    // shardFile → resolved shard (sync access)
+let _deepHebrewShardIndex = null;     // [{file, from, to}] loaded from index.json
+
+function _loadDeepHebrewShardIndex() {
+  if (_deepHebrewShardIndex) return Promise.resolve(_deepHebrewShardIndex);
+  return fetch(`data/deep-hebrew-lexicon/index.json?v=${DEEP_HEBREW_LEXICON_VERSION}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { _deepHebrewShardIndex = (d && d.shards) || []; return _deepHebrewShardIndex; })
+    .catch(() => { _deepHebrewShardIndex = []; return _deepHebrewShardIndex; });
+}
+
+function loadDeepHebrewLexiconEntry(strongs) {
+  const num = parseInt(strongs, 10);
+  if (!num || num < 1 || num > 9000) return Promise.resolve(null);
+  return _loadDeepHebrewShardIndex().then(idx => {
+    const info = idx.find(s => num >= s.from && num <= s.to);
+    if (!info) return null;
+    const key = info.file;
+    if (!_deepHebrewShards.has(key)) {
+      const promise = fetch(`data/deep-hebrew-lexicon/${key}?v=${DEEP_HEBREW_LEXICON_VERSION}`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null);
+      _deepHebrewShards.set(key, promise);
+      promise.then(data => {
+        if (!data) _deepHebrewShards.delete(key);
+        else _deepHebrewData.set(key, data);
+      });
+    }
+    return _deepHebrewShards.get(key).then(shard => (shard && shard[num]) || null);
+  });
+}
+
+function _deepHebrewEntrySync(strongs) {
+  const num = parseInt(strongs, 10);
+  if (!num || !_deepHebrewShardIndex) return null;
+  const info = _deepHebrewShardIndex.find(s => num >= s.from && num <= s.to);
+  if (!info) return null;
+  const shard = _deepHebrewData.get(info.file);
+  return (shard && shard[num]) || null;
+}
+
 function loadDeepLexiconEntry(strongs) {
   const num = parseInt(strongs, 10);
   if (!num || num <= 0 || num > 5700) return Promise.resolve(null);
@@ -44585,7 +44653,37 @@ function _rhemaDeepAnswerReceiptsHtml(decision = {}, entry = {}, strongs = '', b
 }
 
 function _populateDeepAnswer(elId, strongs, layer) {
-  if (layer === 'hebrew') return;
+  if (layer === 'hebrew') {
+    loadDeepHebrewLexiconEntry(strongs).then(entry => {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const prose = entry && entry.prose;
+      if (!prose || (!prose.def && !prose.senseLabels?.length)) { el.remove(); return; }
+      const esc = _escapeRhemaAttr;
+      const lines = [];
+      if (prose.def) {
+        lines.push(`<div class="rhema-deep-answer-main">${esc(prose.def)}</div>`);
+      }
+      if (prose.senseLabels && prose.senseLabels.length) {
+        lines.push(`<div class="rhema-deep-answer-sub">Range of meaning: ${esc(prose.senseLabels.join(' · '))}</div>`);
+      }
+      if (prose.article) {
+        lines.push(`<button type="button" class="rhema-deep-article-btn" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
+          <span>About this word</span><span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
+        </button>
+        <div class="rhema-deep-article hidden">${esc(prose.article)}${prose.caution ? `<div class="rhema-deep-caution">${esc(prose.caution)}</div>` : ''}</div>`);
+      } else if (prose.caution) {
+        lines.push(`<div class="rhema-deep-caution">${esc(prose.caution)}</div>`);
+      }
+      if (!lines.length) { el.remove(); return; }
+      el.innerHTML = `<div class="rhema-deep-answer-head">
+          <span class="rhema-def-label">Hebrew Word Study</span>
+          <span class="rhema-deep-conf rhema-deep-conf-high">AI-generated</span>
+        </div>${lines.join('')}`;
+      el.classList.remove('hidden');
+    });
+    return;
+  }
   // Capture reader position now — globals may move before the shard arrives.
   const book = _rhemaBook, ch = _rhemaChapter, v = _rhemaVerse;
   const activeWord = _rhemaActiveWord && String(_rhemaActiveWord[1]) === String(strongs) ? _rhemaActiveWord : null;
@@ -44686,7 +44784,20 @@ function _populateDeepAnswer(elId, strongs, layer) {
 }
 
 function _populateParsingQuickDefinition(elId, strongs, layer, morph = '', inflectedGloss = '', word = null) {
-  if (layer === 'hebrew') return;
+  if (layer === 'hebrew') {
+    loadDeepHebrewLexiconEntry(strongs).then(entry => {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const def = entry && entry.prose && entry.prose.def;
+      if (!def) return;
+      el.innerHTML = `
+        <div class="rhema-def-label">Quick Definition</div>
+        <div class="rhema-def-quick-text"><strong>${_escapeRhemaAttr(def)}</strong></div>
+      `;
+      el.classList.remove('hidden');
+    });
+    return;
+  }
   loadDeepLexiconEntry(strongs).then(entry => {
     const el = document.getElementById(elId);
     if (!el || !entry) return;
