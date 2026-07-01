@@ -29562,7 +29562,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.376";
+const APP_VERSION = "3.0.377";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29583,6 +29583,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.377 &mdash; Hebrew word studies complete</div>
+<ul>
+  <li><strong>Full Hebrew lexicon now live</strong> &mdash; All 8,500+ Hebrew Strong's entries now have AI-generated definitions, sense labels, articles, and caution notes — grounded in Old Testament corpus data, LXX translation evidence, verb stem (binyan) significance, and book distribution. Hebrew word studies now match the depth of Greek.</li>
+</ul>
 <div class="un-version-label">v3.0.376 &mdash; Cleaner Rhema language button</div>
 <ul>
   <li><strong>Sparkle removed</strong> &mdash; The ✨ that appeared next to "Greek" and "Hebrew" on the Rhema swap button is gone.</li>
