@@ -29562,7 +29562,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.379";
+const APP_VERSION = "3.0.380";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29584,6 +29584,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.380 &mdash; Richer Hebrew word studies: usage stats + LXX evidence</div>
+<ul>
+  <li><strong>Usage statistics now show for every Hebrew word</strong> &mdash; Tap any OT word and the word study now tells you how many times that word appears in the Hebrew Bible and across how many books &mdash; so you can immediately see whether you&rsquo;re looking at a common, well-attested word or a rare hapax legomenon where confidence is limited.</li>
+  <li><strong>Septuagint (LXX) translation evidence</strong> &mdash; The ancient Greek translation of the Old Testament (200&ndash;100 BC) is now shown: e.g. &ldquo;Septuagint translates this as: <em>&pi;&alpha;&tau;&#x3AE;&rho;</em> (1,041&times;)&rdquo;. This is the oldest available evidence for how Jewish scholars understood a Hebrew word &mdash; a powerful check on modern definitions.</li>
+  <li><strong>Honest confidence labels</strong> &mdash; Common words now show &ldquo;Common in OT&rdquo; (green); rare words show &ldquo;Rare in OT&rdquo; (gray) instead of always showing &ldquo;AI-generated&rdquo; for every word regardless of attestation.</li>
+</ul>
 <div class="un-version-label">v3.0.379 &mdash; Brown-Driver-Briggs Hebrew lexicon added</div>
 <ul>
   <li><strong>BDB now shows for every Hebrew word</strong> &mdash; The landmark Brown-Driver-Briggs Hebrew lexicon (1906, public domain) is now displayed in the &ldquo;Full Lexicon Entries&rdquo; panel for every Old Testament word. BDB gives part of speech, core definition, and numbered senses &mdash; the standard scholarly reference for classical Hebrew. Words with multiple distinct meanings show each homonym separately (e.g. I. and II.). Data from the Open Scriptures Hebrew Bible Project (CC BY 4.0).</li>
@@ -44429,6 +44435,10 @@ const _DEEP_CONFIDENCE_LABELS = {
   high: 'Common in NT', good: 'Frequent in NT', moderate: 'Occasional use',
   low: 'Rare in NT', none: 'Lexicon entry',
 };
+const _DEEP_HEBREW_CONFIDENCE_LABELS = {
+  high: 'Common in OT', good: 'Frequent in OT', moderate: 'Moderate use',
+  low: 'Rare in OT', none: 'Lexicon entry',
+};
 
 const _DEEP_FRAGMENT_ARTIFACTS = new Set([
   'a', 'an', 'the', 'and', 'or', 'but', 'for', 'of', 'to', 'in', 'on', 'at', 'by',
@@ -44702,6 +44712,16 @@ function _populateDeepAnswer(elId, strongs, layer) {
       if (prose.senseLabels && prose.senseLabels.length) {
         lines.push(`<div class="rhema-deep-answer-sub">Range of meaning: ${esc(prose.senseLabels.join(' · '))}</div>`);
       }
+      // Corpus usage statistics (why bullets — already human-readable strings)
+      if (entry.why && entry.why.length) {
+        lines.push(`<div class="rhema-deep-why">${entry.why.map(w => `<p>${esc(w)}</p>`).join('')}</div>`);
+      }
+      // Septuagint (LXX) translation evidence — ancient Greek rendering of this Hebrew word
+      if (entry.lxxGreek && entry.lxxGreek.length) {
+        const top = entry.lxxGreek.slice(0, 2);
+        const renderings = top.map(t => `<em>${esc(t.lemma)}</em> (${Number(t.count).toLocaleString()}×)`).join(', ');
+        lines.push(`<div class="rhema-deep-answer-sub">Septuagint (LXX) translates this as: ${renderings}</div>`);
+      }
       if (prose.article) {
         lines.push(`<button type="button" class="rhema-deep-article-btn" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
           <span>About this word</span><span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
@@ -44711,9 +44731,12 @@ function _populateDeepAnswer(elId, strongs, layer) {
         lines.push(`<div class="rhema-deep-caution">${esc(prose.caution)}</div>`);
       }
       if (!lines.length) { el.remove(); return; }
+      const conf = entry.confidence || 'none';
+      const confLabel = _DEEP_HEBREW_CONFIDENCE_LABELS[conf] || 'AI-generated';
+      const confClass = conf in _DEEP_HEBREW_CONFIDENCE_LABELS ? conf : 'none';
       el.innerHTML = `<div class="rhema-deep-answer-head">
           <span class="rhema-def-label">Hebrew Word Study</span>
-          <span class="rhema-deep-conf rhema-deep-conf-high">AI-generated</span>
+          <span class="rhema-deep-conf rhema-deep-conf-${esc(confClass)}">${esc(confLabel)}</span>
         </div>${lines.join('')}`;
       el.classList.remove('hidden');
     });
