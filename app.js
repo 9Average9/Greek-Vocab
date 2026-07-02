@@ -24484,7 +24484,9 @@ function darkenTheme(theme) {
     border: tint("#2b313c", 0.16),
     text: "#f1f4f9",
     muted: "#9aa6b5",
-    buttonText: "#ffffff"
+    // The brightened identity is what buttons use as their background; light
+    // accents (cyan, sky, lime…) need dark text there, not the theme's white.
+    buttonText: getReadableButtonTextColor(secondary)
   };
 }
 
@@ -29562,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.380";
+const APP_VERSION = "3.0.381";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29584,6 +29586,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.381 &mdash; Rhema folds closed + readable dark-mode buttons</div>
+<ul>
+  <li><strong>Rhema closes like the tools</strong> &mdash; Closing the Rhema reader now folds it back into the Rhema button on the bottom nav, the same satisfying collapse the Reading Plan and other Home tools use, instead of abruptly returning home.</li>
+  <li><strong>Dark mode buttons you can actually read</strong> &mdash; Dark mode no longer forces near-white text everywhere. Bright theme colors (Cyan, Sky Pop, Lime, Canary&hellip;) now get dark text on their buttons and chips, so the English/Greek swap, verse arrows, and selection bar stay legible.</li>
+  <li><strong>Reader chrome goes properly dark</strong> &mdash; The chapter pill, version pill, swap control, wand tool, and bottom verse bar swap their white glass for dark glass in dark mode &mdash; no more white-on-white &ldquo;John 3&rdquo; in the top bar.</li>
+</ul>
 <div class="un-version-label">v3.0.380 &mdash; Richer Hebrew word studies: usage stats + LXX evidence</div>
 <ul>
   <li><strong>Usage statistics now show for every Hebrew word</strong> &mdash; Tap any OT word and the word study now tells you how many times that word appears in the Hebrew Bible and across how many books &mdash; so you can immediately see whether you&rsquo;re looking at a common, well-attested word or a rare hapax legomenon where confidence is limited.</li>
@@ -39525,9 +39533,21 @@ function loadRhemaScripts() {
 
 // ── Modal open/close ──────────────────────────────────────────────────────────
 
+// Footprint of the bottom-nav Rhema button at launch time. Closing folds the
+// reader back into it — the same reverse-of-open collapse the Home tools
+// (Reading Plan, Memorize, …) use. Only a visible nav yields a usable rect;
+// opens from flows that hide the nav keep the last known one.
+let _rhemaLaunchRect = null;
+function _rhemaCaptureLaunchRect() {
+  if (document.getElementById('bottomNav')?.classList.contains('hidden')) return;
+  const rect = document.querySelector('#bottomNav .bn-item[data-page="rhema"]')?.getBoundingClientRect();
+  if (rect && rect.width > 0 && rect.height > 0) _rhemaLaunchRect = rect;
+}
+
 async function showRhema() {
   closeHomeSearch();
   _desktopCollapseNav();
+  _rhemaCaptureLaunchRect();
   hideBottomNav();
   setNavActive('rhema');
   const modal = document.getElementById('rhemaModal');
@@ -39634,15 +39654,30 @@ function closeRhema(keepSandbox = false) {
     if (!keepSandbox) _studySandboxId = null;
   }
   _rhemaActivateCompareScope();
-  // Slide the reader back off to the right when closing to a normal page, then
-  // hide it (mirrors the slide-in on open). Other flows close instantly.
+  // Closing to a normal page folds the reader back into the bottom-nav Rhema
+  // button it was launched from — the same collapse the Home tools (Reading
+  // Plan, Memorize, …) close with — revealing the page + nav underneath. Flows
+  // without a usable launch rect keep the slide-off; sandbox and
+  // reduced-motion flows still close instantly.
   const _rhemaModalEl = document.getElementById('rhemaModal');
   const _rhemaReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (_rhemaModalEl && _rhemaModalEl.classList.contains('open') && !keepSandbox && !_studySandboxId && !_rhemaReduce) {
-    _rhemaModalEl.classList.add('rhema-nav-leave');
-    setTimeout(() => _rhemaModalEl.classList.remove('open', 'rhema-nav-leave'), 320);
+    if (_rhemaLaunchRect) {
+      _appSetExpandOrigin(_rhemaModalEl, _rhemaLaunchRect);
+      // Reveal the bottom nav instantly underneath (its transition is
+      // suppressed during motion) instead of letting it slide in mid-fold.
+      document.body?.classList.add('app-screen-motion');
+      _rhemaModalEl.classList.add('rhema-collapse-leave');
+      setTimeout(() => {
+        _rhemaModalEl.classList.remove('open', 'rhema-collapse-leave');
+        document.body?.classList.remove('app-screen-motion');
+      }, 440);
+    } else {
+      _rhemaModalEl.classList.add('rhema-nav-leave');
+      setTimeout(() => _rhemaModalEl.classList.remove('open', 'rhema-nav-leave'), 320);
+    }
   } else {
-    _rhemaModalEl?.classList.remove('open', 'rhema-nav-leave');
+    _rhemaModalEl?.classList.remove('open', 'rhema-nav-leave', 'rhema-collapse-leave');
   }
   closeRhemaSheet();
   closeRhemaReaderNote();

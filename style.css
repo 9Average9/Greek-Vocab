@@ -1851,11 +1851,10 @@ body.dark .lesson-section {
 
 
 
-/*  FORCE dark mode text override */
-body.dark {
-  --font-color: #f3f4f6;
-  --btn-text-color: #f8fafc;
-}
+/* Dark surfaces get their text tokens from the theme itself (applyAppTheme /
+   darkenTheme set them on :root). Forcing near-white here broke themes whose
+   identity color is bright (cyan, sky, lime…): their buttons need DARK text,
+   which the theme provides via --btn-text-color. */
 body.dark .learn-welcome-modal {
   background: rgba(31, 41, 55, 0.98);
   border-color: #4b5563;
@@ -8654,7 +8653,17 @@ body.dark .complete-lesson-btn {
 }
 
 body.dark .main-btn *,
-body.dark .complete-lesson-btn * {
+body.dark .complete-lesson-btn *,
+body.dark .mem-primary-btn,
+body.dark .mem-primary-btn *,
+body.dark .rhema-swap-seg.active,
+body.dark .rhema-swap-seg.active *,
+body.dark .rhema-nav-btn,
+body.dark .rhema-nav-btn *,
+body.dark .rhema-coach-next,
+body.dark .rhema-coach-next *,
+body.dark .rhema-selection-bar,
+body.dark .rhema-selection-bar * {
   color: var(--btn-text-color) !important;
 }
 
@@ -15333,7 +15342,7 @@ body.rx-scroll-lock {
   align-items: center;
   gap: 5px;
   background: var(--secondary-color);
-  color: #fff;
+  color: var(--btn-text-color, #fff);
   border: none;
   border-radius: 50px;
   padding: 9px 18px;
@@ -17222,6 +17231,35 @@ body.dark .atlas-alts strong { color: #e3b466; }
   flex: 1;
   padding: 0 8px;
   line-height: 1.3;
+}
+
+/* ── Dark mode: the reader chrome's raised white glass goes dark. Dark themes
+   brighten --secondary-color/--font-color for dark surfaces, so on the white
+   glass pills (book picker, version, swap, tools, verse nav) the light text
+   vanished — cyan and other bright themes were the worst. ── */
+body.dark .rhema-back-btn.icon-btn,
+body.dark .rhema-swap-btn,
+body.dark .rhema-tool-btn,
+body.dark .rhema-pill,
+body.dark .rhema-verse-nav-row {
+  background: linear-gradient(145deg, rgba(38,46,58,0.94), color-mix(in srgb, var(--secondary-color) 10%, rgba(26,32,42,0.9)));
+  border-color: color-mix(in srgb, var(--secondary-color) 30%, rgba(255,255,255,0.08));
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.07);
+}
+body.dark .rhema-back-btn.icon-btn:active,
+body.dark .rhema-swap-btn:active,
+body.dark .rhema-tool-btn:active,
+body.dark .rhema-pill:active {
+  background: color-mix(in srgb, var(--secondary-color) 18%, rgba(26,32,42,0.92));
+}
+body.dark .rhema-tool-btn.has-active {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--secondary-color) 26%, rgba(26,32,42,0.92)), color-mix(in srgb, var(--secondary-color) 14%, rgba(26,32,42,0.88)));
+  border-color: color-mix(in srgb, var(--secondary-color) 45%, rgba(255,255,255,0.1));
+}
+body.dark .rhema-chapter-mode-pill.active {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--secondary-color) 30%, rgba(26,32,42,0.92)), color-mix(in srgb, var(--secondary-color) 18%, rgba(26,32,42,0.88)));
+  color: var(--secondary-color);
+  border-color: color-mix(in srgb, var(--secondary-color) 40%, transparent);
 }
 
 @keyframes xrefPulse {
@@ -33957,6 +33995,19 @@ body.app-launch-motion .bottom-nav {
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 50%, transparent);
 }
 
+/* Reverse of the Rhema slide-in: fold the reader back into the bottom-nav Rhema
+   button it was launched from (same fold the Home tools close with). The clip
+   animates on the modal shell; the slide inside stays put so text doesn't shift. */
+#rhemaModal.rhema-collapse-leave {
+  animation: appShellCollapse .42s cubic-bezier(.4, 0, .2, 1) forwards;
+  background: var(--primary-light, #f6fbff);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--secondary-color) 50%, transparent);
+}
+#rhemaModal.rhema-collapse-leave #rhemaSlide {
+  transform: translateY(0);
+  transition: none;
+}
+
 .study-library.open.app-screen-expanding {
   z-index: 941;
   /* Stay fully opaque while it clips open — the base modal's opacity fade made it
@@ -33990,6 +34041,7 @@ body.app-launch-motion .bottom-nav {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  #rhemaModal.rhema-collapse-leave,
   .screen.active.app-screen-expanding,
   .screen.active.app-screen-collapsing,
   .study-library.open.app-screen-expanding,
