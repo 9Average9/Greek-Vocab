@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.381";
+const APP_VERSION = "3.0.382";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29586,6 +29586,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.382 &mdash; Clause Compass</div>
+<ul>
+  <li><strong>Clause Compass added</strong> &mdash; English Rhema now has a distinct flow tool for commands, reasons, conclusions, turns, purpose, conditions, and emphasis.</li>
+  <li><strong>Grammar-backed confidence</strong> &mdash; Command markers can be strengthened when the active Greek text shows imperative mood in the underlying verse.</li>
+</ul>
 <div class="un-version-label">v3.0.381 &mdash; Rhema folds closed + readable dark-mode buttons</div>
 <ul>
   <li><strong>Rhema closes like the tools</strong> &mdash; Closing the Rhema reader now folds it back into the Rhema button on the bottom nav, the same satisfying collapse the Reading Plan and other Home tools use, instead of abruptly returning home.</li>
@@ -36743,6 +36748,7 @@ function getCurrentOriginalLanguageLayer(bookCode = _rhemaBook) {
 function setRhemaOTLayer(layer) {
   _rhemaOTLayer = layer === 'lxx' ? 'lxx' : 'hebrew';
   localStorage.setItem('rhemaOTLayer', _rhemaOTLayer);
+  _rhemaFlowCache.clear();
   closeRhemaSheet();
   _syncWheelState();
   _syncToolWandIndicator();
@@ -36907,6 +36913,29 @@ let _rhemaEnglishNlp = null;
 let _rhemaEnglishNlpPromise = null;
 let _rhemaEnglishHighlightRenderToken = 0;
 const _rhemaEnglishPosCache = new Map();
+let _rhemaFlowOn = false;
+const _rhemaFlowCats = new Set(['COMMAND', 'REASON', 'CONCLUSION', 'CONTRAST', 'PURPOSE', 'CONDITION', 'EMPHASIS']);
+const _rhemaFlowCache = new Map();
+
+const RHEMA_FLOW_CATS = {
+  COMMAND: { label: 'Commands', className: 'flow-command' },
+  REASON: { label: 'Reasons', className: 'flow-reason' },
+  CONCLUSION: { label: 'Conclusions', className: 'flow-conclusion' },
+  CONTRAST: { label: 'Turns', className: 'flow-contrast' },
+  PURPOSE: { label: 'Purpose', className: 'flow-purpose' },
+  CONDITION: { label: 'Conditions', className: 'flow-condition' },
+  EMPHASIS: { label: 'Signals', className: 'flow-emphasis' }
+};
+
+const RHEMA_FLOW_PHRASES = {
+  COMMAND: ['do not', 'do not be', 'do not let', 'let us', 'let him', 'let her', 'let them', 'let it', 'see to it', 'take heed', 'remember', 'listen', 'hear'],
+  REASON: ['because of', 'on account of', 'because', 'for this reason', 'for', 'since'],
+  CONCLUSION: ['therefore', 'so then', 'thus', 'consequently', 'accordingly'],
+  CONTRAST: ['nevertheless', 'nonetheless', 'instead', 'rather than', 'rather', 'although', 'though', 'however', 'but', 'yet'],
+  PURPOSE: ['so that', 'in order that', 'in order to', 'so as to'],
+  CONDITION: ['if', 'unless', 'whether', 'whenever', 'when', 'whoever', 'whatever', 'wherever'],
+  EMPHASIS: ['truly truly', 'amen amen', 'truly', 'amen', 'indeed', 'surely', 'certainly', 'behold', 'look']
+};
 
 function _rhemaEnglishHighlightActive() {
   return _rhemaShowEnglish && _rhemaHighlightBarOn && !_rhemaSyntaxMode;
@@ -37013,6 +37042,199 @@ function _rhemaEnglishVerseCats(book, chapter, verse, text) {
   return cats;
 }
 
+function _rhemaFlowActive() {
+  return _rhemaShowEnglish && _rhemaFlowOn && !_rhemaSyntaxMode;
+}
+
+function _rhemaFlowSelected() {
+  return _rhemaFlowActive() && _rhemaFlowCats.size > 0;
+}
+
+function _rhemaFlowCacheKey(book, chapter, verse) {
+  return `${_rhemaEnglishVersion()}|${book}|${chapter}|${verse}|${_rhemaEnglishNlp ? 'nlp' : 'plain'}`;
+}
+
+function _rhemaEscapeRegex(text) {
+  return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function _rhemaOriginalVerseWords(book, chapter, verse) {
+  return ((_rhemaText()?.[book] || {})[chapter] || {})[verse] || [];
+}
+
+function _rhemaVerseHasGreekImperative(book, chapter, verse) {
+  if (!isRhemaNTBook(book)) return false;
+  return _rhemaOriginalVerseWords(book, chapter, verse).some((word) => /^V-[A-Z0-9]*M/i.test(String(word?.[2] || '')));
+}
+
+function _rhemaVerseHasGreekSubjunctive(book, chapter, verse) {
+  if (!isRhemaNTBook(book)) return false;
+  return _rhemaOriginalVerseWords(book, chapter, verse).some((word) => /^V-[A-Z0-9]*S/i.test(String(word?.[2] || '')));
+}
+
+function _rhemaEnglishTokenRowsWithOffsets(text) {
+  const rows = _rhemaEnglishTokenRows(text);
+  const source = String(text || '');
+  const lower = source.toLowerCase();
+  if (!rows.length) {
+    const fallback = [];
+    const re = /\b[A-Za-z][A-Za-z'-]*\b/g;
+    let match;
+    while ((match = re.exec(source))) {
+      fallback.push({ value: match[0], pos: '', start: match.index, end: match.index + match[0].length });
+    }
+    return fallback;
+  }
+  let cursor = 0;
+  return rows.map((row) => {
+    const value = String(row.value || '');
+    const idx = lower.indexOf(value.toLowerCase(), cursor);
+    const start = idx >= cursor ? idx : cursor;
+    const end = Math.min(source.length, start + value.length);
+    cursor = end;
+    return { ...row, start, end };
+  }).filter((row) => row.end > row.start);
+}
+
+function _rhemaAddFlowPhraseSpans(text, spans) {
+  const lower = String(text || '').toLowerCase();
+  Object.entries(RHEMA_FLOW_PHRASES).forEach(([cat, phrases]) => {
+    [...phrases].sort((a, b) => b.length - a.length).forEach((phrase) => {
+      const re = new RegExp(`(^|[^A-Za-z])(${_rhemaEscapeRegex(phrase)})(?=$|[^A-Za-z])`, 'gi');
+      let match;
+      while ((match = re.exec(lower))) {
+        const start = match.index + match[1].length;
+        const end = start + match[2].length;
+        const ambiguous = (cat === 'REASON' && ['for', 'since'].includes(phrase))
+          || (cat === 'CONDITION' && ['when', 'whether'].includes(phrase))
+          || (cat === 'CONTRAST' && ['yet', 'though', 'rather'].includes(phrase));
+        const confidence = cat === 'COMMAND' || ambiguous ? 'medium' : 'high';
+        spans.push({
+          start,
+          end,
+          cat,
+          confidence,
+          note: ambiguous ? 'Context-sensitive English marker' : (cat === 'COMMAND' ? 'English command marker' : 'English discourse marker'),
+          source: text.slice(start, end)
+        });
+      }
+    });
+  });
+}
+
+function _rhemaAddFlowGrammarSpans(text, book, chapter, verse, spans) {
+  const hasGreekImperative = _rhemaVerseHasGreekImperative(book, chapter, verse);
+  const hasGreekSubjunctive = _rhemaVerseHasGreekSubjunctive(book, chapter, verse);
+  const tokens = _rhemaEnglishTokenRowsWithOffsets(text);
+
+  if (hasGreekImperative) {
+    spans.forEach((span) => {
+      if (span.cat === 'COMMAND') {
+        span.confidence = 'high';
+        span.note = 'Backed by Greek imperative mood';
+      }
+    });
+    if (!spans.some((span) => span.cat === 'COMMAND')) {
+      const candidate = tokens.find((token, index) => {
+        const value = String(token.value || '').toLowerCase();
+        if (['do', 'let', 'be', 'go', 'come', 'hear', 'listen', 'remember', 'take', 'see'].includes(value)) return true;
+        return index < 5 && ['VERB', 'AUX'].includes(token.pos);
+      });
+      if (candidate) {
+        spans.push({
+          start: candidate.start,
+          end: candidate.end,
+          cat: 'COMMAND',
+          confidence: 'medium',
+          note: 'Greek imperative mood present in this verse',
+          source: text.slice(candidate.start, candidate.end)
+        });
+      }
+    }
+  }
+
+  if (hasGreekSubjunctive) {
+    spans.forEach((span) => {
+      if (span.cat === 'PURPOSE' && span.confidence !== 'high') {
+        span.confidence = 'medium';
+        span.note = 'Possible purpose/result marker with Greek subjunctive nearby';
+      }
+    });
+  }
+}
+
+function _rhemaNormalizeFlowSpans(spans) {
+  const weight = { high: 3, medium: 2, low: 1 };
+  const sorted = spans
+    .filter((span) => span && Number.isFinite(span.start) && Number.isFinite(span.end) && span.end > span.start)
+    .sort((a, b) => {
+      if (a.start !== b.start) return a.start - b.start;
+      const aLen = a.end - a.start;
+      const bLen = b.end - b.start;
+      if (aLen !== bLen) return bLen - aLen;
+      return (weight[b.confidence] || 0) - (weight[a.confidence] || 0);
+    });
+  const accepted = [];
+  sorted.forEach((span) => {
+    const overlaps = accepted.some((existing) => span.start < existing.end && span.end > existing.start);
+    if (!overlaps) accepted.push(span);
+  });
+  return accepted.sort((a, b) => a.start - b.start);
+}
+
+function _rhemaAnalyzeEnglishFlow(text, book, chapter, verse) {
+  if (!text) return { spans: [], cats: new Set(), summary: 'No English text loaded.' };
+  const key = _rhemaFlowCacheKey(book, chapter, verse);
+  const cached = _rhemaFlowCache.get(key);
+  if (cached) return cached;
+  const spans = [];
+  _rhemaAddFlowPhraseSpans(text, spans);
+  _rhemaAddFlowGrammarSpans(text, book, chapter, verse, spans);
+  const normalized = _rhemaNormalizeFlowSpans(spans);
+  const cats = new Set(normalized.map((span) => span.cat));
+  const summaryBits = normalized.slice(0, 4).map((span) => `${RHEMA_FLOW_CATS[span.cat]?.label || span.cat}: "${text.slice(span.start, span.end)}"`);
+  const result = {
+    spans: normalized,
+    cats,
+    summary: summaryBits.length ? summaryBits.join(' · ') : 'No major flow markers found in this verse.'
+  };
+  _rhemaFlowCache.set(key, result);
+  return result;
+}
+
+function _rhemaFlowPresentCats() {
+  const cats = new Set();
+  const addVerse = (verse) => {
+    const text = _rhemaEnglishText(_rhemaBook, _rhemaChapter, verse);
+    _rhemaAnalyzeEnglishFlow(text, _rhemaBook, _rhemaChapter, verse).cats.forEach((cat) => cats.add(cat));
+  };
+  if (_rhemaFullChapter) {
+    const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
+    Object.keys(chapterData).forEach(addVerse);
+  } else {
+    addVerse(_rhemaVerse);
+  }
+  return cats;
+}
+
+function _renderRhemaFlowText(text, book, chapter, verse) {
+  const analysis = _rhemaAnalyzeEnglishFlow(text, book, chapter, verse);
+  const spans = analysis.spans.filter((span) => _rhemaFlowCats.has(span.cat));
+  if (!spans.length) return _escapeRhemaAttr(text);
+  let cursor = 0;
+  let html = '';
+  spans.forEach((span) => {
+    html += _escapeRhemaAttr(text.slice(cursor, span.start));
+    const catConfig = RHEMA_FLOW_CATS[span.cat] || {};
+    const label = catConfig.label || span.cat;
+    const title = `${label} · ${span.confidence || 'medium'} confidence · ${span.note || 'Clause Compass marker'}`;
+    html += `<span class="rhema-flow-mark ${catConfig.className || ''} flow-${span.confidence || 'medium'}" data-flow-cat="${span.cat}" title="${_escapeRhemaAttr(title)}">${_escapeRhemaAttr(text.slice(span.start, span.end))}</span>`;
+    cursor = span.end;
+  });
+  html += _escapeRhemaAttr(text.slice(cursor));
+  return html;
+}
+
 function _rhemaEnglishPresentCats() {
   const cats = new Set();
   if (!_rhemaEnglishNlp) return new Set(Object.keys(HIGHLIGHT_CATS));
@@ -37031,6 +37253,7 @@ function _rhemaEnglishPresentCats() {
 
 function _renderRhemaEnglishText(text, book = _rhemaBook, chapter = _rhemaChapter, verse = _rhemaVerse) {
   if (!text) return '';
+  if (_rhemaFlowSelected()) return _renderRhemaFlowText(text, book, chapter, verse);
   if (!_rhemaEnglishHighlightSelected() || !_rhemaEnglishNlp) return _escapeRhemaAttr(text);
   const rows = _rhemaEnglishTokenRows(text);
   _rhemaEnglishPosCache.set(_rhemaEnglishCacheKey(book, chapter, verse), _rhemaEnglishRowsToCats(rows));
@@ -39246,6 +39469,9 @@ function toggleRhemaHighlightBar() {
     _rhemaPosHighlights.clear();
     renderRhemaVerse();
   } else {
+    _rhemaFlowOn = false;
+    document.getElementById('rhemaFlowBar')?.classList.add('hidden');
+    _syncWheelBtn('flow', false);
     updateHighlightToolbar();
     _requestRhemaEnglishHighlightRender();
   }
@@ -39325,6 +39551,84 @@ function updateHighlightToolbar() {
     btn.classList.toggle('hl-dimmed',  isActive && !hasMatch);
     btn.classList.toggle('hl-present', !isActive && hasMatch);
   }
+}
+
+function _requestRhemaFlowRender() {
+  if (!_rhemaFlowActive() || _rhemaEnglishNlp) return;
+  const token = ++_rhemaEnglishHighlightRenderToken;
+  _loadRhemaEnglishNlp().then(() => {
+    if (token !== _rhemaEnglishHighlightRenderToken) return;
+    _rhemaFlowCache.clear();
+    updateRhemaFlowToolbar();
+    renderRhemaVerse();
+  }).catch(() => updateRhemaFlowToolbar());
+}
+
+function toggleRhemaFlowCompass() {
+  _rhemaFlowOn = !_rhemaFlowOn;
+  const bar = document.getElementById('rhemaFlowBar');
+  if (bar) bar.classList.toggle('hidden', !_rhemaFlowOn);
+  _syncWheelBtn('flow', _rhemaFlowOn);
+  if (_rhemaFlowOn) {
+    _rhemaHighlightBarOn = false;
+    _rhemaPosHighlights.clear();
+    document.getElementById('rhemaHighlightBar')?.classList.add('hidden');
+    _syncWheelBtn('highlight', false);
+    updateRhemaFlowToolbar();
+    _requestRhemaFlowRender();
+  }
+  renderRhemaVerse();
+  _syncToolWandIndicator();
+}
+
+function toggleRhemaFlowCat(cat) {
+  if (!RHEMA_FLOW_CATS[cat]) return;
+  const present = _rhemaFlowPresentCats();
+  const hasMatch = present.has(cat);
+  if (_rhemaFlowCats.has(cat)) {
+    _rhemaFlowCats.delete(cat);
+  } else {
+    if (!hasMatch) {
+      const btn = document.querySelector(`.rhema-flow-chip[data-flow-cat="${cat}"]`);
+      if (btn) { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 500); }
+      return;
+    }
+    _rhemaFlowCats.add(cat);
+  }
+  updateRhemaFlowToolbar();
+  renderRhemaVerse();
+}
+
+function updateRhemaFlowToolbar() {
+  const bar = document.getElementById('rhemaFlowBar');
+  if (!bar) return;
+  const active = _rhemaFlowActive();
+  bar.classList.toggle('hidden', !active);
+  if (!active) return;
+  const present = _rhemaFlowPresentCats();
+  Object.keys(RHEMA_FLOW_CATS).forEach((cat) => {
+    const btn = document.querySelector(`.rhema-flow-chip[data-flow-cat="${cat}"]`);
+    if (!btn) return;
+    const hasMatch = present.has(cat);
+    const isActive = _rhemaFlowCats.has(cat);
+    btn.classList.toggle('flow-active', isActive && hasMatch);
+    btn.classList.toggle('flow-dimmed', isActive && !hasMatch);
+    btn.classList.toggle('flow-present', !isActive && hasMatch);
+  });
+  const count = Array.from(present).length;
+  const status = document.getElementById('rhemaFlowStatus');
+  if (status) status.textContent = count ? `${count} flow ${count === 1 ? 'signal' : 'signals'} in view` : 'No strong signals in view';
+  const summary = document.getElementById('rhemaFlowSummary');
+  if (summary) {
+    if (_rhemaFullChapter) {
+      const labels = Array.from(present).map((cat) => RHEMA_FLOW_CATS[cat]?.label || cat).join(', ');
+      summary.textContent = labels ? `Compass sees: ${labels}` : 'Compass is quiet in this chapter view.';
+    } else {
+      const text = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
+      summary.textContent = _rhemaAnalyzeEnglishFlow(text, _rhemaBook, _rhemaChapter, _rhemaVerse).summary;
+    }
+  }
+  _requestRhemaFlowRender();
 }
 
 // ── Morphology decoder ───────────────────────────────────────────────────────
@@ -40669,6 +40973,7 @@ function renderRhemaVerse() {
   updateRhemaVerseNav();
   initRhemaVerseSwipe();
   updateHighlightToolbar();
+  updateRhemaFlowToolbar();
   _syncToolWandIndicator();
   _saveRhemaPosition();
   if (_studySandboxId) _initStudyLongPress();
@@ -40702,6 +41007,7 @@ function toggleRhemaEnglish() {
   }
   renderRhemaVerse();
   _requestRhemaEnglishHighlightRender();
+  _requestRhemaFlowRender();
   closeRhemaSheet();
 }
 
@@ -40711,9 +41017,11 @@ function toggleRhemaEnglishVersion() {
   _syncRhemaEnglishAlias();
   _syncRhemaChapterUi();
   closeRhemaSheet();
+  _rhemaFlowCache.clear();
   renderRhemaVerse();
   updateRhemaSwapVisibility();
   _requestRhemaEnglishHighlightRender();
+  _requestRhemaFlowRender();
 }
 
 function toggleRhemaMode() {
@@ -40739,6 +41047,7 @@ function toggleRhemaTextMode() {
   _syncRhemaEnglishAlias();
   _syncRhemaTextModeBtn();
   _syncToolWandIndicator();
+  _rhemaFlowCache.clear();
   renderRhemaVerse();
   closeRhemaWheel();
 }
@@ -40795,6 +41104,9 @@ function toggleWheelTool(tool) {
   } else if (tool === 'highlight') {
     toggleRhemaHighlightBar();
     _syncToolWandIndicator();
+  } else if (tool === 'flow') {
+    toggleRhemaFlowCompass();
+    closeRhemaWheel();
   } else if (tool === 'greek-only') {
     toggleRhemaMode();
   } else if (tool === 'wordlibrary') {
@@ -40814,7 +41126,7 @@ function toggleWheelTool(tool) {
 }
 
 function _syncWheelBtn(tool, active) {
-  const ids = { syntax: 'wheelItemSyntax', 'greek-only': 'wheelItemGreek', highlight: 'wheelItemHighlight', critical: 'wheelItemCritical', lxx: 'wheelItemLxx' };
+  const ids = { syntax: 'wheelItemSyntax', 'greek-only': 'wheelItemGreek', highlight: 'wheelItemHighlight', flow: 'wheelItemFlow', critical: 'wheelItemCritical', lxx: 'wheelItemLxx' };
   document.getElementById(ids[tool])?.classList.toggle('active', active);
 }
 
@@ -40869,6 +41181,7 @@ function _syncWheelState() {
   _syncWheelBtn('syntax', _rhemaSyntaxMode);
   _syncWheelBtn('greek-only', _rhemaGreekOnly);
   _syncWheelBtn('highlight', _rhemaHighlightBarOn);
+  _syncWheelBtn('flow', _rhemaFlowOn);
   _syncWheelBtn('critical', _rhemaTextMode === 'critical');
   _syncWheelBtn('lxx', isRhemaOTBook(_rhemaBook) && _rhemaOTLayer === 'lxx');
   _syncRhemaTextModeBtn();
@@ -40879,7 +41192,7 @@ function _syncWheelState() {
 }
 
 function _syncToolWandIndicator() {
-  const hasActive = _rhemaSyntaxMode || _rhemaGreekOnly || _rhemaHighlightBarOn || _rhemaTextMode === 'critical' || (isRhemaOTBook(_rhemaBook) && _rhemaOTLayer === 'lxx');
+  const hasActive = _rhemaSyntaxMode || _rhemaGreekOnly || _rhemaHighlightBarOn || _rhemaFlowOn || _rhemaTextMode === 'critical' || (isRhemaOTBook(_rhemaBook) && _rhemaOTLayer === 'lxx');
   document.getElementById('rhemaToolBtn')?.classList.toggle('has-active', hasActive);
 }
 

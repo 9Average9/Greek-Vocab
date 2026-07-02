@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.381" rel="stylesheet"/>
+<link href="style.css?v=3.0.382" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
@@ -10469,6 +10469,26 @@ Verb Endings
 <button class="rhema-hl-pill" data-cat="NEG" onclick="toggleRhemaHighlight('NEG')"><span class="rhema-hl-dot" style="background:rgba(248,113,113,1)"></span>Not</button>
 <button class="rhema-hl-pill" data-cat="PART" onclick="toggleRhemaHighlight('PART')"><span class="rhema-hl-dot" style="background:rgba(148,163,184,1)"></span>Particle</button>
 </div>
+<!-- Clause Compass toolbar -->
+<div class="rhema-flow-bar hidden" id="rhemaFlowBar">
+<div class="rhema-flow-head">
+<div>
+<strong>Clause Compass</strong>
+<span id="rhemaFlowStatus">Finding the flow...</span>
+</div>
+<button type="button" onclick="toggleRhemaFlowCompass()">Hide</button>
+</div>
+<div class="rhema-flow-chips" id="rhemaFlowChips">
+<button class="rhema-flow-chip" data-flow-cat="COMMAND" onclick="toggleRhemaFlowCat('COMMAND')">Commands</button>
+<button class="rhema-flow-chip" data-flow-cat="REASON" onclick="toggleRhemaFlowCat('REASON')">Reasons</button>
+<button class="rhema-flow-chip" data-flow-cat="CONCLUSION" onclick="toggleRhemaFlowCat('CONCLUSION')">Therefore</button>
+<button class="rhema-flow-chip" data-flow-cat="CONTRAST" onclick="toggleRhemaFlowCat('CONTRAST')">Turns</button>
+<button class="rhema-flow-chip" data-flow-cat="PURPOSE" onclick="toggleRhemaFlowCat('PURPOSE')">Purpose</button>
+<button class="rhema-flow-chip" data-flow-cat="CONDITION" onclick="toggleRhemaFlowCat('CONDITION')">If / When</button>
+<button class="rhema-flow-chip" data-flow-cat="EMPHASIS" onclick="toggleRhemaFlowCat('EMPHASIS')">Signals</button>
+</div>
+<div class="rhema-flow-summary" id="rhemaFlowSummary">Turn it on to trace commands, reasons, turns, purpose, and emphasis in the active English passage.</div>
+</div>
 <!-- Scrollable body fills all space between picker and verse nav -->
 <div class="rhema-body">
 <div class="rhema-content-area">
@@ -10587,6 +10607,10 @@ Verb Endings
 <button class="rhema-wheel-item" id="wheelItemXref" onclick="openRhemaCrossReferences()">
 <span class="material-symbols-outlined">hub</span>
 <span class="rwi-label">Cross-Ref</span>
+</button>
+<button class="rhema-wheel-item" id="wheelItemFlow" onclick="toggleWheelTool('flow')">
+<span class="material-symbols-outlined">explore</span>
+<span class="rwi-label">Clause<br/>Compass</span>
 </button>
 <button class="rhema-wheel-item" id="wheelItemWordlib" onclick="toggleWheelTool('wordlibrary')">
 <span class="material-symbols-outlined">local_library</span>
@@ -17028,7 +17052,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.381"></script>
+<script src="app.js?v=3.0.382"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.363"></script>
 <script src="verse-structure.js?v=3.0.364"></script>
