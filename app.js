@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.382";
+const APP_VERSION = "3.0.383";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29586,6 +29586,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.383 &mdash; Smarter Clause Compass</div>
+<ul>
+  <li><strong>Clause Compass got sharper</strong> &mdash; English flow markers now check clause position and nearby verb evidence before highlighting context-sensitive words like for, since, when, but, yet, and though.</li>
+  <li><strong>Commands read more like grammar</strong> &mdash; Imperative-style English clauses can now mark multiple commands in a verse, while Greek imperative data boosts confidence where the underlying text supports it.</li>
+  <li><strong>Cleaner Compass banner</strong> &mdash; The bottom summary line was removed so the tool stays focused on the passage itself.</li>
+</ul>
 <div class="un-version-label">v3.0.382 &mdash; Clause Compass</div>
 <ul>
   <li><strong>Clause Compass added</strong> &mdash; English Rhema now has a distinct flow tool for commands, reasons, conclusions, turns, purpose, conditions, and emphasis.</li>
@@ -36928,7 +36934,7 @@ const RHEMA_FLOW_CATS = {
 };
 
 const RHEMA_FLOW_PHRASES = {
-  COMMAND: ['do not', 'do not be', 'do not let', 'let us', 'let him', 'let her', 'let them', 'let it', 'see to it', 'take heed', 'remember', 'listen', 'hear'],
+  COMMAND: ['do not let', 'do not be', 'do not', 'let us', 'let him', 'let her', 'let them', 'let it', 'see to it', 'take heed'],
   REASON: ['because of', 'on account of', 'because', 'for this reason', 'for', 'since'],
   CONCLUSION: ['therefore', 'so then', 'thus', 'consequently', 'accordingly'],
   CONTRAST: ['nevertheless', 'nonetheless', 'instead', 'rather than', 'rather', 'although', 'though', 'however', 'but', 'yet'],
@@ -36936,6 +36942,17 @@ const RHEMA_FLOW_PHRASES = {
   CONDITION: ['if', 'unless', 'whether', 'whenever', 'when', 'whoever', 'whatever', 'wherever'],
   EMPHASIS: ['truly truly', 'amen amen', 'truly', 'amen', 'indeed', 'surely', 'certainly', 'behold', 'look']
 };
+
+const RHEMA_FLOW_COMMON_VERBS = new Set([
+  'abide', 'ask', 'be', 'bear', 'believe', 'bless', 'bring', 'build', 'call', 'come',
+  'confess', 'consider', 'continue', 'deny', 'depart', 'do', 'draw', 'eat', 'enter',
+  'fear', 'flee', 'follow', 'forgive', 'give', 'go', 'hear', 'hold', 'honor', 'keep',
+  'know', 'let', 'listen', 'live', 'look', 'love', 'make', 'pray', 'put', 'receive',
+  'rejoice', 'remember', 'repent', 'resist', 'seek', 'serve', 'speak', 'stand',
+  'submit', 'take', 'tell', 'walk', 'watch', 'worship'
+]);
+const RHEMA_FLOW_AUXILIARY_NOT_COMMAND = new Set(['am', 'are', 'is', 'was', 'were', 'been', 'being', 'has', 'have', 'had', 'will', 'would', 'shall', 'should', 'may', 'might', 'can', 'could', 'must']);
+const RHEMA_FLOW_INITIAL_FILLERS = new Set(['and', 'but', 'so', 'then', 'now', 'therefore', 'thus', 'indeed', 'behold']);
 
 function _rhemaEnglishHighlightActive() {
   return _rhemaShowEnglish && _rhemaHighlightBarOn && !_rhemaSyntaxMode;
@@ -37058,6 +37075,138 @@ function _rhemaEscapeRegex(text) {
   return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function _rhemaPrevNonSpaceIndex(text, start) {
+  for (let i = Math.max(0, start - 1); i >= 0; i--) {
+    const ch = text[i];
+    if (!/\s/.test(ch) && !`"'()[]`.includes(ch)) return i;
+  }
+  return -1;
+}
+
+function _rhemaNextNonSpaceIndex(text, start) {
+  for (let i = Math.max(0, start); i < text.length; i++) {
+    const ch = text[i];
+    if (!/\s/.test(ch) && !`"'()[]`.includes(ch)) return i;
+  }
+  return -1;
+}
+
+function _rhemaClauseBoundaryScore(text, start) {
+  const prev = _rhemaPrevNonSpaceIndex(String(text || ''), start);
+  if (prev < 0) return 2;
+  const ch = text[prev];
+  if (/[.;:?!]/.test(ch)) return 2;
+  if (ch === ',' || ch === '-' || ch === '\n') return 1;
+  return 0;
+}
+
+function _rhemaTokensAfter(tokens, index, count = 8) {
+  return tokens.filter((token) => token.start >= index).slice(0, count);
+}
+
+function _rhemaTokenLooksVerbal(token) {
+  const value = String(token?.value || '').toLowerCase();
+  if (!value || RHEMA_FLOW_AUXILIARY_NOT_COMMAND.has(value)) return false;
+  if (['VERB', 'AUX'].includes(token?.pos)) return true;
+  return RHEMA_FLOW_COMMON_VERBS.has(value);
+}
+
+function _rhemaHasClauseVerbAfter(tokens, start, count = 8) {
+  return _rhemaTokensAfter(tokens, start, count).some((token) => _rhemaTokenLooksVerbal(token));
+}
+
+function _rhemaNextWordLower(text, index) {
+  const rest = String(text || '').slice(index);
+  const match = rest.match(/[A-Za-z][A-Za-z'-]*/);
+  return match ? match[0].toLowerCase() : '';
+}
+
+function _rhemaFlowConfidence(cat, phrase, boundary) {
+  const p = String(phrase || '').toLowerCase();
+  if (cat === 'COMMAND') return 'medium';
+  if (cat === 'REASON' && ['for', 'since'].includes(p)) return 'medium';
+  if (cat === 'CONDITION' && ['when', 'whether'].includes(p)) return 'medium';
+  if (cat === 'CONTRAST' && ['yet', 'though', 'rather'].includes(p)) return 'medium';
+  if (cat === 'EMPHASIS' && boundary < 2) return 'medium';
+  return 'high';
+}
+
+function _rhemaShouldKeepFlowPhrase(cat, phrase, text, start, end, tokens) {
+  const p = String(phrase || '').toLowerCase();
+  const boundary = _rhemaClauseBoundaryScore(text, start);
+  if (cat === 'PURPOSE') return true;
+  if (cat === 'REASON') {
+    if (['because', 'because of', 'on account of', 'for this reason'].includes(p)) return true;
+    return boundary > 0 && _rhemaHasClauseVerbAfter(tokens, end);
+  }
+  if (cat === 'CONCLUSION') return boundary > 0;
+  if (cat === 'CONTRAST') {
+    if (p === 'rather than') return true;
+    return boundary > 0;
+  }
+  if (cat === 'CONDITION') {
+    if (!boundary) return false;
+    return _rhemaHasClauseVerbAfter(tokens, end) || ['whoever', 'whatever', 'wherever'].includes(p);
+  }
+  if (cat === 'EMPHASIS') {
+    if (['truly truly', 'amen amen', 'truly', 'amen', 'behold'].includes(p)) return boundary > 0;
+    if (p === 'look') {
+      const next = _rhemaNextNonSpaceIndex(text, end);
+      return boundary > 0 && (next < 0 || [',', ':', '!'].includes(text[next]));
+    }
+    return boundary > 0;
+  }
+  if (cat === 'COMMAND') return boundary > 0;
+  return true;
+}
+
+function _rhemaCommandCandidateAt(tokens, text, index, requireGreekSupport = false) {
+  const token = tokens[index];
+  const value = String(token?.value || '').toLowerCase();
+  if (!value || !/^[a-z][a-z'-]*$/.test(value)) return null;
+  if (!_rhemaClauseBoundaryScore(text, token.start)) return null;
+
+  let idx = index;
+  while (idx < tokens.length && RHEMA_FLOW_INITIAL_FILLERS.has(String(tokens[idx].value || '').toLowerCase())) idx++;
+  const first = tokens[idx] || token;
+  const firstValue = String(first.value || '').toLowerCase();
+  const second = tokens[idx + 1];
+  const secondValue = String(second?.value || '').toLowerCase();
+  const third = tokens[idx + 2];
+
+  if (firstValue === 'do' && ['not', "n't"].includes(secondValue) && third) {
+    return { start: first.start, end: second.end, nextIndex: idx + 2, confidence: requireGreekSupport ? 'high' : 'medium', note: requireGreekSupport ? 'Backed by Greek imperative mood' : 'Negative English command shape' };
+  }
+  if (firstValue === 'let' && ['us', 'him', 'her', 'them', 'it'].includes(secondValue) && second) {
+    return { start: first.start, end: second.end, nextIndex: idx + 2, confidence: requireGreekSupport ? 'high' : 'medium', note: requireGreekSupport ? 'Backed by Greek imperative mood' : 'English let-command shape' };
+  }
+  if (_rhemaTokenLooksVerbal(first) && RHEMA_FLOW_COMMON_VERBS.has(firstValue)) {
+    return { start: first.start, end: first.end, nextIndex: idx + 1, confidence: requireGreekSupport ? 'high' : 'medium', note: requireGreekSupport ? 'Backed by Greek imperative mood' : 'Clause begins with an English base verb' };
+  }
+  return null;
+}
+
+function _rhemaFindCommandCandidate(tokens, text, requireGreekSupport = false) {
+  for (let i = 0; i < tokens.length; i++) {
+    const candidate = _rhemaCommandCandidateAt(tokens, text, i, requireGreekSupport);
+    if (candidate) return candidate;
+  }
+  return null;
+}
+
+function _rhemaAddFlowCommandSpans(text, spans, tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const candidate = _rhemaCommandCandidateAt(tokens, text, i, false);
+    if (!candidate) continue;
+    spans.push({
+      ...candidate,
+      cat: 'COMMAND',
+      source: text.slice(candidate.start, candidate.end)
+    });
+    i = Math.max(i, candidate.nextIndex - 1);
+  }
+}
+
 function _rhemaOriginalVerseWords(book, chapter, verse) {
   return ((_rhemaText()?.[book] || {})[chapter] || {})[verse] || [];
 }
@@ -37070,6 +37219,11 @@ function _rhemaVerseHasGreekImperative(book, chapter, verse) {
 function _rhemaVerseHasGreekSubjunctive(book, chapter, verse) {
   if (!isRhemaNTBook(book)) return false;
   return _rhemaOriginalVerseWords(book, chapter, verse).some((word) => /^V-[A-Z0-9]*S/i.test(String(word?.[2] || '')));
+}
+
+function _rhemaVerseHasGreekPurposeMarker(book, chapter, verse) {
+  if (!isRhemaNTBook(book)) return false;
+  return _rhemaOriginalVerseWords(book, chapter, verse).some((word) => ['2443', '3704'].includes(String(word?.[1] || '')));
 }
 
 function _rhemaEnglishTokenRowsWithOffsets(text) {
@@ -37096,7 +37250,7 @@ function _rhemaEnglishTokenRowsWithOffsets(text) {
   }).filter((row) => row.end > row.start);
 }
 
-function _rhemaAddFlowPhraseSpans(text, spans) {
+function _rhemaAddFlowPhraseSpans(text, spans, tokens) {
   const lower = String(text || '').toLowerCase();
   Object.entries(RHEMA_FLOW_PHRASES).forEach(([cat, phrases]) => {
     [...phrases].sort((a, b) => b.length - a.length).forEach((phrase) => {
@@ -37105,16 +37259,14 @@ function _rhemaAddFlowPhraseSpans(text, spans) {
       while ((match = re.exec(lower))) {
         const start = match.index + match[1].length;
         const end = start + match[2].length;
-        const ambiguous = (cat === 'REASON' && ['for', 'since'].includes(phrase))
-          || (cat === 'CONDITION' && ['when', 'whether'].includes(phrase))
-          || (cat === 'CONTRAST' && ['yet', 'though', 'rather'].includes(phrase));
-        const confidence = cat === 'COMMAND' || ambiguous ? 'medium' : 'high';
+        if (!_rhemaShouldKeepFlowPhrase(cat, phrase, text, start, end, tokens)) continue;
+        const confidence = _rhemaFlowConfidence(cat, phrase, _rhemaClauseBoundaryScore(text, start));
         spans.push({
           start,
           end,
           cat,
           confidence,
-          note: ambiguous ? 'Context-sensitive English marker' : (cat === 'COMMAND' ? 'English command marker' : 'English discourse marker'),
+          note: confidence === 'medium' ? 'Context-sensitive English marker' : (cat === 'COMMAND' ? 'English command marker' : 'English discourse marker'),
           source: text.slice(start, end)
         });
       }
@@ -37125,6 +37277,7 @@ function _rhemaAddFlowPhraseSpans(text, spans) {
 function _rhemaAddFlowGrammarSpans(text, book, chapter, verse, spans) {
   const hasGreekImperative = _rhemaVerseHasGreekImperative(book, chapter, verse);
   const hasGreekSubjunctive = _rhemaVerseHasGreekSubjunctive(book, chapter, verse);
+  const hasGreekPurposeMarker = _rhemaVerseHasGreekPurposeMarker(book, chapter, verse);
   const tokens = _rhemaEnglishTokenRowsWithOffsets(text);
 
   if (hasGreekImperative) {
@@ -37135,29 +37288,25 @@ function _rhemaAddFlowGrammarSpans(text, book, chapter, verse, spans) {
       }
     });
     if (!spans.some((span) => span.cat === 'COMMAND')) {
-      const candidate = tokens.find((token, index) => {
-        const value = String(token.value || '').toLowerCase();
-        if (['do', 'let', 'be', 'go', 'come', 'hear', 'listen', 'remember', 'take', 'see'].includes(value)) return true;
-        return index < 5 && ['VERB', 'AUX'].includes(token.pos);
-      });
+      const candidate = _rhemaFindCommandCandidate(tokens, text, true);
       if (candidate) {
         spans.push({
           start: candidate.start,
           end: candidate.end,
           cat: 'COMMAND',
-          confidence: 'medium',
-          note: 'Greek imperative mood present in this verse',
+          confidence: candidate.confidence,
+          note: candidate.note,
           source: text.slice(candidate.start, candidate.end)
         });
       }
     }
   }
 
-  if (hasGreekSubjunctive) {
+  if (hasGreekSubjunctive || hasGreekPurposeMarker) {
     spans.forEach((span) => {
-      if (span.cat === 'PURPOSE' && span.confidence !== 'high') {
-        span.confidence = 'medium';
-        span.note = 'Possible purpose/result marker with Greek subjunctive nearby';
+      if (span.cat === 'PURPOSE') {
+        span.confidence = 'high';
+        span.note = hasGreekPurposeMarker ? 'Greek purpose marker present in this verse' : 'Greek subjunctive supports purpose/result grammar';
       }
     });
   }
@@ -37183,12 +37332,14 @@ function _rhemaNormalizeFlowSpans(spans) {
 }
 
 function _rhemaAnalyzeEnglishFlow(text, book, chapter, verse) {
-  if (!text) return { spans: [], cats: new Set(), summary: 'No English text loaded.' };
+  if (!text) return { spans: [], cats: new Set() };
   const key = _rhemaFlowCacheKey(book, chapter, verse);
   const cached = _rhemaFlowCache.get(key);
   if (cached) return cached;
   const spans = [];
-  _rhemaAddFlowPhraseSpans(text, spans);
+  const tokens = _rhemaEnglishTokenRowsWithOffsets(text);
+  _rhemaAddFlowPhraseSpans(text, spans, tokens);
+  _rhemaAddFlowCommandSpans(text, spans, tokens);
   _rhemaAddFlowGrammarSpans(text, book, chapter, verse, spans);
   const normalized = _rhemaNormalizeFlowSpans(spans);
   const cats = new Set(normalized.map((span) => span.cat));
@@ -39618,16 +39769,6 @@ function updateRhemaFlowToolbar() {
   const count = Array.from(present).length;
   const status = document.getElementById('rhemaFlowStatus');
   if (status) status.textContent = count ? `${count} flow ${count === 1 ? 'signal' : 'signals'} in view` : 'No strong signals in view';
-  const summary = document.getElementById('rhemaFlowSummary');
-  if (summary) {
-    if (_rhemaFullChapter) {
-      const labels = Array.from(present).map((cat) => RHEMA_FLOW_CATS[cat]?.label || cat).join(', ');
-      summary.textContent = labels ? `Compass sees: ${labels}` : 'Compass is quiet in this chapter view.';
-    } else {
-      const text = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
-      summary.textContent = _rhemaAnalyzeEnglishFlow(text, _rhemaBook, _rhemaChapter, _rhemaVerse).summary;
-    }
-  }
   _requestRhemaFlowRender();
 }
 

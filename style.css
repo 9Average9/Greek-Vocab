@@ -15918,14 +15918,6 @@ body.rx-scroll-lock {
 .rhema-flow-chip[data-flow-cat="PURPOSE"].flow-active { background: #c3a3ff; }
 .rhema-flow-chip[data-flow-cat="CONDITION"].flow-active { background: #7ee3c5; }
 .rhema-flow-chip[data-flow-cat="EMPHASIS"].flow-active { background: #ffe27a; }
-.rhema-flow-summary {
-  font-size: 0.69rem;
-  line-height: 1.25;
-  color: rgba(247,251,255,0.82);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .rhema-flow-mark {
   position: relative;
   display: inline;
