@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.384";
+const APP_VERSION = "3.0.385";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29583,9 +29583,16 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-syntax.js':    '3.0.65',
   'rhema-crossrefs.js': '3.0.65',
   'rhema-scripture-notes.js': '3.0.160',
+  'rhema-bible-dictionary.js': '3.0.385',
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.385 &mdash; Bible Dictionary: names, places &amp; customs</div>
+<ul>
+  <li><strong>New Bible Dictionary in the reader</strong> &mdash; Tap a verse, choose &ldquo;word meanings,&rdquo; and names like <em>Pharisee</em>, <em>Herod</em>, <em>Passover</em>, or <em>denarius</em> now open a who/what/when card: what kind of thing it is, when it lived or happened, a plain-English explanation, and key passages you can tap to jump straight to.</li>
+  <li><strong>250 curated entries</strong> &mdash; People, places, groups, festivals, money &amp; measures, objects, and customs across both Testaments, with plurals and phrases (&ldquo;Son of Man,&rdquo; &ldquo;Mount of Olives,&rdquo; &ldquo;Feast of Tabernacles&rdquo;) recognized as single terms.</li>
+  <li><strong>Marked word chips</strong> &mdash; In the word picker, words with a dictionary entry are highlighted so you can spot the people and places worth tapping.</li>
+</ul>
 <div class="un-version-label">v3.0.384 &mdash; Clause Compass audit fixes</div>
 <ul>
   <li><strong>Boundary bug fixed</strong> &mdash; Clause Compass now correctly catches markers at the very start of a verse or sentence, like Therefore, But, If, Ask, Seek, and Trust.</li>
@@ -39332,7 +39339,9 @@ function _rhemaOpenWordPicker(mode = 'lookup') {
   // chosen, otherwise just the single verse.
   const refs = _rhemaSel.size > 1 ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []);
   if (!refs.length) return;
-  const chip = (w) => `<button class="rhema-word-chip" onclick="rhemaPickEnglishWord(decodeURIComponent('${encodeURIComponent(w)}'))">${_escapeRhemaAttr(w)}</button>`;
+  // Words with a Bible Dictionary entry get a marked chip so names, places,
+  // and customs are discoverable at a glance.
+  const chip = (w) => `<button class="rhema-word-chip${_rhemaDictKeyForWord(w) ? ' rhema-word-chip-dict' : ''}" onclick="rhemaPickEnglishWord(decodeURIComponent('${encodeURIComponent(w)}'))">${_escapeRhemaAttr(w)}</button>`;
   if (refs.length > 1) {
     let any = false;
     const html = refs.map(ref => {
@@ -39404,6 +39413,68 @@ function _rhemaBibleContextForWord(word) {
   const key = _rhemaBibleContextKey(word);
   return key ? RHEMA_ENGLISH_BIBLE_DICT[key] : '';
 }
+
+/* ── Bible Dictionary (names, places, customs) ────────────────────────────────
+   Encyclopedic who/what/when cards from rhema-bible-dictionary.js, layered on
+   top of the one-line Bible-context glossary. Same key normalization: lowercase
+   letters only, with plural/variant aliases. */
+function _rhemaDictKeyForWord(word) {
+  const dict = window.RhemaBibleDictionary;
+  if (!dict?.entries) return '';
+  const clean = _rhemaCleanEnglishLookupWord(word).replace(/[^a-z]/g, '');
+  if (!clean) return '';
+  const candidates = [
+    clean,
+    dict.aliases?.[clean],
+    clean.endsWith('ies') ? clean.slice(0, -3) + 'y' : '',
+    clean.endsWith('es') ? clean.slice(0, -2) : '',
+    clean.endsWith('s') ? clean.slice(0, -1) : ''
+  ].filter(Boolean);
+  for (const key of candidates) {
+    const resolved = dict.aliases?.[key] || key;
+    if (dict.entries[resolved]) return resolved;
+  }
+  return '';
+}
+function _rhemaDictEntryForWord(word) {
+  const key = _rhemaDictKeyForWord(word);
+  return key ? window.RhemaBibleDictionary.entries[key] : null;
+}
+// Surface the dictionary's multi-word terms (Son of Man, Mount of Olives…) as
+// single chips in the English word picker alongside the glossary's phrases.
+function _rhemaMergeDictionaryPhrases() {
+  const phrases = window.RhemaBibleDictionary?.phrases;
+  if (phrases) Object.assign(RHEMA_ENGLISH_BIBLE_PHRASES, phrases);
+}
+const RHEMA_DICT_KIND_LABELS = {
+  person: 'Person', place: 'Place', group: 'Group', festival: 'Festival',
+  money: 'Money', measure: 'Measure', object: 'Object', custom: 'Custom', title: 'Title'
+};
+function rhemaDictJumpRef(ref) {
+  document.getElementById('rhemaEnglishMeaningModal')?.classList.remove('open');
+  rhemaOpenSavedMark(ref);
+}
+function _rhemaDictSectionHtml(entry) {
+  if (!entry) return '';
+  const kind = RHEMA_DICT_KIND_LABELS[entry.k] || 'Entry';
+  const refChips = (entry.refs || []).map(ref => {
+    const p = _rhemaParseRef(ref);
+    const label = p ? `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}` : ref;
+    return `<button class="rhema-dict-ref" onclick="rhemaDictJumpRef('${_escapeRhemaAttr(ref)}')">${_escapeRhemaAttr(label)}</button>`;
+  }).join('');
+  return `
+    <div class="rhema-meaning-section rhema-dict-section">
+      <h4>Bible Dictionary</h4>
+      <div class="rhema-dict-head">
+        <strong class="rhema-dict-title">${_escapeRhemaAttr(entry.t)}</strong>
+        <span class="rhema-dict-kind rhema-dict-kind-${_escapeRhemaAttr(entry.k)}">${_escapeRhemaAttr(kind)}</span>
+      </div>
+      ${entry.era ? `<div class="rhema-dict-era"><span class="material-symbols-outlined">schedule</span>${_escapeRhemaAttr(entry.era)}</div>` : ''}
+      <p class="rhema-dict-summary">${_escapeRhemaAttr(entry.s)}</p>
+      <p class="rhema-dict-body">${_escapeRhemaAttr(entry.b)}</p>
+      ${refChips ? `<div class="rhema-dict-refs"><span class="rhema-dict-refs-label">See</span>${refChips}</div>` : ''}
+    </div>`;
+}
 function _rhemaRankModernDefinitions(data, cleanWord) {
   const nicheTerms = [
     'long position', 'financial instrument', 'stock exchange', 'securities',
@@ -39458,27 +39529,43 @@ async function rhemaShowEnglishMeaning(word) {
   if (body) body.innerHTML = `<div class="rhema-meaning-section"><h4>Loading</h4><p>Checking the English meaning...</p></div>`;
   if (logBtn) logBtn.classList.toggle('hidden', !_studySandboxId);
   document.getElementById('rhemaEnglishMeaningModal')?.classList.add('open');
-  let modern = '';
+  // Names, places, and customs lead with the encyclopedic dictionary card —
+  // for a proper noun the modern-English dictionary is usually noise. The
+  // one-line Bible-context note only shows when there is no dictionary hit.
+  const dictEntry = _rhemaDictEntryForWord(clean);
+  const bible = _rhemaBibleContextForWord(clean);
+  const render = (modernDefs, pending) => {
+    if (!body) return;
+    let modernHtml;
+    if (modernDefs.length) {
+      modernHtml = `<ol class="rhema-def-list">${modernDefs.map(item => `<li><strong>${_escapeRhemaAttr(item.pos)}</strong><span>${_escapeRhemaAttr(item.definition)}</span>${item.example ? `<em>${_escapeRhemaAttr(item.example)}</em>` : ''}</li>`).join('')}</ol>`;
+    } else if (pending) {
+      modernHtml = `<p>Checking the English meaning...</p>`;
+    } else {
+      modernHtml = `<p>${_escapeRhemaAttr(`A readable English dictionary definition was not available offline for "${clean}". Use the verse itself and any Bible context note below as supporting context.`)}</p>`;
+    }
+    const contextHtml = dictEntry ? '' :
+      `<div class="rhema-meaning-section"><h4>Bible Context</h4><p>${_escapeRhemaAttr(bible || 'No built-in Bible context note for this word yet. Start with the modern definition, then read the immediate verse and paragraph for how the author is using it.')}</p></div>`;
+    body.innerHTML = `
+      ${_rhemaDictSectionHtml(dictEntry)}
+      <div class="rhema-meaning-section"><h4>Modern English</h4>${modernHtml}</div>
+      ${contextHtml}
+      <div class="rhema-meaning-section"><h4>In This Verse</h4><p>${_escapeRhemaAttr(_rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '')}</p></div>`;
+  };
+  // A dictionary hit renders instantly; the modern-English defs patch in when
+  // (and if) the online lookup answers.
+  if (dictEntry) render([], true);
   let modernDefs = [];
   try {
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(clean)}`);
     if (res.ok) {
       const data = await res.json();
       modernDefs = _rhemaRankModernDefinitions(data, clean);
-      modern = modernDefs[0]?.definition || '';
     }
   } catch {}
-  const bible = _rhemaBibleContextForWord(clean);
-  if (!modern) modern = `A readable English dictionary definition was not available offline for "${clean}". Use the verse itself and any Bible context note below as supporting context.`;
-  if (body) {
-    const modernHtml = modernDefs.length
-      ? `<ol class="rhema-def-list">${modernDefs.map(item => `<li><strong>${_escapeRhemaAttr(item.pos)}</strong><span>${_escapeRhemaAttr(item.definition)}</span>${item.example ? `<em>${_escapeRhemaAttr(item.example)}</em>` : ''}</li>`).join('')}</ol>`
-      : `<p>${_escapeRhemaAttr(modern)}</p>`;
-    body.innerHTML = `
-      <div class="rhema-meaning-section"><h4>Modern English</h4>${modernHtml}</div>
-      <div class="rhema-meaning-section"><h4>Bible Context</h4><p>${_escapeRhemaAttr(bible || 'No built-in Bible context note for this word yet. Start with the modern definition, then read the immediate verse and paragraph for how the author is using it.')}</p></div>
-      <div class="rhema-meaning-section"><h4>In This Verse</h4><p>${_escapeRhemaAttr(_rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '')}</p></div>`;
-  }
+  // Bail if the user has already looked up a different word meanwhile.
+  if (_rhemaCurrentEnglishMeaningWord !== clean) return;
+  render(modernDefs, false);
 }
 function closeRhemaEnglishMeaning(e) {
   if (e && e.target !== document.getElementById('rhemaEnglishMeaningModal')) return;
@@ -40005,14 +40092,14 @@ function loadRhemaScripts() {
     _rhemaLoading = true;
     loadDeepLexiconSpine();
     let loaded = 0;
-    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-critical-fallbacks.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-hebrew-bdb.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js'];
+    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-critical-fallbacks.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-hebrew-bdb.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js', 'rhema-bible-dictionary.js'];
     let failed = false;
     for (const file of files) {
       const s = document.createElement('script');
       s.src = file + '?v=' + (RHEMA_DATA_VERSIONS[file] || APP_VERSION);
       s.onload = () => {
         loaded++;
-        if (loaded === files.length) { _syncRhemaEnglishAlias(); _ensureRhemaBibleData(); _rhemaLoaded = true; resolve(); }
+        if (loaded === files.length) { _syncRhemaEnglishAlias(); _ensureRhemaBibleData(); _rhemaMergeDictionaryPhrases(); _rhemaLoaded = true; resolve(); }
       };
       s.onerror = () => {
         if (!failed) { failed = true; reject(new Error('Failed to load ' + file)); }

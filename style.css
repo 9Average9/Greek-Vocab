@@ -33508,6 +33508,73 @@ body.sandbox-open #rhemaSelectionBar:active {
 }
 .rhema-meaning-section p { margin: 0; line-height: 1.5; }
 .rhema-meaning-section ul { margin: 6px 0 0 18px; padding: 0; line-height: 1.45; }
+/* ── Bible Dictionary card (names, places, customs) ── */
+.rhema-word-chip-dict {
+  border-color: color-mix(in srgb, var(--secondary-color, #243447) 45%, transparent);
+  background: color-mix(in srgb, var(--secondary-color, #243447) 10%, transparent);
+  font-weight: 700;
+}
+.rhema-dict-section {
+  border-color: color-mix(in srgb, var(--secondary-color, #243447) 30%, transparent);
+  background: color-mix(in srgb, var(--secondary-color, #243447) 7%, transparent);
+}
+.rhema-dict-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.rhema-dict-title { font-size: 1.05rem; }
+.rhema-dict-kind {
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--secondary-color, #243447) 16%, transparent);
+  color: var(--secondary-color, #243447);
+}
+.rhema-dict-era {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted-color, #8a8a8a);
+  margin-bottom: 6px;
+}
+.rhema-dict-era .material-symbols-outlined { font-size: 0.95rem; }
+.rhema-dict-summary { font-weight: 700; margin-bottom: 6px !important; }
+.rhema-dict-refs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.rhema-dict-refs-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-color, #8a8a8a);
+}
+.rhema-dict-ref {
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #243447) 35%, transparent);
+  background: color-mix(in srgb, var(--secondary-color, #243447) 10%, transparent);
+  color: var(--secondary-color, #243447);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s;
+}
+.rhema-dict-ref:active { transform: scale(0.95); }
+
 .rhema-def-list {
   margin: 0;
   padding-left: 20px;
