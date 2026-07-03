@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.383";
+const APP_VERSION = "3.0.384";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29586,6 +29586,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.384 &mdash; Clause Compass audit fixes</div>
+<ul>
+  <li><strong>Boundary bug fixed</strong> &mdash; Clause Compass now correctly catches markers at the very start of a verse or sentence, like Therefore, But, If, Ask, Seek, and Trust.</li>
+  <li><strong>Coordinated commands improved</strong> &mdash; Phrases like "Repent and believe," "go and make," and "Have salt and be at peace" now mark the joined command verbs instead of only the first one.</li>
+  <li><strong>Condition markers sharpened</strong> &mdash; If, when, and unless now check for a real following clause, including quoted/opening-clause cases such as "Now if..." and "but if...".</li>
+</ul>
 <div class="un-version-label">v3.0.383 &mdash; Smarter Clause Compass</div>
 <ul>
   <li><strong>Clause Compass got sharper</strong> &mdash; English flow markers now check clause position and nearby verb evidence before highlighting context-sensitive words like for, since, when, but, yet, and though.</li>
@@ -36936,7 +36942,7 @@ const RHEMA_FLOW_CATS = {
 const RHEMA_FLOW_PHRASES = {
   COMMAND: ['do not let', 'do not be', 'do not', 'let us', 'let him', 'let her', 'let them', 'let it', 'see to it', 'take heed'],
   REASON: ['because of', 'on account of', 'because', 'for this reason', 'for', 'since'],
-  CONCLUSION: ['therefore', 'so then', 'thus', 'consequently', 'accordingly'],
+  CONCLUSION: ['therefore', 'so then', 'finally', 'thus', 'consequently', 'accordingly'],
   CONTRAST: ['nevertheless', 'nonetheless', 'instead', 'rather than', 'rather', 'although', 'though', 'however', 'but', 'yet'],
   PURPOSE: ['so that', 'in order that', 'in order to', 'so as to'],
   CONDITION: ['if', 'unless', 'whether', 'whenever', 'when', 'whoever', 'whatever', 'wherever'],
@@ -36945,13 +36951,14 @@ const RHEMA_FLOW_PHRASES = {
 
 const RHEMA_FLOW_COMMON_VERBS = new Set([
   'abide', 'ask', 'be', 'bear', 'believe', 'bless', 'bring', 'build', 'call', 'come',
-  'confess', 'consider', 'continue', 'deny', 'depart', 'do', 'draw', 'eat', 'enter',
+  'confess', 'consider', 'continue', 'deny', 'depart', 'do', 'draw', 'eat', 'encounter', 'enter',
   'fear', 'flee', 'follow', 'forgive', 'give', 'go', 'hear', 'hold', 'honor', 'keep',
   'know', 'let', 'listen', 'live', 'look', 'love', 'make', 'pray', 'put', 'receive',
-  'rejoice', 'remember', 'repent', 'resist', 'seek', 'serve', 'speak', 'stand',
-  'submit', 'take', 'tell', 'walk', 'watch', 'worship'
+  'knock', 'lean', 'lose', 'prepare', 'present', 'rejoice', 'remain', 'remember', 'repent',
+  'resist', 'seek', 'serve', 'set', 'speak', 'stand', 'submit', 'take', 'tell',
+  'trust', 'walk', 'watch', 'worship'
 ]);
-const RHEMA_FLOW_AUXILIARY_NOT_COMMAND = new Set(['am', 'are', 'is', 'was', 'were', 'been', 'being', 'has', 'have', 'had', 'will', 'would', 'shall', 'should', 'may', 'might', 'can', 'could', 'must']);
+const RHEMA_FLOW_AUXILIARY_NOT_COMMAND = new Set(['am', 'are', 'is', 'was', 'were', 'been', 'being', 'has', 'had', 'will', 'would', 'shall', 'should', 'may', 'might', 'can', 'could', 'must']);
 const RHEMA_FLOW_INITIAL_FILLERS = new Set(['and', 'but', 'so', 'then', 'now', 'therefore', 'thus', 'indeed', 'behold']);
 
 function _rhemaEnglishHighlightActive() {
@@ -37076,9 +37083,9 @@ function _rhemaEscapeRegex(text) {
 }
 
 function _rhemaPrevNonSpaceIndex(text, start) {
-  for (let i = Math.max(0, start - 1); i >= 0; i--) {
+  for (let i = start - 1; i >= 0; i--) {
     const ch = text[i];
-    if (!/\s/.test(ch) && !`"'()[]`.includes(ch)) return i;
+    if (!/\s/.test(ch) && !`"'“”‘’()[]`.includes(ch)) return i;
   }
   return -1;
 }
@@ -37086,7 +37093,7 @@ function _rhemaPrevNonSpaceIndex(text, start) {
 function _rhemaNextNonSpaceIndex(text, start) {
   for (let i = Math.max(0, start); i < text.length; i++) {
     const ch = text[i];
-    if (!/\s/.test(ch) && !`"'()[]`.includes(ch)) return i;
+    if (!/\s/.test(ch) && !`"'“”‘’()[]`.includes(ch)) return i;
   }
   return -1;
 }
@@ -37111,8 +37118,18 @@ function _rhemaTokenLooksVerbal(token) {
   return RHEMA_FLOW_COMMON_VERBS.has(value);
 }
 
+function _rhemaTokenLooksClauseVerb(token) {
+  const value = String(token?.value || '').toLowerCase();
+  if (!value) return false;
+  if (['VERB', 'AUX'].includes(token?.pos)) return true;
+  if (RHEMA_FLOW_COMMON_VERBS.has(value)) return true;
+  if (['am', 'are', 'is', 'was', 'were', 'be', 'been', 'being', 'has', 'have', 'had', 'will', 'would', 'shall', 'should', 'may', 'might', 'can', 'could', 'must'].includes(value)) return true;
+  if (['encounter', 'lacks', 'loved', 'gave', 'killed', 'conceived', 'knows', 'loses', 'remains', 'saw', 'heard', 'said'].includes(value)) return true;
+  return /^[a-z]{4,}(ed|ing)$/.test(value);
+}
+
 function _rhemaHasClauseVerbAfter(tokens, start, count = 8) {
-  return _rhemaTokensAfter(tokens, start, count).some((token) => _rhemaTokenLooksVerbal(token));
+  return _rhemaTokensAfter(tokens, start, count).some((token) => _rhemaTokenLooksClauseVerb(token));
 }
 
 function _rhemaNextWordLower(text, index) {
@@ -37145,7 +37162,6 @@ function _rhemaShouldKeepFlowPhrase(cat, phrase, text, start, end, tokens) {
     return boundary > 0;
   }
   if (cat === 'CONDITION') {
-    if (!boundary) return false;
     return _rhemaHasClauseVerbAfter(tokens, end) || ['whoever', 'whatever', 'wherever'].includes(p);
   }
   if (cat === 'EMPHASIS') {
@@ -37203,7 +37219,24 @@ function _rhemaAddFlowCommandSpans(text, spans, tokens) {
       cat: 'COMMAND',
       source: text.slice(candidate.start, candidate.end)
     });
-    i = Math.max(i, candidate.nextIndex - 1);
+    let nextIndex = candidate.nextIndex;
+    while (nextIndex < tokens.length) {
+      const joiner = String(tokens[nextIndex]?.value || '').toLowerCase();
+      const nextToken = tokens[nextIndex + 1];
+      const nextValue = String(nextToken?.value || '').toLowerCase();
+      if (joiner !== 'and' || !_rhemaTokenLooksVerbal(nextToken) || !RHEMA_FLOW_COMMON_VERBS.has(nextValue)) break;
+      spans.push({
+        start: nextToken.start,
+        end: nextToken.end,
+        nextIndex: nextIndex + 2,
+        cat: 'COMMAND',
+        confidence: candidate.confidence,
+        note: 'Coordinated English command',
+        source: text.slice(nextToken.start, nextToken.end)
+      });
+      nextIndex += 2;
+    }
+    i = Math.max(i, nextIndex - 1);
   }
 }
 
@@ -37309,6 +37342,19 @@ function _rhemaAddFlowGrammarSpans(text, book, chapter, verse, spans) {
         span.note = hasGreekPurposeMarker ? 'Greek purpose marker present in this verse' : 'Greek subjunctive supports purpose/result grammar';
       }
     });
+    if (hasGreekPurposeMarker && !spans.some((span) => span.cat === 'PURPOSE')) {
+      const match = String(text || '').match(/\bthat\s+(?:you|he|she|they|we|everyone|whoever|all|those)\b/i);
+      if (match) {
+        spans.push({
+          start: match.index,
+          end: match.index + 4,
+          cat: 'PURPOSE',
+          confidence: 'high',
+          note: 'Greek purpose marker present in this verse',
+          source: text.slice(match.index, match.index + 4)
+        });
+      }
+    }
   }
 }
 
