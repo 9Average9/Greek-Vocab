@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.387";
+const APP_VERSION = "3.0.388";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29587,6 +29587,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.388 &mdash; Country, province &amp; county outlines on the maps</div>
+<ul>
+  <li><strong>See location and size at a glance</strong> &mdash; The Bible Journeys map now draws administrative borders in three clear tiers: <strong>countries</strong>, <strong>provinces/regions</strong> (terracotta), and <strong>counties</strong> (teal), each with its own color and weight so you can gauge how far apart places are and how big a region is.</li>
+  <li><strong>On both map views</strong> &mdash; The Modern map shows them in full; the Bible (ancient) map shows the same borders faintly, as a scale reference, with a small note that they&rsquo;re modern lines &mdash; not biblical-era boundaries.</li>
+</ul>
 <div class="un-version-label">v3.0.387 &mdash; The interlinear gloss leads with the measured sense</div>
 <ul>
   <li><strong>See the real meaning at a glance</strong> &mdash; The small English gloss under each Greek word now leads with the word&rsquo;s dominant measured sense straight away, without tapping. <em>&#7936;&#961;&#967;&#942;</em> (archḗ) reads <strong>&ldquo;beginning&rdquo;</strong> in the grid instead of the lexicon&rsquo;s first-listed &ldquo;ruler,&rdquo; so you catch the sense while reading and only tap when you want the deeper, verse-specific breakdown.</li>

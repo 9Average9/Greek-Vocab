@@ -17,7 +17,7 @@
 (function () {
   'use strict';
 
-  var STYLE_URL = 'assets/maplibre/pm-style-layers.json?v=2';
+  var STYLE_URL = 'assets/maplibre/pm-style-layers.json?v=3';
   var TERRAIN_SOURCE_ID = 'journey-terrain-dem';
   var HILLSHADE_SOURCE_ID = 'journey-terrain-hillshade-dem';
   var HILLSHADE_LAYER_ID = 'journey-terrain-hillshade';
@@ -42,6 +42,7 @@
     compassRose: null,
     homeCamera: null,
     resetBtn: null,
+    bordersNote: null,
     userMoved: false
   };
 
@@ -167,6 +168,27 @@
     if (state.resetBtn) state.resetBtn.classList.toggle('visible', !!show);
   }
 
+  // Small caption clarifying that the faint administrative borders on the
+  // ancient map are modern (shown for scale, not period-accurate). Only shown in
+  // ancient mode — on the modern map the borders are simply the current ones.
+  function _syncBordersNote(container) {
+    if (!container) return;
+    var old = container.querySelector('.bible-map-borders-note');
+    if (old) old.remove();
+    var el = document.createElement('div');
+    el.className = 'bible-map-borders-note';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = '<span class="material-symbols-outlined">public</span>' +
+      '<span>Faint borders are modern countries, provinces &amp; counties &mdash; shown for scale, not biblical-era lines</span>';
+    el.classList.toggle('visible', state.mode === 'ancient');
+    container.appendChild(el);
+    state.bordersNote = el;
+  }
+
+  function _updateBordersNote() {
+    if (state.bordersNote) state.bordersNote.classList.toggle('visible', state.mode === 'ancient');
+  }
+
   function _resetCamera() {
     if (!state.map || !state.homeCamera) return;
     state.userMoved = false;
@@ -257,7 +279,13 @@
       if (mode === 'ancient') {
         if (l['source-layer'] === 'boundaries') {
           l.paint = l.paint || {};
-          l.paint['line-opacity'] = 0.12;
+          // Faint reference on the parchment map: enough to read modern
+          // countries, provinces & counties for location/scale, without
+          // asserting them as biblical-era borders. Countries lead; the
+          // finer tiers stay lighter so they don't clutter the ancient look.
+          l.paint['line-opacity'] =
+            l.id === 'boundaries_country' ? 0.40 :
+            l.id === 'boundaries_region' ? 0.34 : 0.24;
         }
         if (l['source-layer'] === 'roads' && l.type === 'line') {
           l.paint = l.paint || {};
@@ -726,6 +754,7 @@
             if (state.terrain.enabled && !_supportsTerrain(map)) state.terrain.enabled = false;
             _syncCompass(container);
             _syncResetButton(container);
+            _syncBordersNote(container);
             state.userMoved = false;
             _showReset(false);
             _restoreMapEnhancements(false);
@@ -754,6 +783,7 @@
     if (!state.map || next === state.mode) { state.mode = next; return; }
     state.mode = next;
     stop();
+    _updateBordersNote();
     state.map.setStyle(_buildStyle(next, state.opts.pmtilesUrl, state.terrain));
     state.map.once('styledata', function () {
       _restoreMapEnhancements(false);
@@ -855,6 +885,7 @@
     _clearMarkers();
     state.compassRose = null;
     state.resetBtn = null;
+    state.bordersNote = null;
     state.homeCamera = null;
     state.userMoved = false;
     if (state.map) { try { state.map.remove(); } catch (e) {} state.map = null; }
