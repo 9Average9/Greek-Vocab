@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.386";
+const APP_VERSION = "3.0.387";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29587,6 +29587,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.387 &mdash; The interlinear gloss leads with the measured sense</div>
+<ul>
+  <li><strong>See the real meaning at a glance</strong> &mdash; The small English gloss under each Greek word now leads with the word&rsquo;s dominant measured sense straight away, without tapping. <em>&#7936;&#961;&#967;&#942;</em> (archḗ) reads <strong>&ldquo;beginning&rdquo;</strong> in the grid instead of the lexicon&rsquo;s first-listed &ldquo;ruler,&rdquo; so you catch the sense while reading and only tap when you want the deeper, verse-specific breakdown.</li>
+  <li><strong>Refines when you tap</strong> &mdash; Opening a word still loads its full range of meaning and the sense measured for that exact verse, so the quick grid gloss and the deeper study stay in step.</li>
+</ul>
 <div class="un-version-label">v3.0.386 &mdash; Quick definition matches the meaning in your verse</div>
 <ul>
   <li><strong>The quick gloss now leads with the sense you&rsquo;re reading</strong> &mdash; Some lexicon entries list a rare sense first: <em>&#7936;&#961;&#967;&#942;</em> (archḗ) reads &ldquo;ruler, beginning,&rdquo; even though &ldquo;beginning&rdquo; is ~70% of its New Testament uses. Rhema now measures the sense for the actual verse and promotes it, so in <em>1 John 1:1</em> the Quick Definition and the &ldquo;Here:&rdquo; line both say <strong>&ldquo;beginning&rdquo;</strong> &mdash; matching the prose instead of contradicting it.</li>
@@ -41050,7 +41055,11 @@ function _rhemaMeaningDecision(word = [], {
 
   // Verb headline reads from the modern deep sense ("lacks") when available,
   // not the archaic lexicon brief ("is wanting"); see _rhemaBaseInterlinearGloss.
-  const inflectedGloss = _rhemaBaseInterlinearGloss(morph, lex, deep, strongs);
+  // Before the full shard loads, fall back to the spine's dominant measured sense
+  // so the verse grid still leads with "beginning", not the brief's "ruler"; the
+  // hint only reorders the brief, never replaces the rest of the decision.
+  const glossHint = deep || _rhemaSpineAlignHint(strongs);
+  const inflectedGloss = _rhemaBaseInterlinearGloss(morph, lex, glossHint, strongs);
 
   const expectedMeaning = _deepExpectedMeaningWords(loadedEntry, lex);
   const formFirst = pos === 'V' || pos === 'N' || pos === 'P' || pos === 'F' || pos === 'T' ||
@@ -44870,6 +44879,20 @@ function loadDeepLexiconEntry(strongs) {
     });
   }
   return _deepLexiconShards.get(lo).then(shard => (shard && shard[num]) || null);
+}
+
+// The spine stores [lemma, top measured gloss, count, confidence] per Strong's
+// number. The top gloss is the word's dominant NT sense (measured across every
+// occurrence), so it's what the verse grid should lead with before the heavier
+// per-word shard loads — e.g. ἀρχή → "beginning", not the brief's lead "ruler".
+// Returned as an alignment hint (same shape the deep summary uses) so it only
+// promotes a matching lexicon-brief segment; it never becomes the gloss on its
+// own. Once the full shard loads, the verse-specific sense supersedes it.
+function _rhemaSpineAlignHint(strongs) {
+  const num = parseInt(strongs, 10);
+  const row = num && window.RhemaSpine && window.RhemaSpine[num];
+  const gloss = Array.isArray(row) ? row[1] : '';
+  return gloss ? { short: gloss, raw: gloss, text: gloss } : null;
 }
 
 // Tiny spine (lemma + top measured gloss per word) — fetched once alongside
