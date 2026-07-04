@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const b = require('@protomaps/basemaps');
+const { refineBoundaries } = require('./refine-boundaries');
 
 const SOURCE = 'protomaps';
 const lightFlavor = b.namedFlavor('light');
@@ -36,8 +37,8 @@ const opts = { lang: 'en' };
 const out = {
   schema: 'protomaps v5 (' + require('@protomaps/basemaps/package.json').version + ')',
   source: SOURCE,
-  modern: nonSymbol(b.layers(SOURCE, lightFlavor, opts)),
-  ancient: nonSymbol(b.layers(SOURCE, parchmentFlavor, opts))
+  modern: refineBoundaries(nonSymbol(b.layers(SOURCE, lightFlavor, opts)), 'modern'),
+  ancient: refineBoundaries(nonSymbol(b.layers(SOURCE, parchmentFlavor, opts)), 'ancient')
 };
 
 const dest = path.join(__dirname, '..', 'assets', 'maplibre', 'pm-style-layers.json');

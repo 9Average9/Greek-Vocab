@@ -32441,6 +32441,37 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
 }
 .bible-map-reset .material-symbols-outlined { font-size: 18px; }
 .bible-map-reset:active { transform: scale(0.95); }
+.bible-map-borders-note {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: auto;
+  z-index: 6;
+  max-width: min(64%, 320px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 8px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 24%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card-color) 88%, transparent);
+  color: var(--secondary-color);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
+  box-shadow: 0 4px 12px rgba(20, 28, 34, 0.16);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.bible-map-borders-note.visible { opacity: 0.9; transform: none; }
+.bible-map-borders-note .material-symbols-outlined { font-size: 15px; flex: 0 0 auto; }
+@media (max-width: 480px) {
+  .bible-map-borders-note { font-size: 0.62rem; max-width: 72%; }
+}
 .bible-map-attribution {
   position: absolute;
   left: 8px;
