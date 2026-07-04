@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.388";
+const APP_VERSION = "3.0.389";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29587,6 +29587,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.389 &mdash; A living Bible-lands map: seas, rivers, mountains &amp; terrain</div>
+<ul>
+  <li><strong>The land itself, named</strong> &mdash; The Journeys map now labels the great geography of Scripture &mdash; the Jordan, the Great Sea (Mediterranean), the Salt Sea (Dead Sea), the Sea of Galilee, the Nile, Euphrates &amp; Tigris, Mounts Sinai, Hermon, Carmel, Tabor &amp; Nebo, and the wildernesses of Sinai, Judea, Paran &amp; the Negev.</li>
+  <li><strong>Then &amp; now</strong> &mdash; Each label shows its biblical name and its modern name, so you learn where a place is <em>and</em> what it&rsquo;s called today. The Bible map leads with the biblical name; the Modern map leads with today&rsquo;s.</li>
+  <li><strong>You can feel the terrain</strong> &mdash; Deserts now read as warm sand, farmland and forest as green, so the wilderness looks like wilderness &mdash; without cluttering the view (labels fade in and out with zoom, so only a handful ever share the screen).</li>
+</ul>
 <div class="un-version-label">v3.0.388 &mdash; Country, province &amp; county outlines on the maps</div>
 <ul>
   <li><strong>See location and size at a glance</strong> &mdash; The Bible Journeys map now draws administrative borders in three clear tiers: <strong>countries</strong>, <strong>provinces/regions</strong> (terracotta), and <strong>counties</strong> (teal), each with its own color and weight so you can gauge how far apart places are and how big a region is.</li>

@@ -17,7 +17,7 @@
 (function () {
   'use strict';
 
-  var STYLE_URL = 'assets/maplibre/pm-style-layers.json?v=3';
+  var STYLE_URL = 'assets/maplibre/pm-style-layers.json?v=4';
   var TERRAIN_SOURCE_ID = 'journey-terrain-dem';
   var HILLSHADE_SOURCE_ID = 'journey-terrain-hillshade-dem';
   var HILLSHADE_LAYER_ID = 'journey-terrain-hillshade';
@@ -43,8 +43,55 @@
     homeCamera: null,
     resetBtn: null,
     bordersNote: null,
+    geoMarkers: [],
     userMoved: false
   };
+
+  // Curated physical geography of the Bible world — seas, rivers, lakes,
+  // mountains, deserts and regions the tiles can't label for us (we ship no
+  // glyph fonts, and the raw OSM labels are modern-only and far too dense).
+  // Each carries its biblical name and its modern name so the map teaches
+  // location AND the "then vs now" at a glance. Shown as font-free HTML markers,
+  // gated by zoom [z0, z1] so only a handful ever share the screen.
+  //   a = ancient / biblical name · m = modern name · k = kind
+  //   lon, lat = label anchor · z0/z1 = zoom range it appears in
+  var GEO_FEATURES = [
+    // Seas & gulfs
+    { a: 'The Great Sea', m: 'Mediterranean Sea', k: 'sea', lon: 34.2, lat: 33.7, z0: 4, z1: 8.2 },
+    { a: 'The Red Sea', m: 'Red Sea', k: 'sea', lon: 37.6, lat: 24.8, z0: 4, z1: 7.6 },
+    { a: 'The Salt Sea', m: 'Dead Sea', k: 'lake', lon: 35.5, lat: 31.5, z0: 5.5, z1: 12 },
+    { a: 'Sea of Galilee', m: 'Lake Kinneret', k: 'lake', lon: 35.59, lat: 32.82, z0: 6.5, z1: 12 },
+    { a: 'Gulf of Aqaba', m: 'Gulf of Aqaba', k: 'sea', lon: 34.75, lat: 28.8, z0: 6.5, z1: 11 },
+    { a: 'Gulf of Suez', m: 'Gulf of Suez', k: 'sea', lon: 33.05, lat: 29.0, z0: 6.5, z1: 11 },
+    // Rivers
+    { a: 'The Jordan', m: 'Jordan River', k: 'river', lon: 35.57, lat: 32.28, z0: 6.5, z1: 12 },
+    { a: 'The Nile', m: 'Nile River', k: 'river', lon: 31.0, lat: 29.6, z0: 5, z1: 10 },
+    { a: 'The Euphrates', m: 'Euphrates River', k: 'river', lon: 40.3, lat: 34.6, z0: 5, z1: 9.5 },
+    { a: 'The Tigris', m: 'Tigris River', k: 'river', lon: 43.6, lat: 34.7, z0: 5.5, z1: 9.5 },
+    { a: 'The Jabbok', m: 'Zarqa River', k: 'river', lon: 35.62, lat: 32.06, z0: 8, z1: 12 },
+    { a: 'The Arnon', m: 'Wadi Mujib', k: 'river', lon: 35.6, lat: 31.46, z0: 8, z1: 12 },
+    { a: 'The Kishon', m: 'Kishon River', k: 'river', lon: 35.06, lat: 32.72, z0: 8.5, z1: 12 },
+    // Mountains
+    { a: 'Mount Sinai (Horeb)', m: 'Jebel Musa', k: 'mountain', lon: 33.97, lat: 28.54, z0: 6.5, z1: 12 },
+    { a: 'Mount Hermon', m: 'Jabal al-Shaykh', k: 'mountain', lon: 35.86, lat: 33.42, z0: 6.5, z1: 12 },
+    { a: 'Mount Carmel', m: 'Mount Carmel', k: 'mountain', lon: 35.03, lat: 32.73, z0: 7.5, z1: 12.5 },
+    { a: 'Mount Tabor', m: 'Har Tavor', k: 'mountain', lon: 35.39, lat: 32.69, z0: 8, z1: 12.5 },
+    { a: 'Mount Nebo', m: 'Jabal Nibu', k: 'mountain', lon: 35.73, lat: 31.77, z0: 8, z1: 12.5 },
+    { a: 'Mount Gerizim', m: 'Jabal Jarizim', k: 'mountain', lon: 35.27, lat: 32.2, z0: 8.5, z1: 12.5 },
+    { a: 'Mount Gilboa', m: 'Mount Gilboa', k: 'mountain', lon: 35.42, lat: 32.48, z0: 8.5, z1: 12.5 },
+    { a: 'Mount of Olives', m: 'Mount of Olives', k: 'mountain', lon: 35.24, lat: 31.78, z0: 9.5, z1: 13 },
+    // Deserts & wilderness
+    { a: 'Wilderness of Sinai', m: 'Sinai Peninsula', k: 'desert', lon: 33.7, lat: 29.5, z0: 5, z1: 9 },
+    { a: 'The Negev', m: 'Negev Desert', k: 'desert', lon: 34.85, lat: 30.6, z0: 6, z1: 10 },
+    { a: 'Wilderness of Judea', m: 'Judean Desert', k: 'desert', lon: 35.35, lat: 31.62, z0: 7, z1: 11 },
+    { a: 'Wilderness of Paran', m: 'Desert of Paran', k: 'desert', lon: 34.4, lat: 30.2, z0: 6, z1: 10 },
+    { a: 'Wilderness of Zin', m: 'Wilderness of Zin', k: 'desert', lon: 35.0, lat: 30.7, z0: 7.5, z1: 11 },
+    // Regions (faint background context)
+    { a: 'Galilee', m: 'Galilee', k: 'region', lon: 35.4, lat: 32.95, z0: 7, z1: 11 },
+    { a: 'Samaria', m: 'Samaria', k: 'region', lon: 35.25, lat: 32.28, z0: 7.5, z1: 11 },
+    { a: 'Judea', m: 'Judea', k: 'region', lon: 35.05, lat: 31.6, z0: 7.5, z1: 11 },
+    { a: 'Decapolis', m: 'Decapolis', k: 'region', lon: 35.95, lat: 32.4, z0: 8, z1: 11 }
+  ];
 
   function supported() {
     if (typeof maplibregl === 'undefined' || typeof pmtiles === 'undefined') return false;
@@ -589,6 +636,7 @@
     if (!map) return;
     _addOverlays();
     _addMarkers();
+    _addGeoFeatures();
     _refreshMarkerText();
     if (applyCamera !== false) _applyJourneyCamera(map, state.coords, state.opts || {});
     try { map.triggerRepaint(); } catch (e) {}
@@ -599,6 +647,7 @@
     state.markers = [];
     state.landmarkMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.landmarkMarkers = [];
+    _clearGeoFeatures();
   }
 
   function _clearMarkerProximity() {
@@ -656,6 +705,49 @@
         .setLngLat([p.lon, p.lat]).addTo(map);
       state.landmarkMarkers.push(marker);
     });
+  }
+
+  // Two-line label: leads with the name that matches the current map (biblical
+  // on the ancient map, modern on the modern map) and tucks the other name
+  // underneath. Same-name features (Mount Carmel) show a single line.
+  function _geoNames(feat, mode) {
+    var primary = mode === 'modern' ? feat.m : feat.a;
+    var secondary = mode === 'modern' ? feat.a : feat.m;
+    return { primary: primary || secondary || '', secondary: secondary && secondary !== primary ? secondary : '' };
+  }
+
+  function _addGeoFeatures() {
+    _clearGeoFeatures();
+    var map = state.map;
+    if (!map) return;
+    GEO_FEATURES.forEach(function (feat) {
+      var el = document.createElement('div');
+      el.className = 'bmgeo bmgeo-' + feat.k + (state.mode === 'ancient' ? ' bmgeo-ancient' : '');
+      var names = _geoNames(feat, state.mode);
+      el.innerHTML = '<span class="bmgeo-name">' + _escape(names.primary) + '</span>' +
+        (names.secondary ? '<span class="bmgeo-sub">' + _escape(names.secondary) + '</span>' : '');
+      var marker = new maplibregl.Marker({ element: el, anchor: 'center', offset: [0, 0] })
+        .setLngLat([feat.lon, feat.lat]).addTo(map);
+      marker._geo = feat;
+      state.geoMarkers.push(marker);
+    });
+    _updateGeoVisibility();
+  }
+
+  // Gate each label to its zoom window so only a handful ever share the screen.
+  function _updateGeoVisibility() {
+    if (!state.map || !state.geoMarkers.length) return;
+    var z = 0;
+    try { z = state.map.getZoom(); } catch (e) { return; }
+    state.geoMarkers.forEach(function (m) {
+      var f = m._geo;
+      m.getElement().classList.toggle('visible', z >= f.z0 && z <= f.z1);
+    });
+  }
+
+  function _clearGeoFeatures() {
+    state.geoMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
+    state.geoMarkers = [];
   }
 
   function _refreshMarkerText() {
@@ -740,6 +832,7 @@
         });
         map.on('rotate', _updateCompass);
         map.on('pitch', _updateCompass);
+        map.on('zoom', _updateGeoVisibility);
         // Surface the reset control once the user drags/zooms/rotates by hand
         // (programmatic camera moves have no originalEvent, so they don't count).
         map.on('movestart', function (e) {
@@ -886,6 +979,7 @@
     state.compassRose = null;
     state.resetBtn = null;
     state.bordersNote = null;
+    state.geoMarkers = [];
     state.homeCamera = null;
     state.userMoved = false;
     if (state.map) { try { state.map.remove(); } catch (e) {} state.map = null; }
