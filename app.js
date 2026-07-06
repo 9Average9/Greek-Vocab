@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.391";
+const APP_VERSION = "3.0.392";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29587,6 +29587,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.392 &mdash; Simpler verse comparison</div>
+<ul>
+  <li><strong>Compare, at a glance</strong> &mdash; Tapping <em>Compare</em> on a verse now pulls up NIV, NKJV and NASB in one clean read-across of that single verse &mdash; no setup, no juggling.</li>
+  <li><strong>Trimmed to the essentials</strong> &mdash; Building multi-verse comparison lists, reordering, saving comparisons, and &ldquo;add another verse&rdquo; have been removed so the tool does one thing well: show you the three translations side by side.</li>
+</ul>
 <div class="un-version-label">v3.0.391 &mdash; Rhema selection cleanup</div>
 <ul>
   <li><strong>Verse underlines clear cleanly</strong> &mdash; Canceling notes, closing word meanings, copying, saving, or leaving verse tools now deselects the verse so the reader never gets stuck with a stale selected underline.</li>
@@ -32239,9 +32244,8 @@ window.__onAuthStateReady = async (user) => {
     updateConnectEmailSettingsRow();
     maybeShowConnectEmailPrompt();
 
-    // Sync the user's Rhema highlights/notes + saved comparisons from the cloud.
+    // Sync the user's Rhema highlights/notes from the cloud.
     _rhemaStartMarksSync();
-    _rhemaStartTrailsSync();
 
     // Re-prompt for notifications when a returning user signs in on a new PWA install
     // where permission hasn't been granted yet (e.g. after reinstalling the app)
@@ -37792,15 +37796,6 @@ function rhemaOpenVerseMenu(v, ev) {
   const verse = String(v);
   _rhemaVerseFocus = false;
   _rhemaHighlightStrongs = null;
-  // When "Add another verse" (compare) is active, tapping a verse drops it
-  // straight into the comparison and reopens that list.
-  if (_rhemaCompareAdding) {
-    _rhemaCompareAdding = false;
-    _rhemaVerse = verse;
-    _rhemaAddCompareRef(_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, verse));
-    rhemaOpenCompare();
-    return;
-  }
   // Default: toggle selection and open the action sheet immediately.
   rhemaToggleVerseSelect(verse);
   if (_rhemaSel.size) rhemaOpenSelectionSheet();
@@ -38972,73 +38967,31 @@ function _rhemaParseRef(ref) {
   const m = String(ref).match(/^(.*) (\d+):(\d+)$/);
   return m ? { book: m[1], chapter: m[2], verse: m[3] } : null;
 }
-function _rhemaAddCompareRef(ref) {
-  _rhemaActivateCompareScope();
-  if (!ref) return;
-  _rhemaCompare.push({ ref, version: _rhemaEnglishVersion() });
-  _rhemaCommitCompareScope();
-  _rhemaSyncCompareChip();
-}
-function _rhemaLoadLocalTrails() {
-  try { _rhemaTrails = JSON.parse(localStorage.getItem('rhemaTrails') || '[]') || []; }
-  catch { _rhemaTrails = []; }
-}
-function _rhemaPersistLocalTrails() {
-  try { localStorage.setItem('rhemaTrails', JSON.stringify(_rhemaTrails)); } catch {}
-}
-function _rhemaStartTrailsSync() {
-  _rhemaLoadLocalTrails();
-  const uid = window.Auth?.getCurrentUser?.()?.uid;
-  _rhemaTrailsUnsub?.(); _rhemaTrailsUnsub = null;
-  if (!uid || !window.Auth?.listenRhemaTrails) return;
-  _rhemaTrailsUnsub = window.Auth.listenRhemaTrails(uid, (cloud) => {
-    const byId = {};
-    [..._rhemaTrails, ...cloud].forEach(t => { if (t && t.id) byId[t.id] = t; });
-    _rhemaTrails = Object.values(byId).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    _rhemaPersistLocalTrails();
-    if (document.getElementById('rhemaCompareOverlay')?.classList.contains('open')) _rhemaRenderCompare();
-  });
-}
-
 function rhemaAddToCompareFromMenu() {
-  const refs = _rhemaSel.size ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []);
-  refs.forEach(ref => _rhemaAddCompareRef(ref));
-  _rhemaCompareOpenedFromMenu = true;
+  const ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
   rhemaClearSelection();
   closeRhemaVerseSheet();
-  rhemaOpenCompare();
+  rhemaOpenCompare(ref);
 }
-function rhemaOpenCompare() {
-  _rhemaActivateCompareScope();
-  _rhemaCompareAdding = false;
-  _rhemaCompareTab = _rhemaCompare.length ? 'current' : 'saved';
+// Compare shows one verse in NIV, NKJV and NASB — a quick read-across, nothing to
+// save or rearrange. With no explicit reference (e.g. opened from the tool wheel)
+// it falls back to the current reader verse.
+function rhemaOpenCompare(ref) {
+  _rhemaCompareRef = ref || _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse);
   _rhemaRenderCompare();
   document.getElementById('rhemaCompareOverlay')?.classList.add('open');
 }
 function closeRhemaCompare(e) {
   if (e && e.target !== document.getElementById('rhemaCompareOverlay')) return;
   document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
-  if (_rhemaCompareOpenedFromMenu && !_rhemaCompareAdding && _rhemaCompare.length <= 1) {
-    _rhemaCompare = [];
-    _rhemaCommitCompareScope();
-  }
-  _rhemaCompareOpenedFromMenu = false;
-  _rhemaSyncCompareChip();
 }
-// "Add another verse": hop back to the reader; the next verse tapped is added
-// to the comparison and reopens this list automatically.
-function rhemaCompareAddAnother() {
-  _rhemaCompareOpenedFromMenu = false;
-  _rhemaCompareAdding = true;
-  document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
-  _rhemaSyncCompareChip(); // surface the shortcut chip only now, while picking
-  if (typeof _showStudyToast === 'function') _showStudyToast('Tap a verse to add it to the comparison');
-}
-// ── Compare: per-row translation (local MSB/BSB + api.bible NIV/NKJV/NASB) ──────
-// The api.bible versions are fetched one verse at a time, cached in memory +
-// localStorage (shared with the rest of the app), so each verse-version costs at
-// most one network call ever. Compare is the ONLY place that touches api.bible.
-const RHEMA_COMPARE_VERSIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
+// ── Compare: the tapped verse in NIV, NKJV and NASB ────────────────────────────
+// A read-across of the three licensed api.bible translations for one verse. They
+// are fetched one verse at a time and cached in memory + localStorage (shared
+// with the rest of the app), so each verse-version costs at most one network call
+// ever. Compare is the ONLY place that touches api.bible.
+const RHEMA_COMPARE_VERSIONS = ['NIV', 'NKJV', 'NASB'];
+let _rhemaCompareRef = null;   // the single verse reference currently compared
 
 function _rhemaCompareIsApiVersion(v) {
   return typeof VS_API_TRANSLATIONS !== 'undefined'
@@ -39097,207 +39050,43 @@ async function _rhemaCompareLoadAsync() {
   }));
 }
 
-let _rhemaComparePickIdx = -1;
-function rhemaCompareOpenVersionPick(idx) {
-  if (idx < 0 || !_rhemaCompare[idx]) return;
-  _rhemaComparePickIdx = idx;
-  const cur = _rhemaCompare[idx].version || 'MSB';
-  const limited = typeof _vsIsApiLimited === 'function' && _vsIsApiLimited();
-  let sheet = document.getElementById('rhemaCompareVerSheet');
-  if (!sheet) {
-    sheet = document.createElement('div');
-    sheet.id = 'rhemaCompareVerSheet';
-    sheet.className = 'rhema-cmp-ver-sheet';
-    sheet.addEventListener('click', (e) => { if (e.target === sheet) rhemaCompareCloseVersionPick(); });
-    document.body.appendChild(sheet);
-  }
-  sheet.innerHTML = `<div class="rhema-cmp-ver-card">
-    <div class="rhema-cmp-ver-title">Translation</div>
-    ${RHEMA_COMPARE_VERSIONS.map(v => {
-      const dis = _rhemaCompareIsApiVersion(v) && limited;
-      return `<button class="rhema-cmp-ver-opt${v === cur ? ' active' : ''}" ${dis ? 'disabled' : ''} onclick="rhemaComparePickVersion('${v}')">
-        <span>${v}</span>
-        ${dis ? '<small>limit reached</small>' : (v === cur ? '<span class="material-symbols-outlined">check</span>' : '')}
-      </button>`;
-    }).join('')}
-  </div>`;
-  requestAnimationFrame(() => sheet.classList.add('open'));
-}
-function rhemaCompareCloseVersionPick() {
-  document.getElementById('rhemaCompareVerSheet')?.classList.remove('open');
-}
-function rhemaComparePickVersion(v) {
-  const idx = _rhemaComparePickIdx;
-  if (idx < 0 || !_rhemaCompare[idx]) { rhemaCompareCloseVersionPick(); return; }
-  _rhemaCompare[idx].version = v;
-  _rhemaCommitCompareScope();
-  rhemaCompareCloseVersionPick();
-  _rhemaRenderCompare();
-}
-function rhemaCompareMove(idx, dir) {
-  const j = idx + dir;
-  if (j < 0 || j >= _rhemaCompare.length) return;
-  const tmp = _rhemaCompare[idx]; _rhemaCompare[idx] = _rhemaCompare[j]; _rhemaCompare[j] = tmp;
-  _rhemaCommitCompareScope();
-  _rhemaRenderCompare();
-}
-function rhemaCompareRemove(idx) {
-  _rhemaCompare.splice(idx, 1);
-  _rhemaCommitCompareScope();
-  _rhemaRenderCompare();
-  _rhemaSyncCompareChip();
-}
-function rhemaCompareClear() {
-  _rhemaCompare = [];
-  _rhemaCommitCompareScope();
-  _rhemaRenderCompare();
-  _rhemaSyncCompareChip();
-}
-function rhemaSetCompareTab(tab) {
-  _rhemaCompareTab = tab === 'saved' ? 'saved' : 'current';
-  _rhemaRenderCompare();
-}
 function _rhemaRenderCompare() {
-  document.getElementById('rhemaCompareTabCurrent')?.classList.toggle('active', _rhemaCompareTab !== 'saved');
-  document.getElementById('rhemaCompareTabSaved')?.classList.toggle('active', _rhemaCompareTab === 'saved');
   const list = document.getElementById('rhemaCompareList');
-  if (list) {
-    list.style.display = _rhemaCompareTab === 'saved' ? 'none' : '';
-    if (!_rhemaCompare.length) {
-      list.innerHTML = `<div class="rhema-compare-empty">No verses yet. Tap a verse in the reader and choose <strong>Compare</strong> to add it here.</div>`;
+  const refLabel = document.getElementById('rhemaCompareRefLabel');
+  const ref = _rhemaCompareRef;
+  const p = ref ? _rhemaParseRef(ref) : null;
+  if (refLabel) refLabel.textContent = p ? (_rhemaDisplayRefFromKey(ref) || ref) : '';
+  if (!list) return;
+  if (!p) {
+    list.innerHTML = `<div class="rhema-compare-empty">Tap a verse in the reader and choose <strong>Compare</strong> to see it in NIV, NKJV and NASB.</div>`;
+    return;
+  }
+  const limited = typeof _vsIsApiLimited === 'function' && _vsIsApiLimited();
+  list.innerHTML = RHEMA_COMPARE_VERSIONS.map(ver => {
+    const cached = _rhemaCompareApiCached(ver, p);
+    let bodyClass = 'rhema-compare-text', bodyText;
+    if (cached != null) {
+      bodyText = _escapeRhemaAttr(cached);
+    } else if (limited) {
+      // Over quota / offline: show a local version so the row still reads,
+      // with a quiet note that the licensed translation is unavailable.
+      const fallback = _rhemaEnglishText(p.book, p.chapter, p.verse, 'MSB') || '';
+      bodyClass += ' rhema-compare-fallback';
+      bodyText = fallback
+        ? `${_escapeRhemaAttr(fallback)}  (showing MSB — ${ver} unavailable right now)`
+        : `${ver} unavailable right now.`;
     } else {
-      list.innerHTML = _rhemaCompare.map((item, i) => {
-        const ref = item.ref;
-        const p = _rhemaParseRef(ref);
-        const ver = item.version || 'MSB';
-        const isApi = _rhemaCompareIsApiVersion(ver);
-        let text = '', pending = false;
-        if (p) {
-          if (isApi) {
-            const cached = _rhemaCompareApiCached(ver, p);
-            if (cached != null) text = cached;
-            else pending = true;
-          } else {
-            text = _rhemaEnglishText(p.book, p.chapter, p.verse, ver) || '';
-          }
-        }
-        const bodyClass = pending ? 'rhema-compare-text rhema-compare-loading' : 'rhema-compare-text';
-        const bodyText = pending ? `Loading ${_escapeRhemaAttr(ver)}…` : _escapeRhemaAttr(text);
-        return `<div class="rhema-compare-item">
-          <div class="rhema-compare-item-hd">
-            <span class="rhema-compare-ref">${_escapeRhemaAttr(_rhemaDisplayRefFromKey(ref) || ref)}</span>
-            <button class="rhema-compare-ver" onclick="rhemaCompareOpenVersionPick(${i})" title="Tap to change translation">${_escapeRhemaAttr(ver)}<span class="material-symbols-outlined">expand_more</span></button>
-            <span class="rhema-compare-ctrls">
-              <button onclick="rhemaCompareMove(${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="Move up"><span class="material-symbols-outlined">arrow_upward</span></button>
-              <button onclick="rhemaCompareMove(${i},1)" ${i === _rhemaCompare.length - 1 ? 'disabled' : ''} aria-label="Move down"><span class="material-symbols-outlined">arrow_downward</span></button>
-              <button onclick="rhemaCompareRemove(${i})" aria-label="Remove"><span class="material-symbols-outlined">close</span></button>
-            </span>
-          </div>
-          <div class="${bodyClass}" data-cmp-ref="${_escapeRhemaAttr(ref)}" data-cmp-ver="${_escapeRhemaAttr(ver)}">${bodyText}</div>
-        </div>`;
-      }).join('');
-      _rhemaCompareLoadAsync();
+      bodyClass += ' rhema-compare-loading';
+      bodyText = `Loading ${ver}…`;
     }
-  }
-  // Saved comparisons — only in the main (home) Rhema; in a study they live in
-  // the study's own Trails area.
-  const saved = document.getElementById('rhemaCompareSaved');
-  if (saved) {
-    saved.innerHTML = (!_studySandboxId && _rhemaTrails.length)
-      ? `<div class="rhema-vsheet-label">Saved comparisons</div>` + _rhemaTrails.map(t =>
-          `<div class="rhema-compare-saved-row">
-            <button class="rhema-compare-saved-open" onclick="rhemaLoadTrail('${_escapeRhemaAttr(t.id)}')">
-              <span class="material-symbols-outlined">route</span>
-              <span>${_escapeRhemaAttr(t.title || 'Untitled')} <small>(${((t.items || t.refs) || []).length})</small></span>
-            </button>
-            <button class="rhema-compare-saved-del" onclick="rhemaDeleteTrail('${_escapeRhemaAttr(t.id)}')" aria-label="Delete"><span class="material-symbols-outlined">delete</span></button>
-          </div>`).join('')
-      : '';
-  }
-  const saveBtn = document.getElementById('rhemaCompareSaveBtn');
-  if (saved) {
-    const scoped = _rhemaSavedComparisonsForScope();
-    saved.style.display = _rhemaCompareTab === 'saved' ? '' : 'none';
-    saved.innerHTML = scoped.length
-      ? `<div class="rhema-vsheet-label">Saved comparisons</div>` + scoped.map(t =>
-          `<div class="rhema-compare-saved-row">
-            <button class="rhema-compare-saved-open" onclick="rhemaLoadTrail('${_escapeRhemaAttr(t.id)}')">
-              <span class="material-symbols-outlined">compare_arrows</span>
-              <span>${_escapeRhemaAttr(t.title || 'Untitled')} <small>(${((t.items || t.refs) || []).length})</small></span>
-            </button>
-            <button class="rhema-compare-saved-del" onclick="rhemaDeleteTrail('${_escapeRhemaAttr(t.id)}')" aria-label="Delete"><span class="material-symbols-outlined">delete</span></button>
-          </div>`).join('')
-      : `<div class="rhema-compare-empty">No saved comparisons here yet.</div>`;
-  }
-  const actions = document.querySelector('.rhema-compare-actions');
-  if (actions) actions.style.display = _rhemaCompareTab === 'saved' ? 'none' : '';
-  if (saveBtn) saveBtn.disabled = _rhemaCompare.length < 1;
-}
-function rhemaLoadTrail(id) {
-  _rhemaActivateCompareScope();
-  const t = _rhemaTrails.find(x => x.id === id);
-  if (!t) return;
-  // Support both the new {items:[{ref,version}]} and legacy {refs:[ref]} shapes.
-  _rhemaCompare = (t.items && t.items.length)
-    ? t.items.map(x => ({ ref: x.ref, version: x.version || 'MSB' }))
-    : (t.refs || []).map(r => ({ ref: r, version: 'MSB' }));
-  _rhemaCompareTab = 'current';
-  _rhemaCommitCompareScope();
-  _rhemaRenderCompare();
-  _rhemaSyncCompareChip();
-}
-async function rhemaDeleteTrail(id) {
-  _rhemaTrails = _rhemaTrails.filter(t => t.id !== id);
-  _rhemaPersistLocalTrails();
-  _rhemaRenderCompare();
-  const uid = window.Auth?.getCurrentUser?.()?.uid;
-  if (uid) window.Auth.deleteRhemaTrail?.(uid, id).catch(() => {});
-}
-async function rhemaSaveCompareTrail() {
-  _rhemaActivateCompareScope();
-  if (!_rhemaCompare.length) return;
-  const first = _rhemaDisplayRefFromKey(_rhemaCompare[0].ref) || _rhemaCompare[0].ref;
-  const title = (prompt('Name this comparison:', `${first} comparison`) || '').trim();
-  if (!title) return;
-  const items = _rhemaCompare.map(c => ({ ref: c.ref, version: c.version }));
-  const uid = window.Auth?.getCurrentUser?.()?.uid;
-  const trail = { id: 'rt_' + Date.now().toString(36), title, items, scope: _rhemaCompareScope(), createdAt: Date.now() };
-  _rhemaTrails = [trail, ..._rhemaTrails];
-  _rhemaPersistLocalTrails();
-  if (uid) window.Auth.saveRhemaTrail?.(uid, trail).catch(() => {});
-  _rhemaCompareTab = 'saved';
-  _rhemaRenderCompare();
-  if (typeof _showStudyToast === 'function') _showStudyToast('Saved to Comparisons');
-  return;
-  if (_studySandboxId) {
-    // In a study, save into the study's own Trails area (reuse Studies.saveTrail).
-    const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
-    await window.Studies?.saveTrail?.(_studySandboxId, uid, displayName, {
-      title,
-      items,
-      breadcrumbTrail: items.map(i => _rhemaDisplayRefFromKey(i.ref) || i.ref),
-      rawBreadcrumbTrail: items.map(i => i.ref),
-      kind: 'compare'
-    });
-    if (typeof _showStudyToast === 'function') _showStudyToast('Saved to this study’s Trails');
-  } else {
-    const trail = { id: 'rt_' + Date.now().toString(36), title, items, createdAt: Date.now() };
-    _rhemaTrails = [trail, ..._rhemaTrails];
-    _rhemaPersistLocalTrails();
-    if (uid) window.Auth.saveRhemaTrail?.(uid, trail).catch(() => {});
-  }
-  _rhemaRenderCompare();
-}
-function _rhemaSyncCompareChip() {
-  _rhemaActivateCompareScope();
-  const chip = document.getElementById('rhemaCompareChip');
-  if (!chip) return;
-  // The floating chip is only a shortcut back to the comparison while the user is
-  // mid "Add another verse" (overlay closed, picking a verse). Once the compare
-  // view is closed normally it should not linger in the corner.
-  chip.classList.toggle('hidden', !(_rhemaCompareAdding && _rhemaCompare.length > 0));
-  const n = document.getElementById('rhemaCompareChipCount');
-  if (n) n.textContent = String(_rhemaCompare.length);
+    return `<div class="rhema-compare-item">
+      <div class="rhema-compare-item-hd">
+        <span class="rhema-compare-ver-static">${ver}</span>
+      </div>
+      <div class="${bodyClass}" data-cmp-ref="${_escapeRhemaAttr(ref)}" data-cmp-ver="${ver}">${bodyText}</div>
+    </div>`;
+  }).join('');
+  _rhemaCompareLoadAsync();
 }
 
 function rhemaOpenHighlightsNotes() {
@@ -40206,9 +39995,7 @@ async function showRhema() {
   modal.classList.add('open');
   _rhemaSetChromeHidden?.(false);
   _rhemaStartMarksSync();
-  _rhemaStartTrailsSync();
   _rhemaActivateCompareScope();
-  _rhemaSyncCompareChip();
 
   // Main entry opens as a plain-English chapter reader; the swap control takes
   // you into the Greek. Sandbox and sermon flows manage their own modes.
