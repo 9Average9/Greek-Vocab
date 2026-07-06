@@ -24564,6 +24564,33 @@ function setAppTheme(themeName) {
   syncUserData();
 }
 
+// ── App Styles (skins) ─────────────────────────────────────────────────────────
+// A skin restyles the whole app — font, surfaces, icon shapes, textures — on top
+// of the color-theme system. It works by stamping data-skin on <html>; style.css
+// holds a token-override block per skin (with !important, so it beats the inline
+// theme variables applyAppTheme writes). "classic" means no skin attribute at all,
+// so the color themes behave exactly as before.
+const APP_SKINS = ["classic", "notebook"];
+
+function applyAppSkin(skinName) {
+  const skin = APP_SKINS.includes(skinName) ? skinName : "classic";
+  if (skin === "classic") delete document.documentElement.dataset.skin;
+  else document.documentElement.dataset.skin = skin;
+  document.querySelectorAll(".skin-preset").forEach(btn => {
+    btn.classList.toggle("selected", (btn.dataset.skin || "classic") === skin);
+  });
+}
+
+function setAppSkin(skinName) {
+  localStorage.setItem("appSkin", skinName);
+  applyAppSkin(skinName);
+  syncUserData();
+}
+
+// Apply immediately at script parse (script sits at the end of <body>, so the
+// picker buttons already exist) — avoids a flash of the classic look on launch.
+applyAppSkin(localStorage.getItem("appSkin") || "classic");
+
 function updateHighContrastSettingsUI() {
   const toggle = document.getElementById("highContrastToggle");
   if (toggle) toggle.checked = getHighContrastMode();
@@ -29564,7 +29591,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.392";
+const APP_VERSION = "3.0.393";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29587,6 +29614,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.393 &mdash; App Styles: the Notebook skin</div>
+<ul>
+  <li><strong>A whole new look, one tap</strong> &mdash; Settings now has an <em>App Style</em> picker. Choose <strong>Notebook</strong> and the entire app becomes a ruled-paper notebook: cream pages with feint lines and a red margin, ballpoint-ink blues, handwritten lettering, and softer, rounded icons.</li>
+  <li><strong>Everything still works the same</strong> &mdash; It&rsquo;s purely a restyle. Dark mode becomes a &ldquo;night notebook,&rdquo; and switching back to <strong>Classic</strong> restores your color themes exactly as they were.</li>
+  <li><strong>Follows you across devices</strong> &mdash; Your chosen style syncs with your account like your theme does.</li>
+</ul>
 <div class="un-version-label">v3.0.392 &mdash; Simpler verse comparison</div>
 <ul>
   <li><strong>Compare, at a glance</strong> &mdash; Tapping <em>Compare</em> on a verse now pulls up NIV, NKJV and NASB in one clean read-across of that single verse &mdash; no setup, no juggling.</li>
@@ -31711,6 +31744,10 @@ async function restoreUserFromFirestore(user) {
     const toggle = document.getElementById("darkModeToggle");
     if (toggle) toggle.checked = localStorage.getItem("darkMode") === "true" || data.appTheme === "midnight";
   }
+  if (data.appSkin) {
+    localStorage.setItem("appSkin", data.appSkin);
+    applyAppSkin(data.appSkin);
+  }
   if (data.homeBackdrop) {
     localStorage.setItem("homeBackdrop", data.homeBackdrop);
     applyHomeBackdrop(data.homeBackdrop);
@@ -31804,6 +31841,7 @@ async function syncUserData() {
     matchHomeTheme: getMatchHomeThemeMode(),
     toolsMatchThemeColor: getToolsMatchThemeColorMode(),
     appTheme: localStorage.getItem("appTheme") || null,
+    appSkin: localStorage.getItem("appSkin") || "classic",
     homeBackdrop: localStorage.getItem("homeBackdrop") || "none",
     advQuizScores: (() => { try { return JSON.parse(localStorage.getItem("advQuizScores") || "{}"); } catch { return {}; } })(),
     answeredKCs: (() => { try { return JSON.parse(localStorage.getItem("answeredKCs") || "{}"); } catch { return {}; } })(),
@@ -31851,6 +31889,7 @@ function gatherMigrationData() {
     matchHomeTheme: getMatchHomeThemeMode(),
     toolsMatchThemeColor: getToolsMatchThemeColorMode(),
     appTheme: localStorage.getItem("appTheme") || null,
+    appSkin: localStorage.getItem("appSkin") || "classic",
     homeBackdrop: localStorage.getItem("homeBackdrop") || "none",
     appWelcomeCoachSeenV275: _hasCompletedAppWelcomeCoach(),
     vocabChapterXP,
