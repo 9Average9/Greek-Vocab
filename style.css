@@ -33593,6 +33593,21 @@ body.sandbox-open #rhemaSelectionBar:active {
 .rhema-compare-ver:active { transform: scale(0.95); }
 .rhema-compare-item-hd { flex-wrap: wrap; }
 .rhema-compare-item-hd .rhema-compare-ctrls { margin-left: auto; }
+/* Static translation badge for the simple 3-version compare (NIV/NKJV/NASB). */
+.rhema-compare-ver-static {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--secondary-color, #243447);
+  color: var(--secondary-color, #243447);
+  background: transparent;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+}
+/* Reference beside the "Compare" title in the overlay header. */
+.rhema-compare-ref-inline { font-weight: 800; color: var(--secondary-color, #243447); margin-left: 4px; }
 
 /* Loading / fallback states for api.bible verses in compare. */
 .rhema-compare-text.rhema-compare-loading { opacity: 0.55; font-style: italic; }
