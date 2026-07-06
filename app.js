@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.390";
+const APP_VERSION = "3.0.391";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29587,6 +29587,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.391 &mdash; Rhema selection cleanup</div>
+<ul>
+  <li><strong>Verse underlines clear cleanly</strong> &mdash; Canceling notes, closing word meanings, copying, saving, or leaving verse tools now deselects the verse so the reader never gets stuck with a stale selected underline.</li>
+</ul>
 <div class="un-version-label">v3.0.390 &mdash; Rhema selection sheet</div>
 <ul>
   <li><strong>Verse taps open the sheet</strong> &mdash; Selecting a verse now brings up the bottom action sheet immediately, with the highlight colors and verse tools laid out in the new reference-style grid.</li>
@@ -37875,6 +37879,11 @@ function closeRhemaVerseSheetAndDeselect(e) {
   closeRhemaVerseSheet();
   rhemaClearSelection();
 }
+function _rhemaClearVerseActionSelection() {
+  closeRhemaVerseSheet();
+  rhemaClearSelection();
+  _rhemaMarkActiveVerse(null);
+}
 function _rhemaVerseSheetOpen() {
   return !!document.getElementById('rhemaVerseSheet')?.classList.contains('open');
 }
@@ -37886,7 +37895,7 @@ function rhemaSetVerseHighlight(color) {
   renderRhemaVerse();
 }
 function rhemaFocusVerseFromMenu() {
-  closeRhemaVerseSheet();
+  _rhemaClearVerseActionSelection();
   if (_rhemaMenuRef) {
     const verse = _rhemaMenuRef.split(':').pop();
     _rhemaFullChapter = false;
@@ -37946,6 +37955,7 @@ function rhemaPickNoteColor(c) { _rhemaNoteColor = c; _rhemaRenderNoteColors(); 
 function closeRhemaNoteModal(e) {
   if (e && e.target !== document.getElementById('rhemaNoteModal')) return;
   document.getElementById('rhemaNoteModal')?.classList.remove('open');
+  _rhemaClearVerseActionSelection();
 }
 function rhemaSaveNote() {
   const ref = _rhemaMenuRef; if (!ref) return;
@@ -37962,12 +37972,14 @@ function rhemaSaveNote() {
     });
   }
   document.getElementById('rhemaNoteModal')?.classList.remove('open');
+  _rhemaClearVerseActionSelection();
   renderRhemaVerse();
 }
 function rhemaDeleteNote() {
   const ref = _rhemaMenuRef; if (!ref) return;
   _rhemaSetMark(ref, { note: null, noteColor: null, noteTs: null, noteUpdatedAt: null });
   document.getElementById('rhemaNoteModal')?.classList.remove('open');
+  _rhemaClearVerseActionSelection();
   renderRhemaVerse();
 }
 
@@ -38045,13 +38057,14 @@ function rhemaSaveBatchNote() {
     }
   });
   document.getElementById('rhemaBatchNoteModal')?.classList.remove('open');
-  rhemaClearSelection();
+  _rhemaClearVerseActionSelection();
   renderRhemaVerse();
   if (typeof _showStudyToast === 'function' && applied) _showStudyToast(`Saved ${applied} note${applied === 1 ? '' : 's'}`);
 }
 function closeRhemaBatchNote(e) {
   if (e && e.target !== document.getElementById('rhemaBatchNoteModal')) return;
   document.getElementById('rhemaBatchNoteModal')?.classList.remove('open');
+  _rhemaClearVerseActionSelection();
 }
 
 // ── Compare → Trails ──────────────────────────────────────────────────────────
@@ -39323,8 +39336,7 @@ function rhemaOpenSavedMark(ref) {
   const p = _rhemaParseRef(ref);
   if (!p) return;
   closeRhemaHighlightsNotes();
-  closeRhemaVerseSheet();
-  _rhemaMarkActiveVerse(null);
+  _rhemaClearVerseActionSelection();
   _rhemaBook = p.book;
   _rhemaChapter = String(p.chapter);
   _rhemaVerse = String(p.verse);
@@ -39338,12 +39350,12 @@ function rhemaOpenSavedMark(ref) {
 
 // ── Phase 5: English verse/word into the study (reuse existing study logic) ────
 function rhemaStudySaveVerseFromMenu() {
-  closeRhemaVerseSheet();
+  _rhemaClearVerseActionSelection();
   saveCurrentVerseToStudy();
   if (typeof _showStudyToast === 'function') _showStudyToast('Verse saved to study');
 }
 function rhemaStudyCaptureFromMenu() {
-  closeRhemaVerseSheet();
+  _rhemaClearVerseActionSelection();
   if (typeof openStudyMiniWheel === 'function') openStudyMiniWheel();
 }
 function _rhemaCompareScope() {
@@ -39429,6 +39441,7 @@ function rhemaStudyLogWordFromMenu() {
 function closeRhemaWordPick(e) {
   if (e && e.target !== document.getElementById('rhemaWordPickModal')) return;
   document.getElementById('rhemaWordPickModal')?.classList.remove('open');
+  _rhemaClearVerseActionSelection();
 }
 function rhemaPickEnglishWord(word) {
   if (_rhemaWordPickMode === 'log') return rhemaLogEnglishWord(word);
@@ -39498,6 +39511,7 @@ const RHEMA_DICT_KIND_LABELS = {
 };
 function rhemaDictJumpRef(ref) {
   document.getElementById('rhemaEnglishMeaningModal')?.classList.remove('open');
+  _rhemaClearVerseActionSelection();
   rhemaOpenSavedMark(ref);
 }
 function _rhemaDictSectionHtml(entry) {
@@ -39616,14 +39630,19 @@ async function rhemaShowEnglishMeaning(word) {
 function closeRhemaEnglishMeaning(e) {
   if (e && e.target !== document.getElementById('rhemaEnglishMeaningModal')) return;
   document.getElementById('rhemaEnglishMeaningModal')?.classList.remove('open');
+  _rhemaClearVerseActionSelection();
 }
 function rhemaAddCurrentEnglishMeaningToStudy() {
   if (_rhemaCurrentEnglishMeaningWord) rhemaLogEnglishWord(_rhemaCurrentEnglishMeaningWord);
   document.getElementById('rhemaEnglishMeaningModal')?.classList.remove('open');
+  _rhemaClearVerseActionSelection();
 }
 async function rhemaLogEnglishWord(word) {
   document.getElementById('rhemaWordPickModal')?.classList.remove('open');
-  if (!_studySandboxId) return;
+  if (!_studySandboxId) {
+    _rhemaClearVerseActionSelection();
+    return;
+  }
   const uid = window.Auth?.getCurrentUser?.()?.uid;
   const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
   await window.Studies?.logWord?.(_studySandboxId, uid, displayName, {
@@ -39633,6 +39652,7 @@ async function rhemaLogEnglishWord(word) {
     definition: '',
     translit: ''
   });
+  _rhemaClearVerseActionSelection();
   if (typeof _showStudyToast === 'function') _showStudyToast(`“${word}” added to the word log`);
 }
 
@@ -43632,8 +43652,7 @@ function rhemaCopyVerseFromMenu() {
     text = `${header}\n${body}`.trim();
     if (!body) return;
     const showToastM = () => {
-      rhemaClearSelection();
-      closeRhemaVerseSheet();
+      _rhemaClearVerseActionSelection();
       const toast = document.getElementById('rhemaChapterToast');
       if (toast) { toast.textContent = 'Verses copied!'; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 2000); }
       else if (typeof _showStudyToast === 'function') _showStudyToast('Verses copied!');
@@ -43650,7 +43669,7 @@ function rhemaCopyVerseFromMenu() {
   text = `${ref}\n${verseText}`.trim();
   if (!verseText || !text) return;
   const showToast = () => {
-    closeRhemaVerseSheet();
+    _rhemaClearVerseActionSelection();
     const toast = document.getElementById('rhemaChapterToast');
     if (toast) {
       toast.textContent = 'Verse copied!';
