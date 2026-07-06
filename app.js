@@ -29564,7 +29564,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.389";
+const APP_VERSION = "3.0.390";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29587,6 +29587,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.390 &mdash; Rhema selection sheet</div>
+<ul>
+  <li><strong>Verse taps open the sheet</strong> &mdash; Selecting a verse now brings up the bottom action sheet immediately, with the highlight colors and verse tools laid out in the new reference-style grid.</li>
+  <li><strong>Skipped verses stay honest</strong> &mdash; Multi-verse selections now label split ranges correctly, like <code>1 Timothy 1:1, 3-4, 7</code>, instead of pretending everything is one continuous range.</li>
+  <li><strong>More reading space while scrolling</strong> &mdash; Rhema and Study Rhema now animate the top reference bar, bottom reader controls, sandbox tab bar, and sandbox arrows out while scrolling down, then bring them back as you scroll upward.</li>
+</ul>
 <div class="un-version-label">v3.0.389 &mdash; A living Bible-lands map: seas, rivers, mountains &amp; terrain</div>
 <ul>
   <li><strong>The land itself, named</strong> &mdash; The Journeys map now labels the great geography of Scripture &mdash; the Jordan, the Great Sea (Mediterranean), the Salt Sea (Dead Sea), the Sea of Galilee, the Nile, Euphrates &amp; Tigris, Mounts Sinai, Hermon, Carmel, Tabor &amp; Nebo, and the wildernesses of Sinai, Judea, Paran &amp; the Negev.</li>
@@ -37722,6 +37728,24 @@ function _rhemaSelectedVersesSorted() {
 function _rhemaSelectedRefs() {
   return _rhemaSelectedVersesSorted().map(v => _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, v));
 }
+function _rhemaFormatVerseSelectionRef() {
+  const nums = _rhemaSelectedVersesSorted().map(Number).filter(n => Number.isFinite(n));
+  if (!nums.length) return '';
+  const parts = [];
+  let start = nums[0];
+  let prev = nums[0];
+  for (let i = 1; i < nums.length; i += 1) {
+    const n = nums[i];
+    if (n === prev + 1) {
+      prev = n;
+      continue;
+    }
+    parts.push(start === prev ? String(start) : `${start}-${prev}`);
+    start = prev = n;
+  }
+  parts.push(start === prev ? String(start) : `${start}-${prev}`);
+  return `${_rhemaBookName(_rhemaBook)} ${_rhemaChapter}:${parts.join(', ')}`;
+}
 
 function rhemaToggleVerseSelect(verse) {
   const v = String(verse);
@@ -37737,8 +37761,8 @@ function rhemaClearSelection() {
   _rhemaSyncVerseSelectionUI();
 }
 
-// Reflect the selection in the DOM (underline + floating arrow + count). Also
-// prunes any selected verses that aren't on screen (e.g. after navigation).
+// Reflect the selection in the DOM. The old floating arrow stays dormant; verse
+// taps open the action sheet immediately.
 function _rhemaSyncVerseSelectionUI() {
   const blocks = document.querySelectorAll('#rhemaEnglishDisplay .rhema-english-verse[data-verse], #rhemaEnglishDisplay .rhema-chapter-block[data-verse]');
   const present = new Set();
@@ -37751,7 +37775,8 @@ function _rhemaSyncVerseSelectionUI() {
   const bar = document.getElementById('rhemaSelectionBar');
   if (bar) {
     const n = _rhemaSel.size;
-    bar.classList.toggle('visible', n > 0);
+    bar.classList.remove('visible');
+    bar.setAttribute('aria-hidden', 'true');
     const c = document.getElementById('rhemaSelectionCount');
     if (c) c.textContent = n === 1 ? '1 verse' : `${n} verses`;
   }
@@ -37772,8 +37797,10 @@ function rhemaOpenVerseMenu(v, ev) {
     rhemaOpenCompare();
     return;
   }
-  // Default: toggle selection. The bottom arrow opens the sheet.
+  // Default: toggle selection and open the action sheet immediately.
   rhemaToggleVerseSelect(verse);
+  if (_rhemaSel.size) rhemaOpenSelectionSheet();
+  else closeRhemaVerseSheet();
 }
 
 // Opens the action sheet for the current selection (1 or many).
@@ -37786,6 +37813,7 @@ function rhemaOpenSelectionSheet() {
   syncRhemaPicker?.();
   _rhemaMenuRef = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, verses[0]);
   _rhemaMarkActiveVerse(verses[0]);
+  _rhemaSetChromeHidden?.(false);
   _rhemaRenderVerseSheet();
   document.getElementById('rhemaVerseSheet')?.classList.add('open');
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
@@ -37798,10 +37826,7 @@ function _rhemaRenderVerseSheet() {
   const refEl = document.getElementById('rhemaVerseSheetRef');
   if (refEl) {
     if (multi) {
-      // e.g. "John 3:14–18 · 3 verses" (range hint for the selected set).
-      const vs = _rhemaSelectedVersesSorted();
-      const range = vs.length ? `${_rhemaBookName(_rhemaBook)} ${_rhemaChapter}:${vs[0]}–${vs[vs.length - 1]}` : '';
-      refEl.textContent = `${range} · ${selCount} verses`;
+      refEl.textContent = _rhemaFormatVerseSelectionRef();
     } else {
       refEl.textContent = _rhemaDisplayRefFromKey(ref) || ref;
     }
@@ -40159,6 +40184,7 @@ async function showRhema() {
     setTimeout(() => modal.classList.remove('rhema-nav-enter'), 540);
   }
   modal.classList.add('open');
+  _rhemaSetChromeHidden?.(false);
   _rhemaStartMarksSync();
   _rhemaStartTrailsSync();
   _rhemaActivateCompareScope();
@@ -40253,6 +40279,7 @@ function closeRhema(keepSandbox = false) {
     if (!keepSandbox) _studySandboxId = null;
   }
   _rhemaActivateCompareScope();
+  _rhemaSetChromeHidden?.(false);
   // Closing to a normal page folds the reader back into the bottom-nav Rhema
   // button it was launched from — the same collapse the Home tools (Reading
   // Plan, Memorize, …) close with — revealing the page + nav underneath. Flows
@@ -40551,6 +40578,22 @@ function _rhemaHandleBookBoundaryLayer(nextBook, prevBook) {
 
 // ── Verse swipe navigation ────────────────────────────────────────────────────
 
+let _rhemaChromeHidden = false;
+function _rhemaSetChromeHidden(hidden) {
+  const shouldHide = !!hidden && !_rhemaVerseSheetOpen?.();
+  const modal = document.getElementById('rhemaModal');
+  const body = document.body;
+  if (
+    _rhemaChromeHidden === shouldHide &&
+    modal?.classList.contains('rhema-chrome-hidden') === shouldHide &&
+    body?.classList.contains('rhema-chrome-hidden') === shouldHide
+  ) return;
+  _rhemaChromeHidden = shouldHide;
+  modal?.classList.toggle('rhema-chrome-hidden', shouldHide);
+  body?.classList.toggle('rhema-chrome-hidden', shouldHide);
+  updateRhemaVerseNav?.();
+}
+
 function updateRhemaVerseNav() {
   const nav    = document.getElementById('rhemaVerseNav');
   const ref    = document.getElementById('rhemaVerseRef');
@@ -40559,7 +40602,7 @@ function updateRhemaVerseNav() {
   if (_studySandboxId) {
     // In study sandbox: hide the full bar and show floating arrow pair instead
     nav.classList.add('hidden');
-    arrows?.classList.toggle('visible', !_rhemaVerseSheetOpen());
+    arrows?.classList.toggle('visible', !_rhemaVerseSheetOpen() && !_rhemaChromeHidden);
   } else {
     nav.classList.remove('hidden');
     arrows?.classList.remove('visible');
@@ -40576,7 +40619,29 @@ function initRhemaVerseSwipe() {
   // Only attach to the verse scroll area — not the header, picker, breadcrumb,
   // highlight bar, or word-detail sheet which each have their own scroll behaviour
   const area = document.querySelector('#rhemaModal .rhema-body');
-  if (!area || area._hSwipeInit) return;
+  if (!area) return;
+  if (!area._rhemaChromeScrollInit) {
+    area._rhemaChromeScrollInit = true;
+    area._rhemaLastChromeScrollTop = area.scrollTop || 0;
+    area.addEventListener('scroll', () => {
+      const y = area.scrollTop || 0;
+      const last = area._rhemaLastChromeScrollTop || 0;
+      const delta = y - last;
+      area._rhemaLastChromeScrollTop = y;
+      if (_rhemaVerseSheetOpen?.()) {
+        _rhemaSetChromeHidden(false);
+        return;
+      }
+      if (y <= 18) {
+        _rhemaSetChromeHidden(false);
+      } else if (delta > 6 && y > 46) {
+        _rhemaSetChromeHidden(true);
+      } else if (delta < -10) {
+        _rhemaSetChromeHidden(false);
+      }
+    }, { passive: true });
+  }
+  if (area._hSwipeInit) return;
   area._hSwipeInit = true;
   let sx = 0, sy = 0, _swipeInDiagram = false;
   area.addEventListener('touchstart', e => {
@@ -41227,10 +41292,17 @@ function renderRhemaVerse() {
       if (!body) return;
       // A fresh chapter open starts at the top; only scroll when jumping to a
       // focused verse or resuming somewhere mid-chapter.
-      if (!focusVerse && _rhemaVerse === String(verseNums[0])) { body.scrollTop = 0; return; }
+      if (!focusVerse && _rhemaVerse === String(verseNums[0])) {
+        body.scrollTop = 0;
+        body._rhemaLastChromeScrollTop = body.scrollTop || 0;
+        _rhemaSetChromeHidden?.(false);
+        return;
+      }
       const visibleDisplay = _rhemaShowEnglish && !_rhemaSyntaxMode && EnglishDiv ? EnglishDiv : display;
       const target = visibleDisplay.querySelector(`.rhema-chapter-block[data-verse="${_rhemaVerse}"]`);
       if (target) body.scrollTop = Math.max(0, _rhemaBlockScrollTop(body, target) - 12);
+      body._rhemaLastChromeScrollTop = body.scrollTop || 0;
+      _rhemaSetChromeHidden?.(false);
     });
   } else {
     const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
@@ -41895,7 +41967,7 @@ const _RHEMA_COACH_STEPS = [
     targetFn: () => _coachFirst(['#rhemaEnglishDisplay:not(.hidden)', '#rhemaVerseDisplay']),
     position: 'center',
     title: 'Read the chapter in English',
-    body: 'Rhema opens as a plain-English reading Bible. Tap a verse to select it — then everything else in Rhema follows that verse.',
+    body: 'Rhema opens as a plain-English reading Bible. Tap a verse and the action sheet opens right away, so highlights, notes, compare, and focus stay close to the passage.',
   },
   {
     targetFn: () => document.getElementById('rhemaSwapBtn'),

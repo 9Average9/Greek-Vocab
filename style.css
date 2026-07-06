@@ -16063,6 +16063,9 @@ body.rx-scroll-lock {
   border-bottom: none;
   flex-shrink: 0;
   touch-action: none; /* swipes here must not scroll ancestors */
+  max-height: 76px;
+  overflow: hidden;
+  transition: opacity 0.22s ease, transform 0.24s cubic-bezier(.2,.82,.18,1), max-height 0.24s cubic-bezier(.2,.82,.18,1), padding 0.24s ease;
 }
 
 .rhema-pill {
@@ -17265,14 +17268,23 @@ body.dark .atlas-alts strong { color: #e3b466; }
   position: fixed;
   left: 0; right: 0;
   bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 12px);
-  display: none;
+  display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
   pointer-events: none;
   z-index: 1050; /* above rhema modal (1000), below study tab bar (1100) */
+  opacity: 0;
+  transform: translateY(18px);
+  visibility: hidden;
+  transition: opacity 0.22s ease, transform 0.24s cubic-bezier(.2,.82,.18,1), visibility 0s linear 0.24s;
 }
-.rhema-sandbox-arrows.visible { display: flex; }
+.rhema-sandbox-arrows.visible {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition-delay: 0s;
+}
 .rhema-sandbox-nav-btn {
   pointer-events: all;
   background: linear-gradient(145deg, var(--secondary-color), color-mix(in srgb, var(--secondary-color) 80%, #000));
@@ -17302,6 +17314,11 @@ body.dark .atlas-alts strong { color: #e3b466; }
   border-top: none;
   touch-action: none;
   user-select: none;
+  max-height: 80px;
+  overflow: hidden;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.22s ease, transform 0.24s cubic-bezier(.2,.82,.18,1), max-height 0.24s cubic-bezier(.2,.82,.18,1), padding 0.24s ease;
 }
 .rhema-verse-nav-row {
   display: flex;
@@ -17318,6 +17335,28 @@ body.dark .atlas-alts strong { color: #e3b466; }
 }
 .rhema-verse-nav.hidden { display: none; }
 #rhemaModal.picker-open .rhema-verse-nav { visibility: hidden; pointer-events: none; }
+#rhemaModal.rhema-chrome-hidden .rhema-picker {
+  opacity: 0;
+  transform: translateY(-18px);
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+}
+#rhemaModal.rhema-chrome-hidden .rhema-verse-nav {
+  opacity: 0;
+  transform: translateY(18px);
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+}
+#rhemaModal.rhema-chrome-hidden .rhema-sandbox-arrows.visible {
+  opacity: 0;
+  transform: translateY(18px);
+  pointer-events: none;
+  visibility: hidden;
+}
 .rhema-nav-btn {
   background: linear-gradient(145deg, var(--secondary-color), color-mix(in srgb, var(--secondary-color) 80%, #000));
   border: none;
@@ -20965,8 +21004,16 @@ label.study-color-swatch.custom-color-dot {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   z-index: 1100;
+  transform: translateY(0);
+  opacity: 1;
+  transition: opacity 0.22s ease, transform 0.24s cubic-bezier(.2,.82,.18,1);
 }
 #studyTabBar.hidden { display: none; }
+body.sandbox-open.rhema-chrome-hidden #studyTabBar {
+  opacity: 0;
+  transform: translateY(calc(100% + env(safe-area-inset-bottom, 0px)));
+  pointer-events: none;
+}
 
 /* Push sandbox pane content up so nothing hides behind the fixed tab bar */
 body.sandbox-open .ss-pane {
@@ -20976,6 +21023,11 @@ body.sandbox-open .ss-pane {
 /* Shrink the Rhema modal to stop above the study tab bar — all children adapt automatically */
 body.sandbox-open #rhemaModal {
   bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  transition: bottom 0.24s cubic-bezier(.2,.82,.18,1);
+}
+
+body.sandbox-open.rhema-chrome-hidden #rhemaModal {
+  bottom: 0;
 }
 
 body.sandbox-open #rhemaModal .rhema-picker {
@@ -33059,11 +33111,12 @@ body.dark .journey-modern-shape { fill: #202c42; }
   position: absolute;
   inset: 0;
   z-index: 70;
-  background: rgba(8, 18, 28, 0.42);
+  background: linear-gradient(to top, rgba(8, 18, 28, 0.12), rgba(8, 18, 28, 0) 46%);
   display: none;
   align-items: flex-end;
   justify-content: center;
 }
+.rhema-vsheet-overlay { pointer-events: none; }
 .rhema-note-overlay { align-items: center; }
 .rhema-vsheet-overlay.open,
 .rhema-note-overlay.open { display: flex; }
@@ -33077,9 +33130,23 @@ body.dark .journey-modern-shape { fill: #202c42; }
   box-shadow: 0 -10px 30px rgba(8, 18, 28, 0.22);
 }
 .rhema-vsheet {
-  border-radius: 20px 20px 0 0;
-  padding: 18px 18px calc(34px + env(safe-area-inset-bottom, 0px));
+  width: calc(100% - 28px);
+  max-width: 520px;
+  margin: 0 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-radius: 28px;
+  padding: 22px 18px 20px;
   position: relative;
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 12%, rgba(255,255,255,0.72));
+  background: color-mix(in srgb, var(--card-color, #fffdf7) 94%, rgba(255,255,255,0.92));
+  box-shadow: 0 -6px 28px color-mix(in srgb, var(--secondary-color, #2498df) 12%, rgba(8,18,28,0.2)), 0 14px 34px rgba(8, 18, 28, 0.18);
+  transform: translateY(22px) scale(0.985);
+  opacity: 0;
+  transition: opacity 0.22s ease, transform 0.3s cubic-bezier(.2,.82,.18,1);
+  pointer-events: auto;
+}
+.rhema-vsheet-overlay.open .rhema-vsheet {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 .rhema-note-card {
   border-radius: 18px;
@@ -33091,13 +33158,13 @@ body.dark .journey-modern-shape { fill: #202c42; }
 .rhema-vsheet-x,
 .rhema-note-x {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 34px;
-  height: 34px;
+  top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
   border: none;
   border-radius: 50%;
-  background: rgba(120, 120, 120, 0.12);
+  background: color-mix(in srgb, var(--muted-color, #8a8a8a) 14%, transparent);
   color: var(--font-color, #20303f);
   display: inline-flex;
   align-items: center;
@@ -33107,56 +33174,83 @@ body.dark .journey-modern-shape { fill: #202c42; }
 .rhema-vsheet-ref,
 .rhema-note-ref {
   font-weight: 800;
-  font-size: 1.02rem;
-  margin-bottom: 8px;
-  padding-right: 42px;
+  font-size: 1.08rem;
+  margin-bottom: 10px;
+  padding-right: 54px;
+  line-height: 1.25;
 }
 .rhema-vsheet-label {
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--muted-color, #8a8a8a);
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--secondary-color, #2498df) 55%, var(--muted-color, #8a8a8a));
 }
 .rhema-vsheet-colors {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 8px 0 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  flex-wrap: nowrap;
+  margin: 14px 0 18px;
 }
 .rhema-vs-swatch {
-  width: 34px;
-  height: 34px;
+  width: clamp(27px, 8.5vw, 42px);
+  height: clamp(27px, 8.5vw, 42px);
   border-radius: 50%;
-  border: 2px solid rgba(0, 0, 0, 0.12);
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
   padding: 0;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.42), 0 3px 8px rgba(8,18,28,0.1);
+  flex: 0 0 auto;
 }
 .rhema-vs-swatch.active {
   border-color: var(--secondary-color, #243447);
-  box-shadow: 0 0 0 2px var(--secondary-color, #243447);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--secondary-color, #2498df) 92%, #fff), inset 0 0 0 3px rgba(255,255,255,0.68);
 }
 .rhema-vs-none {
   background: transparent;
   color: var(--muted-color, #8a8a8a);
 }
+.rhema-vsheet-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
 .rhema-vsheet-action {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px;
-  border: none;
-  background: rgba(120, 120, 120, 0.1);
-  border-radius: 12px;
-  margin-top: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  gap: 12px;
+  min-height: 64px;
+  padding: 13px 14px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 18%, rgba(255,255,255,0.76));
+  background: color-mix(in srgb, var(--primary-light, #f5fbff) 78%, rgba(255,255,255,0.92));
+  border-radius: 14px;
+  margin-top: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
   color: var(--font-color, #20303f);
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), 0 3px 12px rgba(8,18,28,0.05);
+  text-align: left;
+}
+.rhema-vsheet-action .material-symbols-outlined {
+  flex: 0 0 auto;
+  color: var(--secondary-color, #2498df);
+  font-size: 1.35rem;
+}
+.rhema-vsheet-action.rhema-vsheet-single-only {
+  grid-column: 1 / -1;
+}
+.rhema-vsheet-action:active {
+  transform: translateY(1px) scale(0.99);
+}
+#rhemaVerseSheetStudy {
+  margin-top: 14px;
 }
 .rhema-note-text {
   width: 100%;
