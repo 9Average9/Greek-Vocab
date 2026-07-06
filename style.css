@@ -34555,18 +34555,52 @@ body.app-launch-motion .bottom-nav {
   letter-spacing: 0.01em;
 }
 
-/* Ruled paper: horizontal feint lines + the red left-margin rule. */
+/* Ruled paper: horizontal feint lines + the red left-margin rule.
+   !important because base rules elsewhere set body/screen backgrounds with
+   importance (e.g. body.dark's background-color at ~8603). */
 :root[data-skin="notebook"] body {
   background-image:
-    linear-gradient(90deg, transparent 0 26px, rgba(198, 90, 90, 0.34) 26px 27.5px, transparent 27.5px),
-    repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.13) 27px 28px);
-  background-color: #f8f2e1;
+    linear-gradient(90deg, transparent 0 26px, rgba(198, 90, 90, 0.38) 26px 27.5px, transparent 27.5px),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.16) 27px 28px) !important;
+  background-color: #f8f2e1 !important;
 }
 :root[data-skin="notebook"] body.dark {
   background-image:
-    linear-gradient(90deg, transparent 0 26px, rgba(224, 143, 143, 0.20) 26px 27.5px, transparent 27.5px),
-    repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.09) 27px 28px);
-  background-color: #1b1f28;
+    linear-gradient(90deg, transparent 0 26px, rgba(224, 143, 143, 0.22) 26px 27.5px, transparent 27.5px),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.11) 27px 28px) !important;
+  background-color: #1b1f28 !important;
+}
+
+/* Every page becomes a lined sheet. The generic .screen.active wash is a
+   near-opaque card color (with !important), and Settings/Profile/Habits paint
+   their own opaque backgrounds at ID specificity — all of which hid the paper.
+   The ID-carrying selectors below out-rank those per-screen rules. Home is left
+   alone: #homeScreen is transparent by design, so the body's paper shows there. */
+:root[data-skin="notebook"] .screen.active,
+:root[data-skin="notebook"] body #settingsScreen.screen.active,
+:root[data-skin="notebook"] body #profilePage.screen.active,
+:root[data-skin="notebook"] body #habitsPage.screen.active,
+:root[data-skin="notebook"] body #communityPage.screen.active,
+:root[data-skin="notebook"] body #merciesPage.screen.active {
+  background-color: var(--card-solid-color) !important;
+  background-image:
+    linear-gradient(90deg, transparent 0 26px, rgba(198, 90, 90, 0.38) 26px 27.5px, transparent 27.5px),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.16) 27px 28px) !important;
+}
+:root[data-skin="notebook"] body.dark .screen.active,
+:root[data-skin="notebook"] body.dark #settingsScreen.screen.active,
+:root[data-skin="notebook"] body.dark #profilePage.screen.active,
+:root[data-skin="notebook"] body.dark #habitsPage.screen.active,
+:root[data-skin="notebook"] body.dark #communityPage.screen.active,
+:root[data-skin="notebook"] body.dark #merciesPage.screen.active {
+  background-color: #232836 !important;
+  background-image:
+    linear-gradient(90deg, transparent 0 26px, rgba(224, 143, 143, 0.22) 26px 27.5px, transparent 27.5px),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.11) 27px 28px) !important;
+}
+/* Dark mode paints the .app wrapper opaque (body.dark .app) — let paper through. */
+:root[data-skin="notebook"] body.dark .app {
+  background-color: transparent !important;
 }
 
 /* Rounded icon set — reads friendlier, like pen-drawn marks. Falls back to the
