@@ -34444,3 +34444,151 @@ body.app-launch-motion .bottom-nav {
     animation: none !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   APP STYLES (SKINS)
+   A skin restyles the whole app on top of any color theme. Activated by
+   data-skin on <html> (applyAppSkin in app.js). Token overrides carry !important
+   because applyAppTheme() writes theme variables as inline styles on <html>,
+   which would otherwise always win over these stylesheet rules.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Skin picker (Settings → App Style) ──────────────────────────────────────── */
+.skin-preset-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px;
+}
+.skin-preset {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 10px;
+  border: 2px solid var(--border-color, #93c5fd);
+  border-radius: 14px;
+  background: var(--card-color, #fff);
+  color: var(--font-color, #172033);
+  cursor: pointer;
+  font-family: inherit;
+}
+.skin-preset strong { font-size: 0.92rem; }
+.skin-preset small { color: var(--muted-color, #475569); font-weight: 600; }
+.skin-preset .skin-preview {
+  width: 100%;
+  height: 54px;
+  border-radius: 9px;
+  border: 1px solid rgba(120, 120, 120, 0.25);
+  margin-bottom: 4px;
+}
+.skin-preset.skin-classic .skin-preview {
+  background: linear-gradient(135deg, #dbeafe, #1d4ed8 55%, #f59e0b);
+}
+.skin-preset.skin-notebook .skin-preview {
+  background-image:
+    linear-gradient(90deg, transparent 0 12px, rgba(198, 90, 90, 0.55) 12px 13.5px, transparent 13.5px),
+    repeating-linear-gradient(180deg, transparent 0 12px, rgba(47, 74, 124, 0.28) 12px 13px);
+  background-color: #f8f2e1;
+}
+.skin-preset .skin-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: none;
+  color: var(--secondary-color, #1d4ed8);
+  font-size: 20px;
+}
+.skin-preset.selected {
+  border-color: var(--secondary-color, #1d4ed8);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--secondary-color, #1d4ed8) 25%, transparent);
+}
+.skin-preset.selected .skin-check { display: inline-flex; }
+
+/* ── Skin: NOTEBOOK ──────────────────────────────────────────────────────────────
+   Cream ruled paper, ballpoint-blue ink, a red margin line, handwritten type,
+   and rounded icons. Light + dark variants (dark = night notebook). */
+
+/* Ink & paper tokens (light) */
+:root[data-skin="notebook"] {
+  --primary-color: #f4edd9 !important;
+  --primary-light: #faf6ea !important;
+  --secondary-color: #2f4a7c !important;        /* ballpoint blue ink */
+  --accent-color: #c65a5a !important;           /* red margin ink */
+  --card-color: rgba(255, 253, 246, 0.94) !important;
+  --card-solid-color: #fffdf6 !important;
+  --memorization-page-color: #faf6ea !important;
+  --border-color: #a9b8d4 !important;           /* faded rule-line blue */
+  --font-color: #2b3350 !important;             /* blue-black ink */
+  --muted-color: #6b7390 !important;
+  --btn-text-color: #fffdf6 !important;
+  --primary: var(--primary-color) !important;
+  --secondary: var(--secondary-color) !important;
+  --accent: var(--accent-color) !important;
+}
+
+/* Night notebook (dark mode on): dark slate paper, chalky ink */
+:root[data-skin="notebook"]:has(body.dark) {
+  --primary-color: #1e222d !important;
+  --primary-light: #262b38 !important;
+  --secondary-color: #8fb4e8 !important;
+  --accent-color: #e08f8f !important;
+  --card-color: rgba(38, 43, 56, 0.94) !important;
+  --card-solid-color: #262b38 !important;
+  --memorization-page-color: #262b38 !important;
+  --border-color: #45507a !important;
+  --font-color: #e8ecf7 !important;
+  --muted-color: #9aa5c4 !important;
+  --btn-text-color: #10131b !important;
+}
+
+/* Handwritten type everywhere. Form controls don't inherit the body font, so
+   they're targeted explicitly. Icon spans set their own font-family, so they
+   are untouched by these rules. */
+:root[data-skin="notebook"] body,
+:root[data-skin="notebook"] button,
+:root[data-skin="notebook"] input,
+:root[data-skin="notebook"] select,
+:root[data-skin="notebook"] textarea {
+  font-family: "Patrick Hand", "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Neue", "Comic Sans MS", cursive;
+  letter-spacing: 0.01em;
+}
+
+/* Ruled paper: horizontal feint lines + the red left-margin rule. */
+:root[data-skin="notebook"] body {
+  background-image:
+    linear-gradient(90deg, transparent 0 26px, rgba(198, 90, 90, 0.34) 26px 27.5px, transparent 27.5px),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.13) 27px 28px);
+  background-color: #f8f2e1;
+}
+:root[data-skin="notebook"] body.dark {
+  background-image:
+    linear-gradient(90deg, transparent 0 26px, rgba(224, 143, 143, 0.20) 26px 27.5px, transparent 27.5px),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.09) 27px 28px);
+  background-color: #1b1f28;
+}
+
+/* Rounded icon set — reads friendlier, like pen-drawn marks. Falls back to the
+   Outlined family if the Rounded font hasn't loaded (e.g. first launch offline). */
+:root[data-skin="notebook"] .material-symbols-outlined {
+  font-family: "Material Symbols Rounded", "Material Symbols Outlined";
+}
+
+/* Pen-and-paper feel on the most common raised surfaces: a firm ink border and
+   a hard offset shadow (like a sticker on the page) instead of soft blur. */
+:root[data-skin="notebook"] .sett-card,
+:root[data-skin="notebook"] .main-btn,
+:root[data-skin="notebook"] .home-action,
+:root[data-skin="notebook"] .rhema-compare-item,
+:root[data-skin="notebook"] .modal-card {
+  border: 1.5px solid color-mix(in srgb, var(--secondary-color, #2f4a7c) 55%, transparent);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--secondary-color, #2f4a7c) 14%, transparent);
+}
+
+/* Headings drop the serif display font and join the handwriting. */
+:root[data-skin="notebook"] h1,
+:root[data-skin="notebook"] h2,
+:root[data-skin="notebook"] h3 {
+  font-family: "Patrick Hand", "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Neue", "Comic Sans MS", cursive;
+}
