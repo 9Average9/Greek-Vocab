@@ -34602,7 +34602,10 @@ html[data-skin="notebook"]:has(body.dark):not(:has(> body #homeScreen.screen.act
 :root[data-skin="notebook"] body #profilePage.screen.active,
 :root[data-skin="notebook"] body #habitsPage.screen.active,
 :root[data-skin="notebook"] body #communityPage.screen.active,
-:root[data-skin="notebook"] body #merciesPage.screen.active {
+:root[data-skin="notebook"] body #merciesPage.screen.active,
+:root[data-skin="notebook"] body #memorizationPage.screen.active,
+:root[data-skin="notebook"] body #readingPlanPage.screen.active,
+:root[data-skin="notebook"] .study-library {
   background-color: var(--card-solid-color) !important;
   background-image:
     linear-gradient(90deg, transparent 0 26px, rgba(198, 90, 90, 0.38) 26px 27.5px, transparent 27.5px),
@@ -34613,7 +34616,10 @@ html[data-skin="notebook"]:has(body.dark):not(:has(> body #homeScreen.screen.act
 :root[data-skin="notebook"] body.dark #profilePage.screen.active,
 :root[data-skin="notebook"] body.dark #habitsPage.screen.active,
 :root[data-skin="notebook"] body.dark #communityPage.screen.active,
-:root[data-skin="notebook"] body.dark #merciesPage.screen.active {
+:root[data-skin="notebook"] body.dark #merciesPage.screen.active,
+:root[data-skin="notebook"] body.dark #memorizationPage.screen.active,
+:root[data-skin="notebook"] body.dark #readingPlanPage.screen.active,
+:root[data-skin="notebook"] body.dark .study-library {
   background-color: #232836 !important;
   background-image:
     linear-gradient(90deg, transparent 0 26px, rgba(224, 143, 143, 0.22) 26px 27.5px, transparent 27.5px),
@@ -34760,7 +34766,10 @@ html[data-skin="blueprint"]:has(body.dark):not(:has(> body #homeScreen.screen.ac
 :root[data-skin="blueprint"] body #profilePage.screen.active,
 :root[data-skin="blueprint"] body #habitsPage.screen.active,
 :root[data-skin="blueprint"] body #communityPage.screen.active,
-:root[data-skin="blueprint"] body #merciesPage.screen.active {
+:root[data-skin="blueprint"] body #merciesPage.screen.active,
+:root[data-skin="blueprint"] body #memorizationPage.screen.active,
+:root[data-skin="blueprint"] body #readingPlanPage.screen.active,
+:root[data-skin="blueprint"] .study-library {
   background-color: #fbfdff !important;
   background-image:
     repeating-linear-gradient(90deg, transparent 0 22px, rgba(31, 90, 158, 0.09) 22px 23px),
@@ -34771,7 +34780,10 @@ html[data-skin="blueprint"]:has(body.dark):not(:has(> body #homeScreen.screen.ac
 :root[data-skin="blueprint"] body.dark #profilePage.screen.active,
 :root[data-skin="blueprint"] body.dark #habitsPage.screen.active,
 :root[data-skin="blueprint"] body.dark #communityPage.screen.active,
-:root[data-skin="blueprint"] body.dark #merciesPage.screen.active {
+:root[data-skin="blueprint"] body.dark #merciesPage.screen.active,
+:root[data-skin="blueprint"] body.dark #memorizationPage.screen.active,
+:root[data-skin="blueprint"] body.dark #readingPlanPage.screen.active,
+:root[data-skin="blueprint"] body.dark .study-library {
   background-color: #0f2949 !important;
   background-image:
     repeating-linear-gradient(90deg, transparent 0 22px, rgba(150, 195, 240, 0.09) 22px 23px),

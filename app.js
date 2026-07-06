@@ -29591,7 +29591,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.395";
+const APP_VERSION = "3.0.396";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29614,6 +29614,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.396 &mdash; App Styles reach the tools</div>
+<ul>
+  <li><strong>Paper in every tool</strong> &mdash; Memorization, Reading Plan, and the Study Library now show the Notebook&rsquo;s ruled paper (or Blueprint&rsquo;s grid) as their page background, matching the rest of the app. Vocab, Translate, and Test picked it up automatically.</li>
+</ul>
 <div class="un-version-label">v3.0.395 &mdash; New Blueprint style + Notebook polish</div>
 <ul>
   <li><strong>New style: Blueprint</strong> &mdash; Engineer&rsquo;s graph paper with a fine blue grid, drafting-pen inks, monospace type, and sharp technical icons. Dark mode turns it into a classic cyanotype: deep blueprint blue with pale grid lines and chalk text.</li>
