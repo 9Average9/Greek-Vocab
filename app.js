@@ -29591,7 +29591,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.393";
+const APP_VERSION = "3.0.394";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29614,6 +29614,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.394 &mdash; Notebook skin: the ruled paper shows through</div>
+<ul>
+  <li><strong>Every page is now a lined sheet</strong> &mdash; Screens were painting their own solid backgrounds over the notebook paper, so the ruled lines and red margin never showed. Settings, Profile, Habits, Community, Mercies, and every other page now render as true ruled paper &mdash; in light and night notebook alike.</li>
+</ul>
 <div class="un-version-label">v3.0.393 &mdash; App Styles: the Notebook skin</div>
 <ul>
   <li><strong>A whole new look, one tap</strong> &mdash; Settings now has an <em>App Style</em> picker. Choose <strong>Notebook</strong> and the entire app becomes a ruled-paper notebook: cream pages with feint lines and a red margin, ballpoint-ink blues, handwritten lettering, and softer, rounded icons.</li>
