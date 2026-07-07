@@ -35148,7 +35148,7 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
   background-color: #e4ecd2;
 }
 
-/* ══ GOLDEN THREADS ═════════════════════════════════════════════════════════════
+/* ══ THEOLOGICAL THREADS ═════════════════════════════════════════════════════════════
    Thematic verse chains. A vertical "thread" stitches verse cards together;
    knots mark read stops; a completed thread turns gold ("woven"). All colors
    ride the theme tokens so Threads works under every App Style. */
@@ -35346,7 +35346,7 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
 .gt-card.gt-done .gt-card-icon.material-symbols-outlined,
 .gt-detail-head.gt-done .gt-card-icon.material-symbols-outlined { color: #a8821c; }
 
-/* Golden Threads info modal body */
+/* Theological Threads info modal body */
 .gt-info-body { padding: 4px 2px 8px; }
 .gt-info-body p { font-size: 0.9rem; line-height: 1.55; color: var(--font-color); margin: 0 0 10px; }
 #gtInfoModal .rhema-note-card { max-height: 76vh; overflow-y: auto; }
