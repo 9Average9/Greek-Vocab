@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.402";
+const CACHE_NAME = "disciple-builder-v3.0.403";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -49,9 +49,9 @@ const CACHE_NAME = "disciple-builder-v3.0.402";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.402",
+  "./style.css?v=3.0.403",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.402",
+  "./app.js?v=3.0.403",
   "./bible-threads.js?v=3.0.402",
   "./bible-atlas.js?v=3.0.349",
   "./bible-map.js?v=3.0.389",
@@ -94,6 +94,7 @@ const FILES_TO_CACHE = [
   "./assets/icons/quick-translate.png",
   "./assets/icons/quick-test.png",
   "./assets/icons/quick-reading-plan.png?v=3.0.231",
+  "./assets/icons/quick-threads.png?v=3.0.403",
   "./assets/icons/ChatGPT Image Jun 23, 2026, 10_26_34 PM.png",
   "./assets/icons/habit-builder-art.png",
   "./assets/icons/studies-bookshelf.png?v=3.0.238",
