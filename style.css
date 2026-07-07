@@ -23366,6 +23366,15 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   --qa-subtitle: #166f43;
 }
 
+#homeScreen .quick-action-threads {
+  --qa-card-bg: linear-gradient(180deg, rgba(250, 236, 199, 0.98), rgba(253, 246, 228, 0.9));
+  --qa-card-border: rgba(184, 134, 22, 0.2);
+  --qa-card-shadow: rgba(160, 116, 16, 0.14);
+  --qa-image-shadow: rgba(160, 116, 16, 0.18);
+  --qa-title: #a8821c;
+  --qa-subtitle: #86680f;
+}
+
 #homeScreen .quick-action-test {
   --qa-card-bg: linear-gradient(180deg, rgba(255, 226, 232, 0.98), rgba(255, 241, 244, 0.9));
   --qa-card-border: rgba(225, 50, 82, 0.16);
@@ -35329,10 +35338,6 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
   0%, 100% { opacity: 0.75; }
   50% { opacity: 1; }
 }
-
-/* Home tile icon */
-.hat-icon-threads { background: color-mix(in srgb, #d4a93a 18%, transparent) !important; }
-.hat-icon-threads .material-symbols-outlined { color: #a8821c !important; }
 
 /* Category / thread icons are Material Symbols, inked with the theme */
 .gt-cat-icon.material-symbols-outlined {

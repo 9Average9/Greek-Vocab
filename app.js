@@ -29594,7 +29594,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.403";
+const APP_VERSION = "3.0.404";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29617,6 +29617,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.404 &mdash; Theological Threads joins the tool carousel properly</div>
+<ul>
+  <li><strong>A full gold card</strong> &mdash; The Theological Threads tile now gets the same card design as the other Home tools: warm gold card, frosted icon plate behind the artwork, matching title and subtitle styling, and the arrow chip.</li>
+</ul>
 <div class="un-version-label">v3.0.403 &mdash; Theological Threads</div>
 <ul>
   <li><strong>A truer name</strong> &mdash; Golden Threads is now <em>Theological Threads</em>: each thread traces one truth about God through the whole of Scripture. The info button explains what theology means and why doctrine is best learned verse-by-verse in context.</li>
