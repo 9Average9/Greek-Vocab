@@ -8092,7 +8092,7 @@ let currentSentence = null;
 
 
 const screens = [
-  "homeScreen", "profilePage", "habitsPage", "journeysPage", "atlasPage", "memorizationPage", "readingPlanPage", "merciesPage", "communityPage", "csDetailPage",
+  "homeScreen", "profilePage", "habitsPage", "journeysPage", "atlasPage", "memorizationPage", "readingPlanPage", "threadsPage", "merciesPage", "communityPage", "csDetailPage",
   "sermonsPage", "newLearnMenu", "advancedLearnMenu",
   "basicVerbsLearnMenu", "advVerbsLearnMenu",
   "learnMenu", "learnScreen", "translateMenu", "translateScreen",
@@ -10391,7 +10391,7 @@ function _inferScreenTransition(fromId, toId) {
   if (fromId === 'homeScreen' && swipePages.has(toId)) return 'slide-forward';
   if (toId === 'homeScreen' && swipePages.has(fromId)) return 'slide-back';
 
-  const toolPages = new Set(['habitsPage', 'memorizationPage', 'readingPlanPage', 'learnMenu', 'translateMenu', 'translateScreen', 'testMenu', 'testScreen']);
+  const toolPages = new Set(['habitsPage', 'memorizationPage', 'readingPlanPage', 'threadsPage', 'learnMenu', 'translateMenu', 'translateScreen', 'testMenu', 'testScreen']);
   if (fromId === 'homeScreen' && toolPages.has(toId)) return 'tool-open';
   if (toId === 'homeScreen' && toolPages.has(fromId)) return 'tool-close';
 
@@ -10581,7 +10581,7 @@ function showNavPage(page) {
 // Tool screens that must always open scrolled to the top (full-bleed tools).
 const _scrollTopOnOpenScreens = new Set([
   'learnMenu', 'learnScreen', 'translateMenu', 'translateScreen',
-  'testMenu', 'testScreen', 'memorizationPage', 'readingPlanPage'
+  'testMenu', 'testScreen', 'memorizationPage', 'readingPlanPage', 'threadsPage'
 ]);
 function showScreen(id) {
   if (id !== 'homeScreen') _stopHomeFlip();
@@ -16261,6 +16261,7 @@ function _appSlideHomeFromCurrent() {
     'advVerbsLearnMenu',
     'memorizationPage',
     'readingPlanPage',
+    'threadsPage',
     'learnMenu',
     'translateMenu',
     'translateScreen',
@@ -16325,6 +16326,7 @@ function openHomeToolFromElement(launcher, tool) {
     study: 'studyLibraryModal',
     memorization: 'memorizationPage',
     reading: 'readingPlanPage',
+    threads: 'threadsPage',
     vocab: 'learnMenu',
     translate: 'translateMenu',
     test: 'testMenu'
@@ -16336,6 +16338,7 @@ function openHomeToolFromElement(launcher, tool) {
   }
   if (tool === 'memorization') openMemorizationPage();
   else if (tool === 'reading') openReadingPlanPage();
+  else if (tool === 'threads') openThreadsPage();
   else if (tool === 'vocab') tryOpenLockedFeature('vocab');
   else if (tool === 'translate') tryOpenLockedFeature('translate');
   else if (tool === 'test') tryOpenLockedFeature('test');
@@ -29591,7 +29594,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.400";
+const APP_VERSION = "3.0.401";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29614,6 +29617,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.401 &mdash; Golden Threads: follow a theme through the whole Bible</div>
+<ul>
+  <li><strong>A new Home tool: Golden Threads</strong> &mdash; 52 hand-curated verse chains that trace one theme &mdash; the love of God, eternal security, the fear of the LORD, the covenants &mdash; from Genesis to Revelation. Every stop carries a one-line note explaining how it links to the next.</li>
+  <li><strong>Stitch as you read</strong> &mdash; Tap any stop to read it in Rhema and it stitches itself into your thread. Finish every stop and the thread turns <em>gold</em> &mdash; woven &mdash; with XP to match. Progress syncs to your account.</li>
+  <li><strong>Grace-first curation</strong> &mdash; The salvation threads keep the gift free and the verbs present-tense: believe and live, kept forever, assurance you can rest on. Discipleship and rewards get their own threads &mdash; costly, crowned, and clearly distinct from the free gift.</li>
+  <li><strong>Read plainly</strong> &mdash; Promise threads honor context (yes, Jeremiah 29:11 gets its real setting), and the Big Story threads read the covenants, Israel, and the coming kingdom the way they were written &mdash; literally.</li>
+</ul>
 <div class="un-version-label">v3.0.400 &mdash; Clause Compass reads real English grammar</div>
 <ul>
   <li><strong>Grammar engine in charge</strong> &mdash; The Compass now uses its built-in English language model as the authority: every verb&rsquo;s dictionary form is compared against how it appears in the verse, so past tense (came&rarr;come, heard&rarr;hear, was&rarr;be) is decided by English morphology rules instead of guesswork.</li>
@@ -31791,6 +31801,7 @@ async function restoreUserFromFirestore(user) {
     localStorage.setItem("appSkin", data.appSkin);
     applyAppSkin(data.appSkin);
   }
+  if (data.threadsProgress) _gtMergeCloudProgress(data.threadsProgress);
   if (data.homeBackdrop) {
     localStorage.setItem("homeBackdrop", data.homeBackdrop);
     applyHomeBackdrop(data.homeBackdrop);
@@ -31886,6 +31897,7 @@ async function syncUserData() {
     appTheme: localStorage.getItem("appTheme") || null,
     appSkin: localStorage.getItem("appSkin") || "classic",
     homeBackdrop: localStorage.getItem("homeBackdrop") || "none",
+    threadsProgress: (() => { try { return JSON.parse(localStorage.getItem("threadsProgress") || "{}"); } catch { return {}; } })(),
     advQuizScores: (() => { try { return JSON.parse(localStorage.getItem("advQuizScores") || "{}"); } catch { return {}; } })(),
     answeredKCs: (() => { try { return JSON.parse(localStorage.getItem("answeredKCs") || "{}"); } catch { return {}; } })(),
     openedLessonBlocks: (() => { try { return JSON.parse(localStorage.getItem("openedLessonBlocks") || "{}"); } catch { return {}; } })(),
@@ -31934,6 +31946,7 @@ function gatherMigrationData() {
     appTheme: localStorage.getItem("appTheme") || null,
     appSkin: localStorage.getItem("appSkin") || "classic",
     homeBackdrop: localStorage.getItem("homeBackdrop") || "none",
+    threadsProgress: (() => { try { return JSON.parse(localStorage.getItem("threadsProgress") || "{}"); } catch { return {}; } })(),
     appWelcomeCoachSeenV275: _hasCompletedAppWelcomeCoach(),
     vocabChapterXP,
     greekParadigmStats: (() => { try { return JSON.parse(localStorage.getItem("greekParadigmStats") || "null"); } catch { return null; } })(),
@@ -46276,4 +46289,240 @@ function _renderDsdStudies() {
       ${ts ? `<span class="dsd-study-meta">Updated ${ts}</span>` : ''}
     </button>`;
   }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOLDEN THREADS — curated thematic verse chains through the whole Bible.
+// Data lives in bible-threads.js (lazy-loaded). Each thread is an ordered chain
+// of verses with link notes; reading a stop "stitches" it, completing a thread
+// turns it gold and awards XP. Progress persists locally and syncs to the cloud.
+// ═══════════════════════════════════════════════════════════════════════════════
+const BIBLE_THREADS_VERSION = '3.0.401';
+let _gtActiveTopic = null;      // topic id currently open in detail view
+let _gtProgress = {};           // { topicId: { read: { idx: true }, done: ts } }
+let _gtLastCelebrated = null;
+
+function _gtLoadProgress() {
+  try { _gtProgress = JSON.parse(localStorage.getItem('threadsProgress') || '{}') || {}; }
+  catch { _gtProgress = {}; }
+}
+function _gtPersistProgress(sync = false) {
+  try { localStorage.setItem('threadsProgress', JSON.stringify(_gtProgress)); } catch {}
+  if (sync) syncUserData();
+}
+// Cloud restore: per-topic, keep whichever side has more stitches.
+function _gtMergeCloudProgress(cloud) {
+  if (!cloud || typeof cloud !== 'object') return;
+  _gtLoadProgress();
+  Object.entries(cloud).forEach(([id, remote]) => {
+    const local = _gtProgress[id];
+    const localCount = Object.keys(local?.read || {}).length;
+    const remoteCount = Object.keys(remote?.read || {}).length;
+    if (!local || remoteCount > localCount || (!local.done && remote?.done)) _gtProgress[id] = remote;
+  });
+  _gtPersistProgress();
+}
+
+function _gtData() { return window.BibleThreads || null; }
+function _loadBibleThreads() {
+  if (window.BibleThreads) return Promise.resolve(window.BibleThreads);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'bible-threads.js?v=' + BIBLE_THREADS_VERSION;
+    s.async = true;
+    s.onload = () => resolve(window.BibleThreads);
+    s.onerror = () => reject(new Error('Unable to load threads data.'));
+    document.head.appendChild(s);
+  });
+}
+// Verse text needs the MSB bundle; load just that file if Rhema hasn't yet.
+function _gtEnsureMsb() {
+  if (window.RhemaMSB) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'rhema-msb.js?v=' + (RHEMA_DATA_VERSIONS['rhema-msb.js'] || APP_VERSION);
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Unable to load Bible text.'));
+    document.head.appendChild(s);
+  });
+}
+
+function _gtParseRef(ref) {
+  const m = String(ref || '').match(/^([A-Z0-9]{3})\s+(\d+):(\d+)$/);
+  return m ? { b: m[1], c: m[2], v: m[3] } : null;
+}
+function _gtDisplayRef(ref) {
+  const p = _gtParseRef(ref);
+  if (!p) return ref;
+  const name = typeof _rhemaBookName === 'function' ? _rhemaBookName(p.b) : p.b;
+  return `${name} ${p.c}:${p.v}`;
+}
+function _gtVerseText(ref) {
+  const p = _gtParseRef(ref);
+  return p ? (window.RhemaMSB?.[p.b]?.[p.c]?.[p.v] || '') : '';
+}
+function _gtTopicProgress(topic) {
+  const read = _gtProgress[topic.id]?.read || {};
+  const count = topic.verses.reduce((n, _, i) => n + (read[i] ? 1 : 0), 0);
+  return { count, total: topic.verses.length, done: count >= topic.verses.length };
+}
+
+function openThreadsPage() {
+  hideBottomNav();
+  showScreen('threadsPage');
+  _gtLoadProgress();
+  _gtActiveTopic = null;
+  const lib = document.getElementById('gtLibrary');
+  if (lib && !_gtData()) lib.innerHTML = '<div class="gt-loading">Unspooling the threads…</div>';
+  Promise.all([_loadBibleThreads(), _gtEnsureMsb()])
+    .then(() => gtRenderLibrary())
+    .catch(() => { if (lib) lib.innerHTML = '<div class="gt-loading">Couldn’t load threads. Check your connection and reopen.</div>'; });
+  gtShowLibrary();
+  setTimeout(_applyPendingAppUpdateReload, 50);
+}
+function closeThreadsPage() {
+  if (_gtActiveTopic) { gtShowLibrary(); return; }
+  showNavPage('home');
+}
+function gtShowLibrary() {
+  _gtActiveTopic = null;
+  document.getElementById('gtLibraryView')?.classList.remove('hidden');
+  document.getElementById('gtDetailView')?.classList.add('hidden');
+  const scroll = document.querySelector('#threadsPage .gt-scroll');
+  if (scroll) scroll.scrollTop = 0;
+  if (_gtData()) gtRenderLibrary();
+}
+
+function gtRenderLibrary() {
+  const data = _gtData();
+  const lib = document.getElementById('gtLibrary');
+  if (!data || !lib) return;
+  const q = (document.getElementById('gtSearch')?.value || '').trim().toLowerCase();
+  const doneCount = data.topics.filter((t) => _gtTopicProgress(t).done).length;
+  const summary = document.getElementById('gtSummary');
+  if (summary) {
+    summary.innerHTML = doneCount
+      ? `🧵 You’ve woven <strong>${doneCount}</strong> of <strong>${data.topics.length}</strong> threads`
+      : `🧵 <strong>${data.topics.length}</strong> threads to follow — pick one and pull`;
+  }
+  lib.innerHTML = data.categories.map((cat) => {
+    const topics = data.topics.filter((t) => t.cat === cat.id &&
+      (!q || t.title.toLowerCase().includes(q) || t.tagline.toLowerCase().includes(q) || t.id.includes(q)));
+    if (!topics.length) return '';
+    return `<section class="gt-cat">
+      <div class="gt-cat-head"><span class="gt-cat-icon">${cat.icon}</span>
+        <div><strong>${cat.title}</strong><small>${cat.blurb}</small></div></div>
+      <div class="gt-cat-list">${topics.map((t) => {
+        const p = _gtTopicProgress(t);
+        const pct = Math.round((p.count / p.total) * 100);
+        return `<button class="gt-card${p.done ? ' gt-done' : ''}" onclick="gtOpenThread('${t.id}')">
+          <span class="gt-card-icon">${t.icon}</span>
+          <span class="gt-card-main">
+            <strong>${t.title}${p.done ? ' <span class="gt-woven-badge">woven ✦</span>' : ''}</strong>
+            <small>${t.tagline}</small>
+            <span class="gt-stitchbar"><span class="gt-stitchbar-fill" style="width:${pct}%"></span></span>
+          </span>
+          <span class="gt-card-count">${p.count}/${p.total}</span>
+        </button>`;
+      }).join('')}</div>
+    </section>`;
+  }).join('') || '<div class="gt-loading">No threads match that search.</div>';
+}
+
+function gtOpenThread(id) {
+  const data = _gtData();
+  const topic = data?.topics.find((t) => t.id === id);
+  if (!topic) return;
+  _gtActiveTopic = id;
+  document.getElementById('gtLibraryView')?.classList.add('hidden');
+  document.getElementById('gtDetailView')?.classList.remove('hidden');
+  gtRenderDetail();
+  const scroll = document.querySelector('#threadsPage .gt-scroll');
+  if (scroll) scroll.scrollTop = 0;
+}
+
+function gtRenderDetail() {
+  const data = _gtData();
+  const topic = data?.topics.find((t) => t.id === _gtActiveTopic);
+  const wrap = document.getElementById('gtDetail');
+  if (!topic || !wrap) return;
+  const cat = data.categories.find((c) => c.id === topic.cat);
+  const p = _gtTopicProgress(topic);
+  const read = _gtProgress[topic.id]?.read || {};
+  wrap.innerHTML = `
+    <div class="gt-detail-head${p.done ? ' gt-done' : ''}">
+      <div class="gt-detail-title"><span class="gt-card-icon">${topic.icon}</span>
+        <div><strong>${topic.title}</strong><small>${cat ? `${cat.icon} ${cat.title}` : ''} · ${p.count}/${p.total} stitched${p.done ? ' · WOVEN ✦' : ''}</small></div>
+      </div>
+      <p class="gt-detail-intro">${topic.intro}</p>
+      <span class="gt-stitchbar gt-stitchbar-lg"><span class="gt-stitchbar-fill" style="width:${Math.round((p.count / p.total) * 100)}%"></span></span>
+    </div>
+    <div class="gt-chain">
+      ${topic.verses.map((stop, i) => {
+        const isRead = !!read[i];
+        const text = _gtVerseText(stop.r);
+        return `<div class="gt-stop${isRead ? ' gt-read' : ''}">
+          <button class="gt-knot" onclick="gtToggleRead(${i})" aria-label="${isRead ? 'Unmark' : 'Mark'} as read">
+            <span class="material-symbols-outlined">${isRead ? 'check' : 'fiber_manual_record'}</span>
+          </button>
+          <div class="gt-stop-card" onclick="gtOpenVerse(${i})">
+            <div class="gt-stop-ref">${_gtDisplayRef(stop.r)}<span class="material-symbols-outlined gt-stop-go">chevron_right</span></div>
+            ${text ? `<p class="gt-stop-text">“${text}”</p>` : ''}
+            <p class="gt-stop-note">🪡 ${stop.n}</p>
+          </div>
+        </div>`;
+      }).join('')}
+      <div class="gt-chain-end${p.done ? ' gt-done' : ''}">${p.done
+        ? '✦ Thread woven — beautifully done! ✦'
+        : 'Tap a verse to read it in Rhema — it stitches itself as you go.'}</div>
+    </div>`;
+}
+
+function gtToggleRead(idx) {
+  const topic = _gtData()?.topics.find((t) => t.id === _gtActiveTopic);
+  if (!topic) return;
+  const entry = _gtProgress[topic.id] || (_gtProgress[topic.id] = { read: {} });
+  if (entry.read[idx]) delete entry.read[idx];
+  else entry.read[idx] = true;
+  _gtCheckCompletion(topic, entry);
+  _gtPersistProgress(false);
+  gtRenderDetail();
+}
+
+// Opening a verse in Rhema counts as stitching that stop.
+async function gtOpenVerse(idx) {
+  const topic = _gtData()?.topics.find((t) => t.id === _gtActiveTopic);
+  const stop = topic?.verses[idx];
+  const p = stop ? _gtParseRef(stop.r) : null;
+  if (!p) return;
+  const entry = _gtProgress[topic.id] || (_gtProgress[topic.id] = { read: {} });
+  if (!entry.read[idx]) {
+    entry.read[idx] = true;
+    _gtCheckCompletion(topic, entry);
+    _gtPersistProgress(false);
+  }
+  _rhemaBook = p.b;
+  _rhemaChapter = String(p.c);
+  _rhemaVerse = String(p.v);
+  // Rhema opens as an overlay; closing it lands back on this thread.
+  await showRhema();
+  requestAnimationFrame(() => requestAnimationFrame(() =>
+    _rhemaScrollVerseToTop?.(String(p.v), { smooth: false })));
+  gtRenderDetail();
+}
+
+function _gtCheckCompletion(topic, entry) {
+  const count = topic.verses.reduce((n, _, i) => n + (entry.read[i] ? 1 : 0), 0);
+  if (count >= topic.verses.length && !entry.done) {
+    entry.done = Date.now();
+    _gtPersistProgress(true);
+    if (_gtLastCelebrated !== topic.id) {
+      _gtLastCelebrated = topic.id;
+      try { addXP(40, `Thread woven: ${topic.title}`); } catch {}
+      if (typeof _showStudyToast === 'function') _showStudyToast(`✦ Thread woven: ${topic.title}!`);
+    }
+  } else if (count < topic.verses.length && entry.done) {
+    delete entry.done;
+  }
 }
