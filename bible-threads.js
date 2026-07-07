@@ -7,18 +7,18 @@
 window.BibleThreads = {
   version: 1,
   categories: [
-    { id: 'heart',    icon: '💛', title: "God's Heart",        blurb: 'Who God is — His love, grace, and character.' },
-    { id: 'gift',     icon: '🎁', title: 'The Free Gift',      blurb: 'Salvation: free, by faith, forever.' },
-    { id: 'walk',     icon: '👣', title: 'Walking With God',   blurb: 'Discipleship, growth, and rewards.' },
-    { id: 'jesus',    icon: '✝️', title: 'Jesus',              blurb: 'His person, His work, His return.' },
-    { id: 'promises', icon: '⚓', title: 'Promises to Stand On', blurb: 'Peace, courage, provision, comfort.' },
-    { id: 'wisdom',   icon: '🦉', title: 'Wisdom for Life',    blurb: 'Everyday life, examined by Scripture.' },
-    { id: 'story',    icon: '📜', title: 'The Big Story',      blurb: 'Covenants, Israel, the Church, the Kingdom.' }
+    { id: 'heart',    icon: 'favorite', title: "God's Heart",        blurb: 'Who God is — His love, grace, and character.' },
+    { id: 'gift',    icon: 'redeem', title: 'The Free Gift',      blurb: 'Salvation: free, by faith, forever.' },
+    { id: 'walk',    icon: 'directions_walk', title: 'Walking With God',   blurb: 'Discipleship, growth, and rewards.' },
+    { id: 'jesus',    icon: 'star', title: 'Jesus',              blurb: 'His person, His work, His return.' },
+    { id: 'promises',    icon: 'anchor', title: 'Promises to Stand On', blurb: 'Peace, courage, provision, comfort.' },
+    { id: 'wisdom',    icon: 'lightbulb', title: 'Wisdom for Life',    blurb: 'Everyday life, examined by Scripture.' },
+    { id: 'story',    icon: 'history_edu', title: 'The Big Story',      blurb: 'Covenants, Israel, the Church, the Kingdom.' }
   ],
   topics: [
 
   // ═══ GOD'S HEART ═══
-  { id: 'love-of-god', cat: 'heart', icon: '❤️', title: 'The Love of God',
+  { id: 'love-of-god', cat: 'heart', icon: 'favorite', title: 'The Love of God',
     tagline: 'From everlasting love to a cross on a hill.',
     intro: 'God’s love is not a mood — it is His settled, everlasting disposition toward you, proven in history at the cross.',
     verses: [
@@ -36,7 +36,7 @@ window.BibleThreads = {
       { r: '1JO 4:19', n: 'The thread’s end becomes your beginning: we love because He first loved.' }
     ] },
 
-  { id: 'grace-of-god', cat: 'heart', icon: '🕊️', title: 'The Grace of God',
+  { id: 'grace-of-god', cat: 'heart', icon: 'volunteer_activism', title: 'The Grace of God',
     tagline: 'Favor you did not earn and cannot repay.',
     intro: 'Grace is God giving what we could never deserve. Trace it from Noah’s day to the throne you may now approach boldly.',
     verses: [
@@ -53,7 +53,7 @@ window.BibleThreads = {
       { r: 'HEB 4:16', n: 'The destination: a throne OF grace, approached with confidence.' }
     ] },
 
-  { id: 'faithfulness', cat: 'heart', icon: '🌅', title: 'Great Is His Faithfulness',
+  { id: 'faithfulness', cat: 'heart', icon: 'wb_sunny', title: 'Great Is His Faithfulness',
     tagline: 'New every morning — even in Lamentations.',
     intro: 'The Bible’s boldest claim about God’s reliability sits in its saddest book. He keeps His word even when we cannot keep ours.',
     verses: [
@@ -71,7 +71,7 @@ window.BibleThreads = {
       { r: 'HEB 10:23', n: 'So hold your hope without wavering: the Promiser is faithful.' }
     ] },
 
-  { id: 'shepherd', cat: 'heart', icon: '🐑', title: 'The Good Shepherd',
+  { id: 'shepherd', cat: 'heart', icon: 'nature_people', title: 'The Good Shepherd',
     tagline: 'One flock, one Shepherd, no lost sheep.',
     intro: 'From Jacob’s deathbed to the throne of heaven, God insists on being pictured with a staff in His hand.',
     verses: [
@@ -89,7 +89,7 @@ window.BibleThreads = {
       { r: 'REV 7:17', n: 'Forever: the Lamb Himself will shepherd them to springs of living water.' }
     ] },
 
-  { id: 'father', cat: 'heart', icon: '🏠', title: 'The Father’s Heart',
+  { id: 'father', cat: 'heart', icon: 'home', title: 'The Father’s Heart',
     tagline: 'Adopted, embraced, and never disowned.',
     intro: 'Believers are not employees of God — they are children in the family. Trace what it means that God is your Father.',
     verses: [
@@ -106,7 +106,7 @@ window.BibleThreads = {
       { r: 'JAM 1:17', n: 'Every good gift descends from the Father of lights, who does not change.' }
     ] },
 
-  { id: 'holiness', cat: 'heart', icon: '🔥', title: 'Holy, Holy, Holy',
+  { id: 'holiness', cat: 'heart', icon: 'local_fire_department', title: 'Holy, Holy, Holy',
     tagline: 'The only attribute Scripture triples.',
     intro: 'Angels do not cry "love, love, love" or "power, power, power." Holiness is the blazing center of who God is.',
     verses: [
@@ -124,7 +124,7 @@ window.BibleThreads = {
     ] },
 
   // ═══ THE FREE GIFT ═══
-  { id: 'free-gift', cat: 'gift', icon: '🎁', title: 'Salvation Is a Free Gift',
+  { id: 'free-gift', cat: 'gift', icon: 'redeem', title: 'Salvation Is a Free Gift',
     tagline: 'Without money, without cost, without strings.',
     intro: 'From Isaiah’s market cry to the Bible’s final invitation, God’s salvation is priced the same way: free. A gift earned is a wage — and salvation is never a wage.',
     verses: [
@@ -140,7 +140,7 @@ window.BibleThreads = {
       { r: 'REV 22:17', n: 'The Bible’s last invitation: whoever wishes, take the water of life — freely.' }
     ] },
 
-  { id: 'believe', cat: 'gift', icon: '🙌', title: 'Believe and Live',
+  { id: 'believe', cat: 'gift', icon: 'visibility', title: 'Believe and Live',
     tagline: 'One condition, stated about 160 times: faith.',
     intro: 'John wrote his Gospel so that you may believe and have life (John 20:31) — and he never once adds a second condition. Look and live.',
     verses: [
@@ -158,7 +158,7 @@ window.BibleThreads = {
       { r: 'GAL 2:16', n: 'By faith in Christ and not by works of the law — stated three times in one verse.' }
     ] },
 
-  { id: 'eternal-security', cat: 'gift', icon: '🔒', title: 'Kept Forever',
+  { id: 'eternal-security', cat: 'gift', icon: 'lock', title: 'Kept Forever',
     tagline: 'Held in two hands that never let go.',
     intro: 'Eternal life that could be lost was never eternal. This chain stacks the promises: sealed, kept, never cast out, never snatched away.',
     verses: [
@@ -177,7 +177,7 @@ window.BibleThreads = {
       { r: 'JUD 1:24', n: 'To Him who is ABLE to keep you from stumbling and present you blameless — with great joy.' }
     ] },
 
-  { id: 'assurance', cat: 'gift', icon: '✅', title: 'How You Can Know',
+  { id: 'assurance', cat: 'gift', icon: 'verified', title: 'How You Can Know',
     tagline: 'Assurance rests on His promise, not your performance.',
     intro: 'God wants His children certain. Assurance is not arrogance — it is taking Jesus at His word. If it depended on your works, you could never know; because it depends on His promise, you can.',
     verses: [
@@ -193,7 +193,7 @@ window.BibleThreads = {
       { r: '1JO 5:13', n: 'Written that you may KNOW — not hope, not guess — that you have eternal life.' }
     ] },
 
-  { id: 'justified', cat: 'gift', icon: '⚖️', title: 'Declared Righteous',
+  { id: 'justified', cat: 'gift', icon: 'balance', title: 'Declared Righteous',
     tagline: 'The courtroom verdict that cannot be appealed.',
     intro: 'Justification is a legal declaration, not a gradual improvement. God credits Christ’s righteousness to the believing sinner — and no one can re-open the case.',
     verses: [
@@ -211,7 +211,7 @@ window.BibleThreads = {
       { r: 'PHP 3:9', n: 'Paul trades his resume for a righteousness from God on the basis of faith.' }
     ] },
 
-  { id: 'new-birth', cat: 'gift', icon: '🌱', title: 'Born Again',
+  { id: 'new-birth', cat: 'gift', icon: 'eco', title: 'Born Again',
     tagline: 'You cannot be unborn.',
     intro: 'Birth happens once and establishes a permanent relationship. That is exactly the picture Jesus chose for how eternal life begins.',
     verses: [
@@ -228,7 +228,7 @@ window.BibleThreads = {
       { r: '1JO 5:1', n: 'Everyone who believes that Jesus is the Christ has been born of God. Believing = born.' }
     ] },
 
-  { id: 'not-by-works', cat: 'gift', icon: '🚫', title: 'Not by Works',
+  { id: 'not-by-works', cat: 'gift', icon: 'block', title: 'Not by Works',
     tagline: 'The scandal of grace: your best deeds don’t count toward it.',
     intro: 'Scripture is relentless: works cannot start, sustain, or secure salvation. Works matter enormously — but as fruit and for reward, never as the root.',
     verses: [
@@ -245,7 +245,7 @@ window.BibleThreads = {
       { r: 'EPH 2:10', n: 'The right order: created in Christ FOR good works — works flow from salvation, never into it.' }
     ] },
 
-  { id: 'blood-lamb', cat: 'gift', icon: '🩸', title: 'The Blood of the Lamb',
+  { id: 'blood-lamb', cat: 'gift', icon: 'water_drop', title: 'The Blood of the Lamb',
     tagline: 'One scarlet thread from Eden to the throne.',
     intro: 'Follow the sacrifice: a covering in Eden, a ram on Moriah, blood on doorposts, a suffering Servant — until John points and says, "Behold, the Lamb of God."',
     verses: [
@@ -263,7 +263,7 @@ window.BibleThreads = {
       { r: 'REV 5:9', n: 'Heaven’s new song: You were slain, and with Your blood You purchased for God.' }
     ] },
 
-  { id: 'whoever', cat: 'gift', icon: '🌍', title: '"Whoever": The Widest Word',
+  { id: 'whoever', cat: 'gift', icon: 'public', title: '"Whoever": The Widest Word',
     tagline: 'No fine print. No excluded names.',
     intro: 'The gospel’s favorite pronoun is "whoever." God’s offer is as wide as the human race — which means it is exactly as wide as you.',
     verses: [
@@ -280,7 +280,7 @@ window.BibleThreads = {
       { r: 'REV 22:17', n: 'The Spirit and the bride say "Come" — and whoever wishes may take freely.' }
     ] },
 
-  { id: 'everlasting-now', cat: 'gift', icon: '⏳', title: 'Everlasting Life, Present Tense',
+  { id: 'everlasting-now', cat: 'gift', icon: 'all_inclusive', title: 'Everlasting Life, Present Tense',
     tagline: 'Not "will get" — HAS. Right now.',
     intro: 'Read the verb tenses. Jesus does not say the believer will someday receive eternal life at the finish line — He says the believer HAS it, here, today. And what is everlasting cannot end.',
     verses: [
@@ -296,7 +296,7 @@ window.BibleThreads = {
     ] },
 
   // ═══ WALKING WITH GOD ═══
-  { id: 'discipleship', cat: 'walk', icon: '🎒', title: 'The Costly Call',
+  { id: 'discipleship', cat: 'walk', icon: 'hiking', title: 'The Costly Call',
     tagline: 'Salvation is free. Following costs everything.',
     intro: 'Scripture keeps two truths side by side: eternal life is a free gift to believers, and discipleship is a costly road for followers. Confusing them ruins both. This thread walks the costly one — for those already safe in grace.',
     verses: [
@@ -312,7 +312,7 @@ window.BibleThreads = {
       { r: '2TI 2:2', n: 'Disciples make disciples: entrust it to faithful men who will teach others.' }
     ] },
 
-  { id: 'rewards', cat: 'walk', icon: '👑', title: 'Crowns at the Bema',
+  { id: 'rewards', cat: 'walk', icon: 'military_tech', title: 'Crowns at the Bema',
     tagline: 'Salvation is a gift; rewards are earned.',
     intro: 'Believers will stand at the Judgment Seat (Bema) of Christ — not to determine destiny, but to evaluate service. You cannot lose your salvation there, but you can lose your reward. Run to win.',
     verses: [
@@ -332,7 +332,7 @@ window.BibleThreads = {
       { r: 'REV 22:12', n: 'Behold, I am coming soon — My reward is with Me.' }
     ] },
 
-  { id: 'abide', cat: 'walk', icon: '🍇', title: 'Abiding in the Vine',
+  { id: 'abide', cat: 'walk', icon: 'link', title: 'Abiding in the Vine',
     tagline: 'Fruit comes from staying close, not trying hard.',
     intro: 'Union with Christ is permanent; fellowship with Christ is enjoyed by abiding. Branches don’t strain to make grapes — they stay attached.',
     verses: [
@@ -348,7 +348,7 @@ window.BibleThreads = {
       { r: '1JO 2:28', n: 'Abide now — so you’ll have confidence, not shame, at His appearing. (A reward issue, not a rescue issue.)' }
     ] },
 
-  { id: 'spirit-walk', cat: 'walk', icon: '💨', title: 'Walking by the Spirit',
+  { id: 'spirit-walk', cat: 'walk', icon: 'air', title: 'Walking by the Spirit',
     tagline: 'The Christian life is supernatural or it is exhausting.',
     intro: 'God never asked you to imitate Christ in your own strength. He moved in. Fruit grows where the Spirit leads.',
     verses: [
@@ -364,7 +364,7 @@ window.BibleThreads = {
       { r: 'EPH 5:18', n: 'Be filled with the Spirit — a command in the present tense: keep on being filled.' }
     ] },
 
-  { id: 'prayer', cat: 'walk', icon: '🙏', title: 'Bold at the Throne',
+  { id: 'prayer', cat: 'walk', icon: 'front_hand', title: 'Bold at the Throne',
     tagline: 'You have an open door to the throne room. Use it.',
     intro: 'Prayer is not a performance for God’s approval — it is a child’s access to a Father who already said yes to you in Christ.',
     verses: [
@@ -381,7 +381,7 @@ window.BibleThreads = {
       { r: '1JO 5:15', n: 'And if He hears, we have what we asked — prayer banks on His character.' }
     ] },
 
-  { id: 'fellowship', cat: 'walk', icon: '🤝', title: 'Confession & Fellowship',
+  { id: 'fellowship', cat: 'walk', icon: 'handshake', title: 'Confession & Fellowship',
     tagline: 'Sin breaks fellowship with the Father — never sonship.',
     intro: 'First John 1 is family talk: written to believers about walking in the light. Confession restores the JOY and closeness of the relationship — the relationship itself was never in danger.',
     verses: [
@@ -397,7 +397,7 @@ window.BibleThreads = {
       { r: 'PSA 103:12', n: 'As far as east from west — how far He has removed our transgressions.' }
     ] },
 
-  { id: 'growth', cat: 'walk', icon: '📈', title: 'From Milk to Meat',
+  { id: 'growth', cat: 'walk', icon: 'trending_up', title: 'From Milk to Meat',
     tagline: 'Every believer is born an infant. None should stay one.',
     intro: 'Scripture openly acknowledges that believers can stall — Corinth proves it. Growth is real, expected, and gradual: crave the milk, then chew the meat.',
     verses: [
@@ -413,7 +413,7 @@ window.BibleThreads = {
       { r: '2PE 3:18', n: 'The last verse Peter ever wrote: GROW in the grace and knowledge of our Lord.' }
     ] },
 
-  { id: 'serve', cat: 'walk', icon: '🧺', title: 'The Towel and the Basin',
+  { id: 'serve', cat: 'walk', icon: 'cleaning_services', title: 'The Towel and the Basin',
     tagline: 'Greatness in the kingdom stoops.',
     intro: 'The night before the cross, the Lord of glory washed feet. Service is not what we do to earn His favor — it is what His favor turns us into.',
     verses: [
@@ -429,7 +429,7 @@ window.BibleThreads = {
       { r: 'HEB 6:10', n: 'God is not unjust: He will not forget your work and love. It is all on record.' }
     ] },
 
-  { id: 'trials', cat: 'walk', icon: '⛈️', title: 'Gold Through Fire',
+  { id: 'trials', cat: 'walk', icon: 'thunderstorm', title: 'Gold Through Fire',
     tagline: 'Trials refine believers; they never un-adopt them.',
     intro: 'Suffering has a syllabus. God wastes none of it — He refines faith like gold and crowns endurance at the end.',
     verses: [
@@ -449,7 +449,7 @@ window.BibleThreads = {
     ] },
 
   // ═══ JESUS ═══
-  { id: 'deity', cat: 'jesus', icon: '👑', title: 'The Deity of Christ',
+  { id: 'deity', cat: 'jesus', icon: 'brightness_7', title: 'The Deity of Christ',
     tagline: 'Not a good teacher. God in the flesh.',
     intro: 'The New Testament does not whisper Christ’s deity — it opens with it, argues it, and worships accordingly. Read the claims and decide what they demand.',
     verses: [
@@ -467,7 +467,7 @@ window.BibleThreads = {
       { r: 'REV 22:13', n: 'Alpha and Omega, First and Last — Jesus claims the titles of Yahweh.' }
     ] },
 
-  { id: 'lamb-foretold', cat: 'jesus', icon: '🔭', title: 'The Messiah Foretold',
+  { id: 'lamb-foretold', cat: 'jesus', icon: 'travel_explore', title: 'The Messiah Foretold',
     tagline: 'Written centuries early. Fulfilled to the letter.',
     intro: 'A literal reading of the prophets yields a startling portrait — birthplace, lineage, betrayal, pierced hands — written long before Bethlehem. Fulfilled prophecy is God’s signature.',
     verses: [
@@ -485,7 +485,7 @@ window.BibleThreads = {
       { r: 'MAL 3:1', n: 'A messenger prepares the way — then the Lord suddenly comes to His temple.' }
     ] },
 
-  { id: 'cross', cat: 'jesus', icon: '✝️', title: 'It Is Finished',
+  { id: 'cross', cat: 'jesus', icon: 'church', title: 'It Is Finished',
     tagline: 'Tetelestai: paid in full.',
     intro: 'Jesus’ final word from the cross was a single Greek term merchants stamped on settled bills: tetelestai — paid in full. Nothing is left for you to add.',
     verses: [
@@ -503,7 +503,7 @@ window.BibleThreads = {
       { r: '1PE 3:18', n: 'Christ suffered for sins ONCE for all — the righteous for the unrighteous.' }
     ] },
 
-  { id: 'risen', cat: 'jesus', icon: '🌄', title: 'Risen Indeed',
+  { id: 'risen', cat: 'jesus', icon: 'wb_twilight', title: 'Risen Indeed',
     tagline: 'The tomb is empty. Everything changes.',
     intro: 'Christianity stakes everything on a historical claim: on the third day, He rose. Paul says if it is false, faith is futile — and then stakes his life that it is true.',
     verses: [
@@ -521,7 +521,7 @@ window.BibleThreads = {
       { r: 'REV 1:18', n: 'I was dead, and behold — alive forever and ever. And I hold the keys.' }
     ] },
 
-  { id: 'high-priest', cat: 'jesus', icon: '🕯️', title: 'Our Great High Priest',
+  { id: 'high-priest', cat: 'jesus', icon: 'record_voice_over', title: 'Our Great High Priest',
     tagline: 'He always lives to intercede for you.',
     intro: 'Right now, this minute, Jesus is praying for you. His priesthood never expires, so His salvation never lapses — He saves to the uttermost.',
     verses: [
@@ -538,7 +538,7 @@ window.BibleThreads = {
       { r: 'JOH 17:20', n: 'He prayed for all who would believe through the apostles’ word — that includes you.' }
     ] },
 
-  { id: 'i-am', cat: 'jesus', icon: '💬', title: 'The Seven "I AM"s',
+  { id: 'i-am', cat: 'jesus', icon: 'format_quote', title: 'The Seven "I AM"s',
     tagline: 'Seven metaphors. One staggering claim.',
     intro: 'In John’s Gospel Jesus completes the sentence God began at the burning bush. Each "I am" answers a different human hunger — and together they claim the divine name.',
     verses: [
@@ -553,7 +553,7 @@ window.BibleThreads = {
       { r: 'JOH 8:58', n: 'And the claim beneath them all: before Abraham was born, I AM.' }
     ] },
 
-  { id: 'return', cat: 'jesus', icon: '🌟', title: 'The Blessed Hope',
+  { id: 'return', cat: 'jesus', icon: 'flare', title: 'The Blessed Hope',
     tagline: 'He promised to come back. Taken literally, that changes today.',
     intro: 'The same Jesus who ascended will return the same way — literally, bodily, perhaps at any moment. The early church greeted each other with "Maranatha": our Lord, come!',
     verses: [
@@ -571,7 +571,7 @@ window.BibleThreads = {
     ] },
 
   // ═══ PROMISES TO STAND ON ═══
-  { id: 'peace', cat: 'promises', icon: '🕊️', title: 'Peace Beyond Understanding',
+  { id: 'peace', cat: 'promises', icon: 'spa', title: 'Peace Beyond Understanding',
     tagline: 'Peace WITH God is settled; the peace OF God is offered daily.',
     intro: 'Justification gives every believer permanent peace WITH God. On that foundation, God offers the felt peace OF God — a guard for anxious hearts.',
     verses: [
@@ -587,7 +587,7 @@ window.BibleThreads = {
       { r: '2TH 3:16', n: 'The Lord of peace give you peace at ALL times and in EVERY way.' }
     ] },
 
-  { id: 'fear-not', cat: 'promises', icon: '🦁', title: 'Do Not Be Afraid',
+  { id: 'fear-not', cat: 'promises', icon: 'shield', title: 'Do Not Be Afraid',
     tagline: 'The Bible’s most repeated command.',
     intro: '"Fear not" appears in Scripture again and again — and it is almost always attached to a reason: I am with you. Courage is not the absence of fear; it is the presence of God.',
     verses: [
@@ -605,7 +605,7 @@ window.BibleThreads = {
       { r: 'HEB 13:6', n: 'So we say with confidence: the Lord is my helper; I will not be afraid.' }
     ] },
 
-  { id: 'refuge', cat: 'promises', icon: '🏰', title: 'A Strong Tower',
+  { id: 'refuge', cat: 'promises', icon: 'castle', title: 'A Strong Tower',
     tagline: 'When everything shakes, run somewhere solid.',
     intro: 'Scripture piles up fortress language for God: rock, shield, refuge, stronghold, tower. The invitation in every metaphor is the same — run IN.',
     verses: [
@@ -620,7 +620,7 @@ window.BibleThreads = {
       { r: 'NAM 1:7', n: 'Nahum’s hidden gem: the LORD is good, a stronghold in the day of distress — He KNOWS those who take refuge in Him.' }
     ] },
 
-  { id: 'provision', cat: 'promises', icon: '🍞', title: 'Daily Bread',
+  { id: 'provision', cat: 'promises', icon: 'bakery_dining', title: 'Daily Bread',
     tagline: 'Manna came one day at a time. It still does.',
     intro: 'God’s provision is usually daily, rarely early, and never late. From wilderness manna to ravens with room service, He feeds those who look to Him.',
     verses: [
@@ -635,7 +635,7 @@ window.BibleThreads = {
       { r: 'PHP 4:19', n: 'My God will supply every need of yours according to His riches in glory.' }
     ] },
 
-  { id: 'comfort', cat: 'promises', icon: '🫂', title: 'The God of All Comfort',
+  { id: 'comfort', cat: 'promises', icon: 'diversity_1', title: 'The God of All Comfort',
     tagline: 'He keeps your tears in a bottle.',
     intro: 'God does not waste sorrow and does not rush grief. He is near to the brokenhearted — near enough to count tears.',
     verses: [
@@ -653,7 +653,7 @@ window.BibleThreads = {
       { r: 'REV 21:4', n: 'The last promise: He will wipe away every tear. Death shall be no more.' }
     ] },
 
-  { id: 'hope-anchor', cat: 'promises', icon: '⚓', title: 'Hope That Anchors',
+  { id: 'hope-anchor', cat: 'promises', icon: 'anchor', title: 'Hope That Anchors',
     tagline: 'Biblical hope is not wishing — it is waiting on certainty.',
     intro: 'In Scripture, hope is confident expectation anchored in God’s character. (And yes — we’ll read Jeremiah 29:11 in its real context. It gets better, not worse.)',
     verses: [
@@ -668,7 +668,7 @@ window.BibleThreads = {
       { r: '1PE 3:15', n: 'Always be ready to explain the hope in you — hope this solid gets noticed.' }
     ] },
 
-  { id: 'heaven', cat: 'promises', icon: '🏙️', title: 'The Father’s House',
+  { id: 'heaven', cat: 'promises', icon: 'location_city', title: 'The Father’s House',
     tagline: 'A prepared place for prepared people.',
     intro: 'Heaven is not a mood or a metaphor — it is a place Jesus is preparing, with your name on a room. The thief on the cross made it in with nothing but faith.',
     verses: [
@@ -684,7 +684,7 @@ window.BibleThreads = {
       { r: 'PSA 16:11', n: 'In Your presence is fullness of joy; at Your right hand, pleasures forevermore.' }
     ] },
 
-  { id: 'never-alone', cat: 'promises', icon: '🌙', title: 'Never Alone',
+  { id: 'never-alone', cat: 'promises', icon: 'person_pin_circle', title: 'Never Alone',
     tagline: 'The promise stitched into every era of Scripture.',
     intro: 'To Jacob, to Moses, to Joshua, to the disciples, to you: I am with you. It is the promise God repeats most, because it is the one we forget fastest.',
     verses: [
@@ -701,7 +701,7 @@ window.BibleThreads = {
     ] },
 
   // ═══ WISDOM FOR LIFE ═══
-  { id: 'tongue', cat: 'wisdom', icon: '👅', title: 'Taming the Tongue',
+  { id: 'tongue', cat: 'wisdom', icon: 'chat', title: 'Taming the Tongue',
     tagline: 'The smallest muscle with the biggest blast radius.',
     intro: 'Scripture treats words as loaded weapons and healing medicine — sometimes in the same sentence. Wisdom begins with a guarded mouth.',
     verses: [
@@ -719,7 +719,7 @@ window.BibleThreads = {
       { r: 'JAM 3:5', n: 'A tiny spark, a great forest fire — James’s famous warning label.' }
     ] },
 
-  { id: 'money', cat: 'wisdom', icon: '💰', title: 'Money & Contentment',
+  { id: 'money', cat: 'wisdom', icon: 'savings', title: 'Money & Contentment',
     tagline: 'A terrible master, a useful servant.',
     intro: 'The Bible talks about money constantly — not because God needs yours, but because Mammon competes for your heart. Contentment is the exit ramp.',
     verses: [
@@ -736,7 +736,7 @@ window.BibleThreads = {
       { r: 'HEB 13:5', n: 'Keep free from the love of money, content with what you have — because HE stays.' }
     ] },
 
-  { id: 'humility', cat: 'wisdom', icon: '🌾', title: 'The Way Down Is Up',
+  { id: 'humility', cat: 'wisdom', icon: 'south', title: 'The Way Down Is Up',
     tagline: 'God resists the proud — and cannot resist the humble.',
     intro: 'Pride is the one sin God actively opposes from a distance; humility is the doorstep He loves to visit. In His kingdom, the way up is always down.',
     verses: [
@@ -754,7 +754,7 @@ window.BibleThreads = {
       { r: '1PE 5:6', n: 'Humble yourselves under His mighty hand — He does the lifting, in HIS time.' }
     ] },
 
-  { id: 'fear-of-lord', cat: 'wisdom', icon: '🌌', title: 'The Fear of the LORD',
+  { id: 'fear-of-lord', cat: 'wisdom', icon: 'diamond', title: 'The Fear of the LORD',
     tagline: 'Where all real wisdom begins.',
     intro: 'Not cringing terror — reverent awe that takes God seriously. Scripture calls it the beginning of wisdom, a fountain of life, and strangely: a thing to be taught.',
     verses: [
@@ -770,7 +770,7 @@ window.BibleThreads = {
       { r: 'ISA 33:6', n: 'The fear of the LORD is Zion’s TREASURE.' }
     ] },
 
-  { id: 'guidance', cat: 'wisdom', icon: '🧭', title: 'A Lamp for the Path',
+  { id: 'guidance', cat: 'wisdom', icon: 'navigation', title: 'A Lamp for the Path',
     tagline: 'God guides — usually one step at a time.',
     intro: 'A lamp to the feet lights the next step, not the next decade. God promises direction to those who trust, ask, and keep walking.',
     verses: [
@@ -786,7 +786,7 @@ window.BibleThreads = {
       { r: 'JAM 1:5', n: 'Short on wisdom? ASK — God gives generously, without finding fault.' }
     ] },
 
-  { id: 'friendship', cat: 'wisdom', icon: '⚔️', title: 'Iron Sharpens Iron',
+  { id: 'friendship', cat: 'wisdom', icon: 'group', title: 'Iron Sharpens Iron',
     tagline: 'Jonathan strengthened David’s hand in God.',
     intro: 'The Bible’s picture of friendship has edges: iron on iron, faithful wounds, a friend for adversity. Choose companions who point you God-ward.',
     verses: [
@@ -804,7 +804,7 @@ window.BibleThreads = {
     ] },
 
   // ═══ THE BIG STORY ═══
-  { id: 'covenants', cat: 'story', icon: '🌈', title: 'The Covenants',
+  { id: 'covenants', cat: 'story', icon: 'looks', title: 'The Covenants',
     tagline: 'God’s promises are the skeleton of the whole Bible.',
     intro: 'Read literally, the Bible is structured by covenants — and the weight-bearing ones are UNCONDITIONAL: God alone walked between the pieces. History is those promises coming true on schedule.',
     verses: [
@@ -821,7 +821,7 @@ window.BibleThreads = {
       { r: 'HEB 8:6', n: 'Jesus mediates a BETTER covenant, enacted on better promises.' }
     ] },
 
-  { id: 'israel', cat: 'story', icon: '🇮🇱', title: 'Promises That Stand: Israel',
+  { id: 'israel', cat: 'story', icon: 'flag', title: 'Promises That Stand: Israel',
     tagline: 'Gifts and calling God never revokes.',
     intro: 'Read the promises to Israel plainly and they are national, territorial, and permanent. Paul asks the question directly — has God rejected His people? — and answers it himself: absolutely not.',
     verses: [
@@ -839,7 +839,7 @@ window.BibleThreads = {
       { r: 'ROM 11:29', n: 'The principle under it all: God’s gifts and calling are IRREVOCABLE.' }
     ] },
 
-  { id: 'church', cat: 'story', icon: '⛪', title: 'One Body, Many Members',
+  { id: 'church', cat: 'story', icon: 'groups', title: 'One Body, Many Members',
     tagline: 'Something new began at Pentecost.',
     intro: 'The Church is not a renamed Israel — it is a new creation: Jew and Gentile baptized by one Spirit into one body, with the risen Christ as Head.',
     verses: [
@@ -857,7 +857,7 @@ window.BibleThreads = {
       { r: '1PE 2:5', n: 'Living stones, being built into a spiritual house.' }
     ] },
 
-  { id: 'kingdom', cat: 'story', icon: '🦁', title: 'The Kingdom Yet to Come',
+  { id: 'kingdom', cat: 'story', icon: 'account_balance', title: 'The Kingdom Yet to Come',
     tagline: 'Swords to plowshares — read it straight.',
     intro: 'Taken at face value, the prophets describe a real earthly reign: David’s throne occupied, nations at peace, creation tamed. Jesus taught us to keep praying for it — because it is still coming.',
     verses: [
@@ -874,7 +874,7 @@ window.BibleThreads = {
       { r: 'REV 20:6', n: 'They will reign with Him for a thousand years — stated six times in the chapter.' }
     ] },
 
-  { id: 'garden-to-city', cat: 'story', icon: '🌳', title: 'From Garden to City',
+  { id: 'garden-to-city', cat: 'story', icon: 'park', title: 'From Garden to City',
     tagline: 'The Bible ends where it began — only better.',
     intro: 'Genesis opens in a garden with a tree of life; Revelation closes in a garden-city with the same tree, now lining a river. Everything between is God winning it back.',
     verses: [
@@ -891,7 +891,7 @@ window.BibleThreads = {
       { r: 'REV 22:2', n: 'And there it is again: the tree of life — its leaves for the healing of the nations.' }
     ] },
 
-  { id: 'word', cat: 'story', icon: '📖', title: 'The Living Word',
+  { id: 'word', cat: 'story', icon: 'menu_book', title: 'The Living Word',
     tagline: 'What the Bible says about itself.',
     intro: 'Scripture claims to be breathed out by God, flawless, eternal, and alive — sharper than any sword. This thread lets the Book testify in its own defense.',
     verses: [

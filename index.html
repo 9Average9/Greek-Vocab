@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.401" rel="stylesheet"/>
+<link href="style.css?v=3.0.402" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp&amp;display=swap" rel="stylesheet"/>
@@ -574,7 +574,7 @@ Journey Maps</span>
 </button>
 <button class="home-action-tile quick-action-threads" id="threadsHomeBtn" onclick="openHomeToolFromElement(this, 'threads')">
 <div class="hat-icon hat-icon-threads">
-<span class="gt-tile-emoji">🧵</span>
+<span class="material-symbols-outlined">route</span>
 </div>
 <div class="hat-text">
 <strong>Golden Threads</strong>
@@ -8667,13 +8667,12 @@ Journey Maps</span>
 <!-- ── Golden Threads ─────────────────────────────────────────────────── -->
 <section class="screen" id="threadsPage">
 <div class="nav-bar gt-nav">
-<div><button class="prof-nav-icon" onclick="closeThreadsPage()" aria-label="Back"><span class="material-symbols-outlined">arrow_back</span></button></div>
-<div class="nav-title">Golden Threads</div>
 <div><button class="prof-nav-icon" onclick="showNavPage('home')" aria-label="Home"><span class="material-symbols-outlined">home</span></button></div>
+<div class="nav-title">Golden Threads</div>
+<div><button class="prof-nav-icon" onclick="openGtInfo()" aria-label="About Golden Threads"><span class="material-symbols-outlined">info</span></button></div>
 </div>
 <div class="gt-scroll">
 <div id="gtLibraryView">
-<p class="gt-lead">One theme, stitched verse by verse through the whole Bible. Pick a thread and pull.</p>
 <p class="gt-summary" id="gtSummary"></p>
 <input class="gt-search" id="gtSearch" placeholder="Search threads — grace, fear, prayer, kingdom…" oninput="gtRenderLibrary()"/>
 <div id="gtLibrary"><div class="gt-loading">Unspooling the threads…</div></div>
@@ -8681,6 +8680,18 @@ Journey Maps</span>
 <div id="gtDetailView" class="hidden">
 <button class="gt-back-lib" onclick="gtShowLibrary()"><span class="material-symbols-outlined">arrow_back</span> All threads</button>
 <div id="gtDetail"></div>
+</div>
+</div>
+<!-- About Golden Threads -->
+<div class="rhema-note-overlay" id="gtInfoModal" onclick="closeGtInfo(event)">
+<div class="rhema-note-card" onclick="event.stopPropagation()">
+<button class="rhema-note-x" onclick="closeGtInfo()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+<div class="rhema-note-ref">What are Golden Threads?</div>
+<div class="gt-info-body">
+<p>A <strong>thread</strong> is one theme &mdash; the love of God, eternal security, the fear of the LORD &mdash; traced as a hand-picked chain of verses from Genesis to Revelation. Each stop includes a short note explaining how it links to the next.</p>
+<p><strong>Reading stitches the thread.</strong> Tap any stop to open it in the Rhema reader &mdash; it is marked as read automatically. You can also tap the small knot beside a stop to mark or unmark it.</p>
+<p><strong>Finish every stop and the thread is woven</strong> &mdash; it turns gold in your library and earns XP. Your progress saves to your account.</p>
+</div>
 </div>
 </div>
 </section>
@@ -17130,7 +17141,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.401"></script>
+<script src="app.js?v=3.0.402"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.363"></script>
 <script src="verse-structure.js?v=3.0.364"></script>

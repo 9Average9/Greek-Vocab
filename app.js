@@ -29594,7 +29594,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.401";
+const APP_VERSION = "3.0.402";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29617,6 +29617,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.402 &mdash; Golden Threads, properly inked</div>
+<ul>
+  <li><strong>Icons, not emojis</strong> &mdash; Every thread and category now uses the app&rsquo;s own icon set, inked in your theme color (and gold once woven), so Golden Threads matches the rest of the app in every App Style.</li>
+</ul>
 <div class="un-version-label">v3.0.401 &mdash; Golden Threads: follow a theme through the whole Bible</div>
 <ul>
   <li><strong>A new Home tool: Golden Threads</strong> &mdash; 52 hand-curated verse chains that trace one theme &mdash; the love of God, eternal security, the fear of the LORD, the covenants &mdash; from Genesis to Revelation. Every stop carries a one-line note explaining how it links to the next.</li>
@@ -46297,7 +46301,7 @@ function _renderDsdStudies() {
 // of verses with link notes; reading a stop "stitches" it, completing a thread
 // turns it gold and awards XP. Progress persists locally and syncs to the cloud.
 // ═══════════════════════════════════════════════════════════════════════════════
-const BIBLE_THREADS_VERSION = '3.0.401';
+const BIBLE_THREADS_VERSION = '3.0.402';
 let _gtActiveTopic = null;      // topic id currently open in detail view
 let _gtProgress = {};           // { topicId: { read: { idx: true }, done: ts } }
 let _gtLastCelebrated = null;
@@ -46385,6 +46389,13 @@ function closeThreadsPage() {
   if (_gtActiveTopic) { gtShowLibrary(); return; }
   showNavPage('home');
 }
+function openGtInfo() {
+  document.getElementById('gtInfoModal')?.classList.add('open');
+}
+function closeGtInfo(e) {
+  if (e && e.target !== document.getElementById('gtInfoModal')) return;
+  document.getElementById('gtInfoModal')?.classList.remove('open');
+}
 function gtShowLibrary() {
   _gtActiveTopic = null;
   document.getElementById('gtLibraryView')?.classList.remove('hidden');
@@ -46403,23 +46414,23 @@ function gtRenderLibrary() {
   const summary = document.getElementById('gtSummary');
   if (summary) {
     summary.innerHTML = doneCount
-      ? `🧵 You’ve woven <strong>${doneCount}</strong> of <strong>${data.topics.length}</strong> threads`
-      : `🧵 <strong>${data.topics.length}</strong> threads to follow — pick one and pull`;
+      ? `You’ve woven <strong>${doneCount}</strong> of <strong>${data.topics.length}</strong> threads`
+      : `<strong>${data.topics.length}</strong> threads to follow — pick one and pull`;
   }
   lib.innerHTML = data.categories.map((cat) => {
     const topics = data.topics.filter((t) => t.cat === cat.id &&
       (!q || t.title.toLowerCase().includes(q) || t.tagline.toLowerCase().includes(q) || t.id.includes(q)));
     if (!topics.length) return '';
     return `<section class="gt-cat">
-      <div class="gt-cat-head"><span class="gt-cat-icon">${cat.icon}</span>
+      <div class="gt-cat-head"><span class="gt-cat-icon material-symbols-outlined">${cat.icon}</span>
         <div><strong>${cat.title}</strong><small>${cat.blurb}</small></div></div>
       <div class="gt-cat-list">${topics.map((t) => {
         const p = _gtTopicProgress(t);
         const pct = Math.round((p.count / p.total) * 100);
         return `<button class="gt-card${p.done ? ' gt-done' : ''}" onclick="gtOpenThread('${t.id}')">
-          <span class="gt-card-icon">${t.icon}</span>
+          <span class="gt-card-icon material-symbols-outlined">${t.icon}</span>
           <span class="gt-card-main">
-            <strong>${t.title}${p.done ? ' <span class="gt-woven-badge">woven ✦</span>' : ''}</strong>
+            <strong>${t.title}${p.done ? ' <span class="gt-woven-badge">Woven</span>' : ''}</strong>
             <small>${t.tagline}</small>
             <span class="gt-stitchbar"><span class="gt-stitchbar-fill" style="width:${pct}%"></span></span>
           </span>
@@ -46452,8 +46463,8 @@ function gtRenderDetail() {
   const read = _gtProgress[topic.id]?.read || {};
   wrap.innerHTML = `
     <div class="gt-detail-head${p.done ? ' gt-done' : ''}">
-      <div class="gt-detail-title"><span class="gt-card-icon">${topic.icon}</span>
-        <div><strong>${topic.title}</strong><small>${cat ? `${cat.icon} ${cat.title}` : ''} · ${p.count}/${p.total} stitched${p.done ? ' · WOVEN ✦' : ''}</small></div>
+      <div class="gt-detail-title"><span class="gt-card-icon material-symbols-outlined">${topic.icon}</span>
+        <div><strong>${topic.title}</strong><small>${cat ? `${cat.icon} ${cat.title}` : ''} · ${p.count}/${p.total} stitched${p.done ? ' · Woven' : ''}</small></div>
       </div>
       <p class="gt-detail-intro">${topic.intro}</p>
       <span class="gt-stitchbar gt-stitchbar-lg"><span class="gt-stitchbar-fill" style="width:${Math.round((p.count / p.total) * 100)}%"></span></span>
@@ -46469,12 +46480,12 @@ function gtRenderDetail() {
           <div class="gt-stop-card" onclick="gtOpenVerse(${i})">
             <div class="gt-stop-ref">${_gtDisplayRef(stop.r)}<span class="material-symbols-outlined gt-stop-go">chevron_right</span></div>
             ${text ? `<p class="gt-stop-text">“${text}”</p>` : ''}
-            <p class="gt-stop-note">🪡 ${stop.n}</p>
+            <p class="gt-stop-note">${stop.n}</p>
           </div>
         </div>`;
       }).join('')}
       <div class="gt-chain-end${p.done ? ' gt-done' : ''}">${p.done
-        ? '✦ Thread woven — beautifully done! ✦'
+        ? 'Thread woven — beautifully done.'
         : 'Tap a verse to read it in Rhema — it stitches itself as you go.'}</div>
     </div>`;
 }
@@ -46520,7 +46531,7 @@ function _gtCheckCompletion(topic, entry) {
     if (_gtLastCelebrated !== topic.id) {
       _gtLastCelebrated = topic.id;
       try { addXP(40, `Thread woven: ${topic.title}`); } catch {}
-      if (typeof _showStudyToast === 'function') _showStudyToast(`✦ Thread woven: ${topic.title}!`);
+      if (typeof _showStudyToast === 'function') _showStudyToast(`Thread woven: ${topic.title}!`);
     }
   } else if (count < topic.verses.length && entry.done) {
     delete entry.done;
