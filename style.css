@@ -35332,4 +35332,21 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
 
 /* Home tile icon */
 .hat-icon-threads { background: color-mix(in srgb, #d4a93a 18%, transparent) !important; }
-.gt-tile-emoji { font-size: 1.25rem; }
+.hat-icon-threads .material-symbols-outlined { color: #a8821c !important; }
+
+/* Category / thread icons are Material Symbols, inked with the theme */
+.gt-cat-icon.material-symbols-outlined {
+  font-size: 22px;
+  color: var(--secondary-color);
+}
+.gt-card-icon.material-symbols-outlined {
+  font-size: 24px;
+  color: var(--secondary-color);
+}
+.gt-card.gt-done .gt-card-icon.material-symbols-outlined,
+.gt-detail-head.gt-done .gt-card-icon.material-symbols-outlined { color: #a8821c; }
+
+/* Golden Threads info modal body */
+.gt-info-body { padding: 4px 2px 8px; }
+.gt-info-body p { font-size: 0.9rem; line-height: 1.55; color: var(--font-color); margin: 0 0 10px; }
+#gtInfoModal .rhema-note-card { max-height: 76vh; overflow-y: auto; }
