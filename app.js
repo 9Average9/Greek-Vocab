@@ -29591,7 +29591,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.399";
+const APP_VERSION = "3.0.400";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29614,6 +29614,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.400 &mdash; Clause Compass reads real English grammar</div>
+<ul>
+  <li><strong>Grammar engine in charge</strong> &mdash; The Compass now uses its built-in English language model as the authority: every verb&rsquo;s dictionary form is compared against how it appears in the verse, so past tense (came&rarr;come, heard&rarr;hear, was&rarr;be) is decided by English morphology rules instead of guesswork.</li>
+  <li><strong>Commands found by grammar, not just a word list</strong> &mdash; A clause that opens with a base-form verb and no subject is an imperative in English. The Compass now applies that rule, catching commands like <em>Pursue peace&hellip;</em>, <em>Greet one another&hellip;</em>, and <em>Devote yourselves&hellip;</em> that the old curated verb list missed.</li>
+  <li><strong>Sharper narrative detection</strong> &mdash; Temporal clauses judge tense on the true finite verb, so &ldquo;When those tending the pigs saw&hellip;&rdquo; reads as story, not condition &mdash; and &ldquo;Therefore, go&hellip;&rdquo; with a comma no longer hides the command.</li>
+  <li><strong>Tested both ways</strong> &mdash; A 28-case accuracy suite now runs every check through the full grammar engine and the lightweight fallback used before it loads.</li>
+</ul>
 <div class="un-version-label">v3.0.399 &mdash; A more accurate Clause Compass</div>
 <ul>
   <li><strong>Story-time &ldquo;when&rdquo; is no longer a condition</strong> &mdash; Narrative lines like &ldquo;When Jesus heard this&hellip;&rdquo; or &ldquo;When evening came&hellip;&rdquo; are no longer marked as Conditions. Real conditions like &ldquo;when you pray&rdquo; and &ldquo;when you fast&rdquo; still are.</li>
@@ -37192,8 +37199,16 @@ function _rhemaEnglishTokenRows(text) {
   if (!_rhemaEnglishNlp || !text) return [];
   const doc = _rhemaEnglishNlp.nlp.readDoc(text);
   const rows = [];
+  const lemmaIts = _rhemaEnglishNlp.its.lemma;
   doc.tokens().each((token) => {
-    rows.push({ value: token.out(), pos: token.out(_rhemaEnglishNlp.its.pos) });
+    rows.push({
+      value: token.out(),
+      pos: token.out(_rhemaEnglishNlp.its.pos),
+      // The lemma lets flow analysis decide verb tense by rule: a finite verb
+      // whose surface form differs from its lemma and isn't an -s/-ing
+      // inflection is past tense (came→come, heard→hear, was→be).
+      lemma: lemmaIts ? String(token.out(lemmaIts) || '') : ''
+    });
   });
   return rows;
 }
@@ -37254,7 +37269,9 @@ function _rhemaClauseBoundaryScore(text, start) {
 }
 
 function _rhemaTokensAfter(tokens, index, count = 8) {
-  return tokens.filter((token) => token.start >= index).slice(0, count);
+  // Word tokens only: with the NLP loaded the token list includes punctuation,
+  // which would silently eat the lookahead window.
+  return tokens.filter((token) => token.start >= index && /^[A-Za-z]/.test(String(token.value || ''))).slice(0, count);
 }
 
 function _rhemaTokenLooksVerbal(token) {
@@ -37283,14 +37300,38 @@ function _rhemaFlowFirstVerbAfter(tokens, start, count = 8) {
   return _rhemaTokensAfter(tokens, start, count).find((token) => _rhemaTokenLooksClauseVerb(token)) || null;
 }
 
-// Past-tense check for the narrative-vs-conditional distinction. NLP pos tags
-// don't mark tense, so this leans on the irregular list plus a guarded -ed rule.
+// Past-tense check for the narrative-vs-conditional distinction. When the NLP
+// is loaded this is decided by English morphology rules — a finite VERB/AUX
+// whose surface form differs from its lemma and isn't an -s/-ing inflection is
+// past tense (came→come, heard→hear, was→be, walked→walk). Without the NLP it
+// falls back to the irregular list plus a guarded -ed rule.
 function _rhemaFlowTokenLooksPast(token) {
   const value = String(token?.value || '').toLowerCase();
   if (!value) return false;
+  const lemma = String(token?.lemma || '').toLowerCase();
+  if (lemma && ['VERB', 'AUX'].includes(token?.pos)) {
+    if (value === lemma) return false;                       // base form
+    if (['is', 'are', 'am', 'has', 'does'].includes(value)) return false; // irregular presents
+    if (/ing$/.test(value)) return false;                    // participle
+    // Third-person present is specifically lemma+s/es (come→comes, say→says,
+    // try→tries) — a bare s-ending like "was" is NOT that.
+    if (value === lemma + 's' || value === lemma + 'es') return false;
+    if (lemma.endsWith('y') && value === lemma.slice(0, -1) + 'ies') return false;
+    return true;                                             // any other inflection is past
+  }
   if (RHEMA_FLOW_PAST_FORMS.has(value)) return true;
   if (RHEMA_FLOW_ED_NOT_PAST.has(value)) return false;
   return value.length >= 4 && /ed$/.test(value);
+}
+
+// Finite non-base verb (past, or third-person -s). A clause-initial word
+// followed by one of these is that clause's subject, not an imperative.
+function _rhemaFlowTokenLooksFiniteNonBase(token) {
+  if (_rhemaFlowTokenLooksPast(token)) return true;
+  const value = String(token?.value || '').toLowerCase();
+  if (RHEMA_FLOW_THIRD_PERSON_VERBS.has(value)) return true;
+  const lemma = String(token?.lemma || '').toLowerCase();
+  return !!lemma && ['VERB', 'AUX'].includes(token?.pos) && value !== lemma && /s$/.test(value);
 }
 
 function _rhemaNextWordLower(text, index) {
@@ -37330,8 +37371,13 @@ function _rhemaShouldKeepFlowPhrase(cat, phrase, text, start, end, tokens) {
     if (!verb) return false;
     // Narrative/temporal "when" ("When Jesus heard this...") recounts a past
     // event — it isn't a condition. Conditional "when" reads present/habitual
-    // ("when you pray...").
-    if (['when', 'whenever'].includes(p) && _rhemaFlowTokenLooksPast(verb)) return false;
+    // ("when you pray..."). Tense is judged on the first FINITE verb —
+    // participles ("When those tending the pigs saw...") aren't the clause verb.
+    if (['when', 'whenever'].includes(p)) {
+      const finite = _rhemaTokensAfter(tokens, end).find((t) =>
+        _rhemaTokenLooksClauseVerb(t) && !/ing$/i.test(String(t.value || ''))) || verb;
+      if (_rhemaFlowTokenLooksPast(finite)) return false;
+    }
     return true;
   }
   if (cat === 'EMPHASIS') {
@@ -37353,7 +37399,12 @@ function _rhemaCommandCandidateAt(tokens, text, index, requireGreekSupport = fal
   if (!_rhemaClauseBoundaryScore(text, token.start)) return null;
 
   let idx = index;
-  while (idx < tokens.length && RHEMA_FLOW_INITIAL_FILLERS.has(String(tokens[idx].value || '').toLowerCase())) idx++;
+  // Skip leading fillers AND punctuation tokens ("Therefore, go..." — the NLP
+  // token list includes the comma, which otherwise blocks the command scan).
+  while (idx < tokens.length && (
+    RHEMA_FLOW_INITIAL_FILLERS.has(String(tokens[idx].value || '').toLowerCase()) ||
+    !/^[A-Za-z]/.test(String(tokens[idx].value || ''))
+  )) idx++;
   const first = tokens[idx] || token;
   const firstValue = String(first.value || '').toLowerCase();
   const second = tokens[idx + 1];
@@ -37366,13 +37417,22 @@ function _rhemaCommandCandidateAt(tokens, text, index, requireGreekSupport = fal
   if (firstValue === 'let' && ['us', 'him', 'her', 'them', 'it'].includes(secondValue) && second) {
     return { start: first.start, end: second.end, nextIndex: idx + 2, confidence: requireGreekSupport ? 'high' : 'medium', note: requireGreekSupport ? 'Backed by Greek imperative mood' : 'English let-command shape' };
   }
-  if (_rhemaTokenLooksVerbal(first) && RHEMA_FLOW_COMMON_VERBS.has(firstValue)) {
-    // A finite verb right after ("Fear came upon...", "Love covers...") means
-    // the word is the clause's subject noun, not an imperative.
+  const firstLemma = String(first?.lemma || '').toLowerCase();
+  const firstIsListedVerb = _rhemaTokenLooksVerbal(first) && RHEMA_FLOW_COMMON_VERBS.has(firstValue);
+  // Grammar-tagged path: the NLP marks the clause-initial word as a VERB in its
+  // base form (surface form === lemma). English grammar reads a clause-initial
+  // base verb with no subject as an imperative — this catches commands well
+  // beyond the curated verb list (Pursue..., Greet..., Devote...).
+  const firstIsTaggedImperative = first?.pos === 'VERB' && !!firstLemma && firstValue === firstLemma &&
+    !RHEMA_FLOW_AUXILIARY_NOT_COMMAND.has(firstValue);
+  if (firstIsListedVerb || firstIsTaggedImperative) {
+    // A finite verb right after ("Fear came upon...", "Praise awaits...")
+    // means the word is the clause's subject noun, not an imperative.
     const follower = tokens[idx + 1];
-    const followerValue = String(follower?.value || '').toLowerCase();
-    if (follower && (_rhemaFlowTokenLooksPast(follower) || RHEMA_FLOW_THIRD_PERSON_VERBS.has(followerValue))) return null;
-    return { start: first.start, end: first.end, nextIndex: idx + 1, confidence: requireGreekSupport ? 'high' : 'medium', note: requireGreekSupport ? 'Backed by Greek imperative mood' : 'Clause begins with an English base verb' };
+    if (follower && _rhemaFlowTokenLooksFiniteNonBase(follower)) return null;
+    const note = requireGreekSupport ? 'Backed by Greek imperative mood'
+      : (firstIsTaggedImperative ? 'Clause-initial base verb (English grammar)' : 'Clause begins with an English base verb');
+    return { start: first.start, end: first.end, nextIndex: idx + 1, confidence: requireGreekSupport ? 'high' : 'medium', note };
   }
   return null;
 }
