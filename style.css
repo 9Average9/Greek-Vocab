@@ -34938,3 +34938,211 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
   color: var(--font-color) !important;
   border-color: var(--border-color) !important;
 }
+
+/* ── Skin: CANDY — bubblegum pinks & sky blues, polka dots, rounded ──────────── */
+:root[data-skin="candy"] {
+  --primary-color: #fdeef5 !important;
+  --primary-light: #fff5fa !important;
+  --secondary-color: #e0568f !important;
+  --accent-color: #38a8dd !important;
+  --card-color: rgba(255, 248, 252, 0.94) !important;
+  --card-solid-color: #fff8fc !important;
+  --memorization-page-color: #fff5fa !important;
+  --border-color: #f2b9d2 !important;
+  --font-color: #4e2c3c !important;
+  --muted-color: #97707f !important;
+  --btn-text-color: #fff8fc !important;
+  --primary: var(--primary-color) !important;
+  --secondary: var(--secondary-color) !important;
+  --accent: var(--accent-color) !important;
+
+  --skin-page-bg: #fbe3ee;
+  --skin-page-texture:
+    radial-gradient(circle at 12px 12px, rgba(224, 86, 143, 0.10) 0 5px, transparent 6px),
+    radial-gradient(circle at 40px 40px, rgba(56, 168, 221, 0.10) 0 5px, transparent 6px);
+  --skin-sheet-bg: #fff5fa;
+  --skin-sheet-texture:
+    radial-gradient(circle at 12px 12px, rgba(224, 86, 143, 0.07) 0 5px, transparent 6px),
+    radial-gradient(circle at 40px 40px, rgba(56, 168, 221, 0.07) 0 5px, transparent 6px);
+  --skin-card-bg: #fff8fc;
+  --skin-card-texture: radial-gradient(circle at 14px 14px, rgba(224, 86, 143, 0.05) 0 4px, transparent 5px);
+  --skin-font: ui-rounded, "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+  --skin-icon-font: "Material Symbols Rounded", "Material Symbols Outlined";
+  --skin-card-border: 2px solid rgba(224, 86, 143, 0.4);
+  --skin-card-shadow: 0 3px 10px rgba(224, 86, 143, 0.16);
+}
+:root[data-skin="candy"]:has(body.dark) {
+  --primary-color: #2e1b27 !important;
+  --primary-light: #362130 !important;
+  --secondary-color: #f08ab8 !important;
+  --accent-color: #6cc4ee !important;
+  --card-color: rgba(54, 33, 48, 0.94) !important;
+  --card-solid-color: #362130 !important;
+  --memorization-page-color: #362130 !important;
+  --border-color: #6d4159 !important;
+  --font-color: #f9e3ee !important;
+  --muted-color: #c39aac !important;
+  --btn-text-color: #2b1420 !important;
+
+  --skin-page-bg: #241520;
+  --skin-page-texture:
+    radial-gradient(circle at 12px 12px, rgba(240, 138, 184, 0.08) 0 5px, transparent 6px),
+    radial-gradient(circle at 40px 40px, rgba(108, 196, 238, 0.08) 0 5px, transparent 6px);
+  --skin-sheet-bg: #2e1b27;
+  --skin-sheet-texture:
+    radial-gradient(circle at 12px 12px, rgba(240, 138, 184, 0.06) 0 5px, transparent 6px),
+    radial-gradient(circle at 40px 40px, rgba(108, 196, 238, 0.06) 0 5px, transparent 6px);
+  --skin-card-bg: #362130;
+  --skin-card-texture: radial-gradient(circle at 14px 14px, rgba(240, 138, 184, 0.05) 0 4px, transparent 5px);
+  --skin-card-border: 2px solid rgba(240, 138, 184, 0.35);
+  --skin-card-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+/* Give the candy dots a repeat rhythm (radial patterns need a tile size). */
+:root[data-skin="candy"] body,
+:root[data-skin="candy"] .screen.active,
+:root[data-skin="candy"] .study-library {
+  background-size: 56px 56px !important;
+}
+
+/* ── Skin: FIRE — reds, oranges & golds, ember glows, sharp icons ────────────── */
+:root[data-skin="fire"] {
+  --primary-color: #fdf0e2 !important;
+  --primary-light: #fff8ee !important;
+  --secondary-color: #d43d0f !important;
+  --accent-color: #f0b429 !important;
+  --card-color: rgba(255, 250, 242, 0.94) !important;
+  --card-solid-color: #fffaf2 !important;
+  --memorization-page-color: #fff8ee !important;
+  --border-color: #f0c39a !important;
+  --font-color: #4c2413 !important;
+  --muted-color: #9b6a4d !important;
+  --btn-text-color: #fff8ee !important;
+  --primary: var(--primary-color) !important;
+  --secondary: var(--secondary-color) !important;
+  --accent: var(--accent-color) !important;
+
+  --skin-page-bg: #fae5cd;
+  --skin-page-texture:
+    radial-gradient(90% 70% at 15% 100%, rgba(212, 61, 15, 0.10), transparent 55%),
+    radial-gradient(80% 60% at 85% 100%, rgba(240, 180, 41, 0.14), transparent 50%),
+    radial-gradient(100% 50% at 50% 0%, rgba(240, 180, 41, 0.07), transparent 60%);
+  --skin-sheet-bg: #fff8ee;
+  --skin-sheet-texture:
+    radial-gradient(90% 70% at 15% 100%, rgba(212, 61, 15, 0.07), transparent 55%),
+    radial-gradient(80% 60% at 85% 100%, rgba(240, 180, 41, 0.10), transparent 50%);
+  --skin-card-bg: #fffaf2;
+  --skin-card-texture: radial-gradient(120% 90% at 50% 100%, rgba(240, 180, 41, 0.08), transparent 60%);
+  --skin-font: system-ui, sans-serif;
+  --skin-icon-font: "Material Symbols Sharp", "Material Symbols Outlined";
+  --skin-card-border: 1.5px solid rgba(212, 61, 15, 0.4);
+  --skin-card-shadow: 0 3px 12px rgba(212, 61, 15, 0.16);
+}
+:root[data-skin="fire"]:has(body.dark) {
+  --primary-color: #241310 !important;
+  --primary-light: #2c1813 !important;
+  --secondary-color: #ff7a45 !important;
+  --accent-color: #ffc94d !important;
+  --card-color: rgba(44, 24, 19, 0.94) !important;
+  --card-solid-color: #2c1813 !important;
+  --memorization-page-color: #2c1813 !important;
+  --border-color: #6b3a24 !important;
+  --font-color: #ffe8d9 !important;
+  --muted-color: #c99579 !important;
+  --btn-text-color: #24100a !important;
+
+  --skin-page-bg: #1c0f0b;
+  --skin-page-texture:
+    radial-gradient(90% 70% at 15% 100%, rgba(255, 122, 69, 0.13), transparent 55%),
+    radial-gradient(80% 60% at 85% 100%, rgba(255, 201, 77, 0.10), transparent 50%);
+  --skin-sheet-bg: #241310;
+  --skin-sheet-texture:
+    radial-gradient(90% 70% at 15% 100%, rgba(255, 122, 69, 0.10), transparent 55%),
+    radial-gradient(80% 60% at 85% 100%, rgba(255, 201, 77, 0.08), transparent 50%);
+  --skin-card-bg: #2c1813;
+  --skin-card-texture: radial-gradient(120% 90% at 50% 100%, rgba(255, 122, 69, 0.09), transparent 60%);
+  --skin-card-border: 1.5px solid rgba(255, 122, 69, 0.4);
+  --skin-card-shadow: 0 0 14px rgba(255, 122, 69, 0.12);
+}
+
+/* ── Skin: NATURE — sage greens & warm browns, organic grain, rounded ────────── */
+:root[data-skin="nature"] {
+  --primary-color: #eef3e2 !important;
+  --primary-light: #f7faf0 !important;
+  --secondary-color: #3e6b3a !important;
+  --accent-color: #8a5a2e !important;
+  --card-color: rgba(250, 252, 245, 0.94) !important;
+  --card-solid-color: #fafcf5 !important;
+  --memorization-page-color: #f7faf0 !important;
+  --border-color: #b6c99b !important;
+  --font-color: #2c3a24 !important;
+  --muted-color: #6f7f60 !important;
+  --btn-text-color: #f7faf0 !important;
+  --primary: var(--primary-color) !important;
+  --secondary: var(--secondary-color) !important;
+  --accent: var(--accent-color) !important;
+
+  --skin-page-bg: #e4ecd2;
+  --skin-page-texture:
+    radial-gradient(110% 70% at 20% 0%, rgba(62, 107, 58, 0.08), transparent 55%),
+    radial-gradient(100% 60% at 85% 100%, rgba(138, 90, 46, 0.08), transparent 50%),
+    repeating-linear-gradient(105deg, transparent 0 7px, rgba(62, 107, 58, 0.035) 7px 8px);
+  --skin-sheet-bg: #f7faf0;
+  --skin-sheet-texture:
+    radial-gradient(110% 70% at 20% 0%, rgba(62, 107, 58, 0.06), transparent 55%),
+    radial-gradient(100% 60% at 85% 100%, rgba(138, 90, 46, 0.06), transparent 50%),
+    repeating-linear-gradient(105deg, transparent 0 7px, rgba(62, 107, 58, 0.025) 7px 8px);
+  --skin-card-bg: #fafcf5;
+  --skin-card-texture: repeating-linear-gradient(105deg, transparent 0 7px, rgba(62, 107, 58, 0.02) 7px 8px);
+  --skin-font: system-ui, sans-serif;
+  --skin-icon-font: "Material Symbols Rounded", "Material Symbols Outlined";
+  --skin-card-border: 1.5px solid rgba(62, 107, 58, 0.4);
+  --skin-card-shadow: 0 3px 10px rgba(62, 107, 58, 0.14);
+}
+:root[data-skin="nature"]:has(body.dark) {
+  --primary-color: #1c2618 !important;
+  --primary-light: #222e1d !important;
+  --secondary-color: #9cc48e !important;
+  --accent-color: #cfa06a !important;
+  --card-color: rgba(34, 46, 29, 0.94) !important;
+  --card-solid-color: #222e1d !important;
+  --memorization-page-color: #222e1d !important;
+  --border-color: #46583a !important;
+  --font-color: #e4eeda !important;
+  --muted-color: #a3b394 !important;
+  --btn-text-color: #14200f !important;
+
+  --skin-page-bg: #141d10;
+  --skin-page-texture:
+    radial-gradient(110% 70% at 20% 0%, rgba(156, 196, 142, 0.06), transparent 55%),
+    radial-gradient(100% 60% at 85% 100%, rgba(207, 160, 106, 0.05), transparent 50%),
+    repeating-linear-gradient(105deg, transparent 0 7px, rgba(156, 196, 142, 0.03) 7px 8px);
+  --skin-sheet-bg: #1c2618;
+  --skin-sheet-texture:
+    radial-gradient(110% 70% at 20% 0%, rgba(156, 196, 142, 0.05), transparent 55%),
+    repeating-linear-gradient(105deg, transparent 0 7px, rgba(156, 196, 142, 0.025) 7px 8px);
+  --skin-card-bg: #222e1d;
+  --skin-card-texture: repeating-linear-gradient(105deg, transparent 0 7px, rgba(156, 196, 142, 0.02) 7px 8px);
+  --skin-card-border: 1.5px solid rgba(156, 196, 142, 0.35);
+  --skin-card-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Picker preview tiles for the three new skins. */
+.skin-preset.skin-candy .skin-preview {
+  background-image:
+    radial-gradient(circle at 10px 10px, rgba(224, 86, 143, 0.45) 0 4px, transparent 5px),
+    radial-gradient(circle at 26px 26px, rgba(56, 168, 221, 0.45) 0 4px, transparent 5px);
+  background-size: 32px 32px;
+  background-color: #fbe3ee;
+}
+.skin-preset.skin-fire .skin-preview {
+  background-image:
+    radial-gradient(90% 80% at 20% 100%, rgba(212, 61, 15, 0.55), transparent 60%),
+    radial-gradient(80% 70% at 80% 100%, rgba(240, 180, 41, 0.6), transparent 55%);
+  background-color: #fae5cd;
+}
+.skin-preset.skin-nature .skin-preview {
+  background-image:
+    radial-gradient(100% 80% at 25% 0%, rgba(62, 107, 58, 0.35), transparent 60%),
+    radial-gradient(90% 70% at 80% 100%, rgba(138, 90, 46, 0.3), transparent 55%);
+  background-color: #e4ecd2;
+}
