@@ -34568,6 +34568,7 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
 :root[data-skin] body #merciesPage.screen.active,
 :root[data-skin] body #memorizationPage.screen.active,
 :root[data-skin] body #readingPlanPage.screen.active,
+:root[data-skin] body #threadsPage.screen.active,
 :root[data-skin] body #learnMenu.screen.active,
 :root[data-skin] body #learnScreen.screen.active,
 :root[data-skin] body #translateMenu.screen.active,
@@ -35146,3 +35147,189 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
     radial-gradient(90% 70% at 80% 100%, rgba(138, 90, 46, 0.3), transparent 55%);
   background-color: #e4ecd2;
 }
+
+/* ══ GOLDEN THREADS ═════════════════════════════════════════════════════════════
+   Thematic verse chains. A vertical "thread" stitches verse cards together;
+   knots mark read stops; a completed thread turns gold ("woven"). All colors
+   ride the theme tokens so Threads works under every App Style. */
+
+#threadsPage.screen.active {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 1000;
+  overflow: hidden;
+  background: var(--primary-light) !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+#threadsPage .gt-nav {
+  flex-shrink: 0;
+  padding: max(10px, env(safe-area-inset-top)) 18px 4px;
+  margin: 0;
+}
+.gt-scroll {
+  flex: 1 1 0; min-height: 0;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 4px 16px calc(env(safe-area-inset-bottom, 0px) + 40px);
+}
+.gt-lead { color: var(--muted-color); font-size: 0.95rem; line-height: 1.5; margin: 4px 2px 6px; }
+.gt-summary { font-size: 0.9rem; margin: 0 2px 10px; color: var(--font-color); }
+.gt-search {
+  width: 100%; box-sizing: border-box;
+  padding: 11px 14px; margin-bottom: 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--card-color);
+  color: var(--font-color);
+  font-family: inherit; font-size: 0.95rem;
+}
+.gt-loading { text-align: center; color: var(--muted-color); padding: 32px 8px; }
+
+/* Library: categories + thread cards */
+.gt-cat { margin-bottom: 18px; }
+.gt-cat-head { display: flex; align-items: center; gap: 10px; margin: 0 2px 8px; }
+.gt-cat-icon { font-size: 1.35rem; }
+.gt-cat-head strong { display: block; font-size: 1rem; }
+.gt-cat-head small { color: var(--muted-color); font-size: 0.78rem; }
+.gt-cat-list { display: flex; flex-direction: column; gap: 8px; }
+.gt-card {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; box-sizing: border-box; text-align: left;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--card-color);
+  color: var(--font-color);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.gt-card:active { transform: scale(0.985); border-color: var(--secondary-color); }
+.gt-card-icon { font-size: 1.5rem; flex-shrink: 0; }
+.gt-card-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.gt-card-main strong { font-size: 0.92rem; }
+.gt-card-main small { color: var(--muted-color); font-size: 0.78rem; line-height: 1.35; }
+.gt-card-count { flex-shrink: 0; font-size: 0.78rem; font-weight: 800; color: var(--muted-color); }
+
+/* Stitch progress bar: dashes like thread through fabric */
+.gt-stitchbar {
+  display: block; height: 5px; border-radius: 3px; margin-top: 3px;
+  background: color-mix(in srgb, var(--border-color) 45%, transparent);
+  overflow: hidden;
+}
+.gt-stitchbar-fill {
+  display: block; height: 100%;
+  background: repeating-linear-gradient(90deg,
+    var(--secondary-color) 0 7px, color-mix(in srgb, var(--secondary-color) 25%, transparent) 7px 11px);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.gt-stitchbar-lg { height: 7px; margin-top: 10px; }
+
+/* Woven (completed) — gold */
+.gt-card.gt-done { border-color: #c9a227; background: color-mix(in srgb, #e7c65a 12%, var(--card-color)); }
+.gt-card.gt-done .gt-card-count { color: #a8821c; }
+.gt-card.gt-done .gt-stitchbar-fill,
+.gt-detail-head.gt-done .gt-stitchbar-fill {
+  background: repeating-linear-gradient(90deg, #d4a93a 0 7px, #f3df9b 7px 11px);
+}
+.gt-woven-badge {
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em;
+  color: #a8821c; margin-left: 4px;
+}
+
+/* Detail view */
+.gt-back-lib {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--secondary-color); font-weight: 700; font-family: inherit;
+  font-size: 0.88rem; padding: 6px 2px 10px;
+}
+.gt-back-lib .material-symbols-outlined { font-size: 18px; }
+.gt-detail-head {
+  border: 1.5px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--card-color);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.gt-detail-head.gt-done { border-color: #c9a227; background: color-mix(in srgb, #e7c65a 14%, var(--card-color)); }
+.gt-detail-title { display: flex; align-items: center; gap: 10px; }
+.gt-detail-title strong { font-size: 1.05rem; display: block; }
+.gt-detail-title small { color: var(--muted-color); font-size: 0.78rem; }
+.gt-detail-intro { color: var(--font-color); font-size: 0.9rem; line-height: 1.55; margin: 10px 0 0; }
+
+/* The chain: a vertical thread line stitching stops together */
+.gt-chain { position: relative; padding-left: 34px; }
+.gt-chain::before {
+  content: '';
+  position: absolute; left: 13px; top: 8px; bottom: 26px;
+  width: 0;
+  border-left: 2px dashed color-mix(in srgb, var(--secondary-color) 45%, transparent);
+}
+.gt-stop { position: relative; margin-bottom: 12px; }
+.gt-knot {
+  position: absolute; left: -34px; top: 12px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--secondary-color) 55%, transparent);
+  background: var(--card-solid-color);
+  color: var(--muted-color);
+  cursor: pointer;
+  display: grid; place-items: center;
+  z-index: 1;
+  transition: background 0.15s, border-color 0.15s;
+}
+.gt-knot .material-symbols-outlined { font-size: 14px; }
+.gt-stop.gt-read .gt-knot {
+  background: #d4a93a;
+  border-color: #a8821c;
+  color: #fff;
+}
+.gt-stop-card {
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--card-color);
+  padding: 11px 13px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.gt-stop-card:active { border-color: var(--secondary-color); }
+.gt-stop.gt-read .gt-stop-card { border-color: color-mix(in srgb, #c9a227 55%, var(--border-color)); }
+.gt-stop-ref {
+  display: flex; align-items: center; justify-content: space-between;
+  font-weight: 800; font-size: 0.88rem;
+  color: var(--secondary-color);
+}
+.gt-stop-go { font-size: 18px; color: var(--muted-color); }
+.gt-stop-text { font-size: 0.9rem; line-height: 1.5; margin: 6px 0 0; color: var(--font-color); }
+.gt-stop-note {
+  font-size: 0.8rem; line-height: 1.45; margin: 8px 0 0;
+  color: var(--muted-color);
+  border-top: 1px dashed color-mix(in srgb, var(--border-color) 70%, transparent);
+  padding-top: 7px;
+}
+.gt-chain-end {
+  text-align: center; color: var(--muted-color);
+  font-size: 0.85rem; padding: 6px 8px 16px;
+}
+.gt-chain-end.gt-done {
+  color: #a8821c; font-weight: 800;
+  animation: gtShimmer 2.2s ease-in-out infinite;
+}
+@keyframes gtShimmer {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+/* Home tile icon */
+.hat-icon-threads { background: color-mix(in srgb, #d4a93a 18%, transparent) !important; }
+.gt-tile-emoji { font-size: 1.25rem; }
