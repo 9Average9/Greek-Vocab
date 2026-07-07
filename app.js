@@ -29591,7 +29591,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.398";
+const APP_VERSION = "3.0.399";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29614,6 +29614,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.399 &mdash; A more accurate Clause Compass</div>
+<ul>
+  <li><strong>Story-time &ldquo;when&rdquo; is no longer a condition</strong> &mdash; Narrative lines like &ldquo;When Jesus heard this&hellip;&rdquo; or &ldquo;When evening came&hellip;&rdquo; are no longer marked as Conditions. Real conditions like &ldquo;when you pray&rdquo; and &ldquo;when you fast&rdquo; still are.</li>
+  <li><strong>Nouns stop posing as commands</strong> &mdash; &ldquo;Fear came upon them&rdquo; no longer flags <em>Fear</em> as a command, while &ldquo;Fear God and keep His commandments&rdquo; still does.</li>
+  <li><strong>Temporal &ldquo;since&rdquo; isn&rsquo;t a reason</strong> &mdash; &ldquo;Since the beginning of creation&rdquo; no longer shows as a Reason marker.</li>
+  <li><strong>Missed conditions found</strong> &mdash; Lines like &ldquo;If anyone comes to Me&rdquo; are now caught before the language model finishes loading (the quick first-pass detector recognizes many more verb forms).</li>
+  <li><strong>New markers</strong> &mdash; &ldquo;Truly, truly&rdquo; and &ldquo;Amen, amen&rdquo; now read as one strong signal, and <em>even though</em>, <em>on the contrary</em>, <em>on the other hand</em>, <em>as a result</em>, <em>to this end</em>, and <em>above all</em> are recognized.</li>
+</ul>
 <div class="un-version-label">v3.0.398 &mdash; Candy, Fire &amp; Nature styles</div>
 <ul>
   <li><strong>Candy</strong> &mdash; Bubblegum pinks and sky blues with soft polka dots, rounded type, and rounded icons. Dark mode turns it into a berry-plum candy shop at night.</li>
@@ -37051,11 +37059,11 @@ const RHEMA_FLOW_CATS = {
 const RHEMA_FLOW_PHRASES = {
   COMMAND: ['do not let', 'do not be', 'do not', 'let us', 'let him', 'let her', 'let them', 'let it', 'see to it', 'take heed'],
   REASON: ['because of', 'on account of', 'because', 'for this reason', 'for', 'since'],
-  CONCLUSION: ['therefore', 'so then', 'finally', 'thus', 'consequently', 'accordingly'],
-  CONTRAST: ['nevertheless', 'nonetheless', 'instead', 'rather than', 'rather', 'although', 'though', 'however', 'but', 'yet'],
-  PURPOSE: ['so that', 'in order that', 'in order to', 'so as to'],
+  CONCLUSION: ['therefore', 'so then', 'as a result', 'finally', 'thus', 'consequently', 'accordingly'],
+  CONTRAST: ['nevertheless', 'nonetheless', 'instead', 'rather than', 'rather', 'even though', 'on the contrary', 'on the other hand', 'although', 'though', 'however', 'but', 'yet'],
+  PURPOSE: ['so that', 'in order that', 'in order to', 'so as to', 'to this end'],
   CONDITION: ['if', 'unless', 'whether', 'whenever', 'when', 'whoever', 'whatever', 'wherever'],
-  EMPHASIS: ['truly truly', 'amen amen', 'truly', 'amen', 'indeed', 'surely', 'certainly', 'behold', 'look']
+  EMPHASIS: ['truly, truly', 'amen, amen', 'truly truly', 'amen amen', 'truly', 'amen', 'indeed', 'surely', 'certainly', 'above all', 'behold', 'look']
 };
 
 const RHEMA_FLOW_COMMON_VERBS = new Set([
@@ -37069,6 +37077,35 @@ const RHEMA_FLOW_COMMON_VERBS = new Set([
 ]);
 const RHEMA_FLOW_AUXILIARY_NOT_COMMAND = new Set(['am', 'are', 'is', 'was', 'were', 'been', 'being', 'has', 'had', 'will', 'would', 'shall', 'should', 'may', 'might', 'can', 'could', 'must']);
 const RHEMA_FLOW_INITIAL_FILLERS = new Set(['and', 'but', 'so', 'then', 'now', 'therefore', 'thus', 'indeed', 'behold']);
+// Common past-tense narrative verbs (irregular, so no -ed to detect). Used to
+// tell temporal "when" (narrative: "When Jesus heard...") from conditional
+// "when" ("when you pray..."), and clause-subject nouns from imperatives.
+const RHEMA_FLOW_PAST_FORMS = new Set([
+  'was', 'were', 'had', 'did', 'came', 'saw', 'heard', 'said', 'went', 'stood',
+  'sat', 'rose', 'arose', 'answered', 'replied', 'spoke', 'told', 'took', 'gave',
+  'brought', 'found', 'left', 'entered', 'departed', 'arrived', 'fell', 'knew',
+  'met', 'sent', 'began', 'became', 'drew', 'ate', 'drank', 'wept', 'cried'
+]);
+// Words ending in -ed that are not past-tense verbs (nouns/adjectives/presents).
+const RHEMA_FLOW_ED_NOT_PAST = new Set([
+  'need', 'indeed', 'seed', 'deed', 'creed', 'exceed', 'proceed', 'blessed',
+  'wicked', 'beloved', 'sacred', 'naked', 'hundred', 'red', 'bed', 'bread',
+  'dead', 'ahead', 'shed', 'heed'
+]);
+// Words ending in -ing that are nouns, not verbs ("When evening came...").
+const RHEMA_FLOW_ING_NOT_VERB = new Set([
+  'evening', 'morning', 'nothing', 'anything', 'everything', 'something',
+  'offering', 'blessing', 'clothing', 'wedding', 'lightning', 'beginning',
+  'king', 'ring', 'spring', 'wing', 'thing'
+]);
+// Frequent third-person present forms. A clause-initial "verb" followed by one
+// of these is a subject noun, not a command ("Fear came...", "Love covers...").
+const RHEMA_FLOW_THIRD_PERSON_VERBS = new Set([
+  'comes', 'goes', 'says', 'gives', 'takes', 'makes', 'sees', 'hears', 'knows',
+  'loves', 'hates', 'believes', 'lives', 'dies', 'covers', 'casts', 'seizes',
+  'falls', 'fills', 'brings', 'bears', 'keeps', 'holds', 'leads', 'turns',
+  'remains', 'abides', 'endures', 'grows', 'rejoices', 'boasts', 'envies'
+]);
 
 function _rhemaEnglishHighlightActive() {
   return _rhemaShowEnglish && _rhemaHighlightBarOn && !_rhemaSyntaxMode;
@@ -37232,13 +37269,28 @@ function _rhemaTokenLooksClauseVerb(token) {
   if (!value) return false;
   if (['VERB', 'AUX'].includes(token?.pos)) return true;
   if (RHEMA_FLOW_COMMON_VERBS.has(value)) return true;
-  if (['am', 'are', 'is', 'was', 'were', 'be', 'been', 'being', 'has', 'have', 'had', 'will', 'would', 'shall', 'should', 'may', 'might', 'can', 'could', 'must'].includes(value)) return true;
-  if (['encounter', 'lacks', 'loved', 'gave', 'killed', 'conceived', 'knows', 'loses', 'remains', 'saw', 'heard', 'said'].includes(value)) return true;
-  return /^[a-z]{4,}(ed|ing)$/.test(value);
+  if (['am', 'are', 'is', 'was', 'were', 'be', 'been', 'being', 'has', 'have', 'had', 'do', 'does', 'did', 'will', 'would', 'shall', 'should', 'may', 'might', 'can', 'could', 'must'].includes(value)) return true;
+  if (RHEMA_FLOW_PAST_FORMS.has(value) || RHEMA_FLOW_THIRD_PERSON_VERBS.has(value)) return true;
+  if (['encounter', 'lacks', 'loved', 'killed', 'conceived', 'loses'].includes(value)) return true;
+  return /^[a-z]{4,}(ed|ing)$/.test(value) && !RHEMA_FLOW_ED_NOT_PAST.has(value) && !RHEMA_FLOW_ING_NOT_VERB.has(value);
 }
 
 function _rhemaHasClauseVerbAfter(tokens, start, count = 8) {
   return _rhemaTokensAfter(tokens, start, count).some((token) => _rhemaTokenLooksClauseVerb(token));
+}
+
+function _rhemaFlowFirstVerbAfter(tokens, start, count = 8) {
+  return _rhemaTokensAfter(tokens, start, count).find((token) => _rhemaTokenLooksClauseVerb(token)) || null;
+}
+
+// Past-tense check for the narrative-vs-conditional distinction. NLP pos tags
+// don't mark tense, so this leans on the irregular list plus a guarded -ed rule.
+function _rhemaFlowTokenLooksPast(token) {
+  const value = String(token?.value || '').toLowerCase();
+  if (!value) return false;
+  if (RHEMA_FLOW_PAST_FORMS.has(value)) return true;
+  if (RHEMA_FLOW_ED_NOT_PAST.has(value)) return false;
+  return value.length >= 4 && /ed$/.test(value);
 }
 
 function _rhemaNextWordLower(text, index) {
@@ -37263,18 +37315,27 @@ function _rhemaShouldKeepFlowPhrase(cat, phrase, text, start, end, tokens) {
   if (cat === 'PURPOSE') return true;
   if (cat === 'REASON') {
     if (['because', 'because of', 'on account of', 'for this reason'].includes(p)) return true;
+    // Temporal "since" ("since the beginning of creation") is not a reason.
+    if (p === 'since' && /^\s+(the\s+)?(beginning|creation|foundation|birth|childhood|ancient|then\b|that\s+(day|time)|the\s+day)/i.test(String(text || '').slice(end))) return false;
     return boundary > 0 && _rhemaHasClauseVerbAfter(tokens, end);
   }
   if (cat === 'CONCLUSION') return boundary > 0;
   if (cat === 'CONTRAST') {
-    if (p === 'rather than') return true;
+    if (['rather than', 'even though'].includes(p)) return true;
     return boundary > 0;
   }
   if (cat === 'CONDITION') {
-    return _rhemaHasClauseVerbAfter(tokens, end) || ['whoever', 'whatever', 'wherever'].includes(p);
+    if (['whoever', 'whatever', 'wherever'].includes(p)) return true;
+    const verb = _rhemaFlowFirstVerbAfter(tokens, end);
+    if (!verb) return false;
+    // Narrative/temporal "when" ("When Jesus heard this...") recounts a past
+    // event — it isn't a condition. Conditional "when" reads present/habitual
+    // ("when you pray...").
+    if (['when', 'whenever'].includes(p) && _rhemaFlowTokenLooksPast(verb)) return false;
+    return true;
   }
   if (cat === 'EMPHASIS') {
-    if (['truly truly', 'amen amen', 'truly', 'amen', 'behold'].includes(p)) return boundary > 0;
+    if (['truly, truly', 'amen, amen', 'truly truly', 'amen amen', 'truly', 'amen', 'behold'].includes(p)) return boundary > 0;
     if (p === 'look') {
       const next = _rhemaNextNonSpaceIndex(text, end);
       return boundary > 0 && (next < 0 || [',', ':', '!'].includes(text[next]));
@@ -37306,6 +37367,11 @@ function _rhemaCommandCandidateAt(tokens, text, index, requireGreekSupport = fal
     return { start: first.start, end: second.end, nextIndex: idx + 2, confidence: requireGreekSupport ? 'high' : 'medium', note: requireGreekSupport ? 'Backed by Greek imperative mood' : 'English let-command shape' };
   }
   if (_rhemaTokenLooksVerbal(first) && RHEMA_FLOW_COMMON_VERBS.has(firstValue)) {
+    // A finite verb right after ("Fear came upon...", "Love covers...") means
+    // the word is the clause's subject noun, not an imperative.
+    const follower = tokens[idx + 1];
+    const followerValue = String(follower?.value || '').toLowerCase();
+    if (follower && (_rhemaFlowTokenLooksPast(follower) || RHEMA_FLOW_THIRD_PERSON_VERBS.has(followerValue))) return null;
     return { start: first.start, end: first.end, nextIndex: idx + 1, confidence: requireGreekSupport ? 'high' : 'medium', note: requireGreekSupport ? 'Backed by Greek imperative mood' : 'Clause begins with an English base verb' };
   }
   return null;
