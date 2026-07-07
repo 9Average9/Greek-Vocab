@@ -24570,7 +24570,7 @@ function setAppTheme(themeName) {
 // holds a token-override block per skin (with !important, so it beats the inline
 // theme variables applyAppTheme writes). "classic" means no skin attribute at all,
 // so the color themes behave exactly as before.
-const APP_SKINS = ["classic", "notebook", "blueprint", "scroll", "chalkboard", "terminal"];
+const APP_SKINS = ["classic", "notebook", "blueprint", "scroll", "chalkboard", "terminal", "candy", "fire", "nature"];
 
 function applyAppSkin(skinName) {
   const skin = APP_SKINS.includes(skinName) ? skinName : "classic";
@@ -29591,7 +29591,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.397";
+const APP_VERSION = "3.0.398";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29614,6 +29614,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.398 &mdash; Candy, Fire &amp; Nature styles</div>
+<ul>
+  <li><strong>Candy</strong> &mdash; Bubblegum pinks and sky blues with soft polka dots, rounded type, and rounded icons. Dark mode turns it into a berry-plum candy shop at night.</li>
+  <li><strong>Fire</strong> &mdash; Reds, oranges, and golds with warm ember glows rising from the bottom of every page. Dark mode is glowing coals on charcoal.</li>
+  <li><strong>Nature</strong> &mdash; Sage greens and earthy browns with a subtle organic grain, like pressed leaves and kraft paper. Dark mode is a forest at dusk.</li>
+  <li>That brings App Styles to nine: Classic, Notebook, Blueprint, Scroll, Chalkboard, Terminal, Candy, Fire, and Nature &mdash; all in Settings &rarr; App Style.</li>
+</ul>
 <div class="un-version-label">v3.0.397 &mdash; Three new App Styles + textures in every tool</div>
 <ul>
   <li><strong>Scroll</strong> &mdash; Aged parchment with sepia ink, mottled shading, and classic serif type. Dark mode reads like a lamplit manuscript at night.</li>
