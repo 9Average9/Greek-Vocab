@@ -24570,7 +24570,7 @@ function setAppTheme(themeName) {
 // holds a token-override block per skin (with !important, so it beats the inline
 // theme variables applyAppTheme writes). "classic" means no skin attribute at all,
 // so the color themes behave exactly as before.
-const APP_SKINS = ["classic", "notebook", "blueprint"];
+const APP_SKINS = ["classic", "notebook", "blueprint", "scroll", "chalkboard", "terminal"];
 
 function applyAppSkin(skinName) {
   const skin = APP_SKINS.includes(skinName) ? skinName : "classic";
@@ -29591,7 +29591,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.396";
+const APP_VERSION = "3.0.397";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29614,6 +29614,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.397 &mdash; Three new App Styles + textures in every tool</div>
+<ul>
+  <li><strong>Scroll</strong> &mdash; Aged parchment with sepia ink, mottled shading, and classic serif type. Dark mode reads like a lamplit manuscript at night.</li>
+  <li><strong>Chalkboard</strong> &mdash; A classroom slate with chalk handwriting, dusty smudges, chalk-yellow buttons, and dashed chalk borders. Dark mode dims the lights.</li>
+  <li><strong>Terminal</strong> &mdash; A phosphor-green console: scanlines, monospace type, and glowing accents. Dark by nature; dark mode goes deeper.</li>
+  <li><strong>Vocab, Translate, Test &amp; friends get the texture</strong> &mdash; The Learn, Translate, and Test menus and screens painted their own flat backgrounds over the style; every skin&rsquo;s paper, grid, parchment, slate, or scanlines now shows there too.</li>
+</ul>
 <div class="un-version-label">v3.0.396 &mdash; App Styles reach the tools</div>
 <ul>
   <li><strong>Paper in every tool</strong> &mdash; Memorization, Reading Plan, and the Study Library now show the Notebook&rsquo;s ruled paper (or Blueprint&rsquo;s grid) as their page background, matching the rest of the app. Vocab, Translate, and Test picked it up automatically.</li>
