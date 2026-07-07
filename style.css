@@ -34448,9 +34448,16 @@ body.app-launch-motion .bottom-nav {
 /* ══════════════════════════════════════════════════════════════════════════════
    APP STYLES (SKINS)
    A skin restyles the whole app on top of any color theme. Activated by
-   data-skin on <html> (applyAppSkin in app.js). Token overrides carry !important
-   because applyAppTheme() writes theme variables as inline styles on <html>,
-   which would otherwise always win over these stylesheet rules.
+   data-skin on <html> (applyAppSkin in app.js); no attribute = Classic, and
+   none of these rules apply.
+
+   Architecture: one set of SHARED structural rules (page, sheets, cards, type,
+   icons) reads per-skin CSS variables (--skin-*). Each skin is then just a
+   token block — light values on :root[data-skin="X"], dark values on
+   :root[data-skin="X"]:has(body.dark). Theme-token overrides carry !important
+   because applyAppTheme() writes theme variables as inline styles on <html>;
+   the structural rules carry !important because the base stylesheet paints
+   body/screens with importance (e.g. ~8603, ~8920, ~25972, ~26017, ~28181).
    ══════════════════════════════════════════════════════════════════════════════ */
 
 /* ── Skin picker (Settings → App Style) ──────────────────────────────────────── */
@@ -34492,6 +34499,30 @@ body.app-launch-motion .bottom-nav {
     repeating-linear-gradient(180deg, transparent 0 12px, rgba(47, 74, 124, 0.28) 12px 13px);
   background-color: #f8f2e1;
 }
+.skin-preset.skin-blueprint .skin-preview {
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 10px, rgba(255, 255, 255, 0.35) 10px 11px),
+    repeating-linear-gradient(180deg, transparent 0 10px, rgba(255, 255, 255, 0.35) 10px 11px);
+  background-color: #14508c;
+}
+.skin-preset.skin-scroll .skin-preview {
+  background-image:
+    radial-gradient(80% 90% at 18% 12%, rgba(120, 90, 40, 0.22), transparent 60%),
+    radial-gradient(90% 80% at 85% 88%, rgba(120, 90, 40, 0.26), transparent 55%);
+  background-color: #ead9b0;
+}
+.skin-preset.skin-chalkboard .skin-preview {
+  background-image:
+    radial-gradient(60% 90% at 25% 20%, rgba(255, 255, 255, 0.10), transparent 60%),
+    linear-gradient(90deg, transparent 0 65%, rgba(255, 255, 255, 0.5) 65% 66.5%, transparent 66.5%);
+  background-color: #33544a;
+}
+.skin-preset.skin-terminal .skin-preview {
+  background-image:
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0 1px, transparent 1px 3px),
+    linear-gradient(90deg, rgba(34, 197, 94, 0.85) 0 26%, transparent 26%);
+  background-color: #10151a;
+}
 .skin-preset .skin-check {
   position: absolute;
   top: 6px;
@@ -34506,32 +34537,131 @@ body.app-launch-motion .bottom-nav {
 }
 .skin-preset.selected .skin-check { display: inline-flex; }
 
-/* ── Skin: NOTEBOOK ──────────────────────────────────────────────────────────────
-   Cream ruled paper, ballpoint-blue ink, a red margin line, handwritten type,
-   and rounded icons. Light + dark variants (dark = night notebook). */
+/* ── SHARED structural rules (all skins) ─────────────────────────────────────── */
 
-/* Ink & paper tokens (light). The primary tokens sit close to the sheet color
-   on purpose: dozens of bars and page surfaces (profile nav, status-bar backer,
-   Habits page, inputs) paint themselves with --primary-color/--primary-light,
-   and a tinted value there reads as a stray tan band on the white paper. */
+/* Page behind everything. The :not()/.page-home-backdrop-none variants exist to
+   out-rank the ID-strength flat body paints at ~25972 / ~26017; the <html>
+   backer covers slivers the body doesn't reach. */
+:root[data-skin] body,
+:root[data-skin] body:not(:has(#homeScreen.screen.active)),
+:root[data-skin] body.page-home-backdrop-none,
+:root[data-skin] body.dark,
+:root[data-skin] body.dark:not(:has(#homeScreen.screen.active)),
+:root[data-skin] body.dark.page-home-backdrop-none {
+  background-color: var(--skin-page-bg) !important;
+  background-image: var(--skin-page-texture) !important;
+}
+html[data-skin],
+html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
+  background: var(--skin-page-bg) !important;
+}
+
+/* Every page becomes a textured sheet. The ID-carrying selectors out-rank the
+   per-screen opaque paints (Settings/Profile/Habits at ID strength; Memorize,
+   Reading Plan, and the Learn/Translate/Test menus+screens at ~28181 / ~30049 /
+   ~31432). Home stays transparent by design — the body's texture shows there. */
+:root[data-skin] .screen.active,
+:root[data-skin] body #settingsScreen.screen.active,
+:root[data-skin] body #profilePage.screen.active,
+:root[data-skin] body #habitsPage.screen.active,
+:root[data-skin] body #communityPage.screen.active,
+:root[data-skin] body #merciesPage.screen.active,
+:root[data-skin] body #memorizationPage.screen.active,
+:root[data-skin] body #readingPlanPage.screen.active,
+:root[data-skin] body #learnMenu.screen.active,
+:root[data-skin] body #learnScreen.screen.active,
+:root[data-skin] body #translateMenu.screen.active,
+:root[data-skin] body #translateScreen.screen.active,
+:root[data-skin] body #testMenu.screen.active,
+:root[data-skin] body #testScreen.screen.active,
+:root[data-skin] .study-library {
+  background-color: var(--skin-sheet-bg) !important;
+  background-image: var(--skin-sheet-texture) !important;
+}
+
+/* Home tool tiles and lesson surfaces carry the texture themselves — they are
+   opaque cards packed edge to edge that would otherwise swallow whole regions. */
+:root[data-skin] .home-action-tile,
+:root[data-skin] #homeScreen .main-btn.home-action:not(.rhema-featured-btn),
+:root[data-skin] #newLearnMenu .learn-path-grid button,
+:root[data-skin] #basicVerbsLearnMenu .learn-path-grid button,
+:root[data-skin] .lesson-module,
+:root[data-skin] .lesson-block,
+:root[data-skin] .test-card,
+:root[data-skin] .translate-card {
+  background-color: var(--skin-card-bg) !important;
+  background-image: var(--skin-card-texture) !important;
+}
+
+/* Type: body text plus form controls (they don't inherit) plus headings (which
+   otherwise keep the serif display font). Icon spans set their own family. */
+:root[data-skin] body,
+:root[data-skin] button,
+:root[data-skin] input,
+:root[data-skin] select,
+:root[data-skin] textarea,
+:root[data-skin] h1,
+:root[data-skin] h2,
+:root[data-skin] h3 {
+  font-family: var(--skin-font);
+}
+
+/* Icon set per skin (Rounded / Sharp / Outlined), falling back to Outlined. */
+:root[data-skin] .material-symbols-outlined {
+  font-family: var(--skin-icon-font, "Material Symbols Outlined");
+}
+
+/* Raised surfaces: per-skin border + hard offset shadow. */
+:root[data-skin] .sett-card,
+:root[data-skin] .main-btn,
+:root[data-skin] .home-action,
+:root[data-skin] .rhema-compare-item,
+:root[data-skin] .modal-card {
+  border: var(--skin-card-border);
+  box-shadow: var(--skin-card-shadow);
+}
+
+/* Chrome bars that paint page-color read as stray bands on a textured sheet. */
+:root[data-skin] #profilePage .nav-bar {
+  background: transparent !important;
+}
+/* Dark mode paints body.dark .app opaque — let the texture through. */
+:root[data-skin] body.dark .app {
+  background-color: transparent !important;
+}
+
+/* ── Skin: NOTEBOOK — ruled cream paper, ballpoint ink, handwriting ──────────── */
 :root[data-skin="notebook"] {
   --primary-color: #fdfaf0 !important;
   --primary-light: #fffdf6 !important;
-  --secondary-color: #2f4a7c !important;        /* ballpoint blue ink */
-  --accent-color: #c65a5a !important;           /* red margin ink */
+  --secondary-color: #2f4a7c !important;
+  --accent-color: #c65a5a !important;
   --card-color: rgba(255, 253, 246, 0.94) !important;
   --card-solid-color: #fffdf6 !important;
-  --memorization-page-color: #faf6ea !important;
-  --border-color: #a9b8d4 !important;           /* faded rule-line blue */
-  --font-color: #2b3350 !important;             /* blue-black ink */
+  --memorization-page-color: #fffdf6 !important;
+  --border-color: #a9b8d4 !important;
+  --font-color: #2b3350 !important;
   --muted-color: #6b7390 !important;
   --btn-text-color: #fffdf6 !important;
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
   --accent: var(--accent-color) !important;
-}
 
-/* Night notebook (dark mode on): dark slate paper, chalky ink */
+  --skin-page-bg: #f8f2e1;
+  --skin-page-texture:
+    linear-gradient(90deg, transparent 0 26px, rgba(198, 90, 90, 0.38) 26px 27.5px, transparent 27.5px),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.16) 27px 28px);
+  --skin-sheet-bg: #fffdf6;
+  --skin-sheet-texture:
+    linear-gradient(90deg, transparent 0 26px, rgba(198, 90, 90, 0.38) 26px 27.5px, transparent 27.5px),
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.16) 27px 28px);
+  --skin-card-bg: #fffdf6;
+  --skin-card-texture: repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.13) 27px 28px);
+  --skin-font: "Patrick Hand", "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Neue", "Comic Sans MS", cursive;
+  --skin-icon-font: "Material Symbols Rounded", "Material Symbols Outlined";
+  --skin-card-border: 1.5px solid rgba(47, 74, 124, 0.55);
+  --skin-card-shadow: 3px 3px 0 rgba(47, 74, 124, 0.14);
+}
 :root[data-skin="notebook"]:has(body.dark) {
   --primary-color: #232836 !important;
   --primary-light: #2a3040 !important;
@@ -34544,157 +34674,27 @@ body.app-launch-motion .bottom-nav {
   --font-color: #e8ecf7 !important;
   --muted-color: #9aa5c4 !important;
   --btn-text-color: #10131b !important;
-}
 
-/* Handwritten type everywhere. Form controls don't inherit the body font, so
-   they're targeted explicitly. Icon spans set their own font-family, so they
-   are untouched by these rules. */
-:root[data-skin="notebook"] body,
-:root[data-skin="notebook"] button,
-:root[data-skin="notebook"] input,
-:root[data-skin="notebook"] select,
-:root[data-skin="notebook"] textarea {
-  font-family: "Patrick Hand", "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Neue", "Comic Sans MS", cursive;
-  letter-spacing: 0.01em;
-}
-
-/* Ruled paper: horizontal feint lines + the red left-margin rule.
-   !important because base rules elsewhere set body/screen backgrounds with
-   importance (e.g. body.dark at ~8603, and the flat body colors at ~8920,
-   ~25972 and ~26017). The :not()/.page-home-backdrop-none variants exist only
-   to out-rank those last two ID-strength selectors — without them the body
-   turns flat page-color on non-home screens, and the transparent screens
-   (learn menus) show that flat color instead of lines. */
-:root[data-skin="notebook"] body,
-:root[data-skin="notebook"] body:not(:has(#homeScreen.screen.active)),
-:root[data-skin="notebook"] body.page-home-backdrop-none {
-  background-image:
-    linear-gradient(90deg, transparent 0 26px, rgba(198, 90, 90, 0.38) 26px 27.5px, transparent 27.5px),
-    repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.16) 27px 28px) !important;
-  background-color: #f8f2e1 !important;
-}
-:root[data-skin="notebook"] body.dark,
-:root[data-skin="notebook"] body.dark:not(:has(#homeScreen.screen.active)),
-:root[data-skin="notebook"] body.dark.page-home-backdrop-none {
-  background-image:
+  --skin-page-bg: #1b1f28;
+  --skin-page-texture:
     linear-gradient(90deg, transparent 0 26px, rgba(224, 143, 143, 0.22) 26px 27.5px, transparent 27.5px),
-    repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.11) 27px 28px) !important;
-  background-color: #1b1f28 !important;
-}
-/* The <html> element behind the body gets flat-painted by the same rules;
-   keep any exposed sliver paper-colored (no lines needed — body covers it). */
-html[data-skin="notebook"],
-html[data-skin="notebook"]:not(:has(> body #homeScreen.screen.active)) {
-  background: #f8f2e1 !important;
-}
-html[data-skin="notebook"]:has(body.dark),
-html[data-skin="notebook"]:has(body.dark):not(:has(> body #homeScreen.screen.active)) {
-  background: #1b1f28 !important;
-}
-
-/* Every page becomes a lined sheet. The generic .screen.active wash is a
-   near-opaque card color (with !important), and Settings/Profile/Habits paint
-   their own opaque backgrounds at ID specificity — all of which hid the paper.
-   The ID-carrying selectors below out-rank those per-screen rules. Home is left
-   alone: #homeScreen is transparent by design, so the body's paper shows there. */
-:root[data-skin="notebook"] .screen.active,
-:root[data-skin="notebook"] body #settingsScreen.screen.active,
-:root[data-skin="notebook"] body #profilePage.screen.active,
-:root[data-skin="notebook"] body #habitsPage.screen.active,
-:root[data-skin="notebook"] body #communityPage.screen.active,
-:root[data-skin="notebook"] body #merciesPage.screen.active,
-:root[data-skin="notebook"] body #memorizationPage.screen.active,
-:root[data-skin="notebook"] body #readingPlanPage.screen.active,
-:root[data-skin="notebook"] .study-library {
-  background-color: var(--card-solid-color) !important;
-  background-image:
-    linear-gradient(90deg, transparent 0 26px, rgba(198, 90, 90, 0.38) 26px 27.5px, transparent 27.5px),
-    repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.16) 27px 28px) !important;
-}
-:root[data-skin="notebook"] body.dark .screen.active,
-:root[data-skin="notebook"] body.dark #settingsScreen.screen.active,
-:root[data-skin="notebook"] body.dark #profilePage.screen.active,
-:root[data-skin="notebook"] body.dark #habitsPage.screen.active,
-:root[data-skin="notebook"] body.dark #communityPage.screen.active,
-:root[data-skin="notebook"] body.dark #merciesPage.screen.active,
-:root[data-skin="notebook"] body.dark #memorizationPage.screen.active,
-:root[data-skin="notebook"] body.dark #readingPlanPage.screen.active,
-:root[data-skin="notebook"] body.dark .study-library {
-  background-color: #232836 !important;
-  background-image:
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.11) 27px 28px);
+  --skin-sheet-bg: #232836;
+  --skin-sheet-texture:
     linear-gradient(90deg, transparent 0 26px, rgba(224, 143, 143, 0.22) 26px 27.5px, transparent 27.5px),
-    repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.11) 27px 28px) !important;
-}
-/* Dark mode paints the .app wrapper opaque (body.dark .app) — let paper through. */
-:root[data-skin="notebook"] body.dark .app {
-  background-color: transparent !important;
-}
-
-/* Rounded icon set — reads friendlier, like pen-drawn marks. Falls back to the
-   Outlined family if the Rounded font hasn't loaded (e.g. first launch offline). */
-:root[data-skin="notebook"] .material-symbols-outlined {
-  font-family: "Material Symbols Rounded", "Material Symbols Outlined";
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.11) 27px 28px);
+  --skin-card-bg: #232836;
+  --skin-card-texture: repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.09) 27px 28px);
+  --skin-card-border: 1.5px solid rgba(143, 180, 232, 0.45);
+  --skin-card-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
 }
 
-/* Pen-and-paper feel on the most common raised surfaces: a firm ink border and
-   a hard offset shadow (like a sticker on the page) instead of soft blur. */
-:root[data-skin="notebook"] .sett-card,
-:root[data-skin="notebook"] .main-btn,
-:root[data-skin="notebook"] .home-action,
-:root[data-skin="notebook"] .rhema-compare-item,
-:root[data-skin="notebook"] .modal-card {
-  border: 1.5px solid color-mix(in srgb, var(--secondary-color, #2f4a7c) 55%, transparent);
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--secondary-color, #2f4a7c) 14%, transparent);
-}
-
-/* Headings drop the serif display font and join the handwriting. */
-:root[data-skin="notebook"] h1,
-:root[data-skin="notebook"] h2,
-:root[data-skin="notebook"] h3 {
-  font-family: "Patrick Hand", "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Neue", "Comic Sans MS", cursive;
-}
-
-/* ── Fixes shared by every skin ─────────────────────────────────────────────── */
-/* Profile's top bar paints itself page-color, which reads as a stray band on a
-   skinned sheet. Let the sheet (and its lines/grid) run through it instead. */
-:root[data-skin] #profilePage .nav-bar {
-  background: transparent !important;
-}
-
-/* The Home tool tiles and lesson surfaces are opaque cards packed edge to edge,
-   which swallowed the page texture across whole regions. Under a skin they carry
-   the texture themselves (feint rules only — no red margin inside small cards). */
-:root[data-skin="notebook"] .home-action-tile,
-:root[data-skin="notebook"] #homeScreen .main-btn.home-action:not(.rhema-featured-btn),
-:root[data-skin="notebook"] #newLearnMenu .learn-path-grid button,
-:root[data-skin="notebook"] #basicVerbsLearnMenu .learn-path-grid button,
-:root[data-skin="notebook"] .lesson-module,
-:root[data-skin="notebook"] .lesson-block {
-  background-color: var(--card-solid-color) !important;
-  background-image:
-    repeating-linear-gradient(180deg, transparent 0 27px, rgba(47, 74, 124, 0.13) 27px 28px) !important;
-}
-:root[data-skin="notebook"] body.dark .home-action-tile,
-:root[data-skin="notebook"] body.dark #homeScreen .main-btn.home-action:not(.rhema-featured-btn),
-:root[data-skin="notebook"] body.dark #newLearnMenu .learn-path-grid button,
-:root[data-skin="notebook"] body.dark #basicVerbsLearnMenu .learn-path-grid button,
-:root[data-skin="notebook"] body.dark .lesson-module,
-:root[data-skin="notebook"] body.dark .lesson-block {
-  background-color: #232836 !important;
-  background-image:
-    repeating-linear-gradient(180deg, transparent 0 27px, rgba(143, 180, 232, 0.09) 27px 28px) !important;
-}
-
-/* ── Skin: BLUEPRINT ─────────────────────────────────────────────────────────────
-   Engineer's graph paper: fine blue grid on white in light mode, classic
-   cyanotype (deep blue paper, pale grid, chalk text) in dark mode. Monospace
-   drafting type and sharp-cornered icons. Same architecture as Notebook. */
-
+/* ── Skin: BLUEPRINT — graph paper, drafting ink, monospace, sharp icons ─────── */
 :root[data-skin="blueprint"] {
   --primary-color: #f4f8fd !important;
   --primary-light: #fbfdff !important;
-  --secondary-color: #14508c !important;      /* drafting-pen blue */
-  --accent-color: #d97706 !important;         /* surveyor's orange */
+  --secondary-color: #14508c !important;
+  --accent-color: #d97706 !important;
   --card-color: rgba(255, 255, 255, 0.95) !important;
   --card-solid-color: #ffffff !important;
   --memorization-page-color: #fbfdff !important;
@@ -34705,6 +34705,23 @@ html[data-skin="notebook"]:has(body.dark):not(:has(> body #homeScreen.screen.act
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
   --accent: var(--accent-color) !important;
+
+  --skin-page-bg: #eef4fb;
+  --skin-page-texture:
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(31, 90, 158, 0.11) 22px 23px),
+    repeating-linear-gradient(180deg, transparent 0 22px, rgba(31, 90, 158, 0.11) 22px 23px);
+  --skin-sheet-bg: #fbfdff;
+  --skin-sheet-texture:
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(31, 90, 158, 0.09) 22px 23px),
+    repeating-linear-gradient(180deg, transparent 0 22px, rgba(31, 90, 158, 0.09) 22px 23px);
+  --skin-card-bg: #ffffff;
+  --skin-card-texture:
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(31, 90, 158, 0.07) 22px 23px),
+    repeating-linear-gradient(180deg, transparent 0 22px, rgba(31, 90, 158, 0.07) 22px 23px);
+  --skin-font: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", "Courier New", monospace;
+  --skin-icon-font: "Material Symbols Sharp", "Material Symbols Outlined";
+  --skin-card-border: 1.5px solid rgba(20, 80, 140, 0.55);
+  --skin-card-shadow: 2px 2px 0 rgba(20, 80, 140, 0.18);
 }
 :root[data-skin="blueprint"]:has(body.dark) {
   --primary-color: #102a4a !important;
@@ -34718,124 +34735,206 @@ html[data-skin="notebook"]:has(body.dark):not(:has(> body #homeScreen.screen.act
   --font-color: #dce9f9 !important;
   --muted-color: #93b0d1 !important;
   --btn-text-color: #081627 !important;
-}
 
-/* Drafting type: monospace, everywhere text is set. */
-:root[data-skin="blueprint"] body,
-:root[data-skin="blueprint"] button,
-:root[data-skin="blueprint"] input,
-:root[data-skin="blueprint"] select,
-:root[data-skin="blueprint"] textarea,
-:root[data-skin="blueprint"] h1,
-:root[data-skin="blueprint"] h2,
-:root[data-skin="blueprint"] h3 {
-  font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", "Courier New", monospace;
-  letter-spacing: -0.01em;
-}
-
-/* Graph-paper page — same selector strengthening as Notebook (see that block
-   for why the :not()/.page-home-backdrop-none variants and !important exist). */
-:root[data-skin="blueprint"] body,
-:root[data-skin="blueprint"] body:not(:has(#homeScreen.screen.active)),
-:root[data-skin="blueprint"] body.page-home-backdrop-none {
-  background-image:
-    repeating-linear-gradient(90deg, transparent 0 22px, rgba(31, 90, 158, 0.11) 22px 23px),
-    repeating-linear-gradient(180deg, transparent 0 22px, rgba(31, 90, 158, 0.11) 22px 23px) !important;
-  background-color: #eef4fb !important;
-}
-:root[data-skin="blueprint"] body.dark,
-:root[data-skin="blueprint"] body.dark:not(:has(#homeScreen.screen.active)),
-:root[data-skin="blueprint"] body.dark.page-home-backdrop-none {
-  background-image:
+  --skin-page-bg: #0a1f3a;
+  --skin-page-texture:
     repeating-linear-gradient(90deg, transparent 0 22px, rgba(150, 195, 240, 0.10) 22px 23px),
-    repeating-linear-gradient(180deg, transparent 0 22px, rgba(150, 195, 240, 0.10) 22px 23px) !important;
-  background-color: #0a1f3a !important;
-}
-html[data-skin="blueprint"],
-html[data-skin="blueprint"]:not(:has(> body #homeScreen.screen.active)) {
-  background: #eef4fb !important;
-}
-html[data-skin="blueprint"]:has(body.dark),
-html[data-skin="blueprint"]:has(body.dark):not(:has(> body #homeScreen.screen.active)) {
-  background: #0a1f3a !important;
-}
-
-/* Every page becomes a grid sheet (same ID-strength list as Notebook). */
-:root[data-skin="blueprint"] .screen.active,
-:root[data-skin="blueprint"] body #settingsScreen.screen.active,
-:root[data-skin="blueprint"] body #profilePage.screen.active,
-:root[data-skin="blueprint"] body #habitsPage.screen.active,
-:root[data-skin="blueprint"] body #communityPage.screen.active,
-:root[data-skin="blueprint"] body #merciesPage.screen.active,
-:root[data-skin="blueprint"] body #memorizationPage.screen.active,
-:root[data-skin="blueprint"] body #readingPlanPage.screen.active,
-:root[data-skin="blueprint"] .study-library {
-  background-color: #fbfdff !important;
-  background-image:
-    repeating-linear-gradient(90deg, transparent 0 22px, rgba(31, 90, 158, 0.09) 22px 23px),
-    repeating-linear-gradient(180deg, transparent 0 22px, rgba(31, 90, 158, 0.09) 22px 23px) !important;
-}
-:root[data-skin="blueprint"] body.dark .screen.active,
-:root[data-skin="blueprint"] body.dark #settingsScreen.screen.active,
-:root[data-skin="blueprint"] body.dark #profilePage.screen.active,
-:root[data-skin="blueprint"] body.dark #habitsPage.screen.active,
-:root[data-skin="blueprint"] body.dark #communityPage.screen.active,
-:root[data-skin="blueprint"] body.dark #merciesPage.screen.active,
-:root[data-skin="blueprint"] body.dark #memorizationPage.screen.active,
-:root[data-skin="blueprint"] body.dark #readingPlanPage.screen.active,
-:root[data-skin="blueprint"] body.dark .study-library {
-  background-color: #0f2949 !important;
-  background-image:
+    repeating-linear-gradient(180deg, transparent 0 22px, rgba(150, 195, 240, 0.10) 22px 23px);
+  --skin-sheet-bg: #0f2949;
+  --skin-sheet-texture:
     repeating-linear-gradient(90deg, transparent 0 22px, rgba(150, 195, 240, 0.09) 22px 23px),
-    repeating-linear-gradient(180deg, transparent 0 22px, rgba(150, 195, 240, 0.09) 22px 23px) !important;
-}
-:root[data-skin="blueprint"] body.dark .app {
-  background-color: transparent !important;
-}
-
-/* Sharp icon set — technical, drafting-tool feel. */
-:root[data-skin="blueprint"] .material-symbols-outlined {
-  font-family: "Material Symbols Sharp", "Material Symbols Outlined";
-}
-
-/* Drafting-table surfaces: ruled ink border, hard offset shadow. */
-:root[data-skin="blueprint"] .sett-card,
-:root[data-skin="blueprint"] .main-btn,
-:root[data-skin="blueprint"] .home-action,
-:root[data-skin="blueprint"] .rhema-compare-item,
-:root[data-skin="blueprint"] .modal-card {
-  border: 1.5px solid color-mix(in srgb, var(--secondary-color, #14508c) 55%, transparent);
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--secondary-color, #14508c) 18%, transparent);
-}
-
-/* Home tools and lesson surfaces carry the grid, like Notebook's lined cards. */
-:root[data-skin="blueprint"] .home-action-tile,
-:root[data-skin="blueprint"] #homeScreen .main-btn.home-action:not(.rhema-featured-btn),
-:root[data-skin="blueprint"] #newLearnMenu .learn-path-grid button,
-:root[data-skin="blueprint"] #basicVerbsLearnMenu .learn-path-grid button,
-:root[data-skin="blueprint"] .lesson-module,
-:root[data-skin="blueprint"] .lesson-block {
-  background-color: var(--card-solid-color) !important;
-  background-image:
-    repeating-linear-gradient(90deg, transparent 0 22px, rgba(31, 90, 158, 0.07) 22px 23px),
-    repeating-linear-gradient(180deg, transparent 0 22px, rgba(31, 90, 158, 0.07) 22px 23px) !important;
-}
-:root[data-skin="blueprint"] body.dark .home-action-tile,
-:root[data-skin="blueprint"] body.dark #homeScreen .main-btn.home-action:not(.rhema-featured-btn),
-:root[data-skin="blueprint"] body.dark #newLearnMenu .learn-path-grid button,
-:root[data-skin="blueprint"] body.dark #basicVerbsLearnMenu .learn-path-grid button,
-:root[data-skin="blueprint"] body.dark .lesson-module,
-:root[data-skin="blueprint"] body.dark .lesson-block {
-  background-color: #0f2949 !important;
-  background-image:
+    repeating-linear-gradient(180deg, transparent 0 22px, rgba(150, 195, 240, 0.09) 22px 23px);
+  --skin-card-bg: #0f2949;
+  --skin-card-texture:
     repeating-linear-gradient(90deg, transparent 0 22px, rgba(150, 195, 240, 0.07) 22px 23px),
-    repeating-linear-gradient(180deg, transparent 0 22px, rgba(150, 195, 240, 0.07) 22px 23px) !important;
+    repeating-linear-gradient(180deg, transparent 0 22px, rgba(150, 195, 240, 0.07) 22px 23px);
+  --skin-card-border: 1.5px solid rgba(127, 179, 232, 0.45);
+  --skin-card-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
 }
 
-/* Picker preview tile for Blueprint. */
-.skin-preset.skin-blueprint .skin-preview {
-  background-image:
-    repeating-linear-gradient(90deg, transparent 0 10px, rgba(255, 255, 255, 0.35) 10px 11px),
-    repeating-linear-gradient(180deg, transparent 0 10px, rgba(255, 255, 255, 0.35) 10px 11px);
-  background-color: #14508c;
+/* ── Skin: SCROLL — aged parchment, sepia ink, serif type ────────────────────── */
+:root[data-skin="scroll"] {
+  --primary-color: #f0e4c4 !important;
+  --primary-light: #f6edd6 !important;
+  --secondary-color: #6b4a1f !important;
+  --accent-color: #a33b2e !important;
+  --card-color: rgba(246, 237, 214, 0.94) !important;
+  --card-solid-color: #f6edd6 !important;
+  --memorization-page-color: #f6edd6 !important;
+  --border-color: #c8ac74 !important;
+  --font-color: #43331d !important;
+  --muted-color: #7d6b4c !important;
+  --btn-text-color: #f9f2df !important;
+  --primary: var(--primary-color) !important;
+  --secondary: var(--secondary-color) !important;
+  --accent: var(--accent-color) !important;
+
+  --skin-page-bg: #e7d5a9;
+  --skin-page-texture:
+    radial-gradient(120% 80% at 18% 8%, rgba(120, 90, 40, 0.10), transparent 60%),
+    radial-gradient(110% 75% at 85% 92%, rgba(120, 90, 40, 0.13), transparent 55%),
+    repeating-linear-gradient(180deg, transparent 0 3px, rgba(120, 90, 40, 0.025) 3px 4px);
+  --skin-sheet-bg: #f2e8cd;
+  --skin-sheet-texture:
+    radial-gradient(120% 80% at 18% 8%, rgba(120, 90, 40, 0.07), transparent 60%),
+    radial-gradient(110% 75% at 85% 92%, rgba(120, 90, 40, 0.09), transparent 55%),
+    repeating-linear-gradient(180deg, transparent 0 3px, rgba(120, 90, 40, 0.02) 3px 4px);
+  --skin-card-bg: #f6edd6;
+  --skin-card-texture: radial-gradient(140% 100% at 20% 0%, rgba(120, 90, 40, 0.06), transparent 65%);
+  --skin-font: "Playfair Display", Georgia, "Times New Roman", serif;
+  --skin-icon-font: "Material Symbols Outlined";
+  --skin-card-border: 1.5px solid rgba(107, 74, 31, 0.45);
+  --skin-card-shadow: 0 3px 10px rgba(90, 65, 25, 0.18);
+}
+:root[data-skin="scroll"]:has(body.dark) {
+  --primary-color: #322917 !important;
+  --primary-light: #3a3020 !important;
+  --secondary-color: #d3b578 !important;
+  --accent-color: #d98b7f !important;
+  --card-color: rgba(56, 47, 30, 0.94) !important;
+  --card-solid-color: #382f1e !important;
+  --memorization-page-color: #382f1e !important;
+  --border-color: #6d5c38 !important;
+  --font-color: #ecdfc0 !important;
+  --muted-color: #b3a37e !important;
+  --btn-text-color: #241c0d !important;
+
+  --skin-page-bg: #262013;
+  --skin-page-texture:
+    radial-gradient(120% 80% at 18% 8%, rgba(0, 0, 0, 0.28), transparent 60%),
+    radial-gradient(110% 75% at 85% 92%, rgba(0, 0, 0, 0.32), transparent 55%);
+  --skin-sheet-bg: #322917;
+  --skin-sheet-texture:
+    radial-gradient(120% 80% at 18% 8%, rgba(0, 0, 0, 0.20), transparent 60%),
+    radial-gradient(110% 75% at 85% 92%, rgba(0, 0, 0, 0.24), transparent 55%);
+  --skin-card-bg: #382f1e;
+  --skin-card-texture: radial-gradient(140% 100% at 20% 0%, rgba(0, 0, 0, 0.18), transparent 65%);
+  --skin-card-border: 1.5px solid rgba(211, 181, 120, 0.4);
+  --skin-card-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Skin: CHALKBOARD — green slate, chalk handwriting, dusty smudges ────────── */
+/* The board stays a board in both modes: light = classroom green, dark = late-
+   night slate. Chalk-light text tokens apply in both. */
+:root[data-skin="chalkboard"] {
+  --primary-color: #3a5f54 !important;
+  --primary-light: #40685c !important;
+  --secondary-color: #e8c96a !important;
+  --accent-color: #f2a3a3 !important;
+  --card-color: rgba(64, 104, 92, 0.94) !important;
+  --card-solid-color: #40685c !important;
+  --memorization-page-color: #40685c !important;
+  --border-color: rgba(242, 246, 240, 0.35) !important;
+  --font-color: #f2f6f0 !important;
+  --muted-color: #b8cbc2 !important;
+  --btn-text-color: #24352f !important;
+  --primary: var(--primary-color) !important;
+  --secondary: var(--secondary-color) !important;
+  --accent: var(--accent-color) !important;
+
+  --skin-page-bg: #2e4c43;
+  --skin-page-texture:
+    radial-gradient(70% 90% at 22% 18%, rgba(255, 255, 255, 0.045), transparent 60%),
+    radial-gradient(80% 70% at 80% 85%, rgba(255, 255, 255, 0.035), transparent 55%);
+  --skin-sheet-bg: #33544a;
+  --skin-sheet-texture:
+    radial-gradient(70% 90% at 22% 18%, rgba(255, 255, 255, 0.05), transparent 60%),
+    radial-gradient(80% 70% at 80% 85%, rgba(255, 255, 255, 0.04), transparent 55%);
+  --skin-card-bg: #40685c;
+  --skin-card-texture: radial-gradient(120% 100% at 25% 0%, rgba(255, 255, 255, 0.045), transparent 60%);
+  --skin-font: "Patrick Hand", "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Neue", "Comic Sans MS", cursive;
+  --skin-icon-font: "Material Symbols Rounded", "Material Symbols Outlined";
+  --skin-card-border: 1.5px dashed rgba(242, 246, 240, 0.45);
+  --skin-card-shadow: none;
+}
+:root[data-skin="chalkboard"]:has(body.dark) {
+  --primary-color: #26332f !important;
+  --primary-light: #2a3835 !important;
+  --secondary-color: #e8c96a !important;
+  --accent-color: #f2a3a3 !important;
+  --card-color: rgba(42, 56, 53, 0.94) !important;
+  --card-solid-color: #2a3835 !important;
+  --memorization-page-color: #2a3835 !important;
+  --border-color: rgba(242, 246, 240, 0.3) !important;
+  --font-color: #eef2ec !important;
+  --muted-color: #a7b8b0 !important;
+  --btn-text-color: #1d2724 !important;
+
+  --skin-page-bg: #1f2b27;
+  --skin-page-texture:
+    radial-gradient(70% 90% at 22% 18%, rgba(255, 255, 255, 0.035), transparent 60%),
+    radial-gradient(80% 70% at 80% 85%, rgba(255, 255, 255, 0.03), transparent 55%);
+  --skin-sheet-bg: #232d2a;
+  --skin-sheet-texture:
+    radial-gradient(70% 90% at 22% 18%, rgba(255, 255, 255, 0.04), transparent 60%),
+    radial-gradient(80% 70% at 80% 85%, rgba(255, 255, 255, 0.035), transparent 55%);
+  --skin-card-bg: #2a3835;
+  --skin-card-texture: radial-gradient(120% 100% at 25% 0%, rgba(255, 255, 255, 0.035), transparent 60%);
+  --skin-card-border: 1.5px dashed rgba(242, 246, 240, 0.4);
+  --skin-card-shadow: none;
+}
+
+/* ── Skin: TERMINAL — phosphor green console, scanlines, monospace ───────────── */
+/* A console is dark by nature; dark mode just deepens it. */
+:root[data-skin="terminal"] {
+  --primary-color: #131a21 !important;
+  --primary-light: #16202a !important;
+  --secondary-color: #22c55e !important;
+  --accent-color: #f59e0b !important;
+  --card-color: rgba(22, 32, 42, 0.95) !important;
+  --card-solid-color: #16202a !important;
+  --memorization-page-color: #16202a !important;
+  --border-color: #1e3a2a !important;
+  --font-color: #d7ffe4 !important;
+  --muted-color: #7ba98b !important;
+  --btn-text-color: #06130a !important;
+  --primary: var(--primary-color) !important;
+  --secondary: var(--secondary-color) !important;
+  --accent: var(--accent-color) !important;
+
+  --skin-page-bg: #0d1116;
+  --skin-page-texture: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.26) 0 1px, transparent 1px 3px);
+  --skin-sheet-bg: #10151a;
+  --skin-sheet-texture: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px);
+  --skin-card-bg: #16202a;
+  --skin-card-texture: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+  --skin-font: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", "Courier New", monospace;
+  --skin-icon-font: "Material Symbols Sharp", "Material Symbols Outlined";
+  --skin-card-border: 1px solid rgba(34, 197, 94, 0.4);
+  --skin-card-shadow: 0 0 12px rgba(34, 197, 94, 0.08);
+}
+:root[data-skin="terminal"]:has(body.dark) {
+  --primary-color: #0a0e12 !important;
+  --primary-light: #0d1319 !important;
+  --secondary-color: #22c55e !important;
+  --accent-color: #f59e0b !important;
+  --card-color: rgba(13, 19, 25, 0.95) !important;
+  --card-solid-color: #0d1319 !important;
+  --memorization-page-color: #0d1319 !important;
+  --border-color: #16301f !important;
+  --font-color: #c9f7d8 !important;
+  --muted-color: #6d9a7d !important;
+  --btn-text-color: #041008 !important;
+
+  --skin-page-bg: #070b0e;
+  --skin-page-texture: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
+  --skin-sheet-bg: #0a1015;
+  --skin-sheet-texture: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.26) 0 1px, transparent 1px 3px);
+  --skin-card-bg: #0d1319;
+  --skin-card-texture: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px 3px);
+  --skin-card-border: 1px solid rgba(34, 197, 94, 0.35);
+  --skin-card-shadow: 0 0 12px rgba(34, 197, 94, 0.06);
+}
+
+/* Chalkboard and Terminal are dark-surfaced even in light mode; force form
+   controls onto skin surfaces so pale text never lands on a white input. */
+:root[data-skin="chalkboard"] input,
+:root[data-skin="chalkboard"] textarea,
+:root[data-skin="chalkboard"] select,
+:root[data-skin="terminal"] input,
+:root[data-skin="terminal"] textarea,
+:root[data-skin="terminal"] select {
+  background-color: var(--primary-light) !important;
+  color: var(--font-color) !important;
+  border-color: var(--border-color) !important;
 }
