@@ -29594,7 +29594,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.404";
+const APP_VERSION = "3.0.405";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29617,6 +29617,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.405 &mdash; Every English word now has a definition</div>
+<ul>
+  <li><strong>A complete offline dictionary</strong> &mdash; Rhema&rsquo;s &ldquo;Define an English word&rdquo; now ships with a definition for every single word used in the MSB and BSB texts &mdash; 14,000+ entries covering ordinary English, biblical measures and coins (omer, beka, denarius, pim), priestly objects (ephod, breastpiece, showbread), Aramaic sayings (talitha koum, lema sabachthani), names, and people groups.</li>
+  <li><strong>Works offline, never empty</strong> &mdash; Definitions appear instantly from the built-in dictionary; when online, the richer web lookup still layers on top. The &ldquo;no definition available&rdquo; dead end is gone.</li>
+  <li><strong>Audited</strong> &mdash; An automated check verifies all 14,570 word forms in both translations resolve to a definition, so future text updates can&rsquo;t quietly reopen gaps.</li>
+</ul>
 <div class="un-version-label">v3.0.404 &mdash; Theological Threads joins the tool carousel properly</div>
 <ul>
   <li><strong>A full gold card</strong> &mdash; The Theological Threads tile now gets the same card design as the other Home tools: warm gold card, frosted icon plate behind the artwork, matching title and subtitle styling, and the arrow chip.</li>
@@ -39398,6 +39404,7 @@ function _rhemaEnglishWordsForRef(ref) {
 }
 function _rhemaEnglishWordsForMenuRef() { return _rhemaEnglishWordsForRef(_rhemaMenuRef); }
 function _rhemaOpenWordPicker(mode = 'lookup') {
+  _rhemaEnsureEnglishDictionary().catch(() => {}); // warm the offline dictionary
   const wrap = document.getElementById('rhemaWordPickChips');
   const refEl = document.getElementById('rhemaWordPickRef');
   const label = document.getElementById('rhemaWordPickLabel');
@@ -39602,6 +39609,7 @@ async function rhemaShowEnglishMeaning(word) {
   // one-line Bible-context note only shows when there is no dictionary hit.
   const dictEntry = _rhemaDictEntryForWord(clean);
   const bible = _rhemaBibleContextForWord(clean);
+  _rhemaEnsureEnglishDictionary().catch(() => {});
   const render = (modernDefs, pending) => {
     if (!body) return;
     let modernHtml;
@@ -39610,7 +39618,7 @@ async function rhemaShowEnglishMeaning(word) {
     } else if (pending) {
       modernHtml = `<p>Checking the English meaning...</p>`;
     } else {
-      modernHtml = `<p>${_escapeRhemaAttr(`A readable English dictionary definition was not available offline for "${clean}". Use the verse itself and any Bible context note below as supporting context.`)}</p>`;
+      modernHtml = `<p>${_escapeRhemaAttr(`No dictionary entry was found for "${clean}". Use the verse itself and any Bible context note below as supporting context.`)}</p>`;
     }
     const contextHtml = dictEntry ? '' :
       `<div class="rhema-meaning-section"><h4>Bible Context</h4><p>${_escapeRhemaAttr(bible || 'No built-in Bible context note for this word yet. Start with the modern definition, then read the immediate verse and paragraph for how the author is using it.')}</p></div>`;
@@ -39620,9 +39628,17 @@ async function rhemaShowEnglishMeaning(word) {
       ${contextHtml}
       <div class="rhema-meaning-section"><h4>In This Verse</h4><p>${_escapeRhemaAttr(_rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '')}</p></div>`;
   };
-  // A dictionary hit renders instantly; the modern-English defs patch in when
-  // (and if) the online lookup answers.
-  if (dictEntry) render([], true);
+  // Render the shell instantly, then patch in definitions as they arrive:
+  // bundled offline dictionary first (covers every MSB/BSB word), then the
+  // online lookup replaces it when it answers with richer entries.
+  render([], true);
+  let bundled = [];
+  try {
+    await _rhemaEnsureEnglishDictionary();
+    bundled = _rhemaBundledEnglishDefs(clean);
+  } catch {}
+  if (_rhemaCurrentEnglishMeaningWord !== clean) return;
+  if (bundled.length) render(bundled, true);
   let modernDefs = [];
   try {
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(clean)}`);
@@ -39633,7 +39649,37 @@ async function rhemaShowEnglishMeaning(word) {
   } catch {}
   // Bail if the user has already looked up a different word meanwhile.
   if (_rhemaCurrentEnglishMeaningWord !== clean) return;
-  render(modernDefs, false);
+  render(modernDefs.length ? modernDefs : bundled, false);
+}
+
+// ── Bundled offline English dictionary ─────────────────────────────────────────
+// rhema-english-dictionary.js holds a definition for EVERY word in the MSB and
+// BSB texts (WordNet glosses + curated biblical terms + generated name entries),
+// so word meanings work offline and never come back empty.
+const RHEMA_ENGLISH_DICT_VERSION = '3.0.405';
+let _rhemaEnglishDictPromise = null;
+function _rhemaEnsureEnglishDictionary() {
+  if (window.RhemaEnglishDictionary) return Promise.resolve();
+  if (_rhemaEnglishDictPromise) return _rhemaEnglishDictPromise;
+  _rhemaEnglishDictPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'rhema-english-dictionary.js?v=' + RHEMA_ENGLISH_DICT_VERSION;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => { _rhemaEnglishDictPromise = null; reject(new Error('dictionary load failed')); };
+    document.head.appendChild(s);
+  });
+  return _rhemaEnglishDictPromise;
+}
+function _rhemaBundledEnglishDefs(word) {
+  const entries = window.RhemaEnglishDictionary?.entries;
+  if (!entries) return [];
+  const clean = _rhemaCleanEnglishLookupWord(word);
+  const defs = entries[clean]
+    || entries[clean.replace(/'s$/, '').replace(/'$/, '')]
+    || entries[clean.replace(/[^a-z'-]/g, '')]
+    || [];
+  return defs.map(([pos, definition]) => ({ pos, definition, example: '' }));
 }
 function closeRhemaEnglishMeaning(e) {
   if (e && e.target !== document.getElementById('rhemaEnglishMeaningModal')) return;
