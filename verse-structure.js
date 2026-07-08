@@ -12,10 +12,11 @@ const VS_BOOK_CODE_MAP = {
 
 const VS_LOCAL_SET    = new Set(['MSB', 'BSB']);
 // The Verse Structure tool itself is local-only now (MSB/BSB). The api.bible
-// translations (NIV/NKJV/NASB) are reached exclusively through the Rhema compare
-// feature, which calls _vsFetchVerse directly — one call per verse compared.
+// translations (NIV/NKJV/NASB) are fetched in ~250-verse chapter blocks (see
+// _vsEnsureChapter below) for the Rhema reader, compare and cross-refs, and
+// cached permanently to IndexedDB.
 const VS_TRANSLATIONS = ['MSB', 'BSB'];
-// Translations the compare feature may request over the network.
+// Translations that may be requested over the network.
 const VS_API_TRANSLATIONS = ['NIV', 'NKJV', 'NASB'];
 
 // Persistent localStorage cache keys for api.bible data
@@ -176,6 +177,20 @@ async function _vsFetchVerse(trans, book, ch, v) {
     }
   } catch {}
 
+  // Block-first: pull the whole ~250-verse chapter window instead of a single
+  // verse. One passages call caches this chapter (and its neighbors) to
+  // IndexedDB forever, so every later verse in the block is free — compare,
+  // cross-refs and the reader all share the same downloaded text. The
+  // single-verse endpoint below is only a fallback if the block path fails.
+  if (typeof _vsEnsureChapter === 'function') {
+    try {
+      const chap = await _vsEnsureChapter(trans, book, ch);
+      // A cached chapter is authoritative: a verse missing from it is a verse
+      // the translation omits, not a fetch failure.
+      if (chap) return chap[String(v)] || '';
+    } catch {}
+  }
+
   // Don't hit the network if the monthly quota is exhausted
   if (_vsIsApiLimited()) return null;
 
@@ -215,11 +230,10 @@ async function _vsFetchVerse(trans, book, ch, v) {
   finally { _vsInFlight.delete(key); }
 }
 
-// NOTE: whole-chapter prefetch was removed. It silently fetched every verse of a
-// chapter on the first single-verse read, which turned a handful of comparisons
-// into thousands of API calls. The only consumer of api.bible now is the Rhema
-// compare feature, which fetches exactly one verse per version compared (results
-// are cached in memory + localStorage, so repeats cost zero calls).
+// NOTE: the old per-verse whole-chapter prefetch (one API call per verse) was
+// removed long ago. Chapter-level fetching now goes through the passages block
+// layer below — one API call covers up to VS_BLOCK_VERSE_BUDGET verses and is
+// cached to IndexedDB permanently, so it is strictly cheaper than per-verse.
 
 // ── POS Highlighting ──────────────────────────────────────────────────────────
 function _vsNlp() {
@@ -805,4 +819,210 @@ async function openVSCrossReferences() {
   if (typeof openRhemaCrossReferences === 'function') {
     openRhemaCrossReferences();
   }
+}
+
+// ══ Chapter-Block Fetching + IndexedDB Cache ═══════════════════════════════════
+// One passage call fetches a window of whole chapters (~250 verses) instead of
+// one verse. Chapters are cached permanently on-device in IndexedDB (localStorage
+// tops out around 5MB — a full translation is ~4.5MB, so it can't live there),
+// mirrored in memory for synchronous reads, and each verse is seeded into
+// _vsTextCache so every existing consumer (compare, cross-refs) reads them free.
+// The window is anchored on the requested chapter, extends through contiguous
+// UNCACHED chapters (backward a little, forward a lot), never crosses a book,
+// and never exceeds the per-request verse budget.
+const VS_BLOCK_VERSE_BUDGET = 250;
+const VS_LS_BLOCK_CAP_PFX = 'vs_blockcap_'; // + trans → learned per-version cap
+
+const _vsChapterMem = new Map();      // "TRANS|BOOK|CH" → { verseNum: text }
+const _vsChapterInFlight = new Map(); // block fetches keyed by target chapter
+const _vsIdbKnownKeys = new Set();    // chapter keys known to exist in IndexedDB
+let _vsDbPromise = null;
+
+function _vsDb() {
+  if (_vsDbPromise) return _vsDbPromise;
+  _vsDbPromise = new Promise((resolve) => {
+    try {
+      const req = indexedDB.open('rhema-bible-cache', 1);
+      req.onupgradeneeded = () => {
+        try { req.result.createObjectStore('chapters'); } catch {}
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        // Load the key registry once so the window builder can skip chapters
+        // already on-device without an async round trip per chapter.
+        try {
+          const tx = db.transaction('chapters', 'readonly').objectStore('chapters').getAllKeys();
+          tx.onsuccess = () => (tx.result || []).forEach((k) => _vsIdbKnownKeys.add(String(k)));
+        } catch {}
+        resolve(db);
+      };
+      req.onerror = () => resolve(null);
+    } catch { resolve(null); }
+  });
+  return _vsDbPromise;
+}
+
+function _vsDbGet(key) {
+  return _vsDb().then((db) => new Promise((resolve) => {
+    if (!db) return resolve(null);
+    try {
+      const tx = db.transaction('chapters', 'readonly').objectStore('chapters').get(key);
+      tx.onsuccess = () => resolve(tx.result || null);
+      tx.onerror = () => resolve(null);
+    } catch { resolve(null); }
+  }));
+}
+
+function _vsDbPut(key, val) {
+  return _vsDb().then((db) => new Promise((resolve) => {
+    if (!db) return resolve(false);
+    try {
+      const tx = db.transaction('chapters', 'readwrite').objectStore('chapters').put(val, key);
+      tx.onsuccess = () => { _vsIdbKnownKeys.add(key); resolve(true); };
+      tx.onerror = () => resolve(false);
+    } catch { resolve(false); }
+  }));
+}
+
+function _vsChapterKey(trans, book, ch) { return `${trans}|${book}|${String(ch)}`; }
+
+function _vsSeedChapter(trans, book, ch, verses) {
+  const key = _vsChapterKey(trans, book, ch);
+  _vsChapterMem.set(key, verses);
+  for (const [v, t] of Object.entries(verses)) {
+    _vsTextCache.set(`${trans}|${book}|${String(ch)}|${v}`, t);
+  }
+}
+
+function _vsChapterFromMemory(trans, book, ch) {
+  return _vsChapterMem.get(_vsChapterKey(trans, book, ch)) || null;
+}
+
+function _vsChapterKnownCached(trans, book, ch) {
+  const key = _vsChapterKey(trans, book, ch);
+  return _vsChapterMem.has(key) || _vsIdbKnownKeys.has(key);
+}
+
+function _vsBlockBudget(trans) {
+  try {
+    const learned = parseInt(localStorage.getItem(VS_LS_BLOCK_CAP_PFX + trans) || '0', 10);
+    if (learned > 0) return Math.max(30, learned);
+  } catch {}
+  return VS_BLOCK_VERSE_BUDGET;
+}
+
+// Whole-chapter window around targetCh: backward through uncached neighbors
+// (so paging back is covered), then forward as far as the budget allows.
+function _vsBlockWindow(trans, book, targetCh) {
+  const target = parseInt(targetCh, 10);
+  const chapters = _vsChapterList(book).map(Number);
+  const countFor = (ch) => _vsChapterVerses(book, ch).length || 30;
+  if (!chapters.length || !chapters.includes(target)) return { start: target, end: target };
+  const min = chapters[0], max = chapters[chapters.length - 1];
+  let budget = _vsBlockBudget(trans) - countFor(target);
+  let start = target, end = target;
+  // A little back-context first (up to ~2 chapters), then forward with the rest.
+  let backSteps = 0;
+  while (backSteps < 2 && start - 1 >= min && !_vsChapterKnownCached(trans, book, start - 1)) {
+    const c = countFor(start - 1);
+    if (c > budget) break;
+    start--; budget -= c; backSteps++;
+  }
+  while (end + 1 <= max && !_vsChapterKnownCached(trans, book, end + 1)) {
+    const c = countFor(end + 1);
+    if (c > budget) break;
+    end++; budget -= c;
+  }
+  return { start, end };
+}
+
+// Parses api.bible JSON passage content into { chapterNum: { verseNum: text } }.
+// Walks the whole content tree: verse boundaries come from verse-tag sid/verseId
+// attrs ("GEN.5.1"); text nodes that carry their own verseId win over the
+// running marker. Titles/notes are excluded by the request flags.
+function _vsParsePassageJson(content, apiBook) {
+  const out = {};
+  let cur = null;
+  const idRe = new RegExp('^' + apiBook.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\.(\\d+)\\.(\\d+)');
+  const visit = (node) => {
+    if (!node) return;
+    if (Array.isArray(node)) { node.forEach(visit); return; }
+    const attrs = node.attrs || {};
+    const marker = attrs.sid || attrs.verseId;
+    if (typeof marker === 'string') {
+      const m = marker.match(idRe);
+      if (m) cur = { ch: m[1], v: m[2] };
+    }
+    if (node.type === 'text' && typeof node.text === 'string') {
+      const own = typeof attrs.verseId === 'string' ? attrs.verseId.match(idRe) : null;
+      const tgt = own ? { ch: own[1], v: own[2] } : cur;
+      if (tgt) {
+        const chOut = out[tgt.ch] || (out[tgt.ch] = {});
+        chOut[tgt.v] = (chOut[tgt.v] || '') + node.text;
+      }
+    }
+    if (node.items) visit(node.items);
+  };
+  visit(content);
+  for (const ch of Object.keys(out)) {
+    for (const v of Object.keys(out[ch])) {
+      const t = out[ch][v].replace(/\s+/g, ' ').trim();
+      if (t) out[ch][v] = t; else delete out[ch][v];
+    }
+    if (!Object.keys(out[ch]).length) delete out[ch];
+  }
+  return out;
+}
+
+// Fetches the block containing targetCh. One network call caches ~8 chapters.
+async function _vsFetchChapterBlock(trans, book, targetCh) {
+  if (_vsIsApiLimited()) return null;
+  const flightKey = _vsChapterKey(trans, book, targetCh);
+  if (_vsChapterInFlight.has(flightKey)) return _vsChapterInFlight.get(flightKey);
+  const p = (async () => {
+    const ids = await _vsGetBibleIds();
+    const bibleId = ids[trans];
+    if (!bibleId) return null;
+    const { start, end } = _vsBlockWindow(trans, book, targetCh);
+    const api = _vsApiCode(book);
+    const passageId = start === end ? `${api}.${start}` : `${api}.${start}-${api}.${end}`;
+    const url = `${VS_API_BASE}/bibles/${bibleId}/passages/${passageId}` +
+      `?content-type=json&include-notes=false&include-titles=false` +
+      `&include-chapter-numbers=false&include-verse-numbers=false&include-verse-spans=false`;
+    try {
+      const r = await fetch(url, { headers: { 'api-key': VS_API_KEY } });
+      if (!r.ok) {
+        if (r.status === 429 || r.status === 403) _vsSetApiLimited();
+        return null;
+      }
+      const { data } = await r.json();
+      const byChapter = _vsParsePassageJson(data?.content, api);
+      let versesGot = 0;
+      for (const [chNum, verses] of Object.entries(byChapter)) {
+        _vsSeedChapter(trans, book, chNum, verses);
+        _vsDbPut(_vsChapterKey(trans, book, chNum), verses);
+        versesGot += Object.keys(verses).length;
+      }
+      // Truncation learning: if the tail of the window came back empty, this
+      // version's per-request cap is lower than our budget — remember it.
+      if (end > start && !byChapter[String(end)] && versesGot > 0) {
+        try { localStorage.setItem(VS_LS_BLOCK_CAP_PFX + trans, String(Math.max(30, versesGot))); } catch {}
+      }
+      return _vsChapterFromMemory(trans, book, targetCh);
+    } catch { return null; }
+  })().finally(() => _vsChapterInFlight.delete(flightKey));
+  _vsChapterInFlight.set(flightKey, p);
+  return p;
+}
+
+// Public entry: memory → IndexedDB → block fetch. Resolves to the chapter's
+// { verseNum: text } map, or null when unavailable (offline / over quota).
+async function _vsEnsureChapter(trans, book, ch) {
+  ch = String(ch);
+  if (!VS_API_TRANSLATIONS.includes(trans)) return null;
+  const mem = _vsChapterFromMemory(trans, book, ch);
+  if (mem) return mem;
+  const stored = await _vsDbGet(_vsChapterKey(trans, book, ch));
+  if (stored) { _vsSeedChapter(trans, book, ch, stored); return stored; }
+  return _vsFetchChapterBlock(trans, book, ch);
 }

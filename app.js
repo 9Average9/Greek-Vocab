@@ -29699,7 +29699,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.408";
+const APP_VERSION = "3.0.409";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29722,6 +29722,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.409 &mdash; Read the whole Bible in NIV, NKJV or NASB</div>
+<ul>
+  <li><strong>Pick your reading version</strong> &mdash; The version pill in the Rhema reader now opens a picker with five versions: MSB and BSB (built in) plus NIV, NKJV and NASB. Choose one and the whole reader &mdash; full chapters, single verses, even syntax view &mdash; displays that translation.</li>
+  <li><strong>Downloads once, saved forever</strong> &mdash; NIV, NKJV and NASB download as you read: opening a chapter grabs a big ~250-verse block around it in a single request and stores it permanently on your device (in the browser&rsquo;s IndexedDB storage, which is built for holding whole books offline). Anything downloaded is never fetched again &mdash; keep reading and your device steadily builds up the complete Bible in your version.</li>
+  <li><strong>Smarter Compare</strong> &mdash; Compare now shows the tapped verse in every version <em>other</em> than the one you&rsquo;re reading &mdash; MSB and BSB included &mdash; and it shares the same downloaded chapter blocks, so comparing verses near each other costs nothing extra.</li>
+  <li><strong>Cross-references too</strong> &mdash; Verse lookups across the app now pull whole chapter blocks instead of one verse at a time, so every feature helps fill in your offline Bible faster.</li>
+</ul>
 <div class="un-version-label">v3.0.408 &mdash; Deleted accounts clean themselves up</div>
 <ul>
   <li><strong>No more ghosts</strong> &mdash; When a friend&rsquo;s account is deleted, it now disappears everywhere: the app confirms the account is truly gone (never just offline), then quietly removes it from your friends list and from any habit&rsquo;s accountability partners &mdash; on your device and in your saved data.</li>
@@ -36527,6 +36534,61 @@ function _rhemaEnglishRangeText(refOrObj, version = _rhemaEnglishVersion()) {
   return verses.join(' ');
 }
 
+// ── Reader display version ─────────────────────────────────────────────────────
+// The reader can display any version: MSB/BSB (on device) or NIV/NKJV/NASB
+// (fetched in ~250-verse chapter blocks, cached to IndexedDB forever). Picking
+// MSB/BSB also sets the classic app-wide English mode so every other feature
+// follows; picking an API version overlays ONLY the reader's display text —
+// everything else (threads, memorization, notes) keeps reading local text.
+function _rhemaReaderVersion() {
+  try {
+    const v = localStorage.getItem('rhemaReaderVersion');
+    if (['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'].includes(v)) return v;
+  } catch {}
+  return _rhemaEnglishVersion();
+}
+function _rhemaReaderVersionIsApi() {
+  const v = _rhemaReaderVersion();
+  return typeof VS_API_TRANSLATIONS !== 'undefined' && VS_API_TRANSLATIONS.includes(v);
+}
+// The version whose text is actually on screen right now (falls back to the
+// local version while an API chapter downloads or the quota is exhausted).
+function _rhemaReaderDisplayLabel() {
+  if (!_rhemaReaderVersionIsApi()) return _rhemaReaderVersion();
+  const cached = typeof _vsChapterFromMemory === 'function' &&
+    _vsChapterFromMemory(_rhemaReaderVersion(), _rhemaBook, _rhemaChapter);
+  return cached ? _rhemaReaderVersion() : _rhemaEnglishLabel();
+}
+function _rhemaReaderText(book, chapter, verse) {
+  const ver = _rhemaReaderVersion();
+  if (!_rhemaReaderVersionIsApi()) return _rhemaEnglishText(book, chapter, verse, ver);
+  const chap = typeof _vsChapterFromMemory === 'function' ? _vsChapterFromMemory(ver, book, chapter) : null;
+  if (chap) return chap[String(verse)] || '';
+  return _rhemaEnglishText(book, chapter, verse); // local text while the block downloads
+}
+// Kicks the chapter-block download for the current position when needed.
+// Returns 'pending' | 'limited' | false (false = nothing to wait for).
+let _rhemaReaderFetchToken = 0;
+function _rhemaEnsureReaderChapter() {
+  if (!_rhemaReaderVersionIsApi() || typeof _vsEnsureChapter !== 'function') return false;
+  const ver = _rhemaReaderVersion();
+  if (typeof _vsChapterFromMemory === 'function' && _vsChapterFromMemory(ver, _rhemaBook, _rhemaChapter)) {
+    // Read-ahead: warm the next chapter (usually a no-op — the block that
+    // brought this chapter already covered it).
+    const next = String(parseInt(_rhemaChapter, 10) + 1);
+    if (((_rhemaText() || {})[_rhemaBook] || {})[next]) _vsEnsureChapter(ver, _rhemaBook, next).catch(() => {});
+    return false;
+  }
+  if (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()) return 'limited';
+  const token = ++_rhemaReaderFetchToken;
+  const b = _rhemaBook, c = _rhemaChapter;
+  _vsEnsureChapter(ver, b, c).then((chap) => {
+    if (token !== _rhemaReaderFetchToken || !chap) return;
+    if (b === _rhemaBook && c === _rhemaChapter && _rhemaReaderVersion() === ver) renderRhemaVerse();
+  }).catch(() => {});
+  return 'pending';
+}
+
 function _syncRhemaEnglishAlias() {
   window.RhemaEnglish = _rhemaEnglishData();
   window.RhemaEnglishBooks = window.RhemaEnglishBooks || window.RhemaMSBBooks || window.RhemaBSBBooks || [];
@@ -37366,7 +37428,7 @@ function _rhemaEnglishTokenRows(text) {
 }
 
 function _rhemaEnglishCacheKey(book, chapter, verse) {
-  return `${_rhemaEnglishVersion()}|${book}|${chapter}|${verse}`;
+  return `${_rhemaReaderVersion()}|${book}|${chapter}|${verse}`;
 }
 
 function _rhemaEnglishVerseCats(book, chapter, verse, text) {
@@ -37388,7 +37450,7 @@ function _rhemaFlowSelected() {
 }
 
 function _rhemaFlowCacheKey(book, chapter, verse) {
-  return `${_rhemaEnglishVersion()}|${book}|${chapter}|${verse}|${_rhemaEnglishNlp ? 'nlp' : 'plain'}`;
+  return `${_rhemaReaderVersion()}|${book}|${chapter}|${verse}|${_rhemaEnglishNlp ? 'nlp' : 'plain'}`;
 }
 
 function _rhemaEscapeRegex(text) {
@@ -39318,9 +39380,9 @@ function rhemaAddToCompareFromMenu() {
   closeRhemaVerseSheet();
   rhemaOpenCompare(ref);
 }
-// Compare shows one verse in NIV, NKJV and NASB — a quick read-across, nothing to
-// save or rearrange. With no explicit reference (e.g. opened from the tool wheel)
-// it falls back to the current reader verse.
+// Compare shows one verse in every version other than the one on screen — a
+// quick read-across, nothing to save or rearrange. With no explicit reference
+// (e.g. opened from the tool wheel) it falls back to the current reader verse.
 function rhemaOpenCompare(ref) {
   _rhemaCompareRef = ref || _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse);
   _rhemaRenderCompare();
@@ -39330,12 +39392,13 @@ function closeRhemaCompare(e) {
   if (e && e.target !== document.getElementById('rhemaCompareOverlay')) return;
   document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
 }
-// ── Compare: the tapped verse in NIV, NKJV and NASB ────────────────────────────
-// A read-across of the three licensed api.bible translations for one verse. They
-// are fetched one verse at a time and cached in memory + localStorage (shared
-// with the rest of the app), so each verse-version costs at most one network call
-// ever. Compare is the ONLY place that touches api.bible.
-const RHEMA_COMPARE_VERSIONS = ['NIV', 'NKJV', 'NASB'];
+// ── Compare: the tapped verse across every other version ───────────────────────
+// A read-across of all versions except the one currently selected in the reader.
+// MSB/BSB read straight off the device. The licensed api.bible translations are
+// pulled as whole ~250-verse chapter blocks (one passages call caches the chapter
+// and its neighbors to IndexedDB forever), so comparing more verses in the same
+// area of Scripture costs no further API calls.
+const RHEMA_COMPARE_VERSIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
 let _rhemaCompareRef = null;   // the single verse reference currently compared
 
 function _rhemaCompareIsApiVersion(v) {
@@ -39347,6 +39410,9 @@ function _rhemaCompareIsApiVersion(v) {
 // Returns cached text for an api.bible verse without ever hitting the network,
 // or null if it isn't cached yet.
 function _rhemaCompareApiCached(ver, p) {
+  // Chapter blocks already in memory are authoritative for their verses.
+  const chap = typeof _vsChapterFromMemory === 'function' && _vsChapterFromMemory(ver, p.book, p.chapter);
+  if (chap) return chap[String(p.verse)] || '';
   const key = `${ver}|${p.book}|${p.chapter}|${p.verse}`;
   if (typeof _vsTextCache !== 'undefined' && _vsTextCache.has(key)) return _vsTextCache.get(key);
   try {
@@ -39356,8 +39422,10 @@ function _rhemaCompareApiCached(ver, p) {
   return null;
 }
 
-// Fetches any pending api.bible verses in the rendered list (one call each) and
-// patches the text in when it lands — mirrors the cross-ref async pattern.
+// Fetches any pending api.bible verses in the rendered list and patches the text
+// in when it lands. _vsFetchVerse is block-first: one passages call downloads the
+// whole surrounding chapter window and saves it to IndexedDB, so later compares
+// nearby are free.
 async function _rhemaCompareLoadAsync() {
   if (typeof _vsFetchVerse !== 'function') return;
   const list = document.getElementById('rhemaCompareList');
@@ -39403,14 +39471,34 @@ function _rhemaRenderCompare() {
   if (refLabel) refLabel.textContent = p ? (_rhemaDisplayRefFromKey(ref) || ref) : '';
   if (!list) return;
   if (!p) {
-    list.innerHTML = `<div class="rhema-compare-empty">Tap a verse in the reader and choose <strong>Compare</strong> to see it in NIV, NKJV and NASB.</div>`;
+    list.innerHTML = `<div class="rhema-compare-empty">Tap a verse in the reader and choose <strong>Compare</strong> to see it in your other Bible versions.</div>`;
     return;
   }
   const limited = typeof _vsIsApiLimited === 'function' && _vsIsApiLimited();
-  list.innerHTML = RHEMA_COMPARE_VERSIONS.map(ver => {
-    const cached = _rhemaCompareApiCached(ver, p);
+  const current = _rhemaReaderVersion();
+  list.innerHTML = RHEMA_COMPARE_VERSIONS.filter(ver => ver !== current).map(ver => {
     let bodyClass = 'rhema-compare-text', bodyText;
-    if (cached != null) {
+    if (!_rhemaCompareIsApiVersion(ver)) {
+      // MSB/BSB live on the device — read them directly, no network ever.
+      const local = _rhemaEnglishText(p.book, p.chapter, p.verse, ver);
+      if (local) {
+        bodyText = _escapeRhemaAttr(local);
+      } else {
+        bodyClass += ' rhema-compare-fallback';
+        bodyText = `This verse is not included in the ${ver} translation.`;
+      }
+      return `<div class="rhema-compare-item">
+        <div class="rhema-compare-item-hd">
+          <span class="rhema-compare-ver-static">${ver}</span>
+        </div>
+        <div class="${bodyClass}">${bodyText}</div>
+      </div>`;
+    }
+    const cached = _rhemaCompareApiCached(ver, p);
+    if (cached === '') {
+      bodyClass += ' rhema-compare-fallback';
+      bodyText = `This verse is not included in the ${ver} translation.`;
+    } else if (cached != null) {
       bodyText = _escapeRhemaAttr(cached);
     } else if (limited) {
       // Over quota / offline: show a local version so the row still reads,
@@ -40410,13 +40498,13 @@ function _syncRhemaChapterUi() {
   const versionBtn = document.getElementById('rhemaEnglishVersionBtn');
   const versionLabel = document.getElementById('rhemaEnglishVersionLabel');
   if (versionBtn) {
-    // MSB and BSB share the exact same Old Testament text, so the switch is
-    // only meaningful in the New Testament — hide it for OT books.
-    versionBtn.style.display = isRhemaOTBook(_rhemaBook) ? 'none' : '';
-    versionBtn.classList.toggle('active', _rhemaEnglishVersion() === 'BSB');
-    versionBtn.title = `English translation: ${_rhemaEnglishLabel()}. Tap to switch to ${_rhemaEnglishVersion() === 'BSB' ? 'MSB' : 'BSB'}.`;
+    // The pill opens the full version picker (MSB/BSB on device, NIV/NKJV/NASB
+    // downloaded in chapter blocks), which applies to every book.
+    versionBtn.style.display = '';
+    versionBtn.classList.toggle('active', _rhemaReaderVersion() !== 'MSB');
+    versionBtn.title = `Bible version: ${_rhemaReaderVersion()}. Tap to choose another version.`;
   }
-  if (versionLabel) versionLabel.textContent = _rhemaEnglishLabel();
+  if (versionLabel) versionLabel.textContent = _rhemaReaderVersion();
   document.getElementById('rhemaVersePillBtn')?.classList.toggle('hidden', _rhemaFullChapter);
   _syncRhemaLxxBtn();
 }
@@ -41500,6 +41588,15 @@ function renderRhemaVerse() {
   display.classList.toggle('rhema-hebrew-layer', isHebrew);
   display.classList.toggle('rhema-lxx-layer', layer === 'lxx');
 
+  // API reader versions (NIV/NKJV/NASB): make sure this chapter's block is
+  // downloaded. While it's in flight (or the quota is out) the local text shows
+  // with a small banner; the resolved block re-renders this view automatically.
+  const readerState = _rhemaEnsureReaderChapter();
+  const readerBanner = !readerState ? '' :
+    `<div class="rhema-reader-downloading">${readerState === 'limited'
+      ? `${_rhemaReaderVersion()} can't download right now (monthly limit reached) — showing ${_rhemaEnglishLabel()}.`
+      : `Downloading ${_rhemaReaderVersion()}… showing ${_rhemaEnglishLabel()} until it lands.`}</div>`;
+
   if (_rhemaFullChapter) {
     const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
     const verseNums = Object.keys(chapterData).map(Number).sort((a, b) => a - b);
@@ -41524,12 +41621,13 @@ function renderRhemaVerse() {
       EnglishDiv.classList.remove('rhema-english-single');
       EnglishDiv.innerHTML = _rhemaSyntaxMode ? '' :
         `<div class="rhema-english-chapter-title">${_escapeRhemaAttr(_rhemaBookName(_rhemaBook))} ${_escapeRhemaAttr(_rhemaChapter)}</div>` +
+        readerBanner +
         verseNums.map(vn => {
           const v = String(vn);
-          const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, v);
+          const engText = _rhemaReaderText(_rhemaBook, _rhemaChapter, v);
           const engContent = engText
             ? _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, v)
-            : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
+            : `<em class="rhema-no-english">This verse is not included in the ${_rhemaReaderDisplayLabel()} translation.</em>`;
           const _vhl = _rhemaCurMarks()[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, v)]?.color;
           return `<div class="rhema-chapter-block rhema-english-verse${v === focusVerse ? ' rhema-chapter-block-target' : ''}${_vhl ? ' rhema-verse-highlighted' : ''}" data-verse="${v}"${_vhl ? ` style="--rhema-hl:${_vhl}"` : ''} onclick="rhemaOpenVerseMenu('${v}', event)">` +
                  `<sup class="rhema-english-vnum">${vn}</sup>${engContent}${_rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, v)}</div>`;
@@ -41563,7 +41661,7 @@ function renderRhemaVerse() {
     if (_rhemaSyntaxMode) {
       display.classList.remove('greek-only');
       if (_rhemaShowEnglish) {
-        const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
+        const engText = _rhemaReaderText(_rhemaBook, _rhemaChapter, _rhemaVerse);
         display.innerHTML = _renderEnglishSyntaxView(engText);
         _requestRhemaEnglishSyntaxRender();
       } else {
@@ -41575,15 +41673,15 @@ function renderRhemaVerse() {
       display.classList.toggle('greek-only', _rhemaGreekOnly);
       display.innerHTML = _rhemaLayerBadge() + _renderVerseWords(words, null);
       if (EnglishDiv) {
-        const engText = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
+        const engText = _rhemaReaderText(_rhemaBook, _rhemaChapter, _rhemaVerse);
         const _svhl = _rhemaCurMarks()[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse)]?.color;
-        EnglishDiv.innerHTML = engText
+        EnglishDiv.innerHTML = readerBanner + (engText
           ? `<div class="rhema-chapter-block rhema-english-verse${_svhl ? ' rhema-verse-highlighted' : ''}" data-verse="${_rhemaVerse}"${_svhl ? ` style="--rhema-hl:${_svhl}"` : ''} onclick="rhemaOpenVerseMenu('${_rhemaVerse}', event)">` +
             `<sup class="rhema-english-vnum">${_rhemaVerse}</sup>` +
             _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, _rhemaVerse) +
             _rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, _rhemaVerse) + `</div>` +
             `<button class="rhema-full-chapter-back" onclick="rhemaBackToFullChapter()">Back to full chapter</button>`
-          : `<em class="rhema-no-english">This verse is not included in the ${_rhemaEnglishLabel()} translation.</em>`;
+          : `<em class="rhema-no-english">This verse is not included in the ${_rhemaReaderDisplayLabel()} translation.</em>`);
       }
     }
   }
@@ -41631,12 +41729,55 @@ function toggleRhemaEnglish() {
   closeRhemaSheet();
 }
 
-function toggleRhemaEnglishVersion() {
-  _rhemaEnglishMode = _rhemaEnglishVersion() === 'BSB' ? 'MSB' : 'BSB';
-  localStorage.setItem('rhemaEnglishVersion', _rhemaEnglishMode);
-  _syncRhemaEnglishAlias();
+// The old MSB<->BSB toggle now opens the full version picker.
+function toggleRhemaEnglishVersion() { openRhemaVersionPicker(); }
+
+const RHEMA_READER_VERSIONS = [
+  { v: 'MSB',  name: 'Majority Standard Bible',  note: 'On device' },
+  { v: 'BSB',  name: 'Berean Standard Bible',    note: 'On device' },
+  { v: 'NIV',  name: 'New International Version', note: 'Downloads as you read — saved to device' },
+  { v: 'NKJV', name: 'New King James Version',    note: 'Downloads as you read — saved to device' },
+  { v: 'NASB', name: 'New American Standard',     note: 'Downloads as you read — saved to device' }
+];
+
+function openRhemaVersionPicker() {
+  closeRhemaSheet?.();
+  const cur = _rhemaReaderVersion();
+  const limited = typeof _vsIsApiLimited === 'function' && _vsIsApiLimited();
+  let sheet = document.getElementById('rhemaVersionSheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'rhemaVersionSheet';
+    sheet.className = 'rhema-cmp-ver-sheet';
+    sheet.addEventListener('click', (e) => { if (e.target === sheet) closeRhemaVersionPicker(); });
+    document.body.appendChild(sheet);
+  }
+  sheet.innerHTML = `<div class="rhema-cmp-ver-card">
+    <div class="rhema-cmp-ver-title">Bible Version</div>
+    ${RHEMA_READER_VERSIONS.map(({ v, name, note }) => {
+      const isApi = typeof VS_API_TRANSLATIONS !== 'undefined' && VS_API_TRANSLATIONS.includes(v);
+      const dis = isApi && limited;
+      return `<button class="rhema-cmp-ver-opt${v === cur ? ' active' : ''}" ${dis ? 'disabled' : ''} onclick="rhemaPickReaderVersion('${v}')">
+        <span>${v}<small class="rhema-ver-note">${dis ? 'Monthly limit reached' : note}</small></span>
+        ${v === cur ? '<span class="material-symbols-outlined">check</span>' : ''}
+      </button>`;
+    }).join('')}
+    <p class="rhema-ver-foot">Downloaded chapters stay saved on this device and are never fetched twice.</p>
+  </div>`;
+  requestAnimationFrame(() => sheet.classList.add('open'));
+}
+function closeRhemaVersionPicker() {
+  document.getElementById('rhemaVersionSheet')?.classList.remove('open');
+}
+function rhemaPickReaderVersion(v) {
+  try { localStorage.setItem('rhemaReaderVersion', v); } catch {}
+  if (v === 'MSB' || v === 'BSB') {
+    _rhemaEnglishMode = v;
+    localStorage.setItem('rhemaEnglishVersion', v);
+    _syncRhemaEnglishAlias();
+  }
+  closeRhemaVersionPicker();
   _syncRhemaChapterUi();
-  closeRhemaSheet();
   _rhemaFlowCache.clear();
   renderRhemaVerse();
   updateRhemaSwapVisibility();
