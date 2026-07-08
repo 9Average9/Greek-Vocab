@@ -21493,7 +21493,12 @@ function renderHabits() {
       </article>`;
   }).join("");
 
-  const unseen = _habitItems.flatMap(h => h.accountabilityUids || h.shareUids || []).filter(uid => uid && !_habitFriendCache[uid]);
+  // "Unseen" must match the loader's own guard (`uid in cache`), NOT truthiness:
+  // failed lookups are cached as null (deleted friend account, revoked access),
+  // and a truthiness check kept re-queuing them — an instantly-resolving
+  // load -> re-render microtask loop that froze the whole Habits page for any
+  // user with an unresolvable share/accountability uid.
+  const unseen = _habitItems.flatMap(h => h.accountabilityUids || h.shareUids || []).filter(uid => uid && !(uid in _habitFriendCache));
   if (unseen.length) {
     _habitLoadFriendProfiles(unseen).then(() => {
       if (document.getElementById("habitsPage")?.classList.contains("active")) renderHabits();
@@ -29653,7 +29658,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.406";
+const APP_VERSION = "3.0.407";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29676,6 +29681,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.407 &mdash; Habit Builder freeze fixed</div>
+<ul>
+  <li><strong>Frozen Habits screen fixed</strong> &mdash; If a habit was shared with a friend whose account could no longer be looked up (deleted or unavailable), the Habits page silently re-rendered itself in a loop, so it looked normal but nothing responded to taps &mdash; no matter how many times the app was reopened. That loop is fixed; the page settles immediately and every button works again.</li>
+</ul>
 <div class="un-version-label">v3.0.406 &mdash; Reading history, smoother map trips &amp; a cleaner map</div>
 <ul>
   <li><strong>History in the book picker</strong> &mdash; The Select Book sheet swaps the search bar for a History button: every reference you open is remembered, and one tap jumps you back. The main Rhema keeps its own history, and each study&rsquo;s Rhema keeps its own too.</li>
