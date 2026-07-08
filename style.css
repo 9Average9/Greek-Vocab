@@ -35355,3 +35355,58 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
 .gt-info-body { padding: 4px 2px 8px; }
 .gt-info-body p { font-size: 0.9rem; line-height: 1.55; color: var(--font-color); margin: 0 0 10px; }
 #gtInfoModal .rhema-note-card { max-height: 76vh; overflow-y: auto; }
+
+/* ── Rhema book sheet: History (replaces the search bar) ─────────────────────── */
+.rhema-picker-history-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 32px);
+  margin: 4px 16px 10px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border-color, #93c5fd);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--secondary-color, #243447) 6%, var(--card-color, #fff));
+  color: var(--font-color, #20303f);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rhema-picker-history-row .material-symbols-outlined { font-size: 20px; color: var(--secondary-color, #243447); }
+.rhema-picker-history-row .rhema-history-chev { margin-left: auto; color: var(--muted-color, #8a8a8a); }
+.rhema-picker-history-row.hidden { display: none; }
+.rhema-history-empty {
+  color: var(--muted-color, #8a8a8a);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+  padding: 26px 18px;
+}
+
+/* ── "Continue to Bible Atlas" footer on maps opened from Rhema ──────────────── */
+.rhema-maps-continue {
+  padding: 6px 16px calc(env(safe-area-inset-bottom, 0px) + 22px);
+  display: flex;
+  justify-content: center;
+}
+.rhema-maps-continue-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 460px;
+  justify-content: center;
+  padding: 13px 18px;
+  border: none;
+  border-radius: 14px;
+  background: var(--secondary-color, #243447);
+  color: var(--btn-text-color, #fff);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--secondary-color, #243447) 25%, transparent);
+}
+.rhema-maps-continue-btn .material-symbols-outlined { font-size: 20px; }
+.rhema-maps-continue-btn:active { transform: scale(0.98); }
