@@ -219,17 +219,12 @@
   // ancient map are modern (shown for scale, not period-accurate). Only shown in
   // ancient mode — on the modern map the borders are simply the current ones.
   function _syncBordersNote(container) {
+    // The floating pill was retired — the modern-borders caveat now lives in the
+    // journey/place info modals (the "i" button) instead of covering the map.
     if (!container) return;
     var old = container.querySelector('.bible-map-borders-note');
     if (old) old.remove();
-    var el = document.createElement('div');
-    el.className = 'bible-map-borders-note';
-    el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = '<span class="material-symbols-outlined">public</span>' +
-      '<span>Faint borders are modern countries, provinces &amp; counties &mdash; shown for scale, not biblical-era lines</span>';
-    el.classList.toggle('visible', state.mode === 'ancient');
-    container.appendChild(el);
-    state.bordersNote = el;
+    state.bordersNote = null;
   }
 
   function _updateBordersNote() {

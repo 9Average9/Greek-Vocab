@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.405" rel="stylesheet"/>
+<link href="style.css?v=3.0.406" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp&amp;display=swap" rel="stylesheet"/>
@@ -625,6 +625,7 @@ Journey Maps</span>
 <div><span class="material-symbols-outlined">route</span><strong>Likely routes</strong><small>Lines are teaching aids based on the story movement, not exact GPS tracks.</small></div>
 <div><span class="material-symbols-outlined">public</span><strong>Then and now</strong><small>Switch between Bible-world names and modern comparison labels.</small></div>
 <div><span class="material-symbols-outlined">menu_book</span><strong>Receipts</strong><small>Story steps and notes stay connected to the passages that shape the route.</small></div>
+<div><span class="material-symbols-outlined">flag</span><strong>Faint borders</strong><small>The thin country, province &amp; county lines on the Bible map are today&rsquo;s borders &mdash; shown for scale, not biblical-era boundaries.</small></div>
 </div>
 <p class="journey-info-attribution">Map geometry is drawn from self-hosted OpenStreetMap / Protomaps data, rendered with MapLibre. 3D elevation currently uses Mapterhorn terrain tiles as a replaceable DEM source. Route lines, stops, and Bible-world labels are curated inside the app for Bible study.</p>
 </div>
@@ -648,6 +649,9 @@ Journey Maps</span>
 <section class="journey-stats" id="journeyStats"></section>
 <section class="journey-steps" id="journeySteps"></section>
 <section class="journey-sources" id="journeySources" style="display:none"></section>
+<div class="rhema-maps-continue" id="journeyContinueAtlas" style="display:none">
+<button class="rhema-maps-continue-btn" onclick="rhemaContinueToAtlasFromMaps()"><span class="material-symbols-outlined">travel_explore</span><span>Continue to Bible Atlas</span></button>
+</div>
 </main>
 </div>
 </div>
@@ -673,6 +677,7 @@ Journey Maps</span>
 <div><span class="material-symbols-outlined">verified</span><strong>Confidence</strong><small>Confirmed, Likely, or Debated — debated places list the candidate sites scholars propose.</small></div>
 <div><span class="material-symbols-outlined">public</span><strong>Bible / Modern</strong><small>Toggle the map between the Bible-world view and a modern comparison.</small></div>
 <div><span class="material-symbols-outlined">menu_book</span><strong>Receipts</strong><small>Every place stays connected to the passages that name it.</small></div>
+<div><span class="material-symbols-outlined">flag</span><strong>Faint borders</strong><small>The thin country, province &amp; county lines on the Bible map are today&rsquo;s borders &mdash; shown for scale, not biblical-era boundaries.</small></div>
 </div>
 <p class="journey-info-attribution">Map geometry is drawn from self-hosted OpenStreetMap / Protomaps data, rendered with MapLibre. 3D elevation uses Mapterhorn terrain tiles. Place locations and labels are curated inside the app for Bible study.</p>
 </div>
@@ -10883,10 +10888,11 @@ Verb Endings
 <span class="rhema-picker-title" id="rhemaBookPickerTitle">Select Book</span>
 <button class="rhema-picker-x" onclick="closeRhemaPickerSheet()">✕</button>
 </div>
-<div class="rhema-picker-search-row">
-<span class="material-symbols-outlined rhema-picker-search-icon">search</span>
-<input class="rhema-picker-search-input" id="rhemaBookSearch" oninput="rhemaFilterBooks(this.value)" placeholder="Search books…"/>
-</div>
+<button class="rhema-picker-history-row" id="rhemaHistoryBtn" onclick="rhemaShowHistory()" type="button">
+<span class="material-symbols-outlined">history</span>
+<span>History</span>
+<span class="material-symbols-outlined rhema-history-chev">chevron_right</span>
+</button>
 <div class="rhema-book-list" id="rhemaBookList"></div>
 </div>
 </div>
@@ -17140,7 +17146,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.405"></script>
+<script src="app.js?v=3.0.406"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.363"></script>
 <script src="verse-structure.js?v=3.0.364"></script>

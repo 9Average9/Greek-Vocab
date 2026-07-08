@@ -16517,6 +16517,8 @@ function closeAtlasPlaceInfo(e) {
 // Top-left back: from a place detail go back to the list (same tab + scroll);
 // from the list itself, leave the Atlas for home.
 function atlasBack() {
+  // Opened from inside Rhema: Back returns straight to the reader.
+  if (_rhemaMapsReturn) { _rhemaReturnFromMaps(); return; }
   if (_atlasView === 'place') {
     const detail = document.getElementById('atlasDetailPage');
     // Reveal the list underneath first so the detail slides off over it cleanly.
@@ -16643,6 +16645,8 @@ function selectAtlasJourney(id) {
 function bibleJourneyBack() {
   if (typeof _journeyStopPlay === 'function') _journeyStopPlay();
   if (typeof closeBibleJourneyInfo === 'function') closeBibleJourneyInfo();
+  // Opened from inside Rhema: Back returns straight to the reader.
+  if (_rhemaMapsReturn) { _rhemaReturnFromMaps(); return; }
   const jp = document.getElementById('journeysPage');
   if (_journeyFromAtlas) {
     _journeyFromAtlas = false;
@@ -16730,6 +16734,7 @@ function _atlasRenderDetail(place) {
     ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
     ${refs ? `<div class="atlas-refs"><strong>Where it appears in Scripture</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
   </div>`;
+  _rhemaSyncMapsContinue();
   _atlasMountGL(place);
 }
 
@@ -17003,9 +17008,10 @@ function _journeyGLActiveForPeek() {
 function _atlasJumpToFull(name) {
   closeAtlasPeek();
   if (typeof closeRhemaVerseSheet === 'function') { try { closeRhemaVerseSheet(); } catch (e) {} }
-  if (typeof closeRhema === 'function') { try { closeRhema(); } catch (e) {} }
+  _rhemaStashForMaps();
   openBibleAtlasPage();
   selectAtlasPlace(name);
+  _rhemaSyncMapsContinue();
 }
 
 function _atlasPeekMountGL(place) {
@@ -17499,10 +17505,63 @@ function openBibleJourneyFromRhemaMenu() {
   const match = p ? _journeyMatchVerse(p.book, p.chapter, p.verse) : null;
   const journey = match?.journey || null;
   closeRhemaVerseSheet?.();
-  closeRhema?.();
+  _rhemaStashForMaps();
   _journeyFromAtlas = false;
   if (journey) openBibleJourneysPage(journey.id);
   else openBibleJourneysPage();
+}
+
+// ── Rhema → Maps handoff ────────────────────────────────────────────────────
+// Opening a full map page from inside the reader hides the Rhema modal WITHOUT
+// tearing it down, so the map page's Back lands right back in the reader —
+// main or sandbox alike, with position, modes, and sandbox context intact.
+// "Continue to Bible Atlas" commits the exit: the reader closes for real and
+// normal Atlas navigation takes over.
+let _rhemaMapsReturn = null;
+function _rhemaStashForMaps() {
+  const modal = document.getElementById('rhemaModal');
+  if (!modal?.classList.contains('open')) { _rhemaMapsReturn = null; _rhemaSyncMapsContinue(); return; }
+  _rhemaMapsReturn = { screen: (typeof _activeScreenId !== 'undefined' && _activeScreenId) || 'homeScreen' };
+  closeRhemaPickerSheet?.();
+  modal.classList.remove('open');
+  _rhemaSyncMapsContinue();
+}
+function _rhemaReturnFromMaps() {
+  const r = _rhemaMapsReturn;
+  _rhemaMapsReturn = null;
+  _rhemaSyncMapsContinue();
+  if (typeof _atlasGLToken !== 'undefined') _atlasGLToken++;
+  try { window.BibleMap?.destroy?.(); } catch {}
+  if (r?.screen) showScreen(r.screen);
+  document.getElementById('rhemaModal')?.classList.add('open');
+}
+function rhemaContinueToAtlasFromMaps() {
+  _rhemaMapsReturn = null;
+  _rhemaSyncMapsContinue();
+  try { closeRhema(); } catch {}
+  if ((typeof _activeScreenId !== 'undefined' ? _activeScreenId : '') !== 'atlasPage') {
+    _journeyFromAtlas = false;
+    openBibleAtlasPage();
+  }
+}
+// Shows/hides the "Continue to Bible Atlas" footer on map pages. The atlas
+// place detail re-renders its markup, so its footer is (re)appended here.
+function _rhemaSyncMapsContinue() {
+  const on = !!_rhemaMapsReturn;
+  const journeyEl = document.getElementById('journeyContinueAtlas');
+  if (journeyEl) journeyEl.style.display = on ? '' : 'none';
+  const detail = document.getElementById('atlasDetailPage');
+  if (detail) {
+    let el = detail.querySelector('.rhema-maps-continue');
+    if (on && !el) {
+      el = document.createElement('div');
+      el.className = 'rhema-maps-continue';
+      el.innerHTML = '<button class="rhema-maps-continue-btn" onclick="rhemaContinueToAtlasFromMaps()"><span class="material-symbols-outlined">travel_explore</span><span>Continue to Bible Atlas</span></button>';
+      detail.appendChild(el);
+    } else if (!on && el) {
+      el.remove();
+    }
+  }
 }
 
 // Map a book NAME (as used in journey step refs) to its code, e.g. "1 Samuel" -> "1SA".
@@ -17765,7 +17824,7 @@ function closeJourneyPeek() {
 function openJourneyFromPeek(id) {
   closeJourneyPeek();
   closeRhemaVerseSheet?.();
-  closeRhema?.();
+  _rhemaStashForMaps();
   _journeyFromAtlas = false;
   openBibleJourneysPage(id);
 }
@@ -29594,7 +29653,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.405";
+const APP_VERSION = "3.0.406";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29617,6 +29676,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.406 &mdash; Reading history, smoother map trips &amp; a cleaner map</div>
+<ul>
+  <li><strong>History in the book picker</strong> &mdash; The Select Book sheet swaps the search bar for a History button: every reference you open is remembered, and one tap jumps you back. The main Rhema keeps its own history, and each study&rsquo;s Rhema keeps its own too.</li>
+  <li><strong>Maps give you back</strong> &mdash; Opening a full journey or Atlas place from inside Rhema no longer loses your spot: the Back button returns you straight to the reader, exactly where you were &mdash; in the main reader or a study sandbox. Want to stay in maps instead? A &ldquo;Continue to Bible Atlas&rdquo; button now sits at the bottom of the opened map.</li>
+  <li><strong>Cleaner map view</strong> &mdash; The floating &ldquo;faint borders are modern countries&hellip;&rdquo; pill no longer covers the top of the map. That explanation now lives inside the info button at the top right, for both journeys and places.</li>
+</ul>
 <div class="un-version-label">v3.0.405 &mdash; Every English word now has a definition</div>
 <ul>
   <li><strong>A complete offline dictionary</strong> &mdash; Rhema&rsquo;s &ldquo;Define an English word&rdquo; now ships with a definition for every single word used in the MSB and BSB texts &mdash; 14,000+ entries covering ordinary English, biblical measures and coins (omer, beka, denarius, pim), priestly objects (ephod, breastpiece, showbread), Aramaic sayings (talitha koum, lema sabachthani), names, and people groups.</li>
@@ -40462,6 +40527,7 @@ function rhemaRenderBookList() {
   if (title) title.textContent = 'Select Book';
   back?.classList.add('hidden');
   searchRow?.classList.remove('hidden');
+  document.getElementById('rhemaHistoryBtn')?.classList.remove('hidden');
   const books = _rhemaBookOrder();
   const firstOT = books.find(c => RHEMA_OT_BOOK_ORDER.includes(c));
   const firstNT = books.find(c => RHEMA_NT_BOOK_ORDER.includes(c));
@@ -40497,6 +40563,7 @@ function rhemaShowChaptersForBook(code) {
   if (title) title.textContent = `${_rhemaBookName(code)} Chapters`;
   back?.classList.remove('hidden');
   searchRow?.classList.add('hidden');
+  document.getElementById('rhemaHistoryBtn')?.classList.add('hidden');
   list.innerHTML = `<div class="rhema-book-chapter-grid">${chapters.map(ch => {
     const sel = code === _rhemaBook && ch === _rhemaChapter ? ' selected' : '';
     return `<button class="rhema-num-cell${sel}" onclick="rhemaSelectBookChapter('${code}','${ch}')">${ch}</button>`;
@@ -40567,7 +40634,7 @@ function rhemaFilterBooks(query) {
 
 // Selecting any reference always opens the whole chapter; the verse picker
 // then jumps to (and marks) a verse inside it.
-function _rhemaOpenSelectedReference() {
+function _rhemaOpenSelectedReference(skipHistory = false) {
   _rhemaFullChapter = true;
   _rhemaSyntaxMode = false;
   _rhemaHighlightStrongs = null;
@@ -40575,6 +40642,60 @@ function _rhemaOpenSelectedReference() {
   closeRhemaPickerSheet();
   syncRhemaPicker();
   renderRhemaVerse();
+  if (!skipHistory) _rhemaRecordHistory(false);
+}
+
+// ── Reference history ───────────────────────────────────────────────────────
+// Every reader keeps its own trail: the main Rhema has one, and each study
+// sandbox Rhema has its own (same scoping idea as compare).
+const RHEMA_HISTORY_MAX = 30;
+function _rhemaHistoryScope() { return _studySandboxId ? ('study:' + _studySandboxId) : 'main'; }
+function _rhemaHistoryAll() {
+  try { return JSON.parse(localStorage.getItem('rhemaRefHistory') || '{}') || {}; } catch { return {}; }
+}
+function _rhemaHistoryList() { return _rhemaHistoryAll()[_rhemaHistoryScope()] || []; }
+function _rhemaRecordHistory(withVerse) {
+  if (!_rhemaBook || !_rhemaChapter) return;
+  const entry = { b: _rhemaBook, c: String(_rhemaChapter), v: withVerse ? String(_rhemaVerse) : null, t: Date.now() };
+  const all = _rhemaHistoryAll();
+  const scope = _rhemaHistoryScope();
+  const list = (all[scope] || []).filter((e) =>
+    !(e.b === entry.b && String(e.c) === entry.c && String(e.v || '') === String(entry.v || '')));
+  list.unshift(entry);
+  all[scope] = list.slice(0, RHEMA_HISTORY_MAX);
+  try { localStorage.setItem('rhemaRefHistory', JSON.stringify(all)); } catch {}
+}
+function rhemaShowHistory() {
+  const list = document.getElementById('rhemaBookList');
+  const title = document.getElementById('rhemaBookPickerTitle');
+  const back = document.getElementById('rhemaBookPickerBack');
+  document.getElementById('rhemaHistoryBtn')?.classList.add('hidden');
+  if (!list) return;
+  if (title) title.textContent = 'History';
+  back?.classList.remove('hidden');
+  const entries = _rhemaHistoryList();
+  list.innerHTML = entries.length ? entries.map((e, i) => `
+    <div class="rhema-book-row" onclick="rhemaGoHistory(${i})">
+      <span class="material-symbols-outlined rhema-book-icon">history</span>
+      <span class="rhema-book-name">${_escapeRhemaAttr(_rhemaBookName(e.b))} ${_escapeRhemaAttr(String(e.c))}${e.v ? ':' + _escapeRhemaAttr(String(e.v)) : ''}</span>
+      <span class="material-symbols-outlined rhema-book-check">north_east</span>
+    </div>`).join('')
+    : '<div class="rhema-history-empty">No history yet — references you open in this reader will show up here.</div>';
+  list.scrollTop = 0;
+}
+function rhemaGoHistory(i) {
+  const e = _rhemaHistoryList()[i];
+  if (!e || !_rhemaText()?.[e.b]) return;
+  const fromBook = _rhemaBook;
+  _rhemaBook = e.b;
+  _rhemaChapter = String(e.c);
+  _rhemaVerse = e.v ? String(e.v) : '1';
+  _rhemaVerseFocus = false;
+  if (isRhemaOTBook(e.b) && !isRhemaOTBook(fromBook)) _rhemaOTLayer = 'hebrew';
+  _rhemaOpenSelectedReference(true);
+  _rhemaRecordHistory(!!e.v);
+  if (e.v) requestAnimationFrame(() => requestAnimationFrame(() =>
+    _rhemaScrollVerseToTop?.(String(e.v), { smooth: false })));
 }
 
 function rhemaSelectBook(code) {
@@ -40611,6 +40732,7 @@ function rhemaSelectVerse(v) {
   closeRhemaPickerSheet();
   syncRhemaPicker();
   renderRhemaVerse();
+  _rhemaRecordHistory(true);
 }
 
 function _rhemaAdjacentBook(dir) {
