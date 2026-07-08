@@ -633,6 +633,16 @@ async function frGetUser(uid) {
   } catch { return null; }
 }
 
+// True ONLY when the user document is confirmed absent (account deleted).
+// Network/permission errors return null, so callers can never mistake a flaky
+// connection for a deleted account when deciding to prune references.
+async function frUserMissing(uid) {
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    return !snap.exists();
+  } catch { return null; }
+}
+
 async function frSendRequest(fromUid, toUid, fromName) {
   try {
     await Promise.all([
@@ -687,19 +697,20 @@ async function frDeclineRequest(uid, fromUid) {
 }
 
 async function frRemoveFriend(uid, friendUid) {
-  try {
-    await Promise.all([
-      updateDoc(doc(db, "users", uid),       { friends: arrayRemove(friendUid), updatedAt: serverTimestamp() }),
-      updateDoc(doc(db, "users", friendUid), { friends: arrayRemove(uid),       updatedAt: serverTimestamp() })
-    ]);
-    return true;
-  } catch { return false; }
+  // Settle each side independently: the friend's document may no longer exist
+  // (deleted account), and that must not block removing them from OUR side.
+  const results = await Promise.allSettled([
+    updateDoc(doc(db, "users", uid),       { friends: arrayRemove(friendUid), updatedAt: serverTimestamp() }),
+    updateDoc(doc(db, "users", friendUid), { friends: arrayRemove(uid),       updatedAt: serverTimestamp() })
+  ]);
+  return results[0].status === "fulfilled";
 }
 
 window.Friends = {
   getAllUsers:     frGetAllUsers,
   searchUsers:    frSearchUsers,
   getUser:        frGetUser,
+  userMissing:    frUserMissing,
   sendRequest:    frSendRequest,
   cancelRequest:  frCancelRequest,
   acceptRequest:  frAcceptRequest,
