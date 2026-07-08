@@ -34,6 +34,7 @@ function makeContext() {
     _rhemaEnglishNlp: null,
     _rhemaEnglishNlpPromise: null,
     _rhemaEnglishVersion: () => 'MSB',
+    _rhemaReaderVersion: () => 'MSB',
     _rhemaText: () => ({}),
     isRhemaNTBook: () => false,
     _rhemaShowEnglish: true,
