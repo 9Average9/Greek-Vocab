@@ -19169,11 +19169,37 @@ function populateMemorizationBooks() {
 }
 
 function _memSelectedVersion() {
-  return document.getElementById('memVersionSelect')?.value === 'BSB' ? 'BSB' : 'MSB';
+  const v = document.getElementById('memVersionSelect')?.value;
+  return ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'].includes(v) ? v : 'MSB';
 }
 
+// Book/chapter/verse structure source. API versions (NIV/NKJV/NASB) borrow the
+// MSB structure for the dropdowns — chapter and verse numbering match.
 function _memEnglishData() {
   return _memSelectedVersion() === 'BSB' ? window.RhemaBSB : window.RhemaMSB;
+}
+
+// The selected chapter's verse map in the selected version. For API versions it
+// reads the downloaded chapter block; null means the block isn't on device yet.
+function _memChapterData(book, chapter) {
+  const v = _memSelectedVersion();
+  if (v === 'MSB' || v === 'BSB') return _memEnglishData()?.[book]?.[String(chapter)] || {};
+  const chap = typeof _vsChapterFromMemory === 'function' && _vsChapterFromMemory(v, book, String(chapter));
+  return chap || null;
+}
+
+// Kick the ~250-verse block download for the selected passage and rerun `then`
+// when it lands (same permanent IndexedDB cache the Rhema reader fills).
+function _memEnsureChapter(then) {
+  const v = _memSelectedVersion();
+  const book = document.getElementById('memBookSelect')?.value;
+  const chapter = document.getElementById('memChapterSelect')?.value;
+  if (!book || !chapter || typeof _vsEnsureChapter !== 'function') return;
+  _vsEnsureChapter(v, book, String(chapter)).then((chap) => {
+    if (!chap) return;
+    if (_memSelectedVersion() === v && document.getElementById('memBookSelect')?.value === book &&
+        document.getElementById('memChapterSelect')?.value === chapter) then();
+  }).catch(() => {});
 }
 
 function populateMemorizationChapters() {
@@ -19241,7 +19267,8 @@ function updateMemorizationCopyLink() {
 
 function _memSelectedPassageText() {
   const parts = _memCurrentRefParts();
-  const data = _memEnglishData()?.[parts.book]?.[String(parts.chapter)] || {};
+  const data = _memChapterData(parts.book, parts.chapter);
+  if (data === null) return { parts, text: '', pending: true };
   const verses = [];
   for (let v = parts.start; v <= parts.end; v++) {
     if (data[String(v)]) verses.push(data[String(v)]);
@@ -19252,7 +19279,16 @@ function _memSelectedPassageText() {
 function _memUpdateVersePreview() {
   const el = document.getElementById('memVersePreview');
   if (!el) return;
-  const { parts, text } = _memSelectedPassageText();
+  const { parts, text, pending } = _memSelectedPassageText();
+  if (pending) {
+    if (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()) {
+      el.innerHTML = `<p class="mem-empty">${_memEsc(parts.version)} can't download right now (monthly limit reached). Pick MSB or BSB, or try again next month.</p>`;
+      return;
+    }
+    el.innerHTML = `<p class="mem-empty">Downloading ${_memEsc(parts.version)}&hellip; it saves to your device and stays.</p>`;
+    _memEnsureChapter(() => _memUpdateVersePreview());
+    return;
+  }
   if (!text) { el.innerHTML = '<p class="mem-empty">Pick a reference to preview it here.</p>'; return; }
   el.innerHTML = `<span class="mem-preview-ref">${_memEsc(_memRefLabel(parts))}</span><p>${_memEsc(text)}</p>`;
 }
@@ -19281,7 +19317,16 @@ function openMemorizationCopySource() {
 
 function loadMemorizationPassage() {
   const parts = _memCurrentRefParts();
-  const data = _memEnglishData()?.[parts.book]?.[String(parts.chapter)] || {};
+  const data = _memChapterData(parts.book, parts.chapter);
+  if (data === null) {
+    if (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()) {
+      _showStudyToast(`${parts.version} can't download right now (monthly limit)`);
+      return;
+    }
+    _showStudyToast(`Downloading ${parts.version}…`);
+    _memEnsureChapter(() => loadMemorizationPassage());
+    return;
+  }
   const verses = [];
   for (let v = parts.start; v <= parts.end; v++) {
     const text = data[String(v)];
@@ -29699,7 +29744,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.409";
+const APP_VERSION = "3.0.410";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29722,6 +29767,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.410 &mdash; All five versions, everywhere</div>
+<ul>
+  <li><strong>Memorization in any version</strong> &mdash; The Memorize tool&rsquo;s version picker now offers NIV, NKJV and NASB alongside MSB and BSB. Picking a passage downloads its whole ~250-verse chapter block once, saves it to your device forever, and previews instantly from then on.</li>
+  <li><strong>Verse Structure gets them back</strong> &mdash; The NIV, NKJV and NASB chips return to the Verse Structure tool, now powered by the same shared chapter blocks &mdash; a full chapter view costs one request instead of one per verse.</li>
+  <li><strong>Community posts too</strong> &mdash; Attach a verse to a post in any of the five versions; it defaults to whichever version you read in Rhema.</li>
+  <li><strong>One shared offline Bible</strong> &mdash; Every feature reads and fills the same saved chapter blocks, so reading, comparing, memorizing or posting all help complete your on-device copy of each version &mdash; with as few downloads as possible.</li>
+</ul>
 <div class="un-version-label">v3.0.409 &mdash; Read the whole Bible in NIV, NKJV or NASB</div>
 <ul>
   <li><strong>Pick your reading version</strong> &mdash; The version pill in the Rhema reader now opens a picker with five versions: MSB and BSB (built in) plus NIV, NKJV and NASB. Choose one and the whole reader &mdash; full chapters, single verses, even syntax view &mdash; displays that translation.</li>
@@ -35466,7 +35518,7 @@ async function openCommunityPostComposer() {
   if (question) question.value = '';
   if (link) link.value = '';
   if (ref) ref.value = '';
-  if (version) version.value = _rhemaEnglishVersion();
+  if (version) version.value = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : _rhemaEnglishVersion();
   if (alertFriends) alertFriends.checked = false;
   document.getElementById('communityPostVersePreview').textContent = 'No verse will be sent unless you type a reference like John 3:16 and preview it.';
   document.getElementById('communityPostComposer')?.classList.add('open');
@@ -35514,10 +35566,25 @@ async function updateCommunityPostVersePreview() {
     if (preview) preview.textContent = 'Use a reference like John 3:16.';
     return;
   }
-  const text = _rhemaEnglishText(parsed.book.code, parsed.chapter, parsed.verse, version);
+  let text;
+  const isApiVersion = typeof VS_API_TRANSLATIONS !== 'undefined' && VS_API_TRANSLATIONS.includes(version);
+  if (isApiVersion) {
+    // Block-first fetch: this downloads (and permanently saves) the whole
+    // surrounding chapter window, same as the Rhema reader.
+    if (preview) preview.textContent = `Loading ${version}…`;
+    text = typeof _vsFetchVerse === 'function'
+      ? await _vsFetchVerse(version, parsed.book.code, parsed.chapter, parsed.verse).catch(() => null)
+      : null;
+  } else {
+    text = _rhemaEnglishText(parsed.book.code, parsed.chapter, parsed.verse, version);
+  }
   if (!text) {
     _communityPostVerse = null;
-    if (preview) preview.textContent = `${parsed.book.name} ${parsed.chapter}:${parsed.verse} is not available in ${version}.`;
+    if (preview) {
+      preview.textContent = isApiVersion && typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()
+        ? `${version} can't download right now (monthly limit reached) — try MSB or BSB.`
+        : `${parsed.book.name} ${parsed.chapter}:${parsed.verse} is not available in ${version}.`;
+    }
     return;
   }
   _communityPostVerse = {
