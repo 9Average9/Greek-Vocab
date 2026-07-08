@@ -20994,6 +20994,45 @@ async function _habitLoadFriendProfiles(uids = friendsList || []) {
   return wanted.map(uid => _habitFriendCache[uid]).filter(u => u && u.uid);
 }
 
+// ── Self-healing for deleted accounts ──────────────────────────────────────────
+// When a profile lookup comes back empty, confirm the account is actually gone
+// (userMissing distinguishes "deleted" from "offline"), then quietly scrub the
+// uid out of this user's data: habit share/accountability lists and the friends
+// list. Each uid is checked at most once per session.
+const _habitPrunedUids = new Set();
+async function _habitPruneMissingUids(uids = []) {
+  const myUid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!myUid || !window.Friends?.userMissing) return;
+  const candidates = [...new Set(uids)].filter(uid =>
+    uid && uid !== myUid && !_habitPrunedUids.has(uid) && _habitFriendCache[uid] == null);
+  for (const uid of candidates) {
+    _habitPrunedUids.add(uid);
+    const missing = await window.Friends.userMissing(uid).catch(() => null);
+    if (missing !== true) continue; // prune only confirmed-deleted accounts
+    // Scrub from this user's habits (local mirror immediately, server behind it)
+    for (const habit of _habitItems) {
+      const partners = habit.accountabilityUids || habit.shareUids || [];
+      if (!partners.includes(uid)) continue;
+      const cleaned = partners.filter((p) => p !== uid);
+      habit.accountabilityUids = cleaned;
+      if (habit.shareUids) habit.shareUids = habit.shareUids.filter((p) => p !== uid);
+      window.Habits?.update?.(myUid, habit.id, {
+        name: habit.name,
+        description: habit.description || "",
+        scheduleType: habit.schedule?.type || "daily",
+        accountabilityUids: cleaned,
+        icon: habit.icon || "menu_book",
+        color: habit.color || ""
+      }).catch(() => {});
+    }
+    // Scrub from the friends list (our side only — theirs no longer exists)
+    if ((friendsList || []).includes(uid)) {
+      friendsList = friendsList.filter((f) => f !== uid);
+      window.Friends?.removeFriend?.(myUid, uid).catch(() => {});
+    }
+  }
+}
+
 function _habitFriendName(uid) {
   const u = _habitFriendCache[uid];
   return u?.displayName || u?.username || "Friend";
@@ -21227,6 +21266,7 @@ async function loadFriendsHabits() {
   }));
 
   renderFriendsHabits();
+  _habitPruneMissingUids(friends);
 }
 
 function renderFriendsHabits() {
@@ -21501,6 +21541,7 @@ function renderHabits() {
   const unseen = _habitItems.flatMap(h => h.accountabilityUids || h.shareUids || []).filter(uid => uid && !(uid in _habitFriendCache));
   if (unseen.length) {
     _habitLoadFriendProfiles(unseen).then(() => {
+      _habitPruneMissingUids(unseen);
       if (document.getElementById("habitsPage")?.classList.contains("active")) renderHabits();
     });
   }
@@ -29658,7 +29699,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.407";
+const APP_VERSION = "3.0.408";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29681,6 +29722,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.408 &mdash; Deleted accounts clean themselves up</div>
+<ul>
+  <li><strong>No more ghosts</strong> &mdash; When a friend&rsquo;s account is deleted, it now disappears everywhere: the app confirms the account is truly gone (never just offline), then quietly removes it from your friends list and from any habit&rsquo;s accountability partners &mdash; on your device and in your saved data.</li>
+  <li><strong>Safe by design</strong> &mdash; A flaky connection can&rsquo;t trigger the cleanup: references are only removed once the server confirms the account no longer exists.</li>
+</ul>
 <div class="un-version-label">v3.0.407 &mdash; Habit Builder freeze fixed</div>
 <ul>
   <li><strong>Frozen Habits screen fixed</strong> &mdash; If a habit was shared with a friend whose account could no longer be looked up (deleted or unavailable), the Habits page silently re-rendered itself in a loop, so it looked normal but nothing responded to taps &mdash; no matter how many times the app was reopened. That loop is fixed; the page settles immediately and every button works again.</li>
