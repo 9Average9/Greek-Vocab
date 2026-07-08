@@ -11,11 +11,11 @@ const VS_BOOK_CODE_MAP = {
 };
 
 const VS_LOCAL_SET    = new Set(['MSB', 'BSB']);
-// The Verse Structure tool itself is local-only now (MSB/BSB). The api.bible
-// translations (NIV/NKJV/NASB) are fetched in ~250-verse chapter blocks (see
-// _vsEnsureChapter below) for the Rhema reader, compare and cross-refs, and
-// cached permanently to IndexedDB.
-const VS_TRANSLATIONS = ['MSB', 'BSB'];
+// All five translations are available everywhere. MSB/BSB are on device; the
+// api.bible translations (NIV/NKJV/NASB) are fetched in ~250-verse chapter
+// blocks (see _vsEnsureChapter below) and cached permanently to IndexedDB, so
+// every feature shares one ever-growing offline copy of each version.
+const VS_TRANSLATIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
 // Translations that may be requested over the network.
 const VS_API_TRANSLATIONS = ['NIV', 'NKJV', 'NASB'];
 

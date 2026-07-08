@@ -730,7 +730,7 @@ Journey Maps</span>
 </div>
 <div id="memVerseSource">
 <div class="mem-form-grid">
-<label><span>Version</span><select id="memVersionSelect" onchange="populateMemorizationBooks(); updateMemorizationCopyLink()"><option value="MSB">MSB</option><option value="BSB">BSB</option></select></label>
+<label><span>Version</span><select id="memVersionSelect" onchange="populateMemorizationBooks(); updateMemorizationCopyLink()"><option value="MSB">MSB</option><option value="BSB">BSB</option><option value="NIV">NIV</option><option value="NKJV">NKJV</option><option value="NASB">NASB</option></select></label>
 <label><span>Book</span><select id="memBookSelect" onchange="populateMemorizationChapters(); updateMemorizationCopyLink()"></select></label>
 <label><span>Chapter</span><select id="memChapterSelect" onchange="populateMemorizationVerses(); updateMemorizationCopyLink()"></select></label>
 <label><span>Start</span><select id="memStartVerseSelect" onchange="syncMemorizationEndVerse(); updateMemorizationCopyLink()"></select></label>
@@ -17146,10 +17146,10 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.409"></script>
+<script src="app.js?v=3.0.410"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.363"></script>
-<script src="verse-structure.js?v=3.0.409"></script>
+<script src="verse-structure.js?v=3.0.410"></script>
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
 <script src="firebase-lb.js?v=3.0.408" type="module"></script>
@@ -17651,6 +17651,9 @@ Save
 <select id="communityPostVersion" onchange="updateCommunityPostVersePreview()">
 <option value="MSB">MSB</option>
 <option value="BSB">BSB</option>
+<option value="NIV">NIV</option>
+<option value="NKJV">NKJV</option>
+<option value="NASB">NASB</option>
 </select>
 <input id="communityPostRef" placeholder="John 3:16"/>
 <button type="button" onclick="updateCommunityPostVersePreview()">Preview</button>
@@ -18348,6 +18351,9 @@ Save
     <div class="vs-trans-row" id="vsTransRow">
       <button class="vs-trans-chip active" data-trans="MSB" onclick="vsSelectTrans('MSB')">MSB</button>
       <button class="vs-trans-chip" data-trans="BSB" onclick="vsSelectTrans('BSB')">BSB</button>
+      <button class="vs-trans-chip" data-trans="NIV" onclick="vsSelectTrans('NIV')">NIV</button>
+      <button class="vs-trans-chip" data-trans="NKJV" onclick="vsSelectTrans('NKJV')">NKJV</button>
+      <button class="vs-trans-chip" data-trans="NASB" onclick="vsSelectTrans('NASB')">NASB</button>
     </div>
 
     <!-- POS Highlight bar -->
