@@ -949,6 +949,14 @@ function _vsBlockWindow(trans, book, targetCh) {
     if (c > budget) break;
     end++; budget -= c;
   }
+  // Forward blocked (book end, or the chapters ahead are already cached — e.g.
+  // paging BACKWARD into a book): spend the rest of the budget backward so the
+  // call still pulls a full-size block instead of a couple of chapters.
+  while (start - 1 >= min && !_vsChapterKnownCached(trans, book, start - 1)) {
+    const c = countFor(start - 1);
+    if (c > budget) break;
+    start--; budget -= c;
+  }
   return { start, end };
 }
 
@@ -1087,6 +1095,53 @@ async function _vsFetchChapterBlock(trans, book, targetCh) {
   })().finally(() => _vsChapterInFlight.delete(flightKey));
   _vsChapterInFlight.set(flightKey, p);
   return p;
+}
+
+// ── Whole-version download ─────────────────────────────────────────────────────
+// Walks the canon in order and fetches every not-yet-cached chapter through the
+// block layer. Because each fetch pulls a max-size window and skips anything
+// already on device, a full Bible lands in roughly (total verses / block cap)
+// calls — the theoretical minimum — and an interrupted run resumes for free.
+let _vsBulkTrans = null; // one whole-version download at a time
+
+function _vsBooksForTrans(trans) {
+  const order = typeof RHEMA_BOOK_ORDER !== 'undefined' ? RHEMA_BOOK_ORDER
+    : Object.keys((typeof window !== 'undefined' && window.RhemaMSB) || {});
+  return order.filter(b => _vsBookInScope(trans, b) && _vsChapterList(b).length);
+}
+
+function _vsVersionCacheStats(trans) {
+  let total = 0, cached = 0;
+  for (const b of _vsBooksForTrans(trans)) {
+    for (const ch of _vsChapterList(b)) {
+      total++;
+      if (_vsChapterKnownCached(trans, b, String(ch))) cached++;
+    }
+  }
+  return { cached, total };
+}
+
+async function _vsDownloadWholeVersion(trans, onProgress) {
+  if (_vsBulkTrans || !VS_API_TRANSLATIONS.includes(trans)) return false;
+  _vsBulkTrans = trans;
+  try {
+    await _vsDb(); // wake IndexedDB so the cached-chapter registry is loaded
+    for (const book of _vsBooksForTrans(trans)) {
+      for (const ch of _vsChapterList(book).map(String)) {
+        if (_vsIsApiLimited()) return false;
+        if (_vsChapterKnownCached(trans, book, ch)) continue;
+        await _vsEnsureChapter(trans, book, ch);
+        if (onProgress) onProgress(_vsVersionCacheStats(trans));
+      }
+    }
+    return _vsVersionCacheStats(trans).cached >= _vsVersionCacheStats(trans).total;
+  } finally { _vsBulkTrans = null; }
+}
+
+// Warm the IndexedDB registry shortly after launch so cache stats are accurate
+// the first time a picker renders.
+if (typeof indexedDB !== 'undefined' && typeof setTimeout !== 'undefined') {
+  setTimeout(() => { try { _vsDb(); } catch {} }, 2500);
 }
 
 // Public entry: memory → IndexedDB → block fetch. Resolves to the chapter's

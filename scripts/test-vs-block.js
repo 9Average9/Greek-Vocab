@@ -135,6 +135,52 @@ ok(vm.runInContext('_vsBookInScope("KJV", "JOH")', ctx) === true, 'full-canon ve
   ok(vm.runInContext('_vsChapterFromMemory("KJV","GEN","11")', ctx) === null, 'partial tail chapter is NOT cached');
   ok(Number(store['vs_blockcap2_KJV'] || 0) >= 30, 'truncation learning records the real cap');
 
+  // ── Backward fill: paging back into a book must still pull a full block ─────
+  // CSB GEN 6 cached (user came from there) → target GEN 5 can't extend forward,
+  // so the window spends its budget backward past the 2-chapter context cap.
+  vm.runInContext('_vsSeedChapter("CSB","GEN","6",{"1":"x"})', ctx);
+  const winBack = vm.runInContext('_vsBlockWindow("CSB", "GEN", "5")', ctx);
+  ok(winBack.start === 1 && winBack.end === 5, `backward window fills the budget (got ${winBack.start}-${winBack.end})`);
+
+  // ── Whole-version download: minimal calls for a full canon ──────────────────
+  // Stub server returns every requested chapter in full; count the calls needed
+  // to download all of F35 (NT-only). Theoretical floor: NT verses / 250.
+  const ctx2 = {
+    window: {}, console,
+    localStorage: { getItem: (k) => null, setItem: () => {}, removeItem: () => {} },
+    document: undefined, indexedDB: undefined,
+  };
+  vm.createContext(ctx2);
+  vm.runInContext(fs.readFileSync(path.join(root, 'rhema-msb.js'), 'utf8'), ctx2);
+  vm.runInContext(fs.readFileSync(path.join(root, 'verse-structure.js'), 'utf8'), ctx2);
+  const msb2 = ctx2.window.RhemaMSB;
+  const apiToApp = { MRK: 'MAR', JHN: 'JOH', JAS: 'JAM', '1JN': '1JO', '2JN': '2JO', '3JN': '3JO' };
+  let calls = 0;
+  ctx2.fetch = async (url) => {
+    calls++;
+    const m = String(url).match(/\/passages\/([A-Z0-9]+)\.(\d+)(?:-[A-Z0-9]+\.(\d+))?\?/);
+    const apiBook = m[1], s = Number(m[2]), e = Number(m[3] || m[2]);
+    const appBook = apiToApp[apiBook] || apiBook;
+    const items = [];
+    for (let c = s; c <= e; c++) {
+      const count = Object.keys(msb2[appBook]?.[String(c)] || {}).length;
+      for (let v = 1; v <= count; v++) {
+        items.push({ type: 'tag', name: 'verse', attrs: { number: String(v), sid: `${apiBook} ${c}:${v}` }, items: [{ type: 'text', text: String(v) }] });
+        items.push({ type: 'text', text: `${appBook} ${c}:${v} text.` });
+      }
+    }
+    return { ok: true, status: 200, json: async () => ({ data: { content: [{ type: 'tag', name: 'para', attrs: { style: 'p' }, items }] } }) };
+  };
+  const done = await vm.runInContext('_vsDownloadWholeVersion("F35", null)', ctx2);
+  const stats = vm.runInContext('_vsVersionCacheStats("F35")', ctx2);
+  const ntVerses = vm.runInContext('_vsBooksForTrans("F35")', ctx2)
+    .reduce((n, b) => n + Object.keys(msb2[b] || {}).reduce((m, c) => m + Object.keys(msb2[b][c]).length, 0), 0);
+  const floor = Math.ceil(ntVerses / 250);
+  ok(done === true, 'whole-version download completes');
+  ok(stats.cached === stats.total && stats.total > 250, `every chapter cached (${stats.cached}/${stats.total})`);
+  ok(calls <= floor + 27, `call count near the theoretical floor (${calls} calls for ${ntVerses} verses; floor ${floor})`);
+  ok(vm.runInContext('_vsChapterFromMemory("F35","REV","22")', ctx2)?.['21'], 'last NT verse present after bulk download');
+
   console.log(`${pass} pass, ${fail} fail`);
   process.exit(fail ? 1 : 0);
 })();
