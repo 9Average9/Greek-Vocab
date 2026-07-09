@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.413";
+const APP_VERSION = "3.0.414";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.414 &mdash; Compare matches your exact selection</div>
+<ul>
+  <li><strong>Gaps respected</strong> &mdash; Selecting non-adjacent verses (say 16 and 18 without 17) and choosing Compare now reads across exactly those verses, labeled &ldquo;3:16, 18&rdquo; &mdash; the skipped verse stays out. Tap order never mattered and still doesn&rsquo;t.</li>
+</ul>
 <div class="un-version-label">v3.0.413 &mdash; Download a whole version in one tap</div>
 <ul>
   <li><strong>One-tap full download</strong> &mdash; Every downloadable version in the picker now has a download button. Tap it and the entire version (a full Bible is around 170 requests) saves to your device with live progress &mdash; then it's yours offline, forever. Interrupted? Tapping again resumes where it left off, never re-downloading a thing.</li>
@@ -39499,26 +39503,30 @@ function _rhemaParseRef(ref) {
 }
 function rhemaAddToCompareFromMenu() {
   let ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
-  // Multi-verse selection: compare the whole span (within the first chapter).
+  let verses = null, label = null;
+  // Multi-verse selection: compare exactly the selected verses — sorted, and
+  // gaps respected (16 + 18 without 17 compares only 16 and 18). Selection is
+  // chapter-scoped, so the set always lives in one chapter.
   if (_rhemaSel.size > 1) {
-    const ps = _rhemaSelectedRefs().map(_rhemaParseRef).filter(Boolean);
-    if (ps.length) {
-      const first = ps[0];
-      const vs = ps.filter(q => q.book === first.book && q.chapter === first.chapter)
-        .map(q => parseInt(q.verse, 10));
-      const lo = Math.min(...vs), hi = Math.max(...vs);
-      ref = hi > lo ? `${first.book} ${first.chapter}:${lo}-${hi}` : `${first.book} ${first.chapter}:${lo}`;
+    const sorted = _rhemaSelectedVersesSorted();
+    if (sorted.length) {
+      const lo = sorted[0], hi = sorted[sorted.length - 1];
+      ref = hi !== lo ? `${_rhemaBook} ${_rhemaChapter}:${lo}-${hi}` : `${_rhemaBook} ${_rhemaChapter}:${lo}`;
+      verses = sorted;
+      label = _rhemaFormatVerseSelectionRef(); // "John 3:16, 18-19" style
     }
   }
   rhemaClearSelection();
   closeRhemaVerseSheet();
-  rhemaOpenCompare(ref);
+  rhemaOpenCompare(ref, verses, label);
 }
 // Compare shows one verse in every version other than the one on screen — a
 // quick read-across, nothing to save or rearrange. With no explicit reference
 // (e.g. opened from the tool wheel) it falls back to the current reader verse.
-function rhemaOpenCompare(ref) {
+function rhemaOpenCompare(ref, verses, label) {
   _rhemaCompareRef = ref || _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse);
+  _rhemaCompareVerses = Array.isArray(verses) && verses.length > 1 ? verses : null;
+  _rhemaCompareLabel = label || null;
   _rhemaRenderCompare();
   document.getElementById('rhemaCompareOverlay')?.classList.add('open');
 }
@@ -39536,7 +39544,9 @@ function closeRhemaCompare(e) {
 // on screen (NLT steps in when the reader is one of the top four). "Add
 // versions" lets the user pin any other version; picks are remembered.
 const RHEMA_COMPARE_BASE = ['NIV', 'NKJV', 'NASB', 'KJV', 'NLT'];
-let _rhemaCompareRef = null;   // the single verse reference currently compared
+let _rhemaCompareRef = null;    // the verse/span reference currently compared
+let _rhemaCompareVerses = null; // explicit verse list when the selection had gaps
+let _rhemaCompareLabel = null;  // display label for gapped selections ("3:16, 18")
 
 function _rhemaCompareExtras() {
   try {
@@ -39568,26 +39578,29 @@ function _rhemaCompareIsApiVersion(v) {
     : ['NIV', 'NKJV', 'NASB'].includes(v);
 }
 
-// The verse span a compare ref covers (single verse or a selected range).
-function _rhemaCompareSpan(p) {
+// The verses a compare ref covers: the explicit selection when it had gaps
+// (16 + 18 without 17), otherwise the contiguous span.
+function _rhemaCompareVerseNums(p) {
+  if (_rhemaCompareVerses) return _rhemaCompareVerses;
   const s = parseInt(p.verse, 10);
-  return { s, e: Math.max(s, parseInt(p.endVerse || p.verse, 10)) };
+  const e = Math.max(s, parseInt(p.endVerse || p.verse, 10));
+  const out = [];
+  for (let v = s; v <= e; v++) out.push(String(v));
+  return out;
 }
 
-// Joins a span's verses out of a chapter map ({ verseNum: text }).
+// Joins the covered verses out of a chapter map ({ verseNum: text }).
 function _rhemaCompareChapText(chap, p) {
-  const { s, e } = _rhemaCompareSpan(p);
   const parts = [];
-  for (let v = s; v <= e; v++) { const t = chap[String(v)]; if (t) parts.push(t); }
+  for (const v of _rhemaCompareVerseNums(p)) { const t = chap[v]; if (t) parts.push(t); }
   return parts.join(' ');
 }
 
-// Joins a span's verses from an on-device version (MSB/BSB).
+// Joins the covered verses from an on-device version (MSB/BSB).
 function _rhemaCompareLocalText(ver, p) {
-  const { s, e } = _rhemaCompareSpan(p);
   const parts = [];
-  for (let v = s; v <= e; v++) {
-    const t = _rhemaEnglishText(p.book, p.chapter, String(v), ver);
+  for (const v of _rhemaCompareVerseNums(p)) {
+    const t = _rhemaEnglishText(p.book, p.chapter, v, ver);
     if (t) parts.push(t);
   }
   return parts.join(' ');
@@ -39664,7 +39677,7 @@ function _rhemaRenderCompare() {
   const refLabel = document.getElementById('rhemaCompareRefLabel');
   const ref = _rhemaCompareRef;
   const p = ref ? _rhemaParseRef(ref) : null;
-  if (refLabel) refLabel.textContent = p ? (_rhemaDisplayRefFromKey(ref) || ref) : '';
+  if (refLabel) refLabel.textContent = p ? (_rhemaCompareLabel || _rhemaDisplayRefFromKey(ref) || ref) : '';
   if (!list) return;
   if (!p) {
     list.innerHTML = `<div class="rhema-compare-empty">Tap a verse in the reader and choose <strong>Compare</strong> to see it in your other Bible versions.</div>`;
