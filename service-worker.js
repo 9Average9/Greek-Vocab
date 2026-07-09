@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.414";
+const CACHE_NAME = "disciple-builder-v3.0.415";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -51,13 +51,25 @@ const FILES_TO_CACHE = [
   "./index.html",
   "./style.css?v=3.0.413",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.414",
+  "./app.js?v=3.0.415",
   "./bible-threads.js?v=3.0.402",
   "./rhema-english-dictionary.js?v=3.0.405",
   "./bible-atlas.js?v=3.0.349",
   "./bible-map.js?v=3.0.406",
   "./verse-structure.js?v=3.0.413",
   "./vs-structure.js?v=3.0.133",
+  // Self-hosted fonts (icons + skin fonts) — pinned, they effectively never change
+  "./assets/fonts/fonts.css?v=3.0.415",
+  "./assets/fonts/ms-outlined-0.woff2",
+  "./assets/fonts/ms-rounded-0.woff2",
+  "./assets/fonts/ms-sharp-0.woff2",
+  "./assets/fonts/playfair-0.woff2",
+  "./assets/fonts/playfair-1.woff2",
+  "./assets/fonts/playfair-2.woff2",
+  "./assets/fonts/playfair-3.woff2",
+  "./assets/fonts/patrick-hand-0.woff2",
+  "./assets/fonts/patrick-hand-1.woff2",
+  "./assets/fonts/patrick-hand-2.woff2",
   // Rhema Greek text (pinned data versions)
   "./rhema-nt.js?v=3.0.65",
   "./rhema-critical.js?v=3.0.23",
