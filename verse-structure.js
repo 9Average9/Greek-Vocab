@@ -10,17 +10,61 @@ const VS_BOOK_CODE_MAP = {
   '1JO': '1JN', '2JO': '2JN', '3JO': '3JN'
 };
 
-const VS_LOCAL_SET    = new Set(['MSB', 'BSB']);
-// All five translations are available everywhere. MSB/BSB are on device; the
-// api.bible translations (NIV/NKJV/NASB) are fetched in ~250-verse chapter
-// blocks (see _vsEnsureChapter below) and cached permanently to IndexedDB, so
-// every feature shares one ever-growing offline copy of each version.
-const VS_TRANSLATIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
-// Translations that may be requested over the network.
-const VS_API_TRANSLATIONS = ['NIV', 'NKJV', 'NASB'];
+// ── Version registry ──────────────────────────────────────────────────────────
+// Single source of truth for every version the app offers. MSB/BSB ship on
+// device; everything else streams from api.bible in chapter blocks and is
+// cached permanently to IndexedDB. `id` values are pinned bibleIds (verified
+// against the live /v1/bibles list) — never prefix-matched, so NASB 2020 and
+// NASB 1995 can't be confused. `more` = lives in the "Additional versions"
+// tab; `study` = tagged as a study Bible; `scope` = partial canon.
+const VS_VERSIONS = [
+  { code: 'MSB',    name: 'Majority Standard Bible',            local: true },
+  { code: 'BSB',    name: 'Berean Standard Bible',              local: true },
+  { code: 'NIV',    name: 'New International Version',          id: '78a9f6124f344018-01' },
+  { code: 'NKJV',   name: 'New King James Version',             id: '63097d2a0a2f7db3-01' },
+  { code: 'NASB',   name: 'New American Standard 2020',         id: 'a761ca71e0b3ddcf-01' },
+  { code: 'NASB95', name: 'New American Standard 1995',         id: 'b8ee27bcd1cae43a-01' },
+  { code: 'KJV',    name: 'King James Version',                 id: 'de4e12af7f28f599-01' },
+  { code: 'NLT',    name: 'New Living Translation',             id: 'd6e14a625393b4da-01' },
+  { code: 'CSB',    name: 'Christian Standard Bible',           id: 'a556c5305ee15c3f-01' },
+  { code: 'AMP',    name: 'Amplified Bible',                    id: 'a81b73293d3080c9-01' },
+  { code: 'MSG',    name: 'The Message',                        id: '6f11a7de016f942e-01' },
+  { code: 'LXXEN',  name: 'Brenton Septuagint (LXX)',           id: '6bab4d6c61b31b80-01', study: true, scope: 'ot' },
+  { code: 'F35',    name: 'Family 35 New Testament',            id: '2f0fd81d7b85b923-01', study: true, scope: 'nt' },
+  // Additional versions tab
+  { code: 'GNT',    name: 'Good News Translation',              id: '61fd76eafa1577c2-01', more: true },
+  { code: 'CEV',    name: 'Contemporary English Version',       id: '555fef9a6cb31151-01', more: true },
+  { code: 'NIRV',   name: 'New International Reader’s Version', id: '5b888a42e2d9a89d-01', more: true },
+  { code: 'ASV',    name: 'American Standard Version 1901',     id: '06125adad2d5898a-01', more: true },
+  { code: 'RV1885', name: 'Revised Version 1885',               id: '40072c4a5aba4022-01', more: true },
+  { code: 'GNV',    name: 'Geneva Bible 1599',                  id: 'c315fa9f71d4af3a-01', more: true },
+  { code: 'DRA',    name: 'Douay-Rheims 1899',                  id: '179568874c45066f-01', more: true },
+  { code: 'WEB',    name: 'World English Bible',                id: '9879dbb7cfe39e4d-01', more: true },
+  { code: 'FBV',    name: 'Free Bible Version',                 id: '65eec8e0b60e656b-01', more: true },
+  { code: 'T4T',    name: 'Translation for Translators',        id: '66c22495370cdfc0-01', more: true },
+  { code: 'LSV',    name: 'Literal Standard Version',           id: '01b29f4b342acc35-01', more: true, study: true },
+  { code: 'TCENT',  name: 'Text-Critical New Testament',        id: '32339cf2f720ff8e-01', more: true, study: true, scope: 'nt' },
+  { code: 'JPS',    name: 'JPS TaNaKH 1917',                    id: 'bf8f1c7f3f9045a5-01', more: true, study: true, scope: 'ot' },
+  { code: 'TOJB',   name: 'Orthodox Jewish Bible',              id: 'c89622d31b60c444-02', more: true, study: true }
+];
+const VS_VERSION_INFO = Object.fromEntries(VS_VERSIONS.map(v => [v.code, v]));
+const VS_LOCAL_SET = new Set(VS_VERSIONS.filter(v => v.local).map(v => v.code));
+const VS_TRANSLATIONS = VS_VERSIONS.map(v => v.code);
+const VS_API_TRANSLATIONS = VS_VERSIONS.filter(v => !v.local).map(v => v.code);
+
+// Partial-canon scope checks (e.g. Brenton LXX is OT-only, F35 is NT-only).
+const VS_NT_BOOKS = new Set(['MAT','MAR','LUK','JOH','ACT','ROM','1CO','2CO','GAL','EPH','PHP','COL','1TH','2TH','1TI','2TI','TIT','PHM','HEB','JAM','1PE','2PE','1JO','2JO','3JO','JUD','REV']);
+function _vsBookInScope(trans, book) {
+  const scope = VS_VERSION_INFO[trans]?.scope;
+  if (!scope) return true;
+  return scope === 'nt' ? VS_NT_BOOKS.has(book) : !VS_NT_BOOKS.has(book);
+}
+function _vsScopeLabel(trans) {
+  const scope = VS_VERSION_INFO[trans]?.scope;
+  return scope === 'nt' ? 'New Testament' : scope === 'ot' ? 'Old Testament' : '';
+}
 
 // Persistent localStorage cache keys for api.bible data
-const VS_LS_BIBLE_IDS   = 'vs_bible_ids_v1';
 const VS_LS_VERSE_PFX   = 'vs_v_'; // + "TRANS|BOOK|CH|V"
 const VS_LS_CHAPTER_PFX = 'vs_ch_'; // + "TRANS|BOOK|CH" → '1' when fully cached
 const VS_LS_API_LIMITED = 'vs_api_limited_until'; // timestamp when limit resets
@@ -42,10 +86,6 @@ let _vsXrefContext = false;  // true when xref was opened from VS (not Rhema)
 let _vsRangeTapState = 'start';
 let _vsRangeStart    = null;
 let _vsRangeEndPick  = null;
-
-// api.bible Bible-ID cache
-let _vsBibleIds       = null;
-let _vsBibleIdsFetch  = null;
 
 // Verse text cache: "TRANS|BOOK|CH|V" → text
 const _vsTextCache = new Map();
@@ -125,46 +165,16 @@ function _vsApplyLimitedState() {
 }
 
 // ── api.bible Integration ─────────────────────────────────────────────────────
+// Bible IDs are pinned in VS_VERSIONS — no runtime lookup, no stale localStorage
+// snapshot to block newly-licensed versions, and zero API calls spent on it.
 async function _vsGetBibleIds() {
-  if (_vsBibleIds) return _vsBibleIds;
-  if (_vsBibleIdsFetch) return _vsBibleIdsFetch;
-
-  // Check localStorage before hitting the network
-  try {
-    const cached = localStorage.getItem(VS_LS_BIBLE_IDS);
-    if (cached) {
-      _vsBibleIds = JSON.parse(cached);
-      return _vsBibleIds;
-    }
-  } catch {}
-
-  _vsBibleIdsFetch = (async () => {
-    try {
-      const r = await fetch(`${VS_API_BASE}/bibles?language=ENG`, {
-        headers: { 'api-key': VS_API_KEY }
-      });
-      if (!r.ok) throw new Error('api.bible list failed');
-      const { data = [] } = await r.json();
-      const ids = {};
-      for (const b of data) {
-        const abbr = (b.abbreviation || b.abbreviationLocal || '')
-          .toUpperCase().replace(/[^A-Z0-9]/g, '');
-        if (!ids.NIV  && /^NIV/.test(abbr))  ids.NIV  = b.id;
-        if (!ids.NKJV && /^NKJV/.test(abbr)) ids.NKJV = b.id;
-        if (!ids.NASB && /^NASB/.test(abbr)) ids.NASB = b.id;
-      }
-      _vsBibleIds = ids;
-      try { localStorage.setItem(VS_LS_BIBLE_IDS, JSON.stringify(ids)); } catch {}
-      return ids;
-    } catch {
-      _vsBibleIdsFetch = null;
-      return {};
-    }
-  })();
-  return _vsBibleIdsFetch;
+  const ids = {};
+  for (const v of VS_VERSIONS) if (v.id) ids[v.code] = v.id;
+  return ids;
 }
 
 async function _vsFetchVerse(trans, book, ch, v) {
+  if (!_vsBookInScope(trans, book)) return null; // e.g. NT book in an OT-only version
   const key = `${trans}|${book}|${ch}|${v}`;
   if (_vsTextCache.has(key)) return _vsTextCache.get(key);
 
@@ -831,7 +841,8 @@ async function openVSCrossReferences() {
 // UNCACHED chapters (backward a little, forward a lot), never crosses a book,
 // and never exceeds the per-request verse budget.
 const VS_BLOCK_VERSE_BUDGET = 250;
-const VS_LS_BLOCK_CAP_PFX = 'vs_blockcap_'; // + trans → learned per-version cap
+// v2 prefix: caps learned under the v1 parser could be wrong — start fresh.
+const VS_LS_BLOCK_CAP_PFX = 'vs_blockcap2_'; // + trans → learned per-version cap
 
 const _vsChapterMem = new Map();      // "TRANS|BOOK|CH" → { verseNum: text }
 const _vsChapterInFlight = new Map(); // block fetches keyed by target chapter
@@ -842,8 +853,13 @@ function _vsDb() {
   if (_vsDbPromise) return _vsDbPromise;
   _vsDbPromise = new Promise((resolve) => {
     try {
-      const req = indexedDB.open('rhema-bible-cache', 1);
+      // v2: v1 blocks were parsed without verse-number markers, which silently
+      // dropped chapter-opening verses (the NIV "2 Cor 1:1 missing" bug) and
+      // could cache truncated tail chapters. Rebuild the store so every
+      // chapter re-downloads correctly.
+      const req = indexedDB.open('rhema-bible-cache', 2);
       req.onupgradeneeded = () => {
+        try { req.result.deleteObjectStore('chapters'); } catch {}
         try { req.result.createObjectStore('chapters'); } catch {}
       };
       req.onsuccess = () => {
@@ -937,33 +953,56 @@ function _vsBlockWindow(trans, book, targetCh) {
 }
 
 // Parses api.bible JSON passage content into { chapterNum: { verseNum: text } }.
-// Walks the whole content tree: verse boundaries come from verse-tag sid/verseId
-// attrs ("GEN.5.1"); text nodes that carry their own verseId win over the
-// running marker. Titles/notes are excluded by the request flags.
+// Verified against live payloads: verse boundaries come from `verse` tags whose
+// sid uses "2CO 1:1" (space/colon) format — the printed number is a text node
+// INSIDE that tag and must be skipped. Text nodes may carry their own verseId
+// in "2CO.1.3" (dot) format, which wins over the running marker. Continuation
+// paragraphs mark their verse via a para-level `vid` attr. Some versions (MSG,
+// CEV) group verses: sid "JHN 3:1-2" — the text lands on the first verse and
+// the rest of the range gets a pointer note so no verse reads as missing.
 function _vsParsePassageJson(content, apiBook) {
   const out = {};
+  const ranges = [];
   let cur = null;
-  const idRe = new RegExp('^' + apiBook.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\.(\\d+)\\.(\\d+)');
+  const esc = apiBook.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const idRe = new RegExp('^' + esc + '[ .](\\d+)[:.](\\d+)(?:-(\\d+))?');
+  const parseId = (s) => {
+    const m = typeof s === 'string' ? s.match(idRe) : null;
+    return m ? { ch: m[1], v: m[2], end: m[3] || null } : null;
+  };
   const visit = (node) => {
     if (!node) return;
     if (Array.isArray(node)) { node.forEach(visit); return; }
     const attrs = node.attrs || {};
-    const marker = attrs.sid || attrs.verseId;
-    if (typeof marker === 'string') {
-      const m = marker.match(idRe);
-      if (m) cur = { ch: m[1], v: m[2] };
+    const marker = parseId(attrs.sid) || parseId(attrs.verseId) || parseId(attrs.vid);
+    if (marker) {
+      cur = marker;
+      if (marker.end && Number(marker.end) > Number(marker.v)) ranges.push(marker);
     }
+    // The verse tag itself only wraps the printed verse number — take its sid
+    // (above) but never descend into it, or the number joins the text.
+    if (node.type === 'tag' && node.name === 'verse') return;
     if (node.type === 'text' && typeof node.text === 'string') {
-      const own = typeof attrs.verseId === 'string' ? attrs.verseId.match(idRe) : null;
-      const tgt = own ? { ch: own[1], v: own[2] } : cur;
+      const own = parseId(attrs.verseId);
+      const tgt = own || cur;
       if (tgt) {
         const chOut = out[tgt.ch] || (out[tgt.ch] = {});
-        chOut[tgt.v] = (chOut[tgt.v] || '') + node.text;
+        // Space-join fragments: one verse can span paragraphs/poetry lines and
+        // the pieces don't carry their own separators.
+        chOut[tgt.v] = (chOut[tgt.v] ? chOut[tgt.v] + ' ' : '') + node.text;
       }
     }
     if (node.items) visit(node.items);
   };
   visit(content);
+  // Grouped verses (MSG "3:1-2"): point the covered verses at the first one.
+  for (const r of ranges) {
+    const chOut = out[r.ch];
+    if (!chOut || !chOut[r.v]) continue;
+    for (let v = Number(r.v) + 1; v <= Number(r.end); v++) {
+      if (!chOut[String(v)]) chOut[String(v)] = `(verses ${r.v}-${r.end} are combined with verse ${r.v} in this translation)`;
+    }
+  }
   for (const ch of Object.keys(out)) {
     for (const v of Object.keys(out[ch])) {
       const t = out[ch][v].replace(/\s+/g, ' ').trim();
@@ -974,52 +1013,89 @@ function _vsParsePassageJson(content, apiBook) {
   return out;
 }
 
-// Fetches the block containing targetCh. One network call caches ~8 chapters.
+// Recent failed block fetches ("TRANS|BOOK|CH" → timestamp) so a render loop
+// can't hammer the API retrying a chapter that just failed.
+const _vsChapterFailAt = new Map();
+
+// Fetches the block containing targetCh. One network call caches many chapters.
 async function _vsFetchChapterBlock(trans, book, targetCh) {
   if (_vsIsApiLimited()) return null;
   const flightKey = _vsChapterKey(trans, book, targetCh);
   if (_vsChapterInFlight.has(flightKey)) return _vsChapterInFlight.get(flightKey);
+  const failedAt = _vsChapterFailAt.get(flightKey);
+  if (failedAt && Date.now() - failedAt < 60000) return null;
   const p = (async () => {
-    const ids = await _vsGetBibleIds();
-    const bibleId = ids[trans];
+    const bibleId = VS_VERSION_INFO[trans]?.id;
     if (!bibleId) return null;
     const { start, end } = _vsBlockWindow(trans, book, targetCh);
     const api = _vsApiCode(book);
     const passageId = start === end ? `${api}.${start}` : `${api}.${start}-${api}.${end}`;
+    // include-verse-numbers must stay TRUE: the verse-number tags carry the sid
+    // markers that anchor chapter-opening verses (without them the salutation
+    // paragraphs at the start of chapters have no verse attribution at all —
+    // that was the "2 Cor 1:1 missing in NIV" bug).
     const url = `${VS_API_BASE}/bibles/${bibleId}/passages/${passageId}` +
       `?content-type=json&include-notes=false&include-titles=false` +
-      `&include-chapter-numbers=false&include-verse-numbers=false&include-verse-spans=false`;
+      `&include-chapter-numbers=false&include-verse-numbers=true&include-verse-spans=false`;
     try {
       const r = await fetch(url, { headers: { 'api-key': VS_API_KEY } });
       if (!r.ok) {
         if (r.status === 429 || r.status === 403) _vsSetApiLimited();
+        else _vsChapterFailAt.set(flightKey, Date.now());
         return null;
       }
       const { data } = await r.json();
       const byChapter = _vsParsePassageJson(data?.content, api);
+      const gotChapters = Object.keys(byChapter).map(Number).sort((a, b) => a - b);
+      // The API truncates long passages MID-CHAPTER (measured: NIV serves 200
+      // verses and cuts wherever that lands). A partially-served tail chapter
+      // must never be cached as if complete — drop it unless it holds at least
+      // as many verses as the local text expects (small tolerance for verses
+      // some translations legitimately omit).
+      if (gotChapters.length > 1) {
+        const last = gotChapters[gotChapters.length - 1];
+        const expected = _vsChapterVerses(book, last).length;
+        if (expected && Object.keys(byChapter[String(last)]).length < expected - 3) {
+          delete byChapter[String(last)];
+          gotChapters.pop();
+        }
+      }
       let versesGot = 0;
       for (const [chNum, verses] of Object.entries(byChapter)) {
         _vsSeedChapter(trans, book, chNum, verses);
         _vsDbPut(_vsChapterKey(trans, book, chNum), verses);
         versesGot += Object.keys(verses).length;
       }
-      // Truncation learning: if the tail of the window came back empty, this
-      // version's per-request cap is lower than our budget — remember it.
-      if (end > start && !byChapter[String(end)] && versesGot > 0) {
+      // Truncation learning: served less than requested → this version's
+      // per-request cap is lower than our budget. Remember it so the next
+      // window is sized right (nothing was wasted — kept chapters are cached).
+      const lastGot = gotChapters[gotChapters.length - 1] || 0;
+      if (end > start && lastGot < end && versesGot > 0) {
         try { localStorage.setItem(VS_LS_BLOCK_CAP_PFX + trans, String(Math.max(30, versesGot))); } catch {}
       }
-      return _vsChapterFromMemory(trans, book, targetCh);
-    } catch { return null; }
+      const result = _vsChapterFromMemory(trans, book, targetCh);
+      // Back off only on a truly empty response; if the call cached SOME
+      // chapters (e.g. truncation ate the target), the immediate retry's
+      // window starts at the target and will land it.
+      if (!result && versesGot === 0) _vsChapterFailAt.set(flightKey, Date.now());
+      else _vsChapterFailAt.delete(flightKey);
+      return result;
+    } catch {
+      _vsChapterFailAt.set(flightKey, Date.now());
+      return null;
+    }
   })().finally(() => _vsChapterInFlight.delete(flightKey));
   _vsChapterInFlight.set(flightKey, p);
   return p;
 }
 
 // Public entry: memory → IndexedDB → block fetch. Resolves to the chapter's
-// { verseNum: text } map, or null when unavailable (offline / over quota).
+// { verseNum: text } map, or null when unavailable (offline / over quota /
+// outside the version's canon).
 async function _vsEnsureChapter(trans, book, ch) {
   ch = String(ch);
   if (!VS_API_TRANSLATIONS.includes(trans)) return null;
+  if (!_vsBookInScope(trans, book)) return null;
   const mem = _vsChapterFromMemory(trans, book, ch);
   if (mem) return mem;
   const stored = await _vsDbGet(_vsChapterKey(trans, book, ch));

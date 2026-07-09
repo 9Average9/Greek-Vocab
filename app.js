@@ -19135,6 +19135,7 @@ function _memRenderTokenWords(text = '', renderWord) {
 async function startMemorizationPage() {
   await loadRhemaScripts().catch(() => {});
   if (typeof _syncRhemaEnglishAlias === 'function') _syncRhemaEnglishAlias();
+  _populateVersionSelect(document.getElementById('memVersionSelect'));
   populateMemorizationBooks();
   setMemorizationSource(_memSource);
   if (!_memCurrent) {
@@ -19170,7 +19171,22 @@ function populateMemorizationBooks() {
 
 function _memSelectedVersion() {
   const v = document.getElementById('memVersionSelect')?.value;
-  return ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'].includes(v) ? v : 'MSB';
+  if (v === 'MSB' || v === 'BSB') return v;
+  if (v && typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[v] && !VS_VERSION_INFO[v].local) return v;
+  return 'MSB';
+}
+
+// Fill a <select> with every version from the registry (main + additional).
+function _populateVersionSelect(sel) {
+  if (!sel || typeof VS_VERSIONS === 'undefined') return;
+  if (sel.dataset.verCount === String(VS_VERSIONS.length)) return;
+  const keep = sel.value;
+  const opt = (v) => `<option value="${v.code}">${v.code}</option>`;
+  sel.innerHTML =
+    VS_VERSIONS.filter(v => !v.more).map(opt).join('') +
+    `<optgroup label="Additional versions">${VS_VERSIONS.filter(v => v.more).map(opt).join('')}</optgroup>`;
+  sel.dataset.verCount = String(VS_VERSIONS.length);
+  if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
 }
 
 // Book/chapter/verse structure source. API versions (NIV/NKJV/NASB) borrow the
@@ -19281,6 +19297,10 @@ function _memUpdateVersePreview() {
   if (!el) return;
   const { parts, text, pending } = _memSelectedPassageText();
   if (pending) {
+    if (typeof _vsBookInScope === 'function' && !_vsBookInScope(parts.version, parts.book)) {
+      el.innerHTML = `<p class="mem-empty">${_memEsc(parts.version)} covers the ${_memEsc(_vsScopeLabel(parts.version))} only — pick another version for this book.</p>`;
+      return;
+    }
     if (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()) {
       el.innerHTML = `<p class="mem-empty">${_memEsc(parts.version)} can't download right now (monthly limit reached). Pick MSB or BSB, or try again next month.</p>`;
       return;
@@ -19319,6 +19339,10 @@ function loadMemorizationPassage() {
   const parts = _memCurrentRefParts();
   const data = _memChapterData(parts.book, parts.chapter);
   if (data === null) {
+    if (typeof _vsBookInScope === 'function' && !_vsBookInScope(parts.version, parts.book)) {
+      _showStudyToast(`${parts.version} covers the ${_vsScopeLabel(parts.version)} only`);
+      return;
+    }
     if (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()) {
       _showStudyToast(`${parts.version} can't download right now (monthly limit)`);
       return;
@@ -29744,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.410";
+const APP_VERSION = "3.0.411";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29767,6 +29791,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.411 &mdash; 27 Bible versions</div>
+<ul>
+  <li><strong>Eight new headline versions</strong> &mdash; KJV, NLT, CSB, Amplified, The Message, NASB 1995, plus two study translations: the Brenton Septuagint (the LXX in English) and the Family 35 New Testament (a majority-text translation). All available in the reader, Memorize, Verse Structure and community posts.</li>
+  <li><strong>Additional versions tab</strong> &mdash; The version picker now has a second tab with 14 more translations &mdash; Good News, CEV, NIrV, ASV, Geneva 1599, Douay-Rheims, JPS TaNaKH, the Orthodox Jewish Bible and more. Study translations are tagged, and versions that cover only one testament say so.</li>
+  <li><strong>Missing first verses fixed</strong> &mdash; Verses at the start of some chapters (like 2 Corinthians 1:1 in NIV) could show as &ldquo;not included in this translation.&rdquo; The way chapter text is read has been corrected and verified against every one of the 25 downloadable versions &mdash; previously downloaded chapters refresh automatically.</li>
+  <li><strong>Grouped verses handled</strong> &mdash; The Message combines some verses (like John 3:1-2); those now point you to the combined verse instead of appearing missing.</li>
+</ul>
 <div class="un-version-label">v3.0.410 &mdash; All five versions, everywhere</div>
 <ul>
   <li><strong>Memorization in any version</strong> &mdash; The Memorize tool&rsquo;s version picker now offers NIV, NKJV and NASB alongside MSB and BSB. Picking a passage downloads its whole ~250-verse chapter block once, saves it to your device forever, and previews instantly from then on.</li>
@@ -35518,7 +35549,10 @@ async function openCommunityPostComposer() {
   if (question) question.value = '';
   if (link) link.value = '';
   if (ref) ref.value = '';
-  if (version) version.value = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : _rhemaEnglishVersion();
+  if (version) {
+    _populateVersionSelect(version);
+    version.value = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : _rhemaEnglishVersion();
+  }
   if (alertFriends) alertFriends.checked = false;
   document.getElementById('communityPostVersePreview').textContent = 'No verse will be sent unless you type a reference like John 3:16 and preview it.';
   document.getElementById('communityPostComposer')?.classList.add('open');
@@ -35568,6 +35602,11 @@ async function updateCommunityPostVersePreview() {
   }
   let text;
   const isApiVersion = typeof VS_API_TRANSLATIONS !== 'undefined' && VS_API_TRANSLATIONS.includes(version);
+  if (isApiVersion && typeof _vsBookInScope === 'function' && !_vsBookInScope(version, parsed.book.code)) {
+    _communityPostVerse = null;
+    if (preview) preview.textContent = `${version} covers the ${_vsScopeLabel(version)} only.`;
+    return;
+  }
   if (isApiVersion) {
     // Block-first fetch: this downloads (and permanently saves) the whole
     // surrounding chapter window, same as the Rhema reader.
@@ -36610,7 +36649,8 @@ function _rhemaEnglishRangeText(refOrObj, version = _rhemaEnglishVersion()) {
 function _rhemaReaderVersion() {
   try {
     const v = localStorage.getItem('rhemaReaderVersion');
-    if (['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'].includes(v)) return v;
+    if (v === 'MSB' || v === 'BSB') return v;
+    if (v && typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[v] && !VS_VERSION_INFO[v].local) return v;
   } catch {}
   return _rhemaEnglishVersion();
 }
@@ -36639,6 +36679,9 @@ let _rhemaReaderFetchToken = 0;
 function _rhemaEnsureReaderChapter() {
   if (!_rhemaReaderVersionIsApi() || typeof _vsEnsureChapter !== 'function') return false;
   const ver = _rhemaReaderVersion();
+  // Partial-canon versions (e.g. Brenton LXX, Family 35 NT): no fetch outside
+  // their canon — the reader shows local text with an explanatory banner.
+  if (typeof _vsBookInScope === 'function' && !_vsBookInScope(ver, _rhemaBook)) return 'scope';
   if (typeof _vsChapterFromMemory === 'function' && _vsChapterFromMemory(ver, _rhemaBook, _rhemaChapter)) {
     // Read-ahead: warm the next chapter (usually a no-op — the block that
     // brought this chapter already covered it).
@@ -41662,7 +41705,9 @@ function renderRhemaVerse() {
   const readerBanner = !readerState ? '' :
     `<div class="rhema-reader-downloading">${readerState === 'limited'
       ? `${_rhemaReaderVersion()} can't download right now (monthly limit reached) — showing ${_rhemaEnglishLabel()}.`
-      : `Downloading ${_rhemaReaderVersion()}… showing ${_rhemaEnglishLabel()} until it lands.`}</div>`;
+      : readerState === 'scope'
+        ? `${_rhemaReaderVersion()} covers the ${typeof _vsScopeLabel === 'function' ? _vsScopeLabel(_rhemaReaderVersion()) : ''} only — showing ${_rhemaEnglishLabel()} for this book.`
+        : `Downloading ${_rhemaReaderVersion()}… showing ${_rhemaEnglishLabel()} until it lands.`}</div>`;
 
   if (_rhemaFullChapter) {
     const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
@@ -41799,18 +41844,27 @@ function toggleRhemaEnglish() {
 // The old MSB<->BSB toggle now opens the full version picker.
 function toggleRhemaEnglishVersion() { openRhemaVersionPicker(); }
 
-const RHEMA_READER_VERSIONS = [
-  { v: 'MSB',  name: 'Majority Standard Bible',  note: 'On device' },
-  { v: 'BSB',  name: 'Berean Standard Bible',    note: 'On device' },
-  { v: 'NIV',  name: 'New International Version', note: 'Downloads as you read — saved to device' },
-  { v: 'NKJV', name: 'New King James Version',    note: 'Downloads as you read — saved to device' },
-  { v: 'NASB', name: 'New American Standard',     note: 'Downloads as you read — saved to device' }
-];
+let _rhemaVerSheetTab = 'main'; // 'main' | 'more'
 
-function openRhemaVersionPicker() {
+function _rhemaVersionOptHtml(v, cur, limited) {
+  const dis = !v.local && limited;
+  const tags =
+    (v.study ? '<em class="rhema-ver-tag rhema-ver-tag-study">Study</em>' : '') +
+    (v.scope ? `<em class="rhema-ver-tag">${v.scope === 'nt' ? 'New Testament' : 'Old Testament'}</em>` : '');
+  return `<button class="rhema-cmp-ver-opt${v.code === cur ? ' active' : ''}" ${dis ? 'disabled' : ''} onclick="rhemaPickReaderVersion('${v.code}')">
+    <span><span class="rhema-ver-abbr">${v.code}${tags}</span><small class="rhema-ver-note">${v.name}${dis ? ' — unavailable right now' : ''}</small></span>
+    ${v.code === cur ? '<span class="material-symbols-outlined">check</span>' : ''}
+  </button>`;
+}
+
+function openRhemaVersionPicker(tab) {
   closeRhemaSheet?.();
   const cur = _rhemaReaderVersion();
+  if (tab === 'main' || tab === 'more') _rhemaVerSheetTab = tab;
+  else _rhemaVerSheetTab = (typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[cur]?.more) ? 'more' : 'main';
   const limited = typeof _vsIsApiLimited === 'function' && _vsIsApiLimited();
+  const all = typeof VS_VERSIONS !== 'undefined' ? VS_VERSIONS : [];
+  const list = all.filter(v => !!v.more === (_rhemaVerSheetTab === 'more'));
   let sheet = document.getElementById('rhemaVersionSheet');
   if (!sheet) {
     sheet = document.createElement('div');
@@ -41819,17 +41873,13 @@ function openRhemaVersionPicker() {
     sheet.addEventListener('click', (e) => { if (e.target === sheet) closeRhemaVersionPicker(); });
     document.body.appendChild(sheet);
   }
-  sheet.innerHTML = `<div class="rhema-cmp-ver-card">
+  sheet.innerHTML = `<div class="rhema-cmp-ver-card rhema-ver-card-scroll">
     <div class="rhema-cmp-ver-title">Bible Version</div>
-    ${RHEMA_READER_VERSIONS.map(({ v, name, note }) => {
-      const isApi = typeof VS_API_TRANSLATIONS !== 'undefined' && VS_API_TRANSLATIONS.includes(v);
-      const dis = isApi && limited;
-      return `<button class="rhema-cmp-ver-opt${v === cur ? ' active' : ''}" ${dis ? 'disabled' : ''} onclick="rhemaPickReaderVersion('${v}')">
-        <span>${v}<small class="rhema-ver-note">${dis ? 'Monthly limit reached' : note}</small></span>
-        ${v === cur ? '<span class="material-symbols-outlined">check</span>' : ''}
-      </button>`;
-    }).join('')}
-    <p class="rhema-ver-foot">Downloaded chapters stay saved on this device and are never fetched twice.</p>
+    <div class="rhema-ver-tabs">
+      <button class="rhema-ver-tab${_rhemaVerSheetTab === 'main' ? ' active' : ''}" onclick="openRhemaVersionPicker('main')">Versions</button>
+      <button class="rhema-ver-tab${_rhemaVerSheetTab === 'more' ? ' active' : ''}" onclick="openRhemaVersionPicker('more')">Additional versions</button>
+    </div>
+    ${list.map(v => _rhemaVersionOptHtml(v, cur, limited)).join('')}
   </div>`;
   requestAnimationFrame(() => sheet.classList.add('open'));
 }
