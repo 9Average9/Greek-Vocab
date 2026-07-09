@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.418";
+const APP_VERSION = "3.0.419";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.419 &mdash; Book intros work like an extra chapter</div>
+<ul>
+  <li><strong>The intro is now &ldquo;chapter zero&rdquo;</strong> &mdash; Just like the big Bible apps: in any chapter grid, the first cell (the info tile before chapter 1) opens the book&rsquo;s introduction. Swiping forward past the end of a book opens the next book with its intro on top, and swiping back at chapter 1 shows the intro first &mdash; one more swipe crosses into the previous book.</li>
+  <li><strong>Fixed</strong> &mdash; The intro sheet could open invisibly underneath the book picker; it now always appears on top.</li>
+</ul>
 <div class="un-version-label">v3.0.418 &mdash; Introductions for all 66 books</div>
 <ul>
   <li><strong>Know the book before you read it</strong> &mdash; Every book of the Bible now has an introduction card: author, when it was written, setting, purpose, and a theme drawn from the book&rsquo;s own words &mdash; plus reading time (measured from the actual text), chapter count, a tappable key verse, and an outline that jumps you straight into any section.</li>
@@ -41074,6 +41079,9 @@ function initRhemaPicker() {
 }
 
 function syncRhemaPicker() {
+  // Any position change re-arms the intro-before-chapter-1 back-swipe gate
+  // (next/prev re-set it afterwards when they crossed a boundary).
+  _rhemaIntroBackStop = '';
   const bookName = _rhemaBookName(_rhemaBook);
   const b = document.getElementById('rhemaPillBook');
   const v = document.getElementById('rhemaPillVerse');
@@ -41116,7 +41124,6 @@ function rhemaRenderBookList() {
     out += `<div class="rhema-book-row${sel}" data-testament="${isNT ? 'NT' : 'OT'}" onclick="rhemaShowChaptersForBook('${code}')">
       <span class="material-symbols-outlined rhema-book-icon">menu_book</span>
       <span class="rhema-book-name">${name}</span>
-      <span class="rhema-book-info" role="button" title="About this book" onclick="event.stopPropagation(); openBookIntro('${code}')"><span class="material-symbols-outlined">info</span></span>
       <span class="material-symbols-outlined rhema-book-check">check</span>
     </div>`;
     return out;
@@ -41140,13 +41147,13 @@ function rhemaShowChaptersForBook(code) {
   back?.classList.remove('hidden');
   searchRow?.classList.add('hidden');
   document.getElementById('rhemaHistoryBtn')?.classList.add('hidden');
-  const introBtn = `<button class="rhema-book-about" onclick="openBookIntro('${code}')">
-      <span class="material-symbols-outlined">info</span>About ${_rhemaBookName(code)}
-    </button>`;
-  list.innerHTML = introBtn + `<div class="rhema-book-chapter-grid">${chapters.map(ch => {
+  // The intro sits as an "extra chapter" before chapter 1 — like the Bible app.
+  list.innerHTML = `<div class="rhema-book-chapter-grid">` +
+    `<button class="rhema-num-cell rhema-intro-cell" title="About ${_rhemaBookName(code)}" onclick="closeRhemaPickerSheet();openBookIntro('${code}')"><span class="material-symbols-outlined">info</span></button>` +
+    chapters.map(ch => {
     const sel = code === _rhemaBook && ch === _rhemaChapter ? ' selected' : '';
     return `<button class="rhema-num-cell${sel}" onclick="rhemaSelectBookChapter('${code}','${ch}')">${ch}</button>`;
-  }).join('')}</div>`;
+  }).join('') + `</div>`;
   list.scrollTop = 0;
 }
 
@@ -41179,6 +41186,12 @@ function _introReadingLabel(code) {
   const h = Math.floor(mins / 60), m = mins % 60;
   return m ? `~${h} hr ${m} min` : `~${h} hr`;
 }
+
+// Swipe model: the intro behaves like an extra chapter before chapter 1.
+// Swiping forward across a book boundary opens the new book with its intro on
+// top; swiping back at a book's start shows the intro first, and only the next
+// back-swipe crosses into the previous book.
+let _rhemaIntroBackStop = '';
 
 function introJumpTo(code, ch) {
   closeBookIntro();
@@ -41218,7 +41231,9 @@ async function openBookIntro(code) {
   if (!sheet) {
     sheet = document.createElement('div');
     sheet.id = 'bookIntroModal';
-    sheet.className = 'rhema-note-overlay';
+    // bi-overlay: fixed + high z-index — this sheet lives on document.body,
+    // so the modal/picker stacking contexts would otherwise bury it.
+    sheet.className = 'rhema-note-overlay bi-overlay';
     sheet.addEventListener('click', (ev) => { if (ev.target === sheet) closeBookIntro(); });
     document.body.appendChild(sheet);
   }
@@ -41276,7 +41291,9 @@ function openRhemaChapPicker() {
   const overlay = document.getElementById('rhemaChapPickerOverlay');
   if (!overlay || !_rhemaData()) return;
   const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a-+b);
-  document.getElementById('rhemaChapGrid').innerHTML = chapters.map(ch => {
+  document.getElementById('rhemaChapGrid').innerHTML =
+    `<div class="rhema-num-cell rhema-intro-cell" title="About ${_rhemaBookName(_rhemaBook)}" onclick="closeRhemaPickerSheet();openBookIntro('${_rhemaBook}')"><span class="material-symbols-outlined">info</span></div>` +
+    chapters.map(ch => {
     const sel = ch === _rhemaChapter ? ' selected' : '';
     return `<div class="rhema-num-cell${sel}" onclick="rhemaSelectChap('${ch}')">${ch}</div>`;
   }).join('');
@@ -41563,8 +41580,20 @@ function initRhemaVerseSwipe() {
   }, { passive: true });
 }
 
+// At a book's very start, the intro is the "page" behind chapter 1: show it
+// once, and let the following back-swipe actually cross the boundary.
+function _rhemaIntroBackGate() {
+  if (_rhemaIntroBackStop !== _rhemaBook) {
+    _rhemaIntroBackStop = _rhemaBook;
+    openBookIntro(_rhemaBook);
+    return true; // stop: the intro is this swipe's destination
+  }
+  return false;
+}
+
 function rhemaPrevVerse() {
   if (!_rhemaData()) return;
+  const bookBefore = _rhemaBook;
   const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a - +b);
   const chIdx = chapters.indexOf(_rhemaChapter);
   let changed = false;
@@ -41575,6 +41604,7 @@ function rhemaPrevVerse() {
       _rhemaVerseFocus = false;
       changed = true;
     } else {
+      if (_rhemaIntroBackGate()) return;
       const prevBook = _rhemaAdjacentBook(-1);
       if (!prevBook) return;
       _rhemaHandleBookBoundaryLayer(prevBook, _rhemaBook);
@@ -41596,6 +41626,7 @@ function rhemaPrevVerse() {
         _rhemaVerse = _rhemaLastVerseOfChapter(_rhemaBook, _rhemaChapter);
         changed = true;
       } else {
+        if (_rhemaIntroBackGate()) return;
         const prevBook = _rhemaAdjacentBook(-1);
         if (!prevBook) return;
         _rhemaHandleBookBoundaryLayer(prevBook, _rhemaBook);
@@ -41607,6 +41638,7 @@ function rhemaPrevVerse() {
     }
   }
   if (!changed) return;
+  if (_rhemaBook === bookBefore) _rhemaIntroBackStop = ''; // moved within the book
   _rhemaHighlightStrongs = null;
   _rhemaAnimateChapterSwipe(-1);
   syncRhemaPicker();
@@ -41615,6 +41647,7 @@ function rhemaPrevVerse() {
 
 function rhemaNextVerse() {
   if (!_rhemaData()) return;
+  const bookBefore = _rhemaBook;
   const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a - +b);
   const chIdx = chapters.indexOf(_rhemaChapter);
   let changed = false;
@@ -41661,6 +41694,14 @@ function rhemaNextVerse() {
   _rhemaAnimateChapterSwipe(1);
   syncRhemaPicker();
   renderRhemaVerse();
+  if (_rhemaBook !== bookBefore) {
+    // Crossed into a new book: its intro is the first "page" — show it, and
+    // mark it seen so an immediate back-swipe crosses back out cleanly.
+    _rhemaIntroBackStop = _rhemaBook;
+    openBookIntro(_rhemaBook);
+  } else {
+    _rhemaIntroBackStop = '';
+  }
 }
 
 // ── Cross-reference jumping ───────────────────────────────────────────────────
