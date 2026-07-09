@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.416";
+const APP_VERSION = "3.0.417";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.417 &mdash; Verse numbers in Compare &amp; biblical faith defined rightly</div>
+<ul>
+  <li><strong>Numbered comparisons</strong> &mdash; When Compare shows several verses (a range or a broken-up selection), each verse now carries its verse number in every version&rsquo;s row.</li>
+  <li><strong>Faith means full persuasion</strong> &mdash; The definitions for faith, believe, belief, believer, unbelief, trust and all their forms have been rewritten. Biblical faith is not a blind leap or a vague hope &mdash; it is being fully persuaded that something is true (Rom 4:21; Heb 11:1; John 20:31). These entries are now authoritative: the online dictionary can never overwrite them.</li>
+</ul>
 <div class="un-version-label">v3.0.416 &mdash; Define works in every version</div>
 <ul>
   <li><strong>Right words, right version</strong> &mdash; &ldquo;Define an English word&rdquo; now lists the words from the translation you&rsquo;re actually reading (and &ldquo;In This Verse&rdquo; shows that version&rsquo;s text) instead of always using MSB/BSB.</li>
@@ -38620,7 +38625,7 @@ let _rhemaCompareTab = 'current';
 let _rhemaWordPickMode = 'lookup';
 let _rhemaCurrentEnglishMeaningWord = '';
 const RHEMA_ENGLISH_BIBLE_DICT = {
-  faith: 'Often used for believing, trust, or reliance. In passages about receiving eternal life, read carefully whether the context is speaking about believing Christ\'s promise, ongoing discipleship, or faithful living.',
+  faith: 'Full persuasion — being convinced that something is true. In passages about receiving eternal life it is believing Christ\'s promise (John 20:31); elsewhere context may stress ongoing trust or faithful living. It is not a blind leap: Abraham was "fully persuaded that God had power to do what He had promised" (Rom 4:21).',
   grace: 'Often points to favor or gift rather than something earned. Watch whether the verse is emphasizing God\'s generosity, enablement, or kindness.',
   gospel: 'Means good news. In the NT, context usually connects it to the message about Jesus Christ and what God has done through Him.',
   righteousness: 'Can refer to what is right, God\'s justice, right standing, or righteous conduct. Context decides which sense is in view.',
@@ -39598,35 +39603,41 @@ function _rhemaCompareVerseNums(p) {
   return out;
 }
 
-// Joins the covered verses out of a chapter map ({ verseNum: text }).
-function _rhemaCompareChapText(chap, p) {
+// Joins the covered verses as escaped HTML, prefixing each verse's number
+// whenever more than one verse is shown (spans and gapped selections).
+function _rhemaCompareVersesHtml(getText, p) {
+  const nums = _rhemaCompareVerseNums(p);
+  const multi = nums.length > 1;
   const parts = [];
-  for (const v of _rhemaCompareVerseNums(p)) { const t = chap[v]; if (t) parts.push(t); }
-  return parts.join(' ');
-}
-
-// Joins the covered verses from an on-device version (MSB/BSB).
-function _rhemaCompareLocalText(ver, p) {
-  const parts = [];
-  for (const v of _rhemaCompareVerseNums(p)) {
-    const t = _rhemaEnglishText(p.book, p.chapter, v, ver);
-    if (t) parts.push(t);
+  for (const v of nums) {
+    const t = getText(v);
+    if (t) parts.push((multi ? `<sup class="rhema-cmp-vnum">${v}</sup>` : '') + _escapeRhemaAttr(t));
   }
   return parts.join(' ');
 }
 
-// Returns cached text for an api.bible span without ever hitting the network,
-// or null if it isn't cached yet.
+// Covered verses out of a chapter map ({ verseNum: text }) → escaped HTML.
+function _rhemaCompareChapText(chap, p) {
+  return _rhemaCompareVersesHtml((v) => chap[v], p);
+}
+
+// Covered verses from an on-device version (MSB/BSB) → escaped HTML.
+function _rhemaCompareLocalText(ver, p) {
+  return _rhemaCompareVersesHtml((v) => _rhemaEnglishText(p.book, p.chapter, v, ver), p);
+}
+
+// Returns cached text for an api.bible span (as escaped HTML) without ever
+// hitting the network, or null if it isn't cached yet.
 function _rhemaCompareApiCached(ver, p) {
   // Chapter blocks already in memory are authoritative for their verses.
   const chap = typeof _vsChapterFromMemory === 'function' && _vsChapterFromMemory(ver, p.book, p.chapter);
   if (chap) return _rhemaCompareChapText(chap, p);
-  if (p.endVerse) return null; // spans need the chapter block
+  if (p.endVerse || _rhemaCompareVerses) return null; // spans need the chapter block
   const key = `${ver}|${p.book}|${p.chapter}|${p.verse}`;
-  if (typeof _vsTextCache !== 'undefined' && _vsTextCache.has(key)) return _vsTextCache.get(key);
+  if (typeof _vsTextCache !== 'undefined' && _vsTextCache.has(key)) return _escapeRhemaAttr(_vsTextCache.get(key));
   try {
     const stored = localStorage.getItem('vs_v_' + key);
-    if (stored !== null) return stored;
+    if (stored !== null) return _escapeRhemaAttr(stored);
   } catch {}
   return null;
 }
@@ -39653,30 +39664,31 @@ async function _rhemaCompareLoadAsync() {
     if (limited) {
       // Over quota / offline: fall back to a local version so the row still shows
       // something useful, with a quiet note.
-      const fallback = _rhemaCompareLocalText('MSB', p);
+      const fallback = _rhemaCompareLocalText('MSB', p); // escaped HTML
       el.classList.remove('rhema-compare-loading');
       el.classList.add('rhema-compare-fallback');
-      el.textContent = fallback ? `${fallback}  (showing MSB — ${ver} unavailable right now)` : `${ver} unavailable right now.`;
+      el.innerHTML = fallback ? `${fallback}  (showing MSB — ${ver} unavailable right now)` : `${ver} unavailable right now.`;
       return;
     }
 
     // Chapter-block first (covers single verses AND selected spans); the
     // single-verse endpoint is only a fallback for lone verses.
-    let text = null;
+    let html = null;
     if (typeof _vsEnsureChapter === 'function') {
       const chap = await _vsEnsureChapter(ver, p.book, p.chapter).catch(() => null);
-      if (chap) text = _rhemaCompareChapText(chap, p);
+      if (chap) html = _rhemaCompareChapText(chap, p);
     }
-    if (text == null && !p.endVerse) {
-      text = await _vsFetchVerse(ver, p.book, p.chapter, p.verse).catch(() => null);
+    if (html == null && !p.endVerse && !_rhemaCompareVerses) {
+      const single = await _vsFetchVerse(ver, p.book, p.chapter, p.verse).catch(() => null);
+      if (single) html = _escapeRhemaAttr(single);
     }
     el.classList.remove('rhema-compare-loading');
-    if (text) {
-      el.textContent = text;
+    if (html) {
+      el.innerHTML = html;
     } else {
-      const fallback = _rhemaCompareLocalText('MSB', p);
+      const fallback = _rhemaCompareLocalText('MSB', p); // escaped HTML
       el.classList.add('rhema-compare-fallback');
-      el.textContent = fallback ? `${fallback}  (showing MSB — ${ver} unavailable)` : `${ver} unavailable.`;
+      el.innerHTML = fallback ? `${fallback}  (showing MSB — ${ver} unavailable)` : `${ver} unavailable.`;
     }
   }));
 }
@@ -39700,9 +39712,9 @@ function _rhemaRenderCompare() {
     let bodyClass = 'rhema-compare-text', bodyText;
     if (!_rhemaCompareIsApiVersion(ver)) {
       // MSB/BSB live on the device — read them directly, no network ever.
-      const local = _rhemaCompareLocalText(ver, p);
+      const local = _rhemaCompareLocalText(ver, p); // escaped HTML
       if (local) {
-        bodyText = _escapeRhemaAttr(local);
+        bodyText = local;
       } else {
         bodyClass += ' rhema-compare-fallback';
         bodyText = `This verse is not included in the ${ver} translation.`;
@@ -39719,14 +39731,14 @@ function _rhemaRenderCompare() {
       bodyClass += ' rhema-compare-fallback';
       bodyText = `This verse is not included in the ${ver} translation.`;
     } else if (cached != null) {
-      bodyText = _escapeRhemaAttr(cached);
+      bodyText = cached; // escaped HTML
     } else if (limited) {
       // Over quota / offline: show a local version so the row still reads,
       // with a quiet note that the licensed translation is unavailable.
-      const fallback = _rhemaCompareLocalText('MSB', p);
+      const fallback = _rhemaCompareLocalText('MSB', p); // escaped HTML
       bodyClass += ' rhema-compare-fallback';
       bodyText = fallback
-        ? `${_escapeRhemaAttr(fallback)}  (showing MSB — ${ver} unavailable right now)`
+        ? `${fallback}  (showing MSB — ${ver} unavailable right now)`
         : `${ver} unavailable right now.`;
     } else {
       bodyClass += ' rhema-compare-loading';
@@ -40123,6 +40135,9 @@ async function rhemaShowEnglishMeaning(word) {
   } catch {}
   if (_rhemaCurrentEnglishMeaningWord !== clean) return;
   if (bundled.length) render(bundled, true);
+  // Curated theological entries (marked 'biblical' — faith, believe, …) are
+  // authoritative: never let the generic web dictionary overwrite them.
+  if (bundled.some(d => d.pos === 'biblical')) { render(bundled, false); return; }
   let modernDefs = [];
   try {
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(clean)}`);
@@ -40140,7 +40155,7 @@ async function rhemaShowEnglishMeaning(word) {
 // rhema-english-dictionary.js holds a definition for EVERY word in the MSB and
 // BSB texts (WordNet glosses + curated biblical terms + generated name entries),
 // so word meanings work offline and never come back empty.
-const RHEMA_ENGLISH_DICT_VERSION = '3.0.416';
+const RHEMA_ENGLISH_DICT_VERSION = '3.0.417';
 let _rhemaEnglishDictPromise = null;
 function _rhemaEnsureEnglishDictionary() {
   if (window.RhemaEnglishDictionary) return Promise.resolve();
