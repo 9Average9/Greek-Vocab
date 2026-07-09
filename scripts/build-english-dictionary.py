@@ -302,6 +302,49 @@ for _pfx, _ref in _PLACE_BASE.items():
 CURATED.setdefault('towards', [[G, 'Toward; in the direction of.']])
 CURATED.setdefault('soever', [[R, 'At all; of any kind (often attached to who/what/where).']])
 
+# The faith/believe word family. WordNet's glosses carry a modern "blind leap /
+# vague confidence" flavor that misrepresents the biblical words: pistis /
+# believing in Scripture is FULL PERSUASION — being convinced that something is
+# true (Rom 4:21, Heb 11:1, John 20:31). The 'biblical' row also tells the
+# runtime never to let the online dictionary replace these entries.
+B = 'biblical'
+for w, rows in {
+ 'believe': [[V,'To be persuaded that something is true; to be convinced.'],
+             [B,'Believing in Scripture is not a blind leap or a decision to “try” — it is being fully persuaded that something is true. To believe Christ is to be convinced that His word is true: “these are written that you may believe that Jesus is the Christ… and that by believing you may have life in His name” (John 20:31).']],
+ 'believes': [[V,'Is persuaded that something is true; is convinced.'],
+              [B,'Form of “believe” — being fully persuaded that something is true, not a leap or a wish (John 3:16).']],
+ 'believed': [[V,'Was persuaded that something is true; was convinced.'],
+              [B,'Form of “believe.” “Abraham believed God, and it was credited to him as righteousness” (Rom 4:3) — he was fully persuaded that God could do what He promised (Rom 4:21).']],
+ 'believing': [[V,'Being persuaded that something is true.'],
+               [B,'Form of “believe” — the state of being convinced something is true (John 20:27-31).']],
+ 'believer': [[N,'One who is persuaded that something is true; one convinced.'],
+              [B,'In the NT: one who has been persuaded that Jesus is the Christ, the Son of God — and therefore has life (John 20:31).']],
+ 'believers': [[N,'Those persuaded that something is true.'],
+               [B,'In the NT: those convinced that Jesus is the Christ (Acts 5:14).']],
+ 'belief': [[N,'Persuasion that something is true; settled conviction.'],
+            [B,'Not a vague idea or a hopeful guess — being convinced that something is true (2 Thess 2:13).']],
+ 'beliefs': [[N,'Convictions; things one is persuaded are true.']],
+ 'faith': [[N,'Full persuasion; the settled conviction that something is true.'],
+           [B,'Biblical faith (Greek pistis) is the same act as believing: being fully persuaded that God’s word is true. “Faith is the assurance of what we hope for and the certainty of what we do not see” (Heb 11:1); Abraham was “fully persuaded that God had power to do what He had promised” (Rom 4:21). It is not a blind leap, not a feeling, and not a work — it is being convinced.']],
+ 'faithful': [[A,'Trustworthy; reliable; true to one’s word.'],
+              [B,'Of God: utterly reliable to keep His promises (2 Tim 2:13). Of people: dependable — or, in some contexts, “believing ones.”']],
+ 'faithfulness': [[N,'Reliability; the quality of keeping one’s word.'],
+                  [B,'God’s faithfulness is His unwavering commitment to do what He has promised (Lam 3:22-23).']],
+ 'faithless': [[A,'Not believing — unpersuaded; or unreliable, breaking trust.'],
+               [B,'“Stop doubting and believe” (John 20:27) — literally “do not be unbelieving, but believing.”']],
+ 'unbelief': [[N,'The state of not being persuaded; being unconvinced that something is true.'],
+              [B,'Not merely doubt as a mood, but remaining unpersuaded of what God has said (Mark 9:24: “I do believe; help my unbelief”).']],
+ 'unbeliever': [[N,'One not persuaded; one who remains unconvinced.']],
+ 'unbelievers': [[N,'Those not persuaded; those who remain unconvinced.']],
+ 'unbelieving': [[A,'Not persuaded; unconvinced.']],
+ 'trust': [[V,'To rely on someone or something as true and dependable.'],
+           [B,'Reliance that flows from persuasion — you rest on God’s promise because you are convinced it is true (Prov 3:5).']],
+ 'trusted': [[V,'Relied on as true and dependable.']],
+ 'trusting': [[V,'Relying on as true and dependable.']],
+ 'trusts': [[V,'Relies on as true and dependable.']],
+}.items():
+    CURATED[w] = rows
+
 # Archaic / older-translation vocabulary WordNet lacks (KJV, ASV, RV, Douay).
 for w, pos, d in [
  ('afore',G,'Before.'), ('aforetime',R,'Formerly; in earlier times.'),
@@ -401,15 +444,17 @@ def resolvable(w):
     return wn_defs(w) or (wn_defs(w.replace("'", '')) if "'" in w else None)
 
 def archaic_verb_def(w):
-    """loveth → love, comest → come, carrieth → carry, abhorreth → abhor."""
+    """loveth → love, comest → come, carrieth → carry, abhorreth → abhor.
+    Curated stems win over WordNet so e.g. believeth carries the curated
+    biblical definition of believe."""
     m = re.match(r"^([a-z]{2,})(eth|est|edst)$", w)
     if not m: return None
     stems = [m.group(1), m.group(1) + 'e', re.sub(r'i$', 'y', m.group(1)),
              re.sub(r'([a-z])\1$', r'\1', m.group(1))]  # abhorr → abhor
     for stem in dict.fromkeys(stems):
-        base = wn_defs(stem)
+        base = CURATED.get(stem) or wn_defs(stem)
         if base:
-            return [[base[0][0], f'Archaic form of “{stem}.” ' + base[0][1]]] + base[1:2]
+            return [[base[0][0], f'Archaic form of “{stem}.” ' + base[0][1]]] + [r for r in base[1:2]]
     return None
 
 def early_modern_candidates(w):
