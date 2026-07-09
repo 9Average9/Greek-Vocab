@@ -35,6 +35,27 @@ for (const src of [ctx.window.RhemaMSB, ctx.window.RhemaBSB]) {
 process.stdout.write(JSON.stringify(info));
 '''
 info = json.loads(subprocess.run(['node','-e',node_src],cwd=ROOT,capture_output=True,text=True,check=True).stdout)
+core_words = set(info)
+core_info = {w: dict(e) for w, e in info.items()}  # pre-merge counts
+
+# ── 1b. Merge vocabulary from the downloadable translations ───────────────────
+# scripts/data/extra-english-vocab.json holds the word list (word → {lc, cap,
+# gnv}) extracted from the full text of every api.bible version the app offers
+# (NIV, KJV, MSG, Geneva 1599, …). Only the vocabulary is stored — never the
+# licensed text itself. Regenerate it with scripts/extract-extra-vocab.js after
+# fetching fresh corpora. `gnv` marks words seen only in Early-Modern-spelling
+# translations (Geneva), which get spelling-alias entries.
+EXTRA_PATH = os.path.join(ROOT, 'scripts', 'data', 'extra-english-vocab.json')
+if os.path.exists(EXTRA_PATH):
+    extra = json.load(open(EXTRA_PATH, encoding='utf-8'))
+    for w, e in extra.items():
+        cur = info.get(w)
+        if cur:
+            cur['lc'] += e.get('lc', 0); cur['cap'] += e.get('cap', 0)
+        else:
+            info[w] = {'lc': e.get('lc', 0), 'cap': e.get('cap', 0),
+                       'gnv': e.get('gnv', 0), 'heb': e.get('heb', 0)}
+    print(f'merged {len(extra)} extra-version words ({len(info) - len(core_words)} new)')
 
 from nltk.corpus import wordnet as wn
 POS_LABEL = {'n':'noun','v':'verb','a':'adj.','s':'adj.','r':'adv.'}
@@ -253,8 +274,108 @@ CURATED = {
 # contractions
 for c, base in {"didn't":'did not',"don't":'do not',"haven't":'have not',"wasn't":'was not',
                 "hasn't":'has not',"aren't":'are not',"shouldn't":'should not',
-                "couldn't":'could not',"doesn't":'does not'}.items():
+                "couldn't":'could not',"doesn't":'does not',"isn't":'is not',
+                "won't":'will not',"can't":'cannot',"wouldn't":'would not',
+                "weren't":'were not',"i'm":'I am',"i've":'I have',"i'll":'I will',
+                "i'd":'I would / I had',"you're":'you are',"you've":'you have',
+                "you'll":'you will',"you'd":'you would / you had',"we're":'we are',
+                "we've":'we have',"we'll":'we will',"we'd":'we would / we had',
+                "they're":'they are',"they've":'they have',"they'll":'they will',
+                "they'd":'they would / they had',"he's":'he is / he has',
+                "she's":'she is / she has',"it's":'it is / it has',"that's":'that is',
+                "there's":'there is',"what's":'what is',"who's":'who is',
+                "let's":'let us',"here's":'here is',"how's":'how is',
+                "where's":'where is',"mustn't":'must not',"needn't":'need not',
+                "ain't":'is not / are not (colloquial)'}.items():
     CURATED[c] = [[G, f'Contraction of “{base}.”']]
+CURATED["o'clock"] = [[R, 'Of the clock — used in telling time ("nine o’clock").']]
+
+# Compound adverbs of place built on where/there/here (whereon, thereupon,
+# hereunto…) — regular, so generate the whole family.
+_PLACE_BASE = {'where': 'which', 'there': 'that', 'here': 'this'}
+for _pfx, _ref in _PLACE_BASE.items():
+    for _sfx, _gloss in [('on', 'on'), ('at', 'at'), ('upon', 'upon'), ('unto', 'to'),
+                         ('to', 'to'), ('out', 'out of'), ('into', 'into'), ('of', 'of'),
+                         ('by', 'by'), ('with', 'with'), ('from', 'from'), ('about', 'about'),
+                         ('into', 'into'), ('through', 'through'), ('under', 'under')]:
+        CURATED.setdefault(_pfx + _sfx, [[R, f'{_gloss.capitalize()} {_ref}; {_gloss} {"which" if _pfx == "where" else "it"}.']])
+CURATED.setdefault('towards', [[G, 'Toward; in the direction of.']])
+CURATED.setdefault('soever', [[R, 'At all; of any kind (often attached to who/what/where).']])
+
+# Archaic / older-translation vocabulary WordNet lacks (KJV, ASV, RV, Douay).
+for w, pos, d in [
+ ('afore',G,'Before.'), ('aforetime',R,'Formerly; in earlier times.'),
+ ('aforehand',R,'Beforehand; in advance.'), ('albeit',G,'Although; even though.'),
+ ('alway',R,'Archaic form of “always.”'), ('amidst',G,'In the middle of; among.'),
+ ('amongst',G,'Among.'), ('canst',V,'Archaic form of “can” (used with thou).'),
+ ('couldst',V,'Archaic form of “could” (used with thou).'),
+ ('wouldest',V,'Archaic form of “would” (used with thou).'),
+ ('shouldest',V,'Archaic form of “should” (used with thou).'),
+ ('mayest',V,'Archaic form of “may” (used with thou).'),
+ ('mightest',V,'Archaic form of “might” (used with thou).'),
+ ('oughtest',V,'Archaic form of “ought” (used with thou).'),
+ ('clave',V,'Archaic past tense of “cleave” — clung to, or split.'),
+ ('cloke',N,'Archaic spelling of “cloak.”'), ('bason',N,'Archaic spelling of “basin.”'),
+ ('basons',N,'Archaic spelling of “basins.”'),
+ ('cherubims',N,'Archaic double plural of “cherub” — the cherubim, angelic beings.'),
+ ('seraphims',N,'Archaic double plural of “seraph” — the seraphim, angelic beings.'),
+ ('chesnut',N,'Archaic spelling of “chestnut.”'),
+ ('caterpiller',N,'Archaic spelling of “caterpillar.”'),
+ ('caterpillers',N,'Archaic spelling of “caterpillars.”'),
+ ('attent',A,'Attentive; paying close attention.'),
+ ('betake',V,'To take oneself; to go: “he betook himself to the hills.”'),
+ ('betakes',V,'Takes oneself; goes.'), ('betook',V,'Past tense of “betake” — went.'),
+ ('bibber',N,'A habitual drinker: “a winebibber.”'),
+ ('baken',V,'Archaic past participle of “bake” — baked.'),
+ ('chode',V,'Archaic past tense of “chide” — rebuked, scolded.'),
+ ('durst',V,'Archaic past tense of “dare” — dared.'),
+ ('bewray',V,'To reveal or betray: “thy speech bewrayeth thee.”'),
+ ('bewrayeth',V,'Reveals; betrays.'),
+ ('holden',V,'Archaic past participle of “hold” — held.'),
+ ('gotten',V,'Past participle of “get” — received, obtained.'),
+ ('spilt',V,'Past tense of “spill” — spilled.'),
+ ('digged',V,'Archaic past tense of “dig” — dug.'),
+ ('builded',V,'Archaic past tense of “build” — built.'),
+ ('stablish',V,'Archaic form of “establish” — to make firm.'),
+ ('stablished',V,'Archaic form of “established.”'),
+ ('marishes',N,'Archaic form of “marshes.”'),
+ ('assarion',N,'A small Roman copper coin, worth about 1/16 of a denarius.'),
+ ('choenix',N,'A Greek dry measure, about a quart — a day’s grain ration.'),
+ ('bekah',N,'A Hebrew weight — half a shekel.'),
+ ('bekahs',N,'Hebrew weights — half-shekels.'),
+ ('amomum',N,'A fragrant spice plant traded in the ancient world.'),
+ ('chittim',N,'Kittim — the coastlands of Cyprus and the western Mediterranean.'),
+ ('hasted',V,'Archaic past tense of "haste" — hurried.'),
+ ('withholden',V,'Archaic past participle of "withhold" — withheld.'),
+ ('forgat',V,'Archaic past tense of "forget" — forgot.'),
+ ('intreat',V,'Archaic spelling of "entreat" — to plead with.'),
+ ('intreated',V,'Archaic spelling of "entreated" — pleaded with.'),
+ ('asswaged',V,'Archaic spelling of "assuaged" — eased, subsided.'),
+ ('darksome',A,'Dark; gloomy.'),
+ ('foresaid',A,'Said before; aforementioned.'),
+ ('selfwill',N,'Stubborn insistence on one’s own way.'),
+ ('outgoings',N,'The farthest limits or boundaries; where something goes out.'),
+ ('inclosings',N,'Archaic spelling of "enclosings" — the settings in which gems are mounted.'),
+ ('lapis',N,'Short for lapis lazuli — a deep-blue semiprecious stone.'),
+ ('shemesh',N,'Hebrew for "sun" — appears in place names like Beth Shemesh.'),
+ ('kidon',N,'Hebrew for a javelin or short spear.'),
+ ('cumi',V,'Aramaic for "arise" — "Talitha cumi": little girl, arise (Mark 5:41).'),
+ ('arim',N,'Hebrew for "cities."'),
+ ('nashim',N,'Hebrew for "women."'),
+ ('ozen',N,'Hebrew for "ear."'),
+ ('exactor',N,'One who demands or extorts payment; an oppressive collector.'),
+ ('exactors',N,'Those who demand or extort payment.'),
+]:
+    CURATED.setdefault(w, [[pos, d]])
+
+# Hebrew alphabet letter names (the acrostic section headings of Psalm 119 and
+# Lamentations appear in the text of several translations).
+for i, letter in enumerate(['aleph','beth','gimel','daleth','he','waw','zayin','heth',
+                            'teth','yodh','kaph','lamedh','mem','nun','samekh','ayin',
+                            'pe','tsadhe','qoph','resh','shin','taw','vav','tav','sadhe',
+                            'tsade','cheth','jod','lamed','tzaddi','koph','schin']):
+    if letter not in CURATED:
+        CURATED[letter] = [[N, f'A letter of the Hebrew alphabet — used as a section heading in acrostic passages (each section’s verses begin with this letter in Hebrew).']]
 
 def proper_def(w):
     if w.endswith('ites'):
@@ -264,7 +385,7 @@ def proper_def(w):
         return [['name', f'A member of a people group or family line in Scripture (one of the {w.capitalize()}s).']]
     if w.endswith('im') and len(w) > 4:
         return [['name', f'A Hebrew plural name in Scripture — a people group, class of beings, or family line called the {w.capitalize()}.']]
-    return [['name', 'A proper name in Scripture — a person, place, nation, or family line. The verse itself and any Bible Dictionary card above show who or what it refers to.']]
+    return [['name', 'A proper name in Scripture — a person, place, nation, or family line.']]
 
 def compound_def(w):
     parts = [p for p in w.split('-') if p]
@@ -273,25 +394,160 @@ def compound_def(w):
     tail = f' Here “{head}”: {base[0][1][0].lower() + base[0][1][1:]}' if base else ''
     return [[A, f'Compound of “{"” + “".join(parts)}.”{tail}']]
 
+# Resolvers for words that only appear in the downloadable translations ────────
+def resolvable(w):
+    """Best definition for a normalized word, or None."""
+    if w in CURATED: return CURATED[w]
+    return wn_defs(w) or (wn_defs(w.replace("'", '')) if "'" in w else None)
+
+def archaic_verb_def(w):
+    """loveth → love, comest → come, carrieth → carry, abhorreth → abhor."""
+    m = re.match(r"^([a-z]{2,})(eth|est|edst)$", w)
+    if not m: return None
+    stems = [m.group(1), m.group(1) + 'e', re.sub(r'i$', 'y', m.group(1)),
+             re.sub(r'([a-z])\1$', r'\1', m.group(1))]  # abhorr → abhor
+    for stem in dict.fromkeys(stems):
+        base = wn_defs(stem)
+        if base:
+            return [[base[0][0], f'Archaic form of “{stem}.” ' + base[0][1]]] + base[1:2]
+    return None
+
+def early_modern_candidates(w):
+    """Spelling variants used by the 1599 Geneva Bible: u/v and i/j swaps
+    (anywhere in the word), y↔i, silent final -e, -esse endings, doubled
+    letters (worlde, euery, iudge, abiect, agaynst)."""
+    seen, out = {w}, []
+    def add(x):
+        if x and x != w and x not in seen: seen.add(x); out.append(x)
+    swaps = {w,
+             re.sub(r'(?<=[a-z])u(?=[aeiouy])', 'v', w),   # euery → every, gaue → gave
+             re.sub(r'^v(?=[a-z])', 'u', w),               # vnto → unto
+             w.replace('vn', 'un'),
+             re.sub(r'i(?=[aeiou])', 'j', w, count=1),     # abiect → abject, iohn → john
+             re.sub(r'^i(?=[aeiou])', 'j', w),
+             w.replace('ay', 'ai'),                        # agaynst → against
+             w.replace('oy', 'oi'),
+             w.replace('y', 'i')}
+    # combinations of the two most common transforms
+    swaps.add(re.sub(r'(?<=[a-z])u(?=[aeiouy])', 'v', w.replace('ay', 'ai')))
+    for s in list(swaps):
+        add(s)
+        add(re.sub(r'e$', '', s))              # worlde → world
+        add(re.sub(r'esse$', 'ess', s))        # witnesse → witness
+        add(re.sub(r'([a-z])\1e$', r'\1', s))  # sinne → sin
+        add(re.sub(r'ie$', 'y', s))            # glorie → glory
+        add(s.replace('ee', 'e'))              # beleeue-style doubles
+        add(re.sub(r'([a-z])\1', r'\1', s, count=1))
+    return out
+
+def early_modern_def(w):
+    for cand in early_modern_candidates(w):
+        base = resolvable(cand) or archaic_verb_def(cand)
+        if base:
+            return [[G, f'Early-Modern (1599) spelling of “{cand}.”']] + base[:2]
+    return None
+
 entries = {}
-stats = {'wordnet':0,'curated':0,'proper':0,'compound':0}
+stats = {'wordnet':0,'curated':0,'proper':0,'compound':0,'archaic':0,'spelling':0,'generic':0}
+unresolved = []
 for w, e in sorted(info.items()):
     if w in CURATED:
         entries[w] = CURATED[w]; stats['curated'] += 1; continue
     d = wn_defs(w) or (wn_defs(w.replace("'",'')) if "'" in w else None)
     if d:
         entries[w] = d; stats['wordnet'] += 1; continue
+    # Inflected forms WordNet stores under the base word (towards → toward,
+    # cursings → cursing): morphy finds the lemma.
+    for pos in ('n', 'v', 'a', 'r'):
+        base = wn.morphy(w, pos)
+        if base and base != w:
+            bd = wn_defs(base)
+            if bd:
+                d = [[bd[0][0], f'(Form of “{base}”) ' + bd[0][1]]] + bd[1:2]
+                break
+    if d:
+        entries[w] = d; stats['wordnet'] += 1; continue
     if e['lc'] == 0:
         entries[w] = proper_def(w); stats['proper'] += 1; continue
     if '-' in w:
         entries[w] = compound_def(w); stats['compound'] += 1; continue
-    raise SystemExit(f'UNCOVERED WORD: {w} — add it to CURATED')
+    if w in core_words:
+        # The on-device MSB/BSB texts must stay fully covered — but merged
+        # counts from other translations can flip the capitalization heuristic
+        # (MSB has only "Abba", MSG has "abba"). If the word was proper-name-
+        # shaped in the core texts alone, keep the proper entry; otherwise stop.
+        core = core_info.get(w, {})
+        if core.get('lc', 1) == 0:
+            entries[w] = proper_def(w); stats['proper'] += 1; continue
+        raise SystemExit(f'UNCOVERED WORD: {w} — add it to CURATED')
+    d = archaic_verb_def(w)
+    if d:
+        entries[w] = d; stats['archaic'] += 1; continue
+    d = early_modern_def(w)
+    if d:
+        entries[w] = d; stats['spelling'] += 1; continue
+    if e.get('cap', 0) >= e.get('lc', 0):
+        entries[w] = proper_def(w); stats['proper'] += 1; continue
+    unresolved.append(w)
+
+SHORT_JOIN_WORDS = {'a','i','o','an','as','at','be','by','he','if','in','is','it',
+                    'my','of','on','or','so','to','up','us','we','and','the','you'}
+def _join_part_ok(p):
+    return p in SHORT_JOIN_WORDS or p in CURATED or (len(p) > 2 and bool(wn.synsets(p)))
+def find_split(w):
+    """Longest-second-part split of w into two known words, or None."""
+    for i in range(1, len(w)):
+        if _join_part_ok(w[:i]) and _join_part_ok(w[i:]):
+            return (w[:i], w[i:])
+    return None
+
+def closed_compound_def(a, b):
+    head = wn_defs(b, 1)
+    tail = f' Here “{b}”: {head[0][1][0].lower() + head[0][1][1:]}' if head else ''
+    return [[N, f'Compound word — “{a}” + “{b}.”{tail}']]
+
+# Sentence-glue words: a fused word containing one of these on either side is a
+# text-dump artifact, not a real compound.
+FUNCTIONISH = SHORT_JOIN_WORDS | {
+    'the','and','you','your','his','her','its','our','their','them','they',
+    'who','what','when','then','than','this','that','these','those','was',
+    'are','were','will','with','for','not','but','all','out','into','unto',
+    'said','say','had','has','have','him','she','can','could','would','should',
+    'from','about','because','there','here','been','being','other','some','such'}
+
+if unresolved:
+    kept = []
+    for w in unresolved:
+        if info[w].get('heb'):
+            entries[w] = [['hebrew', 'A transliterated Hebrew term used by the Orthodox Jewish Bible. Compare this verse in another version for its English rendering.']]
+            stats['hebrew'] = stats.get('hebrew', 0) + 1
+        elif info[w].get('gnv'):
+            entries[w] = [[G, 'An Early-Modern English spelling from the 1599 Geneva Bible. Read it aloud — the modern word usually surfaces (u↔v and i↔j swap, extra silent letters drop).']]
+            stats['generic'] += 1
+        elif (split := find_split(w)) and (split[0] in FUNCTIONISH or split[1] in FUNCTIONISH):
+            # Text-endpoint dumps fuse words around sentence glue ("aboutthe",
+            # "saidto", "avery") — the app's JSON parser space-joins fragments,
+            # so these never occur in real verse text. Drop them.
+            stats['artifact'] = stats.get('artifact', 0) + 1
+        elif split:
+            # Two content words = a real closed compound (lovingkindness,
+            # moneychangers, buryingplace) — define it from its parts.
+            entries[w] = closed_compound_def(*split)
+            stats['compound'] += 1
+        else:
+            entries[w] = [['word', 'No built-in definition for this exact form yet. The verse itself shows how it is used; the online lookup adds a full definition when connected.']]
+            stats['generic'] += 1
+            kept.append(w)
+    print(f'{len(kept)} extra-version words got the plain generic entry:')
+    print('  ' + ', '.join(kept[:150]))
 
 out = ('// Offline English dictionary for the Rhema reader. Generated by\n'
-       '// scripts/build-english-dictionary.py — every word used in the MSB and BSB\n'
-       '// texts has an entry (WordNet glosses, curated biblical terms, generated\n'
-       '// proper-name and compound entries). Verify: node scripts/test-english-dictionary.js\n'
-       'window.RhemaEnglishDictionary = ' + json.dumps({'version':1,'entries':entries}, ensure_ascii=False, separators=(',',':')) + ';\n')
+       '// scripts/build-english-dictionary.py — covers every word in the on-device\n'
+       '// MSB/BSB texts plus the vocabulary of all downloadable translations\n'
+       '// (NIV, KJV, MSG, Geneva 1599, TOJB, ...): WordNet glosses, curated biblical\n'
+       '// and archaic terms, spelling aliases, proper-name/compound/Hebrew entries.\n'
+       '// Verify: node scripts/test-english-dictionary.js\n'
+       'window.RhemaEnglishDictionary = ' + json.dumps({'version':2,'entries':entries}, ensure_ascii=False, separators=(',',':')) + ';\n')
 open(os.path.join(ROOT,'rhema-english-dictionary.js'),'w').write(out)
 print('entries:', len(entries), stats)
 print('size:', os.path.getsize(os.path.join(ROOT,'rhema-english-dictionary.js')), 'bytes')

@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.415";
+const APP_VERSION = "3.0.416";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.416 &mdash; Define works in every version</div>
+<ul>
+  <li><strong>Right words, right version</strong> &mdash; &ldquo;Define an English word&rdquo; now lists the words from the translation you&rsquo;re actually reading (and &ldquo;In This Verse&rdquo; shows that version&rsquo;s text) instead of always using MSB/BSB.</li>
+  <li><strong>A dictionary for all 27 versions</strong> &mdash; The offline dictionary grew from 14,500 to 54,000 entries, built from the complete vocabulary of every version in the app. That includes KJV-era English (&ldquo;spake,&rdquo; &ldquo;loveth,&rdquo; &ldquo;thee&rdquo;), 1599 Geneva spellings (&ldquo;euery&rdquo; &rarr; every), The Message&rsquo;s compounds, the Orthodox Jewish Bible&rsquo;s Hebrew terms, and Psalm 119&rsquo;s Hebrew letter headings. Verified coverage: 99.9&ndash;100% of the words in every single version, fully offline.</li>
+</ul>
 <div class="un-version-label">v3.0.415 &mdash; Icons &amp; fonts now work fully offline</div>
 <ul>
   <li><strong>No more missing icons offline</strong> &mdash; Every icon in the app (and the special fonts used by the Notebook and Scroll styles) now ships with the app itself instead of loading from the web, so an offline session looks exactly like an online one. An automated check confirms all 228 icons used across the app are covered.</li>
@@ -39870,7 +39875,10 @@ function _rhemaSavedComparisonsForScope() {
 function _rhemaEnglishWordsForRef(ref) {
   const p = ref ? _rhemaParseRef(ref) : null;
   if (!p) return [];
-  const text = _rhemaEnglishText(p.book, p.chapter, p.verse) || '';
+  // Words come from the version actually on screen (NIV/KJV/…), not just the
+  // local MSB/BSB text — _rhemaReaderText reads the downloaded chapter block
+  // and falls back to local while one is still in flight.
+  const text = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
   const normalized = text.toLowerCase().replace(/[^a-z'\u2019\- ]/g, ' ').replace(/\s+/g, ' ').trim();
   const phrases = Object.keys(RHEMA_ENGLISH_BIBLE_PHRASES)
     .filter(phrase => new RegExp(`(^| )${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}( |$)`).test(normalized))
@@ -40102,7 +40110,7 @@ async function rhemaShowEnglishMeaning(word) {
       ${_rhemaDictSectionHtml(dictEntry)}
       <div class="rhema-meaning-section"><h4>Modern English</h4>${modernHtml}</div>
       ${contextHtml}
-      <div class="rhema-meaning-section"><h4>In This Verse</h4><p>${_escapeRhemaAttr(_rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '')}</p></div>`;
+      <div class="rhema-meaning-section"><h4>In This Verse</h4><p>${_escapeRhemaAttr(_rhemaReaderText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '')}</p></div>`;
   };
   // Render the shell instantly, then patch in definitions as they arrive:
   // bundled offline dictionary first (covers every MSB/BSB word), then the
@@ -40132,7 +40140,7 @@ async function rhemaShowEnglishMeaning(word) {
 // rhema-english-dictionary.js holds a definition for EVERY word in the MSB and
 // BSB texts (WordNet glosses + curated biblical terms + generated name entries),
 // so word meanings work offline and never come back empty.
-const RHEMA_ENGLISH_DICT_VERSION = '3.0.405';
+const RHEMA_ENGLISH_DICT_VERSION = '3.0.416';
 let _rhemaEnglishDictPromise = null;
 function _rhemaEnsureEnglishDictionary() {
   if (window.RhemaEnglishDictionary) return Promise.resolve();
@@ -40147,6 +40155,119 @@ function _rhemaEnsureEnglishDictionary() {
   });
   return _rhemaEnglishDictPromise;
 }
+// Archaic English used by the KJV / Geneva / Douay-Rheims / ASV / RV 1885
+// translations. The bundled dictionary is built from the MSB/BSB vocabulary,
+// so these forms need their own entries (same [[pos, definition]] shape).
+const RHEMA_ARCHAIC_ENGLISH_DEFS = {
+  thee: [['pronoun', 'Archaic form of "you" (as the object of a verb or preposition): "I tell thee."']],
+  thou: [['pronoun', 'Archaic form of "you" (as the subject, singular): "thou art."']],
+  thy: [['determiner', 'Archaic form of "your" (singular): "thy word."']],
+  thine: [['pronoun', 'Archaic form of "yours," or "your" before a vowel: "thine eyes."']],
+  ye: [['pronoun', 'Archaic form of "you" (plural subject): "ye are the light of the world."']],
+  hath: [['verb', 'Archaic form of "has."']],
+  hast: [['verb', 'Archaic form of "have" (used with thou).']],
+  hadst: [['verb', 'Archaic form of "had" (used with thou).']],
+  doth: [['verb', 'Archaic form of "does."']],
+  dost: [['verb', 'Archaic form of "do" (used with thou).']],
+  didst: [['verb', 'Archaic form of "did" (used with thou).']],
+  shalt: [['verb', 'Archaic form of "shall" (used with thou): "thou shalt not."']],
+  wilt: [['verb', 'Archaic form of "will" (used with thou).']],
+  art: [['verb', 'Archaic form of "are" (used with thou): "thou art."']],
+  wast: [['verb', 'Archaic form of "were" (used with thou).']],
+  wert: [['verb', 'Archaic form of "were" (used with thou).']],
+  saith: [['verb', 'Archaic form of "says": "thus saith the LORD."']],
+  spake: [['verb', 'Archaic past tense of "speak" — spoke.']],
+  bade: [['verb', 'Past tense of "bid" — commanded, told.']],
+  begat: [['verb', 'Archaic past tense of "beget" — became the father of.']],
+  begotten: [['verb', 'Past participle of "beget" — fathered; "only begotten" = one-of-a-kind son.']],
+  shew: [['verb', 'Archaic spelling of "show."']],
+  shewed: [['verb', 'Archaic spelling of "showed."']],
+  sheweth: [['verb', 'Archaic spelling of "shows."']],
+  unto: [['preposition', 'Archaic form of "to": "he said unto them."']],
+  thereof: [['adverb', 'Of it; of that: "the fruit thereof."']],
+  therein: [['adverb', 'In it; in that place or thing.']],
+  thereon: [['adverb', 'On it; on that.']],
+  thereto: [['adverb', 'To it; in addition.']],
+  hereafter: [['adverb', 'From now on; in the future.']],
+  hitherto: [['adverb', 'Until now.']],
+  wherefore: [['adverb', 'Why; for which reason: "wherefore didst thou doubt?"']],
+  whence: [['adverb', 'From where; from which place.']],
+  whither: [['adverb', 'To where; to which place.']],
+  thither: [['adverb', 'To that place.']],
+  hither: [['adverb', 'To this place; here.']],
+  wherein: [['adverb', 'In which; in what.']],
+  whereby: [['adverb', 'By which.']],
+  whereof: [['adverb', 'Of which; of what.']],
+  wherewith: [['adverb', 'With which.']],
+  howbeit: [['conjunction', 'Nevertheless; however.']],
+  peradventure: [['adverb', 'Perhaps; possibly.']],
+  verily: [['adverb', 'Truly; certainly: "verily, verily, I say unto you."']],
+  betwixt: [['preposition', 'Archaic form of "between."']],
+  whosoever: [['pronoun', 'Whoever; any person who.']],
+  whatsoever: [['pronoun', 'Whatever; anything that.']],
+  wheresoever: [['adverb', 'Wherever.']],
+  aught: [['pronoun', 'Anything at all.']],
+  naught: [['pronoun', 'Nothing: "come to naught."']],
+  nought: [['pronoun', 'Nothing: "set at nought."']],
+  ere: [['preposition', 'Before (in time): "ere the harvest."']],
+  oft: [['adverb', 'Often.']],
+  nigh: [['adverb', 'Near; close: "the kingdom of God is nigh."']],
+  yea: [['adverb', 'Yes; indeed; and more than that.']],
+  nay: [['adverb', 'No; on the contrary.']],
+  lo: [['interjection', 'Look! behold!']],
+  hearken: [['verb', 'To listen attentively: "hearken unto me."']],
+  hearkened: [['verb', 'Listened attentively; obeyed.']],
+  brethren: [['noun', 'Archaic plural of "brother" — brothers; fellow believers.']],
+  kine: [['noun', 'Archaic plural of "cow" — cattle.']],
+  swine: [['noun', 'Pigs.']],
+  raiment: [['noun', 'Clothing; garments.']],
+  victuals: [['noun', 'Food; provisions.']],
+  sepulchre: [['noun', 'A tomb; a burial chamber.']],
+  holpen: [['verb', 'Archaic past participle of "help" — helped.']],
+  wot: [['verb', 'Archaic form of "know": "I wot not."']],
+  wist: [['verb', 'Archaic past tense of "know" — knew.']],
+  trow: [['verb', 'To think or believe.']],
+  ensample: [['noun', 'Archaic form of "example."']],
+  ensamples: [['noun', 'Archaic form of "examples."']],
+  morrow: [['noun', 'The next day: "on the morrow."']],
+  twain: [['noun', 'Two: "the twain shall be one flesh."']],
+  thrice: [['adverb', 'Three times.']],
+  fro: [['adverb', 'Back; away (only in "to and fro").']],
+  amongst: [['preposition', 'Among.']],
+  whiles: [['conjunction', 'While.']],
+  divers: [['adjective', 'Various; several: "divers diseases."']],
+  sundry: [['adjective', 'Various; assorted.']],
+  forasmuch: [['conjunction', 'Since; because (forasmuch as).']],
+  insomuch: [['adverb', 'To such an extent (insomuch that).']],
+  notwithstanding: [['conjunction', 'Nevertheless; in spite of that.']],
+  haply: [['adverb', 'Perhaps; by chance.']],
+  anon: [['adverb', 'At once; soon.']],
+  straightway: [['adverb', 'Immediately; at once.']],
+  privily: [['adverb', 'Secretly; privately.']],
+  froward: [['adjective', 'Stubbornly contrary; perverse.']],
+  goodly: [['adjective', 'Attractive; excellent; of fine quality.']],
+  wax: [['verb', 'To grow or become: "waxed strong."']],
+  waxed: [['verb', 'Grew; became: "waxed cold."']],
+  suffer: [['verb', 'In archaic usage: to allow, permit: "suffer the little children to come."']],
+  quick: [['adjective', 'In archaic usage: living, alive: "the quick and the dead."']],
+  quickened: [['verb', 'Made alive; given life.']],
+  quickeneth: [['verb', 'Makes alive; gives life.']],
+  meet: [['adjective', 'In archaic usage: fitting, suitable, proper: "it was meet that we should make merry."']],
+  wont: [['adjective', 'Accustomed; in the habit of: "as he was wont."']],
+  list: [['verb', 'In archaic usage: to wish or please: "the wind bloweth where it listeth."']],
+  listeth: [['verb', 'Wishes; pleases: "the wind bloweth where it listeth."']],
+  durst: [['verb', 'Archaic past tense of "dare" — dared.']],
+  gat: [['verb', 'Archaic past tense of "get" — got.']],
+  clave: [['verb', 'Archaic past tense of "cleave" — clung to, or split.']],
+  brake: [['verb', 'Archaic past tense of "break" — broke.']],
+  drave: [['verb', 'Archaic past tense of "drive" — drove.']],
+  sware: [['verb', 'Archaic past tense of "swear" — swore.']],
+  bare: [['verb', 'Archaic past tense of "bear" — bore, carried, gave birth to.']],
+  gird: [['verb', 'To fasten clothing with a belt, readying for action: "gird up your loins."']],
+  girded: [['verb', 'Belted; made ready for action.']],
+  girt: [['verb', 'Belted; fastened with a belt.']]
+};
+
 function _rhemaBundledEnglishDefs(word) {
   const entries = window.RhemaEnglishDictionary?.entries;
   if (!entries) return [];
@@ -40155,7 +40276,29 @@ function _rhemaBundledEnglishDefs(word) {
     || entries[clean.replace(/'s$/, '').replace(/'$/, '')]
     || entries[clean.replace(/[^a-z'-]/g, '')]
     || [];
-  return defs.map(([pos, definition]) => ({ pos, definition, example: '' }));
+  // A lone "word"-tagged entry is the builder's placeholder for rare forms —
+  // let the archaic map and stemming below beat it when they know the word.
+  const placeholder = defs.length === 1 && defs[0][0] === 'word';
+  if (defs.length && !placeholder) return defs.map(([pos, definition]) => ({ pos, definition, example: '' }));
+  const asDefs = (list) => list.map(([pos, definition]) => ({ pos, definition, example: '' }));
+  // Archaic forms from the KJV-family translations.
+  const arch = RHEMA_ARCHAIC_ENGLISH_DEFS[clean] || RHEMA_ARCHAIC_ENGLISH_DEFS[clean.replace(/[^a-z'-]/g, '')];
+  if (arch) return arch.map(([pos, definition]) => ({ pos, definition, example: '' }));
+  // Generic -eth / -est verb endings (loveth → love, comest → come): define the
+  // modern stem and say which form this is.
+  const m = clean.match(/^([a-z]{2,})(eth|est)$/);
+  if (m) {
+    for (const stem of [m[1], m[1] + 'e', m[1].replace(/i$/, 'y'), m[1].replace(/([a-z])\1$/, '$1')]) {
+      const base = entries[stem];
+      if (base) {
+        return base.map(([pos, definition]) => ({
+          pos, definition: `Archaic form of "${stem}." ${definition}`, example: ''
+        }));
+      }
+    }
+  }
+  // Nothing better than the placeholder — return it rather than nothing.
+  return asDefs(defs);
 }
 function closeRhemaEnglishMeaning(e) {
   if (e && e.target !== document.getElementById('rhemaEnglishMeaningModal')) return;
