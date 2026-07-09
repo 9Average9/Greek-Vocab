@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.417";
+const APP_VERSION = "3.0.418";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.418 &mdash; Introductions for all 66 books</div>
+<ul>
+  <li><strong>Know the book before you read it</strong> &mdash; Every book of the Bible now has an introduction card: author, when it was written, setting, purpose, and a theme drawn from the book&rsquo;s own words &mdash; plus reading time (measured from the actual text), chapter count, a tappable key verse, and an outline that jumps you straight into any section.</li>
+  <li><strong>Both sides, fairly</strong> &mdash; Where authorship, dating, or interpretation is genuinely debated (who wrote Hebrews, one Isaiah or two, James on faith and works, 1 John&rsquo;s purpose, Revelation&rsquo;s date&hellip;), the card presents both positions with a clean Read More explaining each case and where Free Grace interpreters land.</li>
+  <li><strong>Easy to find</strong> &mdash; Tap the info icon beside any book in the Select Book sheet, or the About button at the top of any book&rsquo;s chapter grid.</li>
+</ul>
 <div class="un-version-label">v3.0.417 &mdash; Verse numbers in Compare &amp; biblical faith defined rightly</div>
 <ul>
   <li><strong>Numbered comparisons</strong> &mdash; When Compare shows several verses (a range or a broken-up selection), each verse now carries its verse number in every version&rsquo;s row.</li>
@@ -41110,6 +41116,7 @@ function rhemaRenderBookList() {
     out += `<div class="rhema-book-row${sel}" data-testament="${isNT ? 'NT' : 'OT'}" onclick="rhemaShowChaptersForBook('${code}')">
       <span class="material-symbols-outlined rhema-book-icon">menu_book</span>
       <span class="rhema-book-name">${name}</span>
+      <span class="rhema-book-info" role="button" title="About this book" onclick="event.stopPropagation(); openBookIntro('${code}')"><span class="material-symbols-outlined">info</span></span>
       <span class="material-symbols-outlined rhema-book-check">check</span>
     </div>`;
     return out;
@@ -41133,11 +41140,133 @@ function rhemaShowChaptersForBook(code) {
   back?.classList.remove('hidden');
   searchRow?.classList.add('hidden');
   document.getElementById('rhemaHistoryBtn')?.classList.add('hidden');
-  list.innerHTML = `<div class="rhema-book-chapter-grid">${chapters.map(ch => {
+  const introBtn = `<button class="rhema-book-about" onclick="openBookIntro('${code}')">
+      <span class="material-symbols-outlined">info</span>About ${_rhemaBookName(code)}
+    </button>`;
+  list.innerHTML = introBtn + `<div class="rhema-book-chapter-grid">${chapters.map(ch => {
     const sel = code === _rhemaBook && ch === _rhemaChapter ? ' selected' : '';
     return `<button class="rhema-num-cell${sel}" onclick="rhemaSelectBookChapter('${code}','${ch}')">${ch}</button>`;
   }).join('')}</div>`;
   list.scrollTop = 0;
+}
+
+// ── Book Introductions ──────────────────────────────────────────────────────
+// Curated intro cards (bible-intros.js): author, date, setting, purpose, a
+// text-anchored theme, reading time from real word counts, outline, and fair
+// both-sides write-ups where authorship/date/purpose are genuinely debated.
+const BIBLE_INTROS_VERSION = '3.0.418';
+function _loadBibleIntros() {
+  if (window.BibleIntros) return Promise.resolve(window.BibleIntros);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'bible-intros.js?v=' + BIBLE_INTROS_VERSION;
+    s.async = true;
+    s.onload = () => resolve(window.BibleIntros);
+    s.onerror = () => reject(new Error('Unable to load book introductions.'));
+    document.head.appendChild(s);
+  });
+}
+
+function _introReadingLabel(code) {
+  const book = (window.RhemaMSB || {})[code];
+  if (!book) return '';
+  let words = 0;
+  for (const ch of Object.values(book)) {
+    for (const t of Object.values(ch)) words += String(t).split(/\s+/).length;
+  }
+  const mins = Math.max(1, Math.round(words / 200)); // ~200 wpm
+  if (mins < 60) return `~${mins} min`;
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return m ? `~${h} hr ${m} min` : `~${h} hr`;
+}
+
+function introJumpTo(code, ch) {
+  closeBookIntro();
+  closeRhemaPickerSheet?.();
+  rhemaOpenSavedMark(`${code} ${ch}:1`);
+}
+
+function introJumpKey(refKey) {
+  closeBookIntro();
+  closeRhemaPickerSheet?.();
+  rhemaOpenSavedMark(refKey);
+}
+
+function toggleIntroDebate(i) {
+  const body = document.getElementById(`biDebate-${i}`);
+  const btn = document.getElementById(`biDebateBtn-${i}`);
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  if (btn) btn.innerHTML = open
+    ? '<span class="material-symbols-outlined">expand_less</span>Show less'
+    : '<span class="material-symbols-outlined">expand_more</span>Read more';
+}
+
+async function openBookIntro(code) {
+  try { await _loadBibleIntros(); } catch { return; }
+  const e = window.BibleIntros?.books?.[code];
+  if (!e) return;
+  const esc = _escapeRhemaAttr;
+  const name = _rhemaBookName(code);
+  const isNT = RHEMA_NT_BOOK_ORDER.includes(code);
+  const chapters = Object.keys((window.RhemaMSB || {})[code] || {}).length;
+  const keyP = e.key ? _rhemaParseRef(e.key) : null;
+  const keyLabel = keyP ? `${_rhemaBookName(keyP.book)} ${keyP.chapter}:${keyP.verse}` : '';
+  const keyText = keyP ? (_rhemaEnglishText(keyP.book, keyP.chapter, keyP.verse) || '') : '';
+  const notes = [e.authorNote, e.dateNote].filter(Boolean).join(' ');
+  let sheet = document.getElementById('bookIntroModal');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'bookIntroModal';
+    sheet.className = 'rhema-note-overlay';
+    sheet.addEventListener('click', (ev) => { if (ev.target === sheet) closeBookIntro(); });
+    document.body.appendChild(sheet);
+  }
+  sheet.innerHTML = `<div class="bi-card">
+    <button class="rhema-note-x" onclick="closeBookIntro()"><span class="material-symbols-outlined">close</span></button>
+    <div class="bi-kicker">${isNT ? 'New Testament' : 'Old Testament'} · ${esc(e.genre)}</div>
+    <h3 class="bi-title">${esc(name)}</h3>
+    <div class="bi-facts">
+      <div><small>Author</small><strong>${esc(e.author)}</strong></div>
+      <div><small>Written</small><strong>${esc(e.date)}</strong></div>
+      <div><small>Reading time</small><strong>${_introReadingLabel(code) || '—'}</strong></div>
+      <div><small>Chapters</small><strong>${chapters || '—'}</strong></div>
+    </div>
+    ${notes ? `<p class="bi-factnote">${esc(notes)}</p>` : ''}
+    <div class="bi-section"><h4>Setting</h4><p>${esc(e.setting)}</p></div>
+    <div class="bi-section"><h4>Purpose</h4><p>${esc(e.purpose)}</p></div>
+    <div class="bi-section"><h4>Theme</h4><p>${esc(e.theme)}</p>
+      ${keyP ? `<button class="bi-keyverse" onclick="introJumpKey('${esc(e.key)}')">
+        <span class="bi-keyref"><span class="material-symbols-outlined">bookmark</span>${esc(keyLabel)}</span>
+        ${keyText ? `<span class="bi-keytext">${esc(keyText)}</span>` : ''}
+      </button>` : ''}
+    </div>
+    ${(e.outline && e.outline.length) ? `<div class="bi-section"><h4>Outline</h4>
+      ${e.outline.map(([range, title]) => {
+        const firstCh = String(range).match(/\d+/)?.[0] || '1';
+        return `<button class="bi-outline-row" onclick="introJumpTo('${code}','${firstCh}')">
+          <span class="bi-outline-range">${esc(String(range))}</span>
+          <span class="bi-outline-title">${esc(title)}</span>
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>`;
+      }).join('')}
+    </div>` : ''}
+    ${(e.debates && e.debates.length) ? `<div class="bi-section"><h4>Debated</h4>
+      ${e.debates.map((d, i) => `<div class="bi-debate">
+        <div class="bi-debate-q">${esc(d.q)}</div>
+        <div class="bi-debate-s">${esc(d.s)}</div>
+        <div class="bi-debate-more" id="biDebate-${i}"><p>${esc(d.more)}</p></div>
+        <button class="bi-debate-btn" id="biDebateBtn-${i}" onclick="toggleIntroDebate(${i})">
+          <span class="material-symbols-outlined">expand_more</span>Read more
+        </button>
+      </div>`).join('')}
+    </div>` : ''}
+  </div>`;
+  sheet.classList.add('open');
+}
+
+function closeBookIntro() {
+  document.getElementById('bookIntroModal')?.classList.remove('open');
 }
 
 function openRhemaChapPicker() {
