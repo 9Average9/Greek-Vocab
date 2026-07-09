@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.414";
+const APP_VERSION = "3.0.415";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.415 &mdash; Icons &amp; fonts now work fully offline</div>
+<ul>
+  <li><strong>No more missing icons offline</strong> &mdash; Every icon in the app (and the special fonts used by the Notebook and Scroll styles) now ships with the app itself instead of loading from the web, so an offline session looks exactly like an online one. An automated check confirms all 228 icons used across the app are covered.</li>
+</ul>
 <div class="un-version-label">v3.0.414 &mdash; Compare matches your exact selection</div>
 <ul>
   <li><strong>Gaps respected</strong> &mdash; Selecting non-adjacent verses (say 16 and 18 without 17) and choosing Compare now reads across exactly those verses, labeled &ldquo;3:16, 18&rdquo; &mdash; the skipped verse stays out. Tap order never mattered and still doesn&rsquo;t.</li>
