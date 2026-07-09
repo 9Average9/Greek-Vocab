@@ -33665,14 +33665,40 @@ body.sandbox-open #rhemaSelectionBar:active {
 .rhema-cmp-ver-opt[disabled] { opacity: 0.45; cursor: default; }
 .rhema-cmp-ver-opt small { color: var(--muted-color, #8a8a8a); font-weight: 700; font-size: 0.68rem; }
 .rhema-cmp-ver-opt .material-symbols-outlined { font-size: 20px; color: var(--secondary-color, #243447); }
-/* Version picker: per-option note under the abbreviation + sheet footnote. */
+/* Version picker: abbreviation + tags on top, full name underneath. */
 .rhema-cmp-ver-opt span:first-child { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
 .rhema-ver-note { color: var(--muted-color, #8a8a8a); font-weight: 600; font-size: 0.68rem; }
-.rhema-ver-foot {
-  margin: 6px 4px 0;
-  font-size: 0.72rem; font-weight: 600; line-height: 1.4;
-  color: var(--muted-color, #8a8a8a);
+.rhema-ver-abbr { display: inline-flex; align-items: center; gap: 6px; }
+.rhema-ver-tag {
+  font-style: normal; font-weight: 800; font-size: 0.58rem;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--muted-color, #8a8a8a) 16%, transparent);
+  color: var(--muted-color, #6b7684);
 }
+.rhema-ver-tag-study {
+  background: color-mix(in srgb, #b98a2e 20%, transparent);
+  color: #9a7222;
+}
+.rhema-ver-tabs {
+  display: flex; gap: 6px; margin: 0 2px 10px;
+}
+.rhema-ver-tab {
+  flex: 1;
+  border: 1px solid var(--border-color, rgba(120, 120, 120, 0.2));
+  background: transparent;
+  color: var(--muted-color, #6b7684);
+  border-radius: 999px;
+  padding: 8px 10px;
+  font-weight: 800; font-size: 0.78rem; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rhema-ver-tab.active {
+  border-color: var(--secondary-color, #243447);
+  background: color-mix(in srgb, var(--secondary-color, #243447) 12%, transparent);
+  color: var(--font-color, #20303f);
+}
+.rhema-ver-card-scroll { max-height: 76vh; overflow-y: auto; }
 /* Reader banner while an API version's chapter block downloads (or quota is out). */
 .rhema-reader-downloading {
   margin: 0 0 12px;
