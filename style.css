@@ -33491,12 +33491,17 @@ body.sandbox-open #rhemaSelectionBar:active {
   position: absolute;
   inset: 0;
   z-index: 75;
-  background: rgba(8, 18, 28, 0.42);
-  display: none;
+  background: rgba(8, 18, 28, 0.5);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
 }
-.rhema-compare-overlay.open { display: flex; }
+.rhema-compare-overlay.open { opacity: 1; pointer-events: auto; }
 .rhema-compare-card {
   width: 100%;
   max-width: 480px;
@@ -33504,12 +33509,17 @@ body.sandbox-open #rhemaSelectionBar:active {
   margin: 0 14px;
   display: flex;
   flex-direction: column;
-  background: var(--card-color, #fffdf7);
+  /* Layered paint: the (possibly translucent) skin card color sits on a solid
+     base, so the sheet is always fully opaque — no reader text bleeding through. */
+  background: linear-gradient(var(--card-color, #fffdf7), var(--card-color, #fffdf7)), var(--primary-color, #fffdf7);
   color: var(--font-color, #20303f);
   border-radius: 18px;
   box-shadow: 0 18px 44px rgba(8, 18, 28, 0.3);
   overflow: hidden;
+  transform: translateY(14px) scale(0.98);
+  transition: transform 0.26s cubic-bezier(.2, .82, .18, 1);
 }
+.rhema-compare-overlay.open .rhema-compare-card { transform: translateY(0) scale(1); }
 .rhema-compare-hd {
   display: flex;
   align-items: center;
@@ -33539,7 +33549,25 @@ body.sandbox-open #rhemaSelectionBar:active {
   color: #fff;
   border-color: var(--secondary-color, #243447);
 }
-.rhema-compare-list { padding: 12px 16px; overflow-y: auto; flex: 1; min-height: 0; }
+.rhema-compare-list {
+  padding: 12px 16px; overflow-y: auto; flex: 1; min-height: 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.rhema-compare-addver {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1.5px dashed var(--border-color, rgba(120, 120, 120, 0.35));
+  background: transparent;
+  color: var(--muted-color, #6b7684);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 2px 0 4px;
+  font-weight: 800; font-size: 0.88rem; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rhema-compare-addver:active { transform: scale(0.985); }
+.rhema-compare-addver .material-symbols-outlined { font-size: 19px; }
 .rhema-compare-empty { color: var(--muted-color, #8a8a8a); font-size: 0.9rem; line-height: 1.5; padding: 18px 4px; text-align: center; }
 .rhema-compare-item {
   border: 1px solid rgba(120, 120, 120, 0.2);
@@ -33627,19 +33655,23 @@ body.sandbox-open #rhemaSelectionBar:active {
   position: fixed; inset: 0;
   z-index: 1300;
   display: flex; align-items: flex-end; justify-content: center;
-  background: rgba(0, 0, 0, 0.34);
+  background: rgba(8, 18, 28, 0.44);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   opacity: 0; pointer-events: none;
   transition: opacity 0.22s ease;
 }
 .rhema-cmp-ver-sheet.open { opacity: 1; pointer-events: auto; }
 .rhema-cmp-ver-card {
   width: 100%; max-width: 460px;
-  background: var(--card-color, #fff);
+  /* Solid surface: skin card color layered over a solid base (see compare card). */
+  background: linear-gradient(var(--card-color, #fff), var(--card-color, #fff)), var(--primary-color, #fff);
   border-radius: 18px 18px 0 0;
   padding: 14px 14px calc(env(safe-area-inset-bottom, 0px) + 16px);
   box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.18);
   transform: translateY(100%);
   transition: transform 0.28s cubic-bezier(.2, .82, .18, 1);
+  will-change: transform;
 }
 .rhema-cmp-ver-sheet.open .rhema-cmp-ver-card { transform: translateY(0); }
 .rhema-cmp-ver-title {
@@ -33698,7 +33730,11 @@ body.sandbox-open #rhemaSelectionBar:active {
   background: color-mix(in srgb, var(--secondary-color, #243447) 12%, transparent);
   color: var(--font-color, #20303f);
 }
-.rhema-ver-card-scroll { max-height: 76vh; overflow-y: auto; }
+.rhema-ver-card-scroll {
+  max-height: 76vh; overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
 /* Reader banner while an API version's chapter block downloads (or quota is out). */
 .rhema-reader-downloading {
   margin: 0 0 12px;
@@ -33710,7 +33746,8 @@ body.sandbox-open #rhemaSelectionBar:active {
   font-size: 0.78rem; font-weight: 700; line-height: 1.4;
 }
 @media (prefers-reduced-motion: reduce) {
-  .rhema-cmp-ver-sheet, .rhema-cmp-ver-card { transition: none !important; }
+  .rhema-cmp-ver-sheet, .rhema-cmp-ver-card,
+  .rhema-compare-overlay, .rhema-compare-card { transition: none !important; }
 }
 /* Three-button compare action row. */
 .rhema-compare-actions { flex-wrap: wrap; }

@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.411";
+const APP_VERSION = "3.0.412";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.412 &mdash; Smarter Compare &amp; a smoother reader</div>
+<ul>
+  <li><strong>Compare, focused</strong> &mdash; Compare now opens with the four most-read versions (NIV, NKJV, NASB and KJV &mdash; NLT steps in when you're already reading one of them). An <em>Add versions</em> button lets you pin any of the other versions to the read-across, and your picks are remembered.</li>
+  <li><strong>Solid, readable sheets</strong> &mdash; The Compare panel and version pickers are now fully opaque with a softly blurred backdrop, so the reader text behind them never bleeds through. They also glide in with a subtle new animation.</li>
+  <li><strong>Smoother scrolling</strong> &mdash; Fixed the jitter when bouncing at the top or bottom of a chapter: the toolbar no longer flickers in and out mid-bounce, and sheet scrolling stays inside the sheet instead of dragging the page behind it.</li>
+</ul>
 <div class="un-version-label">v3.0.411 &mdash; 27 Bible versions</div>
 <ul>
   <li><strong>Eight new headline versions</strong> &mdash; KJV, NLT, CSB, Amplified, The Message, NASB 1995, plus two study translations: the Brenton Septuagint (the LXX in English) and the Family 35 New Testament (a majority-text translation). All available in the reader, Memorize, Verse Structure and community posts.</li>
@@ -39508,8 +39514,35 @@ function closeRhemaCompare(e) {
 // pulled as whole ~250-verse chapter blocks (one passages call caches the chapter
 // and its neighbors to IndexedDB forever), so comparing more verses in the same
 // area of Scripture costs no further API calls.
-const RHEMA_COMPARE_VERSIONS = ['MSB', 'BSB', 'NIV', 'NKJV', 'NASB'];
+// The four Compare slots come from the pool below, skipping the version already
+// on screen (NLT steps in when the reader is one of the top four). "Add
+// versions" lets the user pin any other version; picks are remembered.
+const RHEMA_COMPARE_BASE = ['NIV', 'NKJV', 'NASB', 'KJV', 'NLT'];
 let _rhemaCompareRef = null;   // the single verse reference currently compared
+
+function _rhemaCompareExtras() {
+  try {
+    const arr = JSON.parse(localStorage.getItem('rhemaCompareExtras') || '[]');
+    if (Array.isArray(arr)) {
+      return arr.filter(v => v === 'MSB' || v === 'BSB' ||
+        (typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[v] && !VS_VERSION_INFO[v].local));
+    }
+  } catch {}
+  return [];
+}
+
+function _rhemaSetCompareExtras(extras) {
+  try { localStorage.setItem('rhemaCompareExtras', JSON.stringify(extras)); } catch {}
+}
+
+// The versions Compare shows right now: 4 constants (minus the current reader
+// version) followed by the user's added versions.
+function _rhemaCompareList() {
+  const current = _rhemaReaderVersion();
+  const base = RHEMA_COMPARE_BASE.filter(v => v !== current).slice(0, 4);
+  const extras = _rhemaCompareExtras().filter(v => v !== current && !base.includes(v));
+  return base.concat(extras);
+}
 
 function _rhemaCompareIsApiVersion(v) {
   return typeof VS_API_TRANSLATIONS !== 'undefined'
@@ -39585,8 +39618,10 @@ function _rhemaRenderCompare() {
     return;
   }
   const limited = typeof _vsIsApiLimited === 'function' && _vsIsApiLimited();
-  const current = _rhemaReaderVersion();
-  list.innerHTML = RHEMA_COMPARE_VERSIONS.filter(ver => ver !== current).map(ver => {
+  const rows = _rhemaCompareList()
+    // Partial-canon picks (LXX, F35…) only show on verses inside their canon.
+    .filter(ver => typeof _vsBookInScope !== 'function' || _vsBookInScope(ver, p.book));
+  list.innerHTML = rows.map(ver => {
     let bodyClass = 'rhema-compare-text', bodyText;
     if (!_rhemaCompareIsApiVersion(ver)) {
       // MSB/BSB live on the device — read them directly, no network ever.
@@ -39628,8 +39663,61 @@ function _rhemaRenderCompare() {
       </div>
       <div class="${bodyClass}" data-cmp-ref="${_escapeRhemaAttr(ref)}" data-cmp-ver="${ver}">${bodyText}</div>
     </div>`;
-  }).join('');
+  }).join('') +
+  `<button class="rhema-compare-addver" onclick="openRhemaCompareVerPicker()">
+    <span class="material-symbols-outlined">add</span>Add versions
+  </button>`;
   _rhemaCompareLoadAsync();
+}
+
+// ── Compare version picker: pin extra versions to the read-across ─────────────
+let _rhemaCmpPickTab = 'main';
+
+function openRhemaCompareVerPicker(tab) {
+  if (tab === 'main' || tab === 'more') _rhemaCmpPickTab = tab;
+  const current = _rhemaReaderVersion();
+  const base = RHEMA_COMPARE_BASE.filter(v => v !== current).slice(0, 4);
+  const extras = _rhemaCompareExtras();
+  const all = typeof VS_VERSIONS !== 'undefined' ? VS_VERSIONS : [];
+  const list = all.filter(v => !!v.more === (_rhemaCmpPickTab === 'more') && v.code !== current);
+  let sheet = document.getElementById('rhemaCmpPickSheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'rhemaCmpPickSheet';
+    sheet.className = 'rhema-cmp-ver-sheet';
+    sheet.addEventListener('click', (e) => { if (e.target === sheet) closeRhemaCompareVerPicker(); });
+    document.body.appendChild(sheet);
+  }
+  sheet.innerHTML = `<div class="rhema-cmp-ver-card rhema-ver-card-scroll">
+    <div class="rhema-cmp-ver-title">Compare Versions</div>
+    <div class="rhema-ver-tabs">
+      <button class="rhema-ver-tab${_rhemaCmpPickTab === 'main' ? ' active' : ''}" onclick="openRhemaCompareVerPicker('main')">Versions</button>
+      <button class="rhema-ver-tab${_rhemaCmpPickTab === 'more' ? ' active' : ''}" onclick="openRhemaCompareVerPicker('more')">Additional versions</button>
+    </div>
+    ${list.map(v => {
+      const isBase = base.includes(v.code);
+      const on = isBase || extras.includes(v.code);
+      const tags =
+        (v.study ? '<em class="rhema-ver-tag rhema-ver-tag-study">Study</em>' : '') +
+        (v.scope ? `<em class="rhema-ver-tag">${v.scope === 'nt' ? 'New Testament' : 'Old Testament'}</em>` : '');
+      return `<button class="rhema-cmp-ver-opt${on ? ' active' : ''}" ${isBase ? 'disabled' : ''} onclick="rhemaToggleCompareVersion('${v.code}')">
+        <span><span class="rhema-ver-abbr">${v.code}${tags}</span><small class="rhema-ver-note">${v.name}${isBase ? ' — always shown' : ''}</small></span>
+        ${on ? '<span class="material-symbols-outlined">check</span>' : ''}
+      </button>`;
+    }).join('')}
+  </div>`;
+  requestAnimationFrame(() => sheet.classList.add('open'));
+}
+
+function closeRhemaCompareVerPicker() {
+  document.getElementById('rhemaCmpPickSheet')?.classList.remove('open');
+}
+
+function rhemaToggleCompareVersion(code) {
+  const extras = _rhemaCompareExtras();
+  _rhemaSetCompareExtras(extras.includes(code) ? extras.filter(v => v !== code) : extras.concat(code));
+  openRhemaCompareVerPicker();
+  _rhemaRenderCompare();
 }
 
 function rhemaOpenHighlightsNotes() {
@@ -41071,16 +41159,26 @@ function initRhemaVerseSwipe() {
     area._rhemaChromeScrollInit = true;
     area._rhemaLastChromeScrollTop = area.scrollTop || 0;
     area.addEventListener('scroll', () => {
-      const y = area.scrollTop || 0;
+      // Clamp against rubber-band overscroll: iOS reports scrollTop < 0 at the
+      // top and > max at the bottom, and those phantom deltas used to toggle
+      // the chrome bars mid-bounce (the "weird activity at the bottom" jank).
+      const max = Math.max(0, area.scrollHeight - area.clientHeight);
+      const raw = area.scrollTop || 0;
+      const y = Math.min(Math.max(raw, 0), max);
       const last = area._rhemaLastChromeScrollTop || 0;
       const delta = y - last;
       area._rhemaLastChromeScrollTop = y;
+      if (raw < 0 || raw > max) return; // mid-bounce: never toggle chrome
       if (_rhemaVerseSheetOpen?.()) {
         _rhemaSetChromeHidden(false);
         return;
       }
       if (y <= 18) {
         _rhemaSetChromeHidden(false);
+      } else if (y >= max - 80) {
+        // Dead zone at the end of the chapter: toggling chrome here resizes
+        // the scroll area under the finger and re-triggers itself.
+        return;
       } else if (delta > 6 && y > 46) {
         _rhemaSetChromeHidden(true);
       } else if (delta < -10) {
