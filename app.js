@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.412";
+const APP_VERSION = "3.0.413";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.413 &mdash; Download a whole version in one tap</div>
+<ul>
+  <li><strong>One-tap full download</strong> &mdash; Every downloadable version in the picker now has a download button. Tap it and the entire version (a full Bible is around 170 requests) saves to your device with live progress &mdash; then it's yours offline, forever. Interrupted? Tapping again resumes where it left off, never re-downloading a thing.</li>
+  <li><strong>Compare a passage, not just a verse</strong> &mdash; Select several verses and choose Compare: the whole span now reads across every version, not just the first verse.</li>
+  <li><strong>Every panel is solid now</strong> &mdash; Notes, Define, the word picker, saved highlights and the word study sheet got the same opaque treatment as Compare, with the reader softly blurred behind them.</li>
+  <li><strong>Smarter when reading backwards</strong> &mdash; Paging back into earlier chapters (say, from John 1 back into Luke) now grabs a full-size block of the previous chapters in one request instead of a couple at a time.</li>
+</ul>
 <div class="un-version-label">v3.0.412 &mdash; Smarter Compare &amp; a smoother reader</div>
 <ul>
   <li><strong>Compare, focused</strong> &mdash; Compare now opens with the four most-read versions (NIV, NKJV, NASB and KJV &mdash; NLT steps in when you're already reading one of them). An <em>Add versions</em> button lets you pin any of the other versions to the read-across, and your picks are remembered.</li>
@@ -39487,11 +39494,22 @@ Object.assign(RHEMA_ENGLISH_BIBLE_PHRASES, {
 });
 
 function _rhemaParseRef(ref) {
-  const m = String(ref).match(/^(.*) (\d+):(\d+)$/);
-  return m ? { book: m[1], chapter: m[2], verse: m[3] } : null;
+  const m = String(ref).match(/^(.*) (\d+):(\d+)(?:-(\d+))?$/);
+  return m ? { book: m[1], chapter: m[2], verse: m[3], endVerse: m[4] || null } : null;
 }
 function rhemaAddToCompareFromMenu() {
-  const ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
+  let ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
+  // Multi-verse selection: compare the whole span (within the first chapter).
+  if (_rhemaSel.size > 1) {
+    const ps = _rhemaSelectedRefs().map(_rhemaParseRef).filter(Boolean);
+    if (ps.length) {
+      const first = ps[0];
+      const vs = ps.filter(q => q.book === first.book && q.chapter === first.chapter)
+        .map(q => parseInt(q.verse, 10));
+      const lo = Math.min(...vs), hi = Math.max(...vs);
+      ref = hi > lo ? `${first.book} ${first.chapter}:${lo}-${hi}` : `${first.book} ${first.chapter}:${lo}`;
+    }
+  }
   rhemaClearSelection();
   closeRhemaVerseSheet();
   rhemaOpenCompare(ref);
@@ -39550,12 +39568,38 @@ function _rhemaCompareIsApiVersion(v) {
     : ['NIV', 'NKJV', 'NASB'].includes(v);
 }
 
-// Returns cached text for an api.bible verse without ever hitting the network,
+// The verse span a compare ref covers (single verse or a selected range).
+function _rhemaCompareSpan(p) {
+  const s = parseInt(p.verse, 10);
+  return { s, e: Math.max(s, parseInt(p.endVerse || p.verse, 10)) };
+}
+
+// Joins a span's verses out of a chapter map ({ verseNum: text }).
+function _rhemaCompareChapText(chap, p) {
+  const { s, e } = _rhemaCompareSpan(p);
+  const parts = [];
+  for (let v = s; v <= e; v++) { const t = chap[String(v)]; if (t) parts.push(t); }
+  return parts.join(' ');
+}
+
+// Joins a span's verses from an on-device version (MSB/BSB).
+function _rhemaCompareLocalText(ver, p) {
+  const { s, e } = _rhemaCompareSpan(p);
+  const parts = [];
+  for (let v = s; v <= e; v++) {
+    const t = _rhemaEnglishText(p.book, p.chapter, String(v), ver);
+    if (t) parts.push(t);
+  }
+  return parts.join(' ');
+}
+
+// Returns cached text for an api.bible span without ever hitting the network,
 // or null if it isn't cached yet.
 function _rhemaCompareApiCached(ver, p) {
   // Chapter blocks already in memory are authoritative for their verses.
   const chap = typeof _vsChapterFromMemory === 'function' && _vsChapterFromMemory(ver, p.book, p.chapter);
-  if (chap) return chap[String(p.verse)] || '';
+  if (chap) return _rhemaCompareChapText(chap, p);
+  if (p.endVerse) return null; // spans need the chapter block
   const key = `${ver}|${p.book}|${p.chapter}|${p.verse}`;
   if (typeof _vsTextCache !== 'undefined' && _vsTextCache.has(key)) return _vsTextCache.get(key);
   try {
@@ -39587,19 +39631,28 @@ async function _rhemaCompareLoadAsync() {
     if (limited) {
       // Over quota / offline: fall back to a local version so the row still shows
       // something useful, with a quiet note.
-      const fallback = _rhemaEnglishText(p.book, p.chapter, p.verse, 'MSB') || '';
+      const fallback = _rhemaCompareLocalText('MSB', p);
       el.classList.remove('rhema-compare-loading');
       el.classList.add('rhema-compare-fallback');
       el.textContent = fallback ? `${fallback}  (showing MSB — ${ver} unavailable right now)` : `${ver} unavailable right now.`;
       return;
     }
 
-    const text = await _vsFetchVerse(ver, p.book, p.chapter, p.verse).catch(() => null);
+    // Chapter-block first (covers single verses AND selected spans); the
+    // single-verse endpoint is only a fallback for lone verses.
+    let text = null;
+    if (typeof _vsEnsureChapter === 'function') {
+      const chap = await _vsEnsureChapter(ver, p.book, p.chapter).catch(() => null);
+      if (chap) text = _rhemaCompareChapText(chap, p);
+    }
+    if (text == null && !p.endVerse) {
+      text = await _vsFetchVerse(ver, p.book, p.chapter, p.verse).catch(() => null);
+    }
     el.classList.remove('rhema-compare-loading');
     if (text) {
       el.textContent = text;
     } else {
-      const fallback = _rhemaEnglishText(p.book, p.chapter, p.verse, 'MSB') || '';
+      const fallback = _rhemaCompareLocalText('MSB', p);
       el.classList.add('rhema-compare-fallback');
       el.textContent = fallback ? `${fallback}  (showing MSB — ${ver} unavailable)` : `${ver} unavailable.`;
     }
@@ -39625,7 +39678,7 @@ function _rhemaRenderCompare() {
     let bodyClass = 'rhema-compare-text', bodyText;
     if (!_rhemaCompareIsApiVersion(ver)) {
       // MSB/BSB live on the device — read them directly, no network ever.
-      const local = _rhemaEnglishText(p.book, p.chapter, p.verse, ver);
+      const local = _rhemaCompareLocalText(ver, p);
       if (local) {
         bodyText = _escapeRhemaAttr(local);
       } else {
@@ -39648,7 +39701,7 @@ function _rhemaRenderCompare() {
     } else if (limited) {
       // Over quota / offline: show a local version so the row still reads,
       // with a quiet note that the licensed translation is unavailable.
-      const fallback = _rhemaEnglishText(p.book, p.chapter, p.verse, 'MSB') || '';
+      const fallback = _rhemaCompareLocalText('MSB', p);
       bodyClass += ' rhema-compare-fallback';
       bodyText = fallback
         ? `${_escapeRhemaAttr(fallback)}  (showing MSB — ${ver} unavailable right now)`
@@ -41944,6 +41997,45 @@ function toggleRhemaEnglishVersion() { openRhemaVersionPicker(); }
 
 let _rhemaVerSheetTab = 'main'; // 'main' | 'more'
 
+// Download-whole-version control shown beside each API version. States:
+// idle (download icon) → active (live percent) → done (pin icon).
+function _rhemaVerDlHtml(code) {
+  if (typeof _vsVersionCacheStats !== 'function') return '';
+  const stats = _vsVersionCacheStats(code);
+  if (!stats.total) return '';
+  if (stats.cached >= stats.total) {
+    return `<span class="rhema-ver-dl done" title="Saved on this device"><span class="material-symbols-outlined">offline_pin</span></span>`;
+  }
+  const active = typeof _vsBulkTrans !== 'undefined' && _vsBulkTrans === code;
+  const pct = Math.floor(stats.cached / stats.total * 100);
+  return `<span class="rhema-ver-dl${active ? ' active' : ''}" id="rhemaVerDl-${code}" role="button" title="Download the whole version to this device"
+    onclick="event.stopPropagation(); rhemaDownloadWholeVersion('${code}')">${active ? pct + '%' : '<span class="material-symbols-outlined">download_for_offline</span>'}</span>`;
+}
+
+function rhemaDownloadWholeVersion(code) {
+  if (typeof _vsDownloadWholeVersion !== 'function') return;
+  if (typeof _vsBulkTrans !== 'undefined' && _vsBulkTrans) return; // one at a time
+  if (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()) return;
+  const el = () => document.getElementById('rhemaVerDl-' + code);
+  const paint = (stats) => {
+    const e = el();
+    if (!e) return;
+    e.classList.add('active');
+    e.textContent = Math.floor(stats.cached / Math.max(1, stats.total) * 100) + '%';
+  };
+  if (typeof _vsVersionCacheStats === 'function') paint(_vsVersionCacheStats(code));
+  if (typeof _showStudyToast === 'function') _showStudyToast(`Downloading ${code} — you can keep using the app`);
+  _vsDownloadWholeVersion(code, paint).then((done) => {
+    const e = el();
+    if (e) {
+      e.classList.remove('active');
+      if (done) { e.classList.add('done'); e.innerHTML = '<span class="material-symbols-outlined">offline_pin</span>'; }
+      else e.innerHTML = '<span class="material-symbols-outlined">download_for_offline</span>';
+    }
+    if (done && typeof _showStudyToast === 'function') _showStudyToast(`${code} is fully saved on this device`);
+  }).catch(() => {});
+}
+
 function _rhemaVersionOptHtml(v, cur, limited) {
   const dis = !v.local && limited;
   const tags =
@@ -41951,7 +42043,7 @@ function _rhemaVersionOptHtml(v, cur, limited) {
     (v.scope ? `<em class="rhema-ver-tag">${v.scope === 'nt' ? 'New Testament' : 'Old Testament'}</em>` : '');
   return `<button class="rhema-cmp-ver-opt${v.code === cur ? ' active' : ''}" ${dis ? 'disabled' : ''} onclick="rhemaPickReaderVersion('${v.code}')">
     <span><span class="rhema-ver-abbr">${v.code}${tags}</span><small class="rhema-ver-note">${v.name}${dis ? ' — unavailable right now' : ''}</small></span>
-    ${v.code === cur ? '<span class="material-symbols-outlined">check</span>' : ''}
+    <span class="rhema-ver-optright">${v.code === cur ? '<span class="material-symbols-outlined">check</span>' : ''}${v.local || dis ? '' : _rhemaVerDlHtml(v.code)}</span>
   </button>`;
 }
 

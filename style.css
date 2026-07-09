@@ -17515,7 +17515,9 @@ body.dark .rhema-chapter-mode-pill.active {
 .rhema-sheet-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(8, 18, 28, 0.44);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s;
@@ -33126,7 +33128,16 @@ body.dark .journey-modern-shape { fill: #202c42; }
   justify-content: center;
 }
 .rhema-vsheet-overlay { pointer-events: none; }
-.rhema-note-overlay { align-items: center; }
+/* Modal-style sheets (notes, define, word picker, saved marks): dim + blur the
+   reader behind them so their text never competes with the page. The verse
+   action sheet above keeps its light gradient — the reader stays interactive
+   behind it by design. */
+.rhema-note-overlay {
+  align-items: center;
+  background: rgba(8, 18, 28, 0.5);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
 .rhema-vsheet-overlay.open,
 .rhema-note-overlay.open { display: flex; }
 
@@ -33134,7 +33145,8 @@ body.dark .journey-modern-shape { fill: #202c42; }
 .rhema-note-card {
   width: 100%;
   max-width: 460px;
-  background: var(--card-color, #fffdf7);
+  /* Layered paint: skin card color over a solid base = always fully opaque. */
+  background: linear-gradient(var(--card-color, #fffdf7), var(--card-color, #fffdf7)), var(--primary-color, #fffdf7);
   color: var(--font-color, #20303f);
   box-shadow: 0 -10px 30px rgba(8, 18, 28, 0.22);
 }
@@ -33146,7 +33158,7 @@ body.dark .journey-modern-shape { fill: #202c42; }
   padding: 22px 18px 20px;
   position: relative;
   border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 12%, rgba(255,255,255,0.72));
-  background: color-mix(in srgb, var(--card-color, #fffdf7) 94%, rgba(255,255,255,0.92));
+  background: linear-gradient(var(--card-color, #fffdf7), var(--card-color, #fffdf7)), var(--primary-color, #fffdf7);
   box-shadow: 0 -6px 28px color-mix(in srgb, var(--secondary-color, #2498df) 12%, rgba(8,18,28,0.2)), 0 14px 34px rgba(8, 18, 28, 0.18);
   transform: translateY(22px) scale(0.985);
   opacity: 0;
@@ -33734,6 +33746,30 @@ body.sandbox-open #rhemaSelectionBar:active {
   max-height: 76vh; overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+/* Right side of a version option: current-version check + download control. */
+.rhema-ver-optright { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.rhema-ver-dl {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 38px; height: 34px;
+  border-radius: 999px;
+  padding: 0 6px;
+  color: var(--muted-color, #6b7684);
+  background: color-mix(in srgb, var(--muted-color, #8a8a8a) 10%, transparent);
+  font-weight: 800; font-size: 0.7rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rhema-ver-dl:active { transform: scale(0.92); }
+.rhema-ver-dl .material-symbols-outlined { font-size: 20px; }
+.rhema-ver-dl.active {
+  color: var(--secondary-color, #243447);
+  background: color-mix(in srgb, var(--secondary-color, #243447) 14%, transparent);
+}
+.rhema-ver-dl.done {
+  color: #2e7d32;
+  background: color-mix(in srgb, #2e7d32 14%, transparent);
+  cursor: default;
 }
 /* Reader banner while an API version's chapter block downloads (or quota is out). */
 .rhema-reader-downloading {
