@@ -10,6 +10,15 @@ const VS_BOOK_CODE_MAP = {
   '1JO': '1JN', '2JO': '2JN', '3JO': '3JN'
 };
 
+// ── ESV (Crossway api.esv.org) ─────────────────────────────────────────────────
+// The ESV streams from Crossway's own API and is NEVER stored on the device:
+// Crossway's license does not permit keeping a local copy of the translation,
+// so ESV chapters live in session memory only — no IndexedDB, no download
+// button, refetched next session. Create a free key at api.esv.org and paste
+// it below to enable the version (it stays hidden while the key is empty).
+const ESV_API_KEY = '';
+const ESV_API_BASE = 'https://api.esv.org/v3/passage/text/';
+
 // ── Version registry ──────────────────────────────────────────────────────────
 // Single source of truth for every version the app offers. MSB/BSB ship on
 // device; everything else streams from api.bible in chapter blocks and is
@@ -25,6 +34,7 @@ const VS_VERSIONS = [
   { code: 'NASB',   name: 'New American Standard 2020',         id: 'a761ca71e0b3ddcf-01' },
   { code: 'NASB95', name: 'New American Standard 1995',         id: 'b8ee27bcd1cae43a-01' },
   { code: 'KJV',    name: 'King James Version',                 id: 'de4e12af7f28f599-01' },
+  { code: 'ESV',    name: 'English Standard Version',           esv: true, stream: true },
   { code: 'NLT',    name: 'New Living Translation',             id: 'd6e14a625393b4da-01' },
   { code: 'CSB',    name: 'Christian Standard Bible',           id: 'a556c5305ee15c3f-01' },
   { code: 'AMP',    name: 'Amplified Bible',                    id: 'a81b73293d3080c9-01' },
@@ -46,7 +56,8 @@ const VS_VERSIONS = [
   { code: 'TCENT',  name: 'Text-Critical New Testament',        id: '32339cf2f720ff8e-01', more: true, study: true, scope: 'nt' },
   { code: 'JPS',    name: 'JPS TaNaKH 1917',                    id: 'bf8f1c7f3f9045a5-01', more: true, study: true, scope: 'ot' },
   { code: 'TOJB',   name: 'Orthodox Jewish Bible',              id: 'c89622d31b60c444-02', more: true, study: true }
-];
+  // ESV stays hidden everywhere until an api.esv.org key is pasted above.
+].filter(v => !v.esv || ESV_API_KEY);
 const VS_VERSION_INFO = Object.fromEntries(VS_VERSIONS.map(v => [v.code, v]));
 const VS_LOCAL_SET = new Set(VS_VERSIONS.filter(v => v.local).map(v => v.code));
 const VS_TRANSLATIONS = VS_VERSIONS.map(v => v.code);
@@ -147,18 +158,44 @@ function _vsSetApiLimited() {
   _vsApplyLimitedState();
 }
 
+// ESV has its own quota on Crossway's side (a daily query cap per key), fully
+// independent of the api.bible monthly limit — track it separately and reset
+// at local midnight.
+const ESV_LS_LIMITED = 'esv_limited_until';
+function _esvIsLimited() {
+  try {
+    const until = parseInt(localStorage.getItem(ESV_LS_LIMITED) || '0', 10);
+    return until > Date.now();
+  } catch { return false; }
+}
+function _esvSetLimited() {
+  const now = new Date();
+  const reset = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime();
+  try { localStorage.setItem(ESV_LS_LIMITED, String(reset)); } catch {}
+  _vsApplyLimitedState();
+}
+
+// Per-version limited check: local versions never limit, ESV checks Crossway's
+// daily flag, everything else checks the shared api.bible monthly flag.
+function _vsTransLimited(trans) {
+  const info = VS_VERSION_INFO[trans];
+  if (!info || info.local) return false;
+  return info.esv ? _esvIsLimited() : _vsIsApiLimited();
+}
+function _vsLimitLabel(trans) {
+  return VS_VERSION_INFO[trans]?.esv ? 'daily' : 'monthly';
+}
+
 function _vsApplyLimitedState() {
-  const limited = _vsIsApiLimited();
-  // Grey out API-only chips
+  // Grey out chips per-version (ESV's daily limit is independent of api.bible's)
   document.querySelectorAll('#vsTransRow .vs-trans-chip').forEach(chip => {
-    const isApi = !VS_LOCAL_SET.has(chip.dataset.trans);
-    chip.classList.toggle('limited', limited && isApi);
+    chip.classList.toggle('limited', _vsTransLimited(chip.dataset.trans));
   });
-  // Show/hide the banner
+  // Show/hide the banner (api.bible quota — covers every streamed version but ESV)
   const banner = document.getElementById('vsApiLimitBanner');
-  if (banner) banner.classList.toggle('hidden', !limited);
+  if (banner) banner.classList.toggle('hidden', !_vsIsApiLimited());
   // If currently on a limited translation, fall back to MSB silently
-  if (limited && !VS_LOCAL_SET.has(_vsTranslation)) {
+  if (_vsTransLimited(_vsTranslation)) {
     _vsTranslation = 'MSB';
     _vsSyncTransRow();
   }
@@ -615,7 +652,7 @@ function _vsSyncTransRow() {
 }
 
 function vsSelectTrans(t) {
-  if (!VS_LOCAL_SET.has(t) && _vsIsApiLimited()) {
+  if (_vsTransLimited(t)) {
     // Flash the banner to explain why the chip isn't switching
     const banner = document.getElementById('vsApiLimitBanner');
     if (banner) {
@@ -1097,6 +1134,95 @@ async function _vsFetchChapterBlock(trans, book, targetCh) {
   return p;
 }
 
+// ── ESV streaming fetch (Crossway api.esv.org) ─────────────────────────────────
+// The ESV never touches IndexedDB or localStorage: Crossway's license does not
+// permit keeping a copy of the translation on the device, so chapters are
+// seeded into session memory only and refetched next launch. The trailing
+// "(ESV)" on each chapter comes from include-short-copyright=true, which is
+// what fulfills Crossway's copyright-display requirement — leave it in.
+
+// App book codes → the passage names Crossway's `q` parameter expects.
+const ESV_BOOK_NAMES = {
+  GEN: 'Genesis', EXO: 'Exodus', LEV: 'Leviticus', NUM: 'Numbers', DEU: 'Deuteronomy',
+  JOS: 'Joshua', JDG: 'Judges', RUT: 'Ruth', '1SA': '1 Samuel', '2SA': '2 Samuel',
+  '1KI': '1 Kings', '2KI': '2 Kings', '1CH': '1 Chronicles', '2CH': '2 Chronicles',
+  EZR: 'Ezra', NEH: 'Nehemiah', EST: 'Esther', JOB: 'Job', PSA: 'Psalm',
+  PRO: 'Proverbs', ECC: 'Ecclesiastes', SNG: 'Song of Solomon', ISA: 'Isaiah',
+  JER: 'Jeremiah', LAM: 'Lamentations', EZK: 'Ezekiel', DAN: 'Daniel',
+  HOS: 'Hosea', JOL: 'Joel', AMO: 'Amos', OBA: 'Obadiah', JON: 'Jonah',
+  MIC: 'Micah', NAM: 'Nahum', HAB: 'Habakkuk', ZEP: 'Zephaniah', HAG: 'Haggai',
+  ZEC: 'Zechariah', MAL: 'Malachi',
+  MAT: 'Matthew', MAR: 'Mark', LUK: 'Luke', JOH: 'John', ACT: 'Acts',
+  ROM: 'Romans', '1CO': '1 Corinthians', '2CO': '2 Corinthians', GAL: 'Galatians',
+  EPH: 'Ephesians', PHP: 'Philippians', COL: 'Colossians',
+  '1TH': '1 Thessalonians', '2TH': '2 Thessalonians', '1TI': '1 Timothy',
+  '2TI': '2 Timothy', TIT: 'Titus', PHM: 'Philemon', HEB: 'Hebrews',
+  JAM: 'James', '1PE': '1 Peter', '2PE': '2 Peter', '1JO': '1 John',
+  '2JO': '2 John', '3JO': '3 John', JUD: 'Jude', REV: 'Revelation'
+};
+
+// Splits a plain-text ESV chapter on its [N] verse markers into
+// { verseNum: text }. Anything before the first marker (psalm superscriptions
+// like "To the choirmaster. A Psalm of David.") belongs to verse 1.
+function _esvParseChapter(passage) {
+  const text = String(passage || '');
+  const markers = [];
+  const re = /\[(\d+)\]/g;
+  let m;
+  while ((m = re.exec(text))) markers.push({ v: m[1], start: m.index, end: re.lastIndex });
+  if (!markers.length) return null;
+  const out = {};
+  for (let i = 0; i < markers.length; i++) {
+    const seg = text.slice(markers[i].end, i + 1 < markers.length ? markers[i + 1].start : undefined)
+      .replace(/\s+/g, ' ').trim();
+    if (seg) out[markers[i].v] = out[markers[i].v] ? out[markers[i].v] + ' ' + seg : seg;
+  }
+  const lead = text.slice(0, markers[0].start).replace(/\s+/g, ' ').trim();
+  if (lead) out[markers[0].v] = out[markers[0].v] ? lead + ' ' + out[markers[0].v] : lead;
+  return Object.keys(out).length ? out : null;
+}
+
+// Fetches one ESV chapter from Crossway and seeds it into session memory.
+// Mirrors the block layer's in-flight dedup and 60s fail memo, but there is no
+// block window (Crossway serves one passage per query) and NO persistence.
+async function _esvFetchChapter(book, ch) {
+  if (!ESV_API_KEY || _esvIsLimited()) return null;
+  const flightKey = _vsChapterKey('ESV', book, String(ch));
+  if (_vsChapterInFlight.has(flightKey)) return _vsChapterInFlight.get(flightKey);
+  const failedAt = _vsChapterFailAt.get(flightKey);
+  if (failedAt && Date.now() - failedAt < 60000) return null;
+  const p = (async () => {
+    const name = ESV_BOOK_NAMES[book];
+    if (!name) return null;
+    const url = ESV_API_BASE + '?q=' + encodeURIComponent(`${name} ${ch}`) +
+      '&include-passage-references=false&include-verse-numbers=true' +
+      '&include-first-verse-numbers=true&include-footnotes=false' +
+      '&include-footnote-body=false&include-headings=false' +
+      '&include-short-copyright=true&indent-poetry=false&indent-paragraphs=0&line-length=0';
+    try {
+      const r = await fetch(url, { headers: { Authorization: 'Token ' + ESV_API_KEY } });
+      if (!r.ok) {
+        // 429 = daily quota hit; 401/403 = key rejected — either way stop
+        // hitting Crossway until tomorrow instead of failing every chapter.
+        if (r.status === 429 || r.status === 401 || r.status === 403) _esvSetLimited();
+        else _vsChapterFailAt.set(flightKey, Date.now());
+        return null;
+      }
+      const data = await r.json();
+      const verses = _esvParseChapter((data?.passages || [])[0]);
+      if (!verses) { _vsChapterFailAt.set(flightKey, Date.now()); return null; }
+      _vsSeedChapter('ESV', book, String(ch), verses); // memory only — never _vsDbPut
+      _vsChapterFailAt.delete(flightKey);
+      return verses;
+    } catch {
+      _vsChapterFailAt.set(flightKey, Date.now());
+      return null;
+    }
+  })().finally(() => _vsChapterInFlight.delete(flightKey));
+  _vsChapterInFlight.set(flightKey, p);
+  return p;
+}
+
 // ── Whole-version download ─────────────────────────────────────────────────────
 // Walks the canon in order and fetches every not-yet-cached chapter through the
 // block layer. Because each fetch pulls a max-size window and skips anything
@@ -1122,7 +1248,8 @@ function _vsVersionCacheStats(trans) {
 }
 
 async function _vsDownloadWholeVersion(trans, onProgress) {
-  if (_vsBulkTrans || !VS_API_TRANSLATIONS.includes(trans)) return false;
+  // Streaming-only versions (ESV) may not be saved to the device — no bulk download.
+  if (_vsBulkTrans || !VS_API_TRANSLATIONS.includes(trans) || VS_VERSION_INFO[trans]?.stream) return false;
   _vsBulkTrans = trans;
   try {
     await _vsDb(); // wake IndexedDB so the cached-chapter registry is loaded
@@ -1144,6 +1271,18 @@ if (typeof indexedDB !== 'undefined' && typeof setTimeout !== 'undefined') {
   setTimeout(() => { try { _vsDb(); } catch {} }, 2500);
 }
 
+// Drop translation chips for versions not in the registry — the ESV chip ships
+// in the markup but only shows once an api.esv.org key is pasted above.
+if (typeof document !== 'undefined' && typeof setTimeout !== 'undefined') {
+  setTimeout(() => {
+    try {
+      document.querySelectorAll('#vsTransRow .vs-trans-chip').forEach(chip => {
+        if (!VS_VERSION_INFO[chip.dataset.trans]) chip.remove();
+      });
+    } catch {}
+  }, 0);
+}
+
 // Public entry: memory → IndexedDB → block fetch. Resolves to the chapter's
 // { verseNum: text } map, or null when unavailable (offline / over quota /
 // outside the version's canon).
@@ -1153,6 +1292,8 @@ async function _vsEnsureChapter(trans, book, ch) {
   if (!_vsBookInScope(trans, book)) return null;
   const mem = _vsChapterFromMemory(trans, book, ch);
   if (mem) return mem;
+  // ESV streams from Crossway and is never stored — skip IndexedDB entirely.
+  if (VS_VERSION_INFO[trans]?.esv) return _esvFetchChapter(book, ch);
   const stored = await _vsDbGet(_vsChapterKey(trans, book, ch));
   if (stored) { _vsSeedChapter(trans, book, ch, stored); return stored; }
   return _vsFetchChapterBlock(trans, book, ch);

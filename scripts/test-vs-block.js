@@ -181,6 +181,76 @@ ok(vm.runInContext('_vsBookInScope("KJV", "JOH")', ctx) === true, 'full-canon ve
   ok(calls <= floor + 27, `call count near the theoretical floor (${calls} calls for ${ntVerses} verses; floor ${floor})`);
   ok(vm.runInContext('_vsChapterFromMemory("F35","REV","22")', ctx2)?.['21'], 'last NT verse present after bulk download');
 
+  // ══ ESV (Crossway) — streaming-only, never stored ═══════════════════════════
+
+  // Hidden while no key is pasted (the main ctx loaded with ESV_API_KEY = '')
+  ok(vm.runInContext('VS_TRANSLATIONS.includes("ESV")', ctx) === false, 'ESV hidden from registry while key is empty');
+
+  // Parser: plain-text [N] markers
+  const esvChap = vm.runInContext(
+    '_esvParseChapter(' + JSON.stringify('\n  [1] In the beginning was the Word, and the Word was with God. [2] He was\nin the beginning with God. (ESV)') + ')', ctx);
+  ok(esvChap && esvChap['1'] === 'In the beginning was the Word, and the Word was with God.', 'ESV parser splits on [N] markers');
+  ok(esvChap && esvChap['2'] === 'He was in the beginning with God. (ESV)', 'ESV copyright notice stays on the last verse');
+  const esvPsalm = vm.runInContext(
+    '_esvParseChapter(' + JSON.stringify('To the choirmaster. A Psalm of David.\n\n  [1] The heavens declare the glory of God. [2] Day to day pours out speech. (ESV)') + ')', ctx);
+  ok(esvPsalm && /^To the choirmaster\. A Psalm of David\. The heavens declare/.test(esvPsalm['1']), 'psalm superscription prepends to verse 1');
+  ok(vm.runInContext('_esvParseChapter("no markers here")', ctx) === null, 'markerless text parses to null');
+
+  // A context with a key pasted in: ESV appears and streams from memory only.
+  const ctx3 = {
+    window: {}, console,
+    localStorage: {
+      _s: {},
+      getItem(k) { return this._s[k] ?? null; },
+      setItem(k, v) { this._s[k] = String(v); },
+      removeItem(k) { delete this._s[k]; },
+    },
+    document: undefined, indexedDB: undefined,
+  };
+  vm.createContext(ctx3);
+  vm.runInContext(fs.readFileSync(path.join(root, 'rhema-msb.js'), 'utf8'), ctx3);
+  const vsSrc = fs.readFileSync(path.join(root, 'verse-structure.js'), 'utf8');
+  const keyedSrc = vsSrc.replace("const ESV_API_KEY = '';", "const ESV_API_KEY = 'TESTKEY';");
+  if (keyedSrc === vsSrc) { fail++; console.log('✗ could not inject test ESV key (marker changed?)'); }
+  vm.runInContext(keyedSrc, ctx3);
+
+  ok(vm.runInContext('VS_TRANSLATIONS.includes("ESV")', ctx3) === true, 'ESV registered once a key is set');
+  ok(vm.runInContext('VS_VERSION_INFO.ESV.stream === true', ctx3), 'ESV flagged as streaming');
+
+  // Fetch one chapter through the public entry; spy that persistence is never hit.
+  let esvUrl = null, dbPuts = 0;
+  ctx3.fetch = async (url, opts) => {
+    esvUrl = String(url);
+    ctx3.__esvAuth = opts?.headers?.Authorization || '';
+    return { ok: true, status: 200, json: async () => ({
+      passages: ['\n  [1] Jesus wept. [2] So the Jews said, “See how he loved him!” (ESV)'] }) };
+  };
+  vm.runInContext('_vsDbPut = function () { __dbPuts(); return Promise.resolve(false); }', ctx3);
+  ctx3.__dbPuts = () => { dbPuts++; };
+  const esvGot = await vm.runInContext('_vsEnsureChapter("ESV", "JOH", "11")', ctx3);
+  ok(esvGot && esvGot['1'] === 'Jesus wept.', 'ESV chapter streams through _vsEnsureChapter');
+  ok(/api\.esv\.org/.test(esvUrl) && /q=John%2011/.test(esvUrl), `query targets Crossway with the mapped book name (${esvUrl})`);
+  ok(ctx3.__esvAuth === 'Token TESTKEY', 'Authorization: Token header sent');
+  ok(/include-short-copyright=true/.test(esvUrl), 'copyright display param always on');
+  ok(dbPuts === 0, 'ESV never writes to IndexedDB');
+  ok(!Object.keys(ctx3.localStorage._s).some(k => k.includes('ESV')), 'ESV never persists text to localStorage');
+  ok(vm.runInContext('_vsChapterFromMemory("ESV","JOH","11")', ctx3)?.['2'].includes('(ESV)'), 'chapter lives in session memory');
+
+  // No bulk download for streaming versions
+  ok(await vm.runInContext('_vsDownloadWholeVersion("ESV", null)', ctx3) === false, 'whole-version download refuses ESV');
+
+  // 429 sets the ESV daily flag without touching the api.bible monthly flag
+  ctx3.fetch = async () => ({ ok: false, status: 429, json: async () => ({}) });
+  await vm.runInContext('_esvFetchChapter("JOH", "3")', ctx3);
+  ok(vm.runInContext('_vsTransLimited("ESV")', ctx3) === true, 'ESV daily limit set on 429');
+  ok(vm.runInContext('_vsIsApiLimited()', ctx3) === false, 'api.bible monthly flag untouched by ESV limit');
+  ok(vm.runInContext('_vsTransLimited("NIV")', ctx3) === false, 'other versions unaffected by ESV limit');
+  ok(vm.runInContext('_vsLimitLabel("ESV")', ctx3) === 'daily' && vm.runInContext('_vsLimitLabel("NIV")', ctx3) === 'monthly', 'limit labels per source');
+
+  // Every canon book has an ESV passage name
+  const missing = vm.runInContext('Object.keys(window.RhemaMSB).filter(b => !ESV_BOOK_NAMES[b])', ctx3);
+  ok(missing.length === 0, `ESV book-name map covers the canon (missing: ${missing.join(',') || 'none'})`);
+
   console.log(`${pass} pass, ${fail} fail`);
   process.exit(fail ? 1 : 0);
 })();
