@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.420";
+const APP_VERSION = "3.0.421";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.421 &mdash; Picker and scroll polish</div>
+<ul>
+  <li><strong>Chapters drop down cleanly</strong> &mdash; Tapping a book in the Select Book sheet no longer scrolls the list away; the chapter grid unfolds in place, with a gentle nudge only when the book sits too low to show its chapters.</li>
+  <li><strong>Steadier reading bars</strong> &mdash; The top reference bar and bottom navigation now hide and show only on deliberate scrolling &mdash; a good flick down tucks them away, a flick up brings them back &mdash; and they can&rsquo;t flutter from tiny scroll wiggles anymore.</li>
+</ul>
 <div class="un-version-label">v3.0.420 &mdash; Intros read like a chapter; sleeker book picker</div>
 <ul>
   <li><strong>The intro is a real page now</strong> &mdash; Book introductions open inside the reader itself instead of a pop-up, so they read like chapter zero: swipe forward to turn the page into chapter 1 (or tap Start Reading), swipe back to cross into the previous book. The reference pill shows &ldquo;Genesis &middot; Intro&rdquo; while you&rsquo;re on it.</li>
@@ -41120,7 +41125,7 @@ function _rhemaBookChaptersHtml(code) {
     }).join('') + `</div></div>`;
 }
 
-function rhemaRenderBookList(keepSearch = false) {
+function rhemaRenderBookList(keepSearch = false, restoreScroll = null) {
   const list = document.getElementById('rhemaBookList');
   const title = document.getElementById('rhemaBookPickerTitle');
   const back = document.getElementById('rhemaBookPickerBack');
@@ -41153,16 +41158,35 @@ function rhemaRenderBookList(keepSearch = false) {
   const search = document.getElementById('rhemaBookSearch');
   if (search && !keepSearch) search.value = '';
   if (search && keepSearch && search.value) rhemaFilterBooks(search.value);
-  requestAnimationFrame(() => {
-    const target = list.querySelector('.rhema-book-row.open') || list.querySelector('.selected');
-    if (target) list.scrollTop = Math.max(0, target.offsetTop - 8);
-  });
+  if (restoreScroll != null) {
+    // Toggling a book must not jump the list: keep the scroll exactly where it
+    // was, and only nudge (smoothly) if the tapped row sits too low for its
+    // freshly expanded grid to be seen.
+    list.scrollTop = restoreScroll;
+    requestAnimationFrame(() => {
+      const row = list.querySelector('.rhema-book-row.open');
+      if (!row) return;
+      const rowTop = row.offsetTop;
+      const rowBottom = rowTop + row.offsetHeight;
+      if (rowTop < list.scrollTop + 4 || rowBottom > list.scrollTop + list.clientHeight - 140) {
+        list.scrollTo({ top: Math.max(0, rowTop - 8), behavior: 'smooth' });
+      }
+    });
+  } else {
+    requestAnimationFrame(() => {
+      const target = list.querySelector('.rhema-book-row.open') || list.querySelector('.selected');
+      if (target) list.scrollTop = Math.max(0, target.offsetTop - 8);
+    });
+  }
 }
 
-// Tapping a book toggles its inline chapter grid open/closed.
+// Tapping a book toggles its inline chapter grid open/closed — in place, with
+// no scroll jump.
 function rhemaShowChaptersForBook(code) {
+  const list = document.getElementById('rhemaBookList');
+  const prevScroll = list ? list.scrollTop : 0;
   _rhemaBookListOpen = _rhemaBookListOpen === code ? '' : code;
-  rhemaRenderBookList(true);
+  rhemaRenderBookList(true, prevScroll);
 }
 
 // ── Book Introductions ──────────────────────────────────────────────────────
@@ -41569,7 +41593,7 @@ function initRhemaVerseSwipe() {
     area.addEventListener('scroll', () => {
       // Clamp against rubber-band overscroll: iOS reports scrollTop < 0 at the
       // top and > max at the bottom, and those phantom deltas used to toggle
-      // the chrome bars mid-bounce (the "weird activity at the bottom" jank).
+      // the chrome bars mid-bounce.
       const max = Math.max(0, area.scrollHeight - area.clientHeight);
       const raw = area.scrollTop || 0;
       const y = Math.min(Math.max(raw, 0), max);
@@ -41583,13 +41607,28 @@ function initRhemaVerseSwipe() {
       }
       if (y <= 18) {
         _rhemaSetChromeHidden(false);
-      } else if (y >= max - 80) {
-        // Dead zone at the end of the chapter: toggling chrome here resizes
-        // the scroll area under the finger and re-triggers itself.
         return;
-      } else if (delta > 6 && y > 46) {
+      }
+      if (max < area.clientHeight * 0.75 || y >= max - 80) {
+        // Short content, or the end of the chapter: toggling chrome here
+        // resizes the scroll area under the finger and re-triggers itself.
+        return;
+      }
+      // Deliberate-motion gate: the bars only toggle after ~28px of travel in
+      // one direction, and never twice within 350ms — single jittery events
+      // (momentum tails, layout shifts from the toggle itself) can't flip them.
+      const dir = delta > 0 ? 1 : delta < 0 ? -1 : 0;
+      if (dir === 0) return;
+      if (dir !== area._rhemaChromeDir) { area._rhemaChromeDir = dir; area._rhemaChromeTravel = 0; }
+      area._rhemaChromeTravel = (area._rhemaChromeTravel || 0) + Math.abs(delta);
+      if (area._rhemaChromeTravel < 28) return;
+      const now = Date.now();
+      if (now - (area._rhemaChromeToggleAt || 0) < 350) return;
+      if (dir === 1 && y > 80 && !_rhemaChromeHidden) {
+        area._rhemaChromeToggleAt = now;
         _rhemaSetChromeHidden(true);
-      } else if (delta < -10) {
+      } else if (dir === -1 && _rhemaChromeHidden) {
+        area._rhemaChromeToggleAt = now;
         _rhemaSetChromeHidden(false);
       }
     }, { passive: true });
