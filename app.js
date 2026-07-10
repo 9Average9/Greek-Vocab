@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.423";
+const APP_VERSION = "3.0.424";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.424 &mdash; Books never move when tapped</div>
+<ul>
+  <li><strong>The jump-to-top is gone</strong> &mdash; Tapping a book low on the screen was auto-scrolling it to the very top of the list, cutting off part of the view. That auto-scroll is removed entirely: the book you tap stays exactly where it is &mdash; always &mdash; and its chapters slide open cleanly beneath it.</li>
+</ul>
 <div class="un-version-label">v3.0.423 &mdash; Buttery book picker</div>
 <ul>
   <li><strong>Chapters now slide open</strong> &mdash; Tapping a book no longer redraws and jolts the list: the chapter grid physically slides open right under the book (and slides shut), the books below glide with it, and the book you tapped never moves &mdash; opening, closing, or jumping between books. Measured pixel-perfect in all three cases.</li>
@@ -41227,14 +41231,9 @@ function rhemaShowChaptersForBook(code) {
   row.insertAdjacentHTML('afterend', _rhemaBookChaptersHtml(code));
   const exp = row.nextElementSibling;
   if (exp) _biExpandEl(exp);
-  // Glide into view only when the book sits so low that its grid would be
-  // hidden — and glide to the row, never past it.
-  setTimeout(() => {
-    const rowBottom = row.offsetTop + row.offsetHeight;
-    if (rowBottom > list.scrollTop + list.clientHeight - 120) {
-      list.scrollTo({ top: Math.max(0, row.offsetTop - 8), behavior: 'smooth' });
-    }
-  }, 60);
+  // No auto-scroll of any kind: the tapped book stays exactly where it is and
+  // the chapters unfold beneath it. (The earlier "glide into view" scrolled
+  // the row to the very top whenever it sat low on screen — the reported jump.)
 }
 
 // ── Book Introductions ──────────────────────────────────────────────────────
