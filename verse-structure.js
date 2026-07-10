@@ -966,13 +966,15 @@ function _vsBlockBudget(trans) {
 
 // Whole-chapter window around targetCh: backward through uncached neighbors
 // (so paging back is covered), then forward as far as the budget allows.
-function _vsBlockWindow(trans, book, targetCh) {
+// budgetOverride lets a source with different per-query rules (ESV) size the
+// window itself instead of using the api.bible budget/learned cap.
+function _vsBlockWindow(trans, book, targetCh, budgetOverride) {
   const target = parseInt(targetCh, 10);
   const chapters = _vsChapterList(book).map(Number);
   const countFor = (ch) => _vsChapterVerses(book, ch).length || 30;
   if (!chapters.length || !chapters.includes(target)) return { start: target, end: target };
   const min = chapters[0], max = chapters[chapters.length - 1];
-  let budget = _vsBlockBudget(trans) - countFor(target);
+  let budget = (budgetOverride || _vsBlockBudget(trans)) - countFor(target);
   let start = target, end = target;
   // A little back-context first (up to ~2 chapters), then forward with the rest.
   let backSteps = 0;
@@ -1161,40 +1163,96 @@ const ESV_BOOK_NAMES = {
   '2JO': '2 John', '3JO': '3 John', JUD: 'Jude', REV: 'Revelation'
 };
 
-// Splits a plain-text ESV chapter on its [N] verse markers into
-// { verseNum: text }. Anything before the first marker (psalm superscriptions
-// like "To the choirmaster. A Psalm of David.") belongs to verse 1.
-function _esvParseChapter(passage) {
+// Crossway's per-query ceiling: "up to 500 verses per query, or half a book,
+// whichever is less (excepting single-chapter and double-chapter books)."
+// Sizing every query to this ceiling gets the most text per query, so the
+// 5,000/day budget goes as far as it possibly can.
+function _esvQueryBudget(book) {
+  const chs = _vsChapterList(book);
+  let total = 0;
+  for (const c of chs) total += _vsChapterVerses(book, c).length;
+  if (chs.length <= 2) return Math.min(500, Math.max(1, total)); // exempt from the half-book rule
+  return Math.min(500, Math.max(1, Math.floor(total / 2)));
+}
+
+// Splits a plain-text ESV passage on its verse markers into
+// { chapterNum: { verseNum: text } }. Markers are [5] within a chapter and
+// [3:1] at chapter starts (include-first-verse-numbers); as a fallback, a
+// plain marker that doesn't increase means the passage crossed into the next
+// chapter. Anything before the first marker (psalm superscriptions like
+// "To the choirmaster. A Psalm of David.") belongs to that first verse, and
+// every chapter keeps a closing "(ESV)" — the copyright notice Crossway's
+// license requires wherever the text is displayed.
+function _esvParseChapters(passage, startCh) {
   const text = String(passage || '');
   const markers = [];
-  const re = /\[(\d+)\]/g;
+  const re = /\[(?:(\d+):)?(\d+)\]/g;
   let m;
-  while ((m = re.exec(text))) markers.push({ v: m[1], start: m.index, end: re.lastIndex });
+  while ((m = re.exec(text))) markers.push({ ch: m[1] || null, v: m[2], start: m.index, end: re.lastIndex });
   if (!markers.length) return null;
   const out = {};
+  let ch = String(parseInt(startCh, 10) || 1);
+  let lastV = 0;
   for (let i = 0; i < markers.length; i++) {
-    const seg = text.slice(markers[i].end, i + 1 < markers.length ? markers[i + 1].start : undefined)
+    const mk = markers[i];
+    if (mk.ch) ch = String(Number(mk.ch));
+    else if (i > 0 && Number(mk.v) <= lastV) ch = String(Number(ch) + 1);
+    lastV = Number(mk.v);
+    const seg = text.slice(mk.end, i + 1 < markers.length ? markers[i + 1].start : undefined)
       .replace(/\s+/g, ' ').trim();
-    if (seg) out[markers[i].v] = out[markers[i].v] ? out[markers[i].v] + ' ' + seg : seg;
+    if (seg) {
+      const chOut = out[ch] || (out[ch] = {});
+      chOut[mk.v] = chOut[mk.v] ? chOut[mk.v] + ' ' + seg : seg;
+    }
+    if (i === 0) {
+      const lead = text.slice(0, mk.start).replace(/\s+/g, ' ').trim();
+      if (lead) {
+        const chOut = out[ch] || (out[ch] = {});
+        chOut[mk.v] = chOut[mk.v] ? lead + ' ' + chOut[mk.v] : lead;
+      }
+    }
   }
-  const lead = text.slice(0, markers[0].start).replace(/\s+/g, ' ').trim();
-  if (lead) out[markers[0].v] = out[markers[0].v] ? lead + ' ' + out[markers[0].v] : lead;
+  // The short-copyright "(ESV)" arrives once per passage; make sure every
+  // chapter carries it so the notice shows no matter which chapter renders.
+  for (const c of Object.keys(out)) {
+    const vs = Object.keys(out[c]);
+    if (!vs.length) { delete out[c]; continue; }
+    const last = vs.reduce((a, b) => (Number(a) > Number(b) ? a : b));
+    if (!/\(ESV\)\s*$/.test(out[c][last])) out[c][last] += ' (ESV)';
+  }
   return Object.keys(out).length ? out : null;
 }
 
-// Fetches one ESV chapter from Crossway and seeds it into session memory.
-// Mirrors the block layer's in-flight dedup and 60s fail memo, but there is no
-// block window (Crossway serves one passage per query) and NO persistence.
+// Single-chapter convenience wrapper (used for the per-psalm passages).
+function _esvParseChapter(passage) {
+  const byCh = _esvParseChapters(passage, 1);
+  if (!byCh) return null;
+  return byCh[Object.keys(byCh)[0]] || null;
+}
+
+// Fetches the ESV block containing targetCh and seeds it into session memory.
+// Reuses the same window logic as the api.bible layer — a couple of chapters
+// of back-context for paging backward, then forward to the budget, skipping
+// anything already in memory and never crossing a book — sized to Crossway's
+// own per-query ceiling so one query pulls the maximum text. Psalms are
+// requested as one semicolon-joined query per chapter-passage so each psalm's
+// superscription stays attached to its own chapter. NO persistence, ever.
 async function _esvFetchChapter(book, ch) {
   if (!ESV_API_KEY || _esvIsLimited()) return null;
-  const flightKey = _vsChapterKey('ESV', book, String(ch));
+  ch = String(ch);
+  const flightKey = _vsChapterKey('ESV', book, ch);
   if (_vsChapterInFlight.has(flightKey)) return _vsChapterInFlight.get(flightKey);
   const failedAt = _vsChapterFailAt.get(flightKey);
   if (failedAt && Date.now() - failedAt < 60000) return null;
+  const name = ESV_BOOK_NAMES[book];
+  if (!name) return null;
+  const { start, end } = _vsBlockWindow('ESV', book, ch, _esvQueryBudget(book));
+  const perChapter = book === 'PSA'; // keep superscriptions with their psalm
+  const q = perChapter
+    ? Array.from({ length: end - start + 1 }, (_, i) => `${name} ${start + i}`).join(';')
+    : (start === end ? `${name} ${start}` : `${name} ${start}-${end}`);
   const p = (async () => {
-    const name = ESV_BOOK_NAMES[book];
-    if (!name) return null;
-    const url = ESV_API_BASE + '?q=' + encodeURIComponent(`${name} ${ch}`) +
+    const url = ESV_API_BASE + '?q=' + encodeURIComponent(q) +
       '&include-passage-references=false&include-verse-numbers=true' +
       '&include-first-verse-numbers=true&include-footnotes=false' +
       '&include-footnote-body=false&include-headings=false' +
@@ -1202,24 +1260,47 @@ async function _esvFetchChapter(book, ch) {
     try {
       const r = await fetch(url, { headers: { Authorization: 'Token ' + ESV_API_KEY } });
       if (!r.ok) {
-        // 429 = daily quota hit; 401/403 = key rejected — either way stop
+        // 429 = quota/throttle hit; 401/403 = key rejected — either way stop
         // hitting Crossway until tomorrow instead of failing every chapter.
         if (r.status === 429 || r.status === 401 || r.status === 403) _esvSetLimited();
         else _vsChapterFailAt.set(flightKey, Date.now());
         return null;
       }
       const data = await r.json();
-      const verses = _esvParseChapter((data?.passages || [])[0]);
-      if (!verses) { _vsChapterFailAt.set(flightKey, Date.now()); return null; }
-      _vsSeedChapter('ESV', book, String(ch), verses); // memory only — never _vsDbPut
-      _vsChapterFailAt.delete(flightKey);
-      return verses;
+      const passages = data?.passages || [];
+      let byChapter;
+      if (perChapter) {
+        byChapter = {};
+        passages.forEach((pas, i) => {
+          const verses = _esvParseChapter(pas);
+          if (verses) byChapter[String(start + i)] = verses;
+        });
+      } else {
+        byChapter = _esvParseChapters(passages[0], start) || {};
+      }
+      for (const [chNum, verses] of Object.entries(byChapter)) {
+        _vsSeedChapter('ESV', book, chNum, verses); // memory only — never _vsDbPut
+      }
+      const result = _vsChapterFromMemory('ESV', book, ch);
+      if (!result) _vsChapterFailAt.set(flightKey, Date.now());
+      else _vsChapterFailAt.delete(flightKey);
+      return result;
     } catch {
       _vsChapterFailAt.set(flightKey, Date.now());
       return null;
     }
-  })().finally(() => _vsChapterInFlight.delete(flightKey));
-  _vsChapterInFlight.set(flightKey, p);
+  })();
+  // Register the fetch under EVERY uncached chapter in the window, not just the
+  // target — a concurrent request for a neighboring chapter (compare while the
+  // reader loads, read-ahead) rides this query instead of firing its own.
+  const registered = [];
+  for (let c = start; c <= end; c++) {
+    const k = _vsChapterKey('ESV', book, String(c));
+    if (_vsChapterInFlight.has(k) || _vsChapterMem.has(k)) continue;
+    _vsChapterInFlight.set(k, k === flightKey ? p : p.then(() => _vsChapterFromMemory('ESV', book, String(c))));
+    registered.push(k);
+  }
+  p.finally(() => registered.forEach(k => _vsChapterInFlight.delete(k)));
   return p;
 }
 

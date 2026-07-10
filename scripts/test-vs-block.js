@@ -217,24 +217,116 @@ ok(vm.runInContext('_vsBookInScope("KJV", "JOH")', ctx) === true, 'full-canon ve
   ok(vm.runInContext('VS_TRANSLATIONS.includes("ESV")', ctx3) === true, 'ESV registered once a key is set');
   ok(vm.runInContext('VS_VERSION_INFO.ESV.stream === true', ctx3), 'ESV flagged as streaming');
 
-  // Fetch one chapter through the public entry; spy that persistence is never hit.
-  let esvUrl = null, dbPuts = 0;
+  // Multi-chapter parser: [c:1] markers at chapter starts
+  const multi = vm.runInContext('_esvParseChapters(' +
+    JSON.stringify('[1:1] Alpha one. [2] Alpha two. [2:1] Beta one. [2] Beta two. (ESV)') + ', "1")', ctx3);
+  ok(multi && multi['1'] && multi['2'] && multi['1']['2'] === 'Alpha two. (ESV)' && multi['2']['1'] === 'Beta one.',
+    'range passage splits on [c:1] chapter markers');
+  ok(/\(ESV\)\s*$/.test(multi['1']['2']) && /\(ESV\)\s*$/.test(multi['2']['2']),
+    'every chapter in a range keeps the (ESV) copyright notice');
+  // Fallback: a plain marker that resets means the next chapter
+  const reset = vm.runInContext('_esvParseChapters(' +
+    JSON.stringify('[1] A. [2] B. [1] C. (ESV)') + ', "5")', ctx3);
+  ok(reset && reset['5'] && reset['5']['2'] === 'B. (ESV)' && reset['6'] && reset['6']['1'] === 'C. (ESV)',
+    'verse-number reset without a chapter marker rolls to the next chapter');
+
+  // Stub Crossway: serve exactly what q asks for (ranges and ;-joined chapters)
+  // from the local verse counts, with [c:1] markers at chapter starts.
+  const msb3 = ctx3.window.RhemaMSB;
+  const esvToApp = {};
+  const esvNames = vm.runInContext('ESV_BOOK_NAMES', ctx3);
+  for (const [app, esv] of Object.entries(esvNames)) esvToApp[esv] = app;
+  const chapterText = (app, c, withChapterMarker, lead) => {
+    const count = Object.keys(msb3[app]?.[String(c)] || {}).length;
+    let s = lead || '';
+    for (let v = 1; v <= count; v++) {
+      s += (v === 1 && withChapterMarker ? `[${c}:1]` : `[${v}]`) + ` ${app} ${c}:${v} text. `;
+    }
+    return s;
+  };
+  let esvCalls = 0; const esvUrls = [];
+  let dbPuts = 0;
   ctx3.fetch = async (url, opts) => {
-    esvUrl = String(url);
+    esvCalls++; esvUrls.push(String(url));
     ctx3.__esvAuth = opts?.headers?.Authorization || '';
-    return { ok: true, status: 200, json: async () => ({
-      passages: ['\n  [1] Jesus wept. [2] So the Jews said, “See how he loved him!” (ESV)'] }) };
+    const q = decodeURIComponent(String(url).match(/\?q=([^&]+)/)[1]);
+    let passages;
+    if (q.includes(';')) {
+      passages = q.split(';').map(one => {
+        const pm = one.match(/^(.+) (\d+)$/);
+        const app = esvToApp[pm[1]];
+        return chapterText(app, Number(pm[2]), false, 'Superscription of ' + one + '. ') + '(ESV)';
+      });
+    } else {
+      const pm = q.match(/^(.+?) (\d+)(?:-(\d+))?$/);
+      const app = esvToApp[pm[1]], s = Number(pm[2]), e = Number(pm[3] || pm[2]);
+      let text = '';
+      for (let c = s; c <= e; c++) text += chapterText(app, c, true);
+      passages = [text + '(ESV)'];
+    }
+    return { ok: true, status: 200, json: async () => ({ passages }) };
   };
   vm.runInContext('_vsDbPut = function () { __dbPuts(); return Promise.resolve(false); }', ctx3);
   ctx3.__dbPuts = () => { dbPuts++; };
+
+  // One query pulls the maximum block Crossway allows (500 / half-book rule)
+  const johBudget = vm.runInContext('_esvQueryBudget("JOH")', ctx3);
+  const johTotal = Object.keys(msb3.JOH).reduce((n, c) => n + Object.keys(msb3.JOH[c]).length, 0);
+  ok(johBudget === Math.min(500, Math.floor(johTotal / 2)), `John budget follows the half-book rule (${johBudget})`);
+  const winJoh = vm.runInContext('_vsBlockWindow("ESV", "JOH", "11", _esvQueryBudget("JOH"))', ctx3);
   const esvGot = await vm.runInContext('_vsEnsureChapter("ESV", "JOH", "11")', ctx3);
-  ok(esvGot && esvGot['1'] === 'Jesus wept.', 'ESV chapter streams through _vsEnsureChapter');
-  ok(/api\.esv\.org/.test(esvUrl) && /q=John%2011/.test(esvUrl), `query targets Crossway with the mapped book name (${esvUrl})`);
+  ok(esvGot && esvGot['1'] === 'JOH 11:1 text.', 'ESV target chapter streams through _vsEnsureChapter');
+  ok(esvCalls === 1 && new RegExp(`q=John%20${winJoh.start}-${winJoh.end}`).test(esvUrls[0]),
+    `one range query for the whole window (${decodeURIComponent(esvUrls[0].match(/\?q=([^&]+)/)[1])})`);
   ok(ctx3.__esvAuth === 'Token TESTKEY', 'Authorization: Token header sent');
-  ok(/include-short-copyright=true/.test(esvUrl), 'copyright display param always on');
+  ok(/include-short-copyright=true/.test(esvUrls[0]), 'copyright display param always on');
+  let windowVerses = 0;
+  for (let c = winJoh.start; c <= winJoh.end; c++) windowVerses += Object.keys(msb3.JOH[String(c)] || {}).length;
+  ok(windowVerses <= johBudget && winJoh.start <= 9 && winJoh.end > 11,
+    `window has back-context and forward fill within budget (${winJoh.start}-${winJoh.end}, ${windowVerses} verses)`);
+  // Every chapter in the window is now free — no second query
+  for (let c = winJoh.start; c <= winJoh.end; c++) {
+    await vm.runInContext(`_vsEnsureChapter("ESV", "JOH", "${c}")`, ctx3);
+  }
+  ok(esvCalls === 1, 'reading through the fetched window costs zero extra queries');
+  const firstChap = vm.runInContext(`_vsChapterFromMemory("ESV","JOH","${winJoh.start}")`, ctx3);
+  ok(firstChap && Object.values(firstChap).some(t => /\(ESV\)\s*$/.test(t)),
+    'each cached chapter carries the copyright notice (not just the block tail)');
   ok(dbPuts === 0, 'ESV never writes to IndexedDB');
   ok(!Object.keys(ctx3.localStorage._s).some(k => k.includes('ESV')), 'ESV never persists text to localStorage');
-  ok(vm.runInContext('_vsChapterFromMemory("ESV","JOH","11")', ctx3)?.['2'].includes('(ESV)'), 'chapter lives in session memory');
+
+  // Concurrent neighbors ride one query (in-flight covers the whole window)
+  const before = esvCalls;
+  const [mat5, mat6] = await Promise.all([
+    vm.runInContext('_vsEnsureChapter("ESV", "MAT", "5")', ctx3),
+    vm.runInContext('_vsEnsureChapter("ESV", "MAT", "6")', ctx3),
+  ]);
+  ok(mat5?.['1'] && mat6?.['1'] && esvCalls === before + 1,
+    `simultaneous neighbor requests share one query (${esvCalls - before} fired)`);
+
+  // Small books: the half-book rule caps the window (never over-asks Crossway)
+  const titBudget = vm.runInContext('_esvQueryBudget("TIT")', ctx3);
+  const titTotal = Object.keys(msb3.TIT).reduce((n, c) => n + Object.keys(msb3.TIT[c]).length, 0);
+  ok(titBudget === Math.floor(titTotal / 2), `Titus budget is half the book (${titBudget} of ${titTotal})`);
+  const winTit = vm.runInContext('_vsBlockWindow("ESV", "TIT", "2", _esvQueryBudget("TIT"))', ctx3);
+  let titWinVerses = 0;
+  for (let c = winTit.start; c <= winTit.end; c++) titWinVerses += Object.keys(msb3.TIT[String(c)] || {}).length;
+  ok(titWinVerses <= titBudget, `Titus window respects the half-book cap (${titWinVerses} <= ${titBudget})`);
+  // Single/double-chapter books are exempt from the half-book rule
+  ok(vm.runInContext('_esvQueryBudget("PHM")', ctx3) === Object.keys(msb3.PHM['1']).length,
+    'Philemon (single-chapter) exempt from the half-book rule');
+
+  // Psalms: one ;-joined query, superscriptions stay with their own psalm
+  const winPsa = vm.runInContext('_vsBlockWindow("ESV", "PSA", "3", _esvQueryBudget("PSA"))', ctx3);
+  const psaBefore = esvCalls;
+  const psa3 = await vm.runInContext('_vsEnsureChapter("ESV", "PSA", "3")', ctx3);
+  ok(esvCalls === psaBefore + 1 && /%3B/.test(esvUrls[esvUrls.length - 1]), 'Psalms fetch is one semicolon-joined query');
+  ok(psa3 && /^Superscription of Psalm 3\./.test(psa3['1']), 'psalm superscription lands on its own psalm verse 1');
+  const psaNeighbor = vm.runInContext(`_vsChapterFromMemory("ESV","PSA","${Math.min(winPsa.end, 4)}")`, ctx3);
+  ok(psaNeighbor && /^Superscription of Psalm/.test(psaNeighbor['1']), 'neighboring psalm keeps its own superscription');
+  let psaWinVerses = 0;
+  for (let c = winPsa.start; c <= winPsa.end; c++) psaWinVerses += Object.keys(msb3.PSA[String(c)] || {}).length;
+  ok(psaWinVerses <= 500, `Psalms window within the 500-verse cap (${psaWinVerses})`);
 
   // No bulk download for streaming versions
   ok(await vm.runInContext('_vsDownloadWholeVersion("ESV", null)', ctx3) === false, 'whole-version download refuses ESV');
