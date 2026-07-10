@@ -33626,6 +33626,10 @@ body.sandbox-open #rhemaSelectionBar:active {
 #rhemaBookList { overflow-anchor: none; }
 .rhema-book-chapters .rhema-book-chapter-grid {
   animation: biFade 0.3s ease;
+  /* The grid's internal layout never changes while its wrapper's height
+     animates — containment stops the browser re-laying-out 150 cells on
+     every frame of the open/close motion. */
+  contain: layout;
 }
 @keyframes biFade {
   from { opacity: 0; }

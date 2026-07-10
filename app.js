@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.424";
+const APP_VERSION = "3.0.425";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.425 &mdash; Silky close animation</div>
+<ul>
+  <li><strong>No more stall on close</strong> &mdash; Closing a book&rsquo;s chapter grid could hitch partway and then snap shut. Three causes fixed: a leftover timer from the opening animation could freeze the close midway, the grid&rsquo;s padding couldn&rsquo;t shrink with it (causing an end snap), and closing mid-open jumped to full height first. The fold now runs in one clean motion every time.</li>
+</ul>
 <div class="un-version-label">v3.0.424 &mdash; Books never move when tapped</div>
 <ul>
   <li><strong>The jump-to-top is gone</strong> &mdash; Tapping a book low on the screen was auto-scrolling it to the very top of the list, cutting off part of the view. That auto-scroll is removed entirely: the book you tap stays exactly where it is &mdash; always &mdash; and its chapters slide open cleanly beneath it.</li>
@@ -41179,26 +41183,40 @@ function rhemaRenderBookList(keepSearch = false) {
 // Slide a chapter grid open/closed by animating its real height. The books
 // below move with the animation instead of snapping, and the list's scroll
 // position is never touched — the tapped book cannot jump.
+function _biClearAnim(el) {
+  if (el._biTimer) { clearTimeout(el._biTimer); el._biTimer = null; }
+}
+
 function _biExpandEl(el) {
+  _biClearAnim(el);
   const h = el.scrollHeight;
   el.style.overflow = 'hidden';
   el.style.height = '0px';
   void el.offsetHeight; // commit the collapsed start frame (no rAF dependency)
   el.style.transition = 'height 0.24s cubic-bezier(.2,.82,.18,1)';
   el.style.height = h + 'px';
-  // Guaranteed end state even if the transition never runs.
-  setTimeout(() => {
+  // Guaranteed end state even if the transition never runs. Tracked on the
+  // element so a collapse can cancel it — an orphaned cleanup firing
+  // mid-collapse restored height:auto and froze the closing motion.
+  el._biTimer = setTimeout(() => {
+    el._biTimer = null;
     el.style.height = ''; el.style.transition = ''; el.style.overflow = '';
   }, 280);
 }
 
 function _biCollapseEl(el) {
+  _biClearAnim(el);
+  // Start from the CURRENT rendered height (the grid may still be mid-expand)
+  // and fold the padding down with the height — otherwise the motion bottoms
+  // out at the padding and snaps the last bit when the element is removed.
   el.style.overflow = 'hidden';
-  el.style.height = el.scrollHeight + 'px';
+  el.style.height = el.getBoundingClientRect().height + 'px';
   void el.offsetHeight;
-  el.style.transition = 'height 0.2s ease';
+  el.style.transition = 'height 0.2s ease, padding 0.2s ease';
+  el.style.paddingTop = '0px';
+  el.style.paddingBottom = '0px';
   el.style.height = '0px';
-  setTimeout(() => el.remove(), 240);
+  el._biTimer = setTimeout(() => el.remove(), 230);
 }
 
 // Tapping a book toggles its inline chapter grid — surgically, without
