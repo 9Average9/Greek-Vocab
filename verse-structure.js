@@ -16,7 +16,7 @@ const VS_BOOK_CODE_MAP = {
 // so ESV chapters live in session memory only — no IndexedDB, no download
 // button, refetched next session. Create a free key at api.esv.org and paste
 // it below to enable the version (it stays hidden while the key is empty).
-const ESV_API_KEY = '';
+const ESV_API_KEY = '1009748a883d9bc8c7bce4c6ad1dd9e3ace46933';
 const ESV_API_BASE = 'https://api.esv.org/v3/passage/text/';
 
 // ── Version registry ──────────────────────────────────────────────────────────
