@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.422";
+const APP_VERSION = "3.0.423";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.423 &mdash; Buttery book picker</div>
+<ul>
+  <li><strong>Chapters now slide open</strong> &mdash; Tapping a book no longer redraws and jolts the list: the chapter grid physically slides open right under the book (and slides shut), the books below glide with it, and the book you tapped never moves &mdash; opening, closing, or jumping between books. Measured pixel-perfect in all three cases.</li>
+</ul>
 <div class="un-version-label">v3.0.422 &mdash; Rock-steady book picker</div>
 <ul>
   <li><strong>Nothing jumps anymore</strong> &mdash; Opening a book&rsquo;s chapters, closing them, or moving to a different book now keeps the book you tapped pinned exactly where it was on screen &mdash; the grid simply unfolds or folds beneath it. Verified pixel-perfect in all three cases.</li>
@@ -41129,7 +41133,7 @@ function _rhemaBookChaptersHtml(code) {
     }).join('') + `</div></div>`;
 }
 
-function rhemaRenderBookList(keepSearch = false, restoreScroll = null) {
+function rhemaRenderBookList(keepSearch = false) {
   const list = document.getElementById('rhemaBookList');
   const title = document.getElementById('rhemaBookPickerTitle');
   const back = document.getElementById('rhemaBookPickerBack');
@@ -41162,46 +41166,75 @@ function rhemaRenderBookList(keepSearch = false, restoreScroll = null) {
   const search = document.getElementById('rhemaBookSearch');
   if (search && !keepSearch) search.value = '';
   if (search && keepSearch && search.value) rhemaFilterBooks(search.value);
-  if (restoreScroll != null) {
-    // Anchor the tapped book: after the re-render, put it back at exactly the
-    // same on-screen position it had before, so the grid unfolds (or folds)
-    // beneath it with zero perceived jump — expanding, collapsing, or moving
-    // the expansion to another book alike.
-    const row = list.querySelector(`.rhema-book-row[data-code="${restoreScroll.code}"]`);
-    if (row && restoreScroll.anchorY != null) {
-      list.scrollTop = Math.max(0, row.offsetTop - restoreScroll.anchorY);
-    } else {
-      list.scrollTop = restoreScroll.top || 0;
-    }
-    // If the grid just expanded below the fold, glide it into view.
-    requestAnimationFrame(() => {
-      const open = list.querySelector('.rhema-book-row.open');
-      if (!open) return;
-      const rowBottom = open.offsetTop + open.offsetHeight;
-      if (rowBottom > list.scrollTop + list.clientHeight - 140) {
-        list.scrollTo({ top: Math.max(0, open.offsetTop - 8), behavior: 'smooth' });
-      } else if (open.offsetTop < list.scrollTop + 4) {
-        list.scrollTo({ top: Math.max(0, open.offsetTop - 8), behavior: 'smooth' });
-      }
-    });
-  } else {
-    requestAnimationFrame(() => {
-      const target = list.querySelector('.rhema-book-row.open') || list.querySelector('.selected');
-      if (target) list.scrollTop = Math.max(0, target.offsetTop - 8);
-    });
-  }
+  requestAnimationFrame(() => {
+    const target = list.querySelector('.rhema-book-row.open') || list.querySelector('.selected');
+    if (target) list.scrollTop = Math.max(0, target.offsetTop - 8);
+  });
 }
 
-// Tapping a book toggles its inline chapter grid open/closed — in place. The
-// tapped row is anchored to its current on-screen position across the
-// re-render so nothing jumps, opening or closing.
+// Slide a chapter grid open/closed by animating its real height. The books
+// below move with the animation instead of snapping, and the list's scroll
+// position is never touched — the tapped book cannot jump.
+function _biExpandEl(el) {
+  const h = el.scrollHeight;
+  el.style.overflow = 'hidden';
+  el.style.height = '0px';
+  void el.offsetHeight; // commit the collapsed start frame (no rAF dependency)
+  el.style.transition = 'height 0.24s cubic-bezier(.2,.82,.18,1)';
+  el.style.height = h + 'px';
+  // Guaranteed end state even if the transition never runs.
+  setTimeout(() => {
+    el.style.height = ''; el.style.transition = ''; el.style.overflow = '';
+  }, 280);
+}
+
+function _biCollapseEl(el) {
+  el.style.overflow = 'hidden';
+  el.style.height = el.scrollHeight + 'px';
+  void el.offsetHeight;
+  el.style.transition = 'height 0.2s ease';
+  el.style.height = '0px';
+  setTimeout(() => el.remove(), 240);
+}
+
+// Tapping a book toggles its inline chapter grid — surgically, without
+// re-rendering the list: the grid element is inserted/removed in place and
+// height-animated, so everything above stays put and everything below slides.
 function rhemaShowChaptersForBook(code) {
   const list = document.getElementById('rhemaBookList');
-  const anchor = { code, top: list ? list.scrollTop : 0, anchorY: null };
   const row = list?.querySelector(`.rhema-book-row[data-code="${code}"]`);
-  if (row && list) anchor.anchorY = row.offsetTop - list.scrollTop;
-  _rhemaBookListOpen = _rhemaBookListOpen === code ? '' : code;
-  rhemaRenderBookList(true, anchor);
+  if (!list || !row) return;
+  const existing = list.querySelector('.rhema-book-chapters');
+  const wasOpen = existing?.dataset.for === code;
+  if (existing) {
+    if (!wasOpen && existing.offsetTop < row.offsetTop) {
+      // The old grid sits ABOVE the tapped book: collapsing it would drag the
+      // tapped row up by its height. Remove it and set the compensated scroll
+      // as an absolute target (computed before removal — browsers with native
+      // scroll anchoring adjust scrollTop themselves on removal, so adding a
+      // relative delta afterward would double-compensate).
+      const target = Math.max(0, list.scrollTop - existing.offsetHeight);
+      existing.remove();
+      list.scrollTop = target;
+    } else {
+      _biCollapseEl(existing);
+    }
+  }
+  list.querySelectorAll('.rhema-book-row.open').forEach(r => r.classList.remove('open'));
+  _rhemaBookListOpen = wasOpen ? '' : code;
+  if (wasOpen) return;
+  row.classList.add('open');
+  row.insertAdjacentHTML('afterend', _rhemaBookChaptersHtml(code));
+  const exp = row.nextElementSibling;
+  if (exp) _biExpandEl(exp);
+  // Glide into view only when the book sits so low that its grid would be
+  // hidden — and glide to the row, never past it.
+  setTimeout(() => {
+    const rowBottom = row.offsetTop + row.offsetHeight;
+    if (rowBottom > list.scrollTop + list.clientHeight - 120) {
+      list.scrollTo({ top: Math.max(0, row.offsetTop - 8), behavior: 'smooth' });
+    }
+  }, 60);
 }
 
 // ── Book Introductions ──────────────────────────────────────────────────────
