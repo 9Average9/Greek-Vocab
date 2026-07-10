@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.421";
+const APP_VERSION = "3.0.422";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.422 &mdash; Rock-steady book picker</div>
+<ul>
+  <li><strong>Nothing jumps anymore</strong> &mdash; Opening a book&rsquo;s chapters, closing them, or moving to a different book now keeps the book you tapped pinned exactly where it was on screen &mdash; the grid simply unfolds or folds beneath it. Verified pixel-perfect in all three cases.</li>
+</ul>
 <div class="un-version-label">v3.0.421 &mdash; Picker and scroll polish</div>
 <ul>
   <li><strong>Chapters drop down cleanly</strong> &mdash; Tapping a book in the Select Book sheet no longer scrolls the list away; the chapter grid unfolds in place, with a gentle nudge only when the book sits too low to show its chapters.</li>
@@ -41146,7 +41150,7 @@ function rhemaRenderBookList(keepSearch = false, restoreScroll = null) {
     let out = '';
     if (code === firstOT) out += '<div class="rhema-testament-sep" data-sep="OT">Old Testament</div>';
     if (code === firstNT) out += '<div class="rhema-testament-sep" data-sep="NT">New Testament</div>';
-    out += `<div class="rhema-book-row${sel}${open ? ' open' : ''}" data-testament="${isNT ? 'NT' : 'OT'}" onclick="rhemaShowChaptersForBook('${code}')">
+    out += `<div class="rhema-book-row${sel}${open ? ' open' : ''}" data-code="${code}" data-testament="${isNT ? 'NT' : 'OT'}" onclick="rhemaShowChaptersForBook('${code}')">
       <span class="material-symbols-outlined rhema-book-icon">menu_book</span>
       <span class="rhema-book-name">${name}</span>
       <span class="material-symbols-outlined rhema-book-check">check</span>
@@ -41159,17 +41163,25 @@ function rhemaRenderBookList(keepSearch = false, restoreScroll = null) {
   if (search && !keepSearch) search.value = '';
   if (search && keepSearch && search.value) rhemaFilterBooks(search.value);
   if (restoreScroll != null) {
-    // Toggling a book must not jump the list: keep the scroll exactly where it
-    // was, and only nudge (smoothly) if the tapped row sits too low for its
-    // freshly expanded grid to be seen.
-    list.scrollTop = restoreScroll;
+    // Anchor the tapped book: after the re-render, put it back at exactly the
+    // same on-screen position it had before, so the grid unfolds (or folds)
+    // beneath it with zero perceived jump — expanding, collapsing, or moving
+    // the expansion to another book alike.
+    const row = list.querySelector(`.rhema-book-row[data-code="${restoreScroll.code}"]`);
+    if (row && restoreScroll.anchorY != null) {
+      list.scrollTop = Math.max(0, row.offsetTop - restoreScroll.anchorY);
+    } else {
+      list.scrollTop = restoreScroll.top || 0;
+    }
+    // If the grid just expanded below the fold, glide it into view.
     requestAnimationFrame(() => {
-      const row = list.querySelector('.rhema-book-row.open');
-      if (!row) return;
-      const rowTop = row.offsetTop;
-      const rowBottom = rowTop + row.offsetHeight;
-      if (rowTop < list.scrollTop + 4 || rowBottom > list.scrollTop + list.clientHeight - 140) {
-        list.scrollTo({ top: Math.max(0, rowTop - 8), behavior: 'smooth' });
+      const open = list.querySelector('.rhema-book-row.open');
+      if (!open) return;
+      const rowBottom = open.offsetTop + open.offsetHeight;
+      if (rowBottom > list.scrollTop + list.clientHeight - 140) {
+        list.scrollTo({ top: Math.max(0, open.offsetTop - 8), behavior: 'smooth' });
+      } else if (open.offsetTop < list.scrollTop + 4) {
+        list.scrollTo({ top: Math.max(0, open.offsetTop - 8), behavior: 'smooth' });
       }
     });
   } else {
@@ -41180,13 +41192,16 @@ function rhemaRenderBookList(keepSearch = false, restoreScroll = null) {
   }
 }
 
-// Tapping a book toggles its inline chapter grid open/closed — in place, with
-// no scroll jump.
+// Tapping a book toggles its inline chapter grid open/closed — in place. The
+// tapped row is anchored to its current on-screen position across the
+// re-render so nothing jumps, opening or closing.
 function rhemaShowChaptersForBook(code) {
   const list = document.getElementById('rhemaBookList');
-  const prevScroll = list ? list.scrollTop : 0;
+  const anchor = { code, top: list ? list.scrollTop : 0, anchorY: null };
+  const row = list?.querySelector(`.rhema-book-row[data-code="${code}"]`);
+  if (row && list) anchor.anchorY = row.offsetTop - list.scrollTop;
   _rhemaBookListOpen = _rhemaBookListOpen === code ? '' : code;
-  rhemaRenderBookList(true, prevScroll);
+  rhemaRenderBookList(true, anchor);
 }
 
 // ── Book Introductions ──────────────────────────────────────────────────────
