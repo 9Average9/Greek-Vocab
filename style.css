@@ -33615,14 +33615,21 @@ body.sandbox-open #rhemaSelectionBar:active {
   color: var(--secondary-color, #243447) !important;
 }
 .rhema-intro-cell .material-symbols-outlined { font-size: 20px; }
-/* The inline chapter grid expanded under a book row in the Select Book list. */
+/* The inline chapter grid expanded under a book row in the Select Book list.
+   Open/close motion is a JS height animation (see _biExpandEl/_biCollapseEl)
+   so the rows below slide with it; the grid contents just fade in. */
 .rhema-book-chapters {
   padding: 4px 2px 12px;
-  animation: biExpand 0.22s ease;
 }
-@keyframes biExpand {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Scroll compensation is done manually when the expansion moves between books;
+   native scroll anchoring would double-correct (Chrome anchors, Safari doesn't). */
+#rhemaBookList { overflow-anchor: none; }
+.rhema-book-chapters .rhema-book-chapter-grid {
+  animation: biFade 0.3s ease;
+}
+@keyframes biFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .rhema-book-row.open .rhema-book-icon { color: var(--secondary-color, #243447); }
 /* The intro page rendered inside the reader as "chapter zero". */
