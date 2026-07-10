@@ -19301,11 +19301,15 @@ function _memUpdateVersePreview() {
       el.innerHTML = `<p class="mem-empty">${_memEsc(parts.version)} covers the ${_memEsc(_vsScopeLabel(parts.version))} only — pick another version for this book.</p>`;
       return;
     }
-    if (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()) {
-      el.innerHTML = `<p class="mem-empty">${_memEsc(parts.version)} can't download right now (monthly limit reached). Pick MSB or BSB, or try again next month.</p>`;
+    if (typeof _vsTransLimited === 'function' ? _vsTransLimited(parts.version)
+      : (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited())) {
+      el.innerHTML = `<p class="mem-empty">${_memEsc(parts.version)} can't load right now (${typeof _vsLimitLabel === 'function' ? _vsLimitLabel(parts.version) : 'monthly'} limit reached). Pick MSB or BSB, or try again later.</p>`;
       return;
     }
-    el.innerHTML = `<p class="mem-empty">Downloading ${_memEsc(parts.version)}&hellip; it saves to your device and stays.</p>`;
+    const memStream = typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[parts.version]?.stream;
+    el.innerHTML = memStream
+      ? `<p class="mem-empty">Loading ${_memEsc(parts.version)}&hellip;</p>`
+      : `<p class="mem-empty">Downloading ${_memEsc(parts.version)}&hellip; it saves to your device and stays.</p>`;
     _memEnsureChapter(() => _memUpdateVersePreview());
     return;
   }
@@ -19343,11 +19347,12 @@ function loadMemorizationPassage() {
       _showStudyToast(`${parts.version} covers the ${_vsScopeLabel(parts.version)} only`);
       return;
     }
-    if (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()) {
-      _showStudyToast(`${parts.version} can't download right now (monthly limit)`);
+    if (typeof _vsTransLimited === 'function' ? _vsTransLimited(parts.version)
+      : (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited())) {
+      _showStudyToast(`${parts.version} can't load right now (${typeof _vsLimitLabel === 'function' ? _vsLimitLabel(parts.version) : 'monthly'} limit)`);
       return;
     }
-    _showStudyToast(`Downloading ${parts.version}…`);
+    _showStudyToast(`${typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[parts.version]?.stream ? 'Loading' : 'Downloading'} ${parts.version}…`);
     _memEnsureChapter(() => loadMemorizationPassage());
     return;
   }
@@ -29768,7 +29773,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.425";
+const APP_VERSION = "3.0.426";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29796,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.426 &mdash; ESV support</div>
+<ul>
+  <li><strong>English Standard Version</strong> &mdash; The ESV joins the version list, the Verse Structure tool, Compare, memorization, and community posts, streamed straight from Crossway&rsquo;s own ESV API.</li>
+  <li><strong>Online only, by license</strong> &mdash; Crossway&rsquo;s terms don&rsquo;t allow the ESV to be saved on your device, so it carries an <em>Online</em> tag, has no download button, and needs a connection each session &mdash; every other version still saves for offline reading as usual.</li>
+</ul>
 <div class="un-version-label">v3.0.425 &mdash; Silky close animation</div>
 <ul>
   <li><strong>No more stall on close</strong> &mdash; Closing a book&rsquo;s chapter grid could hitch partway and then snap shut. Three causes fixed: a leftover timer from the opening animation could freeze the close midway, the grid&rsquo;s padding couldn&rsquo;t shrink with it (causing an end snap), and closing mid-open jumped to full height first. The fold now runs in one clean motion every time.</li>
@@ -35688,8 +35698,8 @@ async function updateCommunityPostVersePreview() {
   if (!text) {
     _communityPostVerse = null;
     if (preview) {
-      preview.textContent = isApiVersion && typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()
-        ? `${version} can't download right now (monthly limit reached) — try MSB or BSB.`
+      preview.textContent = isApiVersion && typeof _vsTransLimited === 'function' && _vsTransLimited(version)
+        ? `${version} can't load right now (${typeof _vsLimitLabel === 'function' ? _vsLimitLabel(version) : 'monthly'} limit reached) — try MSB or BSB.`
         : `${parsed.book.name} ${parsed.chapter}:${parsed.verse} is not available in ${version}.`;
     }
     return;
@@ -36757,7 +36767,8 @@ function _rhemaEnsureReaderChapter() {
     if (((_rhemaText() || {})[_rhemaBook] || {})[next]) _vsEnsureChapter(ver, _rhemaBook, next).catch(() => {});
     return false;
   }
-  if (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited()) return 'limited';
+  if (typeof _vsTransLimited === 'function' ? _vsTransLimited(ver)
+    : (typeof _vsIsApiLimited === 'function' && _vsIsApiLimited())) return 'limited';
   const token = ++_rhemaReaderFetchToken;
   const b = _rhemaBook, c = _rhemaChapter;
   _vsEnsureChapter(ver, b, c).then((chap) => {
@@ -39698,7 +39709,7 @@ async function _rhemaCompareLoadAsync() {
     const p = _rhemaParseRef(ref);
     if (!p) { el.classList.remove('rhema-compare-loading'); el.textContent = ''; return; }
 
-    if (limited) {
+    if (typeof _vsTransLimited === 'function' ? _vsTransLimited(ver) : limited) {
       // Over quota / offline: fall back to a local version so the row still shows
       // something useful, with a quiet note.
       const fallback = _rhemaCompareLocalText('MSB', p); // escaped HTML
@@ -39769,7 +39780,7 @@ function _rhemaRenderCompare() {
       bodyText = `This verse is not included in the ${ver} translation.`;
     } else if (cached != null) {
       bodyText = cached; // escaped HTML
-    } else if (limited) {
+    } else if (typeof _vsTransLimited === 'function' ? _vsTransLimited(ver) : limited) {
       // Over quota / offline: show a local version so the row still reads,
       // with a quiet note that the licensed translation is unavailable.
       const fallback = _rhemaCompareLocalText('MSB', p); // escaped HTML
@@ -39823,6 +39834,7 @@ function openRhemaCompareVerPicker(tab) {
       const on = isBase || extras.includes(v.code);
       const tags =
         (v.study ? '<em class="rhema-ver-tag rhema-ver-tag-study">Study</em>' : '') +
+        (v.stream ? '<em class="rhema-ver-tag">Online</em>' : '') +
         (v.scope ? `<em class="rhema-ver-tag">${v.scope === 'nt' ? 'New Testament' : 'Old Testament'}</em>` : '');
       return `<button class="rhema-cmp-ver-opt${on ? ' active' : ''}" ${isBase ? 'disabled' : ''} onclick="rhemaToggleCompareVersion('${v.code}')">
         <span><span class="rhema-ver-abbr">${v.code}${tags}</span><small class="rhema-ver-note">${v.name}${isBase ? ' — always shown' : ''}</small></span>
@@ -42372,10 +42384,10 @@ function renderRhemaVerse() {
   const readerState = _rhemaEnsureReaderChapter();
   const readerBanner = !readerState ? '' :
     `<div class="rhema-reader-downloading">${readerState === 'limited'
-      ? `${_rhemaReaderVersion()} can't download right now (monthly limit reached) — showing ${_rhemaEnglishLabel()}.`
+      ? `${_rhemaReaderVersion()} can't load right now (${typeof _vsLimitLabel === 'function' ? _vsLimitLabel(_rhemaReaderVersion()) : 'monthly'} limit reached) — showing ${_rhemaEnglishLabel()}.`
       : readerState === 'scope'
         ? `${_rhemaReaderVersion()} covers the ${typeof _vsScopeLabel === 'function' ? _vsScopeLabel(_rhemaReaderVersion()) : ''} only — showing ${_rhemaEnglishLabel()} for this book.`
-        : `Downloading ${_rhemaReaderVersion()}… showing ${_rhemaEnglishLabel()} until it lands.`}</div>`;
+        : `${typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[_rhemaReaderVersion()]?.stream ? 'Loading' : 'Downloading'} ${_rhemaReaderVersion()}… showing ${_rhemaEnglishLabel()} until it lands.`}</div>`;
 
   if (_rhemaFullChapter) {
     const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
@@ -42517,6 +42529,8 @@ let _rhemaVerSheetTab = 'main'; // 'main' | 'more'
 // Download-whole-version control shown beside each API version. States:
 // idle (download icon) → active (live percent) → done (pin icon).
 function _rhemaVerDlHtml(code) {
+  // Streaming-only versions (ESV) may not be saved to the device — no control.
+  if (typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[code]?.stream) return '';
   if (typeof _vsVersionCacheStats !== 'function') return '';
   const stats = _vsVersionCacheStats(code);
   if (!stats.total) return '';
@@ -42554,9 +42568,11 @@ function rhemaDownloadWholeVersion(code) {
 }
 
 function _rhemaVersionOptHtml(v, cur, limited) {
-  const dis = !v.local && limited;
+  // ESV's daily Crossway limit is independent of api.bible's monthly one.
+  const dis = !v.local && (typeof _vsTransLimited === 'function' ? _vsTransLimited(v.code) : limited);
   const tags =
     (v.study ? '<em class="rhema-ver-tag rhema-ver-tag-study">Study</em>' : '') +
+    (v.stream ? '<em class="rhema-ver-tag">Online</em>' : '') +
     (v.scope ? `<em class="rhema-ver-tag">${v.scope === 'nt' ? 'New Testament' : 'Old Testament'}</em>` : '');
   return `<button class="rhema-cmp-ver-opt${v.code === cur ? ' active' : ''}" ${dis ? 'disabled' : ''} onclick="rhemaPickReaderVersion('${v.code}')">
     <span><span class="rhema-ver-abbr">${v.code}${tags}</span><small class="rhema-ver-note">${v.name}${dis ? ' — unavailable right now' : ''}</small></span>
