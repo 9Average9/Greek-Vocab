@@ -29773,7 +29773,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.427";
+const APP_VERSION = "3.0.428";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29796,6 +29796,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.428 &mdash; Smooth Rhema scrolling</div>
+<ul>
+  <li><strong>No more scroll jumps</strong> &mdash; The reader's top picker and bottom verse bar now float over the page and slide away without resizing it, so scrolling stays perfectly smooth as the bars hide and return &mdash; especially on long book intro pages.</li>
+</ul>
 <div class="un-version-label">v3.0.427 &mdash; ESV loads in big blocks</div>
 <ul>
   <li><strong>Maximum text per query</strong> &mdash; The ESV now fetches whole blocks of chapters at once, sized to the biggest passage Crossway allows per query (500 verses or half a book, whichever is less), instead of one chapter at a time. Reading forward or backward through a book uses a fraction of the daily quota, and simultaneous requests for nearby chapters share a single query instead of firing their own.</li>
