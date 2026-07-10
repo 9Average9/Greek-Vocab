@@ -10547,6 +10547,11 @@ Verb Endings
 <button class="rhema-swap-btn" id="rhemaSwapBtn" onclick="toggleRhemaEnglish()" title="Swap between English and the original language"><span class="rhema-swap-seg active">English</span><span class="rhema-swap-seg">Greek</span></button>
 </div>
 </div>
+<!-- Reader: relative positioning context. The top chrome + verse nav overlay the
+     scroll body and hide with transform only, so toggling them never resizes the
+     scroll area (resizing it mid-scroll is what made the page jump around). -->
+<div class="rhema-reader">
+<div class="rhema-top-chrome" id="rhemaTopChrome">
 <div class="rhema-picker">
 <button class="rhema-pill" onclick="openRhemaBookPicker()">
 <span class="material-symbols-outlined rhema-pill-icon">menu_book</span>
@@ -10594,7 +10599,8 @@ Verb Endings
 <button class="rhema-flow-chip" data-flow-cat="EMPHASIS" onclick="toggleRhemaFlowCat('EMPHASIS')">Signals</button>
 </div>
 </div>
-<!-- Scrollable body fills all space between picker and verse nav -->
+</div><!-- end .rhema-top-chrome -->
+<!-- Scrollable body fills the whole reader; constant top/bottom padding keeps text clear of the overlaid bars -->
 <div class="rhema-body">
 <div class="rhema-content-area">
 <div class="rhema-loading" id="rhemaLoadingMsg">Loading Rhēma data…</div>
@@ -10602,8 +10608,9 @@ Verb Endings
 <div class="rhema-english-display hidden" id="rhemaEnglishDisplay"></div>
 </div>
 </div>
+</div><!-- end .rhema-reader -->
 <div class="rhema-bottom-wave" id="rhemaBottomWave" aria-hidden="true"></div>
-<!-- Verse nav: last flex child of #rhemaSlide — always at physical screen bottom -->
+<!-- Verse nav: absolute overlay pinned to the bottom of #rhemaSlide — hides with transform only so the scroll area never resizes -->
 <div class="rhema-verse-nav hidden" id="rhemaVerseNav">
 <div class="rhema-verse-nav-row">
 <button class="rhema-nav-btn" onclick="rhemaPrevVerse()">

@@ -41663,7 +41663,33 @@ function updateRhemaVerseNav() {
   }
 }
 
+// The top chrome and verse nav overlay the scroll body, so the body needs
+// constant top/bottom padding matching their heights. Measure them once and
+// keep the CSS vars in sync via ResizeObserver — offsetHeight ignores the
+// hide/show transform, so the padding (and the scroll geometry) stays fixed
+// while the bars animate away. That constancy is the whole fix for the old
+// jumpy scrolling: nothing resizes the scroll container mid-gesture anymore.
+function _initRhemaChromeMetrics() {
+  const slide = document.getElementById('rhemaSlide');
+  if (!slide || slide._rhemaChromeMetricsInit) return;
+  const chrome = document.getElementById('rhemaTopChrome');
+  const nav = document.getElementById('rhemaVerseNav');
+  if (!chrome && !nav) return;
+  slide._rhemaChromeMetricsInit = true;
+  const apply = () => {
+    slide.style.setProperty('--rhema-chrome-top', (chrome?.offsetHeight || 0) + 'px');
+    slide.style.setProperty('--rhema-chrome-bottom', (nav?.offsetHeight || 0) + 'px');
+  };
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(apply);
+    if (chrome) ro.observe(chrome);
+    if (nav) ro.observe(nav);
+  }
+  apply();
+}
+
 function initRhemaVerseSwipe() {
+  _initRhemaChromeMetrics();
   // Only attach to the verse scroll area — not the header, picker, breadcrumb,
   // highlight bar, or word-detail sheet which each have their own scroll behaviour
   const area = document.querySelector('#rhemaModal .rhema-body');
@@ -41691,13 +41717,13 @@ function initRhemaVerseSwipe() {
         return;
       }
       if (max < area.clientHeight * 0.75 || y >= max - 80) {
-        // Short content, or the end of the chapter: toggling chrome here
-        // resizes the scroll area under the finger and re-triggers itself.
+        // Short content, or the end of the chapter: hiding the bars there
+        // gains nothing and they're about to be needed for navigation.
         return;
       }
       // Deliberate-motion gate: the bars only toggle after ~28px of travel in
       // one direction, and never twice within 350ms — single jittery events
-      // (momentum tails, layout shifts from the toggle itself) can't flip them.
+      // (momentum tails, rubber-band edges) can't flip them.
       const dir = delta > 0 ? 1 : delta < 0 ? -1 : 0;
       if (dir === 0) return;
       if (dir !== area._rhemaChromeDir) { area._rhemaChromeDir = dir; area._rhemaChromeTravel = 0; }
@@ -42334,8 +42360,13 @@ function _renderVerseWords(words, verse) {
 // Scroll position of a chapter block measured against the scroll container
 // itself — block.offsetTop is relative to the modal, which includes the
 // header/picker height and lands the verse hidden behind the top bar.
+// The picker chrome now overlays the top of the scroll body, so aligning a
+// block with the body's top edge would tuck it underneath; land it just
+// below the chrome instead.
 function _rhemaBlockScrollTop(body, block) {
-  return block.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop;
+  const chrome = document.getElementById('rhemaTopChrome');
+  const chromeH = chrome ? chrome.offsetHeight : 0;
+  return block.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - chromeH;
 }
 
 function renderRhemaVerse() {
