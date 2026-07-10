@@ -29768,7 +29768,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.419";
+const APP_VERSION = "3.0.420";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29791,6 +29791,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.420 &mdash; Intros read like a chapter; sleeker book picker</div>
+<ul>
+  <li><strong>The intro is a real page now</strong> &mdash; Book introductions open inside the reader itself instead of a pop-up, so they read like chapter zero: swipe forward to turn the page into chapter 1 (or tap Start Reading), swipe back to cross into the previous book. The reference pill shows &ldquo;Genesis &middot; Intro&rdquo; while you&rsquo;re on it.</li>
+  <li><strong>Sleeker book picker</strong> &mdash; Tapping a book now expands its chapter grid right underneath the book name &mdash; no separate chapter sheet &mdash; with the info tile sitting ahead of chapter 1. The picker opens with your current book already expanded.</li>
+</ul>
 <div class="un-version-label">v3.0.419 &mdash; Book intros work like an extra chapter</div>
 <ul>
   <li><strong>The intro is now &ldquo;chapter zero&rdquo;</strong> &mdash; Just like the big Bible apps: in any chapter grid, the first cell (the info tile before chapter 1) opens the book&rsquo;s introduction. Swiping forward past the end of a book opens the next book with its intro on top, and swiping back at chapter 1 shows the intro first &mdash; one more swipe crosses into the previous book.</li>
@@ -39855,6 +39860,7 @@ function rhemaOpenSavedMark(ref) {
   if (!p) return;
   closeRhemaHighlightsNotes();
   _rhemaClearVerseActionSelection();
+  _rhemaIntroMode = false;
   _rhemaBook = p.book;
   _rhemaChapter = String(p.chapter);
   _rhemaVerse = String(p.verse);
@@ -41079,13 +41085,10 @@ function initRhemaPicker() {
 }
 
 function syncRhemaPicker() {
-  // Any position change re-arms the intro-before-chapter-1 back-swipe gate
-  // (next/prev re-set it afterwards when they crossed a boundary).
-  _rhemaIntroBackStop = '';
   const bookName = _rhemaBookName(_rhemaBook);
   const b = document.getElementById('rhemaPillBook');
   const v = document.getElementById('rhemaPillVerse');
-  if (b) b.textContent = `${bookName} ${_rhemaChapter}`;
+  if (b) b.textContent = _rhemaIntroMode ? `${bookName} · Intro` : `${bookName} ${_rhemaChapter}`;
   if (v) v.textContent = 'v' + _rhemaVerse;
 }
 
@@ -41095,13 +41098,29 @@ function openRhemaBookPicker() {
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   const overlay = document.getElementById('rhemaBookPickerOverlay');
   if (!overlay || !_rhemaData()) return;
+  _rhemaBookListOpen = _rhemaBook; // current book opens with its chapters showing
   rhemaRenderBookList();
   overlay.classList.remove('hidden');
   document.getElementById('rhemaModal')?.classList.add('picker-open');
   initRhemaPickerSwipeDown('rhemaBookPickerOverlay');
 }
 
-function rhemaRenderBookList() {
+// Which book's chapter grid is expanded inline in the Select Book list.
+let _rhemaBookListOpen = '';
+
+// The inline chapter grid for one book: the intro ("chapter zero") info cell
+// first, then the chapters — expanded under the book row, Bible-app style.
+function _rhemaBookChaptersHtml(code) {
+  const chapters = Object.keys(_rhemaText()[code] || {}).sort((a, b) => +a - +b);
+  return `<div class="rhema-book-chapters" data-for="${code}"><div class="rhema-book-chapter-grid">` +
+    `<button class="rhema-num-cell rhema-intro-cell" title="About ${_rhemaBookName(code)}" onclick="openBookIntro('${code}')"><span class="material-symbols-outlined">info</span></button>` +
+    chapters.map(ch => {
+      const sel = code === _rhemaBook && ch === _rhemaChapter ? ' selected' : '';
+      return `<button class="rhema-num-cell${sel}" onclick="rhemaSelectBookChapter('${code}','${ch}')">${ch}</button>`;
+    }).join('') + `</div></div>`;
+}
+
+function rhemaRenderBookList(keepSearch = false) {
   const list = document.getElementById('rhemaBookList');
   const title = document.getElementById('rhemaBookPickerTitle');
   const back = document.getElementById('rhemaBookPickerBack');
@@ -41116,45 +41135,34 @@ function rhemaRenderBookList() {
   const firstNT = books.find(c => RHEMA_NT_BOOK_ORDER.includes(c));
   list.innerHTML = books.map(code => {
     const name = _rhemaBookName(code);
+    const open = code === _rhemaBookListOpen;
     const sel  = code === _rhemaBook ? ' selected' : '';
     const isNT = RHEMA_NT_BOOK_ORDER.includes(code);
     let out = '';
     if (code === firstOT) out += '<div class="rhema-testament-sep" data-sep="OT">Old Testament</div>';
     if (code === firstNT) out += '<div class="rhema-testament-sep" data-sep="NT">New Testament</div>';
-    out += `<div class="rhema-book-row${sel}" data-testament="${isNT ? 'NT' : 'OT'}" onclick="rhemaShowChaptersForBook('${code}')">
+    out += `<div class="rhema-book-row${sel}${open ? ' open' : ''}" data-testament="${isNT ? 'NT' : 'OT'}" onclick="rhemaShowChaptersForBook('${code}')">
       <span class="material-symbols-outlined rhema-book-icon">menu_book</span>
       <span class="rhema-book-name">${name}</span>
       <span class="material-symbols-outlined rhema-book-check">check</span>
     </div>`;
+    // Chapters expand inline right under the book — no separate sheet.
+    if (open) out += _rhemaBookChaptersHtml(code);
     return out;
   }).join('');
   const search = document.getElementById('rhemaBookSearch');
-  if (search) search.value = '';
+  if (search && !keepSearch) search.value = '';
+  if (search && keepSearch && search.value) rhemaFilterBooks(search.value);
   requestAnimationFrame(() => {
-    const sel = list.querySelector('.selected');
-    if (sel) list.scrollTop = sel.offsetTop - (list.clientHeight - sel.offsetHeight) / 2;
+    const target = list.querySelector('.rhema-book-row.open') || list.querySelector('.selected');
+    if (target) list.scrollTop = Math.max(0, target.offsetTop - 8);
   });
 }
 
+// Tapping a book toggles its inline chapter grid open/closed.
 function rhemaShowChaptersForBook(code) {
-  const list = document.getElementById('rhemaBookList');
-  const title = document.getElementById('rhemaBookPickerTitle');
-  const back = document.getElementById('rhemaBookPickerBack');
-  const searchRow = document.querySelector('#rhemaBookPickerOverlay .rhema-picker-search-row');
-  if (!list || !_rhemaData()) return;
-  const chapters = Object.keys(_rhemaText()[code] || {}).sort((a, b) => +a - +b);
-  if (title) title.textContent = `${_rhemaBookName(code)} Chapters`;
-  back?.classList.remove('hidden');
-  searchRow?.classList.add('hidden');
-  document.getElementById('rhemaHistoryBtn')?.classList.add('hidden');
-  // The intro sits as an "extra chapter" before chapter 1 — like the Bible app.
-  list.innerHTML = `<div class="rhema-book-chapter-grid">` +
-    `<button class="rhema-num-cell rhema-intro-cell" title="About ${_rhemaBookName(code)}" onclick="closeRhemaPickerSheet();openBookIntro('${code}')"><span class="material-symbols-outlined">info</span></button>` +
-    chapters.map(ch => {
-    const sel = code === _rhemaBook && ch === _rhemaChapter ? ' selected' : '';
-    return `<button class="rhema-num-cell${sel}" onclick="rhemaSelectBookChapter('${code}','${ch}')">${ch}</button>`;
-  }).join('') + `</div>`;
-  list.scrollTop = 0;
+  _rhemaBookListOpen = _rhemaBookListOpen === code ? '' : code;
+  rhemaRenderBookList(true);
 }
 
 // ── Book Introductions ──────────────────────────────────────────────────────
@@ -41187,20 +41195,21 @@ function _introReadingLabel(code) {
   return m ? `~${h} hr ${m} min` : `~${h} hr`;
 }
 
-// Swipe model: the intro behaves like an extra chapter before chapter 1.
-// Swiping forward across a book boundary opens the new book with its intro on
-// top; swiping back at a book's start shows the intro first, and only the next
-// back-swipe crosses into the previous book.
-let _rhemaIntroBackStop = '';
+// The intro renders INSIDE the reader as a real "chapter zero" page — not a
+// modal (a modal invites dismissal; a page in the flow gets read). While
+// _rhemaIntroMode is on, renderRhemaVerse paints the intro page; swiping
+// forward leaves it into chapter 1, swiping back crosses into the previous
+// book, and any direct navigation (pickers, jumps, history) clears the mode.
+let _rhemaIntroMode = false;
 
 function introJumpTo(code, ch) {
-  closeBookIntro();
+  _rhemaIntroMode = false;
   closeRhemaPickerSheet?.();
   rhemaOpenSavedMark(`${code} ${ch}:1`);
 }
 
 function introJumpKey(refKey) {
-  closeBookIntro();
+  _rhemaIntroMode = false;
   closeRhemaPickerSheet?.();
   rhemaOpenSavedMark(refKey);
 }
@@ -41215,10 +41224,10 @@ function toggleIntroDebate(i) {
     : '<span class="material-symbols-outlined">expand_more</span>Read more';
 }
 
-async function openBookIntro(code) {
-  try { await _loadBibleIntros(); } catch { return; }
+// The intro page markup (rendered into the reader's display area).
+function _bookIntroPageHtml(code) {
   const e = window.BibleIntros?.books?.[code];
-  if (!e) return;
+  if (!e) return '';
   const esc = _escapeRhemaAttr;
   const name = _rhemaBookName(code);
   const isNT = RHEMA_NT_BOOK_ORDER.includes(code);
@@ -41227,18 +41236,7 @@ async function openBookIntro(code) {
   const keyLabel = keyP ? `${_rhemaBookName(keyP.book)} ${keyP.chapter}:${keyP.verse}` : '';
   const keyText = keyP ? (_rhemaEnglishText(keyP.book, keyP.chapter, keyP.verse) || '') : '';
   const notes = [e.authorNote, e.dateNote].filter(Boolean).join(' ');
-  let sheet = document.getElementById('bookIntroModal');
-  if (!sheet) {
-    sheet = document.createElement('div');
-    sheet.id = 'bookIntroModal';
-    // bi-overlay: fixed + high z-index — this sheet lives on document.body,
-    // so the modal/picker stacking contexts would otherwise bury it.
-    sheet.className = 'rhema-note-overlay bi-overlay';
-    sheet.addEventListener('click', (ev) => { if (ev.target === sheet) closeBookIntro(); });
-    document.body.appendChild(sheet);
-  }
-  sheet.innerHTML = `<div class="bi-card">
-    <button class="rhema-note-x" onclick="closeBookIntro()"><span class="material-symbols-outlined">close</span></button>
+  return `<div class="bi-page">
     <div class="bi-kicker">${isNT ? 'New Testament' : 'Old Testament'} · ${esc(e.genre)}</div>
     <h3 class="bi-title">${esc(name)}</h3>
     <div class="bi-facts">
@@ -41276,12 +41274,40 @@ async function openBookIntro(code) {
         </button>
       </div>`).join('')}
     </div>` : ''}
+    <button class="bi-startreading" onclick="introJumpTo('${code}','1')">
+      Start reading ${esc(name)} 1<span class="material-symbols-outlined">arrow_forward</span>
+    </button>
   </div>`;
-  sheet.classList.add('open');
 }
 
-function closeBookIntro() {
-  document.getElementById('bookIntroModal')?.classList.remove('open');
+// Enter the intro page for a book (from a chapter grid's info cell).
+async function openBookIntro(code) {
+  try { await _loadBibleIntros(); } catch { return; }
+  if (!window.BibleIntros?.books?.[code]) return;
+  closeRhemaPickerSheet?.();
+  closeRhemaSheet?.();
+  if (_rhemaBook !== code) _rhemaHandleBookBoundaryLayer(code, _rhemaBook);
+  _rhemaBook = code;
+  _rhemaChapter = '1';
+  _rhemaVerse = _rhemaFirstVerseOfChapter(code, '1');
+  _rhemaFullChapter = true;
+  _rhemaVerseFocus = false;
+  _rhemaHighlightStrongs = null;
+  if (_rhemaSyntaxMode) _rhemaSyntaxMode = false;
+  _rhemaIntroMode = true;
+  syncRhemaPicker();
+  renderRhemaVerse();
+}
+
+// Switch the reader into intro mode at the current position (swipe path).
+function _rhemaEnterIntroInline() {
+  _loadBibleIntros().then(() => {
+    if (!window.BibleIntros?.books?.[_rhemaBook]) return;
+    if (_rhemaSyntaxMode) _rhemaSyntaxMode = false;
+    _rhemaIntroMode = true;
+    syncRhemaPicker();
+    renderRhemaVerse();
+  }).catch(() => {});
 }
 
 function openRhemaChapPicker() {
@@ -41338,6 +41364,11 @@ function rhemaFilterBooks(query) {
     const name = row.querySelector('.rhema-book-name')?.textContent?.toLowerCase() || '';
     row.style.display = (!q || name.includes(q)) ? '' : 'none';
   });
+  // The inline chapter grid hides and shows with its book row.
+  list.querySelectorAll('.rhema-book-chapters').forEach(exp => {
+    const row = [...list.querySelectorAll('.rhema-book-row')].find(r => r.nextElementSibling === exp);
+    exp.style.display = row && row.style.display !== 'none' ? '' : 'none';
+  });
   ['OT', 'NT'].forEach(t => {
     const sep = list.querySelector(`.rhema-testament-sep[data-sep="${t}"]`);
     if (!sep) return;
@@ -41350,6 +41381,7 @@ function rhemaFilterBooks(query) {
 // Selecting any reference always opens the whole chapter; the verse picker
 // then jumps to (and marks) a verse inside it.
 function _rhemaOpenSelectedReference(skipHistory = false) {
+  _rhemaIntroMode = false;
   _rhemaFullChapter = true;
   _rhemaSyntaxMode = false;
   _rhemaHighlightStrongs = null;
@@ -41517,9 +41549,11 @@ function updateRhemaVerseNav() {
     arrows?.classList.remove('visible');
     if (ref && _rhemaData()) {
       const bookName = _rhemaBookName(_rhemaBook);
-      ref.textContent = _rhemaFullChapter
-        ? `${bookName} ${_rhemaChapter}`
-        : `${bookName} ${_rhemaChapter}:${_rhemaVerse}`;
+      ref.textContent = _rhemaIntroMode
+        ? `${bookName} · Intro`
+        : _rhemaFullChapter
+          ? `${bookName} ${_rhemaChapter}`
+          : `${bookName} ${_rhemaChapter}:${_rhemaVerse}`;
     }
   }
 }
@@ -41580,20 +41614,26 @@ function initRhemaVerseSwipe() {
   }, { passive: true });
 }
 
-// At a book's very start, the intro is the "page" behind chapter 1: show it
-// once, and let the following back-swipe actually cross the boundary.
-function _rhemaIntroBackGate() {
-  if (_rhemaIntroBackStop !== _rhemaBook) {
-    _rhemaIntroBackStop = _rhemaBook;
-    openBookIntro(_rhemaBook);
-    return true; // stop: the intro is this swipe's destination
-  }
-  return false;
-}
-
 function rhemaPrevVerse() {
   if (!_rhemaData()) return;
-  const bookBefore = _rhemaBook;
+  // On the intro page: back-swipe crosses into the previous book's end.
+  if (_rhemaIntroMode) {
+    const prevBook = _rhemaAdjacentBook(-1);
+    if (!prevBook) return; // Genesis: nothing before its intro
+    _rhemaIntroMode = false;
+    _rhemaHandleBookBoundaryLayer(prevBook, _rhemaBook);
+    _rhemaBook = prevBook;
+    _rhemaChapter = _rhemaLastChapterOfBook(prevBook);
+    _rhemaVerse = _rhemaFullChapter
+      ? _rhemaFirstVerseOfChapter(prevBook, _rhemaChapter)
+      : _rhemaLastVerseOfChapter(prevBook, _rhemaChapter);
+    _rhemaVerseFocus = false;
+    _rhemaHighlightStrongs = null;
+    _rhemaAnimateChapterSwipe(-1);
+    syncRhemaPicker();
+    renderRhemaVerse();
+    return;
+  }
   const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a - +b);
   const chIdx = chapters.indexOf(_rhemaChapter);
   let changed = false;
@@ -41604,15 +41644,10 @@ function rhemaPrevVerse() {
       _rhemaVerseFocus = false;
       changed = true;
     } else {
-      if (_rhemaIntroBackGate()) return;
-      const prevBook = _rhemaAdjacentBook(-1);
-      if (!prevBook) return;
-      _rhemaHandleBookBoundaryLayer(prevBook, _rhemaBook);
-      _rhemaBook = prevBook;
-      _rhemaChapter = _rhemaLastChapterOfBook(prevBook);
-      _rhemaVerse = _rhemaFirstVerseOfChapter(prevBook, _rhemaChapter);
-      _rhemaVerseFocus = false;
-      changed = true;
+      // Chapter 1: the page behind it is this book's intro.
+      _rhemaAnimateChapterSwipe(-1);
+      _rhemaEnterIntroInline();
+      return;
     }
   } else {
     const verses = Object.keys((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {}).sort((a,b) => +a - +b);
@@ -41626,19 +41661,13 @@ function rhemaPrevVerse() {
         _rhemaVerse = _rhemaLastVerseOfChapter(_rhemaBook, _rhemaChapter);
         changed = true;
       } else {
-        if (_rhemaIntroBackGate()) return;
-        const prevBook = _rhemaAdjacentBook(-1);
-        if (!prevBook) return;
-        _rhemaHandleBookBoundaryLayer(prevBook, _rhemaBook);
-        _rhemaBook = prevBook;
-        _rhemaChapter = _rhemaLastChapterOfBook(prevBook);
-        _rhemaVerse = _rhemaLastVerseOfChapter(prevBook, _rhemaChapter);
-        changed = true;
+        _rhemaAnimateChapterSwipe(-1);
+        _rhemaEnterIntroInline();
+        return;
       }
     }
   }
   if (!changed) return;
-  if (_rhemaBook === bookBefore) _rhemaIntroBackStop = ''; // moved within the book
   _rhemaHighlightStrongs = null;
   _rhemaAnimateChapterSwipe(-1);
   syncRhemaPicker();
@@ -41647,6 +41676,14 @@ function rhemaPrevVerse() {
 
 function rhemaNextVerse() {
   if (!_rhemaData()) return;
+  // On the intro page: forward-swipe turns the page into chapter 1.
+  if (_rhemaIntroMode) {
+    _rhemaIntroMode = false;
+    _rhemaAnimateChapterSwipe(1);
+    syncRhemaPicker();
+    renderRhemaVerse();
+    return;
+  }
   const bookBefore = _rhemaBook;
   const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a - +b);
   const chIdx = chapters.indexOf(_rhemaChapter);
@@ -41692,16 +41729,16 @@ function rhemaNextVerse() {
   if (!changed) return;
   _rhemaHighlightStrongs = null;
   _rhemaAnimateChapterSwipe(1);
+  if (_rhemaBook !== bookBefore) {
+    // Crossed into a new book: its intro is the first page. Position is
+    // already chapter 1, so leaving the intro forward lands right there.
+    syncRhemaPicker();
+    renderRhemaVerse();
+    _rhemaEnterIntroInline();
+    return;
+  }
   syncRhemaPicker();
   renderRhemaVerse();
-  if (_rhemaBook !== bookBefore) {
-    // Crossed into a new book: its intro is the first "page" — show it, and
-    // mark it seen so an immediate back-swipe crosses back out cleanly.
-    _rhemaIntroBackStop = _rhemaBook;
-    openBookIntro(_rhemaBook);
-  } else {
-    _rhemaIntroBackStop = '';
-  }
 }
 
 // ── Cross-reference jumping ───────────────────────────────────────────────────
@@ -41714,6 +41751,7 @@ function jumpToRhemaVerse(book, chapter, verse, highlightStrongs) {
   }
   _rhemaTrail.push({ book, chapter: String(chapter), verse: String(verse), strongs: highlightStrongs || null });
   _rhemaTrailPos = _rhemaTrail.length - 1;
+  _rhemaIntroMode = false;
   _rhemaBook = book;
   _rhemaChapter = String(chapter);
   _rhemaVerse = String(verse);
@@ -41762,6 +41800,7 @@ function rhemaJumpHistory(idx) {
   const target = _rhemaTrail[idx];
   if (!target) return;
   _rhemaTrailPos = idx;
+  _rhemaIntroMode = false;
   _rhemaBook = target.book;
   _rhemaChapter = target.chapter;
   _rhemaVerse = target.verse;
@@ -42193,6 +42232,35 @@ function renderRhemaVerse() {
   if (isHebrew && _rhemaSyntaxMode) _rhemaSyntaxMode = false;
   display.classList.toggle('rhema-hebrew-layer', isHebrew);
   display.classList.toggle('rhema-lxx-layer', layer === 'lxx');
+
+  // Intro mode: the book introduction renders as this book's "chapter zero"
+  // page, right in the reading flow — swipe forward into chapter 1, swipe
+  // back across into the previous book.
+  if (_rhemaIntroMode) {
+    const introHtml = _bookIntroPageHtml(_rhemaBook);
+    if (introHtml) {
+      display.classList.remove('greek-only', 'chapter-mode', 'rsx-chapter-mode');
+      const showEnglishPane = _rhemaShowEnglish && EnglishDiv;
+      if (showEnglishPane) {
+        EnglishDiv.classList.add('rhema-english-reading');
+        EnglishDiv.classList.remove('rhema-english-single');
+        EnglishDiv.innerHTML = introHtml;
+        display.innerHTML = '';
+      } else {
+        display.innerHTML = introHtml;
+        if (EnglishDiv) EnglishDiv.innerHTML = '';
+      }
+      _syncRhemaChapterUi();
+      updateRhemaVerseNav();
+      initRhemaVerseSwipe();
+      updateRhemaFlowToolbar();
+      _rhemaSetChromeHidden?.(false);
+      const body = document.querySelector('#rhemaModal .rhema-body');
+      if (body) { body.scrollTop = 0; body._rhemaLastChromeScrollTop = 0; }
+      return;
+    }
+    _rhemaIntroMode = false; // no intro data — fall through to the chapter
+  }
 
   // API reader versions (NIV/NKJV/NASB): make sure this chapter's block is
   // downloaded. While it's in flight (or the quota is out) the local text shows
