@@ -23319,6 +23319,35 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   --qa-subtitle: #2c6fa5;
 }
 
+/* Sermon Notes — dark purple, first tile in the Tools carousel. Deep amethyst
+   card so it reads as the premium hero of the row while still matching the
+   glossy-icon grammar of its siblings. */
+#homeScreen .quick-action-sermon {
+  --qa-card-bg: linear-gradient(165deg, #4a2b8f 0%, #3a2170 52%, #2c1856 100%);
+  --qa-card-border: rgba(124, 92, 214, 0.55);
+  --qa-card-shadow: rgba(44, 24, 86, 0.5);
+  --qa-image-shadow: rgba(20, 10, 45, 0.45);
+  --qa-title: #f3ecff;
+  --qa-subtitle: #c9b8f2;
+}
+/* On the dark card the icon plate should stay bright glass, not tint dark. */
+#homeScreen .quick-action-sermon .hat-icon {
+  background:
+    radial-gradient(120% 100% at 50% 12%, rgba(255,255,255,0.28), rgba(255,255,255,0.06) 60%, transparent 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05)) !important;
+  border: 1px solid rgba(255,255,255,0.28) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.4),
+    inset 0 -16px 28px rgba(20,10,45,0.35),
+    0 12px 22px rgba(20,10,45,0.4) !important;
+}
+#homeScreen .quick-action-sermon .qa-img { mix-blend-mode: normal; }
+#homeScreen .quick-action-sermon .hat-chev {
+  background: rgba(255,255,255,0.16);
+  color: #f3ecff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 18px rgba(20,10,45,0.4);
+}
+
 @keyframes home-press-pop {
   0% { transform: translateY(0) scale(1); }
   42% { transform: translateY(2px) scale(0.965); }
