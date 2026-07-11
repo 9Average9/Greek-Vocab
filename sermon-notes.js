@@ -69,6 +69,7 @@
       bookmarks: [],
       drawing: '',
       audioDuration: 0,
+      hasAudio: false,
       createdAt: nowISO(),
       updatedAt: nowISO()
     };
@@ -105,6 +106,103 @@
     t.classList.add('sn-show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('sn-show'), 2200);
+  }
+
+  /* ───────── In-app dialogs (premium replacements for prompt/confirm) ───────── */
+  function dialogScrim(build, onCancel) {
+    const existing = document.getElementById('snDialogScrim');
+    if (existing) existing.remove();
+    const box = el('div', { class: 'sn-dialog', onclick: e => e.stopPropagation() });
+    build(box);
+    const scrim = el('div', { class: 'sn-sheet-scrim sn-center', id: 'snDialogScrim',
+      onclick: e => { if (e.target === scrim && onCancel) onCancel(); } }, [box]);
+    document.body.appendChild(scrim);
+    requestAnimationFrame(() => scrim.classList.add('sn-open'));
+    return scrim;
+  }
+  function closeDialog() {
+    const s = document.getElementById('snDialogScrim');
+    if (!s) return;
+    s.classList.remove('sn-open');
+    setTimeout(() => s.remove(), 240);
+  }
+  // Returns a Promise resolving to the entered string, or null if cancelled.
+  function snPrompt(opts) {
+    return new Promise(resolve => {
+      let input;
+      const done = val => { closeDialog(); resolve(val); };
+      dialogScrim(box => {
+        box.appendChild(el('div', { class: 'sn-dialog-icon' }, [icon(opts.icon || 'edit')]));
+        box.appendChild(el('h3', { text: opts.title || 'Enter a value' }));
+        if (opts.message) box.appendChild(el('p', { text: opts.message }));
+        input = el('input', { class: 'sn-dialog-input', type: 'text', value: opts.value || '', placeholder: opts.placeholder || '' });
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') done(input.value.trim()); });
+        box.appendChild(input);
+        box.appendChild(el('div', { class: 'sn-dialog-actions' }, [
+          el('button', { class: 'sn-dialog-btn sn-cancel', text: 'Cancel', onclick: () => done(null) }),
+          el('button', { class: 'sn-dialog-btn sn-ok', text: opts.ok || 'Save', onclick: () => done(input.value.trim()) })
+        ]));
+      }, () => done(null));
+      setTimeout(() => { if (input) { input.focus(); input.select(); } }, 120);
+    });
+  }
+  // Returns a Promise resolving true (confirmed) / false (cancelled).
+  function snConfirm(opts) {
+    return new Promise(resolve => {
+      const done = val => { closeDialog(); resolve(val); };
+      dialogScrim(box => {
+        box.appendChild(el('div', { class: 'sn-dialog-icon' + (opts.danger ? ' sn-danger' : '') }, [icon(opts.icon || (opts.danger ? 'warning' : 'help'))]));
+        box.appendChild(el('h3', { text: opts.title || 'Are you sure?' }));
+        if (opts.message) box.appendChild(el('p', { text: opts.message }));
+        box.appendChild(el('div', { class: 'sn-dialog-actions' }, [
+          el('button', { class: 'sn-dialog-btn sn-cancel', text: opts.cancel || 'Cancel', onclick: () => done(false) }),
+          el('button', { class: 'sn-dialog-btn sn-ok' + (opts.danger ? ' sn-danger' : ''), text: opts.ok || 'Confirm', onclick: () => done(true) })
+        ]));
+      }, () => done(false));
+    });
+  }
+
+  /* ───────── IndexedDB audio storage ─────────
+     Recordings are far too large for localStorage, but IndexedDB gets a much
+     larger quota (typically tens–hundreds of MB), so full sermon audio persists
+     per device. Metadata still lives in localStorage; blobs live here keyed by
+     sermon id. Everything degrades gracefully if IndexedDB is unavailable. */
+  const AUDIO_DB = 'rhemaSermonAudio', AUDIO_STORE = 'clips';
+  let _dbPromise = null;
+  function audioDB() {
+    if (_dbPromise) return _dbPromise;
+    _dbPromise = new Promise((resolve, reject) => {
+      if (!window.indexedDB) return reject('no-idb');
+      const req = indexedDB.open(AUDIO_DB, 1);
+      req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(AUDIO_STORE)) req.result.createObjectStore(AUDIO_STORE); };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    }).catch(() => null);
+    return _dbPromise;
+  }
+  async function saveAudioBlob(id, blob) {
+    const db = await audioDB(); if (!db) return false;
+    return new Promise(res => {
+      try {
+        const tx = db.transaction(AUDIO_STORE, 'readwrite');
+        tx.objectStore(AUDIO_STORE).put(blob, id);
+        tx.oncomplete = () => res(true); tx.onerror = () => res(false);
+      } catch (e) { res(false); }
+    });
+  }
+  async function loadAudioBlob(id) {
+    const db = await audioDB(); if (!db) return null;
+    return new Promise(res => {
+      try {
+        const tx = db.transaction(AUDIO_STORE, 'readonly');
+        const rq = tx.objectStore(AUDIO_STORE).get(id);
+        rq.onsuccess = () => res(rq.result || null); rq.onerror = () => res(null);
+      } catch (e) { res(null); }
+    });
+  }
+  async function deleteAudioBlob(id) {
+    const db = await audioDB(); if (!db) return;
+    try { const tx = db.transaction(AUDIO_STORE, 'readwrite'); tx.objectStore(AUDIO_STORE).delete(id); } catch (e) {}
   }
 
   /* ───────── Verse recognition ───────── */
@@ -183,8 +281,6 @@
       ])
     ]);
 
-    const back = el('button', { class: 'sn-iconbtn', onclick: closeSermonNotes, 'aria-label': 'Close', style: { position: 'absolute', margin: '0' } }, [icon('arrow_back')]);
-
     const wrap = el('div', { class: 'sn-lib' }, [
       el('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' } }, [
         el('button', { class: 'sn-iconbtn', onclick: closeSermonNotes, 'aria-label': 'Close' }, [icon('arrow_back')]),
@@ -233,9 +329,11 @@
     persist(true);
     openEditor(s.id);
   }
-  function confirmDelete(s) {
-    if (!confirm('Delete “' + (s.title || 'Untitled sermon') + '”? This cannot be undone.')) return;
+  async function confirmDelete(s) {
+    const ok = await snConfirm({ title: 'Delete this sermon?', message: '“' + (s.title || 'Untitled sermon') + '” and its notes will be permanently removed.', ok: 'Delete', danger: true, icon: 'delete' });
+    if (!ok) return;
     store.sermons = store.sermons.filter(x => x.id !== s.id);
+    deleteAudioBlob(s.id);
     persist(true);
     openLibrary();
     toast('Sermon deleted');
@@ -247,7 +345,22 @@
   function openEditor(id) {
     current = id;
     activeTab = 'notes';
+    // Reset the session audio player for the sermon we're opening.
+    stopAudio(true);
+    if (audioState.url) { URL.revokeObjectURL(audioState.url); audioState.url = null; }
+    audioState.audioEl = null;
     renderEditor();
+    // Rehydrate any saved recording from IndexedDB.
+    const s = getSermon(id);
+    if (s && s.hasAudio) {
+      loadAudioBlob(id).then(blob => {
+        if (blob && current === id) {
+          audioState.url = URL.createObjectURL(blob);
+          const box = document.getElementById('snAudio');
+          if (box) drawAudio(s, box);
+        }
+      });
+    }
   }
 
   function renderEditor() {
@@ -276,8 +389,7 @@
     ));
 
     const body = el('div', { id: 'snTabBody' });
-    root.appendChild(header);
-    root.appendChild(tabs);
+    root.appendChild(el('div', { class: 'sn-topbar' }, [header, tabs]));
     root.appendChild(body);
     renderTabBody(s);
   }
@@ -602,8 +714,9 @@
       el('div', { class: 'sn-dock-sep' }),
       toolBtn('sticky', 'sticky_note_2', () => openStickerSheet(s)),
       toolBtn('deco', 'auto_awesome', () => openDecoSheet(s)),
-      toolBtn('clear', 'delete_sweep', () => {
-        if (confirm('Clear all pen/marker drawing on this page?')) {
+      toolBtn('clear', 'delete_sweep', async () => {
+        const ok = await snConfirm({ title: 'Clear drawing?', message: 'Removes all pen, marker and highlighter strokes on this page. Your typed notes stay.', ok: 'Clear', danger: true, icon: 'delete_sweep' });
+        if (ok) {
           const dc = document.getElementById('snDrawCanvas');
           if (dc && drawCtx) { drawCtx.clearRect(0, 0, dc.width, dc.height); s.drawing = ''; touch(s); }
         }
@@ -694,7 +807,9 @@
         if (audioState.url) URL.revokeObjectURL(audioState.url);
         audioState.url = URL.createObjectURL(blob);
         s.audioDuration = audioElapsedFinal;
+        s.hasAudio = true;
         touch(s);
+        saveAudioBlob(s.id, blob).then(ok => { if (!ok) { s.hasAudio = false; persist(); toast('Audio kept for this session only'); } });
         drawAudio(s, box);
       };
       audioState.recorder.start();
@@ -779,9 +894,9 @@
     const pane = el('div', { class: 'sn-pane' });
     pane.appendChild(el('div', { class: 'sn-pane-head' }, [
       el('h2', { text: 'Verses' }),
-      el('button', { class: 'sn-add-btn', onclick: () => {
-        const r = prompt('Add a Scripture reference (e.g. John 3:16):');
-        if (r && r.trim()) { s.verses.push({ id: uid(), ref: r.trim(), note: '' }); touch(s); renderTabBody(s); }
+      el('button', { class: 'sn-add-btn', onclick: async () => {
+        const r = await snPrompt({ title: 'Add a verse', message: 'Enter a Scripture reference.', placeholder: 'e.g. John 3:16', icon: 'menu_book', ok: 'Add' });
+        if (r) { s.verses.push({ id: uid(), ref: r, note: '' }); touch(s); renderTabBody(s); }
       } }, [icon('add'), 'Add verse'])
     ]));
     pane.appendChild(el('p', { style: { color: 'var(--sn-muted)', fontSize: '.84rem', margin: '-6px 2px 16px' }, text: 'Every reference you type anywhere in your notes is auto-collected here.' }));
@@ -924,10 +1039,10 @@
   }
 
   /* ───────── Bookmarks ───────── */
-  function addBookmark(s) {
-    const label = prompt('Name this bookmark:', 'Important moment');
+  async function addBookmark(s) {
+    const label = await snPrompt({ title: 'Add a bookmark', message: 'Flag this moment' + (audioState.recording ? ' at ' + fmtTime(audioElapsed()) + '.' : '.'), value: 'Important moment', icon: 'bookmark_add', ok: 'Save' });
     if (label == null) return;
-    s.bookmarks.push({ id: uid(), label: label.trim() || 'Moment', t: audioState.recording ? audioElapsed() : null, at: nowISO() });
+    s.bookmarks.push({ id: uid(), label: label || 'Moment', t: audioState.recording ? audioElapsed() : null, at: nowISO() });
     touch(s);
     toast('Bookmarked');
   }
@@ -1047,11 +1162,11 @@
   }
 
   /* ───────── Templates ───────── */
-  function saveAsTemplate(s) {
-    const name = prompt('Template name:', s.title || 'My Sunday layout');
+  async function saveAsTemplate(s) {
+    const name = await snPrompt({ title: 'Save as template', message: 'Reuse this layout (paper, font, outline & colors) for future sermons.', value: s.title || 'My Sunday layout', icon: 'bookmarks', ok: 'Save' });
     if (!name) return;
     store.templates.push({
-      id: uid(), name: name.trim(),
+      id: uid(), name: name,
       paper: s.paper, font: s.font, penColor: s.penColor,
       outline: s.outline.map(o => ({ title: o.title, passages: o.passages })),
       takeaways: []
@@ -1086,6 +1201,7 @@
     copy.createdAt = copy.updatedAt = nowISO();
     copy.drawing = s.drawing;
     store.sermons.unshift(copy); persist(true);
+    if (s.hasAudio) loadAudioBlob(s.id).then(b => { if (b) saveAudioBlob(copy.id, b); });
     openEditor(copy.id);
     toast('Duplicated');
   }
