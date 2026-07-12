@@ -1226,13 +1226,20 @@
         }
         updateRecTimer();
       };
-      r.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { audioState.speech = null; } };
+      r.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { audioState.speechWanted = false; audioState.speech = null; } };
+      let lastStart = 0, backoff = 0;
+      r.onstart = () => { lastStart = Date.now(); };
       r.onend = () => {
         // Web Speech sessions time out (~1 min); relaunch so a long sermon keeps
         // being transcribed. Reset per-index tracking since indices restart.
         for (const k in seenAt) delete seenAt[k];
         for (const k in done) delete done[k];
-        if (audioState.speechWanted) { try { r.start(); } catch (e) {} }
+        if (!audioState.speechWanted) return;
+        // If it ended almost immediately (e.g. no network at church), back off so
+        // we don't hot-loop and drain the battery; recover to instant restarts
+        // once healthy sessions resume.
+        backoff = (Date.now() - lastStart < 1500) ? Math.min((backoff || 200) * 2, 8000) : 0;
+        setTimeout(() => { if (audioState.speechWanted) { try { r.start(); } catch (e) {} } }, backoff);
       };
       audioState.speech = r; audioState.speechWanted = true;
       r.start();
