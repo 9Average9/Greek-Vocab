@@ -68,6 +68,7 @@
       takeaways: (t.takeaways || []).map(x => ({ id: uid(), text: x, done: false })),
       bookmarks: [],
       drawing: '',
+      canvasH: 0,
       audioDuration: 0,
       hasAudio: false,
       createdAt: nowISO(),
@@ -101,7 +102,8 @@
   let toastTimer = null;
   function toast(msg) {
     let t = document.getElementById('snToast');
-    if (!t) { t = el('div', { class: 'sn-toast', id: 'snToast' }); document.body.appendChild(t); }
+    // Must live INSIDE #sermonNotesPage so the scoped --sn-* theme vars resolve.
+    if (!t) { t = el('div', { class: 'sn-toast', id: 'snToast' }); (page || document.body).appendChild(t); }
     t.textContent = msg;
     t.classList.add('sn-show');
     clearTimeout(toastTimer);
@@ -116,7 +118,7 @@
     build(box);
     const scrim = el('div', { class: 'sn-sheet-scrim sn-center', id: 'snDialogScrim',
       onclick: e => { if (e.target === scrim && onCancel) onCancel(); } }, [box]);
-    document.body.appendChild(scrim);
+    (page || document.body).appendChild(scrim);
     requestAnimationFrame(() => scrim.classList.add('sn-open'));
     return scrim;
   }
@@ -216,13 +218,81 @@
     while ((m = VERSE_RE.exec(text)) !== null) out.push(m[0].replace(/\s+/g, ' ').trim());
     return out;
   }
-  // Try to open a detected reference in Rhema's reader if a hook exists.
-  function openVerseRef(ref) {
-    const fns = ['openVerseReference', 'goToReference', 'openReference', 'jumpToVerse', 'openScripture'];
-    for (const f of fns) { if (typeof window[f] === 'function') { try { window[f](ref); return true; } catch (e) {} } }
-    toast('📖 ' + ref);
-    return false;
+  // ── Reference → Rhema book code resolution ──────────────────────────────
+  // Build a lookup of normalized book name / abbreviation → Rhema code, from the
+  // app's own tables plus common abbreviations, so typed refs resolve reliably.
+  let _bookLookup = null;
+  function bookLookup() {
+    if (_bookLookup) return _bookLookup;
+    const map = {};
+    const norm = t => String(t).toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+    const names = window.RhemaBookNames || {};
+    const abbr = window.RhemaBookAbbr || {};
+    Object.keys(names).forEach(code => { map[norm(names[code])] = code; });
+    Object.keys(abbr).forEach(code => { if (abbr[code]) map[norm(abbr[code])] = code; });
+    // Hand-rolled common abbreviations / alternates (roman numerals, short forms).
+    const extra = {
+      'gen': 'GEN', 'ex': 'EXO', 'exod': 'EXO', 'lev': 'LEV', 'num': 'NUM', 'deut': 'DEU', 'dt': 'DEU',
+      'josh': 'JOS', 'judg': 'JDG', 'ps': 'PSA', 'psalm': 'PSA', 'psalms': 'PSA', 'prov': 'PRO', 'eccl': 'ECC',
+      'song': 'SNG', 'song of songs': 'SNG', 'isa': 'ISA', 'jer': 'JER', 'ezek': 'EZK', 'dan': 'DAN',
+      'matt': 'MAT', 'mt': 'MAT', 'mk': 'MAR', 'mark': 'MAR', 'lk': 'LUK', 'jn': 'JOH', 'john': 'JOH',
+      'rom': 'ROM', '1 cor': '1CO', '2 cor': '2CO', 'i cor': '1CO', 'ii cor': '2CO',
+      'gal': 'GAL', 'eph': 'EPH', 'phil': 'PHP', 'php': 'PHP', 'col': 'COL',
+      '1 thess': '1TH', '2 thess': '2TH', '1 tim': '1TI', '2 tim': '2TI', 'philem': 'PHM', 'phlm': 'PHM',
+      'heb': 'HEB', 'jas': 'JAM', '1 pet': '1PE', '2 pet': '2PE', '1 jn': '1JO', '2 jn': '2JO', '3 jn': '3JO',
+      'rev': 'REV'
+    };
+    Object.keys(extra).forEach(k => { if (!map[k]) map[k] = extra[k]; });
+    _bookLookup = map;
+    return map;
   }
+  // Parse "Philippians 2:5" / "1 Cor 13:4-7" → { code, chapter, verse, name }.
+  function parseRef(ref) {
+    if (!ref) return null;
+    const m = String(ref).trim().match(/^((?:[1-3]|i{1,3})\s?)?([A-Za-z][A-Za-z. ]*?)\s+(\d+)(?::(\d+))?/i);
+    if (!m) return null;
+    const bookName = ((m[1] || '') + (m[2] || '')).replace(/\./g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const code = bookLookup()[bookName];
+    if (!code) return null;
+    return { code, chapter: parseInt(m[3], 10), verse: m[4] ? parseInt(m[4], 10) : 1, name: window.RhemaBookNames?.[code] || bookName };
+  }
+
+  // ── Open a reference in Rhema, with a Back button returning to Sermon Notes ──
+  let _snRhemaReturn = false;
+  function openVerseRef(ref) {
+    const p = parseRef(ref);
+    if (!p || typeof showRhema !== 'function' || typeof jumpToRhemaVerse !== 'function') { toast('📖 ' + ref); return false; }
+    _snRhemaReturn = true;
+    const backBtn = document.getElementById('rhemaSermonNotesBackBtn');
+    const homeBtn = document.querySelector('#rhemaSlide .rhema-back-btn');
+    if (backBtn) backBtn.classList.remove('hidden');
+    if (homeBtn) homeBtn.classList.add('hidden');
+    // Slide Sermon Notes closed, then slide Rhema open focused on the verse.
+    page.classList.remove('sn-open');
+    setTimeout(() => {
+      page.classList.add('sn-hidden');
+      Promise.resolve(showRhema()).then(() => {
+        try { jumpToRhemaVerse(p.code, p.chapter, p.verse); } catch (e) {}
+      }).catch(() => {});
+    }, 240);
+    return true;
+  }
+  // Wired to the Rhema header Back button (added in index.html).
+  window._snRhemaBack = function () {
+    const backBtn = document.getElementById('rhemaSermonNotesBackBtn');
+    const homeBtn = document.querySelector('#rhemaSlide .rhema-back-btn');
+    if (backBtn) backBtn.classList.add('hidden');
+    if (homeBtn) homeBtn.classList.remove('hidden');
+    const modal = document.getElementById('rhemaModal');
+    if (modal) modal.classList.remove('open'); // its own CSS transition slides it away
+    if (typeof showBottomNav === 'function') showBottomNav();
+    _snRhemaReturn = false;
+    if (!page) return;
+    activeTab = 'verses';
+    page.classList.remove('sn-hidden');
+    requestAnimationFrame(() => page.classList.add('sn-open'));
+    if (current) renderEditor(); else openLibrary();
+  };
 
   /* ══════════════════════════════════════════════════════════════════════
      PAGE SHELL
@@ -242,6 +312,11 @@
         else if (current) openLibrary();
         else closeSermonNotes();
       }
+    });
+    // Tapping an auto-detected verse chip in the notes opens it in Rhema.
+    page.addEventListener('click', e => {
+      const chip = e.target.closest && e.target.closest('.sn-verse-chip');
+      if (chip && chip.dataset.ref) { e.preventDefault(); openVerseRef(chip.dataset.ref); }
     });
   }
 
@@ -421,6 +496,7 @@
 
     // The paper canvas
     const canvas = el('div', { class: 'sn-canvas paper-' + s.paper + ' font-' + s.font, id: 'snCanvas' });
+    if (s.canvasH) canvas.style.minHeight = s.canvasH + 'px';
 
     // Main idea
     const mi = el('div', { class: 'sn-mainidea' }, [
@@ -445,6 +521,14 @@
 
     // Decorations
     s.decorations.forEach(dc => canvas.appendChild(renderDeco(s, dc)));
+
+    // Add-space button (grow the sheet vertically)
+    canvas.appendChild(el('button', { class: 'sn-canvas-extend', title: 'Add more space',
+      onclick: () => {
+        const cur = s.canvasH || canvas.offsetHeight || 640;
+        s.canvasH = cur + 360; canvas.style.minHeight = s.canvasH + 'px'; touch(s);
+        requestAnimationFrame(() => initDrawing(s));
+      } }, [icon('expand_more'), 'Add space']));
 
     // Drawing layer
     const dc = el('canvas', { class: 'sn-draw-canvas', id: 'snDrawCanvas' });
@@ -520,14 +604,16 @@
     if (b.ts != null) {
       node.appendChild(el('div', { class: 'sn-block-ts', onclick: () => seekAudio(b.ts) }, [icon('schedule'), fmtTime(b.ts)]));
     }
-    // grip + delete
-    const grip = el('div', { class: 'sn-block-grip' }, [icon('drag_indicator')]);
+    // grip: drag to move, press-and-hold to delete
+    const grip = el('div', { class: 'sn-block-grip', title: 'Drag to move · hold to delete' }, [icon('drag_indicator')]);
     node.appendChild(grip);
-    enableDrag(node, grip, s, (x, y) => { b.x = x; b.y = y; touch(s); }, () => node.classList.add('sn-free'));
-    // long-press / right click delete via grip double
-    grip.addEventListener('dblclick', () => {
-      s.blocks = s.blocks.filter(x => x.id !== b.id); node.remove(); touch(s);
-    });
+    const deleteBlock = async () => {
+      if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+      const ok = await snConfirm({ title: 'Delete this block?', message: 'Remove this ' + tg[1].toLowerCase() + '.', ok: 'Delete', danger: true, icon: 'delete' });
+      if (ok) { s.blocks = s.blocks.filter(x => x.id !== b.id); node.remove(); touch(s); }
+    };
+    enableDrag(node, grip, s, (x, y) => { b.x = x; b.y = y; touch(s); }, { onLongPress: deleteBlock });
+    grip.addEventListener('dblclick', deleteBlock); // desktop shortcut
     return node;
   }
 
@@ -570,44 +656,63 @@
     toast('Double-tap a sticker to remove it');
   }
 
-  /* ───────── Dragging (pointer) ───────── */
-  function enableDrag(node, handle, s, onEnd, onStart) {
-    let sx, sy, ox, oy, dragging = false;
+  /* ───────── Dragging (pointer) ─────────
+     Bulletproof drag: listeners live on window during the gesture and are
+     always cleaned up, so a block can never get "stuck" un-movable (the old
+     setPointerCapture-on-handle approach could leave a dangling capture after
+     editing text). A small move threshold means a tap never nudges the block,
+     and a press-and-hold with no movement fires onLongPress (used to delete). */
+  function enableDrag(node, handle, s, onEnd, opts) {
+    opts = opts || {};
     handle.style.touchAction = 'none';
     handle.addEventListener('pointerdown', e => {
-      if (drawTool) return; // drawing mode owns pointer
+      if (drawTool) return;                       // drawing mode owns the pointer
+      if (e.button != null && e.button > 0) return;
       const canvas = document.getElementById('snCanvas');
       if (!canvas) return;
-      dragging = true;
-      node.classList.add('sn-free');
-      if (onStart) onStart();
-      const cr = canvas.getBoundingClientRect();
+      // Drop any active text caret so selection can't fight the drag.
+      if (document.activeElement && document.activeElement.isContentEditable) document.activeElement.blur();
+      const pid = e.pointerId, startX = e.clientX, startY = e.clientY;
       const nr = node.getBoundingClientRect();
-      ox = e.clientX - nr.left; oy = e.clientY - nr.top;
-      sx = cr.left; sy = cr.top;
-      handle.setPointerCapture(e.pointerId);
-      node.style.zIndex = 40;
-      e.preventDefault();
+      const ox = startX - nr.left, oy = startY - nr.top;
+      let started = false;
+      let lpTimer = opts.onLongPress ? setTimeout(() => {
+        if (!started) { cleanup(); opts.onLongPress(); }
+      }, 550) : null;
+      const move = ev => {
+        if (ev.pointerId !== pid) return;
+        const dx = ev.clientX - startX, dy = ev.clientY - startY;
+        if (!started) {
+          if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+          started = true;
+          clearTimeout(lpTimer);
+          node.classList.add('sn-free');
+          if (opts.onStart) opts.onStart();
+          node.style.zIndex = 60;
+        }
+        const cr = canvas.getBoundingClientRect();
+        let x = ev.clientX - cr.left - ox;
+        let y = ev.clientY - cr.top - oy;
+        x = Math.max(0, Math.min(x, canvas.clientWidth - node.offsetWidth));
+        y = Math.max(0, Math.min(y, canvas.clientHeight - node.offsetHeight));
+        node.style.left = x + 'px'; node.style.top = y + 'px';
+        ev.preventDefault();
+      };
+      const up = ev => {
+        if (ev.pointerId !== pid) return;
+        cleanup();
+        if (started) onEnd(parseInt(node.style.left, 10) || 0, parseInt(node.style.top, 10) || 0);
+      };
+      function cleanup() {
+        clearTimeout(lpTimer);
+        window.removeEventListener('pointermove', move, true);
+        window.removeEventListener('pointerup', up, true);
+        window.removeEventListener('pointercancel', up, true);
+      }
+      window.addEventListener('pointermove', move, true);
+      window.addEventListener('pointerup', up, true);
+      window.addEventListener('pointercancel', up, true);
     });
-    handle.addEventListener('pointermove', e => {
-      if (!dragging) return;
-      const canvas = document.getElementById('snCanvas');
-      const cr = canvas.getBoundingClientRect();
-      let x = e.clientX - cr.left - ox;
-      let y = e.clientY - cr.top - oy;
-      x = Math.max(0, Math.min(x, canvas.clientWidth - node.offsetWidth));
-      y = Math.max(0, Math.min(y, canvas.clientHeight - node.offsetHeight));
-      node.style.left = x + 'px'; node.style.top = y + 'px';
-    });
-    const up = e => {
-      if (!dragging) return;
-      dragging = false;
-      const x = parseInt(node.style.left, 10) || 0;
-      const y = parseInt(node.style.top, 10) || 0;
-      onEnd(x, y);
-    };
-    handle.addEventListener('pointerup', up);
-    handle.addEventListener('pointercancel', up);
   }
 
   /* ───────── Drawing engine ───────── */
@@ -623,10 +728,11 @@
     drawCtx = dc.getContext('2d');
     drawCtx.scale(dpr, dpr);
     drawCtx.lineCap = 'round'; drawCtx.lineJoin = 'round';
-    // restore saved drawing
+    // Restore saved drawing at its natural height-for-width so growing the sheet
+    // vertically never stretches existing strokes.
     if (s.drawing) {
       const img = new Image();
-      img.onload = () => drawCtx.drawImage(img, 0, 0, w, h);
+      img.onload = () => drawCtx.drawImage(img, 0, 0, w, img.height * (w / img.width));
       img.src = s.drawing;
     }
     dc.onpointerdown = e => {
@@ -890,14 +996,144 @@
     if (added) { touch(s); }
     return added;
   }
+  // Add one reference (deduped). Returns true if it was newly added.
+  function addVerseRef(s, ref) {
+    ref = String(ref || '').replace(/\s+/g, ' ').trim();
+    if (!ref) return false;
+    if (s.verses.some(v => v.ref.toLowerCase() === ref.toLowerCase())) { toast('Already added'); return false; }
+    s.verses.push({ id: uid(), ref, note: '' });
+    touch(s);
+    if (activeTab === 'verses') renderTabBody(s);
+    toast('Verse added');
+    return true;
+  }
+
+  /* ───────── Add-verse sheet: type OR browse (book → chapter → verse + range) ───────── */
+  function openVerseAddSheet(s) {
+    openSheet(sheet => {
+      sheet.appendChild(el('h3', { text: 'Add a Verse' }));
+      sheet.appendChild(el('p', { class: 'sn-sheet-sub', text: 'Type a reference, or browse to pick the exact verse and range.' }));
+
+      // Type row
+      const input = el('input', { class: 'sn-dialog-input', style: { marginBottom: '0', flex: '1' }, placeholder: 'e.g. Philippians 2:1-5' });
+      const addTyped = () => { if (input.value.trim()) { addVerseRef(s, input.value); closeSheet(); } };
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') addTyped(); });
+      sheet.appendChild(el('div', { style: { display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px' } }, [
+        input, el('button', { class: 'sn-add-btn', onclick: addTyped }, [icon('add'), 'Add'])
+      ]));
+
+      sheet.appendChild(el('div', { class: 'sn-sheet-section', text: 'Or browse the Bible' }));
+      const browse = el('div', { class: 'sn-vp' });
+      sheet.appendChild(browse);
+      buildVerseBrowser(browse, s);
+    });
+  }
+
+  // State machine for the in-sheet reference browser.
+  function buildVerseBrowser(root, s) {
+    const state = { step: 'book', code: null, chapter: null, start: null, end: null };
+    const rhemaReady = () => typeof window._rhemaBookOrder === 'function' && typeof window._rhemaText === 'function' && window._rhemaBookOrder().length;
+
+    const ensure = () => {
+      if (rhemaReady()) { render(); return; }
+      root.innerHTML = '';
+      root.appendChild(el('div', { class: 'sn-vp-loading' }, [icon('hourglass_top'), 'Loading Bible…']));
+      if (typeof window.loadRhemaScripts === 'function') {
+        Promise.resolve(window.loadRhemaScripts()).then(() => render()).catch(() => fail());
+      } else fail();
+    };
+    const fail = () => { root.innerHTML = ''; root.appendChild(el('div', { class: 'sn-vp-loading', text: 'Bible data unavailable — type the reference above instead.' })); };
+
+    function render() {
+      if (!rhemaReady()) return fail();
+      root.innerHTML = '';
+      if (state.step === 'book') return renderBooks();
+      if (state.step === 'chapter') return renderChapters();
+      if (state.step === 'verse') return renderVersesGrid();
+    }
+    function crumb() {
+      const parts = [];
+      parts.push(el('button', { class: 'sn-vp-crumb', onclick: () => { state.step = 'book'; render(); } }, ['Books']));
+      if (state.code) parts.push(el('button', { class: 'sn-vp-crumb', onclick: () => { state.step = 'chapter'; render(); } }, [window._rhemaBookName(state.code)]));
+      if (state.chapter) parts.push(el('span', { class: 'sn-vp-crumb sn-cur', text: 'Ch ' + state.chapter }));
+      return el('div', { class: 'sn-vp-crumbs' }, parts);
+    }
+    function renderBooks() {
+      const search = el('input', { class: 'sn-dialog-input', style: { marginBottom: '10px' }, placeholder: 'Search books…' });
+      root.appendChild(search);
+      const list = el('div', { class: 'sn-vp-books' });
+      root.appendChild(list);
+      const codes = window._rhemaBookOrder();
+      const paint = q => {
+        list.innerHTML = '';
+        codes.forEach(code => {
+          const name = window._rhemaBookName(code);
+          if (q && !name.toLowerCase().includes(q)) return;
+          list.appendChild(el('button', { class: 'sn-vp-book', onclick: () => { state.code = code; state.chapter = null; state.start = state.end = null; state.step = 'chapter'; render(); } }, [
+            el('span', { class: 'material-symbols-outlined', text: 'menu_book' }), name
+          ]));
+        });
+      };
+      paint('');
+      search.addEventListener('input', () => paint(search.value.toLowerCase().trim()));
+    }
+    function renderChapters() {
+      root.appendChild(crumb());
+      const chapters = Object.keys((window._rhemaText()[state.code]) || {}).sort((a, b) => +a - +b);
+      const grid = el('div', { class: 'sn-vp-grid' });
+      chapters.forEach(ch => grid.appendChild(el('button', { class: 'sn-vp-cell', text: ch, onclick: () => { state.chapter = ch; state.start = state.end = null; state.step = 'verse'; render(); } })));
+      root.appendChild(grid);
+    }
+    function renderVersesGrid() {
+      root.appendChild(crumb());
+      const verses = Object.keys(((window._rhemaText()[state.code]) || {})[state.chapter] || {}).sort((a, b) => +a - +b);
+      const hint = el('div', { class: 'sn-vp-hint', text: 'Tap a verse. Tap a second verse to make a range.' });
+      root.appendChild(hint);
+      const grid = el('div', { class: 'sn-vp-grid' });
+      const paint = () => {
+        grid.querySelectorAll('.sn-vp-cell').forEach(c => {
+          const v = +c.dataset.v;
+          const inRange = state.start != null && state.end != null && v >= Math.min(state.start, state.end) && v <= Math.max(state.start, state.end);
+          c.classList.toggle('sn-sel', inRange || v === state.start);
+        });
+        confirmRow.classList.toggle('sn-hidden', state.start == null);
+        if (state.start != null) {
+          const a = Math.min(state.start, state.end == null ? state.start : state.end);
+          const b = Math.max(state.start, state.end == null ? state.start : state.end);
+          const ref = window._rhemaBookName(state.code) + ' ' + state.chapter + ':' + a + (b !== a ? '-' + b : '');
+          confirmLabel.textContent = ref;
+        }
+      };
+      verses.forEach(v => {
+        grid.appendChild(el('button', { class: 'sn-vp-cell', data: { v }, text: v, onclick: () => {
+          const n = +v;
+          if (state.start == null || (state.start != null && state.end != null)) { state.start = n; state.end = null; }
+          else if (n === state.start) { state.end = null; }
+          else { state.end = n; }
+          paint();
+        } }));
+      });
+      root.appendChild(grid);
+      const confirmLabel = el('strong', { class: 'sn-vp-conf-label' });
+      const confirmRow = el('div', { class: 'sn-vp-confirm sn-hidden' }, [
+        confirmLabel,
+        el('button', { class: 'sn-add-btn', onclick: () => {
+          const a = Math.min(state.start, state.end == null ? state.start : state.end);
+          const b = Math.max(state.start, state.end == null ? state.start : state.end);
+          const ref = window._rhemaBookName(state.code) + ' ' + state.chapter + ':' + a + (b !== a ? '-' + b : '');
+          addVerseRef(s, ref); closeSheet();
+        } }, [icon('add'), 'Add'])
+      ]);
+      root.appendChild(confirmRow);
+      paint();
+    }
+    ensure();
+  }
   function renderVerses(s) {
     const pane = el('div', { class: 'sn-pane' });
     pane.appendChild(el('div', { class: 'sn-pane-head' }, [
       el('h2', { text: 'Verses' }),
-      el('button', { class: 'sn-add-btn', onclick: async () => {
-        const r = await snPrompt({ title: 'Add a verse', message: 'Enter a Scripture reference.', placeholder: 'e.g. John 3:16', icon: 'menu_book', ok: 'Add' });
-        if (r) { s.verses.push({ id: uid(), ref: r, note: '' }); touch(s); renderTabBody(s); }
-      } }, [icon('add'), 'Add verse'])
+      el('button', { class: 'sn-add-btn', onclick: () => openVerseAddSheet(s) }, [icon('add'), 'Add verse'])
     ]));
     pane.appendChild(el('p', { style: { color: 'var(--sn-muted)', fontSize: '.84rem', margin: '-6px 2px 16px' }, text: 'Every reference you type anywhere in your notes is auto-collected here.' }));
     if (!s.verses.length) {
@@ -949,7 +1185,7 @@
     const sheet = el('div', { class: 'sn-sheet' }, [el('div', { class: 'sn-sheet-grip' })]);
     builder(sheet);
     const scrim = el('div', { class: 'sn-sheet-scrim', id: 'snSheetScrim', onclick: e => { if (e.target === scrim) closeSheet(); } }, [sheet]);
-    document.body.appendChild(scrim);
+    (page || document.body).appendChild(scrim);
     requestAnimationFrame(() => scrim.classList.add('sn-open'));
   }
   function closeSheet() {
@@ -964,7 +1200,7 @@
       sheet.appendChild(el('h3', { text: 'Paper Style' }));
       sheet.appendChild(el('p', { class: 'sn-sheet-sub', text: 'Set the backdrop for your notes canvas.' }));
       const grid = el('div', { class: 'sn-paper-grid' });
-      [['dotted', 'Dotted', 'pv-dotted'], ['lined', 'Lined', 'pv-lined'], ['grid', 'Grid', 'pv-grid'], ['dark', 'Dark', 'pv-dark'], ['cream', 'Cream', 'pv-cream']].forEach(([id, label, pv]) => {
+      [['blank', 'Blank', 'pv-blank'], ['dotted', 'Dotted', 'pv-dotted'], ['lined', 'Lined', 'pv-lined'], ['grid', 'Grid', 'pv-grid'], ['dark', 'Dark', 'pv-dark'], ['cream', 'Cream', 'pv-cream']].forEach(([id, label, pv]) => {
         grid.appendChild(el('div', { class: 'sn-paper-opt' + (s.paper === id ? ' sn-sel' : ''), onclick: () => {
           s.paper = id; touch(s);
           const c = document.getElementById('snCanvas');
