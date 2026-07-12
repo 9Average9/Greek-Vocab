@@ -1219,80 +1219,93 @@
   function speechSupported() { return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window; }
   function startSpeech(s) {
     if (!speechSupported()) { audioState.speech = null; return; }
+    audioState.speechWanted = true;
+    audioState.speechSermon = s;
+    audioState._speechBackoff = 0;
+    spawnRecognition();
+    // Watchdog: the Web Speech engine can silently die on a long recording
+    // (stops firing results AND onend), which would quietly halt verse-catching
+    // partway through a sermon. If we see no speech activity for a while, tear
+    // the dead recognizer down and start a fresh one so it keeps going for the
+    // whole 45+ minutes.
+    if (audioState.speechWatchdog) clearInterval(audioState.speechWatchdog);
+    audioState.speechWatchdog = setInterval(() => {
+      if (!audioState.recording || !audioState.speechWanted) return;
+      if (Date.now() - (audioState.speechLastActivity || 0) > 25000) respawnRecognition();
+    }, 8000);
+  }
+  // Create a FRESH recognition instance each cycle — more robust over a long
+  // sermon than restarting one reused object.
+  function spawnRecognition() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    try {
-      const r = new SR();
-      // interimResults gives us the moment each phrase is FIRST heard, so a
-      // reference gets the timestamp of when it was actually said — not when the
-      // engine finalizes (which can lag to the end of the recording).
-      r.continuous = true; r.interimResults = true; r.lang = 'en-US';
-      // Per result index: when each reference was FIRST heard, and which ones we
-      // already committed. Committing live off interim results (not waiting for
-      // the final, which can lag minutes) means every reference is caught the
-      // moment it's spoken AND gets its own accurate timestamp — instead of all
-      // the references in one long result sharing a single time.
-      const seenAt = {};   // i → { refKey: firstElapsedSeconds }
-      const done = {};     // i → [ committed {key, code, chapter, verse, kind, id} ]
-      const chunkT = {};   // i → elapsed when this result index was first seen
-      r.onresult = e => {
-        const now = audioElapsed();
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const res = e.results[i], txt = res[0].transcript;
-          if (!seenAt[i]) seenAt[i] = {};
-          if (!done[i]) done[i] = [];
-          if (chunkT[i] == null) chunkT[i] = now;
-          // Each interim update is the current truth for this ONE phrase. Repair
-          // ASR merges, add anything new, and prune references the phrase no
-          // longer supports — so "Isaiah forty"→"41" churn doesn't leave a stray
-          // "Isaiah 40", while a real "Isaiah 40 and 41" (both in the text) stays.
-          const eff = parseSpokenRefs(txt).map(ref => reinterpretRef(ref, done[i]));
-          const wantKeys = new Set(eff.map(heardKey));
-          eff.forEach(ref => {
-            const key = heardKey(ref);
-            if (seenAt[i][key] == null) seenAt[i][key] = now; // first-heard time
-            commitHeardRef(s, ref, key, seenAt[i][key], done[i], txt);
-          });
-          for (let k = done[i].length - 1; k >= 0; k--) {
-            if (!wantKeys.has(done[i][k].key)) {
-              const d = done[i][k];
-              s.heard = s.heard.filter(h => h.id !== d.id);
-              done[i].splice(k, 1);
-              persist();
-              if (activeTab === 'verses' && versesSub === 'heard') renderTabBody(s);
-            }
-          }
-          if (res.isFinal) {
-            // Log the finalized transcript for the post-sermon final sweep.
-            audioState.transcript.push({ text: txt, t: chunkT[i] });
-            audioState._lastInterim = null;
-            delete seenAt[i]; delete done[i]; delete chunkT[i];
-          } else {
-            audioState._lastInterim = { text: txt, t: chunkT[i] };
+    let r;
+    try { r = new SR(); } catch (e) { audioState.speech = null; return; }
+    r.continuous = true; r.interimResults = true; r.lang = 'en-US';
+    const seenAt = {}, done = {}, chunkT = {};   // per-result-index tracking
+    const bump = () => { audioState.speechLastActivity = Date.now(); };
+    r.onstart = bump;
+    r.onresult = e => {
+      bump();
+      const s = audioState.speechSermon; if (!s) return;
+      const now = audioElapsed();
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i], txt = res[0].transcript;
+        if (!seenAt[i]) seenAt[i] = {};
+        if (!done[i]) done[i] = [];
+        if (chunkT[i] == null) chunkT[i] = now;
+        // Each interim update is the current truth for this ONE phrase. Repair
+        // ASR merges, add anything new, and prune references the phrase no longer
+        // supports — so "Isaiah forty"→"41" churn doesn't leave a stray "Isaiah
+        // 40", while a real "Isaiah 40 and 41" (both in the text) stays.
+        const eff = parseSpokenRefs(txt).map(ref => reinterpretRef(ref, done[i]));
+        const wantKeys = new Set(eff.map(heardKey));
+        eff.forEach(ref => {
+          const key = heardKey(ref);
+          if (seenAt[i][key] == null) seenAt[i][key] = now; // first-heard time
+          commitHeardRef(s, ref, key, seenAt[i][key], done[i], txt);
+        });
+        for (let k = done[i].length - 1; k >= 0; k--) {
+          if (!wantKeys.has(done[i][k].key)) {
+            const d = done[i][k];
+            s.heard = s.heard.filter(h => h.id !== d.id);
+            done[i].splice(k, 1);
+            persist();
+            if (activeTab === 'verses' && versesSub === 'heard') renderTabBody(s);
           }
         }
-        updateRecTimer();
-      };
-      r.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { audioState.speechWanted = false; audioState.speech = null; } };
-      let lastStart = 0, backoff = 0;
-      r.onstart = () => { lastStart = Date.now(); };
-      r.onend = () => {
-        // Web Speech sessions time out (~1 min); relaunch so a long sermon keeps
-        // being transcribed. Keep the interim we had at the restart boundary so
-        // the final sweep can stitch across it, then reset per-index tracking.
-        if (audioState._lastInterim) { audioState.transcript.push(audioState._lastInterim); audioState._lastInterim = null; }
-        for (const k in seenAt) delete seenAt[k];
-        for (const k in done) delete done[k];
-        for (const k in chunkT) delete chunkT[k];
-        if (!audioState.speechWanted) return;
-        // If it ended almost immediately (e.g. no network at church), back off so
-        // we don't hot-loop and drain the battery; recover to instant restarts
-        // once healthy sessions resume.
-        backoff = (Date.now() - lastStart < 1500) ? Math.min((backoff || 200) * 2, 8000) : 0;
-        setTimeout(() => { if (audioState.speechWanted) { try { r.start(); } catch (e) {} } }, backoff);
-      };
-      audioState.speech = r; audioState.speechWanted = true;
-      r.start();
-    } catch (e) { audioState.speech = null; }
+        if (res.isFinal) {
+          audioState.transcript.push({ text: txt, t: chunkT[i] }); // for the final sweep
+          audioState._lastInterim = null;
+          delete seenAt[i]; delete done[i]; delete chunkT[i];
+        } else {
+          audioState._lastInterim = { text: txt, t: chunkT[i] };
+        }
+      }
+      updateRecTimer();
+    };
+    r.onerror = ev => { bump(); if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { audioState.speechWanted = false; } };
+    r.onend = () => {
+      bump();
+      if (audioState._lastInterim) { audioState.transcript.push(audioState._lastInterim); audioState._lastInterim = null; }
+      if (audioState.speech === r) audioState.speech = null;
+      if (!audioState.speechWanted || !audioState.recording) return;
+      // Back off if sessions die instantly (no network at church) so we don't
+      // hot-loop; snap back to instant restarts once healthy sessions resume.
+      const gap = Date.now() - (audioState._speechStartedAt || 0);
+      audioState._speechBackoff = gap < 1500 ? Math.min((audioState._speechBackoff || 200) * 2, 8000) : 0;
+      setTimeout(() => { if (audioState.speechWanted && audioState.recording && !audioState.speech) spawnRecognition(); }, audioState._speechBackoff);
+    };
+    audioState.speech = r;
+    audioState._speechStartedAt = Date.now();
+    bump();
+    try { r.start(); } catch (e) { audioState.speech = null; setTimeout(() => { if (audioState.speechWanted && audioState.recording && !audioState.speech) spawnRecognition(); }, 500); }
+  }
+  function respawnRecognition() {
+    const old = audioState.speech;
+    if (old) { old.onstart = old.onresult = old.onerror = old.onend = null; try { old.abort ? old.abort() : old.stop(); } catch (e) {} }
+    audioState.speech = null;
+    audioState.speechLastActivity = Date.now();
+    setTimeout(() => { if (audioState.speechWanted && audioState.recording && !audioState.speech) spawnRecognition(); }, 300);
   }
   // Commit one caught reference for a result index, superseding a less-specific
   // partial (book→chapter→exact) heard earlier in the same utterance.
@@ -1340,7 +1353,9 @@
   }
   function stopSpeech() {
     audioState.speechWanted = false;
-    if (audioState.speech) { try { audioState.speech.stop(); } catch (e) {} audioState.speech = null; }
+    if (audioState.speechWatchdog) { clearInterval(audioState.speechWatchdog); audioState.speechWatchdog = null; }
+    const r = audioState.speech;
+    if (r) { r.onstart = r.onresult = r.onerror = r.onend = null; try { r.stop(); } catch (e) {} try { r.abort && r.abort(); } catch (e) {} audioState.speech = null; }
   }
 
   /* ── Spoken-reference tables & parser ──
