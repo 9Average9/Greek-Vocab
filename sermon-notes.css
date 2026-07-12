@@ -50,7 +50,7 @@ body.dark #sermonNotesPage { --sn-bg: color-mix(in srgb, var(--card-solid-color,
 .sn-topbar {
   position: sticky;
   top: 0;
-  z-index: 6;
+  z-index: 40; /* above all note-canvas content so nothing scrolls over it */
   background: var(--sn-card);
   padding-top: env(safe-area-inset-top, 0px);
   box-shadow: 0 1px 0 var(--sn-line), 0 6px 20px color-mix(in srgb, var(--sn-ink) 6%, transparent);
@@ -123,6 +123,7 @@ body.dark .sn-live-pill { color: color-mix(in srgb, var(--sn-accent) 55%, #fff);
 .sn-paper-wrap { padding: 16px 14px 200px; }
 .sn-canvas {
   position: relative;
+  isolation: isolate; /* contain block/sticky/deco z-indexes so none escape over the top bar */
   min-height: 640px;
   border-radius: 20px;
   padding: 18px 16px;
@@ -158,8 +159,25 @@ body.dark .sn-live-pill { color: color-mix(in srgb, var(--sn-accent) 55%, #fff);
   background-color: #f6ecd6;
   background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(150,110,50,.22) 32px);
 }
+.sn-canvas.paper-blank {
+  background-color: #ffffff;
+  background-image: none;
+}
 .sn-canvas.paper-dark .sn-block,
 .sn-canvas.paper-dark .sn-mainidea { color: #ece9f5; }
+
+/* Add-vertical-space button, pinned to the bottom of the paper. */
+.sn-canvas-extend {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px; border: none; cursor: pointer;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--sn-ink) 6%, transparent));
+  color: var(--sn-muted); font-weight: 750; font-size: .78rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.sn-canvas.paper-dark .sn-canvas-extend { color: #b8b2d8; }
+.sn-canvas-extend .material-symbols-outlined { font-size: 18px; }
+.sn-canvas-extend:active { filter: brightness(.94); }
 
 /* Drawing layer */
 .sn-draw-canvas {
@@ -172,7 +190,8 @@ body.dark .sn-live-pill { color: color-mix(in srgb, var(--sn-accent) 55%, #fff);
 .sn-canvas.sn-drawing .sn-draw-canvas { pointer-events: auto; }
 .sn-canvas.sn-drawing .sn-block,
 .sn-canvas.sn-drawing .sn-sticky,
-.sn-canvas.sn-drawing .sn-deco { pointer-events: none; }
+.sn-canvas.sn-drawing .sn-deco,
+.sn-canvas.sn-drawing .sn-canvas-extend { pointer-events: none; }
 
 /* Main Idea card */
 .sn-mainidea {
@@ -469,8 +488,8 @@ body.dark .sn-live-pill { color: color-mix(in srgb, var(--sn-accent) 55%, #fff);
 /* ═══════════ POPOVER SHEETS (paper / stickers / colors / more) ═══════════ */
 .sn-sheet-scrim {
   position: fixed; inset: 0; z-index: 960;
-  background: color-mix(in srgb, var(--sn-ink) 34%, transparent);
-  -webkit-backdrop-filter: blur(3px) saturate(1.1); backdrop-filter: blur(3px) saturate(1.1);
+  background: color-mix(in srgb, #0a0714 52%, transparent);
+  -webkit-backdrop-filter: blur(4px) saturate(1.1); backdrop-filter: blur(4px) saturate(1.1);
   display: flex; align-items: flex-end; justify-content: center;
   opacity: 0; pointer-events: none; transition: opacity .22s ease;
 }
@@ -500,6 +519,7 @@ body.dark .sn-live-pill { color: color-mix(in srgb, var(--sn-accent) 55%, #fff);
 .pv-grid { background: #fbfcff; background-image: linear-gradient(rgba(80,110,170,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(80,110,170,.3) 1px, transparent 1px); background-size: 12px 12px; }
 .pv-dark { background: #1a1730 radial-gradient(rgba(255,255,255,.18) 1.2px, transparent 1.3px) 4px 4px / 12px 12px; }
 .pv-cream { background: #f6ecd6 repeating-linear-gradient(transparent, transparent 11px, rgba(150,110,50,.4) 12px); }
+.pv-blank { background: #ffffff; }
 
 .sn-sticker-grid { grid-template-columns: repeat(6, 1fr); }
 .sn-sticker { font-size: 30px; text-align: center; padding: 8px 0; border-radius: 12px; cursor: pointer; background: var(--sn-bg); border: 1px solid var(--sn-line); }
@@ -638,3 +658,46 @@ body.dark .sn-live-pill { color: color-mix(in srgb, var(--sn-accent) 55%, #fff);
 .sn-dialog-btn.sn-cancel { background: var(--sn-bg); color: var(--sn-ink); border: 1px solid var(--sn-line); }
 .sn-dialog-btn.sn-ok { background: var(--sn-accent); color: #fff; }
 .sn-dialog-btn.sn-ok.sn-danger { background: #dc2626; }
+
+/* ═══════════ Verse browser (inside Add-Verse sheet) ═══════════ */
+.sn-vp { margin-top: 4px; }
+.sn-vp-loading {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 26px; color: var(--sn-muted); font-weight: 650; font-size: .9rem;
+}
+.sn-vp-loading .material-symbols-outlined { animation: sn-spin 1.1s linear infinite; }
+@keyframes sn-spin { to { transform: rotate(360deg); } }
+.sn-vp-books { max-height: 46vh; overflow-y: auto; display: grid; gap: 4px; }
+.sn-vp-book {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 12px 12px; border: 1px solid var(--sn-line); border-radius: 12px;
+  background: var(--sn-card); color: var(--sn-ink); cursor: pointer;
+  font-weight: 700; font-size: .94rem; text-align: left;
+}
+.sn-vp-book:active { background: var(--sn-accent-soft); }
+.sn-vp-book .material-symbols-outlined { color: var(--sn-accent); font-size: 20px; }
+.sn-vp-crumbs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.sn-vp-crumb {
+  border: none; background: var(--sn-accent-soft); color: var(--sn-accent-deep);
+  font-weight: 800; font-size: .8rem; padding: 5px 11px; border-radius: 999px; cursor: pointer;
+}
+.sn-vp-crumb.sn-cur { background: var(--sn-accent); color: #fff; }
+.sn-vp-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 8px; max-height: 42vh; overflow-y: auto; padding: 2px;
+}
+.sn-vp-cell {
+  aspect-ratio: 1; display: grid; place-items: center;
+  border: 1px solid var(--sn-line); border-radius: 11px;
+  background: var(--sn-card); color: var(--sn-ink); cursor: pointer;
+  font-weight: 750; font-size: .92rem; -webkit-tap-highlight-color: transparent;
+}
+.sn-vp-cell:active { transform: scale(.92); }
+.sn-vp-cell.sn-sel { background: var(--sn-accent); color: #fff; border-color: var(--sn-accent); }
+.sn-vp-hint { color: var(--sn-muted); font-size: .8rem; margin-bottom: 10px; }
+.sn-vp-confirm {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 14px; padding: 12px 14px; border-radius: 14px;
+  background: var(--sn-accent-soft); border: 1px solid color-mix(in srgb, var(--sn-accent) 30%, transparent);
+}
+.sn-vp-conf-label { font-size: 1rem; font-weight: 850; color: var(--sn-accent-deep); }
