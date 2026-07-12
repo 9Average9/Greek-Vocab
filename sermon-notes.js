@@ -267,14 +267,13 @@
     const homeBtn = document.querySelector('#rhemaSlide .rhema-back-btn');
     if (backBtn) backBtn.classList.remove('hidden');
     if (homeBtn) homeBtn.classList.add('hidden');
-    // Slide Sermon Notes closed, then slide Rhema open focused on the verse.
-    page.classList.remove('sn-open');
-    setTimeout(() => {
-      page.classList.add('sn-hidden');
-      Promise.resolve(showRhema()).then(() => {
-        try { jumpToRhemaVerse(p.code, p.chapter, p.verse); } catch (e) {}
-      }).catch(() => {});
-    }, 240);
+    // Rhema's modal (z-index 1000) sits ABOVE the Sermon Notes page (945), so we
+    // open it straight on top — it slides up over the Verses view. Sermon Notes
+    // stays mounted underneath, so there's no flash of the Home screen and it's
+    // revealed again when Rhema slides back down on Back.
+    Promise.resolve(showRhema()).then(() => {
+      try { jumpToRhemaVerse(p.code, p.chapter, p.verse); } catch (e) {}
+    }).catch(() => {});
     return true;
   }
   // Wired to the Rhema header Back button (added in index.html).
@@ -283,15 +282,26 @@
     const homeBtn = document.querySelector('#rhemaSlide .rhema-back-btn');
     if (backBtn) backBtn.classList.add('hidden');
     if (homeBtn) homeBtn.classList.remove('hidden');
-    const modal = document.getElementById('rhemaModal');
-    if (modal) modal.classList.remove('open'); // its own CSS transition slides it away
-    if (typeof showBottomNav === 'function') showBottomNav();
     _snRhemaReturn = false;
-    if (!page) return;
-    activeTab = 'verses';
-    page.classList.remove('sn-hidden');
-    requestAnimationFrame(() => page.classList.add('sn-open'));
-    if (current) renderEditor(); else openLibrary();
+    // Make sure Sermon Notes is visible on the Verses tab underneath before Rhema
+    // slides away (it normally stayed mounted, but guard the edge case).
+    if (page && page.classList.contains('sn-hidden')) {
+      activeTab = 'verses';
+      page.classList.remove('sn-hidden');
+      page.classList.add('sn-open');
+      if (current) renderEditor(); else openLibrary();
+    }
+    // Slide Rhema down to reveal Sermon Notes (mirrors the app's own close anim).
+    const modal = document.getElementById('rhemaModal');
+    if (modal && modal.classList.contains('open')) {
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) { modal.classList.remove('open'); }
+      else {
+        modal.classList.add('rhema-nav-leave');
+        setTimeout(() => modal.classList.remove('open', 'rhema-nav-leave'), 320);
+      }
+    }
+    if (typeof showBottomNav === 'function') showBottomNav();
   };
 
   /* ══════════════════════════════════════════════════════════════════════
