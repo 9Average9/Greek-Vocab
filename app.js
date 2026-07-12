@@ -41914,6 +41914,26 @@ function jumpToRhemaVerse(book, chapter, verse, highlightStrongs) {
   updateRhemaBreadcrumb();
 }
 
+// Open a reference as the plain main verse in view WITHOUT adding to the
+// breadcrumb history trail — used by Sermon Notes when jumping to a verse.
+function snSetRhemaVerse(book, chapter, verse) {
+  const fromBook = _rhemaBook;
+  _rhemaTrail = [];
+  _rhemaTrailPos = -1;
+  _rhemaIntroMode = false;
+  _rhemaBook = book;
+  _rhemaChapter = String(chapter);
+  _rhemaVerse = String(verse);
+  if (typeof isRhemaOTBook === 'function' && isRhemaOTBook(book) && !isRhemaOTBook(fromBook)) _rhemaOTLayer = 'hebrew';
+  _rhemaFullChapter = false;
+  _rhemaVerseFocus = true;
+  _rhemaHighlightStrongs = null;
+  if (typeof closeRhemaSheet === 'function') closeRhemaSheet();
+  syncRhemaPicker();
+  renderRhemaVerse();
+  updateRhemaBreadcrumb();
+}
+
 function updateRhemaBreadcrumb() {
   const el = document.getElementById('rhemaBreadcrumb');
   if (!el) return;
