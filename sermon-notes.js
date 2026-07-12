@@ -274,7 +274,8 @@
   let _snRhemaReturn = false;
   function openVerseRef(ref) {
     const p = parseRef(ref);
-    if (!p || typeof showRhema !== 'function' || typeof jumpToRhemaVerse !== 'function') { toast('📖 ' + ref); return false; }
+    const setter = window.snSetRhemaVerse || window.jumpToRhemaVerse;
+    if (!p || typeof showRhema !== 'function' || typeof setter !== 'function') { toast('📖 ' + ref); return false; }
     _snRhemaReturn = true;
     const backBtn = document.getElementById('rhemaSermonNotesBackBtn');
     const homeBtn = document.querySelector('#rhemaSlide .rhema-back-btn');
@@ -283,9 +284,10 @@
     // Rhema's modal (z-index 1000) sits ABOVE the Sermon Notes page (945), so we
     // open it straight on top — it slides up over the Verses view. Sermon Notes
     // stays mounted underneath, so there's no flash of the Home screen and it's
-    // revealed again when Rhema slides back down on Back.
+    // revealed again when Rhema slides back down on Back. snSetRhemaVerse opens
+    // the verse as the plain main view WITHOUT adding to the breadcrumb trail.
     Promise.resolve(showRhema()).then(() => {
-      try { jumpToRhemaVerse(p.code, p.chapter, p.verse); } catch (e) {}
+      try { setter(p.code, p.chapter, p.verse); } catch (e) {}
     }).catch(() => {});
     return true;
   }
@@ -344,7 +346,7 @@
     });
     // Recording guards: if the tab is backgrounded or the app is closed while
     // recording, flush the current segment so it's saved (never lost).
-    const flushIfRecording = () => { if (audioState.recording) { const s = getSermon(current); if (s) stopRecording(s).then(() => { const box = document.getElementById('snAudio'); if (box) drawAudio(s, box); }); } };
+    const flushIfRecording = () => { if (audioState.recording) { const s = getSermon(current); if (s) stopRecording(s).then(() => refreshAudio(s)); } };
     document.addEventListener('visibilitychange', () => { if (document.hidden) flushIfRecording(); });
     window.addEventListener('pagehide', flushIfRecording);
     window.addEventListener('beforeunload', e => {
@@ -463,7 +465,7 @@
       Promise.all(s.audioSegments.map(seg =>
         loadAudioBlob(seg.id).then(blob => { if (blob) audioState.segUrls[seg.id] = URL.createObjectURL(blob); })
       )).then(() => {
-        if (current === id) { const box = document.getElementById('snAudio'); if (box) drawAudio(s, box); }
+        if (current === id) refreshAudio(s);
       });
     }
   }
@@ -950,16 +952,44 @@
   }
 
   function renderAudio(s) {
+    const wrap = el('div', { class: 'sn-audio-wrap', id: 'snAudioWrap' });
+    redrawAudioWrap(s, wrap);
+    return wrap;
+  }
+  function redrawAudioWrap(s, wrap) {
+    wrap = wrap || document.getElementById('snAudioWrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';
     const box = el('div', { class: 'sn-audio', id: 'snAudio' });
     drawAudio(s, box);
-    return box;
+    wrap.appendChild(box);
+    wrap.appendChild(listenRow(s));
+  }
+  function refreshAudio(s) { const box = document.getElementById('snAudio'); if (box) drawAudio(s, box); }
+  // Toggle: "Listen for spoken verses". Off = fully silent recording (no speech
+  // recognition, so no dictation beep on phones that make one).
+  function listenRow(s) {
+    if (!speechSupported()) return el('div', { class: 'sn-listen-row sn-listen-na' }, [icon('hearing_disabled'), 'Live verse-listening isn’t supported in this browser']);
+    const on = listenEnabled();
+    return el('button', { class: 'sn-listen-row' + (on ? ' sn-on' : ''), onclick: () => {
+      const now = !listenEnabled();
+      setListen(now);
+      if (audioState.recording) { if (now) startSpeech(s); else stopSpeech(); }
+      redrawAudioWrap(s);
+    } }, [
+      icon(on ? 'hearing' : 'hearing_disabled'),
+      el('span', { class: 'sn-listen-label' }, [on ? 'Listening for spoken verses' : 'Verse listening off', el('small', { text: on ? 'Tap to record silently (some phones beep while listening)' : 'Tap to auto-catch verses as they’re spoken' })]),
+      el('span', { class: 'sn-listen-switch' + (on ? ' sn-on' : '') })
+    ]);
   }
 
   /* ───────── Recording ───────── */
   async function toggleRecord(s, box) {
-    if (audioState.recording) { await stopRecording(s); drawAudio(s, box); return; }
+    if (audioState.recording) { await stopRecording(s); refreshAudio(s); return; }
     if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Recording isn’t supported on this device'); return; }
     stopPlayback();
+    // Warm the Bible data so caught references can be validated to real passages.
+    if (typeof window.loadRhemaScripts === 'function') { try { window.loadRhemaScripts(); } catch (e) {} }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioState.stream = stream;
@@ -977,7 +1007,7 @@
       audioState.startTs = Date.now();
       audioState.heardThisSession = 0;
       startSpeech(s);
-      drawAudio(s, box);
+      refreshAudio(s);
       audioState.timer = setInterval(() => updateRecTimer(), 500);
       toast(s.audioSegments.length ? 'Recording resumed — new part' : 'Recording started');
     } catch (e) {
@@ -988,7 +1018,7 @@
     const te = document.getElementById('snAudioTime');
     if (te) te.textContent = fmtTime(audioElapsed());
     const hc = document.getElementById('snHeardCount');
-    if (hc && audioState.speech) hc.textContent = String(audioState.heardThisSession);
+    if (hc && audioState.speech) hc.textContent = String(audioState.heardThisSession + (audioState.provHeard || 0));
   }
   function stopRecording(s) {
     return new Promise(resolve => {
@@ -1019,7 +1049,7 @@
     }
     audioState.baseOffset = s.audioTotal || 0;
     audioState.recording = false;
-    if (box) drawAudio(s, box);
+    refreshAudio(s);
     if (audioState._resolveStop) { const r = audioState._resolveStop; audioState._resolveStop = null; r(); }
   }
 
@@ -1090,10 +1120,12 @@
     const btn = document.getElementById('snPlayBtn');
     if (btn) btn.querySelector('.material-symbols-outlined').textContent = audioState.player.playing ? 'pause' : 'play_arrow';
   }
+  const SN_PREROLL = 3; // seconds of lead-in so the run-up to a reference isn't cut off
   function seekAudio(t) {
     const s = getSermon(current); if (!s) return;
     if (!s.audioSegments || !s.audioSegments.length) { toast('Record audio to jump back to ' + fmtTime(t)); return; }
-    playFrom(s, t);
+    const from = Math.max(0, (t || 0) - SN_PREROLL);
+    playFrom(s, from);
     toast('▶ ' + fmtTime(t));
   }
 
@@ -1175,19 +1207,29 @@
      SPEECH → VERSE CATCHER
      ══════════════════════════════════════════════════════════════════════ */
   function speechSupported() { return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window; }
+  function listenEnabled() { try { return localStorage.getItem('snListenForVerses') !== '0'; } catch (e) { return true; } }
+  function setListen(v) { try { localStorage.setItem('snListenForVerses', v ? '1' : '0'); } catch (e) {} }
   function startSpeech(s) {
-    if (!speechSupported()) { audioState.speech = null; return; }
+    audioState.provHeard = 0;
+    if (!speechSupported() || !listenEnabled()) { audioState.speech = null; return; }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     try {
       const r = new SR();
-      r.continuous = true; r.interimResults = false; r.lang = 'en-US';
+      // interimResults gives us the moment each phrase is FIRST heard, so a
+      // reference gets the timestamp of when it was actually said — not when the
+      // engine finalizes (which can lag to the end of the recording).
+      r.continuous = true; r.interimResults = true; r.lang = 'en-US';
+      const startT = {}; // result index → elapsed seconds when first seen
       r.onresult = e => {
+        let prov = 0;
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          if (e.results[i].isFinal) {
-            const txt = e.results[i][0].transcript;
-            catchReferences(s, txt, audioElapsed());
-          }
+          if (startT[i] == null) startT[i] = audioElapsed();
+          const res = e.results[i], txt = res[0].transcript;
+          if (res.isFinal) { catchReferences(s, txt, startT[i]); delete startT[i]; }
+          else { prov += parseSpokenRefs(txt).length; }
         }
+        audioState.provHeard = prov;
+        updateRecTimer();
       };
       r.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { audioState.speech = null; } };
       r.onend = () => { if (audioState.speechWanted) { try { r.start(); } catch (e) {} } };
@@ -1197,6 +1239,7 @@
   }
   function stopSpeech() {
     audioState.speechWanted = false;
+    audioState.provHeard = 0;
     if (audioState.speech) { try { audioState.speech.stop(); } catch (e) {} audioState.speech = null; }
   }
 
@@ -1228,6 +1271,31 @@
     return null;
   }
   function sbRhemaReady() { try { return typeof window._rhemaText === 'function' && window._rhemaText(); } catch (e) { return false; } }
+  function sbSuffix(ch, v) { return ch != null ? ' ' + ch + (v != null ? ':' + v : '') : ''; }
+  // Return a book's chapter map from Rhema, or null if data isn't available.
+  function sbChapters(code) { const T = sbRhemaReady(); return (T && T[code]) || null; }
+  // Repair a (chapter, verse) so it points at a real passage. Speech often merges
+  // "chapter 1 verse 2" into "12"; if the raw chapter doesn't exist we try
+  // splitting the digits into a real chapter+verse. Falls back to chapter-only or
+  // book-only rather than inventing a non-existent reference.
+  function sbFix(code, chapter, verse) {
+    if (chapter == null) return { chapter: null, verse: null };
+    const B = sbChapters(code);
+    if (!B) return { chapter, verse }; // no data loaded → trust as spoken
+    const has = (c, v) => !!(B[String(c)] && (v == null || B[String(c)][String(v)]));
+    if (has(chapter, verse)) return { chapter, verse };
+    const d = String(chapter);
+    if (d.length >= 2) {
+      // Prefer a split that satisfies the spoken verse (if any), else any real split.
+      for (let cut = 1; cut < d.length; cut++) {
+        const c = parseInt(d.slice(0, cut), 10), v = parseInt(d.slice(cut), 10);
+        if (verse != null && has(c, verse)) return { chapter: c, verse };
+        if (has(c, v)) return { chapter: c, verse: v };
+      }
+    }
+    if (B[String(chapter)]) return { chapter, verse: null }; // chapter real, verse wasn't
+    return { chapter: null, verse: null }; // couldn't validate → book mention
+  }
 
   // Pure parser: text → array of classified reference entries (no timestamp).
   function parseSpokenRefs(text) {
@@ -1254,32 +1322,31 @@
         else { const vn = sbReadNumber(toks, j); if (vn && vn.value <= 176) { verse = vn.value; j = vn.next; } }
       }
 
-      // confidence gate for bare book mentions
+      // confidence gate for bare book mentions (a spoken number always counts).
+      const rawHadNumber = chapter != null;
       const cue = [toks[i - 1], toks[i - 2], toks[i - 3]].some(w => w && SB_CUES.has(w));
-      if (chapter == null && !SB_RARE.has(baseName) && !cue) { i += span - 1; continue; }
-      const kind = chapter == null ? 'book' : (verse == null ? 'chapter' : 'exact');
+      if (!rawHadNumber && !SB_RARE.has(baseName) && !cue) { i += span - 1; continue; }
 
-      // resolve code(s)
+      // resolve candidate code(s)
       let codes;
       if (explicitNum != null) { const c = SB_NUMBERED[baseName] && SB_NUMBERED[baseName][explicitNum]; if (!c) { i += span - 1; continue; } codes = [c]; }
       else if (SB_AMBIG[baseName]) codes = SB_AMBIG[baseName].slice();
       else codes = [SB_SINGLE[baseName]];
 
-      // narrow ambiguous options by whether the chapter/verse actually exists
-      if (codes.length > 1 && chapter != null) {
-        const T = sbRhemaReady();
-        if (T) {
-          const f = codes.filter(c => { const bk = T[c]; if (!bk) return true; const ch = bk[String(chapter)]; if (!ch) return false; if (verse != null && !ch[String(verse)]) return false; return true; });
-          if (f.length) codes = f;
-        }
-      }
+      // Validate + repair each candidate against real chapter/verse ranges, so a
+      // speech-merged number ("Philippians 12" ← "1 2") becomes the real
+      // "Philippians 1:2" and we never store a passage that doesn't exist.
+      let cand = codes.map(c => { const f = sbFix(c, chapter, verse); return { code: c, chapter: f.chapter, verse: f.verse, ref: sbBookName(c) + sbSuffix(f.chapter, f.verse), kind: f.chapter == null ? 'book' : (f.verse == null ? 'chapter' : 'exact') }; });
+      // When a number was spoken, prefer candidates that resolved to a real chapter.
+      if (rawHadNumber) { const withCh = cand.filter(c => c.chapter != null); if (withCh.length) cand = withCh; }
+      // De-dupe identical resolved refs (e.g. two options that fixed to the same).
+      const seen = new Set(); cand = cand.filter(c => { if (seen.has(c.ref)) return false; seen.add(c.ref); return true; });
 
-      const suffix = chapter != null ? ' ' + chapter + (verse != null ? ':' + verse : '') : '';
-      if (codes.length === 1) {
-        results.push({ kind, code: codes[0], chapter, verse, ref: sbBookName(codes[0]) + suffix, options: null });
+      if (cand.length === 1) {
+        const c = cand[0];
+        results.push({ kind: c.kind, code: c.code, chapter: c.chapter, verse: c.verse, ref: c.ref, options: null });
       } else {
-        const options = codes.map(c => sbBookName(c) + suffix);
-        results.push({ kind: 'ambiguous', baseKind: kind, code: null, chapter, verse, ref: options[0], options, codes });
+        results.push({ kind: 'ambiguous', code: null, chapter, verse, ref: cand[0].ref, options: cand.map(c => c.ref), codes: cand.map(c => c.code) });
       }
       i += span - 1;
     }
