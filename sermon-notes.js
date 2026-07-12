@@ -1057,7 +1057,7 @@
     let prevTail = '', changed = 0;
     chunks.forEach(ch => {
       const stitched = (prevTail ? prevTail + ' ' : '') + (ch.text || '');
-      parseSpokenRefs(stitched).forEach(ref => { if (commitHeardRef(s, ref, heardKey(ref), ch.t, doneList, stitched)) changed++; });
+      parseSpokenRefs(stitched).map(ref => reinterpretRef(ref, doneList)).forEach(ref => { if (commitHeardRef(s, ref, heardKey(ref), ch.t, doneList, stitched)) changed++; });
       prevTail = String(ch.text || '').split(/\s+/).slice(-8).join(' ');
     });
     if (changed > 0) { updateHeardBadge(s); if (activeTab === 'verses' && versesSub === 'heard') renderTabBody(s); toast('Final check found ' + changed + ' more reference' + (changed === 1 ? '' : 's')); }
@@ -1241,11 +1241,26 @@
           if (!seenAt[i]) seenAt[i] = {};
           if (!done[i]) done[i] = [];
           if (chunkT[i] == null) chunkT[i] = now;
-          parseSpokenRefs(txt).forEach(ref => {
+          // Each interim update is the current truth for this ONE phrase. Repair
+          // ASR merges, add anything new, and prune references the phrase no
+          // longer supports — so "Isaiah forty"→"41" churn doesn't leave a stray
+          // "Isaiah 40", while a real "Isaiah 40 and 41" (both in the text) stays.
+          const eff = parseSpokenRefs(txt).map(ref => reinterpretRef(ref, done[i]));
+          const wantKeys = new Set(eff.map(heardKey));
+          eff.forEach(ref => {
             const key = heardKey(ref);
             if (seenAt[i][key] == null) seenAt[i][key] = now; // first-heard time
             commitHeardRef(s, ref, key, seenAt[i][key], done[i], txt);
           });
+          for (let k = done[i].length - 1; k >= 0; k--) {
+            if (!wantKeys.has(done[i][k].key)) {
+              const d = done[i][k];
+              s.heard = s.heard.filter(h => h.id !== d.id);
+              done[i].splice(k, 1);
+              persist();
+              if (activeTab === 'verses' && versesSub === 'heard') renderTabBody(s);
+            }
+          }
           if (res.isFinal) {
             // Log the finalized transcript for the post-sermon final sweep.
             audioState.transcript.push({ text: txt, t: chunkT[i] });
@@ -1281,6 +1296,29 @@
   }
   // Commit one caught reference for a result index, superseding a less-specific
   // partial (book→chapter→exact) heard earlier in the same utterance.
+  // ASR merge repair. Speaking "Isaiah four one" (= 4:1) often streams as
+  // "Isaiah four" then merges into "Isaiah 41". Given what we already caught in
+  // THIS phrase, reinterpret a merged chapter number back into chapter:verse:
+  //  • "41" when we already hold exact 4:1  → 4:1 (the merged form of it)
+  //  • "41" when we already hold chapter 4  → 4:1 (the number grew out of it)
+  function reinterpretRef(ref, doneList) {
+    if (!ref.code || ref.kind !== 'chapter' || ref.chapter == null) return ref;
+    const N = String(ref.chapter);
+    const ex = doneList.find(d => d.code === ref.code && d.kind === 'exact' && (String(d.chapter) + String(d.verse)) === N);
+    if (ex) return { code: ref.code, chapter: ex.chapter, verse: ex.verse, kind: 'exact', ref: sbBookName(ref.code) + ' ' + ex.chapter + ':' + ex.verse, options: null };
+    for (const d of doneList) {
+      if (d.code === ref.code && d.kind === 'chapter' && d.chapter != null && d.chapter !== ref.chapter) {
+        const P = String(d.chapter);
+        if (N.length > P.length && N.startsWith(P)) {
+          const v = parseInt(N.slice(P.length), 10);
+          const B = sbChapters(ref.code);
+          if (v > 0 && (!B || (B[P] && B[P][String(v)]))) return { code: ref.code, chapter: d.chapter, verse: v, kind: 'exact', ref: sbBookName(ref.code) + ' ' + P + ':' + v, options: null };
+          break;
+        }
+      }
+    }
+    return ref;
+  }
   // Returns true if it added or upgraded a reference, false if it was a no-op.
   function commitHeardRef(s, ref, key, t, doneList, txt) {
     if (doneList.some(d => d.key === key)) return false;
