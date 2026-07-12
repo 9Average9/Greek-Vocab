@@ -347,7 +347,10 @@
     // Recording guards: if the tab is backgrounded or the app is closed while
     // recording, flush the current segment so it's saved (never lost).
     const flushIfRecording = () => { if (audioState.recording) { const s = getSermon(current); if (s) stopRecording(s).then(() => refreshAudio(s)); } };
-    document.addEventListener('visibilitychange', () => { if (document.hidden) flushIfRecording(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) flushIfRecording();
+      else if (audioState.recording) acquireWakeLock(); // wake lock drops when hidden
+    });
     window.addEventListener('pagehide', flushIfRecording);
     window.addEventListener('beforeunload', e => {
       if (audioState.recording) { flushIfRecording(); e.preventDefault(); e.returnValue = ''; return ''; }
@@ -935,6 +938,13 @@
   }
   function audioElapsed() { return Math.round(audioState.baseOffset + (audioState.recording ? (Date.now() - audioState.startTs) / 1000 : 0)); }
 
+  // Keep the screen awake during recording so a 45-minute sermon isn't cut off
+  // by the phone auto-locking (which would suspend capture).
+  async function acquireWakeLock() {
+    try { if (navigator.wakeLock && !audioState.wakeLock) audioState.wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+  }
+  function releaseWakeLock() { try { if (audioState.wakeLock) audioState.wakeLock.release(); } catch (e) {} audioState.wakeLock = null; }
+
   function resetAudioSession() {
     stopPlayback();
     if (audioState.recording) {
@@ -943,6 +953,7 @@
       try { audioState.recorder && audioState.recorder.stop(); } catch (e) {}
     }
     stopSpeech();
+    releaseWakeLock();
     audioState.recording = false; audioState.baseOffset = 0; audioState.segId = null;
     if (audioState.timer) { clearInterval(audioState.timer); audioState.timer = null; }
     Object.values(audioState.segUrls).forEach(u => { try { URL.revokeObjectURL(u); } catch (e) {} });
@@ -981,6 +992,7 @@
       audioState.recording = true;
       audioState.startTs = Date.now();
       audioState.heardThisSession = 0;
+      acquireWakeLock();
       startSpeech(s);
       refreshAudio(s);
       audioState.timer = setInterval(() => updateRecTimer(), 500);
@@ -993,7 +1005,7 @@
     const te = document.getElementById('snAudioTime');
     if (te) te.textContent = fmtTime(audioElapsed());
     const hc = document.getElementById('snHeardCount');
-    if (hc && audioState.speech) hc.textContent = String(audioState.heardThisSession + (audioState.provHeard || 0));
+    if (hc && audioState.speech) hc.textContent = String(audioState.heardThisSession || 0);
   }
   function stopRecording(s) {
     return new Promise(resolve => {
@@ -1024,6 +1036,7 @@
     }
     audioState.baseOffset = s.audioTotal || 0;
     audioState.recording = false;
+    releaseWakeLock();
     refreshAudio(s);
     if (audioState._resolveStop) { const r = audioState._resolveStop; audioState._resolveStop = null; r(); }
   }
@@ -1183,7 +1196,6 @@
      ══════════════════════════════════════════════════════════════════════ */
   function speechSupported() { return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window; }
   function startSpeech(s) {
-    audioState.provHeard = 0;
     if (!speechSupported()) { audioState.speech = null; return; }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     try {
@@ -1192,27 +1204,61 @@
       // reference gets the timestamp of when it was actually said — not when the
       // engine finalizes (which can lag to the end of the recording).
       r.continuous = true; r.interimResults = true; r.lang = 'en-US';
-      const startT = {}; // result index → elapsed seconds when first seen
+      // Per result index: when each reference was FIRST heard, and which ones we
+      // already committed. Committing live off interim results (not waiting for
+      // the final, which can lag minutes) means every reference is caught the
+      // moment it's spoken AND gets its own accurate timestamp — instead of all
+      // the references in one long result sharing a single time.
+      const seenAt = {};   // i → { refKey: firstElapsedSeconds }
+      const done = {};     // i → [ committed {key, code, chapter, verse, kind, id} ]
       r.onresult = e => {
-        let prov = 0;
+        const now = audioElapsed();
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          if (startT[i] == null) startT[i] = audioElapsed();
           const res = e.results[i], txt = res[0].transcript;
-          if (res.isFinal) { catchReferences(s, txt, startT[i]); delete startT[i]; }
-          else { prov += parseSpokenRefs(txt).length; }
+          if (!seenAt[i]) seenAt[i] = {};
+          if (!done[i]) done[i] = [];
+          parseSpokenRefs(txt).forEach(ref => {
+            const key = heardKey(ref);
+            if (seenAt[i][key] == null) seenAt[i][key] = now; // first-heard time
+            commitHeardRef(s, ref, key, seenAt[i][key], done[i], txt);
+          });
+          if (res.isFinal) { delete seenAt[i]; delete done[i]; }
         }
-        audioState.provHeard = prov;
         updateRecTimer();
       };
       r.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { audioState.speech = null; } };
-      r.onend = () => { if (audioState.speechWanted) { try { r.start(); } catch (e) {} } };
+      r.onend = () => {
+        // Web Speech sessions time out (~1 min); relaunch so a long sermon keeps
+        // being transcribed. Reset per-index tracking since indices restart.
+        for (const k in seenAt) delete seenAt[k];
+        for (const k in done) delete done[k];
+        if (audioState.speechWanted) { try { r.start(); } catch (e) {} }
+      };
       audioState.speech = r; audioState.speechWanted = true;
       r.start();
     } catch (e) { audioState.speech = null; }
   }
+  // Commit one caught reference for a result index, superseding a less-specific
+  // partial (book→chapter→exact) heard earlier in the same utterance.
+  function commitHeardRef(s, ref, key, t, doneList, txt) {
+    if (doneList.some(d => d.key === key)) return;
+    const spec = e => e.kind === 'exact' ? 3 : e.kind === 'chapter' ? 2 : e.kind === 'book' ? 1 : 0;
+    if (ref.code) {
+      for (let k = doneList.length - 1; k >= 0; k--) {
+        const d = doneList[k];
+        if (d.code !== ref.code) continue;
+        const sameChapter = d.kind === 'book' || d.chapter === ref.chapter;
+        if (sameChapter && spec(d) > spec(ref)) return;            // a better one already exists
+        if (sameChapter && spec(ref) > spec(d)) {                   // this refines an earlier partial
+          s.heard = s.heard.filter(h => h.id !== d.id); doneList.splice(k, 1);
+        }
+      }
+    }
+    const entry = addHeard(s, Object.assign({}, ref, { t: t, phrase: txt }));
+    if (entry) doneList.push({ key, code: ref.code, chapter: ref.chapter, verse: ref.verse, kind: ref.kind, id: entry.id });
+  }
   function stopSpeech() {
     audioState.speechWanted = false;
-    audioState.provHeard = 0;
     if (audioState.speech) { try { audioState.speech.stop(); } catch (e) {} audioState.speech = null; }
   }
 
@@ -1341,14 +1387,23 @@
   function addHeard(s, entry) {
     const key = heardKey(entry);
     const existing = s.heard.find(h => heardKey(h) === key);
-    if (existing) { existing.count = (existing.count || 1) + 1; persist(); return; }
-    entry.id = uid(); entry.count = 1; entry.confirmed = false;
+    if (existing) {
+      // Same reference again LATER in the sermon (a real re-mention, >8s after the
+      // last one) bumps the ×count; interim re-fires of the same moment don't.
+      if (entry.t != null && (existing.lastT == null || entry.t - existing.lastT > 8)) {
+        existing.count = (existing.count || 1) + 1; existing.lastT = entry.t; persist();
+        if (activeTab === 'verses' && versesSub === 'heard') renderTabBody(s);
+      }
+      return existing;
+    }
+    entry.id = uid(); entry.count = 1; entry.confirmed = false; entry.lastT = entry.t;
     s.heard.push(entry);
     touch(s);
-    audioState.heardThisSession++;
+    audioState.heardThisSession = (audioState.heardThisSession || 0) + 1;
     updateRecTimer();
     updateHeardBadge(s);
     if (activeTab === 'verses' && versesSub === 'heard') renderTabBody(s);
+    return entry;
   }
   function updateHeardBadge(s) {
     const b = document.getElementById('snHeardBadge');
