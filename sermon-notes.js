@@ -952,36 +952,11 @@
   }
 
   function renderAudio(s) {
-    const wrap = el('div', { class: 'sn-audio-wrap', id: 'snAudioWrap' });
-    redrawAudioWrap(s, wrap);
-    return wrap;
-  }
-  function redrawAudioWrap(s, wrap) {
-    wrap = wrap || document.getElementById('snAudioWrap');
-    if (!wrap) return;
-    wrap.innerHTML = '';
     const box = el('div', { class: 'sn-audio', id: 'snAudio' });
     drawAudio(s, box);
-    wrap.appendChild(box);
-    wrap.appendChild(listenRow(s));
+    return box;
   }
   function refreshAudio(s) { const box = document.getElementById('snAudio'); if (box) drawAudio(s, box); }
-  // Toggle: "Listen for spoken verses". Off = fully silent recording (no speech
-  // recognition, so no dictation beep on phones that make one).
-  function listenRow(s) {
-    if (!speechSupported()) return el('div', { class: 'sn-listen-row sn-listen-na' }, [icon('hearing_disabled'), 'Live verse-listening isn’t supported in this browser']);
-    const on = listenEnabled();
-    return el('button', { class: 'sn-listen-row' + (on ? ' sn-on' : ''), onclick: () => {
-      const now = !listenEnabled();
-      setListen(now);
-      if (audioState.recording) { if (now) startSpeech(s); else stopSpeech(); }
-      redrawAudioWrap(s);
-    } }, [
-      icon(on ? 'hearing' : 'hearing_disabled'),
-      el('span', { class: 'sn-listen-label' }, [on ? 'Listening for spoken verses' : 'Verse listening off', el('small', { text: on ? 'Tap to record silently (some phones beep while listening)' : 'Tap to auto-catch verses as they’re spoken' })]),
-      el('span', { class: 'sn-listen-switch' + (on ? ' sn-on' : '') })
-    ]);
-  }
 
   /* ───────── Recording ───────── */
   async function toggleRecord(s, box) {
@@ -1207,11 +1182,9 @@
      SPEECH → VERSE CATCHER
      ══════════════════════════════════════════════════════════════════════ */
   function speechSupported() { return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window; }
-  function listenEnabled() { try { return localStorage.getItem('snListenForVerses') !== '0'; } catch (e) { return true; } }
-  function setListen(v) { try { localStorage.setItem('snListenForVerses', v ? '1' : '0'); } catch (e) {} }
   function startSpeech(s) {
     audioState.provHeard = 0;
-    if (!speechSupported() || !listenEnabled()) { audioState.speech = null; return; }
+    if (!speechSupported()) { audioState.speech = null; return; }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     try {
       const r = new SR();
