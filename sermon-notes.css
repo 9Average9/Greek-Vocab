@@ -450,6 +450,99 @@ body.dark .sn-live-pill { color: color-mix(in srgb, var(--sn-accent) 55%, #fff);
 .sn-audio-bar { height: 6px; border-radius: 999px; background: var(--sn-line); margin-top: 6px; overflow: hidden; }
 .sn-audio-bar span { display: block; height: 100%; width: 0; background: var(--sn-accent); }
 .sn-audio-hint { font-size: .72rem; color: var(--sn-muted); margin-top: 4px; }
+.sn-audio-hint strong { color: var(--sn-accent); }
+
+/* Live recording state */
+.sn-audio.sn-audio-live { border-color: color-mix(in srgb, #dc2626 40%, var(--sn-line)); }
+.sn-audio-liverow { display: flex; align-items: center; gap: 10px; }
+.sn-audio-dot { width: 9px; height: 9px; border-radius: 50%; background: #dc2626; animation: sn-blink 1s infinite; flex-shrink: 0; }
+@keyframes sn-blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+.sn-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 16px; margin-left: auto; }
+.sn-eq span { width: 3px; background: var(--sn-accent); border-radius: 2px; animation: sn-eq 0.9s ease-in-out infinite; }
+.sn-eq span:nth-child(1){ animation-delay:0s } .sn-eq span:nth-child(2){ animation-delay:.15s }
+.sn-eq span:nth-child(3){ animation-delay:.3s } .sn-eq span:nth-child(4){ animation-delay:.45s }
+.sn-eq span:nth-child(5){ animation-delay:.6s }
+@keyframes sn-eq { 0%,100% { height: 4px; } 50% { height: 16px; } }
+
+/* Playback player */
+.sn-audio-play { background: var(--sn-accent); }
+.sn-play-track {
+  position: relative; height: 8px; border-radius: 999px; background: var(--sn-line);
+  margin: 4px 0 6px; cursor: pointer; touch-action: none;
+}
+.sn-play-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 999px; background: var(--sn-accent); }
+.sn-play-knob {
+  position: absolute; top: 50%; left: 0; width: 15px; height: 15px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--sn-accent); transform: translate(-50%, -50%);
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+.sn-play-times { display: flex; justify-content: space-between; font-size: .68rem; font-weight: 700; color: var(--sn-muted); font-variant-numeric: tabular-nums; }
+.sn-audio-more {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  border: 1px solid var(--sn-line); background: var(--sn-bg); color: var(--sn-accent);
+  border-radius: 12px; padding: 7px 9px; cursor: pointer; font-weight: 800; font-size: .64rem;
+}
+.sn-audio-more .material-symbols-outlined { font-size: 19px; }
+.sn-audio-more:active { transform: scale(.94); }
+
+/* ═══════════ Verses sub-tabs + Heard cards ═══════════ */
+.sn-subtabs { display: flex; gap: 8px; margin: 2px 0 12px; }
+.sn-subtab {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--sn-line); background: var(--sn-card); color: var(--sn-muted);
+  border-radius: 999px; padding: 7px 14px; cursor: pointer; font-weight: 800; font-size: .82rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.sn-subtab.sn-active { background: var(--sn-accent); color: #fff; border-color: var(--sn-accent); }
+.sn-subtab-badge {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  display: inline-grid; place-items: center; font-size: .68rem; font-weight: 850;
+  background: color-mix(in srgb, var(--sn-accent) 18%, var(--sn-card)); color: var(--sn-accent);
+}
+.sn-subtab.sn-active .sn-subtab-badge { background: rgba(255,255,255,.28); color: #fff; }
+.sn-sub-hint { color: var(--sn-muted); font-size: .82rem; line-height: 1.45; margin: -4px 2px 14px; }
+
+.sn-heard-card {
+  background: var(--sn-card); border: 1px solid var(--sn-line);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(30,20,60,.05);
+}
+.sn-heard-card.sn-confirmed { border-color: color-mix(in srgb, var(--sn-accent) 45%, transparent); }
+.sn-heard-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sn-heard-kind {
+  display: inline-flex; align-items: center; gap: 4px; font-size: .66rem; font-weight: 850;
+  text-transform: uppercase; letter-spacing: .03em; padding: 3px 8px; border-radius: 999px;
+}
+.sn-heard-kind .material-symbols-outlined { font-size: 13px; }
+.sn-hk-exact { background: color-mix(in srgb, #0d9488 16%, var(--sn-card)); color: #0d9488; }
+.sn-hk-chapter { background: color-mix(in srgb, var(--sn-accent) 16%, var(--sn-card)); color: var(--sn-accent); }
+.sn-hk-book { background: color-mix(in srgb, #d97706 18%, var(--sn-card)); color: #b45309; }
+.sn-hk-ambiguous { background: color-mix(in srgb, #7c3aed 16%, var(--sn-card)); color: #7c3aed; }
+.sn-heard-time {
+  display: inline-flex; align-items: center; gap: 3px; border: none; cursor: pointer;
+  background: var(--sn-bg); color: var(--sn-accent); font-weight: 800; font-size: .72rem;
+  padding: 3px 9px; border-radius: 999px;
+}
+.sn-heard-time .material-symbols-outlined { font-size: 14px; }
+.sn-heard-count { margin-left: auto; font-size: .72rem; font-weight: 800; color: var(--sn-muted); }
+.sn-heard-ref { font-size: 1.12rem; font-weight: 850; margin-bottom: 10px; }
+.sn-heard-ambnote { font-size: .82rem; color: var(--sn-muted); font-style: italic; margin-bottom: 8px; }
+.sn-heard-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.sn-heard-opt {
+  border: 1.5px solid color-mix(in srgb, var(--sn-accent) 40%, transparent);
+  background: var(--sn-accent-soft); color: var(--sn-accent-deep);
+  border-radius: 10px; padding: 9px 13px; cursor: pointer; font-weight: 800; font-size: .9rem;
+}
+.sn-heard-opt:active { transform: scale(.96); }
+.sn-heard-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.sn-heard-add, .sn-heard-open, .sn-heard-dismiss {
+  display: inline-flex; align-items: center; gap: 5px; border-radius: 999px;
+  padding: 8px 13px; cursor: pointer; font-weight: 800; font-size: .8rem; border: 1px solid var(--sn-line);
+}
+.sn-heard-add .material-symbols-outlined, .sn-heard-open .material-symbols-outlined, .sn-heard-dismiss .material-symbols-outlined { font-size: 16px; }
+.sn-heard-add { background: var(--sn-accent); color: #fff; border-color: var(--sn-accent); }
+.sn-heard-open { background: var(--sn-card); color: var(--sn-ink); }
+.sn-heard-dismiss { background: var(--sn-card); color: var(--sn-muted); }
 
 /* ═══════════ BOTTOM TOOL DOCK ═══════════ */
 .sn-dock {

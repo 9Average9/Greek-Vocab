@@ -69,14 +69,27 @@
       bookmarks: [],
       drawing: '',
       canvasH: 0,
-      audioDuration: 0,
-      hasAudio: false,
+      audioSegments: [], // [{ id, startAt, duration }] — blobs live in IndexedDB by id
+      audioTotal: 0,     // continuous timeline length across all segments (seconds)
+      heard: [],         // auto-caught spoken Bible references
       createdAt: nowISO(),
       updatedAt: nowISO()
     };
   }
   function getSermon(id) { return store.sermons.find(s => s.id === id); }
   function touch(s) { s.updatedAt = nowISO(); persist(); }
+  // Bring older sermons up to the multi-segment audio model.
+  function migrateSermon(s) {
+    if (!s) return s;
+    if (!Array.isArray(s.audioSegments)) s.audioSegments = [];
+    if (s.hasAudio && s.audioSegments.length === 0) {
+      s.audioSegments = [{ id: s.id, startAt: 0, duration: s.audioDuration || 0 }];
+    }
+    if (typeof s.audioTotal !== 'number') s.audioTotal = s.audioSegments.reduce((a, x) => a + (x.duration || 0), 0);
+    if (!Array.isArray(s.heard)) s.heard = [];
+    delete s.hasAudio; delete s.audioDuration;
+    return s;
+  }
 
   /* ───────── Tiny DOM builder ───────── */
   function el(tag, props, kids) {
@@ -309,6 +322,7 @@
      ══════════════════════════════════════════════════════════════════════ */
   let page, launchRect = null, current = null; // current = active sermon id (editor) or null (library)
   let activeTab = 'notes';
+  let versesSub = 'added'; // 'added' | 'heard'
 
   function buildShell() {
     if (page) return;
@@ -328,6 +342,14 @@
       const chip = e.target.closest && e.target.closest('.sn-verse-chip');
       if (chip && chip.dataset.ref) { e.preventDefault(); openVerseRef(chip.dataset.ref); }
     });
+    // Recording guards: if the tab is backgrounded or the app is closed while
+    // recording, flush the current segment so it's saved (never lost).
+    const flushIfRecording = () => { if (audioState.recording) { const s = getSermon(current); if (s) stopRecording(s).then(() => { const box = document.getElementById('snAudio'); if (box) drawAudio(s, box); }); } };
+    document.addEventListener('visibilitychange', () => { if (document.hidden) flushIfRecording(); });
+    window.addEventListener('pagehide', flushIfRecording);
+    window.addEventListener('beforeunload', e => {
+      if (audioState.recording) { flushIfRecording(); e.preventDefault(); e.returnValue = ''; return ''; }
+    });
   }
 
   window.openSermonNotes = function (launcher) {
@@ -341,7 +363,7 @@
 
   window.closeSermonNotes = function () {
     if (!page) return;
-    stopAudio(true);
+    resetAudioSession();
     page.classList.remove('sn-open');
     setTimeout(() => page && page.classList.add('sn-hidden'), 280);
   };
@@ -418,7 +440,8 @@
     const ok = await snConfirm({ title: 'Delete this sermon?', message: '“' + (s.title || 'Untitled sermon') + '” and its notes will be permanently removed.', ok: 'Delete', danger: true, icon: 'delete' });
     if (!ok) return;
     store.sermons = store.sermons.filter(x => x.id !== s.id);
-    deleteAudioBlob(s.id);
+    (s.audioSegments || []).forEach(seg => deleteAudioBlob(seg.id));
+    deleteAudioBlob(s.id); // legacy single-blob key
     persist(true);
     openLibrary();
     toast('Sermon deleted');
@@ -430,20 +453,17 @@
   function openEditor(id) {
     current = id;
     activeTab = 'notes';
-    // Reset the session audio player for the sermon we're opening.
-    stopAudio(true);
-    if (audioState.url) { URL.revokeObjectURL(audioState.url); audioState.url = null; }
-    audioState.audioEl = null;
-    renderEditor();
-    // Rehydrate any saved recording from IndexedDB.
+    // Fully reset the audio engine for the sermon we're opening.
+    resetAudioSession();
     const s = getSermon(id);
-    if (s && s.hasAudio) {
-      loadAudioBlob(id).then(blob => {
-        if (blob && current === id) {
-          audioState.url = URL.createObjectURL(blob);
-          const box = document.getElementById('snAudio');
-          if (box) drawAudio(s, box);
-        }
+    if (s) migrateSermon(s);
+    renderEditor();
+    // Preload every saved segment's blob → object URL so playback is instant.
+    if (s && s.audioSegments.length) {
+      Promise.all(s.audioSegments.map(seg =>
+        loadAudioBlob(seg.id).then(blob => { if (blob) audioState.segUrls[seg.id] = URL.createObjectURL(blob); })
+      )).then(() => {
+        if (current === id) { const box = document.getElementById('snAudio'); if (box) drawAudio(s, box); }
       });
     }
   }
@@ -887,85 +907,412 @@
     ]));
   }
 
-  /* ───────── Audio timeline ───────── */
-  const audioState = { recorder: null, chunks: [], recording: false, startTs: 0, url: null, audioEl: null, timer: null };
+  /* ══════════════════════════════════════════════════════════════════════
+     AUDIO ENGINE — multi-segment recording on one continuous timeline, with
+     a real playback player and live speech → verse catching.
+
+     • Each Record→Stop makes a SEGMENT (blob in IndexedDB). Segments chain into
+       one virtual timeline (startAt + duration), so accidentally stopping and
+       starting again never loses anything — both takes are saved and play back
+       seamlessly as one recording.
+     • Note timestamps use the continuous timeline (baseOffset + elapsed).
+     • While recording, SpeechRecognition (if available) listens and catches
+       spoken Bible references into the sermon's "Heard" list.
+     ══════════════════════════════════════════════════════════════════════ */
+  const audioState = {
+    recorder: null, chunks: [], recording: false, startTs: 0, baseOffset: 0,
+    stream: null, segId: null, timer: null, heardThisSession: 0,
+    segUrls: {},                 // segmentId → object URL (session cache)
+    player: { audio: null, seg: null, playing: false, raf: 0 },
+    speech: null, speechWanted: false
+  };
+  function fmtTime(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    const m = Math.floor(sec / 60), r = sec % 60;
+    return m + ':' + String(r).padStart(2, '0');
+  }
+  function audioElapsed() { return Math.round(audioState.baseOffset + (audioState.recording ? (Date.now() - audioState.startTs) / 1000 : 0)); }
+
+  function resetAudioSession() {
+    stopPlayback();
+    if (audioState.recording) {
+      audioState._stopAt = audioElapsed(); // capture length before clearing the flag
+      audioState.recording = false;
+      try { audioState.recorder && audioState.recorder.stop(); } catch (e) {}
+    }
+    stopSpeech();
+    audioState.recording = false; audioState.baseOffset = 0; audioState.segId = null;
+    if (audioState.timer) { clearInterval(audioState.timer); audioState.timer = null; }
+    Object.values(audioState.segUrls).forEach(u => { try { URL.revokeObjectURL(u); } catch (e) {} });
+    audioState.segUrls = {};
+    audioState.player = { audio: null, seg: null, playing: false, raf: 0 };
+    audioState.heardThisSession = 0;
+  }
+
   function renderAudio(s) {
     const box = el('div', { class: 'sn-audio', id: 'snAudio' });
     drawAudio(s, box);
     return box;
   }
-  function audioElapsed() { return audioState.recording ? Math.round((Date.now() - audioState.startTs) / 1000) : 0; }
-  function drawAudio(s, box) {
-    box.innerHTML = '';
-    const recBtn = el('button', { class: 'sn-audio-rec' + (audioState.recording ? ' sn-recording' : ''), 'aria-label': 'Record',
-      onclick: () => toggleRecord(s, box) }, [icon(audioState.recording ? 'stop' : 'mic')]);
-    const time = el('div', { class: 'sn-audio-time', id: 'snAudioTime', text: fmtTime(s.audioDuration || 0) });
-    const bar = el('div', { class: 'sn-audio-bar' }, [el('span', { id: 'snAudioFill' })]);
-    const hint = el('div', { class: 'sn-audio-hint', text: audioState.recording ? 'Recording… captures now get timestamps' : (audioState.url ? 'Tap ▶ or any timestamp to replay' : 'Record the sermon to timestamp your notes') });
-    const mid = el('div', { class: 'sn-audio-mid' }, [time, bar, hint]);
-    box.appendChild(recBtn);
-    box.appendChild(mid);
-    if (audioState.url && !audioState.recording) {
-      box.appendChild(el('button', { class: 'sn-audio-rec', style: { background: 'var(--sn-purple)' }, 'aria-label': 'Play', onclick: () => playAudio() }, [icon('play_arrow')]));
-    }
-  }
+
+  /* ───────── Recording ───────── */
   async function toggleRecord(s, box) {
-    if (audioState.recording) { stopAudio(); drawAudio(s, box); return; }
-    if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Recording not supported on this device'); return; }
+    if (audioState.recording) { await stopRecording(s); drawAudio(s, box); return; }
+    if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Recording isn’t supported on this device'); return; }
+    stopPlayback();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioState.stream = stream;
       audioState.chunks = [];
-      audioState.recorder = new MediaRecorder(stream);
-      audioState.recorder.ondataavailable = e => { if (e.data.size) audioState.chunks.push(e.data); };
-      audioState.recorder.onstop = () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(audioState.chunks, { type: 'audio/webm' });
-        if (audioState.url) URL.revokeObjectURL(audioState.url);
-        audioState.url = URL.createObjectURL(blob);
-        s.audioDuration = audioElapsedFinal;
-        s.hasAudio = true;
-        touch(s);
-        saveAudioBlob(s.id, blob).then(ok => { if (!ok) { s.hasAudio = false; persist(); toast('Audio kept for this session only'); } });
-        drawAudio(s, box);
-      };
-      audioState.recorder.start();
+      audioState.segId = uid();
+      audioState.baseOffset = s.audioTotal || 0; // continue the timeline
+      let rec;
+      try { rec = new MediaRecorder(stream, { mimeType: 'audio/webm' }); }
+      catch (e) { rec = new MediaRecorder(stream); }
+      audioState.recorder = rec;
+      rec.ondataavailable = e => { if (e.data && e.data.size) audioState.chunks.push(e.data); };
+      rec.onstop = () => finalizeSegment(s, box);
+      rec.start(3000); // periodic flush so a crash still leaves recoverable chunks
       audioState.recording = true;
       audioState.startTs = Date.now();
+      audioState.heardThisSession = 0;
+      startSpeech(s);
       drawAudio(s, box);
-      audioState.timer = setInterval(() => {
-        const t = audioElapsed();
-        const te = document.getElementById('snAudioTime');
-        if (te) te.textContent = fmtTime(t);
-      }, 1000);
-      toast('Recording started');
-    } catch (e) { toast('Microphone permission needed'); }
-  }
-  let audioElapsedFinal = 0;
-  function stopAudio(silent) {
-    if (audioState.timer) { clearInterval(audioState.timer); audioState.timer = null; }
-    if (audioState.recording && audioState.recorder) {
-      audioElapsedFinal = audioElapsed();
-      audioState.recording = false;
-      try { audioState.recorder.stop(); } catch (e) {}
+      audioState.timer = setInterval(() => updateRecTimer(), 500);
+      toast(s.audioSegments.length ? 'Recording resumed — new part' : 'Recording started');
+    } catch (e) {
+      toast(e && e.name === 'NotAllowedError' ? 'Microphone permission needed' : 'Couldn’t start recording');
     }
-    if (silent && audioState.audioEl) { try { audioState.audioEl.pause(); } catch (e) {} }
   }
-  function playAudio(from) {
-    if (!audioState.url) { toast('No recording yet'); return; }
-    if (!audioState.audioEl) audioState.audioEl = new Audio();
-    audioState.audioEl.src = audioState.url;
-    if (from != null) audioState.audioEl.currentTime = from;
-    audioState.audioEl.play().catch(() => {});
+  function updateRecTimer() {
+    const te = document.getElementById('snAudioTime');
+    if (te) te.textContent = fmtTime(audioElapsed());
+    const hc = document.getElementById('snHeardCount');
+    if (hc && audioState.speech) hc.textContent = String(audioState.heardThisSession);
+  }
+  function stopRecording(s) {
+    return new Promise(resolve => {
+      if (!audioState.recording) return resolve();
+      audioState._resolveStop = resolve;
+      audioState._stopAt = audioElapsed(); // capture length while still "recording"
+      audioState.recording = false;
+      if (audioState.timer) { clearInterval(audioState.timer); audioState.timer = null; }
+      stopSpeech();
+      try { audioState.recorder.stop(); } catch (e) { finalizeSegment(s); }
+    });
+  }
+  function finalizeSegment(s, box) {
+    const stopAt = (audioState._stopAt != null) ? audioState._stopAt : audioElapsed();
+    audioState._stopAt = null;
+    const dur = Math.max(1, Math.round(stopAt - (audioState.baseOffset || 0)));
+    if (audioState.stream) { audioState.stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); audioState.stream = null; }
+    const segId = audioState.segId;
+    const blob = new Blob(audioState.chunks, { type: 'audio/webm' });
+    audioState.chunks = [];
+    if (blob.size > 0 && segId) {
+      const seg = { id: segId, startAt: audioState.baseOffset || 0, duration: dur };
+      s.audioSegments.push(seg);
+      s.audioTotal = (s.audioTotal || 0) + dur;
+      audioState.segUrls[segId] = URL.createObjectURL(blob);
+      touch(s);
+      saveAudioBlob(segId, blob).then(ok => { if (!ok) toast('Audio kept for this session only'); });
+    }
+    audioState.baseOffset = s.audioTotal || 0;
+    audioState.recording = false;
+    if (box) drawAudio(s, box);
+    if (audioState._resolveStop) { const r = audioState._resolveStop; audioState._resolveStop = null; r(); }
+  }
+
+  /* ───────── Playback (continuous across segments) ───────── */
+  function timeline(s) { return (s.audioSegments || []).slice().sort((a, b) => a.startAt - b.startAt); }
+  function segAt(s, t) { const tl = timeline(s); return tl.find(g => t >= g.startAt && t < g.startAt + g.duration) || tl[tl.length - 1] || null; }
+  function ensurePlayerAudio() {
+    if (!audioState.player.audio) {
+      const a = new Audio();
+      a.addEventListener('ended', onSegEnded);
+      audioState.player.audio = a;
+    }
+    return audioState.player.audio;
+  }
+  let _playbackSermon = null;
+  function playFrom(s, globalT) {
+    const seg = segAt(s, globalT);
+    if (!seg) { toast('No recording yet'); return; }
+    const url = audioState.segUrls[seg.id];
+    _playbackSermon = s;
+    const a = ensurePlayerAudio();
+    const startLocal = Math.max(0, globalT - seg.startAt);
+    const begin = () => { try { a.currentTime = startLocal; } catch (e) {} a.play().then(() => { audioState.player.playing = true; runPlayLoop(s); }).catch(() => {}); };
+    if (audioState.player.seg && audioState.player.seg.id === seg.id && a.src) { begin(); }
+    else if (url) { audioState.player.seg = seg; a.src = url; a.onloadedmetadata = () => { a.onloadedmetadata = null; begin(); }; if (a.readyState >= 1) begin(); }
+    else {
+      loadAudioBlob(seg.id).then(blob => {
+        if (!blob) { toast('That part isn’t available'); return; }
+        audioState.segUrls[seg.id] = URL.createObjectURL(blob);
+        audioState.player.seg = seg; a.src = audioState.segUrls[seg.id];
+        a.onloadedmetadata = () => { a.onloadedmetadata = null; begin(); };
+      });
+    }
+  }
+  function onSegEnded() {
+    const s = _playbackSermon; if (!s) return;
+    const cur = audioState.player.seg; if (!cur) return;
+    const nextStart = cur.startAt + cur.duration;
+    const next = segAt(s, nextStart);
+    if (next && next.id !== cur.id) playFrom(s, nextStart);
+    else { audioState.player.playing = false; cancelAnimationFrame(audioState.player.raf); updatePlayheadUI(s, 0, true); }
+  }
+  function togglePlayback(s) {
+    const p = audioState.player;
+    if (p.playing) { pausePlayback(); }
+    else if (p.audio && p.seg && p.audio.src) { p.audio.play().then(() => { p.playing = true; runPlayLoop(s); }).catch(() => {}); }
+    else playFrom(s, 0);
+  }
+  function pausePlayback() { const p = audioState.player; if (p.audio) { try { p.audio.pause(); } catch (e) {} } p.playing = false; cancelAnimationFrame(p.raf); syncPlayBtn(); }
+  function stopPlayback() { const p = audioState.player; if (p.audio) { try { p.audio.pause(); } catch (e) {} } p.playing = false; if (p.raf) cancelAnimationFrame(p.raf); }
+  function globalPlayTime() { const p = audioState.player; return p.seg && p.audio ? p.seg.startAt + (p.audio.currentTime || 0) : 0; }
+  function runPlayLoop(s) {
+    cancelAnimationFrame(audioState.player.raf);
+    const step = () => { updatePlayheadUI(s, globalPlayTime(), false); if (audioState.player.playing) audioState.player.raf = requestAnimationFrame(step); };
+    step(); syncPlayBtn();
+  }
+  function updatePlayheadUI(s, t, ended) {
+    const total = s.audioTotal || 1;
+    const fill = document.getElementById('snPlayFill');
+    const knob = document.getElementById('snPlayKnob');
+    const cur = document.getElementById('snPlayCur');
+    const pct = ended ? 0 : Math.min(100, (t / total) * 100);
+    if (fill) fill.style.width = pct + '%';
+    if (knob) knob.style.left = pct + '%';
+    if (cur) cur.textContent = fmtTime(ended ? 0 : t);
+  }
+  function syncPlayBtn() {
+    const btn = document.getElementById('snPlayBtn');
+    if (btn) btn.querySelector('.material-symbols-outlined').textContent = audioState.player.playing ? 'pause' : 'play_arrow';
   }
   function seekAudio(t) {
-    if (!audioState.url) { toast('Record audio to jump back to ' + fmtTime(t)); return; }
-    playAudio(t);
+    const s = getSermon(current); if (!s) return;
+    if (!s.audioSegments || !s.audioSegments.length) { toast('Record audio to jump back to ' + fmtTime(t)); return; }
+    playFrom(s, t);
     toast('▶ ' + fmtTime(t));
   }
-  function fmtTime(sec) {
-    sec = Math.max(0, Math.round(sec || 0));
-    const m = Math.floor(sec / 60), r = sec % 60;
-    return m + ':' + String(r).padStart(2, '0');
+
+  /* ───────── The audio widget UI ───────── */
+  function drawAudio(s, box) {
+    box.innerHTML = '';
+    const hasAudio = s.audioSegments && s.audioSegments.length > 0;
+
+    if (audioState.recording) {
+      box.classList.add('sn-audio-live');
+      box.appendChild(el('button', { class: 'sn-audio-rec sn-recording', 'aria-label': 'Stop recording', onclick: () => toggleRecord(s, box) }, [icon('stop')]));
+      const mid = el('div', { class: 'sn-audio-mid' }, [
+        el('div', { class: 'sn-audio-liverow' }, [
+          el('span', { class: 'sn-audio-dot' }),
+          el('div', { class: 'sn-audio-time', id: 'snAudioTime', text: fmtTime(audioElapsed()) }),
+          el('div', { class: 'sn-eq' }, [el('span'), el('span'), el('span'), el('span'), el('span')])
+        ]),
+        el('div', { class: 'sn-audio-hint' }, [
+          audioState.speech
+            ? el('span', {}, ['Listening for verses · caught ', el('strong', { id: 'snHeardCount', text: String(audioState.heardThisSession) }), ' so far'])
+            : el('span', { text: 'Recording… your captures get timestamps' })
+        ])
+      ]);
+      box.appendChild(mid);
+      return;
+    }
+    box.classList.remove('sn-audio-live');
+
+    if (!hasAudio) {
+      box.appendChild(el('button', { class: 'sn-audio-rec', 'aria-label': 'Record', onclick: () => toggleRecord(s, box) }, [icon('mic')]));
+      box.appendChild(el('div', { class: 'sn-audio-mid' }, [
+        el('div', { class: 'sn-audio-time', text: 'Record the sermon' }),
+        el('div', { class: 'sn-audio-hint', text: 'Timestamps your notes and auto-catches spoken verses.' })
+      ]));
+      return;
+    }
+
+    // Playback player
+    const ready = s.audioSegments.every(seg => audioState.segUrls[seg.id]);
+    box.appendChild(el('button', { class: 'sn-audio-rec sn-audio-play', id: 'snPlayBtn', 'aria-label': 'Play / pause', onclick: () => togglePlayback(s) }, [icon(audioState.player.playing ? 'pause' : 'play_arrow')]));
+    const track = el('div', { class: 'sn-play-track', onpointerdown: e => scrubStart(e, s) }, [
+      el('span', { class: 'sn-play-fill', id: 'snPlayFill' }),
+      el('span', { class: 'sn-play-knob', id: 'snPlayKnob' })
+    ]);
+    const times = el('div', { class: 'sn-play-times' }, [
+      el('span', { id: 'snPlayCur', text: fmtTime(globalPlayTime()) }),
+      el('span', { text: fmtTime(s.audioTotal || 0) })
+    ]);
+    box.appendChild(el('div', { class: 'sn-audio-mid' }, [
+      track, times,
+      el('div', { class: 'sn-audio-hint', text: (s.audioSegments.length > 1 ? s.audioSegments.length + ' parts · ' : '') + (ready ? 'Tap a note’s timestamp to jump there' : 'Loading audio…') })
+    ]));
+    box.appendChild(el('button', { class: 'sn-audio-more', 'aria-label': 'Record more', title: 'Record another part', onclick: () => toggleRecord(s, box) }, [icon('mic'), 'More']));
+    updatePlayheadUI(s, globalPlayTime(), false);
+  }
+  function scrubStart(e, s) {
+    const track = e.currentTarget;
+    const rect = track.getBoundingClientRect();
+    const wasPlaying = audioState.player.playing;
+    const to = ev => {
+      const pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+      updatePlayheadUI(s, pct * (s.audioTotal || 0), false);
+      return pct;
+    };
+    const move = ev => to(ev);
+    const up = ev => {
+      window.removeEventListener('pointermove', move, true);
+      window.removeEventListener('pointerup', up, true);
+      const pct = to(ev);
+      playFrom(s, pct * (s.audioTotal || 0));
+      if (!wasPlaying) { /* start playing from seek — natural */ }
+    };
+    window.addEventListener('pointermove', move, true);
+    window.addEventListener('pointerup', up, true);
+    to(e);
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     SPEECH → VERSE CATCHER
+     ══════════════════════════════════════════════════════════════════════ */
+  function speechSupported() { return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window; }
+  function startSpeech(s) {
+    if (!speechSupported()) { audioState.speech = null; return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    try {
+      const r = new SR();
+      r.continuous = true; r.interimResults = false; r.lang = 'en-US';
+      r.onresult = e => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            const txt = e.results[i][0].transcript;
+            catchReferences(s, txt, audioElapsed());
+          }
+        }
+      };
+      r.onerror = ev => { if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { audioState.speech = null; } };
+      r.onend = () => { if (audioState.speechWanted) { try { r.start(); } catch (e) {} } };
+      audioState.speech = r; audioState.speechWanted = true;
+      r.start();
+    } catch (e) { audioState.speech = null; }
+  }
+  function stopSpeech() {
+    audioState.speechWanted = false;
+    if (audioState.speech) { try { audioState.speech.stop(); } catch (e) {} audioState.speech = null; }
+  }
+
+  /* ── Spoken-reference tables & parser ──
+     Bare numbered-book names are AMBIGUOUS (Corinthians → 1/2 Cor); an ordinal
+     resolves them. Book-only mentions are only recorded when the name is
+     unambiguously a book (RARE) or a cue word ("book of…", "turn to…") is
+     present — this stops everyday words / personal names from false-firing. But
+     the moment a chapter number appears, we ALWAYS record the reference, so an
+     exact "Acts 6:5" is never demoted to a mere "book mentioned". */
+  const SB_SINGLE = { genesis:'GEN', exodus:'EXO', leviticus:'LEV', numbers:'NUM', deuteronomy:'DEU', joshua:'JOS', judges:'JDG', ruth:'RUT', ezra:'EZR', nehemiah:'NEH', esther:'EST', job:'JOB', psalms:'PSA', psalm:'PSA', proverbs:'PRO', ecclesiastes:'ECC', 'song of solomon':'SNG', 'song of songs':'SNG', song:'SNG', isaiah:'ISA', jeremiah:'JER', lamentations:'LAM', ezekiel:'EZK', daniel:'DAN', hosea:'HOS', joel:'JOL', amos:'AMO', obadiah:'OBA', jonah:'JON', micah:'MIC', nahum:'NAM', habakkuk:'HAB', zephaniah:'ZEP', haggai:'HAG', zechariah:'ZEC', malachi:'MAL', matthew:'MAT', mark:'MAR', luke:'LUK', acts:'ACT', romans:'ROM', galatians:'GAL', ephesians:'EPH', philippians:'PHP', colossians:'COL', titus:'TIT', philemon:'PHM', hebrews:'HEB', james:'JAM', jude:'JUD', revelation:'REV', revelations:'REV' };
+  const SB_AMBIG = { john:['JOH','1JO','2JO','3JO'], corinthians:['1CO','2CO'], samuel:['1SA','2SA'], kings:['1KI','2KI'], chronicles:['1CH','2CH'], thessalonians:['1TH','2TH'], timothy:['1TI','2TI'], peter:['1PE','2PE'] };
+  const SB_NUMBERED = { john:{1:'1JO',2:'2JO',3:'3JO'}, corinthians:{1:'1CO',2:'2CO'}, samuel:{1:'1SA',2:'2SA'}, kings:{1:'1KI',2:'2KI'}, chronicles:{1:'1CH',2:'2CH'}, thessalonians:{1:'1TH',2:'2TH'}, timothy:{1:'1TI',2:'2TI'}, peter:{1:'1PE',2:'2PE'} };
+  const SB_RARE = new Set(['genesis','exodus','leviticus','deuteronomy','nehemiah','psalms','psalm','proverbs','ecclesiastes','song of solomon','song of songs','isaiah','jeremiah','lamentations','ezekiel','obadiah','habakkuk','zephaniah','haggai','zechariah','malachi','galatians','ephesians','philippians','colossians','thessalonians','corinthians','hebrews','revelation','revelations','philemon','nahum','deuteronomy','leviticus']);
+  const SB_CUES = new Set(['book','turn','read','reading','gospel','epistle','letter','passage','open','opening','over','scripture','verse','chapter']);
+  const SB_ORD = { first:1, second:2, third:3, one:1, two:2, three:3, i:1, ii:2, iii:3, '1':1, '2':2, '3':3 };
+  const SB_UNITS = { zero:0, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10, eleven:11, twelve:12, thirteen:13, fourteen:14, fifteen:15, sixteen:16, seventeen:17, eighteen:18, nineteen:19 };
+  const SB_TENS = { twenty:20, thirty:30, forty:40, fifty:50, sixty:60, seventy:70, eighty:80, ninety:90 };
+  function sbBookName(code) { return (window.RhemaBookNames && window.RhemaBookNames[code]) || code; }
+  function sbReadNumber(toks, i) {
+    if (i >= toks.length) return null;
+    if (/^\d{1,3}$/.test(toks[i])) return { value: parseInt(toks[i], 10), next: i + 1 };
+    let val = null, j = i, hundreds = 0;
+    if (toks[j] === 'a' && toks[j + 1] === 'hundred') { hundreds = 100; j += 2; val = 100; }
+    if (SB_UNITS[toks[j]] != null && toks[j + 1] === 'hundred') { hundreds = SB_UNITS[toks[j]] * 100; j += 2; val = hundreds; }
+    if (SB_TENS[toks[j]] != null) { val = (hundreds || 0) + SB_TENS[toks[j]]; j++; if (SB_UNITS[toks[j]] != null && SB_UNITS[toks[j]] < 10) { val += SB_UNITS[toks[j]]; j++; } return { value: val, next: j }; }
+    if (SB_UNITS[toks[j]] != null) { val = (hundreds || 0) + SB_UNITS[toks[j]]; j++; return { value: val, next: j }; }
+    if (val != null) return { value: val, next: j };
+    return null;
+  }
+  function sbRhemaReady() { try { return typeof window._rhemaText === 'function' && window._rhemaText(); } catch (e) { return false; } }
+
+  // Pure parser: text → array of classified reference entries (no timestamp).
+  function parseSpokenRefs(text) {
+    const results = [];
+    if (!text) return results;
+    const toks = String(text).toLowerCase().replace(/[:]/g, ' : ').replace(/[^a-z0-9: ]+/g, ' ').split(/\s+/).filter(Boolean);
+    for (let i = 0; i < toks.length; i++) {
+      let baseName = null, span = 0, explicitNum = null;
+      const t0 = toks[i], ord = SB_ORD[t0];
+      if (ord != null && SB_AMBIG[toks[i + 1]]) { explicitNum = ord; baseName = toks[i + 1]; span = 2; }
+      else if (t0 === 'song' && toks[i + 1] === 'of' && (toks[i + 2] === 'solomon' || toks[i + 2] === 'songs')) { baseName = 'song of ' + toks[i + 2]; span = 3; }
+      else if (SB_SINGLE[t0] || SB_AMBIG[t0]) { baseName = t0; span = 1; }
+      if (!baseName) continue;
+
+      // chapter / verse after the book
+      let j = i + span, chapter = null, verse = null;
+      if (toks[j] === 'the') j++;
+      if (toks[j] === 'chapter' || toks[j] === 'chapters') j++;
+      const cn = sbReadNumber(toks, j);
+      if (cn) {
+        chapter = cn.value; j = cn.next;
+        if (toks[j] === ':') { j++; const vn = sbReadNumber(toks, j); if (vn) { verse = vn.value; j = vn.next; } }
+        else if (toks[j] === 'verse' || toks[j] === 'verses' || toks[j] === 'v') { j++; const vn = sbReadNumber(toks, j); if (vn) { verse = vn.value; j = vn.next; } }
+        else { const vn = sbReadNumber(toks, j); if (vn && vn.value <= 176) { verse = vn.value; j = vn.next; } }
+      }
+
+      // confidence gate for bare book mentions
+      const cue = [toks[i - 1], toks[i - 2], toks[i - 3]].some(w => w && SB_CUES.has(w));
+      if (chapter == null && !SB_RARE.has(baseName) && !cue) { i += span - 1; continue; }
+      const kind = chapter == null ? 'book' : (verse == null ? 'chapter' : 'exact');
+
+      // resolve code(s)
+      let codes;
+      if (explicitNum != null) { const c = SB_NUMBERED[baseName] && SB_NUMBERED[baseName][explicitNum]; if (!c) { i += span - 1; continue; } codes = [c]; }
+      else if (SB_AMBIG[baseName]) codes = SB_AMBIG[baseName].slice();
+      else codes = [SB_SINGLE[baseName]];
+
+      // narrow ambiguous options by whether the chapter/verse actually exists
+      if (codes.length > 1 && chapter != null) {
+        const T = sbRhemaReady();
+        if (T) {
+          const f = codes.filter(c => { const bk = T[c]; if (!bk) return true; const ch = bk[String(chapter)]; if (!ch) return false; if (verse != null && !ch[String(verse)]) return false; return true; });
+          if (f.length) codes = f;
+        }
+      }
+
+      const suffix = chapter != null ? ' ' + chapter + (verse != null ? ':' + verse : '') : '';
+      if (codes.length === 1) {
+        results.push({ kind, code: codes[0], chapter, verse, ref: sbBookName(codes[0]) + suffix, options: null });
+      } else {
+        const options = codes.map(c => sbBookName(c) + suffix);
+        results.push({ kind: 'ambiguous', baseKind: kind, code: null, chapter, verse, ref: options[0], options, codes });
+      }
+      i += span - 1;
+    }
+    return results;
+  }
+  function catchReferences(s, text, t) {
+    parseSpokenRefs(text).forEach(e => { e.t = t; e.phrase = text; addHeard(s, e); });
+  }
+  // QA hooks (namespaced) — validate the recognizer without live speech.
+  window.__snParseSpokenRefs = parseSpokenRefs;
+  window.__snFeedSpeech = (text, t) => { const s = getSermon(current); if (s) catchReferences(s, text, t == null ? audioElapsed() : t); };
+
+  function heardKey(e) {
+    if (e.kind === 'ambiguous') return 'amb:' + e.codes.join(',') + ':' + (e.chapter || '') + ':' + (e.verse || '');
+    if (e.kind === 'book') return 'book:' + e.code;
+    if (e.kind === 'chapter') return 'ch:' + e.code + ':' + e.chapter;
+    return 'ex:' + e.code + ':' + e.chapter + ':' + e.verse;
+  }
+  function addHeard(s, entry) {
+    const key = heardKey(entry);
+    const existing = s.heard.find(h => heardKey(h) === key);
+    if (existing) { existing.count = (existing.count || 1) + 1; persist(); return; }
+    entry.id = uid(); entry.count = 1; entry.confirmed = false;
+    s.heard.push(entry);
+    touch(s);
+    audioState.heardThisSession++;
+    updateRecTimer();
+    updateHeardBadge(s);
+    if (activeTab === 'verses' && versesSub === 'heard') renderTabBody(s);
+  }
+  function updateHeardBadge(s) {
+    const b = document.getElementById('snHeardBadge');
+    if (b) { const n = s.heard.length; b.textContent = n; b.classList.toggle('sn-hidden', !n); }
   }
 
   /* ───────── OUTLINE TAB ───────── */
@@ -1143,24 +1490,86 @@
     const pane = el('div', { class: 'sn-pane' });
     pane.appendChild(el('div', { class: 'sn-pane-head' }, [
       el('h2', { text: 'Verses' }),
-      el('button', { class: 'sn-add-btn', onclick: () => openVerseAddSheet(s) }, [icon('add'), 'Add verse'])
+      versesSub === 'added'
+        ? el('button', { class: 'sn-add-btn', onclick: () => openVerseAddSheet(s) }, [icon('add'), 'Add verse'])
+        : el('span')
     ]));
-    pane.appendChild(el('p', { style: { color: 'var(--sn-muted)', fontSize: '.84rem', margin: '-6px 2px 16px' }, text: 'Every reference you type anywhere in your notes is auto-collected here.' }));
-    if (!s.verses.length) {
-      pane.appendChild(el('div', { class: 'sn-empty' }, [icon('menu_book'), el('p', { text: 'No verses yet. Type something like “Philippians 2:5” in your notes and it lands here automatically.' })]));
+    // Sub-tabs: Added (manual/typed) vs Heard (auto-caught from audio).
+    const subTab = (id, label, count) => el('button', {
+      class: 'sn-subtab' + (versesSub === id ? ' sn-active' : ''),
+      onclick: () => { versesSub = id; renderTabBody(s); }
+    }, [label, count != null ? el('span', { class: 'sn-subtab-badge' + (count ? '' : ' sn-hidden'), id: id === 'heard' ? 'snHeardBadge' : null, text: String(count) }) : null]);
+    pane.appendChild(el('div', { class: 'sn-subtabs' }, [
+      subTab('added', 'Added', s.verses.length),
+      subTab('heard', 'Heard in Sermon', s.heard.length)
+    ]));
+
+    if (versesSub === 'added') {
+      pane.appendChild(el('p', { class: 'sn-sub-hint', text: 'References you type in your notes or add here.' }));
+      if (!s.verses.length) {
+        pane.appendChild(el('div', { class: 'sn-empty' }, [icon('menu_book'), el('p', { text: 'No verses yet. Type something like “Philippians 2:5” in your notes and it lands here automatically.' })]));
+      }
+      s.verses.forEach(v => {
+        pane.appendChild(el('div', { class: 'sn-verse-card' }, [
+          icon('menu_book'),
+          el('div', { style: { flex: '1', minWidth: '0' } }, [
+            el('div', { class: 'sn-verse-ref', text: v.ref }),
+            el('input', { class: 'sn-verse-note', placeholder: 'Note…', value: v.note, style: { border: 'none', background: 'transparent', color: 'var(--sn-muted)', width: '100%', outline: 'none', fontSize: '.8rem' }, oninput: e => { v.note = e.target.value; touch(s); } })
+          ]),
+          el('button', { class: 'sn-verse-open', onclick: () => openVerseRef(v.ref) }, ['Open']),
+          el('button', { class: 'sn-verse-del', 'aria-label': 'Remove', onclick: () => { s.verses = s.verses.filter(x => x.id !== v.id); touch(s); renderTabBody(s); } }, [icon('close')])
+        ]));
+      });
+    } else {
+      renderHeard(s, pane);
     }
-    s.verses.forEach(v => {
-      pane.appendChild(el('div', { class: 'sn-verse-card' }, [
-        icon('menu_book'),
-        el('div', { style: { flex: '1', minWidth: '0' } }, [
-          el('div', { class: 'sn-verse-ref', text: v.ref }),
-          el('input', { class: 'sn-verse-note', placeholder: 'Note…', value: v.note, style: { border: 'none', background: 'transparent', color: 'var(--sn-muted)', width: '100%', outline: 'none', fontSize: '.8rem' }, oninput: e => { v.note = e.target.value; touch(s); } })
-        ]),
-        el('button', { class: 'sn-verse-open', onclick: () => openVerseRef(v.ref) }, ['Open']),
-        el('button', { class: 'sn-verse-del', 'aria-label': 'Remove', onclick: () => { s.verses = s.verses.filter(x => x.id !== v.id); touch(s); renderTabBody(s); } }, [icon('close')])
-      ]));
-    });
     return pane;
+  }
+
+  // "Heard in Sermon" — everything the listener caught being spoken.
+  function renderHeard(s, pane) {
+    pane.appendChild(el('p', { class: 'sn-sub-hint', text: speechSupported()
+      ? 'Every Bible reference we catch being spoken while recording lands here, with the moment it was said. Confirm the ones you want to keep.'
+      : 'Live listening isn’t supported in this browser, so nothing is auto-caught here. Recording and manual verses still work.' }));
+    if (!s.heard.length) {
+      pane.appendChild(el('div', { class: 'sn-empty' }, [icon('hearing'), el('p', { text: 'Nothing caught yet. Start recording and references spoken during the sermon will appear here.' })]));
+      return;
+    }
+    // Newest first
+    s.heard.slice().sort((a, b) => (b.t || 0) - (a.t || 0)).forEach(h => pane.appendChild(heardCard(s, h)));
+  }
+  function heardCard(s, h) {
+    const kindLabel = h.kind === 'book' ? 'Book mentioned' : h.kind === 'chapter' ? 'Chapter' : h.kind === 'ambiguous' ? 'Possible match' : 'Exact reference';
+    const kindIcon = h.kind === 'book' ? 'menu_book' : h.kind === 'ambiguous' ? 'help' : 'my_location';
+    const top = el('div', { class: 'sn-heard-top' }, [
+      el('span', { class: 'sn-heard-kind sn-hk-' + h.kind }, [icon(kindIcon), kindLabel]),
+      el('button', { class: 'sn-heard-time', onclick: () => seekAudio(h.t) }, [icon('play_circle'), fmtTime(h.t)]),
+      h.count > 1 ? el('span', { class: 'sn-heard-count', text: '×' + h.count }) : null
+    ]);
+    const card = el('div', { class: 'sn-heard-card' + (h.confirmed ? ' sn-confirmed' : '') }, [top]);
+
+    if (h.kind === 'ambiguous') {
+      card.appendChild(el('div', { class: 'sn-heard-ambnote', text: 'One of these might have been said — tap the right one:' }));
+      const opts = el('div', { class: 'sn-heard-options' });
+      h.options.forEach((label, idx) => {
+        opts.appendChild(el('button', { class: 'sn-heard-opt', onclick: () => {
+          addVerseRef(s, label); h.confirmed = true; h.chosen = label; versesSub = 'added'; touch(s); renderTabBody(s);
+        } }, [label]));
+      });
+      card.appendChild(opts);
+      card.appendChild(el('div', { class: 'sn-heard-actions' }, [
+        el('button', { class: 'sn-heard-open', onclick: () => openVerseRef(h.options[0]) }, [icon('menu_book'), 'Open first']),
+        el('button', { class: 'sn-heard-dismiss', onclick: () => { s.heard = s.heard.filter(x => x.id !== h.id); touch(s); renderTabBody(s); } }, [icon('close'), 'Dismiss'])
+      ]));
+    } else {
+      card.appendChild(el('div', { class: 'sn-heard-ref', text: h.ref }));
+      const actions = el('div', { class: 'sn-heard-actions' });
+      if (h.kind !== 'book') actions.appendChild(el('button', { class: 'sn-heard-add', onclick: () => { addVerseRef(s, h.ref); h.confirmed = true; touch(s); renderTabBody(s); } }, [icon('add'), h.confirmed ? 'Added' : 'Add to verses']));
+      actions.appendChild(el('button', { class: 'sn-heard-open', onclick: () => openVerseRef(h.ref) }, [icon('menu_book'), 'Open']));
+      actions.appendChild(el('button', { class: 'sn-heard-dismiss', onclick: () => { s.heard = s.heard.filter(x => x.id !== h.id); touch(s); renderTabBody(s); } }, [icon('close'), 'Dismiss']));
+      card.appendChild(actions);
+    }
+    return card;
   }
 
   /* ───────── TAKEAWAYS TAB ───────── */
@@ -1446,8 +1855,13 @@
     copy.id = uid(); copy.title = (s.title || 'Sermon') + ' (copy)';
     copy.createdAt = copy.updatedAt = nowISO();
     copy.drawing = s.drawing;
+    // Give each audio segment a fresh id and copy its blob across.
+    (copy.audioSegments || []).forEach(seg => {
+      const oldId = seg.id, newId = uid();
+      seg.id = newId;
+      loadAudioBlob(oldId).then(b => { if (b) saveAudioBlob(newId, b); });
+    });
     store.sermons.unshift(copy); persist(true);
-    if (s.hasAudio) loadAudioBlob(s.id).then(b => { if (b) saveAudioBlob(copy.id, b); });
     openEditor(copy.id);
     toast('Duplicated');
   }
