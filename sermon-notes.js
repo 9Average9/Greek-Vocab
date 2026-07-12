@@ -929,7 +929,8 @@
     stream: null, segId: null, timer: null, heardThisSession: 0,
     segUrls: {},                 // segmentId → object URL (session cache)
     player: { audio: null, seg: null, playing: false, raf: 0 },
-    speech: null, speechWanted: false
+    speech: null, speechWanted: false,
+    transcript: [], _lastInterim: null   // running transcript for the final sweep
   };
   function fmtTime(sec) {
     sec = Math.max(0, Math.floor(sec || 0));
@@ -992,6 +993,7 @@
       audioState.recording = true;
       audioState.startTs = Date.now();
       audioState.heardThisSession = 0;
+      audioState.transcript = []; audioState._lastInterim = null;
       acquireWakeLock();
       startSpeech(s);
       refreshAudio(s);
@@ -1037,8 +1039,28 @@
     audioState.baseOffset = s.audioTotal || 0;
     audioState.recording = false;
     releaseWakeLock();
+    finalReferenceSweep(s);
     refreshAudio(s);
     if (audioState._resolveStop) { const r = audioState._resolveStop; audioState._resolveStop = null; r(); }
+  }
+
+  // Post-recording final check: re-parse the FULL transcript in one pass,
+  // stitching across the ~1-min recognizer restart boundaries, to recover
+  // references the live pass split or dropped. Adds/upgrades any it finds.
+  function finalReferenceSweep(s) {
+    if (audioState._lastInterim) { audioState.transcript.push(audioState._lastInterim); audioState._lastInterim = null; }
+    const chunks = audioState.transcript || [];
+    audioState.transcript = [];
+    if (!chunks.length) return;
+    // Seed supersession with the references already caught live.
+    const doneList = s.heard.map(h => ({ key: heardKey(h), code: h.code, chapter: h.chapter, verse: h.verse, kind: h.kind, id: h.id }));
+    let prevTail = '', changed = 0;
+    chunks.forEach(ch => {
+      const stitched = (prevTail ? prevTail + ' ' : '') + (ch.text || '');
+      parseSpokenRefs(stitched).forEach(ref => { if (commitHeardRef(s, ref, heardKey(ref), ch.t, doneList, stitched)) changed++; });
+      prevTail = String(ch.text || '').split(/\s+/).slice(-8).join(' ');
+    });
+    if (changed > 0) { updateHeardBadge(s); if (activeTab === 'verses' && versesSub === 'heard') renderTabBody(s); toast('Final check found ' + changed + ' more reference' + (changed === 1 ? '' : 's')); }
   }
 
   /* ───────── Playback (continuous across segments) ───────── */
@@ -1211,18 +1233,27 @@
       // the references in one long result sharing a single time.
       const seenAt = {};   // i → { refKey: firstElapsedSeconds }
       const done = {};     // i → [ committed {key, code, chapter, verse, kind, id} ]
+      const chunkT = {};   // i → elapsed when this result index was first seen
       r.onresult = e => {
         const now = audioElapsed();
         for (let i = e.resultIndex; i < e.results.length; i++) {
           const res = e.results[i], txt = res[0].transcript;
           if (!seenAt[i]) seenAt[i] = {};
           if (!done[i]) done[i] = [];
+          if (chunkT[i] == null) chunkT[i] = now;
           parseSpokenRefs(txt).forEach(ref => {
             const key = heardKey(ref);
             if (seenAt[i][key] == null) seenAt[i][key] = now; // first-heard time
             commitHeardRef(s, ref, key, seenAt[i][key], done[i], txt);
           });
-          if (res.isFinal) { delete seenAt[i]; delete done[i]; }
+          if (res.isFinal) {
+            // Log the finalized transcript for the post-sermon final sweep.
+            audioState.transcript.push({ text: txt, t: chunkT[i] });
+            audioState._lastInterim = null;
+            delete seenAt[i]; delete done[i]; delete chunkT[i];
+          } else {
+            audioState._lastInterim = { text: txt, t: chunkT[i] };
+          }
         }
         updateRecTimer();
       };
@@ -1231,9 +1262,12 @@
       r.onstart = () => { lastStart = Date.now(); };
       r.onend = () => {
         // Web Speech sessions time out (~1 min); relaunch so a long sermon keeps
-        // being transcribed. Reset per-index tracking since indices restart.
+        // being transcribed. Keep the interim we had at the restart boundary so
+        // the final sweep can stitch across it, then reset per-index tracking.
+        if (audioState._lastInterim) { audioState.transcript.push(audioState._lastInterim); audioState._lastInterim = null; }
         for (const k in seenAt) delete seenAt[k];
         for (const k in done) delete done[k];
+        for (const k in chunkT) delete chunkT[k];
         if (!audioState.speechWanted) return;
         // If it ended almost immediately (e.g. no network at church), back off so
         // we don't hot-loop and drain the battery; recover to instant restarts
@@ -1247,22 +1281,24 @@
   }
   // Commit one caught reference for a result index, superseding a less-specific
   // partial (book→chapter→exact) heard earlier in the same utterance.
+  // Returns true if it added or upgraded a reference, false if it was a no-op.
   function commitHeardRef(s, ref, key, t, doneList, txt) {
-    if (doneList.some(d => d.key === key)) return;
+    if (doneList.some(d => d.key === key)) return false;
     const spec = e => e.kind === 'exact' ? 3 : e.kind === 'chapter' ? 2 : e.kind === 'book' ? 1 : 0;
     if (ref.code) {
       for (let k = doneList.length - 1; k >= 0; k--) {
         const d = doneList[k];
         if (d.code !== ref.code) continue;
         const sameChapter = d.kind === 'book' || d.chapter === ref.chapter;
-        if (sameChapter && spec(d) > spec(ref)) return;            // a better one already exists
+        if (sameChapter && spec(d) > spec(ref)) return false;       // a better one already exists
         if (sameChapter && spec(ref) > spec(d)) {                   // this refines an earlier partial
           s.heard = s.heard.filter(h => h.id !== d.id); doneList.splice(k, 1);
         }
       }
     }
     const entry = addHeard(s, Object.assign({}, ref, { t: t, phrase: txt }));
-    if (entry) doneList.push({ key, code: ref.code, chapter: ref.chapter, verse: ref.verse, kind: ref.kind, id: entry.id });
+    if (entry) { doneList.push({ key, code: ref.code, chapter: ref.chapter, verse: ref.verse, kind: ref.kind, id: entry.id }); return true; }
+    return false;
   }
   function stopSpeech() {
     audioState.speechWanted = false;
