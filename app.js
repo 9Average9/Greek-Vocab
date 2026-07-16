@@ -29773,7 +29773,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.429";
+const APP_VERSION = "3.0.430";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29796,6 +29796,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.430 &mdash; Pink Sermon Notes tile</div>
+<ul>
+  <li><strong>Sermon Notes goes pink</strong> &mdash; The Sermon Notes tile on the home screen now reads pink throughout, artwork included.</li>
+</ul>
 <div class="un-version-label">v3.0.429 &mdash; Cleaner reading &amp; polish</div>
 <ul>
   <li><strong>Omitted verses just disappear</strong> &mdash; When a translation doesn&rsquo;t include a verse (like Matthew 17:21 in the NIV), the reader now skips it entirely &mdash; the way the YouVersion app does &mdash; instead of leaving a numbered gap that says &ldquo;not included in this translation.&rdquo;</li>
