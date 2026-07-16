@@ -1042,6 +1042,19 @@ async function studyLeaveCollab(studyId, uid) {
   } catch (e) { console.warn("studyLeaveCollab:", e); return false; }
 }
 
+// Self-heal: scrub a confirmed-deleted account's uid out of a study's member and
+// pending lists. Any remaining collaborator is allowed to make this write under
+// the security rules, so ghost members/pending invites clean up on load.
+async function studyPruneMember(studyId, uid) {
+  try {
+    await updateDoc(doc(db, "studies", studyId), {
+      collaboratorUids: arrayRemove(uid),
+      pendingCollaboratorUids: arrayRemove(uid)
+    });
+    return true;
+  } catch (e) { console.warn("studyPruneMember:", e); return false; }
+}
+
 // Copy a study as your own personal copy (no approval needed)
 async function studyCopy(sourceStudyId, uid, displayName) {
   try {
@@ -1679,6 +1692,7 @@ window.Studies = {
   listenTrails: studyListenTrails, saveTrail: studySaveTrail, deleteTrail: studyDeleteTrail,
   listenWordLog: studyListenWordLog, logWord: studyLogWord, deleteWordLog: studyDeleteWordLog,
   requestCollab: studyRequestCollab, approveCollab: studyApproveCollab, denyCollab: studyDenyCollab, leaveCollab: studyLeaveCollab,
+  pruneMember: studyPruneMember,
   inviteCollab: studyInviteCollab, selfApproveInvite: studySelfApproveInvite,
   copy: studyCopy, delete: studyDeletePermanent, listenEncouragements, getEncouragementMessages,
   deleteMsg: deleteEncouragementMsg,

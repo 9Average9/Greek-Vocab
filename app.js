@@ -8122,6 +8122,42 @@ async function _loadMyStudies() {
   _myStudies = await window.Studies?.getMine(uid) || [];
   await _hydrateHomeStudyMembers(_myStudies);
   _renderHomeStudies();
+  _studyPruneMissingUids(_myStudies); // self-heal ghosts from deleted accounts
+}
+
+// Self-healing for deleted accounts in studies — the study equivalent of
+// _habitPruneMissingUids. When a member or pending uid belongs to a
+// confirmed-deleted account (userMissing distinguishes "deleted" from
+// "offline"), quietly remove it so member counts and pending-invite lists stop
+// showing ghosts. Only studies the current user collaborates on are touched
+// (the security rules permit those writes), the creator is never pruned, and
+// each uid is confirmed at most once per session.
+const _studyPrunedUids = new Set();
+async function _studyPruneMissingUids(studies = []) {
+  const myUid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!myUid || !window.Friends?.userMissing) return;
+  const mine = studies.filter(s => s.collaboratorUids?.includes(myUid));
+  const candidates = [...new Set(mine.flatMap(s => [
+    ...(s.collaboratorUids || []),
+    ...(s.pendingCollaboratorUids || [])
+  ]))].filter(uid => uid && uid !== myUid && !_studyPrunedUids.has(uid));
+  let changed = false;
+  for (const uid of candidates) {
+    _studyPrunedUids.add(uid);
+    const missing = await window.Friends.userMissing(uid).catch(() => null);
+    if (missing !== true) continue; // prune only confirmed-deleted accounts
+    for (const s of mine) {
+      if (s.creatorUid === uid) continue; // an orphaned creator is handled elsewhere
+      const inCollab = s.collaboratorUids?.includes(uid);
+      const inPending = s.pendingCollaboratorUids?.includes(uid);
+      if (!inCollab && !inPending) continue;
+      if (inCollab) s.collaboratorUids = s.collaboratorUids.filter(u => u !== uid);
+      if (inPending) s.pendingCollaboratorUids = s.pendingCollaboratorUids.filter(u => u !== uid);
+      changed = true;
+      window.Studies?.pruneMember?.(s.id, uid);
+    }
+  }
+  if (changed) _renderHomeStudies();
 }
 
 async function _hydrateHomeStudyMembers(studies = []) {
@@ -8548,17 +8584,26 @@ async function submitStudyCreate() {
   });
   if (btn) { btn.textContent = 'Create Study'; btn.disabled = false; }
   if (study) {
-    // Send invites to selected friends
-    const inviteUids = [..._studyCreateInviteUids];
-    inviteUids.forEach(inviteeUid => {
-      window.Studies?.inviteCollab(study.id, study.name, inviteeUid, displayName);
-    });
     // Optimistically add to local list so home screen updates immediately
     _myStudies = [study, ..._myStudies.filter(s => s.id !== study.id)];
     _renderHomeStudies();
     closeStudyCreateSheet();
     // Open the new study right away
     openStudySandbox(study.id, study);
+    // Send invites to selected friends and surface any that fail to send, so a
+    // failed invite is not silently swallowed the way a fire-and-forget call was.
+    const inviteUids = [..._studyCreateInviteUids];
+    if (inviteUids.length) {
+      const results = await Promise.all(inviteUids.map(inviteeUid =>
+        window.Studies?.inviteCollab(study.id, study.name, inviteeUid, displayName)
+      ));
+      const failed = results.filter(ok => !ok).length;
+      if (failed) {
+        _showStudyToast(failed === inviteUids.length
+          ? 'Invites could not be sent — you can re-invite from the Members list.'
+          : `${failed} invite${failed > 1 ? 's' : ''} could not be sent.`);
+      }
+    }
   } else {
     _showStudyToast('Could not create study. Check your connection and try again.');
   }
@@ -9922,9 +9967,7 @@ function closeStudyBoardSheet() {
 }
 
 async function openStudyMembersModal() {
-  const s = _studyBoardSheetId
-    ? _studyBoardStudies.find(x => x.id === _studyBoardSheetId)
-    : _activeSandboxStudy;
+  const s = _studyMembersModalStudy();
   if (!s) return;
   _studyMembersInviteOpen = false;
   const list = document.getElementById('studyMembersList');
@@ -9970,6 +10013,12 @@ function closeStudyMembersModal() {
 }
 
 function _studyMembersModalStudy() {
+  // When a study sandbox is open, that is the study the user is acting on — prefer
+  // it over any stale community-board selection (_studyBoardSheetId is not cleared
+  // when a sandbox opens), so invites always target the study currently open.
+  if (document.body.classList.contains('sandbox-open') && _activeSandboxStudy) {
+    return _activeSandboxStudy;
+  }
   return _studyBoardSheetId
     ? _studyBoardStudies.find(x => x.id === _studyBoardSheetId)
     : _activeSandboxStudy;
