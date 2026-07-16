@@ -8122,6 +8122,42 @@ async function _loadMyStudies() {
   _myStudies = await window.Studies?.getMine(uid) || [];
   await _hydrateHomeStudyMembers(_myStudies);
   _renderHomeStudies();
+  _studyPruneMissingUids(_myStudies); // self-heal ghosts from deleted accounts
+}
+
+// Self-healing for deleted accounts in studies — the study equivalent of
+// _habitPruneMissingUids. When a member or pending uid belongs to a
+// confirmed-deleted account (userMissing distinguishes "deleted" from
+// "offline"), quietly remove it so member counts and pending-invite lists stop
+// showing ghosts. Only studies the current user collaborates on are touched
+// (the security rules permit those writes), the creator is never pruned, and
+// each uid is confirmed at most once per session.
+const _studyPrunedUids = new Set();
+async function _studyPruneMissingUids(studies = []) {
+  const myUid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!myUid || !window.Friends?.userMissing) return;
+  const mine = studies.filter(s => s.collaboratorUids?.includes(myUid));
+  const candidates = [...new Set(mine.flatMap(s => [
+    ...(s.collaboratorUids || []),
+    ...(s.pendingCollaboratorUids || [])
+  ]))].filter(uid => uid && uid !== myUid && !_studyPrunedUids.has(uid));
+  let changed = false;
+  for (const uid of candidates) {
+    _studyPrunedUids.add(uid);
+    const missing = await window.Friends.userMissing(uid).catch(() => null);
+    if (missing !== true) continue; // prune only confirmed-deleted accounts
+    for (const s of mine) {
+      if (s.creatorUid === uid) continue; // an orphaned creator is handled elsewhere
+      const inCollab = s.collaboratorUids?.includes(uid);
+      const inPending = s.pendingCollaboratorUids?.includes(uid);
+      if (!inCollab && !inPending) continue;
+      if (inCollab) s.collaboratorUids = s.collaboratorUids.filter(u => u !== uid);
+      if (inPending) s.pendingCollaboratorUids = s.pendingCollaboratorUids.filter(u => u !== uid);
+      changed = true;
+      window.Studies?.pruneMember?.(s.id, uid);
+    }
+  }
+  if (changed) _renderHomeStudies();
 }
 
 async function _hydrateHomeStudyMembers(studies = []) {
