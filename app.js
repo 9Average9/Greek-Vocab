@@ -29773,7 +29773,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.428";
+const APP_VERSION = "3.0.429";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29796,6 +29796,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.429 &mdash; Cleaner reading &amp; polish</div>
+<ul>
+  <li><strong>Omitted verses just disappear</strong> &mdash; When a translation doesn&rsquo;t include a verse (like Matthew 17:21 in the NIV), the reader now skips it entirely &mdash; the way the YouVersion app does &mdash; instead of leaving a numbered gap that says &ldquo;not included in this translation.&rdquo;</li>
+  <li><strong>Copyright at the foot of every chapter</strong> &mdash; Each chapter now closes with the version&rsquo;s copyright / attribution notice, just like a standard Bible app.</li>
+  <li><strong>Home screen &amp; version picker polish</strong> &mdash; The Sermon Notes tile now matches the other Tools tiles in deep purple, and the download icon in the version picker sits perfectly centred whether or not the version is selected.</li>
+</ul>
 <div class="un-version-label">v3.0.428 &mdash; Smooth Rhema scrolling</div>
 <ul>
   <li><strong>No more scroll jumps</strong> &mdash; The reader's top picker and bottom verse bar now float over the page and slide away without resizing it, so scrolling stays perfectly smooth as the bars hide and return &mdash; especially on long book intro pages.</li>
@@ -36759,6 +36765,16 @@ function _rhemaReaderText(book, chapter, verse) {
   if (chap) return chap[String(verse)] || '';
   return _rhemaEnglishText(book, chapter, verse); // local text while the block downloads
 }
+// Copyright / attribution line for the version whose text is actually on screen
+// (falls back to the local version's notice while an API chapter downloads).
+// Rendered at the very bottom of every chapter, YouVersion-style.
+function _rhemaReaderCopyrightHtml() {
+  const ver = _rhemaReaderDisplayLabel();
+  const notice = typeof _vsCopyright === 'function' ? _vsCopyright(ver)
+    : (typeof VS_VERSION_COPYRIGHT !== 'undefined' ? (VS_VERSION_COPYRIGHT[ver] || '') : '');
+  if (!notice) return '';
+  return `<div class="rhema-reader-copyright">${notice}</div>`;
+}
 // Kicks the chapter-block download for the current position when needed.
 // Returns 'pending' | 'limited' | false (false = nothing to wait for).
 let _rhemaReaderFetchToken = 0;
@@ -42473,16 +42489,19 @@ function renderRhemaVerse() {
       EnglishDiv.innerHTML = _rhemaSyntaxMode ? '' :
         `<div class="rhema-english-chapter-title">${_escapeRhemaAttr(_rhemaBookName(_rhemaBook))} ${_escapeRhemaAttr(_rhemaChapter)}</div>` +
         readerBanner +
-        verseNums.map(vn => {
+        verseNums.reduce((html, vn) => {
           const v = String(vn);
           const engText = _rhemaReaderText(_rhemaBook, _rhemaChapter, v);
-          const engContent = engText
-            ? _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, v)
-            : `<em class="rhema-no-english">This verse is not included in the ${_rhemaReaderDisplayLabel()} translation.</em>`;
+          // Translations legitimately omit certain verses (e.g. NIV drops
+          // Matthew 17:21). Skip those entirely — YouVersion-style — instead of
+          // leaving an empty "not included" placeholder that implies missing text.
+          if (!engText) return html;
           const _vhl = _rhemaCurMarks()[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, v)]?.color;
-          return `<div class="rhema-chapter-block rhema-english-verse${v === focusVerse ? ' rhema-chapter-block-target' : ''}${_vhl ? ' rhema-verse-highlighted' : ''}" data-verse="${v}"${_vhl ? ` style="--rhema-hl:${_vhl}"` : ''} onclick="rhemaOpenVerseMenu('${v}', event)">` +
-                 `<sup class="rhema-english-vnum">${vn}</sup>${engContent}${_rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, v)}</div>`;
-        }).join('');
+          return html +
+            `<div class="rhema-chapter-block rhema-english-verse${v === focusVerse ? ' rhema-chapter-block-target' : ''}${_vhl ? ' rhema-verse-highlighted' : ''}" data-verse="${v}"${_vhl ? ` style="--rhema-hl:${_vhl}"` : ''} onclick="rhemaOpenVerseMenu('${v}', event)">` +
+            `<sup class="rhema-english-vnum">${vn}</sup>${_renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, v)}${_rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, v)}</div>`;
+        }, '') +
+        _rhemaReaderCopyrightHtml();
     }
 
     requestAnimationFrame(() => {
@@ -42531,6 +42550,7 @@ function renderRhemaVerse() {
             `<sup class="rhema-english-vnum">${_rhemaVerse}</sup>` +
             _renderRhemaEnglishText(engText, _rhemaBook, _rhemaChapter, _rhemaVerse) +
             _rhemaInlineNoteHtml(_rhemaBook, _rhemaChapter, _rhemaVerse) + `</div>` +
+            _rhemaReaderCopyrightHtml() +
             `<button class="rhema-full-chapter-back" onclick="rhemaBackToFullChapter()">Back to full chapter</button>`
           : `<em class="rhema-no-english">This verse is not included in the ${_rhemaReaderDisplayLabel()} translation.</em>`);
       }

@@ -63,6 +63,44 @@ const VS_LOCAL_SET = new Set(VS_VERSIONS.filter(v => v.local).map(v => v.code));
 const VS_TRANSLATIONS = VS_VERSIONS.map(v => v.code);
 const VS_API_TRANSLATIONS = VS_VERSIONS.filter(v => !v.local).map(v => v.code);
 
+// ── Copyright / attribution notices ─────────────────────────────────────────────
+// Shown at the very bottom of every chapter in the reader (YouVersion-style).
+// Public-domain texts keep a short attribution line; licensed versions carry the
+// publisher's required permission notice.
+const VS_VERSION_COPYRIGHT = {
+  MSB:    "The Holy Bible, Majority Standard Bible (MSB). This text of God's Word has been dedicated to the public domain.",
+  BSB:    "The Holy Bible, Berean Standard Bible (BSB). This text of God's Word has been dedicated to the public domain.",
+  NIV:    "Scripture quotations taken from The Holy Bible, New International Version® (NIV®). Copyright © 1973, 1978, 1984, 2011 by Biblica, Inc.® Used by permission. All rights reserved worldwide.",
+  NKJV:   "Scripture taken from the New King James Version® (NKJV®). Copyright © 1982 by Thomas Nelson. Used by permission. All rights reserved.",
+  NASB:   "New American Standard Bible® (NASB), Copyright © 2020 by The Lockman Foundation. Used by permission. All rights reserved. www.lockman.org",
+  NASB95: "New American Standard Bible® (NASB), Copyright © 1960, 1971, 1977, 1995 by The Lockman Foundation. Used by permission. All rights reserved. www.lockman.org",
+  KJV:    "King James Version (KJV). Public domain.",
+  ESV:    "Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved.",
+  NLT:    "Holy Bible, New Living Translation (NLT), copyright © 1996, 2004, 2015 by Tyndale House Foundation. Used by permission of Tyndale House Publishers, Carol Stream, Illinois 60188. All rights reserved.",
+  CSB:    "Scripture quotations taken from the Christian Standard Bible® (CSB), Copyright © 2017 by Holman Bible Publishers. Used by permission. Christian Standard Bible® and CSB® are federally registered trademarks of Holman Bible Publishers.",
+  AMP:    "Scripture quotations taken from the Amplified® Bible (AMP), Copyright © 2015 by The Lockman Foundation. Used by permission. www.lockman.org",
+  MSG:    "Scripture taken from The Message (MSG). Copyright © 1993, 2002, 2018 by Eugene H. Peterson. Used by permission of NavPress. All rights reserved. Represented by Tyndale House Publishers.",
+  LXXEN:  "The Septuagint with Apocrypha, translated by Sir Lancelot C. L. Brenton (1851). Public domain.",
+  F35:    "Family 35 New Testament, edited by Wilbur N. Pickering. Used by permission.",
+  GNT:    "Good News Translation® (GNT), Today's English Version, Second Edition. Copyright © 1992 American Bible Society. All rights reserved.",
+  CEV:    "Contemporary English Version® (CEV). Copyright © 1995 American Bible Society. All rights reserved.",
+  NIRV:   "Scripture quotations taken from the Holy Bible, New International Reader's Version® (NIrV®). Copyright © 1995, 1996, 1998, 2014 by Biblica, Inc.® Used by permission. All rights reserved worldwide.",
+  ASV:    "American Standard Version (1901). Public domain.",
+  RV1885: "English Revised Version (1885). Public domain.",
+  GNV:    "Geneva Bible (1599). Public domain.",
+  DRA:    "Douay-Rheims 1899 American Edition (DRA). Public domain.",
+  WEB:    "World English Bible (WEB). Public domain.",
+  FBV:    "Free Bible Version (FBV). Licensed under the Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0).",
+  T4T:    "Translation for Translators (T4T). Copyright © 2008–2017 Ellis W. Deibler, Jr. Licensed under the Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0).",
+  LSV:    "Literal Standard Version (LSV). Copyright © 2020 by Covenant Press and the Covenant Christian Coalition. Licensed under the Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0).",
+  TCENT:  "Text-Critical English New Testament (TCENT), by the Center for New Testament Restoration. Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0).",
+  JPS:    "JPS TaNaKH (1917). Public domain.",
+  TOJB:   "The Orthodox Jewish Bible (OJB), fourth edition. Copyright © 2002, 2003, 2008, 2010, 2011 by Artists for Israel International. All rights reserved."
+};
+function _vsCopyright(trans) {
+  return VS_VERSION_COPYRIGHT[trans] || '';
+}
+
 // Partial-canon scope checks (e.g. Brenton LXX is OT-only, F35 is NT-only).
 const VS_NT_BOOKS = new Set(['MAT','MAR','LUK','JOH','ACT','ROM','1CO','2CO','GAL','EPH','PHP','COL','1TH','2TH','1TI','2TI','TIT','PHM','HEB','JAM','1PE','2PE','1JO','2JO','3JO','JUD','REV']);
 function _vsBookInScope(trans, book) {
