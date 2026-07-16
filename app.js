@@ -8548,17 +8548,26 @@ async function submitStudyCreate() {
   });
   if (btn) { btn.textContent = 'Create Study'; btn.disabled = false; }
   if (study) {
-    // Send invites to selected friends
-    const inviteUids = [..._studyCreateInviteUids];
-    inviteUids.forEach(inviteeUid => {
-      window.Studies?.inviteCollab(study.id, study.name, inviteeUid, displayName);
-    });
     // Optimistically add to local list so home screen updates immediately
     _myStudies = [study, ..._myStudies.filter(s => s.id !== study.id)];
     _renderHomeStudies();
     closeStudyCreateSheet();
     // Open the new study right away
     openStudySandbox(study.id, study);
+    // Send invites to selected friends and surface any that fail to send, so a
+    // failed invite is not silently swallowed the way a fire-and-forget call was.
+    const inviteUids = [..._studyCreateInviteUids];
+    if (inviteUids.length) {
+      const results = await Promise.all(inviteUids.map(inviteeUid =>
+        window.Studies?.inviteCollab(study.id, study.name, inviteeUid, displayName)
+      ));
+      const failed = results.filter(ok => !ok).length;
+      if (failed) {
+        _showStudyToast(failed === inviteUids.length
+          ? 'Invites could not be sent — you can re-invite from the Members list.'
+          : `${failed} invite${failed > 1 ? 's' : ''} could not be sent.`);
+      }
+    }
   } else {
     _showStudyToast('Could not create study. Check your connection and try again.');
   }
@@ -9922,9 +9931,7 @@ function closeStudyBoardSheet() {
 }
 
 async function openStudyMembersModal() {
-  const s = _studyBoardSheetId
-    ? _studyBoardStudies.find(x => x.id === _studyBoardSheetId)
-    : _activeSandboxStudy;
+  const s = _studyMembersModalStudy();
   if (!s) return;
   _studyMembersInviteOpen = false;
   const list = document.getElementById('studyMembersList');
@@ -9970,6 +9977,12 @@ function closeStudyMembersModal() {
 }
 
 function _studyMembersModalStudy() {
+  // When a study sandbox is open, that is the study the user is acting on — prefer
+  // it over any stale community-board selection (_studyBoardSheetId is not cleared
+  // when a sandbox opens), so invites always target the study currently open.
+  if (document.body.classList.contains('sandbox-open') && _activeSandboxStudy) {
+    return _activeSandboxStudy;
+  }
   return _studyBoardSheetId
     ? _studyBoardStudies.find(x => x.id === _studyBoardSheetId)
     : _activeSandboxStudy;
