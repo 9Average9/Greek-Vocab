@@ -25035,6 +25035,11 @@ body.dark .bottom-nav::before {
 
 /* Desktop Rhema workspace. Mobile remains governed by the app's normal styles above. */
 @media (min-width: 960px) and (pointer: fine) {
+  :root {
+    --desktop-rhema-rail: 300px;
+    --desktop-rhema-gutter: 28px;
+  }
+
   html,
   body {
     min-width: 960px;
@@ -25054,6 +25059,24 @@ body.dark .bottom-nav::before {
   #statusBarBg,
   .app-header,
   .bottom-nav {
+    display: none !important;
+  }
+
+  .home-friends-btn,
+  #friendsModal,
+  #communityPage,
+  #merciesPage,
+  #habitsTabFriends,
+  #friendsHabitsPane,
+  .friend-habits-modal,
+  #studyCreateSheet .study-share-toggle,
+  #studyCreateSheet #studyInviteFriendsSection,
+  #studyMembersInviteList,
+  #habitCreateFriendsList,
+  #habitDetailFriendsList,
+  .journey-stat:has(#profilePraiseStreakStat),
+  button[onclick*="startCoachReplay('app')"],
+  button[onclick*="startCoachReplay('praises')"] {
     display: none !important;
   }
 
@@ -25157,11 +25180,18 @@ body.dark .bottom-nav::before {
     text-align: left;
     white-space: nowrap;
     flex-shrink: 0;
+    position: relative;
+    transition:
+      background 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
   }
 
   .desktop-nav-btn:hover {
     background: color-mix(in srgb, var(--secondary-color) 9%, transparent);
     border-color: color-mix(in srgb, var(--secondary-color) 16%, transparent);
+    transform: translateX(2px);
   }
 
   .desktop-nav-btn.primary {
@@ -25313,6 +25343,11 @@ body.dark .bottom-nav::before {
     font: inherit;
     font-weight: 900;
     cursor: pointer;
+    transition:
+      transform 0.18s cubic-bezier(.2,.82,.18,1),
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      background 0.18s ease;
   }
 
   .desktop-primary-action {
@@ -25480,6 +25515,7 @@ body.dark .bottom-nav::before {
   .desktop-tool-card:hover {
     transform: translateY(-2px);
     border-color: color-mix(in srgb, var(--secondary-color) 30%, var(--border-color));
+    box-shadow: 0 28px 62px rgba(15,23,42,0.18);
   }
 
   .desktop-tool-card > .material-symbols-outlined {
@@ -25556,16 +25592,147 @@ body.dark .bottom-nav::before {
   }
 
   #rhemaModal.open #rhemaSlide {
-    left: 300px;
-    right: 28px;
-    top: 28px;
-    bottom: 28px;
+    left: var(--desktop-rhema-rail);
+    right: var(--desktop-rhema-gutter);
+    top: var(--desktop-rhema-gutter);
+    bottom: var(--desktop-rhema-gutter);
     width: auto;
     max-width: none;
     border-radius: 28px;
     border: 1px solid color-mix(in srgb, var(--border-color) 62%, rgba(255,255,255,0.54));
     box-shadow: 0 26px 70px rgba(15,23,42,0.18);
     overflow: hidden;
+  }
+
+  #rhemaModal.open .rhema-wheel-overlay,
+  #rhemaModal.open .rhema-vsheet-overlay,
+  #rhemaModal.open .rhema-note-overlay,
+  #rhemaModal.open .rhema-compare-overlay {
+    left: var(--desktop-rhema-rail);
+    right: var(--desktop-rhema-gutter);
+    top: var(--desktop-rhema-gutter);
+    bottom: var(--desktop-rhema-gutter);
+    border-radius: 28px;
+    overflow: hidden;
+  }
+
+  #rhemaModal.open .rhema-sheet-backdrop {
+    left: var(--desktop-rhema-rail);
+    right: var(--desktop-rhema-gutter);
+    top: var(--desktop-rhema-gutter);
+    bottom: var(--desktop-rhema-gutter);
+    border-radius: 28px;
+    background:
+      linear-gradient(90deg, rgba(8,18,28,0.08), rgba(8,18,28,0.22));
+  }
+
+  #rhemaModal.open .rhema-sheet {
+    left: auto;
+    right: calc(var(--desktop-rhema-gutter) + 22px);
+    bottom: calc(var(--desktop-rhema-gutter) + 22px);
+    top: calc(var(--desktop-rhema-gutter) + 22px);
+    width: min(520px, calc(100vw - var(--desktop-rhema-rail) - 92px));
+    min-height: 0;
+    max-height: none;
+    border-radius: 24px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 62%, rgba(255,255,255,0.6));
+    box-shadow: 0 28px 78px rgba(15, 23, 42, 0.26);
+    transform: translateX(28px) scale(0.985);
+    opacity: 0;
+    transition:
+      transform 0.34s cubic-bezier(.2,.82,.18,1),
+      opacity 0.24s ease,
+      visibility 0s linear 0.34s;
+  }
+
+  #rhemaModal.open .rhema-sheet.open {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    transition:
+      transform 0.36s cubic-bezier(.2,.82,.18,1),
+      opacity 0.24s ease,
+      visibility 0s linear 0s;
+  }
+
+  #rhemaModal.open .rhema-sheet-handle {
+    display: none;
+  }
+
+  #rhemaModal.open .rhema-sheet-top {
+    padding: 26px 66px 0 26px;
+  }
+
+  #rhemaModal.open .rhema-sheet-lemma {
+    padding-left: 26px;
+    padding-right: 26px;
+  }
+
+  #rhemaModal.open .rhema-sheet-tabs {
+    padding: 0 22px;
+  }
+
+  #rhemaModal.open .rhema-tab-content {
+    padding: 18px 26px 26px;
+  }
+
+  #rhemaModal.open .rhema-word {
+    border-radius: 10px;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  #rhemaModal.open .rhema-word:hover {
+    background: color-mix(in srgb, var(--secondary-color) 10%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--secondary-color) 18%, transparent);
+    transform: translateY(-1px);
+  }
+
+  #rhemaModal.open .rhema-word.selected {
+    background: color-mix(in srgb, var(--secondary-color) 16%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--secondary-color) 28%, transparent);
+  }
+
+  #rhemaModal.open .rhema-verse-display {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 30px clamp(28px, 4vw, 56px) 36px;
+    row-gap: 18px;
+  }
+
+  #rhemaModal.open .rhema-word:nth-child(4n+1) {
+    border-left: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
+  }
+
+  #rhemaModal.open .rhema-word:nth-child(6n+1) {
+    border-left: none;
+  }
+
+  #rhemaModal.open .rhema-verse-display.greek-only {
+    max-width: 1060px;
+    padding: 38px clamp(42px, 6vw, 78px);
+    line-height: 2.45;
+  }
+
+  #rhemaModal.open .rhema-english-display {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 34px clamp(36px, 5vw, 74px) 42px;
+    font-size: 1.08rem;
+    line-height: 1.86;
+  }
+
+  #rhemaModal.open .rhema-vsheet {
+    margin-bottom: 22px;
+    box-shadow: 0 22px 60px rgba(8, 18, 28, 0.22);
+  }
+
+  #rhemaModal.open .rhema-note-card,
+  #rhemaModal.open .rhema-compare-card {
+    box-shadow: 0 24px 70px rgba(8, 18, 28, 0.26);
   }
 
   .rhema-header {

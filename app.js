@@ -8101,6 +8101,10 @@ const screens = [
 
 const NAV_SCREENS = ['homeScreen', 'profilePage', 'habitsPage', 'merciesPage', 'communityPage'];
 
+function _isDesktopStudyShell() {
+  return !!(window.matchMedia && window.matchMedia('(min-width: 960px) and (pointer: fine)').matches);
+}
+
 // ── Personal Studies ──────────────────────────────────────────────────────────
 
 function _showStudyToast(msg) {
@@ -10553,6 +10557,7 @@ function _bindPraisesScrollShadow() {
 }
 
 function showNavPage(page) {
+  if (_isDesktopStudyShell() && (page === 'community' || page === 'mercies')) page = 'home';
   const previousScreen = document.querySelector('.screen.active');
   const fromId = previousScreen?.id || _activeScreenId;
   if (page === 'home' && _appSlideHomeFromCurrent()) return;
@@ -29822,7 +29827,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.430";
+const APP_VERSION = "3.0.431";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29845,6 +29850,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.431 &mdash; Desktop study workspace</div>
+<ul>
+  <li><strong>Desktop Rhema has room to breathe</strong> &mdash; Greek word details now open as a right-side study inspector so the sidebar never covers the sheet.</li>
+  <li><strong>Study-first desktop shell</strong> &mdash; Desktop hides Praises, Community, Friends, and friend-invite surfaces so the wide layout stays focused on Rhema, studies, sermons, and progress.</li>
+  <li><strong>Desktop polish pass</strong> &mdash; Rhema overlays, selection tools, note/compare panels, and hover states now use desktop-only spacing and motion.</li>
+</ul>
 <div class="un-version-label">v3.0.430 &mdash; Pink Sermon Notes tile</div>
 <ul>
   <li><strong>Sermon Notes goes pink</strong> &mdash; The Sermon Notes tile on the home screen now reads pink throughout, artwork included.</li>
@@ -36434,6 +36445,7 @@ function updateFriendsBadge() {
 }
 
 function showFriendsModal() {
+  if (_isDesktopStudyShell()) return;
   const user = window.Auth?.getCurrentUser();
   if (!user) {
     if (!_authReady) {
@@ -43114,6 +43126,7 @@ function closeRhemaNerdModal(event) {
 
 function startCoachReplay(type) {
   closeCoachReplayModal();
+  if (_isDesktopStudyShell() && type === 'praises') return;
   if (type === 'app') startAppWelcomeCoach(true);
   if (type === 'praises') {
     showNavPage('mercies');
