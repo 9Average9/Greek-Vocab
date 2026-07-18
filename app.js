@@ -29827,7 +29827,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.431";
+const APP_VERSION = "3.0.432";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29850,6 +29850,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.432 &mdash; Desktop Rhema surfaces</div>
+<ul>
+  <li><strong>Desktop Rhema sheets feel native</strong> &mdash; Verse actions, notes, definitions, compare, saved marks, and version pickers now open as roomy desktop panels with hover states and cleaner motion.</li>
+  <li><strong>The tools menu is desktop-friendly</strong> &mdash; The mobile wheel becomes a compact command palette on wide screens, while the phone wheel is unchanged.</li>
+  <li><strong>Cross references and parsing got wider</strong> &mdash; Desktop cross-reference pages, book pickers, grammar popups, and Greek parsing sheets now avoid the sidebar and use desktop spacing.</li>
+</ul>
 <div class="un-version-label">v3.0.431 &mdash; Desktop study workspace</div>
 <ul>
   <li><strong>Desktop Rhema has room to breathe</strong> &mdash; Greek word details now open as a right-side study inspector so the sidebar never covers the sheet.</li>
