@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.435";
+const CACHE_NAME = "disciple-builder-v3.0.436";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -91,8 +91,8 @@ const FILES_TO_CACHE = [
   "./rhema-bible-dictionary.js?v=3.0.389",
   "./rhema-crossrefs-ui.js?v=3.0.363",
   "./greek-verbs.js?v=3.0.152",
-  "./bible-quiz.js?v=3.0.435",
-  "./bible-quiz.css?v=3.0.435",
+  "./bible-quiz.js?v=3.0.436",
+  "./bible-quiz.css?v=3.0.436",
   "./firebase-lb.js?v=3.0.408",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",

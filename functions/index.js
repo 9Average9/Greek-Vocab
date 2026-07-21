@@ -1337,7 +1337,11 @@ const QUIZ_SCHEMA = {
 };
 
 function buildQuizPrompt(opts) {
-  const { reference, difficulty, numQuestions, focus, translation, tricky } = opts;
+  const { reference, difficulty, numQuestions, focus, translation, tricky, avoid } = opts;
+  const avoidText = (avoid && avoid.length)
+    ? "\nAlready asked earlier in this quiz — do NOT repeat or closely rephrase any of these:\n" +
+      avoid.map(q => `- ${q}`).join("\n") + "\n"
+    : "";
   const diffText = QUIZ_DIFFICULTIES[difficulty] || QUIZ_DIFFICULTIES.balanced;
   const focusText = (focus && focus.length)
     ? `Weight the questions toward these areas: ${focus.join(", ")}. Still let the passage's own content lead — don't force a category that isn't there.`
@@ -1356,7 +1360,7 @@ function buildQuizPrompt(opts) {
     `Number of questions: exactly ${numQuestions}.`,
     focusText,
     trickyText,
-    "",
+    avoidText,
     "Rules for every question:",
     "- Base it strictly on the referenced passage(s). Every question, every correct answer, and every explanation must be verifiable from the actual words of the text. Do not invent facts or pull from outside the text.",
     "- Stay theologically neutral: never test denominational positions, systematic-theology labels, or interpretive stances — test what the text SAYS. If a question unavoidably touches salvation, grace, faith, or eternal life, keep to the passage's own wording; where the text's plain reading must be summarized, present salvation and eternal life as received freely by grace through faith in Christ — never as earned or kept by works.",
@@ -1394,6 +1398,11 @@ exports.generateBibleQuiz = functions
       : [];
     const translation = String((data && data.translation) || "").trim().slice(0, 40);
     const tricky = !!(data && data.tricky);
+    // Questions already asked this quiz (the client generates long quizzes in
+    // two batches so play starts fast) — passed so the model doesn't repeat.
+    const avoid = Array.isArray(data && data.avoid)
+      ? data.avoid.map(s => String(s).slice(0, 200)).filter(Boolean).slice(0, 30)
+      : [];
 
     const client = anthropicClient();
     let message;
@@ -1402,8 +1411,10 @@ exports.generateBibleQuiz = functions
         model: BIBLE_QUIZ_MODEL,
         max_tokens: 16000,
         system: "You write accurate, engaging, non-generic Bible quizzes and always return the requested JSON structure.",
-        output_config: { format: { type: "json_schema", schema: QUIZ_SCHEMA } },
-        messages: [{ role: "user", content: buildQuizPrompt({ reference, difficulty, numQuestions, focus, translation, tricky }) }]
+        // "medium" effort trims thinking time — a big latency win with no
+        // meaningful quality loss for quiz writing.
+        output_config: { effort: "medium", format: { type: "json_schema", schema: QUIZ_SCHEMA } },
+        messages: [{ role: "user", content: buildQuizPrompt({ reference, difficulty, numQuestions, focus, translation, tricky, avoid }) }]
       });
     } catch (e) {
       console.error("generateBibleQuiz Anthropic error:", e && e.message);
