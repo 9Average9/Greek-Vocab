@@ -68,7 +68,11 @@
         if (!Array.isArray(s.quizzes)) s.quizzes = [];
         if (!Array.isArray(s.savedQuestions)) s.savedQuestions = [];
         if (!s.settings || typeof s.settings !== 'object') s.settings = {};
-        if (typeof s.settings.habitQuiz !== 'boolean') s.settings.habitQuiz = false;
+        // ON by default for everyone — the feature comes to the user instead
+        // of waiting to be discovered. habitQuizSet records a deliberate
+        // toggle, so an explicit "off" sticks across sessions; stores saved
+        // before this flag existed get migrated to on.
+        if (!s.settings.habitQuizSet || typeof s.settings.habitQuiz !== 'boolean') s.settings.habitQuiz = true;
         if (!Number.isFinite(s.settings.habitQuizCount)) s.settings.habitQuizCount = 5;
         if (!s.promptedHabitChecks || typeof s.promptedHabitChecks !== 'object') s.promptedHabitChecks = {};
         return s;
@@ -76,7 +80,7 @@
     } catch (e) {}
     return {
       quizzes: [], savedQuestions: [],
-      settings: { habitQuiz: false, habitQuizCount: 5 },
+      settings: { habitQuiz: true, habitQuizCount: 5 },
       promptedHabitChecks: {}
     };
   }
@@ -293,6 +297,7 @@
 
     const sw = el('button', { class: 'bq-switch' + (st.habitQuiz ? ' bq-on' : ''), role: 'switch', 'aria-checked': String(st.habitQuiz), onclick: () => {
       st.habitQuiz = !st.habitQuiz;
+      st.habitQuizSet = true; // deliberate choice — survives the on-by-default migration
       sw.classList.toggle('bq-on', st.habitQuiz);
       sw.setAttribute('aria-checked', String(st.habitQuiz));
       countRow.classList.toggle('bq-open-row', st.habitQuiz);
