@@ -150,10 +150,72 @@ body.dark #bibleQuizPage {
     inset 0 1px 0 rgba(255,255,255,0.72);
 }
 
+/* ───────── Tiny ⓘ info button + auto-hiding helper copy ─────────
+   Helper text everywhere is collapsed by default; tapping the ⓘ at the end of
+   a title reveals it, and it slides back away after 5 seconds. */
+.bq-infobtn {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin-left: 2px;
+  border: none;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bq-primary) 15%, transparent);
+  color: var(--bq-primary);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: transform .12s ease, background .18s ease, color .18s ease;
+}
+.bq-infobtn:active { transform: scale(.82); }
+.bq-infobtn .material-symbols-outlined { font-size: 15px; }
+.bq-infobtn[aria-expanded="true"] {
+  background: var(--bq-primary);
+  color: var(--bq-primary-ink);
+}
+.bq-help {
+  font-size: .8rem;
+  color: var(--bq-muted);
+  line-height: 1.45;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin: 0;
+  transform: translateY(-4px);
+  transition: max-height .32s ease, opacity .32s ease, transform .32s ease, margin .32s ease;
+}
+.bq-help.bq-help-show {
+  max-height: 130px;
+  opacity: 1;
+  transform: translateY(0);
+  margin: 2px 0 9px;
+}
+
 /* ═══════════════════════ HOME ═══════════════════════ */
+/* Gentle staggered entrance for the home sections (delay set inline in JS). */
+.bq-rise { animation: bqRise .5s cubic-bezier(.22, .61, .36, 1) both; }
+@keyframes bqRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .bq-hero {
   text-align: center;
-  padding: 12px 8px 20px;
+  padding: 12px 8px 18px;
+}
+.bq-hero-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.bq-hero .bq-help {
+  max-width: 34ch;
+  margin-left: auto;
+  margin-right: auto;
 }
 .bq-hero-badge {
   width: 76px;
@@ -175,7 +237,7 @@ body.dark #bibleQuizPage {
   font-size: 1.9rem;
   font-weight: 850;
   letter-spacing: -.02em;
-  margin: 0 0 8px;
+  margin: 0;
 }
 .bq-hero p {
   color: var(--bq-muted);
@@ -293,12 +355,8 @@ body.dark #bibleQuizPage {
   margin-bottom: 8px;
 }
 .bq-field label.bq-label .material-symbols-outlined { font-size: 19px; color: var(--bq-primary); }
-.bq-field .bq-help {
-  font-size: .8rem;
-  color: var(--bq-muted);
-  margin: -3px 0 9px;
-  line-height: 1.4;
-}
+.bq-field label.bq-label .bq-infobtn { margin-left: auto; }
+.bq-field label.bq-label .bq-infobtn .material-symbols-outlined { font-size: 15px; color: inherit; }
 .bq-input {
   width: 100%;
   padding: 15px 16px;
@@ -324,21 +382,6 @@ body.dark #bibleQuizPage {
     0 0 0 3px color-mix(in srgb, var(--bq-primary) 28%, transparent),
     0 12px 26px color-mix(in srgb, var(--bq-primary) 18%, transparent);
 }
-
-/* Reference quick chips */
-.bq-chiprow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.bq-chip {
-  padding: 8px 13px;
-  border-radius: 999px;
-  border: 1px solid var(--bq-line);
-  background: color-mix(in srgb, var(--bq-primary) 7%, var(--bq-card));
-  color: color-mix(in srgb, var(--bq-primary) 68%, var(--bq-ink));
-  font-size: .82rem;
-  font-weight: 650;
-  cursor: pointer;
-  transition: transform .12s ease, background .18s ease, color .18s ease, border-color .18s ease;
-}
-.bq-chip:active { transform: scale(.93); }
 
 /* Segmented control (difficulty) */
 .bq-seg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
@@ -470,6 +513,47 @@ body.dark #bibleQuizPage {
 }
 .bq-switch.bq-on { background: var(--bq-primary); }
 .bq-switch.bq-on::after { transform: translateX(20px); }
+
+/* "Quiz after reading habit?" card on home */
+.bq-habit-card { margin-bottom: 20px; }
+.bq-toggle-main { flex: 1 1 auto; min-width: 0; }
+.bq-toggle-title { display: flex; align-items: center; gap: 7px; }
+.bq-toggle-title strong { font-size: .93rem; font-weight: 750; }
+.bq-habit-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height .34s cubic-bezier(.22, .61, .36, 1), opacity .3s ease, padding .34s ease;
+}
+.bq-habit-count.bq-open-row {
+  max-height: 70px;
+  opacity: 1;
+  padding: 2px 16px 14px;
+}
+.bq-habit-count-label { font-size: .86rem; font-weight: 650; color: var(--bq-muted); }
+.bq-mini-step { display: inline-flex; align-items: center; gap: 12px; }
+.bq-mini-step b { min-width: 24px; text-align: center; font-size: 1.1rem; font-weight: 850; }
+.bq-mini-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bq-primary) 20%, var(--bq-card));
+  color: var(--bq-primary);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .12s ease, opacity .18s ease;
+}
+.bq-mini-btn:active { transform: scale(.86); }
+.bq-mini-btn:disabled { opacity: .4; cursor: default; }
 
 /* ═══════════════════════ QUIZ ═══════════════════════ */
 /* Progress card */
@@ -945,9 +1029,193 @@ body.dark #bibleQuizPage {
 }
 .bq-toast.bq-show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ═══════════════════════ HABIT KNOWLEDGE-CHECK MODAL ═══════════════════════
+   Shown over the habits screen when a completed habit's note contains a Bible
+   reference. Lives outside #bibleQuizPage, so it re-declares the theme vars. */
+.bq-hm-overlay {
+  --bq-primary: var(--secondary-color, #6d4bd8);
+  --bq-accent: var(--accent-color, #f59e0b);
+  --bq-ink: var(--font-color, #1b1e28);
+  --bq-muted: var(--muted-color, #6b7280);
+  --bq-card: var(--card-solid-color, #ffffff);
+  --bq-line: color-mix(in srgb, var(--bq-primary) 34%, rgba(15, 23, 42, 0.12));
+  --bq-line-soft: color-mix(in srgb, var(--bq-primary) 20%, rgba(15, 23, 42, 0.08));
+  --bq-primary-ink: var(--btn-text-color, #ffffff);
+
+  position: fixed;
+  inset: 0;
+  z-index: 965;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, #0b0d16 52%, transparent);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  opacity: 0;
+  transition: opacity .26s ease;
+}
+.bq-hm-overlay.bq-hm-show { opacity: 1; }
+.bq-hm-card {
+  width: min(400px, 100%);
+  text-align: center;
+  padding: 28px 24px 18px;
+  border-radius: 28px;
+  border: 1px solid var(--bq-line-soft);
+  background:
+    radial-gradient(120% 50% at 50% -8%, color-mix(in srgb, var(--bq-primary) 20%, transparent), transparent 70%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--bq-primary) 7%, var(--bq-card)),
+      var(--bq-card));
+  color: var(--bq-ink);
+  box-shadow:
+    0 34px 80px rgba(8, 10, 20, .4),
+    inset 0 1px 0 rgba(255, 255, 255, .6);
+  transform: translateY(30px) scale(.93);
+  opacity: 0;
+  transition: transform .38s cubic-bezier(.3, 1.35, .45, 1), opacity .3s ease;
+}
+.bq-hm-overlay.bq-hm-show .bq-hm-card { transform: translateY(0) scale(1); opacity: 1; }
+.bq-hm-badge {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 14px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  color: var(--bq-primary-ink);
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255,255,255,0.3), transparent 36%),
+    linear-gradient(150deg, var(--bq-primary), color-mix(in srgb, var(--bq-primary) 66%, var(--bq-accent)));
+  box-shadow:
+    0 16px 34px color-mix(in srgb, var(--bq-primary) 40%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.36);
+  animation: bqBreathe 2.2s ease-in-out infinite;
+}
+.bq-hm-badge .material-symbols-outlined { font-size: 34px; }
+.bq-hm-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bq-primary) 14%, transparent);
+  color: var(--bq-primary);
+  font-size: .74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  max-width: 100%;
+}
+.bq-hm-kicker .material-symbols-outlined { font-size: 15px; }
+.bq-hm-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+  font-weight: 850;
+  letter-spacing: -.015em;
+  line-height: 1.2;
+}
+.bq-hm-card p {
+  margin: 0 auto 20px;
+  max-width: 30ch;
+  font-size: .93rem;
+  line-height: 1.5;
+  color: var(--bq-muted);
+}
+.bq-hm-card p strong { color: var(--bq-primary); font-weight: 800; }
+.bq-hm-go {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background:
+    linear-gradient(135deg,
+      var(--bq-primary),
+      color-mix(in srgb, var(--bq-primary) 70%, var(--bq-accent)));
+  color: var(--bq-primary-ink);
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow:
+    0 14px 30px color-mix(in srgb, var(--bq-primary) 42%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.28);
+  transition: transform .14s ease, filter .2s ease;
+}
+.bq-hm-go:active { transform: scale(.975); filter: brightness(.96); }
+.bq-hm-skip {
+  width: 100%;
+  margin-top: 6px;
+  padding: 13px;
+  border: none;
+  background: transparent;
+  color: var(--bq-muted);
+  font-size: .9rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: color .18s ease, transform .12s ease;
+}
+.bq-hm-skip:active { transform: scale(.97); color: var(--bq-ink); }
+
+/* Ask-variant: reference input + questions stepper */
+.bq-hm-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--bq-line);
+  background: var(--bq-card);
+  color: var(--bq-ink);
+  font-size: 1rem;
+  font-family: inherit;
+  text-align: center;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.bq-hm-input::placeholder { color: var(--bq-muted); opacity: .8; }
+.bq-hm-input:focus {
+  outline: none;
+  border-color: var(--bq-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bq-primary) 26%, transparent);
+}
+.bq-hm-countrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 18px;
+}
+.bq-hm-countrow > span {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--bq-muted);
+}
+.bq-hm-countrow .bq-mini-step b { color: var(--bq-ink); }
+@keyframes bqShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+.bq-hm-shake { animation: bqShake .3s ease; border-color: #e5484d !important; }
+
+body.dark .bq-hm-overlay {
+  --bq-line-soft: color-mix(in srgb, #ffffff 10%, transparent);
+  background: color-mix(in srgb, #05060c 66%, transparent);
+}
+body.dark .bq-hm-card {
+  box-shadow: 0 34px 80px rgba(0, 0, 0, .6);
+}
+
 @media (prefers-reduced-motion: reduce) {
   #bibleQuizPage, .bq-anim-in, .bq-anim-out, .bq-reveal, .bq-hint,
-  .bq-ring, .bq-orb, .bq-orb .material-symbols-outlined, .bq-dots span, .bq-pop {
+  .bq-ring, .bq-orb, .bq-orb .material-symbols-outlined, .bq-dots span, .bq-pop,
+  .bq-rise, .bq-help, .bq-habit-count,
+  .bq-hm-overlay, .bq-hm-card, .bq-hm-badge, .bq-hm-shake {
     animation: none !important;
     transition: none !important;
   }
