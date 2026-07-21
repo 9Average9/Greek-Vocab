@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.433";
+const CACHE_NAME = "disciple-builder-v3.0.434";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -49,9 +49,9 @@ const CACHE_NAME = "disciple-builder-v3.0.433";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.432",
+  "./style.css?v=3.0.434",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.432",
+  "./app.js?v=3.0.434",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.418",
   "./rhema-english-dictionary.js?v=3.0.417",
@@ -92,7 +92,7 @@ const FILES_TO_CACHE = [
   "./rhema-crossrefs-ui.js?v=3.0.363",
   "./greek-verbs.js?v=3.0.152",
   "./bible-quiz.js?v=3.0.433",
-  "./bible-quiz.css?v=3.0.433",
+  "./bible-quiz.css?v=3.0.434",
   "./firebase-lb.js?v=3.0.408",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
@@ -109,6 +109,7 @@ const FILES_TO_CACHE = [
   "./assets/icons/quick-vocab.png",
   "./assets/icons/quick-translate.png",
   "./assets/icons/quick-test.png",
+  "./assets/icons/93e0a332-e620-43eb-931e-5f238f039ace.png?v=3.0.434",
   "./assets/icons/quick-reading-plan.png?v=3.0.231",
   "./assets/icons/quick-threads.png?v=3.0.403",
   "./assets/icons/ChatGPT Image Jun 23, 2026, 10_26_34 PM.png",

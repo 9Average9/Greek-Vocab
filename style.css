@@ -8844,7 +8844,7 @@ body #settingsScreen .theme-preset.selected {
     !important;
 
   background:
-    color-mix(in srgb, var(--profile-color, #4f8cff) 20%, var(--card-color))
+    color-mix(in srgb, var(--profile-color, #4f8cff) 28%, var(--card-color))
     !important;
 }
 
@@ -8896,13 +8896,15 @@ body #settingsScreen .theme-wheel-tile.theme-preset {
 }
 
 body #settingsScreen .theme-wheel-tile.theme-preset.selected {
-  border-color: color-mix(in srgb, var(--secondary-color) 72%, var(--border-color)) !important;
+  border-color: color-mix(in srgb, var(--secondary-color) 86%, var(--border-color)) !important;
   background:
     linear-gradient(135deg,
-      color-mix(in srgb, var(--secondary-color) 11%, var(--card-color)),
-      color-mix(in srgb, var(--accent-color) 7%, var(--card-color))) !important;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--secondary-color) 16%, transparent) !important;
-  outline: 2px solid color-mix(in srgb, var(--secondary-color) 28%, transparent) !important;
+      color-mix(in srgb, var(--secondary-color) 22%, var(--card-color)),
+      color-mix(in srgb, var(--accent-color) 14%, var(--card-color))) !important;
+  box-shadow:
+    0 12px 26px color-mix(in srgb, var(--secondary-color) 24%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.68) !important;
+  outline: 2px solid color-mix(in srgb, var(--secondary-color) 42%, transparent) !important;
 }
 
 @media (max-width: 380px) {
@@ -34587,7 +34589,7 @@ body.screen-transitioning .screen.screen-leaving { z-index: 20; pointer-events: 
 
 /* Theme-aware press feedback. */
 :root {
-  --theme-press-highlight: color-mix(in srgb, var(--secondary-color) 16%, transparent);
+  --theme-press-highlight: color-mix(in srgb, var(--secondary-color) 22%, transparent);
 }
 
 .icon-btn:active,
@@ -34615,26 +34617,33 @@ body.screen-transitioning .screen.screen-leaving { z-index: 20; pointer-events: 
 /* Optional Home Tools theme matching. */
 body.tools-theme-match #homeScreen .home-action-tile {
   --qa-card-bg:
-    radial-gradient(circle at 78% 10%, color-mix(in srgb, var(--secondary-color) 18%, transparent), transparent 40%),
+    radial-gradient(circle at 78% 10%, color-mix(in srgb, var(--secondary-color) 30%, transparent), transparent 40%),
     linear-gradient(180deg,
-      color-mix(in srgb, var(--secondary-color) 17%, var(--card-color)),
-      color-mix(in srgb, var(--secondary-color) 6%, var(--primary-light))) !important;
-  --qa-card-border: color-mix(in srgb, var(--secondary-color) 34%, transparent) !important;
-  --qa-card-shadow: color-mix(in srgb, var(--secondary-color) 18%, transparent) !important;
-  --qa-image-shadow: color-mix(in srgb, var(--secondary-color) 18%, transparent) !important;
+      color-mix(in srgb, var(--secondary-color) 26%, var(--card-color)),
+      color-mix(in srgb, var(--secondary-color) 12%, var(--primary-light))) !important;
+  --qa-card-border: color-mix(in srgb, var(--secondary-color) 52%, rgba(255, 255, 255, 0.68)) !important;
+  --qa-card-shadow: color-mix(in srgb, var(--secondary-color) 26%, transparent) !important;
+  --qa-image-shadow: color-mix(in srgb, var(--secondary-color) 28%, transparent) !important;
   --qa-title: var(--secondary-color) !important;
-  --qa-subtitle: color-mix(in srgb, var(--secondary-color) 72%, var(--font-color)) !important;
+  --qa-subtitle: color-mix(in srgb, var(--secondary-color) 88%, var(--font-color)) !important;
   background: var(--qa-card-bg) !important;
   border-color: var(--qa-card-border) !important;
-  box-shadow: 0 15px 34px var(--qa-card-shadow) !important;
+  box-shadow:
+    0 16px 34px var(--qa-card-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.74) !important;
 }
 
 body.tools-theme-match #homeScreen .home-action-tile .hat-icon {
   background:
+    radial-gradient(110% 90% at 50% 8%, rgba(255,255,255,0.84), transparent 62%),
     linear-gradient(145deg,
-      color-mix(in srgb, var(--secondary-color) 10%, #fff),
-      color-mix(in srgb, var(--secondary-color) 16%, var(--card-color))) !important;
-  border-color: color-mix(in srgb, var(--secondary-color) 22%, transparent) !important;
+      color-mix(in srgb, var(--secondary-color) 18%, #fff),
+      color-mix(in srgb, var(--secondary-color) 28%, var(--card-color))) !important;
+  border-color: color-mix(in srgb, var(--secondary-color) 42%, rgba(255,255,255,0.62)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.92),
+    inset 0 -18px 28px color-mix(in srgb, var(--secondary-color) 16%, transparent),
+    0 12px 20px color-mix(in srgb, var(--secondary-color) 16%, transparent) !important;
 }
 
 body.tools-theme-match #homeScreen .home-action-tile .hat-text strong,
@@ -34643,7 +34652,7 @@ body.tools-theme-match #homeScreen .home-action-tile .hat-chev {
 }
 
 body.tools-theme-match #homeScreen .home-action-tile .hat-text small {
-  color: color-mix(in srgb, var(--secondary-color) 76%, var(--font-color)) !important;
+  color: color-mix(in srgb, var(--secondary-color) 88%, var(--font-color)) !important;
 }
 
 /* Friends sheet: full mobile-width bottom sheet with a softer entrance. */
@@ -35917,6 +35926,47 @@ body.home-theme-match #homeScreen .home-action-tile.quick-action-sermon,
   mix-blend-mode: normal !important;
   filter: hue-rotate(65deg) saturate(1.35) contrast(1.02)
           drop-shadow(0 10px 15px var(--qa-image-shadow)) !important;
+}
+
+#homeScreen .home-action-tile.quick-action-quiz,
+body.tools-theme-match #homeScreen .home-action-tile.quick-action-quiz,
+body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz,
+:root[data-skin] #homeScreen .home-action-tile.quick-action-quiz,
+:root[data-skin] .home-action-tile.quick-action-quiz {
+  --qa-card-bg:
+    radial-gradient(circle at 24% 0%, rgba(255, 255, 255, 0.99), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(233, 238, 246, 0.95));
+  --qa-card-border: rgba(148, 163, 184, 0.5);
+  --qa-card-shadow: rgba(71, 85, 105, 0.18);
+  --qa-image-shadow: rgba(51, 65, 85, 0.24);
+  --qa-title: #2f3b4d;
+  --qa-subtitle: #5c6a7d;
+  background: var(--qa-card-bg) !important;
+  border-color: var(--qa-card-border) !important;
+}
+
+#homeScreen .home-action-tile.quick-action-quiz .hat-icon,
+body.tools-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
+body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
+:root[data-skin] #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
+:root[data-skin] .home-action-tile.quick-action-quiz .hat-icon {
+  padding: 0 !important;
+  background:
+    radial-gradient(120% 90% at 50% 8%, rgba(255,255,255,0.98), rgba(255,255,255,0.48) 56%, transparent 100%),
+    linear-gradient(180deg, #ffffff, #e9eef5) !important;
+  border: 1px solid rgba(148, 163, 184, 0.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.98),
+    inset 0 -18px 30px rgba(100,116,139,0.14),
+    0 12px 20px rgba(71,85,105,0.14) !important;
+}
+
+#homeScreen .home-action-tile.quick-action-quiz .qa-img {
+  mix-blend-mode: normal !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  filter: saturate(1.04) contrast(1.08) drop-shadow(0 12px 18px var(--qa-image-shadow)) !important;
 }
 
 /* Desktop-only Rhema surface refinements. Phone and tablet touch layouts use the

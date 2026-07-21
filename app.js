@@ -29827,7 +29827,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.432";
+const APP_VERSION = "3.0.434";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29850,6 +29850,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.434 &mdash; Bible Quiz polish</div>
+<ul>
+  <li><strong>Bible Quiz gets its own silver look</strong> &mdash; The home tile now uses the new white 3D quiz icon and a clean silver card style that matches the rest of the home tools.</li>
+  <li><strong>Theme colors pop harder</strong> &mdash; Theme-matched home tools, Bible Quiz screens, and selected theme controls now use stronger accents, clearer borders, and more readable text.</li>
+</ul>
 <div class="un-version-label">v3.0.432 &mdash; Desktop Rhema surfaces</div>
 <ul>
   <li><strong>Desktop Rhema sheets feel native</strong> &mdash; Verse actions, notes, definitions, compare, saved marks, and version pickers now open as roomy desktop panels with hover states and cleaner motion.</li>
