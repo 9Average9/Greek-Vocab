@@ -1294,8 +1294,10 @@ const QUIZ_DIFFICULTIES = {
 };
 
 function anthropicClient() {
-  const key = process.env.ANTHROPIC_API_KEY ||
-    (functions.config().anthropic && functions.config().anthropic.key);
+  // NOTE: firebase-functions v7 removed functions.config() — the key must come
+  // from the environment. Bind it by declaring `secrets: ["ANTHROPIC_API_KEY"]`
+  // on the function (set with `firebase functions:secrets:set ANTHROPIC_API_KEY`).
+  const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     throw new functions.https.HttpsError(
       "failed-precondition",
@@ -1348,20 +1350,23 @@ function buildQuizPrompt(opts) {
   return [
     `You are an expert Bible teacher writing a premium, genuinely challenging quiz on ${reference}.`,
     "",
+    "The reference above may name MULTIPLE passages (separated by commas, semicolons, \"and\", or line breaks — e.g. \"John 3; Romans 8:1–17, Psalm 23\"). Treat every listed passage as in scope: spread the questions across all of them roughly in proportion to their length, and never ignore one.",
+    "",
     `Difficulty: ${diffText}`,
     `Number of questions: exactly ${numQuestions}.`,
     focusText,
     trickyText,
     "",
     "Rules for every question:",
-    "- Base it strictly on the referenced passage(s). Do not invent facts or pull from outside the text.",
+    "- Base it strictly on the referenced passage(s). Every question, every correct answer, and every explanation must be verifiable from the actual words of the text. Do not invent facts or pull from outside the text.",
+    "- Stay theologically neutral: never test denominational positions, systematic-theology labels, or interpretive stances — test what the text SAYS. If a question unavoidably touches salvation, grace, faith, or eternal life, keep to the passage's own wording; where the text's plain reading must be summarized, present salvation and eternal life as received freely by grace through faith in Christ — never as earned or kept by works.",
     "- Exactly four options. Exactly one is correct. `answerIndex` is the 0-based index of the correct option.",
     "- Vary which position holds the correct answer across the quiz — do not favor any slot.",
     "- Questions must be specific and substantive — never vague, never answerable without having read the passage. Avoid trivially easy or generic filler.",
     "- `reference` is the specific verse or short range the answer comes from (e.g. \"Genesis 1:14–19\").",
     `- \`verse\` is the actual Scripture text for that reference, quoted accurately.${versionText}`,
     "- `hint` is a genuinely helpful nudge tailored to THIS question — a pointer to the right verse, a clarifying detail, or a way to reason it out — WITHOUT giving away the answer.",
-    "- `explanation` is one or two sentences on why the correct answer is right, worth reading after answering.",
+    "- `explanation` is one or two sentences on why the correct answer is right, grounded in the text itself, worth reading after answering.",
     "- `category` is the single best fit from the allowed list.",
     "",
     "Write like a thoughtful teacher who wants the reader to actually retain what they read, not like a generic trivia generator."
@@ -1369,7 +1374,7 @@ function buildQuizPrompt(opts) {
 }
 
 exports.generateBibleQuiz = functions
-  .runWith({ timeoutSeconds: 120, memory: "512MB" })
+  .runWith({ timeoutSeconds: 300, memory: "512MB", secrets: ["ANTHROPIC_API_KEY"] })
   .https.onCall(async (data, context) => {
     if (!context.auth || !context.auth.uid) {
       throw new functions.https.HttpsError("unauthenticated", "Sign in to create a quiz.");
@@ -1395,7 +1400,7 @@ exports.generateBibleQuiz = functions
     try {
       message = await client.messages.create({
         model: BIBLE_QUIZ_MODEL,
-        max_tokens: 8000,
+        max_tokens: 16000,
         system: "You write accurate, engaging, non-generic Bible quizzes and always return the requested JSON structure.",
         output_config: { format: { type: "json_schema", schema: QUIZ_SCHEMA } },
         messages: [{ role: "user", content: buildQuizPrompt({ reference, difficulty, numQuestions, focus, translation, tricky }) }]

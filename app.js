@@ -21815,6 +21815,10 @@ async function toggleHabitToday(habitId, status) {
         addXP(milestone.xp, `${habit.name}: ${milestone.label}`, true);
         await window.Habits?.awardMilestone?.(uid, habitId, milestone.key);
       }
+      // Completed with a Bible reference in today's note → offer a knowledge check.
+      window.BibleQuiz?.maybeOfferHabitQuiz?.({
+        habitId, habitName: habit.name, dateKey: _habitTodayKey(), note: existingComment
+      });
     }
   } finally {
     _habitEntryInProgress.delete(lockKey);
@@ -21911,6 +21915,13 @@ async function saveHabitNote() {
       addXP(milestone.xp, `${habit.name}: ${milestone.label}`, true);
       await window.Habits?.awardMilestone?.(uid, _habitNoteHabitId, milestone.key);
     }
+  }
+  // Covers both orders — note added after completing, or completed via this
+  // modal with the reference already in the note. Dedupes per habit per day.
+  if (status === "success" && comment && habit) {
+    window.BibleQuiz?.maybeOfferHabitQuiz?.({
+      habitId: _habitNoteHabitId, habitName: habit.name, dateKey: _habitNoteDate, note: comment
+    });
   }
   closeHabitNoteModal();
   _showStudyToast("Habit day updated");

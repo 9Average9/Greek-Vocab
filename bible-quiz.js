@@ -17,14 +17,19 @@
        persist to localStorage so history + stats survive across sessions.
      • High-percentage and longer quizzes award XP to the profile via addXP().
 
-   Added beyond the brief (each surfaced in the in-app "How it works" panel):
+   Added beyond the brief:
      - Four difficulty tiers (Broad → Scholar) with plain-language meaning.
-     - Focus areas (people, places, numbers, doctrine, prophecy, …) the user
-       can weight the quiz toward.
-     - "Tricky distractors" toggle for a genuinely hard test.
+     - Focus areas (people, places, numbers, prophecy, …) the user can weight
+       the quiz toward. Tricky distractors are always on — every quiz is a
+       real test.
+     - Helper copy lives behind tiny ⓘ info buttons that reveal on tap and
+       auto-hide after 5 seconds, keeping every screen clean.
      - Per-quiz + lifetime stats (quizzes taken, average score, XP earned).
      - Save individual questions to a personal review deck.
      - Instant graded feedback with the correct verse revealed after answering.
+     - "Quiz after reading habit": when enabled, completing a habit whose note
+       contains a Bible reference offers a knowledge check on that passage via
+       window.BibleQuiz.maybeOfferHabitQuiz (called from the habits code).
    ══════════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -44,7 +49,6 @@
     { id: 'people',      label: 'People',         icon: 'group' },
     { id: 'places',      label: 'Places',         icon: 'public' },
     { id: 'numbers',     label: 'Numbers',        icon: 'tag' },
-    { id: 'doctrine',    label: 'Doctrine',       icon: 'church' },
     { id: 'quotes',      label: 'Who said it',    icon: 'format_quote' },
     { id: 'prophecy',    label: 'Prophecy',       icon: 'bolt' },
     { id: 'application', label: 'Application',    icon: 'self_improvement' }
@@ -53,7 +57,6 @@
     narrative: 'menu_book', people: 'group', places: 'public', numbers: 'tag',
     doctrine: 'church', quotes: 'format_quote', prophecy: 'bolt', application: 'self_improvement'
   };
-  const REF_CHIPS = ['Genesis 1–3', 'John 3', 'Psalm 23', 'Romans 8', 'Exodus 12', 'Matthew 5–7'];
   const LETTERS = ['A', 'B', 'C', 'D'];
 
   /* ───────── Persistence ───────── */
@@ -64,10 +67,18 @@
         const s = JSON.parse(raw);
         if (!Array.isArray(s.quizzes)) s.quizzes = [];
         if (!Array.isArray(s.savedQuestions)) s.savedQuestions = [];
+        if (!s.settings || typeof s.settings !== 'object') s.settings = {};
+        if (typeof s.settings.habitQuiz !== 'boolean') s.settings.habitQuiz = false;
+        if (!Number.isFinite(s.settings.habitQuizCount)) s.settings.habitQuizCount = 5;
+        if (!s.promptedHabitChecks || typeof s.promptedHabitChecks !== 'object') s.promptedHabitChecks = {};
         return s;
       }
     } catch (e) {}
-    return { quizzes: [], savedQuestions: [] };
+    return {
+      quizzes: [], savedQuestions: [],
+      settings: { habitQuiz: false, habitQuizCount: 5 },
+      promptedHabitChecks: {}
+    };
   }
   let store = loadStore();
   let saveTimer = null;
@@ -95,6 +106,30 @@
     return n;
   }
   const icon = name => el('span', { class: 'material-symbols-outlined', text: name });
+
+  /* Tiny ⓘ button + auto-hiding helper text. Helper copy stays hidden until the
+     info button is tapped, then fades back out after 5 seconds — so every
+     screen stays clean by default but nothing is unexplained. */
+  function infoHelp(helpText) {
+    const help = el('div', { class: 'bq-help', text: helpText });
+    const btn = el('button', { class: 'bq-infobtn', type: 'button', 'aria-label': 'More info', 'aria-expanded': 'false' }, [icon('info')]);
+    let hideTimer = null;
+    const hide = () => {
+      clearTimeout(hideTimer);
+      help.classList.remove('bq-help-show');
+      btn.setAttribute('aria-expanded', 'false');
+    };
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (help.classList.contains('bq-help-show')) { hide(); return; }
+      help.classList.add('bq-help-show');
+      btn.setAttribute('aria-expanded', 'true');
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(hide, 5000);
+    });
+    return { btn, help };
+  }
 
   let toastTimer = null;
   function toast(msg) {
@@ -188,44 +223,44 @@
     view = 'home';
     const s = stats();
     const kids = [];
+    let rise = 0;
+    const staggered = node => {
+      node.classList.add('bq-rise');
+      node.style.animationDelay = (rise++ * 60) + 'ms';
+      return node;
+    };
 
-    kids.push(el('div', { class: 'bq-hero' }, [
+    // Hero — one line of copy, the rest behind the ⓘ button.
+    const heroInfo = infoHelp('Point the AI at any passage — or several — and it writes a real test of what the text says, with hints, verses, and explanations. Score high to earn XP.');
+    kids.push(staggered(el('div', { class: 'bq-hero' }, [
       el('div', { class: 'bq-hero-badge' }, [icon('quiz')]),
-      el('h1', { text: 'Bible Quiz' }),
-      el('p', { text: 'Turn what you read into what you remember. Point the AI at any passage and it builds a real test of what it says.' })
-    ]));
+      el('div', { class: 'bq-hero-title' }, [el('h1', { text: 'Bible Quiz' }), heroInfo.btn]),
+      el('p', { text: 'Turn what you read into what you remember.' }),
+      heroInfo.help
+    ])));
 
-    kids.push(el('button', { class: 'bq-cta', onclick: renderBuilder }, [icon('add'), 'New Quiz']));
+    kids.push(staggered(el('button', { class: 'bq-cta', onclick: renderBuilder }, [icon('add'), 'New Quiz'])));
 
     // Lifetime stat strip
-    kids.push(el('div', { class: 'bq-stats' }, [
+    kids.push(staggered(el('div', { class: 'bq-stats' }, [
       el('div', { class: 'bq-card bq-stat' }, [el('b', { text: String(s.count) }), el('span', { text: 'Quizzes' })]),
       el('div', { class: 'bq-card bq-stat' }, [el('b', { text: s.count ? s.avg + '%' : '—' }), el('span', { text: 'Avg score' })]),
       el('div', { class: 'bq-card bq-stat' }, [el('b', { text: String(s.xp) }), el('span', { text: 'XP earned' })])
-    ]));
+    ])));
+
+    // Quiz after reading habit — toggle + questions-per-check stepper
+    kids.push(staggered(habitSyncCard()));
 
     // Recent quizzes
     if (store.quizzes.length) {
-      kids.push(el('div', { class: 'bq-section-label', text: 'Recent quizzes' }));
+      kids.push(staggered(el('div', { class: 'bq-section-label', text: 'Recent quizzes' })));
       const list = el('div', { class: 'bq-recent-list' });
       store.quizzes.slice(0, 4).forEach(q => list.appendChild(histCard(q)));
-      kids.push(list);
+      kids.push(staggered(list));
       if (store.quizzes.length > 4) {
-        kids.push(el('button', { class: 'bq-cta bq-ghost', style: { marginTop: '12px' }, onclick: () => renderArchive('history') }, [icon('folder'), 'See all in the cabinet']));
+        kids.push(staggered(el('button', { class: 'bq-cta bq-ghost', style: { marginTop: '12px' }, onclick: () => renderArchive('history') }, [icon('folder'), 'All past quizzes'])));
       }
     }
-
-    // How it works / why
-    kids.push(el('div', { class: 'bq-section-label', text: 'How it works' }));
-    kids.push(el('div', { class: 'bq-card bq-how' }, [
-      howRow('menu_book', 'Pick a passage', 'A book, a chapter, a verse, or a range — whatever you just read.'),
-      howRow('tune', 'Set the challenge', 'Choose a difficulty from broad themes to scholar-level detail, and steer it toward people, places, numbers, doctrine, and more.'),
-      howRow('auto_awesome', 'AI builds a real test', 'Questions are written to actually check your understanding — not generic filler — each with a hint and the verse it comes from.'),
-      howRow('workspace_premium', 'Earn XP as you grow', 'Score high and take longer quizzes to earn more XP toward your profile. Every quiz is saved so you can watch yourself improve.')
-    ]));
-
-    kids.push(el('p', { style: { textAlign: 'center', fontSize: '.84rem', color: 'var(--bq-muted)', margin: '18px 8px 4px', lineHeight: '1.5' },
-      text: 'Reading through the Bible is easy to forget. A quick quiz right after you read locks it in — and turns a read-through into something you actually keep.' }));
 
     mount(topbar({
       left: { icon: 'arrow_back', onclick: closeFeature, label: 'Close' },
@@ -234,10 +269,45 @@
     }), kids);
   }
 
-  function howRow(ic, title, body) {
-    return el('div', { class: 'bq-how-row' }, [
-      el('div', { class: 'bq-how-ico' }, [icon(ic)]),
-      el('div', {}, [el('strong', { text: title }), el('p', { text: body })])
+  // "Quiz after reading habit?" — when on, finishing a habit whose note holds a
+  // Bible reference offers a quick knowledge check with this many questions.
+  function habitSyncCard() {
+    const st = store.settings;
+    const info = infoHelp('Finish any habit with a Bible reference in its note (e.g. “Read John 3”) and a knowledge check on that passage is offered automatically.');
+
+    const countVal = el('b', { text: String(st.habitQuizCount) });
+    const minus = el('button', { class: 'bq-mini-btn', type: 'button', text: '−', 'aria-label': 'Fewer questions' });
+    const plus = el('button', { class: 'bq-mini-btn', type: 'button', text: '+', 'aria-label': 'More questions' });
+    const syncCount = () => {
+      countVal.textContent = String(st.habitQuizCount);
+      minus.disabled = st.habitQuizCount <= 3;
+      plus.disabled = st.habitQuizCount >= 15;
+    };
+    minus.addEventListener('click', () => { if (st.habitQuizCount > 3) { st.habitQuizCount--; syncCount(); persist(); } });
+    plus.addEventListener('click', () => { if (st.habitQuizCount < 15) { st.habitQuizCount++; syncCount(); persist(); } });
+    syncCount();
+    const countRow = el('div', { class: 'bq-habit-count' + (st.habitQuiz ? ' bq-open-row' : '') }, [
+      el('span', { class: 'bq-habit-count-label', text: 'Questions per check' }),
+      el('div', { class: 'bq-mini-step' }, [minus, countVal, plus])
+    ]);
+
+    const sw = el('button', { class: 'bq-switch' + (st.habitQuiz ? ' bq-on' : ''), role: 'switch', 'aria-checked': String(st.habitQuiz), onclick: () => {
+      st.habitQuiz = !st.habitQuiz;
+      sw.classList.toggle('bq-on', st.habitQuiz);
+      sw.setAttribute('aria-checked', String(st.habitQuiz));
+      countRow.classList.toggle('bq-open-row', st.habitQuiz);
+      persist();
+    } });
+
+    return el('div', { class: 'bq-card bq-habit-card' }, [
+      el('div', { class: 'bq-toggle' }, [
+        el('div', { class: 'bq-toggle-main' }, [
+          el('div', { class: 'bq-toggle-title' }, [el('strong', { text: 'Quiz after reading habit?' }), info.btn]),
+          info.help
+        ]),
+        sw
+      ]),
+      countRow
     ]);
   }
 
@@ -267,13 +337,9 @@
 
     const refInput = el('input', {
       class: 'bq-input', type: 'text', value: form.reference,
-      placeholder: 'e.g. Genesis 1–5, John 3, Romans 8:1–17',
+      placeholder: 'e.g. John 3; Romans 8:1–17',
       oninput: e => { form.reference = e.target.value; }
     });
-
-    const chipRow = el('div', { class: 'bq-chiprow' }, REF_CHIPS.map(c =>
-      el('button', { class: 'bq-chip', onclick: () => { form.reference = c; refInput.value = c; } }, [c])
-    ));
 
     // Difficulty segmented
     const diffGrid = el('div', { class: 'bq-seg' }, DIFFICULTIES.map(d => {
@@ -311,44 +377,30 @@
     syncStep();
     const stepper = el('div', { class: 'bq-stepper' }, [minus, stepVal, plus]);
 
-    // Tricky toggle
-    const sw = el('button', { class: 'bq-switch' + (form.tricky ? ' bq-on' : ''), role: 'switch', 'aria-checked': String(form.tricky), onclick: () => {
-      form.tricky = !form.tricky;
-      sw.classList.toggle('bq-on', form.tricky);
-      sw.setAttribute('aria-checked', String(form.tricky));
-    } });
+    // Each field's helper copy hides behind a tiny ⓘ at the end of the label.
+    const field = (ic, labelText, helpText, control) => {
+      const info = infoHelp(helpText);
+      return el('div', { class: 'bq-field' }, [
+        el('label', { class: 'bq-label' }, [icon(ic), labelText, info.btn]),
+        info.help,
+        control
+      ]);
+    };
 
     const kids = [
       el('div', { class: 'bq-form' }, [
-        el('div', { class: 'bq-field' }, [
-          el('label', { class: 'bq-label' }, [icon('menu_book'), 'Passage']),
-          el('div', { class: 'bq-help', text: 'Reference a book, chapter, single verse, or a range.' }),
-          refInput, chipRow
-        ]),
-        el('div', { class: 'bq-field' }, [
-          el('label', { class: 'bq-label' }, [icon('tune'), 'Difficulty']),
-          el('div', { class: 'bq-help', text: 'From broad themes to exact, easily-confused details.' }),
-          diffGrid
-        ]),
-        el('div', { class: 'bq-field' }, [
-          el('label', { class: 'bq-label' }, [icon('category'), 'Focus (optional)']),
-          el('div', { class: 'bq-help', text: 'Weight the questions toward what you want to test. Leave blank for a natural spread.' }),
-          pillWrap
-        ]),
-        el('div', { class: 'bq-field' }, [
-          el('label', { class: 'bq-label' }, [icon('format_list_numbered'), 'Length']),
-          el('div', { class: 'bq-help', text: 'More questions is a bigger test — and earns more XP.' }),
-          stepper
-        ]),
-        el('div', { class: 'bq-field' }, [
-          el('div', { class: 'bq-card bq-toggle' }, [
-            el('div', {}, [
-              el('strong', { text: 'Tricky distractors' }),
-              el('small', { text: 'Make wrong answers genuinely plausible — a real test.' })
-            ]),
-            sw
-          ])
-        ])
+        field('menu_book', 'Passage',
+          'A book, chapter, verse, or range — and you can list several passages at once, like “John 3; Romans 8:1–17”.',
+          refInput),
+        field('tune', 'Difficulty',
+          'From broad themes to exact, easily-confused details. Wrong answers are always genuinely plausible — every quiz is a real test.',
+          diffGrid),
+        field('category', 'Focus (optional)',
+          'Weight the questions toward what you want to test. Leave blank for a natural spread.',
+          pillWrap),
+        field('format_list_numbered', 'Length',
+          'More questions is a bigger test — and earns more XP.',
+          stepper)
       ])
     ];
 
@@ -810,4 +862,121 @@
   function emptyState(ic, msg) {
     return el('div', { class: 'bq-empty' }, [icon(ic), el('p', { text: msg })]);
   }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     QUIZ AFTER READING HABIT
+     The habits code calls window.BibleQuiz.maybeOfferHabitQuiz() whenever a
+     habit day is completed with a note. If the feature toggle is on and the
+     note contains one or more Bible references, a sleek theme-matching modal
+     offers a knowledge check that jumps straight into quiz generation.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  // Book names + common abbreviations, longest-first so e.g. "John" wins over "Jn".
+  const BQ_BOOKS = [
+    'Genesis', 'Gen', 'Exodus', 'Exod', 'Exo', 'Leviticus', 'Lev', 'Numbers', 'Num',
+    'Deuteronomy', 'Deut', 'Joshua', 'Josh', 'Judges', 'Judg', 'Ruth',
+    'Samuel', 'Sam', 'Kings', 'Kgs', 'Chronicles', 'Chron', 'Chr',
+    'Ezra', 'Nehemiah', 'Neh', 'Esther', 'Esth', 'Job',
+    'Psalms', 'Psalm', 'Pss', 'Ps', 'Proverbs', 'Prov', 'Ecclesiastes', 'Eccl',
+    'Song of Solomon', 'Song of Songs', 'Isaiah', 'Isa', 'Jeremiah', 'Jer',
+    'Lamentations', 'Lam', 'Ezekiel', 'Ezek', 'Daniel', 'Dan', 'Hosea', 'Hos',
+    'Joel', 'Amos', 'Obadiah', 'Obad', 'Jonah', 'Micah', 'Mic', 'Nahum', 'Nah',
+    'Habakkuk', 'Hab', 'Zephaniah', 'Zeph', 'Haggai', 'Hag', 'Zechariah', 'Zech',
+    'Malachi', 'Mal', 'Matthew', 'Matt', 'Mark', 'Luke', 'John', 'Jn', 'Acts',
+    'Romans', 'Rom', 'Corinthians', 'Cor', 'Galatians', 'Gal', 'Ephesians', 'Eph',
+    'Philippians', 'Phil', 'Colossians', 'Col', 'Thessalonians', 'Thess',
+    'Timothy', 'Tim', 'Titus', 'Philemon', 'Phlm', 'Hebrews', 'Heb', 'James', 'Jas',
+    'Peter', 'Pet', 'Jude', 'Revelation', 'Rev'
+  ].sort((a, b) => b.length - a.length).map(b => b.replace(/ /g, '\\s+'));
+
+  // "1 John 4:7-12", "Jn 3", "Psalm 23", "2 Cor. 5:17–21", "Genesis 1-3", …
+  const BQ_REF_RE = new RegExp(
+    '\\b(?:([123])\\s*)?(' + BQ_BOOKS.join('|') + ')\\.?\\s+' +
+    '(\\d{1,3}(?::\\d{1,3})?(?:\\s*[-–—]\\s*\\d{1,3}(?::\\d{1,3})?)?)',
+    'gi'
+  );
+
+  // Pull every Bible reference out of free text; '' when none found.
+  function extractReferences(text) {
+    if (!text || typeof text !== 'string') return '';
+    const refs = [];
+    const seen = new Set();
+    let m;
+    BQ_REF_RE.lastIndex = 0;
+    while ((m = BQ_REF_RE.exec(text)) !== null) {
+      const ref = ((m[1] ? m[1] + ' ' : '') + m[2].replace(/\s+/g, ' ') + ' ' + m[3].replace(/\s+/g, '')).trim();
+      const key = ref.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); refs.push(ref); }
+      if (refs.length >= 5) break; // keep the quiz scoped
+    }
+    return refs.join('; ');
+  }
+
+  function startHabitQuiz(refs) {
+    buildShell();
+    store = loadStore();
+    form = defaultForm();
+    form.reference = refs;
+    form.numQuestions = Math.max(3, Math.min(20, store.settings.habitQuizCount || 5));
+    page.classList.remove('bq-hidden');
+    requestAnimationFrame(() => page.classList.add('bq-open'));
+    startGeneration();
+  }
+
+  let habitModal = null;
+  function closeHabitModal() {
+    if (!habitModal) return;
+    const node = habitModal;
+    habitModal = null;
+    node.classList.remove('bq-hm-show');
+    setTimeout(() => node.remove(), reduceMotion() ? 0 : 260);
+  }
+
+  function showHabitQuizModal(refs, habitName) {
+    if (habitModal) return;
+    const n = Math.max(3, Math.min(20, store.settings.habitQuizCount || 5));
+    const card = el('div', { class: 'bq-hm-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Knowledge check' }, [
+      el('div', { class: 'bq-hm-badge' }, [icon('auto_awesome')]),
+      el('div', { class: 'bq-hm-kicker' }, [icon('check_circle'), habitName ? habitName + ' complete' : 'Reading complete']),
+      el('h3', { text: 'Ready for a quick knowledge check?' }),
+      el('p', {}, [
+        'Lock in what you just read with a quick ' + n + '-question check on ',
+        el('strong', { text: refs }),
+        '.'
+      ]),
+      el('button', { class: 'bq-hm-go', onclick: () => { closeHabitModal(); startHabitQuiz(refs); } }, [icon('bolt'), 'Take Knowledge Check']),
+      el('button', { class: 'bq-hm-skip', onclick: closeHabitModal }, ['Not now'])
+    ]);
+    card.addEventListener('click', e => e.stopPropagation());
+    habitModal = el('div', { class: 'bq-hm-overlay', onclick: closeHabitModal }, [card]);
+    document.body.appendChild(habitModal);
+    requestAnimationFrame(() => habitModal && habitModal.classList.add('bq-hm-show'));
+  }
+
+  window.BibleQuiz = {
+    isHabitQuizEnabled() {
+      store = loadStore();
+      return !!store.settings.habitQuiz;
+    },
+    // opts: { habitId, habitName, dateKey, note } — returns true if a check was offered.
+    maybeOfferHabitQuiz(opts) {
+      opts = opts || {};
+      store = loadStore();
+      if (!store.settings.habitQuiz) return false;
+      const refs = extractReferences(opts.note);
+      if (!refs) return false;
+      // Offer once per habit per day, so re-saving a note doesn't nag.
+      const key = (opts.habitId || 'habit') + '|' + (opts.dateKey || 'today');
+      if (store.promptedHabitChecks[key]) return false;
+      store.promptedHabitChecks[key] = Date.now();
+      const cutoff = Date.now() - 14 * 86400000;
+      for (const k in store.promptedHabitChecks) {
+        if (store.promptedHabitChecks[k] < cutoff) delete store.promptedHabitChecks[k];
+      }
+      persist(true);
+      // Small delay so the habit UI (check animation, milestone toast) lands first.
+      setTimeout(() => showHabitQuizModal(refs, opts.habitName || ''), 700);
+      return true;
+    }
+  };
 })();
