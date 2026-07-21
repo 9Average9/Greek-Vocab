@@ -1279,7 +1279,7 @@ exports.onEncouragementCreated = functions.firestore
 // Model is intentionally a single constant so it is trivial to swap. The most
 // capable model writes the strongest, least "generic" questions; drop to a
 // cheaper/faster one here if cost or latency matters more than depth.
-const BIBLE_QUIZ_MODEL = "claude-opus-4-8";
+const BIBLE_QUIZ_MODEL = "claude-sonnet-5";
 
 const QUIZ_CATEGORIES = [
   "narrative", "people", "places", "numbers",
