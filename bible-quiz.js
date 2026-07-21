@@ -916,7 +916,7 @@
      reference in the note. A full reference in the habit name ("Read John 3")
      is used directly; otherwise a name that clearly means Scripture reading
      triggers an ask-modal where the user types the passage. */
-  const BQ_BIBLE_WORDS = /\b(bible|scriptures?|gospels?|devotionals?|devotions?|testament|word\s+of\s+god|quiet\s+time)\b/i;
+  const BQ_BIBLE_WORDS = /\b(bible|scriptures?|gospels?|devotionals?|devotions?|testament|word|quiet\s+time)\b/i;
   const BQ_READING_WORDS = /\b(read(?:ing)?|study(?:ing)?|chapters?|verses?|passages?|memori[sz]e)\b/i;
   // Books whose bare name is unmistakably Scripture (not also a common
   // personal name or everyday word like "Mark", "Job", "Numbers", "Acts").
@@ -940,10 +940,16 @@
 
   function looksLikeBibleReadingHabit(name) {
     if (!name) return false;
+    // "Bible", "Scripture", "the Word", "quiet time", … ("word" boundaries
+    // keep "crossword"/"Wordle" from matching).
     if (BQ_BIBLE_WORDS.test(name)) return true;
     if (BQ_CLEAR_BOOKS.test(name)) return true;
-    // Ambiguous book names ("John", "Mark", "Job", …) count only alongside a
-    // reading word — so "Read John" qualifies but "Pray for John" doesn't.
+    // A plain reading habit — "Reading", "Morning read", "Read 3 chapters".
+    // In this app that's nearly always Scripture, and the modal is a
+    // dismissible question, so err on the side of offering.
+    if (/\bread(?:ing)?\b/i.test(name)) return true;
+    // Other study words ("study", "chapter", "memorize") need a book named,
+    // so "Read John" qualifies but "Study for exams" and "Pray for John" don't.
     return BQ_READING_WORDS.test(name) && !!bibleBookInName(name);
   }
 
