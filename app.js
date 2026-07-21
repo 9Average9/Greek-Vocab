@@ -29851,7 +29851,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.437";
+const APP_VERSION = "3.0.438";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29874,6 +29874,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.438 &mdash; Tool icon polish</div>
+<ul>
+  <li><strong>Home tool buttons look sleeker</strong> &mdash; The quick-action icons now use the same clean transparent image treatment and sizing as Sermon Notes while keeping each tool's own icon and color.</li>
+  <li><strong>Bible Quiz results are centered</strong> &mdash; The percentage score now sits directly in the middle of the circular result meter.</li>
+</ul>
 <div class="un-version-label">v3.0.434 &mdash; Bible Quiz polish</div>
 <ul>
   <li><strong>Bible Quiz gets its own silver look</strong> &mdash; The home tile now uses the new white 3D quiz icon and a clean silver card style that matches the rest of the home tools.</li>

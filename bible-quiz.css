@@ -21,10 +21,12 @@ body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz {
 }
 #homeScreen .home-action-tile.quick-action-quiz .qa-img {
   mix-blend-mode: normal !important;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  filter: saturate(1.04) contrast(1.08) drop-shadow(0 12px 18px var(--qa-image-shadow)) !important;
+  width: min(94%, var(--qa-art-size)) !important;
+  max-width: var(--qa-art-size) !important;
+  height: min(94%, var(--qa-art-size)) !important;
+  max-height: var(--qa-art-size) !important;
+  object-fit: contain !important;
+  filter: saturate(1.08) contrast(1.04) drop-shadow(0 10px 15px var(--qa-image-shadow)) !important;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -848,16 +850,36 @@ body.dark #bibleQuizPage {
   width: 170px; height: 170px;
   margin: 6px auto 18px;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
+  position: relative;
   background:
     radial-gradient(closest-side, var(--bq-card) 74%, transparent 75% 100%),
     conic-gradient(var(--bq-primary) var(--bq-pct, 0%), color-mix(in srgb, var(--bq-ink) 9%, transparent) 0);
   box-shadow: var(--bq-shadow);
   animation: bqPop .5s ease;
 }
-.bq-ring b { font-size: 2.6rem; font-weight: 850; letter-spacing: -.03em; color: var(--bq-primary); line-height: 1; }
-.bq-ring span { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--bq-muted); margin-top: 4px; }
+.bq-ring b {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.6rem;
+  font-weight: 850;
+  letter-spacing: -.03em;
+  color: var(--bq-primary);
+  line-height: 1;
+}
+.bq-ring span {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 40px);
+  transform: translateX(-50%);
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--bq-muted);
+  margin-top: 0;
+}
 .bq-result-title { font-size: 1.5rem; font-weight: 850; margin: 0 0 4px; letter-spacing: -.01em; }
 .bq-result-sub { color: var(--bq-muted); font-size: .95rem; margin: 0 0 4px; }
 .bq-xp-badge {

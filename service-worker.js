@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.437";
+const CACHE_NAME = "disciple-builder-v3.0.438";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -49,9 +49,9 @@ const CACHE_NAME = "disciple-builder-v3.0.437";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.434",
+  "./style.css?v=3.0.438",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.437",
+  "./app.js?v=3.0.438",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.418",
   "./rhema-english-dictionary.js?v=3.0.417",
@@ -92,7 +92,7 @@ const FILES_TO_CACHE = [
   "./rhema-crossrefs-ui.js?v=3.0.363",
   "./greek-verbs.js?v=3.0.152",
   "./bible-quiz.js?v=3.0.437",
-  "./bible-quiz.css?v=3.0.436",
+  "./bible-quiz.css?v=3.0.438",
   "./firebase-lb.js?v=3.0.408",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
@@ -104,14 +104,14 @@ const FILES_TO_CACHE = [
   "./assets/home-backgrounds/greek-columns.jpg",
   "./assets/home-backgrounds/leaves.jpg",
   "./assets/home-backgrounds/mountains.jpg",
-  "./assets/icons/quick-study-library.png",
-  "./assets/icons/quick-memorize.png",
-  "./assets/icons/quick-vocab.png",
-  "./assets/icons/quick-translate.png",
-  "./assets/icons/quick-test.png",
-  "./assets/icons/93e0a332-e620-43eb-931e-5f238f039ace.png?v=3.0.434",
-  "./assets/icons/quick-reading-plan.png?v=3.0.231",
-  "./assets/icons/quick-threads.png?v=3.0.403",
+  "./assets/icons/quick-study-library.png?v=3.0.438",
+  "./assets/icons/quick-memorize.png?v=3.0.438",
+  "./assets/icons/quick-vocab.png?v=3.0.438",
+  "./assets/icons/quick-translate.png?v=3.0.438",
+  "./assets/icons/quick-test.png?v=3.0.438",
+  "./assets/icons/93e0a332-e620-43eb-931e-5f238f039ace.png?v=3.0.438",
+  "./assets/icons/quick-reading-plan.png?v=3.0.438",
+  "./assets/icons/quick-threads.png?v=3.0.438",
   "./assets/icons/ChatGPT Image Jun 23, 2026, 10_26_34 PM.png",
   "./assets/icons/habit-builder-art.png",
   "./assets/icons/studies-bookshelf.png?v=3.0.238",

@@ -23246,14 +23246,17 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 }
 
 #homeScreen .home-action-tile .qa-img {
+  --qa-art-size: calc(clamp(112px, 29vw, 136px) * 0.94);
   display: block !important;
-  width: 94% !important;
-  max-width: none !important;
-  height: 94% !important;
+  width: min(94%, var(--qa-art-size)) !important;
+  max-width: var(--qa-art-size) !important;
+  height: min(94%, var(--qa-art-size)) !important;
+  max-height: var(--qa-art-size) !important;
+  aspect-ratio: 1 / 1;
   object-fit: contain !important;
   object-position: center center !important;
-  mix-blend-mode: multiply;
-  filter: saturate(1.08) contrast(1.03) drop-shadow(0 10px 15px var(--qa-image-shadow));
+  mix-blend-mode: normal;
+  filter: saturate(1.1) contrast(1.04) drop-shadow(0 10px 15px var(--qa-image-shadow));
   transform: none;
   transform-origin: center;
 }
@@ -35950,7 +35953,7 @@ body.tools-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon
 body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
 :root[data-skin] #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
 :root[data-skin] .home-action-tile.quick-action-quiz .hat-icon {
-  padding: 0 !important;
+  padding: clamp(6px, 1.8vw, 10px) !important;
   background:
     radial-gradient(120% 90% at 50% 8%, rgba(255,255,255,0.98), rgba(255,255,255,0.48) 56%, transparent 100%),
     linear-gradient(180deg, #ffffff, #e9eef5) !important;
@@ -35963,10 +35966,12 @@ body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
 
 #homeScreen .home-action-tile.quick-action-quiz .qa-img {
   mix-blend-mode: normal !important;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  filter: saturate(1.04) contrast(1.08) drop-shadow(0 12px 18px var(--qa-image-shadow)) !important;
+  width: min(94%, var(--qa-art-size)) !important;
+  max-width: var(--qa-art-size) !important;
+  height: min(94%, var(--qa-art-size)) !important;
+  max-height: var(--qa-art-size) !important;
+  object-fit: contain !important;
+  filter: saturate(1.08) contrast(1.04) drop-shadow(0 10px 15px var(--qa-image-shadow)) !important;
 }
 
 /* Desktop-only Rhema surface refinements. Phone and tablet touch layouts use the
