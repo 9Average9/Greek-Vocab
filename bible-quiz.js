@@ -239,7 +239,7 @@
       heroInfo.help
     ])));
 
-    kids.push(staggered(el('button', { class: 'bq-cta', onclick: renderBuilder }, [icon('add'), 'New Quiz'])));
+    kids.push(staggered(el('button', { class: 'bq-cta', onclick: newQuiz }, [icon('add'), 'New Quiz'])));
 
     // Lifetime stat strip
     kids.push(staggered(el('div', { class: 'bq-stats' }, [
@@ -255,9 +255,9 @@
     if (store.quizzes.length) {
       kids.push(staggered(el('div', { class: 'bq-section-label', text: 'Recent quizzes' })));
       const list = el('div', { class: 'bq-recent-list' });
-      store.quizzes.slice(0, 4).forEach(q => list.appendChild(histCard(q)));
+      store.quizzes.slice(0, 3).forEach(q => list.appendChild(histCard(q)));
       kids.push(staggered(list));
-      if (store.quizzes.length > 4) {
+      if (store.quizzes.length > 3) {
         kids.push(staggered(el('button', { class: 'bq-cta bq-ghost', style: { marginTop: '12px' }, onclick: () => renderArchive('history') }, [icon('folder'), 'All past quizzes'])));
       }
     }
@@ -331,6 +331,14 @@
   function defaultForm() {
     return { reference: '', difficulty: 'balanced', numQuestions: 10, focus: [], tricky: true };
   }
+  // Fresh "New Quiz" entry point — always starts with a cleared passage bar.
+  // (renderBuilder itself keeps values, so "Try again" after an error doesn't
+  // wipe what the user typed.)
+  function newQuiz() {
+    if (!form) form = defaultForm();
+    form.reference = '';
+    renderBuilder();
+  }
   function renderBuilder() {
     view = 'builder';
     if (!form) form = defaultForm();
@@ -341,14 +349,22 @@
       oninput: e => { form.reference = e.target.value; }
     });
 
-    // Difficulty segmented
-    const diffGrid = el('div', { class: 'bq-seg' }, DIFFICULTIES.map(d => {
+    // Difficulty — compact one-row segmented control; the selected tier's
+    // description lives on a single animated line underneath instead of
+    // cluttering every button.
+    const diffDesc = el('div', { class: 'bq-seg-desc', text: (DIFFICULTIES.find(d => d.id === form.difficulty) || DIFFICULTIES[1]).desc });
+    const diffRow = el('div', { class: 'bq-seg' }, DIFFICULTIES.map(d => {
       const b = el('button', { class: 'bq-seg-opt' + (form.difficulty === d.id ? ' bq-sel' : ''), onclick: () => {
         form.difficulty = d.id;
-        diffGrid.querySelectorAll('.bq-seg-opt').forEach((n, i) => n.classList.toggle('bq-sel', DIFFICULTIES[i].id === d.id));
-      } }, [el('strong', { text: d.name }), el('small', { text: d.desc })]);
+        diffRow.querySelectorAll('.bq-seg-opt').forEach((n, i) => n.classList.toggle('bq-sel', DIFFICULTIES[i].id === d.id));
+        diffDesc.textContent = d.desc;
+        diffDesc.classList.remove('bq-desc-swap');
+        void diffDesc.offsetWidth; // restart the little swap animation
+        diffDesc.classList.add('bq-desc-swap');
+      } }, [el('strong', { text: d.name })]);
       return b;
     }));
+    const diffGrid = el('div', {}, [diffRow, diffDesc]);
 
     // Focus pills
     const pillWrap = el('div', { class: 'bq-pills' }, FOCUS.map(f => {
@@ -418,41 +434,84 @@
   /* ══════════════════════════════════════════════════════════════════════
      GENERATION
      ══════════════════════════════════════════════════════════════════════ */
+  // Long quizzes stream in two parts: a fast 3-question opener the user can
+  // start answering right away, then the rest written in the background while
+  // they play. genToken guards against stale responses after a restart.
+  let genToken = 0;
   function startGeneration() {
     const ref = (form.reference || '').trim();
     if (!ref) { toast('Add a passage reference first.'); return; }
     renderLoading();
-    const payload = {
-      reference: ref,
-      difficulty: form.difficulty,
-      numQuestions: form.numQuestions,
-      focus: form.focus.slice(),
-      tricky: form.tricky
-    };
     if (!window.BibleQuizAI || typeof window.BibleQuizAI.generate !== 'function') {
       renderError("The quiz service isn't available right now. Please reload the app and try again.");
       return;
     }
-    window.BibleQuizAI.generate(payload)
+    const gen = ++genToken;
+    const total = form.numQuestions;
+    const base = {
+      reference: ref,
+      difficulty: form.difficulty,
+      focus: form.focus.slice(),
+      tricky: form.tricky
+    };
+    const firstCount = total > 5 ? 3 : total;
+    window.BibleQuizAI.generate(Object.assign({ numQuestions: firstCount }, base))
       .then(data => {
+        if (gen !== genToken) return;
         if (!data || !Array.isArray(data.questions) || !data.questions.length) {
           renderError("Couldn't build questions for that passage. Try a broader or clearer reference.");
           return;
         }
-        startQuiz(data);
+        startQuiz(data, total);
+        if (total > data.questions.length) fetchRemainder(gen, base, total - data.questions.length, data.questions);
       })
-      .catch(err => {
-        const code = err && err.code ? String(err.code) : '';
-        if (code.indexOf('unauthenticated') >= 0) {
-          renderError('Please sign in to your account to create quizzes.');
-        } else if (code.indexOf('resource-exhausted') >= 0) {
-          renderError('The quiz service is busy right now. Please try again in a moment.');
-        } else if (code.indexOf('failed-precondition') >= 0) {
-          renderError('Bible Quiz isn’t configured on the server yet.');
-        } else {
-          renderError((err && err.message) || 'Something went wrong generating the quiz. Please try again.');
-        }
-      });
+      .catch(err => { if (gen === genToken) renderError(describeGenError(err)); });
+  }
+
+  function describeGenError(err) {
+    const code = err && err.code ? String(err.code) : '';
+    if (code.indexOf('unauthenticated') >= 0) return 'Please sign in to your account to create quizzes.';
+    if (code.indexOf('resource-exhausted') >= 0) return 'The quiz service is busy right now. Please try again in a moment.';
+    if (code.indexOf('failed-precondition') >= 0) return 'Bible Quiz isn’t configured on the server yet.';
+    return (err && err.message) || 'Something went wrong generating the quiz. Please try again.';
+  }
+
+  function fetchRemainder(gen, base, count, existing) {
+    const payload = Object.assign({
+      numQuestions: Math.max(3, Math.min(20, count)),
+      // Tell the server what's already been asked so it doesn't repeat.
+      avoid: existing.map(q => q.question).slice(0, 30)
+    }, base);
+    window.BibleQuizAI.generate(payload)
+      .then(data => {
+        if (gen !== genToken || !quiz) return;
+        const have = new Set(quiz.questions.map(q => String(q.question).toLowerCase()));
+        ((data && data.questions) || []).forEach(q => {
+          if (!q || !q.question || have.has(String(q.question).toLowerCase())) return;
+          if (quiz.questions.length >= quiz.expectedTotal) return;
+          have.add(String(q.question).toLowerCase());
+          quiz.questions.push(Object.assign({}, q, { userAnswer: null, selected: null, hintShown: false, saved: false }));
+        });
+        settleRemainder(false);
+      })
+      .catch(() => { if (gen === genToken && quiz) settleRemainder(true); });
+  }
+
+  // Remainder finished (or failed): lock the quiz length to what we actually
+  // have and refresh whatever the user is looking at.
+  function settleRemainder(failed) {
+    quiz.loading = false;
+    const shrunk = quiz.questions.length < quiz.expectedTotal;
+    quiz.expectedTotal = quiz.questions.length;
+    if (failed && shrunk) toast('Kept this one to ' + quiz.questions.length + ' questions.');
+    if (view !== 'quiz') return;
+    if (qIndex >= quiz.questions.length) {
+      // User was sitting on the "writing…" screen.
+      if (qIndex < quiz.expectedTotal) renderQuiz(true);
+      else finishQuiz();
+    } else {
+      renderQuiz(false); // refresh the "Question X of N" counter + footer
+    }
   }
 
   function renderLoading() {
@@ -461,8 +520,8 @@
     page.appendChild(topbar({ title: 'Building your quiz', sub: form.reference }));
     page.appendChild(el('div', { class: 'bq-loading' }, [
       el('div', { class: 'bq-orb' }, [icon('auto_awesome')]),
-      el('h2', { text: 'Writing your questions…' }),
-      el('p', { text: 'The AI is reading ' + (form.reference || 'the passage') + ' and crafting a real test of what it says.' }),
+      el('h2', { text: 'Writing your first questions…' }),
+      el('p', { text: 'The AI is reading ' + (form.reference || 'the passage') + '. You’ll start in seconds — the rest is written while you play.' }),
       el('div', { class: 'bq-dots' }, [el('span'), el('span'), el('span')])
     ]));
   }
@@ -486,17 +545,19 @@
   /* ══════════════════════════════════════════════════════════════════════
      QUIZ RUNTIME
      ══════════════════════════════════════════════════════════════════════ */
-  let quiz = null; // { title, reference, difficulty, questions:[...] }
+  let quiz = null; // { title, reference, difficulty, expectedTotal, loading, questions:[...] }
   let qIndex = 0;
 
-  function startQuiz(data) {
+  function startQuiz(data, expectedTotal) {
     quiz = {
       title: data.title || data.reference,
       reference: data.reference,
       difficulty: data.difficulty || form.difficulty,
       focus: data.focus || [],
       tricky: !!data.tricky,
-      questions: data.questions.map(q => Object.assign({}, q, { userAnswer: null, hintShown: false, saved: false }))
+      expectedTotal: Math.max(expectedTotal || 0, data.questions.length),
+      loading: (expectedTotal || 0) > data.questions.length,
+      questions: data.questions.map(q => Object.assign({}, q, { userAnswer: null, selected: null, hintShown: false, saved: false }))
     };
     qIndex = 0;
     renderQuiz(false);
@@ -504,9 +565,10 @@
 
   function renderQuiz(animate) {
     view = 'quiz';
-    const total = quiz.questions.length;
-    const q = quiz.questions[qIndex];
-    const answered = q.userAnswer != null;
+    const total = quiz.expectedTotal;
+    const waiting = qIndex >= quiz.questions.length; // background batch still writing
+    const q = waiting ? null : quiz.questions[qIndex];
+    const answered = !!q && q.userAnswer != null;
     const pct = Math.round(((qIndex + 1) / total) * 100);
 
     // Progress card
@@ -519,34 +581,40 @@
       el('div', { class: 'bq-progress-track' }, [progressFill])
     ]);
 
-    // Question card
-    const optionsWrap = el('div', { class: 'bq-options' });
-    q.options.forEach((opt, i) => optionsWrap.appendChild(optionNode(q, i)));
+    let qcard, actions = null, optionsWrap = null, extras = null;
+    if (waiting) {
+      // The user answered faster than the AI writes — brief holding card.
+      qcard = el('div', { class: 'bq-card bq-qcard bq-qwait' + (animate ? ' bq-anim-in' : '') }, [
+        el('div', { class: 'bq-orb bq-orb-sm' }, [icon('auto_awesome')]),
+        el('h2', { text: 'Writing your next question…' }),
+        el('p', { text: 'You’re faster than the ink dries. One second.' }),
+        el('div', { class: 'bq-dots' }, [el('span'), el('span'), el('span')])
+      ]);
+    } else {
+      optionsWrap = el('div', { class: 'bq-options' });
+      q.options.forEach((opt, i) => optionsWrap.appendChild(optionNode(q, i)));
 
-    const qcard = el('div', { class: 'bq-card bq-qcard' + (animate ? ' bq-anim-in' : '') }, [
-      el('div', { class: 'bq-qcat' }, [icon(CAT_ICON[q.category] || 'menu_book')]),
-      el('h2', { class: 'bq-question', text: q.question }),
-      q.reference ? el('p', { class: 'bq-qref', text: q.reference }) : null,
-      optionsWrap
-    ]);
+      qcard = el('div', { class: 'bq-card bq-qcard' + (animate ? ' bq-anim-in' : '') }, [
+        el('div', { class: 'bq-qcat' }, [icon(CAT_ICON[q.category] || 'menu_book')]),
+        el('h2', { class: 'bq-question', text: q.question }),
+        q.reference ? el('p', { class: 'bq-qref', text: q.reference }) : null,
+        optionsWrap
+      ]);
 
-    // Hint + reveal slots live inside the card, appended dynamically
-    const extras = el('div', { class: 'bq-qcard-extras' });
-    qcard.appendChild(extras);
+      // Hint + reveal slots live inside the card, appended dynamically
+      extras = el('div', { class: 'bq-qcard-extras' });
+      qcard.appendChild(extras);
 
-    // Action row (hint + save)
-    const hintBtn = el('button', { class: 'bq-qaction', onclick: () => showHint(q, extras, hintBtn) }, [icon('lightbulb'), 'Show Hint']);
-    const saveBtn = el('button', { class: 'bq-qaction' + (q.saved ? ' bq-saved' : ''), onclick: () => toggleSaveQuestion(q, saveBtn) }, [
-      icon(q.saved ? 'bookmark_added' : 'bookmark'),
-      q.saved ? 'Saved' : 'Save Question'
-    ]);
-    const actions = el('div', { class: 'bq-qactions' }, [hintBtn, saveBtn]);
+      const hintBtn = el('button', { class: 'bq-qaction', onclick: () => showHint(q, extras, hintBtn) }, [icon('lightbulb'), 'Show Hint']);
+      const saveBtn = el('button', { class: 'bq-qaction' + (q.saved ? ' bq-saved' : ''), onclick: () => toggleSaveQuestion(q, saveBtn) }, [
+        icon(q.saved ? 'bookmark_added' : 'bookmark'),
+        q.saved ? 'Saved' : 'Save Question'
+      ]);
+      actions = el('div', { class: 'bq-qactions' }, [hintBtn, saveBtn]);
+    }
 
-    // Footer next button
-    const nextBtn = el('button', { class: 'bq-next', disabled: !answered, onclick: goNext }, [
-      qIndex + 1 >= total ? 'See Results' : 'Next Question',
-      icon(qIndex + 1 >= total ? 'flag' : 'arrow_forward')
-    ]);
+    // Footer button: Check Answer → Next Question / See Results.
+    const nextBtn = el('button', { class: 'bq-next', onclick: onFooterTap }, []);
     const footer = el('div', { class: 'bq-footer' }, [nextBtn]);
 
     const scroll = mount(topbar({
@@ -554,16 +622,22 @@
       title: 'Bible Quiz',
       sub: quiz.reference,
       right: { icon: 'folder', onclick: leaveToArchive, label: 'Past quizzes' }
-    }), [progress, qcard, actions], footer);
+    }), actions ? [progress, qcard, actions] : [progress, qcard], footer);
 
-    // If already answered (revisiting), restore graded state + reveal
-    if (answered) {
-      gradeOptions(optionsWrap, q);
-      appendReveal(extras, q);
-      if (q.hintShown) appendHint(extras, q);
-    } else if (q.hintShown) {
-      appendHint(extras, q);
+    // Restore state when revisiting or re-rendering mid-question.
+    if (q) {
+      if (answered) {
+        gradeOptions(optionsWrap, q);
+        appendReveal(extras, q);
+        if (q.hintShown) appendHint(extras, q);
+      } else {
+        if (q.selected != null) {
+          Array.prototype.forEach.call(optionsWrap.children, n => n.classList.toggle('bq-picked', n._index === q.selected));
+        }
+        if (q.hintShown) appendHint(extras, q);
+      }
     }
+    syncFooterBtn(nextBtn);
 
     // Animate progress bar to its value after paint.
     requestAnimationFrame(() => { progressFill.style.width = pct + '%'; });
@@ -572,12 +646,39 @@
     scroll._optionsWrap = optionsWrap;
     scroll._extras = extras;
     scroll._nextBtn = nextBtn;
-    scroll._hintBtn = hintBtn;
+  }
+
+  // One footer button, three states.
+  function syncFooterBtn(btn) {
+    if (!btn) return;
+    const waiting = qIndex >= quiz.questions.length;
+    const q = waiting ? null : quiz.questions[qIndex];
+    btn.innerHTML = '';
+    if (waiting) {
+      btn.appendChild(icon('auto_awesome'));
+      btn.appendChild(document.createTextNode('Writing…'));
+      btn.disabled = true;
+    } else if (q.userAnswer == null) {
+      btn.appendChild(icon('check_circle'));
+      btn.appendChild(document.createTextNode('Check Answer'));
+      btn.disabled = q.selected == null;
+    } else {
+      const isLast = qIndex + 1 >= quiz.expectedTotal;
+      btn.appendChild(document.createTextNode(isLast ? 'See Results' : 'Next Question'));
+      btn.appendChild(icon(isLast ? 'flag' : 'arrow_forward'));
+      btn.disabled = false;
+    }
+  }
+
+  function onFooterTap() {
+    if (qIndex >= quiz.questions.length) return;
+    const q = quiz.questions[qIndex];
+    if (q.userAnswer == null) checkAnswer(); else goNext();
   }
 
   function optionNode(q, i) {
     const badge = el('div', { class: 'bq-opt-badge', text: LETTERS[i] });
-    const node = el('button', { class: 'bq-opt', onclick: () => selectAnswer(q, i, node) }, [
+    const node = el('button', { class: 'bq-opt', onclick: () => selectOption(q, i, node) }, [
       badge,
       el('div', { class: 'bq-opt-text', text: q.options[i] })
     ]);
@@ -586,14 +687,29 @@
     return node;
   }
 
-  function selectAnswer(q, i, node) {
-    if (q.userAnswer != null) return; // locked after first answer
-    q.userAnswer = i;
-    node.classList.add('bq-pop');
+  // Tapping an option only highlights it — the user can move freely between
+  // answers until they press Check Answer.
+  function selectOption(q, i, node) {
+    if (q.userAnswer != null) return; // locked once checked
+    q.selected = i;
     const scroll = page.querySelector('.bq-scroll');
+    if (scroll && scroll._optionsWrap) {
+      Array.prototype.forEach.call(scroll._optionsWrap.children, n => n.classList.toggle('bq-picked', n._index === i));
+    }
+    node.classList.add('bq-pop');
+    setTimeout(() => node.classList.remove('bq-pop'), 340);
+    if (scroll && scroll._nextBtn) syncFooterBtn(scroll._nextBtn);
+  }
+
+  function checkAnswer() {
+    const q = quiz.questions[qIndex];
+    if (!q || q.userAnswer != null || q.selected == null) return;
+    q.userAnswer = q.selected;
+    const scroll = page.querySelector('.bq-scroll');
+    if (!scroll) return;
     gradeOptions(scroll._optionsWrap, q);
     appendReveal(scroll._extras, q);
-    if (scroll._nextBtn) scroll._nextBtn.disabled = false;
+    syncFooterBtn(scroll._nextBtn);
   }
 
   function gradeOptions(wrap, q) {
@@ -661,8 +777,10 @@
 
   function goNext() {
     const q = quiz.questions[qIndex];
-    if (q.userAnswer == null) return;
-    if (qIndex + 1 >= quiz.questions.length) { finishQuiz(); return; }
+    if (!q || q.userAnswer == null) return;
+    if (qIndex + 1 >= quiz.expectedTotal) { finishQuiz(); return; }
+    // Advancing past the loaded questions shows the "writing…" card until the
+    // background batch lands (settleRemainder re-renders when it does).
     const card = page.querySelector('.bq-qcard');
     const advance = () => { qIndex++; renderQuiz(true); };
     if (card && !reduceMotion()) {
@@ -754,7 +872,7 @@
     ];
 
     const footer = el('div', { class: 'bq-footer' }, [
-      el('button', { class: 'bq-next', onclick: renderBuilder }, [icon('add'), 'New Quiz'])
+      el('button', { class: 'bq-next', onclick: newQuiz }, [icon('add'), 'New Quiz'])
     ]);
 
     mount(topbar({
@@ -816,7 +934,7 @@
     mount(topbar({
       left: { icon: 'arrow_back', onclick: renderHome, label: 'Back' },
       title: 'Past Quizzes',
-      right: { icon: 'add', onclick: renderBuilder, label: 'New quiz' }
+      right: { icon: 'add', onclick: newQuiz, label: 'New quiz' }
     }), kids);
   }
 
