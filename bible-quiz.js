@@ -1180,27 +1180,33 @@
       store = loadStore();
       if (!store.settings.habitQuiz) return false;
       const name = opts.habitName || '';
-      // A reference in the note wins; failing that, a full reference in the
-      // habit name itself (e.g. a habit called "Read John 3").
+      // A reference in the note ALWAYS wins; failing that, a full reference in
+      // the habit name itself (e.g. a habit called "Read John 3").
       let refs = extractReferences(opts.note);
       if (!refs) refs = extractReferences(name);
       // No reference anywhere — but a clearly Bible-reading habit still gets
       // an ask-modal so the user can type what they read.
       const askInstead = !refs && looksLikeBibleReadingHabit(name);
       if (!refs && !askInstead) return false;
-      // Offer once per habit per day, so re-saving a note doesn't nag.
+      // Once per habit per day — EXCEPT when a real reference shows up that we
+      // haven't offered yet (e.g. the ask-modal was dismissed, then the user
+      // added "John 3" to the note and completed again → offer properly).
       const key = (opts.habitId || 'habit') + '|' + (opts.dateKey || 'today');
-      if (store.promptedHabitChecks[key]) return false;
-      store.promptedHabitChecks[key] = Date.now();
+      const prior = store.promptedHabitChecks[key];
+      const priorRefs = prior && typeof prior === 'object' ? (prior.refs || '') : '';
+      if (prior && (!refs || refs === priorRefs)) return false;
+      store.promptedHabitChecks[key] = { at: Date.now(), refs: refs || '' };
       const cutoff = Date.now() - 14 * 86400000;
       for (const k in store.promptedHabitChecks) {
-        if (store.promptedHabitChecks[k] < cutoff) delete store.promptedHabitChecks[k];
+        const v = store.promptedHabitChecks[k];
+        const at = (v && typeof v === 'object') ? v.at : v;
+        if (!at || at < cutoff) delete store.promptedHabitChecks[k];
       }
       persist(true);
       // Small delay so the habit UI (check animation, milestone toast) lands first.
       setTimeout(() => {
         if (refs) showHabitQuizModal(refs, name);
-        else showHabitAskModal(bibleBookInName(name), name);
+        else showHabitAskModal(bibleBookInName(opts.note || '') || bibleBookInName(name), name);
       }, 700);
       return true;
     }

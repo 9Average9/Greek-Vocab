@@ -21807,6 +21807,11 @@ async function toggleHabitToday(habitId, status) {
       notify: status === "success"
     });
     if (!ok) alert("Could not update that habit.");
+    if (ok && habit) {
+      // Keep the local cache in step with what was just written.
+      const k = _habitTodayKey();
+      habit.entries = { ...(habit.entries || {}), [k]: { ...(habit.entries?.[k] || {}), date: k, status, comment: existingComment } };
+    }
     if (ok && status === "success" && habit) {
       const mergedEntries = { ...(habit.entries || {}), [_habitTodayKey()]: { date: _habitTodayKey(), status: "success" } };
       const streak = _habitCurrentStreak(mergedEntries);
@@ -21907,6 +21912,13 @@ async function saveHabitNote() {
     notify: false
   });
   if (!ok) { alert("Could not save that note."); return; }
+  // Update the local cache immediately — the realtime listener catches up a
+  // moment later, but anything that reads this habit in between (like
+  // completing it right after saving the note) must see this note, not a
+  // stale copy that could also get written back over it.
+  if (habit) {
+    habit.entries = { ...(habit.entries || {}), [_habitNoteDate]: { ...previous, date: _habitNoteDate, status, comment } };
+  }
   if (status === "success" && previous.status !== "success" && habit) {
     const mergedEntries = { ...(habit.entries || {}), [_habitNoteDate]: { date: _habitNoteDate, status: "success" } };
     const streak = _habitCurrentStreak(mergedEntries);
@@ -29839,7 +29851,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.435";
+const APP_VERSION = "3.0.437";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
