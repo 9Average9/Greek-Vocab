@@ -1038,6 +1038,7 @@ body.dark #bibleQuizPage {
   --bq-ink: var(--font-color, #1b1e28);
   --bq-muted: var(--muted-color, #6b7280);
   --bq-card: var(--card-solid-color, #ffffff);
+  --bq-line: color-mix(in srgb, var(--bq-primary) 34%, rgba(15, 23, 42, 0.12));
   --bq-line-soft: color-mix(in srgb, var(--bq-primary) 20%, rgba(15, 23, 42, 0.08));
   --bq-primary-ink: var(--btn-text-color, #ffffff);
 
@@ -1161,6 +1162,47 @@ body.dark #bibleQuizPage {
 }
 .bq-hm-skip:active { transform: scale(.97); color: var(--bq-ink); }
 
+/* Ask-variant: reference input + questions stepper */
+.bq-hm-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--bq-line);
+  background: var(--bq-card);
+  color: var(--bq-ink);
+  font-size: 1rem;
+  font-family: inherit;
+  text-align: center;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.bq-hm-input::placeholder { color: var(--bq-muted); opacity: .8; }
+.bq-hm-input:focus {
+  outline: none;
+  border-color: var(--bq-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bq-primary) 26%, transparent);
+}
+.bq-hm-countrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 18px;
+}
+.bq-hm-countrow > span {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--bq-muted);
+}
+.bq-hm-countrow .bq-mini-step b { color: var(--bq-ink); }
+@keyframes bqShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+.bq-hm-shake { animation: bqShake .3s ease; border-color: #e5484d !important; }
+
 body.dark .bq-hm-overlay {
   --bq-line-soft: color-mix(in srgb, #ffffff 10%, transparent);
   background: color-mix(in srgb, #05060c 66%, transparent);
@@ -1173,7 +1215,7 @@ body.dark .bq-hm-card {
   #bibleQuizPage, .bq-anim-in, .bq-anim-out, .bq-reveal, .bq-hint,
   .bq-ring, .bq-orb, .bq-orb .material-symbols-outlined, .bq-dots span, .bq-pop,
   .bq-rise, .bq-help, .bq-habit-count,
-  .bq-hm-overlay, .bq-hm-card, .bq-hm-badge {
+  .bq-hm-overlay, .bq-hm-card, .bq-hm-badge, .bq-hm-shake {
     animation: none !important;
     transition: none !important;
   }

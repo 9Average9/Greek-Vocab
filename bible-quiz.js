@@ -912,6 +912,41 @@
     return refs.join('; ');
   }
 
+  /* Smart habit-name detection — for Bible-reading habits completed WITHOUT a
+     reference in the note. A full reference in the habit name ("Read John 3")
+     is used directly; otherwise a name that clearly means Scripture reading
+     triggers an ask-modal where the user types the passage. */
+  const BQ_BIBLE_WORDS = /\b(bible|scriptures?|gospels?|devotionals?|devotions?|testament|word\s+of\s+god|quiet\s+time)\b/i;
+  const BQ_READING_WORDS = /\b(read(?:ing)?|study(?:ing)?|chapters?|verses?|passages?|memori[sz]e)\b/i;
+  // Books whose bare name is unmistakably Scripture (not also a common
+  // personal name or everyday word like "Mark", "Job", "Numbers", "Acts").
+  const BQ_CLEAR_BOOKS = new RegExp('\\b(?:' + [
+    'Genesis', 'Exodus', 'Leviticus', 'Deuteronomy', 'Psalms?', 'Proverbs', 'Ecclesiastes',
+    'Song\\s+of\\s+(?:Solomon|Songs)', 'Isaiah', 'Jeremiah', 'Lamentations', 'Ezekiel',
+    'Hosea', 'Obadiah', 'Jonah', 'Micah', 'Nahum', 'Habakkuk', 'Zephaniah', 'Haggai',
+    'Zechariah', 'Malachi', 'Matthew', 'Romans', 'Corinthians', 'Galatians', 'Ephesians',
+    'Philippians', 'Colossians', 'Thessalonians', 'Philemon', 'Hebrews', 'Revelation',
+    'Chronicles', 'Nehemiah', 'Ezra', 'Esther', 'Leviticus', 'Zephaniah'
+  ].join('|') + ')\\b', 'i');
+  const BQ_ANY_BOOK_RE = new RegExp('\\b(?:([123])\\s*)?(' + BQ_BOOKS.join('|') + ')\\b\\.?', 'i');
+
+  // First Bible book mentioned in the text (chapter not required) — used to
+  // prefill the ask-modal, e.g. habit "Proverbs" prefills "Proverbs ".
+  function bibleBookInName(name) {
+    const m = BQ_ANY_BOOK_RE.exec(name || '');
+    if (!m) return '';
+    return ((m[1] ? m[1] + ' ' : '') + m[2].replace(/\s+/g, ' ')).trim();
+  }
+
+  function looksLikeBibleReadingHabit(name) {
+    if (!name) return false;
+    if (BQ_BIBLE_WORDS.test(name)) return true;
+    if (BQ_CLEAR_BOOKS.test(name)) return true;
+    // Ambiguous book names ("John", "Mark", "Job", …) count only alongside a
+    // reading word — so "Read John" qualifies but "Pray for John" doesn't.
+    return BQ_READING_WORDS.test(name) && !!bibleBookInName(name);
+  }
+
   function startHabitQuiz(refs) {
     buildShell();
     store = loadStore();
@@ -953,6 +988,63 @@
     requestAnimationFrame(() => habitModal && habitModal.classList.add('bq-hm-show'));
   }
 
+  // Fallback modal when we know it's a Bible-reading habit but don't know the
+  // passage: asks for the reference (prefilled with any book found in the
+  // habit name) and the number of questions, then generates.
+  function showHabitAskModal(prefillBook, habitName) {
+    if (habitModal) return;
+    const st = store.settings;
+    const input = el('input', {
+      class: 'bq-hm-input', type: 'text',
+      placeholder: 'e.g. John 3; Romans 8:1–17',
+      value: prefillBook ? prefillBook + ' ' : ''
+    });
+    const countVal = el('b', { text: String(st.habitQuizCount) });
+    const minus = el('button', { class: 'bq-mini-btn', type: 'button', text: '−', 'aria-label': 'Fewer questions' });
+    const plus = el('button', { class: 'bq-mini-btn', type: 'button', text: '+', 'aria-label': 'More questions' });
+    const syncCount = () => {
+      countVal.textContent = String(st.habitQuizCount);
+      minus.disabled = st.habitQuizCount <= 3;
+      plus.disabled = st.habitQuizCount >= 15;
+    };
+    minus.addEventListener('click', () => { if (st.habitQuizCount > 3) { st.habitQuizCount--; syncCount(); persist(); } });
+    plus.addEventListener('click', () => { if (st.habitQuizCount < 15) { st.habitQuizCount++; syncCount(); persist(); } });
+    syncCount();
+    const go = () => {
+      const ref = input.value.trim();
+      if (!ref) {
+        input.classList.add('bq-hm-shake');
+        setTimeout(() => input.classList.remove('bq-hm-shake'), 400);
+        input.focus();
+        return;
+      }
+      closeHabitModal();
+      startHabitQuiz(ref);
+    };
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    const card = el('div', { class: 'bq-hm-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Knowledge check' }, [
+      el('div', { class: 'bq-hm-badge' }, [icon('auto_awesome')]),
+      el('div', { class: 'bq-hm-kicker' }, [icon('check_circle'), habitName ? habitName + ' complete' : 'Reading complete']),
+      el('h3', { text: 'Quick knowledge check on what you read?' }),
+      el('p', { text: 'Tell me the passage and I’ll build the test.' }),
+      input,
+      el('div', { class: 'bq-hm-countrow' }, [
+        el('span', { text: 'Questions' }),
+        el('div', { class: 'bq-mini-step' }, [minus, countVal, plus])
+      ]),
+      el('button', { class: 'bq-hm-go', onclick: go }, [icon('bolt'), 'Take Knowledge Check']),
+      el('button', { class: 'bq-hm-skip', onclick: closeHabitModal }, ['Not now'])
+    ]);
+    card.addEventListener('click', e => e.stopPropagation());
+    habitModal = el('div', { class: 'bq-hm-overlay', onclick: closeHabitModal }, [card]);
+    document.body.appendChild(habitModal);
+    requestAnimationFrame(() => {
+      if (!habitModal) return;
+      habitModal.classList.add('bq-hm-show');
+      setTimeout(() => { try { input.focus(); } catch (e) {} }, 380);
+    });
+  }
+
   window.BibleQuiz = {
     isHabitQuizEnabled() {
       store = loadStore();
@@ -963,8 +1055,15 @@
       opts = opts || {};
       store = loadStore();
       if (!store.settings.habitQuiz) return false;
-      const refs = extractReferences(opts.note);
-      if (!refs) return false;
+      const name = opts.habitName || '';
+      // A reference in the note wins; failing that, a full reference in the
+      // habit name itself (e.g. a habit called "Read John 3").
+      let refs = extractReferences(opts.note);
+      if (!refs) refs = extractReferences(name);
+      // No reference anywhere — but a clearly Bible-reading habit still gets
+      // an ask-modal so the user can type what they read.
+      const askInstead = !refs && looksLikeBibleReadingHabit(name);
+      if (!refs && !askInstead) return false;
       // Offer once per habit per day, so re-saving a note doesn't nag.
       const key = (opts.habitId || 'habit') + '|' + (opts.dateKey || 'today');
       if (store.promptedHabitChecks[key]) return false;
@@ -975,7 +1074,10 @@
       }
       persist(true);
       // Small delay so the habit UI (check animation, milestone toast) lands first.
-      setTimeout(() => showHabitQuizModal(refs, opts.habitName || ''), 700);
+      setTimeout(() => {
+        if (refs) showHabitQuizModal(refs, name);
+        else showHabitAskModal(bibleBookInName(name), name);
+      }, 700);
       return true;
     }
   };

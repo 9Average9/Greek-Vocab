@@ -21917,8 +21917,9 @@ async function saveHabitNote() {
     }
   }
   // Covers both orders — note added after completing, or completed via this
-  // modal with the reference already in the note. Dedupes per habit per day.
-  if (status === "success" && comment && habit) {
+  // modal with the reference already in the note. Even without a note, a
+  // Bible-reading habit name triggers an ask-modal. Dedupes per habit per day.
+  if (status === "success" && habit) {
     window.BibleQuiz?.maybeOfferHabitQuiz?.({
       habitId: _habitNoteHabitId, habitName: habit.name, dateKey: _habitNoteDate, note: comment
     });
