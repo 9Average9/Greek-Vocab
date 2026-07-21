@@ -1,0 +1,813 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   BIBLE QUIZ  —  a premium, full-screen, AI-generated Scripture quiz studio.
+
+   Self-contained IIFE. The only global it exposes is window.openBibleQuiz(el),
+   called by the Tools tile on the home screen. The whole UI (page shell + every
+   view) is injected on first open, so index.html only needs the tile plus the
+   <script>/<link> tags.
+
+   How the feature works, in one breath:
+     • The user describes a passage + difficulty + focus; ONE call to the
+       generateBibleQuiz Cloud Function returns the entire quiz as structured
+       JSON — every question, its options, the answer, a tailored hint, the
+       supporting reference/verse, and an explanation. Generating it all up
+       front is the efficient path: hints and explanations are then instant,
+       with zero extra AI calls while the user plays.
+     • Results (score %, per-question review) and individually-saved questions
+       persist to localStorage so history + stats survive across sessions.
+     • High-percentage and longer quizzes award XP to the profile via addXP().
+
+   Added beyond the brief (each surfaced in the in-app "How it works" panel):
+     - Four difficulty tiers (Broad → Scholar) with plain-language meaning.
+     - Focus areas (people, places, numbers, doctrine, prophecy, …) the user
+       can weight the quiz toward.
+     - "Tricky distractors" toggle for a genuinely hard test.
+     - Per-quiz + lifetime stats (quizzes taken, average score, XP earned).
+     - Save individual questions to a personal review deck.
+     - Instant graded feedback with the correct verse revealed after answering.
+   ══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  const BQ_KEY = 'discipleBibleQuiz.v1';
+  const uid = () => 'bq' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+
+  /* ───────── Reference data ───────── */
+  const DIFFICULTIES = [
+    { id: 'broad',    name: 'Broad',    desc: 'Themes & main events' },
+    { id: 'balanced', name: 'Balanced', desc: 'A fair, varied mix' },
+    { id: 'detailed', name: 'Detailed', desc: 'Names, numbers, order' },
+    { id: 'scholar',  name: 'Scholar',  desc: 'Deep & precise' }
+  ];
+  const FOCUS = [
+    { id: 'narrative',   label: 'Story & events', icon: 'menu_book' },
+    { id: 'people',      label: 'People',         icon: 'group' },
+    { id: 'places',      label: 'Places',         icon: 'public' },
+    { id: 'numbers',     label: 'Numbers',        icon: 'tag' },
+    { id: 'doctrine',    label: 'Doctrine',       icon: 'church' },
+    { id: 'quotes',      label: 'Who said it',    icon: 'format_quote' },
+    { id: 'prophecy',    label: 'Prophecy',       icon: 'bolt' },
+    { id: 'application', label: 'Application',    icon: 'self_improvement' }
+  ];
+  const CAT_ICON = {
+    narrative: 'menu_book', people: 'group', places: 'public', numbers: 'tag',
+    doctrine: 'church', quotes: 'format_quote', prophecy: 'bolt', application: 'self_improvement'
+  };
+  const REF_CHIPS = ['Genesis 1–3', 'John 3', 'Psalm 23', 'Romans 8', 'Exodus 12', 'Matthew 5–7'];
+  const LETTERS = ['A', 'B', 'C', 'D'];
+
+  /* ───────── Persistence ───────── */
+  function loadStore() {
+    try {
+      const raw = localStorage.getItem(BQ_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (!Array.isArray(s.quizzes)) s.quizzes = [];
+        if (!Array.isArray(s.savedQuestions)) s.savedQuestions = [];
+        return s;
+      }
+    } catch (e) {}
+    return { quizzes: [], savedQuestions: [] };
+  }
+  let store = loadStore();
+  let saveTimer = null;
+  function persist(now) {
+    clearTimeout(saveTimer);
+    const write = () => { try { localStorage.setItem(BQ_KEY, JSON.stringify(store)); } catch (e) {} };
+    if (now) write(); else saveTimer = setTimeout(write, 350);
+  }
+
+  /* ───────── DOM helpers (mirrors the app's own tiny el/icon pattern) ───────── */
+  function el(tag, props, kids) {
+    const n = document.createElement(tag);
+    if (props) for (const k in props) {
+      if (k === 'class') n.className = props[k];
+      else if (k === 'html') n.innerHTML = props[k];
+      else if (k === 'text') n.textContent = props[k];
+      else if (k === 'style' && typeof props[k] === 'object') Object.assign(n.style, props[k]);
+      else if (k.startsWith('on') && typeof props[k] === 'function') n.addEventListener(k.slice(2), props[k]);
+      else if (props[k] != null && props[k] !== false) n.setAttribute(k, props[k] === true ? '' : props[k]);
+    }
+    if (kids != null) (Array.isArray(kids) ? kids : [kids]).forEach(c => {
+      if (c == null) return;
+      n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return n;
+  }
+  const icon = name => el('span', { class: 'material-symbols-outlined', text: name });
+
+  let toastTimer = null;
+  function toast(msg) {
+    let t = document.getElementById('bqToast');
+    if (!t) { t = el('div', { class: 'bq-toast', id: 'bqToast' }); (page || document.body).appendChild(t); }
+    t.textContent = msg;
+    t.classList.add('bq-show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('bq-show'), 2200);
+  }
+
+  function reduceMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  /* ───────── Page shell ───────── */
+  let page = null;
+  function buildShell() {
+    if (page) return;
+    page = el('section', { class: 'bq-hidden', id: 'bibleQuizPage' });
+    document.body.appendChild(page);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && page && !page.classList.contains('bq-hidden')) back();
+    });
+  }
+
+  window.openBibleQuiz = function (launcher) {
+    buildShell();
+    store = loadStore();
+    renderHome();
+    page.classList.remove('bq-hidden');
+    requestAnimationFrame(() => page.classList.add('bq-open'));
+  };
+
+  function closeFeature() {
+    if (!page) return;
+    page.classList.remove('bq-open');
+    setTimeout(() => page && page.classList.add('bq-hidden'), 280);
+    if (typeof window.showBottomNav === 'function') window.showBottomNav();
+  }
+
+  // Contextual back — where "back" goes depends on the current view.
+  function back() {
+    if (view === 'home') closeFeature();
+    else if (view === 'builder' || view === 'archive') renderHome();
+    else if (view === 'quiz') {
+      if (confirm('Leave this quiz? Your progress will be lost.')) renderHome();
+    } else renderHome();
+  }
+
+  /* ───────── Top bar ───────── */
+  function topbar(opts) {
+    // opts: { left:{icon,onclick,label}, title, sub, right:{icon,onclick,label} }
+    return el('div', { class: 'bq-topbar' }, [
+      opts.left
+        ? el('button', { class: 'bq-iconbtn', onclick: opts.left.onclick, 'aria-label': opts.left.label || 'Back' }, [icon(opts.left.icon)])
+        : el('span'),
+      el('div', { class: 'bq-topbar-title' }, [
+        el('strong', { text: opts.title }),
+        opts.sub ? el('small', { text: opts.sub }) : null
+      ]),
+      opts.right
+        ? el('button', { class: 'bq-iconbtn', onclick: opts.right.onclick, 'aria-label': opts.right.label || 'Menu' }, [icon(opts.right.icon)])
+        : el('span')
+    ]);
+  }
+
+  function mount(topbarNode, scrollKids, footerNode) {
+    page.innerHTML = '';
+    page.appendChild(topbarNode);
+    const scroll = el('div', { class: 'bq-scroll' }, scrollKids);
+    page.appendChild(scroll);
+    if (footerNode) page.appendChild(footerNode);
+    return scroll;
+  }
+
+  /* ───────── Stats ───────── */
+  function stats() {
+    const qz = store.quizzes;
+    const count = qz.length;
+    const avg = count ? Math.round(qz.reduce((a, q) => a + (q.pct || 0), 0) / count) : 0;
+    const xp = qz.reduce((a, q) => a + (q.xp || 0), 0);
+    return { count, avg, xp };
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     HOME
+     ══════════════════════════════════════════════════════════════════════ */
+  let view = 'home';
+  function renderHome() {
+    view = 'home';
+    const s = stats();
+    const kids = [];
+
+    kids.push(el('div', { class: 'bq-hero' }, [
+      el('div', { class: 'bq-hero-badge' }, [icon('quiz')]),
+      el('h1', { text: 'Bible Quiz' }),
+      el('p', { text: 'Turn what you read into what you remember. Point the AI at any passage and it builds a real test of what it says.' })
+    ]));
+
+    kids.push(el('button', { class: 'bq-cta', onclick: renderBuilder }, [icon('add'), 'New Quiz']));
+
+    // Lifetime stat strip
+    kids.push(el('div', { class: 'bq-stats' }, [
+      el('div', { class: 'bq-card bq-stat' }, [el('b', { text: String(s.count) }), el('span', { text: 'Quizzes' })]),
+      el('div', { class: 'bq-card bq-stat' }, [el('b', { text: s.count ? s.avg + '%' : '—' }), el('span', { text: 'Avg score' })]),
+      el('div', { class: 'bq-card bq-stat' }, [el('b', { text: String(s.xp) }), el('span', { text: 'XP earned' })])
+    ]));
+
+    // Recent quizzes
+    if (store.quizzes.length) {
+      kids.push(el('div', { class: 'bq-section-label', text: 'Recent quizzes' }));
+      const list = el('div', { class: 'bq-recent-list' });
+      store.quizzes.slice(0, 4).forEach(q => list.appendChild(histCard(q)));
+      kids.push(list);
+      if (store.quizzes.length > 4) {
+        kids.push(el('button', { class: 'bq-cta bq-ghost', style: { marginTop: '12px' }, onclick: () => renderArchive('history') }, [icon('folder'), 'See all in the cabinet']));
+      }
+    }
+
+    // How it works / why
+    kids.push(el('div', { class: 'bq-section-label', text: 'How it works' }));
+    kids.push(el('div', { class: 'bq-card bq-how' }, [
+      howRow('menu_book', 'Pick a passage', 'A book, a chapter, a verse, or a range — whatever you just read.'),
+      howRow('tune', 'Set the challenge', 'Choose a difficulty from broad themes to scholar-level detail, and steer it toward people, places, numbers, doctrine, and more.'),
+      howRow('auto_awesome', 'AI builds a real test', 'Questions are written to actually check your understanding — not generic filler — each with a hint and the verse it comes from.'),
+      howRow('workspace_premium', 'Earn XP as you grow', 'Score high and take longer quizzes to earn more XP toward your profile. Every quiz is saved so you can watch yourself improve.')
+    ]));
+
+    kids.push(el('p', { style: { textAlign: 'center', fontSize: '.84rem', color: 'var(--bq-muted)', margin: '18px 8px 4px', lineHeight: '1.5' },
+      text: 'Reading through the Bible is easy to forget. A quick quiz right after you read locks it in — and turns a read-through into something you actually keep.' }));
+
+    mount(topbar({
+      left: { icon: 'arrow_back', onclick: closeFeature, label: 'Close' },
+      title: 'Bible Quiz',
+      right: { icon: 'folder', onclick: () => renderArchive('history'), label: 'Past quizzes' }
+    }), kids);
+  }
+
+  function howRow(ic, title, body) {
+    return el('div', { class: 'bq-how-row' }, [
+      el('div', { class: 'bq-how-ico' }, [icon(ic)]),
+      el('div', {}, [el('strong', { text: title }), el('p', { text: body })])
+    ]);
+  }
+
+  function histCard(q) {
+    const d = q.createdAt ? new Date(q.createdAt) : null;
+    const dateStr = d ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+    return el('div', { class: 'bq-card bq-hist-item', onclick: () => renderResults(q, false) }, [
+      el('div', { class: 'bq-hist-score', text: (q.pct != null ? q.pct : 0) + '%' }),
+      el('div', { class: 'bq-hist-main' }, [
+        el('strong', { text: q.title || q.reference || 'Quiz' }),
+        el('small', { text: `${q.correct}/${q.numQuestions} correct · ${dateStr}` })
+      ]),
+      icon('chevron_right')
+    ]);
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     BUILDER
+     ══════════════════════════════════════════════════════════════════════ */
+  let form = null;
+  function defaultForm() {
+    return { reference: '', difficulty: 'balanced', numQuestions: 10, focus: [], tricky: true };
+  }
+  function renderBuilder() {
+    view = 'builder';
+    if (!form) form = defaultForm();
+
+    const refInput = el('input', {
+      class: 'bq-input', type: 'text', value: form.reference,
+      placeholder: 'e.g. Genesis 1–5, John 3, Romans 8:1–17',
+      oninput: e => { form.reference = e.target.value; }
+    });
+
+    const chipRow = el('div', { class: 'bq-chiprow' }, REF_CHIPS.map(c =>
+      el('button', { class: 'bq-chip', onclick: () => { form.reference = c; refInput.value = c; } }, [c])
+    ));
+
+    // Difficulty segmented
+    const diffGrid = el('div', { class: 'bq-seg' }, DIFFICULTIES.map(d => {
+      const b = el('button', { class: 'bq-seg-opt' + (form.difficulty === d.id ? ' bq-sel' : ''), onclick: () => {
+        form.difficulty = d.id;
+        diffGrid.querySelectorAll('.bq-seg-opt').forEach((n, i) => n.classList.toggle('bq-sel', DIFFICULTIES[i].id === d.id));
+      } }, [el('strong', { text: d.name }), el('small', { text: d.desc })]);
+      return b;
+    }));
+
+    // Focus pills
+    const pillWrap = el('div', { class: 'bq-pills' }, FOCUS.map(f => {
+      const p = el('button', { class: 'bq-pill' + (form.focus.includes(f.id) ? ' bq-sel' : ''), onclick: () => {
+        const i = form.focus.indexOf(f.id);
+        if (i >= 0) form.focus.splice(i, 1); else form.focus.push(f.id);
+        p.classList.toggle('bq-sel');
+      } }, [icon(f.icon), f.label]);
+      return p;
+    }));
+
+    // Stepper
+    const stepVal = el('div', { class: 'bq-step-val' }, [
+      el('b', { text: String(form.numQuestions) }),
+      el('span', { text: 'questions' })
+    ]);
+    const minus = el('button', { class: 'bq-step-btn', text: '−' });
+    const plus = el('button', { class: 'bq-step-btn', text: '+' });
+    const syncStep = () => {
+      stepVal.querySelector('b').textContent = String(form.numQuestions);
+      minus.disabled = form.numQuestions <= 3;
+      plus.disabled = form.numQuestions >= 20;
+    };
+    minus.addEventListener('click', () => { if (form.numQuestions > 3) { form.numQuestions--; syncStep(); } });
+    plus.addEventListener('click', () => { if (form.numQuestions < 20) { form.numQuestions++; syncStep(); } });
+    syncStep();
+    const stepper = el('div', { class: 'bq-stepper' }, [minus, stepVal, plus]);
+
+    // Tricky toggle
+    const sw = el('button', { class: 'bq-switch' + (form.tricky ? ' bq-on' : ''), role: 'switch', 'aria-checked': String(form.tricky), onclick: () => {
+      form.tricky = !form.tricky;
+      sw.classList.toggle('bq-on', form.tricky);
+      sw.setAttribute('aria-checked', String(form.tricky));
+    } });
+
+    const kids = [
+      el('div', { class: 'bq-form' }, [
+        el('div', { class: 'bq-field' }, [
+          el('label', { class: 'bq-label' }, [icon('menu_book'), 'Passage']),
+          el('div', { class: 'bq-help', text: 'Reference a book, chapter, single verse, or a range.' }),
+          refInput, chipRow
+        ]),
+        el('div', { class: 'bq-field' }, [
+          el('label', { class: 'bq-label' }, [icon('tune'), 'Difficulty']),
+          el('div', { class: 'bq-help', text: 'From broad themes to exact, easily-confused details.' }),
+          diffGrid
+        ]),
+        el('div', { class: 'bq-field' }, [
+          el('label', { class: 'bq-label' }, [icon('category'), 'Focus (optional)']),
+          el('div', { class: 'bq-help', text: 'Weight the questions toward what you want to test. Leave blank for a natural spread.' }),
+          pillWrap
+        ]),
+        el('div', { class: 'bq-field' }, [
+          el('label', { class: 'bq-label' }, [icon('format_list_numbered'), 'Length']),
+          el('div', { class: 'bq-help', text: 'More questions is a bigger test — and earns more XP.' }),
+          stepper
+        ]),
+        el('div', { class: 'bq-field' }, [
+          el('div', { class: 'bq-card bq-toggle' }, [
+            el('div', {}, [
+              el('strong', { text: 'Tricky distractors' }),
+              el('small', { text: 'Make wrong answers genuinely plausible — a real test.' })
+            ]),
+            sw
+          ])
+        ])
+      ])
+    ];
+
+    const footer = el('div', { class: 'bq-footer' }, [
+      el('button', { class: 'bq-next', onclick: startGeneration }, [icon('auto_awesome'), 'Generate Quiz'])
+    ]);
+
+    mount(topbar({
+      left: { icon: 'arrow_back', onclick: renderHome, label: 'Back' },
+      title: 'New Quiz',
+      right: { icon: 'folder', onclick: () => renderArchive('history'), label: 'Past quizzes' }
+    }), kids, footer);
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     GENERATION
+     ══════════════════════════════════════════════════════════════════════ */
+  function startGeneration() {
+    const ref = (form.reference || '').trim();
+    if (!ref) { toast('Add a passage reference first.'); return; }
+    renderLoading();
+    const payload = {
+      reference: ref,
+      difficulty: form.difficulty,
+      numQuestions: form.numQuestions,
+      focus: form.focus.slice(),
+      tricky: form.tricky
+    };
+    if (!window.BibleQuizAI || typeof window.BibleQuizAI.generate !== 'function') {
+      renderError("The quiz service isn't available right now. Please reload the app and try again.");
+      return;
+    }
+    window.BibleQuizAI.generate(payload)
+      .then(data => {
+        if (!data || !Array.isArray(data.questions) || !data.questions.length) {
+          renderError("Couldn't build questions for that passage. Try a broader or clearer reference.");
+          return;
+        }
+        startQuiz(data);
+      })
+      .catch(err => {
+        const code = err && err.code ? String(err.code) : '';
+        if (code.indexOf('unauthenticated') >= 0) {
+          renderError('Please sign in to your account to create quizzes.');
+        } else if (code.indexOf('resource-exhausted') >= 0) {
+          renderError('The quiz service is busy right now. Please try again in a moment.');
+        } else if (code.indexOf('failed-precondition') >= 0) {
+          renderError('Bible Quiz isn’t configured on the server yet.');
+        } else {
+          renderError((err && err.message) || 'Something went wrong generating the quiz. Please try again.');
+        }
+      });
+  }
+
+  function renderLoading() {
+    view = 'loading';
+    page.innerHTML = '';
+    page.appendChild(topbar({ title: 'Building your quiz', sub: form.reference }));
+    page.appendChild(el('div', { class: 'bq-loading' }, [
+      el('div', { class: 'bq-orb' }, [icon('auto_awesome')]),
+      el('h2', { text: 'Writing your questions…' }),
+      el('p', { text: 'The AI is reading ' + (form.reference || 'the passage') + ' and crafting a real test of what it says.' }),
+      el('div', { class: 'bq-dots' }, [el('span'), el('span'), el('span')])
+    ]));
+  }
+
+  function renderError(msg) {
+    view = 'error';
+    const kids = [
+      el('div', { class: 'bq-hero', style: { paddingTop: '30px' } }, [
+        el('div', { class: 'bq-hero-badge', style: { background: 'color-mix(in srgb, var(--bq-wrong) 80%, #000)' } }, [icon('error')]),
+        el('h1', { text: 'Hmm.' }),
+        el('div', { class: 'bq-error-box' }, [icon('info'), el('span', { text: msg })])
+      ]),
+      el('button', { class: 'bq-cta', style: { marginTop: '20px' }, onclick: renderBuilder }, [icon('refresh'), 'Try again'])
+    ];
+    mount(topbar({
+      left: { icon: 'arrow_back', onclick: renderBuilder, label: 'Back' },
+      title: 'New Quiz'
+    }), kids);
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     QUIZ RUNTIME
+     ══════════════════════════════════════════════════════════════════════ */
+  let quiz = null; // { title, reference, difficulty, questions:[...] }
+  let qIndex = 0;
+
+  function startQuiz(data) {
+    quiz = {
+      title: data.title || data.reference,
+      reference: data.reference,
+      difficulty: data.difficulty || form.difficulty,
+      focus: data.focus || [],
+      tricky: !!data.tricky,
+      questions: data.questions.map(q => Object.assign({}, q, { userAnswer: null, hintShown: false, saved: false }))
+    };
+    qIndex = 0;
+    renderQuiz(false);
+  }
+
+  function renderQuiz(animate) {
+    view = 'quiz';
+    const total = quiz.questions.length;
+    const q = quiz.questions[qIndex];
+    const answered = q.userAnswer != null;
+    const pct = Math.round(((qIndex + 1) / total) * 100);
+
+    // Progress card
+    const progressFill = el('div', { class: 'bq-progress-fill' });
+    const progress = el('div', { class: 'bq-card bq-progress-card' }, [
+      el('div', { class: 'bq-progress-top' }, [
+        el('span', { text: `Question ${qIndex + 1} of ${total}` }),
+        el('b', { text: pct + '%' })
+      ]),
+      el('div', { class: 'bq-progress-track' }, [progressFill])
+    ]);
+
+    // Question card
+    const optionsWrap = el('div', { class: 'bq-options' });
+    q.options.forEach((opt, i) => optionsWrap.appendChild(optionNode(q, i)));
+
+    const qcard = el('div', { class: 'bq-card bq-qcard' + (animate ? ' bq-anim-in' : '') }, [
+      el('div', { class: 'bq-qcat' }, [icon(CAT_ICON[q.category] || 'menu_book')]),
+      el('h2', { class: 'bq-question', text: q.question }),
+      q.reference ? el('p', { class: 'bq-qref', text: q.reference }) : null,
+      optionsWrap
+    ]);
+
+    // Hint + reveal slots live inside the card, appended dynamically
+    const extras = el('div', { class: 'bq-qcard-extras' });
+    qcard.appendChild(extras);
+
+    // Action row (hint + save)
+    const hintBtn = el('button', { class: 'bq-qaction', onclick: () => showHint(q, extras, hintBtn) }, [icon('lightbulb'), 'Show Hint']);
+    const saveBtn = el('button', { class: 'bq-qaction' + (q.saved ? ' bq-saved' : ''), onclick: () => toggleSaveQuestion(q, saveBtn) }, [
+      icon(q.saved ? 'bookmark_added' : 'bookmark'),
+      q.saved ? 'Saved' : 'Save Question'
+    ]);
+    const actions = el('div', { class: 'bq-qactions' }, [hintBtn, saveBtn]);
+
+    // Footer next button
+    const nextBtn = el('button', { class: 'bq-next', disabled: !answered, onclick: goNext }, [
+      qIndex + 1 >= total ? 'See Results' : 'Next Question',
+      icon(qIndex + 1 >= total ? 'flag' : 'arrow_forward')
+    ]);
+    const footer = el('div', { class: 'bq-footer' }, [nextBtn]);
+
+    const scroll = mount(topbar({
+      left: { icon: 'home', onclick: () => back(), label: 'Home' },
+      title: 'Bible Quiz',
+      sub: quiz.reference,
+      right: { icon: 'folder', onclick: leaveToArchive, label: 'Past quizzes' }
+    }), [progress, qcard, actions], footer);
+
+    // If already answered (revisiting), restore graded state + reveal
+    if (answered) {
+      gradeOptions(optionsWrap, q);
+      appendReveal(extras, q);
+      if (q.hintShown) appendHint(extras, q);
+    } else if (q.hintShown) {
+      appendHint(extras, q);
+    }
+
+    // Animate progress bar to its value after paint.
+    requestAnimationFrame(() => { progressFill.style.width = pct + '%'; });
+
+    // Stash refs used by grading
+    scroll._optionsWrap = optionsWrap;
+    scroll._extras = extras;
+    scroll._nextBtn = nextBtn;
+    scroll._hintBtn = hintBtn;
+  }
+
+  function optionNode(q, i) {
+    const badge = el('div', { class: 'bq-opt-badge', text: LETTERS[i] });
+    const node = el('button', { class: 'bq-opt', onclick: () => selectAnswer(q, i, node) }, [
+      badge,
+      el('div', { class: 'bq-opt-text', text: q.options[i] })
+    ]);
+    node._badge = badge;
+    node._index = i;
+    return node;
+  }
+
+  function selectAnswer(q, i, node) {
+    if (q.userAnswer != null) return; // locked after first answer
+    q.userAnswer = i;
+    node.classList.add('bq-pop');
+    const scroll = page.querySelector('.bq-scroll');
+    gradeOptions(scroll._optionsWrap, q);
+    appendReveal(scroll._extras, q);
+    if (scroll._nextBtn) scroll._nextBtn.disabled = false;
+  }
+
+  function gradeOptions(wrap, q) {
+    Array.prototype.forEach.call(wrap.children, node => {
+      const i = node._index;
+      node.classList.add('bq-locked');
+      if (i === q.answerIndex) node.classList.add('bq-right');
+      else if (i === q.userAnswer) node.classList.add('bq-wrong');
+      else node.classList.add('bq-dim');
+      // mark badge glyph for clarity
+      if (i === q.answerIndex) { node._badge.innerHTML = ''; node._badge.appendChild(icon('check')); }
+      else if (i === q.userAnswer) { node._badge.innerHTML = ''; node._badge.appendChild(icon('close')); }
+    });
+  }
+
+  function appendReveal(extras, q) {
+    if (extras.querySelector('.bq-reveal')) return;
+    const body = el('div', { class: 'bq-reveal-body' }, [
+      el('strong', { text: q.reference || 'Reference' }),
+      q.verse ? el('p', { text: '“' + q.verse + '”' }) : null,
+      q.explanation ? el('p', { class: 'bq-expl', text: q.explanation }) : null
+    ]);
+    extras.appendChild(el('div', { class: 'bq-reveal' }, [
+      el('div', { class: 'bq-reveal-ico' }, [icon('menu_book')]),
+      body
+    ]));
+  }
+
+  function showHint(q, extras, btn) {
+    if (q.hintShown) return;
+    q.hintShown = true;
+    if (btn) { btn.disabled = true; btn.classList.add('bq-dim'); }
+    appendHint(extras, q);
+  }
+  function appendHint(extras, q) {
+    if (extras.querySelector('.bq-hint')) return;
+    // Reveal card should sit below the hint if both present — insert hint first.
+    const hint = el('div', { class: 'bq-hint' }, [icon('lightbulb'), el('span', { text: q.hint || 'Re-read the passage carefully — the answer is there.' })]);
+    const reveal = extras.querySelector('.bq-reveal');
+    if (reveal) extras.insertBefore(hint, reveal); else extras.appendChild(hint);
+  }
+
+  function toggleSaveQuestion(q, btn) {
+    q.saved = !q.saved;
+    btn.classList.toggle('bq-saved', q.saved);
+    btn.innerHTML = '';
+    btn.appendChild(icon(q.saved ? 'bookmark_added' : 'bookmark'));
+    btn.appendChild(document.createTextNode(q.saved ? 'Saved' : 'Save Question'));
+    if (q.saved) {
+      store.savedQuestions.unshift({
+        id: uid(),
+        question: q.question, options: q.options.slice(), answerIndex: q.answerIndex,
+        reference: q.reference, verse: q.verse, hint: q.hint, explanation: q.explanation,
+        category: q.category, quizTitle: quiz ? quiz.title : '', savedAt: Date.now(),
+        _fromQuestion: q.question // used to locate on un-save
+      });
+      toast('Question saved to your deck.');
+    } else {
+      const idx = store.savedQuestions.findIndex(s => s._fromQuestion === q.question && s.reference === q.reference);
+      if (idx >= 0) store.savedQuestions.splice(idx, 1);
+      toast('Removed from your deck.');
+    }
+    persist();
+  }
+
+  function goNext() {
+    const q = quiz.questions[qIndex];
+    if (q.userAnswer == null) return;
+    if (qIndex + 1 >= quiz.questions.length) { finishQuiz(); return; }
+    const card = page.querySelector('.bq-qcard');
+    const advance = () => { qIndex++; renderQuiz(true); };
+    if (card && !reduceMotion()) {
+      card.classList.add('bq-anim-out');
+      setTimeout(advance, 200);
+    } else advance();
+  }
+
+  function leaveToArchive() {
+    if (confirm('Leave this quiz? Your progress will be lost.')) renderArchive('history');
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     RESULTS
+     ══════════════════════════════════════════════════════════════════════ */
+  function computeXP(numQuestions, pct) {
+    const base = numQuestions * 3;
+    let xp = Math.round(base * (pct / 100));
+    if (pct >= 90) xp += numQuestions * 3;      // mastery bonus
+    else if (pct >= 75) xp += numQuestions;      // strong-finish bonus
+    return Math.max(numQuestions, xp);           // finishing always earns something
+  }
+
+  function finishQuiz() {
+    const total = quiz.questions.length;
+    const correct = quiz.questions.reduce((a, q) => a + (q.userAnswer === q.answerIndex ? 1 : 0), 0);
+    const pct = Math.round((correct / total) * 100);
+    const xp = computeXP(total, pct);
+
+    const record = {
+      id: uid(),
+      title: quiz.title,
+      reference: quiz.reference,
+      difficulty: quiz.difficulty,
+      numQuestions: total,
+      correct,
+      pct,
+      xp,
+      createdAt: Date.now(),
+      questions: quiz.questions.map(q => ({
+        question: q.question, options: q.options, answerIndex: q.answerIndex,
+        reference: q.reference, verse: q.verse, explanation: q.explanation,
+        category: q.category, userAnswer: q.userAnswer
+      }))
+    };
+    store.quizzes.unshift(record);
+    persist(true);
+
+    // Award XP to the profile (addXP no-ops gracefully if not signed in).
+    if (typeof window.addXP === 'function') {
+      try { window.addXP(xp, `Bible Quiz — ${pct}% on ${quiz.reference}`, true); } catch (e) {}
+    }
+
+    renderResults(record, true);
+  }
+
+  function praise(pct) {
+    if (pct >= 95) return 'Outstanding.';
+    if (pct >= 85) return 'Excellent work.';
+    if (pct >= 70) return 'Well done.';
+    if (pct >= 50) return 'Good effort — keep going.';
+    return 'Every read-through counts. Try again.';
+  }
+
+  function renderResults(record, fresh) {
+    view = 'results';
+    const ring = el('div', { class: 'bq-ring' }, [
+      el('b', { text: (record.pct || 0) + '%' }),
+      el('span', { text: `${record.correct}/${record.numQuestions}` })
+    ]);
+    // Custom properties must be set via setProperty (style-object assignment won't take).
+    ring.style.setProperty('--bq-pct', (record.pct || 0) + '%');
+    const hero = el('div', { class: 'bq-result-hero' }, [
+      ring,
+      el('h2', { class: 'bq-result-title', text: praise(record.pct || 0) }),
+      el('p', { class: 'bq-result-sub', text: (record.title || record.reference) }),
+      fresh ? el('div', { class: 'bq-xp-badge' }, [icon('bolt'), `+${record.xp} XP`])
+            : el('div', { class: 'bq-xp-badge' }, [icon('bolt'), `${record.xp} XP earned`])
+    ]);
+
+    // Review list
+    const review = el('div', { class: 'bq-review' });
+    (record.questions || []).forEach((q, i) => review.appendChild(reviewItem(q, i)));
+
+    const kids = [
+      hero,
+      el('div', { class: 'bq-section-label', text: 'Review', style: { marginTop: '18px' } }),
+      review
+    ];
+
+    const footer = el('div', { class: 'bq-footer' }, [
+      el('button', { class: 'bq-next', onclick: renderBuilder }, [icon('add'), 'New Quiz'])
+    ]);
+
+    mount(topbar({
+      left: { icon: 'home', onclick: renderHome, label: 'Home' },
+      title: 'Results',
+      sub: record.reference,
+      right: { icon: 'folder', onclick: () => renderArchive('history'), label: 'Past quizzes' }
+    }), kids, footer);
+  }
+
+  function reviewItem(q, i) {
+    const ok = q.userAnswer === q.answerIndex;
+    const kids = [
+      el('div', { class: 'bq-review-q' }, [
+        el('div', { class: 'bq-review-mark ' + (ok ? 'ok' : 'no') }, [icon(ok ? 'check' : 'close')]),
+        el('p', { text: `${i + 1}. ${q.question}` })
+      ])
+    ];
+    const ans = el('div', { class: 'bq-review-ans' });
+    if (!ok && q.userAnswer != null) {
+      ans.appendChild(el('span', { class: 'bq-ra wrong' }, [el('b', { text: 'You: ' }), q.options[q.userAnswer]]));
+    }
+    ans.appendChild(el('span', { class: 'bq-ra right' }, [el('b', { text: 'Answer: ' }), q.options[q.answerIndex] + (q.reference ? '  (' + q.reference + ')' : '')]));
+    if (q.explanation) ans.appendChild(el('span', { class: 'bq-ra expl', text: q.explanation }));
+    kids.push(ans);
+    return el('div', { class: 'bq-card bq-review-item' }, kids);
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     ARCHIVE (the "file cabinet")
+     ══════════════════════════════════════════════════════════════════════ */
+  function renderArchive(tab) {
+    view = 'archive';
+    tab = tab || 'history';
+    const historyTab = el('button', { class: 'bq-tab' + (tab === 'history' ? ' bq-sel' : ''), onclick: () => renderArchive('history') }, ['Quizzes']);
+    const savedTab = el('button', { class: 'bq-tab' + (tab === 'saved' ? ' bq-sel' : ''), onclick: () => renderArchive('saved') }, ['Saved questions']);
+    const tabs = el('div', { class: 'bq-tabs' }, [historyTab, savedTab]);
+
+    const kids = [tabs];
+
+    if (tab === 'history') {
+      if (!store.quizzes.length) {
+        kids.push(emptyState('folder', 'No past quizzes yet. Take one and it lands here — with your score and a full review.'));
+      } else {
+        const list = el('div', { class: 'bq-recent-list' });
+        store.quizzes.forEach(q => list.appendChild(archiveHistCard(q)));
+        kids.push(list);
+      }
+    } else {
+      if (!store.savedQuestions.length) {
+        kids.push(emptyState('bookmark', 'No saved questions yet. Tap “Save Question” during a quiz to build a personal review deck.'));
+      } else {
+        const list = el('div', { class: 'bq-recent-list' });
+        store.savedQuestions.forEach(sq => list.appendChild(savedQCard(sq)));
+        kids.push(list);
+      }
+    }
+
+    mount(topbar({
+      left: { icon: 'arrow_back', onclick: renderHome, label: 'Back' },
+      title: 'Past Quizzes',
+      right: { icon: 'add', onclick: renderBuilder, label: 'New quiz' }
+    }), kids);
+  }
+
+  function archiveHistCard(q) {
+    const d = q.createdAt ? new Date(q.createdAt) : null;
+    const dateStr = d ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    const delBtn = el('button', { class: 'bq-hist-del', 'aria-label': 'Delete quiz', onclick: e => {
+      e.stopPropagation();
+      if (confirm('Delete this quiz from your history?')) {
+        const i = store.quizzes.findIndex(x => x.id === q.id);
+        if (i >= 0) { store.quizzes.splice(i, 1); persist(true); }
+        renderArchive('history');
+      }
+    } }, [icon('delete')]);
+    return el('div', { class: 'bq-card bq-hist-item', onclick: () => renderResults(q, false) }, [
+      el('div', { class: 'bq-hist-score', text: (q.pct != null ? q.pct : 0) + '%' }),
+      el('div', { class: 'bq-hist-main' }, [
+        el('strong', { text: q.title || q.reference || 'Quiz' }),
+        el('small', { text: `${q.correct}/${q.numQuestions} correct · ${dateStr}` })
+      ]),
+      delBtn
+    ]);
+  }
+
+  function savedQCard(sq) {
+    const delBtn = el('button', { class: 'bq-hist-del', 'aria-label': 'Delete saved question', onclick: () => {
+      const i = store.savedQuestions.findIndex(x => x.id === sq.id);
+      if (i >= 0) { store.savedQuestions.splice(i, 1); persist(true); }
+      renderArchive('saved');
+    } }, [icon('delete')]);
+    return el('div', { class: 'bq-card bq-saveq' }, [
+      el('div', { style: { display: 'flex', gap: '10px', alignItems: 'flex-start' } }, [
+        el('div', { style: { flex: '1 1 auto', minWidth: '0' } }, [
+          el('p', { class: 'bq-saveq-q', text: sq.question }),
+          el('div', { class: 'bq-saveq-meta', text: (sq.reference || '') + (sq.quizTitle ? ' · ' + sq.quizTitle : '') }),
+          el('div', { class: 'bq-saveq-ans', text: 'Answer: ' + (sq.options ? sq.options[sq.answerIndex] : '') })
+        ]),
+        delBtn
+      ])
+    ]);
+  }
+
+  function emptyState(ic, msg) {
+    return el('div', { class: 'bq-empty' }, [icon(ic), el('p', { text: msg })]);
+  }
+})();

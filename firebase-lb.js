@@ -2490,6 +2490,15 @@ async function evtGCalDayEvents(date, timezone) {
   } catch (e) { console.warn("evtGCalDayEvents:", e); return { linked: false, events: [] }; }
 }
 
+// Bible Quiz — one server round-trip generates the whole quiz (see the
+// generateBibleQuiz Cloud Function). Auth travels automatically with the call.
+async function generateBibleQuiz(payload) {
+  const fn = httpsCallable(functionsApp, "generateBibleQuiz");
+  const res = await fn(payload || {});
+  return res.data;
+}
+window.BibleQuizAI = { generate: generateBibleQuiz };
+
 window.Events = {
   create:           evtCreate,
   update:           evtUpdate,

@@ -1,5 +1,6 @@
 const functions = require("firebase-functions/v1");
 const crypto = require("crypto");
+const Anthropic = require("@anthropic-ai/sdk");
 const { initializeApp } = require("firebase-admin/app");
 const { FieldValue, getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
@@ -1266,4 +1267,188 @@ exports.onEncouragementCreated = functions.firestore
 
     await snap.ref.update({ processed: true });
     return null;
+  });
+
+// ── Bible Quiz (AI) ───────────────────────────────────────────────────────────
+// One Claude call generates a whole quiz — every question, its four options,
+// the correct answer, a tailored hint, the supporting reference + verse, and a
+// short explanation — returned as a single structured-JSON payload. Generating
+// everything up front (rather than one call per question) is the efficient path:
+// the client shows hints and explanations instantly with zero extra API calls.
+
+// Model is intentionally a single constant so it is trivial to swap. The most
+// capable model writes the strongest, least "generic" questions; drop to a
+// cheaper/faster one here if cost or latency matters more than depth.
+const BIBLE_QUIZ_MODEL = "claude-sonnet-5";
+
+const QUIZ_CATEGORIES = [
+  "narrative", "people", "places", "numbers",
+  "doctrine", "quotes", "prophecy", "application"
+];
+
+const QUIZ_DIFFICULTIES = {
+  broad: "Broad — big-picture themes, main events, and who's who. A committed reader who just finished the passage should get most of these.",
+  balanced: "Balanced — a fair mix of storyline, key people, and a few specific details. Rewards careful reading.",
+  detailed: "Detailed — precise names, numbers, sequence of events, and cause-and-effect. Assumes close, attentive reading.",
+  scholar: "Scholar — exact figures, obscure names, subtle wording, cross-textual connections, and easily-confused details. A genuine test even for someone who knows the passage well."
+};
+
+function anthropicClient() {
+  const key = process.env.ANTHROPIC_API_KEY ||
+    (functions.config().anthropic && functions.config().anthropic.key);
+  if (!key) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "Bible Quiz isn't configured yet. Set the ANTHROPIC_API_KEY for Cloud Functions."
+    );
+  }
+  return new Anthropic({ apiKey: key });
+}
+
+// JSON schema the model must fill. Structured outputs guarantee valid,
+// parseable JSON on the first try — no retries, no brittle string parsing.
+const QUIZ_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    title: { type: "string" },
+    questions: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          question: { type: "string" },
+          options: { type: "array", items: { type: "string" } },
+          answerIndex: { type: "integer" },
+          reference: { type: "string" },
+          verse: { type: "string" },
+          hint: { type: "string" },
+          explanation: { type: "string" },
+          category: { type: "string", enum: QUIZ_CATEGORIES }
+        },
+        required: ["question", "options", "answerIndex", "reference", "verse", "hint", "explanation", "category"]
+      }
+    }
+  },
+  required: ["title", "questions"]
+};
+
+function buildQuizPrompt(opts) {
+  const { reference, difficulty, numQuestions, focus, translation, tricky } = opts;
+  const diffText = QUIZ_DIFFICULTIES[difficulty] || QUIZ_DIFFICULTIES.balanced;
+  const focusText = (focus && focus.length)
+    ? `Weight the questions toward these areas: ${focus.join(", ")}. Still let the passage's own content lead — don't force a category that isn't there.`
+    : "Cover a natural spread of the passage: its storyline, the people involved, key statements, and telling details.";
+  const trickyText = tricky
+    ? "Make the wrong answers genuinely plausible: use real names, places, and numbers from nearby Scripture so a guesser can't win by eliminating the obviously-silly option. Never make a distractor a joke."
+    : "Keep wrong answers reasonable and on-topic — no absurd or filler options.";
+  const versionText = translation ? ` Quote the ${translation} translation where you cite a verse.` : "";
+
+  return [
+    `You are an expert Bible teacher writing a premium, genuinely challenging quiz on ${reference}.`,
+    "",
+    `Difficulty: ${diffText}`,
+    `Number of questions: exactly ${numQuestions}.`,
+    focusText,
+    trickyText,
+    "",
+    "Rules for every question:",
+    "- Base it strictly on the referenced passage(s). Do not invent facts or pull from outside the text.",
+    "- Exactly four options. Exactly one is correct. `answerIndex` is the 0-based index of the correct option.",
+    "- Vary which position holds the correct answer across the quiz — do not favor any slot.",
+    "- Questions must be specific and substantive — never vague, never answerable without having read the passage. Avoid trivially easy or generic filler.",
+    "- `reference` is the specific verse or short range the answer comes from (e.g. \"Genesis 1:14–19\").",
+    `- \`verse\` is the actual Scripture text for that reference, quoted accurately.${versionText}`,
+    "- `hint` is a genuinely helpful nudge tailored to THIS question — a pointer to the right verse, a clarifying detail, or a way to reason it out — WITHOUT giving away the answer.",
+    "- `explanation` is one or two sentences on why the correct answer is right, worth reading after answering.",
+    "- `category` is the single best fit from the allowed list.",
+    "",
+    "Write like a thoughtful teacher who wants the reader to actually retain what they read, not like a generic trivia generator."
+  ].join("\n");
+}
+
+exports.generateBibleQuiz = functions
+  .runWith({ timeoutSeconds: 120, memory: "512MB" })
+  .https.onCall(async (data, context) => {
+    if (!context.auth || !context.auth.uid) {
+      throw new functions.https.HttpsError("unauthenticated", "Sign in to create a quiz.");
+    }
+
+    const reference = String((data && data.reference) || "").trim().slice(0, 240);
+    if (!reference) {
+      throw new functions.https.HttpsError("invalid-argument", "Add a passage reference (book, chapter, or verse range).");
+    }
+    let numQuestions = parseInt((data && data.numQuestions), 10);
+    if (!Number.isFinite(numQuestions)) numQuestions = 10;
+    numQuestions = Math.max(3, Math.min(20, numQuestions));
+
+    const difficulty = QUIZ_DIFFICULTIES[data && data.difficulty] ? data.difficulty : "balanced";
+    const focus = Array.isArray(data && data.focus)
+      ? data.focus.filter(f => QUIZ_CATEGORIES.includes(f)).slice(0, QUIZ_CATEGORIES.length)
+      : [];
+    const translation = String((data && data.translation) || "").trim().slice(0, 40);
+    const tricky = !!(data && data.tricky);
+
+    const client = anthropicClient();
+    let message;
+    try {
+      message = await client.messages.create({
+        model: BIBLE_QUIZ_MODEL,
+        max_tokens: 8000,
+        system: "You write accurate, engaging, non-generic Bible quizzes and always return the requested JSON structure.",
+        output_config: { format: { type: "json_schema", schema: QUIZ_SCHEMA } },
+        messages: [{ role: "user", content: buildQuizPrompt({ reference, difficulty, numQuestions, focus, translation, tricky }) }]
+      });
+    } catch (e) {
+      console.error("generateBibleQuiz Anthropic error:", e && e.message);
+      if (e && e.status === 429) {
+        throw new functions.https.HttpsError("resource-exhausted", "The quiz service is busy right now. Please try again in a moment.");
+      }
+      throw new functions.https.HttpsError("internal", "Couldn't generate the quiz. Please try again.");
+    }
+
+    const textBlock = (message.content || []).find(b => b.type === "text");
+    let parsed;
+    try {
+      parsed = JSON.parse(textBlock ? textBlock.text : "{}");
+    } catch (e) {
+      console.error("generateBibleQuiz parse error:", e && e.message);
+      throw new functions.https.HttpsError("internal", "The quiz came back malformed. Please try again.");
+    }
+
+    // Validate + normalize every question; drop anything unusable rather than
+    // shipping a broken card to the UI.
+    const clean = [];
+    for (const q of (Array.isArray(parsed.questions) ? parsed.questions : [])) {
+      if (!q || typeof q.question !== "string") continue;
+      const options = Array.isArray(q.options) ? q.options.map(o => String(o)).filter(Boolean) : [];
+      if (options.length !== 4) continue;
+      let ai = parseInt(q.answerIndex, 10);
+      if (!Number.isFinite(ai) || ai < 0 || ai > 3) continue;
+      clean.push({
+        question: String(q.question).trim(),
+        options,
+        answerIndex: ai,
+        reference: String(q.reference || "").trim(),
+        verse: String(q.verse || "").trim(),
+        hint: String(q.hint || "").trim(),
+        explanation: String(q.explanation || "").trim(),
+        category: QUIZ_CATEGORIES.includes(q.category) ? q.category : "narrative"
+      });
+    }
+
+    if (!clean.length) {
+      throw new functions.https.HttpsError("internal", "Couldn't build questions for that passage. Try a broader reference.");
+    }
+
+    return {
+      title: String(parsed.title || reference).trim().slice(0, 120),
+      reference,
+      difficulty,
+      focus,
+      translation,
+      tricky,
+      questions: clean
+    };
   });

@@ -341,6 +341,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
 <link href="style.css?v=3.0.432" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.428" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.433" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -550,6 +551,13 @@ Journey Maps</span>
 </div>
 <div class="home-section-label">Tools</div>
 <div class="home-actions-grid">
+<button class="home-action-tile quick-action-quiz" id="bibleQuizHomeBtn" onclick="openBibleQuiz(this)">
+<div class="hat-icon hat-icon-quiz">
+<span class="material-symbols-outlined" aria-hidden="true">quiz</span>
+</div>
+<div class="hat-text"><strong>Bible<br/>Quiz</strong><small>Test what you read</small></div>
+<span class="hat-chev">&rarr;</span>
+</button>
 <button class="home-action-tile quick-action-sermon" id="sermonNotesHomeBtn" onclick="openSermonNotes(this)">
 <div class="hat-icon hat-icon-sermon">
 <img class="qa-img" src="assets/icons/quick-sermon-notes.png?v=3.0.428" alt="" loading="lazy"/>
@@ -17169,6 +17177,7 @@ Verb Endings
 <script src="vs-structure.js?v=3.0.127"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
 <script src="sermon-notes.js?v=3.0.428"></script>
+<script src="bible-quiz.js?v=3.0.433"></script>
 <script src="firebase-lb.js?v=3.0.408" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
