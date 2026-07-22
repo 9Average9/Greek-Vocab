@@ -29851,7 +29851,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.438";
+const APP_VERSION = "3.0.439";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29874,6 +29874,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.439 &mdash; Matched tool icon sizing</div>
+<ul>
+  <li><strong>Home tool icons now share one footprint</strong> &mdash; The quick-action artwork has been rebuilt onto the same 512px canvas and Sermon Notes-sized art bounds, so the icons no longer look randomly scaled.</li>
+</ul>
 <div class="un-version-label">v3.0.438 &mdash; Tool icon polish</div>
 <ul>
   <li><strong>Home tool buttons look sleeker</strong> &mdash; The quick-action icons now use the same clean transparent image treatment and sizing as Sermon Notes while keeping each tool's own icon and color.</li>
