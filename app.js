@@ -10637,6 +10637,27 @@ const _scrollTopOnOpenScreens = new Set([
   'learnMenu', 'learnScreen', 'translateMenu', 'translateScreen',
   'testMenu', 'testScreen', 'memorizationPage', 'readingPlanPage', 'threadsPage'
 ]);
+// Screens that drive their own bespoke open/slide/collapse motion — skip the
+// generic entrance reveal so the two don't fight.
+const _noScreenEntrance = new Set([
+  'newLearnMenu', 'learnScreen', 'memorizationPage', 'readingPlanPage',
+  'journeysPage', 'atlasPage', 'atlasDetailPage'
+]);
+// One-shot, self-cleaning entrance reveal (see .screen-enter in style.css).
+// Opacity-only, so it can't disturb position:fixed descendants like the nav.
+function _playScreenEntrance(target, id) {
+  if (_noScreenEntrance.has(id)) return;
+  target.classList.remove('screen-enter');
+  void target.offsetWidth; // restart the animation on re-navigation
+  target.classList.add('screen-enter');
+  const done = () => {
+    target.classList.remove('screen-enter');
+    target.removeEventListener('animationend', done);
+  };
+  target.addEventListener('animationend', done);
+  setTimeout(done, 520); // fallback if animationend doesn't fire
+}
+
 function showScreen(id) {
   if (id !== 'homeScreen') _stopHomeFlip();
   closeLearnSideMenu();
@@ -10652,7 +10673,10 @@ function showScreen(id) {
   });
 
   const target = document.getElementById(id);
-  if (target) target.classList.add("active");
+  if (target) {
+    target.classList.add("active");
+    _playScreenEntrance(target, id);
+  }
   // These full-bleed tools should always open at the very top, never where the
   // user last left them scrolled.
   if (target && _scrollTopOnOpenScreens.has(id)) {
@@ -29851,7 +29875,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.439";
+const APP_VERSION = "3.0.441";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.

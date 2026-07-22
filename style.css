@@ -36785,3 +36785,22 @@ body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
     border-radius: 22px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PREMIUM PASS · Screen-entrance motion
+   One cohesive, gentle reveal every time a screen opens — the same
+   "intentional open" the Bible Quiz has. Opacity-only at the screen level so
+   it never disturbs position:fixed children (bottom nav, overlays); per-screen
+   content rise is layered on top only where it's safe. Self-cleaning one-shot
+   class added in showScreen(), so it re-fires on every navigation.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@keyframes appScreenEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.screen.screen-enter {
+  animation: appScreenEnter .34s cubic-bezier(.4, 0, .2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.screen-enter { animation: none !important; }
+}
