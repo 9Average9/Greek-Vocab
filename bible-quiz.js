@@ -158,14 +158,36 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && page && !page.classList.contains('bq-hidden')) back();
     });
+    // If the app was backgrounded mid-generation and the request was dropped,
+    // re-fire it the moment we're visible again.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!page || page.classList.contains('bq-hidden')) return;
+      if (genInFlight) return; // a call is still pending — let it resolve
+      const a = store && store.active;
+      if (a && a.phase === 'generating' && (view === 'loading' || view === 'error') && a.payload && a.payload.base) {
+        runGeneration(a.payload.base, a.payload.total || (form && form.numQuestions) || 10);
+      }
+    });
   }
 
   window.openBibleQuiz = function (launcher) {
     buildShell();
+    // Already mid-flight in this context (feature was just hidden, not closed)
+    // — re-reveal whatever's on screen instead of resetting to home.
+    if (genInFlight || (quiz && (view === 'quiz' || view === 'loading'))) {
+      page.classList.remove('bq-hidden');
+      requestAnimationFrame(() => page.classList.add('bq-open'));
+      return;
+    }
     store = loadStore();
-    renderHome();
     page.classList.remove('bq-hidden');
     requestAnimationFrame(() => page.classList.add('bq-open'));
+    // A persisted, recent, unfinished session? Resume it. Otherwise go home.
+    const a = store.active;
+    if (a && (Date.now() - (a.savedAt || 0)) < BQ_ACTIVE_TTL && resumeActive(a)) return;
+    if (a) clearActive();
+    renderHome();
   };
 
   function closeFeature() {
@@ -180,7 +202,7 @@
     if (view === 'home') closeFeature();
     else if (view === 'builder' || view === 'archive') renderHome();
     else if (view === 'quiz') {
-      if (confirm('Leave this quiz? Your progress will be lost.')) renderHome();
+      if (confirm('Leave this quiz? Your progress will be lost.')) { clearActive(); renderHome(); }
     } else renderHome();
   }
 
@@ -342,6 +364,7 @@
   function newQuiz() {
     if (!form) form = defaultForm();
     form.reference = '';
+    clearActive(); // starting fresh abandons any in-progress session
     renderBuilder();
   }
   function renderBuilder() {
@@ -443,40 +466,78 @@
   // start answering right away, then the rest written in the background while
   // they play. genToken guards against stale responses after a restart.
   let genToken = 0;
+  let genInFlight = 0;        // outstanding generate() calls in THIS page context
+  let activePayload = null;   // { base, total } — enough to resume generation
+
+  // Resume window: a persisted in-progress quiz older than this is discarded.
+  const BQ_ACTIVE_TTL = 6 * 60 * 60 * 1000;
+
+  // Retry a generate() call a few times with exponential backoff. Transient
+  // failures (busy service, transport blips, brief backgrounding) recover on
+  // their own; auth/config/argument errors are fatal and thrown immediately.
+  function genWithRetry(payload, tries) {
+    tries = tries || 3;
+    genInFlight++;
+    const attempt = n => window.BibleQuizAI.generate(payload).catch(err => {
+      if (isFatalGenError(err) || n >= tries) throw err;
+      const wait = Math.min(8000, 700 * Math.pow(2, n - 1)) + Math.floor(Math.random() * 400);
+      return new Promise(r => setTimeout(r, wait)).then(() => attempt(n + 1));
+    });
+    return attempt(1).finally(() => { genInFlight = Math.max(0, genInFlight - 1); });
+  }
+
+  function isFatalGenError(err) {
+    const code = err && err.code ? String(err.code) : '';
+    return /unauthenticated|failed-precondition|invalid-argument|permission-denied/.test(code);
+  }
+
   function startGeneration() {
     const ref = (form.reference || '').trim();
     if (!ref) { toast('Add a passage reference first.'); return; }
-    renderLoading();
     if (!window.BibleQuizAI || typeof window.BibleQuizAI.generate !== 'function') {
       renderError("The quiz service isn't available right now. Please reload the app and try again.");
       return;
     }
-    const gen = ++genToken;
-    const total = form.numQuestions;
-    const base = {
+    runGeneration({
       reference: ref,
       difficulty: form.difficulty,
       focus: form.focus.slice(),
       tricky: form.tricky
-    };
+    }, form.numQuestions);
+  }
+
+  // The actual generation driver — usable both for a fresh start and for
+  // resuming a persisted-but-unfinished generation after a reload/foreground.
+  function runGeneration(base, total) {
+    renderLoading();
+    const gen = ++genToken;
+    activePayload = { base: base, total: total };
+    saveActive('generating');
     const firstCount = total > 5 ? 3 : total;
-    window.BibleQuizAI.generate(Object.assign({ numQuestions: firstCount }, base))
+    genWithRetry(Object.assign({ numQuestions: firstCount }, base))
       .then(data => {
         if (gen !== genToken) return;
         if (!data || !Array.isArray(data.questions) || !data.questions.length) {
           renderError("Couldn't build questions for that passage. Try a broader or clearer reference.");
+          clearActive();
           return;
         }
         startQuiz(data, total);
         if (total > data.questions.length) fetchRemainder(gen, base, total - data.questions.length, data.questions);
       })
-      .catch(err => { if (gen === genToken) renderError(describeGenError(err)); });
+      .catch(err => {
+        if (gen !== genToken) return;
+        renderError(describeGenError(err));
+        // Keep the pending record for transient failures so returning to the
+        // app can retry; drop it only when the error can't be recovered.
+        if (isFatalGenError(err)) clearActive();
+      });
   }
 
   function describeGenError(err) {
     const code = err && err.code ? String(err.code) : '';
     if (code.indexOf('unauthenticated') >= 0) return 'Please sign in to your account to create quizzes.';
-    if (code.indexOf('resource-exhausted') >= 0) return 'The quiz service is busy right now. Please try again in a moment.';
+    if (code.indexOf('resource-exhausted') >= 0) return 'The quiz service is busy right now. Reopen Bible Quiz in a moment and it’ll pick back up.';
     if (code.indexOf('failed-precondition') >= 0) return 'Bible Quiz isn’t configured on the server yet.';
     return (err && err.message) || 'Something went wrong generating the quiz. Please try again.';
   }
@@ -487,7 +548,7 @@
       // Tell the server what's already been asked so it doesn't repeat.
       avoid: existing.map(q => q.question).slice(0, 30)
     }, base);
-    window.BibleQuizAI.generate(payload)
+    genWithRetry(payload)
       .then(data => {
         if (gen !== genToken || !quiz) return;
         const have = new Set(quiz.questions.map(q => String(q.question).toLowerCase()));
@@ -502,6 +563,64 @@
       .catch(() => { if (gen === genToken && quiz) settleRemainder(true); });
   }
 
+  /* ───────── Active-session persistence (survive backgrounding / reload) ───────── */
+  // The whole in-progress quiz (or the pending generation request) is mirrored
+  // to storage so leaving the app and coming back — even after the OS kills the
+  // tab — resumes exactly where the user was.
+  function serializeActive(phase) {
+    if (phase === 'generating') {
+      return { phase: 'generating', payload: activePayload, savedAt: Date.now() };
+    }
+    if (!quiz) return null;
+    return {
+      phase: 'playing',
+      savedAt: Date.now(),
+      qIndex: qIndex,
+      quiz: {
+        title: quiz.title, reference: quiz.reference, difficulty: quiz.difficulty,
+        focus: quiz.focus || [], tricky: !!quiz.tricky,
+        expectedTotal: quiz.expectedTotal, loading: !!quiz.loading,
+        questions: quiz.questions
+      }
+    };
+  }
+  function saveActive(phase) {
+    try {
+      const a = serializeActive(phase);
+      if (a) { store.active = a; persist(true); }
+    } catch (e) {}
+  }
+  function clearActive() {
+    if (store && store.active) { delete store.active; persist(true); }
+    activePayload = null;
+  }
+
+  function resumeActive(a) {
+    if (a.phase === 'playing' && a.quiz && Array.isArray(a.quiz.questions) && a.quiz.questions.length) {
+      quiz = a.quiz;
+      quiz.questions = quiz.questions.map(q => Object.assign({ userAnswer: null, selected: null, hintShown: false, saved: false }, q));
+      qIndex = Math.min(a.qIndex || 0, Math.max(0, (quiz.expectedTotal || quiz.questions.length) - 1));
+      renderQuiz(false);
+      toast('Picked up where you left off.');
+      // The background batch never finished — resume it.
+      if (quiz.loading && quiz.questions.length < quiz.expectedTotal) {
+        const gen = ++genToken;
+        fetchRemainder(gen, {
+          reference: quiz.reference, difficulty: quiz.difficulty,
+          focus: quiz.focus || [], tricky: !!quiz.tricky
+        }, quiz.expectedTotal - quiz.questions.length, quiz.questions);
+      }
+      return true;
+    }
+    if (a.phase === 'generating' && a.payload && a.payload.base) {
+      form = form || defaultForm();
+      form.reference = a.payload.base.reference;
+      runGeneration(a.payload.base, a.payload.total || form.numQuestions || 10);
+      return true;
+    }
+    return false;
+  }
+
   // Remainder finished (or failed): lock the quiz length to what we actually
   // have and refresh whatever the user is looking at.
   function settleRemainder(failed) {
@@ -509,6 +628,7 @@
     const shrunk = quiz.questions.length < quiz.expectedTotal;
     quiz.expectedTotal = quiz.questions.length;
     if (failed && shrunk) toast('Kept this one to ' + quiz.questions.length + ' questions.');
+    saveActive('playing');
     if (view !== 'quiz') return;
     if (qIndex >= quiz.questions.length) {
       // User was sitting on the "writing…" screen.
@@ -566,6 +686,7 @@
     };
     qIndex = 0;
     renderQuiz(false);
+    saveActive('playing');
   }
 
   function renderQuiz(animate) {
@@ -715,6 +836,7 @@
     gradeOptions(scroll._optionsWrap, q);
     appendReveal(scroll._extras, q);
     syncFooterBtn(scroll._nextBtn);
+    saveActive('playing'); // persist the graded answer
   }
 
   function gradeOptions(wrap, q) {
@@ -787,7 +909,7 @@
     // Advancing past the loaded questions shows the "writing…" card until the
     // background batch lands (settleRemainder re-renders when it does).
     const card = page.querySelector('.bq-qcard');
-    const advance = () => { qIndex++; renderQuiz(true); };
+    const advance = () => { qIndex++; renderQuiz(true); saveActive('playing'); };
     if (card && !reduceMotion()) {
       card.classList.add('bq-anim-out');
       setTimeout(advance, 200);
@@ -795,7 +917,7 @@
   }
 
   function leaveToArchive() {
-    if (confirm('Leave this quiz? Your progress will be lost.')) renderArchive('history');
+    if (confirm('Leave this quiz? Your progress will be lost.')) { clearActive(); renderArchive('history'); }
   }
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -832,6 +954,7 @@
       }))
     };
     store.quizzes.unshift(record);
+    clearActive(); // quiz is done — no session to resume
     persist(true);
 
     // Award XP to the profile (addXP no-ops gracefully if not signed in).
@@ -993,6 +1116,10 @@
      note contains one or more Bible references, a sleek theme-matching modal
      offers a knowledge check that jumps straight into quiz generation.
      ══════════════════════════════════════════════════════════════════════ */
+
+  // In-memory throttle for the no-reference ask-modal (per habit+day). Resets
+  // on reload — a fresh session prompting again is fine and desirable.
+  const _lastAskAt = {};
 
   // Book names + common abbreviations, longest-first so e.g. "John" wins over "Jn".
   const BQ_BOOKS = [
@@ -1193,21 +1320,32 @@
       // an ask-modal so the user can type what they read.
       const askInstead = !refs && looksLikeBibleReadingHabit(name);
       if (!refs && !askInstead) return false;
-      // Once per habit per day — EXCEPT when a real reference shows up that we
-      // haven't offered yet (e.g. the ask-modal was dismissed, then the user
-      // added "John 3" to the note and completed again → offer properly).
       const key = (opts.habitId || 'habit') + '|' + (opts.dateKey || 'today');
-      const prior = store.promptedHabitChecks[key];
-      const priorRefs = prior && typeof prior === 'object' ? (prior.refs || '') : '';
-      if (prior && (!refs || refs === priorRefs)) return false;
-      store.promptedHabitChecks[key] = { at: Date.now(), refs: refs || '' };
-      const cutoff = Date.now() - 14 * 86400000;
-      for (const k in store.promptedHabitChecks) {
-        const v = store.promptedHabitChecks[k];
-        const at = (v && typeof v === 'object') ? v.at : v;
-        if (!at || at < cutoff) delete store.promptedHabitChecks[k];
+
+      if (refs) {
+        // Reference-based auto offer: at most once per habit/day per distinct
+        // passage — but a NEW reference the same day (e.g. ask-modal dismissed,
+        // then "John 3" added to the note) still gets offered.
+        const prior = store.promptedHabitChecks[key];
+        const priorRefs = prior && typeof prior === 'object' ? (prior.refs || '') : (prior ? '' : null);
+        if (prior != null && refs === priorRefs) return false;
+        store.promptedHabitChecks[key] = { at: Date.now(), refs: refs };
+        const cutoff = Date.now() - 14 * 86400000;
+        for (const k in store.promptedHabitChecks) {
+          const v = store.promptedHabitChecks[k];
+          const at = (v && typeof v === 'object') ? v.at : v;
+          if (!at || at < cutoff) delete store.promptedHabitChecks[k];
+        }
+        persist(true);
+      } else {
+        // No-reference ask offer: only a short in-memory throttle so a single
+        // completion can't double-fire from two code paths, but every genuine
+        // completion of a Bible-reading habit still prompts (it is NOT blocked
+        // for the whole day the way a specific-passage offer is).
+        const now = Date.now();
+        if (_lastAskAt[key] && (now - _lastAskAt[key]) < 20000) return false;
+        _lastAskAt[key] = now;
       }
-      persist(true);
       // Small delay so the habit UI (check animation, milestone toast) lands first.
       setTimeout(() => {
         if (refs) showHabitQuizModal(refs, name);

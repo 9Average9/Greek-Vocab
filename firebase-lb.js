@@ -2493,7 +2493,10 @@ async function evtGCalDayEvents(date, timezone) {
 // Bible Quiz — one server round-trip generates the whole quiz (see the
 // generateBibleQuiz Cloud Function). Auth travels automatically with the call.
 async function generateBibleQuiz(payload) {
-  const fn = httpsCallable(functionsApp, "generateBibleQuiz");
+  // Generous client timeout (default is 70s) so a slower call for a big batch
+  // isn't cut off before the server's own 300s budget; the function itself
+  // retries + falls back across models, and the caller retries on top of that.
+  const fn = httpsCallable(functionsApp, "generateBibleQuiz", { timeout: 180000 });
   const res = await fn(payload || {});
   return res.data;
 }
