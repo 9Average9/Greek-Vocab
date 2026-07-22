@@ -1276,10 +1276,57 @@ exports.onEncouragementCreated = functions.firestore
 // everything up front (rather than one call per question) is the efficient path:
 // the client shows hints and explanations instantly with zero extra API calls.
 
-// Model is intentionally a single constant so it is trivial to swap. The most
-// capable model writes the strongest, least "generic" questions; drop to a
-// cheaper/faster one here if cost or latency matters more than depth.
+// Primary model plus ordered fallbacks. If the strongest model is overloaded
+// or erroring, generation automatically drops to the next so a quiz still comes
+// back. Sonnet 5 writes the best questions; Opus 4.8 is an equally strong
+// backup; Haiku 4.5 is the fast last resort that keeps the feature working
+// even under load.
 const BIBLE_QUIZ_MODEL = "claude-sonnet-5";
+const BIBLE_QUIZ_MODELS = ["claude-sonnet-5", "claude-opus-4-8", "claude-haiku-4-5"];
+// Haiku 4.5 doesn't accept the effort parameter; everything else here does.
+const MODELS_WITHOUT_EFFORT = { "claude-haiku-4-5": true };
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Transient failures worth retrying / falling back on (overload, rate limit,
+// timeouts, transport errors). A 400/401/403 is a real problem another model
+// won't fix, so those surface immediately.
+function isRetryableAnthropicError(e) {
+  const s = e && e.status;
+  if (!s) return true; // network / timeout / unknown → worth another try
+  return s === 408 || s === 409 || s === 425 || s === 429 || s === 500 || s === 502 || s === 503 || s === 504 || s === 529;
+}
+
+// Try each model in turn, with one quick backoff-retry per model, before giving
+// up. Returns the first successful message.
+async function createQuizMessage(client, promptContent) {
+  let lastErr;
+  for (let m = 0; m < BIBLE_QUIZ_MODELS.length; m++) {
+    const model = BIBLE_QUIZ_MODELS[m];
+    const output_config = MODELS_WITHOUT_EFFORT[model]
+      ? { format: { type: "json_schema", schema: QUIZ_SCHEMA } }
+      : { effort: "medium", format: { type: "json_schema", schema: QUIZ_SCHEMA } };
+    const params = {
+      model,
+      max_tokens: 16000,
+      system: "You write accurate, engaging, non-generic Bible quizzes and always return the requested JSON structure.",
+      output_config,
+      messages: [{ role: "user", content: promptContent }]
+    };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await client.messages.create(params);
+      } catch (e) {
+        lastErr = e;
+        console.warn(`generateBibleQuiz ${model} attempt ${attempt + 1} failed:`, e && e.message);
+        if (!isRetryableAnthropicError(e)) throw e;
+        if (attempt === 0) await sleep(600 * (m + 1)); // brief backoff, then retry same model
+      }
+    }
+    // exhausted this model's retries → fall through to the next model
+  }
+  throw lastErr;
+}
 
 const QUIZ_CATEGORIES = [
   "narrative", "people", "places", "numbers",
@@ -1407,15 +1454,12 @@ exports.generateBibleQuiz = functions
     const client = anthropicClient();
     let message;
     try {
-      message = await client.messages.create({
-        model: BIBLE_QUIZ_MODEL,
-        max_tokens: 16000,
-        system: "You write accurate, engaging, non-generic Bible quizzes and always return the requested JSON structure.",
-        // "medium" effort trims thinking time — a big latency win with no
-        // meaningful quality loss for quiz writing.
-        output_config: { effort: "medium", format: { type: "json_schema", schema: QUIZ_SCHEMA } },
-        messages: [{ role: "user", content: buildQuizPrompt({ reference, difficulty, numQuestions, focus, translation, tricky, avoid }) }]
-      });
+      // Retries + model fallback live in createQuizMessage so a busy or erroring
+      // model never leaves the user without a quiz.
+      message = await createQuizMessage(
+        client,
+        buildQuizPrompt({ reference, difficulty, numQuestions, focus, translation, tricky, avoid })
+      );
     } catch (e) {
       console.error("generateBibleQuiz Anthropic error:", e && e.message);
       if (e && e.status === 429) {
