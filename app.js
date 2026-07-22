@@ -10647,6 +10647,9 @@ const _noScreenEntrance = new Set([
 // Opacity-only, so it can't disturb position:fixed descendants like the nav.
 function _playScreenEntrance(target, id) {
   if (_noScreenEntrance.has(id)) return;
+  // A bespoke screen transition is mid-flight (e.g. journeys folding back to
+  // home) — it manages its own reveal; don't fade over the top of it.
+  if (document.body?.classList.contains('app-screen-motion')) return;
   target.classList.remove('screen-enter');
   void target.offsetWidth; // restart the animation on re-navigation
   target.classList.add('screen-enter');
@@ -10664,6 +10667,13 @@ function showScreen(id) {
 
   _activeScreenId = id;
 
+  // Was this screen already on-screen before this call? (e.g. a bespoke
+  // close animation like journeys' collapse-to-home reveals the target
+  // underneath first, then calls showNavPage.) If so, don't replay the
+  // entrance — re-fading an already-visible screen reads as a flash.
+  const targetPre = document.getElementById(id);
+  const targetWasVisible = !!(targetPre && targetPre.classList.contains('active'));
+
   screens.forEach(screen => {
     const el = document.getElementById(screen);
     if (el) {
@@ -10675,7 +10685,8 @@ function showScreen(id) {
   const target = document.getElementById(id);
   if (target) {
     target.classList.add("active");
-    _playScreenEntrance(target, id);
+    if (targetWasVisible) target.classList.remove('screen-enter'); // no re-fade on an already-shown screen
+    else _playScreenEntrance(target, id);
   }
   // These full-bleed tools should always open at the very top, never where the
   // user last left them scrolled.
@@ -29875,7 +29886,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.441";
+const APP_VERSION = "3.0.442";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
