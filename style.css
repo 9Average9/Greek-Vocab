@@ -34199,6 +34199,95 @@ body.sandbox-open #rhemaSelectionBar:active {
 }
 .rhema-meaning-section p { margin: 0; line-height: 1.5; }
 .rhema-meaning-section ul { margin: 6px 0 0 18px; padding: 0; line-height: 1.45; }
+
+/* ── Interlinear-lite ─────────────────────────────────────────────────────── */
+.rhema-il-card {
+  max-width: 560px;
+  max-height: 86%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.rhema-il-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-right: 46px;
+  margin-bottom: 4px;
+}
+.rhema-il-kicker {
+  font-size: 0.64rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: color-mix(in srgb, var(--secondary-color, #2498df) 62%, var(--muted-color, #8a8a8a));
+}
+.rhema-il-ref { font-weight: 800; font-size: 1.12rem; line-height: 1.2; }
+.rhema-il-english {
+  margin: 6px 0 14px;
+  line-height: 1.5;
+  font-size: 0.92rem;
+  color: color-mix(in srgb, var(--font-color, #20303f) 82%, transparent);
+}
+.rhema-il-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rhema-il-grid.rhema-il-rtl { flex-direction: row-reverse; justify-content: flex-end; }
+.rhema-il-word {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 72px;
+  max-width: 160px;
+  padding: 10px 10px 11px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 16%, rgba(120,120,120,0.16));
+  background: color-mix(in srgb, var(--secondary-color, #2498df) 5%, transparent);
+  color: var(--font-color, #20303f);
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.rhema-il-word:hover {
+  background: color-mix(in srgb, var(--secondary-color, #2498df) 12%, transparent);
+  border-color: color-mix(in srgb, var(--secondary-color, #2498df) 34%, transparent);
+}
+.rhema-il-word:active { transform: scale(0.97); }
+.rhema-il-orig {
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--secondary-color, #243447);
+}
+.rhema-il-translit {
+  font-size: 0.68rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--font-color, #20303f) 62%, transparent);
+}
+.rhema-il-gloss {
+  font-size: 0.74rem;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+  color: color-mix(in srgb, var(--font-color, #20303f) 90%, transparent);
+}
+.rhema-il-foot {
+  margin: 14px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--muted-color, #8a8a8a);
+}
+.rhema-il-loading {
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--muted-color, #8a8a8a);
+  font-size: 0.9rem;
+}
+
 /* ── Bible Dictionary card (names, places, customs) ── */
 .rhema-word-chip-dict {
   border-color: color-mix(in srgb, var(--secondary-color, #243447) 45%, transparent);
