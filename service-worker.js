@@ -49,7 +49,7 @@ const CACHE_NAME = "disciple-builder-v3.0.443";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.441",
+  "./style.css?v=3.0.443",
   "./vocab.js?v=3.0.8",
   "./app.js?v=3.0.443",
   "./bible-threads.js?v=3.0.402",

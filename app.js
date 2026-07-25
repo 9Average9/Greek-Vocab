@@ -40158,6 +40158,85 @@ function _rhemaOpenWordPicker(mode = 'lookup') {
   document.getElementById('rhemaWordPickModal')?.classList.add('open');
 }
 function rhemaOpenEnglishWordPicker() { _rhemaOpenWordPicker('lookup'); }
+
+// ── Interlinear-lite ───────────────────────────────────────────────────────────
+// Tap a verse → the original text word by word, each with transliteration and a
+// lexicon-checked English gloss. This uses the SAME _rhemaMeaningDecision resolver
+// the Greek reader trusts, so every gloss is per original-language token — the one
+// direction that is actually accurate. English translations are not word-aligned
+// to the Greek, so we never place a Greek word "under" an English one.
+let _rhemaInterlinearRef = null;
+
+function rhemaOpenInterlinearFromMenu() {
+  const ref = _rhemaMenuRef;
+  closeRhemaVerseSheet();
+  rhemaOpenInterlinear(ref);
+}
+
+async function rhemaOpenInterlinear(ref) {
+  ref = ref || _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse);
+  _rhemaInterlinearRef = ref;
+  const modal = document.getElementById('rhemaInterlinearModal');
+  if (!modal) return;
+  const p = _rhemaParseRef(ref);
+  const refEl = document.getElementById('rhemaInterlinearRef');
+  const engEl = document.getElementById('rhemaInterlinearEnglish');
+  const gridEl = document.getElementById('rhemaInterlinearGrid');
+  if (refEl && p) refEl.textContent = `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}`;
+  if (engEl && p) engEl.textContent = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
+  if (gridEl) gridEl.innerHTML = '<div class="rhema-il-loading">Loading…</div>';
+  modal.classList.add('open');
+  if (!_rhemaData()) {
+    try { await loadRhemaScripts(); }
+    catch { if (gridEl) gridEl.innerHTML = '<div class="rhema-il-loading">Could not load the scripture data. Check your connection.</div>'; return; }
+    if (_rhemaInterlinearRef !== ref) return; // user moved on while loading
+  }
+  _rhemaRenderInterlinear(ref);
+}
+
+function _rhemaRenderInterlinear(ref) {
+  const gridEl = document.getElementById('rhemaInterlinearGrid');
+  if (!gridEl) return;
+  const p = _rhemaParseRef(ref);
+  if (!p) { gridEl.innerHTML = ''; return; }
+  const layer = getCurrentOriginalLanguageLayer();
+  const isHebrew = layer === 'hebrew';
+  const words = (_rhemaText()[p.book] || {})[p.chapter]?.[p.verse] || [];
+  if (!words.length) {
+    gridEl.innerHTML = '<div class="rhema-il-loading">No original-language text is available for this verse yet.</div>';
+    return;
+  }
+  gridEl.classList.toggle('rhema-il-rtl', isHebrew);
+  gridEl.innerHTML = words.map((w, i) => {
+    const resolved = _rhemaResolveWord(w, p.book, p.chapter);
+    const lex = _rhemaLexForWord(resolved, layer, p.book, p.chapter);
+    const translit = _escapeRhemaAttr(lex.translit || lex.pronounce || '');
+    const decision = _rhemaMeaningDecision(resolved, { layer, book: p.book, chapter: p.chapter, verse: p.verse });
+    const gloss = _escapeRhemaAttr(decision.gloss || '');
+    const orig = _escapeRhemaAttr(w[0] || '');
+    return `<button class="rhema-il-word" onclick="_rhemaInterlinearOpenWord(${i})">` +
+      `<span class="rhema-il-orig${isHebrew ? ' rhema-hebrew-text' : ''}">${orig}</span>` +
+      (translit ? `<span class="rhema-il-translit">${translit}</span>` : '') +
+      (gloss ? `<span class="rhema-il-gloss">${gloss}</span>` : '') +
+      `</button>`;
+  }).join('');
+}
+
+function _rhemaInterlinearOpenWord(idx) {
+  const ref = _rhemaInterlinearRef;
+  const p = ref ? _rhemaParseRef(ref) : null;
+  if (!p) return;
+  closeRhemaInterlinear();
+  // Point the reader at this verse so the word study reads the right token.
+  _rhemaBook = p.book; _rhemaChapter = p.chapter;
+  openRhemaSheet(idx, p.verse);
+}
+
+function closeRhemaInterlinear(e) {
+  if (e && e.target !== document.getElementById('rhemaInterlinearModal')) return;
+  document.getElementById('rhemaInterlinearModal')?.classList.remove('open');
+  _rhemaInterlinearRef = null;
+}
 function rhemaStudyLogWordFromMenu() {
   return _rhemaOpenWordPicker('log');
   const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
@@ -40330,11 +40409,22 @@ async function rhemaShowEnglishMeaning(word) {
   _rhemaEnsureEnglishDictionary().catch(() => {});
   const render = (modernDefs, pending) => {
     if (!body) return;
+    // For a proper name (Bible Dictionary card present), a modern celebrity
+    // biography is pure noise — drop it so "Aaron" doesn't read as a baseball
+    // player. The dictionary card above already carries the real meaning.
+    let filteredOut = false;
+    if (dictEntry && modernDefs.length) {
+      const kept = modernDefs.filter(d => !_rhemaIsBiographyGloss(d.definition));
+      if (kept.length !== modernDefs.length) filteredOut = true;
+      modernDefs = kept;
+    }
     let modernHtml;
     if (modernDefs.length) {
       modernHtml = `<ol class="rhema-def-list">${modernDefs.map(item => `<li><strong>${_escapeRhemaAttr(item.pos)}</strong><span>${_escapeRhemaAttr(item.definition)}</span>${item.example ? `<em>${_escapeRhemaAttr(item.example)}</em>` : ''}</li>`).join('')}</ol>`;
     } else if (pending) {
       modernHtml = `<p>Checking the English meaning...</p>`;
+    } else if (filteredOut) {
+      modernHtml = `<p>This is a proper name — see the Bible Dictionary entry above for who or what it refers to.</p>`;
     } else {
       modernHtml = `<p>${_escapeRhemaAttr(`No dictionary entry was found for "${clean}". Use the verse itself and any Bible context note below as supporting context.`)}</p>`;
     }
@@ -40505,6 +40595,40 @@ const RHEMA_ARCHAIC_ENGLISH_DEFS = {
   girt: [['verb', 'Belted; fastened with a belt.']]
 };
 
+// WordNet stores senses by general-corpus frequency, which for a Bible reader
+// often leads with irrelevant noise (a → the letter; niche computing / finance /
+// heraldry senses; proper names collapsing to a modern celebrity). Gently reorder
+// so the most broadly useful sense surfaces first — nothing is ever invented or
+// dropped here, only re-ranked. A modern-person biography ("United States
+// professional baseball player…") is a strong demote because those collide with
+// biblical names (Aaron, Philip, …) where the real meaning lives in the Bible
+// Dictionary card shown above the modern section.
+const _RHEMA_ENGLISH_DEF_NOISE = [
+  'baseball', 'basketball', 'hockey', 'in music', 'heraldry', 'stock exchange',
+  'securities', 'long position', 'financial instrument', 'blood group',
+  'blood type', 'ten billionth', 'angstrom', 'nautical mile', 'a genus of',
+  'genus of', '(computing)', '(programming)', '(obsolete)'
+];
+const _RHEMA_ENGLISH_DEF_BIOGRAPHY = /^(united states|american|english|british|french|german|italian|russian|greek|dutch|spanish|scottish|irish|canadian|australian) .*\b(player|singer|actor|actress|author|writer|composer|musician|painter|general|politician|statesman|inventor|economist|physicist|philosopher|poet|dramatist|film maker|filmmaker|dancer|architect|chemist|mathematician|astronomer|naturalist|psychologist)\b/;
+function _rhemaIsBiographyGloss(definition) {
+  return _RHEMA_ENGLISH_DEF_BIOGRAPHY.test(String(definition || '').toLowerCase());
+}
+function _rhemaRankBundledEnglishDefs(defs) {
+  const ranked = defs.map(([pos, definition], i) => {
+    const p = String(pos || '').toLowerCase();
+    const lower = String(definition || '').toLowerCase();
+    let score = 100 - i;
+    if (p === 'biblical') score += 200;          // curated theology is authoritative
+    if (p === 'name') score += 6;
+    if (['noun', 'verb', 'adjective', 'adverb'].includes(p)) score += 3;
+    if (_rhemaIsBiographyGloss(definition)) score -= 160;
+    if (_RHEMA_ENGLISH_DEF_NOISE.some(t => lower.includes(t))) score -= 120;
+    return { pos, definition, example: '', score, i };
+  });
+  ranked.sort((a, b) => b.score - a.score || a.i - b.i);
+  return ranked.map(({ pos, definition, example }) => ({ pos, definition, example }));
+}
+
 function _rhemaBundledEnglishDefs(word) {
   const entries = window.RhemaEnglishDictionary?.entries;
   if (!entries) return [];
@@ -40516,7 +40640,7 @@ function _rhemaBundledEnglishDefs(word) {
   // A lone "word"-tagged entry is the builder's placeholder for rare forms —
   // let the archaic map and stemming below beat it when they know the word.
   const placeholder = defs.length === 1 && defs[0][0] === 'word';
-  if (defs.length && !placeholder) return defs.map(([pos, definition]) => ({ pos, definition, example: '' }));
+  if (defs.length && !placeholder) return _rhemaRankBundledEnglishDefs(defs);
   const asDefs = (list) => list.map(([pos, definition]) => ({ pos, definition, example: '' }));
   // Archaic forms from the KJV-family translations.
   const arch = RHEMA_ARCHAIC_ENGLISH_DEFS[clean] || RHEMA_ARCHAIC_ENGLISH_DEFS[clean.replace(/[^a-z'-]/g, '')];
