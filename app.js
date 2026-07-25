@@ -29886,7 +29886,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.442";
+const APP_VERSION = "3.0.443";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32987,6 +32987,10 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => handleCalendarNotificationOpen(), 900);
   }
   if (window.__pendingAuthResolved) setAppLaunchText('Finishing setup');
+
+  // Preload scripture data in the background so opening the reader skips the
+  // "Loading Rhēma data…" gap (and its default John 3:16 flash).
+  scheduleRhemaBackgroundPreload();
 });
 
 
@@ -41079,6 +41083,34 @@ function loadRhemaScripts() {
       document.head.appendChild(s);
     }
   });
+}
+
+// Warm the Rhēma scripture data in the background a little after launch, so the
+// reader opens straight into the target passage instead of flashing the default
+// John 3:16 placeholder while the on-demand fetch runs. loadRhemaScripts() is
+// idempotent (guarded by _rhemaLoaded/_rhemaLoading), so a later showRhema()
+// simply reuses this in-flight/finished load. Deferred to idle time and skipped
+// on Save-Data / 2g connections, where the large scripture bundle is better
+// fetched only when the reader is actually opened.
+let _rhemaPreloadStarted = false;
+function _rhemaBackgroundPreload() {
+  if (_rhemaPreloadStarted || _rhemaLoaded || _rhemaLoading) return;
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (conn && (conn.saveData || /(^|\b)(slow-2g|2g)$/.test(conn.effectiveType || ''))) return;
+  _rhemaPreloadStarted = true;
+  loadRhemaScripts().catch(() => { _rhemaPreloadStarted = false; });
+}
+
+function scheduleRhemaBackgroundPreload() {
+  const kick = () => {
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(_rhemaBackgroundPreload, { timeout: 4000 });
+    } else {
+      _rhemaBackgroundPreload();
+    }
+  };
+  // Let first paint + auth/home boot settle before pulling scripture data.
+  setTimeout(kick, 2500);
 }
 
 // ── Modal open/close ──────────────────────────────────────────────────────────
