@@ -17530,14 +17530,20 @@ body.dark .rhema-reader-menu-btn {
 .rhema-read-mode .rhema-verse-ref,
 .rhema-read-mode .rhema-desktop-note-btn { display: none; }
 .rhema-read-mode .rhema-verse-nav {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 30px);
+  padding: 8px 20px calc(env(safe-area-inset-bottom, 0px) + 34px);
 }
+/* Read mode: no pill — the two arrows float on their own, pushed to the edges */
 .rhema-read-mode .rhema-verse-nav-row {
-  width: auto;
-  margin: 0 auto;
-  justify-content: center;
-  gap: 44px;
-  padding: 8px 18px;
+  width: 100%;
+  margin: 0;
+  justify-content: space-between;
+  gap: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* ── Read-mode typography controls applied to the verse text ── */
@@ -17570,7 +17576,6 @@ body.dark .rhema-reader-menu-btn {
   box-shadow: -16px 0 44px -14px rgba(0,0,0,0.4);
   transform: translateX(100%);
   transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  display: flex;
   overflow: hidden;
 }
 .rhema-reader-panel-overlay.open .rhema-reader-panel { transform: translateX(0); }
@@ -17582,11 +17587,14 @@ body.dark .rhema-reader-menu-btn {
 }
 .rhema-reader-panel.sub-open .rrp-track { transform: translateX(-50%); }
 .rrp-pane {
+  flex: 0 0 50%;
   width: 50%;
+  min-width: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
 }
 .rrp-header {
