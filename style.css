@@ -17527,24 +17527,9 @@ body.dark .rhema-reader-menu-btn {
 .rhema-read-mode .rhema-reader-menu-btn { display: inline-flex; }
 
 /* ── Read-mode verse nav: arrows only, raised ── */
-.rhema-read-mode .rhema-verse-ref,
-.rhema-read-mode .rhema-desktop-note-btn { display: none; }
-.rhema-read-mode .rhema-verse-nav {
-  padding: 8px 20px calc(env(safe-area-inset-bottom, 0px) + 34px);
-}
-/* Read mode: no pill — the two arrows float on their own, pushed to the edges */
-.rhema-read-mode .rhema-verse-nav-row {
-  width: 100%;
-  margin: 0;
-  justify-content: space-between;
-  gap: 0;
-  padding: 0;
-  background: none;
-  border: none;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
+/* Read mode: no bottom verse-nav — navigation is via the book pill and the
+   grouped Highlights/Notes lists in the reader panel. */
+.rhema-read-mode .rhema-verse-nav { display: none; }
 
 /* ── Read-mode typography controls applied to the verse text ── */
 .rhema-reader { --rhema-reader-scale: 1; --rhema-reader-font: inherit; }
@@ -17718,6 +17703,46 @@ body.dark .rhema-reader-menu-btn {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .rrp-mark-note { font-size: 0.8rem; color: var(--muted-color); font-style: italic; line-height: 1.4; }
+
+/* ── Book-grouped dropdowns for Highlights / Notes ── */
+.rrp-book-group {
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--card-solid-color);
+}
+.rrp-book-head {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 13px 13px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--font-color);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.rrp-book-head:active { background: color-mix(in srgb, var(--secondary-color) 6%, transparent); }
+.rrp-book-chev { font-size: 22px; color: var(--muted-color); transition: transform 0.22s ease; flex-shrink: 0; }
+.rrp-book-group.open .rrp-book-chev { transform: rotate(180deg); }
+.rrp-book-name { flex: 1; min-width: 0; font-size: 0.95rem; font-weight: 750; }
+.rrp-book-count {
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--secondary-color);
+  background: color-mix(in srgb, var(--secondary-color) 12%, transparent);
+  padding: 2px 9px; border-radius: 999px;
+  min-width: 24px; text-align: center; flex-shrink: 0;
+}
+.rrp-book-items { display: none; flex-direction: column; padding: 0 12px 6px; }
+.rrp-book-group.open .rrp-book-items { display: flex; }
+.rrp-book-items .rrp-mark-row {
+  background: transparent;
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 55%, transparent);
+  border-radius: 0;
+  padding: 11px 2px;
+}
+.rrp-book-items .rrp-mark-row:first-child { border-top: none; }
 
 /* ── Dark mode: the reader chrome's raised white glass goes dark. Dark themes
    brighten --secondary-color/--font-color for dark surfaces, so on the white

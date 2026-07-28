@@ -41414,20 +41414,47 @@ function _rhemaReaderMarksHtml(kind) {
   if (!marks.length) {
     return `<div class="rrp-empty">${wantNote ? 'No notes saved yet. Long-press a verse to add one.' : 'No highlights yet. Tap a verse to highlight it.'}</div>`;
   }
-  return marks.map(([ref, m]) => {
+  // Group the (already canonically sorted) marks by book so each book becomes
+  // one labelled dropdown — easier to scan than a long flat list.
+  const groups = [];
+  const byBook = {};
+  for (const [ref, m] of marks) {
     const p = _rhemaParseRef(ref);
-    const text = p ? (_rhemaEnglishText(p.book, p.chapter, p.verse) || '') : '';
-    const color = m.color || m.noteColor || 'var(--secondary-color)';
-    const note = m.note ? `<span class="rrp-mark-note">${_escapeRhemaAttr(m.note)}</span>` : '';
-    return `<button class="rrp-mark-row" onclick="closeRhemaReaderPanel();rhemaOpenSavedMark('${_escapeRhemaAttr(ref)}')" style="--mark-color:${_escapeRhemaAttr(color)}">
-      <span class="rrp-mark-dot"></span>
-      <span class="rrp-mark-copy">
-        <strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(ref) || ref)}</strong>
-        ${text ? `<span class="rrp-mark-text">${_escapeRhemaAttr(text)}</span>` : ''}
-        ${note}
-      </span>
-    </button>`;
+    const book = p ? p.book : '?';
+    if (!byBook[book]) {
+      byBook[book] = { name: p ? _rhemaBookName(book) : ref, items: [] };
+      groups.push(byBook[book]);
+    }
+    byBook[book].items.push([ref, m]);
+  }
+  const soleBook = groups.length === 1;
+  return groups.map(g => {
+    const rows = g.items.map(([ref, m]) => {
+      const p = _rhemaParseRef(ref);
+      const text = p ? (_rhemaEnglishText(p.book, p.chapter, p.verse) || '') : '';
+      const color = m.color || m.noteColor || 'var(--secondary-color)';
+      const note = m.note ? `<span class="rrp-mark-note">${_escapeRhemaAttr(m.note)}</span>` : '';
+      return `<button class="rrp-mark-row" onclick="closeRhemaReaderPanel();rhemaOpenSavedMark('${_escapeRhemaAttr(ref)}')" style="--mark-color:${_escapeRhemaAttr(color)}">
+        <span class="rrp-mark-dot"></span>
+        <span class="rrp-mark-copy">
+          <strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(ref) || ref)}</strong>
+          ${text ? `<span class="rrp-mark-text">${_escapeRhemaAttr(text)}</span>` : ''}
+          ${note}
+        </span>
+      </button>`;
+    }).join('');
+    return `<div class="rrp-book-group${soleBook ? ' open' : ''}">
+      <button class="rrp-book-head" onclick="rhemaToggleBookGroup(this)">
+        <span class="material-symbols-outlined rrp-book-chev">expand_more</span>
+        <span class="rrp-book-name">${_escapeRhemaAttr(g.name)}</span>
+        <span class="rrp-book-count">${g.items.length}</span>
+      </button>
+      <div class="rrp-book-items">${rows}</div>
+    </div>`;
   }).join('');
+}
+function rhemaToggleBookGroup(btn) {
+  btn.parentElement?.classList.toggle('open');
 }
 
 function _syncRhemaChapterUi() {
