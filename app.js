@@ -41258,6 +41258,10 @@ async function showRhema() {
   setNavActive('rhema');
   const modal = document.getElementById('rhemaModal');
   if (!modal) return;
+  // Read mode = stripped-down Bible reader (no English/Greek swap, no Greek
+  // tool wheel); its tools live in the slide-in reader panel instead.
+  modal.classList.toggle('rhema-read-mode', !!_rhemaReadMode);
+  _applyRhemaReaderFontPrefs();
   const alreadyOpen = modal.classList.contains('open');
   if (!alreadyOpen) {
     modal.classList.remove('rhema-nav-enter');
@@ -41292,6 +41296,138 @@ async function showRhema() {
   } catch (e) {
     if (loading) loading.textContent = 'Failed to load data. Check your connection.';
   }
+}
+
+// ── Read vs Study launch chooser ──────────────────────────────────────────────
+let _rhemaReadMode = false;
+
+function openRhemaLaunchMenu(e) {
+  if (e) { e.stopPropagation(); }
+  const menu = document.getElementById('rhemaLaunchMenu');
+  if (!menu) { resumeRhema(); return; }
+  menu.classList.add('open');
+}
+function closeRhemaLaunchMenu() {
+  document.getElementById('rhemaLaunchMenu')?.classList.remove('open');
+}
+function launchRhema(mode) {
+  closeRhemaLaunchMenu();
+  _rhemaReadMode = (mode === 'read');
+  resumeRhema();
+}
+
+// ── Read-mode reader panel (highlights / notes / cross refs / typography) ──────
+const RHEMA_READER_FONTS = [
+  { id: 'default', label: 'Default',   stack: '' },
+  { id: 'serif',   label: 'Serif',     stack: 'Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif' },
+  { id: 'rounded', label: 'Rounded',   stack: 'ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Varela Round", system-ui, sans-serif' },
+  { id: 'mono',    label: 'Monospace', stack: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace' }
+];
+const RHEMA_READER_FONT_STEPS = [0.88, 0.95, 1, 1.08, 1.18, 1.3];
+
+function _rhemaReaderFontPrefs() {
+  let size = 2, font = 'default';
+  try {
+    const raw = JSON.parse(localStorage.getItem('rhemaReaderTypography') || '{}');
+    if (Number.isInteger(raw.size)) size = Math.max(0, Math.min(RHEMA_READER_FONT_STEPS.length - 1, raw.size));
+    if (raw.font && RHEMA_READER_FONTS.some(f => f.id === raw.font)) font = raw.font;
+  } catch {}
+  return { size, font };
+}
+function _saveRhemaReaderFontPrefs(prefs) {
+  try { localStorage.setItem('rhemaReaderTypography', JSON.stringify(prefs)); } catch {}
+}
+function _applyRhemaReaderFontPrefs() {
+  const reader = document.querySelector('#rhemaModal .rhema-reader');
+  if (!reader) return;
+  const { size, font } = _rhemaReaderFontPrefs();
+  const stack = (RHEMA_READER_FONTS.find(f => f.id === font) || RHEMA_READER_FONTS[0]).stack;
+  reader.style.setProperty('--rhema-reader-scale', String(RHEMA_READER_FONT_STEPS[size]));
+  reader.style.setProperty('--rhema-reader-font', stack || 'inherit');
+}
+function rhemaReaderFontStep(dir) {
+  const prefs = _rhemaReaderFontPrefs();
+  prefs.size = Math.max(0, Math.min(RHEMA_READER_FONT_STEPS.length - 1, prefs.size + dir));
+  _saveRhemaReaderFontPrefs(prefs);
+  _applyRhemaReaderFontPrefs();
+  _syncRhemaReaderFontSizeUi();
+}
+function rhemaReaderSetFont(id) {
+  const prefs = _rhemaReaderFontPrefs();
+  prefs.font = id;
+  _saveRhemaReaderFontPrefs(prefs);
+  _applyRhemaReaderFontPrefs();
+  _renderRhemaReaderFontList();
+}
+function _syncRhemaReaderFontSizeUi() {
+  const { size } = _rhemaReaderFontPrefs();
+  const pct = (size / (RHEMA_READER_FONT_STEPS.length - 1)) * 100;
+  const fill = document.getElementById('rrpFsFill');
+  const knob = document.getElementById('rrpFsKnob');
+  if (fill) fill.style.width = pct + '%';
+  if (knob) knob.style.left = pct + '%';
+}
+function _renderRhemaReaderFontList() {
+  const wrap = document.getElementById('rrpFontList');
+  if (!wrap) return;
+  const { font } = _rhemaReaderFontPrefs();
+  wrap.innerHTML = RHEMA_READER_FONTS.map(f =>
+    `<button class="rrp-font-opt${f.id === font ? ' active' : ''}" onclick="rhemaReaderSetFont('${f.id}')" style="font-family:${f.stack || 'inherit'}">
+      <span class="rrp-font-name">${f.label}</span>
+      <span class="rrp-font-sample">Aa</span>
+    </button>`
+  ).join('');
+}
+
+function openRhemaReaderPanel() {
+  const ov = document.getElementById('rhemaReaderPanelOverlay');
+  if (!ov) return;
+  showReaderPanelSection('main');
+  _renderRhemaReaderFontList();
+  _syncRhemaReaderFontSizeUi();
+  ov.classList.add('open');
+}
+function closeRhemaReaderPanel() {
+  document.getElementById('rhemaReaderPanelOverlay')?.classList.remove('open');
+}
+function showReaderPanelSection(section) {
+  const panel = document.getElementById('rhemaReaderPanel');
+  if (!panel) return;
+  if (section === 'main') { panel.classList.remove('sub-open'); return; }
+  if (section === 'crossrefs') {
+    // Cross references is a full Scripture-Trail experience — hand off to it.
+    closeRhemaReaderPanel();
+    setTimeout(() => { if (typeof openRhemaCrossReferences === 'function') openRhemaCrossReferences(); }, 220);
+    return;
+  }
+  const title = document.getElementById('rrpSubTitle');
+  const body = document.getElementById('rrpSubBody');
+  if (title) title.textContent = section === 'notes' ? 'Notes' : 'Highlights';
+  if (body) body.innerHTML = _rhemaReaderMarksHtml(section);
+  panel.classList.add('sub-open');
+}
+function _rhemaReaderMarksHtml(kind) {
+  const wantNote = (kind === 'notes');
+  const marks = Object.entries(_rhemaCurMarks())
+    .filter(([, m]) => m && (wantNote ? m.note : m.color))
+    .sort((a, b) => _rhemaRefSortValue(a[0]) - _rhemaRefSortValue(b[0]));
+  if (!marks.length) {
+    return `<div class="rrp-empty">${wantNote ? 'No notes saved yet. Long-press a verse to add one.' : 'No highlights yet. Tap a verse to highlight it.'}</div>`;
+  }
+  return marks.map(([ref, m]) => {
+    const p = _rhemaParseRef(ref);
+    const text = p ? (_rhemaEnglishText(p.book, p.chapter, p.verse) || '') : '';
+    const color = m.color || m.noteColor || 'var(--secondary-color)';
+    const note = m.note ? `<span class="rrp-mark-note">${_escapeRhemaAttr(m.note)}</span>` : '';
+    return `<button class="rrp-mark-row" onclick="closeRhemaReaderPanel();rhemaOpenSavedMark('${_escapeRhemaAttr(ref)}')" style="--mark-color:${_escapeRhemaAttr(color)}">
+      <span class="rrp-mark-dot"></span>
+      <span class="rrp-mark-copy">
+        <strong>${_escapeRhemaAttr(_rhemaDisplayRefFromKey(ref) || ref)}</strong>
+        ${text ? `<span class="rrp-mark-text">${_escapeRhemaAttr(text)}</span>` : ''}
+        ${note}
+      </span>
+    </button>`;
+  }).join('');
 }
 
 function _syncRhemaChapterUi() {
@@ -41388,6 +41524,9 @@ function closeRhema(keepSandbox = false) {
   closeRhemaSheet();
   closeRhemaReaderNote();
   closeRhemaPickerSheet();
+  closeRhemaReaderPanel();
+  _rhemaReadMode = false;
+  document.getElementById('rhemaModal')?.classList.remove('rhema-read-mode');
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   _rhemaTrail = [];
   _rhemaTrailPos = -1;

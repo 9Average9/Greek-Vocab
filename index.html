@@ -10564,6 +10564,9 @@ Verb Endings
 <span class="rhema-tool-dot"></span>
 </button>
 <button class="rhema-swap-btn" id="rhemaSwapBtn" onclick="toggleRhemaEnglish()" title="Swap between English and the original language"><span class="rhema-swap-seg active">English</span><span class="rhema-swap-seg">Greek</span></button>
+<button class="rhema-reader-menu-btn" id="rhemaReaderMenuBtn" onclick="openRhemaReaderPanel()" title="Reader tools" aria-label="Reader tools">
+<span class="material-symbols-outlined">menu</span>
+</button>
 </div>
 </div>
 <!-- Reader: relative positioning context. The top chrome + verse nav overlay the
@@ -10763,6 +10766,54 @@ Verb Endings
 <span class="material-symbols-outlined">close</span>
 </button>
 </div>
+</div>
+<!-- ── Read-mode reader tools panel (slides in from the right) ── -->
+<div class="rhema-reader-panel-overlay" id="rhemaReaderPanelOverlay" onclick="if(event.target===this)closeRhemaReaderPanel()">
+<aside class="rhema-reader-panel" id="rhemaReaderPanel">
+<div class="rrp-track" id="rrpTrack">
+<!-- Main options pane -->
+<div class="rrp-pane rrp-pane-main">
+<div class="rrp-header">
+<span class="rrp-title">Reader</span>
+<button class="rrp-x" onclick="closeRhemaReaderPanel()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="rrp-list">
+<button class="rrp-row" onclick="showReaderPanelSection('highlights')">
+<span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span>
+<span class="rrp-row-label">Highlights</span>
+<span class="material-symbols-outlined rrp-chev">chevron_right</span>
+</button>
+<button class="rrp-row" onclick="showReaderPanelSection('notes')">
+<span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span>
+<span class="rrp-row-label">Notes</span>
+<span class="material-symbols-outlined rrp-chev">chevron_right</span>
+</button>
+<button class="rrp-row" onclick="showReaderPanelSection('crossrefs')">
+<span class="material-symbols-outlined rrp-row-icon">hub</span>
+<span class="rrp-row-label">Cross references</span>
+<span class="material-symbols-outlined rrp-chev">chevron_right</span>
+</button>
+</div>
+<div class="rrp-section-label">Text size</div>
+<div class="rrp-fontsize">
+<button class="rrp-fs-btn" onclick="rhemaReaderFontStep(-1)" aria-label="Smaller text"><span class="rrp-fs-a" style="font-size:0.85rem">A</span></button>
+<div class="rrp-fs-track"><div class="rrp-fs-fill" id="rrpFsFill"></div><div class="rrp-fs-knob" id="rrpFsKnob"></div></div>
+<button class="rrp-fs-btn" onclick="rhemaReaderFontStep(1)" aria-label="Larger text"><span class="rrp-fs-a" style="font-size:1.3rem">A</span></button>
+</div>
+<div class="rrp-section-label">Font</div>
+<div class="rrp-fontlist" id="rrpFontList"></div>
+</div>
+<!-- Sub pane (Highlights / Notes list) -->
+<div class="rrp-pane rrp-pane-sub">
+<div class="rrp-header">
+<button class="rrp-back" onclick="showReaderPanelSection('main')" aria-label="Back"><span class="material-symbols-outlined">arrow_back</span></button>
+<span class="rrp-title" id="rrpSubTitle">Highlights</span>
+<button class="rrp-x" onclick="closeRhemaReaderPanel()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="rrp-sub-body" id="rrpSubBody"></div>
+</div>
+</div>
+</aside>
 </div>
 <!-- ── Coach mark onboarding overlay ── -->
 <div class="rhema-coach-overlay hidden" id="rhemaCoachOverlay">
@@ -10971,7 +11022,7 @@ Verb Endings
 <span class="material-symbols-outlined">home</span>
 <span class="bn-dot"></span>
 </button>
-<button class="bn-item" data-page="rhema" onclick="resumeRhema()" aria-label="Rhema">
+<button class="bn-item" data-page="rhema" onclick="openRhemaLaunchMenu(event)" aria-label="Rhema">
 <span class="material-symbols-outlined">menu_book</span>
 <span class="bn-dot"></span>
 </button>
@@ -10979,6 +11030,23 @@ Verb Endings
 <span class="material-symbols-outlined">local_library</span>
 </button>
 </nav>
+<!-- Rhema launch chooser: Read vs Study -->
+<div class="rhema-launch-menu" id="rhemaLaunchMenu" onclick="if(event.target===this)closeRhemaLaunchMenu()">
+<div class="rhema-launch-card" role="dialog" aria-label="Open Rhema">
+<div class="rhema-launch-title">Open Rhema</div>
+<div class="rhema-launch-opts">
+<button class="rhema-launch-opt" onclick="launchRhema('read')">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="rlo-copy"><strong>Read</strong><small>Just the Bible reader</small></span>
+</button>
+<button class="rhema-launch-opt" onclick="launchRhema('study')">
+<span class="material-symbols-outlined">draw</span>
+<span class="rlo-copy"><strong>Study</strong><small>Reader + Study tools</small></span>
+</button>
+</div>
+<div class="rhema-launch-arrow" aria-hidden="true"></div>
+</div>
+</div>
 <div class="modal-overlay notif-panel-overlay" id="notifPanel" onclick="if(event.target===this)closeNotifications()">
 <div class="notif-panel" onclick="event.stopPropagation()">
 <div class="notif-panel-header">

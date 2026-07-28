@@ -17429,6 +17429,288 @@ body.dark .atlas-alts strong { color: #e3b466; }
   line-height: 1.3;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   Rhema launch chooser (Read vs Study) + Read-mode reader panel
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── "Open Rhema" chooser popover above the bottom nav ── */
+.rhema-launch-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 94px);
+}
+.rhema-launch-menu.open { display: flex; animation: rlm-fade 0.16s ease; }
+@keyframes rlm-fade { from { opacity: 0; } to { opacity: 1; } }
+.rhema-launch-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: var(--card-solid-color);
+  border: 1px solid var(--border-color);
+  border-radius: 22px;
+  padding: 15px 15px 17px;
+  box-shadow: 0 18px 46px -12px rgba(0,0,0,0.34), 0 4px 12px rgba(0,0,0,0.12);
+  animation: rlm-rise 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes rlm-rise { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+.rhema-launch-title {
+  text-align: center;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--font-color);
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+.rhema-launch-opts { display: flex; gap: 10px; }
+.rhema-launch-opt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 12px 13px;
+  border-radius: 15px;
+  cursor: pointer;
+  background: var(--primary-light);
+  border: 1px solid var(--border-color);
+  color: var(--font-color);
+  transition: transform 0.12s, background 0.15s, border-color 0.15s;
+}
+.rhema-launch-opt:active { transform: scale(0.97); }
+.rhema-launch-opt:hover { border-color: color-mix(in srgb, var(--secondary-color) 45%, var(--border-color)); }
+.rhema-launch-opt .material-symbols-outlined { font-size: 24px; color: var(--secondary-color); flex-shrink: 0; }
+.rlo-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rlo-copy strong { font-size: 0.95rem; font-weight: 750; }
+.rlo-copy small { font-size: 0.72rem; color: var(--muted-color); line-height: 1.2; }
+.rhema-launch-arrow {
+  position: absolute;
+  bottom: -9px;
+  left: 72%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 18px;
+  height: 18px;
+  background: var(--card-solid-color);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  border-bottom-right-radius: 4px;
+}
+
+/* ── Read-mode header: swap Greek/English + tool wheel out, hamburger in ── */
+.rhema-reader-menu-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--secondary-color);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, rgba(255,255,255,0.6));
+  background: linear-gradient(145deg, rgba(255,255,255,0.92), color-mix(in srgb, var(--secondary-color) 6%, rgba(255,255,255,0.85)));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--secondary-color) 12%, rgba(0,0,0,0.08)), inset 0 1px 1px rgba(255,255,255,0.8);
+  transition: transform 0.14s;
+}
+.rhema-reader-menu-btn:active { transform: scale(0.96); }
+.rhema-reader-menu-btn .material-symbols-outlined { font-size: 22px; }
+body.dark .rhema-reader-menu-btn {
+  background: linear-gradient(145deg, rgba(38,46,58,0.94), color-mix(in srgb, var(--secondary-color) 10%, rgba(26,32,42,0.9)));
+  border-color: color-mix(in srgb, var(--secondary-color) 30%, rgba(255,255,255,0.08));
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.07);
+}
+.rhema-read-mode #rhemaSwapBtn,
+.rhema-read-mode #rhemaToolBtn { display: none; }
+.rhema-read-mode .rhema-reader-menu-btn { display: inline-flex; }
+
+/* ── Read-mode verse nav: arrows only, raised ── */
+.rhema-read-mode .rhema-verse-ref,
+.rhema-read-mode .rhema-desktop-note-btn { display: none; }
+.rhema-read-mode .rhema-verse-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 30px);
+}
+.rhema-read-mode .rhema-verse-nav-row {
+  width: auto;
+  margin: 0 auto;
+  justify-content: center;
+  gap: 44px;
+  padding: 8px 18px;
+}
+
+/* ── Read-mode typography controls applied to the verse text ── */
+.rhema-reader { --rhema-reader-scale: 1; --rhema-reader-font: inherit; }
+.rhema-read-mode .rhema-english-display { font-family: var(--rhema-reader-font); }
+.rhema-read-mode .rhema-english-display.rhema-english-reading { font-size: calc(1.06rem * var(--rhema-reader-scale)); }
+.rhema-read-mode .rhema-english-display:not(.rhema-english-reading) { font-size: calc(1rem * var(--rhema-reader-scale)); }
+
+/* ── The slide-in reader panel ── */
+.rhema-reader-panel-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1090;
+  display: none;
+  background: color-mix(in srgb, var(--secondary-color) 14%, rgba(0,0,0,0.28));
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.26s ease;
+}
+.rhema-reader-panel-overlay.open { display: block; opacity: 1; }
+.rhema-reader-panel {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 50%;
+  min-width: 296px;
+  max-width: 440px;
+  background: var(--primary-light);
+  border-left: 1px solid var(--border-color);
+  box-shadow: -16px 0 44px -14px rgba(0,0,0,0.4);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  display: flex;
+  overflow: hidden;
+}
+.rhema-reader-panel-overlay.open .rhema-reader-panel { transform: translateX(0); }
+.rrp-track {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.rhema-reader-panel.sub-open .rrp-track { transform: translateX(-50%); }
+.rrp-pane {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.rrp-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 13px 12px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.rrp-title { flex: 1; font-size: 1.05rem; font-weight: 800; color: var(--font-color); letter-spacing: -0.01em; }
+.rrp-x, .rrp-back {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  background: var(--card-color);
+  border: 1px solid var(--border-color);
+  color: var(--muted-color);
+  flex-shrink: 0;
+}
+.rrp-x:active, .rrp-back:active { transform: scale(0.94); }
+.rrp-x .material-symbols-outlined, .rrp-back .material-symbols-outlined { font-size: 20px; }
+.rrp-list { padding: 12px 12px 4px; display: flex; flex-direction: column; gap: 6px; }
+.rrp-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  background: var(--card-solid-color);
+  border: 1px solid var(--border-color);
+  color: var(--font-color);
+  transition: transform 0.12s, background 0.15s;
+}
+.rrp-row:active { transform: scale(0.98); }
+.rrp-row-icon { font-size: 22px; color: var(--secondary-color); flex-shrink: 0; }
+.rrp-row-label { flex: 1; font-size: 0.95rem; font-weight: 650; }
+.rrp-chev { font-size: 20px; color: var(--muted-color); }
+.rrp-section-label {
+  padding: 14px 16px 6px;
+  font-size: 0.68rem; font-weight: 800;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--muted-color);
+}
+.rrp-fontsize { display: flex; align-items: center; gap: 12px; padding: 4px 16px 6px; }
+.rrp-fs-btn {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  background: var(--card-solid-color);
+  border: 1px solid var(--border-color);
+  color: var(--secondary-color);
+  font-weight: 800; line-height: 1;
+  flex-shrink: 0;
+}
+.rrp-fs-btn:active { transform: scale(0.95); }
+.rrp-fs-track {
+  position: relative; flex: 1; height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--secondary-color) 16%, var(--card-color));
+}
+.rrp-fs-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--secondary-color); }
+.rrp-fs-knob {
+  position: absolute; top: 50%;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--secondary-color);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.rrp-fontlist { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 4px 16px 22px; }
+.rrp-font-opt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 11px 12px;
+  border-radius: 13px;
+  cursor: pointer;
+  background: var(--card-solid-color);
+  border: 1.5px solid var(--border-color);
+  color: var(--font-color);
+  text-align: left;
+}
+.rrp-font-opt.active {
+  border-color: var(--secondary-color);
+  background: color-mix(in srgb, var(--secondary-color) 10%, var(--card-solid-color));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--secondary-color) 35%, transparent);
+}
+.rrp-font-name {
+  font-size: 0.7rem; font-weight: 700;
+  color: var(--muted-color);
+  font-family: system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+.rrp-font-opt.active .rrp-font-name { color: var(--secondary-color); }
+.rrp-font-sample { font-size: 1.5rem; font-weight: 600; line-height: 1; }
+.rrp-sub-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.rrp-empty { padding: 34px 20px; text-align: center; color: var(--muted-color); font-size: 0.88rem; line-height: 1.5; }
+.rrp-mark-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px;
+  border-radius: 13px;
+  cursor: pointer;
+  background: var(--card-solid-color);
+  border: 1px solid var(--border-color);
+  color: var(--font-color);
+  text-align: left;
+}
+.rrp-mark-row:active { transform: scale(0.98); }
+.rrp-mark-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--mark-color, var(--secondary-color));
+  margin-top: 5px; flex-shrink: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mark-color, var(--secondary-color)) 22%, transparent);
+}
+.rrp-mark-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.rrp-mark-copy strong { font-size: 0.86rem; font-weight: 750; color: var(--secondary-color); }
+.rrp-mark-text {
+  font-size: 0.82rem; color: var(--font-color); opacity: 0.85; line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.rrp-mark-note { font-size: 0.8rem; color: var(--muted-color); font-style: italic; line-height: 1.4; }
+
 /* ── Dark mode: the reader chrome's raised white glass goes dark. Dark themes
    brighten --secondary-color/--font-color for dark surfaces, so on the white
    glass pills (book picker, version, swap, tools, verse nav) the light text
