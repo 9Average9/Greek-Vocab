@@ -41413,13 +41413,8 @@ function showReaderPanelSection(section) {
   }
   const title = document.getElementById('rrpSubTitle');
   const body = document.getElementById('rrpSubBody');
-  if (section === 'language') {
-    if (title) title.textContent = 'Language';
-    if (body) body.innerHTML = _rhemaLanguageSubHtml();
-  } else {
-    if (title) title.textContent = section === 'notes' ? 'Notes' : 'Highlights';
-    if (body) body.innerHTML = _rhemaReaderMarksHtml(section);
-  }
+  if (title) title.textContent = section === 'notes' ? 'Notes' : 'Highlights';
+  if (body) body.innerHTML = _rhemaReaderMarksHtml(section);
   panel.classList.add('sub-open');
 }
 
@@ -41493,9 +41488,7 @@ function _rhemaStudyPanelHtml() {
     <div class="rrp-section-label">Text</div>
     <div class="rrp-grid">${textTiles}</div>
     <div class="rrp-section-label">Language</div>
-    <div class="rrp-list">
-      <button class="rrp-row" onclick="showReaderPanelSection('language')"><span class="material-symbols-outlined rrp-row-icon">language</span><span class="rrp-row-label">Language &amp; version</span><span class="rrp-row-val">${_escapeRhemaAttr(_rhemaLanguageSummary())}</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
-    </div>
+    ${_rhemaLanguageBarHtml()}
     <div class="rrp-section-label">Study</div>
     <div class="rrp-list">
       <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(openRhemaCrossReferences,220)"><span class="material-symbols-outlined rrp-row-icon">hub</span><span class="rrp-row-label">Cross references</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
@@ -41522,42 +41515,32 @@ function rhemaStudyTool(id, ev) {
   t.action();
   _renderRhemaPanelMain();
 }
-function _rhemaLanguageSummary() {
-  if (_rhemaShowEnglish) return 'English · ' + _rhemaReaderVersion();
-  if (isRhemaOTBook(_rhemaBook)) return getCurrentOriginalLanguageLayer() === 'lxx' ? 'Septuagint' : 'Hebrew';
-  return 'Greek';
-}
-function _rhemaLanguageSubHtml() {
+// One toggle bar for the reading language. NT: English / Greek. OT: English /
+// Hebrew / Greek, where Greek is the Septuagint (LXX) layer.
+function _rhemaLanguageBarHtml() {
   const isOT = isRhemaOTBook(_rhemaBook);
-  const origLabel = isOT ? (getCurrentOriginalLanguageLayer() === 'lxx' ? 'Greek (LXX)' : 'Hebrew') : 'Greek';
-  const seg = (label, on, onclick) =>
-    `<button class="rrp-seg-btn${on ? ' on' : ''}" onclick="${onclick}">${label}</button>`;
-  let html = `<div class="rrp-section-label">Reading language</div>
-    <div class="rrp-seg">
-      ${seg('English', !!_rhemaShowEnglish, "rhemaLanguageSet('english')")}
-      ${seg(origLabel, !_rhemaShowEnglish, "rhemaLanguageSet('original')")}
-    </div>
-    <div class="rrp-list">
-      <button class="rrp-row" onclick="closeRhemaReaderPanel();toggleRhemaEnglishVersion()"><span class="material-symbols-outlined rrp-row-icon">menu_book</span><span class="rrp-row-label">Bible version</span><span class="rrp-row-val">${_escapeRhemaAttr(_rhemaReaderVersion())}</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
-    </div>`;
+  const showEng = !!_rhemaShowEnglish;
+  const seg = (label, on, target) =>
+    `<button class="rrp-seg-btn${on ? ' on' : ''}" onclick="rhemaLanguagePick('${target}')">${label}</button>`;
+  let bar = seg('English', showEng, 'english');
   if (isOT) {
-    html += `<div class="rrp-section-label">Original layer</div>
-      <div class="rrp-seg">
-        ${seg('Hebrew', _rhemaOTLayer !== 'lxx', "rhemaOTLayerSet('hebrew')")}
-        ${seg('Septuagint', _rhemaOTLayer === 'lxx', "rhemaOTLayerSet('lxx')")}
-      </div>`;
+    const lxx = _rhemaOTLayer === 'lxx';
+    bar += seg('Hebrew', !showEng && !lxx, 'hebrew');
+    bar += seg('Greek', !showEng && lxx, 'lxx');
+  } else {
+    bar += seg('Greek', !showEng, 'greek');
   }
-  return html;
+  return `<div class="rrp-seg">${bar}</div>`;
 }
-function rhemaLanguageSet(which) {
-  const wantEnglish = (which === 'english');
-  if (!!_rhemaShowEnglish !== wantEnglish) toggleRhemaEnglish();
-  showReaderPanelSection('language');
-  _renderRhemaPanelMain();
-}
-function rhemaOTLayerSet(layer) {
-  if (_rhemaOTLayer !== layer) setRhemaOTLayer(layer);
-  showReaderPanelSection('language');
+function rhemaLanguagePick(target) {
+  if (target === 'english') {
+    if (!_rhemaShowEnglish) toggleRhemaEnglish();
+  } else if (target === 'greek') {            // NT original
+    if (_rhemaShowEnglish) toggleRhemaEnglish();
+  } else if (target === 'hebrew' || target === 'lxx') {  // OT layers
+    if (_rhemaOTLayer !== target) setRhemaOTLayer(target);
+    if (_rhemaShowEnglish) toggleRhemaEnglish();
+  }
   _renderRhemaPanelMain();
 }
 function _rhemaPanelToast(msg) {
