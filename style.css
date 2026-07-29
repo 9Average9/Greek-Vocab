@@ -17526,8 +17526,9 @@ body.dark .rhema-reader-menu-btn {
    radial wheel. Sandbox/sermon flows keep the wheel and hide the hamburger. */
 .rhema-has-menu .rhema-reader-menu-btn { display: inline-flex; }
 .rhema-has-menu #rhemaToolBtn { display: none; }
-/* Read mode additionally drops the English/Greek swap; Study keeps it. */
-.rhema-read-mode #rhemaSwapBtn { display: none; }
+/* The hamburger menu owns language switching now, so the header swap is dropped
+   in both Read and Study — you change language inside the menu. */
+.rhema-has-menu #rhemaSwapBtn { display: none; }
 
 /* ── Read-mode verse nav: arrows only, raised ── */
 /* Read mode: no bottom verse-nav — navigation is via the book pill and the
