@@ -9372,7 +9372,7 @@ function closeWordLibrary() {
   const overlay = document.getElementById('wordLibraryOverlay');
   if (!overlay) return;
   overlay.classList.remove('open');
-  setTimeout(() => overlay.classList.add('hidden'), 260);
+  setTimeout(() => overlay.classList.add('hidden'), 400);
 }
 
 function _buildWlKeyboard() {
@@ -9510,12 +9510,13 @@ function _wlDoSearch(q) {
   const formEntries = _wlScanNTForm(query);
 
   let html = '';
+  let _i = 0;
   if (formEntries.length) {
     html += `<div class="wl-section-label">Exact Forms in NT</div>`;
     html += formEntries.map(f => {
       const lex = (window.RhemaLexicon || {})[f.strongs] || {};
       const formLabel = _wlFormLabel(f.strongs, f.surface);
-      return `<div class="wl-result-item wl-result-form" onclick="openWlWordDetail(${f.strongs},'${f.surface.replace(/'/g,"\\'")}')">
+      return `<div class="wl-result-item wl-result-form" style="--i:${_i++}" onclick="openWlWordDetail(${f.strongs},'${f.surface.replace(/'/g,"\\'")}')">
         <span class="wl-result-lemma">${f.surface}</span>
         <span class="wl-result-translit">${lex.translit || ''}</span>
         <span class="wl-result-brief">${(lex.brief||'').split(',')[0].trim()}</span>
@@ -9527,7 +9528,7 @@ function _wlDoSearch(q) {
   if (lexEntries.length) {
     html += `<div class="wl-section-label">Lexical Forms</div>`;
     html += lexEntries.map(e =>
-      `<div class="wl-result-item" onclick="openWlWordDetail(${e.strongs},null)">
+      `<div class="wl-result-item" style="--i:${_i++}" onclick="openWlWordDetail(${e.strongs},null)">
         <span class="wl-result-lemma">${e.lemma}</span>
         <span class="wl-result-translit">${e.translit}</span>
         <span class="wl-result-brief">${e.brief}</span>
@@ -41467,7 +41468,8 @@ function _rhemaStudyTools() {
       action: () => toggleRhemaChapterMode() },
     { id: 'critical', label: _rhemaTextMode === 'critical' ? 'Majority Text' : 'Critical Text', icon: 'difference',
       active: _rhemaTextMode === 'critical',
-      reason: isNT ? '' : 'The critical text is only available for the New Testament.',
+      reason: !isNT ? 'The critical text is only available for the New Testament.'
+            : _rhemaShowEnglish ? 'Switch to Greek to choose a text type.' : '',
       action: () => toggleWheelTool('critical') }
   ];
   return tools;
@@ -41596,13 +41598,24 @@ function _rhemaSyncCopyUI() {
   if (label) label.textContent = n <= 1 ? `Copy ${n || ''} verse`.trim() : `Copy ${n} verses`;
   document.getElementById('rhemaCopyFab')?.classList.toggle('show', n > 0);
 }
+// "1-3,6-7" — collapse consecutive verses into ranges, comma-separate gaps.
+function _rhemaVerseRangeStr(nums) {
+  const parts = [];
+  let start = nums[0], prev = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    if (nums[i] === prev + 1) { prev = nums[i]; continue; }
+    parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+    start = prev = nums[i];
+  }
+  parts.push(start === prev ? `${start}` : `${start}-${prev}`);
+  return parts.join(',');
+}
 function rhemaDoCopySelected() {
-  const vs = [..._rhemaCopySel].map(Number).sort((a, b) => a - b).map(String);
-  if (!vs.length) return;
+  const nums = [..._rhemaCopySel].map(Number).sort((a, b) => a - b);
+  if (!nums.length) return;
+  const vs = nums.map(String);
   const bookName = _rhemaBookName(_rhemaBook);
-  const header = vs.length === 1
-    ? `${bookName} ${_rhemaChapter}:${vs[0]}`
-    : `${bookName} ${_rhemaChapter}:${vs[0]}-${vs[vs.length - 1]}`;
+  const header = `${bookName} ${_rhemaChapter}:${_rhemaVerseRangeStr(nums)}`;
   const body = vs.map(v => `${v} ${_rhemaVerseTextFor(_rhemaBook, _rhemaChapter, v)}`.trim()).join('\n');
   if (!body) return;
   const text = `${header}\n${body}`.trim();
