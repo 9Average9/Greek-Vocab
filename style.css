@@ -13940,7 +13940,7 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   grid-template-columns: 44px 1fr auto;
   align-items: center;
   gap: 8px;
-  padding: calc(env(safe-area-inset-top, 20px) + 14px) 14px 14px;
+  padding: calc(env(safe-area-inset-top, 20px) + 8px) 14px 9px;
   background: var(--card-color);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -13979,14 +13979,14 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 
 /* ── Shared raised-glass style for header action buttons ── */
 .rhema-back-btn.icon-btn {
-  border-radius: 14px;
+  border-radius: 13px;
   background: linear-gradient(145deg, rgba(255,255,255,0.92), color-mix(in srgb, var(--secondary-color) 6%, rgba(255,255,255,0.85)));
   border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, rgba(255,255,255,0.6));
   box-shadow: 0 2px 8px color-mix(in srgb, var(--secondary-color) 12%, rgba(0,0,0,0.08)), 0 1px 2px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.8);
   color: var(--secondary-color);
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   transition: all 0.15s;
 }
 .rhema-back-btn.icon-btn:active {
@@ -17517,9 +17517,9 @@ body.dark .atlas-alts strong { color: #e3b466; }
 /* ── Read-mode header: swap Greek/English + tool wheel out, hamburger in ── */
 .rhema-reader-menu-btn {
   display: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 13px;
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -22171,8 +22171,9 @@ body.sandbox-open .rhema-english-display {
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .wl-header-icon {
-  font-size: 22px; color: var(--secondary-color);
-  width: 40px; height: 40px; display: grid; place-items: center;
+  font-size: 22px; line-height: 1; color: var(--secondary-color);
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
   border-radius: 13px;
   background: linear-gradient(145deg, color-mix(in srgb, var(--secondary-color) 14%, rgba(255,255,255,0.9)), color-mix(in srgb, var(--secondary-color) 8%, rgba(255,255,255,0.85)));
   border: 1px solid color-mix(in srgb, var(--secondary-color) 22%, transparent);
