@@ -41282,6 +41282,9 @@ async function showRhema() {
     _rhemaShowEnglish = true;
     _rhemaVerseFocus = false;
   }
+  // Standard reader (from the Read/Study chooser) uses the hamburger side menu
+  // instead of the radial wheel. Sandbox and sermon flows keep the wheel.
+  modal.classList.toggle('rhema-has-menu', !_studySandboxId && !sermonMode);
   _syncRhemaChapterUi();
 
   const loading = document.getElementById('rhemaLoadingMsg');
@@ -41382,13 +41385,21 @@ function _renderRhemaReaderFontList() {
 function openRhemaReaderPanel() {
   const ov = document.getElementById('rhemaReaderPanelOverlay');
   if (!ov) return;
+  const title = document.getElementById('rrpMainTitle');
+  if (title) title.textContent = _rhemaReadMode ? 'Reader' : 'Study tools';
+  _renderRhemaPanelMain();
   showReaderPanelSection('main');
-  _renderRhemaReaderFontList();
-  _syncRhemaReaderFontSizeUi();
   ov.classList.add('open');
 }
 function closeRhemaReaderPanel() {
   document.getElementById('rhemaReaderPanelOverlay')?.classList.remove('open');
+}
+function _renderRhemaPanelMain() {
+  const el = document.getElementById('rrpMainBody');
+  if (!el) return;
+  el.innerHTML = _rhemaReadMode ? _rhemaReadPanelHtml() : _rhemaStudyPanelHtml();
+  _renderRhemaReaderFontList();
+  _syncRhemaReaderFontSizeUi();
 }
 function showReaderPanelSection(section) {
   const panel = document.getElementById('rhemaReaderPanel');
@@ -41402,9 +41413,162 @@ function showReaderPanelSection(section) {
   }
   const title = document.getElementById('rrpSubTitle');
   const body = document.getElementById('rrpSubBody');
-  if (title) title.textContent = section === 'notes' ? 'Notes' : 'Highlights';
-  if (body) body.innerHTML = _rhemaReaderMarksHtml(section);
+  if (section === 'language') {
+    if (title) title.textContent = 'Language';
+    if (body) body.innerHTML = _rhemaLanguageSubHtml();
+  } else {
+    if (title) title.textContent = section === 'notes' ? 'Notes' : 'Highlights';
+    if (body) body.innerHTML = _rhemaReaderMarksHtml(section);
+  }
   panel.classList.add('sub-open');
+}
+
+// ── Panel content: Reader (read mode) vs Study tools ──
+function _rhemaFontControlsHtml() {
+  return `<div class="rrp-section-label">Text size</div>
+    <div class="rrp-fontsize">
+      <button class="rrp-fs-btn" onclick="rhemaReaderFontStep(-1)" aria-label="Smaller text"><span style="font-size:0.85rem">A</span></button>
+      <div class="rrp-fs-track"><div class="rrp-fs-fill" id="rrpFsFill"></div><div class="rrp-fs-knob" id="rrpFsKnob"></div></div>
+      <button class="rrp-fs-btn" onclick="rhemaReaderFontStep(1)" aria-label="Larger text"><span style="font-size:1.3rem">A</span></button>
+    </div>
+    <div class="rrp-section-label">Font</div>
+    <div class="rrp-fontlist" id="rrpFontList"></div>`;
+}
+function _rhemaReadPanelHtml() {
+  return `<div class="rrp-list">
+      <button class="rrp-row" onclick="showReaderPanelSection('highlights')"><span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span><span class="rrp-row-label">Highlights</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      <button class="rrp-row" onclick="showReaderPanelSection('notes')"><span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span><span class="rrp-row-label">Notes</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      <button class="rrp-row" onclick="showReaderPanelSection('crossrefs')"><span class="material-symbols-outlined rrp-row-icon">hub</span><span class="rrp-row-label">Cross references</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+    </div>
+    ${_rhemaFontControlsHtml()}`;
+}
+
+// Study tool descriptors — availability mirrors the tool-wheel sync rules so an
+// unavailable tool (e.g. the syntax tree in the Old Testament / Hebrew) shows a
+// reason instead of acting.
+function _rhemaStudyTools() {
+  const isOT = isRhemaOTBook(_rhemaBook);
+  const isNT = isRhemaNTBook(_rhemaBook);
+  const hebrew = isOT && getCurrentOriginalLanguageLayer() === 'hebrew';
+  const tools = [
+    { id: 'syntax', label: 'Syntax Tree', icon: 'account_tree', active: _rhemaSyntaxMode,
+      reason: _rhemaFullChapter ? 'Switch to verse view first to open the syntax tree.'
+            : hebrew ? 'The syntax tree isn’t available for Hebrew.' : '',
+      action: () => toggleWheelTool('syntax') },
+    { id: 'pos', label: 'Parts of Speech', icon: 'ink_highlighter', active: _rhemaHighlightBarOn, reason: '',
+      action: () => toggleWheelTool('highlight') },
+    { id: 'greek', label: hebrew ? 'Hebrew Only' : 'Greek Only', icon: 'translate', active: _rhemaGreekOnly, reason: '',
+      action: () => toggleWheelTool('greek-only') },
+    { id: 'flow', label: 'Clause Compass', icon: 'explore', active: _rhemaFlowOn, reason: '',
+      action: () => toggleWheelTool('flow') },
+    { id: 'chapter', label: 'Chapter View', icon: 'article', active: _rhemaFullChapter, reason: '',
+      action: () => toggleRhemaChapterMode() },
+    { id: 'critical', label: _rhemaTextMode === 'critical' ? 'Majority Text' : 'Critical Text', icon: 'difference',
+      active: _rhemaTextMode === 'critical',
+      reason: isNT ? '' : 'The critical text is only available for the New Testament.',
+      action: () => toggleWheelTool('critical') }
+  ];
+  if (isOT) {
+    tools.push({ id: 'lxx', label: 'Septuagint (LXX)', icon: 'language', active: _rhemaOTLayer === 'lxx', reason: '',
+      action: () => setRhemaOTLayer(_rhemaOTLayer === 'lxx' ? 'hebrew' : 'lxx') });
+  }
+  return tools;
+}
+function _rhemaStudyTileHtml(t) {
+  const cls = ['rrp-tile'];
+  if (t.active) cls.push('on');
+  if (t.reason) cls.push('is-disabled');
+  return `<button class="${cls.join(' ')}" data-tool="${t.id}" onclick="rhemaStudyTool('${t.id}',event)">
+      <span class="material-symbols-outlined">${t.icon}</span>
+      <span>${t.label}</span>${t.active ? '<em>On</em>' : ''}
+    </button>`;
+}
+function _rhemaStudyPanelHtml() {
+  const tools = _rhemaStudyTools();
+  const pick = ids => tools.filter(t => ids.includes(t.id)).map(_rhemaStudyTileHtml).join('');
+  const display = pick(['syntax', 'pos', 'greek', 'flow']);
+  const textTiles = pick(['chapter', 'critical', 'lxx']);
+  return `<div class="rrp-section-label">Display</div>
+    <div class="rrp-grid">${display}</div>
+    <div class="rrp-section-label">Text</div>
+    <div class="rrp-grid">${textTiles}</div>
+    <div class="rrp-section-label">Language</div>
+    <div class="rrp-list">
+      <button class="rrp-row" onclick="showReaderPanelSection('language')"><span class="material-symbols-outlined rrp-row-icon">language</span><span class="rrp-row-label">Language &amp; version</span><span class="rrp-row-val">${_escapeRhemaAttr(_rhemaLanguageSummary())}</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+    </div>
+    <div class="rrp-section-label">Study</div>
+    <div class="rrp-list">
+      <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(openRhemaCrossReferences,220)"><span class="material-symbols-outlined rrp-row-icon">hub</span><span class="rrp-row-label">Cross references</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(openWordLibrary,220)"><span class="material-symbols-outlined rrp-row-icon">local_library</span><span class="rrp-row-label">Word Library</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(rhemaOpenCompare,220)"><span class="material-symbols-outlined rrp-row-icon">compare_arrows</span><span class="rrp-row-label">Compare</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      <button class="rrp-row" onclick="closeRhemaReaderPanel();copyRhemaVerseOrChapter()"><span class="material-symbols-outlined rrp-row-icon">content_copy</span><span class="rrp-row-label">Copy verse</span></button>
+    </div>
+    <div class="rrp-section-label">Marks</div>
+    <div class="rrp-list">
+      <button class="rrp-row" onclick="showReaderPanelSection('highlights')"><span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span><span class="rrp-row-label">Highlights</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      <button class="rrp-row" onclick="showReaderPanelSection('notes')"><span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span><span class="rrp-row-label">Notes</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+    </div>
+    ${_rhemaFontControlsHtml()}`;
+}
+function rhemaStudyTool(id, ev) {
+  const t = _rhemaStudyTools().find(x => x.id === id);
+  if (!t) return;
+  if (t.reason) {
+    const tile = ev && ev.currentTarget;
+    if (tile) { tile.classList.add('shake'); setTimeout(() => tile.classList.remove('shake'), 450); }
+    _rhemaPanelToast(t.reason);
+    return;
+  }
+  t.action();
+  _renderRhemaPanelMain();
+}
+function _rhemaLanguageSummary() {
+  if (_rhemaShowEnglish) return 'English · ' + _rhemaReaderVersion();
+  if (isRhemaOTBook(_rhemaBook)) return getCurrentOriginalLanguageLayer() === 'lxx' ? 'Septuagint' : 'Hebrew';
+  return 'Greek';
+}
+function _rhemaLanguageSubHtml() {
+  const isOT = isRhemaOTBook(_rhemaBook);
+  const origLabel = isOT ? (getCurrentOriginalLanguageLayer() === 'lxx' ? 'Greek (LXX)' : 'Hebrew') : 'Greek';
+  const seg = (label, on, onclick) =>
+    `<button class="rrp-seg-btn${on ? ' on' : ''}" onclick="${onclick}">${label}</button>`;
+  let html = `<div class="rrp-section-label">Reading language</div>
+    <div class="rrp-seg">
+      ${seg('English', !!_rhemaShowEnglish, "rhemaLanguageSet('english')")}
+      ${seg(origLabel, !_rhemaShowEnglish, "rhemaLanguageSet('original')")}
+    </div>
+    <div class="rrp-list">
+      <button class="rrp-row" onclick="closeRhemaReaderPanel();toggleRhemaEnglishVersion()"><span class="material-symbols-outlined rrp-row-icon">menu_book</span><span class="rrp-row-label">Bible version</span><span class="rrp-row-val">${_escapeRhemaAttr(_rhemaReaderVersion())}</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+    </div>`;
+  if (isOT) {
+    html += `<div class="rrp-section-label">Original layer</div>
+      <div class="rrp-seg">
+        ${seg('Hebrew', _rhemaOTLayer !== 'lxx', "rhemaOTLayerSet('hebrew')")}
+        ${seg('Septuagint', _rhemaOTLayer === 'lxx', "rhemaOTLayerSet('lxx')")}
+      </div>`;
+  }
+  return html;
+}
+function rhemaLanguageSet(which) {
+  const wantEnglish = (which === 'english');
+  if (!!_rhemaShowEnglish !== wantEnglish) toggleRhemaEnglish();
+  showReaderPanelSection('language');
+  _renderRhemaPanelMain();
+}
+function rhemaOTLayerSet(layer) {
+  if (_rhemaOTLayer !== layer) setRhemaOTLayer(layer);
+  showReaderPanelSection('language');
+  _renderRhemaPanelMain();
+}
+function _rhemaPanelToast(msg) {
+  const t = document.getElementById('rrpToast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.remove('show');
+  void t.offsetWidth;
+  t.classList.add('show');
+  clearTimeout(_rhemaPanelToast._t);
+  _rhemaPanelToast._t = setTimeout(() => t.classList.remove('show'), 2600);
 }
 function _rhemaReaderMarksHtml(kind) {
   const wantNote = (kind === 'notes');
@@ -41553,7 +41717,7 @@ function closeRhema(keepSandbox = false) {
   closeRhemaPickerSheet();
   closeRhemaReaderPanel();
   _rhemaReadMode = false;
-  document.getElementById('rhemaModal')?.classList.remove('rhema-read-mode');
+  document.getElementById('rhemaModal')?.classList.remove('rhema-read-mode', 'rhema-has-menu');
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   _rhemaTrail = [];
   _rhemaTrailPos = -1;
