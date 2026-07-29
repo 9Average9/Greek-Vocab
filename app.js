@@ -41452,6 +41452,7 @@ function _rhemaStudyTools() {
   const isOT = isRhemaOTBook(_rhemaBook);
   const isNT = isRhemaNTBook(_rhemaBook);
   const hebrew = isOT && getCurrentOriginalLanguageLayer() === 'hebrew';
+  const orig = hebrew ? 'Hebrew' : 'Greek';
   const tools = [
     { id: 'syntax', label: 'Syntax Tree', icon: 'account_tree', active: _rhemaSyntaxMode,
       reason: _rhemaFullChapter ? 'Switch to verse view first to open the syntax tree.'
@@ -41459,10 +41460,9 @@ function _rhemaStudyTools() {
       action: () => toggleWheelTool('syntax') },
     { id: 'pos', label: 'Parts of Speech', icon: 'ink_highlighter', active: _rhemaHighlightBarOn, reason: '',
       action: () => toggleWheelTool('highlight') },
-    { id: 'greek', label: hebrew ? 'Hebrew Only' : 'Greek Only', icon: 'translate', active: _rhemaGreekOnly, reason: '',
+    { id: 'greek', label: `${orig} Only`, icon: 'translate', active: _rhemaGreekOnly,
+      reason: _rhemaShowEnglish ? `Select ${orig} in the Language bar first.` : '',
       action: () => toggleWheelTool('greek-only') },
-    { id: 'flow', label: 'Clause Compass', icon: 'explore', active: _rhemaFlowOn, reason: '',
-      action: () => toggleWheelTool('flow') },
     { id: 'chapter', label: 'Chapter View', icon: 'article', active: _rhemaFullChapter, reason: '',
       action: () => toggleRhemaChapterMode() },
     { id: 'critical', label: _rhemaTextMode === 'critical' ? 'Majority Text' : 'Critical Text', icon: 'difference',
@@ -41484,7 +41484,7 @@ function _rhemaStudyTileHtml(t) {
 function _rhemaStudyPanelHtml() {
   const tools = _rhemaStudyTools();
   const pick = ids => tools.filter(t => ids.includes(t.id)).map(_rhemaStudyTileHtml).join('');
-  const display = pick(['syntax', 'pos', 'greek', 'flow']);
+  const display = pick(['syntax', 'pos', 'greek']);
   const textTiles = pick(['chapter', 'critical']);
   return `<div class="rrp-section-label">Display</div>
     <div class="rrp-grid">${display}</div>
