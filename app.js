@@ -38561,6 +38561,7 @@ function _rhemaSyncVerseSelectionUI() {
 function rhemaOpenVerseMenu(v, ev) {
   ev?.stopPropagation?.();
   if (_rhemaSuppressVerseTap) { _rhemaSuppressVerseTap = false; return; }
+  if (_rhemaCopyMode) { rhemaToggleCopyVerse(v); return; }
   const verse = String(v);
   _rhemaVerseFocus = false;
   _rhemaHighlightStrongs = null;
@@ -41390,9 +41391,15 @@ function openRhemaReaderPanel() {
   _renderRhemaPanelMain();
   showReaderPanelSection('main');
   ov.classList.add('open');
+  // Two frames so the from-state (off-screen) paints before the slide-in.
+  requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add('in')));
 }
 function closeRhemaReaderPanel() {
-  document.getElementById('rhemaReaderPanelOverlay')?.classList.remove('open');
+  const ov = document.getElementById('rhemaReaderPanelOverlay');
+  if (!ov || !ov.classList.contains('open')) return;
+  ov.classList.remove('in');            // slide + fade out
+  clearTimeout(closeRhemaReaderPanel._t);
+  closeRhemaReaderPanel._t = setTimeout(() => ov.classList.remove('open'), 360);
 }
 function _renderRhemaPanelMain() {
   const el = document.getElementById('rrpMainBody');
@@ -41463,10 +41470,6 @@ function _rhemaStudyTools() {
       reason: isNT ? '' : 'The critical text is only available for the New Testament.',
       action: () => toggleWheelTool('critical') }
   ];
-  if (isOT) {
-    tools.push({ id: 'lxx', label: 'Septuagint (LXX)', icon: 'language', active: _rhemaOTLayer === 'lxx', reason: '',
-      action: () => setRhemaOTLayer(_rhemaOTLayer === 'lxx' ? 'hebrew' : 'lxx') });
-  }
   return tools;
 }
 function _rhemaStudyTileHtml(t) {
@@ -41482,7 +41485,7 @@ function _rhemaStudyPanelHtml() {
   const tools = _rhemaStudyTools();
   const pick = ids => tools.filter(t => ids.includes(t.id)).map(_rhemaStudyTileHtml).join('');
   const display = pick(['syntax', 'pos', 'greek', 'flow']);
-  const textTiles = pick(['chapter', 'critical', 'lxx']);
+  const textTiles = pick(['chapter', 'critical']);
   return `<div class="rrp-section-label">Display</div>
     <div class="rrp-grid">${display}</div>
     <div class="rrp-section-label">Text</div>
@@ -41493,8 +41496,7 @@ function _rhemaStudyPanelHtml() {
     <div class="rrp-list">
       <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(openRhemaCrossReferences,220)"><span class="material-symbols-outlined rrp-row-icon">hub</span><span class="rrp-row-label">Cross references</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(openWordLibrary,220)"><span class="material-symbols-outlined rrp-row-icon">local_library</span><span class="rrp-row-label">Word Library</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
-      <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(rhemaOpenCompare,220)"><span class="material-symbols-outlined rrp-row-icon">compare_arrows</span><span class="rrp-row-label">Compare</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
-      <button class="rrp-row" onclick="closeRhemaReaderPanel();copyRhemaVerseOrChapter()"><span class="material-symbols-outlined rrp-row-icon">content_copy</span><span class="rrp-row-label">Copy verse</span></button>
+      <button class="rrp-row" onclick="startRhemaCopyMode()"><span class="material-symbols-outlined rrp-row-icon">content_copy</span><span class="rrp-row-label">Copy verse</span></button>
     </div>
     <div class="rrp-section-label">Marks</div>
     <div class="rrp-list">
@@ -41553,6 +41555,68 @@ function _rhemaPanelToast(msg) {
   clearTimeout(_rhemaPanelToast._t);
   _rhemaPanelToast._t = setTimeout(() => t.classList.remove('show'), 2600);
 }
+
+// ── Copy-verses mode: dim the chapter, tap verses to select, copy the set ──
+let _rhemaCopyMode = false;
+let _rhemaCopySel = new Set();
+
+function startRhemaCopyMode() {
+  closeRhemaReaderPanel();
+  _rhemaCopyMode = true;
+  _rhemaCopySel.clear();
+  _rhemaSetChromeHidden?.(true);   // slide the pills/nav away for a calm canvas
+  document.getElementById('rhemaModal')?.classList.add('rhema-copy-mode');
+  document.getElementById('rhemaCopyBanner')?.classList.add('show');
+  _rhemaSyncCopyUI();
+}
+function exitRhemaCopyMode() {
+  if (!_rhemaCopyMode) return;
+  _rhemaCopyMode = false;
+  _rhemaCopySel.clear();
+  document.getElementById('rhemaModal')?.classList.remove('rhema-copy-mode');
+  document.getElementById('rhemaCopyBanner')?.classList.remove('show');
+  const fab = document.getElementById('rhemaCopyFab');
+  if (fab) fab.classList.remove('show', 'copied');
+  const label = document.getElementById('rhemaCopyFabLabel');
+  if (label) label.textContent = 'Copy';
+  document.querySelectorAll('.rhema-copy-selected').forEach(el => el.classList.remove('rhema-copy-selected'));
+  _rhemaSetChromeHidden?.(false);
+}
+function rhemaToggleCopyVerse(v) {
+  v = String(v);
+  if (_rhemaCopySel.has(v)) _rhemaCopySel.delete(v); else _rhemaCopySel.add(v);
+  _rhemaSyncCopyUI();
+}
+function _rhemaSyncCopyUI() {
+  document.querySelectorAll('#rhemaEnglishDisplay .rhema-chapter-block[data-verse]').forEach(el => {
+    el.classList.toggle('rhema-copy-selected', _rhemaCopySel.has(el.getAttribute('data-verse')));
+  });
+  const n = _rhemaCopySel.size;
+  const label = document.getElementById('rhemaCopyFabLabel');
+  if (label) label.textContent = n <= 1 ? `Copy ${n || ''} verse`.trim() : `Copy ${n} verses`;
+  document.getElementById('rhemaCopyFab')?.classList.toggle('show', n > 0);
+}
+function rhemaDoCopySelected() {
+  const vs = [..._rhemaCopySel].map(Number).sort((a, b) => a - b).map(String);
+  if (!vs.length) return;
+  const bookName = _rhemaBookName(_rhemaBook);
+  const header = vs.length === 1
+    ? `${bookName} ${_rhemaChapter}:${vs[0]}`
+    : `${bookName} ${_rhemaChapter}:${vs[0]}-${vs[vs.length - 1]}`;
+  const body = vs.map(v => `${v} ${_rhemaVerseTextFor(_rhemaBook, _rhemaChapter, v)}`.trim()).join('\n');
+  if (!body) return;
+  const text = `${header}\n${body}`.trim();
+  const done = () => {
+    const fab = document.getElementById('rhemaCopyFab');
+    const label = document.getElementById('rhemaCopyFabLabel');
+    if (fab) fab.classList.add('copied');
+    if (label) label.textContent = 'Verses copied';
+    setTimeout(exitRhemaCopyMode, 1000);
+  };
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done).catch(() => _fallbackCopy(text, done));
+  else _fallbackCopy(text, done);
+}
+
 function _rhemaReaderMarksHtml(kind) {
   const wantNote = (kind === 'notes');
   const marks = Object.entries(_rhemaCurMarks())
@@ -41699,6 +41763,7 @@ function closeRhema(keepSandbox = false) {
   closeRhemaReaderNote();
   closeRhemaPickerSheet();
   closeRhemaReaderPanel();
+  if (typeof exitRhemaCopyMode === 'function') exitRhemaCopyMode();
   _rhemaReadMode = false;
   document.getElementById('rhemaModal')?.classList.remove('rhema-read-mode', 'rhema-has-menu');
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');

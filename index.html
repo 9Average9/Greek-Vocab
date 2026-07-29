@@ -10630,6 +10630,16 @@ Verb Endings
 <div class="rhema-english-display hidden" id="rhemaEnglishDisplay"></div>
 </div>
 </div>
+<!-- Copy-verses mode: prompt banner + floating copy button -->
+<div class="rhema-copy-banner" id="rhemaCopyBanner">
+<span class="material-symbols-outlined">touch_app</span>
+<span class="rcb-label">Select verses to copy</span>
+<button class="rcb-cancel" onclick="exitRhemaCopyMode()">Cancel</button>
+</div>
+<button class="rhema-copy-fab" id="rhemaCopyFab" onclick="rhemaDoCopySelected()">
+<span class="material-symbols-outlined">content_copy</span>
+<span id="rhemaCopyFabLabel">Copy</span>
+</button>
 </div><!-- end .rhema-reader -->
 <div class="rhema-bottom-wave" id="rhemaBottomWave" aria-hidden="true"></div>
 <!-- Verse nav: absolute overlay pinned to the bottom of #rhemaSlide — hides with transform only so the scroll area never resizes -->
