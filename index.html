@@ -10771,37 +10771,13 @@ Verb Endings
 <div class="rhema-reader-panel-overlay" id="rhemaReaderPanelOverlay" onclick="if(event.target===this)closeRhemaReaderPanel()">
 <aside class="rhema-reader-panel" id="rhemaReaderPanel">
 <div class="rrp-track" id="rrpTrack">
-<!-- Main options pane -->
+<!-- Main options pane (rendered by mode: Reader vs Study tools) -->
 <div class="rrp-pane rrp-pane-main">
 <div class="rrp-header">
-<span class="rrp-title">Reader</span>
+<span class="rrp-title" id="rrpMainTitle">Reader</span>
 <button class="rrp-x" onclick="closeRhemaReaderPanel()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
 </div>
-<div class="rrp-list">
-<button class="rrp-row" onclick="showReaderPanelSection('highlights')">
-<span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span>
-<span class="rrp-row-label">Highlights</span>
-<span class="material-symbols-outlined rrp-chev">chevron_right</span>
-</button>
-<button class="rrp-row" onclick="showReaderPanelSection('notes')">
-<span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span>
-<span class="rrp-row-label">Notes</span>
-<span class="material-symbols-outlined rrp-chev">chevron_right</span>
-</button>
-<button class="rrp-row" onclick="showReaderPanelSection('crossrefs')">
-<span class="material-symbols-outlined rrp-row-icon">hub</span>
-<span class="rrp-row-label">Cross references</span>
-<span class="material-symbols-outlined rrp-chev">chevron_right</span>
-</button>
-</div>
-<div class="rrp-section-label">Text size</div>
-<div class="rrp-fontsize">
-<button class="rrp-fs-btn" onclick="rhemaReaderFontStep(-1)" aria-label="Smaller text"><span class="rrp-fs-a" style="font-size:0.85rem">A</span></button>
-<div class="rrp-fs-track"><div class="rrp-fs-fill" id="rrpFsFill"></div><div class="rrp-fs-knob" id="rrpFsKnob"></div></div>
-<button class="rrp-fs-btn" onclick="rhemaReaderFontStep(1)" aria-label="Larger text"><span class="rrp-fs-a" style="font-size:1.3rem">A</span></button>
-</div>
-<div class="rrp-section-label">Font</div>
-<div class="rrp-fontlist" id="rrpFontList"></div>
+<div id="rrpMainBody"></div>
 </div>
 <!-- Sub pane (Highlights / Notes list) -->
 <div class="rrp-pane rrp-pane-sub">
@@ -10813,6 +10789,7 @@ Verb Endings
 <div class="rrp-sub-body" id="rrpSubBody"></div>
 </div>
 </div>
+<div class="rrp-toast" id="rrpToast" role="status" aria-live="polite"></div>
 </aside>
 </div>
 <!-- ── Coach mark onboarding overlay ── -->

@@ -17522,20 +17522,23 @@ body.dark .rhema-reader-menu-btn {
   border-color: color-mix(in srgb, var(--secondary-color) 30%, rgba(255,255,255,0.08));
   box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.07);
 }
-.rhema-read-mode #rhemaSwapBtn,
-.rhema-read-mode #rhemaToolBtn { display: none; }
-.rhema-read-mode .rhema-reader-menu-btn { display: inline-flex; }
+/* Standard reader (Read or Study from the chooser): hamburger menu replaces the
+   radial wheel. Sandbox/sermon flows keep the wheel and hide the hamburger. */
+.rhema-has-menu .rhema-reader-menu-btn { display: inline-flex; }
+.rhema-has-menu #rhemaToolBtn { display: none; }
+/* Read mode additionally drops the English/Greek swap; Study keeps it. */
+.rhema-read-mode #rhemaSwapBtn { display: none; }
 
 /* ── Read-mode verse nav: arrows only, raised ── */
 /* Read mode: no bottom verse-nav — navigation is via the book pill and the
    grouped Highlights/Notes lists in the reader panel. */
 .rhema-read-mode .rhema-verse-nav { display: none; }
 
-/* ── Read-mode typography controls applied to the verse text ── */
+/* ── Typography controls applied to the English verse text (both modes) ── */
 .rhema-reader { --rhema-reader-scale: 1; --rhema-reader-font: inherit; }
-.rhema-read-mode .rhema-english-display { font-family: var(--rhema-reader-font); }
-.rhema-read-mode .rhema-english-display.rhema-english-reading { font-size: calc(1.06rem * var(--rhema-reader-scale)); }
-.rhema-read-mode .rhema-english-display:not(.rhema-english-reading) { font-size: calc(1rem * var(--rhema-reader-scale)); }
+.rhema-english-display { font-family: var(--rhema-reader-font); }
+.rhema-english-display.rhema-english-reading { font-size: calc(1.06rem * var(--rhema-reader-scale)); }
+.rhema-english-display:not(.rhema-english-reading) { font-size: calc(1rem * var(--rhema-reader-scale)); }
 
 /* ── The slide-in reader panel ── */
 .rhema-reader-panel-overlay {
@@ -17743,6 +17746,99 @@ body.dark .rhema-reader-menu-btn {
   padding: 11px 2px;
 }
 .rrp-book-items .rrp-mark-row:first-child { border-top: none; }
+
+/* ── Study menu: tool tiles (toggles with active + unavailable states) ── */
+.rrp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 4px 14px 6px; }
+.rrp-tile {
+  position: relative;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 9px;
+  padding: 12px 12px 11px;
+  border-radius: 15px;
+  cursor: pointer;
+  min-height: 76px;
+  background: var(--card-solid-color);
+  border: 1px solid var(--border-color);
+  color: var(--font-color);
+  text-align: left;
+  transition: transform 0.12s, background 0.15s, border-color 0.15s;
+}
+.rrp-tile .material-symbols-outlined { font-size: 22px; color: var(--secondary-color); }
+.rrp-tile > span:not(.material-symbols-outlined) { font-size: 0.8rem; font-weight: 650; line-height: 1.15; }
+.rrp-tile em {
+  position: absolute; top: 9px; right: 9px;
+  font-style: normal; font-size: 0.54rem; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--secondary-color);
+  background: color-mix(in srgb, var(--secondary-color) 12%, transparent);
+  padding: 2px 6px; border-radius: 6px;
+}
+.rrp-tile:not(.is-disabled):active { transform: scale(0.97); }
+.rrp-tile.on {
+  border-color: var(--secondary-color);
+  background: color-mix(in srgb, var(--secondary-color) 10%, var(--card-solid-color));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--secondary-color) 35%, transparent);
+}
+/* Unavailable tool: clouded out; shakes on tap (no state change) */
+.rrp-tile.is-disabled { opacity: 0.45; filter: grayscale(0.35); cursor: not-allowed; }
+.rrp-tile.is-disabled .material-symbols-outlined { color: var(--muted-color); }
+@keyframes rrp-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.rrp-tile.shake { animation: rrp-shake 0.4s ease; }
+
+/* Row trailing value (e.g. current version / language) */
+.rrp-row-val { font-size: 0.78rem; font-weight: 700; color: var(--secondary-color); margin-left: auto; flex-shrink: 0; }
+.rrp-row-val + .rrp-chev { margin-left: 6px; }
+
+/* Segmented control (Language sub-view) */
+.rrp-seg {
+  display: flex; gap: 4px;
+  margin: 4px 16px 4px;
+  padding: 4px;
+  background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color));
+  border: 1px solid var(--border-color);
+  border-radius: 13px;
+}
+.rrp-seg-btn {
+  flex: 1;
+  padding: 9px 10px;
+  border: none; border-radius: 9px;
+  background: transparent;
+  color: var(--muted-color);
+  font-size: 0.86rem; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.rrp-seg-btn.on {
+  background: var(--secondary-color);
+  color: var(--btn-text-color);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--secondary-color) 30%, transparent);
+}
+
+/* ── Panel-scoped toast (theme-matched; floats above the panel) ── */
+.rrp-toast {
+  position: absolute;
+  left: 16px; right: 16px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  z-index: 5;
+  padding: 12px 15px;
+  border-radius: 13px;
+  background: var(--card-solid-color);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 30%, var(--border-color));
+  color: var(--font-color);
+  font-size: 0.82rem; font-weight: 600; line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 10px 30px -8px rgba(0,0,0,0.35);
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.24s cubic-bezier(0.32,0.72,0,1);
+}
+.rrp-toast.show { opacity: 1; transform: translateY(0); }
 
 /* ── Dark mode: the reader chrome's raised white glass goes dark. Dark themes
    brighten --secondary-color/--font-color for dark surfaces, so on the white
