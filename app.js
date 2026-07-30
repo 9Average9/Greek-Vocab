@@ -29887,7 +29887,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.446";
+const APP_VERSION = "3.0.447";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -41438,7 +41438,8 @@ function _syncRhemaStudyHeader() {
     if (sub) sub.textContent = 'Study';
   } else {
     if (main) main.textContent = 'Rhēma';
-    if (sub) sub.textContent = 'Bible reader';
+    // Read mode = plain Bible reader; the Study chooser opens the study tool.
+    if (sub) sub.textContent = _rhemaReadMode ? 'Bible reader' : 'Study tool';
   }
 }
 function _syncRhemaStudyPill() {
@@ -41451,6 +41452,59 @@ function _syncRhemaStudyPill() {
     if (icon) { icon.textContent = 'book_2'; icon.style.color = ''; }
     pill?.classList.remove('active');
   }
+}
+
+// ── Study tools hosted over the reader (Phase 2) ──────────────────────────────
+// The 4 sidebar tools reuse the existing sandbox panes, shown one at a time over
+// the reader. Back returns to the reader without ending the study.
+const _RHEMA_STUDY_TOOL_PANES = {
+  phrasing: 'ssPaneVerses', wordlog: 'ssPaneWordlog', trails: 'ssPaneTrails', workspace: 'ssPaneNotes'
+};
+const _RHEMA_STUDY_TOOL_TABS = {
+  phrasing: 'verses', wordlog: 'wordlog', trails: 'trails', workspace: 'notes'
+};
+function openStudyTool(tool) {
+  if (!_studySandboxId || !_activeSandboxStudy) return;
+  const host = document.getElementById('studySandbox');
+  const paneId = _RHEMA_STUDY_TOOL_PANES[tool];
+  if (!host || !paneId) return;
+  closeRhemaReaderPanel();
+  // Header
+  const iconEl = document.getElementById('ssIcon');
+  const titleEl = document.getElementById('ssTitle');
+  if (iconEl) { iconEl.textContent = _activeSandboxStudy.icon || 'menu_book'; iconEl.style.color = _activeSandboxStudy.color || ''; }
+  if (titleEl) titleEl.textContent = _activeSandboxStudy.name || 'Study';
+  _updateSandboxMembersButton?.(_activeSandboxStudy);
+  // Save-routing indicator so entries/words land in the right place
+  _sandboxTab = _RHEMA_STUDY_TOOL_TABS[tool];
+  // Show only the chosen pane
+  document.querySelectorAll('#studySandbox .ss-pane').forEach(p => p.classList.toggle('active', p.id === paneId));
+  // Phrasing = the structured-verses tool only (Saved Verses dropped)
+  const versesPane = document.getElementById('ssPaneVerses');
+  if (tool === 'phrasing') {
+    versesPane?.classList.add('rhema-phrasing-only');
+    if (typeof switchStudyVerseTab === 'function') switchStudyVerseTab('structured');
+  } else {
+    versesPane?.classList.remove('rhema-phrasing-only');
+  }
+  if (tool === 'workspace' && typeof _buildWsKeyboard === 'function') _buildWsKeyboard();
+  document.getElementById('studyTabBar')?.classList.add('hidden');
+  // Slide-in over the reader
+  host.classList.remove('hidden');
+  host.classList.add('tool-host');
+  requestAnimationFrame(() => requestAnimationFrame(() => host.classList.add('in')));
+  document.body.classList.add('sandbox-open');
+}
+function closeStudyToolHost() {
+  const host = document.getElementById('studySandbox');
+  if (!host) return;
+  host.classList.remove('in');
+  clearTimeout(closeStudyToolHost._t);
+  closeStudyToolHost._t = setTimeout(() => {
+    host.classList.add('hidden');
+    host.classList.remove('tool-host');
+    document.body.classList.remove('sandbox-open');
+  }, 320);
 }
 
 // ── Read-mode reader panel (highlights / notes / cross refs / typography) ──────
@@ -41615,12 +41669,27 @@ function _rhemaStudyTileHtml(t) {
       <span>${t.label}</span>${t.active ? '<em>On</em>' : ''}
     </button>`;
 }
+function _rhemaStudyToolsGridHtml() {
+  if (!_studySandboxId) return '';
+  const btn = (tool, icon, label) =>
+    `<button class="rrp-study-btn" onclick="openStudyTool('${tool}')">
+      <span class="material-symbols-outlined">${icon}</span><span>${label}</span>
+    </button>`;
+  return `<div class="rrp-section-label">This study</div>
+    <div class="rrp-study-grid">
+      ${btn('phrasing', 'account_tree', 'Phrasing')}
+      ${btn('wordlog', 'dictionary', 'Word Log')}
+      ${btn('trails', 'route', 'Trails')}
+      ${btn('workspace', 'layers', 'Workspace')}
+    </div>`;
+}
 function _rhemaStudyPanelHtml() {
   const tools = _rhemaStudyTools();
   const pick = ids => tools.filter(t => ids.includes(t.id)).map(_rhemaStudyTileHtml).join('');
   const display = pick(['syntax', 'pos', 'greek']);
   const textTiles = pick(['chapter', 'critical']);
-  return `<div class="rrp-section-label">Display</div>
+  return `${_rhemaStudyToolsGridHtml()}
+    <div class="rrp-section-label">Display</div>
     <div class="rrp-grid">${display}</div>
     <div class="rrp-section-label">Text</div>
     <div class="rrp-grid">${textTiles}</div>
