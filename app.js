@@ -9677,7 +9677,14 @@ function openStudyStructure(structureId) {
 
 function openStudyStructurePicker() {
   if (!_activeSandboxStudy || typeof openVSStructurePicker !== 'function') return;
-  openVSStructurePicker({ studyId: _activeSandboxStudy.id, returnToStudy: true });
+  openVSStructurePicker({
+    studyId: _activeSandboxStudy.id,
+    returnToStudy: true,
+    book: _rhemaBook,
+    chapter: String(_rhemaChapter),
+    verse: String(_rhemaVerse),
+    translation: (typeof _rhemaReaderVersion === 'function') ? _rhemaReaderVersion() : undefined
+  });
 }
 
 async function deleteStudyStructure(structureId) {
@@ -29887,7 +29894,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.448";
+const APP_VERSION = "3.0.449";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -41385,6 +41392,7 @@ function rhemaEnterStudy(studyId) {
   closeRhemaStudyPicker();
   _activeSandboxStudy = study;
   _studySandboxId = studyId;
+  _sandboxTab = 'rhema';   // long-press mini-wheel only fires when the "rhema tab" is active
   _rhemaStartStudyListeners(studyId);
   document.getElementById('rhemaModal')?.classList.add('rhema-in-study');
   _syncRhemaStudyHeader();
@@ -41500,6 +41508,11 @@ function closeStudyToolHost() {
   const host = document.getElementById('studySandbox');
   if (!host) return;
   host.classList.remove('in');
+  // Back to the reader "tab" so the long-press mini-wheel works again.
+  _sandboxTab = 'rhema';
+  // The reader sits behind the tool host — make sure it's the thing revealed
+  // (not the home screen).
+  document.getElementById('rhemaModal')?.classList.add('open');
   clearTimeout(closeStudyToolHost._t);
   closeStudyToolHost._t = setTimeout(() => {
     host.classList.add('hidden');
@@ -42008,8 +42021,9 @@ function closeRhema(keepSandbox = false) {
 }
 
 function rhemaGoBack() {
-  // In study sandbox: back button closes the study entirely (user navigates via tab bar)
-  if (_studySandboxId) { closeStudySandbox(); return; }
+  // In a study: the reader home button closes the reader to home (which clears
+  // the study and restores the bottom nav). Reopening starts on the default.
+  if (_studySandboxId) { closeRhema(); return; }
   if (_rhemaTrail.length === 0) { closeRhema(); return; }
   // Move cursor back without removing any items
   if (_rhemaTrailPos === -1) {
