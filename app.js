@@ -8934,7 +8934,7 @@ function _updateWsVerseDisplay() {
     ? `${bookName} ${_rhemaChapter}:${_rhemaVerse}` : '';
   if (EnglishEl) {
     EnglishEl.textContent = (_rhemaBook && _rhemaChapter && _rhemaVerse)
-      ? _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse, _rhemaReaderVersion()) : '';
+      ? _rhemaReaderText(_rhemaBook, _rhemaChapter, _rhemaVerse) : '';
   }
 }
 
@@ -9155,12 +9155,12 @@ function _updateSwmVerseDisplay() {
   const full = document.getElementById('swmFullText');
   if (!full) return;
   const versesArr = (_swmSelectedVerses && _swmSelectedVerses.size) ? _swmSelectedSorted().map(String) : [String(_swmSavedVerse)];
-  const sourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel(_rhemaReaderVersion()) : 'Greek';
+  const sourceLabel = _rhemaShowEnglish ? _rhemaReaderVersion() : 'Greek';
   const rangeLabel = (typeof _rhemaVerseRangeStr === 'function') ? _rhemaVerseRangeStr(versesArr.map(Number)) : versesArr.join(',');
   const rows = versesArr.map(v => {
     let text;
     if (_rhemaShowEnglish) {
-      text = _rhemaEnglishText(_swmSavedBook, _swmSavedChapter, v, _rhemaReaderVersion()) || '';
+      text = _rhemaReaderText(_swmSavedBook, _swmSavedChapter, v) || '';
     } else {
       const words = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter]?.[v] || [];
       text = words.map(w => w[0]).join(' ');
@@ -9216,7 +9216,7 @@ async function saveWritingModal() {
   };
   const verseSnippet = (() => {
     const oneSnippet = (vv) => {
-      if (_rhemaShowEnglish) return _rhemaEnglishText(_swmSavedBook, _swmSavedChapter, vv, _rhemaReaderVersion()) || '';
+      if (_rhemaShowEnglish) return _rhemaReaderText(_swmSavedBook, _swmSavedChapter, vv) || '';
       const words = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter]?.[vv] || [];
       return words.map(w => w[0]).join(' ');
     };
@@ -29960,7 +29960,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.454";
+const APP_VERSION = "3.0.455";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
