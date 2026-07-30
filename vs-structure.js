@@ -271,14 +271,9 @@ function openVSStructurePicker(context = null) {
   _vsStructVerseEnd    = _vsStructVerseStart;
   if (typeof _vsTranslation !== 'undefined') _vsStructTranslation = _vsTranslation;
 
-  // When opened from a study reader, default to that passage and — importantly —
-  // the reader's selected translation, so phrasing is saved in it.
-  if (context) {
-    if (context.book)        _vsStructBook        = context.book;
-    if (context.chapter)   { _vsStructChapter     = String(context.chapter); }
-    if (context.verse)     { _vsStructVerseStart  = String(context.verse); _vsStructVerseEnd = String(context.verse); }
-    if (context.translation) _vsStructTranslation = context.translation;
-  }
+  // Follow the reader's selected translation, but let the phrasing tool's own
+  // reference selector choose the passage.
+  if (context && context.translation) _vsStructTranslation = context.translation;
 
   _vsStructPopulatePicker();
   const modal = document.getElementById('vsStructPickerModal');

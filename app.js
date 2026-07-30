@@ -9677,12 +9677,11 @@ function openStudyStructure(structureId) {
 
 function openStudyStructurePicker() {
   if (!_activeSandboxStudy || typeof openVSStructurePicker !== 'function') return;
+  // Only the translation follows the reader; the reference is chosen with the
+  // phrasing tool's own reference selector.
   openVSStructurePicker({
     studyId: _activeSandboxStudy.id,
     returnToStudy: true,
-    book: _rhemaBook,
-    chapter: String(_rhemaChapter),
-    verse: String(_rhemaVerse),
     translation: (typeof _rhemaReaderVersion === 'function') ? _rhemaReaderVersion() : undefined
   });
 }
@@ -29894,7 +29893,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.449";
+const APP_VERSION = "3.0.450";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
