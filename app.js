@@ -29887,7 +29887,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.447";
+const APP_VERSION = "3.0.448";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -41489,11 +41489,12 @@ function openStudyTool(tool) {
   }
   if (tool === 'workspace' && typeof _buildWsKeyboard === 'function') _buildWsKeyboard();
   document.getElementById('studyTabBar')?.classList.add('hidden');
-  // Slide-in over the reader
+  // Slide-in over the reader. We deliberately do NOT set body.sandbox-open —
+  // that class reserved bottom space for the retired tab bar and floating
+  // arrows, so the panes now use the full vertical height.
   host.classList.remove('hidden');
   host.classList.add('tool-host');
   requestAnimationFrame(() => requestAnimationFrame(() => host.classList.add('in')));
-  document.body.classList.add('sandbox-open');
 }
 function closeStudyToolHost() {
   const host = document.getElementById('studySandbox');
@@ -41503,7 +41504,6 @@ function closeStudyToolHost() {
   closeStudyToolHost._t = setTimeout(() => {
     host.classList.add('hidden');
     host.classList.remove('tool-host');
-    document.body.classList.remove('sandbox-open');
   }, 320);
 }
 

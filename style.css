@@ -18095,6 +18095,50 @@ body.dark .rhema-reader-menu-btn {
 .ss-pane.rhema-phrasing-only #ssSavedVersesPane { display: none !important; }
 .ss-pane.rhema-phrasing-only #ssStructuredVersesPane { display: flex; }
 
+/* The floating passage arrows are retired — studies navigate via the book pill */
+.rhema-sandbox-arrows { display: none !important; }
+
+/* Hosted tools own the full height (no tab bar / arrows to clear) */
+.study-sandbox.tool-host .ss-pane { bottom: 0 !important; }
+
+/* ── Phase 2b: premium polish for hosted study tools ── */
+.study-sandbox.tool-host .ss-header {
+  padding-top: calc(env(safe-area-inset-top, 44px) + 14px);
+  border-bottom: 1.5px solid var(--border-color);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.study-sandbox.tool-host .ss-back-btn {
+  width: 38px; height: 38px; border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--card-solid-color);
+  border: 1px solid var(--border-color);
+  color: var(--secondary-color);
+  transition: transform 0.12s;
+}
+.study-sandbox.tool-host .ss-back-btn:active { transform: scale(0.94); }
+.study-sandbox.tool-host .ss-title { font-size: 1.16rem; font-weight: 800; letter-spacing: -0.01em; color: var(--secondary-color); }
+.study-sandbox.tool-host .ss-icon { color: var(--secondary-color); }
+/* Content rises in when a tool opens */
+.study-sandbox.tool-host.in .ss-pane.active { animation: ss-pane-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes ss-pane-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .study-sandbox.tool-host.in .ss-pane.active { animation: none; }
+}
+/* Premium send button + subtle list-item press feedback */
+.study-sandbox.tool-host .ss-send-btn {
+  background: linear-gradient(145deg, var(--secondary-color), color-mix(in srgb, var(--secondary-color) 80%, #000));
+  box-shadow: 0 4px 12px -3px color-mix(in srgb, var(--secondary-color) 55%, transparent);
+  transition: transform 0.12s;
+}
+.study-sandbox.tool-host .ss-send-btn:active { transform: scale(0.92); }
+.study-sandbox.tool-host .ss-note-item,
+.study-sandbox.tool-host .ss-verses-list > * ,
+.study-sandbox.tool-host .ss-wordlog-list > *,
+.study-sandbox.tool-host .ss-trails-list > * { transition: transform 0.12s, box-shadow 0.15s; }
+.study-sandbox.tool-host .ss-verses-list > *:active,
+.study-sandbox.tool-host .ss-wordlog-list > *:active,
+.study-sandbox.tool-host .ss-trails-list > *:active { transform: scale(0.985); }
+
 /* ── Dark mode: the reader chrome's raised white glass goes dark. Dark themes
    brighten --secondary-color/--font-color for dark surfaces, so on the white
    glass pills (book picker, version, swap, tools, verse nav) the light text
