@@ -8969,7 +8969,7 @@ function _renderWorkspaceEntries(entries) {
     const meta = _WS_META[e.type] || _WS_META.observations;
     const canDel = e.authorUid === uid || isCreator;
     const ts = e.createdAt?.toDate ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(e.createdAt.toDate()) : '';
-    const ref = e.verseRef ? `${_rhemaBookName(e.verseRef.book)} ${e.verseRef.chapter}:${e.verseRef.verse}` : '';
+    const ref = e.verseRef ? `${_rhemaBookName(e.verseRef.book)} ${e.verseRef.chapter}:${e.verseRef.verseLabel || e.verseRef.verse}` : '';
     const clickAttr = ref ? `onclick="jumpToRhemaFromStudy('${e.verseRef.book}','${e.verseRef.chapter}','${e.verseRef.verse}')"` : '';
     return `<div class="ws-entry" style="--ws-entry-color:${meta.color}" ${clickAttr}>
       <div class="ws-entry-head">
@@ -9067,10 +9067,37 @@ function selectMiniWheelItem(type) {
 
 // ── Writing Modal ─────────────────────────────────────────────────────────────
 
+let _swmSelectedVerses = new Set();
+function _swmChapterVerseList() {
+  const chData = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter] || {};
+  return Object.keys(chData).map(Number).sort((a, b) => a - b).map(String);
+}
+function _swmSelectedSorted() {
+  return [..._swmSelectedVerses].map(Number).sort((a, b) => a - b);
+}
+function _swmRenderVerseChips() {
+  const wrap = document.getElementById('swmVerseChips');
+  if (!wrap) return;
+  wrap.innerHTML = _swmChapterVerseList().map(v =>
+    `<button class="swm-vchip${_swmSelectedVerses.has(v) ? ' on' : ''}" onclick="swmToggleVerse('${v}')">${v}</button>`
+  ).join('');
+}
+function swmToggleVerse(v) {
+  v = String(v);
+  if (_swmSelectedVerses.has(v)) {
+    if (_swmSelectedVerses.size > 1) _swmSelectedVerses.delete(v); // keep at least one
+  } else {
+    _swmSelectedVerses.add(v);
+  }
+  _swmDisplayVerse = v;            // preview follows the tapped verse
+  _swmRenderVerseChips();
+  _updateSwmVerseDisplay();
+}
 function openWritingModal(type) {
   _writingModalType = type;
   // Save the original verse ref (this is what gets stored with the note)
   _swmSavedBook = _rhemaBook; _swmSavedChapter = _rhemaChapter; _swmSavedVerse = _rhemaVerse;
+  _swmSelectedVerses = new Set([String(_rhemaVerse)]);
   // Display starts at the saved verse
   _swmDisplayBook = _rhemaBook; _swmDisplayChapter = _rhemaChapter; _swmDisplayVerse = _rhemaVerse;
   const meta = _WS_META[type] || _WS_META.observations;
@@ -9083,7 +9110,8 @@ function openWritingModal(type) {
   if (icon) icon.textContent = meta.icon;
   if (name) name.textContent = meta.name;
   if (chip) chip.style.color = meta.color;
-  // Verse card + English
+  // Verse card + English + multi-select chips
+  _swmRenderVerseChips();
   _updateSwmVerseDisplay();
   // Clear textarea
   const ta = document.getElementById('swmTextarea');
@@ -9117,7 +9145,10 @@ function _updateSwmVerseDisplay() {
       <div class="swm-verse-text">${snippet}${words.length > 14 ? '…' : ''}</div>`;
   }
   if (card) {
-    card.innerHTML = `<div class="swm-verse-ref">${_escapeRhemaAttr(_rhemaBookName(_swmDisplayBook))} ${_escapeRhemaAttr(_swmDisplayChapter)}:${_escapeRhemaAttr(_swmDisplayVerse)}</div>
+    const rangeLabel = (typeof _rhemaVerseRangeStr === 'function' && _swmSelectedVerses && _swmSelectedVerses.size)
+      ? _rhemaVerseRangeStr(_swmSelectedSorted().map(Number))
+      : _swmDisplayVerse;
+    card.innerHTML = `<div class="swm-verse-ref">${_escapeRhemaAttr(_rhemaBookName(_swmSavedBook))} ${_escapeRhemaAttr(_swmSavedChapter)}:${_escapeRhemaAttr(rangeLabel)}</div>
       <div class="swm-verse-text">${_escapeRhemaAttr(swmSnippet)}${(!_rhemaShowEnglish && swmWordCount > 14) ? '...' : ''}</div>
       <div class="swm-source-label">${_escapeRhemaAttr(swmSourceLabel)}</div>`;
   }
@@ -9155,23 +9186,28 @@ async function saveWritingModal() {
   if (!text) { ta?.focus(); return; }
   const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
   const sourceLanguage = _rhemaShowEnglish ? 'english' : 'greek';
+  const versesArr = (_swmSelectedVerses && _swmSelectedVerses.size) ? _swmSelectedSorted().map(String) : [String(_swmSavedVerse)];
+  const rangeLabel = (typeof _rhemaVerseRangeStr === 'function') ? _rhemaVerseRangeStr(versesArr.map(Number)) : versesArr.join(',');
   const verseRef = {
     book: _swmSavedBook,
     chapter: _swmSavedChapter,
-    verse: _swmSavedVerse,
+    verse: versesArr[0],            // first verse — back-compat + jump target
+    verses: versesArr,              // full selection
+    verseLabel: rangeLabel,         // "1-3,6"
     bookName: _rhemaBookName(_swmSavedBook),
     sourceLanguage,
     version: _rhemaShowEnglish ? _rhemaReaderVersion() : 'Greek'
   };
   const verseSnippet = (() => {
-    if (_rhemaShowEnglish) {
-      const eng = _rhemaEnglishText(_swmSavedBook, _swmSavedChapter, _swmSavedVerse, _rhemaReaderVersion()) || '';
-      return eng.length > 90 ? eng.slice(0, 87) + '...' : eng;
-    }
-    const words = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter]?.[_swmSavedVerse] || [];
-    if (!words.length) return '';
-    const greek = words.slice(0, 10).map(w => w[0]).join(' ');
-    return greek.length > 60 ? greek.slice(0, 57) + '…' : greek;
+    const oneSnippet = (vv) => {
+      if (_rhemaShowEnglish) return _rhemaEnglishText(_swmSavedBook, _swmSavedChapter, vv, _rhemaReaderVersion()) || '';
+      const words = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter]?.[vv] || [];
+      return words.map(w => w[0]).join(' ');
+    };
+    let combined = versesArr.map(oneSnippet).filter(Boolean).join(' ');
+    const cap = _rhemaShowEnglish ? 110 : 70;
+    if (combined.length > cap) combined = combined.slice(0, cap - 1) + '…';
+    return combined;
   })();
   // Switch workspace to the saved type so user sees their entry
   if (_sandboxTab === 'notes' && _workspaceTab !== _writingModalType) switchWorkspaceTab(_writingModalType);
@@ -29908,7 +29944,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.452";
+const APP_VERSION = "3.0.453";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.

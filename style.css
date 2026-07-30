@@ -22336,6 +22336,30 @@ body.sandbox-open .rhema-english-display {
   -webkit-tap-highlight-color: transparent;
 }
 .swm-verse-arrow:active { background: var(--border-color); }
+/* Multi-verse selection chips */
+.swm-verse-select-label {
+  padding: 6px 16px 4px; font-size: 0.7rem; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-color);
+  display: flex; align-items: baseline; gap: 8px;
+}
+.swm-verse-select-hint { font-size: 0.62rem; font-weight: 600; letter-spacing: 0; text-transform: none; opacity: 0.75; }
+.swm-verse-chips {
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 16px 6px;
+  max-height: 118px; overflow-y: auto; overscroll-behavior: contain;
+}
+.swm-vchip {
+  min-width: 34px; padding: 6px 9px; border-radius: 10px; cursor: pointer;
+  background: var(--card-solid-color); border: 1.5px solid var(--border-color);
+  color: var(--font-color); font-size: 0.82rem; font-weight: 700;
+  transition: transform 0.1s, background 0.15s, border-color 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.swm-vchip:active { transform: scale(0.9); }
+.swm-vchip.on {
+  background: var(--secondary-color); border-color: var(--secondary-color);
+  color: var(--btn-text-color);
+  box-shadow: 0 2px 8px -2px color-mix(in srgb, var(--secondary-color) 55%, transparent);
+}
 .swm-english-text {
   flex: 1; font-size: 0.82rem; line-height: 1.5; color: var(--muted-color);
   font-style: italic; text-align: center; padding: 2px 0;
