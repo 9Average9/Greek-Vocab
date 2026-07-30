@@ -22336,6 +22336,29 @@ body.sandbox-open .rhema-english-display {
   -webkit-tap-highlight-color: transparent;
 }
 .swm-verse-arrow:active { background: var(--border-color); }
+/* Reference selectors (choose any book / chapter) */
+.swm-ref-row { display: flex; gap: 8px; padding: 8px 16px 4px; }
+.swm-ref-select {
+  min-width: 0; padding: 10px 12px; border-radius: 12px;
+  background: var(--card-solid-color); border: 1.5px solid var(--border-color);
+  color: var(--font-color); font-size: 0.9rem; font-weight: 650; cursor: pointer;
+  font-family: inherit;
+}
+.swm-ref-book { flex: 2; }
+.swm-ref-chap { flex: 1; }
+.swm-ref-select:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 0 3px color-mix(in srgb, var(--secondary-color) 15%, transparent); }
+/* Full text of the selected verse(s) */
+.swm-fulltext {
+  margin: 4px 16px 8px; padding: 12px 14px; border-radius: 14px;
+  background: var(--card-color); border: 1px solid var(--border-color);
+  max-height: 172px; overflow-y: auto; overscroll-behavior: contain;
+}
+.swm-ft-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.swm-ft-ref { font-size: 0.88rem; font-weight: 800; letter-spacing: -0.01em; color: var(--secondary-color); }
+.swm-ft-src { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-color); flex-shrink: 0; }
+.swm-ft-verse { margin: 0 0 7px; font-size: 0.92rem; line-height: 1.58; color: var(--font-color); }
+.swm-ft-verse:last-child { margin-bottom: 0; }
+.swm-ft-num { font-size: 0.6em; font-weight: 800; color: var(--secondary-color); margin-right: 4px; vertical-align: 0.35em; }
 /* Multi-verse selection chips */
 .swm-verse-select-label {
   padding: 6px 16px 4px; font-size: 0.7rem; font-weight: 800;

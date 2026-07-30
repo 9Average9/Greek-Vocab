@@ -9072,6 +9072,31 @@ function _swmChapterVerseList() {
   const chData = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter] || {};
   return Object.keys(chData).map(Number).sort((a, b) => a - b).map(String);
 }
+function _swmRenderRefSelectors() {
+  const bookSel = document.getElementById('swmBookSelect');
+  const chapSel = document.getElementById('swmChapSelect');
+  if (!bookSel || !chapSel) return;
+  bookSel.innerHTML = _rhemaBookOrder().map(code =>
+    `<option value="${code}"${code === _swmSavedBook ? ' selected' : ''}>${_escapeRhemaAttr(_rhemaBookName(code))}</option>`).join('');
+  const chapters = Object.keys(_rhemaText()[_swmSavedBook] || {}).map(Number).sort((a, b) => a - b);
+  chapSel.innerHTML = chapters.map(c =>
+    `<option value="${c}"${String(c) === String(_swmSavedChapter) ? ' selected' : ''}>Chapter ${c}</option>`).join('');
+}
+function swmSetBook(code) {
+  _swmSavedBook = code;
+  const chapters = Object.keys(_rhemaText()[code] || {}).map(Number).sort((a, b) => a - b);
+  _swmSavedChapter = String(chapters[0] || '1');
+  _swmSelectedVerses = new Set([_swmChapterVerseList()[0] || '1']);
+  _swmRenderRefSelectors();
+  _swmRenderVerseChips();
+  _updateSwmVerseDisplay();
+}
+function swmSetChapter(ch) {
+  _swmSavedChapter = String(ch);
+  _swmSelectedVerses = new Set([_swmChapterVerseList()[0] || '1']);
+  _swmRenderVerseChips();
+  _updateSwmVerseDisplay();
+}
 function _swmSelectedSorted() {
   return [..._swmSelectedVerses].map(Number).sort((a, b) => a - b);
 }
@@ -9110,7 +9135,8 @@ function openWritingModal(type) {
   if (icon) icon.textContent = meta.icon;
   if (name) name.textContent = meta.name;
   if (chip) chip.style.color = meta.color;
-  // Verse card + English + multi-select chips
+  // Reference selectors + multi-select chips + full text
+  _swmRenderRefSelectors();
   _swmRenderVerseChips();
   _updateSwmVerseDisplay();
   // Clear textarea
@@ -9126,36 +9152,26 @@ function openWritingModal(type) {
 }
 
 function _updateSwmVerseDisplay() {
-  const card = document.getElementById('swmVerseCard');
-  const English = document.getElementById('swmEnglishText');
-  let swmSnippet = '';
-  let swmWordCount = 0;
-  let swmSourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel(_rhemaReaderVersion()) : 'Greek';
-  if (card) {
-    const bookName = _rhemaBookName(_swmDisplayBook);
-    const words = (_rhemaText()[_swmDisplayBook] || {})[_swmDisplayChapter]?.[_swmDisplayVerse] || [];
-    const sourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel(_rhemaReaderVersion()) : 'Greek';
-    const snippet = _rhemaShowEnglish
-      ? (_rhemaEnglishText(_swmDisplayBook, _swmDisplayChapter, _swmDisplayVerse, _rhemaReaderVersion()) || '')
-      : words.slice(0, 14).map(w => w[0]).join(' ');
-    swmSnippet = snippet;
-    swmWordCount = words.length;
-    swmSourceLabel = sourceLabel;
-    card.innerHTML = `<div class="swm-verse-ref">${bookName} ${_swmDisplayChapter}:${_swmDisplayVerse}</div>
-      <div class="swm-verse-text">${snippet}${words.length > 14 ? '…' : ''}</div>`;
-  }
-  if (card) {
-    const rangeLabel = (typeof _rhemaVerseRangeStr === 'function' && _swmSelectedVerses && _swmSelectedVerses.size)
-      ? _rhemaVerseRangeStr(_swmSelectedSorted().map(Number))
-      : _swmDisplayVerse;
-    card.innerHTML = `<div class="swm-verse-ref">${_escapeRhemaAttr(_rhemaBookName(_swmSavedBook))} ${_escapeRhemaAttr(_swmSavedChapter)}:${_escapeRhemaAttr(rangeLabel)}</div>
-      <div class="swm-verse-text">${_escapeRhemaAttr(swmSnippet)}${(!_rhemaShowEnglish && swmWordCount > 14) ? '...' : ''}</div>
-      <div class="swm-source-label">${_escapeRhemaAttr(swmSourceLabel)}</div>`;
-  }
-  if (English) {
-    English.textContent = (!_rhemaShowEnglish && _swmDisplayBook && _swmDisplayChapter && _swmDisplayVerse)
-      ? _rhemaEnglishText(_swmDisplayBook, _swmDisplayChapter, _swmDisplayVerse, _rhemaReaderVersion()) : '';
-  }
+  const full = document.getElementById('swmFullText');
+  if (!full) return;
+  const versesArr = (_swmSelectedVerses && _swmSelectedVerses.size) ? _swmSelectedSorted().map(String) : [String(_swmSavedVerse)];
+  const sourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel(_rhemaReaderVersion()) : 'Greek';
+  const rangeLabel = (typeof _rhemaVerseRangeStr === 'function') ? _rhemaVerseRangeStr(versesArr.map(Number)) : versesArr.join(',');
+  const rows = versesArr.map(v => {
+    let text;
+    if (_rhemaShowEnglish) {
+      text = _rhemaEnglishText(_swmSavedBook, _swmSavedChapter, v, _rhemaReaderVersion()) || '';
+    } else {
+      const words = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter]?.[v] || [];
+      text = words.map(w => w[0]).join(' ');
+    }
+    return `<p class="swm-ft-verse"><sup class="swm-ft-num">${_escapeRhemaAttr(v)}</sup>${_escapeRhemaAttr(text)}</p>`;
+  }).join('');
+  full.innerHTML =
+    `<div class="swm-ft-head">
+       <span class="swm-ft-ref">${_escapeRhemaAttr(_rhemaBookName(_swmSavedBook))} ${_escapeRhemaAttr(_swmSavedChapter)}:${_escapeRhemaAttr(rangeLabel)}</span>
+       <span class="swm-ft-src">${_escapeRhemaAttr(sourceLabel)}</span>
+     </div>${rows}`;
 }
 
 function swmNavVerse(delta) {
@@ -29944,7 +29960,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.453";
+const APP_VERSION = "3.0.454";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
