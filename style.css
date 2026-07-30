@@ -18059,6 +18059,42 @@ body.dark .rhema-reader-menu-btn {
   .rsp-row { animation-duration: 0.01ms !important; opacity: 1; }
 }
 
+/* ── Study tools 2×2 grid (side menu, shown when a study is active) ── */
+.rrp-study-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 4px 14px 6px; }
+.rrp-study-btn {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  padding: 14px 13px;
+  border-radius: 16px; cursor: pointer;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--secondary-color) 11%, var(--card-solid-color)), var(--card-solid-color));
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
+  color: var(--font-color);
+  text-align: left; min-height: 82px;
+  box-shadow: 0 2px 8px -3px color-mix(in srgb, var(--secondary-color) 34%, transparent);
+  transition: transform 0.12s, box-shadow 0.15s;
+}
+.rrp-study-btn:active { transform: scale(0.97); }
+.rrp-study-btn .material-symbols-outlined {
+  font-size: 22px; color: var(--btn-text-color);
+  width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center;
+  background: linear-gradient(145deg, var(--secondary-color), color-mix(in srgb, var(--secondary-color) 80%, #000));
+  box-shadow: 0 3px 8px -2px color-mix(in srgb, var(--secondary-color) 55%, transparent);
+}
+.rrp-study-btn > span:not(.material-symbols-outlined) { font-size: 0.9rem; font-weight: 750; }
+
+/* ── A study tool hosted over the reader (slides in from the right) ── */
+.study-sandbox.tool-host {
+  z-index: 1300;
+  transform: translateX(100%);
+  transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.study-sandbox.tool-host.in { transform: none; }
+@media (prefers-reduced-motion: reduce) { .study-sandbox.tool-host { transition-duration: 0.01ms; } }
+
+/* Phrasing tool = the structured-verses editor only (Saved Verses retired) */
+.ss-pane.rhema-phrasing-only .ss-subtabs { display: none; }
+.ss-pane.rhema-phrasing-only #ssSavedVersesPane { display: none !important; }
+.ss-pane.rhema-phrasing-only #ssStructuredVersesPane { display: flex; }
+
 /* ── Dark mode: the reader chrome's raised white glass goes dark. Dark themes
    brighten --secondary-color/--font-color for dark surfaces, so on the white
    glass pills (book picker, version, swap, tools, verse nav) the light text
