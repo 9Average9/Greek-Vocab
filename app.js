@@ -8112,7 +8112,7 @@ function _showStudyToast(msg) {
   if (!el) {
     el = document.createElement('div');
     el.id = 'studyToast';
-    el.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:24px;font-size:0.85rem;font-weight:600;z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.25s';
+    el.className = 'rhema-app-toast';
     document.body.appendChild(el);
   }
   el.textContent = msg;
@@ -8934,7 +8934,7 @@ function _updateWsVerseDisplay() {
     ? `${bookName} ${_rhemaChapter}:${_rhemaVerse}` : '';
   if (EnglishEl) {
     EnglishEl.textContent = (_rhemaBook && _rhemaChapter && _rhemaVerse)
-      ? _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) : '';
+      ? _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse, _rhemaReaderVersion()) : '';
   }
 }
 
@@ -9102,13 +9102,13 @@ function _updateSwmVerseDisplay() {
   const English = document.getElementById('swmEnglishText');
   let swmSnippet = '';
   let swmWordCount = 0;
-  let swmSourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel() : 'Greek';
+  let swmSourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel(_rhemaReaderVersion()) : 'Greek';
   if (card) {
     const bookName = _rhemaBookName(_swmDisplayBook);
     const words = (_rhemaText()[_swmDisplayBook] || {})[_swmDisplayChapter]?.[_swmDisplayVerse] || [];
-    const sourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel() : 'Greek';
+    const sourceLabel = _rhemaShowEnglish ? _rhemaEnglishLabel(_rhemaReaderVersion()) : 'Greek';
     const snippet = _rhemaShowEnglish
-      ? (_rhemaEnglishText(_swmDisplayBook, _swmDisplayChapter, _swmDisplayVerse) || '')
+      ? (_rhemaEnglishText(_swmDisplayBook, _swmDisplayChapter, _swmDisplayVerse, _rhemaReaderVersion()) || '')
       : words.slice(0, 14).map(w => w[0]).join(' ');
     swmSnippet = snippet;
     swmWordCount = words.length;
@@ -9123,7 +9123,7 @@ function _updateSwmVerseDisplay() {
   }
   if (English) {
     English.textContent = (!_rhemaShowEnglish && _swmDisplayBook && _swmDisplayChapter && _swmDisplayVerse)
-      ? _rhemaEnglishText(_swmDisplayBook, _swmDisplayChapter, _swmDisplayVerse) : '';
+      ? _rhemaEnglishText(_swmDisplayBook, _swmDisplayChapter, _swmDisplayVerse, _rhemaReaderVersion()) : '';
   }
 }
 
@@ -9161,11 +9161,11 @@ async function saveWritingModal() {
     verse: _swmSavedVerse,
     bookName: _rhemaBookName(_swmSavedBook),
     sourceLanguage,
-    version: _rhemaShowEnglish ? _rhemaEnglishVersion() : 'Greek'
+    version: _rhemaShowEnglish ? _rhemaReaderVersion() : 'Greek'
   };
   const verseSnippet = (() => {
     if (_rhemaShowEnglish) {
-      const eng = _rhemaEnglishText(_swmSavedBook, _swmSavedChapter, _swmSavedVerse) || '';
+      const eng = _rhemaEnglishText(_swmSavedBook, _swmSavedChapter, _swmSavedVerse, _rhemaReaderVersion()) || '';
       return eng.length > 90 ? eng.slice(0, 87) + '...' : eng;
     }
     const words = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter]?.[_swmSavedVerse] || [];
@@ -9556,11 +9556,18 @@ function openWlWordDetail(strongs, formSurface) {
   document.getElementById('rhemaSheetSurface').textContent = surface;
   document.getElementById('rhemaSheetStrongs').textContent = (layer === 'hebrew' ? 'H' : 'G') + strongs;
   document.getElementById('rhemaSheetLemma').textContent   = lex.lemma ? `${lex.lemma}  (${lex.translit || lex.pronounce || ''})` : '';
-  // Hide study buttons (not in verse context)
+  // Save-to-study is retired; offer "Add to Word Log" when inside a study.
   document.getElementById('rhemaSaveToStudyBtn')?.classList.add('hidden');
-  document.getElementById('rhemaAddToWordLogBtn')?.classList.add('hidden');
-  // Hide sandbox arrows while sheet is open
-  document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
+  const _wlAddBtn = document.getElementById('rhemaAddToWordLogBtn');
+  if (_wlAddBtn) {
+    if (_studySandboxId) {
+      _wlAddBtn.classList.remove('hidden', 'logged');
+      _wlAddBtn.disabled = false;
+      _wlAddBtn.textContent = '+ Add to Word Log';
+    } else {
+      _wlAddBtn.classList.add('hidden');
+    }
+  }
   // Show definition tab
   showRhemaTab('definition', _rhemaActiveWord);
   document.getElementById('rhemaWlBackBtn')?.classList.remove('hidden');
@@ -9744,6 +9751,14 @@ async function deleteSandboxWord(wordId) {
 }
 
 function openSandboxWordDetail(strongs, layer = 'nt-greek') {
+  // English entries (logged as en:<word>) have no Greek parsing — show the
+  // English definition instead. Greek/Hebrew entries are unchanged.
+  if (String(strongs).startsWith('en:')) {
+    const we = _sandboxWordLogCache.find(x => String(x.strongs) === String(strongs));
+    const word = we?.surface || we?.lemma || String(strongs).slice(3);
+    if (word && typeof rhemaShowEnglishMeaning === 'function') rhemaShowEnglishMeaning(word);
+    return;
+  }
   const w = _sandboxWordLogCache.find(x => String(x.strongs) === String(strongs) && (x.layer || 'nt-greek') === layer);
   const lexicon = getCurrentRhemaLexicon(layer);
   if (!w && !lexicon?.[strongs]) return;
@@ -29893,7 +29908,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.451";
+const APP_VERSION = "3.0.452";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -40869,7 +40884,15 @@ function toggleRhemaHighlightBar() {
   }
 }
 
+let _rhemaPreserveScroll = false;
+let _rhemaPreserveScrollTimer = null;
+function _rhemaHoldScroll() {
+  _rhemaPreserveScroll = true;
+  clearTimeout(_rhemaPreserveScrollTimer);
+  _rhemaPreserveScrollTimer = setTimeout(() => { _rhemaPreserveScroll = false; }, 600);
+}
 function toggleRhemaHighlight(cat) {
+  _rhemaHoldScroll();
   if (_rhemaEnglishHighlightActive()) {
     const present = _rhemaEnglishPresentCats();
     const hasMatch = present.has(cat);
@@ -43434,6 +43457,13 @@ function renderRhemaVerse() {
     requestAnimationFrame(() => {
       const body = document.querySelector('#rhemaModal .rhema-body');
       if (!body) return;
+      // Highlight/POS refreshes keep the reader exactly where it is instead of
+      // jumping back to the top / focus verse.
+      if (_rhemaPreserveScroll) {
+        body._rhemaLastChromeScrollTop = body.scrollTop || 0;
+        _rhemaSetChromeHidden?.(false);
+        return;
+      }
       // A fresh chapter open starts at the top; only scroll when jumping to a
       // focused verse or resuming somewhere mid-chapter.
       if (!focusVerse && _rhemaVerse === String(verseNums[0])) {

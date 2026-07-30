@@ -16200,16 +16200,42 @@ body.rx-scroll-lock {
   bottom: 90px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0,0,0,0.72);
-  color: #fff;
-  padding: 7px 18px;
-  border-radius: 20px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  background: var(--card-solid-color);
+  color: var(--font-color);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 32%, var(--border-color));
+  padding: 10px 18px;
+  border-radius: 14px;
+  font-size: 0.84rem;
+  font-weight: 650;
   z-index: 1060;
   pointer-events: none;
   white-space: nowrap;
+  box-shadow: 0 12px 32px -10px rgba(16,24,40,0.4);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
+/* Theme-matched premium toast used app-wide (_showStudyToast) */
+.rhema-app-toast {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--card-solid-color);
+  color: var(--font-color);
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 32%, var(--border-color));
+  padding: 11px 20px;
+  border-radius: 14px;
+  font-size: 0.86rem;
+  font-weight: 650;
+  z-index: 9999;
+  pointer-events: none;
+  max-width: min(88vw, 420px);
+  text-align: center;
+  box-shadow: 0 14px 36px -10px rgba(16,24,40,0.42);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.28s cubic-bezier(0.32,0.72,0,1);
+}
+.rhema-app-toast[style*="opacity: 1"], .rhema-app-toast.show { transform: translateX(-50%) translateY(0); }
 .rhema-chapter-toast:not(.hidden) {
   animation: rhema-toast-fade 1.8s ease forwards;
 }
@@ -17949,7 +17975,13 @@ body.dark .rhema-reader-menu-btn {
   padding: 0 11px !important;
   justify-content: center;
 }
-.rhema-study-pill .rhema-pill-icon { margin: 0; color: var(--muted-color); }
+.rhema-study-pill { align-items: center; }
+.rhema-study-pill .rhema-pill-icon {
+  margin: 0; color: var(--muted-color);
+  line-height: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem;
+}
+.rhema-study-pill.active .rhema-pill-icon { color: var(--secondary-color); }
 .rhema-study-pill.active {
   background: linear-gradient(145deg, color-mix(in srgb, var(--secondary-color) 20%, rgba(255,255,255,0.88)), color-mix(in srgb, var(--secondary-color) 12%, rgba(255,255,255,0.82)));
   border-color: color-mix(in srgb, var(--secondary-color) 30%, rgba(255,255,255,0.5));
@@ -22035,7 +22067,7 @@ body.sandbox-open .rhema-english-display {
 /* Add to Word Log button in Rhema word sheet */
 .rhema-add-wordlog-btn {
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  width: calc(100% - 32px); margin: 8px 16px 0;
+  width: calc(100% - 32px); margin: 8px 16px calc(env(safe-area-inset-bottom, 0px) + 18px);
   padding: 12px; border-radius: 14px; border: 1.5px solid var(--secondary-color);
   background: color-mix(in srgb, var(--secondary-color) 8%, transparent);
   color: var(--secondary-color);
@@ -37666,3 +37698,7 @@ body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
 @media (prefers-reduced-motion: reduce) {
   .screen.screen-enter { animation: none !important; }
 }
+
+/* English meaning modal must clear the study tool host (z 1300) when opened
+   from an English word-log entry. */
+#rhemaEnglishMeaningModal { z-index: 1400; }
