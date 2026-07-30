@@ -29893,7 +29893,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.450";
+const APP_VERSION = "3.0.451";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -41509,9 +41509,19 @@ function closeStudyToolHost() {
   host.classList.remove('in');
   // Back to the reader "tab" so the long-press mini-wheel works again.
   _sandboxTab = 'rhema';
-  // The reader sits behind the tool host — make sure it's the thing revealed
-  // (not the home screen).
-  document.getElementById('rhemaModal')?.classList.add('open');
+  // Reassert the study reader chrome so returning from a tool never shows the
+  // old swap/wheel or a reset Study pill. The reader sits behind the host.
+  const modal = document.getElementById('rhemaModal');
+  if (modal) {
+    modal.classList.add('open', 'rhema-has-menu');
+    if (_studySandboxId) {
+      if (!_activeSandboxStudy) _activeSandboxStudy = _myStudies.find(s => s.id === _studySandboxId) || _activeSandboxStudy;
+      modal.classList.add('rhema-in-study');
+    }
+  }
+  _syncRhemaStudyHeader();
+  _syncRhemaStudyPill();
+  if (typeof _syncRhemaChapterUi === 'function') _syncRhemaChapterUi();
   clearTimeout(closeStudyToolHost._t);
   closeStudyToolHost._t = setTimeout(() => {
     host.classList.add('hidden');
@@ -41991,10 +42001,17 @@ function closeRhema(keepSandbox = false) {
   closeRhemaReaderPanel();
   if (typeof exitRhemaCopyMode === 'function') exitRhemaCopyMode();
   closeRhemaStudyPicker();
-  _rhemaStopStudyListeners();
-  _activeSandboxStudy = null;
+  // On a real close, tear the study down. On a keep-sandbox close (an internal
+  // tab switch), preserve the study context + reader chrome so returning to the
+  // reader from a tool keeps the study state (hamburger, pill, no swap/wheel).
+  if (!keepSandbox) {
+    _rhemaStopStudyListeners();
+    _activeSandboxStudy = null;
+  }
   _rhemaReadMode = false;
-  document.getElementById('rhemaModal')?.classList.remove('rhema-read-mode', 'rhema-has-menu', 'rhema-in-study');
+  const _rmModalEl = document.getElementById('rhemaModal');
+  _rmModalEl?.classList.remove('rhema-read-mode');
+  if (!keepSandbox) _rmModalEl?.classList.remove('rhema-has-menu', 'rhema-in-study');
   _syncRhemaStudyHeader();
   _syncRhemaStudyPill();
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
