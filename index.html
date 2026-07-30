@@ -339,7 +339,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.445" rel="stylesheet"/>
+<link href="style.css?v=3.0.446" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.428" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.438" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -563,13 +563,6 @@ Journey Maps</span>
 <img class="qa-img" src="assets/icons/quick-sermon-notes.png?v=3.0.428" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Sermon<br/>Notes</strong><small>Capture every message</small></div>
-<span class="hat-chev">&rarr;</span>
-</button>
-<button class="home-action-tile quick-action-study" id="studyLibraryHomeBtn" onclick="openHomeToolFromElement(this, 'study')">
-<div class="hat-icon hat-icon-library">
-<img class="qa-img" src="assets/icons/quick-study-library.png?v=3.0.439" alt="" loading="lazy"/>
-</div>
-<div class="hat-text"><strong>Study<br/>Library</strong><small>Explore</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile quick-action-memorize" id="memorizationHomeBtn" onclick="openHomeToolFromElement(this, 'memorization')">
@@ -10555,8 +10548,8 @@ Verb Endings
 <span class="material-symbols-outlined">arrow_back</span>
 </button>
 <div class="rhema-title-block">
-<span class="rhema-title">Rhēma</span>
-<span class="rhema-title-greek">Word Study</span>
+<span class="rhema-title" id="rhemaTitleMain">Rhēma</span>
+<span class="rhema-title-greek" id="rhemaTitleSub">Bible reader</span>
 </div>
 <div class="rhema-header-actions">
 <button class="rhema-tool-btn" id="rhemaToolBtn" onclick="toggleRhemaWheel()" title="Tools">
@@ -10583,6 +10576,9 @@ Verb Endings
 <button class="rhema-pill" id="rhemaVersePillBtn" onclick="openRhemaVersePicker()" title="Jump to a verse in this chapter">
 <span id="rhemaPillVerse">v16</span>
 <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
+</button>
+<button class="rhema-pill rhema-study-pill" id="rhemaStudyPillBtn" onclick="openRhemaStudyPicker()" title="Studies" aria-label="Studies">
+<span class="material-symbols-outlined rhema-pill-icon" id="rhemaStudyPillIcon">book_2</span>
 </button>
 <button class="rhema-pill rhema-chapter-mode-pill rhema-translation-pill" id="rhemaEnglishVersionBtn" onclick="toggleRhemaEnglishVersion()" title="Choose Bible version">
 <span id="rhemaEnglishVersionLabel">MSB</span>
@@ -10797,6 +10793,21 @@ Verb Endings
 </div>
 <div class="rrp-toast" id="rrpToast" role="status" aria-live="polite"></div>
 </aside>
+</div>
+<!-- ── Study picker (from the reader's Study pill) ── -->
+<div class="rhema-study-picker-overlay" id="rhemaStudyPickerOverlay" onclick="if(event.target===this)closeRhemaStudyPicker()">
+<div class="rhema-study-picker">
+<div class="rsp-grip"></div>
+<div class="rsp-header">
+<span class="rsp-title">Studies</span>
+<button class="rsp-x" onclick="closeRhemaStudyPicker()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="rsp-list" id="rhemaStudyPickerList"></div>
+<button class="rsp-new" onclick="rhemaStudyPickerCreate()">
+<span class="material-symbols-outlined">add</span>
+<span>Start another study</span>
+</button>
+</div>
 </div>
 <!-- ── Coach mark onboarding overlay ── -->
 <div class="rhema-coach-overlay hidden" id="rhemaCoachOverlay">
@@ -17238,7 +17249,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.445"></script>
+<script src="app.js?v=3.0.446"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.363"></script>
 <script src="verse-structure.js?v=3.0.429"></script>

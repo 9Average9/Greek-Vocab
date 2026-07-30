@@ -29887,7 +29887,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.445";
+const APP_VERSION = "3.0.446";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -41285,8 +41285,11 @@ async function showRhema() {
     _rhemaVerseFocus = false;
   }
   // Standard reader (from the Read/Study chooser) uses the hamburger side menu
-  // instead of the radial wheel. Sandbox and sermon flows keep the wheel.
-  modal.classList.toggle('rhema-has-menu', !_studySandboxId && !sermonMode);
+  // instead of the radial wheel — including when a study is active (studies are
+  // now hosted in the reader). Sermon flow keeps the wheel.
+  modal.classList.toggle('rhema-has-menu', !sermonMode);
+  _syncRhemaStudyHeader();
+  _syncRhemaStudyPill();
   _syncRhemaChapterUi();
 
   const loading = document.getElementById('rhemaLoadingMsg');
@@ -41319,6 +41322,135 @@ function launchRhema(mode) {
   closeRhemaLaunchMenu();
   _rhemaReadMode = (mode === 'read');
   resumeRhema();
+}
+
+// ── Reader study picker + study context ───────────────────────────────────────
+// Studies are entered from the reader's Study pill (the home Study Library was
+// retired). Entering a study sets the same _studySandboxId / _activeSandboxStudy
+// context the old sandbox used, so mark isolation, long-press observations and
+// the study data listeners all work — just hosted inside the reader.
+function openRhemaStudyPicker() {
+  const ov = document.getElementById('rhemaStudyPickerOverlay');
+  if (!ov) return;
+  _renderRhemaStudyPicker();
+  ov.classList.add('open');
+  requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add('in')));
+  // Refresh the list in the background; re-render only if it actually changed.
+  if (typeof _loadMyStudies === 'function') {
+    const before = _myStudies.map(s => s.id).join(',');
+    Promise.resolve(_loadMyStudies()).then(() => {
+      if (ov.classList.contains('open') && _myStudies.map(s => s.id).join(',') !== before) _renderRhemaStudyPicker();
+    }).catch(() => {});
+  }
+}
+function closeRhemaStudyPicker() {
+  const ov = document.getElementById('rhemaStudyPickerOverlay');
+  if (!ov || !ov.classList.contains('open')) return;
+  ov.classList.remove('in');
+  clearTimeout(closeRhemaStudyPicker._t);
+  closeRhemaStudyPicker._t = setTimeout(() => ov.classList.remove('open'), 300);
+}
+function _renderRhemaStudyPicker() {
+  const list = document.getElementById('rhemaStudyPickerList');
+  if (!list) return;
+  const rows = [];
+  if (_studySandboxId) {
+    rows.push(`<button class="rsp-row rsp-exit" onclick="rhemaExitStudy()">
+      <span class="rsp-ico" style="--rsp-c:var(--muted-color)"><span class="material-symbols-outlined">menu_book</span></span>
+      <span class="rsp-copy"><strong>Just reading</strong><small>Leave the study, keep reading</small></span>
+    </button>`);
+  }
+  if (!_myStudies.length) {
+    rows.push(`<div class="rsp-empty">No studies yet.<br>Start one to save phrasing, notes, word logs and trails — all kept together.</div>`);
+  } else {
+    _myStudies.forEach(s => {
+      const active = _studySandboxId === s.id;
+      const color = _escapeRhemaAttr(s.color || 'var(--secondary-color)');
+      rows.push(`<button class="rsp-row${active ? ' active' : ''}" onclick="rhemaEnterStudy('${_escapeRhemaAttr(s.id)}')">
+        <span class="rsp-ico" style="--rsp-c:${color}"><span class="material-symbols-outlined">${_escapeRhemaAttr(s.icon || 'menu_book')}</span></span>
+        <span class="rsp-copy"><strong>${_escapeRhemaAttr(s.name || 'Study')}</strong>${s.description ? `<small>${_escapeRhemaAttr(s.description)}</small>` : ''}</span>
+        <span class="material-symbols-outlined rsp-mark">${active ? 'check_circle' : 'chevron_right'}</span>
+      </button>`);
+    });
+  }
+  list.innerHTML = rows.join('');
+}
+function rhemaStudyPickerCreate() {
+  closeRhemaStudyPicker();
+  setTimeout(() => { if (typeof openStudyCreateSheet === 'function') openStudyCreateSheet(); }, 280);
+}
+function rhemaEnterStudy(studyId) {
+  const study = _myStudies.find(s => s.id === studyId);
+  if (!study) return;
+  closeRhemaStudyPicker();
+  _activeSandboxStudy = study;
+  _studySandboxId = studyId;
+  _rhemaStartStudyListeners(studyId);
+  document.getElementById('rhemaModal')?.classList.add('rhema-in-study');
+  _syncRhemaStudyHeader();
+  _syncRhemaStudyPill();
+  renderRhemaVerse();   // re-render: binds long-press (guarded by _studySandboxId) + scopes marks
+}
+function rhemaExitStudy() {
+  closeRhemaStudyPicker();
+  _rhemaStopStudyListeners();
+  _studySandboxId = null;
+  _activeSandboxStudy = null;
+  document.getElementById('rhemaModal')?.classList.remove('rhema-in-study');
+  _syncRhemaStudyHeader();
+  _syncRhemaStudyPill();
+  renderRhemaVerse();
+}
+function _rhemaStartStudyListeners(studyId) {
+  if (!window.Studies) return;
+  _rhemaStopStudyListeners();
+  const uid = window.Auth?.getCurrentUser()?.uid;
+  const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
+  if (uid) window.Studies.openSession?.(uid, studyId, { displayName, friendsList });
+  _sandboxUnsubEntries = window.Studies.listenEntries?.(studyId, entries => {
+    _sandboxEntriesCache = entries; if (typeof _renderWorkspaceEntries === 'function') _renderWorkspaceEntries(entries);
+  });
+  _sandboxUnsubVerses = window.Studies.listenVerses?.(studyId, verses => {
+    if (typeof _renderSandboxVerses === 'function') _renderSandboxVerses(verses);
+  });
+  _sandboxUnsubWordLog = window.Studies.listenWordLog?.(studyId, words => {
+    _sandboxWordLogCache = words; if (typeof _renderSandboxWordLog === 'function') _renderSandboxWordLog(words);
+  });
+  _sandboxUnsubTrails = window.Studies.listenTrails?.(studyId, trails => {
+    _sandboxTrailsCache = trails; if (typeof _renderSandboxTrails === 'function') _renderSandboxTrails(trails);
+  });
+  _sandboxUnsubStructures = window.Studies.listenStructures?.(studyId, structures => {
+    _sandboxStructuresCache = structures || []; if (typeof _renderSandboxStructures === 'function') _renderSandboxStructures(_sandboxStructuresCache);
+  });
+  _sandboxUnsubStudy = window.Studies.listenStudy?.(studyId, updated => { if (updated) _activeSandboxStudy = updated; });
+}
+function _rhemaStopStudyListeners() {
+  _sandboxUnsubEntries?.(); _sandboxUnsubVerses?.(); _sandboxUnsubWordLog?.();
+  _sandboxUnsubTrails?.(); _sandboxUnsubStructures?.(); _sandboxUnsubStudy?.(); _sandboxUnsubNotes?.();
+  _sandboxUnsubEntries = _sandboxUnsubVerses = _sandboxUnsubWordLog = _sandboxUnsubTrails = _sandboxUnsubStructures = _sandboxUnsubStudy = _sandboxUnsubNotes = null;
+  _sandboxEntriesCache = []; _sandboxTrailsCache = []; _sandboxStructuresCache = []; _sandboxWordLogCache = [];
+}
+function _syncRhemaStudyHeader() {
+  const main = document.getElementById('rhemaTitleMain');
+  const sub = document.getElementById('rhemaTitleSub');
+  if (_studySandboxId && _activeSandboxStudy) {
+    if (main) main.textContent = _activeSandboxStudy.name || 'Study';
+    if (sub) sub.textContent = 'Study';
+  } else {
+    if (main) main.textContent = 'Rhēma';
+    if (sub) sub.textContent = 'Bible reader';
+  }
+}
+function _syncRhemaStudyPill() {
+  const icon = document.getElementById('rhemaStudyPillIcon');
+  const pill = document.getElementById('rhemaStudyPillBtn');
+  if (_studySandboxId && _activeSandboxStudy) {
+    if (icon) { icon.textContent = _activeSandboxStudy.icon || 'book_2'; icon.style.color = _activeSandboxStudy.color || ''; }
+    pill?.classList.add('active');
+  } else {
+    if (icon) { icon.textContent = 'book_2'; icon.style.color = ''; }
+    pill?.classList.remove('active');
+  }
 }
 
 // ── Read-mode reader panel (highlights / notes / cross refs / typography) ──────
@@ -41777,8 +41909,13 @@ function closeRhema(keepSandbox = false) {
   closeRhemaPickerSheet();
   closeRhemaReaderPanel();
   if (typeof exitRhemaCopyMode === 'function') exitRhemaCopyMode();
+  closeRhemaStudyPicker();
+  _rhemaStopStudyListeners();
+  _activeSandboxStudy = null;
   _rhemaReadMode = false;
-  document.getElementById('rhemaModal')?.classList.remove('rhema-read-mode', 'rhema-has-menu');
+  document.getElementById('rhemaModal')?.classList.remove('rhema-read-mode', 'rhema-has-menu', 'rhema-in-study');
+  _syncRhemaStudyHeader();
+  _syncRhemaStudyPill();
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   _rhemaTrail = [];
   _rhemaTrailPos = -1;
