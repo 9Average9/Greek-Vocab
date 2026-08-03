@@ -45901,7 +45901,7 @@ function copyRhemaVerseOrChapter() {
     const header = `${bookName} ${_rhemaChapter}`;
     if (_rhemaShowEnglish) {
       const lines = verseNums.map(vn => {
-        const t = _rhemaEnglishText(_rhemaBook, _rhemaChapter, String(vn));
+        const t = _rhemaReaderText(_rhemaBook, _rhemaChapter, String(vn));
         return t ? `${vn} ${t}` : null;
       }).filter(Boolean);
       text = `${header}\n\n${lines.join('\n')}`;
@@ -45915,7 +45915,7 @@ function copyRhemaVerseOrChapter() {
   } else {
     const ref = `${bookName} ${_rhemaChapter}:${_rhemaVerse}`;
     if (_rhemaShowEnglish) {
-      const t = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
+      const t = _rhemaReaderText(_rhemaBook, _rhemaChapter, _rhemaVerse);
       text = `${ref}\n${t}`;
     } else {
       const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
@@ -45936,7 +45936,10 @@ function copyRhemaVerseOrChapter() {
 }
 
 function _rhemaVerseTextFor(book, chapter, verse) {
-  if (_rhemaShowEnglish) return _rhemaEnglishText(book, chapter, verse) || '';
+  // Copy the version the reader is actually showing (MSB/BSB or an API version
+  // like NIV/NKJV/NASB), not the app-wide English mode — otherwise every copy
+  // falls back to MSB regardless of what the user selected.
+  if (_rhemaShowEnglish) return _rhemaReaderText(book, chapter, verse) || '';
   const words = (_rhemaText()[book] || {})[String(chapter)]?.[String(verse)] || [];
   return words.map(w => w[0]).join(' ');
 }
