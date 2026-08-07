@@ -485,6 +485,36 @@ body.dark .sn-live-pill { color: color-mix(in srgb, var(--sn-accent) 55%, #fff);
 .sn-audio-more .material-symbols-outlined { font-size: 19px; }
 .sn-audio-more:active { transform: scale(.94); }
 
+/* On-device verse scan (post-recording speech-to-text) */
+.sn-scan-row {
+  flex: 0 0 100%; order: 10;                 /* drop to its own line under the player */
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 4px; padding-top: 10px;
+  border-top: 1px dashed var(--sn-line);
+  min-height: 20px; font-size: .74rem; color: var(--sn-muted);
+}
+.sn-scan-row.sn-scan-active { color: var(--sn-accent-deep); }
+body.dark .sn-scan-row.sn-scan-active { color: color-mix(in srgb, var(--sn-accent) 60%, #fff); }
+.sn-scan-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid color-mix(in srgb, var(--sn-accent) 30%, transparent);
+  background: var(--sn-accent-soft); color: var(--sn-accent-deep);
+  border-radius: 999px; padding: 7px 14px; cursor: pointer;
+  font-weight: 800; font-size: .74rem;
+}
+body.dark .sn-scan-btn { color: color-mix(in srgb, var(--sn-accent) 60%, #fff); }
+.sn-scan-btn .material-symbols-outlined { font-size: 17px; }
+.sn-scan-btn:active { transform: scale(.96); }
+.sn-scan-label { font-weight: 700; }
+.sn-scan-ic { font-size: 17px; color: var(--sn-accent); }
+.sn-scan-ic.material-symbols-outlined { font-size: 17px; }
+.sn-scan-spin {
+  width: 15px; height: 15px; flex-shrink: 0; border-radius: 50%;
+  border: 2px solid var(--sn-line); border-top-color: var(--sn-accent);
+  animation: sn-scan-spin .7s linear infinite;
+}
+@keyframes sn-scan-spin { to { transform: rotate(360deg); } }
+
 /* ═══════════ Verses sub-tabs + Heard cards ═══════════ */
 .sn-subtabs { display: flex; gap: 8px; margin: 2px 0 12px; }
 .sn-subtab {

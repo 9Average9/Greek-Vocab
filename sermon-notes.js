@@ -927,6 +927,7 @@
   const audioState = {
     recorder: null, chunks: [], recording: false, startTs: 0, baseOffset: 0,
     stream: null, segId: null, timer: null, heardThisSession: 0,
+    mime: '', recMime: '',       // container/codec the recorder is actually using
     segUrls: {},                 // segmentId → object URL (session cache)
     player: { audio: null, seg: null, playing: false, raf: 0 },
     speech: null, speechWanted: false,
@@ -970,6 +971,45 @@
   }
   function refreshAudio(s) { const box = document.getElementById('snAudio'); if (box) drawAudio(s, box); }
 
+  /* ───────── Capture quality ─────────
+     A phone resting in your lap in the pew is capturing a distant speaker across
+     a room — usually through the house PA. The browser's default `audio:true`
+     turns on call-tuned DSP (echo cancellation + noise suppression) that treats
+     that distant, reverberant voice as "noise" and gates/muffles it — the classic
+     underwater, cutting-out sermon recording. We turn those off and keep only
+     gentle auto-gain to lift the level, capture mono at 48 kHz, and record at a
+     healthy bitrate. The result is far fuller, more natural sermon audio. */
+  function micConstraints() {
+    return {
+      channelCount: 1,
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: true,
+      sampleRate: 48000
+    };
+  }
+  // Pick the best container/codec this device can actually record. Opus (in webm
+  // or ogg) is ideal; iOS Safari only records AAC in mp4, so fall through to it.
+  // Returns '' when the device can't report support (let the browser choose).
+  function pickRecorderMime() {
+    const cands = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/aac'];
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported) {
+      for (const c of cands) { try { if (MediaRecorder.isTypeSupported(c)) return c; } catch (e) {} }
+    }
+    return '';
+  }
+  function makeRecorder(stream) {
+    const mime = pickRecorderMime();
+    audioState.recMime = mime;
+    const opts = { audioBitsPerSecond: 128000 };
+    if (mime) opts.mimeType = mime;
+    try { return new MediaRecorder(stream, opts); }
+    catch (e) {
+      try { return new MediaRecorder(stream, mime ? { mimeType: mime } : {}); }
+      catch (e2) { return new MediaRecorder(stream); }
+    }
+  }
+
   /* ───────── Recording ───────── */
   async function toggleRecord(s, box) {
     if (audioState.recording) { await stopRecording(s); refreshAudio(s); return; }
@@ -978,15 +1018,17 @@
     // Warm the Bible data so caught references can be validated to real passages.
     if (typeof window.loadRhemaScripts === 'function') { try { window.loadRhemaScripts(); } catch (e) {} }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: micConstraints() });
       audioState.stream = stream;
       audioState.chunks = [];
       audioState.segId = uid();
       audioState.baseOffset = s.audioTotal || 0; // continue the timeline
-      let rec;
-      try { rec = new MediaRecorder(stream, { mimeType: 'audio/webm' }); }
-      catch (e) { rec = new MediaRecorder(stream); }
+      const rec = makeRecorder(stream);
       audioState.recorder = rec;
+      // Remember the container/codec the recorder actually produced so the saved
+      // Blob is labelled correctly (iOS records AAC/mp4, not webm) and plays back
+      // cleanly everywhere. rec.mimeType is the source of truth once started.
+      audioState.mime = (rec && rec.mimeType) || audioState.recMime || 'audio/webm';
       rec.ondataavailable = e => { if (e.data && e.data.size) audioState.chunks.push(e.data); };
       rec.onstop = () => finalizeSegment(s, box);
       rec.start(3000); // periodic flush so a crash still leaves recoverable chunks
@@ -1026,7 +1068,7 @@
     const dur = Math.max(1, Math.round(stopAt - (audioState.baseOffset || 0)));
     if (audioState.stream) { audioState.stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); audioState.stream = null; }
     const segId = audioState.segId;
-    const blob = new Blob(audioState.chunks, { type: 'audio/webm' });
+    const blob = new Blob(audioState.chunks, { type: (audioState.recorder && audioState.recorder.mimeType) || audioState.mime || 'audio/webm' });
     audioState.chunks = [];
     if (blob.size > 0 && segId) {
       const seg = { id: segId, startAt: audioState.baseOffset || 0, duration: dur };
@@ -1042,6 +1084,7 @@
     finalReferenceSweep(s);
     refreshAudio(s);
     if (audioState._resolveStop) { const r = audioState._resolveStop; audioState._resolveStop = null; r(); }
+    maybeAutoScan(s); // iOS has no live catcher — transcribe on-device to catch refs
   }
 
   // Post-recording final check: re-parse the FULL transcript in one pass,
@@ -1154,9 +1197,9 @@
           el('div', { class: 'sn-eq' }, [el('span'), el('span'), el('span'), el('span'), el('span')])
         ]),
         el('div', { class: 'sn-audio-hint' }, [
-          audioState.speech
+          speechSupported()
             ? el('span', {}, ['Listening for verses · caught ', el('strong', { id: 'snHeardCount', text: String(audioState.heardThisSession) }), ' so far'])
-            : el('span', { text: 'Recording… your captures get timestamps' })
+            : el('span', { text: 'Recording in HD · verses you type are logged automatically' })
         ])
       ]);
       box.appendChild(mid);
@@ -1168,7 +1211,7 @@
       box.appendChild(el('button', { class: 'sn-audio-rec', 'aria-label': 'Record', onclick: () => toggleRecord(s, box) }, [icon('mic')]));
       box.appendChild(el('div', { class: 'sn-audio-mid' }, [
         el('div', { class: 'sn-audio-time', text: 'Record the sermon' }),
-        el('div', { class: 'sn-audio-hint', text: 'Timestamps your notes and auto-catches spoken verses.' })
+        el('div', { class: 'sn-audio-hint', text: speechSupported() ? 'HD capture · timestamps your notes and auto-catches spoken verses.' : 'HD capture · timestamps your notes; verses you type are logged automatically.' })
       ]));
       return;
     }
@@ -1189,6 +1232,7 @@
       el('div', { class: 'sn-audio-hint', text: (s.audioSegments.length > 1 ? s.audioSegments.length + ' parts · ' : '') + (ready ? 'Tap a note’s timestamp to jump there' : 'Loading audio…') })
     ]));
     box.appendChild(el('button', { class: 'sn-audio-more', 'aria-label': 'Record more', title: 'Record another part', onclick: () => toggleRecord(s, box) }, [icon('mic'), 'More']));
+    box.appendChild(renderScanRow(s));
     updatePlayheadUI(s, globalPlayTime(), false);
   }
   function scrubStart(e, s) {
@@ -1504,6 +1548,194 @@
   function updateHeardBadge(s) {
     const b = document.getElementById('snHeardBadge');
     if (b) { const n = s.heard.length; b.textContent = n; b.classList.toggle('sn-hidden', !n); }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     ON-DEVICE VERSE SCAN  (post-recording speech-to-text)
+     ──────────────────────────────────────────────────────────────────────
+     The live catcher (Web Speech) doesn't exist on iOS at all, and even on
+     Android it can miss references over a long, noisy sermon. So after a
+     recording stops we transcribe it ON THE DEVICE with Whisper (via the
+     worker) and run the transcript through the very same reference parser the
+     live catcher uses. Nothing is uploaded; the model is downloaded once and
+     then works offline. On iOS this runs automatically (with a one-time
+     consent); everywhere there's a manual "Scan for verses" button too.
+     ══════════════════════════════════════════════════════════════════════ */
+  const STT_VER = '3.0.455';
+  const STT_MODEL = 'Xenova/whisper-tiny.en';
+  const STT = { worker: null, busy: false, ready: false, declined: false, forSermon: null };
+
+  function sttSupported() {
+    return !!(window.Worker && window.WebAssembly && (window.AudioContext || window.webkitAudioContext) &&
+      (window.OfflineAudioContext || window.webkitOfflineAudioContext));
+  }
+  function sttDevice() { try { return navigator.gpu ? 'webgpu' : 'wasm'; } catch (e) { return 'wasm'; } }
+  function sttWorker() {
+    if (STT.worker) return STT.worker;
+    try { STT.worker = new Worker('sermon-transcribe.worker.js?v=' + STT_VER, { type: 'module' }); }
+    catch (e) { STT.worker = null; }
+    return STT.worker;
+  }
+
+  // Decode a recording (any container) to the 16 kHz mono Float32 PCM Whisper
+  // wants. Each device can decode its OWN recordings (iOS: AAC/mp4, Android:
+  // Opus/webm) — which is exactly why the capture-codec fix matters here.
+  async function decodeMono16k(blob) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const bytes = await blob.arrayBuffer();
+    const ac = new AC();
+    const decoded = await new Promise((res, rej) => {
+      let done = false;
+      const p = ac.decodeAudioData(bytes, b => { done = true; res(b); }, err => { done = true; rej(err || new Error('decode-failed')); });
+      if (p && typeof p.then === 'function') p.then(b => { if (!done) res(b); }, err => { if (!done) rej(err); });
+    });
+    try { ac.close(); } catch (e) {}
+    const frames = Math.max(1, Math.ceil(decoded.duration * 16000));
+    const off = new OAC(1, frames, 16000);
+    const src = off.createBufferSource();
+    src.buffer = decoded; src.connect(off.destination); src.start(0);
+    const rendered = await off.startRendering();
+    return rendered.getChannelData(0);
+  }
+
+  // Send PCM to the worker; resolve with { text, chunks }.
+  function transcribePCM(pcm, onProgress) {
+    return new Promise((resolve, reject) => {
+      const w = sttWorker();
+      if (!w) return reject(new Error('no-worker'));
+      const onMsg = e => {
+        const m = e.data || {};
+        if (m.type === 'progress') { onProgress && onProgress(m); }
+        else if (m.type === 'result') { w.removeEventListener('message', onMsg); w.removeEventListener('error', onErr); resolve(m); }
+        else if (m.type === 'error') { w.removeEventListener('message', onMsg); w.removeEventListener('error', onErr); reject(new Error(m.error || 'transcribe-failed')); }
+      };
+      const onErr = () => {
+        w.removeEventListener('message', onMsg); w.removeEventListener('error', onErr);
+        try { w.terminate(); } catch (e) {}
+        if (STT.worker === w) STT.worker = null;   // rebuild a fresh worker next time
+        reject(new Error('worker-crashed'));
+      };
+      w.addEventListener('message', onMsg);
+      w.addEventListener('error', onErr);
+      // Transfer the buffer so we don't copy megabytes of audio.
+      w.postMessage({ audio: pcm, model: STT_MODEL, device: sttDevice() }, [pcm.buffer]);
+    });
+  }
+
+  // Feed a Whisper transcript through the existing reference pipeline. Mirrors
+  // finalReferenceSweep: stitch across chunk boundaries, reinterpret ASR merges,
+  // and commit refs — timestamped to the audio timeline via chunk start times.
+  function applyTranscript(s, res, baseT) {
+    let chunks = (res.chunks && res.chunks.length)
+      ? res.chunks.map(c => ({ text: c.text || '', t: Math.round((baseT || 0) + (c.timestamp && c.timestamp[0] != null ? c.timestamp[0] : 0)) }))
+      : (res.text ? [{ text: res.text, t: Math.round(baseT || 0) }] : []);
+    if (!chunks.length) return 0;
+    const doneList = s.heard.map(h => ({ key: heardKey(h), code: h.code, chapter: h.chapter, verse: h.verse, kind: h.kind, id: h.id }));
+    let prevTail = '', changed = 0;
+    chunks.forEach(ch => {
+      const stitched = (prevTail ? prevTail + ' ' : '') + (ch.text || '');
+      parseSpokenRefs(stitched).map(ref => reinterpretRef(ref, doneList)).forEach(ref => { if (commitHeardRef(s, ref, heardKey(ref), ch.t, doneList, stitched)) changed++; });
+      prevTail = String(ch.text || '').split(/\s+/).slice(-8).join(' ');
+    });
+    if (changed > 0) { updateHeardBadge(s); if (activeTab === 'verses' && versesSub === 'heard') renderTabBody(s); }
+    return changed;
+  }
+
+  async function scanSegment(s, seg, onProgress) {
+    let blob = null;
+    const url = audioState.segUrls[seg.id];
+    if (url) { try { blob = await fetch(url).then(r => r.blob()); } catch (e) {} }
+    if (!blob) blob = await loadAudioBlob(seg.id);
+    if (!blob) throw new Error('no-audio');
+    const pcm = await decodeMono16k(blob);
+    if (typeof window.loadRhemaScripts === 'function') { try { window.loadRhemaScripts(); } catch (e) {} }
+    const res = await transcribePCM(pcm, onProgress);
+    return applyTranscript(s, res, seg.startAt || 0);
+  }
+
+  // Scan every not-yet-scanned segment of a sermon. opts.force rescans all;
+  // opts.auto skips the toast on "nothing new"; consent is asked once.
+  async function scanSermon(s, opts) {
+    opts = opts || {};
+    if (!sttSupported()) { if (!opts.auto) toast('Verse scanning isn’t supported on this device'); return; }
+    if (STT.busy) { if (!opts.auto) toast('Already scanning the recording…'); return; }
+    const segs = (s.audioSegments || []).filter(seg => opts.force || !seg.scanned);
+    if (!segs.length) { if (!opts.auto) toast(s.audioSegments && s.audioSegments.length ? 'Already scanned for verses' : 'No recording to scan'); return; }
+    if (!STT.ready) {
+      if (opts.auto && STT.declined) return;   // don't nag after a decline
+      const ok = await snConfirm({
+        title: 'Scan the recording for verses?',
+        message: 'Uses a small on-device voice model to catch spoken references you didn’t type. It downloads once (~75 MB), then works offline — and your audio never leaves this device.',
+        ok: 'Scan', cancel: 'Not now', icon: 'graphic_eq'
+      });
+      if (!ok) { STT.declined = true; return; }
+    }
+    STT.busy = true; STT.forSermon = s.id;
+    setScanUI({ stage: 'prep' });
+    let total = 0;
+    try {
+      for (const seg of segs) {
+        const found = await scanSegment(s, seg, p => setScanUI(p));
+        seg.scanned = true; total += found; touch(s);
+      }
+      STT.ready = true;
+      setScanUI({ stage: 'done', found: total });
+      toast(total ? ('Found ' + total + ' verse reference' + (total === 1 ? '' : 's') + ' in the recording') : 'Scan complete — no new references');
+    } catch (e) {
+      const msg = String((e && e.message) || e);
+      setScanUI({ stage: 'error' });
+      toast(msg.indexOf('no-audio') >= 0 ? 'That recording isn’t available to scan' : 'Couldn’t finish the verse scan');
+    } finally {
+      STT.busy = false; STT.forSermon = null;
+      if (getSermon(current) === s) refreshAudio(s);
+    }
+  }
+
+  // Auto-scan after recording stops — but only where it's actually needed:
+  // iOS has no live catcher, so scan automatically; on Android the live catcher
+  // already ran, so we leave the manual "Scan for verses" button instead.
+  function maybeAutoScan(s) {
+    if (!sttSupported() || speechSupported()) return;
+    if (!(s.audioSegments && s.audioSegments.length)) return;
+    setTimeout(() => { if (getSermon(current) === s) scanSermon(s, { auto: true }); }, 400);
+  }
+
+  // Live progress line inside the audio widget (updated in place, no re-render).
+  function setScanUI(p) {
+    const row = document.getElementById('snScanRow');
+    if (!row) return;
+    row.classList.add('sn-scan-active');
+    let label = 'Preparing…';
+    if (p.stage === 'download') label = 'Downloading voice model… ' + (p.pct || 0) + '%';
+    else if (p.stage === 'transcribe') label = 'Listening through the recording…';
+    else if (p.stage === 'done') label = p.found ? ('Found ' + p.found + ' reference' + (p.found === 1 ? '' : 's')) : 'No new references found';
+    else if (p.stage === 'error') label = 'Scan failed — tap to retry';
+    row.innerHTML = '';
+    if (p.stage === 'done' || p.stage === 'error') {
+      row.classList.remove('sn-scan-active');
+      row.appendChild(el('span', { class: 'sn-scan-ic material-symbols-outlined', text: p.stage === 'error' ? 'error' : 'task_alt' }));
+    } else {
+      row.appendChild(el('span', { class: 'sn-scan-spin' }));
+    }
+    row.appendChild(el('span', { class: 'sn-scan-label', text: label }));
+  }
+
+  // The scan control shown under the playback bar.
+  function renderScanRow(s) {
+    const row = el('div', { class: 'sn-scan-row', id: 'snScanRow' });
+    if (!sttSupported()) return row; // nothing we can do on this device
+    if (STT.busy && STT.forSermon === s.id) {
+      row.classList.add('sn-scan-active');
+      row.appendChild(el('span', { class: 'sn-scan-spin' }));
+      row.appendChild(el('span', { class: 'sn-scan-label', text: 'Scanning for verses…' }));
+      return row;
+    }
+    const allScanned = (s.audioSegments || []).length && s.audioSegments.every(seg => seg.scanned);
+    row.appendChild(el('button', {
+      class: 'sn-scan-btn', onclick: () => scanSermon(s, { force: allScanned })
+    }, [icon(allScanned ? 'refresh' : 'graphic_eq'), allScanned ? 'Re-scan for verses' : 'Scan recording for verses']));
+    return row;
   }
 
   /* ───────── OUTLINE TAB ───────── */
