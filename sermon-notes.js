@@ -927,6 +927,7 @@
   const audioState = {
     recorder: null, chunks: [], recording: false, startTs: 0, baseOffset: 0,
     stream: null, segId: null, timer: null, heardThisSession: 0,
+    mime: '', recMime: '',       // container/codec the recorder is actually using
     segUrls: {},                 // segmentId → object URL (session cache)
     player: { audio: null, seg: null, playing: false, raf: 0 },
     speech: null, speechWanted: false,
@@ -970,6 +971,45 @@
   }
   function refreshAudio(s) { const box = document.getElementById('snAudio'); if (box) drawAudio(s, box); }
 
+  /* ───────── Capture quality ─────────
+     A phone resting in your lap in the pew is capturing a distant speaker across
+     a room — usually through the house PA. The browser's default `audio:true`
+     turns on call-tuned DSP (echo cancellation + noise suppression) that treats
+     that distant, reverberant voice as "noise" and gates/muffles it — the classic
+     underwater, cutting-out sermon recording. We turn those off and keep only
+     gentle auto-gain to lift the level, capture mono at 48 kHz, and record at a
+     healthy bitrate. The result is far fuller, more natural sermon audio. */
+  function micConstraints() {
+    return {
+      channelCount: 1,
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: true,
+      sampleRate: 48000
+    };
+  }
+  // Pick the best container/codec this device can actually record. Opus (in webm
+  // or ogg) is ideal; iOS Safari only records AAC in mp4, so fall through to it.
+  // Returns '' when the device can't report support (let the browser choose).
+  function pickRecorderMime() {
+    const cands = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/aac'];
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported) {
+      for (const c of cands) { try { if (MediaRecorder.isTypeSupported(c)) return c; } catch (e) {} }
+    }
+    return '';
+  }
+  function makeRecorder(stream) {
+    const mime = pickRecorderMime();
+    audioState.recMime = mime;
+    const opts = { audioBitsPerSecond: 128000 };
+    if (mime) opts.mimeType = mime;
+    try { return new MediaRecorder(stream, opts); }
+    catch (e) {
+      try { return new MediaRecorder(stream, mime ? { mimeType: mime } : {}); }
+      catch (e2) { return new MediaRecorder(stream); }
+    }
+  }
+
   /* ───────── Recording ───────── */
   async function toggleRecord(s, box) {
     if (audioState.recording) { await stopRecording(s); refreshAudio(s); return; }
@@ -978,15 +1018,17 @@
     // Warm the Bible data so caught references can be validated to real passages.
     if (typeof window.loadRhemaScripts === 'function') { try { window.loadRhemaScripts(); } catch (e) {} }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: micConstraints() });
       audioState.stream = stream;
       audioState.chunks = [];
       audioState.segId = uid();
       audioState.baseOffset = s.audioTotal || 0; // continue the timeline
-      let rec;
-      try { rec = new MediaRecorder(stream, { mimeType: 'audio/webm' }); }
-      catch (e) { rec = new MediaRecorder(stream); }
+      const rec = makeRecorder(stream);
       audioState.recorder = rec;
+      // Remember the container/codec the recorder actually produced so the saved
+      // Blob is labelled correctly (iOS records AAC/mp4, not webm) and plays back
+      // cleanly everywhere. rec.mimeType is the source of truth once started.
+      audioState.mime = (rec && rec.mimeType) || audioState.recMime || 'audio/webm';
       rec.ondataavailable = e => { if (e.data && e.data.size) audioState.chunks.push(e.data); };
       rec.onstop = () => finalizeSegment(s, box);
       rec.start(3000); // periodic flush so a crash still leaves recoverable chunks
@@ -1026,7 +1068,7 @@
     const dur = Math.max(1, Math.round(stopAt - (audioState.baseOffset || 0)));
     if (audioState.stream) { audioState.stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); audioState.stream = null; }
     const segId = audioState.segId;
-    const blob = new Blob(audioState.chunks, { type: 'audio/webm' });
+    const blob = new Blob(audioState.chunks, { type: (audioState.recorder && audioState.recorder.mimeType) || audioState.mime || 'audio/webm' });
     audioState.chunks = [];
     if (blob.size > 0 && segId) {
       const seg = { id: segId, startAt: audioState.baseOffset || 0, duration: dur };
@@ -1154,9 +1196,9 @@
           el('div', { class: 'sn-eq' }, [el('span'), el('span'), el('span'), el('span'), el('span')])
         ]),
         el('div', { class: 'sn-audio-hint' }, [
-          audioState.speech
+          speechSupported()
             ? el('span', {}, ['Listening for verses · caught ', el('strong', { id: 'snHeardCount', text: String(audioState.heardThisSession) }), ' so far'])
-            : el('span', { text: 'Recording… your captures get timestamps' })
+            : el('span', { text: 'Recording in HD · verses you type are logged automatically' })
         ])
       ]);
       box.appendChild(mid);
@@ -1168,7 +1210,7 @@
       box.appendChild(el('button', { class: 'sn-audio-rec', 'aria-label': 'Record', onclick: () => toggleRecord(s, box) }, [icon('mic')]));
       box.appendChild(el('div', { class: 'sn-audio-mid' }, [
         el('div', { class: 'sn-audio-time', text: 'Record the sermon' }),
-        el('div', { class: 'sn-audio-hint', text: 'Timestamps your notes and auto-catches spoken verses.' })
+        el('div', { class: 'sn-audio-hint', text: speechSupported() ? 'HD capture · timestamps your notes and auto-catches spoken verses.' : 'HD capture · timestamps your notes; verses you type are logged automatically.' })
       ]));
       return;
     }
