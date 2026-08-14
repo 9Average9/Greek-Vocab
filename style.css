@@ -37759,3 +37759,32 @@ body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
 /* English meaning modal must clear the study tool host (z 1300) when opened
    from an English word-log entry. */
 #rhemaEnglishMeaningModal { z-index: 1400; }
+
+/* ── iOS standalone PWA: opaque ground behind the translucent status bar ─────
+   The app ships `apple-mobile-web-app-status-bar-style: black-translucent` with
+   `viewport-fit=cover`, so in an INSTALLED PWA the page runs underneath the
+   status bar and iOS composites its own translucent/blurred backdrop over that
+   region to keep the clock and battery legible. Over the Home screen's gradient
+   that reads as a hazy blurred band across the top of the screen. It cannot
+   reproduce in Safari, because there `env(safe-area-inset-top)` is 0 and the
+   browser's own chrome owns that strip — which is exactly why this looked like
+   a "PWA-only" blur, and why it varies with the iOS version.
+
+   #statusBarBg is the app's opaque strip for this area, but it is force-hidden
+   on the Home screen. Restore it there (plain Home only, so photo backdrops
+   still run edge-to-edge) painted in the page colour: blurring a flat colour
+   returns the same flat colour, so the system's glass has nothing to smear and
+   the band disappears. */
+html body.page-home-backdrop-none:has(#homeScreen.screen.active) #statusBarBg,
+html body:not([class*="page-home-backdrop-"]):has(#homeScreen.screen.active) #statusBarBg {
+  display: block !important;
+  background: var(--primary-color) !important;
+  /* Never blur here — a blurred strip at the top is the very bug this fixes. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html body.dark.page-home-backdrop-none:has(#homeScreen.screen.active) #statusBarBg,
+html body.dark:not([class*="page-home-backdrop-"]):has(#homeScreen.screen.active) #statusBarBg {
+  background: #111827 !important;
+}
