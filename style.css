@@ -148,7 +148,18 @@ body {
 
 /* Status bar background — solid bar behind iOS status bar so content never bleeds under the notch */
 #statusBarBg {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  position: fixed; top: 0; left: 0; right: 0;
+  /* z-index 1, NOT 9999. This is the status-bar *background*, but at 9999 it
+     painted on top of everything — the reader modal (1000), bottom sheets
+     (1300), coach overlays, and every sticky header. Its opaque
+     --primary-color then showed as a light band across the top of the screen:
+     un-blurred over a sheet's blurred backdrop, and the wrong colour over a
+     header. It is exactly env(safe-area-inset-top) tall, so it is invisible in
+     Safari (inset 0) and only ever appeared in the installed PWA, with its size
+     varying by device and iOS version.
+     At z-index 1 it still covers plain in-flow content scrolling under the
+     notch — its actual job — while headers, modals and overlays paint over it. */
+  z-index: 1;
   height: env(safe-area-inset-top, 0px);
   background: var(--primary-color);
   pointer-events: none;
