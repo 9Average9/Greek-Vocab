@@ -29960,7 +29960,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.456";
+const APP_VERSION = "3.0.457";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32109,28 +32109,50 @@ function isRunningAsInstalledApp() {
 }
 
 function registerServiceWorker() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      _appUpdateReloadPending = false;
-      clearInterval(_appUpdateReloadTimer);
-    });
+  if (!("serviceWorker" in navigator)) return;
 
-    navigator.serviceWorker.register("./service-worker.js").then((registration) => {
-      registration.addEventListener('updatefound', () => {
-        if (_appLaunchReleased) return;
-        _swUpdateFound = true;
-        setAppLaunchText("There's been updates since last time you were here, this may take longer to load");
-        // Fallback: release after 15s in case the update never activates
-        setTimeout(() => {
-          _swUpdateFound = false;
-          if (!_appLaunchReleased) hideAppLaunchScreen('ready');
-        }, 15000);
-      });
-      registration.update().catch(() => {});
-    }).catch((error) => {
-      console.warn("Service worker registration failed:", error);
+  // True when the page is already controlled by a service worker at load time,
+  // i.e. a returning session rather than the very first install. We only force
+  // a reload for genuine *updates*, never on first install.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloadingForUpdate = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    // A newly installed service worker has taken control. Reload once so the
+    // page actually runs the new HTML/CSS/JS instead of the version it booted
+    // with. Without this the installed PWA activates new code but keeps showing
+    // the old assets, so deployed fixes never reach it. queueAppUpdateReload()
+    // waits for a safe moment (home screen / startup) before reloading.
+    if (!hadController || reloadingForUpdate) return;
+    reloadingForUpdate = true;
+    queueAppUpdateReload();
+  });
+
+  // updateViaCache:"none" keeps the browser from serving service-worker.js from
+  // the HTTP cache, so a new deployment is always detected on the next check.
+  navigator.serviceWorker.register("./service-worker.js", { updateViaCache: "none" }).then((registration) => {
+    registration.addEventListener('updatefound', () => {
+      // Only surface the "updating" hint for a real update (a controller already
+      // exists), not for the first-ever install.
+      if (!navigator.serviceWorker.controller || _appLaunchReleased) return;
+      _swUpdateFound = true;
+      setAppLaunchText("There's been updates since last time you were here, this may take longer to load");
+      // Fallback: release after 15s in case the update never activates
+      setTimeout(() => {
+        _swUpdateFound = false;
+        if (!_appLaunchReleased) hideAppLaunchScreen('ready');
+      }, 15000);
     });
-  }
+    registration.update().catch(() => {});
+
+    // Installed PWAs (especially on iOS) rarely re-check on their own — poll for
+    // a new version whenever the app returns to the foreground.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") registration.update().catch(() => {});
+    });
+  }).catch((error) => {
+    console.warn("Service worker registration failed:", error);
+  });
 }
 
 function isMobileDevice() {
