@@ -13941,9 +13941,13 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   align-items: center;
   gap: 8px;
   padding: calc(env(safe-area-inset-top, 20px) + 8px) 14px 9px;
-  background: var(--card-color);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* Opaque, and no backdrop-filter. This bar spans the full width at the very
+     top of the screen and grows by env(safe-area-inset-top) — about 59pt — in an
+     installed PWA, where it is only a slim header in Safari. A translucent or
+     blurred background at that size smears the content scrolling beneath it into
+     a hazy band across the top of the screen. --card-solid-color is the opaque
+     twin of --card-color and is defined by every skin, so the look is unchanged. */
+  background: var(--card-solid-color);
   border-bottom: 1.5px solid var(--border-color);
   flex-shrink: 0;
   touch-action: none; /* swipes here must not scroll ancestors */
@@ -18140,7 +18144,7 @@ body.dark .rhema-reader-menu-btn {
 .study-sandbox.tool-host .ss-header {
   padding-top: calc(env(safe-area-inset-top, 44px) + 14px);
   border-bottom: 1.5px solid var(--border-color);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  /* No backdrop-filter — see .rhema-header. */
 }
 .study-sandbox.tool-host .ss-back-btn {
   width: 38px; height: 38px; border-radius: 12px;
@@ -21742,7 +21746,8 @@ label.study-color-swatch.custom-color-dot {
 .ss-header {
   display: flex; align-items: center; gap: 10px;
   padding: calc(env(safe-area-inset-top, 44px) + 12px) 16px 12px;
-  background: var(--card-color);
+  /* Opaque — see .rhema-header. */
+  background: var(--card-solid-color);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
@@ -22448,9 +22453,10 @@ body.sandbox-open .rhema-english-display {
   display: flex; align-items: center; gap: 11px;
   padding: calc(env(safe-area-inset-top, 0px) + 16px) 18px 12px;
   flex-shrink: 0;
-  background: var(--card-color);
+  /* Opaque — see .rhema-header: a translucent/blurred top bar becomes a hazy
+     band across the top once the safe-area padding stretches it in a PWA. */
+  background: var(--card-solid-color);
   border-bottom: 1.5px solid var(--border-color);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .wl-header-icon {
   font-size: 22px; line-height: 1; color: var(--secondary-color);
@@ -27214,8 +27220,11 @@ body:has(#homeScreen.screen.active) #homeScreen.screen.active {
   margin: 0 !important;
   padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 12px !important;
   min-height: calc(62px + env(safe-area-inset-top, 0px)) !important;
+  /* Opaque: this is a sticky bar at the top of the screen that lesson content
+     scrolls underneath, and --card-color carries alpha (~0.88), so the text
+     showed through it as a haze. --card-solid-color keeps the same look. */
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--card-color) 96%, white), color-mix(in srgb, var(--card-color) 86%, var(--primary-light))) !important;
+    linear-gradient(180deg, color-mix(in srgb, var(--card-solid-color) 96%, white), color-mix(in srgb, var(--card-solid-color) 86%, var(--primary-light))) !important;
   border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 16%, rgba(15,23,42,0.08)) !important;
   border-radius: 0 0 18px 18px !important;
   box-shadow: 0 10px 26px rgba(15,23,42,0.08) !important;
