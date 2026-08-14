@@ -19710,10 +19710,10 @@ body.dark .theme-wheel-tile {
     0 18px 42px rgba(15, 23, 42, 0.18),
     0 4px 14px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255,255,255,0.62);
-  /* NOTE: the frosted blur lives on .bottom-nav::after, not here — see the
-     comment on that pseudo-element. Keeping backdrop-filter on this
-     position:fixed element makes iOS/WebKit paint a phantom blurred strip at
-     the top of the viewport on every screen. */
+  /* No backdrop-filter here — this element is position:fixed, and on iOS a
+     fixed element's backdrop-filter is duplicated as a phantom blurred strip at
+     the top of the viewport on every screen. The nav uses an opaque background
+     (see the override below) instead of a live blur. */
   transform: translateX(-50%);
   transition: transform 0.25s ease, opacity 0.2s ease;
 }
@@ -25707,9 +25707,10 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   padding: 5px 9px 6px !important;
   border-radius: 999px !important;
   border: 1px solid color-mix(in srgb, var(--secondary-color) 14%, rgba(255,255,255,0.72)) !important;
+  /* Opaque (no alpha) so nothing shows through — see the note on why the nav
+     can't use backdrop-filter. */
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.56)),
-    color-mix(in srgb, var(--card-color) 72%, rgba(255,255,255,0.68)) !important;
+    linear-gradient(180deg, #ffffff, color-mix(in srgb, var(--primary-light) 60%, #ffffff)) !important;
   box-shadow:
     0 22px 46px rgba(15, 23, 42, 0.18),
     0 8px 18px rgba(15, 23, 42, 0.09),
@@ -25718,25 +25719,13 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   isolation: isolate;
 }
 
-/* Frosted glass on a NON-fixed pseudo-element.
-   The blur must not live on the .bottom-nav element itself: it is
-   position:fixed (plus a transform), and iOS/WebKit duplicates a fixed
-   element's backdrop-filter as a phantom blurred rectangle pinned to the
-   top-left origin of the viewport. That ghost showed as a "weird blur across
-   the top of the screen" on every page. An absolutely-positioned layer carries
-   the identical blur without triggering the bug. It sits above the nav's tinted
-   background but below the icons/labels (z-index:2), so the glass reads the
-   same and the buttons stay crisp. */
-.bottom-nav::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  backdrop-filter: blur(22px) saturate(1.18);
-  -webkit-backdrop-filter: blur(22px) saturate(1.18);
-  pointer-events: none;
-}
+/* No backdrop-filter anywhere on the bottom nav — not on the element and not
+   on a pseudo-element. The nav is position:fixed (plus a transform), and
+   iOS/WebKit duplicates a fixed element's backdrop-filter (or that of any of
+   its descendants) as a phantom blurred rectangle pinned to the top-left of
+   the viewport. That ghost showed as a "weird blur across the top of the
+   screen" on every page. The nav uses a fully opaque background instead, so it
+   still reads as a solid frosted bar with no live blur and no ghost. */
 
 .bottom-nav::before {
   content: "";
@@ -25812,9 +25801,10 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 }
 
 body.dark .bottom-nav {
+  /* Opaque (no alpha) — the nav can't use backdrop-filter on iOS, so it must
+     not rely on translucency either. */
   background:
-    linear-gradient(180deg, rgba(30,41,59,0.82), rgba(15,23,42,0.68)),
-    color-mix(in srgb, var(--card-color) 72%, rgba(15,23,42,0.74)) !important;
+    linear-gradient(180deg, #1e293b, #0f172a) !important;
   border-color: color-mix(in srgb, var(--secondary-color) 18%, rgba(255,255,255,0.18)) !important;
   box-shadow:
     0 22px 50px rgba(0,0,0,0.44),
