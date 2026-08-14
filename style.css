@@ -19710,8 +19710,10 @@ body.dark .theme-wheel-tile {
     0 18px 42px rgba(15, 23, 42, 0.18),
     0 4px 14px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255,255,255,0.62);
-  backdrop-filter: blur(18px) saturate(1.18);
-  -webkit-backdrop-filter: blur(18px) saturate(1.18);
+  /* NOTE: the frosted blur lives on .bottom-nav::after, not here — see the
+     comment on that pseudo-element. Keeping backdrop-filter on this
+     position:fixed element makes iOS/WebKit paint a phantom blurred strip at
+     the top of the viewport on every screen. */
   transform: translateX(-50%);
   transition: transform 0.25s ease, opacity 0.2s ease;
 }
@@ -25712,10 +25714,28 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
     0 22px 46px rgba(15, 23, 42, 0.18),
     0 8px 18px rgba(15, 23, 42, 0.09),
     inset 0 1px 0 rgba(255,255,255,0.8) !important;
-  backdrop-filter: blur(22px) saturate(1.18);
-  -webkit-backdrop-filter: blur(22px) saturate(1.18);
   overflow: visible;
   isolation: isolate;
+}
+
+/* Frosted glass on a NON-fixed pseudo-element.
+   The blur must not live on the .bottom-nav element itself: it is
+   position:fixed (plus a transform), and iOS/WebKit duplicates a fixed
+   element's backdrop-filter as a phantom blurred rectangle pinned to the
+   top-left origin of the viewport. That ghost showed as a "weird blur across
+   the top of the screen" on every page. An absolutely-positioned layer carries
+   the identical blur without triggering the bug. It sits above the nav's tinted
+   background but below the icons/labels (z-index:2), so the glass reads the
+   same and the buttons stay crisp. */
+.bottom-nav::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(22px) saturate(1.18);
+  -webkit-backdrop-filter: blur(22px) saturate(1.18);
+  pointer-events: none;
 }
 
 .bottom-nav::before {
