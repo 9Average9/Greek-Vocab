@@ -7,7 +7,14 @@
 <title>Disciple Builder</title>
 <!-- PWA / Home Screen App Support -->
 <link href="manifest.json" rel="manifest"/>
-<meta content="#243447" name="theme-color"/>
+<!-- theme-color drives the tint iOS paints behind the status bar in an installed
+     web app. It was a fixed dark navy while the UI is light blue, so the system
+     blended a mismatched band across the top in standalone mode (never in
+     Safari, where the browser chrome owns that strip). Match the real page
+     colours instead, light and dark. -->
+<meta content="#dbeafe" name="theme-color"/>
+<meta content="#dbeafe" media="(prefers-color-scheme: light)" name="theme-color"/>
+<meta content="#111827" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <script>
 (function () {
   const savedTheme = localStorage.getItem("appTheme") || "royal";
@@ -339,8 +346,8 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.458" rel="stylesheet"/>
-<link href="sermon-notes.css?v=3.0.458" rel="stylesheet"/>
+<link href="style.css?v=3.0.459" rel="stylesheet"/>
+<link href="sermon-notes.css?v=3.0.459" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.438" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
@@ -17240,13 +17247,13 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.458"></script>
+<script src="app.js?v=3.0.459"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.363"></script>
 <script src="verse-structure.js?v=3.0.429"></script>
 <script src="vs-structure.js?v=3.0.450"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.458"></script>
+<script src="sermon-notes.js?v=3.0.459"></script>
 <script src="bible-quiz.js?v=3.0.440"></script>
 <script src="firebase-lb.js?v=3.0.440" type="module"></script>
 <!-- Leaderboard Intro Modal -->
