@@ -29960,7 +29960,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.460";
+const APP_VERSION = "3.0.461";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29983,6 +29983,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.461 &mdash; No more blurry strip at the top</div>
+<ul>
+  <li><strong>The hazy blur across the top of the screen is gone</strong> &mdash; In the installed app, the Bible reader's top bar and bottom verse bar were quietly making iOS paint a blurred ghost strip across the very top of the screen, which smeared the title and study name. Both bars are now solid, so the top of every reader screen stays crisp. (This only ever showed in the installed app, never in Safari.)</li>
+</ul>
 <div class="un-version-label">v3.0.439 &mdash; Matched tool icon sizing</div>
 <ul>
   <li><strong>Home tool icons now share one footprint</strong> &mdash; The quick-action artwork has been rebuilt onto the same 512px canvas and Sermon Notes-sized art bounds, so the icons no longer look randomly scaled.</li>
