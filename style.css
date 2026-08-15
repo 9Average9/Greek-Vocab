@@ -16480,9 +16480,15 @@ body.rx-scroll-lock {
   position: absolute;
   top: 0; left: 0; right: 0;
   z-index: 40;
-  background: color-mix(in srgb, var(--primary-light) 94%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* Opaque, no backdrop-filter — see .rhema-header. This bar is a GPU-composited
+     layer (transform + will-change) pinned to the top of the reader. In an
+     installed iOS PWA, a -webkit-backdrop-filter on a layer like this makes
+     WebKit paint a ghost blurred copy at the very top of the screen, which lands
+     on the header title above it and reads as a hazy/doubled strip. It only ever
+     showed in the installed app, never in Safari (where safe-area inset is 0).
+     An opaque background gives the system glass nothing to smear, so the phantom
+     strip disappears. */
+  background: var(--primary-light);
   transform: translateY(0);
   opacity: 1;
   transition: transform 0.28s cubic-bezier(.2,.82,.18,1), opacity 0.2s ease;
@@ -17426,13 +17432,15 @@ body.dark .atlas-alts strong { color: #e3b466; }
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  background: linear-gradient(145deg, rgba(255,255,255,0.94), color-mix(in srgb, var(--secondary-color) 5%, rgba(255,255,255,0.88)));
+  /* Opaque, no backdrop-filter — see .rhema-header. Even sitting at the BOTTOM of
+     the reader, this composited bar's blur made iOS paint a phantom blurred strip
+     at the TOP of the screen — the same quirk that forced the bottom nav opaque.
+     Fully opaque whites so dropping the live blur doesn't let text bleed through. */
+  background: linear-gradient(145deg, rgba(255,255,255,1), color-mix(in srgb, var(--secondary-color) 5%, rgb(255,255,255)));
   border: 1px solid color-mix(in srgb, var(--secondary-color) 15%, rgba(255,255,255,0.5));
   border-radius: 28px;
   padding: 8px 8px;
   box-shadow: 0 4px 20px color-mix(in srgb, var(--secondary-color) 12%, rgba(0,0,0,0.08)), 0 2px 6px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.9);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 .rhema-verse-nav.hidden { display: none; }
 #rhemaModal.picker-open .rhema-verse-nav { visibility: hidden; pointer-events: none; }
@@ -18198,7 +18206,8 @@ body.dark .rhema-swap-btn,
 body.dark .rhema-tool-btn,
 body.dark .rhema-pill,
 body.dark .rhema-verse-nav-row {
-  background: linear-gradient(145deg, rgba(38,46,58,0.94), color-mix(in srgb, var(--secondary-color) 10%, rgba(26,32,42,0.9)));
+  /* Opaque — matches the light rule; no live blur to soften bleed-through. */
+  background: linear-gradient(145deg, rgb(38,46,58), color-mix(in srgb, var(--secondary-color) 10%, rgb(26,32,42)));
   border-color: color-mix(in srgb, var(--secondary-color) 30%, rgba(255,255,255,0.08));
   box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.07);
 }
