@@ -29964,7 +29964,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.462";
+const APP_VERSION = "3.0.463";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29987,6 +29987,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.463 &mdash; The top-of-screen blur is finally gone</div>
+<ul>
+  <li><strong>No more phantom blur strip at the very top</strong> &mdash; The app-wide toast (the little pop-up that says things like "Verse saved") was left sitting in the page permanently after its first appearance, and its blur effect made the installed iOS app paint a hazy strip across the very top of every screen — even though the toast itself was invisible. The blur has been removed from the toast, so the top of the screen stays crisp everywhere. (Only ever showed in the installed app, never in Safari.)</li>
+</ul>
 <div class="un-version-label">v3.0.462 &mdash; Scrollable notes &amp; no surprise reloads</div>
 <ul>
   <li><strong>Your saved highlights &amp; notes scroll again</strong> &mdash; In the reader's Highlights/Notes panel, a long list used to get stuck so you only saw the top few and couldn't reach the rest. The list now scrolls all the way through, however many you've saved.</li>
