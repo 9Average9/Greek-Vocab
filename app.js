@@ -29964,7 +29964,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.464";
+const APP_VERSION = "3.0.465";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29987,9 +29987,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.464 &mdash; Top blur gone even with a home background</div>
+<div class="un-version-label">v3.0.465 &mdash; Top status-bar band cleared on every screen</div>
 <ul>
-  <li><strong>The top-of-screen blur is fixed when you've picked a home background</strong> &mdash; The opaque strip that keeps iOS's translucent status bar from smearing the top of the screen was only being restored on the plain Home screen. If you'd chosen a home background, that strip stayed hidden and the hazy band came back &mdash; which is why it showed up for some people and not others. The strip is now kept solid behind the status bar no matter which home background you use. (Installed iOS app only.)</li>
+  <li><strong>The strip across the very top is gone app-wide</strong> &mdash; The installed app runs under iOS's transparent status bar and was painting that top sliver a flat color, which showed as a band across the top of every screen (it never appeared on the website). That sliver is now clear, so each screen's own background flows right up to the top edge &mdash; matching how the website already looks. (Installed iOS app only.)</li>
 </ul>
 <div class="un-version-label">v3.0.463 &mdash; The top-of-screen blur is finally gone</div>
 <ul>
