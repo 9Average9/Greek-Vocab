@@ -84,6 +84,10 @@ let _appLaunchReleased = false;
 let _appUpdateReloadPending = false;
 let _appUpdateReloadTimer = null;
 let _swUpdateFound = false;
+// When the launch screen releases and the app becomes interactive. Used to tell
+// a genuine mid-session service-worker deploy (worth applying) apart from the SW
+// simply settling in during a fresh launch that already booted the newest code.
+let _appFullyStartedAt = 0;
 let _homeBackdropPreload = null;
 let _pendingFirstRunNotificationPrompt = false;
 let _deferWelcomeUntilNotificationPromptCloses = false;
@@ -29960,7 +29964,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.461";
+const APP_VERSION = "3.0.462";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29983,6 +29987,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.462 &mdash; Scrollable notes &amp; no surprise reloads</div>
+<ul>
+  <li><strong>Your saved highlights &amp; notes scroll again</strong> &mdash; In the reader's Highlights/Notes panel, a long list used to get stuck so you only saw the top few and couldn't reach the rest. The list now scrolls all the way through, however many you've saved.</li>
+  <li><strong>No more getting kicked out mid-use for an update</strong> &mdash; The app no longer nags you to "return home to apply the update" or force-reloads you ~30 seconds after opening. Updates simply apply the next time you launch, which already loads the newest version.</li>
+</ul>
 <div class="un-version-label">v3.0.461 &mdash; No more blurry strip at the top</div>
 <ul>
   <li><strong>The hazy blur across the top of the screen is gone</strong> &mdash; In the installed app, the Bible reader's top bar and bottom verse bar were quietly making iOS paint a blurred ghost strip across the very top of the screen, which smeared the title and study name. Both bars are now solid, so the top of every reader screen stays crisp. (This only ever showed in the installed app, never in Safari.)</li>
@@ -32057,6 +32066,7 @@ function hideAppLaunchScreen(reason = 'ready') {
   setTimeout(() => {
     requestAnimationFrame(() => requestAnimationFrame(() => {
       _appLaunchReleased = true;
+      if (!_appFullyStartedAt) _appFullyStartedAt = Date.now();
       // Finish the ring all the way around, then dismiss.
       completeLaunchRing(() => {
         splash.classList.add('dismissed');
@@ -32083,6 +32093,7 @@ function _applyPendingAppUpdateReload() {
   if (!_appUpdateReloadPending) return;
   if (!_isAppInInterruptibleStartupState() && !_isSafeForUpdateReload()) return;
   _appUpdateReloadPending = false;
+  clearInterval(_appUpdateReloadTimer);
   showAppLaunchScreen('Updating Disciple Builder');
   setTimeout(() => window.location.reload(), 260);
 }
@@ -32090,19 +32101,16 @@ function _applyPendingAppUpdateReload() {
 function queueAppUpdateReload() {
   if (_appUpdateReloadPending) return;
   _appUpdateReloadPending = true;
+  // Apply immediately only at a genuinely safe point (startup, backgrounded, or
+  // sitting on the home screen). Otherwise wait quietly for one — we never force
+  // a reload while the user is mid-task. An update that never finds a safe moment
+  // simply lands on the next launch, which (network-first) already boots fresh.
   if (_isAppInInterruptibleStartupState() || _isSafeForUpdateReload()) {
     _applyPendingAppUpdateReload();
     return;
   }
-  _showStudyToast?.('Update ready. Applying when you return home.');
   clearInterval(_appUpdateReloadTimer);
   _appUpdateReloadTimer = setInterval(_applyPendingAppUpdateReload, 1000);
-  setTimeout(() => {
-    if (!_appUpdateReloadPending) return;
-    _appUpdateReloadPending = false;
-    showAppLaunchScreen('Updating Disciple Builder');
-    setTimeout(() => window.location.reload(), 420);
-  }, 30000);
 }
 
 function isRunningAsInstalledApp() {
@@ -32122,12 +32130,15 @@ function registerServiceWorker() {
   let reloadingForUpdate = false;
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    // A newly installed service worker has taken control. Reload once so the
-    // page actually runs the new HTML/CSS/JS instead of the version it booted
-    // with. Without this the installed PWA activates new code but keeps showing
-    // the old assets, so deployed fixes never reach it. queueAppUpdateReload()
-    // waits for a safe moment (home screen / startup) before reloading.
+    // A newly installed service worker has taken control. We only need to reload
+    // for a *mid-session* deploy — one that lands while the app has already been
+    // open and interactive for a while, so the running page is now stale. During
+    // a normal launch the network-first fetch handler has already booted the
+    // newest HTML/CSS/JS, so the SW taking control is just it settling in and a
+    // reload would be redundant (and, if forced, would yank the user out mid-use).
     if (!hadController || reloadingForUpdate) return;
+    const startedLongAgo = _appFullyStartedAt && (Date.now() - _appFullyStartedAt > 60000);
+    if (!startedLongAgo) return; // fresh launch already runs the new code — nothing to apply
     reloadingForUpdate = true;
     queueAppUpdateReload();
   });
