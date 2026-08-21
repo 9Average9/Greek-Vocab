@@ -29991,10 +29991,6 @@ const UPDATE_NOTES_HTML = `
 <ul>
   <li><strong>The strip across the very top is gone app-wide</strong> &mdash; The installed app runs under iOS's transparent status bar and was painting that top sliver a flat color, which showed as a band across the top of every screen (it never appeared on the website). That sliver is now clear, so each screen's own background flows right up to the top edge &mdash; matching how the website already looks. (Installed iOS app only.)</li>
 </ul>
-<div class="un-version-label">v3.0.464 &mdash; Top blur gone even with a home background</div>
-<ul>
-  <li><strong>The top-of-screen blur is fixed when you've picked a home background</strong> &mdash; The opaque strip that keeps iOS's translucent status bar from smearing the top of the screen was only being restored on the plain Home screen. If you'd chosen a home background, that strip stayed hidden and the hazy band came back &mdash; which is why it showed up for some people and not others. The strip is now kept solid behind the status bar no matter which home background you use. (Installed iOS app only.)</li>
-</ul>
 <div class="un-version-label">v3.0.463 &mdash; The top-of-screen blur is finally gone</div>
 <ul>
   <li><strong>No more phantom blur strip at the very top</strong> &mdash; The app-wide toast (the little pop-up that says things like "Verse saved") was left sitting in the page permanently after its first appearance, and its blur effect made the installed iOS app paint a hazy strip across the very top of every screen — even though the toast itself was invisible. The blur has been removed from the toast, so the top of the screen stays crisp everywhere. (Only ever showed in the installed app, never in Safari.)</li>
