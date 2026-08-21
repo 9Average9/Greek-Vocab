@@ -17745,7 +17745,7 @@ body.dark .rhema-reader-menu-btn {
 }
 .rrp-font-opt.active .rrp-font-name { color: var(--secondary-color); }
 .rrp-font-sample { font-size: 1.5rem; font-weight: 600; line-height: 1; }
-.rrp-sub-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.rrp-sub-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .rrp-empty { padding: 34px 20px; text-align: center; color: var(--muted-color); font-size: 0.88rem; line-height: 1.5; }
 .rrp-mark-row {
   display: flex; gap: 10px; align-items: flex-start;
