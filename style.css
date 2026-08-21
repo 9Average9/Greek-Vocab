@@ -16226,7 +16226,8 @@ body.rx-scroll-lock {
   pointer-events: none;
   white-space: nowrap;
   box-shadow: 0 12px 32px -10px rgba(16,24,40,0.4);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  /* No backdrop-filter — see .rhema-app-toast. Same opaque solid pill; the blur
+     only risked flashing the iOS phantom top strip while a chapter toast showed. */
 }
 /* Theme-matched premium toast used app-wide (_showStudyToast) */
 .rhema-app-toast {
@@ -16246,7 +16247,14 @@ body.rx-scroll-lock {
   max-width: min(88vw, 420px);
   text-align: center;
   box-shadow: 0 14px 36px -10px rgba(16,24,40,0.42);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  /* No backdrop-filter — see .rhema-header. _showStudyToast() appends this
+     element to <body> once and then leaves it there permanently (hidden only
+     via opacity:0), so it stays a position:fixed, always-composited layer. On
+     the installed iOS PWA a fixed element's -webkit-backdrop-filter is
+     duplicated as a phantom blurred strip across the very top of the screen,
+     which is why that blur appeared globally on every screen even though the
+     toast itself was invisible. The pill's --card-solid-color is opaque, so
+     dropping the blur costs nothing visually. */
   opacity: 0;
   transition: opacity 0.25s ease, transform 0.28s cubic-bezier(0.32,0.72,0,1);
 }
