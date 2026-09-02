@@ -29964,7 +29964,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.466";
+const APP_VERSION = "3.0.467";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29987,6 +29987,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.467 &mdash; Fresh delivery of the latest fixes</div>
+<ul>
+  <li><strong>Cache refresh</strong> &mdash; A version bump so every installed app pulls down the newest code cleanly, making sure the recent no-random-refresh and full-screen keyboard fixes are delivered.</li>
+</ul>
 <div class="un-version-label">v3.0.466 &mdash; No surprise refreshes &amp; true full-screen</div>
 <ul>
   <li><strong>No more random reloads mid-use</strong> &mdash; A freshly deployed update could quietly reload the app while you were looking at it (even sitting on the home screen), which felt like a random refresh. Updates now only ever apply at a moment you can't see &mdash; while the app is in the background, or on your next launch &mdash; never on a screen you're actively using.</li>
