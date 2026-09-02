@@ -29964,7 +29964,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.465";
+const APP_VERSION = "3.0.466";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29987,6 +29987,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.466 &mdash; No surprise refreshes &amp; true full-screen</div>
+<ul>
+  <li><strong>No more random reloads mid-use</strong> &mdash; A freshly deployed update could quietly reload the app while you were looking at it (even sitting on the home screen), which felt like a random refresh. Updates now only ever apply at a moment you can't see &mdash; while the app is in the background, or on your next launch &mdash; never on a screen you're actively using.</li>
+  <li><strong>Full screen, top to bottom, when the keyboard opens</strong> &mdash; In Reading Plan, Memorize and Theological Threads, opening a text box no longer leaves an extra bar peeking out along the very bottom. The page now sits flush above the keyboard, so it stays edge-to-edge with a native-app feel.</li>
+  <li><strong>A more consistent premium feel across the tools</strong> &mdash; Reading Plan and Theological Threads now carry the same soft, layered backdrop as Memorize and the Bible Quiz, so the home-screen tools read as one polished family.</li>
+</ul>
 <div class="un-version-label">v3.0.465 &mdash; Top status-bar band cleared on every screen</div>
 <ul>
   <li><strong>The strip across the very top is gone app-wide</strong> &mdash; The installed app runs under iOS's transparent status bar and was painting that top sliver a flat color, which showed as a band across the top of every screen (it never appeared on the website). That sliver is now clear, so each screen's own background flows right up to the top edge &mdash; matching how the website already looks. (Installed iOS app only.)</li>
@@ -32085,23 +32091,25 @@ function hideAppLaunchScreen(reason = 'ready') {
 }
 
 function _isAppInInterruptibleStartupState() {
+  // The only moments a reload is invisible to the user: before the launch
+  // splash has been released, or while the app is backgrounded (document
+  // hidden). We deliberately do NOT treat "sitting on the home screen" as
+  // safe — reloading a screen the user is actively looking at is exactly the
+  // "random refresh" this guards against.
   return !_appLaunchReleased || document.hidden;
-}
-
-function _isSafeForUpdateReload() {
-  const activeScreen = document.querySelector('.screen.active')?.id;
-  const rhemaOpen = document.getElementById('rhemaModal')?.classList.contains('open');
-  const studyOpen = !document.getElementById('studySandbox')?.classList.contains('hidden');
-  const blockingModal = [...document.querySelectorAll('.modal-overlay.open, .study-sheet-overlay.open, .swm-modal:not(.hidden), .wl-overlay:not(.hidden)')]
-    .some(el => el.id !== 'appLaunchScreen');
-  return activeScreen === 'homeScreen' && !rhemaOpen && !studyOpen && !blockingModal;
 }
 
 function _applyPendingAppUpdateReload() {
   if (!_appUpdateReloadPending) return;
-  if (!_isAppInInterruptibleStartupState() && !_isSafeForUpdateReload()) return;
+  // Never reload a visible, in-use session. Only apply when the user can't
+  // see it happen (startup splash or backgrounded). A pending update that
+  // never hits such a moment simply lands on the next cold launch, which
+  // (network-first) already boots the newest HTML/CSS/JS.
+  if (!_isAppInInterruptibleStartupState()) return;
   _appUpdateReloadPending = false;
   clearInterval(_appUpdateReloadTimer);
+  clearTimeout(_appUpdateReloadTimer);
+  document.removeEventListener("visibilitychange", _applyPendingAppUpdateReload);
   showAppLaunchScreen('Updating Disciple Builder');
   setTimeout(() => window.location.reload(), 260);
 }
@@ -32109,17 +32117,48 @@ function _applyPendingAppUpdateReload() {
 function queueAppUpdateReload() {
   if (_appUpdateReloadPending) return;
   _appUpdateReloadPending = true;
-  // Apply immediately only at a genuinely safe point (startup, backgrounded, or
-  // sitting on the home screen). Otherwise wait quietly for one — we never force
-  // a reload while the user is mid-task. An update that never finds a safe moment
-  // simply lands on the next launch, which (network-first) already boots fresh.
-  if (_isAppInInterruptibleStartupState() || _isSafeForUpdateReload()) {
+  // Apply immediately only if we're already at an invisible moment (startup or
+  // backgrounded). Otherwise wait quietly — we never force a reload while the
+  // user is looking at the app. The reload lands the next time the app goes to
+  // the background; failing that, on the next cold launch.
+  if (_isAppInInterruptibleStartupState()) {
     _applyPendingAppUpdateReload();
     return;
   }
-  clearInterval(_appUpdateReloadTimer);
-  _appUpdateReloadTimer = setInterval(_applyPendingAppUpdateReload, 1000);
+  // The background transition is the moment we're waiting for.
+  document.addEventListener("visibilitychange", _applyPendingAppUpdateReload);
 }
+
+// ── On-screen keyboard inset tracking ──────────────────────────────────────
+// When the soft keyboard opens on iOS (and in standalone PWAs generally), the
+// layout viewport does NOT shrink — the keyboard just overlays the bottom of a
+// full-height (100dvh) fixed page. That left a strip of page background (and the
+// home-indicator safe area) visible between the content and the keyboard: the
+// "extra bar at the very bottom" users saw in Reading Plan / Memorize. We track
+// the real visible area via the VisualViewport API and expose it as
+// --kb-inset (+ html.kb-open) so full-screen pages can shrink to sit flush on
+// top of the keyboard, staying edge-to-edge with no phantom bar.
+(function initKeyboardInsetTracking() {
+  const vv = window.visualViewport;
+  const root = document.documentElement;
+  if (!vv || !root) return;
+  let raf = 0;
+  function apply() {
+    raf = 0;
+    // Portion of the layout viewport hidden at the bottom (keyboard height).
+    const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    // Ignore small deltas (URL-bar show/hide jitter); >90px is a real keyboard.
+    const kb = overlap > 90 ? Math.round(overlap) : 0;
+    root.style.setProperty("--kb-inset", kb + "px");
+    root.classList.toggle("kb-open", kb > 0);
+  }
+  const schedule = () => { if (!raf) raf = requestAnimationFrame(apply); };
+  vv.addEventListener("resize", schedule);
+  vv.addEventListener("scroll", schedule);
+  // A blur usually means the keyboard is dismissing — recompute shortly after.
+  document.addEventListener("focusout", () => setTimeout(schedule, 50), true);
+  apply();
+})();
 
 function isRunningAsInstalledApp() {
   return (
