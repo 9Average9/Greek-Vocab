@@ -31164,6 +31164,9 @@ body:has(.screen.active .nav-bar) #statusBarBg {
   bottom: 0;
   height: 100vh;
   height: 100dvh;
+  /* Shrink to the area above the soft keyboard so the page stays edge-to-edge
+     with no phantom background/safe-area bar peeking out beneath it. */
+  height: calc(100dvh - var(--kb-inset, 0px));
   z-index: 1000;
   overflow: hidden;
   background: var(--memorization-page-color, var(--primary-light)) !important;
@@ -32547,6 +32550,9 @@ body.mem-dragging .mem-scramble-tile:not(.dragging) { transition: transform 0.16
   top: 0; left: 0; right: 0; bottom: 0;
   height: 100vh;
   height: 100dvh;
+  /* Shrink to the area above the soft keyboard so the page stays edge-to-edge
+     with no phantom background/safe-area bar peeking out beneath it. */
+  height: calc(100dvh - var(--kb-inset, 0px));
   z-index: 1000;
   overflow: hidden;
   background: var(--primary-light) !important;
@@ -32586,6 +32592,11 @@ body.reading-plan-active #statusBarBg {
   display: flex; flex-direction: column;
   overflow: hidden;
   color: var(--font-color);
+  /* Premium layered wash (matches Memorize / Bible Quiz) so the tool reads as
+     part of the same polished family rather than a flat page. Transparent base
+     lets the already-themed page background show through in every theme. */
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--secondary-color) 9%, transparent), transparent 250px);
 }
 .rp-topbar {
   flex: 0 0 auto;
@@ -32827,6 +32838,10 @@ body.reading-plan-active #statusBarBg {
   background: rgba(15, 23, 42, 0.42);
   backdrop-filter: blur(4px);
   display: flex; align-items: flex-end; justify-content: center;
+  /* Lift the bottom sheet above the soft keyboard when the search field is
+     focused, so the input never hides behind it. */
+  padding-bottom: var(--kb-inset, 0px);
+  transition: padding-bottom 0.2s ease;
 }
 .rp-picker-overlay.hidden { display: none; }
 .rp-picker-sheet {
@@ -36647,6 +36662,9 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
   top: 0; left: 0; right: 0; bottom: 0;
   height: 100vh;
   height: 100dvh;
+  /* Shrink above the soft keyboard so the page stays edge-to-edge with no
+     phantom background/safe-area bar peeking out beneath it. */
+  height: calc(100dvh - var(--kb-inset, 0px));
   z-index: 1000;
   overflow: hidden;
   background: var(--primary-light) !important;
@@ -36655,6 +36673,20 @@ html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
   border-radius: 0 !important;
   box-shadow: none !important;
 }
+/* Premium layered wash (matches Memorize / Bible Quiz) so the tool reads as
+   part of the same polished family. A pseudo-element overlay keeps the themed
+   base color (incl. dark-mode overrides) intact in every theme. */
+#threadsPage.screen.active::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 250px;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--secondary-color) 9%, transparent), transparent);
+}
+#threadsPage .gt-nav,
+#threadsPage .gt-scroll { position: relative; z-index: 1; }
 #threadsPage .gt-nav {
   flex-shrink: 0;
   padding: max(10px, env(safe-area-inset-top)) 18px 4px;
