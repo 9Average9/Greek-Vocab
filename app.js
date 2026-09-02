@@ -32166,6 +32166,12 @@ function queueAppUpdateReload() {
     const kbOpen = covered > 90; // ignore URL-bar / rounding jitter
     if (kbOpen) {
       root.style.setProperty("--app-vh", Math.round(visibleH) + "px");
+      // iOS also pans the whole page up to keep the focused field visible,
+      // which reveals a strip of page background below a full-height fixed
+      // page (the "bar" users saw). Now that the page is sized to the visible
+      // area it fits above the keyboard, so undo any residual page pan. Guarded
+      // by the != 0 checks so this can't fight itself into a scroll loop.
+      if (window.scrollX !== 0 || window.scrollY !== 0) window.scrollTo(0, 0);
     } else {
       root.style.removeProperty("--app-vh");
     }
