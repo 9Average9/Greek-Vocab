@@ -29964,7 +29964,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.466";
+const APP_VERSION = "3.0.467";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29987,6 +29987,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.467 &mdash; The bottom bar on keyboard is really gone now</div>
+<ul>
+  <li><strong>No more strip at the bottom when the keyboard opens</strong> &mdash; The first attempt didn't hold on every iPhone because it measured the keyboard the wrong way. Reading Plan, Memorize and Theological Threads now size themselves straight from the actually-visible screen area, so the page sits flush on top of the keyboard with no leftover safe-area strip underneath &mdash; on every device. The Reading Plan book picker also lifts above the keyboard so its search box is never hidden.</li>
+</ul>
 <div class="un-version-label">v3.0.466 &mdash; No surprise refreshes &amp; true full-screen</div>
 <ul>
   <li><strong>No more random reloads mid-use</strong> &mdash; A freshly deployed update could quietly reload the app while you were looking at it (even sitting on the home screen), which felt like a random refresh. Updates now only ever apply at a moment you can't see &mdash; while the app is in the background, or on your next launch &mdash; never on a screen you're actively using.</li>
@@ -32129,34 +32133,57 @@ function queueAppUpdateReload() {
   document.addEventListener("visibilitychange", _applyPendingAppUpdateReload);
 }
 
-// ── On-screen keyboard inset tracking ──────────────────────────────────────
+// ── Visible-viewport tracking (soft-keyboard fit) ───────────────────────────
 // When the soft keyboard opens on iOS (and in standalone PWAs generally), the
-// layout viewport does NOT shrink — the keyboard just overlays the bottom of a
-// full-height (100dvh) fixed page. That left a strip of page background (and the
-// home-indicator safe area) visible between the content and the keyboard: the
-// "extra bar at the very bottom" users saw in Reading Plan / Memorize. We track
-// the real visible area via the VisualViewport API and expose it as
-// --kb-inset (+ html.kb-open) so full-screen pages can shrink to sit flush on
-// top of the keyboard, staying edge-to-edge with no phantom bar.
-(function initKeyboardInsetTracking() {
+// keyboard overlays the bottom of a full-height (100dvh) fixed page, leaving a
+// strip of page background + home-indicator safe area showing between the
+// content and the keyboard — the "extra bar at the very bottom" users saw in
+// Reading Plan / Memorize / Threads.
+//
+// We size those pages directly from VisualViewport.height rather than trying to
+// compute a keyboard height from window.innerHeight — on several iOS versions
+// innerHeight itself shrinks with the keyboard, so an innerHeight-based
+// calculation reads ~0 and silently does nothing (the earlier attempt's bug).
+// Comparing the visual viewport against the layout viewport
+// (documentElement.clientHeight, which does NOT shrink for an overlaying
+// keyboard) reliably tells us when the keyboard is up, and --app-vh then holds
+// the exact visible height so the page sits flush on top of the keyboard.
+// If a platform instead shrinks the layout viewport for the keyboard (Android
+// with interactive-widget, or iOS versions that resize it), --app-vh is cleared
+// and the page falls back to 100dvh, which already fits — so both behaviors are
+// covered.
+(function initVisibleViewportTracking() {
   const vv = window.visualViewport;
   const root = document.documentElement;
   if (!vv || !root) return;
   let raf = 0;
   function apply() {
     raf = 0;
-    // Portion of the layout viewport hidden at the bottom (keyboard height).
-    const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    // Ignore small deltas (URL-bar show/hide jitter); >90px is a real keyboard.
-    const kb = overlap > 90 ? Math.round(overlap) : 0;
-    root.style.setProperty("--kb-inset", kb + "px");
-    root.classList.toggle("kb-open", kb > 0);
+    const layoutH = root.clientHeight || window.innerHeight;
+    const visibleH = vv.height;
+    // How much of the layout viewport is covered at the bottom (keyboard).
+    const covered = layoutH - visibleH - vv.offsetTop;
+    const kbOpen = covered > 90; // ignore URL-bar / rounding jitter
+    if (kbOpen) {
+      root.style.setProperty("--app-vh", Math.round(visibleH) + "px");
+      // iOS also pans the whole page up to keep the focused field visible,
+      // which reveals a strip of page background below a full-height fixed
+      // page (the "bar" users saw). Now that the page is sized to the visible
+      // area it fits above the keyboard, so undo any residual page pan. Guarded
+      // by the != 0 checks so this can't fight itself into a scroll loop.
+      if (window.scrollX !== 0 || window.scrollY !== 0) window.scrollTo(0, 0);
+    } else {
+      root.style.removeProperty("--app-vh");
+    }
+    root.classList.toggle("kb-open", kbOpen);
   }
   const schedule = () => { if (!raf) raf = requestAnimationFrame(apply); };
   vv.addEventListener("resize", schedule);
   vv.addEventListener("scroll", schedule);
-  // A blur usually means the keyboard is dismissing — recompute shortly after.
-  document.addEventListener("focusout", () => setTimeout(schedule, 50), true);
+  // A blur usually means the keyboard is dismissing — recompute shortly after
+  // so the page grows back cleanly with no lingering short height.
+  document.addEventListener("focusout", () => setTimeout(schedule, 60), true);
+  window.addEventListener("orientationchange", () => setTimeout(schedule, 100));
   apply();
 })();
 
