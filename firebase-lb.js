@@ -69,6 +69,14 @@ const functionsApp = getFunctions(fbApp);
 let messaging = null;
 try { messaging = getMessaging(fbApp); } catch (e) { console.warn("FCM unavailable:", e); }
 
+// Resolves once Firebase Auth has restored (or confirmed the absence of) a
+// persisted session. On a cold start / PWA resume `auth.currentUser` is null
+// until this first fires, so callers that gate on being signed in should await
+// this before deciding the user is signed out.
+let _authReadyResolve;
+const _authReadyPromise = new Promise(resolve => { _authReadyResolve = resolve; });
+let _authResolvedOnce = false;
+
 const EMAIL_DOMAIN = "@greek-vocab.app";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const COMMUNITY_POST_TTL_MS = 7 * DAY_MS;
@@ -323,6 +331,13 @@ function onAuthChange(callback) {
 }
 
 function getCurrentUser() {
+  return auth.currentUser;
+}
+
+// Await Firebase's first auth-state resolution, then return the current user.
+// Lets callers avoid a false "signed out" reading during the cold-start window.
+async function whenAuthReady() {
+  await _authReadyPromise;
   return auth.currentUser;
 }
 
@@ -2342,6 +2357,7 @@ window.Auth = {
   getAuthEmailInfo,
   onAuthChange,
   getCurrentUser,
+  whenAuthReady,
   loadUserData,
   syncUserData,
   checkUsernameTaken,
@@ -2521,6 +2537,7 @@ window.Events = {
 
 // Notify app.js when Firebase auth state is resolved
 onAuthStateChanged(auth, user => {
+  if (!_authResolvedOnce) { _authResolvedOnce = true; _authReadyResolve(user); }
   if (typeof window.__onAuthStateReady === "function") {
     window.__onAuthStateReady(user);
   } else {

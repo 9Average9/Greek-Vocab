@@ -8579,7 +8579,14 @@ function _addSheetSwipeClose(sheetId, closeFn) {
 }
 
 async function submitStudyCreate() {
-  const uid = window.Auth?.getCurrentUser()?.uid;
+  let uid = window.Auth?.getCurrentUser()?.uid;
+  // On a cold start / PWA resume the UI can render (from cached data) before
+  // Firebase finishes restoring the persisted session, leaving currentUser
+  // momentarily null. Wait for auth to resolve before treating the user as
+  // signed out, so an already-signed-in user isn't wrongly told to sign in.
+  if (!uid && window.Auth?.whenAuthReady) {
+    uid = (await window.Auth.whenAuthReady())?.uid;
+  }
   if (!uid) { _showStudyToast('Sign in to create a study.'); return; }
   const name = document.getElementById('studyCreateName')?.value?.trim();
   if (!name) { document.getElementById('studyCreateName')?.focus(); return; }
@@ -29964,7 +29971,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.467";
+const APP_VERSION = "3.0.468";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29987,7 +29994,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.467 &mdash; The bottom bar on keyboard is really gone now</div>
+<div class="un-version-label">v3.0.468 &mdash; Fix false "sign in to create a study" for signed-in users</div>
 <ul>
   <li><strong>No more strip at the bottom when the keyboard opens</strong> &mdash; The first attempt didn't hold on every iPhone because it measured the keyboard the wrong way. Reading Plan, Memorize and Theological Threads now size themselves straight from the actually-visible screen area, so the page sits flush on top of the keyboard with no leftover safe-area strip underneath &mdash; on every device. The Reading Plan book picker also lifts above the keyboard so its search box is never hidden.</li>
 </ul>
