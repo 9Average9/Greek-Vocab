@@ -8765,8 +8765,12 @@ async function openStudySandbox(studyId, studyObj) {
   // Switch to Rhema tab first
   switchSandboxTab('rhema');
 
-  // Show sandbox
-  document.getElementById('studySandbox')?.classList.remove('hidden');
+  // Show sandbox as the full-screen dashboard. Clear any leftover Phase-2
+  // tool-host state so it can't inherit the over-the-reader styling and so the
+  // Back button routes to closeStudySandbox (not closeStudyToolHost).
+  const _ssHost = document.getElementById('studySandbox');
+  clearTimeout(closeStudyToolHost._t);
+  _ssHost?.classList.remove('tool-host', 'in', 'hidden');
   document.getElementById('studyTabBar')?.classList.remove('hidden');
   document.getElementById('bottomNav')?.classList.add('hidden');
   document.body.classList.add('sandbox-open');
@@ -8820,7 +8824,27 @@ async function openStudySandbox(studyId, studyObj) {
   setTimeout(() => startStudyRhemaCoach(), 220);
 }
 
+// Single back-button handler for the study surface. #studySandbox is used two
+// ways: (1) the full-screen study dashboard opened via openStudySandbox (with
+// its own #studyTabBar), and (2) a Phase-2 tool pane hosted OVER the reader
+// (marked with the `tool-host` class). Back must do the right thing for each —
+// routing everything to closeStudyToolHost (as it once did) left the dashboard's
+// #studyTabBar stranded at the bottom of the screen after closing a study.
+function studySandboxBack() {
+  const host = document.getElementById('studySandbox');
+  if (host?.classList.contains('tool-host')) {
+    closeStudyToolHost();   // return to the reader, keep the study open
+  } else {
+    closeStudySandbox();    // close the dashboard, restore the home chrome
+  }
+}
+
 function closeStudySandbox() {
+  // Defensively undo any Phase-2 tool-host state so a mixed session can never
+  // leave the sandbox host or its animation timer half-applied.
+  const _ssHost = document.getElementById('studySandbox');
+  clearTimeout(closeStudyToolHost._t);
+  _ssHost?.classList.remove('tool-host', 'in');
   // If Rhema is open in study mode, close it first
   if (_studySandboxId) {
     _studySandboxRhemaReturn = false;
@@ -8857,11 +8881,17 @@ function closeStudySandbox() {
   _sandboxTrailsCache = [];
   _sandboxStructuresCache = [];
   _activeSandboxStudy = null;
+  _sandboxTab = 'rhema';
   document.getElementById('studySandbox')?.classList.add('hidden');
   document.getElementById('studyTabBar')?.classList.add('hidden');
   document.getElementById('rhemaModal')?.classList.remove('open');
   document.getElementById('bottomNav')?.classList.remove('hidden');
   document.body.classList.remove('sandbox-open');
+  // Reset the dashboard to its default (Rhema) pane/tab so the next open is
+  // clean, even if it was left on a tool pane hidden by a Phase-2 overlay.
+  document.querySelectorAll('#studyTabBar .ss-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'rhema'));
+  document.querySelectorAll('#studySandbox .ss-pane').forEach(p => p.classList.toggle('active', p.id === 'ssPaneRhema'));
+  document.getElementById('ssPaneVerses')?.classList.remove('rhema-phrasing-only');
   _loadMyStudies();
 }
 
@@ -8869,6 +8899,10 @@ function switchSandboxTab(tab) {
   if (tab !== 'rhema' && document.getElementById('rhemaModal')?.classList.contains('open')) {
     closeRhema(true); // close Rhema modal but stay inside the sandbox
   }
+  // Using the dashboard tabs means the dashboard is the active surface, so its
+  // tab bar must be showing — reassert it in case a Phase-2 tool overlay (which
+  // hides it) was the last thing to touch it.
+  document.getElementById('studyTabBar')?.classList.remove('hidden');
   _sandboxTab = tab;
   document.querySelectorAll('#studyTabBar .ss-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.ss-pane').forEach(p => p.classList.toggle('active', p.id === `ssPane${tab.charAt(0).toUpperCase()+tab.slice(1)}`));
@@ -29971,7 +30005,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.468";
+const APP_VERSION = "3.0.469";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -29994,9 +30028,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.468 &mdash; Fix false "sign in to create a study" for signed-in users</div>
+<div class="un-version-label">v3.0.469 &mdash; Study nav bar no longer sticks after closing a study</div>
 <ul>
-  <li><strong>No more strip at the bottom when the keyboard opens</strong> &mdash; The first attempt didn't hold on every iPhone because it measured the keyboard the wrong way. Reading Plan, Memorize and Theological Threads now size themselves straight from the actually-visible screen area, so the page sits flush on top of the keyboard with no leftover safe-area strip underneath &mdash; on every device. The Reading Plan book picker also lifts above the keyboard so its search box is never hidden.</li>
+  <li><strong>The study tab bar closes with the study</strong> &mdash; After you made or opened a study, the bar of study tabs (Rhema, Verses, Word Log, Trails, Workspace) could stay stuck across the bottom of every screen even after you backed out. The Back button now closes the study cleanly &mdash; the study tab bar disappears and your normal bottom navigation comes right back &mdash; every time.</li>
 </ul>
 <div class="un-version-label">v3.0.466 &mdash; No surprise refreshes &amp; true full-screen</div>
 <ul>
