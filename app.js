@@ -16938,7 +16938,7 @@ function _atlasRenderDetail(place) {
       <button onclick="setAtlasDetailMode('modern')">Modern</button>
     </div>` : ''}
     <div class="atlas-map" id="atlasMapShell"></div>
-    ${inTiles && _atlasRegionOutline(place) ? `<p class="atlas-extent-note"><span class="material-symbols-outlined">crop_free</span>Shaded area shows this territory's <strong>approximate extent</strong> — ancient borders are debated and shifted over time.</p>` : ''}
+    ${inTiles && _atlasRegionOutline(place) ? `<p class="atlas-extent-note"><span class="material-symbols-outlined">crop_free</span>Shaded area shows the <strong>approximate extent</strong> of ${_journeyEsc(_atlasRegionOutline(place).name)} — ancient borders are debated and shifted over time. Faint dotted areas are neighbouring lands; small dots are nearby places.</p>` : ''}
     <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>${conf.tier === 'debated' ? 'Most-accepted location' : 'Where it is today'}</strong><span>${_journeyEsc(place.modern)}</span></div></div>
     ${_atlasAltsHtml(place)}
     ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
@@ -16977,6 +16977,7 @@ function _atlasMountGL(place) {
   shell.appendChild(host);
   shell.classList.add('gl-mounting');
   const pseudo = { id: 'atlas', title: place.name, points: [{ ancient: place.name, modern: place.modern, lat: place.lat, lon: place.lon, kind: place.kind }] };
+  const _atlasRO = _atlasRegionOutline(place);
   _ensureBibleMapLibs().then(() => {
     if (token !== _atlasGLToken) return null;
     if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('map unavailable');
@@ -16988,8 +16989,10 @@ function _atlasMountGL(place) {
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(pseudo, 10),
       pinZoom: 7,
-      regionOutline: _atlasRegionOutline(place),
+      regionOutline: _atlasRO,
+      focusIsRegion: !!(_atlasRO && _atlasRO.focusIsRegion),
       regionContext: _atlasRegionContext(place),
+      contextPlaces: _atlasContextPlaces(place, 10),
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
   }).then(() => {
@@ -17026,16 +17029,46 @@ const _ATLAS_KIND_COLORS = {
 function _atlasKindColor(kind) {
   return _ATLAS_KIND_COLORS[String(kind || '').toLowerCase()] || '#4b5563';
 }
-// Returns the approximate territory outline for a place, if one is bundled in
-// window.BIBLE_REGIONS (regions/nations only). Null for point places.
+function _ringArea(ring) {
+  let s = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    s += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+  }
+  return Math.abs(s) / 2;
+}
+// The smallest bundled territory that a place sits in — or, when the place IS a
+// region/nation, its own polygon. This lets ANY place (a city like Athens, a
+// site, a mountain) show the land it belongs to, not only region-type places.
+function _atlasContainingRegion(place) {
+  const regions = window.BIBLE_REGIONS || {};
+  if (place && Array.isArray(regions[place.name]) && regions[place.name].length >= 3) {
+    return { name: place.name, ring: regions[place.name], isSelf: true };
+  }
+  if (!place || typeof place.lon !== 'number' || typeof place.lat !== 'number') return null;
+  let best = null, bestArea = Infinity;
+  for (const name in regions) {
+    const ring = regions[name];
+    if (!Array.isArray(ring) || ring.length < 3) continue;
+    if (!_pointInRing(place.lon, place.lat, ring)) continue;
+    const a = _ringArea(ring);
+    if (a < bestArea) { bestArea = a; best = { name, ring, isSelf: false }; }
+  }
+  return best;
+}
+// The focus-territory outline for a place: the land it sits in (or is), tinted to
+// MATCH the place's own colour so the spot and its territory read as one unit.
+// Null if the place isn't inside any bundled territory.
 function _atlasRegionOutline(place) {
   if (!place) return null;
-  const ring = (window.BIBLE_REGIONS || {})[place.name];
-  if (!Array.isArray(ring) || ring.length < 3) return null;
+  const cr = _atlasContainingRegion(place);
+  if (!cr) return null;
+  const c = _ringCentroid(cr.ring);
   return {
-    geometry: { type: 'Polygon', coordinates: [ring] },
-    color: _atlasKindColor(place.kind),
-    name: place.name
+    geometry: { type: 'Polygon', coordinates: [cr.ring] },
+    color: _atlasKindColor(place.kind),   // spot + territory share one colour
+    name: cr.name,
+    cx: c.x, cy: c.y,
+    focusIsRegion: cr.isSelf
   };
 }
 
@@ -17088,29 +17121,63 @@ function _journeyRegionContext(journey) {
   return out.slice(0, 10);
 }
 
-// Neighbouring territories whose bounding box touches the focused one — drawn as
-// faint context outlines so the geography reads without cluttering the view.
-// Capped to the nearest few and only returned when the place itself is a region.
+// Neighbouring territories around the focused place — drawn as faint outline-only
+// context so the wider geography reads without cluttering the view. Keyed off the
+// land the place sits in (or a small box around the point when it's in none), and
+// excludes that home territory (which is already the highlighted focus).
 function _atlasRegionContext(place) {
   const regions = window.BIBLE_REGIONS || {};
-  const selfRing = place && regions[place.name];
-  if (!Array.isArray(selfRing) || selfRing.length < 3) return [];
-  const sb = _ringBBox(selfRing);
-  const sc = _ringCentroid(selfRing);
+  const cr = _atlasContainingRegion(place);
+  let baseBB, excludeName = cr ? cr.name : null;
+  if (cr) {
+    baseBB = _ringBBox(cr.ring);
+  } else if (place && typeof place.lon === 'number' && typeof place.lat === 'number') {
+    baseBB = { minX: place.lon - 1.4, maxX: place.lon + 1.4, minY: place.lat - 1.4, maxY: place.lat + 1.4 };
+  } else {
+    return [];
+  }
+  const cx0 = (baseBB.minX + baseBB.maxX) / 2, cy0 = (baseBB.minY + baseBB.maxY) / 2;
   const out = [];
   for (const name in regions) {
-    if (name === place.name) continue;
+    if (name === excludeName || name === (place && place.name)) continue;
     const ring = regions[name];
     if (!Array.isArray(ring) || ring.length < 3) continue;
     const b = _ringBBox(ring);
-    if (b.minX > sb.maxX || b.maxX < sb.minX || b.minY > sb.maxY || b.maxY < sb.minY) continue;
+    if (b.minX > baseBB.maxX || b.maxX < baseBB.minX || b.minY > baseBB.maxY || b.maxY < baseBB.minY) continue;
     const c = _ringCentroid(ring);
     const kind = (_atlasByName(name) || {}).kind || 'region';
-    const dx = c.x - sc.x, dy = c.y - sc.y;
+    const dx = c.x - cx0, dy = c.y - cy0;
     out.push({ geometry: { type: 'Polygon', coordinates: [ring] }, color: _atlasKindColor(kind), name, cx: c.x, cy: c.y, _d: dx * dx + dy * dy });
   }
   out.sort((a, b) => a._d - b._d);
   return out.slice(0, 6).map(r => ({ geometry: r.geometry, color: r.color, name: r.name, cx: r.cx, cy: r.cy }));
+}
+
+// The nearest gazetteer places around a focused place, for surrounding context so
+// the reader sees a spot in relation to what's near it. Capped by count and a
+// sensible radius, coloured by kind, and carrying both names so the label follows
+// the Bible/Modern map mode.
+function _atlasContextPlaces(place, n) {
+  if (!place || typeof place.lon !== 'number' || typeof place.lat !== 'number') return [];
+  n = n || 10;
+  const maxD = 2.6 * 2.6;   // ~ up to a few hundred km, so far-off places don't drag the frame
+  const cosLat = Math.cos(place.lat * Math.PI / 180) || 1;
+  const scored = [];
+  _atlasPlaces().forEach(p => {
+    if (!p || p.name === place.name) return;
+    if (typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
+    if (!_atlasInTiles(p)) return;
+    // Skip region/nation entries — those are already shown as territory outlines,
+    // so a dot for them would just duplicate the shaded land.
+    const k = String(p.kind || '').toLowerCase();
+    if (k === 'region' || k === 'nation') return;
+    const dx = (p.lon - place.lon) * cosLat, dy = (p.lat - place.lat);
+    const d = dx * dx + dy * dy;
+    if (d > maxD) return;
+    scored.push({ p, d });
+  });
+  scored.sort((a, b) => a.d - b.d);
+  return scored.slice(0, n).map(({ p }) => ({ ancient: p.name, modern: p.modern, lat: p.lat, lon: p.lon, kind: p.kind }));
 }
 
 function _atlasConfidence(place) {
@@ -17340,6 +17407,7 @@ function _atlasPeekMountGL(place) {
   shell.appendChild(host);
   shell.classList.add('gl-mounting');
   const pseudo = { id: 'atlaspeek', title: place.name, points: [{ ancient: place.name, modern: place.modern, lat: place.lat, lon: place.lon, kind: place.kind }] };
+  const _peekRO = _atlasRegionOutline(place);
   _ensureBibleMapLibs().then(() => {
     if (token !== _atlasGLToken || !document.getElementById('atlasPeekMap')) return null;
     if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('map unavailable');
@@ -17347,8 +17415,10 @@ function _atlasPeekMountGL(place) {
       mode: _atlasPeekMode, pmtilesUrl: _journeyResolvePmtiles(), labelFor: _journeyLabelFor,
       terrain: BIBLE_TERRAIN_OPTIONS, followTraveler: false,
       landmarks: _journeyModernLandmarks(pseudo, 9), pinZoom: 7,
-      regionOutline: _atlasRegionOutline(place),
+      regionOutline: _peekRO,
+      focusIsRegion: !!(_peekRO && _peekRO.focusIsRegion),
       regionContext: _atlasRegionContext(place),
+      contextPlaces: _atlasContextPlaces(place, 10),
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
   }).then(() => {
@@ -30179,7 +30249,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.470";
+const APP_VERSION = "3.0.471";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30202,6 +30272,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.471 &mdash; Every map now shows territory &amp; surroundings</div>
+<ul>
+  <li><strong>Open any place and see where it sits</strong> &mdash; Now every place (not just regions) shows the land it belongs to. Open Athens and you'll see it shaded inside Achaia, with the territory named and colored to match the place, plus the nearby towns and sites around it &mdash; so a location mentioned in your reading lands in real geographic context.</li>
+  <li><strong>Surrounding places for context</strong> &mdash; Up to ten of the nearest biblical places are shown around whatever you open, as small colored dots with labels, and the map frames them together so you can see what's nearby.</li>
+  <li><strong>Works on both the Bible map and the Modern map</strong> &mdash; The territory outline, neighboring lands and surrounding places all appear in both views, with labels switching between the biblical and modern names as you toggle.</li>
+</ul>
 <div class="un-version-label">v3.0.470 &mdash; Cleaner map pins, viewable saved plans &amp; tidy habit deletes</div>
 <ul>
   <li><strong>Map places now show exactly where they are</strong> &mdash; On the Atlas and verse map pins, each place used to be a floating name with no clear point. Every place now gets a colored dot right on its precise spot, color-coded by type (cities, towns, mountains, rivers, regions and more), and its name-tag picks up the same color &mdash; so you can tell at a glance both what a place is and exactly where it sits.</li>

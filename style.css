@@ -33879,6 +33879,40 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
     inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent),
     inset 3px 0 0 var(--pin-color);
 }
+/* Surrounding context place: a small colour-coded dot exactly on the spot with a
+   compact label floated to the side (absolute, so the dot stays on the point). */
+.bmctx {
+  --pin-color: #6b7280;
+  position: relative;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+}
+.bmctx-dot {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--pin-color);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pin-color) 60%, #000 40%), 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.bmctx em {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-style: normal;
+  font-size: 0.64rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--font-color);
+  opacity: 0.82;
+  text-shadow:
+    0 1px 2px color-mix(in srgb, var(--card-color) 88%, transparent),
+    0 0 3px color-mix(in srgb, var(--card-color) 78%, transparent);
+}
 .bmregion-ctx-label {
   font-size: 0.62rem;
   font-weight: 800;
@@ -33891,6 +33925,22 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
   text-shadow:
     0 1px 2px color-mix(in srgb, var(--card-color) 85%, transparent),
     0 0 3px color-mix(in srgb, var(--card-color) 70%, transparent);
+}
+/* Name of the home territory the focused place sits in — more present than a
+   neighbour tag, styled to read as the area's title. */
+.bmregion-focus-label {
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.9;
+  text-shadow:
+    0 1px 2px color-mix(in srgb, var(--card-color) 90%, transparent),
+    0 0 4px color-mix(in srgb, var(--card-color) 80%, transparent),
+    0 0 6px color-mix(in srgb, var(--card-color) 70%, transparent);
 }
 .bible-map-landmark {
   display: none;
