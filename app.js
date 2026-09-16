@@ -30249,7 +30249,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.471";
+const APP_VERSION = "3.0.472";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -41247,6 +41247,18 @@ function _rhemaInlineNoteHtml(book, chapter, verse) {
   // Atlas place pin: verses that name a place in the gazetteer (exact ref match).
   if (typeof _atlasPlacesForVerse === 'function' && _atlasPlacesForVerse(book, chapter, verse).length) {
     html += `<button class="rhema-reader-note-btn rhema-reader-place-btn" onclick="event.stopPropagation();openAtlasPeek('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="See this place on the map" aria-label="Place on map"><span class="material-symbols-outlined">location_on</span></button>`;
+  }
+  // Genealogy: verses that record a person's family line get a little person
+  // icon that opens the "Who's who" family-tree map focused on them.
+  if (window.BibleGenealogy && typeof window.BibleGenealogy.personsForVerse === 'function') {
+    const genPeople = window.BibleGenealogy.personsForVerse(book, chapter, verse);
+    if (genPeople.length) {
+      const who = genPeople.map(p => p.name).join(', ');
+      const title = genPeople.length === 1
+        ? `${who}'s genealogy — open the family tree`
+        : `Genealogy of ${who} — open the family tree`;
+      html += `<button class="rhema-reader-note-btn rhema-reader-genealogy-btn" onclick="event.stopPropagation();openGenealogyForVerse('${_escapeRhemaAttr(book)}','${_escapeRhemaAttr(chapter)}','${_escapeRhemaAttr(verse)}')" title="${_escapeRhemaAttr(title)}" aria-label="${_escapeRhemaAttr(title)}"><span class="material-symbols-outlined">family_history</span></button>`;
+    }
   }
   return html;
 }

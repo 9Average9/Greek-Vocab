@@ -16824,6 +16824,12 @@ body.dark .rhema-reader-map-btn { color: #6fd6a6; }
   color: #b14228;
 }
 body.dark .rhema-reader-place-btn { color: #f0a58e; }
+.rhema-reader-genealogy-btn {
+  border-color: color-mix(in srgb, #a06a24 48%, transparent);
+  background: color-mix(in srgb, #d9a441 18%, transparent);
+  color: #8a5a12;
+}
+body.dark .rhema-reader-genealogy-btn { color: #e6c07a; }
 
 /* Atlas peek — quick place pin popup from a verse (reuses journey-peek shell). */
 .atlas-peek-chips {
