@@ -30,7 +30,7 @@
     mode: 'ancient',
     markers: [],
     pinDots: [],
-    regionCtxLabels: [],
+    regionLabels: [],
     contextPlaceMarkers: [],
     landmarkMarkers: [],
     raf: 0,
@@ -500,35 +500,79 @@
     } else {
       map.setPaintProperty('region-outline-line', 'line-color', color);
     }
-    // Name the home territory on the map (unless the focus place IS that region,
-    // in which case its own label already shows the name).
-    if (ro.name && !(state.opts && state.opts.focusIsRegion) && typeof ro.cx === 'number' && typeof ro.cy === 'number') {
-      var rl = document.createElement('div');
-      rl.className = 'bmregion-focus-label';
-      rl.textContent = ro.name;
-      rl.style.color = color;
-      var rlm = new maplibregl.Marker({ element: rl, anchor: 'center', offset: [0, 0] })
-        .setLngLat([ro.cx, ro.cy]).addTo(map);
-      state.regionCtxLabels.push(rlm);
-    }
   }
 
-  // Small, quiet name tags at the centre of each neighbouring territory so a
-  // bare context outline isn't a mystery shape. Kept subtle (muted, no pill) so
-  // the focused region stays the clear subject.
-  function _addRegionContextLabels() {
+  function _polyRing(geom) {
+    return (geom && geom.coordinates && geom.coordinates[0]) || [];
+  }
+  function _ringBounds2(ring) {
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    ring.forEach(function (c) {
+      if (c[0] < minX) minX = c[0]; if (c[0] > maxX) maxX = c[0];
+      if (c[1] < minY) minY = c[1]; if (c[1] > maxY) maxY = c[1];
+    });
+    return { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
+  }
+
+  // Territory NAME labels. Every outlined land (the home territory the place sits
+  // in, plus each neighbouring territory) gets a label. Their positions are
+  // recomputed on every camera move so the name stays ON-SCREEN over its own land
+  // — otherwise a big territory's centre sits outside a tight frame and the border
+  // shows with no title. The home territory reads bolder than its neighbours.
+  function _addRegionLabels() {
     var map = state.map;
+    if (!map) return;
+    var ro = state.opts && state.opts.regionOutline;
     var ctx = (state.opts && state.opts.regionContext) || [];
-    if (!map || !ctx.length) return;
+    var defs = [];
+    // Home territory (skip when the focused place IS that region — its own pill
+    // label already names it).
+    if (ro && ro.geometry && ro.name && !(state.opts && state.opts.focusIsRegion)) {
+      defs.push({ name: ro.name, color: ro.color || '#4b5563', ring: _polyRing(ro.geometry), prominent: true });
+    }
     ctx.forEach(function (c) {
-      if (!c || !c.geometry || typeof c.cx !== 'number' || typeof c.cy !== 'number') return;
+      if (c && c.geometry && c.name) {
+        defs.push({ name: c.name, color: c.color || '#6b7280', ring: _polyRing(c.geometry), prominent: false });
+      }
+    });
+    defs.forEach(function (d) {
+      if (!d.ring.length) return;
       var el = document.createElement('div');
-      el.className = 'bmregion-ctx-label';
-      el.textContent = c.name || '';
-      el.style.color = c.color || '#6b7280';
+      el.className = d.prominent ? 'bmregion-focus-label' : 'bmregion-ctx-label';
+      el.textContent = d.name;
+      el.style.color = d.color;
       var marker = new maplibregl.Marker({ element: el, anchor: 'center', offset: [0, 0] })
-        .setLngLat([c.cx, c.cy]).addTo(map);
-      state.regionCtxLabels.push(marker);
+        .setLngLat([d.ring[0][0], d.ring[0][1]]).addTo(map);
+      var bb = _ringBounds2(d.ring);
+      state.regionLabels.push({
+        marker: marker,
+        bbox: bb,
+        cx: (bb.minX + bb.maxX) / 2,
+        cy: (bb.minY + bb.maxY) / 2
+      });
+    });
+    _repositionRegionLabels();
+  }
+
+  // Keep each territory label within the visible portion of its own land: clamp
+  // its anchor to the overlap of the viewport and the territory's bounds. Hide the
+  // label when its territory is entirely off-screen.
+  function _repositionRegionLabels() {
+    var map = state.map;
+    if (!map || !state.regionLabels.length) return;
+    var b;
+    try { b = map.getBounds(); } catch (e) { return; }
+    var W = b.getWest(), E = b.getEast(), S = b.getSouth(), N = b.getNorth();
+    var mx = (E - W) * 0.07, my = (N - S) * 0.07;
+    state.regionLabels.forEach(function (rl) {
+      var el = rl.marker.getElement();
+      var west = Math.max(W, rl.bbox.minX), east = Math.min(E, rl.bbox.maxX);
+      var south = Math.max(S, rl.bbox.minY), north = Math.min(N, rl.bbox.maxY);
+      if (west > east || south > north) { el.style.display = 'none'; return; }
+      el.style.display = '';
+      var lng = (west + mx <= east - mx) ? Math.min(Math.max(rl.cx, west + mx), east - mx) : (west + east) / 2;
+      var lat = (south + my <= north - my) ? Math.min(Math.max(rl.cy, south + my), north - my) : (south + north) / 2;
+      rl.marker.setLngLat([lng, lat]);
     });
   }
 
@@ -791,7 +835,7 @@
     if (!map) return;
     _addRegionContext();
     _addRegionOutline();
-    _addRegionContextLabels();
+    _addRegionLabels();
     _addContextPlaces();
     _addOverlays();
     _addMarkers();
@@ -806,8 +850,8 @@
     state.markers = [];
     state.pinDots.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.pinDots = [];
-    state.regionCtxLabels.forEach(function (m) { try { m.remove(); } catch (e) {} });
-    state.regionCtxLabels = [];
+    state.regionLabels.forEach(function (r) { try { r.marker.remove(); } catch (e) {} });
+    state.regionLabels = [];
     state.contextPlaceMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.contextPlaceMarkers = [];
     state.landmarkMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
@@ -1028,6 +1072,7 @@
         map.on('rotate', _updateCompass);
         map.on('pitch', _updateCompass);
         map.on('zoom', _updateGeoVisibility);
+        map.on('move', _repositionRegionLabels);
         // Surface the reset control once the user drags/zooms/rotates by hand
         // (programmatic camera moves have no originalEvent, so they don't count).
         map.on('movestart', function (e) {
