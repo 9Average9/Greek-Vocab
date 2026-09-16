@@ -17121,36 +17121,37 @@ function _journeyRegionContext(journey) {
   return out.slice(0, 10);
 }
 
-// Neighbouring territories around the focused place — drawn as faint outline-only
-// context so the wider geography reads without cluttering the view. Keyed off the
-// land the place sits in (or a small box around the point when it's in none), and
-// excludes that home territory (which is already the highlighted focus).
+// Territories visible around the focused place — outlined AND labelled so the
+// surrounding lands read as named areas, not anonymous borders. Based on the same
+// area the camera frames (the place + its nearby places), so every territory the
+// reader can see gets included; the home territory is excluded (it's the focus).
 function _atlasRegionContext(place) {
   const regions = window.BIBLE_REGIONS || {};
-  const cr = _atlasContainingRegion(place);
-  let baseBB, excludeName = cr ? cr.name : null;
-  if (cr) {
-    baseBB = _ringBBox(cr.ring);
-  } else if (place && typeof place.lon === 'number' && typeof place.lat === 'number') {
-    baseBB = { minX: place.lon - 1.4, maxX: place.lon + 1.4, minY: place.lat - 1.4, maxY: place.lat + 1.4 };
-  } else {
-    return [];
-  }
-  const cx0 = (baseBB.minX + baseBB.maxX) / 2, cy0 = (baseBB.minY + baseBB.maxY) / 2;
+  if (!place || typeof place.lon !== 'number' || typeof place.lat !== 'number') return [];
+  const home = _atlasContainingRegion(place);
+  const excludeName = home ? home.name : null;
+  // The framed area = focus point + its surrounding places.
+  const cps = _atlasContextPlaces(place, 10);
+  const xs = [place.lon, ...cps.map(p => p.lon)];
+  const ys = [place.lat, ...cps.map(p => p.lat)];
+  let minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const padX = Math.max(0.4, (maxX - minX) * 0.18), padY = Math.max(0.4, (maxY - minY) * 0.18);
+  const fb = { minX: minX - padX, maxX: maxX + padX, minY: minY - padY, maxY: maxY + padY };
+  const cx0 = (fb.minX + fb.maxX) / 2, cy0 = (fb.minY + fb.maxY) / 2;
   const out = [];
   for (const name in regions) {
-    if (name === excludeName || name === (place && place.name)) continue;
+    if (name === excludeName || name === place.name) continue;
     const ring = regions[name];
     if (!Array.isArray(ring) || ring.length < 3) continue;
     const b = _ringBBox(ring);
-    if (b.minX > baseBB.maxX || b.maxX < baseBB.minX || b.minY > baseBB.maxY || b.maxY < baseBB.minY) continue;
+    if (b.minX > fb.maxX || b.maxX < fb.minX || b.minY > fb.maxY || b.maxY < fb.minY) continue;
     const c = _ringCentroid(ring);
     const kind = (_atlasByName(name) || {}).kind || 'region';
     const dx = c.x - cx0, dy = c.y - cy0;
     out.push({ geometry: { type: 'Polygon', coordinates: [ring] }, color: _atlasKindColor(kind), name, cx: c.x, cy: c.y, _d: dx * dx + dy * dy });
   }
   out.sort((a, b) => a._d - b._d);
-  return out.slice(0, 6).map(r => ({ geometry: r.geometry, color: r.color, name: r.name, cx: r.cx, cy: r.cy }));
+  return out.slice(0, 10).map(r => ({ geometry: r.geometry, color: r.color, name: r.name, cx: r.cx, cy: r.cy }));
 }
 
 // The nearest gazetteer places around a focused place, for surrounding context so
@@ -30249,7 +30250,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.471";
+const APP_VERSION = "3.0.472";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30272,6 +30273,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.472 &mdash; Surrounding territories are now named on the map</div>
+<ul>
+  <li><strong>Every bordered territory is now labeled</strong> &mdash; The surrounding lands around a place were outlined but their names often sat off-screen, so borders showed with no title. Territory names now follow the view, staying on-screen over their own land so each outlined area is clearly named.</li>
+  <li><strong>Surrounding lands match what you see</strong> &mdash; The neighboring territories shown are now the ones actually in view around the place (and the lands its nearby places belong to), each outlined and titled &mdash; so it's real regional context, not just scattered dots.</li>
+</ul>
 <div class="un-version-label">v3.0.471 &mdash; Every map now shows territory &amp; surroundings</div>
 <ul>
   <li><strong>Open any place and see where it sits</strong> &mdash; Now every place (not just regions) shows the land it belongs to. Open Athens and you'll see it shaded inside Achaia, with the territory named and colored to match the place, plus the nearby towns and sites around it &mdash; so a location mentioned in your reading lands in real geographic context.</li>
