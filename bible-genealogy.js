@@ -43,13 +43,13 @@
    * long scroll reads like chapters of one story.
    * ======================================================================*/
   var ERAS = {
-    creation:   { label: 'Before the Flood', accent: '#7c6cf0', soft: '#efecff', ink: '#3a2f8f' },
-    postflood:  { label: 'After the Flood',  accent: '#0ea5a4', soft: '#e2fbf8', ink: '#0b6b6a' },
-    patriarch:  { label: 'The Patriarchs',   accent: '#e0872b', soft: '#fdf0dd', ink: '#9a5a12' },
-    judges:     { label: 'Toward the King',  accent: '#5b9a4e', soft: '#e9f7e4', ink: '#3c6a33' },
-    kings:      { label: 'Kings of Judah',   accent: '#8b5cf6', soft: '#f1eafe', ink: '#5b2ea6' },
-    exile:      { label: 'Exile & Return',   accent: '#5f7590', soft: '#eaeff5', ink: '#3d4d61' },
-    messiah:    { label: 'The Messiah',      accent: '#e0a919', soft: '#fdf4d8', ink: '#8a6608' }
+    creation:   { label: 'From Adam to Noah',     accent: '#7c6cf0', soft: '#efecff', ink: '#3a2f8f' },
+    postflood:  { label: 'From Noah to Abraham',  accent: '#0ea5a4', soft: '#e2fbf8', ink: '#0b6b6a' },
+    patriarch:  { label: 'The Patriarchs',        accent: '#e0872b', soft: '#fdf0dd', ink: '#9a5a12' },
+    judges:     { label: 'The Line of Judah',     accent: '#5b9a4e', soft: '#e9f7e4', ink: '#3c6a33' },
+    kings:      { label: 'The Kings of Judah',    accent: '#8b5cf6', soft: '#f1eafe', ink: '#5b2ea6' },
+    exile:      { label: 'Exile & Return',        accent: '#5f7590', soft: '#eaeff5', ink: '#3d4d61' },
+    messiah:    { label: 'The Messiah',           accent: '#e0a919', soft: '#fdf4d8', ink: '#8a6608' }
   };
 
   /* ========================================================================
@@ -616,7 +616,7 @@
       mentions:[ {ref:'GEN 9:27', q:'“May God enlarge Japheth.”'} ],
       av:{skin:'olive', hair:'brown', style:'short', beard:'full', head:'none'} },
 
-    { id:'nimrod', name:'Nimrod', gender:'m', branchOf:'noah', meaning:'“we shall rebel”',
+    { id:'nimrod', name:'Nimrod', gender:'m', branchOf:'cush', meaning:'“we shall rebel”',
       role:'The first mighty man', era:'postflood',
       blurb:'A grandson of Ham through Cush; “a mighty hunter before the LORD,” founder of Babel.',
       gen:['GEN 10:8','1CH 1:10'],
@@ -772,7 +772,219 @@
       gen:['EXO 6:20','1CH 6:3'], mentions:[
         {ref:'EXO 3:10', q:'“I will send you to Pharaoh… bring out my people.”'},
         {ref:'DEU 34:10', q:'“No prophet has arisen since… like Moses.”'} ],
-      av:{skin:'olive', hair:'gray', style:'long', beard:'long', head:'none'} }
+      av:{skin:'olive', hair:'gray', style:'long', beard:'long', head:'none'} },
+
+    /* ── Cain’s line (Genesis 4) ── */
+    { id:'lamechCain', name:'Lamech', gender:'m', branchOf:'cain', meaning:'“powerful”', era:'creation',
+      role:'Of the line of Cain', blurb:'A descendant of Cain who took two wives and boasted of vengeance in the first recorded poem.',
+      gen:['GEN 4:18'], mentions:[{ref:'GEN 4:23', q:'“I have killed a man for wounding me…”'}],
+      av:{skin:'tan', hair:'darkbrown', style:'short', beard:'full', head:'none'} },
+    { id:'jabal', name:'Jabal', gender:'m', branchOf:'cain', meaning:'“stream / wanderer”', era:'creation',
+      role:'Father of herdsmen', blurb:'“The father of those who dwell in tents and have livestock.”',
+      gen:['GEN 4:20'], mentions:[{ref:'GEN 4:20', q:'The first of the tent-dwelling herdsmen.'}],
+      av:{skin:'tan', hair:'brown', style:'short', beard:'short', head:'band'} },
+    { id:'jubal', name:'Jubal', gender:'m', branchOf:'cain', meaning:'“sound / trumpet”', era:'creation',
+      role:'Father of musicians', blurb:'“The father of all who play the lyre and pipe” — music’s first name.',
+      gen:['GEN 4:21'], mentions:[{ref:'GEN 4:21', q:'The first musician recorded in Scripture.'}],
+      av:{skin:'tan', hair:'brown', style:'short', beard:'none', head:'none'} },
+    { id:'tubalcain', name:'Tubal-cain', gender:'m', branchOf:'cain', meaning:'“smith”', era:'creation',
+      role:'Father of metalworkers', blurb:'“Forger of all instruments of bronze and iron” — the first smith.',
+      gen:['GEN 4:22'], mentions:[{ref:'GEN 4:22', q:'The first worker of bronze and iron.'}],
+      av:{skin:'brown', hair:'black', style:'short', beard:'full', head:'band'} },
+
+    /* ── The Table of Nations (Genesis 10) ── */
+    { id:'cush', name:'Cush', gender:'m', branchOf:'ham', meaning:'“black / Ethiopia”', era:'postflood',
+      role:'Son of Ham', blurb:'A son of Ham and father of Nimrod; associated with the lands south of Egypt.',
+      gen:['GEN 10:6','1CH 1:8'], mentions:[{ref:'GEN 10:8', q:'Father of Nimrod, the first mighty man.'}],
+      av:{skin:'deep', hair:'black', style:'short', beard:'full', head:'none'} },
+    { id:'mizraim', name:'Mizraim', gender:'m', branchOf:'ham', meaning:'“Egypt”', era:'postflood',
+      role:'Son of Ham', blurb:'The son of Ham whose name is the Hebrew word for Egypt.',
+      gen:['GEN 10:6','1CH 1:8'], mentions:[{ref:'GEN 10:13', q:'Ancestor of the peoples of Egypt.'}],
+      av:{skin:'brown', hair:'black', style:'short', beard:'short', head:'egypt'} },
+    { id:'canaan', name:'Canaan', gender:'m', branchOf:'ham', meaning:'“lowland”', era:'postflood',
+      role:'Son of Ham', blurb:'Youngest son of Ham; his descendants filled the land Israel would later enter.',
+      gen:['GEN 10:6','GEN 9:25'], mentions:[{ref:'GEN 9:25', q:'“Cursed be Canaan; a servant of servants shall he be.”'}],
+      av:{skin:'tan', hair:'darkbrown', style:'short', beard:'full', head:'none'} },
+
+    /* ── Terah’s household & Abraham’s wider family ── */
+    { id:'haran', name:'Haran', gender:'m', branchOf:'terah', meaning:'“mountaineer”', era:'postflood',
+      role:'Brother of Abraham', blurb:'Abraham’s brother who died in Ur; father of Lot, Milcah and Iscah.',
+      gen:['GEN 11:27'], mentions:[{ref:'GEN 11:28', q:'Died in Ur of the Chaldeans, in his father’s presence.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'full', head:'turban'} },
+    { id:'lot', name:'Lot', gender:'m', branchOf:'terah', meaning:'“covering / veil”', era:'patriarch',
+      role:'Nephew of Abraham', blurb:'Abraham’s nephew who settled in Sodom and was rescued from its destruction.',
+      gen:['GEN 11:27'], mentions:[{ref:'GEN 13:11', q:'Chose the well-watered Jordan valley.'},{ref:'GEN 19:16', q:'Pulled out of Sodom by the angels’ hands.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'full', head:'turban'} },
+    { id:'nahorBro', name:'Nahor', gender:'m', branchOf:'terah', meaning:'“snorting”', era:'postflood',
+      role:'Brother of Abraham', blurb:'Abraham’s brother; grandfather of Rebekah through his son Bethuel.',
+      gen:['GEN 11:26','GEN 22:20'], mentions:[{ref:'GEN 22:20', q:'His family line reported to Abraham.'}],
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'full', head:'turban'} },
+    { id:'bethuel', name:'Bethuel', gender:'m', branchOf:'terah', meaning:'“man of God”', era:'patriarch',
+      role:'Father of Rebekah', blurb:'Son of Nahor; father of Rebekah and Laban.',
+      gen:['GEN 22:23'], mentions:[{ref:'GEN 24:50', q:'Agreed to send Rebekah to Isaac.'}],
+      av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'turban'} },
+    { id:'hagar', name:'Hagar', gender:'f', branchOf:'abraham', meaning:'“flight”', era:'patriarch',
+      role:'Mother of Ishmael', blurb:'Sarah’s Egyptian servant; God met her in the wilderness and heard her son’s cry.',
+      gen:['GEN 16:15'], mentions:[{ref:'GEN 16:13', q:'“You are a God of seeing.”'},{ref:'GEN 21:17', q:'God heard the voice of the boy.'}],
+      av:{skin:'brown', hair:'black', style:'long', beard:'none', head:'veil'} },
+    { id:'keturah', name:'Keturah', gender:'f', branchOf:'abraham', meaning:'“incense”', era:'patriarch',
+      role:'Later wife of Abraham', blurb:'Abraham’s wife after Sarah; mother of six sons, including Midian.',
+      gen:['GEN 25:1','1CH 1:32'], mentions:[{ref:'GEN 25:2', q:'Bore Zimran, Jokshan, Medan, Midian, Ishbak and Shuah.'}],
+      av:{skin:'olive', hair:'darkbrown', style:'long', beard:'none', head:'veil'} },
+    { id:'midian', name:'Midian', gender:'m', branchOf:'abraham', meaning:'“strife”', era:'patriarch',
+      role:'Son of Keturah', blurb:'Father of the Midianites — among whom Moses later found refuge and a wife.',
+      gen:['GEN 25:2','1CH 1:32'], mentions:[{ref:'EXO 2:15', q:'Moses fled to the land of Midian.'}],
+      av:{skin:'tan', hair:'black', style:'short', beard:'full', head:'band'} },
+    { id:'laban', name:'Laban', gender:'m', branchOf:'jacob', meaning:'“white”', era:'patriarch',
+      role:'Uncle & father-in-law of Jacob', blurb:'Rebekah’s brother; Jacob served him fourteen years for Leah and Rachel.',
+      gen:['GEN 24:29'], mentions:[{ref:'GEN 29:25', q:'Gave Leah before Rachel by a wedding-night trick.'}],
+      av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'turban'} },
+    { id:'leah', name:'Leah', gender:'f', branchOf:'jacob', meaning:'“weary / wild cow”', era:'patriarch',
+      role:'Wife of Jacob', blurb:'Jacob’s first wife; mother of six tribes, including Judah and Levi.',
+      gen:['GEN 29:16'], mentions:[{ref:'GEN 29:35', q:'At Judah’s birth: “This time I will praise the LORD.”'}],
+      av:{skin:'olive', hair:'darkbrown', style:'long', beard:'none', head:'veil'} },
+    { id:'rachel', name:'Rachel', gender:'f', branchOf:'jacob', meaning:'“ewe”', era:'patriarch',
+      role:'Wife of Jacob', blurb:'Jacob’s beloved wife; mother of Joseph and Benjamin, she died near Bethlehem.',
+      gen:['GEN 29:16'], mentions:[{ref:'GEN 35:19', q:'Died giving birth to Benjamin on the way to Bethlehem.'}],
+      av:{skin:'olive', hair:'brown', style:'long', beard:'none', head:'veil'} },
+
+    /* ── Esau / Edom ── */
+    { id:'amalek', name:'Amalek', gender:'m', branchOf:'esau', meaning:'“warlike”', era:'patriarch',
+      role:'Grandson of Esau', blurb:'A grandson of Esau; father of the Amalekites, Israel’s persistent foe.',
+      gen:['GEN 36:12','1CH 1:36'], mentions:[{ref:'EXO 17:8', q:'Amalek fought Israel at Rephidim.'}],
+      av:{skin:'tan', hair:'darkbrown', style:'short', beard:'full', head:'band'} },
+
+    /* ── Judah’s household (Genesis 38) ── */
+    { id:'er', name:'Er', gender:'m', branchOf:'judah', meaning:'“watchful”', era:'patriarch',
+      role:'Firstborn of Judah', blurb:'Judah’s firstborn, husband of Tamar; wicked in the LORD’s sight.',
+      gen:['GEN 38:3','1CH 2:3'], mentions:[{ref:'GEN 38:7', q:'The LORD put him to death.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'turban'} },
+    { id:'onan', name:'Onan', gender:'m', branchOf:'judah', meaning:'“strong / vigorous”', era:'patriarch',
+      role:'Second son of Judah', blurb:'Refused to raise up offspring for his brother Er; he too died.',
+      gen:['GEN 38:4','1CH 2:3'], mentions:[{ref:'GEN 38:9', q:'Refused an heir for his brother.'}],
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'short', head:'turban'} },
+    { id:'shelahJ', name:'Shelah', gender:'m', branchOf:'judah', meaning:'“request”', era:'patriarch',
+      role:'Third son of Judah', blurb:'Judah’s youngest by Bath-shua; a clan of Judah descends from him.',
+      gen:['GEN 38:5','1CH 2:3'], mentions:[{ref:'GEN 38:26', q:'Withheld from Tamar, prompting her plan.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'turban'} },
+
+    /* ── The priestly line of Levi (continued) ── */
+    { id:'miriam', name:'Miriam', gender:'f', branchOf:'levi', meaning:'“beloved / bitterness”', era:'patriarch',
+      role:'Prophetess, sister of Moses', blurb:'Watched over baby Moses in the Nile; later led Israel in song at the sea.',
+      gen:['NUM 26:59'], mentions:[{ref:'EXO 15:20', q:'Led the women with tambourine and dance.'}],
+      av:{skin:'olive', hair:'darkbrown', style:'long', beard:'none', head:'veil'} },
+    { id:'nadab', name:'Nadab', gender:'m', branchOf:'levi', meaning:'“generous”', era:'patriarch',
+      role:'Son of Aaron', blurb:'Aaron’s eldest son; died offering unauthorized fire before the LORD.',
+      gen:['EXO 6:23','1CH 6:3'], mentions:[{ref:'LEV 10:1', q:'Offered strange fire and was consumed.'}],
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'short', head:'priest'} },
+    { id:'abihu', name:'Abihu', gender:'m', branchOf:'levi', meaning:'“he is my father”', era:'patriarch',
+      role:'Son of Aaron', blurb:'Aaron’s second son; died with Nadab for offering unauthorized fire.',
+      gen:['EXO 6:23','1CH 6:3'], mentions:[{ref:'LEV 10:2', q:'Fire came out and consumed them.'}],
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'short', head:'priest'} },
+    { id:'eleazarP', name:'Eleazar', gender:'m', branchOf:'levi', meaning:'“God has helped”', era:'patriarch',
+      role:'High priest after Aaron', blurb:'Aaron’s third son who succeeded him as high priest.',
+      gen:['EXO 6:23','1CH 6:3'], mentions:[{ref:'NUM 20:28', q:'Clothed with Aaron’s priestly garments.'}],
+      av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'priest'} },
+    { id:'ithamar', name:'Ithamar', gender:'m', branchOf:'levi', meaning:'“palm coast”', era:'patriarch',
+      role:'Son of Aaron', blurb:'Aaron’s youngest son; oversaw the service of the tabernacle.',
+      gen:['EXO 6:23','1CH 6:3'], mentions:[{ref:'EXO 38:21', q:'Directed the record of the tabernacle.'}],
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'short', head:'priest'} },
+    { id:'phinehas', name:'Phinehas', gender:'m', branchOf:'levi', meaning:'“mouth of brass”', era:'patriarch',
+      role:'Zealous priest', blurb:'Eleazar’s son; his zeal turned back the plague and won a covenant of peace.',
+      gen:['EXO 6:25','1CH 6:4'], mentions:[{ref:'NUM 25:11', q:'His zeal turned away God’s wrath from Israel.'}],
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'full', head:'priest'} },
+
+    /* ── The house of Elimelech (Ruth) ── */
+    { id:'elimelech', name:'Elimelech', gender:'m', branchOf:'boaz', meaning:'“my God is king”', era:'judges',
+      role:'Naomi’s husband', blurb:'A man of Bethlehem who moved to Moab in the famine; Boaz redeemed his line.',
+      gen:['RUT 1:2'], mentions:[{ref:'RUT 1:3', q:'Died in Moab, leaving Naomi and two sons.'}],
+      av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'turban'} },
+    { id:'naomi', name:'Naomi', gender:'f', branchOf:'boaz', meaning:'“pleasant”', era:'judges',
+      role:'Ruth’s mother-in-law', blurb:'Returned to Bethlehem bereaved, and cradled Ruth’s son Obed as her own.',
+      gen:['RUT 1:2'], mentions:[{ref:'RUT 1:20', q:'“Call me Mara, for the Almighty has dealt bitterly.”'},{ref:'RUT 4:16', q:'Took the child Obed to her bosom.'}],
+      av:{skin:'olive', hair:'gray', style:'long', beard:'none', head:'veil'} },
+    { id:'mahlon', name:'Mahlon', gender:'m', branchOf:'boaz', meaning:'“sickly”', era:'judges',
+      role:'Ruth’s first husband', blurb:'Son of Elimelech and Naomi; Ruth’s first husband, who died in Moab.',
+      gen:['RUT 4:10','RUT 1:2'], mentions:[{ref:'RUT 4:10', q:'Boaz revived his name over his inheritance.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'turban'} },
+    { id:'orpah', name:'Orpah', gender:'f', branchOf:'boaz', meaning:'“neck / gazelle”', era:'judges',
+      role:'Naomi’s other daughter-in-law', blurb:'Kissed Naomi goodbye and returned to Moab — the road Ruth refused.',
+      gen:['RUT 1:4'], mentions:[{ref:'RUT 1:14', q:'“Orpah kissed her mother-in-law, but Ruth clung to her.”'}],
+      av:{skin:'tan', hair:'black', style:'long', beard:'none', head:'veil'} },
+
+    /* ── David’s house (2 Samuel / 1 Chronicles 3) ── */
+    { id:'nathanSon', name:'Nathan', gender:'m', branchOf:'david', meaning:'“gift”', era:'kings',
+      role:'Son of David', blurb:'A son of David and Bathsheba; Luke traces Jesus’ line to David through Nathan, not Solomon.',
+      gen:['2SA 5:14','1CH 3:5','LUK 3:31'], mentions:[{ref:'LUK 3:31', q:'Luke’s genealogy runs through Nathan the son of David.'},{ref:'ZEC 12:12', q:'“The family of the house of Nathan” mourns.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'band'} },
+    { id:'absalom', name:'Absalom', gender:'m', branchOf:'david', meaning:'“father of peace”', era:'kings',
+      role:'Son of David', blurb:'David’s handsome son who rebelled and seized the throne, then died in an oak.',
+      gen:['2SA 3:3','1CH 3:2'], mentions:[{ref:'2SA 18:33', q:'David wept: “O Absalom, my son, my son!”'}],
+      av:{skin:'olive', hair:'darkbrown', style:'long', beard:'short', head:'band'} },
+    { id:'adonijah', name:'Adonijah', gender:'m', branchOf:'david', meaning:'“the LORD is my Lord”', era:'kings',
+      role:'Son of David', blurb:'David’s son who tried to claim the throne before Solomon was made king.',
+      gen:['2SA 3:4','1CH 3:2'], mentions:[{ref:'1KI 1:5', q:'“I will be king,” he declared, exalting himself.'}],
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'short', head:'band'} },
+    { id:'tamarD', name:'Tamar', gender:'f', branchOf:'david', meaning:'“palm tree”', era:'kings',
+      role:'Daughter of David', blurb:'David’s daughter, sister of Absalom; her wrong set his rebellion in motion.',
+      gen:['2SA 13:1','1CH 3:9'], mentions:[{ref:'2SA 13:1', q:'“Absalom… had a beautiful sister, whose name was Tamar.”'}],
+      av:{skin:'olive', hair:'darkbrown', style:'long', beard:'none', head:'veil'} },
+    { id:'amnon', name:'Amnon', gender:'m', branchOf:'david', meaning:'“faithful”', era:'kings',
+      role:'Firstborn of David', blurb:'David’s eldest son, whose crime against Tamar led to his death by Absalom.',
+      gen:['2SA 3:2','1CH 3:1'], mentions:[{ref:'2SA 13:28', q:'Killed by Absalom’s servants at a feast.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'band'} },
+
+    /* ── The sons of Japheth (Genesis 10) ── */
+    { id:'gomer', name:'Gomer', gender:'m', branchOf:'japheth', meaning:'“complete”', era:'postflood',
+      role:'Son of Japheth', blurb:'Eldest son of Japheth; ancestor of peoples to Israel’s far north.',
+      gen:['GEN 10:2','1CH 1:5'], mentions:[{ref:'EZK 38:6', q:'Named among the northern nations of Gog.'}],
+      av:{skin:'light', hair:'brown', style:'short', beard:'full', head:'none'} },
+    { id:'javan', name:'Javan', gender:'m', branchOf:'japheth', meaning:'“Greece / Ionia”', era:'postflood',
+      role:'Son of Japheth', blurb:'The son of Japheth whose name is the Hebrew word for the Greeks.',
+      gen:['GEN 10:2','1CH 1:5'], mentions:[{ref:'DAN 8:21', q:'“The king of Greece” — the goat of Daniel’s vision.'}],
+      av:{skin:'light', hair:'auburn', style:'short', beard:'short', head:'none'} },
+
+    /* ── Ishmael’s sons (Genesis 25) ── */
+    { id:'nebaioth', name:'Nebaioth', gender:'m', branchOf:'ishmael', meaning:'“heights”', era:'patriarch',
+      role:'Firstborn of Ishmael', blurb:'The eldest of Ishmael’s twelve princes; his flocks are named by Isaiah.',
+      gen:['GEN 25:13','1CH 1:29'], mentions:[{ref:'ISA 60:7', q:'“The rams of Nebaioth shall minister to you.”'}],
+      av:{skin:'tan', hair:'black', style:'short', beard:'full', head:'band'} },
+    { id:'kedar', name:'Kedar', gender:'m', branchOf:'ishmael', meaning:'“dark”', era:'patriarch',
+      role:'Son of Ishmael', blurb:'Father of a desert people whose tents the psalmist longed to leave.',
+      gen:['GEN 25:13','1CH 1:29'], mentions:[{ref:'PSA 120:5', q:'“Woe to me… that I dwell among the tents of Kedar!”'}],
+      av:{skin:'tan', hair:'black', style:'short', beard:'full', head:'band'} },
+
+    /* ── Samuel’s family (1 Samuel 1; 1 Chronicles 6) ── */
+    { id:'elkanah', name:'Elkanah', gender:'m', branchOf:'levi', meaning:'“God has created”', era:'judges',
+      role:'Father of Samuel', blurb:'A Levite of the hill country of Ephraim; husband of Hannah and Peninnah.',
+      gen:['1SA 1:1','1CH 6:27'], mentions:[{ref:'1SA 1:19', q:'Worshipped at Shiloh before the LORD.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'full', head:'turban'} },
+    { id:'hannah', name:'Hannah', gender:'f', branchOf:'levi', meaning:'“grace / favor”', era:'judges',
+      role:'Mother of Samuel', blurb:'Prayed for a son and gave him back to the LORD; her song foreshadows Mary’s.',
+      gen:['1SA 1:2'], mentions:[{ref:'1SA 1:27', q:'“For this child I prayed.”'},{ref:'1SA 2:1', q:'“My heart exults in the LORD.”'}],
+      av:{skin:'olive', hair:'darkbrown', style:'long', beard:'none', head:'veil'} },
+    { id:'samuel', name:'Samuel', gender:'m', branchOf:'elkanah', meaning:'“heard of God”', era:'judges',
+      role:'Prophet who anointed kings', blurb:'The last judge and first great prophet; he anointed both Saul and David.',
+      gen:['1SA 1:20','1CH 6:28'], mentions:[{ref:'1SA 3:10', q:'“Speak, for your servant hears.”'},{ref:'1SA 16:13', q:'Anointed David in the midst of his brothers.'}],
+      av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'none'} },
+
+    /* ── The house of Saul (Benjamin — 1 Samuel; 1 Chronicles 8) ── */
+    { id:'kish', name:'Kish', gender:'m', branchOf:'benjamin', meaning:'“bow / snare”', era:'judges',
+      role:'Father of Saul', blurb:'A Benjamite of standing whose lost donkeys sent Saul to meet Samuel.',
+      gen:['1SA 9:1','1CH 8:33'], mentions:[{ref:'1SA 9:3', q:'His lost donkeys began Saul’s journey to the throne.'}],
+      av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'turban'} },
+    { id:'saul', name:'Saul', gender:'m', branchOf:'kish', meaning:'“asked for”', era:'judges',
+      role:'The first king of Israel', blurb:'Israel’s first king, head and shoulders above the rest; his disobedience cost him the throne.',
+      gen:['1SA 9:2','1CH 8:33'], mentions:[{ref:'1SA 10:1', q:'Samuel anointed him leader over Israel.'},{ref:'1SA 15:23', q:'“You have rejected the word of the LORD.”'}],
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'full', head:'crown'} },
+    { id:'jonathan', name:'Jonathan', gender:'m', branchOf:'saul', meaning:'“the LORD has given”', era:'judges',
+      role:'Son of Saul, friend of David', blurb:'Saul’s valiant son whose covenant love for David outran his own claim to the throne.',
+      gen:['1SA 14:49','1CH 8:33'], mentions:[{ref:'1SA 18:3', q:'Made a covenant with David, loving him as himself.'},{ref:'1SA 14:6', q:'“Nothing can hinder the LORD from saving.”'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'band'} },
+    { id:'mephibosheth', name:'Mephibosheth', gender:'m', branchOf:'jonathan', meaning:'“dispeller of shame”', era:'judges',
+      role:'Grandson of Saul', blurb:'Jonathan’s lame son whom David sought out and seated at his own table for Jonathan’s sake.',
+      gen:['2SA 4:4','1CH 8:34'], mentions:[{ref:'2SA 9:7', q:'“You shall eat at my table always.”'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'none'} }
   ];
 
   /* ---- Assemble: index, link fathers along the spine ---------------------- */
@@ -785,11 +997,62 @@
     SPINE[i].father = i > 0 ? SPINE[i - 1].id : null;
     SPINE[i].heir = i < SPINE.length - 1 ? SPINE[i + 1].id : null;
   }
-  // group branches under their spine parent
+  // group branches under their immediate parent (spine OR another branch)
   var BRANCHES_BY_PARENT = {};
   BRANCHES.forEach(function (b) {
     (BRANCHES_BY_PARENT[b.branchOf] = BRANCHES_BY_PARENT[b.branchOf] || []).push(b);
   });
+
+  // The section label each relative is filed under in the tree. Lets clusters
+  // (the twelve tribes, the priestly line, the house of Saul…) read as their
+  // own tidy groups instead of one long "also in the family" pile.
+  var BRANCH_GROUP = {
+    // Adam & Cain
+    eve: 'The first family', cain: 'The first family', abel: 'The first family',
+    lamechCain: 'Cain’s line', jabal: 'Cain’s line', jubal: 'Cain’s line', tubalcain: 'Cain’s line',
+    // Noah & the nations
+    ham: 'Noah’s sons', japheth: 'Noah’s sons',
+    cush: 'The sons of Ham', mizraim: 'The sons of Ham', canaan: 'The sons of Ham', nimrod: 'The sons of Ham',
+    gomer: 'The sons of Japheth', javan: 'The sons of Japheth',
+    // Terah
+    haran: 'Terah’s household', lot: 'Terah’s household', nahorBro: 'Terah’s household', bethuel: 'Terah’s household',
+    // Abraham & Ishmael
+    sarah: 'Abraham’s family', hagar: 'Abraham’s family', keturah: 'Abraham’s family', ishmael: 'Abraham’s family', midian: 'Abraham’s family',
+    nebaioth: 'Ishmael’s sons', kedar: 'Ishmael’s sons',
+    // Isaac
+    esau: 'Isaac’s household', rebekah: 'Isaac’s household',
+    // Jacob
+    reuben: 'The twelve tribes', simeon: 'The twelve tribes', levi: 'The twelve tribes', dan: 'The twelve tribes',
+    naphtali: 'The twelve tribes', gad: 'The twelve tribes', asher: 'The twelve tribes', issachar: 'The twelve tribes',
+    zebulun: 'The twelve tribes', josephp: 'The twelve tribes', benjamin: 'The twelve tribes', dinah: 'The twelve tribes',
+    leah: 'Jacob’s household', rachel: 'Jacob’s household', laban: 'Jacob’s household',
+    kish: 'The house of Saul', saul: 'The house of Saul', jonathan: 'The house of Saul', mephibosheth: 'The house of Saul',
+    // Judah
+    er: 'Judah’s children', onan: 'Judah’s children', shelahJ: 'Judah’s children', tamar: 'Judah’s children', zerah: 'Judah’s children',
+    // Levi & Samuel
+    kohath: 'The priestly line', amram: 'The priestly line', aaron: 'The priestly line', moses: 'The priestly line',
+    miriam: 'The priestly line', nadab: 'The priestly line', abihu: 'The priestly line', eleazarP: 'The priestly line',
+    ithamar: 'The priestly line', phinehas: 'The priestly line',
+    elkanah: 'Samuel’s family', hannah: 'Samuel’s family', samuel: 'Samuel’s family',
+    // Ruth
+    rahab: 'Salmon & Rahab',
+    elimelech: 'The house of Elimelech', naomi: 'The house of Elimelech', mahlon: 'The house of Elimelech',
+    orpah: 'The house of Elimelech', ruth: 'The house of Elimelech',
+    // David
+    bathsheba: 'The house of David', nathanSon: 'The house of David', absalom: 'The house of David',
+    adonijah: 'The house of David', tamarD: 'The house of David', amnon: 'The house of David'
+  };
+
+  // Every relative that descends from a spine person (any depth), so a spine
+  // node can show all their branches — the twelve tribes, the priestly line
+  // through Levi, the house of Saul through Benjamin, and so on.
+  function descendantBranches(spineId) {
+    var out = [];
+    (function walk(id) {
+      (BRANCHES_BY_PARENT[id] || []).forEach(function (b) { out.push(b); walk(b.id); });
+    })(spineId);
+    return out;
+  }
 
   /* ---- Anchor index: verse-key -> [personId] ------------------------------ */
   var ANCHORS = {};
@@ -1007,6 +1270,48 @@
 + '.rgen-x:hover{background:color-mix(in srgb,var(--font-color) 16%,transparent);}'
 + '.rgen-scroll{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 16px 60px;position:relative;z-index:2;}'
 + '.rgen-tree{max-width:640px;margin:0 auto;position:relative;padding-top:6px;}'
+// ── sub-bar: search + era jump-nav ──
++ '.rgen-subbar{flex:0 0 auto;position:relative;z-index:3;padding:0 16px 8px;border-bottom:1px solid color-mix(in srgb,var(--font-color) 8%,transparent);}'
++ '.rgen-search{position:relative;max-width:620px;margin:0 auto 8px;display:flex;align-items:center;gap:8px;'
++ 'background:color-mix(in srgb,var(--font-color) 6%,transparent);border-radius:14px;padding:0 10px;height:42px;}'
++ '.rgen-search-ico{font-size:20px;opacity:.6;flex:0 0 auto;}'
++ '.rgen-search input{flex:1 1 auto;min-width:0;border:none;background:transparent;color:var(--font-color,inherit);font-size:.95rem;font-family:system-ui,sans-serif;outline:none;height:100%;}'
++ '.rgen-search input::placeholder{color:var(--muted-color,inherit);opacity:.8;}'
++ '.rgen-search-clear{display:none;flex:0 0 auto;width:26px;height:26px;border:none;border-radius:50%;cursor:pointer;background:color-mix(in srgb,var(--font-color) 12%,transparent);color:inherit;place-items:center;}'
++ '.rgen-search-clear.show{display:grid;}'
++ '.rgen-search-clear .material-symbols-outlined{font-size:16px;}'
++ '.rgen-search-results{position:absolute;left:0;right:0;top:48px;z-index:20;max-height:60vh;overflow-y:auto;'
++ 'background:var(--card-solid-color,#fff);border:1px solid color-mix(in srgb,var(--font-color) 12%,transparent);border-radius:16px;'
++ 'box-shadow:0 18px 44px rgba(0,0,0,.3);padding:6px;display:none;}'
++ '.rgen-search-results.show{display:block;}'
++ '.rgen-search-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:transparent;cursor:pointer;'
++ 'color:var(--font-color,inherit);padding:7px 8px;border-radius:11px;}'
++ '.rgen-search-row:hover{background:color-mix(in srgb,var(--font-color) 8%,transparent);}'
++ '.rgen-search-row .mini{width:30px;height:30px;border-radius:50%;overflow:hidden;flex:0 0 auto;}'
++ '.rgen-search-row .mini svg{width:100%;height:100%;display:block;}'
++ '.rgen-search-name{flex:1 1 auto;min-width:0;font-weight:700;font-size:.9rem;display:flex;flex-direction:column;line-height:1.1;}'
++ '.rgen-search-name small{font-weight:600;font-size:.68rem;color:var(--muted-color,inherit);margin-top:2px;}'
++ '.rgen-search-go{font-size:16px;opacity:.4;flex:0 0 auto;}'
++ '.rgen-search-empty{padding:14px;text-align:center;color:var(--muted-color,inherit);font-size:.85rem;}'
++ '.rgen-nav{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:620px;margin:0 auto;padding-bottom:2px;}'
++ '.rgen-nav::-webkit-scrollbar{display:none;}'
++ '.rgen-nav-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;cursor:pointer;font-size:.78rem;font-weight:700;'
++ 'background:color-mix(in srgb,var(--font-color) 6%,transparent);border:1.5px solid transparent;color:var(--font-color,inherit);white-space:nowrap;transition:background .16s ease,border-color .16s ease;}'
++ '.rgen-nav-chip .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}'
++ '.rgen-nav-chip .n{font-size:.66rem;opacity:.6;font-weight:800;}'
++ '.rgen-nav-chip.active{background:color-mix(in srgb,var(--rgen-accent,#888) 16%,transparent);border-color:color-mix(in srgb,var(--rgen-accent,#888) 55%,transparent);}'
+// ── collapsible era sections ──
++ '.rgen-era-group{margin:14px 0 6px;}'
++ '.rgen-era-head{width:100%;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;'
++ 'background:color-mix(in srgb,var(--rgen-accent,#888) 8%,var(--card-solid-color,#fff));border:1.5px solid color-mix(in srgb,var(--rgen-accent,#888) 30%,transparent);'
++ 'border-radius:16px;padding:11px 14px;color:var(--font-color,inherit);font-family:"Patrick Hand",cursive;font-size:1.15rem;position:sticky;top:0;z-index:5;}'
++ '.rgen-era-head .dot{width:13px;height:13px;border-radius:50%;flex:0 0 auto;box-shadow:0 1px 4px rgba(0,0,0,.25);}'
++ '.rgen-era-title{flex:1 1 auto;}'
++ '.rgen-era-count{font-family:system-ui,sans-serif;font-size:.7rem;font-weight:800;color:#fff;background:var(--rgen-accent,#888);padding:2px 9px;border-radius:999px;}'
++ '.rgen-era-chev{transition:transform .2s ease;opacity:.7;}'
++ '.rgen-era-group.rgen-collapsed .rgen-era-chev{transform:rotate(-90deg);}'
++ '.rgen-era-body{padding-top:10px;}'
++ '.rgen-era-group.rgen-collapsed .rgen-era-body{display:none;}'
 + '.rgen-era{display:flex;align-items:center;gap:8px;margin:26px 0 10px;font-family:"Patrick Hand",cursive;font-size:1.05rem;}'
 + '.rgen-era:first-child{margin-top:6px;}'
 + '.rgen-era .dot{width:12px;height:12px;border-radius:50%;flex:0 0 auto;box-shadow:0 1px 4px rgba(0,0,0,.25);}'
@@ -1021,11 +1326,20 @@
 + '.rgen-card:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(0,0,0,.22);}'
 + '.rgen-card:active{transform:scale(.99);}'
 + '.rgen-card.spine{max-width:460px;}'
-+ '.rgen-ava{flex:0 0 auto;width:78px;height:78px;border-radius:50%;overflow:hidden;position:relative;background:color-mix(in srgb,var(--font-color) 10%,transparent);}'
+// The avatar IS the tap target: an accent ring makes it read as a button and a
+// small "TAP" cue sits inside the circle (clipped by overflow, so it can never
+// half-spill the way a corner badge did).
++ '.rgen-ava{flex:0 0 auto;width:78px;height:78px;border-radius:50%;overflow:hidden;position:relative;background:color-mix(in srgb,var(--font-color) 10%,transparent);'
++ 'box-shadow:0 0 0 3px color-mix(in srgb,var(--rgen-accent,#888) 70%,transparent),0 4px 12px rgba(0,0,0,.18);transition:box-shadow .16s ease,transform .16s ease;}'
 + '.rgen-ava svg{display:block;width:100%;height:100%;}'
-+ '.rgen-ava .tap{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:var(--rgen-accent,#333);color:#fff;'
-+ 'display:grid;place-items:center;border:2px solid var(--card-solid-color,#fff);box-shadow:0 2px 6px rgba(0,0,0,.25);}'
-+ '.rgen-ava .tap .material-symbols-outlined{font-size:16px;}'
++ '.rgen-ava-cue{position:absolute;left:0;right:0;bottom:0;height:34%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;'
++ 'font-family:system-ui,sans-serif;font-size:.56rem;font-weight:800;letter-spacing:.14em;color:#fff;'
++ 'background:linear-gradient(to top,rgba(0,0,0,.6),rgba(0,0,0,0));text-shadow:0 1px 2px rgba(0,0,0,.5);pointer-events:none;transition:opacity .16s ease;}'
++ '.rgen-card:hover .rgen-ava{box-shadow:0 0 0 3px var(--rgen-accent,#888),0 6px 16px rgba(0,0,0,.28);transform:scale(1.04);}'
++ '.rgen-card:active .rgen-ava{transform:scale(.97);}'
++ '.rgen-card-go{flex:0 0 auto;align-self:center;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;'
++ 'color:var(--rgen-accent,#888);opacity:.5;}'
++ '.rgen-card-go .material-symbols-outlined{font-size:22px;}'
 + '.rgen-meta{flex:1 1 auto;min-width:0;}'
 + '.rgen-name{font-family:"Patrick Hand",cursive;font-size:1.32rem;line-height:1.05;margin:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;color:var(--font-color,inherit);}'
 + '.rgen-name .role{font-family:system-ui,sans-serif;font-size:.66rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;'
@@ -1100,7 +1414,7 @@
 + 'background:var(--secondary-color,#2c2519);color:var(--btn-text-color,#fff);padding:10px 16px;border-radius:999px;font-size:.82rem;opacity:0;transition:all .25s ease;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.3);}'
 + '.rgen-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}'
 // respect reduced-motion, like the app's other premium surfaces
-+ '@media(prefers-reduced-motion:reduce){.rgen-overlay,.rgen-card,.rgen-sheet,.rgen-sheet-card,.rgen-branch-chip,.rgen-relchip,.rgen-verse,.rgen-x,.rgen-toast{transition:none!important;}.rgen-highlight .rgen-card{animation:none!important;}.rgen-card:hover{transform:none;}}'
++ '@media(prefers-reduced-motion:reduce){.rgen-overlay,.rgen-card,.rgen-sheet,.rgen-sheet-card,.rgen-branch-chip,.rgen-relchip,.rgen-verse,.rgen-x,.rgen-toast,.rgen-ava,.rgen-era-chev,.rgen-nav-chip{transition:none!important;}.rgen-highlight .rgen-card{animation:none!important;}.rgen-card:hover{transform:none;}.rgen-card:hover .rgen-ava,.rgen-card:active .rgen-ava{transform:none;}}'
 ;
     var st = document.createElement('style');
     st.id = 'bibleGenealogyStyles';
@@ -1124,15 +1438,19 @@
   function cardHtml(p, cls) {
     var era = ERAS[p.era] || ERAS.creation;
     var role = p.role ? '<span class="role">' + esc(shortRole(p.role)) + '</span>' : '';
+    // The avatar itself is the tap target: an accent ring marks it as a button
+    // and a small "tap" cue sits INSIDE the circle (clipped, never spilling).
     return '<button class="rgen-card ' + (cls || '') + '" style="--rgen-accent:' + era.accent + ';--rgen-soft:' + era.soft + '" '
       + 'data-person="' + esc(p.id) + '" onclick="BibleGenealogy.openPersonCard(\'' + esc(p.id) + '\')">'
       + '<span class="rgen-ava">' + avatarSvg(p, { size: 78 })
-      + '<span class="tap" aria-hidden="true"><span class="material-symbols-outlined">info</span></span></span>'
+      + '<span class="rgen-ava-cue" aria-hidden="true">TAP</span></span>'
       + '<span class="rgen-meta">'
       + '<span class="rgen-name">' + esc(p.name) + role + '</span>'
       + '<ul class="rgen-facts">' + factLine(p) + '</ul>'
       + (p.blurb ? '<p class="rgen-blurb">' + esc(p.blurb) + '</p>' : '')
-      + '</span></button>';
+      + '</span>'
+      + '<span class="rgen-card-go" aria-hidden="true"><span class="material-symbols-outlined">chevron_right</span></span>'
+      + '</button>';
   }
 
   function shortRole(r) {
@@ -1140,60 +1458,94 @@
     return r;
   }
 
-  function branchesHtml(spineId) {
-    var list = BRANCHES_BY_PARENT[spineId];
-    if (!list || !list.length) return '';
-    var parent = BY_ID[spineId];
-    var label = branchLabel(parent, list);
-    var chips = list.map(function (b) {
-      var era = ERAS[b.era] || ERAS.creation;
-      return '<button class="rgen-branch-chip" style="--rgen-accent:' + era.accent + '" onclick="BibleGenealogy.openPersonCard(\'' + esc(b.id) + '\')">'
-        + '<span class="mini">' + avatarSvg(b, { size: 30 }) + '</span>' + esc(b.name.replace(/\s*\(.*$/, '')) + '</button>';
-    }).join('');
-    return '<div class="rgen-branch-label"><span class="material-symbols-outlined" style="font-size:14px">alt_route</span>' + esc(label) + '</div>'
-      + '<div class="rgen-branches">' + chips + '</div>';
+  function chipHtml(b) {
+    var era = ERAS[b.era] || ERAS.creation;
+    return '<button class="rgen-branch-chip" style="--rgen-accent:' + era.accent + '" onclick="BibleGenealogy.openPersonCard(\'' + esc(b.id) + '\')">'
+      + '<span class="mini">' + avatarSvg(b, { size: 30 }) + '</span>' + esc(b.name.replace(/\s*\(.*$/, '')) + '</button>';
   }
 
-  function branchLabel(parent, list) {
-    if (!parent) return 'Also in the family';
-    if (parent.id === 'jacob') return 'The twelve sons of Israel & their sister';
-    if (parent.id === 'noah') return 'Noah’s other sons';
-    if (parent.id === 'levi') return 'The priestly line of Levi';
-    if (parent.id === 'judah') return 'Judah’s household';
-    var anyF = list.some(function (b) { return b.gender === 'f'; });
-    var anyM = list.some(function (b) { return b.gender === 'm'; });
-    if (anyF && !anyM) return 'The women beside ' + parent.name.replace(/\s*\(.*$/, '');
-    return 'Also in ' + parent.name.replace(/\s*\(.*$/, '') + '’s house';
+  function branchesHtml(spineId) {
+    var list = descendantBranches(spineId);
+    if (!list.length) return '';
+    var parent = BY_ID[spineId];
+    // Bucket every relative into its named group, preserving first-seen order.
+    var order = [], groups = {};
+    list.forEach(function (b) {
+      var g = b.group || BRANCH_GROUP[b.id] || branchLabel(parent);
+      if (!groups[g]) { groups[g] = []; order.push(g); }
+      groups[g].push(b);
+    });
+    return order.map(function (g) {
+      return '<div class="rgen-branch-label"><span class="material-symbols-outlined" style="font-size:14px">alt_route</span>' + esc(g) + '</div>'
+        + '<div class="rgen-branches">' + groups[g].map(chipHtml).join('') + '</div>';
+    }).join('');
+  }
+
+  // Clean fallback label for any relative not explicitly grouped.
+  function branchLabel(parent) {
+    if (!parent) return 'Family';
+    return parent.name.replace(/\s*\(.*$/, '') + '’s household';
+  }
+
+  // Distinct eras in the order the spine walks through them.
+  function eraOrder() {
+    var order = [], seen = {};
+    SPINE.forEach(function (p) { if (!seen[p.era]) { seen[p.era] = 1; order.push(p.era); } });
+    return order;
+  }
+  // Count everyone (spine + branches) per era, for the section + nav badges.
+  function eraCounts() {
+    var c = {};
+    PEOPLE.forEach(function (p) { c[p.era] = (c[p.era] || 0) + 1; });
+    return c;
+  }
+
+  // Sticky jump-nav: one chip per era so you can leap straight to a stretch of
+  // the line instead of scrolling through everyone.
+  function navHtml() {
+    var counts = eraCounts();
+    var chips = eraOrder().map(function (k, i) {
+      var era = ERAS[k] || ERAS.creation;
+      return '<button class="rgen-nav-chip' + (i === 0 ? ' active' : '') + '" data-era="' + k + '" style="--rgen-accent:' + era.accent + '" '
+        + 'onclick="BibleGenealogy.jumpEra(\'' + k + '\')">'
+        + '<span class="dot" style="background:' + era.accent + '"></span>' + esc(era.label)
+        + '<span class="n">' + (counts[k] || 0) + '</span></button>';
+    }).join('');
+    return '<div class="rgen-nav" id="rgenNav">' + chips + '</div>';
   }
 
   function treeHtml() {
     var html = '<div class="rgen-tree">';
     html += '<div class="rgen-intro">'
-      + '<p>From the first man to the Messiah — every name below has a genealogy written in Scripture. '
-      + 'Tap any <b>face</b> to read who they were and <b>every verse</b> that names them. Scroll down the line to see who comes next.</p>'
-      + '<div class="rgen-legend">'
-      + '<span><i style="background:' + ERAS.creation.accent + '"></i>Before the Flood</span>'
-      + '<span><i style="background:' + ERAS.patriarch.accent + '"></i>Patriarchs</span>'
-      + '<span><i style="background:' + ERAS.kings.accent + '"></i>Kings</span>'
-      + '<span><i style="background:' + ERAS.messiah.accent + '"></i>The Messiah</span>'
-      + '</div></div>';
+      + '<p>From the first man to the Messiah — each era below holds people whose genealogy is written in Scripture. '
+      + 'Tap a section to open it, then <b>tap a face</b> to read who they were and <b>every verse</b> that names them.</p>'
+      + '</div>';
 
-    var lastEra = null;
-    for (var i = 0; i < SPINE.length; i++) {
-      var p = SPINE[i];
-      var era = ERAS[p.era] || ERAS.creation;
-      if (p.era !== lastEra) {
-        html += '<div class="rgen-era"><span class="dot" style="background:' + era.accent + '"></span>'
-          + '<span>' + esc(era.label) + '</span>'
-          + '<span class="ln" style="background:' + era.accent + '"></span></div>';
-        lastEra = p.era;
-      } else if (i > 0) {
-        html += '<div class="rgen-node"><span class="rgen-connector"></span></div>';
+    var counts = eraCounts();
+    eraOrder().forEach(function (eraKey, ei) {
+      var era = ERAS[eraKey] || ERAS.creation;
+      var open = ei === 0; // first era open; the rest collapsed to keep it navigable
+      html += '<section class="rgen-era-group' + (open ? '' : ' rgen-collapsed') + '" data-era="' + eraKey + '" id="rgen-era-' + eraKey + '">';
+      html += '<button class="rgen-era-head" style="--rgen-accent:' + era.accent + '" aria-expanded="' + open + '" onclick="BibleGenealogy.toggleEra(\'' + eraKey + '\')">'
+        + '<span class="dot" style="background:' + era.accent + '"></span>'
+        + '<span class="rgen-era-title">' + esc(era.label) + '</span>'
+        + '<span class="rgen-era-count">' + (counts[eraKey] || 0) + '</span>'
+        + '<span class="material-symbols-outlined rgen-era-chev">expand_more</span>'
+        + '</button>';
+      html += '<div class="rgen-era-body">';
+      var first = true;
+      for (var i = 0; i < SPINE.length; i++) {
+        var p = SPINE[i];
+        if (p.era !== eraKey) continue;
+        if (!first) html += '<div class="rgen-node"><span class="rgen-connector"></span></div>';
+        first = false;
+        html += '<div class="rgen-node" id="rgen-node-' + esc(p.id) + '">' + cardHtml(p, 'spine') + '</div>';
+        html += branchesHtml(p.id);
       }
-      html += '<div class="rgen-node" id="rgen-node-' + esc(p.id) + '">' + cardHtml(p, 'spine') + '</div>';
-      html += branchesHtml(p.id);
-    }
-    html += '<div class="rgen-intro" style="margin-top:34px"><p style="opacity:.6">“The book of the genealogy of Jesus Christ, the son of David, the son of Abraham.” — Matthew 1:1</p></div>';
+      html += '</div></section>';
+    });
+
+    html += '<div class="rgen-intro" style="margin-top:28px"><p style="opacity:.6">“The book of the genealogy of Jesus Christ, the son of David, the son of Abraham.” — Matthew 1:1</p></div>';
     html += '</div>';
     return html;
   }
@@ -1213,32 +1565,142 @@
       + '<div class="rgen-sub">Who’s who from Adam to Jesus &middot; ' + SPINE.length + ' in the main line, ' + PEOPLE.length + ' people</div></div>'
       + '<button class="rgen-x" aria-label="Close" onclick="BibleGenealogy.close()"><span class="material-symbols-outlined">close</span></button>'
       + '</div>'
+      + '<div class="rgen-subbar">'
+      + '<div class="rgen-search">'
+      + '<span class="material-symbols-outlined rgen-search-ico">search</span>'
+      + '<input id="rgenSearch" type="text" placeholder="Find anyone — Adam, Ruth, David…" autocomplete="off" spellcheck="false" oninput="BibleGenealogy.search(this.value)">'
+      + '<button class="rgen-search-clear" id="rgenSearchClear" aria-label="Clear" onclick="BibleGenealogy.clearSearch()"><span class="material-symbols-outlined">close</span></button>'
+      + '<div class="rgen-search-results" id="rgenSearchResults"></div>'
+      + '</div>'
+      + navHtml()
+      + '</div>'
       + '<div class="rgen-scroll" id="rgenScroll">' + treeHtml() + '</div>';
     document.body.appendChild(ov);
     document.body.style.overflow = 'hidden';
+    // Scrollspy: keep the nav chip for the era you're looking at highlighted.
+    var scroll = ov.querySelector('#rgenScroll');
+    var spyScheduled = false;
+    ov._spy = function () {
+      if (spyScheduled) return;
+      spyScheduled = true;
+      requestAnimationFrame(function () {
+        spyScheduled = false;
+        var groups = scroll.querySelectorAll('.rgen-era-group');
+        var y = scroll.scrollTop + 120, current = null;
+        groups.forEach(function (g) { if (g.offsetTop <= y) current = g.getAttribute('data-era'); });
+        if (current) setActiveNav(current, false);
+      });
+    };
+    if (scroll) scroll.addEventListener('scroll', ov._spy, { passive: true });
     requestAnimationFrame(function () {
       ov.classList.add('open');
       if (focusPersonId) scrollToPerson(focusPersonId, true);
     });
     // esc to close
-    ov._key = function (e) { if (e.key === 'Escape') closeMap(); };
+    ov._key = function (e) { if (e.key === 'Escape') { if (document.getElementById('rgenSearchResults')?.classList.contains('show')) { clearSearch(); return; } closeMap(); } };
     document.addEventListener('keydown', ov._key);
   }
 
+  function expandEra(eraKey) {
+    var g = document.getElementById('rgen-era-' + eraKey);
+    if (!g) return;
+    g.classList.remove('rgen-collapsed');
+    var head = g.querySelector('.rgen-era-head');
+    if (head) head.setAttribute('aria-expanded', 'true');
+  }
+  function toggleEra(eraKey) {
+    var g = document.getElementById('rgen-era-' + eraKey);
+    if (!g) return;
+    var collapsed = g.classList.toggle('rgen-collapsed');
+    var head = g.querySelector('.rgen-era-head');
+    if (head) head.setAttribute('aria-expanded', String(!collapsed));
+    if (!collapsed) setActiveNav(eraKey, true);
+  }
+  function setActiveNav(eraKey, scrollChip) {
+    var nav = document.getElementById('rgenNav');
+    if (!nav) return;
+    nav.querySelectorAll('.rgen-nav-chip').forEach(function (c) {
+      var on = c.getAttribute('data-era') === eraKey;
+      c.classList.toggle('active', on);
+      if (on && scrollChip && c.scrollIntoView) { try { c.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } catch (e) {} }
+    });
+  }
+  function jumpEra(eraKey) {
+    expandEra(eraKey);
+    setActiveNav(eraKey, true);
+    var g = document.getElementById('rgen-era-' + eraKey);
+    var scroll = document.getElementById('rgenScroll');
+    if (g && scroll) requestAnimationFrame(function () {
+      scroll.scrollTo({ top: Math.max(0, g.offsetTop - 8), behavior: 'smooth' });
+    });
+  }
+
   function scrollToPerson(id, highlight) {
+    var p = BY_ID[id];
+    if (p && p.isSpine) expandEra(p.era);
     var node = document.getElementById('rgen-node-' + id);
     var scroll = document.getElementById('rgenScroll');
     if (!node || !scroll) {
-      // maybe a branch person → open its card directly
-      if (BY_ID[id] && !BY_ID[id].isSpine) { openPersonCard(id); }
+      // maybe a branch person → open its card directly (after opening its era)
+      if (p && !p.isSpine) { if (p.branchOf && BY_ID[p.branchOf]) expandEra(BY_ID[p.branchOf].era); openPersonCard(id); }
       return;
     }
-    var top = node.offsetTop - 80;
-    scroll.scrollTo({ top: Math.max(0, top), behavior: highlight ? 'smooth' : 'auto' });
-    if (highlight) {
-      node.classList.add('rgen-highlight');
-      setTimeout(function () { node.classList.remove('rgen-highlight'); }, 3400);
+    requestAnimationFrame(function () {
+      var top = node.offsetTop - 84;
+      scroll.scrollTo({ top: Math.max(0, top), behavior: highlight ? 'smooth' : 'auto' });
+      if (p) setActiveNav(p.era, true);
+      if (highlight) {
+        node.classList.add('rgen-highlight');
+        setTimeout(function () { node.classList.remove('rgen-highlight'); }, 3400);
+      }
+    });
+  }
+
+  // Jump to anyone (from the search box): spine people scroll into the tree,
+  // branch people open their card directly.
+  function jumpToPerson(id) {
+    clearSearch();
+    var p = BY_ID[id];
+    if (!p) return;
+    if (p.isSpine) scrollToPerson(id, true);
+    else { if (p.branchOf && BY_ID[p.branchOf]) expandEra(BY_ID[p.branchOf].era); openPersonCard(id); }
+  }
+
+  function search(q) {
+    var box = document.getElementById('rgenSearchResults');
+    var clear = document.getElementById('rgenSearchClear');
+    if (!box) return;
+    q = (q || '').trim().toLowerCase();
+    if (clear) clear.classList.toggle('show', !!q);
+    if (!q) { box.classList.remove('show'); box.innerHTML = ''; return; }
+    var matches = PEOPLE.filter(function (p) {
+      return p.name.toLowerCase().indexOf(q) >= 0 || (p.role || '').toLowerCase().indexOf(q) >= 0 || (p.meaning || '').toLowerCase().indexOf(q) >= 0;
+    });
+    // spine people first, then by canonical order
+    matches.sort(function (a, b) { return (a.isSpine ? 0 : 1) - (b.isSpine ? 0 : 1); });
+    matches = matches.slice(0, 14);
+    if (!matches.length) {
+      box.innerHTML = '<div class="rgen-search-empty">No one by that name in the tree yet.</div>';
+      box.classList.add('show');
+      return;
     }
+    box.innerHTML = matches.map(function (p) {
+      var era = ERAS[p.era] || ERAS.creation;
+      return '<button class="rgen-search-row" onclick="BibleGenealogy.jumpToPerson(\'' + esc(p.id) + '\')">'
+        + '<span class="mini">' + avatarSvg(p, { size: 30 }) + '</span>'
+        + '<span class="rgen-search-name">' + esc(p.name)
+        + '<small>' + esc(era.label) + (p.isSpine ? '' : ' · relative') + '</small></span>'
+        + '<span class="material-symbols-outlined rgen-search-go">north_east</span></button>';
+    }).join('');
+    box.classList.add('show');
+  }
+  function clearSearch() {
+    var input = document.getElementById('rgenSearch');
+    var box = document.getElementById('rgenSearchResults');
+    var clear = document.getElementById('rgenSearchClear');
+    if (input) input.value = '';
+    if (box) { box.classList.remove('show'); box.innerHTML = ''; }
+    if (clear) clear.classList.remove('show');
   }
 
   function closeMap() {
@@ -1380,7 +1842,7 @@
     if (ppl.length === 1) {
       // spine person → open map scrolled to them; branch person → open their card
       if (ppl[0].isSpine) openMap(ppl[0].id);
-      else { openMap(); setTimeout(function () { openPersonCard(ppl[0].id); }, 380); }
+      else { openMap(); setTimeout(function () { jumpToPerson(ppl[0].id); }, 380); }
       return;
     }
     // several people on one verse (e.g. Matthew 1:2) → open map at the first, they can tap others
@@ -1404,7 +1866,12 @@
     openForVerse: openForVerse,
     openPersonCard: openPersonCard,
     closeSheet: closeSheet,
-    goToRef: goToRef
+    goToRef: goToRef,
+    toggleEra: toggleEra,
+    jumpEra: jumpEra,
+    jumpToPerson: jumpToPerson,
+    search: search,
+    clearSearch: clearSearch
   };
 
   // Global helpers the reader / home tile call by name.
