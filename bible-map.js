@@ -31,6 +31,7 @@
     markers: [],
     pinDots: [],
     regionCtxLabels: [],
+    contextPlaceMarkers: [],
     landmarkMarkers: [],
     raf: 0,
     followTick: 0,
@@ -499,6 +500,17 @@
     } else {
       map.setPaintProperty('region-outline-line', 'line-color', color);
     }
+    // Name the home territory on the map (unless the focus place IS that region,
+    // in which case its own label already shows the name).
+    if (ro.name && !(state.opts && state.opts.focusIsRegion) && typeof ro.cx === 'number' && typeof ro.cy === 'number') {
+      var rl = document.createElement('div');
+      rl.className = 'bmregion-focus-label';
+      rl.textContent = ro.name;
+      rl.style.color = color;
+      var rlm = new maplibregl.Marker({ element: rl, anchor: 'center', offset: [0, 0] })
+        .setLngLat([ro.cx, ro.cy]).addTo(map);
+      state.regionCtxLabels.push(rlm);
+    }
   }
 
   // Small, quiet name tags at the centre of each neighbouring territory so a
@@ -517,6 +529,29 @@
       var marker = new maplibregl.Marker({ element: el, anchor: 'center', offset: [0, 0] })
         .setLngLat([c.cx, c.cy]).addTo(map);
       state.regionCtxLabels.push(marker);
+    });
+  }
+
+  // Surrounding places (nearby biblical sites) shown for context around a focused
+  // place, so the reader sees what's near it. Small dot exactly on the spot, with
+  // a compact label to the side. Colour-coded by kind; labels follow the map mode
+  // (biblical name on the Bible map, modern name on the Modern map).
+  function _addContextPlaces() {
+    var map = state.map;
+    var places = (state.opts && state.opts.contextPlaces) || [];
+    if (!map || !places.length) return;
+    var labelFor = (state.opts && state.opts.labelFor) || function (p, mode) {
+      return mode === 'modern' ? (p.modern || p.ancient || '') : (p.ancient || p.modern || '');
+    };
+    places.forEach(function (p) {
+      if (typeof p.lon !== 'number' || typeof p.lat !== 'number') return;
+      var kind = _pinKind(p.kind);
+      var el = document.createElement('div');
+      el.className = 'bmctx' + (kind ? ' bmkind-' + kind : '');
+      el.innerHTML = '<span class="bmctx-dot"></span><em>' + _escape(labelFor(p, state.mode)) + '</em>';
+      var marker = new maplibregl.Marker({ element: el, anchor: 'center', offset: [0, 0] })
+        .setLngLat([p.lon, p.lat]).addTo(map);
+      state.contextPlaceMarkers.push(marker);
     });
   }
 
@@ -641,13 +676,32 @@
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     try {
       var ro = state.opts && state.opts.regionOutline;
-      if (coords.length === 1 && ro && ro.geometry) {
-        // Frame the whole territory, not just its centre point.
+      // When the focused place IS a region/nation, frame the whole territory.
+      if (coords.length === 1 && opts && opts.focusIsRegion && ro && ro.geometry) {
         var ring = (ro.geometry.coordinates && ro.geometry.coordinates[0]) || [];
         if (ring.length >= 3) {
           map.fitBounds(_bounds(ring), {
             padding: (opts && opts.cameraPadding) || _cameraPadding(map),
             maxZoom: 9,
+            animate: animateOpen && !reduce,
+            duration: 1800
+          });
+          state.homeCamera = { center: map.getCenter(), zoom: map.getZoom(), pitch: pitch, bearing: bearing };
+          return;
+        }
+      }
+      // When it's a single spot with surrounding context, frame the spot plus its
+      // nearby places so the reader sees it in relation to what's around it.
+      var ctxPlaces = (state.opts && state.opts.contextPlaces) || [];
+      if (coords.length === 1 && ctxPlaces.length) {
+        var pcoords = [coords[0]];
+        ctxPlaces.forEach(function (p) {
+          if (typeof p.lon === 'number' && typeof p.lat === 'number') pcoords.push([p.lon, p.lat]);
+        });
+        if (pcoords.length >= 2) {
+          map.fitBounds(_bounds(pcoords), {
+            padding: (opts && opts.cameraPadding) || _cameraPadding(map),
+            maxZoom: Number(opts && opts.pinZoom ? opts.pinZoom + 1.2 : 8.6),
             animate: animateOpen && !reduce,
             duration: 1800
           });
@@ -738,6 +792,7 @@
     _addRegionContext();
     _addRegionOutline();
     _addRegionContextLabels();
+    _addContextPlaces();
     _addOverlays();
     _addMarkers();
     _addGeoFeatures();
@@ -753,6 +808,8 @@
     state.pinDots = [];
     state.regionCtxLabels.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.regionCtxLabels = [];
+    state.contextPlaceMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
+    state.contextPlaceMarkers = [];
     state.landmarkMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.landmarkMarkers = [];
     _clearGeoFeatures();
