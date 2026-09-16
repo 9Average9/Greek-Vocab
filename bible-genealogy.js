@@ -963,7 +963,7 @@
       role:'Mother of Samuel', blurb:'Prayed for a son and gave him back to the LORD; her song foreshadows Mary’s.',
       gen:['1SA 1:2'], mentions:[{ref:'1SA 1:27', q:'“For this child I prayed.”'},{ref:'1SA 2:1', q:'“My heart exults in the LORD.”'}],
       av:{skin:'olive', hair:'darkbrown', style:'long', beard:'none', head:'veil'} },
-    { id:'samuel', name:'Samuel', gender:'m', branchOf:'elkanah', meaning:'“heard of God”', era:'judges',
+    { id:'samuel', name:'Samuel', gender:'m', branchOf:'levi', meaning:'“heard of God”', era:'judges',
       role:'Prophet who anointed kings', blurb:'The last judge and first great prophet; he anointed both Saul and David.',
       gen:['1SA 1:20','1CH 6:28'], mentions:[{ref:'1SA 3:10', q:'“Speak, for your servant hears.”'},{ref:'1SA 16:13', q:'Anointed David in the midst of his brothers.'}],
       av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'none'} },
@@ -973,15 +973,15 @@
       role:'Father of Saul', blurb:'A Benjamite of standing whose lost donkeys sent Saul to meet Samuel.',
       gen:['1SA 9:1','1CH 8:33'], mentions:[{ref:'1SA 9:3', q:'His lost donkeys began Saul’s journey to the throne.'}],
       av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'turban'} },
-    { id:'saul', name:'Saul', gender:'m', branchOf:'kish', meaning:'“asked for”', era:'judges',
+    { id:'saul', name:'Saul', gender:'m', branchOf:'benjamin', meaning:'“asked for”', era:'judges',
       role:'The first king of Israel', blurb:'Israel’s first king, head and shoulders above the rest; his disobedience cost him the throne.',
       gen:['1SA 9:2','1CH 8:33'], mentions:[{ref:'1SA 10:1', q:'Samuel anointed him leader over Israel.'},{ref:'1SA 15:23', q:'“You have rejected the word of the LORD.”'}],
       av:{skin:'olive', hair:'darkbrown', style:'short', beard:'full', head:'crown'} },
-    { id:'jonathan', name:'Jonathan', gender:'m', branchOf:'saul', meaning:'“the LORD has given”', era:'judges',
+    { id:'jonathan', name:'Jonathan', gender:'m', branchOf:'benjamin', meaning:'“the LORD has given”', era:'judges',
       role:'Son of Saul, friend of David', blurb:'Saul’s valiant son whose covenant love for David outran his own claim to the throne.',
       gen:['1SA 14:49','1CH 8:33'], mentions:[{ref:'1SA 18:3', q:'Made a covenant with David, loving him as himself.'},{ref:'1SA 14:6', q:'“Nothing can hinder the LORD from saving.”'}],
       av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'band'} },
-    { id:'mephibosheth', name:'Mephibosheth', gender:'m', branchOf:'jonathan', meaning:'“dispeller of shame”', era:'judges',
+    { id:'mephibosheth', name:'Mephibosheth', gender:'m', branchOf:'benjamin', meaning:'“dispeller of shame”', era:'judges',
       role:'Grandson of Saul', blurb:'Jonathan’s lame son whom David sought out and seated at his own table for Jonathan’s sake.',
       gen:['2SA 4:4','1CH 8:34'], mentions:[{ref:'2SA 9:7', q:'“You shall eat at my table always.”'}],
       av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'none'} }
@@ -1354,6 +1354,10 @@
 + '.rgen-branch-chip:hover{background:color-mix(in srgb,var(--rgen-accent,#888) 16%,var(--card-solid-color,#fff));}'
 + '.rgen-branch-chip .mini{width:30px;height:30px;border-radius:50%;overflow:hidden;flex:0 0 auto;}'
 + '.rgen-branch-chip .mini svg{width:100%;height:100%;display:block;}'
++ '.rgen-branch-chip.has-line{border-style:solid;}'
++ '.rgen-chip-more{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;margin-left:-1px;'
++ 'background:color-mix(in srgb,var(--rgen-accent,#888) 20%,transparent);color:var(--rgen-accent,#888);}'
++ '.rgen-chip-more .material-symbols-outlined{font-size:13px;}'
 + '.rgen-branch-label{display:flex;align-items:center;gap:4px;justify-content:center;margin:12px auto 2px;font-size:.72rem;color:var(--muted-color,inherit);opacity:.85;'
 + 'text-transform:uppercase;letter-spacing:.6px;font-weight:600;}'
 + '.rgen-highlight .rgen-card{animation:rgenPulse 1.6s ease 2;}'
@@ -1401,6 +1405,7 @@
 + '.rgen-relchip small{display:block;font-size:.6rem;color:var(--muted-color,inherit);font-weight:700;text-transform:uppercase;letter-spacing:.4px;}'
 + '.rgen-sech{font-family:"Patrick Hand",cursive;font-size:1.2rem;margin:20px 0 8px;display:flex;align-items:center;gap:7px;color:var(--secondary-color,inherit);}'
 + '.rgen-sech .material-symbols-outlined{font-size:20px;opacity:.7;}'
++ '.rgen-sech-hint{font-size:.76rem;color:var(--muted-color,inherit);opacity:.9;margin:-4px 0 10px;}'
 + '.rgen-verse{display:block;width:100%;text-align:left;background:color-mix(in srgb,var(--font-color) 4%,transparent);border:1px solid color-mix(in srgb,var(--font-color) 9%,transparent);'
 + 'border-radius:14px;padding:11px 13px;margin-bottom:9px;cursor:pointer;color:var(--font-color,inherit);}'
 + '.rgen-verse:hover{background:color-mix(in srgb,var(--font-color) 8%,transparent);}'
@@ -1458,17 +1463,25 @@
     return r;
   }
 
+  function hasLine(id) { return !!(BRANCHES_BY_PARENT[id] && BRANCHES_BY_PARENT[id].length); }
+
   function chipHtml(b) {
     var era = ERAS[b.era] || ERAS.creation;
-    return '<button class="rgen-branch-chip" style="--rgen-accent:' + era.accent + '" onclick="BibleGenealogy.openPersonCard(\'' + esc(b.id) + '\')">'
-      + '<span class="mini">' + avatarSvg(b, { size: 30 }) + '</span>' + esc(b.name.replace(/\s*\(.*$/, '')) + '</button>';
+    // A chip whose person heads their own line gets a small "opens a line" cue,
+    // so it's obvious you can tap in and keep exploring downward.
+    var more = hasLine(b.id) ? '<span class="rgen-chip-more" aria-hidden="true"><span class="material-symbols-outlined">account_tree</span></span>' : '';
+    return '<button class="rgen-branch-chip' + (hasLine(b.id) ? ' has-line' : '') + '" style="--rgen-accent:' + era.accent + '" onclick="BibleGenealogy.openPersonCard(\'' + esc(b.id) + '\')">'
+      + '<span class="mini">' + avatarSvg(b, { size: 30 }) + '</span>' + esc(b.name.replace(/\s*\(.*$/, '')) + more + '</button>';
   }
 
+  // The tree shows each person's IMMEDIATE family only; deeper lines are one tap
+  // away on that relative's card. That keeps every era section tidy and in its
+  // own time, and makes exploring the tree the same simple move everywhere:
+  // tap a face to go a generation deeper.
   function branchesHtml(spineId) {
-    var list = descendantBranches(spineId);
+    var list = BRANCHES_BY_PARENT[spineId] || [];
     if (!list.length) return '';
     var parent = BY_ID[spineId];
-    // Bucket every relative into its named group, preserving first-seen order.
     var order = [], groups = {};
     list.forEach(function (b) {
       var g = b.group || BRANCH_GROUP[b.id] || branchLabel(parent);
@@ -1493,10 +1506,11 @@
     SPINE.forEach(function (p) { if (!seen[p.era]) { seen[p.era] = 1; order.push(p.era); } });
     return order;
   }
-  // Count everyone (spine + branches) per era, for the section + nav badges.
+  // Count the main-line (spine) people per era — that's the number of trunk
+  // cards each section actually shows, so the badge never overstates.
   function eraCounts() {
     var c = {};
-    PEOPLE.forEach(function (p) { c[p.era] = (c[p.era] || 0) + 1; });
+    SPINE.forEach(function (p) { c[p.era] = (c[p.era] || 0) + 1; });
     return c;
   }
 
@@ -1517,8 +1531,7 @@
   function treeHtml() {
     var html = '<div class="rgen-tree">';
     html += '<div class="rgen-intro">'
-      + '<p>From the first man to the Messiah — each era below holds people whose genealogy is written in Scripture. '
-      + 'Tap a section to open it, then <b>tap a face</b> to read who they were and <b>every verse</b> that names them.</p>'
+      + '<p>From the first man to the Messiah. Open an era, then <b>tap any face</b> to read their story — every verse they’re named in, and the family that branches from them. Keep tapping to explore deeper.</p>'
       + '</div>';
 
     var counts = eraCounts();
@@ -1724,7 +1737,7 @@
     if (!p) return '';
     return '<button class="rgen-relchip" onclick="BibleGenealogy.openPersonCard(\'' + esc(p.id) + '\')">'
       + '<span class="mini">' + avatarSvg(p, { size: 34 }) + '</span>'
-      + '<span><small>' + esc(kind) + '</small>' + esc(p.name.replace(/\s*\(.*$/, '')) + '</span></button>';
+      + '<span>' + (kind ? '<small>' + esc(kind) + '</small>' : '') + esc(p.name.replace(/\s*\(.*$/, '')) + '</span></button>';
   }
 
   function openPersonCard(id) {
@@ -1735,13 +1748,37 @@
     var existing = document.getElementById('bibleGenealogySheet');
     if (existing) existing.remove();
 
-    // relationships
-    var father = p.father ? BY_ID[p.father] : (p.branchOf ? BY_ID[p.branchOf] : null);
-    var heir = p.heir ? BY_ID[p.heir] : null;
+    // Relationships — where this person sits on the line.
     var rels = '';
-    if (father) rels += relChip(father, p.gender === 'f' ? 'connected to' : 'father');
-    if (heir) rels += relChip(heir, 'then came');
+    if (p.isSpine) {
+      var father = p.father ? BY_ID[p.father] : null;
+      var heir = p.heir ? BY_ID[p.heir] : null;
+      if (father) rels += relChip(father, 'Comes after');
+      if (heir) rels += relChip(heir, 'Then comes');
+    } else {
+      var par = p.branchOf ? BY_ID[p.branchOf] : null;
+      if (par) rels += relChip(par, 'Part of');
+    }
     var relRow = rels ? '<div class="rgen-relrow">' + rels + '</div>' : '';
+
+    // Their own family & line — the relatives who branch from this person, as
+    // tappable faces, so you can keep drilling generation by generation.
+    var kids = BRANCHES_BY_PARENT[p.id] || [];
+    var lineHtml = '';
+    if (kids.length) {
+      var lorder = [], lgroups = {};
+      kids.forEach(function (b) {
+        var g = b.group || BRANCH_GROUP[b.id] || (p.name.replace(/\s*\(.*$/, '') + '’s household');
+        if (!lgroups[g]) { lgroups[g] = []; lorder.push(g); }
+        lgroups[g].push(b);
+      });
+      lineHtml = '<div class="rgen-sech"><span class="material-symbols-outlined">diversity_1</span>Their family &amp; line</div>'
+        + '<p class="rgen-sech-hint">Tap anyone to open their story and keep exploring.</p>'
+        + lorder.map(function (g) {
+          return '<div class="rgen-branch-label" style="justify-content:flex-start"><span class="material-symbols-outlined" style="font-size:14px">alt_route</span>' + esc(g) + '</div>'
+            + '<div class="rgen-branches" style="justify-content:flex-start">' + lgroups[g].map(chipHtml).join('') + '</div>';
+        }).join('');
+    }
 
     // quick facts grid
     var facts = ''
@@ -1785,6 +1822,7 @@
       + (p.blurb ? '<p style="margin:2px 0 16px;font-size:.92rem;line-height:1.45;opacity:.92">' + esc(p.blurb) + '</p>' : '')
       + '<div class="rgen-quickfacts">' + facts + '</div>'
       + relRow
+      + lineHtml
       + '<div class="rgen-sech"><span class="material-symbols-outlined">account_tree</span>Where the genealogy is written</div>'
       + genRefs
       + (mentions ? '<div class="rgen-sech"><span class="material-symbols-outlined">menu_book</span>Every mention &amp; why it matters</div>' + mentions : '')
