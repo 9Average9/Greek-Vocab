@@ -16247,6 +16247,7 @@ function _journeyMountGL(journey) {
       followTraveler: true,
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(journey, 12),
+      regionContext: _journeyRegionContext(journey),
       onError: (err) => {
         _journeySetDiag('tile/style error: ' + _journeyErrText(err));
         _journeyGLFallback();
@@ -17059,6 +17060,34 @@ function _ringCentroid(ring) {
   for (const [lo, la] of ring) { x += lo; y += la; n++; }
   return { x: x / n, y: y / n };
 }
+function _pointInRing(x, y, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+// For a journey (many stops shown at once) there is no single focus territory,
+// so every land the route touches is drawn outline-only. We pick the regions
+// that actually contain a stop — the lands the journey passed through — and draw
+// them as faint dashed outlines, leaving the route + stops as the clear subject.
+function _journeyRegionContext(journey) {
+  const regions = window.BIBLE_REGIONS || {};
+  const pts = ((journey && journey.points) || []).filter(p => typeof p.lon === 'number' && typeof p.lat === 'number');
+  if (!pts.length) return [];
+  const out = [];
+  for (const name in regions) {
+    const ring = regions[name];
+    if (!Array.isArray(ring) || ring.length < 3) continue;
+    if (!pts.some(p => _pointInRing(p.lon, p.lat, ring))) continue;
+    const c = _ringCentroid(ring);
+    const kind = (_atlasByName(name) || {}).kind || 'region';
+    out.push({ geometry: { type: 'Polygon', coordinates: [ring] }, color: _atlasKindColor(kind), name, cx: c.x, cy: c.y });
+  }
+  return out.slice(0, 10);
+}
+
 // Neighbouring territories whose bounding box touches the focused one — drawn as
 // faint context outlines so the geography reads without cluttering the view.
 // Capped to the nearest few and only returned when the place itself is a region.
@@ -17998,6 +18027,7 @@ function _journeyPeekMountGLLegacy(journey, mode = _journeyPeekMode) {
       followTraveler: false,
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(journey, 9),
+      regionContext: _journeyRegionContext(journey),
       onError: (err) => { wrap.classList.remove('gl-mounting', 'gl-ready'); _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err)); }
     });
   }).then((map) => {
@@ -18042,6 +18072,7 @@ function _journeyPeekMountGL(journey, mode = _journeyPeekMode) {
       followTraveler: false,
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(journey, 9),
+      regionContext: _journeyRegionContext(journey),
       onError: (err) => {
         wrap.classList.remove('gl-mounting', 'gl-ready');
         _journeyPeekSetDiag('tile/style error: ' + _journeyErrText(err));

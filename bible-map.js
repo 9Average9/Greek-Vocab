@@ -435,39 +435,41 @@
   // nation. Drawn as a translucent colour-coded fill with a dashed border (the
   // dashes signal "approximate extent"). Sits beneath the HTML name labels/pins,
   // which always paint on top of GL layers.
+  // Neighbouring / passed-through territories drawn as thin muted dashed outlines
+  // with NO fill — enough to show how the lands fit together (or which lands a
+  // journey crossed) without stacking colours into mud. Each keeps its own kind
+  // colour. Independent of any focus region, so it works on journey maps too.
+  function _addRegionContext() {
+    var map = state.map;
+    var ctx = (state.opts && state.opts.regionContext) || [];
+    if (!map || !ctx.length) return;
+    _addOrUpdateGeoJsonSource(map, 'region-context', {
+      type: 'FeatureCollection',
+      features: ctx.filter(function (c) { return c && c.geometry; }).map(function (c) {
+        return { type: 'Feature', properties: { color: c.color || '#6b7280' }, geometry: c.geometry };
+      })
+    });
+    if (!map.getLayer('region-context-line')) {
+      map.addLayer({
+        id: 'region-context-line',
+        type: 'line',
+        source: 'region-context',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.9, 9, 1.6, 13, 2.2],
+          'line-opacity': 0.5,
+          'line-dasharray': [1.6, 1.8]
+        }
+      });
+    }
+  }
+
   function _addRegionOutline() {
     var map = state.map;
     var ro = state.opts && state.opts.regionOutline;
     if (!map || !ro || !ro.geometry) return;
     var color = ro.color || '#4b5563';
-
-    // Neighbouring territories, drawn FIRST (so they sit beneath the focus) as
-    // thin muted dashed outlines with no fill — enough to show how the lands fit
-    // together without stacking colours into mud. Each keeps its own kind colour.
-    var ctx = (state.opts && state.opts.regionContext) || [];
-    if (ctx.length) {
-      _addOrUpdateGeoJsonSource(map, 'region-context', {
-        type: 'FeatureCollection',
-        features: ctx.filter(function (c) { return c && c.geometry; }).map(function (c) {
-          return { type: 'Feature', properties: { color: c.color || '#6b7280' }, geometry: c.geometry };
-        })
-      });
-      if (!map.getLayer('region-context-line')) {
-        map.addLayer({
-          id: 'region-context-line',
-          type: 'line',
-          source: 'region-context',
-          layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: {
-            'line-color': ['get', 'color'],
-            'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.9, 9, 1.6, 13, 2.2],
-            'line-opacity': 0.5,
-            'line-dasharray': [1.6, 1.8]
-          }
-        });
-      }
-    }
-
     _addOrUpdateGeoJsonSource(map, 'region-outline', {
       type: 'Feature', properties: {}, geometry: ro.geometry
     });
@@ -504,9 +506,8 @@
   // the focused region stays the clear subject.
   function _addRegionContextLabels() {
     var map = state.map;
-    var ro = state.opts && state.opts.regionOutline;
     var ctx = (state.opts && state.opts.regionContext) || [];
-    if (!map || !ctx.length || !ro || !ro.geometry) return;
+    if (!map || !ctx.length) return;
     ctx.forEach(function (c) {
       if (!c || !c.geometry || typeof c.cx !== 'number' || typeof c.cy !== 'number') return;
       var el = document.createElement('div');
@@ -734,6 +735,7 @@
   function _restoreMapEnhancements(applyCamera) {
     var map = state.map;
     if (!map) return;
+    _addRegionContext();
     _addRegionOutline();
     _addRegionContextLabels();
     _addOverlays();
