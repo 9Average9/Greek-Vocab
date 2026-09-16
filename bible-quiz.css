@@ -1252,8 +1252,32 @@ body.dark #bibleQuizPage {
   font-size: .88rem;
   font-weight: 700;
   color: var(--bq-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
+.bq-hm-countrow > span .material-symbols-outlined { font-size: 17px; opacity: .8; }
 .bq-hm-countrow .bq-mini-step b { color: var(--bq-ink); }
+
+/* Habit prompt options — difficulty + question count, right in the prompt. */
+.bq-hm-opts {
+  text-align: left;
+  margin: 6px 0 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--bq-line-soft);
+}
+.bq-hm-optlabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--bq-muted);
+  margin: 0 2px 8px;
+}
+.bq-hm-optlabel .material-symbols-outlined { font-size: 17px; opacity: .8; }
+.bq-hm-opts .bq-seg-desc { margin-bottom: 14px; }
+.bq-hm-opts .bq-hm-countrow { margin-bottom: 0; }
 @keyframes bqShake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }

@@ -74,13 +74,16 @@
         // before this flag existed get migrated to on.
         if (!s.settings.habitQuizSet || typeof s.settings.habitQuiz !== 'boolean') s.settings.habitQuiz = true;
         if (!Number.isFinite(s.settings.habitQuizCount)) s.settings.habitQuizCount = 5;
+        // Remembered difficulty for the habit knowledge-check (chosen right in
+        // the prompt); defaults to the same "Balanced" tier as the builder.
+        if (typeof s.settings.habitQuizDifficulty !== 'string') s.settings.habitQuizDifficulty = 'balanced';
         if (!s.promptedHabitChecks || typeof s.promptedHabitChecks !== 'object') s.promptedHabitChecks = {};
         return s;
       }
     } catch (e) {}
     return {
       quizzes: [], savedQuestions: [],
-      settings: { habitQuiz: true, habitQuizCount: 5 },
+      settings: { habitQuiz: true, habitQuizCount: 5, habitQuizDifficulty: 'balanced' },
       promptedHabitChecks: {}
     };
   }
@@ -491,6 +494,97 @@
     return /unauthenticated|failed-precondition|invalid-argument|permission-denied/.test(code);
   }
 
+  /* ── Multi-passage support ──────────────────────────────────────────────
+     When more than one passage is in play (e.g. a note with "Matthew 5; Acts
+     2", or several typed in the builder) we don't trust a single model call to
+     split its attention fairly — one passage tends to dominate. Instead we
+     generate a dedicated batch for EACH passage in parallel, then interleave
+     them round-robin so the quiz alternates between passages for a real mix.
+     ---------------------------------------------------------------------- */
+
+  // Break a reference string into its individual passages. Prefers the
+  // normalized "A; B; C" that extractReferences produces (so free-text commas
+  // and "and" are handled), and falls back to explicit separators.
+  function splitPassages(refStr) {
+    if (!refStr || typeof refStr !== 'string') return [];
+    let parts;
+    const norm = (typeof extractReferences === 'function') ? extractReferences(refStr) : '';
+    if (norm && norm.indexOf(';') >= 0) parts = norm.split(';');
+    else parts = refStr.split(/[;\n·]|\band\b/i);
+    parts = parts.map(s => s.trim()).filter(Boolean);
+    const seen = new Set(), out = [];
+    for (const p of parts) { const k = p.toLowerCase(); if (!seen.has(k)) { seen.add(k); out.push(p); } }
+    return out;
+  }
+
+  // Split `total` questions across `n` passages as evenly as possible.
+  function distributeCounts(total, n) {
+    const base = Math.floor(total / n);
+    let rem = total - base * n;
+    const arr = [];
+    for (let i = 0; i < n; i++) arr.push(base + (rem-- > 0 ? 1 : 0));
+    return arr;
+  }
+
+  // Round-robin merge of per-passage question lists, de-duped by question text,
+  // trimmed to `limit`. Interleaving is what guarantees the mix reads evenly.
+  function interleaveDedupe(lists, limit) {
+    const seen = new Set(), out = [];
+    let idx = 0, added = true;
+    while (added) {
+      added = false;
+      for (const list of lists) {
+        if (idx < list.length) {
+          added = true;
+          const q = list[idx];
+          const key = q && q.question ? String(q.question).toLowerCase() : null;
+          if (q && key && !seen.has(key)) {
+            seen.add(key);
+            out.push(q);
+            if (limit && out.length >= limit) return out;
+          }
+        }
+      }
+      idx++;
+    }
+    return out;
+  }
+
+  function runMultiGeneration(gen, base, total, passages) {
+    // The server enforces a floor of 3 questions per call, so request at least
+    // that for every passage (guaranteeing each is represented) and trim the
+    // interleaved result back down to the count the user actually asked for.
+    const alloc = distributeCounts(total, passages.length).map(v => Math.max(3, v));
+    const calls = passages.map((ref, i) =>
+      genWithRetry(Object.assign({}, base, { reference: ref, numQuestions: alloc[i] }))
+        .then(data => (data && Array.isArray(data.questions)) ? data.questions : [])
+        .catch(err => { if (isFatalGenError(err)) throw err; return []; })
+    );
+    Promise.all(calls)
+      .then(lists => {
+        if (gen !== genToken) return;
+        const merged = interleaveDedupe(lists, total);
+        if (!merged.length) {
+          renderError("Couldn't build questions for those passages. Try broader or clearer references.");
+          clearActive();
+          return;
+        }
+        startQuiz({
+          title: passages.join(' · '),
+          reference: base.reference,
+          difficulty: base.difficulty,
+          focus: base.focus || [],
+          tricky: base.tricky,
+          questions: merged
+        }, merged.length); // expectedTotal = what we got, so no remainder pass
+      })
+      .catch(err => {
+        if (gen !== genToken) return;
+        renderError(describeGenError(err));
+        if (isFatalGenError(err)) clearActive();
+      });
+  }
+
   function startGeneration() {
     const ref = (form.reference || '').trim();
     if (!ref) { toast('Add a passage reference first.'); return; }
@@ -513,6 +607,10 @@
     const gen = ++genToken;
     activePayload = { base: base, total: total };
     saveActive('generating');
+    // Multiple passages → generate a balanced batch per passage and interleave,
+    // so every passage is fairly represented instead of one dominating.
+    const passages = splitPassages(base && base.reference);
+    if (passages.length > 1) { runMultiGeneration(gen, base, total, passages); return; }
     const firstCount = total > 5 ? 3 : total;
     genWithRetry(Object.assign({ numQuestions: firstCount }, base))
       .then(data => {
@@ -1203,15 +1301,66 @@
     return BQ_READING_WORDS.test(name) && !!bibleBookInName(name);
   }
 
-  function startHabitQuiz(refs) {
+  function startHabitQuiz(refs, opts) {
+    opts = opts || {};
     buildShell();
     store = loadStore();
     form = defaultForm();
     form.reference = refs;
-    form.numQuestions = Math.max(3, Math.min(20, store.settings.habitQuizCount || 5));
+    const count = Number.isFinite(opts.count) ? opts.count : store.settings.habitQuizCount;
+    form.numQuestions = Math.max(3, Math.min(20, count || 5));
+    // Carry the difficulty the user picked in the prompt straight into the quiz.
+    const diff = opts.difficulty || store.settings.habitQuizDifficulty || 'balanced';
+    form.difficulty = DIFFICULTIES.some(d => d.id === diff) ? diff : 'balanced';
     page.classList.remove('bq-hidden');
     requestAnimationFrame(() => page.classList.add('bq-open'));
     startGeneration();
+  }
+
+  /* Shared "how do you want it?" controls for both habit prompts — a compact
+     difficulty segmented control + a questions stepper. Both write the choice
+     straight back to settings (so it's remembered next time) and expose live
+     getters. Reuses the builder's own control styling so it feels native. */
+  function buildHabitOptions(st) {
+    // Difficulty — same segmented control as the full builder, one row.
+    let difficulty = DIFFICULTIES.some(d => d.id === st.habitQuizDifficulty) ? st.habitQuizDifficulty : 'balanced';
+    const diffDesc = el('div', { class: 'bq-seg-desc', text: (DIFFICULTIES.find(d => d.id === difficulty) || DIFFICULTIES[1]).desc });
+    const diffRow = el('div', { class: 'bq-seg' }, DIFFICULTIES.map(d =>
+      el('button', { class: 'bq-seg-opt' + (difficulty === d.id ? ' bq-sel' : ''), type: 'button', onclick: () => {
+        difficulty = d.id;
+        st.habitQuizDifficulty = d.id;
+        diffRow.querySelectorAll('.bq-seg-opt').forEach((n, i) => n.classList.toggle('bq-sel', DIFFICULTIES[i].id === d.id));
+        diffDesc.textContent = d.desc;
+        diffDesc.classList.remove('bq-desc-swap');
+        void diffDesc.offsetWidth;
+        diffDesc.classList.add('bq-desc-swap');
+        persist();
+      } }, [el('strong', { text: d.name })])
+    ));
+
+    // Questions — stepper (3–15), same look as the ask-modal's original.
+    const countVal = el('b', { text: String(st.habitQuizCount) });
+    const minus = el('button', { class: 'bq-mini-btn', type: 'button', text: '−', 'aria-label': 'Fewer questions' });
+    const plus = el('button', { class: 'bq-mini-btn', type: 'button', text: '+', 'aria-label': 'More questions' });
+    const syncCount = () => {
+      countVal.textContent = String(st.habitQuizCount);
+      minus.disabled = st.habitQuizCount <= 3;
+      plus.disabled = st.habitQuizCount >= 15;
+    };
+    minus.addEventListener('click', () => { if (st.habitQuizCount > 3) { st.habitQuizCount--; syncCount(); persist(); } });
+    plus.addEventListener('click', () => { if (st.habitQuizCount < 15) { st.habitQuizCount++; syncCount(); persist(); } });
+    syncCount();
+
+    const node = el('div', { class: 'bq-hm-opts' }, [
+      el('div', { class: 'bq-hm-optlabel' }, [icon('tune'), 'Difficulty']),
+      diffRow,
+      diffDesc,
+      el('div', { class: 'bq-hm-countrow' }, [
+        el('span', {}, [icon('help'), 'Questions']),
+        el('div', { class: 'bq-mini-step' }, [minus, countVal, plus])
+      ])
+    ]);
+    return { node, getCount: () => st.habitQuizCount, getDifficulty: () => difficulty };
   }
 
   let habitModal = null;
@@ -1225,17 +1374,18 @@
 
   function showHabitQuizModal(refs, habitName) {
     if (habitModal) return;
-    const n = Math.max(3, Math.min(20, store.settings.habitQuizCount || 5));
+    const opts = buildHabitOptions(store.settings);
     const card = el('div', { class: 'bq-hm-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Knowledge check' }, [
       el('div', { class: 'bq-hm-badge' }, [icon('auto_awesome')]),
       el('div', { class: 'bq-hm-kicker' }, [icon('check_circle'), habitName ? habitName + ' complete' : 'Reading complete']),
       el('h3', { text: 'Ready for a quick knowledge check?' }),
       el('p', {}, [
-        'Lock in what you just read with a quick ' + n + '-question check on ',
+        'Lock in what you just read with a check on ',
         el('strong', { text: refs }),
-        '.'
+        '. Choose how you want it:'
       ]),
-      el('button', { class: 'bq-hm-go', onclick: () => { closeHabitModal(); startHabitQuiz(refs); } }, [icon('bolt'), 'Take Knowledge Check']),
+      opts.node,
+      el('button', { class: 'bq-hm-go', onclick: () => { const c = opts.getCount(), d = opts.getDifficulty(); closeHabitModal(); startHabitQuiz(refs, { count: c, difficulty: d }); } }, [icon('bolt'), 'Take Knowledge Check']),
       el('button', { class: 'bq-hm-skip', onclick: closeHabitModal }, ['Not now'])
     ]);
     card.addEventListener('click', e => e.stopPropagation());
@@ -1249,23 +1399,12 @@
   // habit name) and the number of questions, then generates.
   function showHabitAskModal(prefillBook, habitName) {
     if (habitModal) return;
-    const st = store.settings;
     const input = el('input', {
       class: 'bq-hm-input', type: 'text',
       placeholder: 'e.g. John 3; Romans 8:1–17',
       value: prefillBook ? prefillBook + ' ' : ''
     });
-    const countVal = el('b', { text: String(st.habitQuizCount) });
-    const minus = el('button', { class: 'bq-mini-btn', type: 'button', text: '−', 'aria-label': 'Fewer questions' });
-    const plus = el('button', { class: 'bq-mini-btn', type: 'button', text: '+', 'aria-label': 'More questions' });
-    const syncCount = () => {
-      countVal.textContent = String(st.habitQuizCount);
-      minus.disabled = st.habitQuizCount <= 3;
-      plus.disabled = st.habitQuizCount >= 15;
-    };
-    minus.addEventListener('click', () => { if (st.habitQuizCount > 3) { st.habitQuizCount--; syncCount(); persist(); } });
-    plus.addEventListener('click', () => { if (st.habitQuizCount < 15) { st.habitQuizCount++; syncCount(); persist(); } });
-    syncCount();
+    const opts = buildHabitOptions(store.settings);
     const go = () => {
       const ref = input.value.trim();
       if (!ref) {
@@ -1274,20 +1413,18 @@
         input.focus();
         return;
       }
+      const c = opts.getCount(), d = opts.getDifficulty();
       closeHabitModal();
-      startHabitQuiz(ref);
+      startHabitQuiz(ref, { count: c, difficulty: d });
     };
     input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
     const card = el('div', { class: 'bq-hm-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Knowledge check' }, [
       el('div', { class: 'bq-hm-badge' }, [icon('auto_awesome')]),
       el('div', { class: 'bq-hm-kicker' }, [icon('check_circle'), habitName ? habitName + ' complete' : 'Reading complete']),
       el('h3', { text: 'Quick knowledge check on what you read?' }),
-      el('p', { text: 'Tell me the passage and I’ll build the test.' }),
+      el('p', { text: 'Tell me the passage and how you want it — I’ll build the test.' }),
       input,
-      el('div', { class: 'bq-hm-countrow' }, [
-        el('span', { text: 'Questions' }),
-        el('div', { class: 'bq-mini-step' }, [minus, countVal, plus])
-      ]),
+      opts.node,
       el('button', { class: 'bq-hm-go', onclick: go }, [icon('bolt'), 'Take Knowledge Check']),
       el('button', { class: 'bq-hm-skip', onclick: closeHabitModal }, ['Not now'])
     ]);
