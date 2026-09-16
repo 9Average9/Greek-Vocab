@@ -30,6 +30,7 @@
     mode: 'ancient',
     markers: [],
     pinDots: [],
+    regionCtxLabels: [],
     landmarkMarkers: [],
     raf: 0,
     followTick: 0,
@@ -439,6 +440,34 @@
     var ro = state.opts && state.opts.regionOutline;
     if (!map || !ro || !ro.geometry) return;
     var color = ro.color || '#4b5563';
+
+    // Neighbouring territories, drawn FIRST (so they sit beneath the focus) as
+    // thin muted dashed outlines with no fill — enough to show how the lands fit
+    // together without stacking colours into mud. Each keeps its own kind colour.
+    var ctx = (state.opts && state.opts.regionContext) || [];
+    if (ctx.length) {
+      _addOrUpdateGeoJsonSource(map, 'region-context', {
+        type: 'FeatureCollection',
+        features: ctx.filter(function (c) { return c && c.geometry; }).map(function (c) {
+          return { type: 'Feature', properties: { color: c.color || '#6b7280' }, geometry: c.geometry };
+        })
+      });
+      if (!map.getLayer('region-context-line')) {
+        map.addLayer({
+          id: 'region-context-line',
+          type: 'line',
+          source: 'region-context',
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': ['get', 'color'],
+            'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.9, 9, 1.6, 13, 2.2],
+            'line-opacity': 0.5,
+            'line-dasharray': [1.6, 1.8]
+          }
+        });
+      }
+    }
+
     _addOrUpdateGeoJsonSource(map, 'region-outline', {
       type: 'Feature', properties: {}, geometry: ro.geometry
     });
@@ -468,6 +497,26 @@
     } else {
       map.setPaintProperty('region-outline-line', 'line-color', color);
     }
+  }
+
+  // Small, quiet name tags at the centre of each neighbouring territory so a
+  // bare context outline isn't a mystery shape. Kept subtle (muted, no pill) so
+  // the focused region stays the clear subject.
+  function _addRegionContextLabels() {
+    var map = state.map;
+    var ro = state.opts && state.opts.regionOutline;
+    var ctx = (state.opts && state.opts.regionContext) || [];
+    if (!map || !ctx.length || !ro || !ro.geometry) return;
+    ctx.forEach(function (c) {
+      if (!c || !c.geometry || typeof c.cx !== 'number' || typeof c.cy !== 'number') return;
+      var el = document.createElement('div');
+      el.className = 'bmregion-ctx-label';
+      el.textContent = c.name || '';
+      el.style.color = c.color || '#6b7280';
+      var marker = new maplibregl.Marker({ element: el, anchor: 'center', offset: [0, 0] })
+        .setLngLat([c.cx, c.cy]).addTo(map);
+      state.regionCtxLabels.push(marker);
+    });
   }
 
   function _addOverlays() {
@@ -686,6 +735,7 @@
     var map = state.map;
     if (!map) return;
     _addRegionOutline();
+    _addRegionContextLabels();
     _addOverlays();
     _addMarkers();
     _addGeoFeatures();
@@ -699,6 +749,8 @@
     state.markers = [];
     state.pinDots.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.pinDots = [];
+    state.regionCtxLabels.forEach(function (m) { try { m.remove(); } catch (e) {} });
+    state.regionCtxLabels = [];
     state.landmarkMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.landmarkMarkers = [];
     _clearGeoFeatures();

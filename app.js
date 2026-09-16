@@ -16988,6 +16988,7 @@ function _atlasMountGL(place) {
       landmarks: _journeyModernLandmarks(pseudo, 10),
       pinZoom: 7,
       regionOutline: _atlasRegionOutline(place),
+      regionContext: _atlasRegionContext(place),
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
   }).then(() => {
@@ -17035,6 +17036,52 @@ function _atlasRegionOutline(place) {
     color: _atlasKindColor(place.kind),
     name: place.name
   };
+}
+
+let _atlasByNameCache = null;
+function _atlasByName(name) {
+  if (!_atlasByNameCache) {
+    _atlasByNameCache = {};
+    _atlasPlaces().forEach(p => { _atlasByNameCache[p.name] = p; });
+  }
+  return _atlasByNameCache[name];
+}
+function _ringBBox(ring) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [lo, la] of ring) {
+    if (lo < minX) minX = lo; if (lo > maxX) maxX = lo;
+    if (la < minY) minY = la; if (la > maxY) maxY = la;
+  }
+  return { minX, minY, maxX, maxY };
+}
+function _ringCentroid(ring) {
+  let x = 0, y = 0, n = 0;
+  for (const [lo, la] of ring) { x += lo; y += la; n++; }
+  return { x: x / n, y: y / n };
+}
+// Neighbouring territories whose bounding box touches the focused one — drawn as
+// faint context outlines so the geography reads without cluttering the view.
+// Capped to the nearest few and only returned when the place itself is a region.
+function _atlasRegionContext(place) {
+  const regions = window.BIBLE_REGIONS || {};
+  const selfRing = place && regions[place.name];
+  if (!Array.isArray(selfRing) || selfRing.length < 3) return [];
+  const sb = _ringBBox(selfRing);
+  const sc = _ringCentroid(selfRing);
+  const out = [];
+  for (const name in regions) {
+    if (name === place.name) continue;
+    const ring = regions[name];
+    if (!Array.isArray(ring) || ring.length < 3) continue;
+    const b = _ringBBox(ring);
+    if (b.minX > sb.maxX || b.maxX < sb.minX || b.minY > sb.maxY || b.maxY < sb.minY) continue;
+    const c = _ringCentroid(ring);
+    const kind = (_atlasByName(name) || {}).kind || 'region';
+    const dx = c.x - sc.x, dy = c.y - sc.y;
+    out.push({ geometry: { type: 'Polygon', coordinates: [ring] }, color: _atlasKindColor(kind), name, cx: c.x, cy: c.y, _d: dx * dx + dy * dy });
+  }
+  out.sort((a, b) => a._d - b._d);
+  return out.slice(0, 6).map(r => ({ geometry: r.geometry, color: r.color, name: r.name, cx: r.cx, cy: r.cy }));
 }
 
 function _atlasConfidence(place) {
@@ -17272,6 +17319,7 @@ function _atlasPeekMountGL(place) {
       terrain: BIBLE_TERRAIN_OPTIONS, followTraveler: false,
       landmarks: _journeyModernLandmarks(pseudo, 9), pinZoom: 7,
       regionOutline: _atlasRegionOutline(place),
+      regionContext: _atlasRegionContext(place),
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
   }).then(() => {

@@ -33879,6 +33879,19 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
     inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent),
     inset 3px 0 0 var(--pin-color);
 }
+.bmregion-ctx-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.72;
+  text-shadow:
+    0 1px 2px color-mix(in srgb, var(--card-color) 85%, transparent),
+    0 0 3px color-mix(in srgb, var(--card-color) 70%, transparent);
+}
 .bible-map-landmark {
   display: none;
   align-items: center;
