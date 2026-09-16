@@ -29,6 +29,8 @@
     journey: null,
     mode: 'ancient',
     markers: [],
+    pinDots: [],
+    regionCtxLabels: [],
     landmarkMarkers: [],
     raf: 0,
     followTick: 0,
@@ -429,6 +431,95 @@
     else map.getSource(id).setData(data);
   }
 
+  // Approximate territory outline for a single-place Atlas view of a region or
+  // nation. Drawn as a translucent colour-coded fill with a dashed border (the
+  // dashes signal "approximate extent"). Sits beneath the HTML name labels/pins,
+  // which always paint on top of GL layers.
+  // Neighbouring / passed-through territories drawn as thin muted dashed outlines
+  // with NO fill — enough to show how the lands fit together (or which lands a
+  // journey crossed) without stacking colours into mud. Each keeps its own kind
+  // colour. Independent of any focus region, so it works on journey maps too.
+  function _addRegionContext() {
+    var map = state.map;
+    var ctx = (state.opts && state.opts.regionContext) || [];
+    if (!map || !ctx.length) return;
+    _addOrUpdateGeoJsonSource(map, 'region-context', {
+      type: 'FeatureCollection',
+      features: ctx.filter(function (c) { return c && c.geometry; }).map(function (c) {
+        return { type: 'Feature', properties: { color: c.color || '#6b7280' }, geometry: c.geometry };
+      })
+    });
+    if (!map.getLayer('region-context-line')) {
+      map.addLayer({
+        id: 'region-context-line',
+        type: 'line',
+        source: 'region-context',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.9, 9, 1.6, 13, 2.2],
+          'line-opacity': 0.5,
+          'line-dasharray': [1.6, 1.8]
+        }
+      });
+    }
+  }
+
+  function _addRegionOutline() {
+    var map = state.map;
+    var ro = state.opts && state.opts.regionOutline;
+    if (!map || !ro || !ro.geometry) return;
+    var color = ro.color || '#4b5563';
+    _addOrUpdateGeoJsonSource(map, 'region-outline', {
+      type: 'Feature', properties: {}, geometry: ro.geometry
+    });
+    if (!map.getLayer('region-outline-fill')) {
+      map.addLayer({
+        id: 'region-outline-fill',
+        type: 'fill',
+        source: 'region-outline',
+        paint: { 'fill-color': color, 'fill-opacity': 0.16 }
+      });
+    } else {
+      map.setPaintProperty('region-outline-fill', 'fill-color', color);
+    }
+    if (!map.getLayer('region-outline-line')) {
+      map.addLayer({
+        id: 'region-outline-line',
+        type: 'line',
+        source: 'region-outline',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': color,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.8, 9, 3.2, 13, 4.6],
+          'line-opacity': 0.95,
+          'line-dasharray': [2, 1.4]
+        }
+      });
+    } else {
+      map.setPaintProperty('region-outline-line', 'line-color', color);
+    }
+  }
+
+  // Small, quiet name tags at the centre of each neighbouring territory so a
+  // bare context outline isn't a mystery shape. Kept subtle (muted, no pill) so
+  // the focused region stays the clear subject.
+  function _addRegionContextLabels() {
+    var map = state.map;
+    var ctx = (state.opts && state.opts.regionContext) || [];
+    if (!map || !ctx.length) return;
+    ctx.forEach(function (c) {
+      if (!c || !c.geometry || typeof c.cx !== 'number' || typeof c.cy !== 'number') return;
+      var el = document.createElement('div');
+      el.className = 'bmregion-ctx-label';
+      el.textContent = c.name || '';
+      el.style.color = c.color || '#6b7280';
+      var marker = new maplibregl.Marker({ element: el, anchor: 'center', offset: [0, 0] })
+        .setLngLat([c.cx, c.cy]).addTo(map);
+      state.regionCtxLabels.push(marker);
+    });
+  }
+
   function _addOverlays() {
     var map = state.map;
     var coords = state.routeCoords && state.routeCoords.length ? state.routeCoords : state.coords;
@@ -549,6 +640,21 @@
     var bearing = terrain.enabled ? terrain.bearing : 0;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     try {
+      var ro = state.opts && state.opts.regionOutline;
+      if (coords.length === 1 && ro && ro.geometry) {
+        // Frame the whole territory, not just its centre point.
+        var ring = (ro.geometry.coordinates && ro.geometry.coordinates[0]) || [];
+        if (ring.length >= 3) {
+          map.fitBounds(_bounds(ring), {
+            padding: (opts && opts.cameraPadding) || _cameraPadding(map),
+            maxZoom: 9,
+            animate: animateOpen && !reduce,
+            duration: 1800
+          });
+          state.homeCamera = { center: map.getCenter(), zoom: map.getZoom(), pitch: pitch, bearing: bearing };
+          return;
+        }
+      }
       if (coords.length === 1) {
         var singleTarget = {
           center: coords[0],
@@ -629,6 +735,9 @@
   function _restoreMapEnhancements(applyCamera) {
     var map = state.map;
     if (!map) return;
+    _addRegionContext();
+    _addRegionOutline();
+    _addRegionContextLabels();
     _addOverlays();
     _addMarkers();
     _addGeoFeatures();
@@ -640,9 +749,25 @@
   function _clearMarkers() {
     state.markers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.markers = [];
+    state.pinDots.forEach(function (m) { try { m.remove(); } catch (e) {} });
+    state.pinDots = [];
+    state.regionCtxLabels.forEach(function (m) { try { m.remove(); } catch (e) {} });
+    state.regionCtxLabels = [];
     state.landmarkMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.landmarkMarkers = [];
     _clearGeoFeatures();
+  }
+
+  // Known place kinds that get their own outline colour. Anything else falls
+  // back to a neutral pin so an unrecognised kind still marks the exact spot.
+  var PIN_KINDS = {
+    city: 1, town: 1, village: 1, site: 1, region: 1, nation: 1,
+    mountain: 1, valley: 1, river: 1, lake: 1, sea: 1, port: 1,
+    island: 1, fortress: 1
+  };
+  function _pinKind(k) {
+    k = String(k == null ? '' : k).toLowerCase().trim();
+    return PIN_KINDS[k] ? k : '';
   }
 
   function _clearMarkerProximity() {
@@ -681,14 +806,32 @@
     };
     var lons = pts.map(function (p) { return p.lon; });
     var midLon = lons.length ? (Math.min.apply(Math, lons) + Math.max.apply(Math, lons)) / 2 : 0;
+    // On a single-place map (the Atlas / verse pins) there's no route line and no
+    // stop circle, so the label alone floats near — but not on — the coordinate.
+    // Drop a colour-coded dot on the exact spot so it's unmistakable where the
+    // place sits, and tint the label's outline to the same colour by kind.
+    // A region/nation view draws a filled outline instead of a pinpoint dot, so
+    // the dot would just clutter the area's centre.
+    var hasRegion = !!(state.opts && state.opts.regionOutline && state.opts.regionOutline.geometry);
+    var singlePlace = state.coords.length < 2 && !hasRegion;
     pts.forEach(function (p, i) {
+      var kind = _pinKind(p.kind);
       var el = document.createElement('div');
-      el.className = 'bible-map-label' + (i === 0 ? ' first' : '') + (i === pts.length - 1 ? ' last' : '');
+      el.className = 'bible-map-label' + (i === 0 ? ' first' : '') + (i === pts.length - 1 ? ' last' : '') +
+        (kind ? ' bmkind-' + kind : '');
       el.textContent = labelFor(p, state.mode);
       var eastSide = p.lon > midLon;
       var marker = new maplibregl.Marker({ element: el, anchor: eastSide ? 'right' : 'left', offset: eastSide ? [-9, 0] : [9, 0] })
         .setLngLat([p.lon, p.lat]).addTo(map);
       state.markers.push(marker);
+      if (singlePlace) {
+        var dot = document.createElement('div');
+        dot.className = 'bible-map-pin' + (kind ? ' bmkind-' + kind : '');
+        dot.innerHTML = '<span class="bible-map-pin-core"></span>';
+        var dotMarker = new maplibregl.Marker({ element: dot, anchor: 'center', offset: [0, 0] })
+          .setLngLat([p.lon, p.lat]).addTo(map);
+        state.pinDots.push(dotMarker);
+      }
     });
     ((state.opts && state.opts.landmarks) || []).forEach(function (p) {
       if (typeof p.lon !== 'number' || typeof p.lat !== 'number') return;

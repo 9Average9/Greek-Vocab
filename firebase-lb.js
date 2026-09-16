@@ -1509,6 +1509,17 @@ async function deleteHabit(uid, habitId) {
         writes = 0;
       }
     }
+    // Remove any reminder slots tied to this habit so no orphaned notifications
+    // keep firing after the habit is gone (slots are named `${habitId}_0..9`).
+    for (let i = 0; i < 10; i++) {
+      batch.delete(doc(db, "users", uid, "habitReminderSlots", `${habitId}_${i}`));
+      writes++;
+      if (writes >= 420) {
+        await batch.commit();
+        batch = writeBatch(db);
+        writes = 0;
+      }
+    }
     batch.delete(doc(db, "users", uid, "habits", habitId));
     await batch.commit();
     return true;
