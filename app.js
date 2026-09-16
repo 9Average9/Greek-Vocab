@@ -22246,14 +22246,23 @@ async function catchUpHabitYesterday(habitId) {
   const uid = window.Auth?.getCurrentUser()?.uid;
   if (!uid) return;
   const yesterday = _habitShiftDateKey(_habitTodayKey(), -1);
+  const habit = _habitItems.find(h => h.id === habitId);
+  const existingComment = habit?.entries?.[yesterday]?.comment || "";
   const ok = await window.Habits?.setEntry?.(uid, habitId, {
     date: yesterday,
     status: "success",
-    comment: "Caught up from yesterday",
+    comment: existingComment || "Caught up from yesterday",
     notify: false
   });
   if (!ok) { alert("Could not catch up that habit."); return; }
   _showStudyToast("Yesterday marked complete");
+  // Catching up a Bible-reading habit still offers the knowledge check, so no
+  // completion path silently skips the quiz prompt.
+  if (habit) {
+    window.BibleQuiz?.maybeOfferHabitQuiz?.({
+      habitId, habitName: habit.name, dateKey: yesterday, note: existingComment
+    });
+  }
 }
 
 function selectHabitNoteStatus(status) {
@@ -30249,7 +30258,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.472";
+const APP_VERSION = "3.0.473";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
