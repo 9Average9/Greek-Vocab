@@ -494,6 +494,97 @@
     return /unauthenticated|failed-precondition|invalid-argument|permission-denied/.test(code);
   }
 
+  /* ── Multi-passage support ──────────────────────────────────────────────
+     When more than one passage is in play (e.g. a note with "Matthew 5; Acts
+     2", or several typed in the builder) we don't trust a single model call to
+     split its attention fairly — one passage tends to dominate. Instead we
+     generate a dedicated batch for EACH passage in parallel, then interleave
+     them round-robin so the quiz alternates between passages for a real mix.
+     ---------------------------------------------------------------------- */
+
+  // Break a reference string into its individual passages. Prefers the
+  // normalized "A; B; C" that extractReferences produces (so free-text commas
+  // and "and" are handled), and falls back to explicit separators.
+  function splitPassages(refStr) {
+    if (!refStr || typeof refStr !== 'string') return [];
+    let parts;
+    const norm = (typeof extractReferences === 'function') ? extractReferences(refStr) : '';
+    if (norm && norm.indexOf(';') >= 0) parts = norm.split(';');
+    else parts = refStr.split(/[;\n·]|\band\b/i);
+    parts = parts.map(s => s.trim()).filter(Boolean);
+    const seen = new Set(), out = [];
+    for (const p of parts) { const k = p.toLowerCase(); if (!seen.has(k)) { seen.add(k); out.push(p); } }
+    return out;
+  }
+
+  // Split `total` questions across `n` passages as evenly as possible.
+  function distributeCounts(total, n) {
+    const base = Math.floor(total / n);
+    let rem = total - base * n;
+    const arr = [];
+    for (let i = 0; i < n; i++) arr.push(base + (rem-- > 0 ? 1 : 0));
+    return arr;
+  }
+
+  // Round-robin merge of per-passage question lists, de-duped by question text,
+  // trimmed to `limit`. Interleaving is what guarantees the mix reads evenly.
+  function interleaveDedupe(lists, limit) {
+    const seen = new Set(), out = [];
+    let idx = 0, added = true;
+    while (added) {
+      added = false;
+      for (const list of lists) {
+        if (idx < list.length) {
+          added = true;
+          const q = list[idx];
+          const key = q && q.question ? String(q.question).toLowerCase() : null;
+          if (q && key && !seen.has(key)) {
+            seen.add(key);
+            out.push(q);
+            if (limit && out.length >= limit) return out;
+          }
+        }
+      }
+      idx++;
+    }
+    return out;
+  }
+
+  function runMultiGeneration(gen, base, total, passages) {
+    // The server enforces a floor of 3 questions per call, so request at least
+    // that for every passage (guaranteeing each is represented) and trim the
+    // interleaved result back down to the count the user actually asked for.
+    const alloc = distributeCounts(total, passages.length).map(v => Math.max(3, v));
+    const calls = passages.map((ref, i) =>
+      genWithRetry(Object.assign({}, base, { reference: ref, numQuestions: alloc[i] }))
+        .then(data => (data && Array.isArray(data.questions)) ? data.questions : [])
+        .catch(err => { if (isFatalGenError(err)) throw err; return []; })
+    );
+    Promise.all(calls)
+      .then(lists => {
+        if (gen !== genToken) return;
+        const merged = interleaveDedupe(lists, total);
+        if (!merged.length) {
+          renderError("Couldn't build questions for those passages. Try broader or clearer references.");
+          clearActive();
+          return;
+        }
+        startQuiz({
+          title: passages.join(' · '),
+          reference: base.reference,
+          difficulty: base.difficulty,
+          focus: base.focus || [],
+          tricky: base.tricky,
+          questions: merged
+        }, merged.length); // expectedTotal = what we got, so no remainder pass
+      })
+      .catch(err => {
+        if (gen !== genToken) return;
+        renderError(describeGenError(err));
+        if (isFatalGenError(err)) clearActive();
+      });
+  }
+
   function startGeneration() {
     const ref = (form.reference || '').trim();
     if (!ref) { toast('Add a passage reference first.'); return; }
@@ -516,6 +607,10 @@
     const gen = ++genToken;
     activePayload = { base: base, total: total };
     saveActive('generating');
+    // Multiple passages → generate a balanced batch per passage and interleave,
+    // so every passage is fairly represented instead of one dominating.
+    const passages = splitPassages(base && base.reference);
+    if (passages.length > 1) { runMultiGeneration(gen, base, total, passages); return; }
     const firstCount = total > 5 ? 3 : total;
     genWithRetry(Object.assign({ numQuestions: firstCount }, base))
       .then(data => {
