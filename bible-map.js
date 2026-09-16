@@ -430,6 +430,46 @@
     else map.getSource(id).setData(data);
   }
 
+  // Approximate territory outline for a single-place Atlas view of a region or
+  // nation. Drawn as a translucent colour-coded fill with a dashed border (the
+  // dashes signal "approximate extent"). Sits beneath the HTML name labels/pins,
+  // which always paint on top of GL layers.
+  function _addRegionOutline() {
+    var map = state.map;
+    var ro = state.opts && state.opts.regionOutline;
+    if (!map || !ro || !ro.geometry) return;
+    var color = ro.color || '#4b5563';
+    _addOrUpdateGeoJsonSource(map, 'region-outline', {
+      type: 'Feature', properties: {}, geometry: ro.geometry
+    });
+    if (!map.getLayer('region-outline-fill')) {
+      map.addLayer({
+        id: 'region-outline-fill',
+        type: 'fill',
+        source: 'region-outline',
+        paint: { 'fill-color': color, 'fill-opacity': 0.16 }
+      });
+    } else {
+      map.setPaintProperty('region-outline-fill', 'fill-color', color);
+    }
+    if (!map.getLayer('region-outline-line')) {
+      map.addLayer({
+        id: 'region-outline-line',
+        type: 'line',
+        source: 'region-outline',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': color,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.8, 9, 3.2, 13, 4.6],
+          'line-opacity': 0.95,
+          'line-dasharray': [2, 1.4]
+        }
+      });
+    } else {
+      map.setPaintProperty('region-outline-line', 'line-color', color);
+    }
+  }
+
   function _addOverlays() {
     var map = state.map;
     var coords = state.routeCoords && state.routeCoords.length ? state.routeCoords : state.coords;
@@ -550,6 +590,21 @@
     var bearing = terrain.enabled ? terrain.bearing : 0;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     try {
+      var ro = state.opts && state.opts.regionOutline;
+      if (coords.length === 1 && ro && ro.geometry) {
+        // Frame the whole territory, not just its centre point.
+        var ring = (ro.geometry.coordinates && ro.geometry.coordinates[0]) || [];
+        if (ring.length >= 3) {
+          map.fitBounds(_bounds(ring), {
+            padding: (opts && opts.cameraPadding) || _cameraPadding(map),
+            maxZoom: 9,
+            animate: animateOpen && !reduce,
+            duration: 1800
+          });
+          state.homeCamera = { center: map.getCenter(), zoom: map.getZoom(), pitch: pitch, bearing: bearing };
+          return;
+        }
+      }
       if (coords.length === 1) {
         var singleTarget = {
           center: coords[0],
@@ -630,6 +685,7 @@
   function _restoreMapEnhancements(applyCamera) {
     var map = state.map;
     if (!map) return;
+    _addRegionOutline();
     _addOverlays();
     _addMarkers();
     _addGeoFeatures();
@@ -700,7 +756,10 @@
     // stop circle, so the label alone floats near — but not on — the coordinate.
     // Drop a colour-coded dot on the exact spot so it's unmistakable where the
     // place sits, and tint the label's outline to the same colour by kind.
-    var singlePlace = state.coords.length < 2;
+    // A region/nation view draws a filled outline instead of a pinpoint dot, so
+    // the dot would just clutter the area's centre.
+    var hasRegion = !!(state.opts && state.opts.regionOutline && state.opts.regionOutline.geometry);
+    var singlePlace = state.coords.length < 2 && !hasRegion;
     pts.forEach(function (p, i) {
       var kind = _pinKind(p.kind);
       var el = document.createElement('div');

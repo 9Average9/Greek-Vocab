@@ -16937,6 +16937,7 @@ function _atlasRenderDetail(place) {
       <button onclick="setAtlasDetailMode('modern')">Modern</button>
     </div>` : ''}
     <div class="atlas-map" id="atlasMapShell"></div>
+    ${inTiles && _atlasRegionOutline(place) ? `<p class="atlas-extent-note"><span class="material-symbols-outlined">crop_free</span>Shaded area shows this territory's <strong>approximate extent</strong> — ancient borders are debated and shifted over time.</p>` : ''}
     <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>${conf.tier === 'debated' ? 'Most-accepted location' : 'Where it is today'}</strong><span>${_journeyEsc(place.modern)}</span></div></div>
     ${_atlasAltsHtml(place)}
     ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
@@ -16986,6 +16987,7 @@ function _atlasMountGL(place) {
       labelFor: _journeyLabelFor,
       landmarks: _journeyModernLandmarks(pseudo, 10),
       pinZoom: 7,
+      regionOutline: _atlasRegionOutline(place),
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
   }).then(() => {
@@ -17011,6 +17013,30 @@ let _atlasPeekMode = 'ancient';
 // Confidence tier for how sure the identification is. Set per-place in the
 // gazetteer (certain | likely | debated); falls back to a text heuristic for
 // any older cached entry without the field.
+// Per-kind colours for map outlines/pins — kept in sync with the .bmkind-*
+// values in style.css so a GL region fill matches its label and dot.
+const _ATLAS_KIND_COLORS = {
+  city: '#b91c1c', town: '#ea580c', village: '#d97706', site: '#7c3aed',
+  region: '#4b5563', nation: '#1e3a8a', mountain: '#78350f', valley: '#4d7c0f',
+  river: '#0891b2', lake: '#0284c7', sea: '#0369a1', port: '#0d9488',
+  island: '#059669', fortress: '#9333ea'
+};
+function _atlasKindColor(kind) {
+  return _ATLAS_KIND_COLORS[String(kind || '').toLowerCase()] || '#4b5563';
+}
+// Returns the approximate territory outline for a place, if one is bundled in
+// window.BIBLE_REGIONS (regions/nations only). Null for point places.
+function _atlasRegionOutline(place) {
+  if (!place) return null;
+  const ring = (window.BIBLE_REGIONS || {})[place.name];
+  if (!Array.isArray(ring) || ring.length < 3) return null;
+  return {
+    geometry: { type: 'Polygon', coordinates: [ring] },
+    color: _atlasKindColor(place.kind),
+    name: place.name
+  };
+}
+
 function _atlasConfidence(place) {
   let conf = place.conf;
   if (!conf) {
@@ -17245,6 +17271,7 @@ function _atlasPeekMountGL(place) {
       mode: _atlasPeekMode, pmtilesUrl: _journeyResolvePmtiles(), labelFor: _journeyLabelFor,
       terrain: BIBLE_TERRAIN_OPTIONS, followTraveler: false,
       landmarks: _journeyModernLandmarks(pseudo, 9), pinZoom: 7,
+      regionOutline: _atlasRegionOutline(place),
       onError: () => { shell.classList.remove('gl-mounting'); }
     });
   }).then(() => {
@@ -30099,6 +30126,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.470 &mdash; Cleaner map pins, viewable saved plans &amp; tidy habit deletes</div>
 <ul>
   <li><strong>Map places now show exactly where they are</strong> &mdash; On the Atlas and verse map pins, each place used to be a floating name with no clear point. Every place now gets a colored dot right on its precise spot, color-coded by type (cities, towns, mountains, rivers, regions and more), and its name-tag picks up the same color &mdash; so you can tell at a glance both what a place is and exactly where it sits.</li>
+  <li><strong>Regions &amp; nations are now shaded on the map</strong> &mdash; Territories like Galilee, Judea, Samaria, the Decapolis, Moab, Egypt, Galatia, Macedonia and more are now drawn as a colored, outlined area showing roughly where the land lay &mdash; not just a single dot. The map zooms to frame the whole territory, and a note makes clear the shaded shape is an <em>approximate extent</em>, since ancient borders are debated and shifted over time.</li>
   <li><strong>See every date &amp; reference in a saved reading plan</strong> &mdash; Saved plans now have a <em>View</em> button that opens the full day-by-day schedule &mdash; every date paired with that day's reading &mdash; rebuilt right on your device, with today highlighted.</li>
   <li><strong>Deleting a habit clears its reminders too</strong> &mdash; Removing a habit now also deletes its scheduled reminders, so you'll never get a notification for a habit that no longer exists.</li>
 </ul>

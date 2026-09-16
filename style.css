@@ -33217,6 +33217,16 @@ body.dark .rp-book-sep { background: #1f2937; }
 .atlas-modern strong { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--secondary-color); }
 .atlas-modern span { font-weight: 700; }
 .atlas-note { margin: 12px 2px; line-height: 1.5; }
+.atlas-extent-note {
+  display: flex; align-items: flex-start; gap: 7px;
+  margin: 10px 2px; padding: 8px 11px;
+  font-size: 0.78rem; line-height: 1.45; color: var(--muted-color);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--secondary-color) 6%, var(--card-color));
+  border: 1px dashed color-mix(in srgb, var(--secondary-color) 32%, transparent);
+}
+.atlas-extent-note .material-symbols-outlined { font-size: 1.05rem; color: var(--secondary-color); flex: 0 0 auto; margin-top: 1px; }
+.atlas-extent-note strong { color: var(--font-color); }
 .atlas-refs strong { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--secondary-color); margin: 0 2px 6px; }
 .atlas-ref-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .atlas-ref-chips span {

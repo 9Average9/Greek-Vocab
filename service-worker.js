@@ -56,6 +56,7 @@ const FILES_TO_CACHE = [
   "./bible-intros.js?v=3.0.418",
   "./rhema-english-dictionary.js?v=3.0.417",
   "./bible-atlas.js?v=3.0.349",
+  "./bible-regions.js?v=3.0.470",
   "./bible-map.js?v=3.0.470",
   "./verse-structure.js?v=3.0.429",
   "./vs-structure.js?v=3.0.450",
