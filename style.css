@@ -32886,6 +32886,43 @@ body.reading-plan-active #statusBarBg {
 .rp-picker-count { font-size: 0.82rem; font-weight: 800; color: var(--muted-color); }
 .rp-picker-foot .rp-btn { padding: 12px 28px; }
 
+/* saved-plan schedule viewer */
+.rp-view-sheet { max-height: 90svh; }
+.rp-view-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rp-view-title strong { font-size: 1.05rem; font-weight: 900; color: var(--font-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-view-title small { font-size: 0.78rem; font-weight: 700; color: var(--muted-color); }
+.rp-view-meta {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 4px 0 12px; margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-color);
+}
+.rp-view-meta span {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.76rem; font-weight: 800; color: var(--secondary-color);
+  background: color-mix(in srgb, var(--secondary-color) 8%, transparent);
+  padding: 5px 10px; border-radius: 999px;
+}
+.rp-view-meta .material-symbols-outlined { font-size: 1rem; }
+.rp-view-list { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 6px; }
+.rp-view-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 6px; border-bottom: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+}
+.rp-view-row:last-child { border-bottom: 0; }
+.rp-view-daynum {
+  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+  display: grid; place-items: center;
+  font-size: 0.8rem; font-weight: 900;
+  color: var(--secondary-color);
+  background: color-mix(in srgb, var(--secondary-color) 12%, transparent);
+}
+.rp-view-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rp-view-date { font-size: 0.72rem; font-weight: 800; color: var(--muted-color); text-transform: uppercase; letter-spacing: 0.03em; }
+.rp-view-ref { font-size: 0.92rem; font-weight: 800; color: var(--font-color); line-height: 1.35; }
+.rp-view-row.is-today .rp-view-daynum { color: #fff; background: var(--secondary-color); }
+.rp-view-row.is-today .rp-view-date { color: var(--secondary-color); }
+body.dark .rp-view-sheet { background: #1f2937; }
+
 /* reminder toggle */
 .rp-reminder {
   padding: 12px 14px; border-radius: 16px;
@@ -33772,6 +33809,65 @@ body.journeys-active #statusBarBg { background: var(--card-color); }
   color: #a32222;
   border-color: color-mix(in srgb, #dc2626 42%, transparent);
   background: color-mix(in srgb, #fee2e2 72%, var(--card-color));
+}
+
+/* Exact-location pin dropped on a place's precise coordinate (single-place
+   Atlas / verse maps). Colour-coded by kind so the type of place — and exactly
+   where it sits — reads at a glance, not just its name floating nearby. */
+.bible-map-pin {
+  --pin-color: #6b7280;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+.bible-map-pin-core {
+  display: block;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: var(--pin-color);
+  border: 2.5px solid #fff;
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--pin-color) 70%, #000 30%), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+/* Per-kind colours (set on the marker so both the dot and the label outline,
+   which each carry the .bmkind-* class, resolve to the same colour). */
+.bmkind-city    { --pin-color: #b91c1c; }
+.bmkind-town    { --pin-color: #ea580c; }
+.bmkind-village { --pin-color: #d97706; }
+.bmkind-site    { --pin-color: #7c3aed; }
+.bmkind-region  { --pin-color: #4b5563; }
+.bmkind-nation  { --pin-color: #1e3a8a; }
+.bmkind-mountain{ --pin-color: #78350f; }
+.bmkind-valley  { --pin-color: #4d7c0f; }
+.bmkind-river   { --pin-color: #0891b2; }
+.bmkind-lake    { --pin-color: #0284c7; }
+.bmkind-sea     { --pin-color: #0369a1; }
+.bmkind-port    { --pin-color: #0d9488; }
+.bmkind-island  { --pin-color: #059669; }
+.bmkind-fortress{ --pin-color: #9333ea; }
+/* Label outline picks up the same kind colour (unless it's the journey
+   first/last stop, whose green/red styling wins by coming later in the file). */
+.bible-map-label.bmkind-city:not(.first):not(.last),
+.bible-map-label.bmkind-town:not(.first):not(.last),
+.bible-map-label.bmkind-village:not(.first):not(.last),
+.bible-map-label.bmkind-site:not(.first):not(.last),
+.bible-map-label.bmkind-region:not(.first):not(.last),
+.bible-map-label.bmkind-nation:not(.first):not(.last),
+.bible-map-label.bmkind-mountain:not(.first):not(.last),
+.bible-map-label.bmkind-valley:not(.first):not(.last),
+.bible-map-label.bmkind-river:not(.first):not(.last),
+.bible-map-label.bmkind-lake:not(.first):not(.last),
+.bible-map-label.bmkind-sea:not(.first):not(.last),
+.bible-map-label.bmkind-port:not(.first):not(.last),
+.bible-map-label.bmkind-island:not(.first):not(.last),
+.bible-map-label.bmkind-fortress:not(.first):not(.last) {
+  border-color: color-mix(in srgb, var(--pin-color) 60%, transparent);
+  box-shadow:
+    0 4px 12px rgba(20, 28, 34, 0.16),
+    inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent),
+    inset 3px 0 0 var(--pin-color);
 }
 .bible-map-landmark {
   display: none;

@@ -29,6 +29,7 @@
     journey: null,
     mode: 'ancient',
     markers: [],
+    pinDots: [],
     landmarkMarkers: [],
     raf: 0,
     followTick: 0,
@@ -640,9 +641,23 @@
   function _clearMarkers() {
     state.markers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.markers = [];
+    state.pinDots.forEach(function (m) { try { m.remove(); } catch (e) {} });
+    state.pinDots = [];
     state.landmarkMarkers.forEach(function (m) { try { m.remove(); } catch (e) {} });
     state.landmarkMarkers = [];
     _clearGeoFeatures();
+  }
+
+  // Known place kinds that get their own outline colour. Anything else falls
+  // back to a neutral pin so an unrecognised kind still marks the exact spot.
+  var PIN_KINDS = {
+    city: 1, town: 1, village: 1, site: 1, region: 1, nation: 1,
+    mountain: 1, valley: 1, river: 1, lake: 1, sea: 1, port: 1,
+    island: 1, fortress: 1
+  };
+  function _pinKind(k) {
+    k = String(k == null ? '' : k).toLowerCase().trim();
+    return PIN_KINDS[k] ? k : '';
   }
 
   function _clearMarkerProximity() {
@@ -681,14 +696,29 @@
     };
     var lons = pts.map(function (p) { return p.lon; });
     var midLon = lons.length ? (Math.min.apply(Math, lons) + Math.max.apply(Math, lons)) / 2 : 0;
+    // On a single-place map (the Atlas / verse pins) there's no route line and no
+    // stop circle, so the label alone floats near — but not on — the coordinate.
+    // Drop a colour-coded dot on the exact spot so it's unmistakable where the
+    // place sits, and tint the label's outline to the same colour by kind.
+    var singlePlace = state.coords.length < 2;
     pts.forEach(function (p, i) {
+      var kind = _pinKind(p.kind);
       var el = document.createElement('div');
-      el.className = 'bible-map-label' + (i === 0 ? ' first' : '') + (i === pts.length - 1 ? ' last' : '');
+      el.className = 'bible-map-label' + (i === 0 ? ' first' : '') + (i === pts.length - 1 ? ' last' : '') +
+        (kind ? ' bmkind-' + kind : '');
       el.textContent = labelFor(p, state.mode);
       var eastSide = p.lon > midLon;
       var marker = new maplibregl.Marker({ element: el, anchor: eastSide ? 'right' : 'left', offset: eastSide ? [-9, 0] : [9, 0] })
         .setLngLat([p.lon, p.lat]).addTo(map);
       state.markers.push(marker);
+      if (singlePlace) {
+        var dot = document.createElement('div');
+        dot.className = 'bible-map-pin' + (kind ? ' bmkind-' + kind : '');
+        dot.innerHTML = '<span class="bible-map-pin-core"></span>';
+        var dotMarker = new maplibregl.Marker({ element: dot, anchor: 'center', offset: [0, 0] })
+          .setLngLat([p.lon, p.lat]).addTo(map);
+        state.pinDots.push(dotMarker);
+      }
     });
     ((state.opts && state.opts.landmarks) || []).forEach(function (p) {
       if (typeof p.lon !== 'number' || typeof p.lat !== 'number') return;

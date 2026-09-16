@@ -16974,7 +16974,7 @@ function _atlasMountGL(place) {
   host.className = 'atlas-gl-map';
   shell.appendChild(host);
   shell.classList.add('gl-mounting');
-  const pseudo = { id: 'atlas', title: place.name, points: [{ ancient: place.name, modern: place.modern, lat: place.lat, lon: place.lon }] };
+  const pseudo = { id: 'atlas', title: place.name, points: [{ ancient: place.name, modern: place.modern, lat: place.lat, lon: place.lon, kind: place.kind }] };
   _ensureBibleMapLibs().then(() => {
     if (token !== _atlasGLToken) return null;
     if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('map unavailable');
@@ -17237,7 +17237,7 @@ function _atlasPeekMountGL(place) {
   host.className = 'atlas-peek-gl';
   shell.appendChild(host);
   shell.classList.add('gl-mounting');
-  const pseudo = { id: 'atlaspeek', title: place.name, points: [{ ancient: place.name, modern: place.modern, lat: place.lat, lon: place.lon }] };
+  const pseudo = { id: 'atlaspeek', title: place.name, points: [{ ancient: place.name, modern: place.modern, lat: place.lat, lon: place.lon, kind: place.kind }] };
   _ensureBibleMapLibs().then(() => {
     if (token !== _atlasGLToken || !document.getElementById('atlasPeekMap')) return null;
     if (!window.BibleMap || !window.BibleMap.supported()) throw new Error('map unavailable');
@@ -18757,6 +18757,7 @@ function rpRenderSaved() {
         <span>${rpOrderLabel(p.order)}</span>
       </div>
       <div class="rp-saved-actions">
+        <button onclick="rpViewPlan('${p.id}')"><span class="material-symbols-outlined">visibility</span>View</button>
         <button onclick="rpEditPlan('${p.id}')"><span class="material-symbols-outlined">edit</span>Edit</button>
         ${p.habitId ? "" : `<button onclick="rpCommitSaved('${p.id}')"><span class="material-symbols-outlined">add_task</span>Add habit</button>`}
         <button class="rp-del" onclick="rpDeletePlan('${p.id}')"><span class="material-symbols-outlined">delete</span></button>
@@ -18778,6 +18779,68 @@ function rpEditPlan(id) {
   });
   setReadingPlanTab('new');
   rpRenderForm();
+}
+// Open a read-only viewer showing the full day-by-day schedule of a saved plan —
+// every date paired with that day's reading reference. Rebuilt from the stored
+// plan config so it works entirely offline from what's saved on the device.
+function rpViewPlan(id) {
+  const plan = rpLoadPlans().find(p => p.id === id);
+  if (!plan) return;
+  const overlay = document.getElementById('rpViewOverlay');
+  const nameEl = document.getElementById('rpViewName');
+  const subEl = document.getElementById('rpViewSub');
+  const metaEl = document.getElementById('rpViewMeta');
+  const listEl = document.getElementById('rpViewList');
+  if (!overlay || !listEl) return;
+
+  const calc = rpCompute(rpCfgFromPlan(plan));
+  // Recreate the schedule using the plan's own start date so the references and
+  // dates line up with the plan exactly as it was saved.
+  const startKey = plan.startDate || _rpTodayKeyLocal();
+  const start = _rpStartOfDay(startKey + "T00:00:00");
+  const schedule = [];
+  if (calc.total && calc.perDay) {
+    let day = 0;
+    for (let i = 0; i < calc.flat.length; i += calc.perDay) {
+      const chunk = calc.flat.slice(i, i + calc.perDay);
+      const d = new Date(start.getTime() + day * 86400000);
+      schedule.push({ date: d, reading: rpFmtReading(chunk) });
+      day++;
+    }
+  }
+
+  if (nameEl) nameEl.textContent = plan.name || "Reading plan";
+  if (subEl) subEl.textContent = plan.scopeLabel || "";
+  if (metaEl) {
+    const end = plan.endDate ? _rpStartOfDay(plan.endDate + "T00:00:00") : null;
+    metaEl.innerHTML =
+      `<span><span class="material-symbols-outlined">menu_book</span>${(plan.total || 0).toLocaleString()} chapters</span>` +
+      `<span><span class="material-symbols-outlined">bolt</span>${plan.perDay}/day</span>` +
+      `<span><span class="material-symbols-outlined">event</span>${schedule.length} day${schedule.length === 1 ? '' : 's'}</span>` +
+      `<span><span class="material-symbols-outlined">flag</span>by ${rpFmtDate(end)}</span>` +
+      `<span><span class="material-symbols-outlined">sort</span>${rpOrderLabel(plan.order)}</span>`;
+  }
+
+  const todayKey = _rpTodayKeyLocal();
+  listEl.innerHTML = schedule.length
+    ? schedule.map((row, i) => {
+        const key = `${row.date.getFullYear()}-${String(row.date.getMonth() + 1).padStart(2, "0")}-${String(row.date.getDate()).padStart(2, "0")}`;
+        const isToday = key === todayKey;
+        const dateLabel = row.date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+        return `<div class="rp-view-row${isToday ? ' is-today' : ''}">
+          <span class="rp-view-daynum">${i + 1}</span>
+          <span class="rp-view-body">
+            <span class="rp-view-date">${dateLabel}${isToday ? ' &middot; Today' : ''}</span>
+            <span class="rp-view-ref">${(row.reading || '').replace(/</g, "&lt;")}</span>
+          </span>
+        </div>`;
+      }).join("")
+    : `<div class="rp-empty"><span class="material-symbols-outlined">error</span><p>Couldn't rebuild this plan's schedule. Try editing it to refresh.</p></div>`;
+
+  overlay.classList.remove('hidden');
+}
+function closeRpPlanView() {
+  document.getElementById('rpViewOverlay')?.classList.add('hidden');
 }
 function rpCancelEdit() { _rpState = _rpFreshState(); rpRenderForm(); }
 async function rpCommitSaved(id) {
@@ -22256,6 +22319,11 @@ async function deleteHabitFromDetail() {
   if (!uid) return;
   const ok = await window.Habits?.delete?.(uid, _habitDetailId);
   if (!ok) { alert("Could not delete that habit."); return; }
+  // Drop any cached reminder settings for the deleted habit so the reminder
+  // modal doesn't resurrect a slot for a habit that no longer exists.
+  if (_habitReminderSettings && _habitReminderSettings[_habitDetailId]) {
+    delete _habitReminderSettings[_habitDetailId];
+  }
   closeHabitDetailModal();
   _showStudyToast("Habit deleted");
 }
@@ -30005,7 +30073,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.469";
+const APP_VERSION = "3.0.470";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30028,6 +30096,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.470 &mdash; Cleaner map pins, viewable saved plans &amp; tidy habit deletes</div>
+<ul>
+  <li><strong>Map places now show exactly where they are</strong> &mdash; On the Atlas and verse map pins, each place used to be a floating name with no clear point. Every place now gets a colored dot right on its precise spot, color-coded by type (cities, towns, mountains, rivers, regions and more), and its name-tag picks up the same color &mdash; so you can tell at a glance both what a place is and exactly where it sits.</li>
+  <li><strong>See every date &amp; reference in a saved reading plan</strong> &mdash; Saved plans now have a <em>View</em> button that opens the full day-by-day schedule &mdash; every date paired with that day's reading &mdash; rebuilt right on your device, with today highlighted.</li>
+  <li><strong>Deleting a habit clears its reminders too</strong> &mdash; Removing a habit now also deletes its scheduled reminders, so you'll never get a notification for a habit that no longer exists.</li>
+</ul>
 <div class="un-version-label">v3.0.469 &mdash; Study nav bar no longer sticks after closing a study</div>
 <ul>
   <li><strong>The study tab bar closes with the study</strong> &mdash; After you made or opened a study, the bar of study tabs (Rhema, Verses, Word Log, Trails, Workspace) could stay stuck across the bottom of every screen even after you backed out. The Back button now closes the study cleanly &mdash; the study tab bar disappears and your normal bottom navigation comes right back &mdash; every time.</li>

@@ -346,7 +346,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.469" rel="stylesheet"/>
+<link href="style.css?v=3.0.470" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.438" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -895,6 +895,19 @@ Journey Maps</span>
 <span class="rp-picker-count" id="rpPickerCount"></span>
 <button class="rp-btn rp-btn-primary" onclick="applyRpBookPicker()">Done</button>
 </div>
+</div>
+</div>
+<div class="rp-picker-overlay hidden" id="rpViewOverlay" onclick="if(event.target===this)closeRpPlanView()">
+<div class="rp-picker-sheet rp-view-sheet">
+<div class="rp-picker-hdr">
+<div class="rp-view-title">
+<strong id="rpViewName">Reading plan</strong>
+<small id="rpViewSub"></small>
+</div>
+<button class="rp-picker-close" onclick="closeRpPlanView()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="rp-view-meta" id="rpViewMeta"></div>
+<div class="rp-view-list" id="rpViewList"></div>
 </div>
 </div>
 </section>
@@ -17247,7 +17260,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.469"></script>
+<script src="app.js?v=3.0.470"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="rhema-crossrefs-ui.js?v=3.0.363"></script>
 <script src="verse-structure.js?v=3.0.429"></script>
@@ -17255,7 +17268,7 @@ Verb Endings
 <script src="greek-verbs.js?v=3.0.152"></script>
 <script src="sermon-notes.js?v=3.0.460"></script>
 <script src="bible-quiz.js?v=3.0.440"></script>
-<script src="firebase-lb.js?v=3.0.468" type="module"></script>
+<script src="firebase-lb.js?v=3.0.470" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
