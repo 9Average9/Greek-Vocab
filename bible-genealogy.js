@@ -43,13 +43,13 @@
    * long scroll reads like chapters of one story.
    * ======================================================================*/
   var ERAS = {
-    creation:   { label: 'Before the Flood', accent: '#7c6cf0', soft: '#efecff', ink: '#3a2f8f' },
-    postflood:  { label: 'After the Flood',  accent: '#0ea5a4', soft: '#e2fbf8', ink: '#0b6b6a' },
-    patriarch:  { label: 'The Patriarchs',   accent: '#e0872b', soft: '#fdf0dd', ink: '#9a5a12' },
-    judges:     { label: 'Toward the King',  accent: '#5b9a4e', soft: '#e9f7e4', ink: '#3c6a33' },
-    kings:      { label: 'Kings of Judah',   accent: '#8b5cf6', soft: '#f1eafe', ink: '#5b2ea6' },
-    exile:      { label: 'Exile & Return',   accent: '#5f7590', soft: '#eaeff5', ink: '#3d4d61' },
-    messiah:    { label: 'The Messiah',      accent: '#e0a919', soft: '#fdf4d8', ink: '#8a6608' }
+    creation:   { label: 'From Adam to Noah',     accent: '#7c6cf0', soft: '#efecff', ink: '#3a2f8f' },
+    postflood:  { label: 'From Noah to Abraham',  accent: '#0ea5a4', soft: '#e2fbf8', ink: '#0b6b6a' },
+    patriarch:  { label: 'The Patriarchs',        accent: '#e0872b', soft: '#fdf0dd', ink: '#9a5a12' },
+    judges:     { label: 'The Line of Judah',     accent: '#5b9a4e', soft: '#e9f7e4', ink: '#3c6a33' },
+    kings:      { label: 'The Kings of Judah',    accent: '#8b5cf6', soft: '#f1eafe', ink: '#5b2ea6' },
+    exile:      { label: 'Exile & Return',        accent: '#5f7590', soft: '#eaeff5', ink: '#3d4d61' },
+    messiah:    { label: 'The Messiah',           accent: '#e0a919', soft: '#fdf4d8', ink: '#8a6608' }
   };
 
   /* ========================================================================
@@ -616,7 +616,7 @@
       mentions:[ {ref:'GEN 9:27', q:'“May God enlarge Japheth.”'} ],
       av:{skin:'olive', hair:'brown', style:'short', beard:'full', head:'none'} },
 
-    { id:'nimrod', name:'Nimrod', gender:'m', branchOf:'noah', meaning:'“we shall rebel”',
+    { id:'nimrod', name:'Nimrod', gender:'m', branchOf:'cush', meaning:'“we shall rebel”',
       role:'The first mighty man', era:'postflood',
       blurb:'A grandson of Ham through Cush; “a mighty hunter before the LORD,” founder of Babel.',
       gen:['GEN 10:8','1CH 1:10'],
@@ -793,15 +793,15 @@
       av:{skin:'brown', hair:'black', style:'short', beard:'full', head:'band'} },
 
     /* ── The Table of Nations (Genesis 10) ── */
-    { id:'cush', name:'Cush', gender:'m', branchOf:'noah', meaning:'“black / Ethiopia”', era:'postflood',
+    { id:'cush', name:'Cush', gender:'m', branchOf:'ham', meaning:'“black / Ethiopia”', era:'postflood',
       role:'Son of Ham', blurb:'A son of Ham and father of Nimrod; associated with the lands south of Egypt.',
       gen:['GEN 10:6','1CH 1:8'], mentions:[{ref:'GEN 10:8', q:'Father of Nimrod, the first mighty man.'}],
       av:{skin:'deep', hair:'black', style:'short', beard:'full', head:'none'} },
-    { id:'mizraim', name:'Mizraim', gender:'m', branchOf:'noah', meaning:'“Egypt”', era:'postflood',
+    { id:'mizraim', name:'Mizraim', gender:'m', branchOf:'ham', meaning:'“Egypt”', era:'postflood',
       role:'Son of Ham', blurb:'The son of Ham whose name is the Hebrew word for Egypt.',
       gen:['GEN 10:6','1CH 1:8'], mentions:[{ref:'GEN 10:13', q:'Ancestor of the peoples of Egypt.'}],
       av:{skin:'brown', hair:'black', style:'short', beard:'short', head:'egypt'} },
-    { id:'canaan', name:'Canaan', gender:'m', branchOf:'noah', meaning:'“lowland”', era:'postflood',
+    { id:'canaan', name:'Canaan', gender:'m', branchOf:'ham', meaning:'“lowland”', era:'postflood',
       role:'Son of Ham', blurb:'Youngest son of Ham; his descendants filled the land Israel would later enter.',
       gen:['GEN 10:6','GEN 9:25'], mentions:[{ref:'GEN 9:25', q:'“Cursed be Canaan; a servant of servants shall he be.”'}],
       av:{skin:'tan', hair:'darkbrown', style:'short', beard:'full', head:'none'} },
@@ -924,7 +924,67 @@
     { id:'adonijah', name:'Adonijah', gender:'m', branchOf:'david', meaning:'“the LORD is my Lord”', era:'kings',
       role:'Son of David', blurb:'David’s son who tried to claim the throne before Solomon was made king.',
       gen:['2SA 3:4','1CH 3:2'], mentions:[{ref:'1KI 1:5', q:'“I will be king,” he declared, exalting himself.'}],
-      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'short', head:'band'} }
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'short', head:'band'} },
+    { id:'tamarD', name:'Tamar', gender:'f', branchOf:'david', meaning:'“palm tree”', era:'kings',
+      role:'Daughter of David', blurb:'David’s daughter, sister of Absalom; her wrong set his rebellion in motion.',
+      gen:['2SA 13:1','1CH 3:9'], mentions:[{ref:'2SA 13:1', q:'“Absalom… had a beautiful sister, whose name was Tamar.”'}],
+      av:{skin:'olive', hair:'darkbrown', style:'long', beard:'none', head:'veil'} },
+    { id:'amnon', name:'Amnon', gender:'m', branchOf:'david', meaning:'“faithful”', era:'kings',
+      role:'Firstborn of David', blurb:'David’s eldest son, whose crime against Tamar led to his death by Absalom.',
+      gen:['2SA 3:2','1CH 3:1'], mentions:[{ref:'2SA 13:28', q:'Killed by Absalom’s servants at a feast.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'band'} },
+
+    /* ── The sons of Japheth (Genesis 10) ── */
+    { id:'gomer', name:'Gomer', gender:'m', branchOf:'japheth', meaning:'“complete”', era:'postflood',
+      role:'Son of Japheth', blurb:'Eldest son of Japheth; ancestor of peoples to Israel’s far north.',
+      gen:['GEN 10:2','1CH 1:5'], mentions:[{ref:'EZK 38:6', q:'Named among the northern nations of Gog.'}],
+      av:{skin:'light', hair:'brown', style:'short', beard:'full', head:'none'} },
+    { id:'javan', name:'Javan', gender:'m', branchOf:'japheth', meaning:'“Greece / Ionia”', era:'postflood',
+      role:'Son of Japheth', blurb:'The son of Japheth whose name is the Hebrew word for the Greeks.',
+      gen:['GEN 10:2','1CH 1:5'], mentions:[{ref:'DAN 8:21', q:'“The king of Greece” — the goat of Daniel’s vision.'}],
+      av:{skin:'light', hair:'auburn', style:'short', beard:'short', head:'none'} },
+
+    /* ── Ishmael’s sons (Genesis 25) ── */
+    { id:'nebaioth', name:'Nebaioth', gender:'m', branchOf:'ishmael', meaning:'“heights”', era:'patriarch',
+      role:'Firstborn of Ishmael', blurb:'The eldest of Ishmael’s twelve princes; his flocks are named by Isaiah.',
+      gen:['GEN 25:13','1CH 1:29'], mentions:[{ref:'ISA 60:7', q:'“The rams of Nebaioth shall minister to you.”'}],
+      av:{skin:'tan', hair:'black', style:'short', beard:'full', head:'band'} },
+    { id:'kedar', name:'Kedar', gender:'m', branchOf:'ishmael', meaning:'“dark”', era:'patriarch',
+      role:'Son of Ishmael', blurb:'Father of a desert people whose tents the psalmist longed to leave.',
+      gen:['GEN 25:13','1CH 1:29'], mentions:[{ref:'PSA 120:5', q:'“Woe to me… that I dwell among the tents of Kedar!”'}],
+      av:{skin:'tan', hair:'black', style:'short', beard:'full', head:'band'} },
+
+    /* ── Samuel’s family (1 Samuel 1; 1 Chronicles 6) ── */
+    { id:'elkanah', name:'Elkanah', gender:'m', branchOf:'levi', meaning:'“God has created”', era:'judges',
+      role:'Father of Samuel', blurb:'A Levite of the hill country of Ephraim; husband of Hannah and Peninnah.',
+      gen:['1SA 1:1','1CH 6:27'], mentions:[{ref:'1SA 1:19', q:'Worshipped at Shiloh before the LORD.'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'full', head:'turban'} },
+    { id:'hannah', name:'Hannah', gender:'f', branchOf:'levi', meaning:'“grace / favor”', era:'judges',
+      role:'Mother of Samuel', blurb:'Prayed for a son and gave him back to the LORD; her song foreshadows Mary’s.',
+      gen:['1SA 1:2'], mentions:[{ref:'1SA 1:27', q:'“For this child I prayed.”'},{ref:'1SA 2:1', q:'“My heart exults in the LORD.”'}],
+      av:{skin:'olive', hair:'darkbrown', style:'long', beard:'none', head:'veil'} },
+    { id:'samuel', name:'Samuel', gender:'m', branchOf:'elkanah', meaning:'“heard of God”', era:'judges',
+      role:'Prophet who anointed kings', blurb:'The last judge and first great prophet; he anointed both Saul and David.',
+      gen:['1SA 1:20','1CH 6:28'], mentions:[{ref:'1SA 3:10', q:'“Speak, for your servant hears.”'},{ref:'1SA 16:13', q:'Anointed David in the midst of his brothers.'}],
+      av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'none'} },
+
+    /* ── The house of Saul (Benjamin — 1 Samuel; 1 Chronicles 8) ── */
+    { id:'kish', name:'Kish', gender:'m', branchOf:'benjamin', meaning:'“bow / snare”', era:'judges',
+      role:'Father of Saul', blurb:'A Benjamite of standing whose lost donkeys sent Saul to meet Samuel.',
+      gen:['1SA 9:1','1CH 8:33'], mentions:[{ref:'1SA 9:3', q:'His lost donkeys began Saul’s journey to the throne.'}],
+      av:{skin:'olive', hair:'gray', style:'short', beard:'full', head:'turban'} },
+    { id:'saul', name:'Saul', gender:'m', branchOf:'kish', meaning:'“asked for”', era:'judges',
+      role:'The first king of Israel', blurb:'Israel’s first king, head and shoulders above the rest; his disobedience cost him the throne.',
+      gen:['1SA 9:2','1CH 8:33'], mentions:[{ref:'1SA 10:1', q:'Samuel anointed him leader over Israel.'},{ref:'1SA 15:23', q:'“You have rejected the word of the LORD.”'}],
+      av:{skin:'olive', hair:'darkbrown', style:'short', beard:'full', head:'crown'} },
+    { id:'jonathan', name:'Jonathan', gender:'m', branchOf:'saul', meaning:'“the LORD has given”', era:'judges',
+      role:'Son of Saul, friend of David', blurb:'Saul’s valiant son whose covenant love for David outran his own claim to the throne.',
+      gen:['1SA 14:49','1CH 8:33'], mentions:[{ref:'1SA 18:3', q:'Made a covenant with David, loving him as himself.'},{ref:'1SA 14:6', q:'“Nothing can hinder the LORD from saving.”'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'band'} },
+    { id:'mephibosheth', name:'Mephibosheth', gender:'m', branchOf:'jonathan', meaning:'“dispeller of shame”', era:'judges',
+      role:'Grandson of Saul', blurb:'Jonathan’s lame son whom David sought out and seated at his own table for Jonathan’s sake.',
+      gen:['2SA 4:4','1CH 8:34'], mentions:[{ref:'2SA 9:7', q:'“You shall eat at my table always.”'}],
+      av:{skin:'olive', hair:'brown', style:'short', beard:'short', head:'none'} }
   ];
 
   /* ---- Assemble: index, link fathers along the spine ---------------------- */
@@ -937,11 +997,62 @@
     SPINE[i].father = i > 0 ? SPINE[i - 1].id : null;
     SPINE[i].heir = i < SPINE.length - 1 ? SPINE[i + 1].id : null;
   }
-  // group branches under their spine parent
+  // group branches under their immediate parent (spine OR another branch)
   var BRANCHES_BY_PARENT = {};
   BRANCHES.forEach(function (b) {
     (BRANCHES_BY_PARENT[b.branchOf] = BRANCHES_BY_PARENT[b.branchOf] || []).push(b);
   });
+
+  // The section label each relative is filed under in the tree. Lets clusters
+  // (the twelve tribes, the priestly line, the house of Saul…) read as their
+  // own tidy groups instead of one long "also in the family" pile.
+  var BRANCH_GROUP = {
+    // Adam & Cain
+    eve: 'The first family', cain: 'The first family', abel: 'The first family',
+    lamechCain: 'Cain’s line', jabal: 'Cain’s line', jubal: 'Cain’s line', tubalcain: 'Cain’s line',
+    // Noah & the nations
+    ham: 'Noah’s sons', japheth: 'Noah’s sons',
+    cush: 'The sons of Ham', mizraim: 'The sons of Ham', canaan: 'The sons of Ham', nimrod: 'The sons of Ham',
+    gomer: 'The sons of Japheth', javan: 'The sons of Japheth',
+    // Terah
+    haran: 'Terah’s household', lot: 'Terah’s household', nahorBro: 'Terah’s household', bethuel: 'Terah’s household',
+    // Abraham & Ishmael
+    sarah: 'Abraham’s family', hagar: 'Abraham’s family', keturah: 'Abraham’s family', ishmael: 'Abraham’s family', midian: 'Abraham’s family',
+    nebaioth: 'Ishmael’s sons', kedar: 'Ishmael’s sons',
+    // Isaac
+    esau: 'Isaac’s household', rebekah: 'Isaac’s household',
+    // Jacob
+    reuben: 'The twelve tribes', simeon: 'The twelve tribes', levi: 'The twelve tribes', dan: 'The twelve tribes',
+    naphtali: 'The twelve tribes', gad: 'The twelve tribes', asher: 'The twelve tribes', issachar: 'The twelve tribes',
+    zebulun: 'The twelve tribes', josephp: 'The twelve tribes', benjamin: 'The twelve tribes', dinah: 'The twelve tribes',
+    leah: 'Jacob’s household', rachel: 'Jacob’s household', laban: 'Jacob’s household',
+    kish: 'The house of Saul', saul: 'The house of Saul', jonathan: 'The house of Saul', mephibosheth: 'The house of Saul',
+    // Judah
+    er: 'Judah’s children', onan: 'Judah’s children', shelahJ: 'Judah’s children', tamar: 'Judah’s children', zerah: 'Judah’s children',
+    // Levi & Samuel
+    kohath: 'The priestly line', amram: 'The priestly line', aaron: 'The priestly line', moses: 'The priestly line',
+    miriam: 'The priestly line', nadab: 'The priestly line', abihu: 'The priestly line', eleazarP: 'The priestly line',
+    ithamar: 'The priestly line', phinehas: 'The priestly line',
+    elkanah: 'Samuel’s family', hannah: 'Samuel’s family', samuel: 'Samuel’s family',
+    // Ruth
+    rahab: 'Salmon & Rahab',
+    elimelech: 'The house of Elimelech', naomi: 'The house of Elimelech', mahlon: 'The house of Elimelech',
+    orpah: 'The house of Elimelech', ruth: 'The house of Elimelech',
+    // David
+    bathsheba: 'The house of David', nathanSon: 'The house of David', absalom: 'The house of David',
+    adonijah: 'The house of David', tamarD: 'The house of David', amnon: 'The house of David'
+  };
+
+  // Every relative that descends from a spine person (any depth), so a spine
+  // node can show all their branches — the twelve tribes, the priestly line
+  // through Levi, the house of Saul through Benjamin, and so on.
+  function descendantBranches(spineId) {
+    var out = [];
+    (function walk(id) {
+      (BRANCHES_BY_PARENT[id] || []).forEach(function (b) { out.push(b); walk(b.id); });
+    })(spineId);
+    return out;
+  }
 
   /* ---- Anchor index: verse-key -> [personId] ------------------------------ */
   var ANCHORS = {};
@@ -1347,30 +1458,33 @@
     return r;
   }
 
-  function branchesHtml(spineId) {
-    var list = BRANCHES_BY_PARENT[spineId];
-    if (!list || !list.length) return '';
-    var parent = BY_ID[spineId];
-    var label = branchLabel(parent, list);
-    var chips = list.map(function (b) {
-      var era = ERAS[b.era] || ERAS.creation;
-      return '<button class="rgen-branch-chip" style="--rgen-accent:' + era.accent + '" onclick="BibleGenealogy.openPersonCard(\'' + esc(b.id) + '\')">'
-        + '<span class="mini">' + avatarSvg(b, { size: 30 }) + '</span>' + esc(b.name.replace(/\s*\(.*$/, '')) + '</button>';
-    }).join('');
-    return '<div class="rgen-branch-label"><span class="material-symbols-outlined" style="font-size:14px">alt_route</span>' + esc(label) + '</div>'
-      + '<div class="rgen-branches">' + chips + '</div>';
+  function chipHtml(b) {
+    var era = ERAS[b.era] || ERAS.creation;
+    return '<button class="rgen-branch-chip" style="--rgen-accent:' + era.accent + '" onclick="BibleGenealogy.openPersonCard(\'' + esc(b.id) + '\')">'
+      + '<span class="mini">' + avatarSvg(b, { size: 30 }) + '</span>' + esc(b.name.replace(/\s*\(.*$/, '')) + '</button>';
   }
 
-  function branchLabel(parent, list) {
-    if (!parent) return 'Also in the family';
-    if (parent.id === 'jacob') return 'The twelve sons of Israel & their sister';
-    if (parent.id === 'noah') return 'Noah’s other sons';
-    if (parent.id === 'levi') return 'The priestly line of Levi';
-    if (parent.id === 'judah') return 'Judah’s household';
-    var anyF = list.some(function (b) { return b.gender === 'f'; });
-    var anyM = list.some(function (b) { return b.gender === 'm'; });
-    if (anyF && !anyM) return 'The women beside ' + parent.name.replace(/\s*\(.*$/, '');
-    return 'Also in ' + parent.name.replace(/\s*\(.*$/, '') + '’s house';
+  function branchesHtml(spineId) {
+    var list = descendantBranches(spineId);
+    if (!list.length) return '';
+    var parent = BY_ID[spineId];
+    // Bucket every relative into its named group, preserving first-seen order.
+    var order = [], groups = {};
+    list.forEach(function (b) {
+      var g = b.group || BRANCH_GROUP[b.id] || branchLabel(parent);
+      if (!groups[g]) { groups[g] = []; order.push(g); }
+      groups[g].push(b);
+    });
+    return order.map(function (g) {
+      return '<div class="rgen-branch-label"><span class="material-symbols-outlined" style="font-size:14px">alt_route</span>' + esc(g) + '</div>'
+        + '<div class="rgen-branches">' + groups[g].map(chipHtml).join('') + '</div>';
+    }).join('');
+  }
+
+  // Clean fallback label for any relative not explicitly grouped.
+  function branchLabel(parent) {
+    if (!parent) return 'Family';
+    return parent.name.replace(/\s*\(.*$/, '') + '’s household';
   }
 
   // Distinct eras in the order the spine walks through them.
