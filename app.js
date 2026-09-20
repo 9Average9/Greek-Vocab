@@ -42039,7 +42039,28 @@ const RHEMA_READER_FONTS = [
   { id: 'default', label: 'Default',   stack: '' },
   { id: 'serif',   label: 'Serif',     stack: 'Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif' },
   { id: 'rounded', label: 'Rounded',   stack: 'ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Varela Round", system-ui, sans-serif' },
-  { id: 'mono',    label: 'Monospace', stack: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace' }
+  { id: 'mono',    label: 'Monospace', stack: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace' },
+  { id: 'times',        label: 'Times New Roman', stack: '"Times New Roman", Times, "Liberation Serif", serif' },
+  { id: 'georgia',      label: 'Georgia',         stack: 'Georgia, "Nimbus Roman", "Times New Roman", serif' },
+  { id: 'palatino',     label: 'Palatino',        stack: '"Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif' },
+  { id: 'garamond',     label: 'Garamond',        stack: 'Garamond, "EB Garamond", "Apple Garamond", "Times New Roman", serif' },
+  { id: 'baskerville',  label: 'Baskerville',     stack: 'Baskerville, "Baskerville Old Face", "Libre Baskerville", "Times New Roman", serif' },
+  { id: 'cambria',      label: 'Cambria',         stack: 'Cambria, "Hoefler Text", "Liberation Serif", Georgia, serif' },
+  { id: 'bookman',      label: 'Bookman',         stack: '"Bookman Old Style", "URW Bookman L", "Palatino Linotype", serif' },
+  { id: 'cardo',        label: 'Cardo',           stack: 'Cardo, "Gentium Plus", "Times New Roman", serif' },
+  { id: 'arial',        label: 'Arial',           stack: 'Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif' },
+  { id: 'helvetica',    label: 'Helvetica',       stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+  { id: 'verdana',      label: 'Verdana',         stack: 'Verdana, Geneva, "DejaVu Sans", sans-serif' },
+  { id: 'tahoma',       label: 'Tahoma',          stack: 'Tahoma, Geneva, Verdana, sans-serif' },
+  { id: 'trebuchet',    label: 'Trebuchet',       stack: '"Trebuchet MS", "Segoe UI", "Lucida Grande", sans-serif' },
+  { id: 'segoe',        label: 'Segoe UI',        stack: '"Segoe UI", Roboto, system-ui, sans-serif' },
+  { id: 'calibri',      label: 'Calibri',         stack: 'Calibri, Candara, "Segoe UI", "Carlito", sans-serif' },
+  { id: 'gillsans',     label: 'Gill Sans',       stack: '"Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif' },
+  { id: 'futura',       label: 'Futura',          stack: 'Futura, "Century Gothic", "Trebuchet MS", sans-serif' },
+  { id: 'centurygothic',label: 'Century Gothic',  stack: '"Century Gothic", "URW Gothic L", "Avant Garde", sans-serif' },
+  { id: 'optima',       label: 'Optima',          stack: 'Optima, Candara, "Segoe UI", sans-serif' },
+  { id: 'lucida',       label: 'Lucida',          stack: '"Lucida Sans", "Lucida Grande", "Lucida Sans Unicode", sans-serif' },
+  { id: 'courier',      label: 'Courier',         stack: '"Courier New", Courier, "Liberation Mono", monospace' }
 ];
 const RHEMA_READER_FONT_STEPS = [0.88, 0.95, 1, 1.08, 1.18, 1.3];
 
