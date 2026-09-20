@@ -30258,7 +30258,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.474";
+const APP_VERSION = "3.0.477";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,6 +30281,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.477 &mdash; A richer, quicker way to pick your reading font</div>
+<ul>
+  <li><strong>Times New Roman &amp; 20 more fonts</strong> &mdash; The Rhema reader now offers 25 typefaces &mdash; classic serifs like Times New Roman, Garamond, Palatino and Baskerville, clean sans-serifs, and monospace &mdash; so you can read Scripture in the style that suits you.</li>
+  <li><strong>A cleaner font picker</strong> &mdash; Instead of one long scroll, fonts are now grouped into <em>Serif</em>, <em>Sans</em>, <em>Mono</em> and <em>System</em> tabs, with a live verse preview up top that re-types itself in whatever face you tap &mdash; so you can see exactly how a chapter will read before you choose.</li>
+</ul>
 <div class="un-version-label">v3.0.471 &mdash; Every map now shows territory &amp; surroundings</div>
 <ul>
   <li><strong>Open any place and see where it sits</strong> &mdash; Now every place (not just regions) shows the land it belongs to. Open Athens and you'll see it shaded inside Achaia, with the territory named and colored to match the place, plus the nearby towns and sites around it &mdash; so a location mentioned in your reading lands in real geographic context.</li>
@@ -42036,33 +42041,41 @@ function closeStudyToolHost() {
 
 // ── Read-mode reader panel (highlights / notes / cross refs / typography) ──────
 const RHEMA_READER_FONTS = [
-  { id: 'default', label: 'Default',   stack: '' },
-  { id: 'serif',   label: 'Serif',     stack: 'Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif' },
-  { id: 'rounded', label: 'Rounded',   stack: 'ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Varela Round", system-ui, sans-serif' },
-  { id: 'mono',    label: 'Monospace', stack: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace' },
-  { id: 'times',        label: 'Times New Roman', stack: '"Times New Roman", Times, "Liberation Serif", serif' },
-  { id: 'georgia',      label: 'Georgia',         stack: 'Georgia, "Nimbus Roman", "Times New Roman", serif' },
-  { id: 'palatino',     label: 'Palatino',        stack: '"Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif' },
-  { id: 'garamond',     label: 'Garamond',        stack: 'Garamond, "EB Garamond", "Apple Garamond", "Times New Roman", serif' },
-  { id: 'baskerville',  label: 'Baskerville',     stack: 'Baskerville, "Baskerville Old Face", "Libre Baskerville", "Times New Roman", serif' },
-  { id: 'cambria',      label: 'Cambria',         stack: 'Cambria, "Hoefler Text", "Liberation Serif", Georgia, serif' },
-  { id: 'bookman',      label: 'Bookman',         stack: '"Bookman Old Style", "URW Bookman L", "Palatino Linotype", serif' },
-  { id: 'cardo',        label: 'Cardo',           stack: 'Cardo, "Gentium Plus", "Times New Roman", serif' },
-  { id: 'arial',        label: 'Arial',           stack: 'Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif' },
-  { id: 'helvetica',    label: 'Helvetica',       stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
-  { id: 'verdana',      label: 'Verdana',         stack: 'Verdana, Geneva, "DejaVu Sans", sans-serif' },
-  { id: 'tahoma',       label: 'Tahoma',          stack: 'Tahoma, Geneva, Verdana, sans-serif' },
-  { id: 'trebuchet',    label: 'Trebuchet',       stack: '"Trebuchet MS", "Segoe UI", "Lucida Grande", sans-serif' },
-  { id: 'segoe',        label: 'Segoe UI',        stack: '"Segoe UI", Roboto, system-ui, sans-serif' },
-  { id: 'calibri',      label: 'Calibri',         stack: 'Calibri, Candara, "Segoe UI", "Carlito", sans-serif' },
-  { id: 'gillsans',     label: 'Gill Sans',       stack: '"Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif' },
-  { id: 'futura',       label: 'Futura',          stack: 'Futura, "Century Gothic", "Trebuchet MS", sans-serif' },
-  { id: 'centurygothic',label: 'Century Gothic',  stack: '"Century Gothic", "URW Gothic L", "Avant Garde", sans-serif' },
-  { id: 'optima',       label: 'Optima',          stack: 'Optima, Candara, "Segoe UI", sans-serif' },
-  { id: 'lucida',       label: 'Lucida',          stack: '"Lucida Sans", "Lucida Grande", "Lucida Sans Unicode", sans-serif' },
-  { id: 'courier',      label: 'Courier',         stack: '"Courier New", Courier, "Liberation Mono", monospace' }
+  { id: 'default', label: 'Default',   group: 'system', stack: '' },
+  { id: 'serif',   label: 'Serif',     group: 'serif',  stack: 'Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif' },
+  { id: 'rounded', label: 'Rounded',   group: 'sans',   stack: 'ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Varela Round", system-ui, sans-serif' },
+  { id: 'mono',    label: 'Monospace', group: 'mono',   stack: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace' },
+  { id: 'times',        label: 'Times New Roman', group: 'serif', stack: '"Times New Roman", Times, "Liberation Serif", serif' },
+  { id: 'georgia',      label: 'Georgia',         group: 'serif', stack: 'Georgia, "Nimbus Roman", "Times New Roman", serif' },
+  { id: 'palatino',     label: 'Palatino',        group: 'serif', stack: '"Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif' },
+  { id: 'garamond',     label: 'Garamond',        group: 'serif', stack: 'Garamond, "EB Garamond", "Apple Garamond", "Times New Roman", serif' },
+  { id: 'baskerville',  label: 'Baskerville',     group: 'serif', stack: 'Baskerville, "Baskerville Old Face", "Libre Baskerville", "Times New Roman", serif' },
+  { id: 'cambria',      label: 'Cambria',         group: 'serif', stack: 'Cambria, "Hoefler Text", "Liberation Serif", Georgia, serif' },
+  { id: 'bookman',      label: 'Bookman',         group: 'serif', stack: '"Bookman Old Style", "URW Bookman L", "Palatino Linotype", serif' },
+  { id: 'cardo',        label: 'Cardo',           group: 'serif', stack: 'Cardo, "Gentium Plus", "Times New Roman", serif' },
+  { id: 'arial',        label: 'Arial',           group: 'sans',  stack: 'Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif' },
+  { id: 'helvetica',    label: 'Helvetica',       group: 'sans',  stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+  { id: 'verdana',      label: 'Verdana',         group: 'sans',  stack: 'Verdana, Geneva, "DejaVu Sans", sans-serif' },
+  { id: 'tahoma',       label: 'Tahoma',          group: 'sans',  stack: 'Tahoma, Geneva, Verdana, sans-serif' },
+  { id: 'trebuchet',    label: 'Trebuchet',       group: 'sans',  stack: '"Trebuchet MS", "Segoe UI", "Lucida Grande", sans-serif' },
+  { id: 'segoe',        label: 'Segoe UI',        group: 'sans',  stack: '"Segoe UI", Roboto, system-ui, sans-serif' },
+  { id: 'calibri',      label: 'Calibri',         group: 'sans',  stack: 'Calibri, Candara, "Segoe UI", "Carlito", sans-serif' },
+  { id: 'gillsans',     label: 'Gill Sans',       group: 'sans',  stack: '"Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif' },
+  { id: 'futura',       label: 'Futura',          group: 'sans',  stack: 'Futura, "Century Gothic", "Trebuchet MS", sans-serif' },
+  { id: 'centurygothic',label: 'Century Gothic',  group: 'sans',  stack: '"Century Gothic", "URW Gothic L", "Avant Garde", sans-serif' },
+  { id: 'optima',       label: 'Optima',          group: 'sans',  stack: 'Optima, Candara, "Segoe UI", sans-serif' },
+  { id: 'lucida',       label: 'Lucida',          group: 'sans',  stack: '"Lucida Sans", "Lucida Grande", "Lucida Sans Unicode", sans-serif' },
+  { id: 'courier',      label: 'Courier',         group: 'mono',  stack: '"Courier New", Courier, "Liberation Mono", monospace' }
+];
+// Category tabs for the font picker — keeps 25 faces browsable without a long scroll.
+const RHEMA_READER_FONT_GROUPS = [
+  { id: 'serif',  label: 'Serif' },
+  { id: 'sans',   label: 'Sans' },
+  { id: 'mono',   label: 'Mono' },
+  { id: 'system', label: 'System' }
 ];
 const RHEMA_READER_FONT_STEPS = [0.88, 0.95, 1, 1.08, 1.18, 1.3];
+let _rhemaReaderFontTab = null; // active category in the picker (lazily set from selection)
 
 function _rhemaReaderFontPrefs() {
   let size = 2, font = 'default';
@@ -42096,6 +42109,12 @@ function rhemaReaderSetFont(id) {
   prefs.font = id;
   _saveRhemaReaderFontPrefs(prefs);
   _applyRhemaReaderFontPrefs();
+  const picked = RHEMA_READER_FONTS.find(f => f.id === id);
+  if (picked) _rhemaReaderFontTab = picked.group; // follow the selection into its category
+  _renderRhemaReaderFontList();
+}
+function rhemaReaderFontTab(group) {
+  _rhemaReaderFontTab = group;
   _renderRhemaReaderFontList();
 }
 function _syncRhemaReaderFontSizeUi() {
@@ -42107,15 +42126,44 @@ function _syncRhemaReaderFontSizeUi() {
   if (knob) knob.style.left = pct + '%';
 }
 function _renderRhemaReaderFontList() {
-  const wrap = document.getElementById('rrpFontList');
+  const wrap = document.getElementById('rrpFontPicker');
   if (!wrap) return;
   const { font } = _rhemaReaderFontPrefs();
-  wrap.innerHTML = RHEMA_READER_FONTS.map(f =>
-    `<button class="rrp-font-opt${f.id === font ? ' active' : ''}" onclick="rhemaReaderSetFont('${f.id}')" style="font-family:${f.stack || 'inherit'}">
-      <span class="rrp-font-name">${f.label}</span>
-      <span class="rrp-font-sample">Aa</span>
-    </button>`
-  ).join('');
+  const current = RHEMA_READER_FONTS.find(f => f.id === font) || RHEMA_READER_FONTS[0];
+  // Default the visible tab to whatever category the current font lives in.
+  if (!_rhemaReaderFontTab || !RHEMA_READER_FONT_GROUPS.some(g => g.id === _rhemaReaderFontTab)) {
+    _rhemaReaderFontTab = current.group;
+  }
+  const tab = _rhemaReaderFontTab;
+  const inTab = RHEMA_READER_FONTS.filter(f => f.group === tab);
+
+  const previewStack = current.stack || 'inherit';
+  const previewHtml =
+    `<div class="rrp-fp-preview" style="font-family:${previewStack}">
+      <span class="rrp-fp-verse">In the beginning was the Word</span>
+      <span class="rrp-fp-meta"><em>${current.label}</em> · Aa Gg &nbsp; 1 2 3</span>
+    </div>`;
+
+  const tabsHtml =
+    `<div class="rrp-fp-tabs" role="tablist">
+      ${RHEMA_READER_FONT_GROUPS.map(g => {
+        const n = RHEMA_READER_FONTS.filter(f => f.group === g.id).length;
+        if (!n) return '';
+        return `<button class="rrp-fp-tab${g.id === tab ? ' active' : ''}" role="tab" aria-selected="${g.id === tab}" onclick="rhemaReaderFontTab('${g.id}')">${g.label}<span class="rrp-fp-tab-n">${n}</span></button>`;
+      }).join('')}
+    </div>`;
+
+  const chipsHtml =
+    `<div class="rrp-fp-chips">
+      ${inTab.map(f =>
+        `<button class="rrp-fp-chip${f.id === font ? ' active' : ''}" onclick="rhemaReaderSetFont('${f.id}')" style="font-family:${f.stack || 'inherit'}" aria-pressed="${f.id === font}">
+          <span class="rrp-fp-chip-check material-symbols-outlined">check</span>
+          <span class="rrp-fp-chip-name">${f.label}</span>
+        </button>`
+      ).join('')}
+    </div>`;
+
+  wrap.innerHTML = previewHtml + tabsHtml + chipsHtml;
 }
 
 function openRhemaReaderPanel() {
@@ -42169,7 +42217,7 @@ function _rhemaFontControlsHtml() {
       <button class="rrp-fs-btn" onclick="rhemaReaderFontStep(1)" aria-label="Larger text"><span style="font-size:1.3rem">A</span></button>
     </div>
     <div class="rrp-section-label">Font</div>
-    <div class="rrp-fontlist" id="rrpFontList"></div>`;
+    <div class="rrp-fontpicker" id="rrpFontPicker"></div>`;
 }
 function _rhemaReadPanelHtml() {
   return `<div class="rrp-list">
