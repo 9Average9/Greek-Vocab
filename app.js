@@ -30258,7 +30258,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.484";
+const APP_VERSION = "3.0.485";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,6 +30281,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.485 &mdash; Interlinear matches the right word more often</div>
+<ul>
+  <li><strong>Verbs line up correctly</strong> &mdash; The interlinear no longer maps a Greek verb to a little grammar word like &ldquo;when&rdquo; or &ldquo;they&rdquo; &mdash; it now finds the real word (e.g. Mark 1:37 &zeta;&eta;&tau;&omicron;&#8166;&sigma;&iota;&nu; now shows &ldquo;looking,&rdquo; &epsilon;&#7549;&rho;&#972;&nu;&tau;&epsilon;&sigmaf; shows &ldquo;found&rdquo;).</li>
+  <li><strong>No dropped words</strong> &mdash; When a translation and the Greek differ in word order, the matcher no longer loses a word along the way, so more words get their English.</li>
+</ul>
 <div class="un-version-label">v3.0.484 &mdash; Verse selection clears after you use a tool</div>
 <ul>
   <li><strong>No more stuck verse outline</strong> &mdash; After you tap a verse and open the Interlinear (or Compare), closing it now clears the verse&rsquo;s selection outline, so it doesn&rsquo;t linger or stack up when you go to tap another verse. Tapping a new verse also starts a fresh selection.</li>
@@ -40818,38 +40823,51 @@ function _rhemaIlStem(w) {
   }
   return w;
 }
-function _rhemaIlAddStems(text, into, keepGlue) {
-  for (const raw of String(text || '').toLowerCase().split(/[^a-z]+/)) {
-    if (!raw || raw.length < 2) continue;
-    if (!keepGlue && _DEEP_GLUE_WORDS.has(raw)) continue;
-    const s = _rhemaIlStem(raw);
-    if (s) into.add(s);
-  }
+// English words translations supply or use as grammar — pronouns, auxiliaries,
+// subordinators, negatives. A Greek CONTENT word (verb/noun/adjective) must map
+// to the content word of its rendering, never one of these (so εὑρόντες "when
+// they found" maps to "found", not "when"/"they"). Greek function words still map
+// to them, because for those the rendering IS one of these words (σε → "you").
+const _RHEMA_FUNC_WORDS = new Set([
+  'i','me','my','mine','myself','you','your','yours','yourself','yourselves',
+  'he','him','his','himself','she','her','hers','herself','it','its','itself',
+  'we','us','our','ours','ourselves','they','them','their','theirs','themselves',
+  'this','that','these','those','who','whom','whose','which','what',
+  'is','are','was','were','be','been','being','am','has','have','had','having',
+  'do','does','did','done','will','would','shall','should','may','might','can',
+  'could','must','when','while','as','if','then','than','so','not','no','there','here',
+]);
+function _rhemaIlIsSupplied(low) { return _DEEP_GLUE_WORDS.has(low) || _RHEMA_FUNC_WORDS.has(low); }
+function _rhemaIlWords(text) {
+  return String(text || '').toLowerCase().split(/[^a-z]+/).filter(w => w.length > 1);
 }
 function _rhemaIlCandidateStems(decision, bsbEng) {
-  // The exact BSB rendering (when we have it) is the strongest bridge signal —
-  // it's the real translation word, so matching it into another version is
-  // reliable English-to-English. Then the occurrence gloss. Keep glue so a
-  // preposition/article can still map.
+  // Prefer the CONTENT word(s) of the exact BSB rendering, then the occurrence
+  // gloss's content words. If a rendering is purely functional (e.g. "and",
+  // "him", "the"), map to that instead — those Greek words genuinely mean it.
+  const bsbWords = _rhemaIlWords(bsbEng);
+  const glossWords = _rhemaIlWords(decision && decision.gloss);
+  const content = arr => arr.filter(w => !_rhemaIlIsSupplied(w));
+  const bsbContent = content(bsbWords);
+  const glossContent = content(glossWords);
+  const hasContent = bsbContent.length > 0 || glossContent.length > 0;
   const primary = new Set();
-  if (bsbEng) _rhemaIlAddStems(bsbEng, primary, true);
-  _rhemaIlAddStems(decision && decision.gloss, primary, true);
-  // Wider lexicon meanings — content words only, to broaden without noise.
+  (hasContent ? [...bsbContent, ...glossContent] : [...bsbWords, ...glossWords])
+    .forEach(w => { const s = _rhemaIlStem(w); if (s) primary.add(s); });
   const broad = new Set(primary);
   try {
     const expected = _deepExpectedMeaningWords((decision && decision.entry) || {}, (decision && decision.lex) || {});
-    for (const w of expected) { const s = _rhemaIlStem(w); if (s && s.length >= 3) broad.add(s); }
+    for (const w of expected) { if (_rhemaIlIsSupplied(w)) continue; const s = _rhemaIlStem(w); if (s && s.length >= 3) broad.add(s); }
   } catch {}
-  if (decision && decision.summary && decision.summary.text) _rhemaIlAddStems(decision.summary.text, broad, false);
-  return { primary, broad };
+  if (decision && decision.summary && decision.summary.text) content(_rhemaIlWords(decision.summary.text)).forEach(w => { const s = _rhemaIlStem(w); if (s) broad.add(s); });
+  return { primary, broad, content: hasContent };
 }
 function _rhemaIlTokenizeEnglish(text) {
   const out = [];
   for (const raw of String(text || '').split(/\s+/)) {
     const clean = raw.replace(/^[^A-Za-z]+/, '').replace(/[^A-Za-z]+$/, '');
     if (!clean) continue;
-    const low = clean.toLowerCase();
-    out.push({ raw: clean, stem: _rhemaIlStem(clean), glue: _DEEP_GLUE_WORDS.has(low) });
+    out.push({ raw: clean, stem: _rhemaIlStem(clean), sup: _rhemaIlIsSupplied(clean.toLowerCase()) });
   }
   return out;
 }
@@ -40860,13 +40878,13 @@ function _rhemaIlTokenizeEnglish(text) {
 // high-confidence occurrence glosses claim their words first, then the wider
 // lexicon meanings fill what's left, so a content word isn't stolen by a vaguer
 // match.
-function _rhemaIlAssignNearest(tokens, used, stems, expected, allowGlue) {
+function _rhemaIlAssignNearest(tokens, used, stems, expected, allowSup) {
   if (!stems || !stems.size) return -1;
   let best = -1, bestDist = Infinity;
   for (let j = 0; j < tokens.length; j++) {
     if (used[j]) continue;
     const t = tokens[j];
-    if (!allowGlue && t.glue) continue;
+    if (!allowSup && t.sup) continue; // content Greek words never take a supplied/grammar word
     if (!t.stem || !stems.has(t.stem)) continue;
     const dist = Math.abs(j - expected);
     if (dist < bestDist) { bestDist = dist; best = j; }
@@ -40882,11 +40900,13 @@ function _rhemaAlignVersionRenderings(decisions, versionText, bsbEngArr) {
   const denom = Math.max(1, n - 1);
   const cand = decisions.map((d, i) => _rhemaIlCandidateStems(d, bsbEngArr && bsbEngArr[i]));
   for (const round of ['primary', 'broad']) {
-    const allowGlue = round === 'primary';
     for (let i = 0; i < n; i++) {
       if (out[i]) continue;
+      // A Greek content word may only take a content English word; a Greek
+      // function word (whose rendering is itself a supplied/grammar word) may.
+      const allowSup = !cand[i].content;
       const expected = Math.round((i / denom) * (tokens.length - 1));
-      const j = _rhemaIlAssignNearest(tokens, used, cand[i][round], expected, allowGlue);
+      const j = _rhemaIlAssignNearest(tokens, used, cand[i][round], expected, allowSup);
       if (j >= 0) { used[j] = true; out[i] = tokens[j].raw; }
     }
   }
@@ -40925,21 +40945,24 @@ function _rhemaBsbEnglishForTokens(appTokens, book, chapter, verse) {
   const bsb = _rhemaBsbAlignVerse(book, chapter, verse);
   if (!bsb || !bsb.length) return out;
   const sOf = (t) => String((_rhemaResolveWord(t, book, chapter) || t)[1] || '');
-  const bStr = (j) => String(bsb[j] ? bsb[j][0] : '');
-  const W = 4;
-  let i = 0, j = 0;
-  while (i < appTokens.length) {
+  // Match each Greek token to the nearest UNUSED Berean row with the same
+  // Strong's. Position-aware and order-independent, so it survives word-order
+  // differences between the app's Greek text and BSB's base (e.g. a swapped
+  // verb/object) and repeated Strong's numbers, instead of dropping a word.
+  const used = new Array(bsb.length).fill(false);
+  const n = appTokens.length;
+  const denom = Math.max(1, n - 1);
+  for (let i = 0; i < n; i++) {
     const si = sOf(appTokens[i]);
-    if (j < bsb.length && si && si === bStr(j)) { out[i] = bsb[j][1] || ''; i++; j++; continue; }
-    // BSB has an extra word (in the app's text but skipped) → resync forward in bsb.
-    let fj = -1;
-    for (let k = j; k < Math.min(bsb.length, j + W); k++) { if (si && si === bStr(k)) { fj = k; break; } }
-    if (fj >= 0) { out[i] = bsb[fj][1] || ''; j = fj + 1; i++; continue; }
-    // The app has an extra token → resync forward in the app tokens.
-    let fi = -1;
-    for (let k = i; k < Math.min(appTokens.length, i + W); k++) { if (bStr(j) && sOf(appTokens[k]) === bStr(j)) { fi = k; break; } }
-    if (fi >= 0) { i = fi; continue; } // tokens i..fi-1 stay ''
-    out[i] = ''; i++; if (j < bsb.length) j++;
+    if (!si) continue;
+    const expected = Math.round((i / denom) * (bsb.length - 1));
+    let best = -1, bestDist = Infinity;
+    for (let j = 0; j < bsb.length; j++) {
+      if (used[j] || String(bsb[j][0]) !== si) continue;
+      const d = Math.abs(j - expected);
+      if (d < bestDist) { bestDist = d; best = j; }
+    }
+    if (best >= 0) { used[best] = true; out[i] = bsb[best][1] || ''; }
   }
   return out;
 }
