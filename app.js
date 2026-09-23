@@ -30258,7 +30258,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.478";
+const APP_VERSION = "3.0.479";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,6 +30281,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.479 &mdash; Fixed the blurry strip at the top of the installed app</div>
+<ul>
+  <li><strong>No more frosted band at the top</strong> &mdash; On iPhone, the installed (Home-Screen) app could show a faint blurred strip across the very top &mdash; with thin dark lines when iOS transparency was reduced &mdash; that never appeared in the browser. It was an iOS quirk that mirrors any frosted-glass bar up under the status bar. The installed app now uses solid bars there instead, so the top is clean. The website keeps its frosted-glass look.</li>
+</ul>
 <div class="un-version-label">v3.0.478 &mdash; Works fully offline, opens faster, and a better font picker</div>
 <ul>
   <li><strong>Use it in airplane mode</strong> &mdash; The whole app and all of Rhema (every translation, the original languages, lexicons and cross references) are now saved to your device the first time you open them, so you can read and study with no connection at all. A few features that truly need the internet &mdash; the Quiz, Habits sync and live maps &mdash; still require a signal.</li>
