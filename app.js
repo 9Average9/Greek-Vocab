@@ -30258,7 +30258,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.481";
+const APP_VERSION = "3.0.482";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,6 +30281,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.482 &mdash; Interlinear now shows your version's word under each Greek word</div>
+<ul>
+  <li><strong>See how your translation renders each Greek word</strong> &mdash; In the Interlinear, under each Greek word you now see the word(s) your current version actually used to translate it (in colour), alongside the literal meaning (in grey). No more guessing which English word in the verse goes with which Greek word.</li>
+  <li><strong>Works with every version, fully offline</strong> &mdash; It matches each Greek word&rsquo;s known meanings to the words of the version on screen, allowing for the different word order between Greek and English. It&rsquo;s an approximation (clearly labelled), so when there&rsquo;s no confident match it simply shows the literal meaning instead of guessing.</li>
+</ul>
 <div class="un-version-label">v3.0.481 &mdash; Home screen fits the screen again (no vertical scroll)</div>
 <ul>
   <li><strong>Home screen back to one screen</strong> &mdash; Reverted a change that had made the Home screen scroll vertically. The greeting, cards and Tools row again fit the screen with no vertical scrolling (the Tools row still scrolls sideways).</li>
@@ -40693,6 +40698,7 @@ async function rhemaOpenInterlinear(ref) {
   if (refEl && p) refEl.textContent = `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}`;
   if (engEl && p) engEl.textContent = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
   if (gridEl) gridEl.innerHTML = '<div class="rhema-il-loading">Loading…</div>';
+  _rhemaSetInterlinearVersionNote('');
   modal.classList.add('open');
   if (!_rhemaData()) {
     try { await loadRhemaScripts(); }
@@ -40712,22 +40718,140 @@ function _rhemaRenderInterlinear(ref) {
   const words = (_rhemaText()[p.book] || {})[p.chapter]?.[p.verse] || [];
   if (!words.length) {
     gridEl.innerHTML = '<div class="rhema-il-loading">No original-language text is available for this verse yet.</div>';
+    _rhemaSetInterlinearVersionNote('');
     return;
   }
   gridEl.classList.toggle('rhema-il-rtl', isHebrew);
-  gridEl.innerHTML = words.map((w, i) => {
+
+  // Resolve each token once; the decision drives both the literal gloss and the
+  // candidate renderings used to align the current version's words.
+  const rows = words.map((w) => {
     const resolved = _rhemaResolveWord(w, p.book, p.chapter);
     const lex = _rhemaLexForWord(resolved, layer, p.book, p.chapter);
-    const translit = _escapeRhemaAttr(lex.translit || lex.pronounce || '');
     const decision = _rhemaMeaningDecision(resolved, { layer, book: p.book, chapter: p.chapter, verse: p.verse });
-    const gloss = _escapeRhemaAttr(decision.gloss || '');
-    const orig = _escapeRhemaAttr(w[0] || '');
-    return `<button class="rhema-il-word" onclick="_rhemaInterlinearOpenWord(${i})">` +
+    return { orig: w[0] || '', translit: lex.translit || lex.pronounce || '', gloss: decision.gloss || '', decision };
+  });
+
+  // Approximate: which word(s) of the version on screen render each Greek token.
+  const versionText = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
+  const versionRenders = _rhemaAlignVersionRenderings(rows.map(r => r.decision), versionText);
+  const versionLabel = (typeof _rhemaReaderDisplayLabel === 'function' && _rhemaReaderDisplayLabel()) || '';
+  _rhemaSetInterlinearVersionNote(versionRenders.some(Boolean) ? versionLabel : '');
+
+  gridEl.innerHTML = rows.map((r, i) => {
+    const translit = _escapeRhemaAttr(r.translit);
+    const gloss = _escapeRhemaAttr(r.gloss);
+    const orig = _escapeRhemaAttr(r.orig);
+    const ver = _escapeRhemaAttr(versionRenders[i] || '');
+    return `<button class="rhema-il-word${ver ? ' has-version' : ''}" onclick="_rhemaInterlinearOpenWord(${i})">` +
       `<span class="rhema-il-orig${isHebrew ? ' rhema-hebrew-text' : ''}">${orig}</span>` +
       (translit ? `<span class="rhema-il-translit">${translit}</span>` : '') +
+      (ver ? `<span class="rhema-il-version">${ver}</span>` : '') +
       (gloss ? `<span class="rhema-il-gloss">${gloss}</span>` : '') +
       `</button>`;
   }).join('');
+}
+function _rhemaSetInterlinearVersionNote(versionLabel) {
+  const el = document.getElementById('rhemaInterlinearVersionNote');
+  if (!el) return;
+  if (versionLabel) {
+    el.innerHTML = `<span class="rhema-il-vn-dot"></span><span>Coloured word &asymp; how <strong>${_escapeRhemaAttr(versionLabel)}</strong> renders that Greek word (approximate) &middot; grey is the literal meaning</span>`;
+    el.style.display = '';
+  } else {
+    el.textContent = '';
+    el.style.display = 'none';
+  }
+}
+
+// ── Approximate Greek → version-English alignment ──────────────────────────
+// The reader's English versions are flowing sentence text with no word-level
+// link to the Greek. To show, under each Greek word, the word(s) the CURRENT
+// version actually used, we match each Greek token's known English renderings
+// (its occurrence gloss first, then its wider lexicon meanings) against the
+// words of the version's sentence, left to right, each English word used once.
+// It is deliberately conservative — no confident match means no version word,
+// and the literal gloss stands — and it is always labelled as approximate,
+// because translations are not truly word-aligned to the Greek.
+function _rhemaIlStem(w) {
+  w = String(w || '').toLowerCase().replace(/[^a-z]/g, '');
+  if (w.length < 4) return w;
+  const rules = [['ingly', ''], ['edly', ''], ['ies', 'y'], ['ied', 'y'], ['ying', 'y'],
+    ['ing', ''], ['eth', ''], ['est', ''], ['ed', ''], ['es', ''], ['ly', ''],
+    ['er', ''], ['en', ''], ['s', '']];
+  for (const [a, b] of rules) {
+    if (w.endsWith(a) && (w.length - a.length + b.length) >= 3) return w.slice(0, w.length - a.length) + b;
+  }
+  return w;
+}
+function _rhemaIlAddStems(text, into, keepGlue) {
+  for (const raw of String(text || '').toLowerCase().split(/[^a-z]+/)) {
+    if (!raw || raw.length < 2) continue;
+    if (!keepGlue && _DEEP_GLUE_WORDS.has(raw)) continue;
+    const s = _rhemaIlStem(raw);
+    if (s) into.add(s);
+  }
+}
+function _rhemaIlCandidateStems(decision) {
+  // Occurrence gloss — highest confidence; keep glue so a preposition/article maps.
+  const primary = new Set();
+  _rhemaIlAddStems(decision && decision.gloss, primary, true);
+  // Wider lexicon meanings — content words only, to broaden without noise.
+  const broad = new Set(primary);
+  try {
+    const expected = _deepExpectedMeaningWords((decision && decision.entry) || {}, (decision && decision.lex) || {});
+    for (const w of expected) { const s = _rhemaIlStem(w); if (s && s.length >= 3) broad.add(s); }
+  } catch {}
+  if (decision && decision.summary && decision.summary.text) _rhemaIlAddStems(decision.summary.text, broad, false);
+  return { primary, broad };
+}
+function _rhemaIlTokenizeEnglish(text) {
+  const out = [];
+  for (const raw of String(text || '').split(/\s+/)) {
+    const clean = raw.replace(/^[^A-Za-z]+/, '').replace(/[^A-Za-z]+$/, '');
+    if (!clean) continue;
+    const low = clean.toLowerCase();
+    out.push({ raw: clean, stem: _rhemaIlStem(clean), glue: _DEEP_GLUE_WORDS.has(low) });
+  }
+  return out;
+}
+// Greek and English don't share word order (Greek routinely puts the verb before
+// its subject), so we don't match strictly left-to-right — each Greek token takes
+// the unused English word whose stem matches and that sits NEAREST to where the
+// token is expected in the sentence (its proportional position). Two rounds: the
+// high-confidence occurrence glosses claim their words first, then the wider
+// lexicon meanings fill what's left, so a content word isn't stolen by a vaguer
+// match.
+function _rhemaIlAssignNearest(tokens, used, stems, expected, allowGlue) {
+  if (!stems || !stems.size) return -1;
+  let best = -1, bestDist = Infinity;
+  for (let j = 0; j < tokens.length; j++) {
+    if (used[j]) continue;
+    const t = tokens[j];
+    if (!allowGlue && t.glue) continue;
+    if (!t.stem || !stems.has(t.stem)) continue;
+    const dist = Math.abs(j - expected);
+    if (dist < bestDist) { bestDist = dist; best = j; }
+  }
+  return best;
+}
+function _rhemaAlignVersionRenderings(decisions, versionText) {
+  const out = new Array(decisions.length).fill('');
+  const tokens = _rhemaIlTokenizeEnglish(versionText);
+  if (!tokens.length) return out;
+  const used = new Array(tokens.length).fill(false);
+  const n = decisions.length;
+  const denom = Math.max(1, n - 1);
+  const cand = decisions.map(d => _rhemaIlCandidateStems(d));
+  for (const round of ['primary', 'broad']) {
+    const allowGlue = round === 'primary';
+    for (let i = 0; i < n; i++) {
+      if (out[i]) continue;
+      const expected = Math.round((i / denom) * (tokens.length - 1));
+      const j = _rhemaIlAssignNearest(tokens, used, cand[i][round], expected, allowGlue);
+      if (j >= 0) { used[j] = true; out[i] = tokens[j].raw; }
+    }
+  }
+  return out;
 }
 
 function _rhemaInterlinearOpenWord(idx) {
