@@ -165,36 +165,6 @@ body {
   pointer-events: none;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   iOS installed-PWA phantom-blur fix (the "weird blur at the top").
-   On iOS, an installed (Home-Screen / standalone) web app duplicates ANY
-   position:fixed element's backdrop-filter — or that of a blurred descendant
-   of one — as a phantom blurred rectangle pinned to the TOP of the screen. It
-   shows as a frosted strip across the top, with thin dark lines revealed when
-   the system's transparency/frost is reduced. It never happens in Safari or on
-   the website, only in the installed app, which is exactly what was reported.
-
-   Individual fixed bars (bottom nav, Rhema headers, toasts …) were already
-   made opaque one by one; this catches the rest systematically. While running
-   as an installed app we turn OFF live backdrop-blur everywhere — every
-   affected surface already carries a solid or near-solid background, so it
-   still reads correctly, just without the ghost. The website keeps its full
-   frosted-glass look. Matched by BOTH the standalone media query and the
-   .pwa-standalone class set in the head (belt-and-suspenders across iOS
-   versions / webviews). */
-@media all and (display-mode: standalone) {
-  *, *::before, *::after {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-}
-html.pwa-standalone *,
-html.pwa-standalone *::before,
-html.pwa-standalone *::after {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
 .app {
   max-width: 900px;
   margin: 0 auto;

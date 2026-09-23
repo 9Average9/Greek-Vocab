@@ -25210,6 +25210,13 @@ function applyAppTheme(themeName) {
   document.documentElement.style.setProperty("--muted-color", theme.muted);
   document.documentElement.style.setProperty("--btn-text-color", theme.buttonText);
 
+  // Keep the iOS status-bar strip tinted to the live theme (with default status
+  // bar style, iOS colours the bar from theme-color and no longer frosts it).
+  try {
+    const tcMeta = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (tcMeta) tcMeta.setAttribute("content", solidThemeColor(theme.primary));
+  } catch (e) {}
+
   document.body.classList.toggle("dark", darkSurfaces);
   document.body.classList.toggle("high-contrast-theme", getHighContrastMode());
   applyMatchHomeThemeMode();
@@ -30258,7 +30265,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.479";
+const APP_VERSION = "3.0.480";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,9 +30288,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.479 &mdash; Fixed the blurry strip at the top of the installed app</div>
+<div class="un-version-label">v3.0.480 &mdash; Cleaned up the blurry strip at the top of the installed app</div>
 <ul>
-  <li><strong>No more frosted band at the top</strong> &mdash; On iPhone, the installed (Home-Screen) app could show a faint blurred strip across the very top &mdash; with thin dark lines when iOS transparency was reduced &mdash; that never appeared in the browser. It was an iOS quirk that mirrors any frosted-glass bar up under the status bar. The installed app now uses solid bars there instead, so the top is clean. The website keeps its frosted-glass look.</li>
+  <li><strong>No more frosted band under the status bar</strong> &mdash; On iPhone, the installed (Home-Screen) app showed a faint blurred strip across the very top, behind the clock and battery &mdash; with thin dark lines when iOS transparency was reduced &mdash; that never appeared in the browser. It came from the app running its content up underneath a translucent iOS status bar. The app now paints a clean, solid strip there that matches your current theme, so the top is crisp on every screen and every theme.</li>
 </ul>
 <div class="un-version-label">v3.0.478 &mdash; Works fully offline, opens faster, and a better font picker</div>
 <ul>
