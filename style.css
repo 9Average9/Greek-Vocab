@@ -35465,11 +35465,42 @@ body.sandbox-open #rhemaSelectionBar:active {
   letter-spacing: 0.02em;
   color: color-mix(in srgb, var(--font-color, #20303f) 62%, transparent);
 }
+.rhema-il-version {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+  color: var(--secondary-color, #1d4ed8);
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--secondary-color, #1d4ed8) 12%, transparent);
+}
 .rhema-il-gloss {
   font-size: 0.74rem;
   line-height: 1.25;
   overflow-wrap: break-word;
   color: color-mix(in srgb, var(--font-color, #20303f) 90%, transparent);
+}
+/* When the version's rendering is shown, the literal gloss steps back a little. */
+.rhema-il-word.has-version .rhema-il-gloss {
+  font-size: 0.68rem;
+  color: color-mix(in srgb, var(--font-color, #20303f) 55%, transparent);
+}
+.rhema-il-versionnote {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: -6px 0 13px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--muted-color, #8a8a8a);
+}
+.rhema-il-versionnote strong { color: var(--secondary-color); font-weight: 800; }
+.rhema-il-vn-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--secondary-color) 55%, transparent);
 }
 .rhema-il-foot {
   margin: 14px 0 0;
