@@ -30258,7 +30258,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.483";
+const APP_VERSION = "3.0.484";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,6 +30281,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.484 &mdash; Verse selection clears after you use a tool</div>
+<ul>
+  <li><strong>No more stuck verse outline</strong> &mdash; After you tap a verse and open the Interlinear (or Compare), closing it now clears the verse&rsquo;s selection outline, so it doesn&rsquo;t linger or stack up when you go to tap another verse. Tapping a new verse also starts a fresh selection.</li>
+</ul>
 <div class="un-version-label">v3.0.483 &mdash; Interlinear word matching is now accurate across the New Testament</div>
 <ul>
   <li><strong>Exact word-for-word for the whole NT</strong> &mdash; The Interlinear now uses the Berean translation&rsquo;s own word-by-word data, so under each Greek word you see the precise English the translation used &mdash; every word, every verse. (For example, Mark 1:22 now correctly shows &ldquo;teaching&rdquo; under &delta;&iota;&delta;&alpha;&chi;&#8135;.)</li>
@@ -39082,6 +39086,11 @@ function rhemaOpenVerseMenu(v, ev) {
   const verse = String(v);
   _rhemaVerseFocus = false;
   _rhemaHighlightStrongs = null;
+  // If the action sheet isn't open, this tap starts a fresh selection: drop any
+  // leftover selection (e.g. the verse a tool was opened from) so its outline
+  // doesn't linger or compound onto the new verse. Multi-select — tapping more
+  // verses while the sheet is open — is unaffected.
+  if (typeof _rhemaVerseSheetOpen === 'function' && !_rhemaVerseSheetOpen()) _rhemaSel.clear();
   // Default: toggle selection and open the action sheet immediately.
   rhemaToggleVerseSelect(verse);
   if (_rhemaSel.size) rhemaOpenSelectionSheet();
@@ -40285,6 +40294,8 @@ function rhemaOpenCompare(ref, verses, label) {
 function closeRhemaCompare(e) {
   if (e && e.target !== document.getElementById('rhemaCompareOverlay')) return;
   document.getElementById('rhemaCompareOverlay')?.classList.remove('open');
+  // Clear the verse selection so its outline doesn't linger after closing.
+  try { rhemaClearSelection(); } catch (e) {}
 }
 // ── Compare: the tapped verse across every other version ───────────────────────
 // A read-across of all versions except the one currently selected in the reader.
@@ -40947,6 +40958,9 @@ function closeRhemaInterlinear(e) {
   if (e && e.target !== document.getElementById('rhemaInterlinearModal')) return;
   document.getElementById('rhemaInterlinearModal')?.classList.remove('open');
   _rhemaInterlinearRef = null;
+  // Clear the verse selection so its outline doesn't linger on the reader after
+  // the tool closes (and won't compound onto the next verse you tap).
+  try { rhemaClearSelection(); } catch (e) {}
 }
 function rhemaStudyLogWordFromMenu() {
   return _rhemaOpenWordPicker('log');
