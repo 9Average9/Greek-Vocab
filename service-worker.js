@@ -41,7 +41,11 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.477";
+const CACHE_NAME = "disciple-builder-v3.0.478";
+// Canonical app-shell entry we always fall back to when a navigation can't be
+// served from the network (e.g. airplane mode) — keeps deep links / query
+// strings working offline.
+const SHELL_URL = "./index.html";
 
 // Rhema data files use pinned data versions (RHEMA_DATA_VERSIONS in app.js).
 // Only update these when the underlying dataset actually changes — not on every
@@ -49,18 +53,20 @@ const CACHE_NAME = "disciple-builder-v3.0.477";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.477",
+  "./style.css?v=3.0.478",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.477",
+  "./app.js?v=3.0.478",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.418",
   "./rhema-english-dictionary.js?v=3.0.417",
+  "./assets/vendor/wink-nlp-en.js?v=3.0.104",
   "./bible-atlas.js?v=3.0.349",
   "./bible-genealogy.js?v=3.0.476",
   "./bible-regions.js?v=3.0.472",
-  "./bible-map.js?v=3.0.472",
   "./verse-structure.js?v=3.0.429",
   "./vs-structure.js?v=3.0.450",
+  "./sermon-notes.js?v=3.0.460",
+  "./sermon-notes.css?v=3.0.460",
   // Self-hosted fonts (icons + skin fonts) — pinned, they effectively never change
   "./assets/fonts/fonts.css?v=3.0.415",
   "./assets/fonts/ms-outlined-0.woff2",
@@ -90,7 +96,7 @@ const FILES_TO_CACHE = [
   "./rhema-syntax.js?v=3.0.65",
   "./rhema-crossrefs.js?v=3.0.65",
   "./rhema-scripture-notes.js?v=3.0.160",
-  "./rhema-bible-dictionary.js?v=3.0.389",
+  "./rhema-bible-dictionary.js?v=3.0.385",
   "./rhema-crossrefs-ui.js?v=3.0.363",
   "./greek-verbs.js?v=3.0.152",
   "./bible-quiz.js?v=3.0.473",
@@ -175,38 +181,74 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Store a fresh response in the cache without blocking the response we return.
+function _swPutInCache(request, response) {
+  if (response && response.status === 200 && response.type === "basic") {
+    const clone = response.clone();
+    caches.open(CACHE_NAME).then((cache) => cache.put(request, clone)).catch(() => {});
+  }
+  return response;
+}
+
 self.addEventListener("fetch", (event) => {
-  // Let Firebase and external CDN requests pass through
-  if (
-    event.request.url.includes("firebaseapp.com") ||
-    event.request.url.includes("googleapis.com") ||
-    event.request.url.includes("gstatic.com") ||
-    event.request.url.includes("fcmregistrations.googleapis.com")
-  ) {
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  let url;
+  try { url = new URL(req.url); } catch { return; }
+
+  // Cross-origin requests (Firebase, Google sign-in, map tiles, other CDNs) are
+  // never intercepted — let the network handle them so nothing here breaks when
+  // an external service changes.
+  if (url.origin !== self.location.origin) return;
+
+  // Large streamed media we deliberately keep off the cache: the install video
+  // and the ~56 MB offline map data. These stay network-only (map features are
+  // inherently online, as noted to the user).
+  if (url.pathname.endsWith(".mp4") || url.pathname.endsWith(".pmtiles")) return;
+
+  // ── App shell (the HTML document): network-first ──────────────────────────
+  // So a freshly deployed index.html — which points at the new ?v= asset URLs —
+  // is picked up the moment the app is opened online. When the network is gone
+  // (airplane mode) we fall back to the cached shell, keeping deep links working.
+  const isShell =
+    req.mode === "navigate" ||
+    url.pathname === "/" ||
+    url.pathname.endsWith("/") ||
+    url.pathname.endsWith("index.html");
+
+  if (isShell) {
+    event.respondWith(
+      fetch(req)
+        .then((response) => {
+          // Keep the canonical shell copy current for offline launches.
+          if (response && response.status === 200 && response.type === "basic") {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(SHELL_URL, clone)).catch(() => {});
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(req)
+            .then((r) => r || caches.match(SHELL_URL))
+            .then((r) => r || caches.match("./"))
+        )
+    );
     return;
   }
 
-  if (event.request.method !== "GET") return;
-
+  // ── Everything else same-origin (code, styles, fonts, data, images): ──────
+  // cache-first with a background refresh (stale-while-revalidate). The app —
+  // including the large pinned Rhema datasets — opens instantly from cache and
+  // works fully in airplane mode, while any newer copy for the same URL is
+  // fetched quietly for next time. Because assets are versioned (?v=…), a real
+  // update ships under a new URL and is fetched fresh automatically.
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const shouldCache =
-          response &&
-          response.status === 200 &&
-          response.type === "basic" &&
-          !event.request.url.endsWith(".mp4");
-
-        if (shouldCache) {
-          const responseClone = response.clone();
-
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+    caches.match(req).then((cached) => {
+      const network = fetch(req)
+        .then((response) => _swPutInCache(req, response))
+        .catch(() => cached);
+      return cached || network;
+    })
   );
 });

@@ -30258,7 +30258,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.477";
+const APP_VERSION = "3.0.478";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,6 +30281,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.478 &mdash; Works fully offline, opens faster, and a better font picker</div>
+<ul>
+  <li><strong>Use it in airplane mode</strong> &mdash; The whole app and all of Rhema (every translation, the original languages, lexicons and cross references) are now saved to your device the first time you open them, so you can read and study with no connection at all. A few features that truly need the internet &mdash; the Quiz, Habits sync and live maps &mdash; still require a signal.</li>
+  <li><strong>Opens fast every time</strong> &mdash; The app now loads straight from your device instead of waiting on the network, so launching &mdash; and opening Rhema &mdash; is quick and reliable on every visit.</li>
+  <li><strong>Better font picker</strong> &mdash; The reading-font preview now shows a true sample, the category tabs no longer overflow, and you get finer, wider control over text size &mdash; drag the slider or tap to set an exact size.</li>
+</ul>
 <div class="un-version-label">v3.0.477 &mdash; A richer, quicker way to pick your reading font</div>
 <ul>
   <li><strong>Times New Roman &amp; 20 more fonts</strong> &mdash; The Rhema reader now offers 25 typefaces &mdash; classic serifs like Times New Roman, Garamond, Palatino and Baskerville, clean sans-serifs, and monospace &mdash; so you can read Scripture in the style that suits you.</li>
@@ -42074,11 +42080,13 @@ const RHEMA_READER_FONT_GROUPS = [
   { id: 'mono',   label: 'Mono' },
   { id: 'system', label: 'System' }
 ];
-const RHEMA_READER_FONT_STEPS = [0.88, 0.95, 1, 1.08, 1.18, 1.3];
+// Finer, wider range of reading sizes (was 6 coarse steps) — index 4 == 100%.
+const RHEMA_READER_FONT_STEPS = [0.75, 0.80, 0.85, 0.92, 1.0, 1.08, 1.16, 1.25, 1.35, 1.48, 1.62, 1.78, 1.95];
+const RHEMA_READER_FONT_DEFAULT_STEP = 4; // 1.0×
 let _rhemaReaderFontTab = null; // active category in the picker (lazily set from selection)
 
 function _rhemaReaderFontPrefs() {
-  let size = 2, font = 'default';
+  let size = RHEMA_READER_FONT_DEFAULT_STEP, font = 'default';
   try {
     const raw = JSON.parse(localStorage.getItem('rhemaReaderTypography') || '{}');
     if (Number.isInteger(raw.size)) size = Math.max(0, Math.min(RHEMA_READER_FONT_STEPS.length - 1, raw.size));
@@ -42124,6 +42132,57 @@ function _syncRhemaReaderFontSizeUi() {
   const knob = document.getElementById('rrpFsKnob');
   if (fill) fill.style.width = pct + '%';
   if (knob) knob.style.left = pct + '%';
+  const label = Math.round(RHEMA_READER_FONT_STEPS[size] * 100) + '%';
+  const pctEl = document.getElementById('rrpFsPct');
+  if (pctEl) pctEl.textContent = label;
+  const track = document.getElementById('rrpFsTrack');
+  if (track) {
+    track.setAttribute('aria-valuenow', String(size));
+    track.setAttribute('aria-valuetext', label);
+  }
+}
+// Jump straight to a size step (used by the draggable / tappable track).
+function rhemaReaderSetFontStep(idx) {
+  const prefs = _rhemaReaderFontPrefs();
+  const clamped = Math.max(0, Math.min(RHEMA_READER_FONT_STEPS.length - 1, idx));
+  if (clamped !== prefs.size) {
+    prefs.size = clamped;
+    _saveRhemaReaderFontPrefs(prefs);
+    _applyRhemaReaderFontPrefs();
+  }
+  _syncRhemaReaderFontSizeUi();
+}
+function _rhemaFontStepFromPointer(ev) {
+  const track = document.getElementById('rrpFsTrack');
+  if (!track) return null;
+  const rect = track.getBoundingClientRect();
+  if (rect.width <= 0) return null;
+  const frac = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+  return Math.round(frac * (RHEMA_READER_FONT_STEPS.length - 1));
+}
+function rhemaReaderFontSizeDragStart(ev) {
+  ev.preventDefault();
+  const track = ev.currentTarget;
+  const apply = (e) => { const i = _rhemaFontStepFromPointer(e); if (i != null) rhemaReaderSetFontStep(i); };
+  apply(ev);
+  try { track.setPointerCapture(ev.pointerId); } catch {}
+  const move = (e) => apply(e);
+  const end = (e) => {
+    track.removeEventListener('pointermove', move);
+    track.removeEventListener('pointerup', end);
+    track.removeEventListener('pointercancel', end);
+    try { track.releasePointerCapture(e.pointerId); } catch {}
+  };
+  track.addEventListener('pointermove', move);
+  track.addEventListener('pointerup', end);
+  track.addEventListener('pointercancel', end);
+}
+function rhemaReaderFontSizeKey(ev) {
+  const k = ev.key;
+  if (k === 'ArrowLeft' || k === 'ArrowDown') { ev.preventDefault(); rhemaReaderFontStep(-1); }
+  else if (k === 'ArrowRight' || k === 'ArrowUp') { ev.preventDefault(); rhemaReaderFontStep(1); }
+  else if (k === 'Home') { ev.preventDefault(); rhemaReaderSetFontStep(0); }
+  else if (k === 'End') { ev.preventDefault(); rhemaReaderSetFontStep(RHEMA_READER_FONT_STEPS.length - 1); }
 }
 function _renderRhemaReaderFontList() {
   const wrap = document.getElementById('rrpFontPicker');
@@ -42137,11 +42196,13 @@ function _renderRhemaReaderFontList() {
   const tab = _rhemaReaderFontTab;
   const inTab = RHEMA_READER_FONTS.filter(f => f.group === tab);
 
-  const previewStack = current.stack || 'inherit';
+  // The reader applies '' (Default) as the page's own font; mirror that here so
+  // the preview always shows exactly what the chapter will look like.
+  const previewStack = current.stack || 'var(--rhema-reader-default-font, inherit)';
   const previewHtml =
-    `<div class="rrp-fp-preview" style="font-family:${previewStack}">
-      <span class="rrp-fp-verse">In the beginning was the Word</span>
-      <span class="rrp-fp-meta"><em>${current.label}</em> · Aa Gg &nbsp; 1 2 3</span>
+    `<div class="rrp-fp-preview">
+      <span class="rrp-fp-verse" style="font-family:${previewStack}">In the beginning was the Word</span>
+      <span class="rrp-fp-meta"><em style="font-family:${previewStack}">${current.label}</em> · <span style="font-family:${previewStack}">Aa Gg&nbsp; 1 2 3</span></span>
     </div>`;
 
   const tabsHtml =
@@ -42210,10 +42271,15 @@ function showReaderPanelSection(section) {
 
 // ── Panel content: Reader (read mode) vs Study tools ──
 function _rhemaFontControlsHtml() {
-  return `<div class="rrp-section-label">Text size</div>
+  return `<div class="rrp-section-label"><span>Text size</span><span class="rrp-fs-pct" id="rrpFsPct">100%</span></div>
     <div class="rrp-fontsize">
       <button class="rrp-fs-btn" onclick="rhemaReaderFontStep(-1)" aria-label="Smaller text"><span style="font-size:0.85rem">A</span></button>
-      <div class="rrp-fs-track"><div class="rrp-fs-fill" id="rrpFsFill"></div><div class="rrp-fs-knob" id="rrpFsKnob"></div></div>
+      <div class="rrp-fs-track" id="rrpFsTrack" role="slider" tabindex="0" aria-label="Text size"
+           aria-valuemin="0" aria-valuemax="${RHEMA_READER_FONT_STEPS.length - 1}"
+           onpointerdown="rhemaReaderFontSizeDragStart(event)"
+           onkeydown="rhemaReaderFontSizeKey(event)">
+        <div class="rrp-fs-fill" id="rrpFsFill"></div><div class="rrp-fs-knob" id="rrpFsKnob"></div>
+      </div>
       <button class="rrp-fs-btn" onclick="rhemaReaderFontStep(1)" aria-label="Larger text"><span style="font-size:1.3rem">A</span></button>
     </div>
     <div class="rrp-section-label">Font</div>
