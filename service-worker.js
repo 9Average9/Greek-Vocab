@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.480";
+const CACHE_NAME = "disciple-builder-v3.0.481";
 // Canonical app-shell entry we always fall back to when a navigation can't be
 // served from the network (e.g. airplane mode) — keeps deep links / query
 // strings working offline.
@@ -53,9 +53,9 @@ const SHELL_URL = "./index.html";
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.480",
+  "./style.css?v=3.0.481",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.480",
+  "./app.js?v=3.0.481",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.418",
   "./rhema-english-dictionary.js?v=3.0.417",
