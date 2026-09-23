@@ -30258,7 +30258,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.482";
+const APP_VERSION = "3.0.483";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,6 +30281,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.483 &mdash; Interlinear word matching is now accurate across the New Testament</div>
+<ul>
+  <li><strong>Exact word-for-word for the whole NT</strong> &mdash; The Interlinear now uses the Berean translation&rsquo;s own word-by-word data, so under each Greek word you see the precise English the translation used &mdash; every word, every verse. (For example, Mark 1:22 now correctly shows &ldquo;teaching&rdquo; under &delta;&iota;&delta;&alpha;&chi;&#8135;.)</li>
+  <li><strong>Works in your translation of choice</strong> &mdash; Whatever version you&rsquo;re reading, the matching lines up to that translation&rsquo;s wording. It&rsquo;s all offline once loaded, and tapping any word still opens the full parsing, meaning, and occurrence tools.</li>
+</ul>
 <div class="un-version-label">v3.0.482 &mdash; Interlinear now shows your version's word under each Greek word</div>
 <ul>
   <li><strong>See how your translation renders each Greek word</strong> &mdash; In the Interlinear, under each Greek word you now see the word(s) your current version actually used to translate it (in colour), alongside the literal meaning (in grey). No more guessing which English word in the verse goes with which Greek word.</li>
@@ -40705,6 +40710,12 @@ async function rhemaOpenInterlinear(ref) {
     catch { if (gridEl) gridEl.innerHTML = '<div class="rhema-il-loading">Could not load the scripture data. Check your connection.</div>'; return; }
     if (_rhemaInterlinearRef !== ref) return; // user moved on while loading
   }
+  // Word-for-word English needs the Berean alignment; load it (once) before we
+  // render so the very first open already shows the version's words.
+  if (!window.RhemaBSBAlign) {
+    await _ensureRhemaBsbAlign();
+    if (_rhemaInterlinearRef !== ref) return; // user moved on while loading
+  }
   _rhemaRenderInterlinear(ref);
 }
 
@@ -40732,22 +40743,35 @@ function _rhemaRenderInterlinear(ref) {
     return { orig: w[0] || '', translit: lex.translit || lex.pronounce || '', gloss: decision.gloss || '', decision };
   });
 
-  // Approximate: which word(s) of the version on screen render each Greek token.
+  // The word(s) of the version on screen that render each Greek token. For BSB
+  // this is exact (Berean's own alignment); for every other version we bridge
+  // through BSB's rendering to the words of that version's sentence.
   const versionText = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
-  const versionRenders = _rhemaAlignVersionRenderings(rows.map(r => r.decision), versionText);
+  const bsbEng = _rhemaBsbEnglishForTokens(words, p.book, p.chapter, p.verse);
+  const readerVer = (typeof _rhemaReaderVersion === 'function' && _rhemaReaderVersion()) || '';
+  const haveBsb = bsbEng.some(Boolean);
+  let versionRenders;
+  if (readerVer === 'BSB' && haveBsb) {
+    versionRenders = bsbEng; // exact
+  } else {
+    versionRenders = _rhemaAlignVersionRenderings(rows.map(r => r.decision), versionText, bsbEng);
+  }
   const versionLabel = (typeof _rhemaReaderDisplayLabel === 'function' && _rhemaReaderDisplayLabel()) || '';
-  _rhemaSetInterlinearVersionNote(versionRenders.some(Boolean) ? versionLabel : '');
+  _rhemaSetInterlinearVersionNote(versionLabel);
 
   gridEl.innerHTML = rows.map((r, i) => {
-    const translit = _escapeRhemaAttr(r.translit);
-    const gloss = _escapeRhemaAttr(r.gloss);
     const orig = _escapeRhemaAttr(r.orig);
-    const ver = _escapeRhemaAttr(versionRenders[i] || '');
+    const translit = _escapeRhemaAttr(r.translit);
+    // One clean English line per word: the version's actual rendering when we
+    // have it (accent), otherwise the literal meaning (muted). Tapping opens the
+    // full study for anything deeper.
+    const ver = versionRenders[i] || '';
+    const english = _escapeRhemaAttr(ver || r.gloss || '');
+    const engClass = ver ? 'rhema-il-version' : 'rhema-il-gloss';
     return `<button class="rhema-il-word${ver ? ' has-version' : ''}" onclick="_rhemaInterlinearOpenWord(${i})">` +
       `<span class="rhema-il-orig${isHebrew ? ' rhema-hebrew-text' : ''}">${orig}</span>` +
       (translit ? `<span class="rhema-il-translit">${translit}</span>` : '') +
-      (ver ? `<span class="rhema-il-version">${ver}</span>` : '') +
-      (gloss ? `<span class="rhema-il-gloss">${gloss}</span>` : '') +
+      (english ? `<span class="${engClass}">${english}</span>` : '') +
       `</button>`;
   }).join('');
 }
@@ -40755,7 +40779,7 @@ function _rhemaSetInterlinearVersionNote(versionLabel) {
   const el = document.getElementById('rhemaInterlinearVersionNote');
   if (!el) return;
   if (versionLabel) {
-    el.innerHTML = `<span class="rhema-il-vn-dot"></span><span>Coloured word &asymp; how <strong>${_escapeRhemaAttr(versionLabel)}</strong> renders that Greek word (approximate) &middot; grey is the literal meaning</span>`;
+    el.innerHTML = `<span class="rhema-il-vn-dot"></span><span>English shown from <strong>${_escapeRhemaAttr(versionLabel)}</strong></span>`;
     el.style.display = '';
   } else {
     el.textContent = '';
@@ -40791,9 +40815,13 @@ function _rhemaIlAddStems(text, into, keepGlue) {
     if (s) into.add(s);
   }
 }
-function _rhemaIlCandidateStems(decision) {
-  // Occurrence gloss — highest confidence; keep glue so a preposition/article maps.
+function _rhemaIlCandidateStems(decision, bsbEng) {
+  // The exact BSB rendering (when we have it) is the strongest bridge signal —
+  // it's the real translation word, so matching it into another version is
+  // reliable English-to-English. Then the occurrence gloss. Keep glue so a
+  // preposition/article can still map.
   const primary = new Set();
+  if (bsbEng) _rhemaIlAddStems(bsbEng, primary, true);
   _rhemaIlAddStems(decision && decision.gloss, primary, true);
   // Wider lexicon meanings — content words only, to broaden without noise.
   const broad = new Set(primary);
@@ -40834,14 +40862,14 @@ function _rhemaIlAssignNearest(tokens, used, stems, expected, allowGlue) {
   }
   return best;
 }
-function _rhemaAlignVersionRenderings(decisions, versionText) {
+function _rhemaAlignVersionRenderings(decisions, versionText, bsbEngArr) {
   const out = new Array(decisions.length).fill('');
   const tokens = _rhemaIlTokenizeEnglish(versionText);
   if (!tokens.length) return out;
   const used = new Array(tokens.length).fill(false);
   const n = decisions.length;
   const denom = Math.max(1, n - 1);
-  const cand = decisions.map(d => _rhemaIlCandidateStems(d));
+  const cand = decisions.map((d, i) => _rhemaIlCandidateStems(d, bsbEngArr && bsbEngArr[i]));
   for (const round of ['primary', 'broad']) {
     const allowGlue = round === 'primary';
     for (let i = 0; i < n; i++) {
@@ -40850,6 +40878,57 @@ function _rhemaAlignVersionRenderings(decisions, versionText) {
       const j = _rhemaIlAssignNearest(tokens, used, cand[i][round], expected, allowGlue);
       if (j >= 0) { used[j] = true; out[i] = tokens[j].raw; }
     }
+  }
+  return out;
+}
+
+// ── Exact Greek → BSB alignment (Berean word tables) ───────────────────────
+// window.RhemaBSBAlign[BOOK][ch][vs] = [[strongs, "BSB English"], …] in Greek
+// order. Lazy-loaded (a couple of MB) the first time the interlinear opens, then
+// precached for offline use.
+const RHEMA_BSB_ALIGN_VERSION = '3.0.1';
+let _rhemaBsbAlignPromise = null;
+function _ensureRhemaBsbAlign() {
+  if (window.RhemaBSBAlign) return Promise.resolve(window.RhemaBSBAlign);
+  if (_rhemaBsbAlignPromise) return _rhemaBsbAlignPromise;
+  _rhemaBsbAlignPromise = new Promise((resolve) => {
+    const s = document.createElement('script');
+    s.src = 'rhema-bsb-align.js?v=' + RHEMA_BSB_ALIGN_VERSION;
+    s.onload = () => resolve(window.RhemaBSBAlign || null);
+    s.onerror = () => resolve(null);
+    document.head.appendChild(s);
+  });
+  return _rhemaBsbAlignPromise;
+}
+function _rhemaBsbAlignVerse(book, chapter, verse) {
+  const a = window.RhemaBSBAlign;
+  if (!a) return null;
+  return ((a[book] || {})[String(chapter)] || {})[String(verse)] || null;
+}
+// Map the app's Greek tokens onto the Berean rows by Strong's sequence (usually
+// 1:1; tolerant of the occasional textual-variant insertion/deletion). Returns
+// one BSB English string per app token ('' when the word has no standalone
+// English, e.g. an article, or when no alignment is available).
+function _rhemaBsbEnglishForTokens(appTokens, book, chapter, verse) {
+  const out = new Array(appTokens.length).fill('');
+  const bsb = _rhemaBsbAlignVerse(book, chapter, verse);
+  if (!bsb || !bsb.length) return out;
+  const sOf = (t) => String((_rhemaResolveWord(t, book, chapter) || t)[1] || '');
+  const bStr = (j) => String(bsb[j] ? bsb[j][0] : '');
+  const W = 4;
+  let i = 0, j = 0;
+  while (i < appTokens.length) {
+    const si = sOf(appTokens[i]);
+    if (j < bsb.length && si && si === bStr(j)) { out[i] = bsb[j][1] || ''; i++; j++; continue; }
+    // BSB has an extra word (in the app's text but skipped) → resync forward in bsb.
+    let fj = -1;
+    for (let k = j; k < Math.min(bsb.length, j + W); k++) { if (si && si === bStr(k)) { fj = k; break; } }
+    if (fj >= 0) { out[i] = bsb[fj][1] || ''; j = fj + 1; i++; continue; }
+    // The app has an extra token → resync forward in the app tokens.
+    let fi = -1;
+    for (let k = i; k < Math.min(appTokens.length, i + W); k++) { if (bStr(j) && sOf(appTokens[k]) === bStr(j)) { fi = k; break; } }
+    if (fi >= 0) { i = fi; continue; } // tokens i..fi-1 stay ''
+    out[i] = ''; i++; if (j < bsb.length) j++;
   }
   return out;
 }
