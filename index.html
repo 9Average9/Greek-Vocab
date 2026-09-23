@@ -7,14 +7,16 @@
 <title>Disciple Builder</title>
 <!-- PWA / Home Screen App Support -->
 <link href="manifest.json" rel="manifest"/>
-<!-- theme-color drives the tint iOS paints behind the status bar in an installed
-     web app. It was a fixed dark navy while the UI is light blue, so the system
-     blended a mismatched band across the top in standalone mode (never in
-     Safari, where the browser chrome owns that strip). Match the real page
-     colours instead, light and dark. -->
+<!-- theme-color tints the solid strip iOS paints behind the status bar in an
+     installed web app. It is set dynamically from the ACTIVE in-app theme by the
+     head script below (the app's theme is chosen in-app, independent of the OS
+     light/dark setting), so the top band always matches the current theme and
+     iOS picks a legible status-bar text colour from it. Paired with
+     apple-mobile-web-app-status-bar-style = default (see below): content no
+     longer runs under a translucent, frosted status bar, so there's no blurry
+     band across the top of the installed app. The default here is just an
+     initial value; the script overwrites it before first paint. -->
 <meta content="#dbeafe" name="theme-color"/>
-<meta content="#dbeafe" media="(prefers-color-scheme: light)" name="theme-color"/>
-<meta content="#111827" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <script>
 (function () {
   const savedTheme = localStorage.getItem("appTheme") || "royal";
@@ -337,29 +339,27 @@ antique: {
     document.documentElement.classList.add("dark");
   }
 
-  // Mark the installed (home-screen) app so CSS can drop live backdrop-blur only
-  // there. On iOS an installed PWA duplicates any position:fixed element's
-  // backdrop-filter as a phantom blurred strip pinned to the top of the screen
-  // (a weird frosted band, with thin dark lines when Reduce Transparency is on).
-  // Set as early as possible so there's no first-paint flash. The paired
-  // @media (display-mode: standalone) rule in style.css covers the same case.
+  // Drive the iOS status-bar colour from the ACTIVE in-app theme (not the OS
+  // colour scheme). With apple-mobile-web-app-status-bar-style = default, iOS
+  // paints a solid strip behind the status bar tinted by theme-color and picks
+  // a legible (light/dark) text colour from its brightness — so the top is a
+  // clean, theme-matched band with no translucent frost, on every theme. Set as
+  // early as possible so there's no first-paint mismatch.
   try {
-    if (window.matchMedia("(display-mode: standalone)").matches ||
-        window.navigator.standalone === true) {
-      document.documentElement.classList.add("pwa-standalone");
-    }
+    var tcMeta = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (tcMeta && theme && theme.primary) tcMeta.setAttribute("content", theme.primary);
   } catch (e) {}
 })();
 </script>
 <!-- iPhone Home Screen Support -->
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
-<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Disciple Builder" name="apple-mobile-web-app-title"/>
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.479" rel="stylesheet"/>
+<link href="style.css?v=3.0.480" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -17280,7 +17280,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.479"></script>
+<script src="app.js?v=3.0.480"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
