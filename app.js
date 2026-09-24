@@ -30306,7 +30306,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.489";
+const APP_VERSION = "3.0.490";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30329,6 +30329,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.490 &mdash; Cleaner close, for real this time</div>
+<ul>
+  <li><strong>Fixed the closing flash</strong> &mdash; When heading Home, the reader now keeps its exact look while it fades out. The old header (the Greek/English toggle) and the bottom nav no longer flash into view mid-animation &mdash; everything settles only after the reader has fully dissolved.</li>
+</ul>
 <div class="un-version-label">v3.0.489 &mdash; A new way in and out, and an instant open</div>
 <ul>
   <li><strong>New open &amp; close animation</strong> &mdash; Rhema now materialises into focus when you open it &mdash; a gentle scale, fade and de-blur &mdash; and plays the exact same motion in reverse when you head Home. No more sliding or collapsing.</li>
@@ -43053,25 +43057,56 @@ function closeRhema(keepSandbox = false) {
     if (!keepSandbox) _studySandboxId = null;
   }
   _rhemaActivateCompareScope();
-  _rhemaSetChromeHidden?.(false);
+
   // Closing to a normal page plays the reverse of the open motion — a focus-out
   // (scale-down + fade + blur), matching rhemaReaderIn run backwards. Sandbox
   // and reduced-motion flows still close instantly.
   const _rhemaModalEl = document.getElementById('rhemaModal');
   const _rhemaReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (_rhemaModalEl && _rhemaModalEl.classList.contains('open') && !keepSandbox && !_studySandboxId && !_rhemaReduce) {
-    // Close with the reverse of the open motion — a focus-out (scale + fade +
-    // blur). The bottom nav is revealed instantly underneath, its own transition
-    // suppressed, so there's no mid-animation flash of the reader header.
+  const _animatingClose = !!(_rhemaModalEl && _rhemaModalEl.classList.contains('open') &&
+    !keepSandbox && !_studySandboxId && !_rhemaReduce);
+
+  // Visual teardown that reverts the reader from its study look (hamburger, pill,
+  // hidden swap/wheel) back to the base chrome and restores the bottom nav. When
+  // we animate the close this MUST wait until #rhemaSlide has fully faded out —
+  // otherwise the header visibly flips to the old Greek/English swap toggle and
+  // the bottom nav pops in *during* the fade (the reported "old version" flash).
+  // On instant closes (sandbox / reduced motion) it runs right away.
+  const _settleClosedVisuals = () => {
+    _rhemaSetChromeHidden?.(false);
+    _rhemaModalEl?.classList.remove('rhema-read-mode');
+    if (!keepSandbox) _rhemaModalEl?.classList.remove('rhema-has-menu', 'rhema-in-study');
+    _syncRhemaStudyHeader();
+    _syncRhemaStudyPill();
+    document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
+    document.getElementById('rhemaHighlightBar')?.classList.add('hidden');
+    document.getElementById('rhemaHighlightToggleBtn')?.classList.remove('active');
+    updateRhemaBreadcrumb();
+    // Restore nav — determine active page from which screen is visible. Only
+    // restore the bottom nav if not staying inside a sandbox session.
+    if (!_studySandboxId) {
+      const activePage =
+        document.getElementById('profilePage')?.classList.contains('active') ? 'profile' :
+        document.getElementById('communityPage')?.classList.contains('active') ? 'community' : 'home';
+      setNavActive(activePage);
+      showBottomNav();
+      _updateHomeContinueCard();
+    }
+  };
+
+  if (_animatingClose) {
     document.body?.classList.add('app-screen-motion');
     _rhemaModalEl.classList.add('rhema-closing');
     setTimeout(() => {
       _rhemaModalEl.classList.remove('open', 'rhema-closing', 'rhema-preview');
       document.body?.classList.remove('app-screen-motion');
+      _settleClosedVisuals();
     }, 340);
   } else {
     _rhemaModalEl?.classList.remove('open', 'rhema-closing', 'rhema-preview', 'rhema-nav-leave', 'rhema-collapse-leave');
+    _settleClosedVisuals();
   }
+
   closeRhemaSheet();
   closeRhemaReaderNote();
   closeRhemaPickerSheet();
@@ -43086,31 +43121,12 @@ function closeRhema(keepSandbox = false) {
     _activeSandboxStudy = null;
   }
   _rhemaReadMode = false;
-  const _rmModalEl = document.getElementById('rhemaModal');
-  _rmModalEl?.classList.remove('rhema-read-mode');
-  if (!keepSandbox) _rmModalEl?.classList.remove('rhema-has-menu', 'rhema-in-study');
-  _syncRhemaStudyHeader();
-  _syncRhemaStudyPill();
-  document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   _rhemaTrail = [];
   _rhemaTrailPos = -1;
   _rhemaHighlightStrongs = null;
   _rhemaVerseFocus = false;
   _rhemaPosHighlights.clear();
   _rhemaHighlightBarOn = false;
-  document.getElementById('rhemaHighlightBar')?.classList.add('hidden');
-  document.getElementById('rhemaHighlightToggleBtn')?.classList.remove('active');
-  updateRhemaBreadcrumb();
-  // Restore nav — determine active page from which screen is visible
-  // Only restore bottom nav if not staying inside a sandbox session
-  if (!_studySandboxId) {
-    const activePage =
-      document.getElementById('profilePage')?.classList.contains('active') ? 'profile' :
-      document.getElementById('communityPage')?.classList.contains('active') ? 'community' : 'home';
-    setNavActive(activePage);
-    showBottomNav();
-    _updateHomeContinueCard();
-  }
 }
 
 function rhemaGoBack() {
