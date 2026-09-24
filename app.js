@@ -81,6 +81,7 @@ let _appInitialDataReady = false;
 let _welcomeCoachQueuedAfterAuth = false;
 let _appLaunchStartedAt = Date.now();
 let _appLaunchReleased = false;
+let _didBootLanding = false; // true once the initial launch has landed in Study Rhema
 let _appUpdateReloadPending = false;
 let _appUpdateReloadTimer = null;
 let _swUpdateFound = false;
@@ -22810,13 +22811,16 @@ function _updateHomeContinueCard() {
 }
 
 function resumeRhema() {
+  _rhemaReadMode = false; // Study is the only mode now.
+  // First-time / no history → Genesis 1:1.
+  _rhemaBook = 'GEN'; _rhemaChapter = '1'; _rhemaVerse = '1';
   const savedRaw = localStorage.getItem('rhemaLastPos');
   if (savedRaw) {
     try {
       const pos = JSON.parse(savedRaw);
-      _rhemaBook = pos.book || 'JOH';
-      _rhemaChapter = pos.chapter || '3';
-      _rhemaVerse = pos.verse || '16';
+      _rhemaBook = pos.book || 'GEN';
+      _rhemaChapter = pos.chapter || '1';
+      _rhemaVerse = pos.verse || '1';
       _rhemaTextMode = pos.textMode === 'critical' ? 'critical' : 'majority';
       if (pos.englishVersion) {
         _rhemaEnglishMode = pos.englishVersion === 'BSB' ? 'BSB' : 'MSB';
@@ -30261,7 +30265,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.487";
+const APP_VERSION = "3.0.488";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30284,6 +30288,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.488 &mdash; Opens straight into Rhema study</div>
+<ul>
+  <li><strong>Launches into study</strong> &mdash; The app now opens right into the Rhema study reader where you left off (Genesis 1 the first time). A premium Home button at the top-left takes you back to the main screen anytime.</li>
+  <li><strong>One reading mode</strong> &mdash; The separate Read view and the Read/Study chooser are gone; Rhema always opens the full study reader.</li>
+  <li><strong>Faster open</strong> &mdash; The reader now paints on its core text first and loads the heavier study datasets (cross-references, Septuagint, dictionaries) quietly in the background, so it comes up sooner.</li>
+</ul>
 <div class="un-version-label">v3.0.487 &mdash; A more focused app, centered on Rhema</div>
 <ul>
   <li><strong>Praises &amp; Disciple Group stepped back</strong> &mdash; The Praises feed, its reminders, and the Disciple Group / Community pages are no longer part of the main app, and Praises has left the bottom bar &mdash; keeping the focus on Rhema and study.</li>
@@ -33426,6 +33436,17 @@ window.__onAuthStateReady = async (user) => {
     _maybeStartAppWelcomeCoachAfterAuth();
     setTimeout(maybeShowHomeIntroModal, 500);
     _appInitialDataReady = true;
+    // Land straight in Study Rhema on the initial launch — the app is centered on
+    // Rhema now. Home stays behind it (the reader's top-left Home button returns
+    // to it). Skip when arriving via a deep link or on the desktop study shell.
+    if (!_didBootLanding) {
+      _didBootLanding = true;
+      const _deepLink = /[?&]open=/.test(location.search || '');
+      if (!_deepLink && !(typeof _isDesktopStudyShell === 'function' && _isDesktopStudyShell())) {
+        _rhemaReadMode = false;
+        try { resumeRhema(); } catch (e) {}
+      }
+    }
     hideAppLaunchScreen('ready');
 
     // If a data-dependent page was already visible (e.g. shown before auth resolved),
@@ -42071,23 +42092,34 @@ function loadRhemaScripts() {
     }
     _rhemaLoading = true;
     loadDeepLexiconSpine();
-    let loaded = 0;
-    const files = ['rhema-nt.js', 'rhema-critical.js', 'rhema-critical-fallbacks.js', 'rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js', 'rhema-hebrew-bdb.js', 'rhema-lxx.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-scripture-notes.js', 'rhema-bible-dictionary.js'];
-    let failed = false;
-    for (const file of files) {
+    // Two-tier load so the reader paints on the CORE set (text + core word study)
+    // and the large, tool-specific datasets (LXX, cross-references, dictionary,
+    // syntax, Hebrew lexicons ≈ 30 MB) parse in the background right after. Those
+    // features are opened on demand, well after first render, and all data access
+    // is null-guarded, so deferring them just makes the reader open sooner.
+    const CORE = ['rhema-nt.js', 'rhema-critical.js', 'rhema-critical-fallbacks.js', 'rhema-ot-hebrew.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-scripture-notes.js'];
+    const REST = ['rhema-hebrew-lexicon.js', 'rhema-hebrew-bdb.js', 'rhema-lxx.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-bible-dictionary.js'];
+    const loadOne = (file) => new Promise((res, rej) => {
       const s = document.createElement('script');
       s.src = file + '?v=' + (RHEMA_DATA_VERSIONS[file] || APP_VERSION);
-      s.onload = () => {
-        loaded++;
-        if (loaded === files.length) { _syncRhemaEnglishAlias(); _ensureRhemaBibleData(); _rhemaMergeDictionaryPhrases(); _rhemaLoaded = true; resolve(); }
-      };
-      s.onerror = () => {
-        if (!failed) { failed = true; reject(new Error('Failed to load ' + file)); }
-      };
+      s.onload = res;
+      s.onerror = () => rej(new Error('Failed to load ' + file));
       document.head.appendChild(s);
-    }
+    });
+    Promise.all(CORE.map(loadOne)).then(() => {
+      _syncRhemaEnglishAlias();
+      _ensureRhemaBibleData();
+      _rhemaLoaded = true;
+      resolve();
+      // Background: the peripheral datasets. Merge dictionary phrases once they land.
+      Promise.all(REST.map(f => loadOne(f).catch(() => {}))).then(() => {
+        _rhemaRestLoaded = true;
+        try { _rhemaMergeDictionaryPhrases(); } catch {}
+      });
+    }).catch(reject);
   });
 }
+let _rhemaRestLoaded = false;
 
 // Warm the Rhēma scripture data in the background a little after launch, so the
 // reader opens straight into the target passage instead of flashing the default
@@ -42189,16 +42221,16 @@ let _rhemaReadMode = false;
 
 function openRhemaLaunchMenu(e) {
   if (e) { e.stopPropagation(); }
-  const menu = document.getElementById('rhemaLaunchMenu');
-  if (!menu) { resumeRhema(); return; }
-  menu.classList.add('open');
+  // Read mode is retired — Rhema opens straight into Study (no chooser).
+  _rhemaReadMode = false;
+  resumeRhema();
 }
 function closeRhemaLaunchMenu() {
   document.getElementById('rhemaLaunchMenu')?.classList.remove('open');
 }
 function launchRhema(mode) {
   closeRhemaLaunchMenu();
-  _rhemaReadMode = (mode === 'read');
+  _rhemaReadMode = false; // Study only.
   resumeRhema();
 }
 
