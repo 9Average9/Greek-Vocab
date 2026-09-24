@@ -22774,6 +22774,47 @@ function _saveRhemaPosition() {
   }
 }
 
+// ── Instant-open chapter snapshot ──────────────────────────────────────────
+// The heavy scripture data takes a moment to parse on a cold start. To make the
+// reader open (near-)instantly, we keep a snapshot of the last full-chapter view
+// (the already-rendered English + original panes) and repaint it immediately on
+// the next open, before any data loads. The live, interactive render then quietly
+// replaces it — same markup, so the swap is seamless.
+function _rhemaCaptureChapterSnapshot() {
+  try {
+    if (_studySandboxId || _rhemaSyntaxMode || _rhemaIntroMode) return;
+    if (!_rhemaFullChapter || !_rhemaShowEnglish) return;
+    const eng = document.getElementById('rhemaEnglishDisplay');
+    const grk = document.getElementById('rhemaVerseDisplay');
+    if (!eng || !eng.innerHTML) return;
+    const snap = {
+      v: APP_VERSION,
+      book: _rhemaBook, chapter: String(_rhemaChapter),
+      eCls: eng.className, eHtml: eng.innerHTML,
+      gCls: grk ? grk.className : '', gHtml: grk ? grk.innerHTML : '',
+    };
+    localStorage.setItem('rhemaChapterSnap', JSON.stringify(snap));
+  } catch {}
+}
+function _rhemaPaintChapterSnapshot(book, chapter) {
+  try {
+    const raw = localStorage.getItem('rhemaChapterSnap');
+    if (!raw) return false;
+    const snap = JSON.parse(raw);
+    if (snap.v !== APP_VERSION || snap.book !== book || String(snap.chapter) !== String(chapter)) return false;
+    const eng = document.getElementById('rhemaEnglishDisplay');
+    const grk = document.getElementById('rhemaVerseDisplay');
+    const loading = document.getElementById('rhemaLoadingMsg');
+    if (!eng || !snap.eHtml) return false;
+    eng.className = snap.eCls || 'rhema-english-display';
+    eng.classList.remove('hidden');
+    eng.innerHTML = snap.eHtml;
+    if (grk) { grk.className = snap.gCls || 'rhema-verse-display'; grk.innerHTML = snap.gHtml || ''; }
+    if (loading) loading.style.display = 'none';
+    return true;
+  } catch { return false; }
+}
+
 function _updateHomeContinueCard() {
   const savedRaw = localStorage.getItem('rhemaLastPos');
   const card = document.getElementById('homeContinueCard');
@@ -30265,7 +30306,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.488";
+const APP_VERSION = "3.0.489";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30288,6 +30329,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.489 &mdash; A new way in and out, and an instant open</div>
+<ul>
+  <li><strong>New open &amp; close animation</strong> &mdash; Rhema now materialises into focus when you open it &mdash; a gentle scale, fade and de-blur &mdash; and plays the exact same motion in reverse when you head Home. No more sliding or collapsing.</li>
+  <li><strong>Instant open</strong> &mdash; The last chapter you were reading now paints the moment you open Rhema, straight from your device, while the full study data finishes loading behind it. If you've downloaded your translation, it comes up almost instantly.</li>
+  <li><strong>Cleaner close</strong> &mdash; Fixed the brief flash of the old header at the top when returning Home.</li>
+</ul>
 <div class="un-version-label">v3.0.488 &mdash; Opens straight into Rhema study</div>
 <ul>
   <li><strong>Launches into study</strong> &mdash; The app now opens right into the Rhema study reader where you left off (Genesis 1 the first time). A premium Home button at the top-left takes you back to the main screen anytime.</li>
@@ -42203,15 +42250,24 @@ async function showRhema() {
   _syncRhemaChapterUi();
 
   const loading = document.getElementById('rhemaLoadingMsg');
-  if (loading) loading.style.display = 'block';
+  // Instant paint: if the heavy data hasn't parsed yet and we have a snapshot of
+  // this exact chapter, show it right away while the data loads behind it.
+  let _painted = false;
+  if (!_rhemaLoaded && !_studySandboxId && !sermonMode) {
+    _painted = _rhemaPaintChapterSnapshot(_rhemaBook, _rhemaChapter);
+    if (_painted) modal.classList.add('rhema-preview');
+  }
+  if (loading) loading.style.display = _painted ? 'none' : 'block';
 
   try {
     await loadRhemaScripts();
     if (loading) loading.style.display = 'none';
     initRhemaPicker();
     renderRhemaVerse();
+    modal.classList.remove('rhema-preview');
     startRhemaCoach();
   } catch (e) {
+    modal.classList.remove('rhema-preview');
     if (loading) loading.textContent = 'Failed to load data. Check your connection.';
   }
 }
@@ -42998,30 +43054,23 @@ function closeRhema(keepSandbox = false) {
   }
   _rhemaActivateCompareScope();
   _rhemaSetChromeHidden?.(false);
-  // Closing to a normal page folds the reader back into the bottom-nav Rhema
-  // button it was launched from — the same collapse the Home tools (Reading
-  // Plan, Memorize, …) close with — revealing the page + nav underneath. Flows
-  // without a usable launch rect keep the slide-off; sandbox and
-  // reduced-motion flows still close instantly.
+  // Closing to a normal page plays the reverse of the open motion — a focus-out
+  // (scale-down + fade + blur), matching rhemaReaderIn run backwards. Sandbox
+  // and reduced-motion flows still close instantly.
   const _rhemaModalEl = document.getElementById('rhemaModal');
   const _rhemaReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (_rhemaModalEl && _rhemaModalEl.classList.contains('open') && !keepSandbox && !_studySandboxId && !_rhemaReduce) {
-    if (_rhemaLaunchRect) {
-      _appSetExpandOrigin(_rhemaModalEl, _rhemaLaunchRect);
-      // Reveal the bottom nav instantly underneath (its transition is
-      // suppressed during motion) instead of letting it slide in mid-fold.
-      document.body?.classList.add('app-screen-motion');
-      _rhemaModalEl.classList.add('rhema-collapse-leave');
-      setTimeout(() => {
-        _rhemaModalEl.classList.remove('open', 'rhema-collapse-leave');
-        document.body?.classList.remove('app-screen-motion');
-      }, 440);
-    } else {
-      _rhemaModalEl.classList.add('rhema-nav-leave');
-      setTimeout(() => _rhemaModalEl.classList.remove('open', 'rhema-nav-leave'), 320);
-    }
+    // Close with the reverse of the open motion — a focus-out (scale + fade +
+    // blur). The bottom nav is revealed instantly underneath, its own transition
+    // suppressed, so there's no mid-animation flash of the reader header.
+    document.body?.classList.add('app-screen-motion');
+    _rhemaModalEl.classList.add('rhema-closing');
+    setTimeout(() => {
+      _rhemaModalEl.classList.remove('open', 'rhema-closing', 'rhema-preview');
+      document.body?.classList.remove('app-screen-motion');
+    }, 340);
   } else {
-    _rhemaModalEl?.classList.remove('open', 'rhema-nav-leave', 'rhema-collapse-leave');
+    _rhemaModalEl?.classList.remove('open', 'rhema-closing', 'rhema-preview', 'rhema-nav-leave', 'rhema-collapse-leave');
   }
   closeRhemaSheet();
   closeRhemaReaderNote();
@@ -44458,6 +44507,10 @@ function renderRhemaVerse() {
         }, '') +
         _rhemaReaderCopyrightHtml();
     }
+
+    // Snapshot this rendered chapter so a future open can paint it instantly
+    // from localStorage while the heavy data loads in the background.
+    _rhemaCaptureChapterSnapshot();
 
     requestAnimationFrame(() => {
       const body = document.querySelector('#rhemaModal .rhema-body');
