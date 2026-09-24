@@ -30258,7 +30258,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.485";
+const APP_VERSION = "3.0.486";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,6 +30281,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.486 &mdash; Interlinear ignores translator-added words when matching</div>
+<ul>
+  <li><strong>Added words no longer mislead the match</strong> &mdash; Translations add small words the Greek doesn&rsquo;t have (like &ldquo;The people&rdquo; in &ldquo;the people were amazed&rdquo;). The interlinear now knows which words were added and skips them, so a Greek word maps to its real meaning &mdash; e.g. Mark 1:22 &#7952;&xi;&epsilon;&pi;&lambda;&#8158;&sigma;&sigma;&omicron;&nu;&tau;&omicron; now lands on &ldquo;amazed,&rdquo; not &ldquo;people.&rdquo;</li>
+</ul>
 <div class="un-version-label">v3.0.485 &mdash; Interlinear matches the right word more often</div>
 <ul>
   <li><strong>Verbs line up correctly</strong> &mdash; The interlinear no longer maps a Greek verb to a little grammar word like &ldquo;when&rdquo; or &ldquo;they&rdquo; &mdash; it now finds the real word (e.g. Mark 1:37 &zeta;&eta;&tau;&omicron;&#8166;&sigma;&iota;&nu; now shows &ldquo;looking,&rdquo; &epsilon;&#7549;&rho;&#972;&nu;&tau;&epsilon;&sigmaf; shows &ldquo;found&rdquo;).</li>
@@ -40768,7 +40772,7 @@ function _rhemaRenderInterlinear(ref) {
   const haveBsb = bsbEng.some(Boolean);
   let versionRenders;
   if (readerVer === 'BSB' && haveBsb) {
-    versionRenders = bsbEng; // exact
+    versionRenders = bsbEng.map(_rhemaBsbDisplay); // exact (supplied-word brackets removed for reading)
   } else {
     versionRenders = _rhemaAlignVersionRenderings(rows.map(r => r.decision), versionText, bsbEng);
   }
@@ -40841,11 +40845,17 @@ function _rhemaIlIsSupplied(low) { return _DEEP_GLUE_WORDS.has(low) || _RHEMA_FU
 function _rhemaIlWords(text) {
   return String(text || '').toLowerCase().split(/[^a-z]+/).filter(w => w.length > 1);
 }
+// Drop Berean's [supplied] words — they aren't a rendering of the Greek word, so
+// they must not seed a bridge match (e.g. "[The people] were astonished").
+function _rhemaBsbDirect(s) { return String(s || '').replace(/\[[^\]]*\]/g, ' '); }
+// Plain reader text: keep the words, drop the supplied-word brackets.
+function _rhemaBsbDisplay(s) { return String(s || '').replace(/[\[\]]/g, '').replace(/\s+/g, ' ').trim(); }
 function _rhemaIlCandidateStems(decision, bsbEng) {
-  // Prefer the CONTENT word(s) of the exact BSB rendering, then the occurrence
-  // gloss's content words. If a rendering is purely functional (e.g. "and",
-  // "him", "the"), map to that instead — those Greek words genuinely mean it.
-  const bsbWords = _rhemaIlWords(bsbEng);
+  // Prefer the CONTENT word(s) of the exact BSB rendering (excluding supplied
+  // [bracketed] words), then the occurrence gloss's content words. If a rendering
+  // is purely functional (e.g. "and", "him", "the"), map to that instead — those
+  // Greek words genuinely mean it.
+  const bsbWords = _rhemaIlWords(_rhemaBsbDirect(bsbEng));
   const glossWords = _rhemaIlWords(decision && decision.gloss);
   const content = arr => arr.filter(w => !_rhemaIlIsSupplied(w));
   const bsbContent = content(bsbWords);
@@ -40917,7 +40927,7 @@ function _rhemaAlignVersionRenderings(decisions, versionText, bsbEngArr) {
 // window.RhemaBSBAlign[BOOK][ch][vs] = [[strongs, "BSB English"], …] in Greek
 // order. Lazy-loaded (a couple of MB) the first time the interlinear opens, then
 // precached for offline use.
-const RHEMA_BSB_ALIGN_VERSION = '3.0.1';
+const RHEMA_BSB_ALIGN_VERSION = '3.0.2';
 let _rhemaBsbAlignPromise = null;
 function _ensureRhemaBsbAlign() {
   if (window.RhemaBSBAlign) return Promise.resolve(window.RhemaBSBAlign);

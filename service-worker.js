@@ -41,7 +41,7 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-const CACHE_NAME = "disciple-builder-v3.0.485";
+const CACHE_NAME = "disciple-builder-v3.0.486";
 // Canonical app-shell entry we always fall back to when a navigation can't be
 // served from the network (e.g. airplane mode) — keeps deep links / query
 // strings working offline.
@@ -55,7 +55,7 @@ const FILES_TO_CACHE = [
   "./index.html",
   "./style.css?v=3.0.482",
   "./vocab.js?v=3.0.8",
-  "./app.js?v=3.0.485",
+  "./app.js?v=3.0.486",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.418",
   "./rhema-english-dictionary.js?v=3.0.417",
@@ -96,7 +96,7 @@ const FILES_TO_CACHE = [
   "./rhema-syntax.js?v=3.0.65",
   "./rhema-crossrefs.js?v=3.0.65",
   "./rhema-scripture-notes.js?v=3.0.160",
-  "./rhema-bsb-align.js?v=3.0.1",
+  "./rhema-bsb-align.js?v=3.0.2",
   "./rhema-bible-dictionary.js?v=3.0.385",
   "./rhema-crossrefs-ui.js?v=3.0.363",
   "./greek-verbs.js?v=3.0.152",
