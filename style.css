@@ -13927,7 +13927,9 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   display: block;
 }
 
-/* ── Animated slide-up panel: transform lives here, flex column layout lives here ── */
+/* ── Reader panel. Open/close is a "focus-in" materialize (scale + fade + blur),
+   not a slide or a collapse-to-button — open and close are the same motion,
+   reversed. ── */
 #rhemaSlide {
   position: absolute;
   inset: 0;
@@ -13935,14 +13937,34 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   flex-direction: column;
   background: var(--primary-light);
   overflow: hidden;
-  transform: translateY(100%);
-  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
   overscroll-behavior: none;
+  transform-origin: 50% 46%;
+  will-change: transform, opacity, filter;
   /* allow both axes so .rsx-diagram can scroll horizontally */
   touch-action: pan-x pan-y;
 }
 #rhemaModal.open #rhemaSlide {
-  transform: translateY(0);
+  animation: rhemaReaderIn 0.46s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+#rhemaModal.rhema-closing #rhemaSlide {
+  animation: rhemaReaderOut 0.34s cubic-bezier(0.4, 0, 0.9, 1) both;
+}
+@keyframes rhemaReaderIn {
+  0%   { opacity: 0; transform: scale(0.93); filter: blur(8px); }
+  55%  { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+@keyframes rhemaReaderOut {
+  0%   { opacity: 1; transform: scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: scale(0.93); filter: blur(8px); }
+}
+/* Snapshot preview (painted instantly on open, before data parses): show it, but
+   don't let taps hit the not-yet-live verses until the real render hydrates. */
+#rhemaModal.rhema-preview .rhema-english-display,
+#rhemaModal.rhema-preview .rhema-verse-display { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  #rhemaModal.open #rhemaSlide,
+  #rhemaModal.rhema-closing #rhemaSlide { animation: none; }
 }
 
 /* ── Header ── */
@@ -35867,14 +35889,11 @@ body.screen-transitioning .screen.screen-leaving { z-index: 20; pointer-events: 
   100% { transform: translateY(0) scale(1); filter: brightness(1); }
 }
 
+/* Home-button re-entry: the panel materialises via #rhemaModal.open #rhemaSlide
+   (rhemaReaderIn); nav-enter now only adds a soft depth shadow so it doesn't
+   fight the materialise. The old translateX slide was removed. */
 #rhemaModal.rhema-nav-enter #rhemaSlide {
-  animation: rhemaSwipeOpen .5s cubic-bezier(.2,.82,.18,1) both;
-  box-shadow: -16px 0 40px color-mix(in srgb, var(--secondary-color) 22%, transparent);
-}
-
-@keyframes rhemaSwipeOpen {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--secondary-color) 18%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
