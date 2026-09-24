@@ -38194,3 +38194,42 @@ html body.dark:not([class*="page-home-backdrop-"]):has(#homeScreen.screen.active
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+
+/* ── Saved Pictures gallery (Profile) ─────────────────────────────────────── */
+.saved-pics-card {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  background: var(--primary-light, #fff);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 18px 18px 22px;
+  box-shadow: 0 24px 60px -20px rgba(0,0,0,0.45);
+}
+.saved-pics-head { display: flex; align-items: center; gap: 8px; }
+.saved-pics-title { flex: 1; font-size: 1.15rem; font-weight: 800; color: var(--font-color); letter-spacing: -0.01em; }
+.saved-pics-sub { margin: 6px 0 14px; font-size: 0.82rem; line-height: 1.4; color: var(--muted-color); }
+.saved-pics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.saved-pics-empty { grid-column: 1 / -1; padding: 30px 10px; text-align: center; color: var(--muted-color); font-size: 0.9rem; }
+.saved-pic {
+  position: relative; margin: 0;
+  border-radius: 14px; overflow: hidden;
+  background: var(--card-solid-color);
+  border: 1px solid var(--border-color);
+}
+.saved-pic img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
+.saved-pic figcaption {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 14px 10px 7px; font-size: 0.7rem; font-weight: 700; color: #fff;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.55));
+}
+.saved-pic-dl {
+  position: absolute; top: 7px; right: 7px;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  background: rgba(15,23,42,0.55); color: #fff; border: none;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.saved-pic-dl:active { transform: scale(0.92); }
+.saved-pic-dl .material-symbols-outlined { font-size: 19px; }
+@media (min-width: 520px) { .saved-pics-grid { grid-template-columns: repeat(3, 1fr); } }

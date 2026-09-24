@@ -10676,6 +10676,9 @@ function _bindPraisesScrollShadow() {
 }
 
 function showNavPage(page) {
+  // Praises (mercies) and Community are retired from the main experience — send
+  // any lingering navigation to those pages home instead. (Feature code is kept.)
+  if (page === 'mercies' || page === 'community') page = 'home';
   if (_isDesktopStudyShell() && (page === 'community' || page === 'mercies')) page = 'home';
   const previousScreen = document.querySelector('.screen.active');
   const fromId = previousScreen?.id || _activeScreenId;
@@ -30258,7 +30261,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.486";
+const APP_VERSION = "3.0.487";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30281,6 +30284,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.487 &mdash; A more focused app, centered on Rhema</div>
+<ul>
+  <li><strong>Praises &amp; Disciple Group stepped back</strong> &mdash; The Praises feed, its reminders, and the Disciple Group / Community pages are no longer part of the main app, and Praises has left the bottom bar &mdash; keeping the focus on Rhema and study.</li>
+  <li><strong>Your saved pictures are safe</strong> &mdash; Any pictures you saved in Praises now live in your Profile under <em>Saved Pictures</em>, where you can view them and save any to your device.</li>
+</ul>
 <div class="un-version-label">v3.0.486 &mdash; Interlinear ignores translator-added words when matching</div>
 <ul>
   <li><strong>Added words no longer mislead the match</strong> &mdash; Translations add small words the Greek doesn&rsquo;t have (like &ldquo;The people&rdquo; in &ldquo;the people were amazed&rdquo;). The interlinear now knows which words were added and skips them, so a Greek word maps to its real meaning &mdash; e.g. Mark 1:22 &#7952;&xi;&epsilon;&pi;&lambda;&#8158;&sigma;&sigma;&omicron;&nu;&tau;&omicron; now lands on &ldquo;amazed,&rdquo; not &ldquo;people.&rdquo;</li>
@@ -33329,6 +33337,10 @@ window.__onAuthStateReady = async (user) => {
       window.FCM?.registerToken(user.uid).catch(() => {});
     }
 
+    // Praises is retired from the main experience — turn off any praise reminders
+    // once so they stop firing (best-effort; the underlying settings code is kept).
+    _disablePraiseRemindersOnce(user.uid);
+
     // Prompt users on an auto-generated email to connect a real one for account recovery.
     updateConnectEmailSettingsRow();
     maybeShowConnectEmailPrompt();
@@ -36115,6 +36127,96 @@ async function deleteMercyJournalCacheEntry(entryId) {
     tx.objectStore('entries').delete(entryId);
     await new Promise(resolve => tx.oncomplete = resolve);
   } catch {}
+}
+
+// Turn off praise reminders once per device (Praises is retired from the UX).
+function _disablePraiseRemindersOnce(uid) {
+  try {
+    if (localStorage.getItem('praiseRemindersRetiredV1') === '1') return;
+    const wasOn = localStorage.getItem('mercyDailyEnabled') === 'true'
+      || localStorage.getItem('mercyFriendReminderEnabled') === 'true';
+    localStorage.setItem('mercyDailyEnabled', 'false');
+    localStorage.setItem('mercyFriendReminderEnabled', 'false');
+    localStorage.setItem('praiseRemindersRetiredV1', '1');
+    if (wasOn && uid && window.Mercies?.saveSettings) {
+      window.Mercies.saveSettings(uid, {
+        dailyEnabled: false, friendEnabled: false,
+        dailyTime: '20:00', friendTime: '18:00',
+        autoSave: localStorage.getItem('merciesAutoSave') === 'true',
+      }).catch(() => {});
+    }
+  } catch {}
+}
+
+// ── Saved Pictures (Profile) ───────────────────────────────────────────────
+// A simple gallery of the images kept in the Praises Journal (IndexedDB), with a
+// "save to device" action. Kept so a user's saved pictures stay reachable even
+// as the Praises feature is retired from the main experience.
+let _savedPicsList = [];
+function openSavedPicturesModal() {
+  const modal = document.getElementById('savedPicturesModal');
+  if (!modal) return;
+  modal.classList.add('open');
+  _renderSavedPictures();
+}
+function closeSavedPicturesModal(e) {
+  if (e && e.target !== document.getElementById('savedPicturesModal')) return;
+  document.getElementById('savedPicturesModal')?.classList.remove('open');
+}
+async function _renderSavedPictures() {
+  const grid = document.getElementById('savedPicturesGrid');
+  if (!grid) return;
+  let entries = [];
+  try {
+    const db = await mercyDb();
+    const tx = db.transaction('entries', 'readonly');
+    entries = await new Promise((resolve) => {
+      const req = tx.objectStore('entries').getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve([]);
+    });
+  } catch {
+    grid.innerHTML = '<p class="saved-pics-empty">Saved pictures aren’t available on this device.</p>';
+    return;
+  }
+  _savedPicsList = entries
+    .map(e => ({ src: e.imageDataUrl || e.imageUrl || '', date: e.date || '', body: e.body || e.promptText || '', ts: e.createdAtMs || 0 }))
+    .filter(e => e.src)
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (!_savedPicsList.length) {
+    grid.innerHTML = '<p class="saved-pics-empty">You don’t have any saved pictures.</p>';
+    return;
+  }
+  grid.innerHTML = _savedPicsList.map((e, i) =>
+    `<figure class="saved-pic">
+      <img loading="lazy" src="${_lbEscape(e.src)}" alt="${_lbEscape(e.body || 'Saved picture')}">
+      ${e.date ? `<figcaption>${_lbEscape(e.date)}</figcaption>` : ''}
+      <button class="saved-pic-dl" onclick="downloadSavedPicture(${i})" aria-label="Save to device"><span class="material-symbols-outlined">download</span></button>
+    </figure>`
+  ).join('');
+}
+async function downloadSavedPicture(i) {
+  const item = _savedPicsList[i];
+  if (!item || !item.src) return;
+  const name = `praise-${String(item.date || '').replace(/[^0-9]/g, '') || Date.now()}.jpg`;
+  try {
+    const resp = await fetch(item.src);
+    const blob = await resp.blob();
+    // On iOS the share sheet is the reliable "Save Image" path; use it when files
+    // can be shared, otherwise fall back to a direct download.
+    const file = new File([blob], name, { type: blob.type || 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] });
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch {
+    try { window.open(item.src, '_blank'); } catch {}
+  }
 }
 
 function openMerciesSettings() {
