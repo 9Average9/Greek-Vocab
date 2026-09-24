@@ -346,7 +346,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.482" rel="stylesheet"/>
+<link href="style.css?v=3.0.487" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -9567,10 +9567,6 @@ Verb Endings
 <span>App Open Streak</span>
 </div>
 <div class="journey-stat">
-<strong id="profilePraiseStreakStat">0</strong>
-<span>Praise Streak</span>
-</div>
-<div class="journey-stat">
 <strong id="profileVocabStat">0</strong>
 <span>Vocab Chapters</span>
 </div>
@@ -9642,6 +9638,12 @@ Verb Endings
 <span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
 </button>
 <div class="prof-menu-sep"></div>
+<button class="prof-menu-row" id="profileSavedPicsBtn" onclick="openSavedPicturesModal()">
+<span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">photo_library</span></span>
+<span class="prof-menu-name">Saved Pictures</span>
+<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
+</button>
+<div class="prof-menu-sep"></div>
 <button class="prof-menu-row" id="profileNerdBtn" onclick="openRhemaNerdModal()">
 <span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">science</span></span>
 <span class="prof-menu-name">Rhema Nerd Page</span>
@@ -9660,6 +9662,17 @@ Verb Endings
 </button>
 </div>
 </section>
+<!-- Saved Pictures (from your Praises Journal) — view & save to your device -->
+<div class="modal-overlay saved-pics-overlay" id="savedPicturesModal" onclick="closeSavedPicturesModal(event)">
+<div class="saved-pics-card" onclick="event.stopPropagation()">
+<div class="saved-pics-head">
+<span class="saved-pics-title">Saved Pictures</span>
+<button class="rhema-note-x" onclick="closeSavedPicturesModal()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+</div>
+<p class="saved-pics-sub">Pictures you saved to your Praises. Tap save to keep one on your device.</p>
+<div class="saved-pics-grid" id="savedPicturesGrid"><p class="saved-pics-empty">Loading…</p></div>
+</div>
+</div>
 <section class="screen" id="merciesPage">
 <div class="praises-tabbar" id="praisesTabbar">
 <div class="praises-tabbar-inner">
@@ -11025,10 +11038,6 @@ Verb Endings
 <nav class="bottom-nav" id="bottomNav">
 <button class="bn-item" data-page="profile" onclick="showNavPage('profile')">
 <span class="material-symbols-outlined">person</span>
-<span class="bn-dot"></span>
-</button>
-<button class="bn-item" data-page="mercies" onclick="showNavPage('mercies')">
-<span class="material-symbols-outlined">photo_camera</span>
 <span class="bn-dot"></span>
 </button>
 <button class="bn-item bn-home active" data-page="home" onclick="showNavPage('home')">
@@ -17268,7 +17277,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.486"></script>
+<script src="app.js?v=3.0.487"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
