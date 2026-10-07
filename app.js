@@ -82,6 +82,7 @@ let _welcomeCoachQueuedAfterAuth = false;
 let _appLaunchStartedAt = Date.now();
 let _appLaunchReleased = false;
 let _didBootLanding = false; // true once the initial launch has landed in Study Rhema
+let _guestMode = false; // signed-out "Continue as guest" session — Rhema only (see Guest mode)
 let _appUpdateReloadPending = false;
 let _appUpdateReloadTimer = null;
 let _swUpdateFound = false;
@@ -8488,6 +8489,7 @@ function _updateSandboxMembersButton(study = _activeSandboxStudy) {
 
 // Create sheet
 function openStudyCreateSheet() {
+  if (_guestMode) return; // studies need an account
   _studyCreateColor = '#4f8cff';
   _studyCreateIcon = 'menu_book';
   _studyCreateShareFriends = false;
@@ -10677,6 +10679,8 @@ function _bindPraisesScrollShadow() {
 }
 
 function showNavPage(page) {
+  // Guests are limited to the Rhema reader.
+  if (_guestMode && page !== 'rhema') { _guestEnsureRhema(); return; }
   // Praises (mercies) and Community are retired from the main experience — send
   // any lingering navigation to those pages home instead. (Feature code is kept.)
   if (page === 'mercies' || page === 'community') page = 'home';
@@ -17922,6 +17926,8 @@ function _rhemaReturnFromMaps() {
   document.getElementById('rhemaModal')?.classList.add('open');
 }
 function rhemaContinueToAtlasFromMaps() {
+  // Guests may follow maps out of the reader, but only ever back into it.
+  if (_guestMode) { _guestEnsureRhema(); return; }
   _rhemaMapsReturn = null;
   _rhemaSyncMapsContinue();
   try { closeRhema(); } catch {}
@@ -22748,7 +22754,8 @@ async function saveHabitReminderItem(habitId) {
 }
 
 function _saveRhemaPosition() {
-  const uid = window.Auth?.getCurrentUser()?.uid || window.LB?.getUserId();
+  // Guests keep their place on this device only (no anonymous cloud write).
+  const uid = window.Auth?.getCurrentUser()?.uid || (_guestMode ? null : window.LB?.getUserId());
   // Study sandbox Rhema: debounced save to study only — never touch main homescreen position
   if (_studySandboxId) {
     if (!uid) return;
@@ -29409,6 +29416,7 @@ async function confirmDeleteAccount() {
     return;
   }
   localStorage.clear();
+  _rememberHadAccount(); // not a first-time welcome: no guest option next time
   location.reload();
 }
 
@@ -29418,6 +29426,7 @@ function signOutAccount() {
   _unsubUserDoc = null;
   window.Auth.logout().then(() => {
     localStorage.clear();
+    _rememberHadAccount(); // not a first-time welcome: no guest option next time
     location.reload();
   });
 }
@@ -30306,7 +30315,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.490";
+const APP_VERSION = "3.0.491";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -33023,7 +33032,11 @@ function gatherMigrationData() {
 // ── Auth modal UI ────────────────────────────────────────────────────────────
 
 function showAuthModal() {
-  document.getElementById("authModal")?.classList.add("open");
+  const modal = document.getElementById("authModal");
+  // "Continue as guest" is only offered on a true first-time welcome (or to a
+  // guest reopening the card) — never to someone who has had an account here.
+  modal?.classList.toggle("auth-first-welcome", _guestMode || !_deviceHadAccount());
+  modal?.classList.add("open");
 }
 
 function hideAuthModal() {
@@ -33032,6 +33045,81 @@ function hideAuthModal() {
 
 function _hasSignedInUser() {
   return !!window.Auth?.getCurrentUser?.();
+}
+
+// ── Guest mode ───────────────────────────────────────────────────────────────
+// A first-time visitor's sign-up card offers "Continue as guest": it skips the
+// account and opens Rhema — and only Rhema. Guests get the reader and all of
+// its tools (highlights and notes stay on this device), with no Home, Profile,
+// nav, studies or coach tours: the nav and every route out of the reader are
+// hidden (body.guest-mode) and refused here. The choice is remembered, so
+// reopening the app lands back in the reader; the reader's "Sign up" button
+// reopens the account card, and signing in or creating an account ends guest
+// mode. Anyone who has had an account on this device is never offered it.
+const GUEST_MODE_KEY = "guestMode";
+// Set once someone signs in on this device; kept through sign-out's wipe.
+const HAD_ACCOUNT_KEY = "hadAccount";
+
+function _deviceHadAccount() {
+  try {
+    return localStorage.getItem(HAD_ACCOUNT_KEY) === "1" || !!localStorage.getItem("authUsername");
+  } catch { return false; }
+}
+
+function _rememberHadAccount() {
+  try { localStorage.setItem(HAD_ACCOUNT_KEY, "1"); } catch {}
+}
+
+function _setGuestModeUi(on) {
+  _guestMode = !!on;
+  document.body?.classList.toggle("guest-mode", _guestMode);
+  // Keep keyboard focus out of the (covered) home screen behind the reader.
+  document.getElementById("homeScreen")?.toggleAttribute("inert", _guestMode);
+  document.querySelector(".app-header")?.toggleAttribute("inert", _guestMode);
+  if (_guestMode) hideBottomNav();
+}
+
+// Re-applies a remembered guest choice at startup. Returns true for a guest.
+function _restoreGuestMode() {
+  let on = false;
+  try { on = localStorage.getItem(GUEST_MODE_KEY) === "1"; } catch {}
+  // Never for a device that has had an account (first-time welcomes only).
+  if (on && _deviceHadAccount()) { _exitGuestMode(); on = false; }
+  if (on) _setGuestModeUi(true);
+  return on;
+}
+
+function continueAsGuest() {
+  if (!_guestMode && _deviceHadAccount()) return; // first-time welcomes only
+  try { localStorage.setItem(GUEST_MODE_KEY, "1"); } catch {}
+  _setGuestModeUi(true);
+  hideAuthModal();
+  _guestEnsureRhema();
+}
+
+function _exitGuestMode() {
+  try { localStorage.removeItem(GUEST_MODE_KEY); } catch {}
+  if (!_guestMode) return;
+  _setGuestModeUi(false);
+  // The reader stays open through sign-in; keep the nav tucked behind it (a
+  // startup pass can un-hide it while CSS was hiding it for the guest).
+  if (document.getElementById("rhemaModal")?.classList.contains("open")) hideBottomNav();
+}
+
+// A guest never leaves the reader: anything that would navigate elsewhere lands
+// back in it instead (returning from a Rhema map handoff if one is open).
+function _guestEnsureRhema() {
+  hideBottomNav();
+  if (_rhemaMapsReturn) { _rhemaReturnFromMaps(); return; }
+  if (document.getElementById("rhemaModal")?.classList.contains("open")) return;
+  _didBootLanding = true;
+  resumeRhema();
+}
+
+// The reader's "Sign up" button: the same account card, raised over the reader.
+function openGuestAccountPrompt() {
+  switchAuthTab("create");
+  showAuthModal();
 }
 
 function queueAppWelcomeCoachAfterAuth() {
@@ -33050,8 +33138,9 @@ function _maybeStartAppWelcomeCoachAfterAuth() {
 
 function switchAuthTab(tab) {
   const isCreate = tab === "create";
-  document.getElementById("authCreateForm").style.display = isCreate ? "block" : "none";
-  document.getElementById("authLoginForm").style.display = isCreate ? "none" : "block";
+  // "" falls back to .auth-form's flex column (keeps its field spacing).
+  document.getElementById("authCreateForm").style.display = isCreate ? "" : "none";
+  document.getElementById("authLoginForm").style.display = isCreate ? "none" : "";
   document.getElementById("authTabCreate").classList.toggle("active", isCreate);
   document.getElementById("authTabLogin").classList.toggle("active", !isCreate);
   document.getElementById("authCreateError").textContent = "";
@@ -33098,6 +33187,8 @@ async function submitCreateAccount() {
 
   btn.disabled = true;
   btn.textContent = "Checking…";
+  // Read before the auth-state handler ends guest mode mid-signup.
+  const wasGuest = _guestMode;
 
   try {
     const usernameTaken = await window.Auth.checkUsernameTaken(username);
@@ -33139,6 +33230,9 @@ async function submitCreateAccount() {
     if (!localStorage.getItem("appJoinDate")) {
       localStorage.setItem("appJoinDate", new Date().toISOString());
     }
+    // Highlights and notes made as a guest only lived on this device — save them
+    // to the new account so they follow the user everywhere.
+    if (wasGuest) _rhemaUploadLocalMarks();
     // Don't nag brand-new accounts to connect an email during onboarding — re-prompt later.
     _snoozeConnectEmailPrompt();
 
@@ -33359,10 +33453,12 @@ window.__onAuthStateReady = async (user) => {
   _authReady = true;
   _appInitialDataReady = false;
   if (user) {
+    _rememberHadAccount(); // this device is no longer a first-time welcome
     setAppLaunchText('Syncing your study space');
     await restoreUserFromFirestore(user);
     syncUserData();
     hideAuthModal();
+    _exitGuestMode(); // signed in — the full app (Home, nav, studies) unlocks
     updateProfileUI();
     updateProfileBadges?.();
     updatePracticeToolLocks();
@@ -33521,11 +33617,20 @@ window.__onAuthStateReady = async (user) => {
     _welcomeCoachQueuedAfterAuth = false;
     document.getElementById('appCoachOverlay')?.classList.add('hidden');
     _resumeHomeFlipAfterCoach();
-    showAuthModal();
+    if (_guestMode) {
+      // A returning guest skips the sign-up card and stays in the reader.
+      hideAuthModal();
+      _guestEnsureRhema();
+    } else {
+      showAuthModal();
+    }
     _appInitialDataReady = true;
     hideAppLaunchScreen('ready');
   }
 };
+
+// Re-apply a remembered guest choice before auth resolves (see Guest mode).
+_restoreGuestMode();
 
 // Handle case where Firebase auth resolved before DOMContentLoaded
 if (window.__pendingAuthResolved) {
@@ -33578,7 +33683,10 @@ document.addEventListener("DOMContentLoaded", () => {
   bindHomeNavCollapse();
   expandHomeNavOnEntry();
   _startHomeFlip();
-  const openParam = new URLSearchParams(location.search).get('open');
+  // Guests only ever see the reader — open it now rather than waiting on
+  // Firebase, and ignore deep links into the rest of the app.
+  if (_guestMode) _guestEnsureRhema();
+  const openParam = _guestMode ? null : new URLSearchParams(location.search).get('open');
   if (openParam === 'mercies') {
     setTimeout(async () => {
       showNavPage('mercies');
@@ -39051,6 +39159,16 @@ function _rhemaStartMarksSync() {
     if (document.getElementById('rhemaModal')?.classList.contains('open')) renderRhemaVerse();
   });
 }
+// Push this device's reader marks to the signed-in account (used when a guest
+// creates an account, so marks made before signing up aren't stranded locally).
+function _rhemaUploadLocalMarks() {
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!uid || !window.Auth?.saveRhemaMark) return;
+  _rhemaLoadLocalMarks();
+  Object.entries(_rhemaScopedMarks.home || {}).forEach(([ref, mark]) => {
+    if (mark && (mark.color || mark.note)) window.Auth.saveRhemaMark(uid, ref, 'home', mark).catch(() => {});
+  });
+}
 function _rhemaSetMark(ref, patch) {
   const scope = _rhemaMarkScope();
   const bucket = _rhemaCurMarks();
@@ -42300,6 +42418,7 @@ function launchRhema(mode) {
 // context the old sandbox used, so mark isolation, long-press observations and
 // the study data listeners all work — just hosted inside the reader.
 function openRhemaStudyPicker() {
+  if (_guestMode) return; // studies need an account
   const ov = document.getElementById('rhemaStudyPickerOverlay');
   if (!ov) return;
   _renderRhemaStudyPicker();
@@ -43008,6 +43127,8 @@ function _syncRhemaChapterUi() {
 }
 
 function closeRhema(keepSandbox = false) {
+  // Guests have nowhere to close the reader to — it is the whole app for them.
+  if (_guestMode && !keepSandbox) return;
   // If opened from sermon workshop, handle cleanup via sermon mode
   if (typeof _sermonRhemaMode !== 'undefined' && _sermonRhemaMode) {
     _closeSermonRhemaMode();
@@ -44913,6 +45034,8 @@ const COACH_TEST_MODE = false;
 let _suppressRhemaCoachOnce = false;
 
 function _coachHasSeen(key, force = false) {
+  // No coach tours for guests — marked seen, so they don't pop up after sign-up.
+  if (_guestMode && !force && !_hasSignedInUser()) { _coachMarkSeen(key); return true; }
   return !force && !COACH_TEST_MODE && _localFlagSet(key);
 }
 
@@ -49191,6 +49314,7 @@ window.addEventListener('load', () => { setTimeout(_initDesktopNav, 900); });
 
 // ── Desktop home navigation ───────────────────────────────────────────────────
 function _desktopGoHome() {
+  if (_guestMode) { _guestEnsureRhema(); return; }
   const modal = document.getElementById('rhemaModal');
   if (modal?.classList.contains('open')) {
     modal.classList.remove('open');
