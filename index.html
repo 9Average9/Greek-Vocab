@@ -346,7 +346,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.489" rel="stylesheet"/>
+<link href="style.css?v=3.0.491" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -10306,6 +10306,7 @@ Verb Endings
 <!-- Auth Modal -->
 <div class="modal-overlay auth-modal-overlay" id="authModal">
 <div class="auth-card" onclick="event.stopPropagation()">
+<button class="auth-guest-close" onclick="continueAsGuest()" type="button" aria-label="Close and keep reading as a guest"><span class="material-symbols-outlined">close</span></button>
 <div class="auth-logo">
 <span class="material-symbols-outlined auth-logo-icon">menu_book</span>
 <h2 class="auth-logo-title">Disciple Builder</h2>
@@ -10346,6 +10347,15 @@ Verb Endings
 <p class="auth-error" id="authLoginError"></p>
 <button class="auth-submit-btn" onclick="submitLogin()">Sign In</button>
 <button class="auth-link-btn" onclick="openForgotPasswordModal()" type="button" style="width:100%;margin-top:10px;background:none;border:none;color:var(--muted-color);font-size:13px;cursor:pointer;text-decoration:underline">Forgot password?</button>
+</div>
+<!-- Guest: Rhema reader only, no account (see Guest mode in app.js) -->
+<div class="auth-guest">
+<div class="auth-guest-divider"><span>or</span></div>
+<button class="auth-guest-btn" onclick="continueAsGuest()" type="button">
+<span class="material-symbols-outlined auth-guest-icon">auto_stories</span>
+<span class="auth-guest-copy"><strong>Continue as guest</strong><small>Read and study in Rhēma — no account needed</small></span>
+<span class="material-symbols-outlined auth-guest-chev">arrow_forward</span>
+</button>
 </div>
 </div>
 </div>
@@ -10580,6 +10590,10 @@ Verb Endings
 <div class="rhema-header">
 <button class="icon-btn rhema-back-btn" onclick="rhemaGoBack()">
 <span class="material-symbols-outlined">home</span>
+</button>
+<button class="rhema-guest-btn" onclick="openGuestAccountPrompt()" type="button" title="Create an account or sign in" aria-label="Sign up or sign in">
+<span class="material-symbols-outlined">person_add</span>
+<span>Sign up</span>
 </button>
 <button class="icon-btn rhema-workshop-back-btn hidden" id="rhemaWorkshopBackBtn" onclick="_closeSermonRhemaMode()" title="Back to Workshop">
 <span class="material-symbols-outlined">arrow_back</span>
@@ -17277,7 +17291,7 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="app.js?v=3.0.490"></script>
+<script src="app.js?v=3.0.491"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
