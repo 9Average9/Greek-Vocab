@@ -29416,7 +29416,6 @@ async function confirmDeleteAccount() {
     return;
   }
   localStorage.clear();
-  _rememberHadAccount(); // not a first-time welcome: no guest option next time
   location.reload();
 }
 
@@ -29426,7 +29425,6 @@ function signOutAccount() {
   _unsubUserDoc = null;
   window.Auth.logout().then(() => {
     localStorage.clear();
-    _rememberHadAccount(); // not a first-time welcome: no guest option next time
     location.reload();
   });
 }
@@ -30315,7 +30313,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.491";
+const APP_VERSION = "3.0.492";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -33032,11 +33030,7 @@ function gatherMigrationData() {
 // ── Auth modal UI ────────────────────────────────────────────────────────────
 
 function showAuthModal() {
-  const modal = document.getElementById("authModal");
-  // "Continue as guest" is only offered on a true first-time welcome (or to a
-  // guest reopening the card) — never to someone who has had an account here.
-  modal?.classList.toggle("auth-first-welcome", _guestMode || !_deviceHadAccount());
-  modal?.classList.add("open");
+  document.getElementById("authModal")?.classList.add("open");
 }
 
 function hideAuthModal() {
@@ -33048,27 +33042,15 @@ function _hasSignedInUser() {
 }
 
 // ── Guest mode ───────────────────────────────────────────────────────────────
-// A first-time visitor's sign-up card offers "Continue as guest": it skips the
-// account and opens Rhema — and only Rhema. Guests get the reader and all of
-// its tools (highlights and notes stay on this device), with no Home, Profile,
-// nav, studies or coach tours: the nav and every route out of the reader are
-// hidden (body.guest-mode) and refused here. The choice is remembered, so
-// reopening the app lands back in the reader; the reader's "Sign up" button
-// reopens the account card, and signing in or creating an account ends guest
-// mode. Anyone who has had an account on this device is never offered it.
+// The sign-up card offers "Continue as guest" to anyone who isn't signed in: it
+// skips the account and opens Rhema — and only Rhema. Guests get the reader and
+// all of its tools (highlights and notes stay on this device), with no Home,
+// Profile, nav, studies or coach tours: the nav and every route out of the
+// reader are hidden (body.guest-mode) and refused here. The choice is
+// remembered, so reopening the app lands back in the reader; the reader's
+// "Sign up" button reopens the account card, and signing in or creating an
+// account ends guest mode.
 const GUEST_MODE_KEY = "guestMode";
-// Set once someone signs in on this device; kept through sign-out's wipe.
-const HAD_ACCOUNT_KEY = "hadAccount";
-
-function _deviceHadAccount() {
-  try {
-    return localStorage.getItem(HAD_ACCOUNT_KEY) === "1" || !!localStorage.getItem("authUsername");
-  } catch { return false; }
-}
-
-function _rememberHadAccount() {
-  try { localStorage.setItem(HAD_ACCOUNT_KEY, "1"); } catch {}
-}
 
 function _setGuestModeUi(on) {
   _guestMode = !!on;
@@ -33083,14 +33065,11 @@ function _setGuestModeUi(on) {
 function _restoreGuestMode() {
   let on = false;
   try { on = localStorage.getItem(GUEST_MODE_KEY) === "1"; } catch {}
-  // Never for a device that has had an account (first-time welcomes only).
-  if (on && _deviceHadAccount()) { _exitGuestMode(); on = false; }
   if (on) _setGuestModeUi(true);
   return on;
 }
 
 function continueAsGuest() {
-  if (!_guestMode && _deviceHadAccount()) return; // first-time welcomes only
   try { localStorage.setItem(GUEST_MODE_KEY, "1"); } catch {}
   _setGuestModeUi(true);
   hideAuthModal();
@@ -33453,7 +33432,6 @@ window.__onAuthStateReady = async (user) => {
   _authReady = true;
   _appInitialDataReady = false;
   if (user) {
-    _rememberHadAccount(); // this device is no longer a first-time welcome
     setAppLaunchText('Syncing your study space');
     await restoreUserFromFirestore(user);
     syncUserData();
