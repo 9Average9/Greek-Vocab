@@ -38301,11 +38301,10 @@ html body.dark:not([class*="page-home-backdrop-"]):has(#homeScreen.screen.active
 }
 
 /* ── Guest mode: "Continue as guest" opens Rhema and nothing else ─────────── */
-/* Auth card: the guest option sits at the very bottom, secondary to sign-up,
-   and only on a first-time welcome (showAuthModal sets .auth-first-welcome). */
+/* Auth card (only ever shown to people who aren't signed in): the guest option
+   sits at the very bottom, secondary to sign-up. */
 #authModal .auth-card { position: relative; }
-.auth-guest { display: none; margin-top: 18px; }
-#authModal.auth-first-welcome .auth-guest { display: block; }
+.auth-guest { margin-top: 18px; }
 .auth-guest-divider {
   display: flex;
   align-items: center;
