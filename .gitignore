@@ -5,3 +5,4 @@ firebase-debug.log
 .claude/
 functions/.env
 functions/.env.*
+data/deep-lexicon/study/work/
