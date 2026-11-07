@@ -424,7 +424,7 @@
       const crit = entry.critical?.count;
       const books = Object.keys(entry.byBook || {}).length;
       items.push({ era: 'c. AD 45–95', title: 'New Testament', icon: 'auto_stories',
-        body: `<p>${entry.count.toLocaleString()}× in ${books} book${books === 1 ? '' : 's'} of the Majority (Byzantine) text${crit != null && crit !== entry.count ? `; ${crit.toLocaleString()}× in the critical text (SBLGNT) — the ${Math.abs(entry.count - crit)} difference comes from textual variants` : crit != null ? ', the same in the critical text (SBLGNT)' : ''}.</p>` });
+        body: `<p>${entry.count.toLocaleString()}× in ${books} book${books === 1 ? '' : 's'} of the Majority (Byzantine) text${_critNote(entry.count, crit)}.</p>` });
     }
     if (entry?.classical?.af) {
       items.push({ era: 'c. AD 95–150', title: 'Apostolic Fathers', icon: 'history_edu',
@@ -436,6 +436,19 @@
         <div class="ws-tl-body"><div class="ws-tl-h"><b>${esc(it.title)}</b><span>${esc(it.era)}</span></div>${it.body}</div>
       </li>`).join('')}</ol>
       <p class="ws-fine">Sources outside the Bible witness how Greek speakers used the word; they don’t override what the biblical author means in context.</p>`);
+  }
+
+  // Majority vs critical count. A small gap is textual variation; a large one
+  // means the two editions catalogue the word differently (SBLGNT files δεῖ
+  // under δέω and πρῶτον under πρῶτος), so the numbers aren't comparable.
+  function _critNote(count, crit) {
+    if (crit == null) return '';
+    if (crit === count) return ', the same in the critical text (SBLGNT)';
+    const diff = Math.abs(count - crit);
+    if (diff <= Math.max(3, Math.round(count * 0.1))) {
+      return `; ${crit.toLocaleString()}× in the critical text (SBLGNT) — the ${diff} difference comes from textual variants`;
+    }
+    return ' (the critical text, SBLGNT, files this word under a different dictionary entry, so its count isn’t directly comparable)';
   }
 
   // ── Lexicons (tabbed) ────────────────────────────────────────────────────
