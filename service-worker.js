@@ -53,7 +53,7 @@ self.addEventListener("notificationclick", (event) => {
 // Before this split, every release renamed the one cache and `activate`
 // deleted the old one, so each update re-downloaded all of the Bible data, and
 // stale-while-revalidate re-fetched multi-megabyte files on every open.
-const APP_SW_VERSION = "3.0.492";
+const APP_SW_VERSION = "3.0.493";
 const SHELL_CACHE = "disciple-builder-v" + APP_SW_VERSION;
 const DATA_CACHE = "disciple-builder-data-v1";
 const KEEP_CACHES = new Set([SHELL_CACHE, DATA_CACHE]);
@@ -72,10 +72,11 @@ const SHELL_NETWORK_TIMEOUT_MS = 3000;
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.492",
+  "./style.css?v=3.0.493",
   "./vocab.js?v=3.0.8",
   "./rhema-align.js?v=3.0.493",
-  "./app.js?v=3.0.492",
+  "./app.js?v=3.0.493",
+  "./rhema-word-study.js?v=3.0.493",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.418",
   "./rhema-english-dictionary.js?v=3.0.417",
@@ -177,7 +178,7 @@ const FILES_TO_CACHE = [
 // them twice at once is what made first launches crawl). The page asks for the
 // rest once the reader has settled ("warm-offline" message below).
 function _swIsBigData(path) {
-  return /\/(rhema-(?!crossrefs-ui|align)[^/]+|bible-threads|bible-intros)\.js$/.test(path);
+  return /\/(rhema-(?!crossrefs-ui|align|word-study)[^/]+|bible-threads|bible-intros)\.js$/.test(path);
 }
 
 // HTML entry points + the manifest live in the per-release shell cache.

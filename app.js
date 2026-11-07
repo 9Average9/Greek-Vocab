@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.492";
+const APP_VERSION = "3.0.493";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.493 &mdash; Faster loading, a deeper word study, a truer interlinear</div>
+<ul>
+  <li><strong>Updates no longer re-download the Bible</strong> &mdash; Your offline Bible data now stays on your device across app updates. Before, every update quietly downloaded about 80 MB again, which is why some launches were slow. Large files are also no longer re-checked in the background every time you open them.</li>
+  <li><strong>The reader opens on what it needs</strong> &mdash; A New Testament chapter no longer waits for the Hebrew Old Testament, and the rest of the study data loads gently afterwards so the reader stays smooth. Updates no longer hold the launch screen.</li>
+  <li><strong>A new Word Study</strong> &mdash; Tap any Greek word for one study that leads with what it means right here: how every translation renders this exact word (BSB, MSB, and NIV, NKJV, NASB, KJV at a tap), the measured range of meaning with every verse, which NT authors use it and how, its history from classical Greek through the Septuagint, the papyri and the Apostolic Fathers, and cleaned-up lexicons (Abbott-Smith, Moulton&ndash;Milligan, LSJ, Dodson, Strong&rsquo;s) with tappable references.</li>
+  <li><strong>Critical-text words all have definitions</strong> &mdash; Over 500 SBLGNT words that used to show &ldquo;No definition found&rdquo; (like &omicron;&#8021;&tau;&omega;&sigmaf;) now resolve correctly.</li>
+  <li><strong>A more accurate interlinear</strong> &mdash; Greek words now line up with the Berean tables in order, so repeated words no longer swap, and verses split differently between texts line up properly. Each English word says what it is: your version&rsquo;s word, a best match (&asymp;), no separate word (&mdash;), or the literal meaning, with a legend and an optional literal-and-parsing view.</li>
+</ul>
 <div class="un-version-label">v3.0.490 &mdash; Cleaner close, for real this time</div>
 <ul>
   <li><strong>Fixed the closing flash</strong> &mdash; When heading Home, the reader now keeps its exact look while it fades out. The old header (the Greek/English toggle) and the bottom nav no longer flash into view mid-animation &mdash; everything settles only after the reader has fully dissolved.</li>
@@ -37625,7 +37633,7 @@ let _rhemaSyntaxMode = false;
 let _rhemaTextMode = localStorage.getItem('rhemaTextMode') === 'critical' ? 'critical' : 'majority';
 let _rhemaEnglishMode = localStorage.getItem('rhemaEnglishVersion') === 'BSB' ? 'BSB' : 'MSB';
 let _rhemaOTLayer = localStorage.getItem('rhemaOTLayer') === 'lxx' ? 'lxx' : 'hebrew';
-let _rhemaActiveTab = 'parsing';
+let _rhemaActiveTab = 'definition'; // the word study leads; Parsing is one tap away
 let _rhemaActiveWord = null;
 let _rhemaActiveWordLayer = null;
 let _rhemaTrail = [];       // full cross-ref trail — never auto-shrinks
@@ -46968,6 +46976,9 @@ function openRhemaSheet(wordIdx, verse) {
   closeRhemaPickerSheet();
   _rhemaActiveWord = word;
   _rhemaActiveWordLayer = getCurrentOriginalLanguageLayer();
+  // Where this word was tapped — lets the word study say "in this verse" and
+  // line up every translation's rendering of this exact occurrence.
+  window._rhemaWordCtx = { idx: Number(wordIdx), book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, strongs: String(word[1] || '') };
 
   // Highlight selected word
   document.querySelectorAll('.rhema-word.selected').forEach(el => el.classList.remove('selected'));
@@ -47019,6 +47030,7 @@ function closeRhemaSheet() {
   document.getElementById('rhemaWlBackBtn')?.classList.add('hidden');
   _rhemaActiveWord = null;
   _rhemaActiveWordLayer = null;
+  window._rhemaWordCtx = null;
 }
 
 function copyCurrentRhemaWord() {
@@ -47938,6 +47950,8 @@ function _rhemaMeaningEvidenceHtml(decision = {}) {
 
 function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguageLayer()) {
   if (layer === 'hebrew') return renderHebrewDefinition(strongs);
+  // Greek (NT + LXX): the full Word Study (rhema-word-study.js).
+  if (typeof renderRhemaWordStudy === 'function') return renderRhemaWordStudy(strongs, morph, layer);
   const activeWord = _rhemaActiveWord && String(_rhemaActiveWord[1]) === String(strongs)
     ? _rhemaActiveWord
     : ['', strongs, morph || ''];
