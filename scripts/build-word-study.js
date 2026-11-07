@@ -122,19 +122,31 @@ const plain = (html, max) => {
 // same thing in both places (e.g. εἶπον G2036 counts as λέγω G3004).
 const Align = require(path.join(ROOT, 'rhema-align.js'));
 
+const SUPPLETIVE = [[3004, 2036, 2046, 4483], [2068, 5315], [757, 756], [681, 680]];
+const SUPPLETIVE_KEY = new Map();
+for (const g of SUPPLETIVE) for (const x of g) SUPPLETIVE_KEY.set(String(x), String(g[0]));
+const sameLexeme = (s) => SUPPLETIVE_KEY.get(String(s)) || String(s);
+
 function makeVerifier(W) {
   const texts = [W.RhemaNT?.text || {}, W.RhemaCriticalNT?.text || {}, W.RhemaLXX?.text || {}];
   const lemmaIdx = Align.buildLemmaIndex(W.RhemaLexicon || {});
   function verseHas(ref, strongs) {
     const m = String(ref || '').trim().match(/^([1-3]?[A-Z]{2,3}) (\d+):(\d+)$/);
     if (!m) return false;
-    const target = Align.canon(strongs);
+    // Strict: the cited verse must contain this exact word. Only suppletive
+    // verbs (one verb, several stems/numbers) count as the same word — not the
+    // looser groups the interlinear uses (μόνος/μόνον, μακρός/μακράν, ...).
+    const target = sameLexeme(strongs);
+    // …or the word spelled exactly as its dictionary form (indeclinables like
+    // μόνον, μακράν, which the texts sometimes file under μόνος, μακρός).
+    const lemma = Align.lemmaKey((W.RhemaLexicon || {})[strongs]?.lemma || '');
     for (const T of texts) {
       const words = ((T[m[1]] || {})[m[2]] || {})[m[3]];
       if (!words) continue;
       for (const w of words) {
         const s = w[1] || (w[3] ? Align.strongsForLemma(lemmaIdx, w[3]) : '');
-        if (s && Align.canon(s) === target) return true;
+        if (s && sameLexeme(s) === target) return true;
+        if (lemma.length > 2 && Align.lemmaKey(w[0]) === lemma) return true;
       }
     }
     return false;
