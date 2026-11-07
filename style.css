@@ -38627,3 +38627,16 @@ html.dark .rhema-tab.active, body.dark .rhema-tab.active { color: #93c5fd; borde
 .rhema-xref-verse-text .xref-match-approx { text-decoration: underline dotted; text-underline-offset: 3px; }
 .rhema-xref-none { font-size: .72rem; font-style: italic; opacity: .7; }
 .rhema-xref-note { font-size: .74rem; color: var(--muted-color); margin: 4px 0 8px; }
+
+.ws-vchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.ws-vchip { padding: 5px 11px; border-radius: 999px; border: 1px solid var(--ws-line); background: transparent; color: var(--font-color, #20303f); font-size: .74rem; font-weight: 800; cursor: pointer; }
+.ws-vchip.done { border-color: color-mix(in srgb, var(--ws-accent) 45%, transparent); }
+.ws-vchip.on { background: var(--ws-accent); border-color: var(--ws-accent); color: #fff; }
+html.dark .ws-vchip.on, body.dark .ws-vchip.on { color: #0b1220; }
+.ws-vlist { display: flex; flex-direction: column; gap: 8px; }
+.ws-vrow { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--ws-line); }
+.ws-vrow .ws-bar { margin: 6px 0 2px; }
+.ws-progress { padding: 6px 0; }
+.ws-vtable table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.ws-vtable th { text-align: left; font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; opacity: .6; padding: 4px 6px; }
+.ws-vtable td { padding: 6px; border-top: 1px solid var(--ws-line); vertical-align: top; }

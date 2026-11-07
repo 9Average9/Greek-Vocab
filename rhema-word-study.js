@@ -468,6 +468,236 @@
        <p class="ws-fine">Senses are measured by aligning every occurrence in the Byzantine text with the Majority Standard Bible (and checked independently against the Berean Standard Bible), then grouping the English renderings. Translation wording approximates meaning; where the lexicons recognise a sense the English hides, it is listed separately.</p>`));
   }
 
+
+  // ── Across translations: every NT use, per version ───────────────────────
+  // How each version renders this word across the whole New Testament. MSB and
+  // BSB live on the device, so they measure instantly. Licensed versions (NIV,
+  // NKJV, NASB, KJV, ESV…) are measured ON THIS DEVICE from that version's own
+  // text: the chapters it needs are downloaded once into the same permanent
+  // store the reader uses (ESV: session memory only, per Crossway), and each
+  // occurrence is lined up word-for-word through the Berean tables. Nothing is
+  // precomputed or redistributed — it's the reader's own copy, counted.
+  const _wsOccCache = new Map();
+  function _wsOccurrences(strongs) {
+    const key = `${_rhemaTextMode}|${strongs}`;
+    if (_wsOccCache.has(key)) return _wsOccCache.get(key);
+    const T = _rhemaTextForMode(_rhemaTextMode) || {};
+    const out = [];
+    for (const book of RHEMA_NT_BOOK_ORDER) {
+      const B = T[book]; if (!B) continue;
+      for (const ch of Object.keys(B).sort((a, b) => a - b)) {
+        for (const v of Object.keys(B[ch]).sort((a, b) => a - b)) {
+          const words = B[ch][v];
+          for (let i = 0; i < words.length; i++) {
+            const r = _rhemaResolveWord(words[i], book, ch);
+            if (String((r || words[i])[1]) === String(strongs)) out.push({ book, ch, v, idx: i });
+          }
+        }
+      }
+    }
+    _wsOccCache.set(key, out);
+    if (_wsOccCache.size > 30) _wsOccCache.delete(_wsOccCache.keys().next().value);
+    return out;
+  }
+
+  function _wsVersionList() {
+    const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
+    const list = [...new Set(['MSB', 'BSB', reader, ..._apiVersions()])];
+    const known = typeof VS_VERSIONS !== 'undefined' ? new Set(VS_VERSIONS.map(v => v.code)) : null;
+    return list.filter(v => !known || known.has(v));
+  }
+  const _wsIsLocal = (ver) => WS_LOCAL.includes(ver);
+  const _wsVerStats = new Map();   // `${ver}|${mode}|${strongs}` → stats
+  const _wsVerBusy = new Map();    // same key → { done, total, phase }
+
+  function _wsChapterText(ver, book, ch) {
+    if (_wsIsLocal(ver)) return null;
+    return typeof _vsChapterFromMemory === 'function' ? _vsChapterFromMemory(ver, book, String(ch)) : null;
+  }
+  function _wsVerseText(ver, book, ch, v) {
+    if (_wsIsLocal(ver)) return _rhemaEnglishText(book, ch, v, ver) || '';
+    const chap = _wsChapterText(ver, book, ch);
+    return chap ? String(chap[String(v)] || '') : '';
+  }
+  function _wsMissingChapters(ver, occs) {
+    if (_wsIsLocal(ver)) return [];
+    const seen = new Set(), out = [];
+    for (const o of occs) {
+      const k = `${o.book} ${o.ch}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      if (typeof _vsBookInScope === 'function' && !_vsBookInScope(ver, o.book)) continue;
+      if (!_wsChapterText(ver, o.book, o.ch)) out.push([o.book, o.ch]);
+    }
+    return out;
+  }
+  const _wsTidy = (t) => {
+    const words = String(t || '').split(/\s+/).filter(Boolean);
+    const isG = (w) => window.RhemaAlign && RhemaAlign.isGrammar(w.toLowerCase().replace(/[’']s$/, ''));
+    let a = 0, b = words.length;
+    while (a < b - 1 && isG(words[a])) a++;
+    while (b - 1 > a && isG(words[b - 1])) b--;
+    return words.slice(a, b).join(' ');
+  };
+
+  async function _wsMeasure(uid, strongs, ver) {
+    const key = `${ver}|${_rhemaTextMode}|${strongs}`;
+    if (_wsVerStats.has(key) || _wsVerBusy.has(key)) return;
+    const busy = { done: 0, total: 0, phase: 'prepare' };
+    _wsVerBusy.set(key, busy);
+    const redraw = () => _wsRenderVersions(uid, strongs);
+    try {
+      if (typeof _ensureRhemaBsbAlign === 'function') await _ensureRhemaBsbAlign();
+      if (ver === 'BSB' && typeof _rhemaLoadDataFile === 'function') await _rhemaLoadDataFile('rhema-bsb.js').catch(() => {});
+      const occs = _wsOccurrences(strongs);
+      // 1. Chapters (licensed versions only), one at a time so each block
+      //    download covers its neighbours.
+      let missing = _wsMissingChapters(ver, occs);
+      if (missing.length) {
+        busy.phase = 'download'; busy.total = missing.length; redraw();
+        for (const [book, ch] of missing) {
+          if (typeof _vsTransLimited === 'function' && _vsTransLimited(ver)) { busy.limited = true; break; }
+          if (!_wsChapterText(ver, book, ch)) { try { await _vsEnsureChapter(ver, book, ch); } catch {} }
+          busy.done++;
+          if (busy.done % 3 === 0) redraw();
+        }
+      }
+      // 2. Line up every occurrence, in slices so the sheet stays responsive.
+      busy.phase = 'measure'; busy.done = 0; busy.total = occs.length; redraw();
+      const lex = (window.RhemaLexicon || {})[strongs] || {};
+      const st = _studies.get(uid);
+      let meanings = [];
+      try { meanings = [...(_deepExpectedMeaningWords(st?.entry || {}, lex) || [])].slice(0, 12); } catch {}
+      const baseDecision = _rhemaMeaningDecision(['', strongs, ''], { layer: 'nt-greek' });
+      const gloss = String(baseDecision.gloss || '').split(/[;,(]/)[0];
+      const tally = new Map();
+      let none = 0, unmatched = 0, noText = 0;
+      const T = _rhemaTextForMode(_rhemaTextMode) || {};
+      let lastVerse = '', verseCache = null;
+      for (let k = 0; k < occs.length; k++) {
+        const o = occs[k];
+        const vk = `${o.book} ${o.ch}:${o.v}`;
+        if (vk !== lastVerse) {
+          const words = T[o.book][o.ch][o.v];
+          const bsbEng = _rhemaBsbEnglishForTokens(words, o.book, o.ch, o.v);
+          const text = ver === 'BSB' ? null : _wsVerseText(ver, o.book, o.ch, o.v);
+          verseCache = { words, bsbEng, text };
+          lastVerse = vk;
+        }
+        let r;
+        if (ver === 'BSB') {
+          r = RhemaAlign.bsbRenderings([verseCache.bsbEng[o.idx]])[0];
+        } else if (!verseCache.text) {
+          noText++; continue;
+        } else {
+          const items = verseCache.words.map((w, i) => i === o.idx ? { bsb: verseCache.bsbEng[i], gloss, meanings } : { bsb: verseCache.bsbEng[i] });
+          r = RhemaAlign.bridgeToVersion(items, verseCache.text)[o.idx];
+        }
+        if (r.kind === 'none') none++;
+        else if (!r.text) unmatched++;
+        else {
+          let shown = _wsTidy(r.text);
+          // "Then"/"But" only because they open the sentence → "then"/"but";
+          // capitals mid-sentence (God, He, Lord) are kept.
+          const text = verseCache.text || '';
+          if (r.start != null && /^[A-Z][a-z]/.test(shown) && (r.start === 0 || /[.!?“"‘'(—:;]\s*$/.test(text.slice(0, r.start)))) {
+            shown = shown.charAt(0).toLowerCase() + shown.slice(1);
+          }
+          const norm = shown.toLowerCase();
+          if (!tally.has(norm)) tally.set(norm, { forms: new Map(), count: 0, refs: [], approx: 0 });
+          const t = tally.get(norm);
+          t.count++;
+          t.forms.set(shown, (t.forms.get(shown) || 0) + 1);
+          if (r.kind === 'inferred') t.approx++;
+          if (t.refs[t.refs.length - 1] !== vk) t.refs.push(vk);
+        }
+        if (k % 150 === 149) { busy.done = k + 1; redraw(); await new Promise(res => setTimeout(res, 0)); }
+      }
+      const renderings = [...tally.values()].map(t => ({
+        text: [...t.forms.entries()].sort((a, b) => b[1] - a[1])[0][0], count: t.count, refs: t.refs, approx: t.approx,
+      })).sort((a, b) => b.count - a.count);
+      _wsVerStats.set(key, { ver, total: occs.length, matched: occs.length - none - unmatched - noText, none, unmatched, noText, renderings, limited: !!busy.limited });
+    } finally {
+      _wsVerBusy.delete(key);
+      redraw();
+    }
+  }
+
+  window.rhemaWordStudyVersion = function (uid, ver) {
+    const st = _studies.get(uid);
+    if (!st) return;
+    st.ver = ver;
+    const key = `${ver}|${_rhemaTextMode}|${st.strongs}`;
+    // Local versions measure straight away; a licensed version measures
+    // straight away only when its chapters are already on the device.
+    if (!_wsVerStats.has(key) && (_wsIsLocal(ver) || !_wsMissingChapters(ver, _wsOccurrences(st.strongs)).length)) {
+      _wsMeasure(uid, st.strongs, ver);
+    }
+    _wsRenderVersions(uid, st.strongs);
+  };
+  window.rhemaWordStudyMeasure = function (uid, ver) {
+    const st = _studies.get(uid);
+    if (st) _wsMeasure(uid, st.strongs, ver);
+  };
+
+  function _wsRenderVersions(uid, strongs) {
+    const el = document.getElementById(`${uid}-versions`);
+    const st = _studies.get(uid);
+    if (!el || !st) return;
+    const vers = _wsVersionList();
+    const sel = st.ver || vers[0];
+    const keyOf = (v) => `${v}|${_rhemaTextMode}|${strongs}`;
+    const chips = vers.map(v => {
+      const done = _wsVerStats.has(keyOf(v));
+      return `<button type="button" class="ws-vchip${v === sel ? ' on' : ''}${done ? ' done' : ''}" onclick="rhemaWordStudyVersion('${uid}','${esc(v)}')">${esc(v)}${done ? ' ✓' : ''}</button>`;
+    }).join('');
+    const stats = _wsVerStats.get(keyOf(sel));
+    const busy = _wsVerBusy.get(keyOf(sel));
+    let body = '';
+    if (busy) {
+      const pctDone = busy.total ? Math.round(100 * busy.done / busy.total) : 0;
+      body = `<div class="ws-progress"><div class="ws-note">${busy.phase === 'download'
+        ? `Downloading ${esc(sel)}’s New Testament chapters for this word… ${busy.done}/${busy.total}`
+        : busy.phase === 'measure' ? `Lining up all ${busy.total.toLocaleString()} uses in ${esc(sel)}…` : 'Preparing…'}</div>
+        <div class="ws-bar"><span style="width:${Math.max(3, pctDone)}%"></span></div></div>`;
+    } else if (stats) {
+      const top = stats.renderings.slice(0, 14);
+      const max = top[0]?.count || 1;
+      const covered = stats.total - stats.noText;
+      body = `<p class="ws-note"><b>${esc(sel)}</b> renders it <b>${stats.renderings.length}</b> different way${stats.renderings.length === 1 ? '' : 's'} across ${covered.toLocaleString()} NT use${covered === 1 ? '' : 's'}${top[0] ? ` — most often “${esc(top[0].text)}” (${Math.round(100 * top[0].count / Math.max(1, covered))}%)` : ''}.</p>
+        <div class="ws-vlist">${top.map(r => `<div class="ws-vrow">
+            <div class="ws-sense-top"><b>${esc(r.text)}</b>${r.approx ? `<span class="ws-fine" title="Some matched by position">≈${r.approx}</span>` : ''}<span class="ws-count">${r.count}× · ${Math.round(100 * r.count / Math.max(1, covered))}%</span></div>
+            <div class="ws-bar"><span style="width:${Math.max(2, Math.round(100 * r.count / max))}%"></span></div>
+            ${more(`${r.refs.length} verse${r.refs.length === 1 ? '' : 's'}`, `<div class="ws-refs">${r.refs.slice(0, 60).map(x => _refChipFromKey(x, strongs)).join('')}${r.refs.length > 60 ? `<span class="ws-fine">+${r.refs.length - 60} more</span>` : ''}</div>`)}
+          </div>`).join('')}</div>
+        ${stats.renderings.length > top.length ? `<p class="ws-fine">…and ${stats.renderings.length - top.length} rarer renderings.</p>` : ''}
+        <p class="ws-fine">${[
+          stats.none ? `${stats.none} use${stats.none === 1 ? '' : 's'} with no separate English word` : '',
+          stats.unmatched ? `${stats.unmatched} not confidently matched` : '',
+          stats.noText ? `${stats.noText} in verses ${esc(sel)} doesn’t have${stats.limited ? ' (download limit reached — try again later)' : ''}` : '',
+        ].filter(Boolean).join(' · ')}</p>`;
+    } else if (!_wsIsLocal(sel)) {
+      const missing = _wsMissingChapters(sel, _wsOccurrences(strongs)).length;
+      const limited = typeof _vsTransLimited === 'function' && _vsTransLimited(sel);
+      body = limited
+        ? `<p class="ws-note">${esc(sel)} can’t be downloaded right now (its usage limit is reached). Try again later.</p>`
+        : `<p class="ws-note">To count how ${esc(sel)} translates this word everywhere it appears, Rhema needs ${missing} New Testament chapter${missing === 1 ? '' : 's'} of ${esc(sel)} on this device. They download once${sel === 'ESV' ? ' for this session (Crossway doesn’t allow saving the ESV)' : ' and stay for offline reading'}.</p>
+           <button type="button" class="ws-btn" onclick="rhemaWordStudyMeasure('${uid}','${esc(sel)}')"><span class="material-symbols-outlined">download</span>Measure ${esc(sel)} across the NT</button>`;
+    }
+    // Side-by-side once two or more versions are measured.
+    const measured = vers.map(v => _wsVerStats.get(keyOf(v))).filter(Boolean);
+    const table = measured.length >= 2 ? `<div class="ws-vtable"><div class="ws-sub-h">Side by side</div>
+      <table><thead><tr><th>Version</th><th>Most often</th><th>Ways</th></tr></thead><tbody>${measured.map(m => {
+        const covered = Math.max(1, m.total - m.noText);
+        const t = m.renderings[0];
+        return `<tr><td><b>${esc(m.ver)}</b></td><td>${t ? `${esc(t.text)} <span class="ws-fine">${Math.round(100 * t.count / covered)}%</span>` : '—'}${m.renderings[1] ? `<div class="ws-fine">then ${esc(m.renderings[1].text)} ${Math.round(100 * m.renderings[1].count / covered)}%</div>` : ''}</td><td>${m.renderings.length}</td></tr>`;
+      }).join('')}</tbody></table></div>` : '';
+    el.innerHTML = section('versions', 'compare_arrows', 'Across translations',
+      `<div class="ws-vchips">${chips}</div>${body}${table}
+       <p class="ws-fine">Counted on your device from each version’s own text, every New Testament use lined up word-for-word through the Berean tables (BSB is exact). Approximate matches are marked ≈.</p>`,
+      'every NT use, per version');
+  }
+
   // ── Main entry ───────────────────────────────────────────────────────────
   const _studies = new Map();
   let _seq = 0;
@@ -486,7 +716,8 @@
     _studies.set(uid, { strongs, ctx, entry: null });
     if (_studies.size > 20) _studies.delete(_studies.keys().next().value);
 
-    const nav = [['here', 'Here', !!ctx], ['range', 'Range', true], ['authors', 'Authors', true], ['history', 'History', true], ['lexicons', 'Lexicons', true]]
+    const isNT = layer === 'nt-greek' || !!(occ && occ.total);
+    const nav = [['here', 'Here', !!ctx], ['range', 'Range', true], ['versions', 'Versions', isNT], ['authors', 'Authors', true], ['history', 'History', true], ['lexicons', 'Lexicons', true]]
       .filter(x => x[2]).map(([id, label]) => `<button type="button" onclick="rhemaWordStudyJump('${uid}','${id}')">${label}</button>`).join('');
 
     const html = `<div class="ws" id="${uid}">
@@ -494,6 +725,7 @@
       <nav class="ws-nav">${nav}</nav>
       <div id="${uid}-here">${ctx ? `<section class="ws-sec"><div class="ws-loading">Lining up the translations…</div></section>` : ''}</div>
       <div id="${uid}-deep"><section class="ws-sec"><div class="ws-loading">Measuring this word across the New Testament…</div></section></div>
+      <div id="${uid}-versions"></div>
       <div id="${uid}-lex">${lexiconsHtml(lex, strongs, null, uid)}</div>
     </div>`;
 
@@ -503,8 +735,18 @@
         const st = _studies.get(uid); if (st) st.entry = entry;
         fillHero(uid, entry, strongs);
         const deep = document.getElementById(`${uid}-deep`);
-        if (deep) deep.innerHTML = [rangeHtml(entry, strongs), authorsHtml(entry, strongs), historyHtml(entry, lex, strongs), methodHtml(entry)].join('')
-          || '<p class="ws-note">This word has no measured New Testament usage; the lexicons below carry its meaning.</p>';
+        if (deep) {
+          deep.innerHTML = [rangeHtml(entry, strongs), `<div data-ws-slot="versions"></div>`, authorsHtml(entry, strongs), historyHtml(entry, lex, strongs), methodHtml(entry)].join('')
+            || '<p class="ws-note">This word has no measured New Testament usage; the lexicons below carry its meaning.</p>';
+          // The Across-translations block lives between Range and Authors.
+          const slot = deep.querySelector('[data-ws-slot="versions"]');
+          const vEl = document.getElementById(`${uid}-versions`);
+          if (slot && vEl) slot.replaceWith(vEl);
+        }
+        if (isNT && _wsOccurrences(strongs).length) {
+          const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
+          rhemaWordStudyVersion(uid, _wsIsLocal(reader) ? reader : 'MSB');
+        }
         const lexEl = document.getElementById(`${uid}-lex`);
         if (lexEl && entry?.classical?.lsj) lexEl.innerHTML = lexiconsHtml(lex, strongs, entry, uid);
         if (ctx) renderHere(uid, ctx, strongs, entry);
@@ -522,7 +764,19 @@
   window.rhemaWordStudyJump = function (uid, id) {
     const root = document.getElementById(uid);
     const target = root && root.querySelector(`[data-ws-sec="${id}"]`);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!target) return;
+    // Scroll only the sheet's own scroller — scrollIntoView would also move
+    // the page behind the sheet.
+    let sc = target.parentElement;
+    while (sc && sc !== document.body) {
+      const oy = getComputedStyle(sc).overflowY;
+      if ((oy === 'auto' || oy === 'scroll') && sc.scrollHeight > sc.clientHeight) break;
+      sc = sc.parentElement;
+    }
+    if (!sc || sc === document.body) return;
+    const nav = root.querySelector('.ws-nav');
+    const top = target.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - (nav ? nav.offsetHeight + 16 : 0);
+    sc.scrollTo({ top, behavior: 'smooth' });
   };
 
   // Exposed for scripts/test-word-study.js
