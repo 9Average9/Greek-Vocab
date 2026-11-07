@@ -571,7 +571,26 @@
       (lk.length >= 4 && k.length >= 4 && _dist(k, lk) <= (lk.length >= 6 ? 2 : 1)));
   }
 
-  const api = { mmHeadwordMatches, buildLemmaIndex, strongsForLemma, lemmaKey, translitGreek, cleanSurface, STRONGS_GROUPS, canon, alignGreekToRows, bridgeToVersion, bsbRenderings, bsbDirect, bsbFull, stem, tokenizeEnglish, isGrammar };
+  // LSJ entries are matched to Strong's numbers by spelling, and accents tell
+  // homographs apart: φῶς "light" vs φώς "man", ἔλεος "mercy" vs ἐλεός
+  // "kitchen table", αἰών vs ἀϊών "shore". Normalise LSJ's conventions (length
+  // marks, hyphens, ρρ/ῤῥ, diaeresis, iota subscript, grave→acute, *), then
+  // require the same letters, breathings and accents.
+  function _lsjForm(w) {
+    return String(w || '').normalize('NFD')
+      .replace(/[\u0304\u0306\u0308\u0345\-‐*\[\]]/g, '')
+      .replace(/\u0300/g, '\u0301')
+      .replace(/ρ\u0313ρ\u0314|ρ\u0314ρ|ρρ\u0314|ρ\u0313ρ/g, 'ρρ')
+      .normalize('NFC').toLowerCase().replace(/ς/g, 'σ');
+  }
+  function lsjHeadwordMatches(lsj, lemma) {
+    const toks = String(lsj || '').replace(/^\s*\*\s*/, '').split(/[\s,]+/).filter(Boolean);
+    if (!toks.length || !lemma) return true;
+    const lk = _lsjForm(lemma);
+    return _lsjForm(toks[0]) === lk || (toks[1] && _lsjForm(toks[0] + toks[1]) === lk);
+  }
+
+  const api = { lsjHeadwordMatches, mmHeadwordMatches, buildLemmaIndex, strongsForLemma, lemmaKey, translitGreek, cleanSurface, STRONGS_GROUPS, canon, alignGreekToRows, bridgeToVersion, bsbRenderings, bsbDirect, bsbFull, stem, tokenizeEnglish, isGrammar };
   root.RhemaAlign = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.496";
+const APP_VERSION = "3.0.497";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.497 &mdash; Word studies, wave 3</div>
+<ul>
+  <li><strong>150 Greek words now have full studies</strong> &mdash; Fifty more, including &epsilon;&#7984;&rho;&#8053;&nu;&eta;, &pi;&lambda;&eta;&rho;&#8057;&omega;, &delta;&#8055;&kappa;&alpha;&iota;&omicron;&sigmaf;, &beta;&alpha;&pi;&tau;&#8055;&zeta;&omega;, &epsilon;&#8016;&alpha;&gamma;&gamma;&#8051;&lambda;&iota;&omicron;&nu;, &kappa;&epsilon;&phi;&alpha;&lambda;&#8053;, &alpha;&#7984;&#8061;&nu;&iota;&omicron;&sigmaf;, &phi;&#8182;&sigmaf; and &pi;&iota;&sigma;&tau;&#8057;&sigmaf; &mdash; every cited verse (6,703 of 6,703) checked against the Greek text.</li>
+  <li><strong>Classical Greek entries matched by accent</strong> &mdash; Some LSJ (classical) entries belonged to a different word spelled the same but accented differently &mdash; &nu;&#8057;&mu;&omicron;&sigmaf; &ldquo;law&rdquo; was showing &nu;&omicron;&mu;&#8057;&sigmaf; &ldquo;pasture&rdquo;, &phi;&#8182;&sigmaf; &ldquo;light&rdquo; was showing &phi;&#8061;&sigmaf; &ldquo;man&rdquo;, &kappa;&alpha;&lambda;&#8057;&sigmaf; &ldquo;good&rdquo; was showing &kappa;&#8049;&lambda;&omicron;&sigmaf; &ldquo;cable&rdquo;. Those are no longer shown.</li>
+</ul>
 <div class="un-version-label">v3.0.496 &mdash; A calmer Word Study</div>
 <ul>
   <li><strong>Easier to take in</strong> &mdash; The study now leads with the answer: what the word means here, its definition and a reading tip. Every other part (translations, range, authors, history, lexicons) is a card you can open, and its header already tells you the headline &mdash; like &ldquo;6 senses&rdquo; or &ldquo;mostly Paul (92)&rdquo;. Debated points sit one tap away instead of crowding the top.</li>
@@ -48410,7 +48415,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.495';
+const DEEP_LEXICON_VERSION = '3.0.497';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 

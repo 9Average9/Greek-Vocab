@@ -117,6 +117,13 @@
     return t && (!window.RhemaAlign || RhemaAlign.mmHeadwordMatches(t, lemma)) ? t : '';
   }
 
+  // LSJ for this word — unless it's a homograph's entry (φώς "man" under φῶς
+  // "light", νομός "pasture" under νόμος "law"; see RhemaAlign.lsjHeadwordMatches).
+  function _lsjText(entry) {
+    const t = entry?.classical?.lsj || '';
+    return t && (!window.RhemaAlign || RhemaAlign.lsjHeadwordMatches(t, entry.lemma)) ? t : '';
+  }
+
   function _decodeEntities(s) {
     return String(s || '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'").replace(/&amp;/g, '&');
@@ -420,7 +427,7 @@
     const items = [];
     const bg = (period) => (entry?.study?.background || []).filter(b => b.period === period)
       .map(b => `<p class="ws-bg">${esc(b.note)} <span class="ws-cite">${esc(b.citation)}</span></p>`).join('');
-    const lsj = entry?.classical?.lsj;
+    const lsj = _lsjText(entry);
     if (lsj) {
       const txt = _decodeEntities(lsj);
       const cut = /…\s*$/.test(txt);
@@ -483,7 +490,7 @@
     }
     const mm = _mmText(strongs);
     if (mm) tabs.push(['Moulton–Milligan', cleanMoultonMilligan(mm).map(p => `<p class="ws-mm">${esc(p)}</p>`).join('') + '<p class="ws-fine">The Vocabulary of the Greek Testament (1930), from the papyri and inscriptions.</p>']);
-    if (entry?.classical?.lsj) tabs.push(['LSJ', `<p class="ws-lsj">${esc(_decodeEntities(entry.classical.lsj))}</p><p class="ws-fine">Liddell–Scott–Jones, A Greek–English Lexicon (classical Greek).</p>`]);
+    if (_lsjText(entry)) tabs.push(['LSJ', `<p class="ws-lsj">${esc(_decodeEntities(_lsjText(entry)))}</p><p class="ws-fine">Liddell–Scott–Jones, A Greek–English Lexicon (classical Greek).</p>`]);
     if (lex.extended || lex.brief) tabs.push(['Dodson', `<p>${esc(lex.extended || lex.brief)}</p>`]);
     if (lex.strongs_def) {
       tabs.push(["Strong's", `<p>${esc(String(lex.strongs_def).trim())}</p>${lex.kjv_def ? `<p class="ws-fine">KJV renders it: ${esc(String(lex.kjv_def).replace(/^--/, ''))}</p>` : ''}${lex.deriv ? `<p class="ws-fine">Derivation: ${esc(lex.deriv)}</p>` : ''}`]);
@@ -800,7 +807,7 @@
           _wsRenderVersions(uid, strongs);
         }
         const lexEl = document.getElementById(`${uid}-lex`);
-        if (lexEl && entry?.classical?.lsj) lexEl.innerHTML = lexiconsHtml(lex, strongs, entry, uid);
+        if (lexEl && _lsjText(entry)) lexEl.innerHTML = lexiconsHtml(lex, strongs, entry, uid);
         if (ctx) renderHere(uid, ctx, strongs, entry);
       });
       if (ctx) {

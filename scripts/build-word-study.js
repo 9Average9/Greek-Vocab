@@ -240,7 +240,8 @@ function buildPack(entry, lex, mm, W) {
   if (lex?.abbott_smith) { const t = plain(lex.abbott_smith, 3500); L.push(`ABBOTT-SMITH: ${t}`); sources.push(t); }
   if (lex?.extended || lex?.brief) L.push(`DODSON: ${plain(lex.extended || lex.brief, 400)}`);
   if (lex?.strongs_def) L.push(`STRONG'S: ${plain(lex.strongs_def, 300)}; KJV renders: ${plain(lex.kjv_def, 200)}`);
-  if (entry.classical?.lsj) { const t = plain(entry.classical.lsj, 2500); L.push(`LSJ (classical): ${t}`); sources.push(t); }
+  // Skip an LSJ entry for a homograph (φώς "man" filed under φῶς "light").
+  if (entry.classical?.lsj && Align.lsjHeadwordMatches(entry.classical.lsj, entry.lemma)) { const t = plain(entry.classical.lsj, 2500); L.push(`LSJ (classical): ${t}`); sources.push(t); }
   // Skip an MM article filed under this number that is really another word's.
   if (mm && Align.mmHeadwordMatches(mm, entry.lemma)) { const t = plain(mm, 3000); L.push(`MOULTON–MILLIGAN (papyri/inscriptions): ${t}`); sources.push(t); }
   if (entry.lxx?.refs?.length) sources.push(entry.lxx.refs.join(' '));
