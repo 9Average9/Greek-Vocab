@@ -123,10 +123,29 @@
   }
 
   // ── Small render helpers ─────────────────────────────────────────────────
-  const section = (id, icon, title, body, sub = '') => body ? `<section class="ws-sec" data-ws-sec="${id}">
-      <h3 class="ws-sec-h"><span class="material-symbols-outlined">${icon}</span><span>${title}</span>${sub ? `<em>${sub}</em>` : ''}</h3>
-      ${body}
-    </section>` : '';
+  // Each section is a collapsible card. Closed, its header still says the one
+  // thing worth knowing (the "teaser"), so the study scans in a few seconds.
+  const WS_OPEN_DEFAULT = { here: true, range: true };
+  let _wsOpen = { ...WS_OPEN_DEFAULT };
+  const section = (id, icon, title, body, teaser = '') => body ? `<details class="ws-sec" data-ws-sec="${id}"${_wsOpen[id] ? ' open' : ''} ontoggle="rhemaWordStudyToggle(this)">
+      <summary class="ws-sec-h"><span class="material-symbols-outlined">${icon}</span><span class="ws-sec-t">${title}</span>${teaser ? `<em class="ws-teaser">${teaser}</em>` : ''}<span class="material-symbols-outlined ws-chev">expand_more</span></summary>
+      <div class="ws-sec-body">${body}</div>
+    </details>` : '';
+  window.rhemaWordStudyToggle = function (el) {
+    const id = el.dataset.wsSec;
+    _wsOpen[id] = el.open;
+    // Counting every NT use in a version is real work — do it only when the
+    // reader actually opens the section.
+    if (id === 'versions' && el.open) {
+      const root = el.closest('.ws');
+      const st = root && _studies.get(root.id);
+      if (st && !st.versionsStarted) {
+        st.versionsStarted = true;
+        const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
+        rhemaWordStudyVersion(root.id, st.ver || (_wsIsLocal(reader) ? reader : 'MSB'));
+      }
+    }
+  };
   const more = (label, body, open = false) => body ? `<details class="ws-more"${open ? ' open' : ''}><summary>${label}</summary><div class="ws-more-body">${body}</div></details>` : '';
   const pct = (x) => Math.round((x || 0) * 100);
 
@@ -159,12 +178,17 @@
       if (study?.summary) parts.push(`<p>${esc(study.summary)}</p>`);
       else if (prose.def) parts.push(`<p>${esc(prose.def)}</p>`);
       if (study?.exegesisTip) parts.push(`<div class="ws-tip"><span class="material-symbols-outlined">lightbulb</span><p>${esc(study.exegesisTip)}</p></div>`);
-      if (study?.caution) parts.push(`<p class="ws-caution">${esc(study.caution)}</p>`);
+
       if (entry?.audit?.verdict === 'misleading') {
         parts.push(`<div class="ws-flag"><span class="material-symbols-outlined">flag</span>Rhema’s own review flagged this summary as possibly misleading. Lean on the measured range, the verses and the lexicons below.</div>`);
       }
-      if (prose.article) parts.push(more('About this word', `<p>${esc(prose.article)}</p>${prose.caution ? `<p class="ws-caution">${esc(prose.caution)}</p>` : ''}`));
-      else if (prose.caution) parts.push(`<p class="ws-caution">${esc(prose.caution)}</p>`);
+      // Debate and background are one tap away, not stacked on the answer.
+      const about = [
+        study?.caution ? `<p><b>Debated:</b> ${esc(study.caution)}</p>` : '',
+        prose.article ? `<p>${esc(prose.article)}</p>` : '',
+        prose.caution && !study ? `<p class="ws-caution">${esc(prose.caution)}</p>` : '',
+      ].join('');
+      if (about) parts.push(more(study?.caution ? 'About this word · debated points' : 'About this word', about));
       def.innerHTML = parts.join('') || '';
       def.classList.toggle('ws-empty', !parts.length);
     }
@@ -172,9 +196,8 @@
       const chips = [];
       const top = topAuthor(entry);
       if (entry.count) chips.push(`${entry.count.toLocaleString()}× in the NT`);
-      if (entry.lxx?.count) chips.push(`${entry.lxx.count.toLocaleString()}× in the Septuagint`);
-      if (top) chips.push(`most used by ${top.name} (${top.count})`);
-      if (entry.classical?.af) chips.push(`≈${entry.classical.af}× in the Apostolic Fathers`);
+      if (entry.lxx?.count) chips.push(`${entry.lxx.count.toLocaleString()}× LXX`);
+      if (top) chips.push(`mostly ${top.name}`);
       const conf = _DEEP_CONFIDENCE_LABELS[entry.confidence];
       glance.innerHTML = chips.map(c => `<span>${esc(c)}</span>`).join('') +
         (conf ? `<span class="ws-conf ws-conf-${esc(entry.confidence)}">${esc(conf)}</span>` : '');
@@ -257,14 +280,13 @@
     const loadBtn = missing.length && !(typeof _vsIsApiLimited === 'function' && _vsIsApiLimited())
       ? `<button type="button" class="ws-btn" onclick="rhemaWordStudyLoadVersions('${uid}')"><span class="material-symbols-outlined">translate</span>Compare ${esc(missing.slice(0, 4).join(', '))}${missing.length > 4 ? ` +${missing.length - 4}` : ''}</button>`
       : '';
-    el.innerHTML = section('here', 'translate', 'How translations render it here',
-      `${spread > 1 ? `<p class="ws-note">Translations split <b>${spread} ways</b> on this word here — a sign the Greek carries more than one English word can.</p>` : ''}
-       ${senseLine}
+    const teaser = spread > 1 ? `versions split ${spread} ways` : (sorted[0]?.kind && sorted[0].kind !== 'none' ? `“${sorted[0].label}”` : '');
+    el.innerHTML = section('here', 'translate', 'In this verse',
+      `${senseLine}
        <div class="ws-tr">${groupsHtml}</div>
-       ${entry?.study?.translationNote ? `<div class="ws-author-note"><span class="material-symbols-outlined">forum</span><p><b>Why translations differ.</b> ${esc(entry.study.translationNote)}</p></div>` : ''}
-       ${loadBtn}
-       <p class="ws-fine">BSB is the Berean translators’ own word-for-word table. Other versions are matched to it word by word; ≈ marks a match by position.</p>`,
-      esc(`${_rhemaBookName(ctx.book) || ctx.book} ${ctx.chapter}:${ctx.verse}`));
+       ${entry?.study?.translationNote ? more('Why translations differ', `<p>${esc(entry.study.translationNote)}</p>`) : ''}
+       ${loadBtn}`,
+      esc(teaser));
   }
 
   // Fetch the licensed versions' chapter blocks for this verse (one request
@@ -298,65 +320,58 @@
     const senses = (entry.senses || []).slice(0, 8);
     const by = _refsBySense(entry);
     const labels = entry.prose?.senseLabels || [];
-    const parts = [];
     const study = entry.study;
+    const chips = (refs, n) => {
+      const shown = refs.slice(0, n).map(r => _refChipFromKey(r, strongs)).join('');
+      const rest = refs.slice(n).map(r => _refChipFromKey(r, strongs)).join('');
+      return (shown ? `<div class="ws-refs">${shown}</div>` : '') + (rest ? more(`All ${refs.length} verses`, `<div class="ws-refs">${rest}</div>`) : '');
+    };
+    const parts = [];
     if (study?.senses?.length) {
-      parts.push(`<div class="ws-senses">${study.senses.map((s, i) => `<div class="ws-sense ws-sense-study">
-          <div class="ws-sense-top"><span class="ws-sense-n">${i + 1}</span><b>${esc(s.label)}</b></div>
-          <p class="ws-sense-def">${esc(s.definition)}</p>
-          ${s.note ? `<p class="ws-fine">${esc(s.note)}</p>` : ''}
-          ${s.refs?.length ? `<div class="ws-refs">${s.refs.map(r => _refChipFromKey(r, strongs)).join('')}</div>` : ''}
-        </div>`).join('')}</div>
-        <p class="ws-fine">Every verse above is checked against the Greek text — the word really occurs there.</p>
-        <div class="ws-sub-h">How the English renders it, counted</div>`);
-    }
-    if (senses.length) {
-      parts.push(`<div class="ws-senses">${senses.map((s, i) => {
-        const refs = by.get(i) || s.refs || [];
-        const shown = refs.slice(0, 6).map(r => _refChipFromKey(r, strongs)).join('');
-        const rest = refs.slice(6).map(r => _refChipFromKey(r, strongs)).join('');
-        const vars = Object.entries(s.variants || {}).filter(([k]) => k.toLowerCase() !== String(s.display).toLowerCase()).slice(0, 4);
-        const meta = [];
-        if (s.bsbAgree != null) meta.push(`BSB agrees ${pct(s.bsbAgree)}%`);
-        if (s.corroborated?.length) meta.push(`also in ${s.corroborated.map(c => _DEEP_CORROBORATION_NAMES[c] || c).join(', ')}`);
+      // Verified senses by meaning — the answer. How the English words are
+      // counted lives in "Across translations" (MSB is measured there).
+      parts.push(`<div class="ws-senses">${study.senses.map((x, i) => `<div class="ws-sense">
+          <div class="ws-sense-top"><span class="ws-sense-n">${i + 1}</span><b>${esc(x.label)}</b></div>
+          <p class="ws-sense-def">${esc(x.definition)}${x.note ? ` <span class="ws-sense-note">${esc(x.note)}</span>` : ''}</p>
+          ${chips(x.refs || [], 4)}
+        </div>`).join('')}</div>`);
+    } else if (senses.length) {
+      parts.push(`<div class="ws-senses">${senses.map((x, i) => {
+        const refs = by.get(i) || x.refs || [];
         return `<div class="ws-sense">
-          <div class="ws-sense-top"><span class="ws-sense-n">${i + 1}</span><b>${esc(_senseName(entry, s, i))}</b><span class="ws-count">${s.count}× · ${pct(s.share)}%</span></div>
-          <div class="ws-bar"><span style="width:${Math.max(pct(s.share), 2)}%"></span></div>
-          ${vars.length ? `<div class="ws-fine">also worded: ${vars.map(([k, n]) => `${esc(k)} (${n})`).join(', ')}</div>` : ''}
-          ${meta.length ? `<div class="ws-fine">${esc(meta.join(' · '))}</div>` : ''}
-          ${shown ? `<div class="ws-refs">${shown}</div>` : ''}
-          ${rest ? more(`All ${refs.length} verses`, `<div class="ws-refs">${rest}</div>`) : ''}
+          <div class="ws-sense-top"><span class="ws-sense-n">${i + 1}</span><b>${esc(_senseName(entry, x, i))}</b><span class="ws-count">${x.count}× · ${pct(x.share)}%</span></div>
+          <div class="ws-bar"><span style="width:${Math.max(pct(x.share), 2)}%"></span></div>
+          ${chips(refs, 4)}
         </div>`;
       }).join('')}</div>`);
+      if (labels.length > senses.length) {
+        parts.push(`<div class="ws-extra"><div class="ws-extra-h">Also recognised by the lexicons</div>
+          <ul>${labels.slice(senses.length).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>`);
+      }
     } else if (entry.count) {
-      parts.push(`<p class="ws-note">No single English rendering dominates this word — it is usually absorbed into the phrasing. The lexicons below carry the meaning.</p>`);
+      parts.push(`<p class="ws-note">No single English rendering dominates this word — it is usually woven into the phrasing. The lexicons carry its meaning.</p>`);
     }
-    // Lexicon-attested senses the measurement couldn't separate (e.g. σάρξ
-    // "human nature" in Paul — English versions mostly still say "flesh").
-    if (!study?.senses?.length && labels.length > senses.length) {
-      parts.push(`<div class="ws-extra"><div class="ws-extra-h">Also recognised by the lexicons</div>
-        <ul>${labels.slice(senses.length).map(l => `<li>${esc(l)}</li>`).join('')}</ul>
-        <p class="ws-fine">These senses are real but share their English wording with the senses above, so they can’t be counted from translations alone — check the Authors notes, verses and lexicons.</p></div>`);
-    }
-    const tail = [];
-    // Singleton renderings, minus alignment debris ("those", "according flesh").
+    // The fine-grained evidence, one tap away.
+    const detail = [];
     const rare = (entry.rare || []).filter(r => {
       const words = String(r.display || '').toLowerCase().split(/\s+/).filter(Boolean);
       return words.length && words.length <= 3 && !words.some(w => (window.RhemaAlign && RhemaAlign.isGrammar(w)) || /^(according|being|whom)$/.test(w));
     });
-    if (rare.length) tail.push(`<p class="ws-fine">Rare renderings: ${rare.slice(0, 6).map(r => `${esc(r.display)}${r.refs?.[0] ? ' ' + _refChipFromKey(r.refs[0], strongs) : ''}`).join(' · ')}</p>`);
+    if (rare.length) detail.push(`<p class="ws-fine">Rare renderings: ${rare.slice(0, 6).map(r => `${esc(r.display)}${r.refs?.[0] ? ' ' + _refChipFromKey(r.refs[0], strongs) : ''}`).join(' · ')}</p>`);
     if (entry.untranslated && entry.count && entry.untranslated >= Math.max(2, entry.count * 0.05)) {
-      tail.push(`<p class="ws-fine">Woven into the English phrasing with no word of its own ${entry.untranslated}× of ${entry.count}.</p>`);
+      detail.push(`<p class="ws-fine">Woven into the English phrasing with no word of its own ${entry.untranslated}× of ${entry.count}.</p>`);
     }
     if (entry.contexts?.length) {
-      tail.push(more('Greek company it keeps', entry.contexts.map((c, i) => `<div class="ws-pattern">
+      detail.push(`<div class="ws-sub-h">Greek company it keeps</div>` + entry.contexts.map((c, i) => `<div class="ws-pattern">
           <div class="ws-sense-top"><b>Pattern ${i + 1}</b><span class="ws-count">${c.n}× · ${c.share}%</span></div>
           <div class="ws-fine">with ${c.companions.map(x => `<em>${esc(x)}</em>`).join(', ')} — rendered ${c.renderings.map(r => r.r === '(absorbed)' ? `in the phrasing ${r.pct}%` : `“${esc(r.r)}” ${r.pct}%`).join(' · ')}</div>
           ${(c.refs || []).length ? `<div class="ws-refs">${c.refs.map(r => _refChipFromKey(r, strongs)).join('')}</div>` : ''}
-        </div>`).join('') + `<p class="ws-fine">Grouped by the Greek words around each use — no English involved — so a hidden difference in meaning shows up even when the English stays the same.</p>`));
+        </div>`).join(''));
     }
-    return section('range', 'travel_explore', 'Range of meaning', parts.join('') + tail.join(''),
-      entry.count ? `measured across all ${entry.count} NT uses` : '');
+    if (detail.length) parts.push(more('More detail', detail.join('')));
+    const n = study?.senses?.length || senses.length;
+    return section('range', 'travel_explore', 'Range of meaning', parts.join(''),
+      n ? `${n} sense${n === 1 ? '' : 's'}` : '');
   }
 
   // ── Authors ──────────────────────────────────────────────────────────────
@@ -394,10 +409,10 @@
     const studyNotes = (entry.study?.authorNotes || []).map(a => `<div class="ws-author-note"><span class="material-symbols-outlined">edit_note</span><div><p><b>${esc(a.author)}.</b> ${esc(a.note)}</p>${a.refs?.length ? `<div class="ws-refs">${a.refs.map(r => _refChipFromKey(r, strongs)).join('')}</div>` : ''}</div></div>`).join('');
     const note = studyNotes ? studyNotes : entry.audit?.author_note && !/definition|label|digest|entry/i.test(entry.audit.author_note)
       ? `<div class="ws-author-note"><span class="material-symbols-outlined">edit_note</span><p>${esc(entry.audit.author_note)}</p></div>
-         <p class="ws-fine">Note written in Rhema’s scholarly review pass from the measured evidence and standard lexicons — check it against the verses.</p>`
+`
       : '';
-    return section('authors', 'groups', 'Who uses it', `<div class="ws-authors">${rows}</div>${note}`,
-      stats.length > 1 ? `${stats.length} NT voices` : '');
+    return section('authors', 'groups', 'Who uses it', `${note}<div class="ws-authors">${rows}</div>`,
+      stats.length > 1 ? `mostly ${esc(stats[0].name)} (${stats[0].count})` : esc(stats[0].name));
   }
 
   // ── History ──────────────────────────────────────────────────────────────
@@ -409,12 +424,12 @@
     if (lsj) {
       const txt = _decodeEntities(lsj);
       const cut = /…\s*$/.test(txt);
-      items.push({ era: 'c. 800–300 BC', title: 'Classical Greek', icon: 'account_balance',
-        body: `${bg('classical')}<p class="ws-fine">How Homer, the tragedians, Plato and the historians used it (Liddell–Scott–Jones).</p>${more(cut ? 'Read the LSJ excerpt' : 'Read the LSJ entry', `<p class="ws-lsj">${esc(txt)}</p>`)}` });
+      items.push({ short: 'classical', era: 'c. 800–300 BC', title: 'Classical Greek', icon: 'account_balance',
+        body: `${bg('classical')}${more(cut ? 'Read the LSJ excerpt' : 'Read the LSJ entry', `<p class="ws-lsj">${esc(txt)}</p>`)}` });
     }
     if (entry?.lxx?.count) {
       const heb = (entry.lxx.hebrew || []).slice(0, 4).map(h => `<span class="ws-heb" dir="rtl">${esc(h.lemma || '')}</span> <span class="ws-fine">H${esc(h.h)} · ${h.count}×</span>`).join('<br>');
-      items.push({ era: 'c. 250–100 BC', title: 'Septuagint', icon: 'menu_book',
+      items.push({ short: `LXX ${entry.lxx.count}×`, era: 'c. 250–100 BC', title: 'Septuagint', icon: 'menu_book',
         body: `<p>${entry.lxx.count.toLocaleString()}× in ${entry.lxx.books} book${entry.lxx.books === 1 ? '' : 's'} of the Greek Old Testament — the Bible the apostles quoted.</p>
           ${bg('septuagint')}
           ${heb ? `<p class="ws-fine">It translates the Hebrew:</p><p>${heb}</p>` : ''}
@@ -423,19 +438,19 @@
     const mm = _mmText(strongs);
     if (mm) {
       const paras = cleanMoultonMilligan(mm);
-      items.push({ era: 'c. 300 BC – AD 300', title: 'Everyday Greek: papyri & inscriptions', icon: 'receipt_long',
-        body: `${bg('papyri')}<p class="ws-fine">Letters, contracts and inscriptions from the NT world — how ordinary people used the word (Moulton–Milligan).</p>
+      items.push({ short: 'papyri', era: 'c. 300 BC – AD 300', title: 'Everyday Greek: papyri & inscriptions', icon: 'receipt_long',
+        body: `${bg('papyri')}<p class="ws-fine">Letters, contracts and inscriptions of the NT world.</p>
           <p class="ws-mm">${esc(paras[0] || '').slice(0, 420)}${(paras[0] || '').length > 420 ? '…' : ''}</p>
           ${paras.length > 1 || (paras[0] || '').length > 420 ? more('Read the full entry', paras.map(p => `<p class="ws-mm">${esc(p)}</p>`).join('')) : ''}` });
     }
     if (entry?.count) {
       const crit = entry.critical?.count;
       const books = Object.keys(entry.byBook || {}).length;
-      items.push({ era: 'c. AD 45–95', title: 'New Testament', icon: 'auto_stories',
+      items.push({ short: `NT ${entry.count}×`, era: 'c. AD 45–95', title: 'New Testament', icon: 'auto_stories',
         body: `<p>${entry.count.toLocaleString()}× in ${books} book${books === 1 ? '' : 's'} of the Majority (Byzantine) text${_critNote(entry.count, crit)}.</p>` });
     }
     if (entry?.classical?.af) {
-      items.push({ era: 'c. AD 95–150', title: 'Apostolic Fathers', icon: 'history_edu',
+      items.push({ short: 'early church', era: 'c. AD 95–150', title: 'Apostolic Fathers', icon: 'history_edu',
         body: `${bg('apostolic')}<p>About ${entry.classical.af}× in Clement, Ignatius, Polycarp, the Didache and Hermas — whether the next generation of Christians kept the word, and how.</p>` });
     }
     if (!items.length) return '';
@@ -443,7 +458,8 @@
         <div class="ws-tl-dot"><span class="material-symbols-outlined">${it.icon}</span></div>
         <div class="ws-tl-body"><div class="ws-tl-h"><b>${esc(it.title)}</b><span>${esc(it.era)}</span></div>${it.body}</div>
       </li>`).join('')}</ol>
-      <p class="ws-fine">Sources outside the Bible witness how Greek speakers used the word; they don’t override what the biblical author means in context.</p>`);
+      <p class="ws-fine">Outside sources show how Greek speakers used the word; context in the biblical text decides what the author meant.</p>`,
+      esc(items.map(it => it.short).join(' · ')));
   }
 
   // Majority vs critical count. A small gap is textual variation; a large one
@@ -476,7 +492,8 @@
     const name = `${uid}-lex`;
     return section('lexicons', 'library_books', 'Lexicons', `<div class="ws-tabs" role="tablist">${tabs.map(([t], i) =>
         `<button type="button" role="tab" class="ws-tab${i === 0 ? ' on' : ''}" onclick="rhemaWordStudyTab('${name}',${i},this)">${esc(t)}</button>`).join('')}</div>
-      ${tabs.map(([, body], i) => `<div class="ws-pane${i === 0 ? ' on' : ''}" data-ws-pane="${name}-${i}">${body}</div>`).join('')}`);
+      ${tabs.map(([, body], i) => `<div class="ws-pane${i === 0 ? ' on' : ''}" data-ws-pane="${name}-${i}">${body}</div>`).join('')}`,
+      esc(tabs.length > 2 ? `${tabs[0][0]}, ${tabs[1][0]} +${tabs.length - 2}` : tabs.map(t => t[0]).join(', ')));
   }
   window.rhemaWordStudyTab = function (name, i, btn) {
     const root = btn.closest('.ws-sec');
@@ -489,9 +506,13 @@
   function methodHtml(entry) {
     if (!entry) return '';
     const why = [...new Set(entry.why || [])];
-    return section('method', 'science', 'How we know', more('Show the evidence trail',
+    return section('method', 'science', 'How we know', `<ul class="ws-method">
+        <li>Every verse cited for a sense is checked against the Greek text — the word really occurs there.</li>
+        <li>BSB words come from the Berean translators’ own word-for-word tables; other versions are matched to them word by word (≈ marks a match by position).</li>
+        <li>Across-translation counts are made on your device from each version’s own text.</li>
+      </ul>` + more('Evidence trail',
       `${why.map(w => `<p>${esc(w)}</p>`).join('')}
-       <p class="ws-fine">Senses are measured by aligning every occurrence in the Byzantine text with the Majority Standard Bible (and checked independently against the Berean Standard Bible), then grouping the English renderings. Translation wording approximates meaning; where the lexicons recognise a sense the English hides, it is listed separately.</p>`));
+       <p class="ws-fine">English renderings are measured by aligning every occurrence in the Byzantine text with the Majority Standard Bible (and checked independently against the Berean Standard Bible), then grouping the English renderings. Translation wording approximates meaning; where the lexicons recognise a sense the English hides, it is listed separately.</p>`));
   }
 
 
@@ -718,10 +739,11 @@
         const t = m.renderings[0];
         return `<tr><td><b>${esc(m.ver)}</b></td><td>${t ? `${esc(t.text)} <span class="ws-fine">${Math.round(100 * t.count / covered)}%</span>` : '—'}${m.renderings[1] ? `<div class="ws-fine">then ${esc(m.renderings[1].text)} ${Math.round(100 * m.renderings[1].count / covered)}%</div>` : ''}</td><td>${m.renderings.length}</td></tr>`;
       }).join('')}</tbody></table></div>` : '';
+    const top = stats?.renderings?.[0];
+    const teaser = top ? `${sel}: “${top.text}” ${Math.round(100 * top.count / Math.max(1, stats.total - stats.noText))}%` : 'every NT use, per version';
     el.innerHTML = section('versions', 'compare_arrows', 'Across translations',
-      `<div class="ws-vchips">${chips}</div>${body}${table}
-       <p class="ws-fine">Counted on your device from each version’s own text, every New Testament use lined up word-for-word through the Berean tables (BSB is exact). Approximate matches are marked ≈.</p>`,
-      'every NT use, per version');
+      `<div class="ws-vchips">${chips}</div>${body || '<p class="ws-fine">Counting…</p>'}${table}`,
+      esc(teaser));
   }
 
   // ── Main entry ───────────────────────────────────────────────────────────
@@ -738,6 +760,7 @@
     const lex = decision.lex;
     if (!lex) return `<p class="ws-note">No definition found for this word.</p>`;
     const uid = `ws${++_seq}`;
+    _wsOpen = { ...WS_OPEN_DEFAULT }; // each word opens on its answer
     const occ = typeof getCurrentRhemaOccurrences === 'function' ? getCurrentRhemaOccurrences(strongs, 'nt-greek') : null;
     _studies.set(uid, { strongs, ctx, entry: null });
     if (_studies.size > 20) _studies.delete(_studies.keys().next().value);
@@ -770,8 +793,11 @@
           if (slot && vEl) slot.replaceWith(vEl);
         }
         if (isNT && _wsOccurrences(strongs).length) {
+          // Draw the (closed) section now; counting starts when it is opened.
+          const st2 = _studies.get(uid);
           const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
-          rhemaWordStudyVersion(uid, _wsIsLocal(reader) ? reader : 'MSB');
+          if (st2 && !st2.ver) st2.ver = _wsIsLocal(reader) ? reader : 'MSB';
+          _wsRenderVersions(uid, strongs);
         }
         const lexEl = document.getElementById(`${uid}-lex`);
         if (lexEl && entry?.classical?.lsj) lexEl.innerHTML = lexiconsHtml(lex, strongs, entry, uid);
@@ -791,6 +817,7 @@
     const root = document.getElementById(uid);
     const target = root && root.querySelector(`[data-ws-sec="${id}"]`);
     if (!target) return;
+    if (!target.open) target.open = true; // fires ontoggle (starts counting for Versions)
     // Scroll only the sheet's own scroller — scrollIntoView would also move
     // the page behind the sheet.
     let sc = target.parentElement;
