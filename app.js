@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.494";
+const APP_VERSION = "3.0.495";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.495 &mdash; Word studies, wave 2</div>
+<ul>
+  <li><strong>100 Greek words now have full studies</strong> &mdash; Fifty more, including &sigma;&#8182;&mu;&alpha;, &zeta;&omega;&#8053;, &delta;&omicron;&#8166;&lambda;&omicron;&sigmaf;, &alpha;&#7984;&#974;&nu;, &mu;&#8051;&nu;&omega;, &#7936;&lambda;&#8053;&theta;&epsilon;&iota;&alpha;, &sigma;&#8061;&zeta;&omega;, &psi;&upsilon;&chi;&#8053;, &alpha;&#7991;&mu;&alpha; and &delta;&iota;&kappa;&alpha;&iota;&omicron;&sigma;&#8059;&nu;&eta; &mdash; every cited verse checked against the Greek text.</li>
+  <li><strong>More trustworthy sources</strong> &mdash; Papyri (Moulton&ndash;Milligan) articles that were filed under the wrong word are no longer shown, and the Majority-vs-critical count is only compared where both texts catalogue the word the same way.</li>
+</ul>
 <div class="un-version-label">v3.0.494 &mdash; Scholarly word studies, wave 1</div>
 <ul>
   <li><strong>The 50 most-used Greek words now have full studies</strong> &mdash; Words like &lambda;&#972;&gamma;&omicron;&sigmaf;, &pi;&nu;&epsilon;&#8166;&mu;&alpha;, &pi;&#943;&sigma;&tau;&iota;&sigmaf;, &sigma;&#940;&rho;&xi;, &chi;&#940;&rho;&iota;&sigmaf; and &nu;&#972;&mu;&omicron;&sigmaf; show their real senses (by meaning, not just English wording), how each NT author uses them, why translations differ, a reading tip, and where scholars debate &mdash; every cited verse checked against the Greek text (2,197 of 2,197 verified). More words arrive in waves.</li>
@@ -48399,7 +48404,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.494';
+const DEEP_LEXICON_VERSION = '3.0.495';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 

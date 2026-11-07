@@ -48,5 +48,11 @@ check('author-note refs verified', out.authorNotes[0].refs.join() === 'ROM 8:3')
 check('history citation found in LSJ kept; invented one dropped', out.background.length === 1 && out.background[0].citation === 'Il. 8.380');
 check('stats recorded', out.verified.refsDropped === 4 && out.verified.sensesDropped === 1 && out.verified.backgroundDropped === 1, JSON.stringify(out.verified));
 
+const A = require('../rhema-align.js');
+const MM = W.RhemaMoultonMilligan, LX = W.RhemaLexicon;
+check('papyri article filed under the wrong word is rejected (φάγω holds φαίνω)', !A.mmHeadwordMatches(MM[5315], LX[5315].lemma));
+check('papyri article for the right word is accepted (σάρξ, ἀγάπη)', A.mmHeadwordMatches(MM[4561], LX[4561].lemma) && A.mmHeadwordMatches(MM[26], LX[26].lemma));
+check('spelling variants accepted (ἐνκαινίζω for ἐγκαινίζω; ἤ)', A.mmHeadwordMatches(MM[1457], LX[1457].lemma) && A.mmHeadwordMatches(MM[2228], LX[2228].lemma));
+
 console.log(failures ? `\n${failures} failure(s)` : '\nAll checks passed');
 process.exit(failures ? 1 : 0);

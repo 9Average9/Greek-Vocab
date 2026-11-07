@@ -541,7 +541,37 @@
     return '';
   }
 
-  const api = { buildLemmaIndex, strongsForLemma, lemmaKey, translitGreek, cleanSurface, STRONGS_GROUPS, canon, alignGreekToRows, bridgeToVersion, bsbRenderings, bsbDirect, bsbFull, stem, tokenizeEnglish, isGrammar };
+  // Moulton–Milligan entries are keyed by Strong's number, and a few are
+  // filed under the wrong one (φάγω holds the φαίνω article, Βαραββᾶς holds
+  // βάρβαρος). The entry's own headword ("φαίνω [page 664]") tells us: accept
+  // it when any headword form is the lemma, contains it, or (for longer words)
+  // differs by at most two letters — spelling variants like ἐνκαινίζω /
+  // ἐγκαινίζω or Γερασηνός / Γεργεσηνός.
+  function _dist(a, b) {
+    const m = a.length, n = b.length;
+    if (Math.abs(m - n) > 2) return 3;
+    let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    for (let i = 1; i <= m; i++) {
+      const cur = [i];
+      for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+    return prev[n];
+  }
+  function mmHeadwordMatches(text, lemma) {
+    const head = (String(text || '').match(/^([^\[<]+?)\s*\[page/) || [])[1];
+    if (!head || !lemma) return true; // no headword to judge by
+    const mid = (k) => k.replace(/ομαι$/, 'ω');
+    const lk = mid(lemmaKey(lemma));
+    const words = head.split(/[\s,\/~]+/).filter(Boolean);
+    const whole = head.split(/[,\/~]/)[0];
+    const forms = [...words, whole.replace(/[()]/g, ''), whole.replace(/\([^)]*\)/g, '')]
+      .map((f) => mid(lemmaKey(f))).filter(Boolean);
+    return forms.some((k) => k === lk || (k.length >= 4 && lk.includes(k)) ||
+      (lk.length >= 4 && k.length >= 4 && _dist(k, lk) <= (lk.length >= 6 ? 2 : 1)));
+  }
+
+  const api = { mmHeadwordMatches, buildLemmaIndex, strongsForLemma, lemmaKey, translitGreek, cleanSurface, STRONGS_GROUPS, canon, alignGreekToRows, bridgeToVersion, bsbRenderings, bsbDirect, bsbFull, stem, tokenizeEnglish, isGrammar };
   root.RhemaAlign = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
