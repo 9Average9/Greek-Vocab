@@ -236,10 +236,15 @@
     // Which measured sense this verse uses.
     let senseLine = '';
     const ref = `${ctx.book} ${ctx.chapter}:${ctx.verse}`;
-    if (entry && entry.verseSense && ref in entry.verseSense && entry.senses?.length > 1) {
+    // A verified study sense that cites this very verse is the meaning here;
+    // the measured data only knows the English wording, so it says that.
+    const studySense = (entry?.study?.senses || []).find(x => (x.refs || []).includes(ref));
+    if (studySense) {
+      senseLine = `<p class="ws-note">Sense here: <b>${esc(studySense.label)}</b> — ${esc(studySense.definition)}</p>`;
+    } else if (entry && entry.verseSense && ref in entry.verseSense && entry.senses?.length > 1) {
       const i = entry.verseSense[ref];
       const s = entry.senses[i];
-      if (s) senseLine = `<p class="ws-note">Sense used here: <b>${esc(_senseName(entry, s, i))}</b> — ${s.count} of ${entry.count} NT uses (${pct(s.share)}%).</p>`;
+      if (s) senseLine = `<p class="ws-note">Rendered here as “${esc(s.display)}”, like ${s.count} of its ${entry.count} NT uses (${pct(s.share)}%).</p>`;
     }
     const loadBtn = missing.length && !(typeof _vsIsApiLimited === 'function' && _vsIsApiLimited())
       ? `<button type="button" class="ws-btn" onclick="rhemaWordStudyLoadVersions('${uid}')"><span class="material-symbols-outlined">translate</span>Compare ${esc(missing.slice(0, 4).join(', '))}${missing.length > 4 ? ` +${missing.length - 4}` : ''}</button>`

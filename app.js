@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.493";
+const APP_VERSION = "3.0.494";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.494 &mdash; Scholarly word studies, wave 1</div>
+<ul>
+  <li><strong>The 50 most-used Greek words now have full studies</strong> &mdash; Words like &lambda;&#972;&gamma;&omicron;&sigmaf;, &pi;&nu;&epsilon;&#8166;&mu;&alpha;, &pi;&#943;&sigma;&tau;&iota;&sigmaf;, &sigma;&#940;&rho;&xi;, &chi;&#940;&rho;&iota;&sigmaf; and &nu;&#972;&mu;&omicron;&sigmaf; show their real senses (by meaning, not just English wording), how each NT author uses them, why translations differ, a reading tip, and where scholars debate &mdash; every cited verse checked against the Greek text (2,197 of 2,197 verified). More words arrive in waves.</li>
+</ul>
 <div class="un-version-label">v3.0.493 &mdash; Faster loading, a deeper word study, a truer interlinear</div>
 <ul>
   <li><strong>Updates no longer re-download the Bible</strong> &mdash; Your offline Bible data now stays on your device across app updates. Before, every update quietly downloaded about 80 MB again, which is why some launches were slow. Large files are also no longer re-checked in the background every time you open them.</li>
@@ -48395,7 +48399,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.166';
+const DEEP_LEXICON_VERSION = '3.0.494';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 

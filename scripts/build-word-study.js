@@ -38,6 +38,15 @@
 // Flags: --model <id> (default claude-opus-5-5) · --effort low|medium|high|xhigh|max (default high)
 //        --min-count <n> · --sample <list> · --limit <n> · --dry-run · --merge-only
 //
+// Writing entries in a Claude Code session instead of through the API
+// (no API key; the same verifier applies):
+//   --export --top 300 --batch 20     writes evidence packs for the most-used
+//                                     content words to data/deep-lexicon/study/work/
+//   --check <file.json>               verifies a written batch ([{s, study}]) and
+//                                     reports every citation that would be dropped
+//   --import <file.json> --as <label> appends a checked batch to results.jsonl
+//   then --merge-only                 verifies again and merges into the shards
+//
 // After merging, bump DEEP_LEXICON_VERSION in app.js so devices fetch the new
 // shards (the service worker keeps the old ones until the version changes).
 
@@ -64,6 +73,14 @@ const SAMPLE = typeof flag('sample') === 'string' ? flag('sample').split(',').ma
 const LIMIT = parseInt(flag('limit'), 10) || 0;
 const DRY_RUN = Boolean(flag('dry-run'));
 const MERGE_ONLY = Boolean(flag('merge-only'));
+const EXPORT = Boolean(flag('export'));
+const TOP = parseInt(flag('top'), 10) || 300;
+const OFFSET = parseInt(flag('offset'), 10) || 0;
+const BATCH = parseInt(flag('batch'), 10) || 20;
+const CHECK_FILE = typeof flag('check') === 'string' ? flag('check') : null;
+const IMPORT_FILE = typeof flag('import') === 'string' ? flag('import') : null;
+const IMPORT_AS = typeof flag('as') === 'string' ? flag('as') : 'claude-code-session';
+const WORK_DIR = path.join(OUT_DIR, 'work');
 
 // ── Data ────────────────────────────────────────────────────────────────────
 function loadWindowFiles(files) {
@@ -304,6 +321,44 @@ function requestParams(pack) {
   };
 }
 
+// Structural check of one written entry against SCHEMA (the API enforces this
+// itself; hand-written batches need it explicitly).
+function schemaProblems(st) {
+  const p = [];
+  const str = (x) => typeof x === 'string' && x.trim().length > 0;
+  const strOrNull = (x) => x === null || typeof x === 'string';
+  if (!st || typeof st !== 'object') return ['not an object'];
+  for (const k of SCHEMA.required) if (!(k in st)) p.push(`missing ${k}`);
+  if (!str(st.summary)) p.push('summary must be text');
+  if (!Array.isArray(st.senses) || !st.senses.length) p.push('senses must be a non-empty array');
+  (st.senses || []).forEach((x, i) => {
+    if (!str(x.label) || !str(x.definition) || !Array.isArray(x.refs) || !strOrNull(x.note ?? null)) p.push(`sense ${i + 1} malformed`);
+  });
+  (st.authorNotes || []).forEach((x, i) => {
+    if (!AUTHORS[x.author] || !str(x.note) || !Array.isArray(x.refs)) p.push(`authorNote ${i + 1} malformed (author must be one of ${Object.keys(AUTHORS).join(', ')})`);
+  });
+  (st.background || []).forEach((x, i) => {
+    if (!['classical', 'septuagint', 'papyri', 'apostolic'].includes(x.period) || !str(x.note) || !str(x.citation)) p.push(`background ${i + 1} malformed`);
+  });
+  for (const k of ['translationNote', 'exegesisTip', 'caution']) if (!strOrNull(st[k] ?? null)) p.push(`${k} must be text or null`);
+  return p;
+}
+
+// The most-used content words (nouns, verbs, adjectives; no proper names),
+// where a deeper entry helps the most readers.
+function priorityList(W, entries) {
+  const T = W.RhemaNT?.text || {};
+  const pos = {};
+  for (const b in T) for (const c in T[b]) for (const v in T[b][c]) for (const w of T[b][c][v]) {
+    const p = String(w[2] || '').split('-')[0];
+    (pos[w[1]] = pos[w[1]] || {})[p] = ((pos[w[1]] || {})[p] || 0) + 1;
+  }
+  const dominant = (s) => Object.entries(pos[s] || {}).sort((a, b) => b[1] - a[1])[0]?.[0];
+  return [...entries.values()]
+    .filter((e) => e.lemma && e.count > 0 && ['N', 'V', 'A'].includes(dominant(e.s)) && !/^[Α-ΩἈ-Ὧ]/.test(e.lemma))
+    .sort((a, b) => b.count - a.count);
+}
+
 function parseMessage(msg) {
   if (msg.stop_reason === 'refusal') return { error: `refusal${msg.stop_details?.category ? ` (${msg.stop_details.category})` : ''}` };
   if (msg.stop_reason === 'max_tokens') return { error: 'max_tokens' };
@@ -353,13 +408,79 @@ function mergeIntoShards(W, entries, lexicon, mm) {
 // ── Main ────────────────────────────────────────────────────────────────────
 async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  console.log('Loading texts and lexica…');
+  if (!CHECK_FILE && !IMPORT_FILE) console.log('Loading texts and lexica…');
   const W = loadWindowFiles(['rhema-nt.js', 'rhema-critical.js', 'rhema-lxx.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-mm.js']);
   const lexicon = W.RhemaLexicon || {};
   const mm = W.RhemaMoultonMilligan || {};
   const { entries } = loadShards();
 
   if (MERGE_ONLY) { mergeIntoShards(W, entries, lexicon, mm); return; }
+
+  if (EXPORT) {
+    const done = loadDone();
+    const list = priorityList(W, entries).slice(OFFSET, OFFSET + TOP).filter((e) => !done.has(e.s));
+    fs.mkdirSync(WORK_DIR, { recursive: true });
+    let n = 0;
+    for (let i = 0; i < list.length; i += BATCH) {
+      const batch = list.slice(i, i + BATCH);
+      const name = `batch-${String(++n).padStart(2, '0')}`;
+      const body = [`# ${name}: ${batch.length} words (${batch.map((e) => `G${e.s} ${e.lemma}`).join(', ')})`, ''];
+      for (const e of batch) body.push(`════ G${e.s} ${e.lemma} ════`, buildPack(e, lexicon[e.s], mm[e.s], W).pack, '');
+      fs.writeFileSync(path.join(WORK_DIR, `${name}.md`), body.join('\n'));
+    }
+    fs.writeFileSync(path.join(WORK_DIR, 'INSTRUCTIONS.md'), `${SYSTEM_PROMPT}\n\nOutput: a JSON array, one object per word: {"s": <Strong's number>, "study": <entry>}, where <entry> matches this JSON schema:\n${JSON.stringify(SCHEMA, null, 2)}\n`);
+    console.log(`Exported ${list.length} words in ${n} batches to ${path.relative(ROOT, WORK_DIR)}/ (${done.size} already done, skipped).`);
+    return;
+  }
+
+  if (CHECK_FILE || IMPORT_FILE) {
+    const file = path.resolve(CHECK_FILE || IMPORT_FILE);
+    let rows;
+    try { rows = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { console.error(`Can't read ${file}: ${e.message}`); process.exit(1); }
+    if (!Array.isArray(rows)) { console.error('Expected a JSON array of {s, study}.'); process.exit(1); }
+    const verifier = makeVerifier(W);
+    let bad = 0;
+    const good = [];
+    for (const row of rows) {
+      const e = entries.get(Number(row.s));
+      if (!e) { console.log(`✗ G${row.s}: unknown Strong's number`); bad++; continue; }
+      const problems = schemaProblems(row.study);
+      if (problems.length) { console.log(`✗ G${e.s} ${e.lemma}: ${problems.join('; ')}`); bad++; continue; }
+      const { sources } = buildPack(e, lexicon[e.s], mm[e.s], W);
+      const v = verifyStudy(row.study, e, sources, verifier);
+      const droppedRefs = [];
+      for (const x of [...(row.study.senses || []), ...(row.study.authorNotes || [])]) {
+        for (const r of x.refs || []) if (!verifier.verseHas(r, e.s)) droppedRefs.push(r);
+      }
+      const droppedBg = (row.study.background || []).filter((b) => !v.background.some((k) => k.citation === b.citation)).map((b) => b.citation);
+      // Verse references written inside the prose (e.g. "MAR 3:17" in a note)
+      // aren't tappable receipts, but they must still be right.
+      const prose = [row.study.summary, row.study.translationNote, row.study.exegesisTip, row.study.caution,
+        ...(row.study.senses || []).flatMap((x) => [x.definition, x.note]), ...(row.study.authorNotes || []).map((x) => x.note)]
+        .filter(Boolean).join(' ');
+      // A range ("PHP 2:10-11") passes if any verse in it has the word. Prose
+      // may also cite a verse as a contrast, so these are warnings only.
+      const proseBad = [...new Set((prose.match(/\b[1-3]?[A-Z]{2,3} \d+:\d+(?:[-–]\d+)?/g) || []))].filter((r) => {
+        const m = r.match(/^(\S+ \d+):(\d+)(?:[-–](\d+))?$/);
+        for (let v = +m[2]; v <= +(m[3] || m[2]); v++) if (verifier.verseHas(`${m[1]}:${v}`, e.s)) return false;
+        return true;
+      });
+      if (proseBad.length) droppedRefs.push(...proseBad.map((r) => `${r} (mentioned in text — check it's a deliberate contrast or a different versification)`));
+      const flag = droppedRefs.length || droppedBg.length || v.verified.sensesDropped ? '!' : '✓';
+      console.log(`${flag} G${e.s} ${e.lemma}: ${v.senses.length} senses, ${v.authorNotes.length} author notes, ${v.background.length} history notes` +
+        (droppedRefs.length ? ` · refs that don't contain the word: ${droppedRefs.join(', ')}` : '') +
+        (droppedBg.length ? ` · citations not found in the supplied lexicon text: ${droppedBg.join(' | ')}` : '') +
+        (v.verified.sensesDropped ? ` · ${v.verified.sensesDropped} sense(s) would be dropped (no verified verse)` : ''));
+      good.push(row);
+    }
+    if (IMPORT_FILE) {
+      for (const row of good) append({ s: Number(row.s), model: IMPORT_AS, study: row.study });
+      console.log(`Imported ${good.length} entries (${bad} rejected) into ${path.relative(ROOT, RESULTS_FILE)}.`);
+    } else {
+      console.log(`${good.length} well-formed, ${bad} rejected.`);
+    }
+    process.exit(bad && CHECK_FILE ? 2 : 0);
+  }
 
   const done = loadDone();
   let targets = [...entries.values()]
