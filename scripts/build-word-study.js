@@ -127,11 +127,22 @@ const SUPPLETIVE_KEY = new Map();
 for (const g of SUPPLETIVE) for (const x of g) SUPPLETIVE_KEY.set(String(x), String(g[0]));
 const sameLexeme = (s) => SUPPLETIVE_KEY.get(String(s)) || String(s);
 
+// Common alternative book codes (USFM/SBL) → the app's codes.
+const BOOK_ALIASES = {
+  MRK: 'MAR', MK: 'MAR', JHN: 'JOH', JN: 'JOH', JAS: 'JAM', JMS: 'JAM', JDE: 'JUD', PHL: 'PHP', PHI: 'PHP',
+  '1JN': '1JO', '2JN': '2JO', '3JN': '3JO', MT: 'MAT', LK: 'LUK', RO: 'ROM', RV: 'REV', PHLM: 'PHM',
+};
+function canonRef(ref) {
+  const m = String(ref || '').trim().match(/^([1-3]?[A-Z]{2,4}) (\d+):(\d+)$/);
+  if (!m) return String(ref || '').trim();
+  return `${BOOK_ALIASES[m[1]] || m[1]} ${m[2]}:${m[3]}`;
+}
+
 function makeVerifier(W) {
   const texts = [W.RhemaNT?.text || {}, W.RhemaCriticalNT?.text || {}, W.RhemaLXX?.text || {}];
   const lemmaIdx = Align.buildLemmaIndex(W.RhemaLexicon || {});
   function verseHas(ref, strongs) {
-    const m = String(ref || '').trim().match(/^([1-3]?[A-Z]{2,3}) (\d+):(\d+)$/);
+    const m = canonRef(ref).match(/^([1-3]?[A-Z]{2,3}) (\d+):(\d+)$/);
     if (!m) return false;
     // Strict: the cited verse must contain this exact word. Only suppletive
     // verbs (one verb, several stems/numbers) count as the same word — not the
@@ -158,7 +169,7 @@ const norm = (s) => String(s || '').normalize('NFC').toLowerCase().replace(/[\s.
 
 function verifyStudy(raw, entry, sources, verifier) {
   const stats = { refsChecked: 0, refsDropped: 0, sensesDropped: 0, notesDropped: 0, backgroundDropped: 0 };
-  const keepRefs = (refs) => (refs || []).filter((r) => {
+  const keepRefs = (refs) => (refs || []).map(canonRef).filter((r) => {
     stats.refsChecked++;
     const ok = verifier.verseHas(r, entry.s);
     if (!ok) stats.refsDropped++;
