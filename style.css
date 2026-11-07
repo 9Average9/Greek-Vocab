@@ -14013,6 +14013,66 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   gap: 6px;
   align-items: center;
 }
+.rhema-has-menu .rhema-search-toggle { display: inline-flex; }
+.rhema-search-panel {
+  display: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
+  background: var(--primary-light);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#rhemaModal.rhema-search-open .rhema-search-panel { display: flex; }
+#rhemaModal.rhema-search-open .rhema-reader { display: none; }
+.rhema-search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 5px 6px 5px 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 15px;
+  background: var(--card-solid-color);
+  color: var(--secondary-color);
+}
+.rhema-search-form:focus-within { outline: 2px solid color-mix(in srgb, var(--secondary-color) 40%, transparent); }
+.rhema-search-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--font-color);
+  font: inherit;
+  font-size: 0.95rem;
+}
+.rhema-search-form input::-webkit-search-cancel-button { display: none; }
+.rhema-search-clear { border: 0; background: transparent; color: var(--muted-color); cursor: pointer; padding: 3px; }
+.rhema-search-clear.hidden { display: none; }
+.rhema-search-submit {
+  border: 0;
+  border-radius: 10px;
+  background: var(--secondary-color);
+  color: var(--card-solid-color);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 750;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+.rhema-search-help { margin: 0; color: var(--muted-color); font-size: 0.8rem; line-height: 1.45; }
+.rhema-search-ai-status { color: var(--secondary-color); font-size: 0.78rem; font-weight: 700; }
+.rhema-search-ai-status:empty { display: none; }
+.rhema-search-results { display: grid; gap: 8px; padding-bottom: env(safe-area-inset-bottom); }
+.rhema-search-results .home-rhema-result.best { border: 2px solid var(--secondary-color); background: color-mix(in srgb, var(--card-color) 83%, var(--secondary-color)); }
+.rhema-search-results .home-rhema-result em { color: var(--secondary-color); font-size: 0.7rem; font-style: normal; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
+.rhema-search-results .home-rhema-result { padding: 12px 14px; }
+.rhema-search-results .home-rhema-result strong { font-size: 0.9rem; }
+.rhema-search-results .home-rhema-result span { font-size: 0.84rem; }
+.rhema-search-results .home-rhema-result small { color: var(--secondary-color); font-size: 0.75rem; line-height: 1.35; }
 
 /* ── Shared raised-glass style for header action buttons ── */
 .rhema-back-btn.icon-btn {

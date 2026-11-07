@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.508";
+const APP_VERSION = "3.0.509";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.509 &mdash; Rhema Bible search</div>
+<ul>
+  <li><strong>Find the passage you remember</strong> &mdash; Search from inside Rhema by reference, words, story, or a rough remembered phrase. Local results appear as you type; AI ranks the most likely Bible reference when you submit.</li>
+</ul>
 <div class="un-version-label">v3.0.508 &mdash; 1370 Greek words studied</div>
 <ul>
   <li><strong>150 more word studies</strong> &mdash; Including &pi;&rho;&omicron;&phi;&eta;&tau;&epsilon;&#8055;&alpha;, &#7936;&pi;&omicron;&kappa;&#8049;&lambda;&upsilon;&psi;&iota;&sigmaf;, &theta;&upsilon;&mu;&#8057;&sigmaf;, &sigma;&tau;&#8051;&phi;&alpha;&nu;&omicron;&sigmaf;, &#7940;&phi;&epsilon;&sigma;&iota;&sigmaf;, &pi;&omicron;&iota;&mu;&#8053;&nu; and 120 less common words, each with every verse it appears in.</li>
@@ -37861,6 +37865,9 @@ window.RhemaBookOrder = RHEMA_BOOK_ORDER;
 let _homeRhemaSearchTimer = null;
 let _homeRhemaResults = [];
 let _homeRhemaSearchIndex = null;
+let _homeRhemaSearchPromise = null;
+let _rhemaSearchRequestId = 0;
+const _rhemaAiSearchCache = new Map();
 
 const HOME_RHEMA_STOPWORDS = new Set([
   'a','an','and','are','as','at','about','be','but','by','for','from','he','her','his','how','i','in','is','it','like','me','of','on','or','out','passage','she','so','story','that','the','their','them','there','they','this','to','was','were','what','when','where','who','with','you','your'
@@ -38015,9 +38022,11 @@ function _homeRhemaTokens(query) {
 
 async function _ensureHomeRhemaSearchIndex() {
   if (_homeRhemaSearchIndex) return _homeRhemaSearchIndex;
+  if (_homeRhemaSearchPromise) return _homeRhemaSearchPromise;
+  _homeRhemaSearchPromise = (async () => {
   await loadRhemaScripts();
   const data = window.RhemaMSB || {};
-  _homeRhemaSearchIndex = [];
+  const entries = [];
   RHEMA_BOOK_ORDER.forEach((book) => {
     const chapters = data[book] || {};
     Object.keys(chapters).forEach((chapter) => {
@@ -38028,11 +38037,15 @@ async function _ensureHomeRhemaSearchIndex() {
         const ref = `${_rhemaBookName(book)} ${chapter}:${verse}`;
         const norm = _homeRhemaNormalize(`${ref} ${RHEMA_BOOK_ABBR[book] || ''} ${text}`);
         const tokenSet = new Set(norm.split(' ').filter(t => t.length > 2 && !HOME_RHEMA_STOPWORDS.has(t)));
-        _homeRhemaSearchIndex.push({ book, chapter: String(chapter), verse: String(verse), ref, text, norm, tokenSet });
+        entries.push({ book, chapter: String(chapter), verse: String(verse), ref, text, norm, tokenSet });
       });
     });
   });
-  return _homeRhemaSearchIndex;
+  _homeRhemaSearchIndex = entries;
+  return entries;
+  })();
+  try { return await _homeRhemaSearchPromise; }
+  finally { _homeRhemaSearchPromise = null; }
 }
 
 function _homeRhemaEditDistance(a, b, max = 2) {
@@ -38120,13 +38133,17 @@ function _homeRhemaTopicBoost(normQuery, entry) {
   if ((has('faith') && has('works')) || has('dead')) {
     if (entry.book === 'JAM' && entry.chapter === '2') score += 55;
   }
+  if (has('hate') && (has('do') || has('paul') || has('want'))) {
+    if (inRef('ROM', 7, ['15'])) score += 340;
+    else if (inRef('ROM', 7, ['19'])) score += 120;
+  }
   if ((has('shadrach') || has('meshach') || has('abednego')) && (has('furnace') || has('fire') || has('flame') || has('burning') || has('nebuchadnezzar'))) {
     if (entry.book === 'DAN' && entry.chapter === '3') score += 220;
   }
   return score;
 }
 
-function _scoreHomeRhemaEntry(query, tokens, entry, directRef) {
+function _scoreHomeRhemaEntry(query, tokens, entry, directRef, allowFuzzy = false, normalizedQuery) {
   let score = 0;
   if (directRef && entry.book === directRef.book && entry.chapter === directRef.chapter) {
     score += entry.verse === directRef.verse ? 200 : 25;
@@ -38135,7 +38152,7 @@ function _scoreHomeRhemaEntry(query, tokens, entry, directRef) {
   tokens.forEach((token, idx) => {
     const first = entry.norm.indexOf(token);
     if (first === -1) {
-      const fuzzy = _homeRhemaFuzzyTokenScore(token, entry);
+      const fuzzy = allowFuzzy ? _homeRhemaFuzzyTokenScore(token, entry) : 0;
       if (fuzzy > 0) matchedTokens++;
       score += fuzzy;
       return;
@@ -38145,34 +38162,54 @@ function _scoreHomeRhemaEntry(query, tokens, entry, directRef) {
     if (entry.norm.includes(` ${token} `)) score += 3;
     if (idx > 0 && entry.norm.includes(`${tokens[idx - 1]} ${token}`)) score += 8;
   });
-  score += _homeRhemaTopicBoost(_homeRhemaNormalize(query), entry);
+  score += _homeRhemaTopicBoost(normalizedQuery, entry);
   if (tokens.length >= 2) score += Math.round((matchedTokens / tokens.length) * 24);
   if (matchedTokens >= 3) score += 18;
-  if (tokens.length && tokens.every(token => entry.norm.includes(token) || _homeRhemaFuzzyTokenScore(token, entry) > 0)) score += 20;
+  if (tokens.length && tokens.every(token => entry.norm.includes(token) || (allowFuzzy && _homeRhemaFuzzyTokenScore(token, entry) > 0))) score += 20;
   return score;
 }
 
+function _rankHomeRhemaEntries(index, query, allowFuzzy = false) {
+  const tokens = _homeRhemaTokens(query);
+  const directRef = _homeRhemaDirectRef(query);
+  const normalizedQuery = _homeRhemaNormalize(query);
+  const best = [];
+  for (const entry of index) {
+    const score = _scoreHomeRhemaEntry(query, tokens, entry, directRef, allowFuzzy, normalizedQuery);
+    if (score <= 0 || (best.length === 8 && score <= best[7].score)) continue;
+    const at = best.findIndex(result => score > result.score);
+    best.splice(at < 0 ? best.length : at, 0, { ...entry, score });
+    if (best.length > 8) best.pop();
+  }
+  return best.length ? best.filter(entry => entry.score >= Math.max(7, best[0].score * 0.15)) : best;
+}
+
 function _renderHomeRhemaSearchResults(items, status) {
-  const target = document.getElementById('homeRhemaSearchResults');
+  const target = document.getElementById('rhemaSearchResults');
   if (!target) return;
   if (status) {
     target.innerHTML = `<div class="home-rhema-search-status">${_homeRhemaEscape(status)}</div>`;
     return;
   }
   target.innerHTML = items.map((item, index) => `
-    <button class="home-rhema-result" type="button" onclick="openHomeRhemaResult(${index})">
+    <button class="home-rhema-result${index === 0 && item.reason ? ' best' : ''}" type="button" onclick="openHomeRhemaResult(${index})">
+      ${index === 0 && item.reason ? '<em>Best match</em>' : ''}
       <strong>${_homeRhemaEscape(item.ref)}</strong>
       <span>${_homeRhemaEscape(item.text)}</span>
+      ${item.reason ? `<small>${_homeRhemaEscape(item.reason)}</small>` : ''}
     </button>
   `).join('');
 }
 
 function _syncHomeRhemaSearchClear(query = '') {
-  document.getElementById('homeRhemaSearchClear')?.classList.toggle('hidden', !String(query || '').trim());
+  document.getElementById('rhemaSearchClear')?.classList.toggle('hidden', !String(query || '').trim());
 }
 
 function homeRhemaSearch(value) {
   clearTimeout(_homeRhemaSearchTimer);
+  const requestId = ++_rhemaSearchRequestId;
+  const aiStatus = document.getElementById('rhemaSearchAiStatus');
+  if (aiStatus) aiStatus.textContent = '';
   const query = String(value || '').trim();
   _syncHomeRhemaSearchClear(query);
   if (!query) {
@@ -38180,7 +38217,7 @@ function homeRhemaSearch(value) {
     _renderHomeRhemaSearchResults([]);
     return;
   }
-  if (query.length < 3) {
+  if (query.length < 2) {
     _homeRhemaResults = [];
     _renderHomeRhemaSearchResults([], 'Keep typing to search Rhema.');
     return;
@@ -38189,18 +38226,15 @@ function homeRhemaSearch(value) {
   _homeRhemaSearchTimer = setTimeout(async () => {
     try {
       const index = await _ensureHomeRhemaSearchIndex();
-      const tokens = _homeRhemaTokens(query);
-      const directRef = _homeRhemaDirectRef(query);
-      const ranked = index
-        .map(entry => ({ ...entry, score: _scoreHomeRhemaEntry(query, tokens, entry, directRef) }))
-        .filter(entry => entry.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5);
+      if (requestId !== _rhemaSearchRequestId) return;
+      let ranked = _rankHomeRhemaEntries(index, query);
+      if (!ranked.length && _homeRhemaTokens(query).length <= 3) ranked = _rankHomeRhemaEntries(index, query, true);
+      if (requestId !== _rhemaSearchRequestId) return;
       _homeRhemaResults = ranked;
       _renderHomeRhemaSearchResults(ranked, ranked.length ? '' : 'No close match yet.');
     } catch (err) {
       _homeRhemaResults = [];
-      _renderHomeRhemaSearchResults([], 'Rhema search could not load.');
+      if (requestId === _rhemaSearchRequestId) _renderHomeRhemaSearchResults([], 'Rhema search could not load.');
     }
   }, 220);
 }
@@ -38208,66 +38242,84 @@ function homeRhemaSearch(value) {
 function clearHomeRhemaSearch() {
   clearTimeout(_homeRhemaSearchTimer);
   _homeRhemaResults = [];
-  const input = document.getElementById('homeRhemaSearchInput');
+  ++_rhemaSearchRequestId;
+  const input = document.getElementById('rhemaSearchInput');
   if (input) input.value = '';
   _syncHomeRhemaSearchClear('');
   _renderHomeRhemaSearchResults([]);
+  const aiStatus = document.getElementById('rhemaSearchAiStatus');
+  if (aiStatus) aiStatus.textContent = '';
   input?.focus();
 }
 
-// ── Inline home search (collapses to a magnifier next to the greeting) ───────
-let _homeSearchInteracting = false;
-
-function toggleHomeSearch(event) {
-  event?.stopPropagation?.();
-  const wrap = document.getElementById('homeInlineSearch');
-  if (!wrap) return;
-  if (wrap.classList.contains('open')) { closeHomeSearch(); return; }
-  _initHomeSearchBehavior();
-  const btn = document.getElementById('homeSearchToggle');
-  if (btn) {
-    btn.classList.remove('his-pressing');
-    void btn.offsetWidth;
-    btn.classList.add('his-pressing');
-    setTimeout(() => btn.classList.remove('his-pressing'), 460);
-  }
-  requestAnimationFrame(() => wrap.classList.add('open'));
-  // Focus inside the tap gesture so the keyboard opens right away
-  document.getElementById('homeRhemaSearchInput')?.focus({ preventScroll: true });
+// The reader owns search. Local matches appear while typing; the AI lookup is
+// reserved for a deliberate submit so every keystroke stays fast and free.
+function toggleRhemaSearch() {
+  const modal = document.getElementById('rhemaModal');
+  if (!modal) return;
+  if (modal.classList.contains('rhema-search-open')) { closeRhemaSearch(); return; }
+  modal.classList.add('rhema-search-open');
+  document.getElementById('rhemaSearchToggle')?.setAttribute('aria-expanded', 'true');
+  document.getElementById('rhemaSearchInput')?.focus({ preventScroll: true });
 }
 
-function closeHomeSearch() {
-  const wrap = document.getElementById('homeInlineSearch');
-  if (!wrap || !wrap.classList.contains('open')) return;
-  wrap.classList.remove('open');
+function closeRhemaSearch() {
+  const modal = document.getElementById('rhemaModal');
+  modal?.classList.remove('rhema-search-open');
+  document.getElementById('rhemaSearchToggle')?.setAttribute('aria-expanded', 'false');
+  ++_rhemaSearchRequestId;
   clearTimeout(_homeRhemaSearchTimer);
-  _homeRhemaResults = [];
-  const input = document.getElementById('homeRhemaSearchInput');
-  if (input) { input.value = ''; input.blur(); }
-  _syncHomeRhemaSearchClear('');
-  _renderHomeRhemaSearchResults([]);
+  document.getElementById('rhemaSearchInput')?.blur();
 }
 
-function _initHomeSearchBehavior() {
-  const input = document.getElementById('homeRhemaSearchInput');
-  if (!input || input._homeSearchInit) return;
-  input._homeSearchInit = true;
-  // Taps on results or inside the pill (clear button) shouldn't count as
-  // dismissing the keyboard — only a true blur closes the search.
-  const markInteraction = () => {
-    _homeSearchInteracting = true;
-    setTimeout(() => { _homeSearchInteracting = false; }, 600);
-  };
-  document.getElementById('homeRhemaSearchResults')?.addEventListener('pointerdown', markInteraction);
-  document.querySelector('#homeInlineSearch .his-pill')?.addEventListener('pointerdown', e => {
-    if (e.target !== input) markInteraction();
-  });
-  input.addEventListener('blur', () => {
-    setTimeout(() => {
-      if (_homeSearchInteracting || document.activeElement === input) return;
-      closeHomeSearch();
-    }, 140);
-  });
+function closeHomeSearch() {} // Retained for older navigation call sites.
+
+async function submitRhemaSearch() {
+  const query = document.getElementById('rhemaSearchInput')?.value.trim() || '';
+  if (!query) return;
+  const requestId = ++_rhemaSearchRequestId;
+  const aiStatus = document.getElementById('rhemaSearchAiStatus');
+  if (aiStatus) aiStatus.textContent = 'Finding the most likely passage…';
+  clearTimeout(_homeRhemaSearchTimer);
+  let index;
+  try { index = await _ensureHomeRhemaSearchIndex(); }
+  catch { if (requestId === _rhemaSearchRequestId) { if (aiStatus) aiStatus.textContent = ''; _renderHomeRhemaSearchResults([], 'Bible text could not load. Check your connection.'); } return; }
+  if (requestId !== _rhemaSearchRequestId) return;
+  const directRef = _homeRhemaDirectRef(query);
+  const local = _rankHomeRhemaEntries(index, query);
+  _homeRhemaResults = local;
+  _renderHomeRhemaSearchResults(local, local.length ? '' : 'Looking for related passages…');
+  if (directRef && local[0]?.book === directRef.book && local[0]?.chapter === directRef.chapter) { if (aiStatus) aiStatus.textContent = ''; return; }
+  try {
+    const cacheKey = query.toLowerCase();
+    let suggestions = _rhemaAiSearchCache.get(cacheKey);
+    if (!suggestions) {
+      if (!window.BibleSearchAI?.search) throw new Error('Bible AI service has not loaded');
+      suggestions = (await window.BibleSearchAI.search(query)).results || [];
+      _rhemaAiSearchCache.set(cacheKey, suggestions);
+    }
+    if (requestId !== _rhemaSearchRequestId) return;
+    const byRef = new Map(index.map(entry => [`${entry.book}:${entry.chapter}:${entry.verse}`, entry]));
+    const found = [];
+    const seen = new Set();
+    suggestions.forEach(suggestion => {
+      const ref = _homeRhemaDirectRef(suggestion.reference);
+      if (!ref) return;
+      const entry = byRef.get(`${ref.book}:${ref.chapter}:${ref.verse}`);
+      const key = entry && `${entry.book}:${entry.chapter}:${entry.verse}`;
+      if (!entry || seen.has(key)) return;
+      seen.add(key);
+      found.push({ ...entry, reason: String(suggestion.reason || '').slice(0, 140) });
+    });
+    _homeRhemaResults = found.length ? found : local;
+    if (aiStatus) aiStatus.textContent = '';
+    _renderHomeRhemaSearchResults(_homeRhemaResults, _homeRhemaResults.length ? '' : 'No matching passages found. Try different words.');
+  } catch (err) {
+    if (requestId === _rhemaSearchRequestId) {
+      if (aiStatus) aiStatus.textContent = '';
+      _renderHomeRhemaSearchResults(local, local.length ? '' : 'AI search is unavailable. Try a reference or different words.');
+    }
+  }
 }
 
 function openHomeRhemaTopResult() {
@@ -38277,6 +38329,7 @@ function openHomeRhemaTopResult() {
 async function openHomeRhemaResult(index) {
   const result = _homeRhemaResults[index];
   if (!result) return;
+  closeRhemaSearch();
   await showRhema();
   _rhemaTextMode = 'majority';
   _syncRhemaEnglishAlias();
@@ -43186,6 +43239,7 @@ function _syncRhemaChapterUi() {
 function closeRhema(keepSandbox = false) {
   // Guests have nowhere to close the reader to — it is the whole app for them.
   if (_guestMode && !keepSandbox) return;
+  closeRhemaSearch();
   // If opened from sermon workshop, handle cleanup via sermon mode
   if (typeof _sermonRhemaMode !== 'undefined' && _sermonRhemaMode) {
     _closeSermonRhemaMode();
@@ -45163,7 +45217,7 @@ const APP_WELCOME_COACH_STEPS = [
   { before: () => { showNavPage('community'); showLbTab('scholar'); }, target: () => _coachFirst(['button[data-tab="scholar"]', '#lbPaneScholar']), title: 'Scholar board', body: 'The Scholar board highlights careful practice quality, not just activity. It gives deeper testing and review work its own place.' },
   { before: () => showNavPage('home'), target: () => _coachFirst(['.home-actions-grid', '#notifBtn']), title: 'Home tools', body: 'Home is the launch point. Tools open vocabulary, translation, and tests. The bell opens Notifications — app updates and activity — and also holds a Reminders tab for your study reminders.' },
   { target: () => _coachFirst(['#studyLibraryHomeBtn', '.home-actions-grid']), title: 'Create studies here', body: 'The Study Library holds your focused study spaces. A study can hold Rhema work, saved verses, word logs, scripture trails, and notes.' },
-  { target: () => _coachFirst(['.bn-item[data-page="rhema"]', '#homeSearchToggle']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. Open it from the nav bar to read a passage, tap words, compare English, use syntax, and explore cross references.' },
+  { target: () => _coachFirst(['.bn-item[data-page="rhema"]', '#rhemaSearchToggle']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. Open it from the nav bar to read a passage, tap words, compare English, use syntax, and explore cross references.' },
   { before: () => { showNavPage('profile'); document.getElementById('profileJourneySection')?.classList.remove('collapsed'); }, target: () => _coachFirst(['#profileJourneySection', '.profile-action-row', '.profile-header']), title: 'Profile tracks your journey', body: 'Your profile keeps your XP, rank, streak, lesson progress, known words, translation attempts, and achievements — tap "Your Greek Journey" to expand it anytime. The settings gear in the top-left holds appearance, account, and calendar options.' }
 ];
 
