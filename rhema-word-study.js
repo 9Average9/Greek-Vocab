@@ -109,6 +109,14 @@
       .filter(Boolean);
   }
 
+  // Moulton–Milligan for this word — unless the entry filed under its number
+  // is really another word's (see RhemaAlign.mmHeadwordMatches).
+  function _mmText(strongs) {
+    const t = (window.RhemaMoultonMilligan || {})[strongs] || '';
+    const lemma = (window.RhemaLexicon || {})[strongs]?.lemma;
+    return t && (!window.RhemaAlign || RhemaAlign.mmHeadwordMatches(t, lemma)) ? t : '';
+  }
+
   function _decodeEntities(s) {
     return String(s || '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'").replace(/&amp;/g, '&');
@@ -412,7 +420,7 @@
           ${heb ? `<p class="ws-fine">It translates the Hebrew:</p><p>${heb}</p>` : ''}
           ${(entry.lxx.refs || []).length ? `<div class="ws-refs">${entry.lxx.refs.slice(0, 6).map(r => _refChipFromKey(r, strongs)).join('')}</div>` : ''}` });
     }
-    const mm = (window.RhemaMoultonMilligan || {})[strongs];
+    const mm = _mmText(strongs);
     if (mm) {
       const paras = cleanMoultonMilligan(mm);
       items.push({ era: 'c. 300 BC – AD 300', title: 'Everyday Greek: papyri & inscriptions', icon: 'receipt_long',
@@ -457,7 +465,7 @@
     if (lex.abbott_smith && _rhemaAbbottMatchesLex(lex)) {
       tabs.push(['Abbott-Smith', `<div class="ws-as">${cleanAbbottSmith(lex.abbott_smith, strongs)}</div><p class="ws-fine">A Manual Greek Lexicon of the NT (1922). References are tappable.</p>`]);
     }
-    const mm = (window.RhemaMoultonMilligan || {})[strongs];
+    const mm = _mmText(strongs);
     if (mm) tabs.push(['Moulton–Milligan', cleanMoultonMilligan(mm).map(p => `<p class="ws-mm">${esc(p)}</p>`).join('') + '<p class="ws-fine">The Vocabulary of the Greek Testament (1930), from the papyri and inscriptions.</p>']);
     if (entry?.classical?.lsj) tabs.push(['LSJ', `<p class="ws-lsj">${esc(_decodeEntities(entry.classical.lsj))}</p><p class="ws-fine">Liddell–Scott–Jones, A Greek–English Lexicon (classical Greek).</p>`]);
     if (lex.extended || lex.brief) tabs.push(['Dodson', `<p>${esc(lex.extended || lex.brief)}</p>`]);

@@ -241,7 +241,8 @@ function buildPack(entry, lex, mm, W) {
   if (lex?.extended || lex?.brief) L.push(`DODSON: ${plain(lex.extended || lex.brief, 400)}`);
   if (lex?.strongs_def) L.push(`STRONG'S: ${plain(lex.strongs_def, 300)}; KJV renders: ${plain(lex.kjv_def, 200)}`);
   if (entry.classical?.lsj) { const t = plain(entry.classical.lsj, 2500); L.push(`LSJ (classical): ${t}`); sources.push(t); }
-  if (mm) { const t = plain(mm, 3000); L.push(`MOULTON–MILLIGAN (papyri/inscriptions): ${t}`); sources.push(t); }
+  // Skip an MM article filed under this number that is really another word's.
+  if (mm && Align.mmHeadwordMatches(mm, entry.lemma)) { const t = plain(mm, 3000); L.push(`MOULTON–MILLIGAN (papyri/inscriptions): ${t}`); sources.push(t); }
   if (entry.lxx?.refs?.length) sources.push(entry.lxx.refs.join(' '));
   return { pack: L.join('\n'), sources: sources.join('\n') };
 }
