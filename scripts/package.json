@@ -1,13 +1,17 @@
 {
   "name": "greek-vocab-build-scripts",
   "private": true,
-  "description": "Build-time scripts for Disciple Builder. Only build-deep-lexicon-prose.js needs the dependency below; the other scripts are dependency-free.",
+  "description": "Build-time scripts for Disciple Builder. Only the build-*-prose.js and build-word-study.js generators need the dependency below; the other scripts are dependency-free.",
   "scripts": {
     "build:rhema-critical-fallbacks": "node build-rhema-critical-fallbacks.js",
     "audit:rhema": "node audit-rhema-quality.js",
     "audit:rhema:2co3": "node audit-rhema-quality.js --book=2CO --chapter=3 --limit=120",
     "audit:definitions": "node audit-deep-definitions.js",
-    "audit:definitions:dry-run": "node audit-deep-definitions.js --dry-run"
+    "audit:definitions:dry-run": "node audit-deep-definitions.js --dry-run",
+    "build:word-study:dry-run": "node build-word-study.js --dry-run --sample 4561",
+    "build:word-study": "node build-word-study.js --min-count 2",
+    "test:word-study": "node test-word-study.js",
+    "test:interlinear": "node test-interlinear-align.js --stats"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0"

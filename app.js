@@ -19591,6 +19591,7 @@ function _memRenderTokenWords(text = '', renderWord) {
 
 async function startMemorizationPage() {
   await loadRhemaScripts().catch(() => {});
+  await _rhemaLoadDataFile('rhema-bsb.js').catch(() => {}); // BSB is a Memorize option
   if (typeof _syncRhemaEnglishAlias === 'function') _syncRhemaEnglishAlias();
   _populateVersionSelect(document.getElementById('memVersionSelect'));
   populateMemorizationBooks();
@@ -30313,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.492";
+const APP_VERSION = "3.0.493";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30336,6 +30337,16 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.493 &mdash; Faster loading, a deeper word study, a truer interlinear</div>
+<ul>
+  <li><strong>Updates no longer re-download the Bible</strong> &mdash; Your offline Bible data now stays on your device across app updates. Before, every update quietly downloaded about 80 MB again, which is why some launches were slow. Large files are also no longer re-checked in the background every time you open them.</li>
+  <li><strong>The reader opens on what it needs</strong> &mdash; A New Testament chapter no longer waits for the Hebrew Old Testament, and the rest of the study data loads gently afterwards so the reader stays smooth. Updates no longer hold the launch screen.</li>
+  <li><strong>A new Word Study</strong> &mdash; Tap any Greek word for one study that leads with what it means right here: how every translation renders this exact word (BSB, MSB, and NIV, NKJV, NASB, KJV at a tap), the measured range of meaning with every verse, which NT authors use it and how, its history from classical Greek through the Septuagint, the papyri and the Apostolic Fathers, and cleaned-up lexicons (Abbott-Smith, Moulton&ndash;Milligan, LSJ, Dodson, Strong&rsquo;s) with tappable references.</li>
+  <li><strong>How every version translates a word, across the whole NT</strong> &mdash; The Word Study&rsquo;s new <em>Across translations</em> section counts every New Testament use of the word in MSB and BSB instantly, and in NIV, NKJV, NASB, KJV or any version you pick with one tap (its chapters download once to your device). See each version&rsquo;s renderings with counts and every verse, plus a side-by-side table once you&rsquo;ve measured two or more.</li>
+  <li><strong>Occurrences in your version, with the word in bold</strong> &mdash; In a word&rsquo;s Occurrences list, switch to English and every verse shows in the version you&rsquo;re reading (NIV, NKJV, NASB, ESV&hellip; downloaded once and saved), with the exact English words that translate this Greek word in bold &mdash; or a note when that version gives it no separate word.</li>
+  <li><strong>Critical-text words all have definitions</strong> &mdash; Over 500 SBLGNT words that used to show &ldquo;No definition found&rdquo; (like &omicron;&#8021;&tau;&omega;&sigmaf;) now resolve correctly.</li>
+  <li><strong>A more accurate interlinear</strong> &mdash; Greek words now line up with the Berean tables in order, so repeated words no longer swap, and verses split differently between texts line up properly. Each English word says what it is: your version&rsquo;s word, a best match (&asymp;), no separate word (&mdash;), or the literal meaning, with a legend and an optional literal-and-parsing view.</li>
+</ul>
 <div class="un-version-label">v3.0.490 &mdash; Cleaner close, for real this time</div>
 <ul>
   <li><strong>Fixed the closing flash</strong> &mdash; When heading Home, the reader now keeps its exact look while it fades out. The old header (the Greek/English toggle) and the bottom nav no longer flash into view mid-animation &mdash; everything settles only after the reader has fully dissolved.</li>
@@ -32644,14 +32655,12 @@ function registerServiceWorker() {
     registration.addEventListener('updatefound', () => {
       // Only surface the "updating" hint for a real update (a controller already
       // exists), not for the first-ever install.
+      // The launch no longer waits on it: the network-first shell already runs
+      // the newest code, and the new worker only re-downloads files whose
+      // version changed (the Bible data is kept across releases), so holding
+      // the splash for it just made every update launch feel slow.
       if (!navigator.serviceWorker.controller || _appLaunchReleased) return;
-      _swUpdateFound = true;
-      setAppLaunchText("There's been updates since last time you were here, this may take longer to load");
-      // Fallback: release after 15s in case the update never activates
-      setTimeout(() => {
-        _swUpdateFound = false;
-        if (!_appLaunchReleased) hideAppLaunchScreen('ready');
-      }, 15000);
+      setAppLaunchText('Applying the latest update');
     });
     registration.update().catch(() => {});
 
@@ -36620,6 +36629,7 @@ function _parseCommunityVerseRef(input) {
 
 async function updateCommunityPostVersePreview() {
   await loadRhemaScripts().catch(() => {});
+  await _rhemaLoadDataFile('rhema-bsb.js').catch(() => {});
   const preview = document.getElementById('communityPostVersePreview');
   const refInput = document.getElementById('communityPostRef')?.value || '';
   const version = document.getElementById('communityPostVersion')?.value || 'MSB';
@@ -37625,7 +37635,7 @@ let _rhemaSyntaxMode = false;
 let _rhemaTextMode = localStorage.getItem('rhemaTextMode') === 'critical' ? 'critical' : 'majority';
 let _rhemaEnglishMode = localStorage.getItem('rhemaEnglishVersion') === 'BSB' ? 'BSB' : 'MSB';
 let _rhemaOTLayer = localStorage.getItem('rhemaOTLayer') === 'lxx' ? 'lxx' : 'hebrew';
-let _rhemaActiveTab = 'parsing';
+let _rhemaActiveTab = 'definition'; // the word study leads; Parsing is one tap away
 let _rhemaActiveWord = null;
 let _rhemaActiveWordLayer = null;
 let _rhemaTrail = [];       // full cross-ref trail — never auto-shrinks
@@ -41009,6 +41019,30 @@ async function rhemaOpenInterlinear(ref) {
   _rhemaRenderInterlinear(ref);
 }
 
+// Per-token English for the version on screen. Shared by the interlinear and
+// the word study's "How translations render it here". Each result carries a
+// kind (see rhema-align.js): exact · match · inferred · none · ''.
+function _rhemaVersionRenderingsForVerse(p, words, decisions, versionText, version) {
+  const bsbEng = _rhemaBsbEnglishForTokens(words, p.book, p.chapter, p.verse);
+  if (!window.RhemaAlign) return words.map(() => ({ text: '', kind: '' }));
+  if (version === 'BSB' && bsbEng.some(e => e != null)) return RhemaAlign.bsbRenderings(bsbEng);
+  const items = decisions.map((d, i) => {
+    let meanings = [];
+    try { meanings = _deepExpectedMeaningWords((d && d.entry) || {}, (d && d.lex) || {}) || []; } catch {}
+    // Hebrew/LXX glosses can be whole definitions — only the head is a rendering.
+    const gloss = String((d && d.gloss) || '').split(/[;,(]/)[0];
+    return { bsb: bsbEng[i], gloss, meanings: [...meanings].slice(0, 12) };
+  });
+  return RhemaAlign.bridgeToVersion(items, versionText);
+}
+
+let _rhemaIlDetails = (() => { try { return localStorage.getItem('rhemaIlDetails') === '1'; } catch { return false; } })();
+function rhemaToggleInterlinearDetails() {
+  _rhemaIlDetails = !_rhemaIlDetails;
+  try { localStorage.setItem('rhemaIlDetails', _rhemaIlDetails ? '1' : '0'); } catch {}
+  if (_rhemaInterlinearRef) _rhemaRenderInterlinear(_rhemaInterlinearRef);
+}
+
 function _rhemaRenderInterlinear(ref) {
   const gridEl = document.getElementById('rhemaInterlinearGrid');
   if (!gridEl) return;
@@ -41023,45 +41057,52 @@ function _rhemaRenderInterlinear(ref) {
     return;
   }
   gridEl.classList.toggle('rhema-il-rtl', isHebrew);
+  gridEl.classList.toggle('rhema-il-details', _rhemaIlDetails);
 
   // Resolve each token once; the decision drives both the literal gloss and the
-  // candidate renderings used to align the current version's words.
+  // candidate renderings used to find the current version's words.
   const rows = words.map((w) => {
     const resolved = _rhemaResolveWord(w, p.book, p.chapter);
     const lex = _rhemaLexForWord(resolved, layer, p.book, p.chapter);
     const decision = _rhemaMeaningDecision(resolved, { layer, book: p.book, chapter: p.chapter, verse: p.verse });
-    return { orig: w[0] || '', translit: lex.translit || lex.pronounce || '', gloss: decision.gloss || '', decision };
+    const surface = window.RhemaAlign ? RhemaAlign.cleanSurface(w[0]) : (w[0] || '');
+    const translit = !isHebrew && window.RhemaAlign
+      ? RhemaAlign.translitGreek(surface)
+      : (lex.translit || lex.pronounce || '');
+    return { orig: surface, translit, gloss: decision.gloss || '', decision, strongs: resolved?.[1] || '', morph: resolved?.[2] || '' };
   });
 
-  // The word(s) of the version on screen that render each Greek token. For BSB
-  // this is exact (Berean's own alignment); for every other version we bridge
-  // through BSB's rendering to the words of that version's sentence.
   const versionText = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
-  const bsbEng = _rhemaBsbEnglishForTokens(words, p.book, p.chapter, p.verse);
-  const readerVer = (typeof _rhemaReaderVersion === 'function' && _rhemaReaderVersion()) || '';
-  const haveBsb = bsbEng.some(Boolean);
-  let versionRenders;
-  if (readerVer === 'BSB' && haveBsb) {
-    versionRenders = bsbEng.map(_rhemaBsbDisplay); // exact (supplied-word brackets removed for reading)
-  } else {
-    versionRenders = _rhemaAlignVersionRenderings(rows.map(r => r.decision), versionText, bsbEng);
-  }
   const versionLabel = (typeof _rhemaReaderDisplayLabel === 'function' && _rhemaReaderDisplayLabel()) || '';
+  const readerVer = (typeof _rhemaReaderVersion === 'function' && _rhemaReaderVersion()) || '';
+  const renders = _rhemaVersionRenderingsForVerse(p, words, rows.map(r => r.decision), versionText, readerVer === 'BSB' ? 'BSB' : versionLabel);
   _rhemaSetInterlinearVersionNote(versionLabel);
 
+  const esc = _escapeRhemaAttr;
+  const pfx = isHebrew ? 'H' : 'G';
   gridEl.innerHTML = rows.map((r, i) => {
-    const orig = _escapeRhemaAttr(r.orig);
-    const translit = _escapeRhemaAttr(r.translit);
-    // One clean English line per word: the version's actual rendering when we
-    // have it (accent), otherwise the literal meaning (muted). Tapping opens the
-    // full study for anything deeper.
-    const ver = versionRenders[i] || '';
-    const english = _escapeRhemaAttr(ver || r.gloss || '');
-    const engClass = ver ? 'rhema-il-version' : 'rhema-il-gloss';
-    return `<button class="rhema-il-word${ver ? ' has-version' : ''}" onclick="_rhemaInterlinearOpenWord(${i})">` +
-      `<span class="rhema-il-orig${isHebrew ? ' rhema-hebrew-text' : ''}">${orig}</span>` +
-      (translit ? `<span class="rhema-il-translit">${translit}</span>` : '') +
-      (english ? `<span class="${engClass}">${english}</span>` : '') +
+    const v = renders[i] || { text: '', kind: '' };
+    let english;
+    if (v.text && (v.kind === 'exact' || v.kind === 'match')) {
+      english = `<span class="rhema-il-version">${esc(v.text)}</span>`;
+    } else if (v.text && v.kind === 'inferred') {
+      english = `<span class="rhema-il-version rhema-il-inferred" title="Best match by position">≈ ${esc(v.text)}</span>`;
+    } else if (v.kind === 'none') {
+      english = `<span class="rhema-il-none" title="${esc(versionLabel)} has no separate word for this">—</span>`;
+    } else {
+      english = r.gloss ? `<span class="rhema-il-gloss" title="Literal meaning (not found in ${esc(versionLabel)})">${esc(r.gloss)}</span>` : '';
+    }
+    // Details: the literal meaning (when it differs), Strong's and parsing.
+    const showLit = r.gloss && (v.kind === 'exact' || v.kind === 'match' || v.kind === 'inferred' || v.kind === 'none')
+      && r.gloss.toLowerCase() !== String(v.text || '').toLowerCase();
+    const details = `<span class="rhema-il-detail">` +
+      (showLit ? `<span class="rhema-il-lit">lit. ${esc(r.gloss)}</span>` : '') +
+      `<span class="rhema-il-code">${r.strongs ? pfx + esc(r.strongs) : ''}${r.strongs && r.morph ? ' · ' : ''}${esc(r.morph)}</span>` +
+      `</span>`;
+    return `<button class="rhema-il-word rhema-il-k-${v.kind || 'gloss'}" onclick="_rhemaInterlinearOpenWord(${i})">` +
+      `<span class="rhema-il-orig${isHebrew ? ' rhema-hebrew-text' : ''}">${esc(r.orig)}</span>` +
+      (r.translit ? `<span class="rhema-il-translit">${esc(r.translit)}</span>` : '') +
+      english + details +
       `</button>`;
   }).join('');
 }
@@ -41069,128 +41110,20 @@ function _rhemaSetInterlinearVersionNote(versionLabel) {
   const el = document.getElementById('rhemaInterlinearVersionNote');
   if (!el) return;
   if (versionLabel) {
-    el.innerHTML = `<span class="rhema-il-vn-dot"></span><span>English shown from <strong>${_escapeRhemaAttr(versionLabel)}</strong></span>`;
+    const esc = _escapeRhemaAttr;
+    el.innerHTML = `<span class="rhema-il-legend">` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-version">word</span> ${esc(versionLabel)}’s word</span>` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-inferred">≈</span> best match by position</span>` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-none">—</span> no separate word</span>` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-gloss">grey</span> literal meaning</span>` +
+      `</span>` +
+      `<button type="button" class="rhema-il-detail-btn${_rhemaIlDetails ? ' on' : ''}" onclick="rhemaToggleInterlinearDetails()">` +
+      `<span class="material-symbols-outlined">${_rhemaIlDetails ? 'visibility_off' : 'visibility'}</span>${_rhemaIlDetails ? 'Hide' : 'Show'} literal &amp; parsing</button>`;
     el.style.display = '';
   } else {
     el.textContent = '';
     el.style.display = 'none';
   }
-}
-
-// ── Approximate Greek → version-English alignment ──────────────────────────
-// The reader's English versions are flowing sentence text with no word-level
-// link to the Greek. To show, under each Greek word, the word(s) the CURRENT
-// version actually used, we match each Greek token's known English renderings
-// (its occurrence gloss first, then its wider lexicon meanings) against the
-// words of the version's sentence, left to right, each English word used once.
-// It is deliberately conservative — no confident match means no version word,
-// and the literal gloss stands — and it is always labelled as approximate,
-// because translations are not truly word-aligned to the Greek.
-function _rhemaIlStem(w) {
-  w = String(w || '').toLowerCase().replace(/[^a-z]/g, '');
-  if (w.length < 4) return w;
-  const rules = [['ingly', ''], ['edly', ''], ['ies', 'y'], ['ied', 'y'], ['ying', 'y'],
-    ['ing', ''], ['eth', ''], ['est', ''], ['ed', ''], ['es', ''], ['ly', ''],
-    ['er', ''], ['en', ''], ['s', '']];
-  for (const [a, b] of rules) {
-    if (w.endsWith(a) && (w.length - a.length + b.length) >= 3) return w.slice(0, w.length - a.length) + b;
-  }
-  return w;
-}
-// English words translations supply or use as grammar — pronouns, auxiliaries,
-// subordinators, negatives. A Greek CONTENT word (verb/noun/adjective) must map
-// to the content word of its rendering, never one of these (so εὑρόντες "when
-// they found" maps to "found", not "when"/"they"). Greek function words still map
-// to them, because for those the rendering IS one of these words (σε → "you").
-const _RHEMA_FUNC_WORDS = new Set([
-  'i','me','my','mine','myself','you','your','yours','yourself','yourselves',
-  'he','him','his','himself','she','her','hers','herself','it','its','itself',
-  'we','us','our','ours','ourselves','they','them','their','theirs','themselves',
-  'this','that','these','those','who','whom','whose','which','what',
-  'is','are','was','were','be','been','being','am','has','have','had','having',
-  'do','does','did','done','will','would','shall','should','may','might','can',
-  'could','must','when','while','as','if','then','than','so','not','no','there','here',
-]);
-function _rhemaIlIsSupplied(low) { return _DEEP_GLUE_WORDS.has(low) || _RHEMA_FUNC_WORDS.has(low); }
-function _rhemaIlWords(text) {
-  return String(text || '').toLowerCase().split(/[^a-z]+/).filter(w => w.length > 1);
-}
-// Drop Berean's [supplied] words — they aren't a rendering of the Greek word, so
-// they must not seed a bridge match (e.g. "[The people] were astonished").
-function _rhemaBsbDirect(s) { return String(s || '').replace(/\[[^\]]*\]/g, ' '); }
-// Plain reader text: keep the words, drop the supplied-word brackets.
-function _rhemaBsbDisplay(s) { return String(s || '').replace(/[\[\]]/g, '').replace(/\s+/g, ' ').trim(); }
-function _rhemaIlCandidateStems(decision, bsbEng) {
-  // Prefer the CONTENT word(s) of the exact BSB rendering (excluding supplied
-  // [bracketed] words), then the occurrence gloss's content words. If a rendering
-  // is purely functional (e.g. "and", "him", "the"), map to that instead — those
-  // Greek words genuinely mean it.
-  const bsbWords = _rhemaIlWords(_rhemaBsbDirect(bsbEng));
-  const glossWords = _rhemaIlWords(decision && decision.gloss);
-  const content = arr => arr.filter(w => !_rhemaIlIsSupplied(w));
-  const bsbContent = content(bsbWords);
-  const glossContent = content(glossWords);
-  const hasContent = bsbContent.length > 0 || glossContent.length > 0;
-  const primary = new Set();
-  (hasContent ? [...bsbContent, ...glossContent] : [...bsbWords, ...glossWords])
-    .forEach(w => { const s = _rhemaIlStem(w); if (s) primary.add(s); });
-  const broad = new Set(primary);
-  try {
-    const expected = _deepExpectedMeaningWords((decision && decision.entry) || {}, (decision && decision.lex) || {});
-    for (const w of expected) { if (_rhemaIlIsSupplied(w)) continue; const s = _rhemaIlStem(w); if (s && s.length >= 3) broad.add(s); }
-  } catch {}
-  if (decision && decision.summary && decision.summary.text) content(_rhemaIlWords(decision.summary.text)).forEach(w => { const s = _rhemaIlStem(w); if (s) broad.add(s); });
-  return { primary, broad, content: hasContent };
-}
-function _rhemaIlTokenizeEnglish(text) {
-  const out = [];
-  for (const raw of String(text || '').split(/\s+/)) {
-    const clean = raw.replace(/^[^A-Za-z]+/, '').replace(/[^A-Za-z]+$/, '');
-    if (!clean) continue;
-    out.push({ raw: clean, stem: _rhemaIlStem(clean), sup: _rhemaIlIsSupplied(clean.toLowerCase()) });
-  }
-  return out;
-}
-// Greek and English don't share word order (Greek routinely puts the verb before
-// its subject), so we don't match strictly left-to-right — each Greek token takes
-// the unused English word whose stem matches and that sits NEAREST to where the
-// token is expected in the sentence (its proportional position). Two rounds: the
-// high-confidence occurrence glosses claim their words first, then the wider
-// lexicon meanings fill what's left, so a content word isn't stolen by a vaguer
-// match.
-function _rhemaIlAssignNearest(tokens, used, stems, expected, allowSup) {
-  if (!stems || !stems.size) return -1;
-  let best = -1, bestDist = Infinity;
-  for (let j = 0; j < tokens.length; j++) {
-    if (used[j]) continue;
-    const t = tokens[j];
-    if (!allowSup && t.sup) continue; // content Greek words never take a supplied/grammar word
-    if (!t.stem || !stems.has(t.stem)) continue;
-    const dist = Math.abs(j - expected);
-    if (dist < bestDist) { bestDist = dist; best = j; }
-  }
-  return best;
-}
-function _rhemaAlignVersionRenderings(decisions, versionText, bsbEngArr) {
-  const out = new Array(decisions.length).fill('');
-  const tokens = _rhemaIlTokenizeEnglish(versionText);
-  if (!tokens.length) return out;
-  const used = new Array(tokens.length).fill(false);
-  const n = decisions.length;
-  const denom = Math.max(1, n - 1);
-  const cand = decisions.map((d, i) => _rhemaIlCandidateStems(d, bsbEngArr && bsbEngArr[i]));
-  for (const round of ['primary', 'broad']) {
-    for (let i = 0; i < n; i++) {
-      if (out[i]) continue;
-      // A Greek content word may only take a content English word; a Greek
-      // function word (whose rendering is itself a supplied/grammar word) may.
-      const allowSup = !cand[i].content;
-      const expected = Math.round((i / denom) * (tokens.length - 1));
-      const j = _rhemaIlAssignNearest(tokens, used, cand[i][round], expected, allowSup);
-      if (j >= 0) { used[j] = true; out[i] = tokens[j].raw; }
-    }
-  }
-  return out;
 }
 
 // ── Exact Greek → BSB alignment (Berean word tables) ───────────────────────
@@ -41206,7 +41139,7 @@ function _ensureRhemaBsbAlign() {
     const s = document.createElement('script');
     s.src = 'rhema-bsb-align.js?v=' + RHEMA_BSB_ALIGN_VERSION;
     s.onload = () => resolve(window.RhemaBSBAlign || null);
-    s.onerror = () => resolve(null);
+    s.onerror = () => { _rhemaBsbAlignPromise = null; resolve(null); }; // retry next open
     document.head.appendChild(s);
   });
   return _rhemaBsbAlignPromise;
@@ -41216,35 +41149,19 @@ function _rhemaBsbAlignVerse(book, chapter, verse) {
   if (!a) return null;
   return ((a[book] || {})[String(chapter)] || {})[String(verse)] || null;
 }
-// Map the app's Greek tokens onto the Berean rows by Strong's sequence (usually
-// 1:1; tolerant of the occasional textual-variant insertion/deletion). Returns
-// one BSB English string per app token ('' when the word has no standalone
-// English, e.g. an article, or when no alignment is available).
+// Map the app's Greek tokens onto the Berean rows for the verse (ordered
+// alignment, numbering-convention aware, verse-division tolerant: see
+// rhema-align.js). Returns one entry per token: the Berean English, '' when
+// the word has no standalone English (e.g. an article), or null when there is
+// no reliable alignment for it.
 function _rhemaBsbEnglishForTokens(appTokens, book, chapter, verse) {
-  const out = new Array(appTokens.length).fill('');
-  const bsb = _rhemaBsbAlignVerse(book, chapter, verse);
-  if (!bsb || !bsb.length) return out;
-  const sOf = (t) => String((_rhemaResolveWord(t, book, chapter) || t)[1] || '');
-  // Match each Greek token to the nearest UNUSED Berean row with the same
-  // Strong's. Position-aware and order-independent, so it survives word-order
-  // differences between the app's Greek text and BSB's base (e.g. a swapped
-  // verb/object) and repeated Strong's numbers, instead of dropping a word.
-  const used = new Array(bsb.length).fill(false);
-  const n = appTokens.length;
-  const denom = Math.max(1, n - 1);
-  for (let i = 0; i < n; i++) {
-    const si = sOf(appTokens[i]);
-    if (!si) continue;
-    const expected = Math.round((i / denom) * (bsb.length - 1));
-    let best = -1, bestDist = Infinity;
-    for (let j = 0; j < bsb.length; j++) {
-      if (used[j] || String(bsb[j][0]) !== si) continue;
-      const d = Math.abs(j - expected);
-      if (d < bestDist) { bestDist = d; best = j; }
-    }
-    if (best >= 0) { used[best] = true; out[i] = bsb[best][1] || ''; }
-  }
-  return out;
+  const rows = _rhemaBsbAlignVerse(book, chapter, verse);
+  if (!window.RhemaAlign || !window.RhemaBSBAlign) return appTokens.map(() => null);
+  const strongs = appTokens.map(t => String((_rhemaResolveWord(t, book, chapter) || t || [])[1] || ''));
+  return RhemaAlign.alignGreekToRows(strongs, rows || [], {
+    prev: _rhemaBsbAlignVerse(book, chapter, Number(verse) - 1),
+    next: _rhemaBsbAlignVerse(book, chapter, Number(verse) + 1),
+  }).english;
 }
 
 function _rhemaInterlinearOpenWord(idx) {
@@ -42228,6 +42145,83 @@ function decodeMorph(code) {
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 
+// One shared loader per data file, so the reader, Memorize, Threads etc. never
+// inject the same multi-MB script twice.
+const _rhemaFilePromises = {};
+function _rhemaDataGlobalReady(file) {
+  const g = {
+    'rhema-nt.js': 'RhemaNT', 'rhema-critical.js': 'RhemaCriticalNT',
+    'rhema-ot-hebrew.js': 'RhemaHebrewOT', 'rhema-lxx.js': 'RhemaLXX',
+    'rhema-msb.js': 'RhemaMSB', 'rhema-bsb.js': 'RhemaBSB',
+    'rhema-lexicon.js': 'RhemaLexicon', 'rhema-mm.js': 'RhemaMoultonMilligan',
+    'rhema-hebrew-lexicon.js': 'RhemaHebrewLexicon', 'rhema-hebrew-bdb.js': 'RhemaHebrewBDB',
+    'rhema-crossrefs.js': 'RhemaCrossRefs', 'rhema-scripture-notes.js': 'RhemaScriptureNotes',
+    'rhema-critical-fallbacks.js': 'RhemaCriticalFallbacks',
+  }[file];
+  return !!(g && window[g]);
+}
+function _rhemaLoadDataFile(file) {
+  if (_rhemaFilePromises[file]) return _rhemaFilePromises[file];
+  if (_rhemaDataGlobalReady(file)) return (_rhemaFilePromises[file] = Promise.resolve());
+  const p = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = file + '?v=' + (RHEMA_DATA_VERSIONS[file] || APP_VERSION);
+    s.async = true;
+    s.onload = res;
+    s.onerror = () => { delete _rhemaFilePromises[file]; rej(new Error('Failed to load ' + file)); };
+    document.head.appendChild(s);
+  });
+  _rhemaFilePromises[file] = p;
+  return p;
+}
+function _rhemaDataFileLoaded(file) {
+  return _rhemaDataGlobalReady(file);
+}
+
+// The reader's position before showRhema() has run (the background preload can
+// start first): the saved spot, or Genesis 1 for a first-timer — what
+// resumeRhema() will open.
+let _rhemaViewKnown = false;
+function _rhemaPendingView() {
+  if (_rhemaViewKnown) {
+    return { book: _rhemaBook, textMode: _rhemaTextMode, otLayer: _rhemaOTLayer, english: _rhemaEnglishVersion() };
+  }
+  let pos = null;
+  try { pos = JSON.parse(localStorage.getItem('rhemaLastPos') || 'null'); } catch {}
+  return {
+    book: pos?.book || 'GEN',
+    textMode: pos?.textMode === 'critical' ? 'critical' : 'majority',
+    otLayer: _rhemaOTLayer,
+    english: (pos?.englishVersion || _rhemaEnglishMode) === 'BSB' ? 'BSB' : 'MSB',
+  };
+}
+
+// Exactly the datasets needed to paint a chapter of `book`. MSB + the Byzantine
+// NT are structural (book list, picker), the lexicon powers word taps.
+function _rhemaFilesForView(view = _rhemaPendingView()) {
+  const files = ['rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-scripture-notes.js'];
+  if (view.english === 'BSB') files.push('rhema-bsb.js');
+  if (isRhemaOTBook(view.book)) {
+    files.push(view.otLayer === 'lxx' ? 'rhema-lxx.js' : 'rhema-ot-hebrew.js');
+  } else {
+    // NT chapters mark critical/majority differences, so both texts are needed.
+    files.push('rhema-critical.js');
+  }
+  return files;
+}
+
+function _rhemaMissingViewFiles() {
+  if (!_rhemaViewKnown) return [];
+  return _rhemaFilesForView().filter(f => !_rhemaDataFileLoaded(f));
+}
+
+// Everything else, in the order a reader is most likely to reach for it.
+const RHEMA_DATA_ALL = [
+  'rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-scripture-notes.js',
+  'rhema-critical.js', 'rhema-hebrew-lexicon.js', 'rhema-ot-hebrew.js', 'rhema-bsb.js', 'rhema-mm.js',
+  'rhema-crossrefs.js', 'rhema-lxx.js', 'rhema-syntax.js', 'rhema-hebrew-bdb.js', 'rhema-bible-dictionary.js',
+];
+
 function loadRhemaScripts() {
   return new Promise((resolve, reject) => {
     if (_rhemaLoaded) { resolve(); return; }
@@ -42239,34 +42233,52 @@ function loadRhemaScripts() {
     }
     _rhemaLoading = true;
     loadDeepLexiconSpine();
-    // Two-tier load so the reader paints on the CORE set (text + core word study)
-    // and the large, tool-specific datasets (LXX, cross-references, dictionary,
-    // syntax, Hebrew lexicons ≈ 30 MB) parse in the background right after. Those
-    // features are opened on demand, well after first render, and all data access
-    // is null-guarded, so deferring them just makes the reader open sooner.
-    const CORE = ['rhema-nt.js', 'rhema-critical.js', 'rhema-critical-fallbacks.js', 'rhema-ot-hebrew.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-scripture-notes.js'];
-    const REST = ['rhema-hebrew-lexicon.js', 'rhema-hebrew-bdb.js', 'rhema-lxx.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-bible-dictionary.js'];
-    const loadOne = (file) => new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = file + '?v=' + (RHEMA_DATA_VERSIONS[file] || APP_VERSION);
-      s.onload = res;
-      s.onerror = () => rej(new Error('Failed to load ' + file));
-      document.head.appendChild(s);
-    });
-    Promise.all(CORE.map(loadOne)).then(() => {
+    // Two-tier load. The reader paints on just the datasets the open chapter
+    // needs (an NT chapter never waits on the 14 MB Hebrew OT, an OT chapter
+    // never waits on the critical text or Moulton–Milligan). The rest parse one
+    // file at a time during idle moments afterwards, so the freshly opened
+    // reader stays responsive instead of freezing while ~30 MB of script parses
+    // at once. All data access is null-guarded, and renderRhemaVerse() fetches
+    // anything a navigation needs before the background pass reaches it.
+    const core = _rhemaFilesForView();
+    Promise.all(core.map(_rhemaLoadDataFile)).then(() => {
+      _rhemaLoading = false;
       _syncRhemaEnglishAlias();
       _ensureRhemaBibleData();
       _rhemaLoaded = true;
       resolve();
-      // Background: the peripheral datasets. Merge dictionary phrases once they land.
-      Promise.all(REST.map(f => loadOne(f).catch(() => {}))).then(() => {
-        _rhemaRestLoaded = true;
-        try { _rhemaMergeDictionaryPhrases(); } catch {}
-      });
-    }).catch(reject);
+      _rhemaLoadRestInBackground();
+    }).catch((e) => { _rhemaLoading = false; reject(e); });
   });
 }
 let _rhemaRestLoaded = false;
+let _rhemaRestStarted = false;
+
+function _rhemaLoadRestInBackground() {
+  if (_rhemaRestStarted) return;
+  _rhemaRestStarted = true;
+  const queue = RHEMA_DATA_ALL.filter(f => !_rhemaDataFileLoaded(f));
+  const idle = (fn) => (typeof requestIdleCallback === 'function'
+    ? requestIdleCallback(fn, { timeout: 1500 })
+    : setTimeout(fn, 60));
+  const next = () => {
+    const file = queue.shift();
+    if (!file) {
+      _rhemaRestLoaded = true;
+      try { _rhemaMergeDictionaryPhrases(); } catch {}
+      _ensureRhemaBibleData();
+      _syncRhemaEnglishAlias();
+      // Everything the reader uses is now on the device; let the service worker
+      // fill in whatever else full offline use needs, in its own time.
+      setTimeout(() => {
+        try { navigator.serviceWorker?.controller?.postMessage({ type: 'warm-offline' }); } catch {}
+      }, 8000);
+      return;
+    }
+    _rhemaLoadDataFile(file).catch(() => {}).then(() => idle(next));
+  };
+  idle(next);
+}
 
 // Warm the Rhēma scripture data in the background a little after launch, so the
 // reader opens straight into the target passage instead of flashing the default
@@ -42310,6 +42322,7 @@ function _rhemaCaptureLaunchRect() {
 }
 
 async function showRhema() {
+  _rhemaViewKnown = true;
   closeHomeSearch();
   _desktopCollapseNav();
   _rhemaCaptureLaunchRect();
@@ -44254,8 +44267,23 @@ function _rhemaResolveWord(word = [], book = _rhemaBook, chapter = _rhemaChapter
   }
   if (word[1]) return word;
   const key = _rhemaGreekSurfaceKey(word[0]);
-  const fallback = RHEMA_SURFACE_STRONGS_FALLBACKS[key] || window.RhemaCriticalFallbacks?.[key];
+  const fallback = RHEMA_SURFACE_STRONGS_FALLBACKS[key] || window.RhemaCriticalFallbacks?.[key]
+    || _rhemaStrongsFromLemma(word[3]);
   return fallback ? [word[0], fallback, word[2] || '', word[3] || ''] : word;
+}
+
+// SBLGNT gives every word a lemma even where it gives no Strong's number
+// (οὕτω(ς), οἶδα, middle-voice lemmas…). Resolve those through the lexicon so
+// the word study and interlinear work for them too. See rhema-align.js.
+let _rhemaLemmaIndex = null;
+const _rhemaLemmaCache = new Map();
+function _rhemaStrongsFromLemma(lemma) {
+  if (!lemma || !window.RhemaAlign || !window.RhemaLexicon) return '';
+  if (_rhemaLemmaCache.has(lemma)) return _rhemaLemmaCache.get(lemma);
+  if (!_rhemaLemmaIndex) _rhemaLemmaIndex = RhemaAlign.buildLemmaIndex(window.RhemaLexicon);
+  const s = RhemaAlign.strongsForLemma(_rhemaLemmaIndex, lemma) || '';
+  _rhemaLemmaCache.set(lemma, s);
+  return s;
 }
 
 function _rhemaContextualBrief(word = [], book = _rhemaBook, chapter = _rhemaChapter) {
@@ -44530,6 +44558,24 @@ function _rhemaBlockScrollTop(body, block) {
 
 function renderRhemaVerse() {
   if (!_rhemaData()) return;
+  // A navigation into a part of the Bible whose text hasn't loaded yet (e.g.
+  // Genesis while the Hebrew OT is still queued, or switching to BSB / LXX):
+  // fetch just that dataset, then render.
+  const missing = _rhemaMissingViewFiles();
+  if (missing.length) {
+    const token = (renderRhemaVerse._waitToken = (renderRhemaVerse._waitToken || 0) + 1);
+    const loading = document.getElementById('rhemaLoadingMsg');
+    if (loading) { loading.textContent = 'Loading Rhēma data…'; loading.style.display = 'block'; }
+    Promise.all(missing.map(_rhemaLoadDataFile)).then(() => {
+      if (token !== renderRhemaVerse._waitToken) return;
+      if (loading) loading.style.display = 'none';
+      _syncRhemaEnglishAlias();
+      renderRhemaVerse();
+    }).catch(() => {
+      if (loading) loading.textContent = 'Failed to load data. Check your connection.';
+    });
+    return;
+  }
   closeRhemaSheet();
   closeRhemaSyntaxSheet();
   _bindRhemaBottomWave();
@@ -46932,6 +46978,9 @@ function openRhemaSheet(wordIdx, verse) {
   closeRhemaPickerSheet();
   _rhemaActiveWord = word;
   _rhemaActiveWordLayer = getCurrentOriginalLanguageLayer();
+  // Where this word was tapped — lets the word study say "in this verse" and
+  // line up every translation's rendering of this exact occurrence.
+  window._rhemaWordCtx = { idx: Number(wordIdx), book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, strongs: String(word[1] || '') };
 
   // Highlight selected word
   document.querySelectorAll('.rhema-word.selected').forEach(el => el.classList.remove('selected'));
@@ -46983,6 +47032,7 @@ function closeRhemaSheet() {
   document.getElementById('rhemaWlBackBtn')?.classList.add('hidden');
   _rhemaActiveWord = null;
   _rhemaActiveWordLayer = null;
+  window._rhemaWordCtx = null;
 }
 
 function copyCurrentRhemaWord() {
@@ -47902,6 +47952,8 @@ function _rhemaMeaningEvidenceHtml(decision = {}) {
 
 function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguageLayer()) {
   if (layer === 'hebrew') return renderHebrewDefinition(strongs);
+  // Greek (NT + LXX): the full Word Study (rhema-word-study.js).
+  if (typeof renderRhemaWordStudy === 'function') return renderRhemaWordStudy(strongs, morph, layer);
   const activeWord = _rhemaActiveWord && String(_rhemaActiveWord[1]) === String(strongs)
     ? _rhemaActiveWord
     : ['', strongs, morph || ''];
@@ -49181,7 +49233,10 @@ function renderRhemaOccurrences(strongs, layer = getCurrentOriginalLanguageLayer
 let _rhemaBVCode    = null;
 let _rhemaBVStrongs = null;
 let _rhemaBVRefs    = [];
-let _rhemaBVEnglish     = false;
+// English view of the occurrence list: remembered, and shown in whatever
+// version the reader is set to (MSB/BSB on device, NIV/NKJV/… downloaded).
+let _rhemaBVEnglish = (() => { try { return localStorage.getItem('rhemaOccEnglish') === '1'; } catch { return false; } })();
+let _rhemaBVFetchToken = 0;
 
 function openRhemaBookVerses(code, strongs) {
   const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer(code);
@@ -49195,9 +49250,12 @@ function openRhemaBookVerses(code, strongs) {
     const verseNums = Object.keys(bookText[ch]).sort((a,b) => +a - +b);
     for (const v of verseNums) {
       const words = bookText[ch][v];
+      // Resolve numbers first so critical-text words the SBLGNT left
+      // unnumbered (οὕτως…) and the εἷς/εἰς fix are counted too.
+      const isWord = (w) => String((_rhemaResolveWord(w, code, ch) || w)[1]) === String(strongs);
       const wordIdx = formNorm
-        ? words.findIndex(w => String(w[1]) === String(strongs) && _stripGreekAccents(w[0]).toLowerCase() === formNorm)
-        : words.findIndex(w => String(w[1]) === String(strongs));
+        ? words.findIndex(w => isWord(w) && _stripGreekAccents(w[0]).toLowerCase() === formNorm)
+        : words.findIndex(isWord);
       if (wordIdx >= 0) refs.push({ ch, v, wordIdx, words });
     }
   }
@@ -49205,13 +49263,85 @@ function openRhemaBookVerses(code, strongs) {
   _rhemaBVCode    = code;
   _rhemaBVStrongs = strongs;
   _rhemaBVRefs    = refs;
-  _rhemaBVEnglish     = false;
   renderRhemaBookVerses();
+  if (_rhemaBVEnglish) _rhemaBVPrepareEnglish();
 }
 
 function toggleRhemaBookViewEnglish() {
   _rhemaBVEnglish = !_rhemaBVEnglish;
+  try { localStorage.setItem('rhemaOccEnglish', _rhemaBVEnglish ? '1' : '0'); } catch {}
   renderRhemaBookVerses();
+  if (_rhemaBVEnglish) _rhemaBVPrepareEnglish();
+}
+
+// The English view needs the Berean word table (to find the exact English
+// words) and, for a downloaded version, its chapters. Chapters are fetched one
+// at a time so a single ~250-verse block covers its neighbours; each lands in
+// the device's permanent version store and the list redraws as it arrives.
+async function _rhemaBVPrepareEnglish() {
+  const token = ++_rhemaBVFetchToken;
+  const code = _rhemaBVCode;
+  const stillHere = () => token === _rhemaBVFetchToken && _rhemaBVEnglish && _rhemaBVCode === code;
+  if (!window.RhemaBSBAlign && typeof _ensureRhemaBsbAlign === 'function') {
+    await _ensureRhemaBsbAlign();
+    if (!stillHere()) return;
+    renderRhemaBookVerses();
+  }
+  const ver = _rhemaReaderVersion();
+  if (!_rhemaReaderVersionIsApi() || typeof _vsEnsureChapter !== 'function') return;
+  if (typeof _vsBookInScope === 'function' && !_vsBookInScope(ver, code)) return;
+  if (typeof _vsTransLimited === 'function' && _vsTransLimited(ver)) return;
+  const chapters = [...new Set(_rhemaBVRefs.map(r => String(r.ch)))];
+  for (const ch of chapters) {
+    if (_vsChapterFromMemory(ver, code, ch)) continue;
+    try { await _vsEnsureChapter(ver, code, ch); } catch {}
+    if (!stillHere()) return;
+    renderRhemaBookVerses();
+  }
+}
+
+// Verse text in the reader's version; falls back to the on-device version
+// while a downloaded version's chapter is still on its way.
+function _rhemaBVVerseText(code, ch, v) {
+  const ver = _rhemaReaderVersion();
+  if (_rhemaReaderVersionIsApi()) {
+    const chap = typeof _vsChapterFromMemory === 'function' ? _vsChapterFromMemory(ver, code, String(ch)) : null;
+    if (chap) return { text: String(chap[String(v)] || ''), ver, fallback: false };
+    return { text: _rhemaEnglishText(code, ch, v), ver: _rhemaEnglishLabel(), fallback: true };
+  }
+  return { text: _rhemaEnglishText(code, ch, v, ver), ver, fallback: false };
+}
+
+// The verse with the exact English words for this occurrence in bold: the
+// Greek token is lined up through the Berean word table and found in this
+// version's sentence (same matcher as the interlinear). Falls back to a gloss
+// search when no alignment is possible.
+function _rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver) {
+  const esc = _escapeRhemaAttr;
+  if (!text) return '';
+  let r = null;
+  if (window.RhemaAlign) {
+    try {
+      const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer(code);
+      const d = _rhemaMeaningDecision(_rhemaResolveWord(words[wordIdx], code, ch), { layer, book: code, chapter: ch, verse: v });
+      let meanings = [];
+      try { meanings = [...(_deepExpectedMeaningWords(d.entry || {}, d.lex || {}) || [])].slice(0, 12); } catch {}
+      const bsbEng = _rhemaBsbEnglishForTokens(words, code, ch, v);
+      const items = words.map((w, i) => i === wordIdx
+        ? { bsb: bsbEng[i], gloss: String(d.gloss || '').split(/[;,(]/)[0], meanings }
+        : { bsb: bsbEng[i] });
+      r = RhemaAlign.bridgeToVersion(items, text)[wordIdx];
+    } catch { r = null; }
+  }
+  if (r && r.text && r.start != null) {
+    return esc(text.slice(0, r.start)) +
+      `<strong class="xref-match${r.kind === 'inferred' ? ' xref-match-approx' : ''}"${r.kind === 'inferred' ? ' title="Best match by position"' : ''}>${esc(text.slice(r.start, r.end))}</strong>` +
+      esc(text.slice(r.end));
+  }
+  if (r && r.kind === 'none') {
+    return `${esc(text)} <span class="rhema-xref-none">(no separate word in ${esc(ver)})</span>`;
+  }
+  return _EnglishHighlight(esc(text), strongs);
 }
 
 function _EnglishHighlight(EnglishText, strongs) {
@@ -49239,9 +49369,8 @@ function renderRhemaBookVerses() {
   const rows = refs.map(({ ch, v, wordIdx, words }) => {
     let previewHtml;
     if (_rhemaBVEnglish) {
-      const raw = _rhemaEnglishText(code, ch, v);
-      const highlighted = _EnglishHighlight(raw, strongs);
-      previewHtml = `<span class="rhema-xref-verse-text">${highlighted}</span>`;
+      const { text, ver } = _rhemaBVVerseText(code, ch, v);
+      previewHtml = `<span class="rhema-xref-verse-text">${_rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver)}</span>`;
     } else {
       const start = Math.max(0, wordIdx - 3);
       const end   = Math.min(words.length - 1, wordIdx + 4);
@@ -49264,12 +49393,26 @@ function renderRhemaBookVerses() {
   if (!content) return;
   const backFn = inSandbox ? "showSandboxWordTab('occurrences')" : "showRhemaTab('occurrences')";
   const EnglishCls = `rhema-xref-english-btn${_rhemaBVEnglish ? ' active' : ''}`;
+  const readerVer = _rhemaReaderVersion();
+  // Tell the reader when some verses are still in the on-device version.
+  let note = '';
+  if (_rhemaBVEnglish && _rhemaReaderVersionIsApi()) {
+    const waiting = refs.some(r => _rhemaBVVerseText(code, r.ch, r.v).fallback);
+    if (waiting) {
+      const limited = typeof _vsTransLimited === 'function' && _vsTransLimited(readerVer);
+      const scope = typeof _vsBookInScope === 'function' && !_vsBookInScope(readerVer, code);
+      note = `<div class="rhema-xref-note">${scope ? `${_escapeRhemaAttr(readerVer)} doesn’t cover this book`
+        : limited ? `${_escapeRhemaAttr(readerVer)} can’t load right now`
+        : `Downloading ${_escapeRhemaAttr(readerVer)}…`} — showing ${_escapeRhemaAttr(_rhemaEnglishLabel())} meanwhile.</div>`;
+    }
+  }
   content.innerHTML = `
     <div class="rhema-xref-header">
       <button class="rhema-xref-back-btn" onclick="${backFn}">← Occurrences</button>
       <span class="rhema-xref-title">${bookName} · ${refs.length} verse${refs.length !== 1 ? 's' : ''}</span>
-      <button class="${EnglishCls}" onclick="toggleRhemaBookViewEnglish()">${_rhemaEnglishLabel()}</button>
+      <button class="${EnglishCls}" onclick="toggleRhemaBookViewEnglish()" title="${_rhemaBVEnglish ? 'Show the Greek' : `Show in ${_escapeRhemaAttr(readerVer)}`}">${_escapeRhemaAttr(readerVer)}</button>
     </div>
+    ${note}
     <div>${rows}</div>`;
 }
 
@@ -49771,14 +49914,7 @@ function _loadBibleThreads() {
 // Verse text needs the MSB bundle; load just that file if Rhema hasn't yet.
 function _gtEnsureMsb() {
   if (window.RhemaMSB) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'rhema-msb.js?v=' + (RHEMA_DATA_VERSIONS['rhema-msb.js'] || APP_VERSION);
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Unable to load Bible text.'));
-    document.head.appendChild(s);
-  });
+  return _rhemaLoadDataFile('rhema-msb.js').catch(() => { throw new Error('Unable to load Bible text.'); });
 }
 
 function _gtParseRef(ref) {

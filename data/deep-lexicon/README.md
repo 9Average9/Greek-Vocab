@@ -119,3 +119,26 @@ works fully without this step — prose just enriches the answer block.
 
 Stage 3 wires the shards into the app via on-demand loading (done: the
 Range of Meaning panel and the answer-first Definition block).
+
+## Stage 4 — verified word study (`scripts/build-word-study.js`)
+
+Stages 1–3 measure how English versions *render* a word, which cannot see a
+sense the English hides (σάρξ as fallen human nature in Paul is still "flesh"
+in most versions). Stage 4 asks Claude for the entry a lexicographer would
+write — semantic senses, author-by-author usage, why translations differ, and
+the word's history — from an evidence pack that includes the Greek verses
+themselves. Then every receipt is checked mechanically before it can ship:
+
+- each cited verse must actually contain the word (Byzantine, SBLGNT or LXX),
+  or it is dropped; a sense with no surviving verse is dropped;
+- each historical citation must appear verbatim in the LSJ, Moulton–Milligan
+  or Abbott-Smith text supplied, or it is dropped;
+- author notes survive only for authors who use the word.
+
+Results merge into the shards as `entry.study`, which the app's Word Study
+(`rhema-word-study.js`) shows ahead of the measured data. Run
+`node scripts/build-word-study.js --dry-run --sample 4561` to read the
+evidence pack, `--sample …` to try a handful of words, then the full batch.
+Rough one-time cost with `claude-opus-5-5` via Batches: ≈ $220 at effort
+high, ≈ $140 at medium (see the script header). `node scripts/test-word-study.js`
+checks the verifier. After merging, bump `DEEP_LEXICON_VERSION` in `app.js`.
