@@ -38640,3 +38640,43 @@ html.dark .ws-vchip.on, body.dark .ws-vchip.on { color: #0b1220; }
 .ws-vtable table { width: 100%; border-collapse: collapse; font-size: .82rem; }
 .ws-vtable th { text-align: left; font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; opacity: .6; padding: 4px 6px; }
 .ws-vtable td { padding: 6px; border-top: 1px solid var(--ws-line); vertical-align: top; }
+
+/* ── Word Study: calmer layout (collapsible cards, sticky bar with no gap) ── */
+.ws { gap: 10px; }
+.ws-nav { top: -16px; margin-top: -8px; padding: 20px 0 8px; z-index: 3; }
+.ws-nav::before { content: ''; position: absolute; left: -22px; right: -22px; top: 0; bottom: 0; background: inherit; z-index: -1; }
+.ws-nav button { padding: 5px 11px; font-size: .74rem; }
+details.ws-sec { border: 1px solid var(--ws-line); border-radius: 14px; padding: 0; scroll-margin-top: 56px; background: color-mix(in srgb, var(--ws-accent) 2%, transparent); }
+details.ws-sec > summary.ws-sec-h { list-style: none; cursor: pointer; margin: 0; padding: 12px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+details.ws-sec > summary.ws-sec-h::-webkit-details-marker { display: none; }
+.ws-sec-t { flex-shrink: 0; font-size: .92rem; }
+.ws-teaser { font-style: normal; font-weight: 600; font-size: .74rem; opacity: .62; margin-left: auto; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ws-chev { font-size: 1.2rem !important; opacity: .55; transition: transform .2s ease; flex-shrink: 0; }
+details.ws-sec:not(:has(.ws-teaser)) .ws-chev { margin-left: auto; }
+details.ws-sec[open] .ws-chev { transform: rotate(180deg); }
+.ws-sec-body { padding: 0 12px 12px; }
+.ws-sense { padding: 10px 12px; }
+.ws-sense-def { margin: 4px 0 2px; }
+.ws-sense-note { display: block; margin-top: 3px; font-size: .78rem; opacity: .7; }
+.ws-refs { gap: 4px; }
+.ws-ref { padding: 2px 8px; font-size: .7rem; }
+.ws-method { margin: 0 0 6px; padding-left: 18px; font-size: .82rem; line-height: 1.5; }
+.ws-glance span { font-size: .68rem; padding: 2px 8px; }
+.ws-author-note { margin: 0 0 10px; }
+
+/* Flat lists inside cards: dividers instead of boxes-in-boxes. */
+details.ws-sec .ws-sense, details.ws-sec .ws-vrow, details.ws-sec .ws-pattern, details.ws-sec .ws-tr-group {
+  border: 0; border-radius: 0; background: transparent; padding: 10px 0;
+  border-top: 1px solid var(--ws-line);
+}
+details.ws-sec .ws-senses > :first-child, details.ws-sec .ws-vlist > :first-child, details.ws-sec .ws-tr > :first-child { border-top: 0; padding-top: 2px; }
+details.ws-sec .ws-senses, details.ws-sec .ws-vlist, details.ws-sec .ws-tr { gap: 0; }
+.ws-vrow .ws-sense-top b { font-size: .92rem; }
+.ws-vrow .ws-bar { height: 4px; margin: 5px 0 0; }
+.ws-tr-head strong { font-size: .95rem; }
+/* Hero stats: one quiet line. */
+.ws-glance { gap: 0; margin-top: 10px; font-size: .74rem; font-weight: 700; color: color-mix(in srgb, var(--font-color, #20303f) 62%, transparent); }
+.ws-glance span { border: 0; background: none; padding: 0; font-size: inherit; }
+.ws-glance span + span::before { content: '·'; margin: 0 7px; opacity: .6; }
+.ws-tip { margin: 10px 0 4px; }
+.ws-hero .ws-more { margin-top: 6px; }

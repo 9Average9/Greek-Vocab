@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.495";
+const APP_VERSION = "3.0.496";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.496 &mdash; A calmer Word Study</div>
+<ul>
+  <li><strong>Easier to take in</strong> &mdash; The study now leads with the answer: what the word means here, its definition and a reading tip. Every other part (translations, range, authors, history, lexicons) is a card you can open, and its header already tells you the headline &mdash; like &ldquo;6 senses&rdquo; or &ldquo;mostly Paul (92)&rdquo;. Debated points sit one tap away instead of crowding the top.</li>
+  <li><strong>No more gap above the section bar</strong> &mdash; The Here / Range / Versions bar now sits flush at the top while you scroll, and tapping a section opens it and jumps straight there.</li>
+  <li><strong>Lighter on your phone</strong> &mdash; Across-translation counts now run only when you open that section.</li>
+</ul>
 <div class="un-version-label">v3.0.495 &mdash; Word studies, wave 2</div>
 <ul>
   <li><strong>100 Greek words now have full studies</strong> &mdash; Fifty more, including &sigma;&#8182;&mu;&alpha;, &zeta;&omega;&#8053;, &delta;&omicron;&#8166;&lambda;&omicron;&sigmaf;, &alpha;&#7984;&#974;&nu;, &mu;&#8051;&nu;&omega;, &#7936;&lambda;&#8053;&theta;&epsilon;&iota;&alpha;, &sigma;&#8061;&zeta;&omega;, &psi;&upsilon;&chi;&#8053;, &alpha;&#7991;&mu;&alpha; and &delta;&iota;&kappa;&alpha;&iota;&omicron;&sigma;&#8059;&nu;&eta; &mdash; every cited verse checked against the Greek text.</li>
