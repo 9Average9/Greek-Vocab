@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.499";
+const APP_VERSION = "3.0.500";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.500 &mdash; Word studies, wave 5</div>
+<ul>
+  <li><strong>250 Greek words now have full studies</strong> &mdash; Fifty more, including &sigma;&omega;&tau;&eta;&rho;&#8055;&alpha;, &theta;&lambda;&#8150;&psi;&iota;&sigmaf;, &kappa;&alpha;&iota;&nu;&#8057;&sigmaf;, &epsilon;&#8016;&lambda;&omicron;&gamma;&#8051;&omega;, &#7936;&nu;&#8049;&sigma;&tau;&alpha;&sigma;&iota;&sigmaf;, &gamma;&epsilon;&nu;&epsilon;&#8049;, &lambda;&omicron;&gamma;&#8055;&zeta;&omicron;&mu;&alpha;&iota;, &tau;&#8051;&lambda;&omicron;&sigmaf;, &pi;&epsilon;&iota;&rho;&#8049;&zeta;&omega;, &delta;&iota;&kappa;&alpha;&iota;&#8057;&omega;, &kappa;&alpha;&upsilon;&chi;&#8049;&omicron;&mu;&alpha;&iota; and &pi;&rho;&omicron;&sigma;&epsilon;&upsilon;&chi;&#8053; &mdash; every cited verse checked against the Greek text.</li>
+</ul>
 <div class="un-version-label">v3.0.499 &mdash; Word studies, wave 4</div>
 <ul>
   <li><strong>200 Greek words now have full studies</strong> &mdash; Fifty more, including &delta;&omicron;&xi;&#8049;&zeta;&omega;, &kappa;&eta;&rho;&#8059;&sigma;&sigma;&omega;, &pi;&rho;&omicron;&sigma;&kappa;&upsilon;&nu;&#8051;&omega;, &chi;&alpha;&rho;&#8049;, &#7936;&rho;&chi;&#8053;, &pi;&epsilon;&#8055;&theta;&omega;, &sigma;&omicron;&phi;&#8055;&alpha;, &gamma;&rho;&alpha;&phi;&#8053;, &mu;&alpha;&kappa;&#8049;&rho;&iota;&omicron;&sigmaf;, &pi;&alpha;&rho;&alpha;&beta;&omicron;&lambda;&#8053;, &kappa;&rho;&#8055;&sigma;&iota;&sigmaf;, &nu;&alpha;&#8057;&sigmaf; and &sigma;&tau;&alpha;&upsilon;&rho;&#8057;&omega; &mdash; every cited verse checked against the Greek text.</li>
@@ -48423,7 +48427,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.499';
+const DEEP_LEXICON_VERSION = '3.0.500';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
