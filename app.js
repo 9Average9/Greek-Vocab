@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.498";
+const APP_VERSION = "3.0.499";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.499 &mdash; Word studies, wave 4</div>
+<ul>
+  <li><strong>200 Greek words now have full studies</strong> &mdash; Fifty more, including &delta;&omicron;&xi;&#8049;&zeta;&omega;, &kappa;&eta;&rho;&#8059;&sigma;&sigma;&omega;, &pi;&rho;&omicron;&sigma;&kappa;&upsilon;&nu;&#8051;&omega;, &chi;&alpha;&rho;&#8049;, &#7936;&rho;&chi;&#8053;, &pi;&epsilon;&#8055;&theta;&omega;, &sigma;&omicron;&phi;&#8055;&alpha;, &gamma;&rho;&alpha;&phi;&#8053;, &mu;&alpha;&kappa;&#8049;&rho;&iota;&omicron;&sigmaf;, &pi;&alpha;&rho;&alpha;&beta;&omicron;&lambda;&#8053;, &kappa;&rho;&#8055;&sigma;&iota;&sigmaf;, &nu;&alpha;&#8057;&sigmaf; and &sigma;&tau;&alpha;&upsilon;&rho;&#8057;&omega; &mdash; every cited verse checked against the Greek text.</li>
+</ul>
 <div class="un-version-label">v3.0.498 &mdash; Word Study, simpler still</div>
 <ul>
   <li><strong>Roomier sections</strong> &mdash; More space between the Word Study&rsquo;s sections, and the Here / Range / Versions bar is gone &mdash; every section is already one tap away as you scroll. &ldquo;How we know&rdquo; now sits at the very end.</li>
@@ -48419,7 +48423,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.497';
+const DEEP_LEXICON_VERSION = '3.0.499';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 

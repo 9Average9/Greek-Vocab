@@ -323,6 +323,29 @@ function requestParams(pack) {
   };
 }
 
+// English book names/abbreviations → app book codes, for checking prose.
+const EN_BOOKS = {
+  matt: 'MAT', mt: 'MAT', matthew: 'MAT', mark: 'MAR', mk: 'MAR', mrk: 'MAR', luke: 'LUK', lk: 'LUK',
+  john: 'JOH', jn: 'JOH', jhn: 'JOH', acts: 'ACT', act: 'ACT', rom: 'ROM', romans: 'ROM', cor: 'CO', gal: 'GAL',
+  eph: 'EPH', phil: 'PHP', php: 'PHP', col: 'COL', thess: 'TH', th: 'TH', tim: 'TI', ti: 'TI', titus: 'TIT', tit: 'TIT',
+  phlm: 'PHM', philem: 'PHM', heb: 'HEB', jas: 'JAM', james: 'JAM', pet: 'PE', pe: 'PE', jude: 'JUD', rev: 'REV',
+};
+function englishRefs(text) {
+  const out = [];
+  const re = /\b([1-3])?\s?([A-Z][a-z]{1,6})\.? (\d+):(\d+)(?:[-–](\d+))?/g;
+  let m;
+  while ((m = re.exec(String(text || '')))) {
+    const [, num, name, ch, v, v2] = m;
+    let code = EN_BOOKS[name.toLowerCase()];
+    if (!code) continue;
+    if (['CO', 'TH', 'TI', 'PE'].includes(code)) { if (!num) continue; code = num + code; }
+    else if (code === 'JOH' && num) code = num + 'JO';
+    else if (num) continue;
+    out.push(`${code} ${ch}:${v}${v2 ? '-' + v2 : ''}`);
+  }
+  return out;
+}
+
 // Structural check of one written entry against SCHEMA (the API enforces this
 // itself; hand-written batches need it explicitly).
 function schemaProblems(st) {
@@ -462,7 +485,9 @@ async function main() {
         .filter(Boolean).join(' ');
       // A range ("PHP 2:10-11") passes if any verse in it has the word. Prose
       // may also cite a verse as a contrast, so these are warnings only.
-      const proseBad = [...new Set((prose.match(/\b[1-3]?[A-Z]{2,3} \d+:\d+(?:[-–]\d+)?/g) || []))].filter((r) => {
+      // Also read English-style references ("Rom 8:3", "1 Cor 5:5", "Matt 25:21").
+      const proseRefs = [...(prose.match(/\b[1-3]?[A-Z]{2,3} \d+:\d+(?:[-–]\d+)?/g) || []), ...englishRefs(prose)];
+      const proseBad = [...new Set(proseRefs)].filter((r) => {
         const m = r.match(/^(\S+ \d+):(\d+)(?:[-–](\d+))?$/);
         for (let v = +m[2]; v <= +(m[3] || m[2]); v++) if (verifier.verseHas(`${m[1]}:${v}`, e.s)) return false;
         return true;
