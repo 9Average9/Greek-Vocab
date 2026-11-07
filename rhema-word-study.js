@@ -322,6 +322,38 @@
     }
     return by;
   }
+  function _onlyUseHtml(entry, strongs) {
+    const target = String(strongs);
+    let ref = Object.keys(entry.verseSense || {})[0] || (entry.refs || [])[0] || '';
+    let m = String(ref).match(/^(\S+) (\d+):(\d+)$/);
+    const T = _rhemaText() || {};
+    const findIn = (b, c, v) => ((T[b] || {})[c] || {})[v]?.findIndex(w => String((_rhemaResolveWord(w, b, c) || w)[1]) === target) ?? -1;
+    if (!m || findIn(m[1], m[2], m[3]) < 0) {
+      m = null;
+      outer: for (const b of RHEMA_NT_BOOK_ORDER) for (const c in (T[b] || {})) for (const v in T[b][c]) {
+        if (findIn(b, c, v) >= 0) { m = [null, b, c, v]; break outer; }
+      }
+    }
+    if (!m) return null;
+    const [, b, c, v] = m;
+    const words = T[b][c][v];
+    const idx = findIn(b, c, v);
+    const greek = words.map((w, i) => i === idx ? `<b>${esc(w[0])}</b>` : esc(w[0])).join(' ');
+    const ver = typeof _rhemaReaderVersion === 'function' && WS_LOCAL.includes(_rhemaReaderVersion()) ? _rhemaReaderVersion() : 'MSB';
+    const eng = _rhemaEnglishText(b, c, v, ver) || '';
+    let engHtml = esc(eng);
+    try { if (typeof _rhemaBVEnglishHtml === 'function') engHtml = _rhemaBVEnglishHtml(eng, b, c, v, words, idx, strongs, ver); } catch {}
+    const label = `${_rhemaBookName(b) || b} ${c}:${v}`;
+    const lxx = entry.lxx?.count ? ` It also appears ${entry.lxx.count}× in the Septuagint (see Through history).` : '';
+    return {
+      label,
+      html: `<p class="ws-once-greek">${greek}</p>
+        <p class="ws-once-eng"><b>${esc(ver)}</b> ${engHtml}</p>
+        <div class="ws-refs">${_refChip(b, c, v, strongs, label)}</div>
+        <p class="ws-fine">Because it is used only here, its meaning rests on this context and the lexicons below.${lxx}</p>`,
+    };
+  }
+
   function rangeHtml(entry, strongs) {
     if (!entry) return '';
     const senses = (entry.senses || []).slice(0, 8);
@@ -333,6 +365,12 @@
       const rest = refs.slice(n).map(r => _refChipFromKey(r, strongs)).join('');
       return (shown ? `<div class="ws-refs">${shown}</div>` : '') + (rest ? more(`All ${refs.length} verses`, `<div class="ws-refs">${rest}</div>`) : '');
     };
+    // Used once in the NT: there is no range to measure — show the one verse,
+    // with the word in bold, and point to the lexicons.
+    if (!study?.senses?.length && entry.count === 1) {
+      const once = _onlyUseHtml(entry, strongs);
+      if (once) return section('range', 'auto_stories', 'Its only New Testament use', once.html, esc(once.label));
+    }
     const parts = [];
     if (study?.senses?.length) {
       // Verified senses by meaning — the answer. How the English words are

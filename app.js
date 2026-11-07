@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.501";
+const APP_VERSION = "3.0.502";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.502 &mdash; Words used only once</div>
+<ul>
+  <li><strong>The one verse, front and center</strong> &mdash; For the 1,299 Greek words that appear only once in the New Testament, the Word Study now shows that verse in Greek and English with the word in bold, right beside the lexicons &mdash; since with a single use, the context is the best guide to its meaning.</li>
+  <li><strong>More studies on the way</strong> &mdash; Scholarly studies are being written for the remaining frequent and less-common words, a batch at a time.</li>
+</ul>
 <div class="un-version-label">v3.0.501 &mdash; The 300 most-used Greek words, fully studied</div>
 <ul>
   <li><strong>300 words now have full studies</strong> &mdash; The final fifty include &mu;&epsilon;&tau;&alpha;&nu;&omicron;&#8051;&omega;, &delta;&iota;&alpha;&theta;&#8053;&kappa;&eta;, &sigma;&upsilon;&nu;&epsilon;&#8055;&delta;&eta;&sigma;&iota;&sigmaf;, &pi;&epsilon;&rho;&iota;&tau;&omicron;&mu;&#8053;, &pi;&alpha;&rho;&rho;&eta;&sigma;&#8055;&alpha;, &sigma;&kappa;&alpha;&nu;&delta;&alpha;&lambda;&#8055;&zeta;&omega;, &delta;&iota;&#8049;&kappa;&omicron;&nu;&omicron;&sigmaf;, &#7937;&gamma;&iota;&#8049;&zeta;&omega;, &gamma;&nu;&#8182;&sigma;&iota;&sigmaf;, &theta;&upsilon;&sigma;&#8055;&alpha; and &pi;&alpha;&rho;&#8049;&kappa;&lambda;&eta;&sigma;&iota;&sigmaf;. Together they cover most of the words you&rsquo;ll tap in the New Testament &mdash; and every one of their 12,091 cited verses is checked against the Greek text.</li>
