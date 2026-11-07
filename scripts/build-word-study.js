@@ -453,6 +453,19 @@ async function main() {
         for (const r of x.refs || []) if (!verifier.verseHas(r, e.s)) droppedRefs.push(r);
       }
       const droppedBg = (row.study.background || []).filter((b) => !v.background.some((k) => k.citation === b.citation)).map((b) => b.citation);
+      // Verse references written inside the prose (e.g. "MAR 3:17" in a note)
+      // aren't tappable receipts, but they must still be right.
+      const prose = [row.study.summary, row.study.translationNote, row.study.exegesisTip, row.study.caution,
+        ...(row.study.senses || []).flatMap((x) => [x.definition, x.note]), ...(row.study.authorNotes || []).map((x) => x.note)]
+        .filter(Boolean).join(' ');
+      // A range ("PHP 2:10-11") passes if any verse in it has the word. Prose
+      // may also cite a verse as a contrast, so these are warnings only.
+      const proseBad = [...new Set((prose.match(/\b[1-3]?[A-Z]{2,3} \d+:\d+(?:[-–]\d+)?/g) || []))].filter((r) => {
+        const m = r.match(/^(\S+ \d+):(\d+)(?:[-–](\d+))?$/);
+        for (let v = +m[2]; v <= +(m[3] || m[2]); v++) if (verifier.verseHas(`${m[1]}:${v}`, e.s)) return false;
+        return true;
+      });
+      if (proseBad.length) droppedRefs.push(...proseBad.map((r) => `${r} (mentioned in text — check it's a deliberate contrast or a different versification)`));
       const flag = droppedRefs.length || droppedBg.length || v.verified.sensesDropped ? '!' : '✓';
       console.log(`${flag} G${e.s} ${e.lemma}: ${v.senses.length} senses, ${v.authorNotes.length} author notes, ${v.background.length} history notes` +
         (droppedRefs.length ? ` · refs that don't contain the word: ${droppedRefs.join(', ')}` : '') +
