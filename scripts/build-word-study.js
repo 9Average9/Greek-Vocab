@@ -81,6 +81,12 @@ const CHECK_FILE = typeof flag('check') === 'string' ? flag('check') : null;
 const IMPORT_FILE = typeof flag('import') === 'string' ? flag('import') : null;
 const IMPORT_AS = typeof flag('as') === 'string' ? flag('as') : 'claude-code-session';
 const WORK_DIR = path.join(OUT_DIR, 'work');
+// Tiers for the long tail: full studies for frequent words, compact ones
+// (smaller packs, every occurrence listed) for words used 2-9 times.
+const TIER = flag('tier') === 'compact' ? 'compact' : 'full';
+const MAX_COUNT = parseInt(flag('max-count'), 10) || Infinity;
+const ALL_POS = Boolean(flag('all-pos'));
+const PREFIX = typeof flag('prefix') === 'string' ? flag('prefix') : 'batch';
 
 // ── Data ────────────────────────────────────────────────────────────────────
 function loadWindowFiles(files) {
@@ -208,7 +214,22 @@ function sampleRefs(entry, max = 24) {
   return [...picked];
 }
 
-function buildPack(entry, lex, mm, W) {
+// Every NT occurrence of the word (for compact packs, where there are few).
+function allOccurrences(W, strongs, max = 12) {
+  const target = Align.canon(strongs);
+  const T = W.RhemaNT?.text || {};
+  const out = [];
+  for (const b in T) for (const c in T[b]) for (const v in T[b][c]) {
+    if (T[b][c][v].some((w) => w[1] && Align.canon(w[1]) === target)) { out.push(`${b} ${c}:${v}`); if (out.length >= max) return out; }
+  }
+  return out;
+}
+
+function buildPack(entry, lex, mm, W, opts = {}) {
+  const compact = !!opts.compact;
+  // Compact packs carry shorter lexicon excerpts (a prefix of the full ones,
+  // so anything cited from them still verifies against the full text).
+  const cap = compact ? { as: 1400, lsj: 900, mm: 1000 } : { as: 3500, lsj: 2500, mm: 3000 };
   const L = [];
   L.push(`WORD: ${entry.lemma} (G${entry.s}${entry.translit ? `, ${entry.translit}` : ''})`);
   L.push(`NT OCCURRENCES: ${entry.count} in the Byzantine text; ${entry.critical?.count ?? 'n/a'} in SBLGNT`);
@@ -225,7 +246,7 @@ function buildPack(entry, lex, mm, W) {
   if (entry.classical?.af) L.push(`APOSTOLIC FATHERS: ≈${entry.classical.af} occurrences`);
   const msb = W.RhemaMSB || {};
   const nt = W.RhemaNT?.text || {};
-  const refs = sampleRefs(entry);
+  const refs = compact ? allOccurrences(W, entry.s) : sampleRefs(entry);
   if (refs.length) {
     L.push('SAMPLE OCCURRENCES (Greek with the word in [brackets] · MSB English):');
     for (const r of refs) {
@@ -237,13 +258,13 @@ function buildPack(entry, lex, mm, W) {
     }
   }
   const sources = [];
-  if (lex?.abbott_smith) { const t = plain(lex.abbott_smith, 3500); L.push(`ABBOTT-SMITH: ${t}`); sources.push(t); }
+  if (lex?.abbott_smith) { const t = plain(lex.abbott_smith, cap.as); L.push(`ABBOTT-SMITH: ${t}`); sources.push(t); }
   if (lex?.extended || lex?.brief) L.push(`DODSON: ${plain(lex.extended || lex.brief, 400)}`);
   if (lex?.strongs_def) L.push(`STRONG'S: ${plain(lex.strongs_def, 300)}; KJV renders: ${plain(lex.kjv_def, 200)}`);
   // Skip an LSJ entry for a homograph (φώς "man" filed under φῶς "light").
-  if (entry.classical?.lsj && Align.lsjHeadwordMatches(entry.classical.lsj, entry.lemma)) { const t = plain(entry.classical.lsj, 2500); L.push(`LSJ (classical): ${t}`); sources.push(t); }
+  if (entry.classical?.lsj && Align.lsjHeadwordMatches(entry.classical.lsj, entry.lemma)) { const t = plain(entry.classical.lsj, cap.lsj); L.push(`LSJ (classical): ${t}`); sources.push(t); }
   // Skip an MM article filed under this number that is really another word's.
-  if (mm && Align.mmHeadwordMatches(mm, entry.lemma)) { const t = plain(mm, 3000); L.push(`MOULTON–MILLIGAN (papyri/inscriptions): ${t}`); sources.push(t); }
+  if (mm && Align.mmHeadwordMatches(mm, entry.lemma)) { const t = plain(mm, cap.mm); L.push(`MOULTON–MILLIGAN (papyri/inscriptions): ${t}`); sources.push(t); }
   if (entry.lxx?.refs?.length) sources.push(entry.lxx.refs.join(' '));
   return { pack: L.join('\n'), sources: sources.join('\n') };
 }
@@ -380,7 +401,8 @@ function priorityList(W, entries) {
   }
   const dominant = (s) => Object.entries(pos[s] || {}).sort((a, b) => b[1] - a[1])[0]?.[0];
   return [...entries.values()]
-    .filter((e) => e.lemma && e.count > 0 && ['N', 'V', 'A'].includes(dominant(e.s)) && !/^[Α-ΩἈ-Ὧ]/.test(e.lemma))
+    .filter((e) => e.lemma && e.count > 0 && (ALL_POS || ['N', 'V', 'A'].includes(dominant(e.s))) && !/^[Α-ΩἈ-Ὧ]/.test(e.lemma))
+    .filter((e) => e.count >= (MIN_COUNT || 1) && e.count <= MAX_COUNT)
     .sort((a, b) => b.count - a.count);
 }
 
@@ -448,11 +470,24 @@ async function main() {
     let n = 0;
     for (let i = 0; i < list.length; i += BATCH) {
       const batch = list.slice(i, i + BATCH);
-      const name = `batch-${String(++n).padStart(2, '0')}`;
+      const name = `${PREFIX}-${String(++n).padStart(2, '0')}`;
       const body = [`# ${name}: ${batch.length} words (${batch.map((e) => `G${e.s} ${e.lemma}`).join(', ')})`, ''];
-      for (const e of batch) body.push(`════ G${e.s} ${e.lemma} ════`, buildPack(e, lexicon[e.s], mm[e.s], W).pack, '');
+      for (const e of batch) body.push(`════ G${e.s} ${e.lemma} ════`, buildPack(e, lexicon[e.s], mm[e.s], W, { compact: TIER === 'compact' }).pack, '');
       fs.writeFileSync(path.join(WORK_DIR, `${name}.md`), body.join('\n'));
     }
+    fs.writeFileSync(path.join(WORK_DIR, 'INSTRUCTIONS-COMPACT.md'), `${SYSTEM_PROMPT}
+
+COMPACT ENTRIES (words used only 2-9 times). Keep each entry short and exact:
+- summary: one sentence.
+- senses: 1-3, and together they should cover the word's occurrences; cite the
+  actual verses (the pack lists every NT occurrence).
+- authorNotes: usually []. translationNote: null unless versions clearly
+  differ. background: 0-2 notes. exegesisTip and caution: null unless genuinely
+  useful.
+
+Output: a JSON array, one object per word: {"s": <Strong's number>, "study": <entry>}, where <entry> matches this JSON schema:
+${JSON.stringify(SCHEMA)}
+`);
     fs.writeFileSync(path.join(WORK_DIR, 'INSTRUCTIONS.md'), `${SYSTEM_PROMPT}\n\nOutput: a JSON array, one object per word: {"s": <Strong's number>, "study": <entry>}, where <entry> matches this JSON schema:\n${JSON.stringify(SCHEMA, null, 2)}\n`);
     console.log(`Exported ${list.length} words in ${n} batches to ${path.relative(ROOT, WORK_DIR)}/ (${done.size} already done, skipped).`);
     return;

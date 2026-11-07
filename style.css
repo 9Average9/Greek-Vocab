@@ -38686,3 +38686,7 @@ details.ws-sec > summary.ws-sec-h { padding: 14px 14px; }
 .ws-sec-body { padding: 2px 14px 14px; }
 .ws > div:not(.ws-hero) { display: flex; flex-direction: column; gap: 16px; }
 .ws > div:empty { display: none; }
+
+.ws-once-greek { font-size: 1.02rem; line-height: 1.6; }
+.ws-once-greek b, .ws-once-eng strong { color: var(--ws-accent); }
+.ws-once-eng { font-size: .9rem; }
