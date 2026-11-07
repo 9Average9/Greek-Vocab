@@ -38192,6 +38192,7 @@ function _renderHomeRhemaSearchResults(items, status) {
     return;
   }
   target.innerHTML = items.map((item, index) => `
+    ${index === 1 && items[0]?.reason ? '<div class="rhema-search-related">Related passages</div>' : ''}
     <button class="home-rhema-result${index === 0 && item.reason ? ' best' : ''}" type="button" onclick="openHomeRhemaResult(${index})">
       ${index === 0 && item.reason ? '<em>Best match</em>' : ''}
       <strong>${_homeRhemaEscape(item.ref)}</strong>
@@ -38236,7 +38237,7 @@ function homeRhemaSearch(value) {
       _homeRhemaResults = [];
       if (requestId === _rhemaSearchRequestId) _renderHomeRhemaSearchResults([], 'Rhema search could not load.');
     }
-  }, 220);
+  }, 160);
 }
 
 function clearHomeRhemaSearch() {

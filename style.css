@@ -14021,7 +14021,9 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   flex-direction: column;
   gap: 12px;
   padding: 16px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
-  background: var(--primary-light);
+  background: color-mix(in srgb, var(--card-solid-color) 94%, var(--secondary-color));
+  background-image: none;
+  isolation: isolate;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -14067,7 +14069,17 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 .rhema-search-ai-status { color: var(--secondary-color); font-size: 0.78rem; font-weight: 700; }
 .rhema-search-ai-status:empty { display: none; }
 .rhema-search-results { display: grid; gap: 8px; padding-bottom: env(safe-area-inset-bottom); }
-.rhema-search-results .home-rhema-result.best { border: 2px solid var(--secondary-color); background: color-mix(in srgb, var(--card-color) 83%, var(--secondary-color)); }
+.rhema-search-results .home-rhema-result {
+  background: var(--card-solid-color);
+  border-color: color-mix(in srgb, var(--secondary-color) 28%, var(--border-color));
+  box-shadow: 0 3px 12px rgba(0,0,0,0.045);
+}
+.rhema-search-results .home-rhema-result.best {
+  border: 2px solid var(--secondary-color);
+  background: color-mix(in srgb, var(--card-solid-color) 91%, var(--secondary-color));
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--secondary-color) 12%, transparent);
+}
+.rhema-search-related { color: var(--muted-color); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin: 6px 2px 0; }
 .rhema-search-results .home-rhema-result em { color: var(--secondary-color); font-size: 0.7rem; font-style: normal; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
 .rhema-search-results .home-rhema-result { padding: 12px 14px; }
 .rhema-search-results .home-rhema-result strong { font-size: 0.9rem; }
