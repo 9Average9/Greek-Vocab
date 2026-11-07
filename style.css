@@ -35503,27 +35503,75 @@ body.sandbox-open #rhemaSelectionBar:active {
   overflow-wrap: break-word;
   color: color-mix(in srgb, var(--font-color, #20303f) 90%, transparent);
 }
-/* When the version's rendering is shown, the literal gloss steps back a little. */
-.rhema-il-word.has-version .rhema-il-gloss {
+/* Literal meaning shown in place of a version word: muted + italic so it never
+   reads as the version's own wording. */
+.rhema-il-k-gloss .rhema-il-gloss { font-style: italic; color: color-mix(in srgb, var(--font-color, #20303f) 60%, transparent); }
+.rhema-il-version.rhema-il-inferred {
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--secondary-color, #1d4ed8) 45%, transparent);
+}
+.rhema-il-none {
+  font-size: 0.82rem;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--font-color, #20303f) 38%, transparent);
+}
+.rhema-il-k-none { background: transparent; border-style: dashed; }
+/* Details (literal meaning, Strong's, parsing) — hidden until switched on. */
+.rhema-il-detail { display: none; flex-direction: column; align-items: center; gap: 2px; margin-top: 2px; }
+.rhema-il-details .rhema-il-detail { display: flex; }
+.rhema-il-lit {
   font-size: 0.68rem;
-  color: color-mix(in srgb, var(--font-color, #20303f) 55%, transparent);
+  line-height: 1.25;
+  font-style: italic;
+  overflow-wrap: break-word;
+  color: color-mix(in srgb, var(--font-color, #20303f) 60%, transparent);
+}
+.rhema-il-code {
+  font-size: 0.6rem;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--font-color, #20303f) 48%, transparent);
 }
 .rhema-il-versionnote {
   display: flex;
-  align-items: center;
-  gap: 7px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   margin: -6px 0 13px;
   font-size: 0.72rem;
   line-height: 1.35;
   color: var(--muted-color, #8a8a8a);
 }
-.rhema-il-versionnote strong { color: var(--secondary-color); font-weight: 800; }
-.rhema-il-vn-dot {
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: color-mix(in srgb, var(--secondary-color) 55%, transparent);
+.rhema-il-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.rhema-il-legend > span { display: inline-flex; align-items: center; gap: 5px; }
+.rhema-il-swatch {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 0 6px;
+  border-radius: 6px;
 }
+.rhema-il-sw-version { color: var(--secondary-color, #1d4ed8); background: color-mix(in srgb, var(--secondary-color, #1d4ed8) 12%, transparent); }
+.rhema-il-sw-inferred { color: var(--secondary-color, #1d4ed8); border: 1px dashed color-mix(in srgb, var(--secondary-color, #1d4ed8) 45%, transparent); }
+.rhema-il-sw-none { color: color-mix(in srgb, var(--font-color, #20303f) 45%, transparent); }
+.rhema-il-sw-gloss { font-style: italic; font-weight: 500; color: color-mix(in srgb, var(--font-color, #20303f) 60%, transparent); }
+.rhema-il-detail-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 30%, transparent);
+  background: transparent;
+  color: var(--secondary-color, #2498df);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rhema-il-detail-btn .material-symbols-outlined { font-size: 1rem; }
+.rhema-il-detail-btn.on { background: color-mix(in srgb, var(--secondary-color, #2498df) 12%, transparent); }
+.rhema-il-versionnote strong { color: var(--secondary-color); font-weight: 800; }
 .rhema-il-foot {
   margin: 14px 0 0;
   font-size: 0.72rem;

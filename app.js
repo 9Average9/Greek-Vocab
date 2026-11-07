@@ -41009,6 +41009,30 @@ async function rhemaOpenInterlinear(ref) {
   _rhemaRenderInterlinear(ref);
 }
 
+// Per-token English for the version on screen. Shared by the interlinear and
+// the word study's "How translations render it here". Each result carries a
+// kind (see rhema-align.js): exact · match · inferred · none · ''.
+function _rhemaVersionRenderingsForVerse(p, words, decisions, versionText, version) {
+  const bsbEng = _rhemaBsbEnglishForTokens(words, p.book, p.chapter, p.verse);
+  if (!window.RhemaAlign) return words.map(() => ({ text: '', kind: '' }));
+  if (version === 'BSB' && bsbEng.some(e => e != null)) return RhemaAlign.bsbRenderings(bsbEng);
+  const items = decisions.map((d, i) => {
+    let meanings = [];
+    try { meanings = _deepExpectedMeaningWords((d && d.entry) || {}, (d && d.lex) || {}) || []; } catch {}
+    // Hebrew/LXX glosses can be whole definitions — only the head is a rendering.
+    const gloss = String((d && d.gloss) || '').split(/[;,(]/)[0];
+    return { bsb: bsbEng[i], gloss, meanings: [...meanings].slice(0, 12) };
+  });
+  return RhemaAlign.bridgeToVersion(items, versionText);
+}
+
+let _rhemaIlDetails = (() => { try { return localStorage.getItem('rhemaIlDetails') === '1'; } catch { return false; } })();
+function rhemaToggleInterlinearDetails() {
+  _rhemaIlDetails = !_rhemaIlDetails;
+  try { localStorage.setItem('rhemaIlDetails', _rhemaIlDetails ? '1' : '0'); } catch {}
+  if (_rhemaInterlinearRef) _rhemaRenderInterlinear(_rhemaInterlinearRef);
+}
+
 function _rhemaRenderInterlinear(ref) {
   const gridEl = document.getElementById('rhemaInterlinearGrid');
   if (!gridEl) return;
@@ -41023,45 +41047,52 @@ function _rhemaRenderInterlinear(ref) {
     return;
   }
   gridEl.classList.toggle('rhema-il-rtl', isHebrew);
+  gridEl.classList.toggle('rhema-il-details', _rhemaIlDetails);
 
   // Resolve each token once; the decision drives both the literal gloss and the
-  // candidate renderings used to align the current version's words.
+  // candidate renderings used to find the current version's words.
   const rows = words.map((w) => {
     const resolved = _rhemaResolveWord(w, p.book, p.chapter);
     const lex = _rhemaLexForWord(resolved, layer, p.book, p.chapter);
     const decision = _rhemaMeaningDecision(resolved, { layer, book: p.book, chapter: p.chapter, verse: p.verse });
-    return { orig: w[0] || '', translit: lex.translit || lex.pronounce || '', gloss: decision.gloss || '', decision };
+    const surface = window.RhemaAlign ? RhemaAlign.cleanSurface(w[0]) : (w[0] || '');
+    const translit = !isHebrew && window.RhemaAlign
+      ? RhemaAlign.translitGreek(surface)
+      : (lex.translit || lex.pronounce || '');
+    return { orig: surface, translit, gloss: decision.gloss || '', decision, strongs: resolved?.[1] || '', morph: resolved?.[2] || '' };
   });
 
-  // The word(s) of the version on screen that render each Greek token. For BSB
-  // this is exact (Berean's own alignment); for every other version we bridge
-  // through BSB's rendering to the words of that version's sentence.
   const versionText = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
-  const bsbEng = _rhemaBsbEnglishForTokens(words, p.book, p.chapter, p.verse);
-  const readerVer = (typeof _rhemaReaderVersion === 'function' && _rhemaReaderVersion()) || '';
-  const haveBsb = bsbEng.some(Boolean);
-  let versionRenders;
-  if (readerVer === 'BSB' && haveBsb) {
-    versionRenders = bsbEng.map(_rhemaBsbDisplay); // exact (supplied-word brackets removed for reading)
-  } else {
-    versionRenders = _rhemaAlignVersionRenderings(rows.map(r => r.decision), versionText, bsbEng);
-  }
   const versionLabel = (typeof _rhemaReaderDisplayLabel === 'function' && _rhemaReaderDisplayLabel()) || '';
+  const readerVer = (typeof _rhemaReaderVersion === 'function' && _rhemaReaderVersion()) || '';
+  const renders = _rhemaVersionRenderingsForVerse(p, words, rows.map(r => r.decision), versionText, readerVer === 'BSB' ? 'BSB' : versionLabel);
   _rhemaSetInterlinearVersionNote(versionLabel);
 
+  const esc = _escapeRhemaAttr;
+  const pfx = isHebrew ? 'H' : 'G';
   gridEl.innerHTML = rows.map((r, i) => {
-    const orig = _escapeRhemaAttr(r.orig);
-    const translit = _escapeRhemaAttr(r.translit);
-    // One clean English line per word: the version's actual rendering when we
-    // have it (accent), otherwise the literal meaning (muted). Tapping opens the
-    // full study for anything deeper.
-    const ver = versionRenders[i] || '';
-    const english = _escapeRhemaAttr(ver || r.gloss || '');
-    const engClass = ver ? 'rhema-il-version' : 'rhema-il-gloss';
-    return `<button class="rhema-il-word${ver ? ' has-version' : ''}" onclick="_rhemaInterlinearOpenWord(${i})">` +
-      `<span class="rhema-il-orig${isHebrew ? ' rhema-hebrew-text' : ''}">${orig}</span>` +
-      (translit ? `<span class="rhema-il-translit">${translit}</span>` : '') +
-      (english ? `<span class="${engClass}">${english}</span>` : '') +
+    const v = renders[i] || { text: '', kind: '' };
+    let english;
+    if (v.text && (v.kind === 'exact' || v.kind === 'match')) {
+      english = `<span class="rhema-il-version">${esc(v.text)}</span>`;
+    } else if (v.text && v.kind === 'inferred') {
+      english = `<span class="rhema-il-version rhema-il-inferred" title="Best match by position">≈ ${esc(v.text)}</span>`;
+    } else if (v.kind === 'none') {
+      english = `<span class="rhema-il-none" title="${esc(versionLabel)} has no separate word for this">—</span>`;
+    } else {
+      english = r.gloss ? `<span class="rhema-il-gloss" title="Literal meaning (not found in ${esc(versionLabel)})">${esc(r.gloss)}</span>` : '';
+    }
+    // Details: the literal meaning (when it differs), Strong's and parsing.
+    const showLit = r.gloss && (v.kind === 'exact' || v.kind === 'match' || v.kind === 'inferred' || v.kind === 'none')
+      && r.gloss.toLowerCase() !== String(v.text || '').toLowerCase();
+    const details = `<span class="rhema-il-detail">` +
+      (showLit ? `<span class="rhema-il-lit">lit. ${esc(r.gloss)}</span>` : '') +
+      `<span class="rhema-il-code">${r.strongs ? pfx + esc(r.strongs) : ''}${r.strongs && r.morph ? ' · ' : ''}${esc(r.morph)}</span>` +
+      `</span>`;
+    return `<button class="rhema-il-word rhema-il-k-${v.kind || 'gloss'}" onclick="_rhemaInterlinearOpenWord(${i})">` +
+      `<span class="rhema-il-orig${isHebrew ? ' rhema-hebrew-text' : ''}">${esc(r.orig)}</span>` +
+      (r.translit ? `<span class="rhema-il-translit">${esc(r.translit)}</span>` : '') +
+      english + details +
       `</button>`;
   }).join('');
 }
@@ -41069,128 +41100,20 @@ function _rhemaSetInterlinearVersionNote(versionLabel) {
   const el = document.getElementById('rhemaInterlinearVersionNote');
   if (!el) return;
   if (versionLabel) {
-    el.innerHTML = `<span class="rhema-il-vn-dot"></span><span>English shown from <strong>${_escapeRhemaAttr(versionLabel)}</strong></span>`;
+    const esc = _escapeRhemaAttr;
+    el.innerHTML = `<span class="rhema-il-legend">` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-version">word</span> ${esc(versionLabel)}’s word</span>` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-inferred">≈</span> best match by position</span>` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-none">—</span> no separate word</span>` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-gloss">grey</span> literal meaning</span>` +
+      `</span>` +
+      `<button type="button" class="rhema-il-detail-btn${_rhemaIlDetails ? ' on' : ''}" onclick="rhemaToggleInterlinearDetails()">` +
+      `<span class="material-symbols-outlined">${_rhemaIlDetails ? 'visibility_off' : 'visibility'}</span>${_rhemaIlDetails ? 'Hide' : 'Show'} literal &amp; parsing</button>`;
     el.style.display = '';
   } else {
     el.textContent = '';
     el.style.display = 'none';
   }
-}
-
-// ── Approximate Greek → version-English alignment ──────────────────────────
-// The reader's English versions are flowing sentence text with no word-level
-// link to the Greek. To show, under each Greek word, the word(s) the CURRENT
-// version actually used, we match each Greek token's known English renderings
-// (its occurrence gloss first, then its wider lexicon meanings) against the
-// words of the version's sentence, left to right, each English word used once.
-// It is deliberately conservative — no confident match means no version word,
-// and the literal gloss stands — and it is always labelled as approximate,
-// because translations are not truly word-aligned to the Greek.
-function _rhemaIlStem(w) {
-  w = String(w || '').toLowerCase().replace(/[^a-z]/g, '');
-  if (w.length < 4) return w;
-  const rules = [['ingly', ''], ['edly', ''], ['ies', 'y'], ['ied', 'y'], ['ying', 'y'],
-    ['ing', ''], ['eth', ''], ['est', ''], ['ed', ''], ['es', ''], ['ly', ''],
-    ['er', ''], ['en', ''], ['s', '']];
-  for (const [a, b] of rules) {
-    if (w.endsWith(a) && (w.length - a.length + b.length) >= 3) return w.slice(0, w.length - a.length) + b;
-  }
-  return w;
-}
-// English words translations supply or use as grammar — pronouns, auxiliaries,
-// subordinators, negatives. A Greek CONTENT word (verb/noun/adjective) must map
-// to the content word of its rendering, never one of these (so εὑρόντες "when
-// they found" maps to "found", not "when"/"they"). Greek function words still map
-// to them, because for those the rendering IS one of these words (σε → "you").
-const _RHEMA_FUNC_WORDS = new Set([
-  'i','me','my','mine','myself','you','your','yours','yourself','yourselves',
-  'he','him','his','himself','she','her','hers','herself','it','its','itself',
-  'we','us','our','ours','ourselves','they','them','their','theirs','themselves',
-  'this','that','these','those','who','whom','whose','which','what',
-  'is','are','was','were','be','been','being','am','has','have','had','having',
-  'do','does','did','done','will','would','shall','should','may','might','can',
-  'could','must','when','while','as','if','then','than','so','not','no','there','here',
-]);
-function _rhemaIlIsSupplied(low) { return _DEEP_GLUE_WORDS.has(low) || _RHEMA_FUNC_WORDS.has(low); }
-function _rhemaIlWords(text) {
-  return String(text || '').toLowerCase().split(/[^a-z]+/).filter(w => w.length > 1);
-}
-// Drop Berean's [supplied] words — they aren't a rendering of the Greek word, so
-// they must not seed a bridge match (e.g. "[The people] were astonished").
-function _rhemaBsbDirect(s) { return String(s || '').replace(/\[[^\]]*\]/g, ' '); }
-// Plain reader text: keep the words, drop the supplied-word brackets.
-function _rhemaBsbDisplay(s) { return String(s || '').replace(/[\[\]]/g, '').replace(/\s+/g, ' ').trim(); }
-function _rhemaIlCandidateStems(decision, bsbEng) {
-  // Prefer the CONTENT word(s) of the exact BSB rendering (excluding supplied
-  // [bracketed] words), then the occurrence gloss's content words. If a rendering
-  // is purely functional (e.g. "and", "him", "the"), map to that instead — those
-  // Greek words genuinely mean it.
-  const bsbWords = _rhemaIlWords(_rhemaBsbDirect(bsbEng));
-  const glossWords = _rhemaIlWords(decision && decision.gloss);
-  const content = arr => arr.filter(w => !_rhemaIlIsSupplied(w));
-  const bsbContent = content(bsbWords);
-  const glossContent = content(glossWords);
-  const hasContent = bsbContent.length > 0 || glossContent.length > 0;
-  const primary = new Set();
-  (hasContent ? [...bsbContent, ...glossContent] : [...bsbWords, ...glossWords])
-    .forEach(w => { const s = _rhemaIlStem(w); if (s) primary.add(s); });
-  const broad = new Set(primary);
-  try {
-    const expected = _deepExpectedMeaningWords((decision && decision.entry) || {}, (decision && decision.lex) || {});
-    for (const w of expected) { if (_rhemaIlIsSupplied(w)) continue; const s = _rhemaIlStem(w); if (s && s.length >= 3) broad.add(s); }
-  } catch {}
-  if (decision && decision.summary && decision.summary.text) content(_rhemaIlWords(decision.summary.text)).forEach(w => { const s = _rhemaIlStem(w); if (s) broad.add(s); });
-  return { primary, broad, content: hasContent };
-}
-function _rhemaIlTokenizeEnglish(text) {
-  const out = [];
-  for (const raw of String(text || '').split(/\s+/)) {
-    const clean = raw.replace(/^[^A-Za-z]+/, '').replace(/[^A-Za-z]+$/, '');
-    if (!clean) continue;
-    out.push({ raw: clean, stem: _rhemaIlStem(clean), sup: _rhemaIlIsSupplied(clean.toLowerCase()) });
-  }
-  return out;
-}
-// Greek and English don't share word order (Greek routinely puts the verb before
-// its subject), so we don't match strictly left-to-right — each Greek token takes
-// the unused English word whose stem matches and that sits NEAREST to where the
-// token is expected in the sentence (its proportional position). Two rounds: the
-// high-confidence occurrence glosses claim their words first, then the wider
-// lexicon meanings fill what's left, so a content word isn't stolen by a vaguer
-// match.
-function _rhemaIlAssignNearest(tokens, used, stems, expected, allowSup) {
-  if (!stems || !stems.size) return -1;
-  let best = -1, bestDist = Infinity;
-  for (let j = 0; j < tokens.length; j++) {
-    if (used[j]) continue;
-    const t = tokens[j];
-    if (!allowSup && t.sup) continue; // content Greek words never take a supplied/grammar word
-    if (!t.stem || !stems.has(t.stem)) continue;
-    const dist = Math.abs(j - expected);
-    if (dist < bestDist) { bestDist = dist; best = j; }
-  }
-  return best;
-}
-function _rhemaAlignVersionRenderings(decisions, versionText, bsbEngArr) {
-  const out = new Array(decisions.length).fill('');
-  const tokens = _rhemaIlTokenizeEnglish(versionText);
-  if (!tokens.length) return out;
-  const used = new Array(tokens.length).fill(false);
-  const n = decisions.length;
-  const denom = Math.max(1, n - 1);
-  const cand = decisions.map((d, i) => _rhemaIlCandidateStems(d, bsbEngArr && bsbEngArr[i]));
-  for (const round of ['primary', 'broad']) {
-    for (let i = 0; i < n; i++) {
-      if (out[i]) continue;
-      // A Greek content word may only take a content English word; a Greek
-      // function word (whose rendering is itself a supplied/grammar word) may.
-      const allowSup = !cand[i].content;
-      const expected = Math.round((i / denom) * (tokens.length - 1));
-      const j = _rhemaIlAssignNearest(tokens, used, cand[i][round], expected, allowSup);
-      if (j >= 0) { used[j] = true; out[i] = tokens[j].raw; }
-    }
-  }
-  return out;
 }
 
 // ── Exact Greek → BSB alignment (Berean word tables) ───────────────────────
@@ -41206,7 +41129,7 @@ function _ensureRhemaBsbAlign() {
     const s = document.createElement('script');
     s.src = 'rhema-bsb-align.js?v=' + RHEMA_BSB_ALIGN_VERSION;
     s.onload = () => resolve(window.RhemaBSBAlign || null);
-    s.onerror = () => resolve(null);
+    s.onerror = () => { _rhemaBsbAlignPromise = null; resolve(null); }; // retry next open
     document.head.appendChild(s);
   });
   return _rhemaBsbAlignPromise;
@@ -41216,35 +41139,19 @@ function _rhemaBsbAlignVerse(book, chapter, verse) {
   if (!a) return null;
   return ((a[book] || {})[String(chapter)] || {})[String(verse)] || null;
 }
-// Map the app's Greek tokens onto the Berean rows by Strong's sequence (usually
-// 1:1; tolerant of the occasional textual-variant insertion/deletion). Returns
-// one BSB English string per app token ('' when the word has no standalone
-// English, e.g. an article, or when no alignment is available).
+// Map the app's Greek tokens onto the Berean rows for the verse (ordered
+// alignment, numbering-convention aware, verse-division tolerant: see
+// rhema-align.js). Returns one entry per token: the Berean English, '' when
+// the word has no standalone English (e.g. an article), or null when there is
+// no reliable alignment for it.
 function _rhemaBsbEnglishForTokens(appTokens, book, chapter, verse) {
-  const out = new Array(appTokens.length).fill('');
-  const bsb = _rhemaBsbAlignVerse(book, chapter, verse);
-  if (!bsb || !bsb.length) return out;
-  const sOf = (t) => String((_rhemaResolveWord(t, book, chapter) || t)[1] || '');
-  // Match each Greek token to the nearest UNUSED Berean row with the same
-  // Strong's. Position-aware and order-independent, so it survives word-order
-  // differences between the app's Greek text and BSB's base (e.g. a swapped
-  // verb/object) and repeated Strong's numbers, instead of dropping a word.
-  const used = new Array(bsb.length).fill(false);
-  const n = appTokens.length;
-  const denom = Math.max(1, n - 1);
-  for (let i = 0; i < n; i++) {
-    const si = sOf(appTokens[i]);
-    if (!si) continue;
-    const expected = Math.round((i / denom) * (bsb.length - 1));
-    let best = -1, bestDist = Infinity;
-    for (let j = 0; j < bsb.length; j++) {
-      if (used[j] || String(bsb[j][0]) !== si) continue;
-      const d = Math.abs(j - expected);
-      if (d < bestDist) { bestDist = d; best = j; }
-    }
-    if (best >= 0) { used[best] = true; out[i] = bsb[best][1] || ''; }
-  }
-  return out;
+  const rows = _rhemaBsbAlignVerse(book, chapter, verse);
+  if (!window.RhemaAlign || !window.RhemaBSBAlign) return appTokens.map(() => null);
+  const strongs = appTokens.map(t => String((_rhemaResolveWord(t, book, chapter) || t || [])[1] || ''));
+  return RhemaAlign.alignGreekToRows(strongs, rows || [], {
+    prev: _rhemaBsbAlignVerse(book, chapter, Number(verse) - 1),
+    next: _rhemaBsbAlignVerse(book, chapter, Number(verse) + 1),
+  }).english;
 }
 
 function _rhemaInterlinearOpenWord(idx) {
@@ -44350,8 +44257,23 @@ function _rhemaResolveWord(word = [], book = _rhemaBook, chapter = _rhemaChapter
   }
   if (word[1]) return word;
   const key = _rhemaGreekSurfaceKey(word[0]);
-  const fallback = RHEMA_SURFACE_STRONGS_FALLBACKS[key] || window.RhemaCriticalFallbacks?.[key];
+  const fallback = RHEMA_SURFACE_STRONGS_FALLBACKS[key] || window.RhemaCriticalFallbacks?.[key]
+    || _rhemaStrongsFromLemma(word[3]);
   return fallback ? [word[0], fallback, word[2] || '', word[3] || ''] : word;
+}
+
+// SBLGNT gives every word a lemma even where it gives no Strong's number
+// (οὕτω(ς), οἶδα, middle-voice lemmas…). Resolve those through the lexicon so
+// the word study and interlinear work for them too. See rhema-align.js.
+let _rhemaLemmaIndex = null;
+const _rhemaLemmaCache = new Map();
+function _rhemaStrongsFromLemma(lemma) {
+  if (!lemma || !window.RhemaAlign || !window.RhemaLexicon) return '';
+  if (_rhemaLemmaCache.has(lemma)) return _rhemaLemmaCache.get(lemma);
+  if (!_rhemaLemmaIndex) _rhemaLemmaIndex = RhemaAlign.buildLemmaIndex(window.RhemaLexicon);
+  const s = RhemaAlign.strongsForLemma(_rhemaLemmaIndex, lemma) || '';
+  _rhemaLemmaCache.set(lemma, s);
+  return s;
 }
 
 function _rhemaContextualBrief(word = [], book = _rhemaBook, chapter = _rhemaChapter) {

@@ -74,6 +74,7 @@ const FILES_TO_CACHE = [
   "./index.html",
   "./style.css?v=3.0.492",
   "./vocab.js?v=3.0.8",
+  "./rhema-align.js?v=3.0.493",
   "./app.js?v=3.0.492",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.418",
@@ -176,7 +177,7 @@ const FILES_TO_CACHE = [
 // them twice at once is what made first launches crawl). The page asks for the
 // rest once the reader has settled ("warm-offline" message below).
 function _swIsBigData(path) {
-  return /\/(rhema-(?!crossrefs-ui)[^/]+|bible-threads|bible-intros)\.js$/.test(path);
+  return /\/(rhema-(?!crossrefs-ui|align)[^/]+|bible-threads|bible-intros)\.js$/.test(path);
 }
 
 // HTML entry points + the manifest live in the per-release shell cache.
