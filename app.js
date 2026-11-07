@@ -19591,6 +19591,7 @@ function _memRenderTokenWords(text = '', renderWord) {
 
 async function startMemorizationPage() {
   await loadRhemaScripts().catch(() => {});
+  await _rhemaLoadDataFile('rhema-bsb.js').catch(() => {}); // BSB is a Memorize option
   if (typeof _syncRhemaEnglishAlias === 'function') _syncRhemaEnglishAlias();
   _populateVersionSelect(document.getElementById('memVersionSelect'));
   populateMemorizationBooks();
@@ -32644,14 +32645,12 @@ function registerServiceWorker() {
     registration.addEventListener('updatefound', () => {
       // Only surface the "updating" hint for a real update (a controller already
       // exists), not for the first-ever install.
+      // The launch no longer waits on it: the network-first shell already runs
+      // the newest code, and the new worker only re-downloads files whose
+      // version changed (the Bible data is kept across releases), so holding
+      // the splash for it just made every update launch feel slow.
       if (!navigator.serviceWorker.controller || _appLaunchReleased) return;
-      _swUpdateFound = true;
-      setAppLaunchText("There's been updates since last time you were here, this may take longer to load");
-      // Fallback: release after 15s in case the update never activates
-      setTimeout(() => {
-        _swUpdateFound = false;
-        if (!_appLaunchReleased) hideAppLaunchScreen('ready');
-      }, 15000);
+      setAppLaunchText('Applying the latest update');
     });
     registration.update().catch(() => {});
 
@@ -36620,6 +36619,7 @@ function _parseCommunityVerseRef(input) {
 
 async function updateCommunityPostVersePreview() {
   await loadRhemaScripts().catch(() => {});
+  await _rhemaLoadDataFile('rhema-bsb.js').catch(() => {});
   const preview = document.getElementById('communityPostVersePreview');
   const refInput = document.getElementById('communityPostRef')?.value || '';
   const version = document.getElementById('communityPostVersion')?.value || 'MSB';
@@ -42228,6 +42228,83 @@ function decodeMorph(code) {
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 
+// One shared loader per data file, so the reader, Memorize, Threads etc. never
+// inject the same multi-MB script twice.
+const _rhemaFilePromises = {};
+function _rhemaDataGlobalReady(file) {
+  const g = {
+    'rhema-nt.js': 'RhemaNT', 'rhema-critical.js': 'RhemaCriticalNT',
+    'rhema-ot-hebrew.js': 'RhemaHebrewOT', 'rhema-lxx.js': 'RhemaLXX',
+    'rhema-msb.js': 'RhemaMSB', 'rhema-bsb.js': 'RhemaBSB',
+    'rhema-lexicon.js': 'RhemaLexicon', 'rhema-mm.js': 'RhemaMoultonMilligan',
+    'rhema-hebrew-lexicon.js': 'RhemaHebrewLexicon', 'rhema-hebrew-bdb.js': 'RhemaHebrewBDB',
+    'rhema-crossrefs.js': 'RhemaCrossRefs', 'rhema-scripture-notes.js': 'RhemaScriptureNotes',
+    'rhema-critical-fallbacks.js': 'RhemaCriticalFallbacks',
+  }[file];
+  return !!(g && window[g]);
+}
+function _rhemaLoadDataFile(file) {
+  if (_rhemaFilePromises[file]) return _rhemaFilePromises[file];
+  if (_rhemaDataGlobalReady(file)) return (_rhemaFilePromises[file] = Promise.resolve());
+  const p = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = file + '?v=' + (RHEMA_DATA_VERSIONS[file] || APP_VERSION);
+    s.async = true;
+    s.onload = res;
+    s.onerror = () => { delete _rhemaFilePromises[file]; rej(new Error('Failed to load ' + file)); };
+    document.head.appendChild(s);
+  });
+  _rhemaFilePromises[file] = p;
+  return p;
+}
+function _rhemaDataFileLoaded(file) {
+  return _rhemaDataGlobalReady(file);
+}
+
+// The reader's position before showRhema() has run (the background preload can
+// start first): the saved spot, or Genesis 1 for a first-timer — what
+// resumeRhema() will open.
+let _rhemaViewKnown = false;
+function _rhemaPendingView() {
+  if (_rhemaViewKnown) {
+    return { book: _rhemaBook, textMode: _rhemaTextMode, otLayer: _rhemaOTLayer, english: _rhemaEnglishVersion() };
+  }
+  let pos = null;
+  try { pos = JSON.parse(localStorage.getItem('rhemaLastPos') || 'null'); } catch {}
+  return {
+    book: pos?.book || 'GEN',
+    textMode: pos?.textMode === 'critical' ? 'critical' : 'majority',
+    otLayer: _rhemaOTLayer,
+    english: (pos?.englishVersion || _rhemaEnglishMode) === 'BSB' ? 'BSB' : 'MSB',
+  };
+}
+
+// Exactly the datasets needed to paint a chapter of `book`. MSB + the Byzantine
+// NT are structural (book list, picker), the lexicon powers word taps.
+function _rhemaFilesForView(view = _rhemaPendingView()) {
+  const files = ['rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-scripture-notes.js'];
+  if (view.english === 'BSB') files.push('rhema-bsb.js');
+  if (isRhemaOTBook(view.book)) {
+    files.push(view.otLayer === 'lxx' ? 'rhema-lxx.js' : 'rhema-ot-hebrew.js');
+  } else {
+    // NT chapters mark critical/majority differences, so both texts are needed.
+    files.push('rhema-critical.js');
+  }
+  return files;
+}
+
+function _rhemaMissingViewFiles() {
+  if (!_rhemaViewKnown) return [];
+  return _rhemaFilesForView().filter(f => !_rhemaDataFileLoaded(f));
+}
+
+// Everything else, in the order a reader is most likely to reach for it.
+const RHEMA_DATA_ALL = [
+  'rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-scripture-notes.js',
+  'rhema-critical.js', 'rhema-hebrew-lexicon.js', 'rhema-ot-hebrew.js', 'rhema-bsb.js', 'rhema-mm.js',
+  'rhema-crossrefs.js', 'rhema-lxx.js', 'rhema-syntax.js', 'rhema-hebrew-bdb.js', 'rhema-bible-dictionary.js',
+];
+
 function loadRhemaScripts() {
   return new Promise((resolve, reject) => {
     if (_rhemaLoaded) { resolve(); return; }
@@ -42239,34 +42316,52 @@ function loadRhemaScripts() {
     }
     _rhemaLoading = true;
     loadDeepLexiconSpine();
-    // Two-tier load so the reader paints on the CORE set (text + core word study)
-    // and the large, tool-specific datasets (LXX, cross-references, dictionary,
-    // syntax, Hebrew lexicons ≈ 30 MB) parse in the background right after. Those
-    // features are opened on demand, well after first render, and all data access
-    // is null-guarded, so deferring them just makes the reader open sooner.
-    const CORE = ['rhema-nt.js', 'rhema-critical.js', 'rhema-critical-fallbacks.js', 'rhema-ot-hebrew.js', 'rhema-lexicon.js', 'rhema-mm.js', 'rhema-msb.js', 'rhema-bsb.js', 'rhema-scripture-notes.js'];
-    const REST = ['rhema-hebrew-lexicon.js', 'rhema-hebrew-bdb.js', 'rhema-lxx.js', 'rhema-syntax.js', 'rhema-crossrefs.js', 'rhema-bible-dictionary.js'];
-    const loadOne = (file) => new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = file + '?v=' + (RHEMA_DATA_VERSIONS[file] || APP_VERSION);
-      s.onload = res;
-      s.onerror = () => rej(new Error('Failed to load ' + file));
-      document.head.appendChild(s);
-    });
-    Promise.all(CORE.map(loadOne)).then(() => {
+    // Two-tier load. The reader paints on just the datasets the open chapter
+    // needs (an NT chapter never waits on the 14 MB Hebrew OT, an OT chapter
+    // never waits on the critical text or Moulton–Milligan). The rest parse one
+    // file at a time during idle moments afterwards, so the freshly opened
+    // reader stays responsive instead of freezing while ~30 MB of script parses
+    // at once. All data access is null-guarded, and renderRhemaVerse() fetches
+    // anything a navigation needs before the background pass reaches it.
+    const core = _rhemaFilesForView();
+    Promise.all(core.map(_rhemaLoadDataFile)).then(() => {
+      _rhemaLoading = false;
       _syncRhemaEnglishAlias();
       _ensureRhemaBibleData();
       _rhemaLoaded = true;
       resolve();
-      // Background: the peripheral datasets. Merge dictionary phrases once they land.
-      Promise.all(REST.map(f => loadOne(f).catch(() => {}))).then(() => {
-        _rhemaRestLoaded = true;
-        try { _rhemaMergeDictionaryPhrases(); } catch {}
-      });
-    }).catch(reject);
+      _rhemaLoadRestInBackground();
+    }).catch((e) => { _rhemaLoading = false; reject(e); });
   });
 }
 let _rhemaRestLoaded = false;
+let _rhemaRestStarted = false;
+
+function _rhemaLoadRestInBackground() {
+  if (_rhemaRestStarted) return;
+  _rhemaRestStarted = true;
+  const queue = RHEMA_DATA_ALL.filter(f => !_rhemaDataFileLoaded(f));
+  const idle = (fn) => (typeof requestIdleCallback === 'function'
+    ? requestIdleCallback(fn, { timeout: 1500 })
+    : setTimeout(fn, 60));
+  const next = () => {
+    const file = queue.shift();
+    if (!file) {
+      _rhemaRestLoaded = true;
+      try { _rhemaMergeDictionaryPhrases(); } catch {}
+      _ensureRhemaBibleData();
+      _syncRhemaEnglishAlias();
+      // Everything the reader uses is now on the device; let the service worker
+      // fill in whatever else full offline use needs, in its own time.
+      setTimeout(() => {
+        try { navigator.serviceWorker?.controller?.postMessage({ type: 'warm-offline' }); } catch {}
+      }, 8000);
+      return;
+    }
+    _rhemaLoadDataFile(file).catch(() => {}).then(() => idle(next));
+  };
+  idle(next);
+}
 
 // Warm the Rhēma scripture data in the background a little after launch, so the
 // reader opens straight into the target passage instead of flashing the default
@@ -42310,6 +42405,7 @@ function _rhemaCaptureLaunchRect() {
 }
 
 async function showRhema() {
+  _rhemaViewKnown = true;
   closeHomeSearch();
   _desktopCollapseNav();
   _rhemaCaptureLaunchRect();
@@ -44530,6 +44626,24 @@ function _rhemaBlockScrollTop(body, block) {
 
 function renderRhemaVerse() {
   if (!_rhemaData()) return;
+  // A navigation into a part of the Bible whose text hasn't loaded yet (e.g.
+  // Genesis while the Hebrew OT is still queued, or switching to BSB / LXX):
+  // fetch just that dataset, then render.
+  const missing = _rhemaMissingViewFiles();
+  if (missing.length) {
+    const token = (renderRhemaVerse._waitToken = (renderRhemaVerse._waitToken || 0) + 1);
+    const loading = document.getElementById('rhemaLoadingMsg');
+    if (loading) { loading.textContent = 'Loading Rhēma data…'; loading.style.display = 'block'; }
+    Promise.all(missing.map(_rhemaLoadDataFile)).then(() => {
+      if (token !== renderRhemaVerse._waitToken) return;
+      if (loading) loading.style.display = 'none';
+      _syncRhemaEnglishAlias();
+      renderRhemaVerse();
+    }).catch(() => {
+      if (loading) loading.textContent = 'Failed to load data. Check your connection.';
+    });
+    return;
+  }
   closeRhemaSheet();
   closeRhemaSyntaxSheet();
   _bindRhemaBottomWave();
@@ -49771,14 +49885,7 @@ function _loadBibleThreads() {
 // Verse text needs the MSB bundle; load just that file if Rhema hasn't yet.
 function _gtEnsureMsb() {
   if (window.RhemaMSB) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'rhema-msb.js?v=' + (RHEMA_DATA_VERSIONS['rhema-msb.js'] || APP_VERSION);
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Unable to load Bible text.'));
-    document.head.appendChild(s);
-  });
+  return _rhemaLoadDataFile('rhema-msb.js').catch(() => { throw new Error('Unable to load Bible text.'); });
 }
 
 function _gtParseRef(ref) {
