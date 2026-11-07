@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.497";
+const APP_VERSION = "3.0.498";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.498 &mdash; Word Study, simpler still</div>
+<ul>
+  <li><strong>Roomier sections</strong> &mdash; More space between the Word Study&rsquo;s sections, and the Here / Range / Versions bar is gone &mdash; every section is already one tap away as you scroll. &ldquo;How we know&rdquo; now sits at the very end.</li>
+</ul>
 <div class="un-version-label">v3.0.497 &mdash; Word studies, wave 3</div>
 <ul>
   <li><strong>150 Greek words now have full studies</strong> &mdash; Fifty more, including &epsilon;&#7984;&rho;&#8053;&nu;&eta;, &pi;&lambda;&eta;&rho;&#8057;&omega;, &delta;&#8055;&kappa;&alpha;&iota;&omicron;&sigmaf;, &beta;&alpha;&pi;&tau;&#8055;&zeta;&omega;, &epsilon;&#8016;&alpha;&gamma;&gamma;&#8051;&lambda;&iota;&omicron;&nu;, &kappa;&epsilon;&phi;&alpha;&lambda;&#8053;, &alpha;&#7984;&#8061;&nu;&iota;&omicron;&sigmaf;, &phi;&#8182;&sigmaf; and &pi;&iota;&sigma;&tau;&#8057;&sigmaf; &mdash; every cited verse (6,703 of 6,703) checked against the Greek text.</li>

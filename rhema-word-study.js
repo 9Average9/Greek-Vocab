@@ -773,16 +773,14 @@
     if (_studies.size > 20) _studies.delete(_studies.keys().next().value);
 
     const isNT = layer === 'nt-greek' || !!(occ && occ.total);
-    const nav = [['here', 'Here', !!ctx], ['range', 'Range', true], ['versions', 'Versions', isNT], ['authors', 'Authors', true], ['history', 'History', true], ['lexicons', 'Lexicons', true]]
-      .filter(x => x[2]).map(([id, label]) => `<button type="button" onclick="rhemaWordStudyJump('${uid}','${id}')">${label}</button>`).join('');
 
     const html = `<div class="ws" id="${uid}">
       ${heroHtml(strongs, lex, decision, ctxRaw, occ, uid)}
-      <nav class="ws-nav">${nav}</nav>
       <div id="${uid}-here">${ctx ? `<section class="ws-sec"><div class="ws-loading">Lining up the translations…</div></section>` : ''}</div>
       <div id="${uid}-deep"><section class="ws-sec"><div class="ws-loading">Measuring this word across the New Testament…</div></section></div>
       <div id="${uid}-versions"></div>
       <div id="${uid}-lex">${lexiconsHtml(lex, strongs, null, uid)}</div>
+      <div id="${uid}-method"></div>
     </div>`;
 
     setTimeout(() => {
@@ -792,7 +790,7 @@
         fillHero(uid, entry, strongs);
         const deep = document.getElementById(`${uid}-deep`);
         if (deep) {
-          deep.innerHTML = [rangeHtml(entry, strongs), `<div data-ws-slot="versions"></div>`, authorsHtml(entry, strongs), historyHtml(entry, lex, strongs), methodHtml(entry)].join('')
+          deep.innerHTML = [rangeHtml(entry, strongs), `<div data-ws-slot="versions"></div>`, authorsHtml(entry, strongs), historyHtml(entry, lex, strongs)].join('')
             || '<p class="ws-note">This word has no measured New Testament usage; the lexicons below carry its meaning.</p>';
           // The Across-translations block lives between Range and Authors.
           const slot = deep.querySelector('[data-ws-slot="versions"]');
@@ -806,6 +804,8 @@
           if (st2 && !st2.ver) st2.ver = _wsIsLocal(reader) ? reader : 'MSB';
           _wsRenderVersions(uid, strongs);
         }
+        const methodEl = document.getElementById(`${uid}-method`);
+        if (methodEl) methodEl.innerHTML = methodHtml(entry);
         const lexEl = document.getElementById(`${uid}-lex`);
         if (lexEl && _lsjText(entry)) lexEl.innerHTML = lexiconsHtml(lex, strongs, entry, uid);
         if (ctx) renderHere(uid, ctx, strongs, entry);
