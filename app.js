@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.502";
+const APP_VERSION = "3.0.503";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.503 &mdash; 470 Greek words studied</div>
+<ul>
+  <li><strong>170 more word studies</strong> &mdash; Including the New Testament&rsquo;s most common little words (&kappa;&alpha;&#8055;, &delta;&#8051;, &gamma;&#8049;&rho;, &omicron;&#8016;, &mu;&#8053;, &epsilon;&#7984;&sigmaf;, &delta;&iota;&#8049;, &omicron;&#8022;&nu;, &#7936;&lambda;&lambda;&#8049;&hellip;), described by what they do in a sentence, plus 120 less common words with short, exact studies that cite every verse they appear in.</li>
+  <li><strong>Stricter checking</strong> &mdash; Each cited verse must now contain the exact word, not just a related form.</li>
+</ul>
 <div class="un-version-label">v3.0.502 &mdash; Words used only once</div>
 <ul>
   <li><strong>The one verse, front and center</strong> &mdash; For the 1,299 Greek words that appear only once in the New Testament, the Word Study now shows that verse in Greek and English with the word in bold, right beside the lexicons &mdash; since with a single use, the context is the best guide to its meaning.</li>
@@ -48436,7 +48441,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.501';
+const DEEP_LEXICON_VERSION = '3.0.503';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
