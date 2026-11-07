@@ -38680,3 +38680,9 @@ details.ws-sec .ws-senses, details.ws-sec .ws-vlist, details.ws-sec .ws-tr { gap
 .ws-glance span + span::before { content: '·'; margin: 0 7px; opacity: .6; }
 .ws-tip { margin: 10px 0 4px; }
 .ws-hero .ws-more { margin-top: 6px; }
+/* More breathing room between the collapsible sections (the section bar is gone). */
+.ws { gap: 16px; }
+details.ws-sec > summary.ws-sec-h { padding: 14px 14px; }
+.ws-sec-body { padding: 2px 14px 14px; }
+.ws > div:not(.ws-hero) { display: flex; flex-direction: column; gap: 16px; }
+.ws > div:empty { display: none; }
