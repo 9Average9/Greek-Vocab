@@ -109,6 +109,12 @@ function under(r, surface, nth = 0) {
   check('NIV Mark 1:22 the καί before οὐχ is "not"-adjacent or none, never the first-word "and"', kai.every(x => x.text !== 'The'), JSON.stringify(kai));
 }
 {
+  const text = W.RhemaMSB.JOH['3']['16'];
+  const r = bridge('JOH', '3', '16', text);
+  const loved = under(r, 'ἠγάπησεν');
+  check('bridge returns exact character offsets', loved && text.slice(loved.start, loved.end) === loved.text, JSON.stringify(loved));
+}
+{
   const msb = W.RhemaMSB.MAR['1']['22'];
   const r = bridge('MAR', '1', '22', msb);
   const matched = r.out.filter(o => o.kind === 'match').length, words = r.out.filter(o => o.kind !== 'none').length;

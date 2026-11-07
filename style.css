@@ -38621,3 +38621,9 @@ html.dark .ws, body.dark .ws { --ws-accent: color-mix(in srgb, var(--secondary-c
 html.dark .ws-tab.on, body.dark .ws-tab.on { color: #0b1220; }
 html.dark .rhema-il-card, body.dark .rhema-il-card { --secondary-color: #93c5fd; }
 html.dark .rhema-tab.active, body.dark .rhema-tab.active { color: #93c5fd; border-color: #93c5fd; }
+
+/* Occurrences list: the word's English rendering in the verse, in bold. */
+.rhema-xref-verse-text .xref-match { font-weight: 800; color: var(--font-color); }
+.rhema-xref-verse-text .xref-match-approx { text-decoration: underline dotted; text-underline-offset: 3px; }
+.rhema-xref-none { font-size: .72rem; font-style: italic; opacity: .7; }
+.rhema-xref-note { font-size: .74rem; color: var(--muted-color); margin: 4px 0 8px; }

@@ -265,7 +265,7 @@
     while ((m = re.exec(String(text || '')))) {
       const raw = m[0];
       const low = raw.toLowerCase().replace(/[’']s$/, '');
-      out.push({ raw, low, stem: /^\d/.test(raw) ? raw.replace(/,/g, '') : stem(low), grammar: isGrammar(low) });
+      out.push({ raw, low, stem: /^\d/.test(raw) ? raw.replace(/,/g, '') : stem(low), grammar: isGrammar(low), start: m.index, end: m.index + raw.length });
     }
     return out;
   }
@@ -319,7 +319,8 @@
     const claim = (i, s, e, kind) => {
       for (let k = s; k <= e; k++) used[k] = true;
       span[i] = [s, e];
-      out[i] = { text: toks.slice(s, e + 1).map(t => t.raw).join(' '), kind };
+      // start/end: character range in versionText, for exact highlighting.
+      out[i] = { text: toks.slice(s, e + 1).map(t => t.raw).join(' '), kind, start: toks[s].start, end: toks[e].end };
     };
     // All unused contiguous occurrences of a stem sequence.
     const findSeq = (seq) => {

@@ -30342,6 +30342,7 @@ const UPDATE_NOTES_HTML = `
   <li><strong>Updates no longer re-download the Bible</strong> &mdash; Your offline Bible data now stays on your device across app updates. Before, every update quietly downloaded about 80 MB again, which is why some launches were slow. Large files are also no longer re-checked in the background every time you open them.</li>
   <li><strong>The reader opens on what it needs</strong> &mdash; A New Testament chapter no longer waits for the Hebrew Old Testament, and the rest of the study data loads gently afterwards so the reader stays smooth. Updates no longer hold the launch screen.</li>
   <li><strong>A new Word Study</strong> &mdash; Tap any Greek word for one study that leads with what it means right here: how every translation renders this exact word (BSB, MSB, and NIV, NKJV, NASB, KJV at a tap), the measured range of meaning with every verse, which NT authors use it and how, its history from classical Greek through the Septuagint, the papyri and the Apostolic Fathers, and cleaned-up lexicons (Abbott-Smith, Moulton&ndash;Milligan, LSJ, Dodson, Strong&rsquo;s) with tappable references.</li>
+  <li><strong>Occurrences in your version, with the word in bold</strong> &mdash; In a word&rsquo;s Occurrences list, switch to English and every verse shows in the version you&rsquo;re reading (NIV, NKJV, NASB, ESV&hellip; downloaded once and saved), with the exact English words that translate this Greek word in bold &mdash; or a note when that version gives it no separate word.</li>
   <li><strong>Critical-text words all have definitions</strong> &mdash; Over 500 SBLGNT words that used to show &ldquo;No definition found&rdquo; (like &omicron;&#8021;&tau;&omega;&sigmaf;) now resolve correctly.</li>
   <li><strong>A more accurate interlinear</strong> &mdash; Greek words now line up with the Berean tables in order, so repeated words no longer swap, and verses split differently between texts line up properly. Each English word says what it is: your version&rsquo;s word, a best match (&asymp;), no separate word (&mdash;), or the literal meaning, with a legend and an optional literal-and-parsing view.</li>
 </ul>
@@ -49231,7 +49232,10 @@ function renderRhemaOccurrences(strongs, layer = getCurrentOriginalLanguageLayer
 let _rhemaBVCode    = null;
 let _rhemaBVStrongs = null;
 let _rhemaBVRefs    = [];
-let _rhemaBVEnglish     = false;
+// English view of the occurrence list: remembered, and shown in whatever
+// version the reader is set to (MSB/BSB on device, NIV/NKJV/… downloaded).
+let _rhemaBVEnglish = (() => { try { return localStorage.getItem('rhemaOccEnglish') === '1'; } catch { return false; } })();
+let _rhemaBVFetchToken = 0;
 
 function openRhemaBookVerses(code, strongs) {
   const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer(code);
@@ -49245,9 +49249,12 @@ function openRhemaBookVerses(code, strongs) {
     const verseNums = Object.keys(bookText[ch]).sort((a,b) => +a - +b);
     for (const v of verseNums) {
       const words = bookText[ch][v];
+      // Resolve numbers first so critical-text words the SBLGNT left
+      // unnumbered (οὕτως…) and the εἷς/εἰς fix are counted too.
+      const isWord = (w) => String((_rhemaResolveWord(w, code, ch) || w)[1]) === String(strongs);
       const wordIdx = formNorm
-        ? words.findIndex(w => String(w[1]) === String(strongs) && _stripGreekAccents(w[0]).toLowerCase() === formNorm)
-        : words.findIndex(w => String(w[1]) === String(strongs));
+        ? words.findIndex(w => isWord(w) && _stripGreekAccents(w[0]).toLowerCase() === formNorm)
+        : words.findIndex(isWord);
       if (wordIdx >= 0) refs.push({ ch, v, wordIdx, words });
     }
   }
@@ -49255,13 +49262,85 @@ function openRhemaBookVerses(code, strongs) {
   _rhemaBVCode    = code;
   _rhemaBVStrongs = strongs;
   _rhemaBVRefs    = refs;
-  _rhemaBVEnglish     = false;
   renderRhemaBookVerses();
+  if (_rhemaBVEnglish) _rhemaBVPrepareEnglish();
 }
 
 function toggleRhemaBookViewEnglish() {
   _rhemaBVEnglish = !_rhemaBVEnglish;
+  try { localStorage.setItem('rhemaOccEnglish', _rhemaBVEnglish ? '1' : '0'); } catch {}
   renderRhemaBookVerses();
+  if (_rhemaBVEnglish) _rhemaBVPrepareEnglish();
+}
+
+// The English view needs the Berean word table (to find the exact English
+// words) and, for a downloaded version, its chapters. Chapters are fetched one
+// at a time so a single ~250-verse block covers its neighbours; each lands in
+// the device's permanent version store and the list redraws as it arrives.
+async function _rhemaBVPrepareEnglish() {
+  const token = ++_rhemaBVFetchToken;
+  const code = _rhemaBVCode;
+  const stillHere = () => token === _rhemaBVFetchToken && _rhemaBVEnglish && _rhemaBVCode === code;
+  if (!window.RhemaBSBAlign && typeof _ensureRhemaBsbAlign === 'function') {
+    await _ensureRhemaBsbAlign();
+    if (!stillHere()) return;
+    renderRhemaBookVerses();
+  }
+  const ver = _rhemaReaderVersion();
+  if (!_rhemaReaderVersionIsApi() || typeof _vsEnsureChapter !== 'function') return;
+  if (typeof _vsBookInScope === 'function' && !_vsBookInScope(ver, code)) return;
+  if (typeof _vsTransLimited === 'function' && _vsTransLimited(ver)) return;
+  const chapters = [...new Set(_rhemaBVRefs.map(r => String(r.ch)))];
+  for (const ch of chapters) {
+    if (_vsChapterFromMemory(ver, code, ch)) continue;
+    try { await _vsEnsureChapter(ver, code, ch); } catch {}
+    if (!stillHere()) return;
+    renderRhemaBookVerses();
+  }
+}
+
+// Verse text in the reader's version; falls back to the on-device version
+// while a downloaded version's chapter is still on its way.
+function _rhemaBVVerseText(code, ch, v) {
+  const ver = _rhemaReaderVersion();
+  if (_rhemaReaderVersionIsApi()) {
+    const chap = typeof _vsChapterFromMemory === 'function' ? _vsChapterFromMemory(ver, code, String(ch)) : null;
+    if (chap) return { text: String(chap[String(v)] || ''), ver, fallback: false };
+    return { text: _rhemaEnglishText(code, ch, v), ver: _rhemaEnglishLabel(), fallback: true };
+  }
+  return { text: _rhemaEnglishText(code, ch, v, ver), ver, fallback: false };
+}
+
+// The verse with the exact English words for this occurrence in bold: the
+// Greek token is lined up through the Berean word table and found in this
+// version's sentence (same matcher as the interlinear). Falls back to a gloss
+// search when no alignment is possible.
+function _rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver) {
+  const esc = _escapeRhemaAttr;
+  if (!text) return '';
+  let r = null;
+  if (window.RhemaAlign) {
+    try {
+      const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer(code);
+      const d = _rhemaMeaningDecision(_rhemaResolveWord(words[wordIdx], code, ch), { layer, book: code, chapter: ch, verse: v });
+      let meanings = [];
+      try { meanings = [...(_deepExpectedMeaningWords(d.entry || {}, d.lex || {}) || [])].slice(0, 12); } catch {}
+      const bsbEng = _rhemaBsbEnglishForTokens(words, code, ch, v);
+      const items = words.map((w, i) => i === wordIdx
+        ? { bsb: bsbEng[i], gloss: String(d.gloss || '').split(/[;,(]/)[0], meanings }
+        : { bsb: bsbEng[i] });
+      r = RhemaAlign.bridgeToVersion(items, text)[wordIdx];
+    } catch { r = null; }
+  }
+  if (r && r.text && r.start != null) {
+    return esc(text.slice(0, r.start)) +
+      `<strong class="xref-match${r.kind === 'inferred' ? ' xref-match-approx' : ''}"${r.kind === 'inferred' ? ' title="Best match by position"' : ''}>${esc(text.slice(r.start, r.end))}</strong>` +
+      esc(text.slice(r.end));
+  }
+  if (r && r.kind === 'none') {
+    return `${esc(text)} <span class="rhema-xref-none">(no separate word in ${esc(ver)})</span>`;
+  }
+  return _EnglishHighlight(esc(text), strongs);
 }
 
 function _EnglishHighlight(EnglishText, strongs) {
@@ -49289,9 +49368,8 @@ function renderRhemaBookVerses() {
   const rows = refs.map(({ ch, v, wordIdx, words }) => {
     let previewHtml;
     if (_rhemaBVEnglish) {
-      const raw = _rhemaEnglishText(code, ch, v);
-      const highlighted = _EnglishHighlight(raw, strongs);
-      previewHtml = `<span class="rhema-xref-verse-text">${highlighted}</span>`;
+      const { text, ver } = _rhemaBVVerseText(code, ch, v);
+      previewHtml = `<span class="rhema-xref-verse-text">${_rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver)}</span>`;
     } else {
       const start = Math.max(0, wordIdx - 3);
       const end   = Math.min(words.length - 1, wordIdx + 4);
@@ -49314,12 +49392,26 @@ function renderRhemaBookVerses() {
   if (!content) return;
   const backFn = inSandbox ? "showSandboxWordTab('occurrences')" : "showRhemaTab('occurrences')";
   const EnglishCls = `rhema-xref-english-btn${_rhemaBVEnglish ? ' active' : ''}`;
+  const readerVer = _rhemaReaderVersion();
+  // Tell the reader when some verses are still in the on-device version.
+  let note = '';
+  if (_rhemaBVEnglish && _rhemaReaderVersionIsApi()) {
+    const waiting = refs.some(r => _rhemaBVVerseText(code, r.ch, r.v).fallback);
+    if (waiting) {
+      const limited = typeof _vsTransLimited === 'function' && _vsTransLimited(readerVer);
+      const scope = typeof _vsBookInScope === 'function' && !_vsBookInScope(readerVer, code);
+      note = `<div class="rhema-xref-note">${scope ? `${_escapeRhemaAttr(readerVer)} doesn’t cover this book`
+        : limited ? `${_escapeRhemaAttr(readerVer)} can’t load right now`
+        : `Downloading ${_escapeRhemaAttr(readerVer)}…`} — showing ${_escapeRhemaAttr(_rhemaEnglishLabel())} meanwhile.</div>`;
+    }
+  }
   content.innerHTML = `
     <div class="rhema-xref-header">
       <button class="rhema-xref-back-btn" onclick="${backFn}">← Occurrences</button>
       <span class="rhema-xref-title">${bookName} · ${refs.length} verse${refs.length !== 1 ? 's' : ''}</span>
-      <button class="${EnglishCls}" onclick="toggleRhemaBookViewEnglish()">${_rhemaEnglishLabel()}</button>
+      <button class="${EnglishCls}" onclick="toggleRhemaBookViewEnglish()" title="${_rhemaBVEnglish ? 'Show the Greek' : `Show in ${_escapeRhemaAttr(readerVer)}`}">${_escapeRhemaAttr(readerVer)}</button>
     </div>
+    ${note}
     <div>${rows}</div>`;
 }
 
