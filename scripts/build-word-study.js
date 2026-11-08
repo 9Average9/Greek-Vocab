@@ -192,7 +192,9 @@ function verifyStudy(raw, entry, sources, verifier) {
   const background = [];
   for (const b of raw.background || []) {
     const cite = norm(b.citation);
-    if (cite.length < 4 || !haystack.includes(cite)) { stats.backgroundDropped++; continue; }
+    // "ib. 938" / "Id. Grg." only make sense next to the reference they
+    // abbreviate, so on their own they are not a usable receipt.
+    if (cite.length < 4 || !haystack.includes(cite) || /^(ib|ibid|id)\b/i.test(String(b.citation || '').trim()) || /^[IVXLC]+\.\s*\d/.test(String(b.citation || '').trim())) { stats.backgroundDropped++; continue; }
     background.push({ period: b.period, note: b.note, citation: b.citation });
   }
   return {
