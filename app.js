@@ -30340,6 +30340,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.517 &mdash; 2,160 Greek words studied</div>
 <ul>
   <li><strong>220 more word studies</strong> &mdash; Including &mu;&alpha;&kappa;&rho;&omicron;&theta;&upsilon;&mu;&#8055;&alpha;, &kappa;&lambda;&eta;&rho;&omicron;&nu;&omicron;&mu;&#8055;&alpha;, &pi;&alpha;&rho;&theta;&#8051;&nu;&omicron;&sigmaf;, &xi;&#8051;&nu;&omicron;&sigmaf;, &epsilon;&#8016;&phi;&rho;&alpha;&#8055;&nu;&omega;, &theta;&#8059;&omega; and 180 less common words, each with every verse it appears in.</li>
+  <li><strong>More critical-text words tap through</strong> &mdash; About 600 words in the critical text that are spelled differently from their dictionary heading (&Mu;&omega;&#970;&sigma;&#8134;&sigmaf;, &Delta;&alpha;&upsilon;&#8055;&delta;, &nu;&omicron;&#8051;&omega;, &#7952;&lambda;&epsilon;&#8049;&omega;&hellip;) now open the right definition.</li>
 </ul>
 <div class="un-version-label">v3.0.516 &mdash; 1,940 Greek words studied</div>
 <ul>
