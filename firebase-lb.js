@@ -2533,7 +2533,7 @@ window.BibleQuizAI = { generate: generateBibleQuiz };
 // separate callable so ordinary typing stays entirely local and responsive.
 window.BibleSearchAI = {
   async search(query) {
-    const fn = httpsCallable(functionsApp, "searchBibleReferences", { timeout: 25000 });
+    const fn = httpsCallable(functionsApp, "searchBibleReferences", { timeout: 14000 });
     const response = await fn({ query });
     return response.data || { results: [] };
   }

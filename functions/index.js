@@ -1445,9 +1445,42 @@ const BIBLE_SEARCH_SCHEMA = {
   },
   required: ["results"]
 };
+const BIBLE_SEARCH_CACHE = new Map();
+const BIBLE_SEARCH_IN_FLIGHT = new Map();
+let bibleSearchClient;
+
+async function findBibleReferences(query) {
+  bibleSearchClient ||= anthropicClient();
+  const message = await bibleSearchClient.messages.create({
+    model: "claude-haiku-5-5",
+    max_tokens: 700,
+    system: [
+      "Find real Bible references for the user's remembered words, topic, story, or question.",
+      "Return up to 5 references, most likely first. Example: 'Paul said I do what I hate' → Romans 7:15 first, Romans 7:19 related.",
+      "Use standard book names and one chapter:verse per result. Give a relevant reason of 12 words or fewer.",
+      "Never invent a reference or quote verse text. Return fewer results when uncertain."
+    ].join(" "),
+    output_config: { effort: "low", format: { type: "json_schema", schema: BIBLE_SEARCH_SCHEMA } },
+    messages: [{ role: "user", content: query }]
+  }, { timeout: 9000, maxRetries: 0 });
+  const block = (message.content || []).find(part => part.type === "text");
+  const parsed = JSON.parse(block ? block.text : "{}");
+  const seen = new Set();
+  const results = [];
+  for (const item of (Array.isArray(parsed.results) ? parsed.results : [])) {
+    const reference = String(item.reference || "").trim().slice(0, 60);
+    if (!/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d{1,3}:\d{1,3}$/.test(reference)) continue;
+    const key = reference.toLowerCase().replace(/\s+/g, "");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    results.push({ reference, reason: String(item.reason || "").trim().slice(0, 140) });
+    if (results.length === 5) break;
+  }
+  return { results };
+}
 
 exports.searchBibleReferences = functions
-  .runWith({ timeoutSeconds: 30, memory: "256MB", secrets: ["ANTHROPIC_API_KEY"] })
+  .runWith({ timeoutSeconds: 15, memory: "256MB", minInstances: 1, secrets: ["ANTHROPIC_API_KEY"] })
   .https.onCall(async (data, context) => {
     if (!context.auth || !context.auth.uid) {
       throw new functions.https.HttpsError("unauthenticated", "Sign in to search the Bible.");
@@ -1457,34 +1490,24 @@ exports.searchBibleReferences = functions
       throw new functions.https.HttpsError("invalid-argument", "Enter a phrase, topic, story, or question.");
     }
     try {
-      const message = await anthropicClient().messages.create({
-        model: "claude-haiku-4-5",
-        max_tokens: 950,
-        system: [
-          "You are a Bible reference finder, not a chatbot. Return up to 7 real Bible references in ranked order.",
-          "Put the single most likely verse FIRST. For remembered or approximate wording, identify the actual speaker and passage before offering related verses.",
-          "For example, 'Paul said I do what I hate' is Romans 7:15 first; Romans 7:19 is a related result.",
-          "Use standard English Bible book names and a single chapter:verse for every result (example: Romans 7:15).",
-          "Never invent a reference, quote verse text, or include a verse unless reasonably confident it exists and is relevant.",
-          "Each reason must be a short, useful explanation of the match, at most 18 words. Return fewer results when few are relevant."
-        ].join(" "),
-        output_config: { format: { type: "json_schema", schema: BIBLE_SEARCH_SCHEMA } },
-        messages: [{ role: "user", content: query }]
-      });
-      const block = (message.content || []).find(part => part.type === "text");
-      const parsed = JSON.parse(block ? block.text : "{}");
-      const seen = new Set();
-      const results = [];
-      for (const item of (Array.isArray(parsed.results) ? parsed.results : [])) {
-        const reference = String(item.reference || "").trim().slice(0, 60);
-        if (!/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d{1,3}:\d{1,3}$/.test(reference)) continue;
-        const key = reference.toLowerCase().replace(/\s+/g, "");
-        if (seen.has(key)) continue;
-        seen.add(key);
-        results.push({ reference, reason: String(item.reason || "").trim().slice(0, 140) });
-        if (results.length === 7) break;
+      const cacheKey = query.toLowerCase().replace(/\s+/g, " ");
+      const cached = BIBLE_SEARCH_CACHE.get(cacheKey);
+      if (cached && cached.expires > Date.now()) return cached.value;
+      let pending = BIBLE_SEARCH_IN_FLIGHT.get(cacheKey);
+      if (!pending) {
+        pending = (async () => {
+          try {
+            const value = await findBibleReferences(query);
+            BIBLE_SEARCH_CACHE.set(cacheKey, { value, expires: Date.now() + 20 * 60 * 1000 });
+            if (BIBLE_SEARCH_CACHE.size > 200) BIBLE_SEARCH_CACHE.delete(BIBLE_SEARCH_CACHE.keys().next().value);
+            return value;
+          } finally {
+            BIBLE_SEARCH_IN_FLIGHT.delete(cacheKey);
+          }
+        })();
+        BIBLE_SEARCH_IN_FLIGHT.set(cacheKey, pending);
       }
-      return { results };
+      return await pending;
     } catch (error) {
       console.error("searchBibleReferences error:", error && error.message);
       if (error instanceof functions.https.HttpsError) throw error;
