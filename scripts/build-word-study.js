@@ -417,6 +417,9 @@ function schemaProblems(st) {
 
 // The most-used content words (nouns, verbs, adjectives; no proper names),
 // where a deeper entry helps the most readers.
+// Proper names start with a capital. (A character range like [Ἀ-Ὧ] would also
+// catch lowercase ἐ-, ἀ-, ὁ- words, which interleave with capitals in Unicode.)
+const isProperName = (lemma) => { const c = String(lemma || '').normalize('NFC')[0] || ''; return c !== c.toLowerCase(); };
 function priorityList(W, entries) {
   const T = W.RhemaNT?.text || {};
   const pos = {};
@@ -426,7 +429,7 @@ function priorityList(W, entries) {
   }
   const dominant = (s) => Object.entries(pos[s] || {}).sort((a, b) => b[1] - a[1])[0]?.[0];
   return [...entries.values()]
-    .filter((e) => e.lemma && e.count > 0 && (ALL_POS || ['N', 'V', 'A'].includes(dominant(e.s))) && !/^[Α-ΩἈ-Ὧ]/.test(e.lemma))
+    .filter((e) => e.lemma && e.count > 0 && (ALL_POS || ['N', 'V', 'A'].includes(dominant(e.s))) && !isProperName(e.lemma))
     .filter((e) => e.count >= (MIN_COUNT || 1) && e.count <= MAX_COUNT)
     .sort((a, b) => b.count - a.count);
 }
