@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.509";
+const APP_VERSION = "3.0.510";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,7 +30337,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.509 &mdash; Rhema Bible search</div>
+<div class="un-version-label">v3.0.510 &mdash; Faster Rhema search</div>
 <ul>
   <li><strong>Find the passage you remember</strong> &mdash; Search from inside Rhema by reference, words, story, or a rough remembered phrase. Local results appear as you type; AI ranks the most likely Bible reference when you submit.</li>
 </ul>
@@ -37868,6 +37868,7 @@ let _homeRhemaSearchIndex = null;
 let _homeRhemaSearchPromise = null;
 let _rhemaSearchRequestId = 0;
 const _rhemaAiSearchCache = new Map();
+const _rhemaAiSearchInFlight = new Map();
 
 const HOME_RHEMA_STOPWORDS = new Set([
   'a','an','and','are','as','at','about','be','but','by','for','from','he','her','his','how','i','in','is','it','like','me','of','on','or','out','passage','she','so','story','that','the','their','them','there','they','this','to','was','were','what','when','where','who','with','you','your'
@@ -38274,14 +38275,24 @@ function toggleRhemaSearch() {
   if (!modal) return;
   if (modal.classList.contains('rhema-search-open')) { closeRhemaSearch(); return; }
   modal.classList.add('rhema-search-open');
-  document.getElementById('rhemaSearchToggle')?.setAttribute('aria-expanded', 'true');
+  const toggle = document.getElementById('rhemaSearchToggle');
+  toggle?.setAttribute('aria-expanded', 'true');
+  toggle?.setAttribute('aria-label', 'Close Bible search');
+  if (toggle) toggle.title = 'Close Bible search';
+  const icon = toggle?.querySelector('.material-symbols-outlined');
+  if (icon) icon.textContent = 'close';
   document.getElementById('rhemaSearchInput')?.focus({ preventScroll: true });
 }
 
 function closeRhemaSearch() {
   const modal = document.getElementById('rhemaModal');
   modal?.classList.remove('rhema-search-open');
-  document.getElementById('rhemaSearchToggle')?.setAttribute('aria-expanded', 'false');
+  const toggle = document.getElementById('rhemaSearchToggle');
+  toggle?.setAttribute('aria-expanded', 'false');
+  toggle?.setAttribute('aria-label', 'Search the Bible');
+  if (toggle) toggle.title = 'Search the Bible';
+  const icon = toggle?.querySelector('.material-symbols-outlined');
+  if (icon) icon.textContent = 'search';
   ++_rhemaSearchRequestId;
   clearTimeout(_homeRhemaSearchTimer);
   document.getElementById('rhemaSearchInput')?.blur();
@@ -38289,30 +38300,44 @@ function closeRhemaSearch() {
 
 function closeHomeSearch() {} // Retained for older navigation call sites.
 
+function _getRhemaSearchSuggestions(query) {
+  const key = query.toLowerCase().replace(/\s+/g, ' ').trim();
+  if (_rhemaAiSearchCache.has(key)) return Promise.resolve(_rhemaAiSearchCache.get(key));
+  if (_rhemaAiSearchInFlight.has(key)) return _rhemaAiSearchInFlight.get(key);
+  const pending = (async () => {
+    if (!window.BibleSearchAI?.search) throw new Error('Bible search service has not loaded');
+    const results = (await window.BibleSearchAI.search(query)).results || [];
+    _rhemaAiSearchCache.set(key, results);
+    if (_rhemaAiSearchCache.size > 30) _rhemaAiSearchCache.delete(_rhemaAiSearchCache.keys().next().value);
+    return results;
+  })().finally(() => _rhemaAiSearchInFlight.delete(key));
+  _rhemaAiSearchInFlight.set(key, pending);
+  return pending;
+}
+
 async function submitRhemaSearch() {
   const query = document.getElementById('rhemaSearchInput')?.value.trim() || '';
   if (!query) return;
   const requestId = ++_rhemaSearchRequestId;
   const aiStatus = document.getElementById('rhemaSearchAiStatus');
-  if (aiStatus) aiStatus.textContent = 'Finding the most likely passage…';
+  if (aiStatus) aiStatus.textContent = 'Finding the best matches…';
   clearTimeout(_homeRhemaSearchTimer);
+  const directRef = _homeRhemaDirectRef(query);
+  // Start the remote lookup while the local index loads and ranks verses.
+  const suggestionsPromise = directRef ? null : _getRhemaSearchSuggestions(query)
+    .then(results => ({ results }), error => ({ error }));
   let index;
   try { index = await _ensureHomeRhemaSearchIndex(); }
   catch { if (requestId === _rhemaSearchRequestId) { if (aiStatus) aiStatus.textContent = ''; _renderHomeRhemaSearchResults([], 'Bible text could not load. Check your connection.'); } return; }
   if (requestId !== _rhemaSearchRequestId) return;
-  const directRef = _homeRhemaDirectRef(query);
   const local = _rankHomeRhemaEntries(index, query);
   _homeRhemaResults = local;
   _renderHomeRhemaSearchResults(local, local.length ? '' : 'Looking for related passages…');
   if (directRef && local[0]?.book === directRef.book && local[0]?.chapter === directRef.chapter) { if (aiStatus) aiStatus.textContent = ''; return; }
   try {
-    const cacheKey = query.toLowerCase();
-    let suggestions = _rhemaAiSearchCache.get(cacheKey);
-    if (!suggestions) {
-      if (!window.BibleSearchAI?.search) throw new Error('Bible AI service has not loaded');
-      suggestions = (await window.BibleSearchAI.search(query)).results || [];
-      _rhemaAiSearchCache.set(cacheKey, suggestions);
-    }
+    const outcome = await (suggestionsPromise || _getRhemaSearchSuggestions(query).then(results => ({ results }), error => ({ error })));
+    if (outcome.error) throw outcome.error;
+    const suggestions = outcome.results;
     if (requestId !== _rhemaSearchRequestId) return;
     const byRef = new Map(index.map(entry => [`${entry.book}:${entry.chapter}:${entry.verse}`, entry]));
     const found = [];
@@ -38332,7 +38357,7 @@ async function submitRhemaSearch() {
   } catch (err) {
     if (requestId === _rhemaSearchRequestId) {
       if (aiStatus) aiStatus.textContent = '';
-      _renderHomeRhemaSearchResults(local, local.length ? '' : 'AI search is unavailable. Try a reference or different words.');
+      _renderHomeRhemaSearchResults(local, local.length ? '' : 'Search is unavailable right now. Try a reference or different words.');
     }
   }
 }
