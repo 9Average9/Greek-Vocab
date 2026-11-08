@@ -53,7 +53,7 @@ self.addEventListener("notificationclick", (event) => {
 // Before this split, every release renamed the one cache and `activate`
 // deleted the old one, so each update re-downloaded all of the Bible data, and
 // stale-while-revalidate re-fetched multi-megabyte files on every open.
-const APP_SW_VERSION = "3.0.526";
+const APP_SW_VERSION = "3.0.527";
 const SHELL_CACHE = "disciple-builder-v" + APP_SW_VERSION;
 const DATA_CACHE = "disciple-builder-data-v1";
 const KEEP_CACHES = new Set([SHELL_CACHE, DATA_CACHE]);
@@ -72,11 +72,11 @@ const SHELL_NETWORK_TIMEOUT_MS = 3000;
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.526",
+  "./style.css?v=3.0.527",
   "./vocab.js?v=3.0.8",
-  "./rhema-align.js?v=3.0.526",
-  "./app.js?v=3.0.526",
-  "./rhema-word-study.js?v=3.0.526",
+  "./rhema-align.js?v=3.0.527",
+  "./app.js?v=3.0.527",
+  "./rhema-word-study.js?v=3.0.527",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.418",
   "./rhema-english-dictionary.js?v=3.0.417",
@@ -123,7 +123,7 @@ const FILES_TO_CACHE = [
   "./greek-verbs.js?v=3.0.152",
   "./bible-quiz.js?v=3.0.473",
   "./bible-quiz.css?v=3.0.473",
-  "./firebase-lb.js?v=3.0.526",
+  "./firebase-lb.js?v=3.0.527",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",
