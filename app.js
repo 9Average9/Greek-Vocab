@@ -30339,7 +30339,7 @@ const RHEMA_DATA_VERSIONS = {
 const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.521 &mdash; 2,565 Greek words studied</div>
 <ul>
-  <li><strong>49 more word studies</strong> &mdash; Including &pi;&alpha;&nu;&tau;&omicron;&kappa;&rho;&#8049;&tau;&omega;&rho;, &chi;&rho;&eta;&sigma;&tau;&#8057;&tau;&eta;&sigmaf;, &pi;&lambda;&epsilon;&omicron;&nu;&epsilon;&xi;&#8055;&alpha;, &delta;&iota;&kappa;&alpha;&#8055;&omega;&mu;&alpha;, &mu;&alpha;&kappa;&rho;&omicron;&theta;&upsilon;&mu;&#8051;&omega;, &tau;&#8049;&xi;&iota;&sigmaf; and 43 more &mdash; every New Testament word used more than once now has a verified study, each with every verse it appears in.</li>
+  <li><strong>49 more word studies</strong> &mdash; Including &pi;&alpha;&nu;&tau;&omicron;&kappa;&rho;&#8049;&tau;&omega;&rho;, &chi;&rho;&eta;&sigma;&tau;&#8057;&tau;&eta;&sigmaf;, &pi;&lambda;&epsilon;&omicron;&nu;&epsilon;&xi;&#8055;&alpha;, &delta;&iota;&kappa;&alpha;&#8055;&omega;&mu;&alpha;, &mu;&alpha;&kappa;&rho;&omicron;&theta;&upsilon;&mu;&#8051;&omega;, &tau;&#8049;&xi;&iota;&sigmaf; and 43 more, each with every verse it appears in.</li>
 </ul>
 <div class="un-version-label">v3.0.520 &mdash; 2,516 Greek words studied</div>
 <ul>
