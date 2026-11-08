@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.515";
+const APP_VERSION = "3.0.516";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.516 &mdash; 1,940 Greek words studied</div>
+<ul>
+  <li><strong>160 more word studies</strong> &mdash; Including &sigma;&kappa;&#8049;&nu;&delta;&alpha;&lambda;&omicron;&nu;, &sigma;&phi;&rho;&alpha;&gamma;&#8055;&zeta;&omega;, &tau;&#8049;&lambda;&alpha;&nu;&tau;&omicron;&nu;, &tau;&rho;&#8049;&pi;&epsilon;&zeta;&alpha;, &#7936;&lambda;&lambda;&#8057;&tau;&rho;&iota;&omicron;&sigmaf; and 150 less common words, each with every verse it appears in.</li>
+</ul>
 <div class="un-version-label">v3.0.515 &mdash; 1,780 Greek words studied</div>
 <ul>
   <li><strong>150 more word studies</strong> &mdash; Including &epsilon;&#8016;&sigma;&#8051;&beta;&epsilon;&iota;&alpha;, &epsilon;&#8016;&chi;&alpha;&rho;&iota;&sigma;&tau;&#8055;&alpha;, &tau;&#8059;&pi;&omicron;&sigmaf;, &#7936;&nu;&omicron;&mu;&#8055;&alpha;, &kappa;&lambda;&eta;&rho;&omicron;&nu;&#8057;&mu;&omicron;&sigmaf;, &gamma;&rho;&#8049;&mu;&mu;&alpha; and 120 less common words, each with every verse it appears in.</li>
@@ -48550,7 +48554,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.515';
+const DEEP_LEXICON_VERSION = '3.0.516';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
