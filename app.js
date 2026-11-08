@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.511";
+const APP_VERSION = "3.0.512";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,7 +30337,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.511 &mdash; Rhema search polish</div>
+<div class="un-version-label">v3.0.512 &mdash; Search on submit</div>
 <ul>
   <li><strong>Find the passage you remember</strong> &mdash; Search from inside Rhema by reference, words, story, or a rough remembered phrase. Local results appear as you type; AI ranks the most likely Bible reference when you submit.</li>
 </ul>
@@ -37862,7 +37862,6 @@ window.RhemaBookAbbr = RHEMA_BOOK_ABBR;
 window.RhemaNTBookOrder = RHEMA_NT_BOOK_ORDER;
 window.RhemaBookOrder = RHEMA_BOOK_ORDER;
 
-let _homeRhemaSearchTimer = null;
 let _homeRhemaResults = [];
 let _homeRhemaSearchIndex = null;
 let _homeRhemaSearchPromise = null;
@@ -38221,42 +38220,17 @@ function _syncHomeRhemaSearchClear(query = '') {
   document.getElementById('rhemaSearchClear')?.classList.toggle('hidden', !String(query || '').trim());
 }
 
-function homeRhemaSearch(value) {
-  clearTimeout(_homeRhemaSearchTimer);
-  const requestId = ++_rhemaSearchRequestId;
+function rhemaSearchInputChanged(value) {
+  ++_rhemaSearchRequestId;
   const aiStatus = document.getElementById('rhemaSearchAiStatus');
   if (aiStatus) aiStatus.textContent = '';
   const query = String(value || '').trim();
   _syncHomeRhemaSearchClear(query);
-  if (!query) {
-    _homeRhemaResults = [];
-    _renderHomeRhemaSearchResults([]);
-    return;
-  }
-  if (query.length < 2) {
-    _homeRhemaResults = [];
-    _renderHomeRhemaSearchResults([], 'Keep typing to search Rhema.');
-    return;
-  }
-  _renderHomeRhemaSearchResults([], 'Searching Rhema...');
-  _homeRhemaSearchTimer = setTimeout(async () => {
-    try {
-      const index = await _ensureHomeRhemaSearchIndex();
-      if (requestId !== _rhemaSearchRequestId) return;
-      let ranked = _rankHomeRhemaEntries(index, query);
-      if (!ranked.length && _homeRhemaTokens(query).length <= 3) ranked = _rankHomeRhemaEntries(index, query, true);
-      if (requestId !== _rhemaSearchRequestId) return;
-      _homeRhemaResults = ranked;
-      _renderHomeRhemaSearchResults(ranked, ranked.length ? '' : 'No close match yet.');
-    } catch (err) {
-      _homeRhemaResults = [];
-      if (requestId === _rhemaSearchRequestId) _renderHomeRhemaSearchResults([], 'Rhema search could not load.');
-    }
-  }, 160);
+  _homeRhemaResults = [];
+  _renderHomeRhemaSearchResults([]);
 }
 
 function clearHomeRhemaSearch() {
-  clearTimeout(_homeRhemaSearchTimer);
   _homeRhemaResults = [];
   ++_rhemaSearchRequestId;
   const input = document.getElementById('rhemaSearchInput');
@@ -38268,8 +38242,7 @@ function clearHomeRhemaSearch() {
   input?.focus();
 }
 
-// The reader owns search. Local matches appear while typing; the AI lookup is
-// reserved for a deliberate submit so every keystroke stays fast and free.
+// The reader owns search. Results appear only after a deliberate submit.
 function toggleRhemaSearch() {
   const modal = document.getElementById('rhemaModal');
   if (!modal) return;
@@ -38294,7 +38267,6 @@ function closeRhemaSearch() {
   const icon = toggle?.querySelector('.material-symbols-outlined');
   if (icon) icon.textContent = 'search';
   ++_rhemaSearchRequestId;
-  clearTimeout(_homeRhemaSearchTimer);
   document.getElementById('rhemaSearchInput')?.blur();
 }
 
@@ -38320,8 +38292,13 @@ async function submitRhemaSearch() {
   if (!query) return;
   const requestId = ++_rhemaSearchRequestId;
   const aiStatus = document.getElementById('rhemaSearchAiStatus');
+  _homeRhemaResults = [];
+  _renderHomeRhemaSearchResults([]);
+  if (query.length < 2) {
+    if (aiStatus) aiStatus.textContent = 'Enter at least two characters.';
+    return;
+  }
   if (aiStatus) aiStatus.textContent = 'Finding the best matches…';
-  clearTimeout(_homeRhemaSearchTimer);
   const directRef = _homeRhemaDirectRef(query);
   // Start the remote lookup while the local index loads and ranks verses.
   const suggestionsPromise = directRef ? null : _getRhemaSearchSuggestions(query)
@@ -38331,9 +38308,12 @@ async function submitRhemaSearch() {
   catch { if (requestId === _rhemaSearchRequestId) { if (aiStatus) aiStatus.textContent = ''; _renderHomeRhemaSearchResults([], 'Bible text could not load. Check your connection.'); } return; }
   if (requestId !== _rhemaSearchRequestId) return;
   const local = _rankHomeRhemaEntries(index, query);
-  _homeRhemaResults = local;
-  _renderHomeRhemaSearchResults(local, local.length ? '' : 'Looking for related passages…');
-  if (directRef && local[0]?.book === directRef.book && local[0]?.chapter === directRef.chapter) { if (aiStatus) aiStatus.textContent = ''; return; }
+  if (directRef && local[0]?.book === directRef.book && local[0]?.chapter === directRef.chapter) {
+    _homeRhemaResults = local;
+    if (aiStatus) aiStatus.textContent = '';
+    _renderHomeRhemaSearchResults(local);
+    return;
+  }
   try {
     const outcome = await (suggestionsPromise || _getRhemaSearchSuggestions(query).then(results => ({ results }), error => ({ error })));
     if (outcome.error) throw outcome.error;
@@ -38360,6 +38340,7 @@ async function submitRhemaSearch() {
         ? 'Sign in to find more passages.'
         : 'Full search is temporarily unavailable. Showing closest matches.';
       if (aiStatus) aiStatus.textContent = unavailable;
+      _homeRhemaResults = local;
       _renderHomeRhemaSearchResults(local, local.length ? '' : 'Try a reference or different words.');
     }
   }
