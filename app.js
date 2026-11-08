@@ -38105,45 +38105,59 @@ function _homeRhemaDirectRef(query) {
   return null;
 }
 
-function _homeRhemaTopicBoost(normQuery, entry) {
-  let score = 0;
+function _homeRhemaTopicContext(normQuery) {
   const has = (word) => normQuery.includes(word);
+  return {
+    rules: HOME_RHEMA_TOPIC_RULES.flatMap((rule) => {
+      const hits = rule.any.filter(term => has(term)).length;
+      return hits ? [{ refs: rule.refs, boost: rule.boost + Math.min(hits, 4) * 18 }] : [];
+    }),
+    paulPeter: (has('paul') || has('apostle')) && (has('peter') || has('cephas')) && (has('gentile') || has('uncircumcised') || has('hypocrisy') || has('rebuke') || has('oppose') || has('confront')),
+    damascus: (has('damascus') || has('road')) && (has('saul') || has('paul')),
+    prodigal: (has('prodigal') || has('lost')) && has('son'),
+    armor: (has('armor') || has('armour')) && has('god'),
+    faithWorks: (has('faith') && has('works')) || has('dead'),
+    hate: has('hate') && (has('do') || has('paul') || has('want')),
+    furnace: (has('shadrach') || has('meshach') || has('abednego')) && (has('furnace') || has('fire') || has('flame') || has('burning') || has('nebuchadnezzar'))
+  };
+}
+
+function _homeRhemaTopicBoost(context, entry) {
+  let score = 0;
   const inRef = (book, chapter, verses) => entry.book === book && entry.chapter === String(chapter) && (!verses || verses.includes(entry.verse));
-  HOME_RHEMA_TOPIC_RULES.forEach((rule) => {
-    const hits = rule.any.filter(term => has(term)).length;
-    if (!hits) return;
+  context.rules.forEach((rule) => {
     const matchesRef = rule.refs.some(([book, chapter, verses]) => inRef(book, chapter, verses));
     if (!matchesRef) return;
-    score += rule.boost + Math.min(hits, 4) * 18;
+    score += rule.boost;
   });
 
-  if ((has('paul') || has('apostle')) && (has('peter') || has('cephas')) && (has('gentile') || has('uncircumcised') || has('hypocrisy') || has('rebuke') || has('oppose') || has('confront'))) {
+  if (context.paulPeter) {
     if (inRef('GAL', 2, ['11','12','13','14'])) score += 320;
     else if (entry.book === 'GAL' && entry.chapter === '2') score += 90;
   }
-  if ((has('damascus') || has('road')) && (has('saul') || has('paul'))) {
+  if (context.damascus) {
     if (entry.book === 'ACT' && entry.chapter === '9') score += 70;
   }
-  if ((has('prodigal') || has('lost')) && has('son')) {
+  if (context.prodigal) {
     if (entry.book === 'LUK' && entry.chapter === '15') score += 70;
   }
-  if ((has('armor') || has('armour')) && has('god')) {
+  if (context.armor) {
     if (entry.book === 'EPH' && entry.chapter === '6') score += 70;
   }
-  if ((has('faith') && has('works')) || has('dead')) {
+  if (context.faithWorks) {
     if (entry.book === 'JAM' && entry.chapter === '2') score += 55;
   }
-  if (has('hate') && (has('do') || has('paul') || has('want'))) {
+  if (context.hate) {
     if (inRef('ROM', 7, ['15'])) score += 340;
     else if (inRef('ROM', 7, ['19'])) score += 120;
   }
-  if ((has('shadrach') || has('meshach') || has('abednego')) && (has('furnace') || has('fire') || has('flame') || has('burning') || has('nebuchadnezzar'))) {
+  if (context.furnace) {
     if (entry.book === 'DAN' && entry.chapter === '3') score += 220;
   }
   return score;
 }
 
-function _scoreHomeRhemaEntry(query, tokens, entry, directRef, allowFuzzy = false, normalizedQuery) {
+function _scoreHomeRhemaEntry(tokens, entry, directRef, topicContext, allowFuzzy = false) {
   let score = 0;
   if (directRef && entry.book === directRef.book && entry.chapter === directRef.chapter) {
     score += entry.verse === directRef.verse ? 200 : 25;
@@ -38162,20 +38176,20 @@ function _scoreHomeRhemaEntry(query, tokens, entry, directRef, allowFuzzy = fals
     if (entry.norm.includes(` ${token} `)) score += 3;
     if (idx > 0 && entry.norm.includes(`${tokens[idx - 1]} ${token}`)) score += 8;
   });
-  score += _homeRhemaTopicBoost(normalizedQuery, entry);
+  score += _homeRhemaTopicBoost(topicContext, entry);
   if (tokens.length >= 2) score += Math.round((matchedTokens / tokens.length) * 24);
   if (matchedTokens >= 3) score += 18;
-  if (tokens.length && tokens.every(token => entry.norm.includes(token) || (allowFuzzy && _homeRhemaFuzzyTokenScore(token, entry) > 0))) score += 20;
+  if (tokens.length && matchedTokens === tokens.length) score += 20;
   return score;
 }
 
 function _rankHomeRhemaEntries(index, query, allowFuzzy = false) {
   const tokens = _homeRhemaTokens(query);
   const directRef = _homeRhemaDirectRef(query);
-  const normalizedQuery = _homeRhemaNormalize(query);
+  const topicContext = _homeRhemaTopicContext(_homeRhemaNormalize(query));
   const best = [];
   for (const entry of index) {
-    const score = _scoreHomeRhemaEntry(query, tokens, entry, directRef, allowFuzzy, normalizedQuery);
+    const score = _scoreHomeRhemaEntry(tokens, entry, directRef, topicContext, allowFuzzy);
     if (score <= 0 || (best.length === 8 && score <= best[7].score)) continue;
     const at = best.findIndex(result => score > result.score);
     best.splice(at < 0 ? best.length : at, 0, { ...entry, score });
