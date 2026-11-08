@@ -1424,6 +1424,74 @@ function buildQuizPrompt(opts) {
   ].join("\n");
 }
 
+// Fast, citation-first semantic search. The quiz endpoint above/below retains
+// its own prompt, models and behavior; only the existing API key is shared.
+const BIBLE_SEARCH_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    results: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          reference: { type: "string" },
+          reason: { type: "string" }
+        },
+        required: ["reference", "reason"]
+      }
+    }
+  },
+  required: ["results"]
+};
+
+exports.searchBibleReferences = functions
+  .runWith({ timeoutSeconds: 30, memory: "256MB", secrets: ["ANTHROPIC_API_KEY"] })
+  .https.onCall(async (data, context) => {
+    if (!context.auth || !context.auth.uid) {
+      throw new functions.https.HttpsError("unauthenticated", "Sign in to search the Bible.");
+    }
+    const query = String((data && data.query) || "").trim().slice(0, 180);
+    if (query.length < 2) {
+      throw new functions.https.HttpsError("invalid-argument", "Enter a phrase, topic, story, or question.");
+    }
+    try {
+      const message = await anthropicClient().messages.create({
+        model: "claude-haiku-4-5",
+        max_tokens: 950,
+        system: [
+          "You are a Bible reference finder, not a chatbot. Return up to 7 real Bible references in ranked order.",
+          "Put the single most likely verse FIRST. For remembered or approximate wording, identify the actual speaker and passage before offering related verses.",
+          "For example, 'Paul said I do what I hate' is Romans 7:15 first; Romans 7:19 is a related result.",
+          "Use standard English Bible book names and a single chapter:verse for every result (example: Romans 7:15).",
+          "Never invent a reference, quote verse text, or include a verse unless reasonably confident it exists and is relevant.",
+          "Each reason must be a short, useful explanation of the match, at most 18 words. Return fewer results when few are relevant."
+        ].join(" "),
+        output_config: { format: { type: "json_schema", schema: BIBLE_SEARCH_SCHEMA } },
+        messages: [{ role: "user", content: query }]
+      });
+      const block = (message.content || []).find(part => part.type === "text");
+      const parsed = JSON.parse(block ? block.text : "{}");
+      const seen = new Set();
+      const results = [];
+      for (const item of (Array.isArray(parsed.results) ? parsed.results : [])) {
+        const reference = String(item.reference || "").trim().slice(0, 60);
+        if (!/^[1-3]?\s?[A-Za-z][A-Za-z ]+\s+\d{1,3}:\d{1,3}$/.test(reference)) continue;
+        const key = reference.toLowerCase().replace(/\s+/g, "");
+        if (seen.has(key)) continue;
+        seen.add(key);
+        results.push({ reference, reason: String(item.reason || "").trim().slice(0, 140) });
+        if (results.length === 7) break;
+      }
+      return { results };
+    } catch (error) {
+      console.error("searchBibleReferences error:", error && error.message);
+      if (error instanceof functions.https.HttpsError) throw error;
+      throw new functions.https.HttpsError("unavailable", "Bible search is unavailable right now. Try again shortly.");
+    }
+  });
+
 exports.generateBibleQuiz = functions
   .runWith({ timeoutSeconds: 300, memory: "512MB", secrets: ["ANTHROPIC_API_KEY"] })
   .https.onCall(async (data, context) => {
