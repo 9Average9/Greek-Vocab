@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.510";
+const APP_VERSION = "3.0.511";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,7 +30337,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.510 &mdash; Faster Rhema search</div>
+<div class="un-version-label">v3.0.511 &mdash; Rhema search polish</div>
 <ul>
   <li><strong>Find the passage you remember</strong> &mdash; Search from inside Rhema by reference, words, story, or a rough remembered phrase. Local results appear as you type; AI ranks the most likely Bible reference when you submit.</li>
 </ul>
@@ -38352,12 +38352,15 @@ async function submitRhemaSearch() {
       found.push({ ...entry, reason: String(suggestion.reason || '').slice(0, 140) });
     });
     _homeRhemaResults = found.length ? found : local;
-    if (aiStatus) aiStatus.textContent = '';
+    if (aiStatus) aiStatus.textContent = found.length ? '' : 'Showing closest matches.';
     _renderHomeRhemaSearchResults(_homeRhemaResults, _homeRhemaResults.length ? '' : 'No matching passages found. Try different words.');
   } catch (err) {
     if (requestId === _rhemaSearchRequestId) {
-      if (aiStatus) aiStatus.textContent = '';
-      _renderHomeRhemaSearchResults(local, local.length ? '' : 'Search is unavailable right now. Try a reference or different words.');
+      const unavailable = /unauthenticated/.test(String(err?.code || ''))
+        ? 'Sign in to find more passages.'
+        : 'Full search is temporarily unavailable. Showing closest matches.';
+      if (aiStatus) aiStatus.textContent = unavailable;
+      _renderHomeRhemaSearchResults(local, local.length ? '' : 'Try a reference or different words.');
     }
   }
 }

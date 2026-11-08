@@ -14029,24 +14029,6 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
 }
 #rhemaModal.rhema-search-open .rhema-search-panel { display: flex; }
 #rhemaModal.rhema-search-open .rhema-reader { display: none; }
-.rhema-search-back {
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 0 12px 0 9px;
-  border: 1px solid color-mix(in srgb, var(--secondary-color) 25%, var(--border-color));
-  border-radius: 12px;
-  background: var(--card-solid-color);
-  color: var(--secondary-color);
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 750;
-  cursor: pointer;
-}
-.rhema-search-back .material-symbols-outlined { font-size: 20px; }
-.rhema-search-back:focus-visible { outline: 2px solid var(--secondary-color); outline-offset: 2px; }
 .rhema-search-form {
   display: flex;
   align-items: center;
