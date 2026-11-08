@@ -129,6 +129,8 @@ function under(r, surface, nth = 0) {
 }
 check('lemma lookup: οὕτω(ς) → G3779, οἶδα → G1492; γαμίζω is NOT γεμίζω',
   A.strongsForLemma(LEMMAS, 'οὕτω(ς)') === '3779' && A.strongsForLemma(LEMMAS, 'οἶδα') === '1492' && A.strongsForLemma(LEMMAS, 'γαμίζω') !== '1072');
+check('critical lemmas spelled unlike Strong\'s: Μωϋσῆς → G3475, νοέω → G3539, Δαυίδ → G1138, ἐλεάω → G1653',
+  A.strongsForLemma(LEMMAS, 'Μωϋσῆς') === '3475' && A.strongsForLemma(LEMMAS, 'νοέω') === '3539' && A.strongsForLemma(LEMMAS, 'Δαυίδ') === '1138' && A.strongsForLemma(LEMMAS, 'ἐλεάω') === '1653');
 check('translit of surface forms', A.translitGreek('ἠγάπησεν') === 'ēgapēsen' && A.translitGreek('υἱὸν') === 'huion' && A.translitGreek('ἄγγελος') === 'angelos' && A.translitGreek('ῥῆμα') === 'rhēma');
 {
   const s = A.stem;
