@@ -13985,7 +13985,28 @@ body.dark .fr-sheet-stat { background: rgba(255,255,255,0.05); border-color: #37
   flex-shrink: 0;
   touch-action: none; /* swipes here must not scroll ancestors */
   overscroll-behavior: none;
+  /* The header floats over the reader (like the reference bar below it) so it
+     can slide away on scroll for more reading room without ever resizing the
+     scroll area. Its measured height is --rhema-header-h (see
+     _initRhemaChromeMetrics), which the search panel, the reference bar and
+     the scroll body offset by. */
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 45;
+  transform: translateY(0);
+  transition: transform 0.34s cubic-bezier(.2,.82,.18,1), border-color 0.25s ease, box-shadow 0.25s ease;
+  will-change: transform;
 }
+.rhema-header > * { transition: opacity 0.22s ease; }
+/* Hidden: slide up but leave a status-bar-high strip, so text never scrolls
+   under the clock / notch; the title and buttons fade out as it goes. */
+#rhemaModal.rhema-chrome-hidden:not(.rhema-search-open) .rhema-header {
+  transform: translateY(calc(-100% + env(safe-area-inset-top, 0px)));
+  border-bottom-color: transparent;
+  pointer-events: none;
+}
+#rhemaModal.rhema-chrome-hidden:not(.rhema-search-open) .rhema-header > * { opacity: 0; }
+.rhema-search-panel { margin-top: var(--rhema-header-h, 64px); }
 
 .rhema-title-block {
   display: flex;
@@ -16580,7 +16601,7 @@ body.rx-scroll-lock {
 }
 .rhema-top-chrome {
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: var(--rhema-header-h, 64px); left: 0; right: 0;
   z-index: 40;
   /* Opaque, no backdrop-filter — see .rhema-header. This bar is a GPU-composited
      layer (transform + will-change) pinned to the top of the reader. In an
@@ -16593,7 +16614,7 @@ body.rx-scroll-lock {
   background: var(--primary-light);
   transform: translateY(0);
   opacity: 1;
-  transition: transform 0.28s cubic-bezier(.2,.82,.18,1), opacity 0.2s ease;
+  transition: transform 0.34s cubic-bezier(.2,.82,.18,1), opacity 0.22s ease;
   will-change: transform;
 }
 .rhema-body {
@@ -16610,9 +16631,9 @@ body.rx-scroll-lock {
   /* Constant clearance for the overlaid bars — set from their measured heights by
      _initRhemaChromeMetrics(). Must NOT change when the bars hide (transform only),
      so the scroll geometry stays rock-solid during the show/hide animation. */
-  padding-top: var(--rhema-chrome-top, 62px);
+  padding-top: calc(var(--rhema-header-h, 64px) + var(--rhema-chrome-top, 62px));
   padding-bottom: calc(var(--rhema-chrome-bottom, 0px) + 8px);
-  scroll-padding-top: calc(var(--rhema-chrome-top, 62px) + 8px);
+  scroll-padding-top: calc(var(--rhema-header-h, 64px) + var(--rhema-chrome-top, 62px) + 8px);
 }
 .rhema-body.rhema-swipe-left .rhema-content-area,
 .rhema-body.rhema-swipe-right .rhema-content-area {
@@ -17554,7 +17575,8 @@ body.dark .atlas-alts strong { color: #e3b466; }
 #rhemaModal.picker-open .rhema-verse-nav { visibility: hidden; pointer-events: none; }
 #rhemaModal.rhema-chrome-hidden .rhema-top-chrome {
   opacity: 0;
-  transform: translateY(-102%); /* fully off — transform only, no layout change */
+  /* fully off (it sits below the header) — transform only, no layout change */
+  transform: translateY(calc(-102% - var(--rhema-header-h, 64px)));
   pointer-events: none;
 }
 #rhemaModal.rhema-chrome-hidden .rhema-verse-nav {
@@ -18142,7 +18164,7 @@ body.dark .rhema-reader-menu-btn {
 /* Prompt banner (slides down in) */
 .rhema-copy-banner {
   position: absolute;
-  top: 12px; left: 12px; right: 12px;
+  top: calc(var(--rhema-header-h, 64px) + 12px); left: 12px; right: 12px;
   z-index: 60;
   display: flex; align-items: center; gap: 10px;
   padding: 11px 12px 11px 14px;
