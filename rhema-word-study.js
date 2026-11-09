@@ -755,7 +755,9 @@
         ${multiSense && a.topI != null && a.total >= 2 ? `<div class="ws-fine">mostly “${esc(_senseName(entry, entry.senses[a.topI], a.topI))}” (${a.topN} of ${a.total} measured)</div>` : ''}
       </div>`).join('');
     const studyNotes = (entry.study?.authorNotes || []).map(a => `<div class="ws-author-note"><span class="material-symbols-outlined">edit_note</span><div><p><b>${esc(a.author)}.</b> ${esc(a.note)}</p>${a.refs?.length ? `<div class="ws-refs">${a.refs.map(r => _refChipFromKey(r, strongs)).join('')}</div>` : ''}</div></div>`).join('');
-    const note = studyNotes ? studyNotes : entry.audit?.author_note && !/definition|label|digest|entry/i.test(entry.audit.author_note)
+    // Only reviewed study notes — the older generated author note isn't shown
+    // when a study exists (it predates the theological review).
+    const note = studyNotes ? studyNotes : !entry.study && entry.audit?.author_note && !/definition|label|digest|entry/i.test(entry.audit.author_note)
       ? `<div class="ws-author-note"><span class="material-symbols-outlined">edit_note</span><p>${esc(entry.audit.author_note)}</p></div>
 `
       : '';
