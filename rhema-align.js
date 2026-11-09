@@ -219,6 +219,13 @@
     are: 'be', is: 'be', was: 'be', were: 'be', been: 'be', being: 'be', am: 'be', art: 'be',
     has: 'have', had: 'have', hath: 'have', having: 'have', hast: 'have',
     thee: 'you', thou: 'you', ye: 'you', thy: 'your', thine: 'your',
+    // Older English (KJV, ASV, NKJV quotations): the same words, older forms.
+    shew: 'show', shewed: 'show', shewn: 'show', shewing: 'show', shewest: 'show', sheweth: 'show',
+    spake: 'speak', drave: 'drive', drove: 'drive', brake: 'break', sware: 'swear', gat: 'get',
+    wrought: 'work', clave: 'cleave', slew: 'slay', slain: 'slay', abode: 'abide', bare: 'bear',
+    holpen: 'help', digged: 'dig', saith: 'say', sayest: 'say', doth: 'do', dost: 'do', didst: 'do',
+    wilt: 'will', shalt: 'shall', canst: 'can', couldest: 'could', wouldest: 'would', shouldest: 'should',
+    mayest: 'may', mightest: 'might', knowest: 'know', wast: 'be', wert: 'be',
   };
   function stem(word) {
     let w = String(word || '').toLowerCase().replace(/[’']s$/, '').replace(/[^a-z]/g, '');
@@ -231,8 +238,12 @@
       else if (w.length > 5 && w.endsWith('ingly')) w = w.slice(0, -5);
       else if (w.length > 5 && w.endsWith('edly')) w = w.slice(0, -4);
       else if (w.length > 4 && w.endsWith('ing')) w = w.slice(0, -3);
-      else if (w.length > 4 && w.endsWith('eth')) w = w.slice(0, -3);
-      else if (w.length > 3 && w.endsWith('ed')) w = w.slice(0, -2);
+      // Older verb endings (curseth, believest, lovedst): strip once, stop.
+      else if (w.length > 4 && w.endsWith('eeth')) { w = w.slice(0, -2); break; }
+      else if (w.length > 4 && w.endsWith('eth')) { w = w.slice(0, -3); break; }
+      else if (w.length > 5 && w.endsWith('edst')) { w = w.slice(0, -4); break; }
+      else if (w.length > 5 && w.endsWith('est') && !/(ll|nn|ss|tt)est$/.test(w) && !/^(be|gu|hon|inter|man|pri|que|re|te|we|wr|ch|for|gr|harv|j|mol|n|r|v)est$/.test(w)) { w = w.slice(0, -3); break; }
+      else if (w.length > 3 && w.endsWith('ed')) { w = w.slice(0, -2); break; }
       else if (w.length > 4 && /(ss|sh|ch|x|z)es$/.test(w)) w = w.slice(0, -2);
       else if (w.length > 3 && w.endsWith('s') && !w.endsWith('ss') && !w.endsWith('us') && !w.endsWith('is')) w = w.slice(0, -1);
       else if (w.length > 4 && w.endsWith('ly')) w = w.slice(0, -2);
@@ -303,6 +314,9 @@
         func: new Set((direct && direct.length && !directContent.length ? direct
           : (it.bsb == null && !gloss.length ? glossAll : [])).map(t => t.stem)),
         meanings,
+        // How this version renders the word elsewhere (stem sequences, most
+        // frequent first) — see learnRenderings().
+        learned: Array.isArray(it.learned) ? it.learned.filter(q => q && q.length) : [],
       };
     });
 
@@ -316,11 +330,14 @@
       if (r < n) return span[r][0] - (r - i) * ratio;
       return i * ratio;
     };
-    const claim = (i, s, e, kind) => {
+    // via: which step found it — phrase (the Berean wording verbatim), word (a
+    // content word of it), learned (this version's own wording), lexicon,
+    // second (word the Berean leaves out), grammar, gap (inferred).
+    const claim = (i, s, e, kind, via) => {
       for (let k = s; k <= e; k++) used[k] = true;
       span[i] = [s, e];
       // start/end: character range in versionText, for exact highlighting.
-      out[i] = { text: toks.slice(s, e + 1).map(t => t.raw).join(' '), kind, start: toks[s].start, end: toks[e].end };
+      out[i] = { text: toks.slice(s, e + 1).map(t => t.raw).join(' '), kind, via, start: toks[s].start, end: toks[e].end };
     };
     // All unused contiguous occurrences of a stem sequence.
     const findSeq = (seq) => {
@@ -346,7 +363,7 @@
         if (hits.length === 1 || pass === 1) {
           const exp = expectedAt(i);
           const s = hits.reduce((b, h) => (Math.abs(h - exp) < Math.abs(b - exp) ? h : b), hits[0]);
-          claim(i, s, s + seq.length - 1, 'match');
+          claim(i, s, s + seq.length - 1, 'match', 'phrase');
         }
       }
     }
@@ -377,13 +394,49 @@
     for (let i = 0; i < n; i++) {
       if (span[i] || prep[i].none || !prep[i].content.size) continue;
       const j = nearest(i, prep[i].content, false, wide);
-      if (j >= 0) { const [s, e] = grow(i, j, prep[i].content); claim(i, s, e, 'match'); }
+      if (j >= 0) { const [s, e] = grow(i, j, prep[i].content); claim(i, s, e, 'match', 'word'); }
+    }
+    // Phase 2b — this version's own wording for the word, learned from the
+    // other verses of the chapter ("teachers of the law", "offences"). The
+    // most frequent rendering that occurs near the expected place wins.
+    for (let i = 0; i < n; i++) {
+      if (span[i] || prep[i].none || !prep[i].learned.length) continue;
+      const exp = expectedAt(i);
+      let best = null;
+      for (const seq of prep[i].learned) {
+        for (const h of findSeq(seq)) {
+          const d = Math.abs(h - exp);
+          if (d <= wide && (!best || d < best.d)) best = { h, d, len: seq.length };
+        }
+        if (best) break;
+      }
+      if (best) claim(i, best.h, best.h + best.len - 1, 'match', 'learned');
     }
     // Phase 3 — wider lexicon meanings for content words still open.
     for (let i = 0; i < n; i++) {
-      if (span[i] || prep[i].none || !prep[i].meanings.size) continue;
+      // Content words only: a function word's lexicon list ("also, moreover,
+      // now…") would grab unrelated words across the sentence.
+      if (span[i] || prep[i].none || !prep[i].meanings.size || !prep[i].content.size) continue;
       const j = nearest(i, prep[i].meanings, false, wide);
-      if (j >= 0) claim(i, j, j, 'match');
+      if (j >= 0) claim(i, j, j, 'match', 'lexicon');
+    }
+    // Phase 3c — a word the Berean leaves without English of its own (its
+    // base text lacks it, or folds it into a phrase) can still have its own
+    // word in this version ("lo", "trespasses"): try this version's learned
+    // wording, the gloss and the lexicon meanings — close to where expected.
+    const near = Math.max(4, Math.ceil(toks.length * 0.25));
+    for (let i = 0; i < n; i++) {
+      if (span[i] || !prep[i].none || !prep[i].content.size) continue;
+      const exp = expectedAt(i);
+      let best = null;
+      for (const seq of prep[i].learned) {
+        for (const h of findSeq(seq)) { const d = Math.abs(h - exp); if (d <= near && (!best || d < best.d)) best = { h, d, len: seq.length }; }
+        if (best) break;
+      }
+      if (best) { claim(i, best.h, best.h + best.len - 1, 'match', 'second'); continue; }
+      let j = prep[i].content.size ? nearest(i, prep[i].content, false, near) : -1;
+      if (j < 0 && prep[i].meanings.size) j = nearest(i, prep[i].meanings, false, near);
+      if (j >= 0) claim(i, j, j, 'match', 'second');
     }
     // Phase 3b — a grammar-word rendering ("His", "to them") that occurs only
     // once in the sentence is unambiguous even if it sits a few words away.
@@ -393,7 +446,7 @@
       const hits = [];
       for (const seq of seqs) for (const h of findSeq(seq)) hits.push([h, seq.length]);
       if (hits.length === 1 && Math.abs(hits[0][0] - expectedAt(i)) <= Math.max(6, toks.length * 0.4)) {
-        claim(i, hits[0][0], hits[0][0] + hits[0][1] - 1, 'match');
+        claim(i, hits[0][0], hits[0][0] + hits[0][1] - 1, 'match', 'grammar');
       }
     }
     // Phase 4 — Greek function words whose rendering IS a grammar word (καί
@@ -402,7 +455,7 @@
     for (let i = 0; i < n; i++) {
       if (span[i] || prep[i].none || !prep[i].func.size) continue;
       const j = nearest(i, prep[i].func, true, 2.5);
-      if (j >= 0) claim(i, j, j, 'match');
+      if (j >= 0) claim(i, j, j, 'match', 'grammar');
     }
     // Phase 5 — a content word with no lexical match, alone in its slot: if
     // the anchors on either side leave a short run of unclaimed English with
@@ -424,10 +477,39 @@
       while (s <= e && toks[s].grammar) s++;
       while (e >= s && toks[e].grammar) e--;
       if (s > e || e - s > 4) continue;
-      claim(i, s, e, 'inferred');
+      claim(i, s, e, 'inferred', 'gap');
     }
     for (let i = 0; i < n; i++) if (!span[i] && prep[i].none) out[i] = { text: '', kind: 'none' };
     return out;
+  }
+
+  // ── Version-specific renderings ───────────────────────────────────────
+  // After bridging some verses of a version, record how it rendered each
+  // Greek word (items[i].key, e.g. a Strong's number): its content stems as
+  // a sequence. Confident matches count 1; position-inferred ones ½, so an
+  // inference only counts once the version repeats it.
+  function learnRenderings(items, out, into) {
+    for (let i = 0; i < items.length; i++) {
+      const o = out[i], key = items[i] && items[i].key;
+      if (!key || !o || !o.text || (o.kind !== 'match' && o.kind !== 'inferred')) continue;
+      const t = tokenizeEnglish(o.text);
+      let a = 0, b = t.length - 1;
+      while (a <= b && t[a].grammar) a++;
+      while (b >= a && t[b].grammar) b--;
+      if (a > b || b - a > 4) continue;
+      const seq = t.slice(a, b + 1).map(x => x.stem).join(' ');
+      if (!into.has(key)) into.set(key, new Map());
+      const m = into.get(key);
+      m.set(seq, (m.get(seq) || 0) + (o.kind === 'match' ? 1 : 0.5));
+    }
+    return into;
+  }
+  // The learned renderings for a key worth trusting, most frequent first.
+  function learnedFor(table, key, max = 6) {
+    const m = table && table.get(key);
+    if (!m) return [];
+    return [...m.entries()].filter(([, c]) => c >= 1).sort((x, y) => y[1] - x[1] || y[0].length - x[0].length)
+      .slice(0, max).map(([seq]) => seq.split(' '));
   }
 
   // Exact Berean display for the BSB itself.
@@ -595,7 +677,7 @@
     return _lsjForm(toks[0]) === lk || (toks[1] && _lsjForm(toks[0] + toks[1]) === lk);
   }
 
-  const api = { lsjHeadwordMatches, mmHeadwordMatches, buildLemmaIndex, strongsForLemma, lemmaKey, translitGreek, cleanSurface, STRONGS_GROUPS, canon, alignGreekToRows, bridgeToVersion, bsbRenderings, bsbDirect, bsbFull, stem, tokenizeEnglish, isGrammar };
+  const api = { lsjHeadwordMatches, mmHeadwordMatches, buildLemmaIndex, strongsForLemma, lemmaKey, translitGreek, cleanSurface, STRONGS_GROUPS, canon, alignGreekToRows, bridgeToVersion, learnRenderings, learnedFor, bsbRenderings, bsbDirect, bsbFull, stem, tokenizeEnglish, isGrammar };
   root.RhemaAlign = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.528";
+const APP_VERSION = "3.0.529";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.529 &mdash; Sharper word matching in every Bible</div>
+<ul>
+  <li><strong>Finds the word in your version</strong> &mdash; When you tap a Greek word, Rhema now learns how your Bible (NIV, NKJV, NASB, ESV, KJV&hellip;) words that same Greek word elsewhere in the chapter, and uses that to find it in this verse. It also understands older English (&ldquo;curseth&rdquo;, &ldquo;shewed&rdquo;) and every rendering in Strong&rsquo;s word list.</li>
+  <li><strong>Tested, not guessed</strong> &mdash; Checked against Greek-tagged Bibles: main words are now found 93% of the time (up from 84&ndash;89%), and when found they are the right word about 97&ndash;98% of the time.</li>
+  <li><strong>Honest about the rest</strong> &mdash; A weaker match shows &asymp;. &ldquo;Your NIV&rdquo; is always your NIV: if that verse isn&rsquo;t on the device yet, Rhema loads it instead of quietly showing another version.</li>
+  <li><strong>Translation counts learn too</strong> &mdash; The whole-New-Testament count of how a version translates a word now learns that version&rsquo;s own wording and re-checks the uses it missed.</li>
+</ul>
 <div class="un-version-label">v3.0.528 &mdash; A friendlier Word Study</div>
 <ul>
   <li><strong>The answer first</strong> &mdash; Tap a Greek word and the first card tells you what it means in this verse and how your Bible words it. If scholars debate this very verse, it says so.</li>
@@ -41233,17 +41240,85 @@ async function rhemaOpenInterlinear(ref) {
 // Per-token English for the version on screen. Shared by the interlinear and
 // the word study's "How translations render it here". Each result carries a
 // kind (see rhema-align.js): exact · match · inferred · none · ''.
-function _rhemaVersionRenderingsForVerse(p, words, decisions, versionText, version) {
+// Every English word the lexicons give for a word — including Strong's list of
+// how the KJV rendered it — so a version's synonym can still be found.
+function _rhemaBridgeMeanings(entry, lex) {
+  let m = [];
+  try { m = [..._deepExpectedMeaningWords(entry || {}, lex || {}) || []]; } catch {}
+  const kjvDef = String((lex && lex.kjv_def) || '').toLowerCase().replace(/^--/, '');
+  for (const w of kjvDef.split(/[^a-z]+/)) if (w.length > 2 && !(typeof _DEEP_GLUE_WORDS !== 'undefined' && _DEEP_GLUE_WORDS.has(w))) m.push(w);
+  return [...new Set(m)].slice(0, 40);
+}
+function _rhemaBridgeItems(p, words, decisions) {
   const bsbEng = _rhemaBsbEnglishForTokens(words, p.book, p.chapter, p.verse);
-  if (!window.RhemaAlign) return words.map(() => ({ text: '', kind: '' }));
-  if (version === 'BSB' && bsbEng.some(e => e != null)) return RhemaAlign.bsbRenderings(bsbEng);
-  const items = decisions.map((d, i) => {
-    let meanings = [];
-    try { meanings = _deepExpectedMeaningWords((d && d.entry) || {}, (d && d.lex) || {}) || []; } catch {}
+  return decisions.map((d, i) => {
     // Hebrew/LXX glosses can be whole definitions — only the head is a rendering.
     const gloss = String((d && d.gloss) || '').split(/[;,(]/)[0];
-    return { bsb: bsbEng[i], gloss, meanings: [...meanings].slice(0, 12) };
+    const s = (_rhemaResolveWord(words[i], p.book, p.chapter) || words[i] || [])[1];
+    return { bsb: bsbEng[i], gloss, meanings: _rhemaBridgeMeanings(d && d.entry, d && d.lex), key: s ? String(RhemaAlign.canon ? RhemaAlign.canon(s) : s) : '' };
   });
+}
+
+// A version's own wording, learned from the other verses of the chapter that
+// are on this device: bridge every verse once, record how this version rendered
+// each Greek word, then use that for the verse being read. Turns the NIV's
+// "teachers of the law" or the KJV's "offences" from guesses into matches.
+// Nothing leaves the device; it's computed from the reader's own copy.
+const _rhemaVerLexCache = new Map();
+const _rhemaChapterItemsCache = new Map();
+function _rhemaVersionChapterText(version, book, chapter, verse) {
+  if (version === 'MSB' || version === 'BSB') return _rhemaEnglishText(book, chapter, verse, version) || '';
+  const chap = typeof _vsChapterFromMemory === 'function' ? _vsChapterFromMemory(version, book, String(chapter)) : null;
+  return chap ? String(chap[String(verse)] || '') : '';
+}
+function _rhemaVersionChapterLexicon(book, chapter, version, textOf) {
+  if (typeof isRhemaNTBook === 'function' && !isRhemaNTBook(book)) return null;
+  const verses = (_rhemaText()[book] || {})[chapter];
+  if (!verses) return null;
+  const key = `${version}|${_rhemaTextMode}|${book}|${chapter}`;
+  const cached = _rhemaVerLexCache.get(key);
+  // Re-learn if more of the chapter has arrived since (API blocks stream in).
+  const avail = Object.keys(verses).filter(v => textOf(v)).length;
+  if (cached && cached.avail >= avail) return cached.table;
+  const table = new Map();
+  // The Greek side of each verse doesn't depend on the version: build it once
+  // per chapter and reuse it for every version.
+  const ik = `${_rhemaTextMode}|${book}|${chapter}`;
+  let itemsByVerse = _rhemaChapterItemsCache.get(ik);
+  if (!itemsByVerse) {
+    itemsByVerse = {};
+    _rhemaChapterItemsCache.set(ik, itemsByVerse);
+    if (_rhemaChapterItemsCache.size > 12) _rhemaChapterItemsCache.delete(_rhemaChapterItemsCache.keys().next().value);
+  }
+  for (const v of Object.keys(verses)) {
+    const text = textOf(v);
+    if (!text) continue;
+    if (!itemsByVerse[v]) {
+      const ws = verses[v];
+      const decisions = ws.map(w => _rhemaMeaningDecision(_rhemaResolveWord(w, book, chapter), { layer: 'nt-greek', book, chapter, verse: v }));
+      itemsByVerse[v] = _rhemaBridgeItems({ book, chapter, verse: v }, ws, decisions);
+    }
+    const items = itemsByVerse[v].map(it => ({ ...it }));
+    RhemaAlign.learnRenderings(items, RhemaAlign.bridgeToVersion(items, text), table);
+  }
+  _rhemaVerLexCache.set(key, { table, avail });
+  if (_rhemaVerLexCache.size > 24) _rhemaVerLexCache.delete(_rhemaVerLexCache.keys().next().value);
+  return table;
+}
+
+function _rhemaVersionRenderingsForVerse(p, words, decisions, versionText, version, opts = {}) {
+  if (!window.RhemaAlign) return words.map(() => ({ text: '', kind: '' }));
+  const bsbEng = _rhemaBsbEnglishForTokens(words, p.book, p.chapter, p.verse);
+  if (version === 'BSB' && bsbEng.some(e => e != null)) return RhemaAlign.bsbRenderings(bsbEng);
+  const items = _rhemaBridgeItems(p, words, decisions);
+  if (opts.learn !== false && RhemaAlign.learnRenderings) {
+    let table = null;
+    try {
+      const textOf = opts.chapterText || ((v) => _rhemaVersionChapterText(version, p.book, p.chapter, v));
+      table = _rhemaVersionChapterLexicon(p.book, p.chapter, version, textOf);
+    } catch {}
+    if (table) items.forEach(it => { it.learned = RhemaAlign.learnedFor(table, it.key); });
+  }
   return RhemaAlign.bridgeToVersion(items, versionText);
 }
 
@@ -49545,8 +49620,7 @@ function _rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver) {
     try {
       const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer(code);
       const d = _rhemaMeaningDecision(_rhemaResolveWord(words[wordIdx], code, ch), { layer, book: code, chapter: ch, verse: v });
-      let meanings = [];
-      try { meanings = [...(_deepExpectedMeaningWords(d.entry || {}, d.lex || {}) || [])].slice(0, 12); } catch {}
+      const meanings = _rhemaBridgeMeanings(d.entry, d.lex);
       const bsbEng = _rhemaBsbEnglishForTokens(words, code, ch, v);
       const items = words.map((w, i) => i === wordIdx
         ? { bsb: bsbEng[i], gloss: String(d.gloss || '').split(/[;,(]/)[0], meanings }

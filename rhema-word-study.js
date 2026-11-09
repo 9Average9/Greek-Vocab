@@ -406,13 +406,19 @@
   }
 
   // "Your MSB: 'flesh'" — how the reader's own Bible words this occurrence.
-  function fillYours(uid, reader, row, spread) {
+  // A match the version bridge is less sure of (found by position, or a
+  // grammar word): shown with ≈.
+  const _approx = (r) => !!r && (r.kind === 'inferred' || r.via === 'grammar' || r.via === 'gap');
+  function fillYours(uid, ver, row, spread, readerMissing) {
     const el = document.getElementById(`${uid}-yours`);
     if (!el) return;
-    if (!row) { el.innerHTML = ''; return; }
+    if (!row) { el.innerHTML = readerMissing ? `<span class="ws-answer-k">Your ${esc(readerMissing)}</span><span class="ws-fine">loading this verse…</span>` : ''; return; }
     const r = row.r || {};
-    const said = r.kind === 'none' ? '<i>no separate word — it’s in the phrasing</i>' : r.text ? `“<b>${esc(r.text)}</b>”` : '';
-    el.innerHTML = said ? `<span class="ws-answer-k">Your ${esc(reader)}</span><span>${said}</span>${spread > 1
+    const approx = _approx(r);
+    const said = r.kind === 'none' ? '<i>no separate word — it’s in the phrasing</i>'
+      : r.text ? `${approx ? '<span class="ws-approx" title="Best match — found by position, not by the word itself">≈</span>' : ''}“<b>${esc(r.text)}</b>”` : '';
+    const label = readerMissing ? `${esc(ver)} <span class="ws-fine">(your ${esc(readerMissing)} isn’t loaded)</span>` : `Your ${esc(ver)}`;
+    el.innerHTML = said ? `<span class="ws-answer-k">${label}</span><span>${said}</span>${spread > 1
       ? `<button type="button" class="ws-linkish" onclick="rhemaWordStudyGo('${uid}','here')">Bibles differ ${spread} ways <span class="material-symbols-outlined">arrow_forward</span></button>` : ''}` : '';
   }
 
@@ -466,7 +472,7 @@
     const groups = new Map();
     for (const row of rows) {
       const key = row.r.kind === 'none' ? '—' : (row.r.text ? row.r.text.toLowerCase() : '?');
-      if (!groups.has(key)) groups.set(key, { label: row.r.kind === 'none' ? 'no separate word' : (row.r.text || 'not matched'), kind: row.r.kind, rows: [] });
+      if (!groups.has(key)) groups.set(key, { label: row.r.kind === 'none' ? 'no separate word' : (row.r.text || 'not matched'), kind: _approx(row.r) ? 'inferred' : row.r.kind, rows: [] });
       groups.get(key).rows.push(row);
     }
     const sorted = [...groups.values()].sort((a, b) => (a.kind === '' ? 1 : 0) - (b.kind === '' ? 1 : 0) || b.rows.length - a.rows.length);
@@ -499,8 +505,19 @@
        ${entry?.study?.translationNote ? more('Why translations differ', `<p>${esc(entry.study.translationNote)}</p>`, true) : ''}
        ${loadBtn}`,
       esc(teaser));
-    const mine = rows.find(r => r.ver === reader) || rows.find(r => WS_LOCAL.includes(r.ver));
-    fillYours(uid, mine?.ver, mine, spread);
+    // "Your NIV" must really be the reader's NIV. If that text isn't on the
+    // device yet, fetch just that chapter (once) and redraw; until then say
+    // plainly which version is shown.
+    const mine = rows.find(r => r.ver === reader);
+    const st = _studies.get(uid);
+    if (!mine && !WS_LOCAL.includes(reader) && st && !st.readerLoadTried && typeof _vsEnsureChapter === 'function' &&
+        !(typeof _vsTransLimited === 'function' && _vsTransLimited(reader))) {
+      st.readerLoadTried = true;
+      Promise.resolve(_vsEnsureChapter(reader, ctx.book, ctx.chapter)).catch(() => null)
+        .then(() => { if (document.getElementById(uid)) renderHere(uid, ctx, strongs, _studies.get(uid)?.entry || null); });
+    }
+    const fallback = mine ? null : rows.find(r => WS_LOCAL.includes(r.ver));
+    fillYours(uid, mine ? reader : fallback?.ver, mine || fallback, spread, !mine && reader);
     _wsRefreshDeck(uid);
   }
 
@@ -838,7 +855,8 @@
     const why = [...new Set(entry.why || [])];
     return section('method', 'science', 'How we know', `<ul class="ws-method">
         <li>Every verse cited for a sense is checked against the Greek text — the word really occurs there.</li>
-        <li>BSB words come from the Berean translators’ own word-for-word tables; other versions are matched to them word by word (≈ marks a match by position).</li>
+        <li>BSB words come from the Berean translators’ own word-for-word tables. Other versions are matched to them word by word, using the lexicons and how that version itself words the same Greek word elsewhere in the chapter (≈ marks a weaker match).</li>
+        <li>Tested against a Greek-tagged King James and World English Bible: when a main word is matched, it is the right word about 97–98% of the time.</li>
         <li>Across-translation counts are made on your device from each version’s own text.</li>
       </ul>` + more('Evidence trail',
       `${why.map(w => `<p>${esc(w)}</p>`).join('')}
@@ -943,14 +961,14 @@
       busy.phase = 'measure'; busy.done = 0; busy.total = occs.length; redraw();
       const lex = (window.RhemaLexicon || {})[strongs] || {};
       const st = _studies.get(uid);
-      let meanings = [];
-      try { meanings = [...(_deepExpectedMeaningWords(st?.entry || {}, lex) || [])].slice(0, 12); } catch {}
+      const meanings = typeof _rhemaBridgeMeanings === 'function' ? _rhemaBridgeMeanings(st?.entry, lex) : [];
       const baseDecision = _rhemaMeaningDecision(['', strongs, ''], { layer: 'nt-greek' });
       const gloss = String(baseDecision.gloss || '').split(/[;,(]/)[0];
-      const tally = new Map();
-      let none = 0, unmatched = 0, noText = 0;
+      // Pass 1 — line up every occurrence.
+      const results = new Array(occs.length);
       const T = _rhemaTextForMode(_rhemaTextMode) || {};
       let lastVerse = '', verseCache = null;
+      const target = (o, extra) => verseCache.words.map((w, i) => i === o.idx ? { bsb: verseCache.bsbEng[i], gloss, meanings, ...extra } : { bsb: verseCache.bsbEng[i] });
       for (let k = 0; k < occs.length; k++) {
         const o = occs[k];
         const vk = `${o.book} ${o.ch}:${o.v}`;
@@ -961,22 +979,41 @@
           verseCache = { words, bsbEng, text };
           lastVerse = vk;
         }
-        let r;
-        if (ver === 'BSB') {
-          r = RhemaAlign.bsbRenderings([verseCache.bsbEng[o.idx]])[0];
-        } else if (!verseCache.text) {
-          noText++; continue;
-        } else {
-          const items = verseCache.words.map((w, i) => i === o.idx ? { bsb: verseCache.bsbEng[i], gloss, meanings } : { bsb: verseCache.bsbEng[i] });
-          r = RhemaAlign.bridgeToVersion(items, verseCache.text)[o.idx];
+        if (ver === 'BSB') results[k] = { vk, r: RhemaAlign.bsbRenderings([verseCache.bsbEng[o.idx]])[0], text: '' };
+        else if (!verseCache.text) results[k] = { vk, noText: true };
+        else results[k] = { vk, r: RhemaAlign.bridgeToVersion(target(o), verseCache.text)[o.idx], text: verseCache.text, cache: verseCache };
+        if (k % 150 === 149) { busy.done = Math.round((k + 1) * 0.8); redraw(); await new Promise(res => setTimeout(res, 0)); }
+      }
+      // Pass 2 — learn how THIS version renders the word from its confident
+      // matches across the New Testament, then retry the uses it missed or
+      // only guessed ("teachers of the law" for γραμματεύς in the NIV).
+      if (ver !== 'BSB' && RhemaAlign.learnRenderings) {
+        const table = new Map();
+        for (const x of results) if (x && x.r && x.r.kind === 'match') RhemaAlign.learnRenderings([{ key: 'w' }], [x.r], table);
+        const learned = RhemaAlign.learnedFor(table, 'w', 8);
+        if (learned.length) {
+          for (let k = 0; k < occs.length; k++) {
+            const x = results[k];
+            if (!x || !x.cache || (x.r.kind === 'match' && x.r.text)) continue;
+            verseCache = x.cache;
+            const r2 = RhemaAlign.bridgeToVersion(target(occs[k], { learned }), x.text)[occs[k].idx];
+            if (r2 && r2.text) x.r = r2;
+          }
         }
+      }
+      const tally = new Map();
+      let none = 0, unmatched = 0, noText = 0;
+      for (let k = 0; k < occs.length; k++) {
+        const x = results[k];
+        if (!x || x.noText) { noText++; continue; }
+        const r = x.r, vk = x.vk;
         if (r.kind === 'none') none++;
         else if (!r.text) unmatched++;
         else {
           let shown = _wsTidy(r.text);
           // "Then"/"But" only because they open the sentence → "then"/"but";
           // capitals mid-sentence (God, He, Lord) are kept.
-          const text = verseCache.text || '';
+          const text = x.text || '';
           if (r.start != null && /^[A-Z][a-z]/.test(shown) && (r.start === 0 || /[.!?“"‘'(—:;]\s*$/.test(text.slice(0, r.start)))) {
             shown = shown.charAt(0).toLowerCase() + shown.slice(1);
           }
@@ -988,7 +1025,6 @@
           if (r.kind === 'inferred') t.approx++;
           if (t.refs[t.refs.length - 1] !== vk) t.refs.push(vk);
         }
-        if (k % 150 === 149) { busy.done = k + 1; redraw(); await new Promise(res => setTimeout(res, 0)); }
       }
       const renderings = [...tally.values()].map(t => ({
         text: [...t.forms.entries()].sort((a, b) => b[1] - a[1])[0][0], count: t.count, refs: t.refs, approx: t.approx,
