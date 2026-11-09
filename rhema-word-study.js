@@ -1245,11 +1245,11 @@
   const TOUR_KEY = 'rhemaWsTourDone';
   const TOUR = [
     { sel: '.ws-hero', title: 'The answer first', text: 'Tap any Greek word and this is what you get: what it means right here, and how your Bible words it. Often that’s all you need!' },
-    { sel: '.ws-depth', title: 'How deep?', text: '<b>Quick</b> is just the answer. <b>Study</b> adds every meaning and how Bibles translate it. <b>Deep</b> adds its history, the dictionaries, and how we know.' },
+    { sel: '.ws-depth', pose: 'think', title: 'How deep?', text: '<b>Quick</b> is just the answer. <b>Study</b> adds every meaning and how Bibles translate it. <b>Deep</b> adds its history, the dictionaries, and how we know.' },
     { sel: '.ws-dtabs', title: 'Swipe the cards', text: 'Swipe sideways (or tap a tab): <b>Meanings</b>, <b>This verse</b>, <b>Translations</b> and <b>Authors</b>, plus more cards in Deep.' },
-    { sel: '.ws-save', title: 'Keep a meaning', text: 'Tap <b>Save</b> on a meaning you want to remember. The bookmark up top (or Saved meanings in the menu) shows them all.' },
-    { sel: '#rhemaTabParsing', global: true, title: 'Parsing', text: 'Breaks down this exact form of the word, like its tense, voice and mood, in plain words. Tap a tense, voice or mood to see an example.' },
-    { sel: '#rhemaTabOcc', global: true, title: 'Occurrences', text: 'Every place the word shows up, counted book by book. Tap a book to read those verses.' },
+    { sel: '.ws-save', pose: 'thumbs', title: 'Keep a meaning', text: 'Tap <b>Save</b> on a meaning you want to remember. The bookmark up top (or Saved meanings in the menu) shows them all.' },
+    { sel: '#rhemaTabParsing', global: true, pose: 'inspect', title: 'Parsing', text: 'Breaks down this exact form of the word, like its tense, voice and mood, in plain words. Tap a tense, voice or mood to see an example.' },
+    { sel: '#rhemaTabOcc', global: true, pose: 'inspect', title: 'Occurrences', text: 'Every place the word shows up, counted book by book. Tap a book to read those verses.' },
     { sel: '#rhemaAddToWordLogBtn', global: true, title: 'Word Log', text: 'Want to remember this word? Add it to your Word Log and find it later in the menu.' },
   ];
   let _tour = null;
@@ -1303,7 +1303,7 @@
     const th = tip.offsetHeight || 150;
     const top = below + th < window.innerHeight - 8 ? below : Math.max(8 + ROOM, r.top - th - 14);
     tip.style.top = `${top}px`;
-    window.coachGuideShow?.(document.body, tip, { last });
+    window.coachGuideShow?.(document.body, tip, { last, pose: step.pose || (_tour.i === 0 ? 'wow' : last ? 'cheer' : 'point') });
   }
   window.rhemaWordStudyTourNext = function () { if (_tour) { _tour.i++; _tourShow(); } };
   window.rhemaWordStudyTourEnd = _tourEnd;
