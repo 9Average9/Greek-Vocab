@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.530";
+const APP_VERSION = "3.0.531";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.531 &mdash; More word studies read with grace</div>
+<ul>
+  <li><strong>Free Grace review continues</strong> &mdash; 153 word studies now read the Free Grace way where they take a theological direction: faith alone for eternal life, rewards and discipleship kept distinct from it, and warnings to believers about discipline and reward. Meanings, verses and sources are unchanged and still verified.</li>
+</ul>
 <div class="un-version-label">v3.0.530 &mdash; Word studies, read with grace</div>
 <ul>
   <li><strong>Free Grace reading</strong> &mdash; Where a word study takes a theological direction it now leans Free Grace: eternal life is a free gift received by faith alone; repentance is a change of mind, not an added condition; assurance rests on Christ&rsquo;s promise; rewards, inheritance and discipleship are distinguished from receiving eternal life; warnings to believers concern discipline and loss of reward. 97 studies revised so far, including &mu;&epsilon;&tau;&alpha;&nu;&omicron;&#941;&omega;, &pi;&iota;&sigma;&tau;&epsilon;&#973;&omega;, &sigma;&#974;&zeta;&omega;, &kappa;&lambda;&eta;&rho;&omicron;&nu;&omicron;&mu;&#941;&omega;, &mu;&#941;&nu;&omega;, &#7956;&rho;&gamma;&omicron;&nu; and &beta;&#8134;&mu;&alpha;; more follow.</li>
@@ -48696,7 +48700,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.530';
+const DEEP_LEXICON_VERSION = '3.0.531';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
