@@ -38932,3 +38932,138 @@ html.dark .ws-tour-tip, body.dark .ws-tour-tip { background: #1f2937; color: #e5
 .ws-deck, .ws-dtabs, .ws-mx-picks { position: relative; }
 .ws-approx { margin-right: 2px; font-weight: 900; color: #b45309; }
 html.dark .ws-approx, body.dark .ws-approx { color: #fbbf24; }
+
+/* ── Tour guide mascot (coachGuideShow) ──────────────────────────────────── */
+.coach-guide {
+  position: absolute;
+  left: 0; top: 0;
+  width: 96px;
+  height: calc(96px * 371 / 480 + 8px);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .2s ease;   /* position is set every frame to follow the card */
+  z-index: 3;
+}
+.coach-guide.coach-guide-fixed { position: fixed; z-index: 100004; }
+.coach-guide.on { opacity: 1; visibility: visible; }
+.coach-guide.on.is-waiting { opacity: 0; }
+.coach-guide-fig {
+  position: absolute;
+  left: 0; top: 0;
+  width: 96px;
+  height: calc(96px * 371 / 480);
+  transform-origin: 42% 96%;
+  z-index: 2;
+}
+.coach-guide-bob {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  animation: coachGuideBob 3.2s ease-in-out infinite;
+}
+.coach-guide-body,
+.coach-guide-spark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.coach-guide-body { filter: drop-shadow(0 5px 7px rgba(40, 22, 8, .22)); }
+.coach-guide-spark {
+  transform-origin: 77% 12%;
+  animation: coachGuideSpark 1.7s ease-in-out infinite;
+}
+/* A light sweep across the magnifying-glass lens now and then. */
+.coach-guide-glint {
+  position: absolute;
+  left: 81.6%; top: 27.4%;
+  width: 12.4%; height: 16%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.coach-guide-glint::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.9) 50%, transparent 62%);
+  transform: translateX(-130%);
+  animation: coachGuideGlint 4.2s ease-in-out 1.2s infinite;
+}
+/* Speech-bubble tail: points from the card up to the guide. */
+.coach-guide-tail {
+  position: absolute;
+  left: 40px;
+  bottom: -8px;
+  width: 15px; height: 15px;
+  background: var(--guide-tail-bg, var(--card-color, #fff));
+  border-top: 1px solid var(--guide-tail-border, transparent);
+  border-left: 1px solid var(--guide-tail-border, transparent);
+  border-top-left-radius: 3px;
+  transform: rotate(45deg);
+  z-index: 1;
+}
+.coach-guide-fig.is-pop { animation: coachGuidePop .66s cubic-bezier(.34,1.56,.64,1) both; }
+.coach-guide-fig.is-hop { animation: coachGuideHop .55s cubic-bezier(.3,.7,.4,1) both; }
+.coach-guide.is-cheer .coach-guide-bob { animation: coachGuideCheer 1s ease-in-out .35s 2, coachGuideBob 3.2s ease-in-out 2.35s infinite; }
+.coach-guide.is-cheer .coach-guide-spark { animation-duration: .8s; }
+
+/* The tour card is his speech bubble: its words arrive as he "speaks". */
+.coach-bubble.coach-says :is(.rhema-coach-title, .app-coach-title, h4) { animation: coachGuideSays .36s ease both; }
+.coach-bubble.coach-says :is(.rhema-coach-body, .app-coach-body, p) { animation: coachGuideSays .42s ease .07s both; }
+.rhema-coach-card.coach-bubble { max-height: calc(100% - 40px - 82px); }
+
+@keyframes coachGuideBob {
+  0%, 100% { transform: translateY(0) rotate(-1.6deg); }
+  50% { transform: translateY(-5px) rotate(1.6deg); }
+}
+@keyframes coachGuideSpark {
+  0%, 100% { opacity: .35; transform: scale(.82) rotate(-6deg); }
+  50% { opacity: 1; transform: scale(1.1) rotate(4deg); }
+}
+@keyframes coachGuideGlint {
+  0%, 62% { transform: translateX(-130%); }
+  86%, 100% { transform: translateX(130%); }
+}
+@keyframes coachGuidePop {
+  0% { opacity: 0; transform: translateY(26px) scale(.45) rotate(-12deg); }
+  55% { opacity: 1; transform: translateY(-9px) scale(1.07) rotate(4deg); }
+  78% { transform: translateY(2px) scale(.97) rotate(-1deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes coachGuideHop {
+  0% { transform: none; }
+  28% { transform: translateY(-13px) rotate(-5deg) scale(1.02, .98); }
+  52% { transform: translateY(0) scale(1.06, .92); }
+  72% { transform: translateY(-3px) scale(.99, 1.02); }
+  100% { transform: none; }
+}
+@keyframes coachGuideCheer {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  20% { transform: rotate(-9deg) translateY(-6px); }
+  45% { transform: rotate(8deg) translateY(-9px); }
+  70% { transform: rotate(-5deg) translateY(-3px); }
+}
+@keyframes coachGuideSays {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach-guide-bob, .coach-guide-spark, .coach-guide-glint::after,
+  .coach-guide-fig.is-pop, .coach-guide-fig.is-hop,
+  .coach-guide.is-cheer .coach-guide-bob,
+  .coach-bubble.coach-says :is(.rhema-coach-title, .app-coach-title, h4, .rhema-coach-body, .app-coach-body, p) { animation: none; }
+  .coach-guide { transition: opacity .2s ease; }
+}
+
+.coach-replay-guide { position: relative; width: 112px; aspect-ratio: 480 / 371; margin: -4px auto 4px; animation: coachGuideBob 3.2s ease-in-out infinite; }
+.coach-replay-guide img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.coach-replay-guide-spark { transform-origin: 77% 12%; animation: coachGuideSpark 1.7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .coach-replay-guide, .coach-replay-guide-spark { animation: none; } }
+
+/* Solid speech bubbles: the reader text must not show through behind the guide. */
+.rhema-coach-card.coach-bubble { background: var(--card-solid-color, var(--card-color)); }
+.ws-tour-tip.coach-bubble { background: var(--card-solid-color, var(--card-color, #fff)); }
+html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { background: #1f2937; }

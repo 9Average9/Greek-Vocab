@@ -1279,13 +1279,15 @@
     const pad = 6;
     Object.assign(spot.style, { top: `${r.top - pad}px`, left: `${r.left - pad}px`, width: `${r.width + pad * 2}px`, height: `${Math.min(r.height, window.innerHeight * 0.5) + pad * 2}px` });
     const last = _tour.i === steps.length - 1;
+    const ROOM = window.COACH_GUIDE_ROOM || 0;   // the tour guide perches above the tip
     tip.innerHTML = `<div class="ws-tour-step">${_tour.i + 1} / ${steps.length}</div><h4>${step.title}</h4><p>${step.text}</p>
       <div class="ws-tour-btns"><button type="button" class="ws-tour-skip" onclick="rhemaWordStudyTourEnd()">${last ? '' : 'Skip'}</button><button type="button" class="ws-tour-next" onclick="rhemaWordStudyTourNext()">${last ? 'Got it' : 'Next'}</button></div>`;
     spot.classList.add('on'); tip.classList.add('on');
-    const below = r.top + Math.min(r.height, window.innerHeight * 0.5) + 14;
+    const below = r.top + Math.min(r.height, window.innerHeight * 0.5) + 14 + ROOM;
     const th = tip.offsetHeight || 150;
-    const top = below + th < window.innerHeight - 8 ? below : Math.max(8, r.top - th - 14);
+    const top = below + th < window.innerHeight - 8 ? below : Math.max(8 + ROOM, r.top - th - 14);
     tip.style.top = `${top}px`;
+    window.coachGuideShow?.(document.body, tip, { last });
   }
   window.rhemaWordStudyTourNext = function () { if (_tour) { _tour.i++; _tourShow(); } };
   window.rhemaWordStudyTourEnd = _tourEnd;
@@ -1296,6 +1298,7 @@
     _ls.set(TOUR_KEY, '1');
     document.getElementById('wsTourSpot')?.classList.remove('on');
     document.getElementById('wsTourTip')?.classList.remove('on');
+    window.coachGuideHide?.(document.body);
   }
 
   // ── Main entry ───────────────────────────────────────────────────────────
