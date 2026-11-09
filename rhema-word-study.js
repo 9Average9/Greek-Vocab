@@ -1,17 +1,17 @@
 /* Rhēma Word Study — the Definition tab for Greek words (NT + LXX).
 
-   One scrollable study, answer first, every claim with its receipt:
+   Answer first, then as deep as the reader wants:
 
-     Hero ........ the word, what it means here, the one-paragraph definition
-     Here ........ how each translation renders THIS occurrence (BSB exact,
-                   MSB, NIV/NKJV/NASB/ESV/… bridged word-for-word), grouped so
-                   translation disagreement is visible at a glance
-     Range ....... measured senses across every NT use, each with all its verses
-     Authors ..... who uses the word, how often, and how each author renders it
-     History ..... classical Greek → Septuagint → papyri → NT → Apostolic Fathers
-     Lexicons .... Abbott-Smith, Moulton–Milligan, LSJ, Dodson, Strong's — cleaned
-                   and with every NT reference tappable
-     Method ...... how the numbers were measured and how far to trust them
+     Answer card .. what the word means in THIS verse, how the reader's Bible
+                    words it, the one-sentence summary, "debated in this verse"
+     Depth ........ Quick (answer only) · Study (+ card deck) · Deep (+ history,
+                    lexicons, method and measured detail) — remembered
+     Card deck .... swipeable: Meanings (one colour-coded card per meaning, with
+                    why, a real verse, every verse, Save) · This verse (every
+                    translation's rendering) · Translations (whole-NT counts per
+                    version) · Authors · History · Lexicons · How we know
+     Saved ........ saved meanings live on the device (Reader menu → Saved
+                    meanings); a short first-run tour explains the layout
 
    Depends on app.js globals (loaded after it). Hebrew keeps its own renderer.
 */
@@ -130,33 +130,171 @@
   }
 
   // ── Small render helpers ─────────────────────────────────────────────────
-  // Each section is a collapsible card. Closed, its header still says the one
-  // thing worth knowing (the "teaser"), so the study scans in a few seconds.
-  const WS_OPEN_DEFAULT = { here: true, range: true };
-  let _wsOpen = { ...WS_OPEN_DEFAULT };
-  const section = (id, icon, title, body, teaser = '') => body ? `<details class="ws-sec" data-ws-sec="${id}"${_wsOpen[id] ? ' open' : ''} ontoggle="rhemaWordStudyToggle(this)">
-      <summary class="ws-sec-h"><span class="material-symbols-outlined">${icon}</span><span class="ws-sec-t">${title}</span>${teaser ? `<em class="ws-teaser">${teaser}</em>` : ''}<span class="material-symbols-outlined ws-chev">expand_more</span></summary>
-      <div class="ws-sec-body">${body}</div>
-    </details>` : '';
-  window.rhemaWordStudyToggle = function (el) {
-    const id = el.dataset.wsSec;
-    _wsOpen[id] = el.open;
-    // Counting every NT use in a version is real work — do it only when the
-    // reader actually opens the section.
-    if (id === 'versions' && el.open) {
-      const root = el.closest('.ws');
-      const st = root && _studies.get(root.id);
-      if (st && !st.versionsStarted) {
-        st.versionsStarted = true;
-        const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
-        rhemaWordStudyVersion(root.id, st.ver || (_wsIsLocal(reader) ? reader : 'MSB'));
-      }
-    }
-  };
+  // Everything below the answer card is a deck of cards the reader swipes
+  // through. Each card's header still carries the one thing worth knowing
+  // (the "teaser").
+  const section = (id, icon, title, body, teaser = '') => body ? `<section class="ws-card" data-ws-sec="${id}">
+      <header class="ws-card-h"><span class="material-symbols-outlined">${icon}</span><span class="ws-card-t">${title}</span>${teaser ? `<em class="ws-teaser">${teaser}</em>` : ''}</header>
+      <div class="ws-card-body">${body}</div>
+    </section>` : '';
   const more = (label, body, open = false) => body ? `<details class="ws-more"${open ? ' open' : ''}><summary>${label}</summary><div class="ws-more-body">${body}</div></details>` : '';
   const pct = (x) => Math.round((x || 0) * 100);
+  const _ls = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
 
-  // ── Hero ─────────────────────────────────────────────────────────────────
+  // ── Depth: Quick · Study · Deep ─────────────────────────────────────────
+  // Quick is the answer card alone. Study adds the card deck (meanings, this
+  // verse, translations, authors). Deep adds history, the lexicons, the method
+  // and the measured detail. The choice is remembered.
+  const DEPTHS = [
+    ['quick', 'Quick', 'bolt'],
+    ['study', 'Study', 'menu_book'],
+    ['deep', 'Deep', 'school'],
+  ];
+  let _wsDepth = _ls.get('rhemaWsDepth', 'study');
+  if (!DEPTHS.some(d => d[0] === _wsDepth)) _wsDepth = 'study';
+  function depthHtml(uid) {
+    return `<div class="ws-depth" role="radiogroup" aria-label="How deep to go">${DEPTHS.map(([k, label, icon]) =>
+      `<button type="button" role="radio" aria-checked="${k === _wsDepth}" class="ws-depth-b${k === _wsDepth ? ' on' : ''}" data-depth="${k}" onclick="rhemaWordStudyDepth('${uid}','${k}')"><span class="material-symbols-outlined">${icon}</span>${label}</button>`).join('')}</div>`;
+  }
+  window.rhemaWordStudyDepth = function (uid, depth) {
+    if (!DEPTHS.some(d => d[0] === depth)) return;
+    _wsDepth = depth;
+    _ls.set('rhemaWsDepth', depth);
+    document.querySelectorAll('.ws').forEach(root => {
+      DEPTHS.forEach(([k]) => root.classList.toggle(`ws-d-${k}`, k === depth));
+      root.querySelectorAll('.ws-depth-b').forEach(b => {
+        const on = b.dataset.depth === depth;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-checked', String(on));
+      });
+    });
+    _wsRefreshDeck(uid);
+  };
+
+  // ── The card deck ───────────────────────────────────────────────────────
+  // A horizontal scroll-snap strip: native swipe on phones, tabs on top for
+  // taps. The strip takes the height of the card in view, so a short card
+  // doesn't leave a long blank under it.
+  const CARDS = [
+    { id: 'range', label: 'Meanings', icon: 'auto_awesome', depth: 'study' },
+    { id: 'here', label: 'This verse', icon: 'translate', depth: 'study' },
+    { id: 'versions', label: 'Translations', icon: 'compare_arrows', depth: 'study' },
+    { id: 'authors', label: 'Authors', icon: 'groups', depth: 'study' },
+    { id: 'history', label: 'History', icon: 'timeline', depth: 'deep' },
+    { id: 'lex', label: 'Lexicons', icon: 'library_books', depth: 'deep' },
+    { id: 'method', label: 'How we know', icon: 'science', depth: 'deep' },
+  ];
+  function deckHtml(uid, loading) {
+    return `<div class="ws-deckwrap">
+      <div class="ws-dtabs" id="${uid}-dtabs" role="tablist"></div>
+      <div class="ws-deck" id="${uid}-deck">${CARDS.map(c =>
+        `<div class="ws-slot" id="${uid}-${c.id}" data-card="${c.id}" data-depth="${c.depth}">${loading[c.id] || ''}</div>`).join('')}</div>
+      <div class="ws-dots" id="${uid}-dots" aria-hidden="true"></div>
+    </div>`;
+  }
+  function _wsSlots(root) {
+    return [...root.querySelectorAll('.ws-slot')].filter(s =>
+      !s.classList.contains('ws-slot-empty') && !(s.dataset.depth === 'deep' && _wsDepth !== 'deep'));
+  }
+  function _wsRefreshDeck(uid) {
+    const root = document.getElementById(uid);
+    if (!root) return;
+    root.querySelectorAll('.ws-slot').forEach(s => s.classList.toggle('ws-slot-empty', !s.innerHTML.trim()));
+    const slots = _wsSlots(root);
+    const st = _studies.get(uid);
+    const active = st?.active && slots.some(s => s.dataset.card === st.active) ? st.active : slots[0]?.dataset.card;
+    const tabs = document.getElementById(`${uid}-dtabs`);
+    if (tabs) tabs.innerHTML = slots.map(s => {
+      const c = CARDS.find(x => x.id === s.dataset.card);
+      return `<button type="button" role="tab" class="ws-dtab${s.dataset.card === active ? ' on' : ''}" data-card="${c.id}" onclick="rhemaWordStudyGo('${uid}','${c.id}')"><span class="material-symbols-outlined">${c.icon}</span>${c.label}</button>`;
+    }).join('');
+    const dots = document.getElementById(`${uid}-dots`);
+    if (dots) dots.innerHTML = slots.length > 1 ? slots.map(s => `<i class="${s.dataset.card === active ? 'on' : ''}"></i>`).join('') : '';
+    _wsDeckInit(uid);
+    // Cards appear/disappear with the depth; keep the strip on the active one.
+    const deck = document.getElementById(`${uid}-deck`);
+    const slot = active && document.getElementById(`${uid}-${active}`);
+    if (deck && slot && slot.offsetParent && Math.abs(deck.scrollLeft - slot.offsetLeft) > 2) {
+      deck.style.scrollBehavior = 'auto';
+      deck.scrollLeft = slot.offsetLeft;
+      deck.style.scrollBehavior = '';
+    }
+    _wsSetActive(uid, active, false);
+  }
+  function _wsDeckInit(uid) {
+    const deck = document.getElementById(`${uid}-deck`);
+    if (!deck || deck._wsInit) return;
+    deck._wsInit = true;
+    // Keep sideways swipes inside the deck (the reader underneath turns
+    // verses on a horizontal swipe).
+    ['touchstart', 'touchmove', 'touchend'].forEach(t => deck.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+    let timer = 0;
+    deck.addEventListener('scroll', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const root = document.getElementById(uid);
+        if (!root) return;
+        const slots = _wsSlots(root);
+        let best = slots[0], bestD = Infinity;
+        for (const s of slots) {
+          const d = Math.abs(s.offsetLeft - deck.scrollLeft);
+          if (d < bestD) { bestD = d; best = s; }
+        }
+        if (best) _wsSetActive(uid, best.dataset.card, false);
+      }, 60);
+    }, { passive: true });
+    if (typeof ResizeObserver === 'function') {
+      const ro = new ResizeObserver(() => _wsFitDeck(uid));
+      deck.querySelectorAll('.ws-slot').forEach(s => ro.observe(s));
+      deck._wsRO = ro;
+    }
+  }
+  function _wsFitDeck(uid) {
+    const deck = document.getElementById(`${uid}-deck`);
+    const st = _studies.get(uid);
+    if (!deck || !st) return;
+    const slot = document.getElementById(`${uid}-${st.active}`);
+    if (slot && slot.offsetHeight) deck.style.height = `${slot.offsetHeight}px`;
+  }
+  function _wsSetActive(uid, id, scroll) {
+    const st = _studies.get(uid);
+    const root = document.getElementById(uid);
+    if (!st || !root || !id) return;
+    st.active = id;
+    root.querySelectorAll('.ws-dtab').forEach(b => b.classList.toggle('on', b.dataset.card === id));
+    const slots = _wsSlots(root);
+    root.querySelectorAll(`#${uid}-dots i`).forEach((d, i) => d.classList.toggle('on', slots[i]?.dataset.card === id));
+    const tab = root.querySelector(`.ws-dtab[data-card="${id}"]`);
+    if (tab && tab.parentElement) {
+      const p = tab.parentElement;
+      p.scrollTo({ left: Math.max(0, tab.offsetLeft - p.clientWidth / 2 + tab.offsetWidth / 2), behavior: 'smooth' });
+    }
+    const deck = document.getElementById(`${uid}-deck`);
+    const slot = document.getElementById(`${uid}-${id}`);
+    if (scroll && deck && slot) deck.scrollTo({ left: slot.offsetLeft, behavior: 'smooth' });
+    _wsFitDeck(uid);
+    // Counting every NT use in a version is real work — start it only when
+    // the reader actually looks at the Translations card.
+    if (id === 'versions' && !st.versionsStarted && st.entry !== undefined) {
+      st.versionsStarted = true;
+      const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
+      rhemaWordStudyVersion(uid, st.ver || (_wsIsLocal(reader) ? reader : 'MSB'));
+    }
+  }
+  window.rhemaWordStudyGo = function (uid, id) {
+    if (_wsDepth === 'quick') rhemaWordStudyDepth(uid, 'study');
+    const c = CARDS.find(x => x.id === id);
+    if (c && c.depth === 'deep' && _wsDepth !== 'deep') rhemaWordStudyDepth(uid, 'deep');
+    _wsSetActive(uid, id, true);
+  };
+
+  // ── Answer card ──────────────────────────────────────────────────────────
+  // One card that answers "what does this word mean here?" before anything
+  // else: the meaning in this verse, how the reader's own Bible words it, the
+  // one-sentence summary, and — only when it matters — that it's debated.
   function heroHtml(strongs, lex, decision, ctx, occ, uid) {
     const where = ctx ? `${_rhemaBookName(ctx.book) || ctx.book} ${ctx.chapter}:${ctx.verse}` : '';
     const gloss = decision.gloss || decision.definition || '';
@@ -168,37 +306,93 @@
         <span class="ws-lemma">${esc(lex.lemma || '')}</span>
         <span class="ws-translit">${esc(lex.translit || '')}</span>
         <span class="ws-g">G${esc(strongs)}</span>
+        <span class="ws-hero-save" id="${uid}-hsave"></span>
       </div>
       ${gloss ? `<div class="ws-answer"><span class="ws-answer-k">${where ? `In ${esc(where)}` : 'Core meaning'}</span><strong>${esc(gloss)}</strong>${form ? `<span class="ws-form">this form: ${esc(form)}</span>` : ''}</div>` : ''}
+      <div class="ws-hsense" id="${uid}-hsense"></div>
+      <div class="ws-yours" id="${uid}-yours"></div>
       <div class="ws-def" id="${uid}-def"><span class="ws-shimmer"></span></div>
+      <div class="ws-qm" id="${uid}-qm"></div>
       <div class="ws-glance" id="${uid}-glance">${stats.map(s => `<span>${esc(s)}</span>`).join('')}</div>
     </div>`;
   }
 
+  // Does a note talk about this very verse? ("ROM 5:12", "Rom 5:12",
+  // "Romans 5:12-14", "1 Cor 11:10"…)
+  function _mentionsVerse(text, ctx) {
+    if (!text || !ctx) return false;
+    const code = String(ctx.book).toLowerCase();
+    const name = String(_rhemaBookName(ctx.book) || '').toLowerCase().replace(/\s+/g, '');
+    const re = /\b([1-3]?\s?[A-Za-z]{2,})\.?\s(\d+):(\d+)(?:\s?[-–]\s?(\d+))?/g;
+    let m;
+    while ((m = re.exec(String(text)))) {
+      const tok = m[1].toLowerCase().replace(/\s+/g, '');
+      const bookOk = tok === code || (tok.length >= 3 && name.startsWith(tok));
+      if (!bookOk || m[2] !== String(ctx.chapter)) continue;
+      const a = +m[3], b = m[4] ? +m[4] : a, v = +ctx.verse;
+      if (v >= a && v <= b) return true;
+    }
+    return false;
+  }
+
   function fillHero(uid, entry, strongs) {
+    const st = _studies.get(uid);
+    const ctx = st?.ctx || null;
     const def = document.getElementById(`${uid}-def`);
     const glance = document.getElementById(`${uid}-glance`);
     const prose = entry?.prose || {};
+    const study = entry?.study || null;
+    const ref = ctx ? `${ctx.book} ${ctx.chapter}:${ctx.verse}` : '';
+    const hereI = ctx && study?.senses ? study.senses.findIndex(x => (x.refs || []).includes(ref)) : -1;
+    st && (st.hereSense = hereI);
+
+    const hs = document.getElementById(`${uid}-hsense`);
+    if (hs) hs.innerHTML = hereI >= 0
+      ? `<span class="ws-answer-k">Meaning here</span><button type="button" class="ws-hsense-b" onclick="rhemaWordStudyOpenSense('${uid}',${hereI})"><b>${esc(study.senses[hereI].label)}</b> — ${esc(study.senses[hereI].definition)}</button>`
+      : '';
+
+    // Save from the answer card: the meaning used here, else the core one.
+    const hsave = document.getElementById(`${uid}-hsave`);
+    if (hsave) {
+      const s = hereI >= 0 ? study.senses[hereI] : (study?.senses?.length === 1 ? study.senses[0] : null);
+      const payload = s
+        ? { label: s.label, definition: s.definition, note: s.note || '', refs: s.refs || [] }
+        : (study?.summary || prose.def) ? { label: (st?.gloss || 'Core meaning'), definition: study?.summary || prose.def, note: '', refs: [] } : null;
+      hsave.innerHTML = payload ? saveButton(uid, 'hero', strongs, payload, ref) : '';
+    }
+
     if (def) {
       const parts = [];
-      const study = entry?.study || null;
       if (study?.summary) parts.push(`<p>${esc(study.summary)}</p>`);
       else if (prose.def) parts.push(`<p>${esc(prose.def)}</p>`);
-      if (study?.exegesisTip) parts.push(`<div class="ws-tip"><span class="material-symbols-outlined">lightbulb</span><p>${esc(study.exegesisTip)}</p></div>`);
-
-      if (entry?.audit?.verdict === 'misleading') {
-        parts.push(`<div class="ws-flag"><span class="material-symbols-outlined">flag</span>Rhema’s own review flagged this summary as possibly misleading. Lean on the measured range, the verses and the lexicons below.</div>`);
+      // Debated? Say so — prominently when it's this very verse.
+      if (study?.caution) {
+        const here = _mentionsVerse(study.caution, ctx);
+        parts.push(`<details class="ws-debate${here ? ' here' : ' ws-not-quick'}"><summary><span class="material-symbols-outlined">forum</span>${here ? 'Debated in this verse' : 'A debated point'}<span class="material-symbols-outlined ws-chev">expand_more</span></summary><p>${esc(study.caution)}</p></details>`);
       }
-      // Debate and background are one tap away, not stacked on the answer.
+      if (study?.exegesisTip) parts.push(`<div class="ws-tip ws-not-quick"><span class="material-symbols-outlined">lightbulb</span><p>${esc(study.exegesisTip)}</p></div>`);
+      if (entry?.audit?.verdict === 'misleading') {
+        parts.push(`<div class="ws-flag"><span class="material-symbols-outlined">flag</span>Rhema’s own review flagged this summary as possibly misleading. Lean on the measured range, the verses and the lexicons.</div>`);
+      }
       const about = [
-        study?.caution ? `<p><b>Debated:</b> ${esc(study.caution)}</p>` : '',
         prose.article ? `<p>${esc(prose.article)}</p>` : '',
         prose.caution && !study ? `<p class="ws-caution">${esc(prose.caution)}</p>` : '',
       ].join('');
-      if (about) parts.push(more(study?.caution ? 'About this word · debated points' : 'About this word', about));
+      if (about) parts.push(`<div class="ws-deep-only">${more('About this word', about)}</div>`);
       def.innerHTML = parts.join('') || '';
       def.classList.toggle('ws-empty', !parts.length);
     }
+
+    // Quick view: every meaning as a tappable chip that opens it in Study.
+    const qm = document.getElementById(`${uid}-qm`);
+    if (qm) {
+      const senses = study?.senses || [];
+      qm.innerHTML = senses.length > 1
+        ? `<div class="ws-qm-h">${senses.length} meanings</div><div class="ws-qm-chips">${senses.map((s, i) =>
+            `<button type="button" class="ws-qm-chip${i === hereI ? ' here' : ''}" style="--c:${senseColor(i)}" onclick="rhemaWordStudyOpenSense('${uid}',${i})"><span>${i + 1}</span>${esc(s.label)}</button>`).join('')}</div>`
+        : '';
+    }
+
     if (glance && entry) {
       const chips = [];
       const top = topAuthor(entry);
@@ -209,6 +403,17 @@
       glance.innerHTML = chips.map(c => `<span>${esc(c)}</span>`).join('') +
         (conf ? `<span class="ws-conf ws-conf-${esc(entry.confidence)}">${esc(conf)}</span>` : '');
     }
+  }
+
+  // "Your MSB: 'flesh'" — how the reader's own Bible words this occurrence.
+  function fillYours(uid, reader, row, spread) {
+    const el = document.getElementById(`${uid}-yours`);
+    if (!el) return;
+    if (!row) { el.innerHTML = ''; return; }
+    const r = row.r || {};
+    const said = r.kind === 'none' ? '<i>no separate word — it’s in the phrasing</i>' : r.text ? `“<b>${esc(r.text)}</b>”` : '';
+    el.innerHTML = said ? `<span class="ws-answer-k">Your ${esc(reader)}</span><span>${said}</span>${spread > 1
+      ? `<button type="button" class="ws-linkish" onclick="rhemaWordStudyGo('${uid}','here')">Bibles differ ${spread} ways <span class="material-symbols-outlined">arrow_forward</span></button>` : ''}` : '';
   }
 
   // ── Here: how translations render this occurrence ────────────────────────
@@ -291,9 +496,12 @@
     el.innerHTML = section('here', 'translate', 'In this verse',
       `${senseLine}
        <div class="ws-tr">${groupsHtml}</div>
-       ${entry?.study?.translationNote ? more('Why translations differ', `<p>${esc(entry.study.translationNote)}</p>`) : ''}
+       ${entry?.study?.translationNote ? more('Why translations differ', `<p>${esc(entry.study.translationNote)}</p>`, true) : ''}
        ${loadBtn}`,
       esc(teaser));
+    const mine = rows.find(r => r.ver === reader) || rows.find(r => WS_LOCAL.includes(r.ver));
+    fillYours(uid, mine?.ver, mine, spread);
+    _wsRefreshDeck(uid);
   }
 
   // Fetch the licensed versions' chapter blocks for this verse (one request
@@ -354,7 +562,84 @@
     };
   }
 
-  function rangeHtml(entry, strongs) {
+  // Each meaning gets its own colour, used by its chip, card and number.
+  const SENSE_COLORS = ['#2498df', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#0ea5e9', '#d946ef', '#84cc16'];
+  const senseColor = (i) => SENSE_COLORS[i % SENSE_COLORS.length];
+
+  // A verse that shows the meaning, in the reader's own (on-device) Bible,
+  // with the word in bold.
+  function _exampleHtml(ref, strongs) {
+    const m = String(ref || '').match(/^(\S+) (\d+):(\d+)$/);
+    if (!m || (typeof isRhemaNTBook === 'function' && !isRhemaNTBook(m[1]))) return '';
+    const [, b, c, v] = m;
+    try {
+      const words = ((_rhemaText() || {})[b] || {})[c]?.[v];
+      if (!words) return '';
+      const target = String(strongs);
+      const idx = words.findIndex(w => String((_rhemaResolveWord(w, b, c) || w)[1]) === target);
+      const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
+      const ver = WS_LOCAL.includes(reader) ? reader : 'MSB';
+      const eng = _rhemaEnglishText(b, c, v, ver) || '';
+      if (!eng) return '';
+      let html = esc(eng);
+      if (idx >= 0 && typeof _rhemaBVEnglishHtml === 'function') html = _rhemaBVEnglishHtml(eng, b, c, v, words, idx, strongs, ver);
+      return `<blockquote class="ws-mx-ex"><p>${html}</p><footer>${_refChip(b, c, v, strongs)}<span class="ws-fine">${esc(ver)}</span></footer></blockquote>`;
+    } catch { return ''; }
+  }
+
+  // The meaning explorer: numbered chips on top (tap one), one meaning card at
+  // a time below — what it means, why, a real verse, every other verse, and a
+  // save button.
+  function meaningsHtml(uid, entry, strongs) {
+    const senses = entry.study.senses;
+    const st = _studies.get(uid);
+    const ref = st?.ctx ? `${st.ctx.book} ${st.ctx.chapter}:${st.ctx.verse}` : '';
+    const hereI = ref ? senses.findIndex(x => (x.refs || []).includes(ref)) : -1;
+    const sel = st && st.sel != null && st.sel < senses.length ? st.sel : (hereI >= 0 ? hereI : 0);
+    if (st) st.sel = sel;
+    const n = senses.length;
+    const chips = (refs) => {
+      const shown = refs.slice(0, 6).map(r => _refChipFromKey(r, strongs)).join('');
+      const rest = refs.slice(6).map(r => _refChipFromKey(r, strongs)).join('');
+      return (shown ? `<div class="ws-refs">${shown}</div>` : '') + (rest ? more(`All ${refs.length} verses`, `<div class="ws-refs">${rest}</div>`) : '');
+    };
+    const picks = n > 1 ? `<div class="ws-mx-picks" role="tablist">${senses.map((s, i) =>
+      `<button type="button" role="tab" class="ws-mx-pick${i === sel ? ' on' : ''}${i === hereI ? ' here' : ''}" style="--c:${senseColor(i)}" onclick="rhemaWordStudySense('${uid}',${i})"><span class="ws-mx-n">${i + 1}</span><span class="ws-mx-l">${esc(s.label)}</span></button>`).join('')}</div>` : '';
+    const cards = senses.map((s, i) => {
+      const refs = s.refs || [];
+      const example = _exampleHtml(refs[0], strongs);
+      return `<article class="ws-mx-card${i === sel ? ' on' : ''}" data-i="${i}" style="--c:${senseColor(i)}">
+        <div class="ws-mx-top"><span class="ws-mx-count">${n > 1 ? `Meaning ${i + 1} of ${n}` : 'Its meaning'}</span>${i === hereI ? '<span class="ws-mx-herebadge"><span class="material-symbols-outlined">my_location</span>this verse</span>' : ''}${saveButton(uid, `s${i}`, strongs, { label: s.label, definition: s.definition, note: s.note || '', refs }, ref)}</div>
+        <h4 class="ws-mx-label">${esc(s.label)}</h4>
+        <p class="ws-mx-def">${esc(s.definition)}</p>
+        ${s.note ? `<div class="ws-mx-why"><span class="material-symbols-outlined">psychology_alt</span><p><b>Why</b> ${esc(s.note)}</p></div>` : ''}
+        ${example}
+        ${chips(example ? refs.slice(1) : refs)}
+        ${n > 1 ? `<div class="ws-mx-nav">
+          <button type="button" ${i === 0 ? 'disabled' : ''} onclick="rhemaWordStudySense('${uid}',${i - 1})"><span class="material-symbols-outlined">chevron_left</span>${i > 0 ? esc(senses[i - 1].label) : ''}</button>
+          <button type="button" ${i === n - 1 ? 'disabled' : ''} onclick="rhemaWordStudySense('${uid}',${i + 1})">${i < n - 1 ? esc(senses[i + 1].label) : ''}<span class="material-symbols-outlined">chevron_right</span></button>
+        </div>` : ''}
+      </article>`;
+    }).join('');
+    return `<div class="ws-mx" id="${uid}-mx">${picks}${cards}</div>`;
+  }
+  window.rhemaWordStudySense = function (uid, i) {
+    const mx = document.getElementById(`${uid}-mx`);
+    if (!mx) return;
+    const st = _studies.get(uid);
+    if (st) st.sel = i;
+    mx.querySelectorAll('.ws-mx-pick').forEach((b, k) => b.classList.toggle('on', k === i));
+    mx.querySelectorAll('.ws-mx-card').forEach(c => c.classList.toggle('on', Number(c.dataset.i) === i));
+    const pick = mx.querySelectorAll('.ws-mx-pick')[i];
+    if (pick && pick.parentElement) pick.parentElement.scrollTo({ left: Math.max(0, pick.offsetLeft - 12), behavior: 'smooth' });
+    _wsFitDeck(uid);
+  };
+  window.rhemaWordStudyOpenSense = function (uid, i) {
+    rhemaWordStudyGo(uid, 'range');
+    rhemaWordStudySense(uid, i);
+  };
+
+  function rangeHtml(entry, strongs, uid) {
     if (!entry) return '';
     const senses = (entry.senses || []).slice(0, 8);
     const by = _refsBySense(entry);
@@ -371,32 +656,32 @@
       const once = _onlyUseHtml(entry, strongs);
       if (once) return section('range', 'auto_stories', 'Its only New Testament use', once.html, esc(once.label));
     }
-    const parts = [];
-    if (study?.senses?.length) {
-      // Verified senses by meaning — the answer. How the English words are
-      // counted lives in "Across translations" (MSB is measured there).
-      parts.push(`<div class="ws-senses">${study.senses.map((x, i) => `<div class="ws-sense">
-          <div class="ws-sense-top"><span class="ws-sense-n">${i + 1}</span><b>${esc(x.label)}</b></div>
-          <p class="ws-sense-def">${esc(x.definition)}${x.note ? ` <span class="ws-sense-note">${esc(x.note)}</span>` : ''}</p>
-          ${chips(x.refs || [], 4)}
-        </div>`).join('')}</div>`);
-    } else if (senses.length) {
-      parts.push(`<div class="ws-senses">${senses.map((x, i) => {
+    // How the English renders it, measured over every use.
+    let measured = '';
+    if (senses.length) {
+      measured = `<div class="ws-senses">${senses.map((x, i) => {
         const refs = by.get(i) || x.refs || [];
         return `<div class="ws-sense">
           <div class="ws-sense-top"><span class="ws-sense-n">${i + 1}</span><b>${esc(_senseName(entry, x, i))}</b><span class="ws-count">${x.count}× · ${pct(x.share)}%</span></div>
           <div class="ws-bar"><span style="width:${Math.max(pct(x.share), 2)}%"></span></div>
           ${chips(refs, 4)}
         </div>`;
-      }).join('')}</div>`);
+      }).join('')}</div>`;
       if (labels.length > senses.length) {
-        parts.push(`<div class="ws-extra"><div class="ws-extra-h">Also recognised by the lexicons</div>
-          <ul>${labels.slice(senses.length).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>`);
+        measured += `<div class="ws-extra"><div class="ws-extra-h">Also recognised by the lexicons</div>
+          <ul>${labels.slice(senses.length).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>`;
       }
+    }
+    const parts = [];
+    if (study?.senses?.length) {
+      parts.push(meaningsHtml(uid, entry, strongs));
+      if (measured) parts.push(`<div class="ws-deep-only">${more('How the English renders it, measured over every use', measured)}</div>`);
+    } else if (measured) {
+      parts.push(measured);
     } else if (entry.count) {
       parts.push(`<p class="ws-note">No single English rendering dominates this word — it is usually woven into the phrasing. The lexicons carry its meaning.</p>`);
     }
-    // The fine-grained evidence, one tap away.
+    // The fine-grained evidence (Deep).
     const detail = [];
     const rare = (entry.rare || []).filter(r => {
       const words = String(r.display || '').toLowerCase().split(/\s+/).filter(Boolean);
@@ -413,10 +698,10 @@
           ${(c.refs || []).length ? `<div class="ws-refs">${c.refs.map(r => _refChipFromKey(r, strongs)).join('')}</div>` : ''}
         </div>`).join(''));
     }
-    if (detail.length) parts.push(more('More detail', detail.join('')));
+    if (detail.length) parts.push(`<div class="ws-deep-only">${more('More detail', detail.join(''))}</div>`);
     const n = study?.senses?.length || senses.length;
-    return section('range', 'travel_explore', 'Range of meaning', parts.join(''),
-      n ? `${n} sense${n === 1 ? '' : 's'}` : '');
+    return section('range', 'auto_awesome', n > 1 ? 'Meanings' : 'Meaning', parts.join(''),
+      n > 1 ? `${n} meanings · tap one` : '');
   }
 
   // ── Authors ──────────────────────────────────────────────────────────────
@@ -789,6 +1074,187 @@
     el.innerHTML = section('versions', 'compare_arrows', 'Across translations',
       `<div class="ws-vchips">${chips}</div>${body || '<p class="ws-fine">Counting…</p>'}${table}`,
       esc(teaser));
+    _wsRefreshDeck(uid);
+  }
+
+  // ── Saved meanings ──────────────────────────────────────────────────────
+  // Kept on this device. Each saved meaning carries the word, the meaning,
+  // why, its verses, and the verse it was saved from.
+  const SAVE_KEY = 'rhemaSavedMeanings';
+  const _wsSave = new Map(); // `${uid}:${key}` → item ready to save
+  function _savedList() { try { const l = JSON.parse(_ls.get(SAVE_KEY, '[]')); return Array.isArray(l) ? l : []; } catch { return []; } }
+  function _savedWrite(list) { _ls.set(SAVE_KEY, JSON.stringify(list.slice(0, 500))); }
+  const _savedHas = (id) => _savedList().some(x => x.id === id);
+  function saveButton(uid, key, strongs, payload, ctxRef) {
+    const lex = (window.RhemaLexicon || {})[strongs] || {};
+    const item = {
+      id: `${strongs}|${payload.label}`, strongs: String(strongs), lemma: lex.lemma || '', translit: lex.translit || '',
+      label: payload.label, definition: payload.definition || '', note: payload.note || '',
+      refs: (payload.refs || []).slice(0, 8), verse: ctxRef || '',
+    };
+    _wsSave.set(`${uid}:${key}`, item);
+    const on = _savedHas(item.id);
+    return `<button type="button" class="ws-save${on ? ' on' : ''}" data-save-id="${esc(item.id)}" aria-pressed="${on}" onclick="event.stopPropagation();rhemaWordStudySave('${uid}','${key}')"><span class="material-symbols-outlined">${on ? 'bookmark_added' : 'bookmark_add'}</span><span class="ws-save-l">${on ? 'Saved' : 'Save'}</span></button>`;
+  }
+  function _syncSaveButtons(id, on) {
+    document.querySelectorAll('.ws-save').forEach(b => {
+      if (b.dataset.saveId !== id) return;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+      b.innerHTML = `<span class="material-symbols-outlined">${on ? 'bookmark_added' : 'bookmark_add'}</span><span class="ws-save-l">${on ? 'Saved' : 'Save'}</span>`;
+    });
+    document.querySelectorAll('.ws-saved-n').forEach(n => { const c = _savedList().length; n.textContent = c ? String(c) : ''; });
+  }
+  window.rhemaWordStudySave = function (uid, key) {
+    const item = _wsSave.get(`${uid}:${key}`);
+    if (!item) return;
+    let list = _savedList();
+    const had = list.some(x => x.id === item.id);
+    list = had ? list.filter(x => x.id !== item.id) : [{ ...item, savedAt: Date.now() }, ...list];
+    _savedWrite(list);
+    _syncSaveButtons(item.id, !had);
+    _wsToast(had ? 'Removed from Saved meanings'
+      : `Saved “${esc(item.label)}” <button type="button" onclick="rhemaShowSavedMeanings()">View</button>`);
+  };
+  function _wsToast(html) {
+    let t = document.getElementById('wsToast');
+    if (!t) { t = document.createElement('div'); t.id = 'wsToast'; t.className = 'ws-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.innerHTML = html;
+    t.classList.add('on');
+    clearTimeout(_wsToast._t);
+    _wsToast._t = setTimeout(() => t.classList.remove('on'), 2800);
+  }
+
+  // The Saved meanings list (Reader menu → Saved meanings, or the bookmark
+  // button in any word study).
+  window.rhemaSavedMeaningsHtml = function () {
+    const list = _savedList();
+    if (!list.length) {
+      return `<div class="ws-saved-empty"><span class="material-symbols-outlined">bookmarks</span>
+        <p><b>No saved meanings yet.</b></p>
+        <p>Open any Greek word, find a meaning you want to remember, and tap <b>Save</b>. It will wait for you here.</p></div>`;
+    }
+    const verseChip = (ref, strongs) => {
+      const m = String(ref || '').match(/^(\S+) (\d+):(\d+)$/);
+      if (!m) return '';
+      return `<button type="button" class="ws-ref" onclick="closeRhemaReaderPanel();setTimeout(()=>jumpToRhemaVerse('${esc(m[1])}','${esc(m[2])}','${esc(m[3])}','${esc(strongs)}'),220)">${esc(`${_rhemaBookName(m[1]) || m[1]} ${m[2]}:${m[3]}`)}</button>`;
+    };
+    return `<div class="ws-saved">
+      <p class="ws-saved-intro">${list.length} saved meaning${list.length === 1 ? '' : 's'} · newest first</p>
+      ${list.map((x, i) => `<article class="ws-saved-item" style="--c:${senseColor(i)}">
+        <div class="ws-saved-top">
+          <button type="button" class="ws-saved-word" onclick="rhemaOpenWordStudy('${esc(x.strongs)}')"><span class="ws-saved-lemma">${esc(x.lemma)}</span><span class="ws-saved-tr">${esc(x.translit)}</span></button>
+          <button type="button" class="ws-saved-x" aria-label="Remove" onclick="rhemaRemoveSavedMeaning('${esc(x.id)}')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <h4>${esc(x.label)}</h4>
+        <p>${esc(x.definition)}</p>
+        ${x.note ? more('Why', `<p>${esc(x.note)}</p>`) : ''}
+        <div class="ws-refs">${x.verse ? `<span class="ws-fine">Saved from</span>${verseChip(x.verse, x.strongs)}` : ''}${(x.refs || []).filter(r => r !== x.verse).slice(0, 4).map(r => verseChip(r, x.strongs)).join('')}</div>
+        <button type="button" class="ws-btn" onclick="rhemaOpenWordStudy('${esc(x.strongs)}')"><span class="material-symbols-outlined">menu_book</span>Open the word study</button>
+      </article>`).join('')}
+    </div>`;
+  };
+  window.rhemaRemoveSavedMeaning = function (id) {
+    _savedWrite(_savedList().filter(x => x.id !== id));
+    _syncSaveButtons(id, false);
+    const body = document.getElementById('rrpSubBody');
+    if (body && body.querySelector('.ws-saved, .ws-saved-empty')) body.innerHTML = rhemaSavedMeaningsHtml();
+  };
+  window.rhemaShowSavedMeanings = function () {
+    if (typeof closeRhemaSheet === 'function') closeRhemaSheet();
+    if (typeof openRhemaReaderPanel !== 'function') return;
+    openRhemaReaderPanel();
+    setTimeout(() => showReaderPanelSection('meanings'), 30);
+  };
+  // Open a word's study without a verse (from Saved meanings).
+  window.rhemaOpenWordStudy = function (strongs) {
+    const lex = (window.RhemaLexicon || {})[strongs];
+    if (!lex) return;
+    if (typeof closeRhemaReaderPanel === 'function') closeRhemaReaderPanel();
+    setTimeout(() => {
+      const morph = typeof _findAnyMorphForStrongs === 'function' ? _findAnyMorphForStrongs(strongs) : '';
+      window._rhemaWordCtx = null;
+      _rhemaActiveWord = [lex.lemma, Number(strongs), morph || ''];
+      _rhemaActiveWordLayer = 'nt-greek';
+      const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+      set('rhemaSheetSurface', lex.lemma || '');
+      set('rhemaSheetStrongs', `G${strongs}`);
+      set('rhemaSheetLemma', `${lex.lemma || ''}  (${lex.translit || ''})`);
+      document.getElementById('rhemaWlBackBtn')?.classList.add('hidden');
+      showRhemaTab('definition', _rhemaActiveWord);
+      const sheet = document.getElementById('rhemaSheet');
+      sheet?.classList.add('open');
+      document.getElementById('rhemaSheetBackdrop')?.classList.add('visible');
+      if (typeof initRhemaSwipeDown === 'function') initRhemaSwipeDown(sheet);
+    }, 240);
+  };
+
+  // ── First-run tour ──────────────────────────────────────────────────────
+  // Four short tips the first time a word study opens; replay from "?".
+  const TOUR_KEY = 'rhemaWsTourDone';
+  const TOUR = [
+    { sel: '.ws-hero', title: 'The answer first', text: 'What this word means in this verse, and how your Bible words it. Many questions end right here.' },
+    { sel: '.ws-depth', title: 'Choose your depth', text: '<b>Quick</b> is just the answer. <b>Study</b> adds every meaning and the translations. <b>Deep</b> adds history, the lexicons and the evidence.' },
+    { sel: '.ws-dtabs', title: 'Swipe through cards', text: 'Swipe sideways (or tap a tab) for each meaning, this verse in other Bibles, how translations render the word, and who uses it.' },
+    { sel: '.ws-save', title: 'Save a meaning', text: 'Tap <b>Save</b> on any meaning to keep it. Find them all under <b>Saved</b> here, or in the Reader menu.' },
+  ];
+  let _tour = null;
+  window.rhemaWordStudyTour = function (uid, force) {
+    if (!force && _ls.get(TOUR_KEY, '')) return;
+    const root = document.getElementById(uid);
+    if (!root || !root.offsetParent) return;
+    if (_wsDepth === 'quick') rhemaWordStudyDepth(uid, 'study');
+    _tour = { uid, i: 0 };
+    _tourShow();
+  };
+  function _tourEls() {
+    let spot = document.getElementById('wsTourSpot'), tip = document.getElementById('wsTourTip');
+    if (!spot) {
+      spot = document.createElement('div'); spot.id = 'wsTourSpot'; spot.className = 'ws-tour-spot';
+      tip = document.createElement('div'); tip.id = 'wsTourTip'; tip.className = 'ws-tour-tip'; tip.setAttribute('role', 'dialog');
+      document.body.append(spot, tip);
+    }
+    return { spot, tip };
+  }
+  function _tourShow() {
+    if (!_tour) return;
+    const root = document.getElementById(_tour.uid);
+    const steps = TOUR.filter(s => root && [...root.querySelectorAll(s.sel)].some(el => el.offsetParent));
+    const step = steps[_tour.i];
+    if (!root || !step) return _tourEnd();
+    const target = [...root.querySelectorAll(step.sel)].find(el => el.offsetParent);
+    // Scroll only the sheet's own scroller (scrollIntoView would also move the
+    // page behind the sheet).
+    let sc = target.parentElement;
+    while (sc && sc !== document.body) {
+      const oy = getComputedStyle(sc).overflowY;
+      if ((oy === 'auto' || oy === 'scroll') && sc.scrollHeight > sc.clientHeight) break;
+      sc = sc.parentElement;
+    }
+    if (sc && sc !== document.body) {
+      const tr = target.getBoundingClientRect(), sr = sc.getBoundingClientRect();
+      if (tr.top < sr.top + 8 || tr.bottom > sr.bottom - 8) sc.scrollTop += tr.top - sr.top - 24;
+    }
+    const r = target.getBoundingClientRect();
+    const { spot, tip } = _tourEls();
+    const pad = 6;
+    Object.assign(spot.style, { top: `${r.top - pad}px`, left: `${r.left - pad}px`, width: `${r.width + pad * 2}px`, height: `${Math.min(r.height, window.innerHeight * 0.5) + pad * 2}px` });
+    const last = _tour.i === steps.length - 1;
+    tip.innerHTML = `<div class="ws-tour-step">${_tour.i + 1} / ${steps.length}</div><h4>${step.title}</h4><p>${step.text}</p>
+      <div class="ws-tour-btns"><button type="button" class="ws-tour-skip" onclick="rhemaWordStudyTourEnd()">${last ? '' : 'Skip'}</button><button type="button" class="ws-tour-next" onclick="rhemaWordStudyTourNext()">${last ? 'Got it' : 'Next'}</button></div>`;
+    spot.classList.add('on'); tip.classList.add('on');
+    const below = r.top + Math.min(r.height, window.innerHeight * 0.5) + 14;
+    const th = tip.offsetHeight || 150;
+    const top = below + th < window.innerHeight - 8 ? below : Math.max(8, r.top - th - 14);
+    tip.style.top = `${top}px`;
+  }
+  window.rhemaWordStudyTourNext = function () { if (_tour) { _tour.i++; _tourShow(); } };
+  window.rhemaWordStudyTourEnd = _tourEnd;
+  function _tourEnd() {
+    _tour = null;
+    _ls.set(TOUR_KEY, '1');
+    document.getElementById('wsTourSpot')?.classList.remove('on');
+    document.getElementById('wsTourTip')?.classList.remove('on');
   }
 
   // ── Main entry ───────────────────────────────────────────────────────────
@@ -805,48 +1271,51 @@
     const lex = decision.lex;
     if (!lex) return `<p class="ws-note">No definition found for this word.</p>`;
     const uid = `ws${++_seq}`;
-    _wsOpen = { ...WS_OPEN_DEFAULT }; // each word opens on its answer
     const occ = typeof getCurrentRhemaOccurrences === 'function' ? getCurrentRhemaOccurrences(strongs, 'nt-greek') : null;
-    _studies.set(uid, { strongs, ctx, entry: null });
+    _studies.set(uid, { strongs, ctx, entry: undefined, gloss: decision.gloss || '' });
     if (_studies.size > 20) _studies.delete(_studies.keys().next().value);
 
     const isNT = layer === 'nt-greek' || !!(occ && occ.total);
+    const saved = _savedList().length;
+    const loading = {
+      range: `<section class="ws-card"><div class="ws-loading">Gathering every meaning across the New Testament…</div></section>`,
+      here: ctx ? `<section class="ws-card"><div class="ws-loading">Lining up the translations…</div></section>` : '',
+      lex: lexiconsHtml(lex, strongs, null, uid),
+    };
 
-    const html = `<div class="ws" id="${uid}">
+    const html = `<div class="ws ws-d-${_wsDepth}" id="${uid}">
       ${heroHtml(strongs, lex, decision, ctxRaw, occ, uid)}
-      <div id="${uid}-here">${ctx ? `<section class="ws-sec"><div class="ws-loading">Lining up the translations…</div></section>` : ''}</div>
-      <div id="${uid}-deep"><section class="ws-sec"><div class="ws-loading">Measuring this word across the New Testament…</div></section></div>
-      <div id="${uid}-versions"></div>
-      <div id="${uid}-lex">${lexiconsHtml(lex, strongs, null, uid)}</div>
-      <div id="${uid}-method"></div>
+      <div class="ws-bar-row">
+        ${depthHtml(uid)}
+        <button type="button" class="ws-icon-b" onclick="rhemaShowSavedMeanings()" title="Saved meanings" aria-label="Saved meanings"><span class="material-symbols-outlined">bookmarks</span><span class="ws-saved-n">${saved || ''}</span></button>
+        <button type="button" class="ws-icon-b" onclick="rhemaWordStudyTour('${uid}',true)" title="How this works" aria-label="How this works"><span class="material-symbols-outlined">help</span></button>
+      </div>
+      <button type="button" class="ws-go-deeper" onclick="rhemaWordStudyDepth('${uid}','study')">See every meaning, the translations &amp; more<span class="material-symbols-outlined">arrow_forward</span></button>
+      ${deckHtml(uid, loading)}
     </div>`;
 
     setTimeout(() => {
+      _wsRefreshDeck(uid);
       loadDeepLexiconEntry(strongs).then((entry) => {
         if (!document.getElementById(uid)) return;
-        const st = _studies.get(uid); if (st) st.entry = entry;
+        const st = _studies.get(uid); if (st) st.entry = entry || null;
         fillHero(uid, entry, strongs);
-        const deep = document.getElementById(`${uid}-deep`);
-        if (deep) {
-          deep.innerHTML = [rangeHtml(entry, strongs), `<div data-ws-slot="versions"></div>`, authorsHtml(entry, strongs), historyHtml(entry, lex, strongs)].join('')
-            || '<p class="ws-note">This word has no measured New Testament usage; the lexicons below carry its meaning.</p>';
-          // The Across-translations block lives between Range and Authors.
-          const slot = deep.querySelector('[data-ws-slot="versions"]');
-          const vEl = document.getElementById(`${uid}-versions`);
-          if (slot && vEl) slot.replaceWith(vEl);
-        }
+        const put = (id, h) => { const el = document.getElementById(`${uid}-${id}`); if (el) el.innerHTML = h || ''; };
+        const range = rangeHtml(entry, strongs, uid);
+        put('range', range || (entry ? '' : section('range', 'auto_awesome', 'Meaning', '<p class="ws-note">This word has no measured New Testament usage; the lexicons carry its meaning.</p>')));
+        put('authors', authorsHtml(entry, strongs));
+        put('history', historyHtml(entry, lex, strongs));
+        put('method', methodHtml(entry));
+        if (_lsjText(entry)) put('lex', lexiconsHtml(lex, strongs, entry, uid));
         if (isNT && _wsOccurrences(strongs).length) {
-          // Draw the (closed) section now; counting starts when it is opened.
-          const st2 = _studies.get(uid);
+          // Draw the Translations card now; counting starts when it's viewed.
           const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
-          if (st2 && !st2.ver) st2.ver = _wsIsLocal(reader) ? reader : 'MSB';
+          if (st && !st.ver) st.ver = _wsIsLocal(reader) ? reader : 'MSB';
           _wsRenderVersions(uid, strongs);
         }
-        const methodEl = document.getElementById(`${uid}-method`);
-        if (methodEl) methodEl.innerHTML = methodHtml(entry);
-        const lexEl = document.getElementById(`${uid}-lex`);
-        if (lexEl && _lsjText(entry)) lexEl.innerHTML = lexiconsHtml(lex, strongs, entry, uid);
         if (ctx) renderHere(uid, ctx, strongs, entry);
+        _wsRefreshDeck(uid);
+        setTimeout(() => rhemaWordStudyTour(uid, false), 500);
       });
       if (ctx) {
         Promise.resolve(typeof _ensureRhemaBsbAlign === 'function' ? _ensureRhemaBsbAlign() : null).then(() => {
@@ -856,25 +1325,6 @@
       }
     }, 0);
     return html;
-  };
-
-  window.rhemaWordStudyJump = function (uid, id) {
-    const root = document.getElementById(uid);
-    const target = root && root.querySelector(`[data-ws-sec="${id}"]`);
-    if (!target) return;
-    if (!target.open) target.open = true; // fires ontoggle (starts counting for Versions)
-    // Scroll only the sheet's own scroller — scrollIntoView would also move
-    // the page behind the sheet.
-    let sc = target.parentElement;
-    while (sc && sc !== document.body) {
-      const oy = getComputedStyle(sc).overflowY;
-      if ((oy === 'auto' || oy === 'scroll') && sc.scrollHeight > sc.clientHeight) break;
-      sc = sc.parentElement;
-    }
-    if (!sc || sc === document.body) return;
-    const nav = root.querySelector('.ws-nav');
-    const top = target.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - (nav ? nav.offsetHeight + 16 : 0);
-    sc.scrollTo({ top, behavior: 'smooth' });
   };
 
   // Exposed for scripts/test-word-study.js
