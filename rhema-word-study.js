@@ -374,8 +374,9 @@
       if (entry?.audit?.verdict === 'misleading') {
         parts.push(`<div class="ws-flag"><span class="material-symbols-outlined">flag</span>Rhema’s own review flagged this summary as possibly misleading. Lean on the measured range, the verses and the lexicons.</div>`);
       }
+      // The older generated article only when there's no reviewed study.
       const about = [
-        prose.article ? `<p>${esc(prose.article)}</p>` : '',
+        prose.article && !study ? `<p>${esc(prose.article)}</p>` : '',
         prose.caution && !study ? `<p class="ws-caution">${esc(prose.caution)}</p>` : '',
       ].join('');
       if (about) parts.push(`<div class="ws-deep-only">${more('About this word', about)}</div>`);
