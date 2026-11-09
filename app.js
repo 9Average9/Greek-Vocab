@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.536";
+const APP_VERSION = "3.0.537";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.537 &mdash; Meet your Rhēma guide</div>
+<ul>
+  <li><strong>A friendly tour guide</strong> &mdash; Every guided tour is now narrated by Rhēma&rsquo;s guide. He pops in, hops along with each step, and cheers when you finish; the tour card is his speech bubble.</li>
+  <li><strong>Fresh tours</strong> &mdash; The Rhēma tour and a new Study Tools tour (Phrasing, Word Log, Trails, Workspace) match the reader as it is now. Replay any tour from Profile &rarr; Coach Tours.</li>
+</ul>
 <div class="un-version-label">v3.0.536 &mdash; More room to read</div>
 <ul>
   <li><strong>Full-screen reading</strong> &mdash; The top bar (Rhēma, search and menu) now glides away with the reference bar as you scroll down, and slides back the moment you scroll up.</li>
@@ -43205,6 +43210,9 @@ function openRhemaReaderPanel() {
   _renderRhemaPanelMain();
   showReaderPanelSection('main');
   ov.classList.add('open');
+  if (_rhemaStudyId() && !_localFlagSet('studyToolsCoachSeenV3537') && document.getElementById('appCoachOverlay')?.classList.contains('hidden') !== false) {
+    setTimeout(() => { if (ov.classList.contains('open')) startStudyRhemaCoach(); }, 650);
+  }
   // Two frames so the from-state (off-screen) paints before the slide-in.
   requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add('in')));
 }
@@ -45480,6 +45488,79 @@ function _syncToolWandIndicator() {
   document.getElementById('rhemaToolBtn')?.classList.toggle('has-active', hasActive);
 }
 
+// ── Tour guide mascot ─────────────────────────────────────────────────────────
+// Every guided tour is narrated by the Rhēma guide: he perches above the tour
+// card (which becomes his speech bubble), pops in at the start, hops on each
+// step, floats while you read, and cheers on the last step. The cards scroll
+// internally (and would clip him), so he lives beside the card in the tour's
+// overlay and follows the card's position as it moves.
+const COACH_GUIDE_W = 96;
+const COACH_GUIDE_H = Math.round(COACH_GUIDE_W * 371 / 480);
+const COACH_GUIDE_ROOM = COACH_GUIDE_H + 8;   // headroom a card needs above it
+function _coachGuideEl(host) {
+  let g = host.querySelector(':scope > .coach-guide');
+  if (!g) {
+    g = document.createElement('div');
+    g.className = 'coach-guide';
+    g.setAttribute('aria-hidden', 'true');
+    if (host === document.body) g.classList.add('coach-guide-fixed');
+    g.innerHTML = `<div class="coach-guide-fig"><div class="coach-guide-bob">
+        <img class="coach-guide-body" src="assets/mascot/guide-body.webp" alt="" draggable="false" decoding="async">
+        <img class="coach-guide-spark" src="assets/mascot/guide-spark.webp" alt="" draggable="false" decoding="async">
+        <span class="coach-guide-glint"></span>
+      </div></div><span class="coach-guide-tail"></span>`;
+    host.appendChild(g);
+  }
+  return g;
+}
+function coachGuideShow(host, card, opts = {}) {
+  if (!host || !card) return;
+  const g = _coachGuideEl(host);
+  const entering = !g.classList.contains('on');
+  g.classList.add('on');
+  g.classList.toggle('is-cheer', !!opts.last);
+  const fig = g.firstElementChild;
+  fig.classList.remove('is-pop', 'is-hop');
+  void fig.offsetWidth;
+  fig.classList.add(entering ? 'is-pop' : 'is-hop');
+  // The card is his speech bubble: its words "arrive" as he speaks.
+  card.classList.add('coach-bubble');
+  // The speech-bubble tail takes the card's own colours.
+  const cs = getComputedStyle(card);
+  g.style.setProperty('--guide-tail-bg', cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)' ? cs.backgroundColor : 'var(--card-color, #fff)');
+  g.style.setProperty('--guide-tail-border', parseFloat(cs.borderTopWidth) > 0 ? cs.borderTopColor : 'transparent');
+  card.classList.remove('coach-says');
+  void card.offsetWidth;
+  card.classList.add('coach-says');
+  _coachGuideFollow(g, card);
+}
+function _coachGuideFollow(g, card) {
+  cancelAnimationFrame(g._raf);
+  const until = performance.now() + 460;   // covers the card's 0.28s move
+  const fixed = g.classList.contains('coach-guide-fixed');
+  const tick = () => {
+    const cr = card.getBoundingClientRect();
+    const pr = fixed || !g.offsetParent ? { left: 0, top: 0 } : g.offsetParent.getBoundingClientRect();
+    const hiddenCard = card.style.visibility === 'hidden' || cr.width < 4 || cr.top < -2000;
+    g.classList.toggle('is-waiting', hiddenCard);
+    if (!hiddenCard) {
+      g.style.left = Math.round(cr.left - pr.left + 12) + 'px';
+      g.style.top = Math.round(cr.top - pr.top - COACH_GUIDE_ROOM) + 'px';
+    }
+    if (performance.now() < until) g._raf = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function coachGuideHide(host) {
+  const g = host?.querySelector(':scope > .coach-guide');
+  if (!g) return;
+  cancelAnimationFrame(g._raf);
+  g.classList.remove('on', 'is-cheer');
+}
+window.coachGuideShow = coachGuideShow;
+window.coachGuideHide = coachGuideHide;
+window.COACH_GUIDE_ROOM = COACH_GUIDE_ROOM;
+
 // ── Coach mark onboarding ─────────────────────────────────────────────────────
 
 const COACH_TEST_MODE = false;
@@ -45524,18 +45605,21 @@ const APP_WELCOME_COACH_STEPS = [
   { before: () => { showNavPage('community'); showLbTab('xp'); }, target: () => _coachFirst(['button[data-tab="xp"]', '#lbPaneXP']), title: 'XP leaderboard', body: 'XP rewards steady work: lessons, tests, vocab, translation, and study habits. It is not the goal, but it helps your progress feel visible.' },
   { before: () => { showNavPage('community'); showLbTab('scholar'); }, target: () => _coachFirst(['button[data-tab="scholar"]', '#lbPaneScholar']), title: 'Scholar board', body: 'The Scholar board highlights careful practice quality, not just activity. It gives deeper testing and review work its own place.' },
   { before: () => showNavPage('home'), target: () => _coachFirst(['.home-actions-grid', '#notifBtn']), title: 'Home tools', body: 'Home is the launch point. Tools open vocabulary, translation, and tests. The bell opens Notifications — app updates and activity — and also holds a Reminders tab for your study reminders.' },
-  { target: () => _coachFirst(['#studyLibraryHomeBtn', '.home-actions-grid']), title: 'Create studies here', body: 'The Study Library holds your focused study spaces. A study can hold Rhema work, saved verses, word logs, scripture trails, and notes.' },
+  { target: () => _coachFirst(['#studyLibraryHomeBtn', '.home-actions-grid']), title: 'Your study lives in Rhēma', body: 'There are no separate studies to manage. Open Rhēma’s menu for Phrasing, Word Log, Trails and Workspace; everything you save there stays with your account.' },
   { target: () => _coachFirst(['.bn-item[data-page="rhema"]', '#rhemaSearchToggle']), title: 'Rhema lives close by', body: 'Rhema is the Greek word-study reader. Open it from the nav bar to read a passage, tap words, compare English, use syntax, and explore cross references.' },
   { before: () => { showNavPage('profile'); document.getElementById('profileJourneySection')?.classList.remove('collapsed'); }, target: () => _coachFirst(['#profileJourneySection', '.profile-action-row', '.profile-header']), title: 'Profile tracks your journey', body: 'Your profile keeps your XP, rank, streak, lesson progress, known words, translation attempts, and achievements — tap "Your Greek Journey" to expand it anytime. The settings gear in the top-left holds appearance, account, and calendar options.' }
 ];
 
+const _coachPause = (ms = 420) => new Promise(r => setTimeout(r, ms));
+// The reader's built-in study: its tools live in Rhēma's side menu.
 const STUDY_RHEMA_COACH_STEPS = [
-  { target: () => _coachFirst(['#studyTabBar', '#ssPaneRhema']), title: 'Study Rhema', body: 'Inside a study, Rhema works like the main Rhema reader, but the position and saved material belong to this study so every passage has its own workspace.' },
-  { before: () => switchSandboxTab('rhema'), target: () => _coachFirst(['#rhemaVerseDisplay', '#ssRhemaPosition']), title: 'Long-press for study notes', body: 'In Study Rhema, long-press a verse to save a thought directly into the study workspace while the passage is still in front of you.' },
-  { target: () => _coachFirst(['#studyTabBar button[data-tab="trails"]', '#studyTabBar']), title: 'Saved trails from cross references', body: 'When you save a cross-reference trail from Study Rhema, it appears in Trails. Opening it later restores the exact path you saved.' },
-  { before: () => switchSandboxTab('trails'), target: () => _coachFirst(['#ssPaneTrails', '#ssTrailsList']), title: 'Trails preserve discovery', body: 'A trail saves the breadcrumb path, connected verses, labels, and text so you can return to the route instead of trying to remember it.' },
-  { before: () => switchSandboxTab('notes'), target: () => _coachFirst(['#ssPaneNotes', '.ws-tab-bar']), title: 'Workspace is where thoughts land', body: 'Workspace organizes notes into Observe, Interpret, Apply, and Question. Long-press notes from Rhema land here, and you can add your own thoughts too.' },
-  { target: () => _coachFirst(['#wsKbdToggleBtn', '.ss-compose']), title: 'Greek keyboard', body: 'The alpha button opens a Greek keyboard so you can type Greek forms directly into your notes.' }
+  { before: () => { if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost(); openRhemaReaderPanel(); return _coachPause(460); }, target: () => _coachFirst(['#rrpMainBody .rrp-study-grid', '#rrpMainBody']), title: 'Your study lives in the reader', body: 'Phrasing, Word Log, Trails and Workspace are always right here in the menu. Everything you add saves to your account automatically, so there is no separate study to open.' },
+  { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachFirst(['#rhemaEnglishDisplay .rhema-chapter-block', '#rhemaVerseDisplay .rhema-chapter-block', '#rhemaEnglishDisplay', '#rhemaVerseDisplay']), demo: 'longpress', title: 'Long-press for study notes', body: 'Long-press any verse, or tap it and choose “Observe, interpret, apply or ask”, to save a thought to your Workspace while the passage stays open.' },
+  { before: () => Promise.resolve(openStudyTool('phrasing')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneVerses .ss-structured-add', '#ssPaneVerses']), title: 'Phrasing', body: 'Break a passage into its phrases and clauses to see how the thought flows. The + button starts one, and every change saves as you work.' },
+  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssWordlogList', '#ssPaneWordlog']), title: 'Word Log', body: 'Tap any word in Rhēma and press “Add to Word Log”. Tap a logged word later to see its definition, parsing and every place it appears.' },
+  { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssTrailsList', '#ssPaneTrails']), title: 'Trails preserve discovery', body: 'In Cross References, tap Save Trail and the path lands here: the breadcrumbs, connected verses and labels, ready to reopen exactly as you left it.' },
+  { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), title: 'Workspace is where thoughts land', body: 'Workspace sorts your notes into Observe, Interpret, Apply and Question. Long-press notes from Rhēma land here, and you can add your own thoughts too.' },
+  { target: () => _coachFirst(['#wsKbdToggleBtn', '.ss-compose']), title: 'Greek keyboard', body: 'The alpha button opens a Greek keyboard so you can type Greek forms straight into your notes. That’s the tour. Happy studying!' }
 ];
 
 const XREF_COACH_STEPS = [
@@ -45543,7 +45627,7 @@ const XREF_COACH_STEPS = [
   { target: () => _coachFirst(['.rx-category-card', '#rxMainView']), title: 'Categories are scripture trails', body: 'Each card groups a different kind of connection: direct references, themes, Old/New Testament links, parallel ideas, or prophecy fulfillment.' },
   { target: () => _coachFirst(['.rx-category-card .rx-mini-list', '.rx-category-card']), title: 'Only a preview appears here', body: 'Category cards show a small preview so the page stays calm. The arrow opens the full stacked list for that category.' },
   { target: () => _coachFirst(['.rx-breadcrumb', '.rx-page-header']), title: 'Breadcrumbs keep your path', body: 'When you tap a connected verse, it becomes the new active verse and the breadcrumb remembers the route you took.' },
-  { target: () => _coachFirst(['.rx-save-trail-btn', '.rx-page-header']), title: 'Save Trail in Study Rhema', body: 'When Cross References is opened inside a study, Save Trail stores the current scripture trail so it can be restored later from the study Trails tab.' }
+  { target: () => _coachFirst(['.rx-save-trail-btn', '.rx-page-header']), title: 'Save Trail', body: 'Save Trail keeps the current scripture trail in your study, so you can reopen the exact path later from Trails in Rhēma’s menu.' }
 ];
 
 APP_WELCOME_COACH_STEPS[0].body = 'This app helps you learn enough Greek to observe the New Testament carefully, then keeps lessons, practice, Rhema, notes, cross references, Praises, progress, and community study in one place. Tiny tour, big map. Let’s get you oriented.';
@@ -45570,30 +45654,17 @@ APP_WELCOME_COACH_STEPS[3].before = () => {
 APP_WELCOME_COACH_STEPS[3].body = 'XP rewards steady work: lessons, tests, vocabulary, translation, and study habits. It is not the point of Greek study, but it gives your effort a visible shape. Sometimes a little scoreboard keeps the lamp on.';
 APP_WELCOME_COACH_STEPS[4].body = 'The Scholar board is more about careful practice than raw activity. It helps deeper testing and review work show up, so someone doing slow, thoughtful study is not invisible beside someone farming XP.';
 APP_WELCOME_COACH_STEPS[5].body = 'Home is the launch point. Tools open vocabulary, translation, and tests. The bell opens Notifications — where app updates and activity notices live — and it also holds a Reminders tab for setting your daily study reminders.';
-APP_WELCOME_COACH_STEPS[6].body = 'Your Studies is where you make focused study spaces. Use this when you want to work through a passage seriously, invite people in, save trail discoveries, and keep your notes tied to the actual text.';
+APP_WELCOME_COACH_STEPS[6].body = 'There are no separate studies to manage. Open Rhēma’s menu for Phrasing, Word Log, Trails and Workspace; everything you save there stays with your account and keeps your notes tied to the actual text.';
 APP_WELCOME_COACH_STEPS[7].body = 'Rhema is the Greek word-study reader. It is special because it stays inside your study flow: tap words, compare English, inspect parsing, check lexicons, use syntax, open cross references, and keep a trail without leaving the app.';
 APP_WELCOME_COACH_STEPS[8].body = 'Your profile keeps your XP, rank, streak, lesson progress, known words, translation attempts, and achievements — tap "Your Greek Journey" to expand it anytime. The settings gear in the top-left holds appearance, account, and calendar options, and you can replay these coach tours from here.';
 
-STUDY_RHEMA_COACH_STEPS[1] = {
-  before: () => switchSandboxTab('rhema'),
-  target: () => _coachFirst(['#rhemaVerseDisplay', '#ssRhemaPosition']),
-  position: 'center',
-  offsetY: 34,
-  title: 'Long-press for study notes',
-  body: 'In Study Rhema, long-press means touch and hold for a moment instead of quick tapping. Holding a verse opens the study note wheel so you can save a thought while the passage is still right there.',
-  demo: 'longpress'
-};
-// On desktop, replace the long-press coach step with a button reference
+// On desktop there is no long-press: point at the note button instead.
 if (window.matchMedia && window.matchMedia('(min-width: 960px) and (pointer: fine)').matches) {
+  STUDY_RHEMA_COACH_STEPS[1].target = () => _coachFirst(['#rhemaDesktopNoteBtn', '#rhemaEnglishDisplay .rhema-chapter-block']);
   STUDY_RHEMA_COACH_STEPS[1].title = 'Add a study note';
-  STUDY_RHEMA_COACH_STEPS[1].body = 'Use the note button (✎) in the verse navigation bar to save an observation, interpretation, or question directly from the current passage into the study workspace.';
+  STUDY_RHEMA_COACH_STEPS[1].body = 'Use the note button (✎) in the verse bar, or tap a verse and choose “Observe, interpret, apply or ask”, to save a thought from the passage straight into your Workspace.';
   delete STUDY_RHEMA_COACH_STEPS[1].demo;
 }
-STUDY_RHEMA_COACH_STEPS[3].position = 'center';
-STUDY_RHEMA_COACH_STEPS[3].offsetY = 44;
-STUDY_RHEMA_COACH_STEPS[3].body = 'A trail saves the breadcrumb path, connected verses, labels, and text so you can return to the route instead of trying to remember it. It is your “how did I get here?” answer, saved.';
-STUDY_RHEMA_COACH_STEPS[4].position = 'center';
-STUDY_RHEMA_COACH_STEPS[4].body = 'Workspace organizes notes into Observe, Interpret, Apply, and Question. It keeps your thinking separated enough to be useful, but close enough that you can still see one study taking shape.';
 
 XREF_COACH_STEPS[3].body = 'Breadcrumbs will appear near the top once you start moving verse to verse. They show the route you took, so John 1:1 → Hebrews 1:3 → Colossians 1:15 does not become a foggy memory five minutes later.';
 
@@ -45619,8 +45690,9 @@ function startAppWelcomeCoach(force = false) {
 }
 
 function startStudyRhemaCoach(force = false) {
-  if (_coachHasSeen('studyRhemaCoachSeenV275', force)) return;
-  _startAppCoach(STUDY_RHEMA_COACH_STEPS, 'studyRhemaCoachSeenV275');
+  if (_coachHasSeen('studyToolsCoachSeenV3537', force)) return;
+  if (!document.getElementById('rhemaModal')?.classList.contains('open')) return;
+  _startAppCoach(STUDY_RHEMA_COACH_STEPS, 'studyToolsCoachSeenV3537', force);
 }
 
 function startCrossRefCoach(force = false) {
@@ -45680,7 +45752,11 @@ function startCoachReplay(type) {
   }
   if (type === 'rhema') showRhema().then(() => setTimeout(() => startRhemaCoach(true), 260));
   if (type === 'study') {
-    _showStudyToast('Open one of your studies, then choose Study Rhema Coach again from Profile.');
+    _suppressRhemaCoachOnce = true;
+    showRhema().then(async () => {
+      if (!(await _rhemaRequireStudy())) return;
+      setTimeout(() => startStudyRhemaCoach(true), 260);
+    });
   }
   if (type === 'xref') {
     _suppressRhemaCoachOnce = true;
@@ -45725,6 +45801,7 @@ function _showAppCoachStep() {
     document.getElementById('appCoachNextLabel').textContent = _appCoachIdx === _appCoachSteps.length - 1 ? 'Done' : 'Next';
     document.getElementById('appCoachBackBtn').style.visibility = _appCoachIdx === 0 ? 'hidden' : 'visible';
     _placeAppCoachCard(typeof step.target === 'function' ? step.target() : null, card, spotlight, step.position || 'below');
+    coachGuideShow(overlay, card, { last: _appCoachIdx === _appCoachSteps.length - 1 });
   }, 90);
   if (typeof step.before === 'function') {
     const result = step.before();
@@ -45779,14 +45856,15 @@ function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
     spotlight.style.height = `${Math.min(vh - MARGIN * 2, rect.height + PAD * 2)}px`;
   }
   requestAnimationFrame(() => {
-    const cardH = Math.min(card.offsetHeight, vh - MARGIN * 2);
+    const ROOM = COACH_GUIDE_ROOM;   // the guide perches above the card
+    const cardH = Math.min(card.offsetHeight, vh - MARGIN * 2 - ROOM);
     let top;
     let left;
     if (!rect) {
-      top = vh / 2 - cardH / 2;
+      top = vh / 2 - cardH / 2 + ROOM / 2;
       left = vw / 2 - cardW / 2;
     } else if (preferred === 'center') {
-      top = vh / 2 - cardH / 2;
+      top = vh / 2 - cardH / 2 + ROOM / 2;
       left = vw / 2 - cardW / 2;
     } else if (preferred === 'bottom') {
       top = vh - cardH - MARGIN - 8;
@@ -45794,28 +45872,28 @@ function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
     } else if (preferred === 'above') {
       top = rect.top - cardH - 18;
       left = rect.left + rect.width / 2 - cardW / 2;
-      if (top < MARGIN) top = rect.bottom + 18;
+      if (top < MARGIN + ROOM) top = rect.bottom + 18 + ROOM;
     } else if (preferred === 'right') {
       top = rect.top + rect.height / 2 - cardH / 2;
       left = rect.right + 18;
       if (left + cardW > vw - MARGIN) left = rect.left - cardW - 18;
     } else {
-      const belowTop = rect.bottom + 18;
+      const belowTop = rect.bottom + 18 + ROOM;
       const aboveTop = rect.top - cardH - 18;
-      const belowSpace = vh - rect.bottom - MARGIN;
-      const aboveSpace = rect.top - MARGIN;
+      const belowSpace = vh - rect.bottom - MARGIN - ROOM;
+      const aboveSpace = rect.top - MARGIN - ROOM;
       top = belowSpace >= cardH + 18 || belowSpace >= aboveSpace ? belowTop : aboveTop;
       left = rect.left + rect.width / 2 - cardW / 2;
       if (top + cardH > vh - MARGIN) top = aboveTop;
-      if (top < MARGIN) top = Math.min(vh - cardH - MARGIN, Math.max(MARGIN, rect.bottom + 18));
-      if (!(top + cardH < rect.top || top > rect.bottom)) {
-        top = aboveSpace > belowSpace ? MARGIN : vh - cardH - MARGIN;
+      if (top < MARGIN + ROOM) top = Math.min(vh - cardH - MARGIN, Math.max(MARGIN + ROOM, rect.bottom + 18 + ROOM));
+      if (!(top + cardH < rect.top || top - ROOM > rect.bottom)) {
+        top = aboveSpace > belowSpace ? MARGIN + ROOM : vh - cardH - MARGIN;
       }
     }
     if (typeof _appCoachSteps[_appCoachIdx]?.offsetY === 'number') {
       top += _appCoachSteps[_appCoachIdx].offsetY;
     }
-    top = Math.max(MARGIN, Math.min(top, vh - cardH - MARGIN));
+    top = Math.max(MARGIN + ROOM, Math.min(top, vh - cardH - MARGIN));
     left = Math.max(MARGIN, Math.min(left, vw - cardW - MARGIN));
     card.style.top = `${top}px`;
     card.style.left = `${left}px`;
@@ -45839,6 +45917,7 @@ function appCoachBack() {
 function _endAppCoach() {
   _appCoachFinishing = true;
   document.getElementById('appCoachOverlay')?.classList.add('hidden');
+  coachGuideHide(document.getElementById('appCoachOverlay'));
   _coachMarkSeen(_appCoachSeenKey);
   if (_appCoachSeenKey === 'appWelcomeCoachSeenV275') {
     showNavPage('home');
@@ -45882,26 +45961,26 @@ const _RHEMA_COACH_STEPS = [
   {
     targetFn: () => _coachFirst(['#rhemaEnglishDisplay:not(.hidden)', '#rhemaVerseDisplay']),
     position: 'center',
-    title: 'Read the chapter in English',
-    body: 'Rhema opens as a plain-English reading Bible. Tap a verse and the action sheet opens right away, so highlights, notes, compare, and focus stay close to the passage.',
+    title: 'Welcome to Rhēma!',
+    body: 'I’m your guide. Rhēma opens as a plain-English reading Bible. Tap any verse and its action sheet opens right away: highlights, notes, compare, and study notes, all close to the passage.',
   },
   {
-    targetFn: () => document.getElementById('rhemaSwapBtn'),
+    targetFn: () => _coachFirst(['#rhemaReaderMenuBtn']),
     position: 'below',
-    title: 'Swap into the Greek',
-    body: 'This switch flips the chapter between English and the original language. In the Greek, tap any word to open its definition, parsing, and usage — no Greek knowledge needed.',
+    title: 'Your tools live in the menu',
+    body: 'This menu holds everything: switch the chapter into the Greek (then tap any word for its meaning, parsing and usage), turn on the syntax tree or parts of speech, open cross references, and find Phrasing, Word Log, Trails and Workspace.',
   },
   {
-    targetFn: () => document.getElementById('rhemaToolBtn'),
+    targetFn: () => _coachFirst(['#rhemaSearchToggle']),
     position: 'below',
-    title: 'Study tools',
-    body: 'Open the tool wheel to turn on the Syntax tree, Greek-only mode, word highlighting, and the Majority Text / Critical Text switch. English translation is selected separately with the MSB/BSB reader pill.',
+    title: 'Search the whole Bible',
+    body: 'Type a reference, a phrase you half remember, a story, or a question, and Rhēma finds the passage.',
   },
   {
     targetFn: () => document.querySelector('.rhema-picker'),
-    position: 'above',
+    position: 'below',
     title: 'Jump anywhere',
-    body: 'Pick a book and chapter to open that whole chapter, then use the verse pill to jump straight to a verse inside it.',
+    body: 'Pick a book and chapter here, and choose your Bible version with the pill on the right. Scroll down and these bars tuck away for more reading room; scroll up and they come right back.',
   },
 ];
 
@@ -45929,7 +46008,7 @@ const _RHEMA_SYNTAX_COACH_STEPS = [
 let _coachSteps = [];
 let _coachIdx = 0;
 let _coachSyntaxDone = false;
-let _rhemaCoachSeenKey = 'rhemaCoachSeenV275';
+let _rhemaCoachSeenKey = 'rhemaCoachSeenV3537';
 
 function startRhemaCoach(force = false) {
   if (_studySandboxId) return;
@@ -45937,11 +46016,11 @@ function startRhemaCoach(force = false) {
     _suppressRhemaCoachOnce = false;
     return;
   }
-  if (_coachHasSeen('rhemaCoachSeenV275', force)) return;
+  if (_coachHasSeen('rhemaCoachSeenV3537', force)) return;
   _coachSteps = _RHEMA_COACH_STEPS;
   _coachIdx = 0;
   _coachSyntaxDone = false;
-  _rhemaCoachSeenKey = 'rhemaCoachSeenV275';
+  _rhemaCoachSeenKey = 'rhemaCoachSeenV3537';
   _pauseHomeFlipForCoach();
   setTimeout(() => _showCoachStep(), 120);
 }
@@ -45984,6 +46063,9 @@ function _showCoachStep() {
   const target = step.targetFn();
   const modal  = document.getElementById('rhemaModal');
 
+  const ROOM = COACH_GUIDE_ROOM;   // the guide perches above the card
+  const isLast = _coachIdx === _coachSteps.length - 1;
+  card.style.marginTop = '';
   if (!target || !modal) {
     spotlight.style.display = 'none';
     const CARD_W = Math.min(320, window.innerWidth - 40);
@@ -45991,6 +46073,8 @@ function _showCoachStep() {
     card.style.top  = '50%';
     card.style.left = '50%';
     card.style.transform = 'translate(-50%, -50%)';
+    card.style.marginTop = (ROOM / 2) + 'px';
+    coachGuideShow(overlay, card, { last: isLast });
     return;
   }
 
@@ -46017,7 +46101,9 @@ function _showCoachStep() {
     card.style.top  = '50%';
     card.style.left = '50%';
     card.style.transform = 'translate(-50%, -50%)';
+    card.style.marginTop = (ROOM / 2) + 'px';
     card.style.visibility = '';
+    coachGuideShow(overlay, card, { last: isLast });
     return;
   }
 
@@ -46037,7 +46123,7 @@ function _showCoachStep() {
     if (step.position === 'above') {
       cardTop  = st - CARD_H - MARGIN;
       cardLeft = sl + sw / 2 - CARD_W / 2;
-      if (cardTop < MARGIN) { cardTop = spotBottom + MARGIN; } // flip below
+      if (cardTop < MARGIN + ROOM) { cardTop = spotBottom + MARGIN + ROOM; } // flip below
     } else if (step.position === 'right') {
       cardTop  = st + sh / 2 - CARD_H / 2;
       cardLeft = spotRight + MARGIN;
@@ -46045,18 +46131,19 @@ function _showCoachStep() {
         cardLeft = sl - CARD_W - MARGIN; // flip left
       }
     } else { // below (default)
-      cardTop  = spotBottom + MARGIN;
+      cardTop  = spotBottom + MARGIN + ROOM;
       cardLeft = sl + sw / 2 - CARD_W / 2;
       if (cardTop + CARD_H > mRect.height - MARGIN) { cardTop = st - CARD_H - MARGIN; } // flip above
     }
 
-    // Final clamp — card must stay fully inside the modal
-    cardTop  = Math.max(MARGIN, Math.min(cardTop,  mRect.height - CARD_H  - MARGIN));
+    // Final clamp — card (and the guide above it) must stay inside the modal
+    cardTop  = Math.max(MARGIN + ROOM, Math.min(cardTop,  mRect.height - CARD_H  - MARGIN));
     cardLeft = Math.max(MARGIN, Math.min(cardLeft, mRect.width  - CARD_W  - MARGIN));
 
     card.style.top  = cardTop  + 'px';
     card.style.left = cardLeft + 'px';
     card.style.visibility = '';
+    coachGuideShow(overlay, card, { last: isLast });
   });
 }
 
@@ -46082,6 +46169,7 @@ function rhemaCoachBack() {
 function _endRhemaCoach() {
   const overlay = document.getElementById('rhemaCoachOverlay');
   if (overlay) overlay.classList.add('hidden');
+  coachGuideHide(overlay);
   _coachMarkSeen(_rhemaCoachSeenKey);
   _resumeHomeFlipAfterCoach();
 }
