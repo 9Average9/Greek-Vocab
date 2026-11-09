@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.527";
+const APP_VERSION = "3.0.528";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.528 &mdash; A friendlier Word Study</div>
+<ul>
+  <li><strong>The answer first</strong> &mdash; Tap a Greek word and the first card tells you what it means in this verse and how your Bible words it. If scholars debate this very verse, it says so.</li>
+  <li><strong>Quick &middot; Study &middot; Deep</strong> &mdash; Pick how much you want: just the answer, every meaning and the translations, or the full history, lexicons and evidence. Rhema remembers your choice.</li>
+  <li><strong>Swipe through cards</strong> &mdash; Meanings, this verse in other Bibles, translation counts, authors and more, one card at a time.</li>
+  <li><strong>Explore every meaning</strong> &mdash; Each meaning gets its own colour-coded card with why it matters, a real verse that shows it, and every other verse.</li>
+  <li><strong>Save a meaning</strong> &mdash; Tap Save on any meaning and find them all under Saved meanings in the Reader menu.</li>
+</ul>
 <div class="un-version-label">v3.0.527 &mdash; 3,203 Greek words studied</div>
 <ul>
   <li><strong>20 more word studies</strong> &mdash; Including &#8021;&mu;&nu;&omicron;&sigmaf;, &#8021;&sigma;&sigma;&omega;&pi;&omicron;&sigmaf;, &#8017;&pi;&omicron;&tau;&#8059;&pi;&omega;&sigma;&iota;&sigmaf;, &#8016;&phi;&#8051;&lambda;&epsilon;&iota;&alpha; and 16 more &mdash; every New Testament word used more than once (apart from proper names) now has a verified study, each with every verse it appears in.</li>
@@ -43025,6 +43033,13 @@ function showReaderPanelSection(section) {
   }
   const title = document.getElementById('rrpSubTitle');
   const body = document.getElementById('rrpSubBody');
+  if (section === 'meanings') {
+    // Saved Greek meanings (from any Word Study) — rendered by rhema-word-study.js.
+    if (title) title.textContent = 'Saved meanings';
+    if (body) body.innerHTML = typeof rhemaSavedMeaningsHtml === 'function' ? rhemaSavedMeaningsHtml() : '';
+    panel.classList.add('sub-open');
+    return;
+  }
   if (title) title.textContent = section === 'notes' ? 'Notes' : 'Highlights';
   if (body) body.innerHTML = _rhemaReaderMarksHtml(section);
   panel.classList.add('sub-open');
@@ -43050,6 +43065,7 @@ function _rhemaReadPanelHtml() {
   return `<div class="rrp-list">
       <button class="rrp-row" onclick="showReaderPanelSection('highlights')"><span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span><span class="rrp-row-label">Highlights</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="showReaderPanelSection('notes')"><span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span><span class="rrp-row-label">Notes</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      <button class="rrp-row" onclick="showReaderPanelSection('meanings')"><span class="material-symbols-outlined rrp-row-icon">bookmarks</span><span class="rrp-row-label">Saved meanings</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="showReaderPanelSection('crossrefs')"><span class="material-symbols-outlined rrp-row-icon">hub</span><span class="rrp-row-label">Cross references</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
     </div>
     ${_rhemaFontControlsHtml()}`;
@@ -43128,6 +43144,7 @@ function _rhemaStudyPanelHtml() {
     <div class="rrp-list">
       <button class="rrp-row" onclick="showReaderPanelSection('highlights')"><span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span><span class="rrp-row-label">Highlights</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="showReaderPanelSection('notes')"><span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span><span class="rrp-row-label">Notes</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      <button class="rrp-row" onclick="showReaderPanelSection('meanings')"><span class="material-symbols-outlined rrp-row-icon">bookmarks</span><span class="rrp-row-label">Saved meanings</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
     </div>
     ${_rhemaFontControlsHtml()}`;
 }
