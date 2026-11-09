@@ -396,7 +396,7 @@ function renderRhemaXrefTrail() {
     </span>
     <span class="rx-arrow-btn material-symbols-outlined">arrow_forward</span>
   </button>`).join('');
-  const save = _studySandboxId ? `<button class="rx-save-trail-btn" onclick="saveCurrentRhemaTrail()"><span class="material-symbols-outlined">bookmark</span>Save Trail</button>` : '';
+  const save = (typeof _rhemaStudyId === 'function' ? _rhemaStudyId() : _studySandboxId) ? `<button class="rx-save-trail-btn" onclick="saveCurrentRhemaTrail()"><span class="material-symbols-outlined">bookmark</span>Save Trail</button>` : '';
   document.getElementById('rxMainView').innerHTML = _xrefTopCardHtml() +
     `<div class="rx-active-category" data-xref-cat="${cat.key}"><span class="rx-category-icon"><span class="material-symbols-outlined">${cat.icon}</span></span><div><strong>${cat.title} <em>${refs.length}</em></strong><p>${cat.desc}</p></div></div>` +
     `<div class="rx-verse-stack">${cards || '<p class="rx-empty">No starter links are loaded for this verse yet.</p>'}</div>${save}`;
@@ -608,9 +608,10 @@ function rxTrailSaveDismiss() {
 }
 
 async function saveCurrentRhemaTrail() {
-  if (!_studySandboxId || !_rhemaXrefCategory) return;
+  if (!_rhemaXrefCategory) return;
   const uid = window.Auth?.getCurrentUser()?.uid;
-  if (!uid) return;
+  const studyId = uid ? await _rhemaRequireStudy() : null;
+  if (!uid || !studyId) return;
   const cat = _xrefCategoryMeta(_rhemaXrefCategory);
   const refs = (_xrefCurrentData()[_rhemaXrefCategory] || []).map(item => ({
     reference: _xrefDisplay(item.ref),
@@ -635,7 +636,7 @@ async function saveCurrentRhemaTrail() {
     connections: refs
   };
   const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
-  const ok = await window.Studies?.saveTrail?.(_studySandboxId, uid, displayName, trail);
+  const ok = await window.Studies?.saveTrail?.(studyId, uid, displayName, trail);
   _showStudyToast(ok ? 'Trail saved.' : 'Could not save trail.');
 }
 
@@ -653,6 +654,17 @@ function openSavedRhemaTrail(trailId) {
   _rhemaChapter = active.chapter;
   _rhemaVerse = active.verse;
   _rhemaXrefView = 'trail';
+  // The reader's own study: the reader is already open behind the Trails tool.
+  if (!_studySandboxId && document.getElementById('rhemaModal')?.classList.contains('open')) {
+    if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost();
+    _rhemaChapter = String(active.chapter);
+    _rhemaVerse = String(active.verse);
+    _rhemaFullChapter = true;
+    renderRhemaVerse();
+    _showRhemaXrefShell('main');
+    renderRhemaXrefTrail();
+    return;
+  }
   switchSandboxTab('rhema');
   showRhema().then(() => {
     _showRhemaXrefShell('main');

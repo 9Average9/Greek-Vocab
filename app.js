@@ -8763,7 +8763,7 @@ async function openStudySandbox(studyId, studyObj) {
   const membersEl = document.getElementById('ssMembers');
   if (iconEl) { iconEl.textContent = study.icon; iconEl.style.color = study.color; }
   if (titleEl) titleEl.textContent = study.name;
-  if (membersEl) _updateSandboxMembersButton(study);
+  if (membersEl) { membersEl.style.display = ''; _updateSandboxMembersButton(study); }
 
   // Switch to Rhema tab first
   switchSandboxTab('rhema');
@@ -9041,8 +9041,9 @@ async function submitWorkspaceEntry() {
   if (!text) return;
   input.value = ''; input.style.height = 'auto';
   const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
-  const verseRef = _studySandboxId ? { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, bookName: _rhemaBookName(_rhemaBook) } : null;
-  const verseSnippet = _studySandboxId ? _getVerseSnippet() : '';
+  const _inReader = !!_rhemaStudyId() && !!_rhemaBook;
+  const verseRef = _inReader ? { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, bookName: _rhemaBookName(_rhemaBook) } : null;
+  const verseSnippet = _inReader ? _getVerseSnippet() : '';
   await window.Studies.addEntry(_activeSandboxStudy.id, uid, displayName, { type: _workspaceTab, content: text, verseRef, verseSnippet });
 }
 
@@ -9070,7 +9071,7 @@ function _initStudyLongPress() {
     if (!display || display._lpInit) return;
     display._lpInit = true;
     display.addEventListener('touchstart', e => {
-      if (!_studySandboxId || _sandboxTab !== 'rhema') return;
+      if (!_rhemaStudyId() || _sandboxTab !== 'rhema') return;
       if (e.target.closest('.rsx-diagram') || e.target.closest('.rhema-sheet')) return;
       _miniWheelLongPressActive = true;
       const verseEl = e.target.closest('.rhema-chapter-block[data-verse]');
@@ -9244,7 +9245,8 @@ function closeWritingModal() {
 
 async function saveWritingModal() {
   const uid = window.Auth?.getCurrentUser()?.uid;
-  if (!uid || !_activeSandboxStudy || !_writingModalType) return;
+  if (!_writingModalType) return;
+  if (!uid || !(await _rhemaRequireStudy()) || !_activeSandboxStudy) return;
   const ta = document.getElementById('swmTextarea');
   const text = ta?.value?.trim();
   if (!text) { ta?.focus(); return; }
@@ -9660,10 +9662,12 @@ function openWlWordDetail(strongs, formSurface) {
   document.getElementById('rhemaSaveToStudyBtn')?.classList.add('hidden');
   const _wlAddBtn = document.getElementById('rhemaAddToWordLogBtn');
   if (_wlAddBtn) {
-    if (_studySandboxId) {
-      _wlAddBtn.classList.remove('hidden', 'logged');
-      _wlAddBtn.disabled = false;
-      _wlAddBtn.textContent = '+ Add to Word Log';
+    if (_rhemaStudyId()) {
+      const _logged = _sandboxWordLogCache.some(w => String(w.strongs) === String(strongs));
+      _wlAddBtn.classList.remove('hidden');
+      _wlAddBtn.classList.toggle('logged', _logged);
+      _wlAddBtn.disabled = _logged;
+      _wlAddBtn.textContent = _logged ? '✓ In Word Log' : '+ Add to Word Log';
     } else {
       _wlAddBtn.classList.add('hidden');
     }
@@ -9801,6 +9805,19 @@ async function deleteStudyStructure(structureId) {
 // Opens Rhema to a saved verse (in study mode)
 function jumpToRhemaFromStudy(book, chapter, verse) {
   if (!_activeSandboxStudy) return;
+  // The reader's own study: close the tool and go to the verse in the reader.
+  if (!_studySandboxId && document.getElementById('rhemaModal')?.classList.contains('open')) {
+    if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost();
+    _rhemaIntroMode = false;
+    _rhemaBook = book; _rhemaChapter = String(chapter); _rhemaVerse = String(verse || 1);
+    _rhemaFullChapter = true;
+    _rhemaVerseFocus = false;
+    _rhemaHighlightStrongs = null;
+    syncRhemaPicker?.();
+    renderRhemaVerse();
+    requestAnimationFrame(() => requestAnimationFrame(() => _rhemaScrollVerseToTop(_rhemaVerse, { smooth: false })));
+    return;
+  }
   _studySandboxId = _activeSandboxStudy.id;
   _studySandboxRhemaReturn = true;
   // Stash current modes before overriding for study context
@@ -9960,14 +9977,13 @@ function openSandboxRhema() {
 
 async function saveCurrentVerseToStudy() {
   const uid = window.Auth?.getCurrentUser()?.uid;
-  if (!uid || !_studySandboxId) return;
-  const study = _myStudies.find(s => s.id === _studySandboxId);
-  if (!study) return;
+  const studyId = uid ? await _rhemaRequireStudy() : null;
+  if (!uid || !studyId) return;
   const bookName = _rhemaBookName(_rhemaBook);
   const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
   const btn = document.getElementById('rhemaSaveToStudyBtn');
   if (btn) { btn.textContent = 'Saved!'; btn.disabled = true; }
-  await window.Studies.saveVerse(_studySandboxId, uid, displayName, {
+  await window.Studies.saveVerse(studyId, uid, displayName, {
     book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, bookName
   });
   setTimeout(() => {
@@ -9979,13 +9995,15 @@ async function saveCurrentVerseToStudy() {
 }
 
 async function addCurrentWordToLog() {
-  if (!_studySandboxId || !_rhemaActiveWord) return;
+  if (!_rhemaActiveWord) return;
+  const studyId = await _rhemaRequireStudy();
+  if (!studyId) return;
   const [surface, strongs] = _rhemaActiveWord;
   const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer();
   const uid = window.Auth?.getCurrentUser()?.uid;
   const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
   const lex = getCurrentRhemaLexicon(layer)[strongs] || {};
-  await window.Studies?.logWord(_studySandboxId, uid, displayName, {
+  await window.Studies?.logWord(studyId, uid, displayName, {
     lemma: lex.lemma || surface, strongs,
     layer,
     definition: lex.def || lex.short_def || lex.brief || lex.quick_def || '',
@@ -30314,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.534";
+const APP_VERSION = "3.0.535";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30355,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.535 &mdash; Your study lives in the reader</div>
+<ul>
+  <li><strong>No more separate studies</strong> &mdash; Phrasing, Word Log, Trails and the Workspace are now always in Rhēma&rsquo;s side menu, and everything you add saves to your account automatically.</li>
+  <li><strong>Nothing lost</strong> &mdash; Anything in your older studies (notes, observations, word logs, trails, phrasing, highlights) has been brought together into the reader.</li>
+  <li><strong>Study from any verse</strong> &mdash; Tap a verse to observe, interpret, apply or ask a question, or add a word to your word log. Long-press still works too.</li>
+</ul>
 <div class="un-version-label">v3.0.534 &mdash; More word studies read with grace</div>
 <ul>
   <li><strong>Free Grace review continues</strong> &mdash; 270 word studies now read the Free Grace way where they take a theological direction: faith alone for eternal life, rewards and discipleship kept distinct from it, and warnings to believers about discipline and reward. Meanings, verses and sources are unchanged and still verified.</li>
@@ -33657,6 +33681,8 @@ window.__onAuthStateReady = async (user) => {
 
     // Sync the user's Rhema highlights/notes from the cloud.
     _rhemaStartMarksSync();
+    // Signing in with the reader open: switch its study tools on right away.
+    if (document.getElementById('rhemaModal')?.classList.contains('open')) _rhemaAttachHomeStudy();
 
     // Re-prompt for notifications when a returning user signs in on a new PWA install
     // where permission hasn't been granted yet (e.g. after reinstalling the app)
@@ -39668,7 +39694,7 @@ function _rhemaRenderVerseSheet() {
   if (noteLabel) noteLabel.textContent = multi ? 'Add notes' : (mark.note ? 'Edit note' : 'Add note');
   // Study-only actions (reuse the existing save-verse / OIAQ / word-log logic).
   const study = document.getElementById('rhemaVerseSheetStudy');
-  if (study) study.style.display = (_studySandboxId && !multi) ? '' : 'none';
+  if (study) study.style.display = multi ? 'none' : '';
   const wordBtn = document.getElementById('rhemaVerseSheetWordBtn');
   // Works for one or many selected verses (words are grouped per verse).
   if (wordBtn) wordBtn.style.display = _rhemaShowEnglish ? '' : 'none';
@@ -41140,8 +41166,17 @@ function rhemaStudySaveVerseFromMenu() {
   saveCurrentVerseToStudy();
   if (typeof _showStudyToast === 'function') _showStudyToast('Verse saved to study');
 }
-function rhemaStudyCaptureFromMenu() {
+// Desktop note button: observe / interpret / apply / ask about the current verse.
+async function rhemaStudyCaptureCurrent() {
+  if (!(await _rhemaRequireStudy())) return;
+  if (typeof openStudyMiniWheel === 'function') openStudyMiniWheel();
+}
+async function rhemaStudyCaptureFromMenu() {
+  const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
+  if (p && p.book === _rhemaBook && String(p.chapter) === String(_rhemaChapter)) _rhemaVerse = String(p.verse);
+  closeRhemaVerseSheet?.();
   _rhemaClearVerseActionSelection();
+  if (!(await _rhemaRequireStudy())) return;
   if (typeof openStudyMiniWheel === 'function') openStudyMiniWheel();
 }
 function _rhemaCompareScope() {
@@ -41651,7 +41686,7 @@ async function rhemaShowEnglishMeaning(word) {
   const logBtn = document.getElementById('rhemaMeaningLogBtn');
   if (title) title.textContent = clean;
   if (body) body.innerHTML = `<div class="rhema-meaning-section"><h4>Loading</h4><p>Checking the English meaning...</p></div>`;
-  if (logBtn) logBtn.classList.toggle('hidden', !_studySandboxId);
+  if (logBtn) logBtn.classList.toggle('hidden', !!_guestMode);
   document.getElementById('rhemaEnglishMeaningModal')?.classList.add('open');
   // Names, places, and customs lead with the encyclopedic dictionary card —
   // for a proper noun the modern-English dictionary is usually noise. The
@@ -41925,13 +41960,14 @@ function rhemaAddCurrentEnglishMeaningToStudy() {
 }
 async function rhemaLogEnglishWord(word) {
   document.getElementById('rhemaWordPickModal')?.classList.remove('open');
-  if (!_studySandboxId) {
+  const studyId = await _rhemaRequireStudy();
+  if (!studyId) {
     _rhemaClearVerseActionSelection();
     return;
   }
   const uid = window.Auth?.getCurrentUser?.()?.uid;
   const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
-  await window.Studies?.logWord?.(_studySandboxId, uid, displayName, {
+  await window.Studies?.logWord?.(studyId, uid, displayName, {
     lemma: word,
     strongs: 'en:' + word.toLowerCase(),
     surface: word,
@@ -42656,6 +42692,8 @@ async function showRhema() {
   // Main entry opens as a plain-English chapter reader; the swap control takes
   // you into the Greek. Sandbox and sermon flows manage their own modes.
   const sermonMode = typeof _sermonRhemaMode !== 'undefined' && _sermonRhemaMode;
+  // The reader's own study (phrasing, word log, trails, workspace) is always on.
+  if (!_studySandboxId && !sermonMode) _rhemaAttachHomeStudy();
   if (!_studySandboxId && !sermonMode) {
     _rhemaFullChapter = true;
     _rhemaShowEnglish = true;
@@ -42710,85 +42748,136 @@ function launchRhema(mode) {
   resumeRhema();
 }
 
-// ── Reader study picker + study context ───────────────────────────────────────
-// Studies are entered from the reader's Study pill (the home Study Library was
-// retired). Entering a study sets the same _studySandboxId / _activeSandboxStudy
-// context the old sandbox used, so mark isolation, long-press observations and
-// the study data listeners all work — just hosted inside the reader.
-function openRhemaStudyPicker() {
-  if (_guestMode) return; // studies need an account
-  const ov = document.getElementById('rhemaStudyPickerOverlay');
-  if (!ov) return;
-  _renderRhemaStudyPicker();
-  ov.classList.add('open');
-  requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add('in')));
-  // Refresh the list in the background; re-render only if it actually changed.
-  if (typeof _loadMyStudies === 'function') {
-    const before = _myStudies.map(s => s.id).join(',');
-    Promise.resolve(_loadMyStudies()).then(() => {
-      if (ov.classList.contains('open') && _myStudies.map(s => s.id).join(',') !== before) _renderRhemaStudyPicker();
-    }).catch(() => {});
+// ── The reader's built-in study ───────────────────────────────────────────────
+// There are no separate studies any more: every signed-in reader has one
+// personal "home" study behind the reader, and Phrasing, the Word Log, Trails,
+// the Workspace, long-press observations and "Add to Word Log" all save into it,
+// always. Highlights, notes, compare and reading position stay the reader's own
+// (main) ones — _studySandboxId stays null, so nothing is re-scoped. The first
+// time, the user's most recently used study becomes the home study and the
+// content of any other studies they belong to is copied into it.
+let _rhemaHomeStudy = null;
+let _rhemaHomeStudyPromise = null;
+
+function _rhemaStudyId() {
+  return _studySandboxId || (_rhemaHomeStudy && _activeSandboxStudy?.id === _rhemaHomeStudy.id ? _rhemaHomeStudy.id : null);
+}
+function _rhemaHomeStudyKey(uid) { return 'rhemaHomeStudy:' + uid; }
+function _rhemaStudyLastUsed(s, uid) {
+  const d = s?.lastSessionDates?.[uid];
+  const t = d ? Date.parse(d) : NaN;
+  return Number.isFinite(t) ? t : (s?.createdAt?.seconds || 0) * 1000;
+}
+async function _rhemaEnsureHomeStudy() {
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!uid || _guestMode || !window.Studies) return null;
+  if (_rhemaHomeStudy && _rhemaHomeStudy._uid === uid) return _rhemaHomeStudy;
+  if (_rhemaHomeStudyPromise) return _rhemaHomeStudyPromise;
+  _rhemaHomeStudyPromise = (async () => {
+    let cachedId = null;
+    try { cachedId = localStorage.getItem(_rhemaHomeStudyKey(uid)); } catch {}
+    if (typeof _loadMyStudies === 'function') { try { await _loadMyStudies(); } catch {} }
+    const mine = (_myStudies || []).filter(s => s && s.collaboratorUids?.includes(uid));
+    const owned = mine.filter(s => s.creatorUid === uid);
+    let study = owned.find(s => s.isHome) || (cachedId && owned.find(s => s.id === cachedId)) || null;
+    if (!study && cachedId && !_myStudies.length) {
+      // Offline / list failed: trust the cached id rather than make a duplicate.
+      const got = await window.Studies.get?.(cachedId).catch(() => null);
+      if (got && got.creatorUid === uid) study = got;
+    }
+    if (!study && owned.length) {
+      study = owned.slice().sort((a, b) => _rhemaStudyLastUsed(b, uid) - _rhemaStudyLastUsed(a, uid))[0];
+      window.Studies.markHome?.(study.id);
+      study = { ...study, isHome: true };
+    }
+    // (If the list failed to load and a new study gets made, nothing is lost:
+    // the next open finds the older studies and copies them in.)
+    if (!study) {
+      const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
+      study = await window.Studies.create(uid, displayName, {
+        name: 'My Study', description: '', color: '', icon: 'menu_book', shareSession: false, isHome: true
+      });
+      if (!study) return null;
+      _myStudies = [...(_myStudies || []), study];
+    }
+    try { localStorage.setItem(_rhemaHomeStudyKey(uid), study.id); } catch {}
+    _rhemaHomeStudy = { ...study, _uid: uid };
+    _rhemaMergeOldStudies(uid, _rhemaHomeStudy, mine);
+    return _rhemaHomeStudy;
+  })().catch(e => { console.warn('home study:', e); return null; })
+    .finally(() => { _rhemaHomeStudyPromise = null; });
+  return _rhemaHomeStudyPromise;
+}
+// Copy every other study's content into the home study, once per study.
+async function _rhemaMergeOldStudies(uid, home, mine) {
+  if (!window.Studies?.mergeInto) return;
+  const done = new Set(home.mergedStudyIds || []);
+  const others = (mine || []).filter(s => s.id !== home.id && !done.has(s.id));
+  let copied = 0;
+  for (const s of others) {
+    const n = await window.Studies.mergeInto(s.id, home.id);
+    if (n > 0) copied += n;
+    if (n >= 0) (home.mergedStudyIds = home.mergedStudyIds || []).push(s.id);
   }
+  // Highlights / notes made inside an old study join the reader's own marks
+  // (an existing reader mark on the same verse wins).
+  try {
+    const flag = 'rhemaStudyMarksMerged:' + uid;
+    if (!localStorage.getItem(flag)) {
+      _rhemaLoadLocalMarks();
+      const homeMarks = (_rhemaScopedMarks.home = _rhemaScopedMarks.home || {});
+      let moved = 0;
+      Object.keys(_rhemaScopedMarks).filter(k => k.startsWith('study:')).forEach(scope => {
+        Object.entries(_rhemaScopedMarks[scope] || {}).forEach(([ref, mark]) => {
+          if (!mark || (!mark.color && !mark.note) || homeMarks[ref]) return;
+          homeMarks[ref] = { ...mark, scope: 'home' };
+          window.Auth?.saveRhemaMark?.(uid, ref, 'home', homeMarks[ref]).catch(() => {});
+          moved++;
+        });
+      });
+      _rhemaPersistLocalMarks();
+      localStorage.setItem(flag, '1');
+      if (moved && document.getElementById('rhemaModal')?.classList.contains('open')) renderRhemaVerse();
+    }
+  } catch {}
+  if (copied && typeof _showStudyToast === 'function') _showStudyToast('Your studies are now all in one place in the reader');
 }
-function closeRhemaStudyPicker() {
-  const ov = document.getElementById('rhemaStudyPickerOverlay');
-  if (!ov || !ov.classList.contains('open')) return;
-  ov.classList.remove('in');
-  clearTimeout(closeRhemaStudyPicker._t);
-  closeRhemaStudyPicker._t = setTimeout(() => ov.classList.remove('open'), 300);
-}
-function _renderRhemaStudyPicker() {
-  const list = document.getElementById('rhemaStudyPickerList');
-  if (!list) return;
-  const rows = [];
-  if (_studySandboxId) {
-    rows.push(`<button class="rsp-row rsp-exit" onclick="rhemaExitStudy()">
-      <span class="rsp-ico" style="--rsp-c:var(--muted-color)"><span class="material-symbols-outlined">menu_book</span></span>
-      <span class="rsp-copy"><strong>Just reading</strong><small>Leave the study, keep reading</small></span>
-    </button>`);
-  }
-  if (!_myStudies.length) {
-    rows.push(`<div class="rsp-empty">No studies yet.<br>Start one to save phrasing, notes, word logs and trails — all kept together.</div>`);
-  } else {
-    _myStudies.forEach(s => {
-      const active = _studySandboxId === s.id;
-      const color = _escapeRhemaAttr(s.color || 'var(--secondary-color)');
-      rows.push(`<button class="rsp-row${active ? ' active' : ''}" onclick="rhemaEnterStudy('${_escapeRhemaAttr(s.id)}')">
-        <span class="rsp-ico" style="--rsp-c:${color}"><span class="material-symbols-outlined">${_escapeRhemaAttr(s.icon || 'menu_book')}</span></span>
-        <span class="rsp-copy"><strong>${_escapeRhemaAttr(s.name || 'Study')}</strong>${s.description ? `<small>${_escapeRhemaAttr(s.description)}</small>` : ''}</span>
-        <span class="material-symbols-outlined rsp-mark">${active ? 'check_circle' : 'chevron_right'}</span>
-      </button>`);
-    });
-  }
-  list.innerHTML = rows.join('');
-}
-function rhemaStudyPickerCreate() {
-  closeRhemaStudyPicker();
-  setTimeout(() => { if (typeof openStudyCreateSheet === 'function') openStudyCreateSheet(); }, 280);
-}
-function rhemaEnterStudy(studyId) {
-  const study = _myStudies.find(s => s.id === studyId);
-  if (!study) return;
-  closeRhemaStudyPicker();
+// Attach the home study to the open reader (listeners + tools). Safe to call
+// repeatedly; a no-op for guests, signed-out users and the old study sandbox.
+async function _rhemaAttachHomeStudy() {
+  if (_studySandboxId) return;
+  const study = await _rhemaEnsureHomeStudy();
+  if (!study || _studySandboxId) return;
+  if (!document.getElementById('rhemaModal')?.classList.contains('open')) return;
+  if (_activeSandboxStudy?.id === study.id && _sandboxUnsubEntries) return;
   _activeSandboxStudy = study;
-  _studySandboxId = studyId;
-  _sandboxTab = 'rhema';   // long-press mini-wheel only fires when the "rhema tab" is active
-  _rhemaStartStudyListeners(studyId);
-  document.getElementById('rhemaModal')?.classList.add('rhema-in-study');
-  _syncRhemaStudyHeader();
-  _syncRhemaStudyPill();
-  renderRhemaVerse();   // re-render: binds long-press (guarded by _studySandboxId) + scopes marks
+  _sandboxTab = 'rhema';
+  _rhemaStartStudyListeners(study.id);
+  _initStudyLongPress();
+  if (document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open') && typeof _renderRhemaPanelMain === 'function') _renderRhemaPanelMain();
 }
-function rhemaExitStudy() {
-  closeRhemaStudyPicker();
+function _rhemaDetachHomeStudy() {
+  if (_studySandboxId) return;
   _rhemaStopStudyListeners();
-  _studySandboxId = null;
   _activeSandboxStudy = null;
-  document.getElementById('rhemaModal')?.classList.remove('rhema-in-study');
-  _syncRhemaStudyHeader();
-  _syncRhemaStudyPill();
-  renderRhemaVerse();
 }
+// The study this action should save into, attaching the home study on demand.
+// Guests are offered an account (study tools save to the account).
+async function _rhemaRequireStudy() {
+  const id = _rhemaStudyId();
+  if (id) return id;
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!uid || _guestMode) {
+    if (typeof _showStudyToast === 'function') _showStudyToast('Create a free account to save your study');
+    if (_guestMode && typeof openGuestAccountPrompt === 'function') setTimeout(openGuestAccountPrompt, 400);
+    return null;
+  }
+  await _rhemaAttachHomeStudy();
+  return _rhemaStudyId();
+}
+// Old entry points (kept so stale markup or deep links can't throw).
+function openRhemaStudyPicker() { openRhemaReaderPanel?.(); }
+function closeRhemaStudyPicker() {}
 function _rhemaStartStudyListeners(studyId) {
   if (!window.Studies) return;
   _rhemaStopStudyListeners();
@@ -42830,17 +42919,7 @@ function _syncRhemaStudyHeader() {
     if (sub) sub.textContent = _rhemaReadMode ? 'Bible reader' : 'Study tool';
   }
 }
-function _syncRhemaStudyPill() {
-  const icon = document.getElementById('rhemaStudyPillIcon');
-  const pill = document.getElementById('rhemaStudyPillBtn');
-  if (_studySandboxId && _activeSandboxStudy) {
-    if (icon) { icon.textContent = _activeSandboxStudy.icon || 'book_2'; icon.style.color = _activeSandboxStudy.color || ''; }
-    pill?.classList.add('active');
-  } else {
-    if (icon) { icon.textContent = 'book_2'; icon.style.color = ''; }
-    pill?.classList.remove('active');
-  }
-}
+function _syncRhemaStudyPill() {} // the Studies pill is retired
 
 // ── Study tools hosted over the reader (Phase 2) ──────────────────────────────
 // The 4 sidebar tools reuse the existing sandbox panes, shown one at a time over
@@ -42851,18 +42930,38 @@ const _RHEMA_STUDY_TOOL_PANES = {
 const _RHEMA_STUDY_TOOL_TABS = {
   phrasing: 'verses', wordlog: 'wordlog', trails: 'trails', workspace: 'notes'
 };
-function openStudyTool(tool) {
-  if (!_studySandboxId || !_activeSandboxStudy) return;
+const _RHEMA_STUDY_TOOL_META = {
+  phrasing: { icon: 'account_tree', label: 'Phrasing' },
+  wordlog: { icon: 'dictionary', label: 'Word Log' },
+  trails: { icon: 'route', label: 'Trails' },
+  workspace: { icon: 'layers', label: 'Workspace' }
+};
+async function openStudyTool(tool) {
   const host = document.getElementById('studySandbox');
   const paneId = _RHEMA_STUDY_TOOL_PANES[tool];
   if (!host || !paneId) return;
+  if (!_rhemaStudyId()) {
+    closeRhemaReaderPanel();
+    if (!(await _rhemaRequireStudy())) return;
+  }
+  if (!_activeSandboxStudy) return;
   closeRhemaReaderPanel();
-  // Header
+  // Header: the tool's own name in the reader; the study's name in an old
+  // shared-study sandbox (which keeps its members button).
   const iconEl = document.getElementById('ssIcon');
   const titleEl = document.getElementById('ssTitle');
-  if (iconEl) { iconEl.textContent = _activeSandboxStudy.icon || 'menu_book'; iconEl.style.color = _activeSandboxStudy.color || ''; }
-  if (titleEl) titleEl.textContent = _activeSandboxStudy.name || 'Study';
-  _updateSandboxMembersButton?.(_activeSandboxStudy);
+  const meta = _RHEMA_STUDY_TOOL_META[tool] || {};
+  const membersBtn = document.getElementById('ssMembers');
+  if (_studySandboxId) {
+    if (iconEl) { iconEl.textContent = _activeSandboxStudy.icon || 'menu_book'; iconEl.style.color = _activeSandboxStudy.color || ''; }
+    if (titleEl) titleEl.textContent = _activeSandboxStudy.name || 'Study';
+    if (membersBtn) membersBtn.style.display = '';
+    _updateSandboxMembersButton?.(_activeSandboxStudy);
+  } else {
+    if (iconEl) { iconEl.textContent = meta.icon || 'menu_book'; iconEl.style.color = ''; }
+    if (titleEl) titleEl.textContent = meta.label || 'Study';
+    if (membersBtn) membersBtn.style.display = 'none';
+  }
   // Save-routing indicator so entries/words land in the right place
   _sandboxTab = _RHEMA_STUDY_TOOL_TABS[tool];
   // Show only the chosen pane
@@ -43205,12 +43304,15 @@ function _rhemaStudyTileHtml(t) {
     </button>`;
 }
 function _rhemaStudyToolsGridHtml() {
-  if (!_studySandboxId) return '';
+  // Always available in the reader; everything saves to the reader's study.
+  // (Guests have no account to save to, so the study tools stay hidden.)
+  if (_guestMode) return '';
+  if (typeof _sermonRhemaMode !== 'undefined' && _sermonRhemaMode) return '';
   const btn = (tool, icon, label) =>
     `<button class="rrp-study-btn" onclick="openStudyTool('${tool}')">
       <span class="material-symbols-outlined">${icon}</span><span>${label}</span>
     </button>`;
-  return `<div class="rrp-section-label">This study</div>
+  return `<div class="rrp-section-label">${_studySandboxId ? 'This study' : 'Your study'}</div>
     <div class="rrp-study-grid">
       ${btn('phrasing', 'account_tree', 'Phrasing')}
       ${btn('wordlog', 'dictionary', 'Word Log')}
@@ -45058,7 +45160,7 @@ function renderRhemaVerse() {
   updateRhemaFlowToolbar();
   _syncToolWandIndicator();
   _saveRhemaPosition();
-  if (_studySandboxId) _initStudyLongPress();
+  if (_rhemaStudyId()) _initStudyLongPress();
   // Multi-verse selection: clear it if the chapter changed, then re-apply the
   // underline + floating arrow to the freshly rendered verses.
   if (_rhemaSelScope !== _rhemaSelScopeKey()) { _rhemaSel.clear(); _rhemaSelScope = _rhemaSelScopeKey(); }
@@ -47320,8 +47422,8 @@ function openRhemaSheet(wordIdx, verse) {
   if (saveBtn) saveBtn.classList.toggle('hidden', !_studySandboxId);
   const logBtn = document.getElementById('rhemaAddToWordLogBtn');
   if (logBtn) {
-    logBtn.classList.toggle('hidden', !_studySandboxId);
-    if (_studySandboxId) {
+    logBtn.classList.toggle('hidden', !_rhemaStudyId());
+    if (_rhemaStudyId()) {
       const alreadyLogged = _sandboxWordLogCache.some(w => String(w.strongs) === String(strongs));
       logBtn.disabled = alreadyLogged;
       logBtn.classList.toggle('logged', alreadyLogged);
@@ -47337,6 +47439,7 @@ function openRhemaSheet(wordIdx, verse) {
 }
 
 function closeRhemaSheet() {
+  window.rhemaWordStudyTourClose?.();
   const sheet = document.getElementById('rhemaSheet');
   if (sheet) {
     sheet.classList.remove('open');
@@ -50146,13 +50249,12 @@ function _renderSwrVerse() {
   }
 }
 // ── Desktop Study Desk ────────────────────────────────────────────────────────
-function openDesktopStudyDesk() {
+// Separate studies are retired: the desk now opens the reader with its study
+// tools (Phrasing, Word Log, Trails, Workspace) showing.
+async function openDesktopStudyDesk() {
   _desktopCollapseNav();
-  const overlay = document.getElementById('desktopStudyDeskOverlay');
-  if (!overlay) return;
-  _renderDsdStudies();
-  overlay.classList.remove('hidden');
-  requestAnimationFrame(() => overlay.classList.add('open'));
+  await resumeRhema();
+  setTimeout(() => { if (typeof openRhemaReaderPanel === 'function') openRhemaReaderPanel(); }, 260);
 }
 
 function closeDesktopStudyDesk() {

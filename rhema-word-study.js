@@ -1260,7 +1260,7 @@
     const root = document.getElementById(_tour.uid);
     const steps = TOUR.filter(s => root && [...root.querySelectorAll(s.sel)].some(el => el.offsetParent));
     const step = steps[_tour.i];
-    if (!root || !step) return _tourEnd();
+    if (!root || !root.offsetParent || !step) return _tourEnd();
     const target = [...root.querySelectorAll(step.sel)].find(el => el.offsetParent);
     // Scroll only the sheet's own scroller (scrollIntoView would also move the
     // page behind the sheet).
@@ -1289,6 +1289,8 @@
   }
   window.rhemaWordStudyTourNext = function () { if (_tour) { _tour.i++; _tourShow(); } };
   window.rhemaWordStudyTourEnd = _tourEnd;
+  // The word sheet closed (or another tool took over): put the tour away with it.
+  window.rhemaWordStudyTourClose = function () { if (_tour) _tourEnd(); };
   function _tourEnd() {
     _tour = null;
     _ls.set(TOUR_KEY, '1');

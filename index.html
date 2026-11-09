@@ -346,7 +346,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.534" rel="stylesheet"/>
+<link href="style.css?v=3.0.535" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -418,11 +418,11 @@ antique: {
 <div class="desktop-study-copy">
 <span class="desktop-kicker">Scripture Study • Greek Tools • Sermon Prep</span>
 <h1>Your Scripture Study Desk.</h1>
-<p>Explore any passage in Rhema, search the Greek lexicon in the Word Library, prep a sermon, and manage your studies — all with the depth and tools your desktop provides.</p>
+<p>Explore any passage in Rhema, search the Greek lexicon in the Word Library, prep a sermon, and keep your phrasing, word log, trails and notes — all with the depth and tools your desktop provides.</p>
 <div class="desktop-study-actions">
-<button class="desktop-primary-action" onclick="openStudyCreateSheet()">
-<span class="material-symbols-outlined">add</span>
-Start a New Study
+<button class="desktop-primary-action" onclick="openDesktopStudyDesk()">
+<span class="material-symbols-outlined">menu_book</span>
+Open Your Study
 </button>
 </div>
 </div>
@@ -488,7 +488,7 @@ Start a New Study
 <button class="desktop-tool-card" onclick="openDesktopStudyDesk()">
 <span class="material-symbols-outlined">dashboard</span>
 <strong>Study Desk</strong>
-<small>View all your studies, create new ones, and track notes and observations across sessions.</small>
+<small>Your phrasing, word log, trails and observations — saved as you read in Rhema.</small>
 </button>
 <button class="desktop-tool-card" onclick="openMemorizationPage()">
 <span class="material-symbols-outlined">psychology_alt</span>
@@ -10635,9 +10635,6 @@ Verb Endings
 <span id="rhemaPillVerse">v16</span>
 <span class="material-symbols-outlined rhema-pill-chev">expand_more</span>
 </button>
-<button class="rhema-pill rhema-study-pill" id="rhemaStudyPillBtn" onclick="openRhemaStudyPicker()" title="Studies" aria-label="Studies">
-<span class="material-symbols-outlined rhema-pill-icon" id="rhemaStudyPillIcon">book_2</span>
-</button>
 <button class="rhema-pill rhema-chapter-mode-pill rhema-translation-pill" id="rhemaEnglishVersionBtn" onclick="toggleRhemaEnglishVersion()" title="Choose Bible version">
 <span id="rhemaEnglishVersionLabel">MSB</span>
 </button>
@@ -10703,7 +10700,7 @@ Verb Endings
 <span class="material-symbols-outlined">chevron_left</span>
 </button>
 <span class="rhema-verse-ref" id="rhemaVerseRef"></span>
-<button class="rhema-nav-btn rhema-desktop-note-btn" id="rhemaDesktopNoteBtn" onclick="if(_studySandboxId)openStudyMiniWheel();else openWritingModal('observations')" title="Add study note">
+<button class="rhema-nav-btn rhema-desktop-note-btn" id="rhemaDesktopNoteBtn" onclick="rhemaStudyCaptureCurrent()" title="Add study note">
 <span class="material-symbols-outlined">edit_note</span>
 </button>
 <button class="rhema-nav-btn" onclick="rhemaNextVerse()">
@@ -10848,20 +10845,6 @@ Verb Endings
 <div class="rrp-toast" id="rrpToast" role="status" aria-live="polite"></div>
 </aside>
 </div>
-<!-- ── Study picker (from the reader's Study pill) ── -->
-<div class="rhema-study-picker-overlay" id="rhemaStudyPickerOverlay" onclick="if(event.target===this)closeRhemaStudyPicker()">
-<div class="rhema-study-picker">
-<div class="rsp-header">
-<span class="rsp-title">Studies</span>
-<button class="rsp-x" onclick="closeRhemaStudyPicker()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
-</div>
-<div class="rsp-list" id="rhemaStudyPickerList"></div>
-<button class="rsp-new" onclick="rhemaStudyPickerCreate()">
-<span class="material-symbols-outlined">add</span>
-<span>Start another study</span>
-</button>
-</div>
-</div>
 <!-- ── Coach mark onboarding overlay ── -->
 <div class="rhema-coach-overlay hidden" id="rhemaCoachOverlay">
 <div class="rhema-coach-spotlight" id="rhemaCoachSpotlight"></div>
@@ -10916,7 +10899,11 @@ Verb Endings
 </button>
 </div>
 <div id="rhemaVerseSheetStudy" style="display:none">
-<div class="rhema-vsheet-label" style="margin-top:8px">In this study</div>
+<div class="rhema-vsheet-label" style="margin-top:8px">Your study</div>
+<button class="rhema-vsheet-action" onclick="rhemaStudyCaptureFromMenu()">
+<span class="material-symbols-outlined">edit_note</span>
+<span>Observe, interpret, apply or ask</span>
+</button>
 <button class="rhema-vsheet-action" onclick="rhemaStudyLogWordFromMenu()">
 <span class="material-symbols-outlined">spellcheck</span>
 <span>Add a word to the word log</span>
@@ -17295,19 +17282,19 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.534"></script>
-<script src="app.js?v=3.0.534"></script>
-<script src="rhema-word-study.js?v=3.0.534"></script>
+<script src="rhema-align.js?v=3.0.535"></script>
+<script src="app.js?v=3.0.535"></script>
+<script src="rhema-word-study.js?v=3.0.535"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.363"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.535"></script>
 <script src="verse-structure.js?v=3.0.429"></script>
-<script src="vs-structure.js?v=3.0.450"></script>
+<script src="vs-structure.js?v=3.0.535"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
 <script src="sermon-notes.js?v=3.0.460"></script>
 <script src="bible-quiz.js?v=3.0.473"></script>
-<script src="firebase-lb.js?v=3.0.534" type="module"></script>
+<script src="firebase-lb.js?v=3.0.535" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -17440,7 +17427,7 @@ Verb Endings
 <div class="ss-verses-list" id="ssVersesList"></div>
 </div>
 <div class="ss-verse-pane" id="ssStructuredVersesPane">
-<p class="ss-hint">Structures saved to this study stay with the study.</p>
+<p class="ss-hint">Your phrasing saves automatically and stays with your account.</p>
 <div class="ss-verses-list" id="ssStructuresList"></div>
 <button class="ss-structured-add" onclick="openStudyStructurePicker()" title="Create structure">
 <span class="material-symbols-outlined">add</span>
