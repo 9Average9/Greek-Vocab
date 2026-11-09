@@ -39067,3 +39067,76 @@ html.dark .ws-approx, body.dark .ws-approx { color: #fbbf24; }
 .rhema-coach-card.coach-bubble { background: var(--card-solid-color, var(--card-color)); }
 .ws-tour-tip.coach-bubble { background: var(--card-solid-color, var(--card-color, #fff)); }
 html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { background: #1f2937; }
+
+/* ── Rhēma's guide in the side menu ── */
+.rrp-pane-main { position: relative; }
+.rrp-guide-room { height: 64px; }
+.rrp-guide {
+  position: absolute;
+  left: 0; top: 0;
+  width: 58px;
+  height: calc(58px * 371 / 480);
+  padding: 0; margin: 0;
+  border: 0; background: none;
+  cursor: pointer;
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.rrp-guide.in { opacity: 1; pointer-events: auto; }
+.rrp-guide.away { display: none; }
+.rrp-guide-fig { position: absolute; inset: 0; display: block; transform-origin: 50% 100%; }
+.rrp-guide.flip .rrp-guide-fig { transform: scaleX(-1); }
+.rrp-guide.in .rrp-guide-fig { animation: rrpGuideIn .62s cubic-bezier(.34,1.56,.64,1) .18s both; }
+.rrp-guide.in.flip .rrp-guide-fig { animation-name: rrpGuideInFlip; }
+.rrp-guide-bob { position: absolute; inset: 0; display: block; transform-origin: 50% 100%; animation: coachGuideBob 3s ease-in-out infinite; }
+.rrp-guide img, .rrp-tours-guide img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.rrp-guide img:first-child { filter: drop-shadow(0 3px 4px rgba(40, 22, 8, .2)); }
+.rrp-guide-spark { transform-origin: 77% 12%; animation: coachGuideSpark 1.7s ease-in-out infinite; }
+.rrp-guide:active .rrp-guide-bob { transform: scale(.9); animation: none; }
+.rrp-guide:focus-visible { outline: 2px solid var(--secondary-color); outline-offset: 2px; border-radius: 12px; }
+@keyframes rrpGuideIn {
+  0% { opacity: 0; transform: translateY(14px) scale(.4) rotate(-14deg); }
+  60% { opacity: 1; transform: translateY(-5px) scale(1.08) rotate(4deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes rrpGuideInFlip {
+  0% { opacity: 0; transform: scaleX(-1) translateY(14px) scale(.4) rotate(14deg); }
+  60% { opacity: 1; transform: scaleX(-1) translateY(-5px) scale(1.08) rotate(-4deg); }
+  100% { opacity: 1; transform: scaleX(-1); }
+}
+/* Tours list (tap the guide) */
+.rrp-tours-hero { display: flex; align-items: center; gap: 12px; padding: 16px 16px 6px; }
+.rrp-tours-guide { position: relative; flex: 0 0 auto; width: 84px; aspect-ratio: 480 / 371; animation: coachGuideBob 3s ease-in-out infinite; }
+.rrp-tours-say {
+  position: relative; margin: 0; padding: 10px 12px; border-radius: 14px;
+  background: var(--card-solid-color, var(--card-color)); border: 1px solid var(--border-color);
+  font-size: .86rem; font-weight: 700; color: var(--font-color); line-height: 1.35;
+  animation: coachGuideSays .4s ease .15s both;
+}
+.rrp-tours-say::before {
+  content: ''; position: absolute; left: -7px; top: 50%; width: 12px; height: 12px; margin-top: -6px;
+  background: inherit; border-left: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
+  transform: rotate(45deg);
+}
+.rrp-tours { display: flex; flex-direction: column; gap: 8px; padding: 10px 14px 24px; }
+.rrp-tour {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 12px; border-radius: 14px; cursor: pointer; font: inherit; color: var(--font-color);
+  background: var(--card-color); border: 1px solid var(--border-color);
+  animation: coachGuideSays .35s ease both;
+}
+.rrp-tour:nth-child(2) { animation-delay: .04s; } .rrp-tour:nth-child(3) { animation-delay: .08s; }
+.rrp-tour:nth-child(4) { animation-delay: .12s; } .rrp-tour:nth-child(5) { animation-delay: .16s; } .rrp-tour:nth-child(6) { animation-delay: .2s; }
+.rrp-tour:active { transform: scale(.98); }
+.rrp-tour-ico {
+  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--secondary-color) 14%, transparent); color: var(--secondary-color);
+}
+.rrp-tour-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.rrp-tour-copy strong { font-size: .93rem; }
+.rrp-tour-copy small { font-size: .78rem; color: var(--muted-color); line-height: 1.35; }
+@media (prefers-reduced-motion: reduce) {
+  .rrp-guide.in .rrp-guide-fig, .rrp-guide-bob, .rrp-guide-spark, .rrp-tours-guide, .rrp-tours-say, .rrp-tour { animation: none; }
+}
