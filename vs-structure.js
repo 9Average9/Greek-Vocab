@@ -417,7 +417,12 @@ function closeVSStructureWorkspace() {
   setTimeout(() => {
     modal.style.display = 'none';
     if (_vsStructStudyContext?.returnToStudy) {
-      if (typeof switchSandboxTab === 'function') switchSandboxTab('verses');
+      // Phrasing opened from the reader's study tools: its pane is still open
+      // over the reader, so just land back on it (switching the old sandbox
+      // tab here would close the reader).
+      const host = document.getElementById('studySandbox');
+      const overReader = host?.classList.contains('tool-host') && !host.classList.contains('hidden');
+      if (!overReader && typeof switchSandboxTab === 'function') switchSandboxTab('verses');
       if (typeof switchStudyVerseTab === 'function') switchStudyVerseTab('structured');
     }
   }, 340);

@@ -766,10 +766,11 @@ async function fcmSendPushNotification(toUid, type, fromName, fromUid, extra = {
 
 // ── Personal Studies (top-level collection, supports collaboration) ───────────
 
-async function studyCreate(uid, displayName, { name, description, color, icon, shareSession }) {
+async function studyCreate(uid, displayName, { name, description, color, icon, shareSession, isHome }) {
   try {
     const ref = await addDoc(collection(db, "studies"), {
       name, description: description || '', color, icon,
+      ...(isHome ? { isHome: true } : {}),
       creatorUid: uid, creatorName: displayName,
       collaboratorUids: [uid], pendingCollaboratorUids: [],
       shareSession: !!shareSession,
@@ -782,6 +783,7 @@ async function studyCreate(uid, displayName, { name, description, color, icon, s
       creatorUid: uid, creatorName: displayName,
       collaboratorUids: [uid], pendingCollaboratorUids: [],
       isActive: true, rhemaPositions: {}, lastSessionDates: {},
+      ...(isHome ? { isHome: true } : {}),
       createdAt: { seconds: Math.floor(Date.now() / 1000) }
     };
   } catch (e) {
@@ -1093,6 +1095,43 @@ async function studyCopy(sourceStudyId, uid, displayName) {
       createdAt: { seconds: Math.floor(Date.now() / 1000) }
     };
   } catch (e) { console.warn("studyCopy:", e); return null; }
+}
+
+// The reader keeps one personal study behind it (the "home" study) that holds
+// phrasing, the word log, trails and the workspace. Separate studies are
+// retired, so the content of a user's older studies is copied into the home
+// study once. Copies use deterministic ids, so a re-run never duplicates; the
+// old studies themselves are left untouched.
+async function studyMarkHome(studyId) {
+  try { await updateDoc(doc(db, "studies", studyId), { isHome: true }); return true; }
+  catch (e) { console.warn("studyMarkHome:", e); return false; }
+}
+
+const STUDY_MERGE_SUBS = ["entries", "savedVerses", "structures", "trails", "wordLog", "notes"];
+async function studyMergeInto(sourceStudyId, targetStudyId) {
+  if (!sourceStudyId || !targetStudyId || sourceStudyId === targetStudyId) return 0;
+  let copied = 0;
+  try {
+    for (const sub of STUDY_MERGE_SUBS) {
+      const src = await getDocs(collection(db, "studies", sourceStudyId, sub));
+      if (src.empty) continue;
+      // The word log is keyed by Strong's number: keep one entry per word.
+      const have = sub === "wordLog"
+        ? new Set((await getDocs(collection(db, "studies", targetStudyId, sub))).docs.map(d => d.id))
+        : null;
+      let batch = writeBatch(db), n = 0;
+      for (const d of src.docs) {
+        const id = sub === "wordLog" ? d.id : `${sourceStudyId}_${d.id}`;
+        if (have?.has(id)) continue;
+        batch.set(doc(db, "studies", targetStudyId, sub, id), { ...d.data(), mergedFromStudyId: sourceStudyId });
+        copied++;
+        if (++n >= 400) { await batch.commit(); batch = writeBatch(db); n = 0; }
+      }
+      if (n) await batch.commit();
+    }
+    await updateDoc(doc(db, "studies", targetStudyId), { mergedStudyIds: arrayUnion(sourceStudyId) });
+  } catch (e) { console.warn("studyMergeInto:", e); return -1; }
+  return copied;
 }
 
 async function studyDeletePermanent(studyId, uid) {
@@ -1720,7 +1759,7 @@ window.Studies = {
   requestCollab: studyRequestCollab, approveCollab: studyApproveCollab, denyCollab: studyDenyCollab, leaveCollab: studyLeaveCollab,
   pruneMember: studyPruneMember,
   inviteCollab: studyInviteCollab, selfApproveInvite: studySelfApproveInvite,
-  copy: studyCopy, delete: studyDeletePermanent, listenEncouragements, getEncouragementMessages,
+  copy: studyCopy, delete: studyDeletePermanent, markHome: studyMarkHome, mergeInto: studyMergeInto, listenEncouragements, getEncouragementMessages,
   deleteMsg: deleteEncouragementMsg,
   getMemberNames: studyGetMemberNames
 };

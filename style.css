@@ -38524,8 +38524,6 @@ body.guest-mode #displayNameInfoModal { z-index: 1310; }
 body.guest-mode #bottomNav,
 body.guest-mode #desktopShellNav,
 body.guest-mode #rhemaSlide .rhema-back-btn,
-body.guest-mode #rhemaStudyPillBtn,
-body.guest-mode #rhemaStudyPickerOverlay,
 body.guest-mode #rhemaVerseSheetStudy,
 body.guest-mode #rhemaAddToWordLogBtn,
 body.guest-mode #rhemaMeaningLogBtn,
