@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.529";
+const APP_VERSION = "3.0.530";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.530 &mdash; Word studies, read with grace</div>
+<ul>
+  <li><strong>Free Grace reading</strong> &mdash; Where a word study takes a theological direction it now leans Free Grace: eternal life is a free gift received by faith alone; repentance is a change of mind, not an added condition; assurance rests on Christ&rsquo;s promise; rewards, inheritance and discipleship are distinguished from receiving eternal life; warnings to believers concern discipline and loss of reward. 97 studies revised so far, including &mu;&epsilon;&tau;&alpha;&nu;&omicron;&#941;&omega;, &pi;&iota;&sigma;&tau;&epsilon;&#973;&omega;, &sigma;&#974;&zeta;&omega;, &kappa;&lambda;&eta;&rho;&omicron;&nu;&omicron;&mu;&#941;&omega;, &mu;&#941;&nu;&omega;, &#7956;&rho;&gamma;&omicron;&nu; and &beta;&#8134;&mu;&alpha;; more follow.</li>
+  <li><strong>Same receipts</strong> &mdash; Word meanings, verse citations and source quotations are unchanged and still verified; only the interpretation was revised. Where scholars disagree, the Free Grace reading comes first with a short note on other views.</li>
+</ul>
 <div class="un-version-label">v3.0.529 &mdash; Sharper word matching in every Bible</div>
 <ul>
   <li><strong>Finds the word in your version</strong> &mdash; When you tap a Greek word, Rhema now learns how your Bible (NIV, NKJV, NASB, ESV, KJV&hellip;) words that same Greek word elsewhere in the chapter, and uses that to find it in this verse. It also understands older English (&ldquo;curseth&rdquo;, &ldquo;shewed&rdquo;) and every rendering in Strong&rsquo;s word list.</li>
@@ -48691,7 +48696,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.527';
+const DEEP_LEXICON_VERSION = '3.0.530';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
