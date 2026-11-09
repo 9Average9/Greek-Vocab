@@ -127,6 +127,24 @@ function under(r, surface, nth = 0) {
   const one = under(r, 'μονογενῆ');
   check('MSB John 3:16 μονογενῆ → "only begotten"/"one and only"', /only/.test(one?.text || ''), JSON.stringify(one));
 }
+check('older English stems: curseth/curses/cursed, shewed/show, believest/believe, seeth/sees, spake/speak',
+  A.stem('curseth') === A.stem('curses') && A.stem('cursed') === A.stem('curses') && A.stem('shewed') === A.stem('show') &&
+  A.stem('believest') === A.stem('believe') && A.stem('seeth') === A.stem('sees') && A.stem('spake') === A.stem('speak') &&
+  A.stem('priest') !== A.stem('pry') && A.stem('harvest') === 'harvest');
+{
+  // A version's own wording, learned from other verses, turns a guess into a
+  // match: NIV "teachers of the law" for γραμματεῖς in Mark 1:22.
+  const text = 'The people were amazed at his teaching, because he taught them as one who had authority, not as the teachers of the law.';
+  const { toks, res } = align(TEXTS.majority, 'MAR', '1', '22');
+  const items = toks.map((t, i) => ({ bsb: res.english[i], key: strongsOf(t) }));
+  const table = new Map();
+  A.learnRenderings([{ key: '1122' }], [{ text: 'teachers of the law', kind: 'match' }], table);
+  A.learnRenderings([{ key: '1122' }], [{ text: 'teachers of the law', kind: 'match' }], table);
+  items.forEach(it => { it.learned = A.learnedFor(table, it.key); });
+  const out = A.bridgeToVersion(items, text);
+  const i = toks.findIndex(t => /γραμματ/.test(t[0]));
+  check('learned wording: NIV Mark 1:22 γραμματεῖς → "teachers of the law" as a match', out[i] && /teachers/.test(out[i].text) && out[i].kind === 'match' && out[i].via === 'learned', JSON.stringify(out[i]));
+}
 check('lemma lookup: οὕτω(ς) → G3779, οἶδα → G1492; γαμίζω is NOT γεμίζω',
   A.strongsForLemma(LEMMAS, 'οὕτω(ς)') === '3779' && A.strongsForLemma(LEMMAS, 'οἶδα') === '1492' && A.strongsForLemma(LEMMAS, 'γαμίζω') !== '1072');
 check('critical lemmas spelled unlike Strong\'s: Μωϋσῆς → G3475, νοέω → G3539, Δαυίδ → G1138, ἐλεάω → G1653',

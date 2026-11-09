@@ -38910,3 +38910,5 @@ html.dark .ws-tour-tip, body.dark .ws-tour-tip { background: #1f2937; color: #e5
 .ws > div.ws-bar-row { flex-direction: row; align-items: center; gap: 6px; }
 .ws > div.ws-deckwrap { gap: 8px; }
 .ws-deck, .ws-dtabs, .ws-mx-picks { position: relative; }
+.ws-approx { margin-right: 2px; font-weight: 900; color: #b45309; }
+html.dark .ws-approx, body.dark .ws-approx { color: #fbbf24; }
