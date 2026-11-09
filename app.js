@@ -43739,7 +43739,7 @@ function rhemaShowChaptersForBook(code) {
 // Curated intro cards (bible-intros.js): author, date, setting, purpose, a
 // text-anchored theme, reading time from real word counts, outline, and fair
 // both-sides write-ups where authorship/date/purpose are genuinely debated.
-const BIBLE_INTROS_VERSION = '3.0.418';
+const BIBLE_INTROS_VERSION = '3.0.534';
 function _loadBibleIntros() {
   if (window.BibleIntros) return Promise.resolve(window.BibleIntros);
   return new Promise((resolve, reject) => {
