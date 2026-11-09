@@ -30314,7 +30314,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.533";
+const APP_VERSION = "3.0.534";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30337,6 +30337,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.534 &mdash; More word studies read with grace</div>
+<ul>
+  <li><strong>Free Grace review continues</strong> &mdash; 270 word studies now read the Free Grace way where they take a theological direction: faith alone for eternal life, rewards and discipleship kept distinct from it, and warnings to believers about discipline and reward. Meanings, verses and sources are unchanged and still verified.</li>
+</ul>
 <div class="un-version-label">v3.0.533 &mdash; Free Grace review complete</div>
 <ul>
   <li><strong>Every word study reviewed</strong> &mdash; All 599 theologically weighted word studies were reviewed; 233 were revised so they now read the Free Grace way where they take a theological direction: faith alone for eternal life, rewards and discipleship kept distinct from it, and warnings to believers about discipline and reward. Meanings, verses and sources are unchanged and still verified.</li>
@@ -48708,7 +48712,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.533';
+const DEEP_LEXICON_VERSION = '3.0.534';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
