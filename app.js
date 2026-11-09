@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.537";
+const APP_VERSION = "3.0.538";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.538 &mdash; The guide moves into Rhēma</div>
+<ul>
+  <li><strong>Find him in the menu</strong> &mdash; Rhēma&rsquo;s guide now hangs out in Rhēma&rsquo;s side menu, popping up somewhere new each time you open it. Tap him for every Rhēma tour: basics, study tools, word studies, cross references, the syntax tree and the Word Library.</li>
+  <li><strong>Simpler start</strong> &mdash; The long whole-app tour is gone; the guide sticks to Rhēma.</li>
+  <li><strong>Fix</strong> &mdash; The syntax tree now asks you to switch to Greek first instead of showing a blank page in English.</li>
+</ul>
 <div class="un-version-label">v3.0.537 &mdash; Meet your Rhēma guide</div>
 <ul>
   <li><strong>A friendly tour guide</strong> &mdash; Every guided tour is now narrated by Rhēma&rsquo;s guide. He pops in, hops along with each step, and cheers when you finish; the tour card is his speech bubble.</li>
@@ -33319,8 +33325,8 @@ function _maybeStartAppWelcomeCoachAfterAuth() {
   if (!_authReady || !_hasSignedInUser()) return;
   if (document.getElementById("authModal")?.classList.contains("open")) return;
   _welcomeCoachQueuedAfterAuth = false;
-  startAppWelcomeCoach();
-  setTimeout(maybeShowHomeIntroModal, 500);
+  if (_hasCompletedAppWelcomeCoach()) setTimeout(maybeShowHomeIntroModal, 500);
+  else startAppWelcomeCoach();   // runs the first-run follow-ups (no tour)
 }
 
 function switchAuthTab(tab) {
@@ -43210,6 +43216,7 @@ function openRhemaReaderPanel() {
   _renderRhemaPanelMain();
   showReaderPanelSection('main');
   ov.classList.add('open');
+  requestAnimationFrame(() => requestAnimationFrame(_rrpPlaceGuide));
   if (_rhemaStudyId() && !_localFlagSet('studyToolsCoachSeenV3537') && document.getElementById('appCoachOverlay')?.classList.contains('hidden') !== false) {
     setTimeout(() => { if (ov.classList.contains('open')) startStudyRhemaCoach(); }, 650);
   }
@@ -43226,10 +43233,174 @@ function closeRhemaReaderPanel() {
 function _renderRhemaPanelMain() {
   const el = document.getElementById('rrpMainBody');
   if (!el) return;
-  el.innerHTML = _rhemaReadMode ? _rhemaReadPanelHtml() : _rhemaStudyPanelHtml();
+  el.innerHTML = (_rhemaReadMode ? _rhemaReadPanelHtml() : _rhemaStudyPanelHtml()) + '<div class="rrp-guide-room" aria-hidden="true"></div>';
   _renderRhemaReaderFontList();
   _syncRhemaReaderFontSizeUi();
 }
+
+// ── Rhēma's guide in the side menu ────────────────────────────────────────────
+// He turns up in a different empty spot each time the menu opens: beside a
+// section label, in the header next to the title, or at the foot of the menu.
+// Every spot is checked against the menu's buttons, so he never covers one.
+// Tapping him opens the list of Rhēma tours.
+const RRP_GUIDE_W = 58;
+const RRP_GUIDE_H = Math.round(RRP_GUIDE_W * 371 / 480);
+let _rrpGuideLastSpot = '';
+function _rrpGuideEl(pane) {
+  let g = pane.querySelector(':scope > .rrp-guide');
+  if (!g) {
+    const body = document.getElementById('rrpMainBody');
+    if (body && typeof ResizeObserver !== 'undefined') {
+      let t = 0;
+      new ResizeObserver(() => { clearTimeout(t); t = setTimeout(_rrpGuideRecheck, 80); }).observe(body);
+    }
+    g = document.createElement('button');
+    g.type = 'button';
+    g.className = 'rrp-guide';
+    g.setAttribute('aria-label', 'Tours: let the Rhēma guide show you around');
+    g.title = 'Need a tour?';
+    g.innerHTML = `<span class="rrp-guide-fig"><span class="rrp-guide-bob">
+        <img src="assets/mascot/guide-body.webp" alt="" draggable="false" decoding="async">
+        <img class="rrp-guide-spark" src="assets/mascot/guide-spark.webp" alt="" draggable="false" decoding="async">
+      </span></span>`;
+    g.addEventListener('click', e => { e.stopPropagation(); showReaderPanelSection('tours'); });
+    pane.appendChild(g);
+  }
+  return g;
+}
+function _rrpGuideCandidates(pane) {
+  const pr = pane.getBoundingClientRect();
+  const st = pane.scrollTop;
+  const W = RRP_GUIDE_W, H = RRP_GUIDE_H;
+  const out = [];
+  const textRight = el => {
+    let right = el.getBoundingClientRect().left;
+    el.childNodes.forEach(n => {
+      const r = n.nodeType === 3 ? (() => { const rg = document.createRange(); rg.selectNodeContents(n); return rg.getBoundingClientRect(); })() : n.getBoundingClientRect?.();
+      if (r && r.width) right = Math.max(right, r.right);
+    });
+    return right;
+  };
+  const addSpan = (key, x0, x1, bottom) => {
+    // A few random x positions inside a free horizontal span.
+    if (x1 - x0 < W) return;
+    for (let i = 0; i < 3; i++) {
+      const x = x0 + Math.random() * (x1 - x0 - W);
+      out.push({ key: key + ':' + i, left: x - pr.left, top: bottom - H - pr.top + st });
+    }
+  };
+  // Header: between the title and the close button.
+  const title = pane.querySelector('.rrp-header .rrp-title');
+  const x = pane.querySelector('.rrp-header .rrp-x');
+  if (title && x) {
+    const xr = x.getBoundingClientRect();
+    addSpan('hdr', textRight(title) + 12, xr.left - 8, xr.bottom + 4);
+  }
+  // Beside each section label (the label text is short; the row is empty).
+  pane.querySelectorAll('#rrpMainBody .rrp-section-label').forEach((lab, i) => {
+    const lr = lab.getBoundingClientRect();
+    addSpan('lab' + i, textRight(lab) + 14, lr.right - 12, lr.bottom - 2);
+  });
+  // The foot of the menu always has room.
+  const room = pane.querySelector('#rrpMainBody .rrp-guide-room');
+  if (room) {
+    const rr = room.getBoundingClientRect();
+    addSpan('foot', rr.left + 14, rr.right - 14, rr.bottom - 6);
+  }
+  const blockers = _rrpGuideBlockers(pane);
+  return out.filter(c => c.left >= 4 && c.left + W <= pr.width - 4 && c.top >= 0 && !_rrpGuideHits(blockers, c.left, c.top));
+}
+// Never over anything you can press (or the text size slider).
+function _rrpGuideBlockers(pane) {
+  const pr = pane.getBoundingClientRect();
+  const st = pane.scrollTop;
+  return [...pane.querySelectorAll('button:not(.rrp-guide), a, input, select, textarea, [role="slider"], [onclick], .rrp-fs-pct')]
+    .map(el => el.getBoundingClientRect()).filter(r => r.width && r.height)
+    .map(r => ({ l: r.left - pr.left - 4, t: r.top - pr.top + st - 4, r: r.right - pr.left + 4, b: r.bottom - pr.top + st + 4 }));
+}
+function _rrpGuideHits(blockers, left, top) {
+  return blockers.some(b => left < b.r && left + RRP_GUIDE_W > b.l && top < b.b && top + RRP_GUIDE_H > b.t);
+}
+// If the menu re-renders or reflows (a tool toggled, the font list opened) and
+// something pressable ends up under him, he hops to another free spot.
+function _rrpGuideRecheck() {
+  const pane = document.querySelector('#rhemaReaderPanel .rrp-pane-main');
+  const g = pane?.querySelector(':scope > .rrp-guide');
+  if (!g || !document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) return;
+  if (g.classList.contains('away') || _rrpGuideHits(_rrpGuideBlockers(pane), parseFloat(g.style.left) || 0, parseFloat(g.style.top) || 0)) _rrpPlaceGuide();
+}
+function _rrpPlaceGuide() {
+  const pane = document.querySelector('#rhemaReaderPanel .rrp-pane-main');
+  if (!pane) return;
+  const g = _rrpGuideEl(pane);
+  g.classList.remove('in', 'flip');
+  const spots = _rrpGuideCandidates(pane);
+  if (!spots.length) { g.classList.add('away'); return; }
+  g.classList.remove('away');
+  const fresh = spots.filter(c => c.key.split(':')[0] !== _rrpGuideLastSpot);
+  const pick = (fresh.length ? fresh : spots)[Math.floor(Math.random() * (fresh.length ? fresh : spots).length)];
+  _rrpGuideLastSpot = pick.key.split(':')[0];
+  g.style.left = Math.round(pick.left) + 'px';
+  g.style.top = Math.round(pick.top) + 'px';
+  if (Math.random() < 0.5) g.classList.add('flip');
+  void g.offsetWidth;
+  g.classList.add('in');
+}
+const RHEMA_TOURS = [
+  { id: 'rhema', icon: 'auto_stories', title: 'Rhēma basics', desc: 'Reading, the menu, search, and jumping anywhere.' },
+  { id: 'study', icon: 'layers', title: 'Study tools', desc: 'Phrasing, Word Log, Trails, Workspace and long-press notes.', account: true },
+  { id: 'wordstudy', icon: 'menu_book', title: 'Word studies', desc: 'The answer card, depth levels, and swiping through meanings.' },
+  { id: 'xref', icon: 'hub', title: 'Cross references', desc: 'Scripture trails, categories, and breadcrumbs.' },
+  { id: 'syntax', icon: 'account_tree', title: 'Syntax tree', desc: 'Clause boxes, phrase chips and how a verse is built.' },
+  { id: 'wordlib', icon: 'local_library', title: 'Word Library', desc: 'Find Greek words by form, transliteration or English.' }
+];
+function _rhemaToursHtml() {
+  const rows = RHEMA_TOURS.filter(t => !t.account || !_guestMode).map(t =>
+    `<button class="rrp-tour" onclick="rhemaStartTour('${t.id}')">
+      <span class="rrp-tour-ico material-symbols-outlined">${t.icon}</span>
+      <span class="rrp-tour-copy"><strong>${t.title}</strong><small>${t.desc}</small></span>
+      <span class="material-symbols-outlined rrp-chev">play_arrow</span>
+    </button>`).join('');
+  return `<div class="rrp-tours-hero">
+      <span class="rrp-tours-guide" aria-hidden="true"><img src="assets/mascot/guide-body.webp" alt="" draggable="false"><img class="rrp-guide-spark" src="assets/mascot/guide-spark.webp" alt="" draggable="false"></span>
+      <p class="rrp-tours-say">Pick a tour and I’ll walk you through it!</p>
+    </div>
+    <div class="rrp-tours">${rows}</div>`;
+}
+function rhemaStartTour(id) {
+  closeRhemaReaderPanel();
+  const go = fn => setTimeout(fn, 380);
+  if (id === 'rhema') go(() => startRhemaCoach(true));
+  else if (id === 'study') go(async () => { if (await _rhemaRequireStudy()) startStudyRhemaCoach(true); });
+  else if (id === 'xref') go(() => openRhemaCrossReferences(true));
+  else if (id === 'syntax') go(() => {
+    // The tree needs a New Testament verse in verse view.
+    if (!isRhemaNTBook(_rhemaBook)) { _rhemaBook = 'JOH'; _rhemaChapter = '1'; _rhemaVerse = '1'; syncRhemaPicker?.(); renderRhemaVerse(); }
+    if (_rhemaShowEnglish) rhemaLanguagePick('greek');
+    let tries = 0;
+    setTimeout(() => {
+      if (_rhemaFullChapter) toggleRhemaChapterMode();
+      if (!_rhemaSyntaxMode) toggleWheelTool('syntax');
+    }, 700);
+    const wait = setInterval(() => {
+      if (document.querySelector('.rsx-dg-node')) { clearInterval(wait); _coachSyntaxDone = false; startRhemaSyntaxCoach(true); }
+      else if (++tries > 40) clearInterval(wait);
+    }, 150);
+  });
+  else if (id === 'wordlib') go(() => startWordLibraryCoach(true));
+  else if (id === 'wordstudy') go(() => {
+    // Open a well-known word (λόγος) and run the word-study tour on it.
+    if (typeof rhemaOpenWordStudy !== 'function') return;
+    rhemaOpenWordStudy('3056');
+    let tries = 0;
+    const wait = setInterval(() => {
+      const root = document.querySelector('#rhemaSheet.open .ws[id^="ws"]');
+      if (root && root.offsetParent) { clearInterval(wait); setTimeout(() => window.rhemaWordStudyTour?.(root.id, true), 350); }
+      else if (++tries > 40) clearInterval(wait);
+    }, 150);
+  });
+}
+window.rhemaStartTour = rhemaStartTour;
 function showReaderPanelSection(section) {
   const panel = document.getElementById('rhemaReaderPanel');
   if (!panel) return;
@@ -43242,6 +43413,12 @@ function showReaderPanelSection(section) {
   }
   const title = document.getElementById('rrpSubTitle');
   const body = document.getElementById('rrpSubBody');
+  if (section === 'tours') {
+    if (title) title.textContent = 'Tours';
+    if (body) body.innerHTML = _rhemaToursHtml();
+    panel.classList.add('sub-open');
+    return;
+  }
   if (section === 'meanings') {
     // Saved Greek meanings (from any Word Study) — rendered by rhema-word-study.js.
     if (title) title.textContent = 'Saved meanings';
@@ -43290,8 +43467,9 @@ function _rhemaStudyTools() {
   const orig = hebrew ? 'Hebrew' : 'Greek';
   const tools = [
     { id: 'syntax', label: 'Syntax Tree', icon: 'account_tree', active: _rhemaSyntaxMode,
-      reason: _rhemaFullChapter ? 'Switch to verse view first to open the syntax tree.'
-            : hebrew ? 'The syntax tree isn’t available for Hebrew.' : '',
+      reason: hebrew ? 'The syntax tree isn’t available for Hebrew.'
+            : _rhemaShowEnglish ? `Select ${orig} in the Language bar first to see the syntax tree.`
+            : _rhemaFullChapter ? 'Switch to verse view first to open the syntax tree.' : '',
       action: () => toggleWheelTool('syntax') },
     { id: 'pos', label: 'Parts of Speech', icon: 'ink_highlighter', active: _rhemaHighlightBarOn, reason: '',
       action: () => toggleWheelTool('highlight') },
@@ -45593,6 +45771,9 @@ function _coachFirst(selectors) {
 }
 
 let _appCoachSteps = [];
+// Rhēma's guide narrates Rhēma's own tours only.
+const _RHEMA_GUIDE_TOURS = new Set(['studyToolsCoachSeenV3537', 'crossRefCoachSeenV275', 'wordLibraryCoachSeenV275']);
+function _appCoachHasGuide() { return _RHEMA_GUIDE_TOURS.has(_appCoachSeenKey); }
 let _appCoachIdx = 0;
 let _appCoachSeenKey = 'appWelcomeCoachSeenV275';
 let _appCoachFinishing = false;
@@ -45683,10 +45864,16 @@ const PRAISES_COACH_STEPS = [
   { target: () => _coachFirst(['.mercies-icon-btn']), title: 'Praises settings', body: 'Settings control daily praise reminders, weekly friend encouragement reminders, and auto-saving to your Praises Journal. The info button explains the purpose and Scripture vision behind the feature.' }
 ];
 
+// The full app tour is retired: guided tours belong to Rhēma's guide (tap him
+// in Rhēma's menu). New accounts still get the first-run follow-ups the tour
+// used to lead into (notification prompt, then the home intro).
 function startAppWelcomeCoach(force = false) {
-  if (!force && (!_authReady || !_hasSignedInUser() || document.getElementById("authModal")?.classList.contains("open"))) return;
-  if (_coachHasSeen('appWelcomeCoachSeenV275', force)) return;
-  _startAppCoach(APP_WELCOME_COACH_STEPS, 'appWelcomeCoachSeenV275', force);
+  if (force) return;
+  if (!_authReady || !_hasSignedInUser() || document.getElementById("authModal")?.classList.contains("open")) return;
+  if (_coachHasSeen('appWelcomeCoachSeenV275')) return;
+  _appCoachSeenKey = 'appWelcomeCoachSeenV275';
+  _appCoachReplayMode = false;
+  _endAppCoach();
 }
 
 function startStudyRhemaCoach(force = false) {
@@ -45740,7 +45927,6 @@ function closeRhemaNerdModal(event) {
 function startCoachReplay(type) {
   closeCoachReplayModal();
   if (_isDesktopStudyShell() && type === 'praises') return;
-  if (type === 'app') startAppWelcomeCoach(true);
   if (type === 'praises') {
     showNavPage('mercies');
     setTimeout(() => {
@@ -45751,6 +45937,10 @@ function startCoachReplay(type) {
     }, 260);
   }
   if (type === 'rhema') showRhema().then(() => setTimeout(() => startRhemaCoach(true), 260));
+  if (type === 'rhematours') {
+    _suppressRhemaCoachOnce = true;
+    showRhema().then(() => setTimeout(() => { openRhemaReaderPanel(); setTimeout(() => showReaderPanelSection('tours'), 320); }, 260));
+  }
   if (type === 'study') {
     _suppressRhemaCoachOnce = true;
     showRhema().then(async () => {
@@ -45801,7 +45991,8 @@ function _showAppCoachStep() {
     document.getElementById('appCoachNextLabel').textContent = _appCoachIdx === _appCoachSteps.length - 1 ? 'Done' : 'Next';
     document.getElementById('appCoachBackBtn').style.visibility = _appCoachIdx === 0 ? 'hidden' : 'visible';
     _placeAppCoachCard(typeof step.target === 'function' ? step.target() : null, card, spotlight, step.position || 'below');
-    coachGuideShow(overlay, card, { last: _appCoachIdx === _appCoachSteps.length - 1 });
+    if (_appCoachHasGuide()) coachGuideShow(overlay, card, { last: _appCoachIdx === _appCoachSteps.length - 1 });
+    else { coachGuideHide(overlay); card.classList.remove('coach-bubble'); }
   }, 90);
   if (typeof step.before === 'function') {
     const result = step.before();
@@ -45856,7 +46047,7 @@ function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
     spotlight.style.height = `${Math.min(vh - MARGIN * 2, rect.height + PAD * 2)}px`;
   }
   requestAnimationFrame(() => {
-    const ROOM = COACH_GUIDE_ROOM;   // the guide perches above the card
+    const ROOM = _appCoachHasGuide() ? COACH_GUIDE_ROOM : 0;   // the guide perches above the card
     const cardH = Math.min(card.offsetHeight, vh - MARGIN * 2 - ROOM);
     let top;
     let left;
@@ -45920,7 +46111,7 @@ function _endAppCoach() {
   coachGuideHide(document.getElementById('appCoachOverlay'));
   _coachMarkSeen(_appCoachSeenKey);
   if (_appCoachSeenKey === 'appWelcomeCoachSeenV275') {
-    showNavPage('home');
+    if (!document.getElementById('rhemaModal')?.classList.contains('open')) showNavPage('home');
     const shouldShowNotificationPrompt =
       !_appCoachReplayMode &&
       _pendingFirstRunNotificationPrompt &&
@@ -45968,7 +46159,7 @@ const _RHEMA_COACH_STEPS = [
     targetFn: () => _coachFirst(['#rhemaReaderMenuBtn']),
     position: 'below',
     title: 'Your tools live in the menu',
-    body: 'This menu holds everything: switch the chapter into the Greek (then tap any word for its meaning, parsing and usage), turn on the syntax tree or parts of speech, open cross references, and find Phrasing, Word Log, Trails and Workspace.',
+    body: 'This menu holds everything: switch the chapter into the Greek (then tap any word for its meaning, parsing and usage), turn on the syntax tree or parts of speech, open cross references, and find Phrasing, Word Log, Trails and Workspace. I live in there too: tap me anytime for more tours.',
   },
   {
     targetFn: () => _coachFirst(['#rhemaSearchToggle']),
