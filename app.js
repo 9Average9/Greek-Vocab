@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.535";
+const APP_VERSION = "3.0.536";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.536 &mdash; More room to read</div>
+<ul>
+  <li><strong>Full-screen reading</strong> &mdash; The top bar (Rhēma, search and menu) now glides away with the reference bar as you scroll down, and slides back the moment you scroll up.</li>
+</ul>
 <div class="un-version-label">v3.0.535 &mdash; Your study lives in the reader</div>
 <ul>
   <li><strong>No more separate studies</strong> &mdash; Phrasing, Word Log, Trails and the Workspace are now always in Rhēma&rsquo;s side menu, and everything you add saves to your account automatically.</li>
@@ -38370,6 +38374,7 @@ function toggleRhemaSearch() {
   if (!modal) return;
   if (modal.classList.contains('rhema-search-open')) { closeRhemaSearch(); return; }
   modal.classList.add('rhema-search-open');
+  _rhemaSetChromeHidden?.(false);
   const toggle = document.getElementById('rhemaSearchToggle');
   toggle?.setAttribute('aria-expanded', 'true');
   toggle?.setAttribute('aria-label', 'Close Bible search');
@@ -42686,6 +42691,7 @@ async function showRhema() {
   }
   modal.classList.add('open');
   _rhemaSetChromeHidden?.(false);
+  _initRhemaChromeMetrics?.();   // header + bar heights before the first paint
   _rhemaStartMarksSync();
   _rhemaActivateCompareScope();
 
@@ -44245,14 +44251,17 @@ function _initRhemaChromeMetrics() {
   if (!slide || slide._rhemaChromeMetricsInit) return;
   const chrome = document.getElementById('rhemaTopChrome');
   const nav = document.getElementById('rhemaVerseNav');
+  const header = slide.querySelector('.rhema-header');
   if (!chrome && !nav) return;
   slide._rhemaChromeMetricsInit = true;
   const apply = () => {
+    if (header) slide.style.setProperty('--rhema-header-h', (header.offsetHeight || 0) + 'px');
     slide.style.setProperty('--rhema-chrome-top', (chrome?.offsetHeight || 0) + 'px');
     slide.style.setProperty('--rhema-chrome-bottom', (nav?.offsetHeight || 0) + 'px');
   };
   if (typeof ResizeObserver !== 'undefined') {
     const ro = new ResizeObserver(apply);
+    if (header) ro.observe(header);
     if (chrome) ro.observe(chrome);
     if (nav) ro.observe(nav);
   }
