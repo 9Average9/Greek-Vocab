@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.538";
+const APP_VERSION = "3.0.539";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.539 &mdash; A tour for everything</div>
+<ul>
+  <li><strong>New tours</strong> &mdash; &ldquo;Tapping a verse&rdquo; (highlights, notes, compare, copy, define, interlinear, focus) and &ldquo;The menu&rdquo; (Greek and Hebrew, reading helpers, your saved stuff, text size). The Greek words tour now covers Parsing, Occurrences and the Word Log too. Tap the guide in Rhēma&rsquo;s menu to pick one.</li>
+  <li><strong>Friendlier tours</strong> &mdash; Every Rhēma tour was rewritten in short, simple words and checked against how each tool really works.</li>
+  <li><strong>More search results</strong> &mdash; Search now shows up to five likely passages, best first.</li>
+  <li><strong>Better syntax tree words</strong> &mdash; The English under each Greek word now follows your Bible (Ἐν ἀρχῇ reads &ldquo;In the beginning&rdquo;, not &ldquo;in ruler&rdquo;).</li>
+  <li><strong>Phrasing</strong> &mdash; The save button saves straight to your study.</li>
+</ul>
 <div class="un-version-label">v3.0.538 &mdash; The guide moves into Rhēma</div>
 <ul>
   <li><strong>Find him in the menu</strong> &mdash; Rhēma&rsquo;s guide now hangs out in Rhēma&rsquo;s side menu, popping up somewhere new each time you open it. Tap him for every Rhēma tour: basics, study tools, word studies, cross references, the syntax tree and the Word Library.</li>
@@ -38343,7 +38351,7 @@ function _renderHomeRhemaSearchResults(items, status) {
     return;
   }
   target.innerHTML = items.map((item, index) => `
-    ${index === 1 && items[0]?.reason ? '<div class="rhema-search-related">Related passages</div>' : ''}
+    ${index === 1 && items[0]?.reason ? '<div class="rhema-search-related">Other likely passages</div>' : ''}
     <button class="home-rhema-result${index === 0 && item.reason ? ' best' : ''}" type="button" onclick="openHomeRhemaResult(${index})">
       ${index === 0 && item.reason ? '<em>Best match</em>' : ''}
       <strong>${_homeRhemaEscape(item.ref)}</strong>
@@ -38416,7 +38424,10 @@ function _getRhemaSearchSuggestions(query) {
   if (_rhemaAiSearchInFlight.has(key)) return _rhemaAiSearchInFlight.get(key);
   const pending = (async () => {
     if (!window.BibleSearchAI?.search) throw new Error('Bible search service has not loaded');
-    const results = (await window.BibleSearchAI.search(query)).results || [];
+    // Ask for every likely passage, not just the single best one (parallel
+    // accounts, same wording elsewhere, closely related verses).
+    const ask = query.length <= 120 ? `${query} (list up to 5 likely passages, best first)` : query;
+    const results = ((await window.BibleSearchAI.search(ask)) || {}).results || [];
     _rhemaAiSearchCache.set(key, results);
     if (_rhemaAiSearchCache.size > 30) _rhemaAiSearchCache.delete(_rhemaAiSearchCache.keys().next().value);
     return results;
@@ -38469,7 +38480,8 @@ async function submitRhemaSearch() {
       seen.add(key);
       found.push({ ...entry, reason: String(suggestion.reason || '').slice(0, 140) });
     });
-    _homeRhemaResults = found.length ? found : local;
+    // Up to five likely passages, best first.
+    _homeRhemaResults = found.length ? found.slice(0, 5) : local.slice(0, 5);
     if (aiStatus) aiStatus.textContent = found.length ? '' : 'Showing closest matches.';
     _renderHomeRhemaSearchResults(_homeRhemaResults, _homeRhemaResults.length ? '' : 'No matching passages found. Try different words.');
   } catch (err) {
@@ -43347,12 +43359,14 @@ function _rrpPlaceGuide() {
   g.classList.add('in');
 }
 const RHEMA_TOURS = [
-  { id: 'rhema', icon: 'auto_stories', title: 'Rhēma basics', desc: 'Reading, the menu, search, and jumping anywhere.' },
-  { id: 'study', icon: 'layers', title: 'Study tools', desc: 'Phrasing, Word Log, Trails, Workspace and long-press notes.', account: true },
-  { id: 'wordstudy', icon: 'menu_book', title: 'Word studies', desc: 'The answer card, depth levels, and swiping through meanings.' },
-  { id: 'xref', icon: 'hub', title: 'Cross references', desc: 'Scripture trails, categories, and breadcrumbs.' },
-  { id: 'syntax', icon: 'account_tree', title: 'Syntax tree', desc: 'Clause boxes, phrase chips and how a verse is built.' },
-  { id: 'wordlib', icon: 'local_library', title: 'Word Library', desc: 'Find Greek words by form, transliteration or English.' }
+  { id: 'rhema', icon: 'auto_stories', title: 'Rhēma basics', desc: 'Reading, turning pages, search, and getting around.' },
+  { id: 'verses', icon: 'touch_app', title: 'Tapping a verse', desc: 'Highlights, notes, compare, copy, interlinear and more.' },
+  { id: 'reading', icon: 'tune', title: 'The menu', desc: 'Greek and Hebrew, reading helpers, your saved stuff, text size.' },
+  { id: 'wordstudy', icon: 'menu_book', title: 'Greek words', desc: 'What a word means here, its parsing, and everywhere it shows up.' },
+  { id: 'study', icon: 'layers', title: 'Study tools', desc: 'Phrasing, Word Log, Trails and Workspace.', account: true },
+  { id: 'xref', icon: 'hub', title: 'Cross references', desc: 'Find verses that connect and follow the trail.' },
+  { id: 'syntax', icon: 'account_tree', title: 'Syntax tree', desc: 'See how a verse is put together.' },
+  { id: 'wordlib', icon: 'local_library', title: 'Word Library', desc: 'Look up any Greek word, any way you can spell it.' }
 ];
 function _rhemaToursHtml() {
   const rows = RHEMA_TOURS.filter(t => !t.account || !_guestMode).map(t =>
@@ -43371,6 +43385,8 @@ function rhemaStartTour(id) {
   closeRhemaReaderPanel();
   const go = fn => setTimeout(fn, 380);
   if (id === 'rhema') go(() => startRhemaCoach(true));
+  else if (id === 'verses') go(() => startVerseCoach());
+  else if (id === 'reading') go(() => startReadingToolsCoach());
   else if (id === 'study') go(async () => { if (await _rhemaRequireStudy()) startStudyRhemaCoach(true); });
   else if (id === 'xref') go(() => openRhemaCrossReferences(true));
   else if (id === 'syntax') go(() => {
@@ -43382,9 +43398,18 @@ function rhemaStartTour(id) {
       if (_rhemaFullChapter) toggleRhemaChapterMode();
       if (!_rhemaSyntaxMode) toggleWheelTool('syntax');
     }, 700);
+    let moved = false;
     const wait = setInterval(() => {
-      if (document.querySelector('.rsx-dg-node')) { clearInterval(wait); _coachSyntaxDone = false; startRhemaSyntaxCoach(true); }
-      else if (++tries > 40) clearInterval(wait);
+      if (!document.querySelector('.rsx-dg-node')) { if (++tries > 40) clearInterval(wait); return; }
+      // The tour shows the arrows between clauses; a one-clause verse has none,
+      // so hop to John 1:1, which does.
+      if (!document.querySelector('.rsx-dg-arm') && !moved) {
+        moved = true;
+        _rhemaBook = 'JOH'; _rhemaChapter = '1'; _rhemaVerse = '1';
+        syncRhemaPicker?.(); renderRhemaVerse();
+        return;
+      }
+      clearInterval(wait); _coachSyntaxDone = false; startRhemaSyntaxCoach(true);
     }, 150);
   });
   else if (id === 'wordlib') go(() => startWordLibraryCoach(true));
@@ -45772,7 +45797,8 @@ function _coachFirst(selectors) {
 
 let _appCoachSteps = [];
 // Rhēma's guide narrates Rhēma's own tours only.
-const _RHEMA_GUIDE_TOURS = new Set(['studyToolsCoachSeenV3537', 'crossRefCoachSeenV275', 'wordLibraryCoachSeenV275']);
+const _RHEMA_GUIDE_TOURS = new Set(['studyToolsCoachSeenV3537', 'crossRefCoachSeenV275', 'wordLibraryCoachSeenV275', 'verseCoachSeenV3539', 'readingToolsCoachSeenV3539']);
+let _appCoachOnEnd = null;   // cleanup for a tour (e.g. close the verse menu)
 function _appCoachHasGuide() { return _RHEMA_GUIDE_TOURS.has(_appCoachSeenKey); }
 let _appCoachIdx = 0;
 let _appCoachSeenKey = 'appWelcomeCoachSeenV275';
@@ -45792,23 +45818,79 @@ const APP_WELCOME_COACH_STEPS = [
 ];
 
 const _coachPause = (ms = 420) => new Promise(r => setTimeout(r, ms));
+// Opens the verse menu on the first verse of the chapter (English, chapter view).
+async function _coachOpenVerseMenu() {
+  if (!_rhemaShowEnglish) rhemaLanguagePick('english');
+  if (!_rhemaFullChapter) toggleRhemaChapterMode();
+  await _coachPause(350);
+  if (!_rhemaVerseSheetOpen?.()) {
+    const first = document.querySelector('#rhemaEnglishDisplay .rhema-chapter-block[data-verse]');
+    if (first) rhemaOpenVerseMenu(first.dataset.verse);
+  }
+  return _coachPause(420);
+}
+const _coachVsheetBtn = fn => () => _coachFirst([() => [...document.querySelectorAll('#rhemaVerseSheet .rhema-vsheet-action')].find(b => b.offsetParent && fn([...b.querySelectorAll('span')].filter(x => !x.classList.contains('material-symbols-outlined')).map(x => x.textContent).join(' ').trim())), '#rhemaVerseSheet .rhema-vsheet']);
+const VERSE_COACH_STEPS = [
+  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), title: 'Highlight', body: 'Tap a color to highlight the verse. Tap the crossed-out drop to clear it.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /note/i.test(t)), title: 'Notes', body: 'Write your own note on the verse. All your highlights and notes are listed in the menu.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Compare/.test(t)), title: 'Compare', body: 'See this verse side by side in other Bibles, like the NIV, KJV and NASB.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /English word/.test(t)), title: 'Define a word', body: 'Not sure what a word in your Bible means? Pick it and get a simple definition. Names and places get a Bible dictionary entry.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Interlinear/.test(t)), title: 'Interlinear', body: 'Lines up every Greek (or Hebrew) word with its English, word by word. Tap any word to study it.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Focus/.test(t)), title: 'Focus', body: 'Shows just this one verse so you can slow down with it. Turn Chapter View back on in the menu to see the whole chapter again.' },
+  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetStudy', '#rhemaVerseSheet .rhema-vsheet']), title: 'Your study', body: 'Save a thought about the verse to your Workspace, or add one of its words to your Word Log. (These need you signed in.)' },
+  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetRef', '#rhemaVerseSheet .rhema-vsheet']), title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
+];
+// The menu's reading helpers. Scrolls the menu so each spotlighted part is on screen.
+function _coachMenuShow(pick) {
+  return () => {
+    if (!document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) openRhemaReaderPanel();
+    showReaderPanelSection('main');
+    return _coachPause(380).then(() => {
+      const el = pick();
+      const pane = document.querySelector('#rhemaReaderPanel .rrp-pane-main');
+      if (el && pane) {
+        const r = el.getBoundingClientRect(), pr = pane.getBoundingClientRect();
+        pane.scrollTop += (r.top - pr.top) - pane.clientHeight * 0.3;
+      }
+      return _coachPause(260);
+    });
+  };
+}
+const _menuSectionAfter = label => () => {
+  const lab = [...document.querySelectorAll('#rrpMainBody .rrp-section-label')].find(l => l.textContent.trim().toLowerCase().startsWith(label));
+  let el = lab?.nextElementSibling;
+  return el && el.offsetParent ? el : null;
+};
+const READING_COACH_STEPS = [
+  { before: _coachMenuShow(_menuSectionAfter('language')), target: _menuSectionAfter('language'), title: 'Language', body: 'Flip the chapter between English and Greek. In the Old Testament you can pick Hebrew or the Greek Old Testament too. In Greek, tap any word to see what it means.' },
+  { before: _coachMenuShow(_menuSectionAfter('display')), target: _menuSectionAfter('display'), title: 'Reading helpers', body: 'Syntax Tree draws a verse as a diagram of its parts. Parts of Speech adds a row of word types: tap one, like Verb, to color every verb. Greek Only hides the small English under each Greek word. A greyed-out tile tells you what to turn on first.' },
+  { before: _coachMenuShow(_menuSectionAfter('text')), target: _menuSectionAfter('text'), title: 'Chapter or verse', body: 'Chapter View shows the whole chapter; turn it off to read one verse at a time. Critical Text switches the Greek New Testament between its two main manuscript traditions.' },
+  { before: _coachMenuShow(_menuSectionAfter('study')), target: _menuSectionAfter('study'), title: 'More tools', body: 'Cross references for verses that connect, the Word Library to look up Greek words, and Copy verse to grab several verses at once.' },
+  { before: _coachMenuShow(_menuSectionAfter('marks')), target: _menuSectionAfter('marks'), title: 'Your saved stuff', body: 'Every highlight, note, and saved word meaning in one place. Tap one to jump to its verse.' },
+  { before: _coachMenuShow(() => document.querySelector('#rrpMainBody .rrp-fontsize')), target: () => _coachFirst(['#rrpMainBody .rrp-fontsize']), title: 'Make it yours', body: 'Slide to change the text size, and pick a font you like just below.' },
+  { before: _coachMenuShow(() => document.querySelector('#rhemaReaderPanel .rrp-guide.in')), target: () => _coachFirst(['#rhemaReaderPanel .rrp-guide.in', '#rhemaReaderMenuBtn']), title: 'That’s me!', body: 'I pop up somewhere new in this menu each time. Tap me whenever you want another tour.' }
+];
+function startVerseCoach() { _startAppCoach(VERSE_COACH_STEPS, 'verseCoachSeenV3539', true); _appCoachOnEnd = () => { try { closeRhemaVerseSheetAndDeselect(); } catch (e) {} }; }
+function startReadingToolsCoach() { _startAppCoach(READING_COACH_STEPS, 'readingToolsCoachSeenV3539', true); }
+
 // The reader's built-in study: its tools live in Rhēma's side menu.
 const STUDY_RHEMA_COACH_STEPS = [
-  { before: () => { if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost(); openRhemaReaderPanel(); return _coachPause(460); }, target: () => _coachFirst(['#rrpMainBody .rrp-study-grid', '#rrpMainBody']), title: 'Your study lives in the reader', body: 'Phrasing, Word Log, Trails and Workspace are always right here in the menu. Everything you add saves to your account automatically, so there is no separate study to open.' },
-  { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachFirst(['#rhemaEnglishDisplay .rhema-chapter-block', '#rhemaVerseDisplay .rhema-chapter-block', '#rhemaEnglishDisplay', '#rhemaVerseDisplay']), demo: 'longpress', title: 'Long-press for study notes', body: 'Long-press any verse, or tap it and choose “Observe, interpret, apply or ask”, to save a thought to your Workspace while the passage stays open.' },
-  { before: () => Promise.resolve(openStudyTool('phrasing')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneVerses .ss-structured-add', '#ssPaneVerses']), title: 'Phrasing', body: 'Break a passage into its phrases and clauses to see how the thought flows. The + button starts one, and every change saves as you work.' },
-  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssWordlogList', '#ssPaneWordlog']), title: 'Word Log', body: 'Tap any word in Rhēma and press “Add to Word Log”. Tap a logged word later to see its definition, parsing and every place it appears.' },
-  { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssTrailsList', '#ssPaneTrails']), title: 'Trails preserve discovery', body: 'In Cross References, tap Save Trail and the path lands here: the breadcrumbs, connected verses and labels, ready to reopen exactly as you left it.' },
-  { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), title: 'Workspace is where thoughts land', body: 'Workspace sorts your notes into Observe, Interpret, Apply and Question. Long-press notes from Rhēma land here, and you can add your own thoughts too.' },
-  { target: () => _coachFirst(['#wsKbdToggleBtn', '.ss-compose']), title: 'Greek keyboard', body: 'The alpha button opens a Greek keyboard so you can type Greek forms straight into your notes. That’s the tour. Happy studying!' }
+  { before: () => { if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost(); openRhemaReaderPanel(); return _coachPause(460); }, target: () => _coachFirst(['#rrpMainBody .rrp-study-grid', '#rrpMainBody']), title: 'Your study', body: 'Phrasing, Word Log, Trails and Workspace live right here. Anything you add saves to your account by itself.' },
+  { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachFirst(['#rhemaEnglishDisplay .rhema-chapter-block', '#rhemaVerseDisplay .rhema-chapter-block', '#rhemaEnglishDisplay', '#rhemaVerseDisplay']), demo: 'longpress', title: 'Jot a thought', body: 'Press and hold a verse (or tap it and pick “Observe, interpret, apply or ask”) to save a thought about it to your Workspace.' },
+  { before: () => Promise.resolve(openStudyTool('phrasing')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneVerses .ss-structured-add', '#ssPaneVerses']), title: 'Phrasing', body: 'Tap + and pick a passage. Its words land on a canvas: hold a word to split it off, then drag the pieces around to see how the thought flows.' },
+  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssWordlogList', '#ssPaneWordlog']), title: 'Word Log', body: 'Words you want to remember. Tap a Greek word and press “Add to Word Log”, then tap it here anytime for its meaning, parsing and where it shows up.' },
+  { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssTrailsList', '#ssPaneTrails']), title: 'Trails', body: 'Cross-reference paths you saved. Tap one to pick up right where you left off.' },
+  { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), title: 'Workspace', body: 'Your thoughts, sorted into Observe, Interpret, Apply and Question. Tap a note’s verse to jump back to it.' },
+  { target: () => _coachFirst(['#wsKbdToggleBtn', '.ss-compose']), title: 'Type Greek too', body: 'The α button opens a Greek keyboard for your notes. That’s the tour. Happy studying!' }
 ];
 
 const XREF_COACH_STEPS = [
-  { target: () => _coachFirst(['.rx-top-card', '#rxMainView']), title: 'Cross References start with one verse', body: 'The top card is the active verse. Tap it to choose another reference, and every category below reloads around that verse.' },
-  { target: () => _coachFirst(['.rx-category-card', '#rxMainView']), title: 'Categories are scripture trails', body: 'Each card groups a different kind of connection: direct references, themes, Old/New Testament links, parallel ideas, or prophecy fulfillment.' },
-  { target: () => _coachFirst(['.rx-category-card .rx-mini-list', '.rx-category-card']), title: 'Only a preview appears here', body: 'Category cards show a small preview so the page stays calm. The arrow opens the full stacked list for that category.' },
-  { target: () => _coachFirst(['.rx-breadcrumb', '.rx-page-header']), title: 'Breadcrumbs keep your path', body: 'When you tap a connected verse, it becomes the new active verse and the breadcrumb remembers the route you took.' },
-  { target: () => _coachFirst(['.rx-save-trail-btn', '.rx-page-header']), title: 'Save Trail', body: 'Save Trail keeps the current scripture trail in your study, so you can reopen the exact path later from Trails in Rhēma’s menu.' }
+  { target: () => _coachFirst(['.rx-top-card', '#rxMainView']), title: 'Your starting verse', body: 'This card is the verse you’re exploring. Tap it to pick a different one.' },
+  { target: () => _coachFirst(['.rx-category-card', '#rxMainView']), title: 'Groups of connections', body: 'Linked verses are sorted into groups: Scripture it quotes, direct links, Old and New Testament links, prophecy and fulfillment, and shared themes.' },
+  { target: () => _coachFirst(['.rx-category-card .rx-mini-list', '.rx-category-card']), title: 'A peek, then the full list', body: 'Each group shows a few verses. Tap it to see them all.' },
+  { target: () => _coachFirst(['.rx-breadcrumb', '.rx-page-header']), title: 'Follow the trail', body: 'Tap any linked verse to jump to it and see its own connections. The trail at the top remembers every stop, so you can hop back.' },
+  { target: () => _coachFirst(['.rx-save-trail-btn', '.rx-page-header']), title: 'Save your trail', body: 'Found a great path? Save Trail keeps it in Trails (in the menu) so you can pick it up later. You’ll need to be signed in.' }
 ];
 
 APP_WELCOME_COACH_STEPS[0].body = 'This app helps you learn enough Greek to observe the New Testament carefully, then keeps lessons, practice, Rhema, notes, cross references, Praises, progress, and community study in one place. Tiny tour, big map. Let’s get you oriented.';
@@ -45842,18 +45924,17 @@ APP_WELCOME_COACH_STEPS[8].body = 'Your profile keeps your XP, rank, streak, les
 // On desktop there is no long-press: point at the note button instead.
 if (window.matchMedia && window.matchMedia('(min-width: 960px) and (pointer: fine)').matches) {
   STUDY_RHEMA_COACH_STEPS[1].target = () => _coachFirst(['#rhemaDesktopNoteBtn', '#rhemaEnglishDisplay .rhema-chapter-block']);
-  STUDY_RHEMA_COACH_STEPS[1].title = 'Add a study note';
-  STUDY_RHEMA_COACH_STEPS[1].body = 'Use the note button (✎) in the verse bar, or tap a verse and choose “Observe, interpret, apply or ask”, to save a thought from the passage straight into your Workspace.';
+  STUDY_RHEMA_COACH_STEPS[1].title = 'Jot a thought';
+  STUDY_RHEMA_COACH_STEPS[1].body = 'Click the ✎ button in the verse bar (or click a verse and pick “Observe, interpret, apply or ask”) to save a thought about it to your Workspace.';
   delete STUDY_RHEMA_COACH_STEPS[1].demo;
 }
 
-XREF_COACH_STEPS[3].body = 'Breadcrumbs will appear near the top once you start moving verse to verse. They show the route you took, so John 1:1 → Hebrews 1:3 → Colossians 1:15 does not become a foggy memory five minutes later.';
 
 const WORD_LIBRARY_COACH_STEPS = [
-  { before: async () => { await loadRhemaScripts(); openWordLibrary(); }, target: () => null, position: 'center', title: 'Word Library', body: 'The Word Library is for searching Greek words without needing to already know the dictionary form. It is especially helpful when the word on the page is inflected and does not look like the lexicon entry.' },
-  { target: () => _coachFirst(['#wlSearchInput', '.wl-search-row']), title: 'Search exact forms or meanings', body: 'You can search Greek letters, transliteration, or English meanings. Rhema tries to connect what you typed to real forms in the New Testament text, not just a generic dictionary heading.' },
-  { target: () => _coachFirst(['#wlKbdToggleBtn', '.wl-search-row']), title: 'Greek keyboard built in', body: 'The alpha button opens a small Greek keyboard. Useful when you want to search the real Greek form and your phone keyboard is being dramatic.' },
-  { target: () => _coachFirst(['#wlResults', '#wordLibraryOverlay .wl-sheet']), title: 'Results become study doors', body: 'Results can lead you into definitions, occurrences, and forms. Use it when you remember a word, half-remember a word, or only know the English idea you are chasing.' }
+  { before: async () => { await loadRhemaScripts(); openWordLibrary(); }, target: () => null, position: 'center', title: 'Word Library', body: 'A Greek dictionary you can search. Handy when the word on the page looks nothing like its dictionary form.' },
+  { target: () => _coachFirst(['#wlSearchInput', '.wl-search-row']), title: 'Search any way', body: 'Type a Greek word in any form, spell it with English letters (like “agape”), or type an English meaning.' },
+  { target: () => _coachFirst(['#wlKbdToggleBtn', '.wl-search-row']), title: 'Greek keyboard', body: 'Tap α for a Greek keyboard, no phone settings needed.' },
+  { target: () => _coachFirst(['#wlResults', '#wordLibraryOverlay .wl-sheet']), title: 'Open a word', body: 'Tap a result to see what it means, how it’s parsed, and everywhere it shows up.' }
 ];
 
 const PRAISES_COACH_STEPS = [
@@ -46107,6 +46188,8 @@ function appCoachBack() {
 
 function _endAppCoach() {
   _appCoachFinishing = true;
+  const onEnd = _appCoachOnEnd; _appCoachOnEnd = null;
+  if (typeof onEnd === 'function') setTimeout(onEnd, 0);
   document.getElementById('appCoachOverlay')?.classList.add('hidden');
   coachGuideHide(document.getElementById('appCoachOverlay'));
   _coachMarkSeen(_appCoachSeenKey);
@@ -46152,26 +46235,32 @@ const _RHEMA_COACH_STEPS = [
   {
     targetFn: () => _coachFirst(['#rhemaEnglishDisplay:not(.hidden)', '#rhemaVerseDisplay']),
     position: 'center',
-    title: 'Welcome to Rhēma!',
-    body: 'I’m your guide. Rhēma opens as a plain-English reading Bible. Tap any verse and its action sheet opens right away: highlights, notes, compare, and study notes, all close to the passage.',
+    title: 'Hi, I’m your guide!',
+    body: 'Welcome to Rhēma, a Bible you can dig into. Read it like any Bible, and swipe left or right to turn to the next or last chapter.',
+  },
+  {
+    targetFn: () => _coachFirst(['#rhemaEnglishDisplay:not(.hidden) .rhema-chapter-block', '#rhemaVerseDisplay .rhema-chapter-block']),
+    position: 'below',
+    title: 'Tap a verse',
+    body: 'Tap any verse to highlight it, write a note, compare Bibles, and more. The “Tapping a verse” tour shows you everything in there.',
   },
   {
     targetFn: () => _coachFirst(['#rhemaReaderMenuBtn']),
     position: 'below',
-    title: 'Your tools live in the menu',
-    body: 'This menu holds everything: switch the chapter into the Greek (then tap any word for its meaning, parsing and usage), turn on the syntax tree or parts of speech, open cross references, and find Phrasing, Word Log, Trails and Workspace. I live in there too: tap me anytime for more tours.',
+    title: 'The menu',
+    body: 'Switch to the Greek, turn on reading helpers, open cross references, and find your study tools. I live in there too. Tap me anytime for more tours!',
   },
   {
     targetFn: () => _coachFirst(['#rhemaSearchToggle']),
     position: 'below',
-    title: 'Search the whole Bible',
-    body: 'Type a reference, a phrase you half remember, a story, or a question, and Rhēma finds the passage.',
+    title: 'Search',
+    body: 'Can’t remember where a verse is? Type the bits you remember, a story, or a question, and you’ll get the passages that fit best.',
   },
   {
     targetFn: () => document.querySelector('.rhema-picker'),
     position: 'below',
-    title: 'Jump anywhere',
-    body: 'Pick a book and chapter here, and choose your Bible version with the pill on the right. Scroll down and these bars tuck away for more reading room; scroll up and they come right back.',
+    title: 'Go anywhere',
+    body: 'Tap the book to jump to any book and chapter (the ⓘ square opens a quick intro to the book). The pill on the right changes your Bible version. Scroll down and these bars slide away so you can just read.',
   },
 ];
 
@@ -46180,19 +46269,19 @@ const _RHEMA_SYNTAX_COACH_STEPS = [
     targetFn: () => document.querySelector('.rsx-dg-node'),
     position: 'below',
     title: 'Each box is a clause',
-    body: 'The verse is broken into clauses. The main clause is on the left; subordinate clauses branch off to the right.',
+    body: 'The syntax tree breaks the verse into clauses: little chunks, each with its own action. The main clause sits on the left.',
   },
   {
     targetFn: () => document.querySelector('.rsx-dg-chip'),
     position: 'below',
-    title: 'Tap a phrase to learn more',
-    body: 'Tap any phrase chip to see its grammatical role and what that role means in plain English.',
+    title: 'Rows are the parts',
+    body: 'Each row names a part of the clause, like “the action” or “who does it”. Tap a row to see what that part does. Tap a Greek word to open it.',
   },
   {
     targetFn: () => document.querySelector('.rsx-dg-arm'),
     position: 'below',
     title: 'Follow the arrows',
-    body: 'Arrows show how clauses connect. Scroll left-to-right to see the full structure.',
+    body: 'Arrows connect the other clauses to the one they lean on. Swipe sideways to see the whole verse.',
   },
 ];
 
@@ -47462,6 +47551,37 @@ function _renderEnglishSyntaxView(text = '') {
   return html;
 }
 
+// Gloss for a word in the syntax tree: the meaning chosen for THIS verse (the
+// same one the word sheet and interlinear use), falling back to the lexicon's
+// first short gloss. (The first short gloss alone gave e.g. Ἐν ἀρχῇ "in ruler".)
+let _sxEngMemo = { key: '', eng: null };
+function _sxVersionEnglish(words, verse) {
+  const key = `${_rhemaBook}|${_rhemaChapter}|${verse}|${words.length}`;
+  if (_sxEngMemo.key === key) return _sxEngMemo.eng;
+  let eng = null;
+  if (window.RhemaBSBAlign && window.RhemaAlign && isRhemaNTBook(_rhemaBook)) {
+    try { eng = _rhemaBsbEnglishForTokens(words, _rhemaBook, _rhemaChapter, verse); } catch (e) { eng = null; }
+  } else if (isRhemaNTBook(_rhemaBook) && typeof _ensureRhemaBsbAlign === 'function' && !_sxVersionEnglish._loading) {
+    // Load the word-for-word alignment once, then redraw the tree with it.
+    _sxVersionEnglish._loading = true;
+    _ensureRhemaBsbAlign().then(a => { if (a && _rhemaSyntaxMode) renderRhemaVerse(); }).catch(() => {});
+  }
+  if (eng) _sxEngMemo = { key, eng };   // don't remember "not loaded yet"
+  return eng;
+}
+function _sxContextGloss(w, verse, wi, words) {
+  // 1) How the Bible on screen words it (the same word-for-word match as the interlinear).
+  const eng = words ? _sxVersionEnglish(words, verse) : null;
+  const e = eng && eng[wi] ? String(eng[wi]).replace(/[\[\]]/g, '').trim() : '';
+  if (e && e.length <= 28) return e;
+  try {
+    const d = _rhemaMeaningDecision(w, { book: _rhemaBook, chapter: _rhemaChapter, verse: verse || _rhemaVerse });
+    const g = String(d?.inflectedGloss || d?.gloss || '').trim();
+    if (g && g.length <= 28) return g;
+  } catch (e) {}
+  const lex = (window.RhemaLexicon || {})[w[1]] || {};
+  return w[2]?.startsWith('V-') ? _sxVerbGloss(w[2], lex.brief) : _nounGloss(w[2], lex.brief);
+}
 function _renderDiagramBranch(clause, words, verse) {
   // Transparent synthetic root — just render children at root level
   if (!clause.conjPhrase && !clause.phrases.length && clause.children?.length) {
@@ -47498,10 +47618,7 @@ function _renderDiagramBranch(clause, words, verse) {
     for (const wi of p.words) {
       const w = words[wi];
       if (!w) continue;
-      const lex = (window.RhemaLexicon || {})[w[1]] || {};
-      const gloss = w[2]?.startsWith('V-')
-        ? _sxVerbGloss(w[2], lex.brief)
-        : _nounGloss(w[2], lex.brief);
+      const gloss = _sxContextGloss(w, verse, wi, words);
       html += `<span class="rsx-dg-wd" onclick="event.stopPropagation();openRhemaSheet(${wi}${vArg})">`;
       html += `<span class="rsx-dg-wd-gr">${w[0]}</span>`;
       if (gloss) html += `<span class="rsx-dg-wd-gl">${gloss}</span>`;

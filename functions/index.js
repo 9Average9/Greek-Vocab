@@ -1456,9 +1456,11 @@ async function findBibleReferences(query) {
     max_tokens: 700,
     system: [
       "Find real Bible references for the user's remembered words, topic, story, or question.",
-      "Return up to 5 references, most likely first. Example: 'Paul said I do what I hate' → Romans 7:15 first, Romans 7:19 related.",
+      "Return the 5 most probable passages, most likely first. Include every real candidate that could be what they mean:",
+      "parallel accounts in other Gospels or books, other verses with the same wording, and closely related verses on the same idea.",
+      "Example: 'Paul said I do what I hate' → Romans 7:15, Romans 7:19, Romans 7:18, Galatians 5:17, Romans 7:24.",
       "Use standard book names and one chapter:verse per result. Give a relevant reason of 12 words or fewer.",
-      "Never invent a reference or quote verse text. Return fewer results when uncertain."
+      "Never invent a reference or quote verse text. Return fewer than 5 only when fewer real passages fit."
     ].join(" "),
     output_config: { effort: "low", format: { type: "json_schema", schema: BIBLE_SEARCH_SCHEMA } },
     messages: [{ role: "user", content: query }]

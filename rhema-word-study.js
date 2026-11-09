@@ -1220,6 +1220,18 @@
       set('rhemaSheetStrongs', `G${strongs}`);
       set('rhemaSheetLemma', `${lex.lemma || ''}  (${lex.translit || ''})`);
       document.getElementById('rhemaWlBackBtn')?.classList.add('hidden');
+      // "Add to Word Log" works here too (same as tapping the word in the reader).
+      const logBtn = document.getElementById('rhemaAddToWordLogBtn');
+      if (logBtn) {
+        const can = typeof _rhemaStudyId === 'function' && _rhemaStudyId();
+        logBtn.classList.toggle('hidden', !can);
+        if (can) {
+          const logged = (window._sandboxWordLogCache || (typeof _sandboxWordLogCache !== 'undefined' ? _sandboxWordLogCache : [])).some(w => String(w.strongs) === String(strongs));
+          logBtn.disabled = logged;
+          logBtn.classList.toggle('logged', logged);
+          logBtn.textContent = logged ? '✓ In Word Log' : '+ Add to Word Log';
+        }
+      }
       showRhemaTab('definition', _rhemaActiveWord);
       const sheet = document.getElementById('rhemaSheet');
       sheet?.classList.add('open');
@@ -1229,13 +1241,16 @@
   };
 
   // ── First-run tour ──────────────────────────────────────────────────────
-  // Four short tips the first time a word study opens; replay from "?".
+  // A few short tips the first time a word study opens; replay from "?".
   const TOUR_KEY = 'rhemaWsTourDone';
   const TOUR = [
-    { sel: '.ws-hero', title: 'The answer first', text: 'What this word means in this verse, and how your Bible words it. Many questions end right here.' },
-    { sel: '.ws-depth', title: 'Choose your depth', text: '<b>Quick</b> is just the answer. <b>Study</b> adds every meaning and the translations. <b>Deep</b> adds history, the lexicons and the evidence.' },
-    { sel: '.ws-dtabs', title: 'Swipe through cards', text: 'Swipe sideways (or tap a tab) for each meaning, this verse in other Bibles, how translations render the word, and who uses it.' },
-    { sel: '.ws-save', title: 'Save a meaning', text: 'Tap <b>Save</b> on any meaning to keep it. Find them all under <b>Saved</b> here, or in the Reader menu.' },
+    { sel: '.ws-hero', title: 'The answer first', text: 'Tap any Greek word and this is what you get: what it means right here, and how your Bible words it. Often that’s all you need!' },
+    { sel: '.ws-depth', title: 'How deep?', text: '<b>Quick</b> is just the answer. <b>Study</b> adds every meaning and how Bibles translate it. <b>Deep</b> adds its history, the dictionaries, and how we know.' },
+    { sel: '.ws-dtabs', title: 'Swipe the cards', text: 'Swipe sideways (or tap a tab): <b>Meanings</b>, <b>This verse</b>, <b>Translations</b> and <b>Authors</b>, plus more cards in Deep.' },
+    { sel: '.ws-save', title: 'Keep a meaning', text: 'Tap <b>Save</b> on a meaning you want to remember. The bookmark up top (or Saved meanings in the menu) shows them all.' },
+    { sel: '#rhemaTabParsing', global: true, title: 'Parsing', text: 'Breaks down this exact form of the word, like its tense, voice and mood, in plain words. Tap a tense, voice or mood to see an example.' },
+    { sel: '#rhemaTabOcc', global: true, title: 'Occurrences', text: 'Every place the word shows up, counted book by book. Tap a book to read those verses.' },
+    { sel: '#rhemaAddToWordLogBtn', global: true, title: 'Word Log', text: 'Want to remember this word? Add it to your Word Log and find it later in the menu.' },
   ];
   let _tour = null;
   window.rhemaWordStudyTour = function (uid, force) {
@@ -1258,10 +1273,11 @@
   function _tourShow() {
     if (!_tour) return;
     const root = document.getElementById(_tour.uid);
-    const steps = TOUR.filter(s => root && [...root.querySelectorAll(s.sel)].some(el => el.offsetParent));
+    const scope = st => (st.global ? document : root);
+    const steps = TOUR.filter(s => root && [...scope(s).querySelectorAll(s.sel)].some(el => el.offsetParent && !el.classList.contains('hidden')));
     const step = steps[_tour.i];
     if (!root || !root.offsetParent || !step) return _tourEnd();
-    const target = [...root.querySelectorAll(step.sel)].find(el => el.offsetParent);
+    const target = [...scope(step).querySelectorAll(step.sel)].find(el => el.offsetParent && !el.classList.contains('hidden'));
     // Scroll only the sheet's own scroller (scrollIntoView would also move the
     // page behind the sheet).
     let sc = target.parentElement;

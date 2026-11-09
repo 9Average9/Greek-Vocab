@@ -446,6 +446,18 @@ function _vsStructSyncEditBar() {
 
 // ── Save ──────────────────────────────────────────────────────────────────────
 function vsStructSave() {
+  // Separate studies are retired: phrasing saves straight into the reader's
+  // study (it also autosaves as you work). The study picker is only a fallback
+  // when there is no reader study to save to.
+  const sid = _vsStructStudyContext?.studyId || (typeof _rhemaStudyId === 'function' ? _rhemaStudyId() : null);
+  if (sid) {
+    if (!_vsStructStudyContext?.studyId) _vsStructStudyContext = { ...(_vsStructStudyContext || {}), studyId: sid, structureId: null };
+    _vsStructSaveLocal();
+    _vsStructFlashSaveBtn();
+    vsStructUpdateCabinetBadge();
+    if (typeof _showStudyToast === 'function') _showStudyToast('Saved to your Phrasing');
+    return;
+  }
   _vsStructSaveLocal();
   openVSStructStudySave();
   _vsStructFlashSaveBtn();
