@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.539";
+const APP_VERSION = "3.0.540";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.540 &mdash; Your guide has moves</div>
+<ul>
+  <li><strong>New poses</strong> &mdash; The Rhēma guide now reacts as you go: excited to start a tour, thinking when you&rsquo;re stuck, peering closely at the details, a thumbs-up when you save something, and a happy jump at the end.</li>
+  <li><strong>Hide and seek</strong> &mdash; In Rhēma&rsquo;s menu he peeks out from behind the close button, a tile, or the edge of the menu, leans on a tile, or just hangs out. He never covers a button. Give him a poke to open the tours.</li>
+</ul>
 <div class="un-version-label">v3.0.539 &mdash; A tour for everything</div>
 <ul>
   <li><strong>New tours</strong> &mdash; &ldquo;Tapping a verse&rdquo; (highlights, notes, compare, copy, define, interlinear, focus) and &ldquo;The menu&rdquo; (Greek and Hebrew, reading helpers, your saved stuff, text size). The Greek words tour now covers Parsing, Occurrences and the Word Log too. Tap the guide in Rhēma&rsquo;s menu to pick one.</li>
@@ -43250,14 +43255,19 @@ function _renderRhemaPanelMain() {
   _syncRhemaReaderFontSizeUi();
 }
 
-// ── Rhēma's guide in the side menu ────────────────────────────────────────────
-// He turns up in a different empty spot each time the menu opens: beside a
-// section label, in the header next to the title, or at the foot of the menu.
-// Every spot is checked against the menu's buttons, so he never covers one.
-// Tapping him opens the list of Rhēma tours.
-const RRP_GUIDE_W = 58;
-const RRP_GUIDE_H = Math.round(RRP_GUIDE_W * 371 / 480);
-let _rrpGuideLastSpot = '';
+// ── Rhēma's guide in the side menu ──────────────────────────────────────────
+// He turns up somewhere new each time the menu opens, in one of a few ways:
+//   stand  – hovering in an empty strip (beside a section label, in the header
+//            next to the title, at the foot of the menu)
+//   peek   – peeking out from behind the close button, a lone tile, or the
+//            panel's own edge (the peek pose has a flat cut edge, which is
+//            tucked behind the thing he hides behind)
+//   lean   – leaning a hand on the side of a lone tile
+// Every spot is sized from the pose's real proportions and checked against
+// all the menu's buttons (except the one he hides behind or leans on), so he
+// never covers anything you can press. Tapping him: "ouch!", then the tours.
+const RRP_STAND_POSES = ['point', 'wow', 'thumbs', 'cheer', 'think', 'inspect'];
+let _rrpGuideLast = '';
 function _rrpGuideEl(pane) {
   let g = pane.querySelector(':scope > .rrp-guide');
   if (!g) {
@@ -43271,90 +43281,172 @@ function _rrpGuideEl(pane) {
     g.className = 'rrp-guide';
     g.setAttribute('aria-label', 'Tours: let the Rhēma guide show you around');
     g.title = 'Need a tour?';
-    g.innerHTML = `<span class="rrp-guide-fig"><span class="rrp-guide-bob">
-        <img src="assets/mascot/guide-body.webp" alt="" draggable="false" decoding="async">
+    g.innerHTML = `<span class="rrp-guide-fig"><span class="rrp-guide-flip"><span class="rrp-guide-bob">
+        <img class="rrp-guide-img" alt="" draggable="false" decoding="async">
         <img class="rrp-guide-spark" src="assets/mascot/guide-spark.webp" alt="" draggable="false" decoding="async">
-      </span></span>`;
-    g.addEventListener('click', e => { e.stopPropagation(); showReaderPanelSection('tours'); });
+      </span></span></span>`;
+    g.querySelector('.rrp-guide-img').addEventListener('error', () => _rrpGuideSetPose(g, 'point', parseFloat(g.style.height) || 46));
+    g.addEventListener('click', e => { e.stopPropagation(); _rrpGuidePoke(g); });
     pane.appendChild(g);
   }
   return g;
 }
+// Tapped: a quick "ouch!" jolt, then the tours list.
+function _rrpGuidePoke(g) {
+  if (g._poking) return;
+  g._poking = true;
+  const img = g.querySelector('.rrp-guide-img');
+  g.dataset.prevPose = g.dataset.pose || 'point';
+  _rrpGuideSetPose(g, 'ouch', parseFloat(g.style.height) || 46);
+  g.classList.remove('poked'); void g.offsetWidth; g.classList.add('poked');
+  setTimeout(() => {
+    g._poking = false;
+    g.classList.remove('poked');
+    _rrpGuideSetPose(g, g.dataset.prevPose, parseFloat(g.style.height) || 46);
+    showReaderPanelSection('tours');
+  }, 460);
+}
+function _rrpGuideSetPose(g, pose, h) {
+  const ratio = GUIDE_POSES[pose] || GUIDE_POSES.point;
+  const w = h / ratio;
+  g.dataset.pose = pose;
+  const img = g.querySelector('.rrp-guide-img');
+  if (img && img.getAttribute('src') !== guidePoseSrc(pose)) img.setAttribute('src', guidePoseSrc(pose));
+  // Keep his right edge (or left, when flipped) anchored while the pose changes width.
+  if (g.dataset.anchor === 'right') g.style.left = (parseFloat(g.style.left) + (parseFloat(g.style.width) || w) - w) + 'px';
+  g.style.width = w + 'px';
+  g.style.height = h + 'px';
+}
+function _rrpTextRight(el) {
+  let right = el.getBoundingClientRect().left;
+  el.childNodes.forEach(n => {
+    let r = null;
+    if (n.nodeType === 3) { const rg = document.createRange(); rg.selectNodeContents(n); r = rg.getBoundingClientRect(); }
+    else if (n.getBoundingClientRect) r = n.getBoundingClientRect();
+    if (r && r.width) right = Math.max(right, r.right);
+  });
+  return right;
+}
 function _rrpGuideCandidates(pane) {
   const pr = pane.getBoundingClientRect();
   const st = pane.scrollTop;
-  const W = RRP_GUIDE_W, H = RRP_GUIDE_H;
+  const X = v => v - pr.left, Y = v => v - pr.top + st;
   const out = [];
-  const textRight = el => {
-    let right = el.getBoundingClientRect().left;
-    el.childNodes.forEach(n => {
-      const r = n.nodeType === 3 ? (() => { const rg = document.createRange(); rg.selectNodeContents(n); return rg.getBoundingClientRect(); })() : n.getBoundingClientRect?.();
-      if (r && r.width) right = Math.max(right, r.right);
-    });
-    return right;
-  };
-  const addSpan = (key, x0, x1, bottom) => {
-    // A few random x positions inside a free horizontal span.
-    if (x1 - x0 < W) return;
+  const rnd = (lo, hi) => lo + Math.random() * Math.max(0, hi - lo);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const add = c => out.push(c);
+  // 1) Standing in a free strip: random x inside [x0, x1], feet at `bottom`.
+  const stand = (kind, x0, x1, bottom, h) => {
     for (let i = 0; i < 3; i++) {
-      const x = x0 + Math.random() * (x1 - x0 - W);
-      out.push({ key: key + ':' + i, left: x - pr.left, top: bottom - H - pr.top + st });
+      const pose = pick(RRP_STAND_POSES), w = h / GUIDE_POSES[pose];
+      if (x1 - x0 < w) continue;
+      const left = rnd(x0, x1 - w);
+      add({ kind, mode: 'stand', pose, w, h, left: X(left), top: Y(bottom - h) });
     }
   };
-  // Header: between the title and the close button.
   const title = pane.querySelector('.rrp-header .rrp-title');
-  const x = pane.querySelector('.rrp-header .rrp-x');
-  if (title && x) {
-    const xr = x.getBoundingClientRect();
-    addSpan('hdr', textRight(title) + 12, xr.left - 8, xr.bottom + 4);
+  const xBtn = pane.querySelector('.rrp-header .rrp-x');
+  const titleRight = title ? _rrpTextRight(title) : pr.left;
+  if (xBtn) {
+    const xr = xBtn.getBoundingClientRect();
+    stand('hdr', titleRight + 12, xr.left - 10, xr.bottom + 2, 42);
+    // 2) Peeking from behind the close button: his flat cut edge (21–64% of
+    //    his height) sits flush against the button's left edge, so he reads
+    //    as standing behind it.
+    const h = Math.max(52, Math.min(64, xr.height * 1.75)), w = h / GUIDE_POSES.peek;
+    const right = xr.left + 1;
+    if (right - w >= titleRight + 10) {
+      add({ kind: 'peekX', mode: 'peek', pose: 'peek', w, h, left: X(right - w), top: Y(xr.top + xr.height / 2 - h * 0.425), anchor: xBtn, anchorSide: 'right' });
+    }
   }
-  // Beside each section label (the label text is short; the row is empty).
   pane.querySelectorAll('#rrpMainBody .rrp-section-label').forEach((lab, i) => {
     const lr = lab.getBoundingClientRect();
-    addSpan('lab' + i, textRight(lab) + 14, lr.right - 12, lr.bottom - 2);
+    stand('lab' + i, _rrpTextRight(lab) + 14, lr.right - 12, lr.bottom - 2, 44);
   });
-  // The foot of the menu always has room.
+  // 3) A lone tile in a two-column grid leaves an empty cell beside it.
+  pane.querySelectorAll('#rrpMainBody .rrp-grid').forEach(grid => {
+    const tiles = [...grid.children].filter(t => t.offsetParent);
+    if (tiles.length % 2 !== 1) return;
+    const tile = tiles[tiles.length - 1];
+    const tr = tile.getBoundingClientRect(), gr = grid.getBoundingClientRect();
+    const cellR = gr.right - parseFloat(getComputedStyle(grid).paddingRight || 0);
+    const mid = tr.top + tr.height / 2;
+    // peek out from behind the tile's right edge (flipped: flat edge on his left)
+    let h = Math.min(tr.height + 4, 78), w = h / GUIDE_POSES.peek;
+    add({ kind: 'tilePeek', mode: 'peek', pose: 'peek', flip: true, w, h, left: X(tr.right - 1), top: Y(mid - h * 0.425), anchor: tile, anchorSide: 'left' });
+    // lean a hand on the tile's right side (flipped: hand reaching left)
+    h = Math.min(tr.height + 8, 82); w = h / GUIDE_POSES.lean;
+    if (tr.right + 2 + w <= cellR) add({ kind: 'tileLean', mode: 'lean', pose: 'lean', flip: true, w, h, left: X(tr.right + 1), top: Y(mid - h * 0.385), anchor: tile, anchorSide: 'left' });
+    // or just hang out in the empty cell
+    stand('cell', tr.right + 14, cellR - 6, tr.bottom, Math.min(tr.height - 6, 60));
+  });
+  // 4) The foot of the menu: stand, or peek in from behind either panel edge
+  //    (the pane clips him, so the cut edge sits right on the panel's edge).
   const room = pane.querySelector('#rrpMainBody .rrp-guide-room');
   if (room) {
     const rr = room.getBoundingClientRect();
-    addSpan('foot', rr.left + 14, rr.right - 14, rr.bottom - 6);
+    stand('foot', rr.left + 16, rr.right - 16, rr.bottom - 8, 56);
+    const h = Math.min(74, rr.height - 6), w = h / GUIDE_POSES.peek;
+    add({ kind: 'edgeR', mode: 'peek', pose: 'peek', w, h, left: pr.width - w + 2, top: Y(rr.top + 2), edge: true });
+    add({ kind: 'edgeL', mode: 'peek', pose: 'peek', flip: true, w, h, left: -2, top: Y(rr.top + 2), edge: true });
   }
   const blockers = _rrpGuideBlockers(pane);
-  return out.filter(c => c.left >= 4 && c.left + W <= pr.width - 4 && c.top >= 0 && !_rrpGuideHits(blockers, c.left, c.top));
+  return out.filter(c => {
+    if (!c.edge && (c.left < 2 || c.left + c.w > pr.width - 2)) return false;
+    if (c.top < 0) return false;
+    return !_rrpGuideHits(blockers, c, c.anchor);
+  });
 }
 // Never over anything you can press (or the text size slider).
 function _rrpGuideBlockers(pane) {
   const pr = pane.getBoundingClientRect();
   const st = pane.scrollTop;
   return [...pane.querySelectorAll('button:not(.rrp-guide), a, input, select, textarea, [role="slider"], [onclick], .rrp-fs-pct')]
-    .map(el => el.getBoundingClientRect()).filter(r => r.width && r.height)
-    .map(r => ({ l: r.left - pr.left - 4, t: r.top - pr.top + st - 4, r: r.right - pr.left + 4, b: r.bottom - pr.top + st + 4 }));
+    .filter(el => el.offsetParent || el.getClientRects().length)
+    .map(el => ({ el, r: el.getBoundingClientRect() })).filter(o => o.r.width && o.r.height)
+    .map(({ el, r }) => ({ el, l: r.left - pr.left - 4, t: r.top - pr.top + st - 4, r: r.right - pr.left + 4, b: r.bottom - pr.top + st + 4 }));
 }
-function _rrpGuideHits(blockers, left, top) {
-  return blockers.some(b => left < b.r && left + RRP_GUIDE_W > b.l && top < b.b && top + RRP_GUIDE_H > b.t);
+function _rrpGuideHits(blockers, c, anchor) {
+  return blockers.some(b => (!anchor || (b.el !== anchor && !anchor.contains(b.el) && !b.el.contains(anchor))) &&
+    c.left < b.r && c.left + c.w > b.l && c.top < b.b && c.top + c.h > b.t);
 }
 // If the menu re-renders or reflows (a tool toggled, the font list opened) and
-// something pressable ends up under him, he hops to another free spot.
+// something pressable ends up under him, he moves to another free spot.
 function _rrpGuideRecheck() {
   const pane = document.querySelector('#rhemaReaderPanel .rrp-pane-main');
   const g = pane?.querySelector(':scope > .rrp-guide');
-  if (!g || !document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) return;
-  if (g.classList.contains('away') || _rrpGuideHits(_rrpGuideBlockers(pane), parseFloat(g.style.left) || 0, parseFloat(g.style.top) || 0)) _rrpPlaceGuide();
+  if (!g || g._poking || !document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) return;
+  const c = { left: parseFloat(g.style.left) || 0, top: parseFloat(g.style.top) || 0, w: parseFloat(g.style.width) || 0, h: parseFloat(g.style.height) || 0 };
+  const anchorGone = g._anchor && !g._anchor.isConnected;
+  if (g.classList.contains('away') || anchorGone || _rrpGuideHits(_rrpGuideBlockers(pane), c, g._anchor)) _rrpPlaceGuide();
 }
 function _rrpPlaceGuide() {
   const pane = document.querySelector('#rhemaReaderPanel .rrp-pane-main');
   if (!pane) return;
   const g = _rrpGuideEl(pane);
-  g.classList.remove('in', 'flip');
+  _guidePreloadPoses();
+  g.classList.remove('in', 'flip', 'm-stand', 'm-peek', 'm-lean', 'poked');
   const spots = _rrpGuideCandidates(pane);
   if (!spots.length) { g.classList.add('away'); return; }
   g.classList.remove('away');
-  const fresh = spots.filter(c => c.key.split(':')[0] !== _rrpGuideLastSpot);
-  const pick = (fresh.length ? fresh : spots)[Math.floor(Math.random() * (fresh.length ? fresh : spots).length)];
-  _rrpGuideLastSpot = pick.key.split(':')[0];
-  g.style.left = Math.round(pick.left) + 'px';
-  g.style.top = Math.round(pick.top) + 'px';
-  if (Math.random() < 0.5) g.classList.add('flip');
+  // Pick a kind of spot first (so peeks and leans come up as often as
+  // standing), never the same kind twice in a row, then a spot of that kind.
+  const kinds = [...new Set(spots.map(c => c.kind.replace(/\d+$/, '')))];
+  const fresh = kinds.filter(k => k !== _rrpGuideLast);
+  const kind = (fresh.length ? fresh : kinds)[Math.floor(Math.random() * (fresh.length ? fresh : kinds).length)];
+  const pool = spots.filter(c => c.kind.replace(/\d+$/, '') === kind);
+  const c = pool[Math.floor(Math.random() * pool.length)];
+  _rrpGuideLast = kind;
+  g._anchor = c.anchor || null;
+  g.dataset.anchor = c.anchorSide || '';
+  g.dataset.kind = kind;
+  g.style.left = Math.round(c.left) + 'px';
+  g.style.top = Math.round(c.top) + 'px';
+  g.style.width = '';
+  _rrpGuideSetPose(g, c.pose, c.h);
+  g.style.left = Math.round(c.left) + 'px';
+  g.classList.add('m-' + c.mode);
+  if (c.flip) g.classList.add('flip');
   void g.offsetWidth;
   g.classList.add('in');
 }
@@ -43376,7 +43468,7 @@ function _rhemaToursHtml() {
       <span class="material-symbols-outlined rrp-chev">play_arrow</span>
     </button>`).join('');
   return `<div class="rrp-tours-hero">
-      <span class="rrp-tours-guide" aria-hidden="true"><img src="assets/mascot/guide-body.webp" alt="" draggable="false"><img class="rrp-guide-spark" src="assets/mascot/guide-spark.webp" alt="" draggable="false"></span>
+      <span class="rrp-tours-guide" aria-hidden="true"><img src="assets/mascot/guide-wow.webp" alt="" draggable="false"></span>
       <p class="rrp-tours-say">Pick a tour and I’ll walk you through it!</p>
     </div>
     <div class="rrp-tours">${rows}</div>`;
@@ -45700,6 +45792,25 @@ function _syncToolWandIndicator() {
 const COACH_GUIDE_W = 96;
 const COACH_GUIDE_H = Math.round(COACH_GUIDE_W * 371 / 480);
 const COACH_GUIDE_ROOM = COACH_GUIDE_H + 8;   // headroom a card needs above it
+// His poses (assets/mascot/guide-<pose>.webp). 'point' is the original
+// two-layer figure (body + twinkling sparkle); the rest are single images.
+// Height ÷ width of each pose image, for sizing him to fit a spot.
+const GUIDE_POSES = { point: 371 / 480, wow: 0.92, cheer: 0.87, thumbs: 1.057, inspect: 1.087, think: 1.12, ouch: 1.133, peek: 1.503, lean: 1.43 };
+function guidePoseSrc(pose) { return pose === 'point' ? 'assets/mascot/guide-body.webp' : `assets/mascot/guide-${pose}.webp`; }
+let _guidePosesPreloaded = false;
+function _guidePreloadPoses() {
+  if (_guidePosesPreloaded) return;
+  _guidePosesPreloaded = true;
+  Object.keys(GUIDE_POSES).forEach(p => { if (p !== 'point') { const i = new Image(); i.decoding = 'async'; i.src = guidePoseSrc(p); } });
+}
+// Which pose fits a tour step: an explicit step.pose, else excited on the
+// first step, celebrating on the last, and his classic pose in between.
+function coachPoseFor(step, idx, total) {
+  if (step && step.pose) return step.pose;
+  if (idx === 0) return 'wow';
+  if (idx === total - 1) return 'cheer';
+  return 'point';
+}
 function _coachGuideEl(host) {
   let g = host.querySelector(':scope > .coach-guide');
   if (!g) {
@@ -45711,7 +45822,9 @@ function _coachGuideEl(host) {
         <img class="coach-guide-body" src="assets/mascot/guide-body.webp" alt="" draggable="false" decoding="async">
         <img class="coach-guide-spark" src="assets/mascot/guide-spark.webp" alt="" draggable="false" decoding="async">
         <span class="coach-guide-glint"></span>
+        <img class="coach-guide-pose" alt="" draggable="false" decoding="async">
       </div></div><span class="coach-guide-tail"></span>`;
+    g.querySelector('.coach-guide-pose').addEventListener('error', () => g.setAttribute('data-pose', 'point'));
     host.appendChild(g);
   }
   return g;
@@ -45719,8 +45832,16 @@ function _coachGuideEl(host) {
 function coachGuideShow(host, card, opts = {}) {
   if (!host || !card) return;
   const g = _coachGuideEl(host);
+  _guidePreloadPoses();
   const entering = !g.classList.contains('on');
   g.classList.add('on');
+  const pose = GUIDE_POSES[opts.pose] ? opts.pose : (opts.last ? 'cheer' : 'point');
+  g.setAttribute('data-pose', pose);
+  if (pose !== 'point') {
+    const img = g.querySelector('.coach-guide-pose');
+    const src = guidePoseSrc(pose);
+    if (img && img.getAttribute('src') !== src) img.setAttribute('src', src);
+  }
   g.classList.toggle('is-cheer', !!opts.last);
   const fig = g.firstElementChild;
   fig.classList.remove('is-pop', 'is-hop');
@@ -45832,14 +45953,14 @@ async function _coachOpenVerseMenu() {
 const _coachVsheetBtn = fn => () => _coachFirst([() => [...document.querySelectorAll('#rhemaVerseSheet .rhema-vsheet-action')].find(b => b.offsetParent && fn([...b.querySelectorAll('span')].filter(x => !x.classList.contains('material-symbols-outlined')).map(x => x.textContent).join(' ').trim())), '#rhemaVerseSheet .rhema-vsheet']);
 const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), title: 'Highlight', body: 'Tap a color to highlight the verse. Tap the crossed-out drop to clear it.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /note/i.test(t)), title: 'Notes', body: 'Write your own note on the verse. All your highlights and notes are listed in the menu.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /note/i.test(t)), pose: 'thumbs', title: 'Notes', body: 'Write your own note on the verse. All your highlights and notes are listed in the menu.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Compare/.test(t)), title: 'Compare', body: 'See this verse side by side in other Bibles, like the NIV, KJV and NASB.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /English word/.test(t)), title: 'Define a word', body: 'Not sure what a word in your Bible means? Pick it and get a simple definition. Names and places get a Bible dictionary entry.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Interlinear/.test(t)), title: 'Interlinear', body: 'Lines up every Greek (or Hebrew) word with its English, word by word. Tap any word to study it.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Focus/.test(t)), title: 'Focus', body: 'Shows just this one verse so you can slow down with it. Turn Chapter View back on in the menu to see the whole chapter again.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), pose: 'thumbs', title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /English word/.test(t)), pose: 'think', title: 'Define a word', body: 'Not sure what a word in your Bible means? Pick it and get a simple definition. Names and places get a Bible dictionary entry.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Interlinear/.test(t)), pose: 'inspect', title: 'Interlinear', body: 'Lines up every Greek (or Hebrew) word with its English, word by word. Tap any word to study it.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Focus/.test(t)), pose: 'inspect', title: 'Focus', body: 'Shows just this one verse so you can slow down with it. Turn Chapter View back on in the menu to see the whole chapter again.' },
   { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetStudy', '#rhemaVerseSheet .rhema-vsheet']), title: 'Your study', body: 'Save a thought about the verse to your Workspace, or add one of its words to your Word Log. (These need you signed in.)' },
-  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetRef', '#rhemaVerseSheet .rhema-vsheet']), title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
+  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetRef', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
 ];
 // The menu's reading helpers. Scrolls the menu so each spotlighted part is on screen.
 function _coachMenuShow(pick) {
@@ -45864,11 +45985,11 @@ const _menuSectionAfter = label => () => {
 };
 const READING_COACH_STEPS = [
   { before: _coachMenuShow(_menuSectionAfter('language')), target: _menuSectionAfter('language'), title: 'Language', body: 'Flip the chapter between English and Greek. In the Old Testament you can pick Hebrew or the Greek Old Testament too. In Greek, tap any word to see what it means.' },
-  { before: _coachMenuShow(_menuSectionAfter('display')), target: _menuSectionAfter('display'), title: 'Reading helpers', body: 'Syntax Tree draws a verse as a diagram of its parts. Parts of Speech adds a row of word types: tap one, like Verb, to color every verb. Greek Only hides the small English under each Greek word. A greyed-out tile tells you what to turn on first.' },
-  { before: _coachMenuShow(_menuSectionAfter('text')), target: _menuSectionAfter('text'), title: 'Chapter or verse', body: 'Chapter View shows the whole chapter; turn it off to read one verse at a time. Critical Text switches the Greek New Testament between its two main manuscript traditions.' },
+  { before: _coachMenuShow(_menuSectionAfter('display')), target: _menuSectionAfter('display'), pose: 'inspect', title: 'Reading helpers', body: 'Syntax Tree draws a verse as a diagram of its parts. Parts of Speech adds a row of word types: tap one, like Verb, to color every verb. Greek Only hides the small English under each Greek word. A greyed-out tile tells you what to turn on first.' },
+  { before: _coachMenuShow(_menuSectionAfter('text')), target: _menuSectionAfter('text'), pose: 'think', title: 'Chapter or verse', body: 'Chapter View shows the whole chapter; turn it off to read one verse at a time. Critical Text switches the Greek New Testament between its two main manuscript traditions.' },
   { before: _coachMenuShow(_menuSectionAfter('study')), target: _menuSectionAfter('study'), title: 'More tools', body: 'Cross references for verses that connect, the Word Library to look up Greek words, and Copy verse to grab several verses at once.' },
-  { before: _coachMenuShow(_menuSectionAfter('marks')), target: _menuSectionAfter('marks'), title: 'Your saved stuff', body: 'Every highlight, note, and saved word meaning in one place. Tap one to jump to its verse.' },
-  { before: _coachMenuShow(() => document.querySelector('#rrpMainBody .rrp-fontsize')), target: () => _coachFirst(['#rrpMainBody .rrp-fontsize']), title: 'Make it yours', body: 'Slide to change the text size, and pick a font you like just below.' },
+  { before: _coachMenuShow(_menuSectionAfter('marks')), target: _menuSectionAfter('marks'), pose: 'thumbs', title: 'Your saved stuff', body: 'Every highlight, note, and saved word meaning in one place. Tap one to jump to its verse.' },
+  { before: _coachMenuShow(() => document.querySelector('#rrpMainBody .rrp-fontsize')), target: () => _coachFirst(['#rrpMainBody .rrp-fontsize']), pose: 'thumbs', title: 'Make it yours', body: 'Slide to change the text size, and pick a font you like just below.' },
   { before: _coachMenuShow(() => document.querySelector('#rhemaReaderPanel .rrp-guide.in')), target: () => _coachFirst(['#rhemaReaderPanel .rrp-guide.in', '#rhemaReaderMenuBtn']), title: 'That’s me!', body: 'I pop up somewhere new in this menu each time. Tap me whenever you want another tour.' }
 ];
 function startVerseCoach() { _startAppCoach(VERSE_COACH_STEPS, 'verseCoachSeenV3539', true); _appCoachOnEnd = () => { try { closeRhemaVerseSheetAndDeselect(); } catch (e) {} }; }
@@ -45877,17 +45998,17 @@ function startReadingToolsCoach() { _startAppCoach(READING_COACH_STEPS, 'reading
 // The reader's built-in study: its tools live in Rhēma's side menu.
 const STUDY_RHEMA_COACH_STEPS = [
   { before: () => { if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost(); openRhemaReaderPanel(); return _coachPause(460); }, target: () => _coachFirst(['#rrpMainBody .rrp-study-grid', '#rrpMainBody']), title: 'Your study', body: 'Phrasing, Word Log, Trails and Workspace live right here. Anything you add saves to your account by itself.' },
-  { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachFirst(['#rhemaEnglishDisplay .rhema-chapter-block', '#rhemaVerseDisplay .rhema-chapter-block', '#rhemaEnglishDisplay', '#rhemaVerseDisplay']), demo: 'longpress', title: 'Jot a thought', body: 'Press and hold a verse (or tap it and pick “Observe, interpret, apply or ask”) to save a thought about it to your Workspace.' },
+  { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachFirst(['#rhemaEnglishDisplay .rhema-chapter-block', '#rhemaVerseDisplay .rhema-chapter-block', '#rhemaEnglishDisplay', '#rhemaVerseDisplay']), demo: 'longpress', pose: 'think', title: 'Jot a thought', body: 'Press and hold a verse (or tap it and pick “Observe, interpret, apply or ask”) to save a thought about it to your Workspace.' },
   { before: () => Promise.resolve(openStudyTool('phrasing')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneVerses .ss-structured-add', '#ssPaneVerses']), title: 'Phrasing', body: 'Tap + and pick a passage. Its words land on a canvas: hold a word to split it off, then drag the pieces around to see how the thought flows.' },
-  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssWordlogList', '#ssPaneWordlog']), title: 'Word Log', body: 'Words you want to remember. Tap a Greek word and press “Add to Word Log”, then tap it here anytime for its meaning, parsing and where it shows up.' },
+  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssWordlogList', '#ssPaneWordlog']), pose: 'inspect', title: 'Word Log', body: 'Words you want to remember. Tap a Greek word and press “Add to Word Log”, then tap it here anytime for its meaning, parsing and where it shows up.' },
   { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssTrailsList', '#ssPaneTrails']), title: 'Trails', body: 'Cross-reference paths you saved. Tap one to pick up right where you left off.' },
-  { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), title: 'Workspace', body: 'Your thoughts, sorted into Observe, Interpret, Apply and Question. Tap a note’s verse to jump back to it.' },
+  { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), pose: 'think', title: 'Workspace', body: 'Your thoughts, sorted into Observe, Interpret, Apply and Question. Tap a note’s verse to jump back to it.' },
   { target: () => _coachFirst(['#wsKbdToggleBtn', '.ss-compose']), title: 'Type Greek too', body: 'The α button opens a Greek keyboard for your notes. That’s the tour. Happy studying!' }
 ];
 
 const XREF_COACH_STEPS = [
   { target: () => _coachFirst(['.rx-top-card', '#rxMainView']), title: 'Your starting verse', body: 'This card is the verse you’re exploring. Tap it to pick a different one.' },
-  { target: () => _coachFirst(['.rx-category-card', '#rxMainView']), title: 'Groups of connections', body: 'Linked verses are sorted into groups: Scripture it quotes, direct links, Old and New Testament links, prophecy and fulfillment, and shared themes.' },
+  { target: () => _coachFirst(['.rx-category-card', '#rxMainView']), pose: 'inspect', title: 'Groups of connections', body: 'Linked verses are sorted into groups: Scripture it quotes, direct links, Old and New Testament links, prophecy and fulfillment, and shared themes.' },
   { target: () => _coachFirst(['.rx-category-card .rx-mini-list', '.rx-category-card']), title: 'A peek, then the full list', body: 'Each group shows a few verses. Tap it to see them all.' },
   { target: () => _coachFirst(['.rx-breadcrumb', '.rx-page-header']), title: 'Follow the trail', body: 'Tap any linked verse to jump to it and see its own connections. The trail at the top remembers every stop, so you can hop back.' },
   { target: () => _coachFirst(['.rx-save-trail-btn', '.rx-page-header']), title: 'Save your trail', body: 'Found a great path? Save Trail keeps it in Trails (in the menu) so you can pick it up later. You’ll need to be signed in.' }
@@ -45932,7 +46053,7 @@ if (window.matchMedia && window.matchMedia('(min-width: 960px) and (pointer: fin
 
 const WORD_LIBRARY_COACH_STEPS = [
   { before: async () => { await loadRhemaScripts(); openWordLibrary(); }, target: () => null, position: 'center', title: 'Word Library', body: 'A Greek dictionary you can search. Handy when the word on the page looks nothing like its dictionary form.' },
-  { target: () => _coachFirst(['#wlSearchInput', '.wl-search-row']), title: 'Search any way', body: 'Type a Greek word in any form, spell it with English letters (like “agape”), or type an English meaning.' },
+  { target: () => _coachFirst(['#wlSearchInput', '.wl-search-row']), pose: 'inspect', title: 'Search any way', body: 'Type a Greek word in any form, spell it with English letters (like “agape”), or type an English meaning.' },
   { target: () => _coachFirst(['#wlKbdToggleBtn', '.wl-search-row']), title: 'Greek keyboard', body: 'Tap α for a Greek keyboard, no phone settings needed.' },
   { target: () => _coachFirst(['#wlResults', '#wordLibraryOverlay .wl-sheet']), title: 'Open a word', body: 'Tap a result to see what it means, how it’s parsed, and everywhere it shows up.' }
 ];
@@ -46072,7 +46193,7 @@ function _showAppCoachStep() {
     document.getElementById('appCoachNextLabel').textContent = _appCoachIdx === _appCoachSteps.length - 1 ? 'Done' : 'Next';
     document.getElementById('appCoachBackBtn').style.visibility = _appCoachIdx === 0 ? 'hidden' : 'visible';
     _placeAppCoachCard(typeof step.target === 'function' ? step.target() : null, card, spotlight, step.position || 'below');
-    if (_appCoachHasGuide()) coachGuideShow(overlay, card, { last: _appCoachIdx === _appCoachSteps.length - 1 });
+    if (_appCoachHasGuide()) coachGuideShow(overlay, card, { last: _appCoachIdx === _appCoachSteps.length - 1, pose: coachPoseFor(step, _appCoachIdx, _appCoachSteps.length) });
     else { coachGuideHide(overlay); card.classList.remove('coach-bubble'); }
   }, 90);
   if (typeof step.before === 'function') {
@@ -46253,7 +46374,7 @@ const _RHEMA_COACH_STEPS = [
   {
     targetFn: () => _coachFirst(['#rhemaSearchToggle']),
     position: 'below',
-    title: 'Search',
+    pose: 'think', title: 'Search',
     body: 'Can’t remember where a verse is? Type the bits you remember, a story, or a question, and you’ll get the passages that fit best.',
   },
   {
@@ -46274,7 +46395,7 @@ const _RHEMA_SYNTAX_COACH_STEPS = [
   {
     targetFn: () => document.querySelector('.rsx-dg-chip'),
     position: 'below',
-    title: 'Rows are the parts',
+    pose: 'inspect', title: 'Rows are the parts',
     body: 'Each row names a part of the clause, like “the action” or “who does it”. Tap a row to see what that part does. Tap a Greek word to open it.',
   },
   {
@@ -46354,7 +46475,7 @@ function _showCoachStep() {
     card.style.left = '50%';
     card.style.transform = 'translate(-50%, -50%)';
     card.style.marginTop = (ROOM / 2) + 'px';
-    coachGuideShow(overlay, card, { last: isLast });
+    coachGuideShow(overlay, card, { last: isLast, pose: coachPoseFor(step, _coachIdx, _coachSteps.length) });
     return;
   }
 
@@ -46383,7 +46504,7 @@ function _showCoachStep() {
     card.style.transform = 'translate(-50%, -50%)';
     card.style.marginTop = (ROOM / 2) + 'px';
     card.style.visibility = '';
-    coachGuideShow(overlay, card, { last: isLast });
+    coachGuideShow(overlay, card, { last: isLast, pose: coachPoseFor(step, _coachIdx, _coachSteps.length) });
     return;
   }
 
@@ -46423,7 +46544,7 @@ function _showCoachStep() {
     card.style.top  = cardTop  + 'px';
     card.style.left = cardLeft + 'px';
     card.style.visibility = '';
-    coachGuideShow(overlay, card, { last: isLast });
+    coachGuideShow(overlay, card, { last: isLast, pose: coachPoseFor(step, _coachIdx, _coachSteps.length) });
   });
 }
 

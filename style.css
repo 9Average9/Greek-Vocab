@@ -39068,14 +39068,12 @@ html.dark .ws-approx, body.dark .ws-approx { color: #fbbf24; }
 .ws-tour-tip.coach-bubble { background: var(--card-solid-color, var(--card-color, #fff)); }
 html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { background: #1f2937; }
 
-/* ── Rhēma's guide in the side menu ── */
+/* ── Rhēma's guide in the side menu (see _rrpPlaceGuide) ── */
 .rrp-pane-main { position: relative; }
-.rrp-guide-room { height: 64px; }
+.rrp-guide-room { height: 84px; }
 .rrp-guide {
   position: absolute;
   left: 0; top: 0;
-  width: 58px;
-  height: calc(58px * 371 / 480);
   padding: 0; margin: 0;
   border: 0; background: none;
   cursor: pointer;
@@ -39086,29 +39084,71 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 }
 .rrp-guide.in { opacity: 1; pointer-events: auto; }
 .rrp-guide.away { display: none; }
-.rrp-guide-fig { position: absolute; inset: 0; display: block; transform-origin: 50% 100%; }
-.rrp-guide.flip .rrp-guide-fig { transform: scaleX(-1); }
-.rrp-guide.in .rrp-guide-fig { animation: rrpGuideIn .62s cubic-bezier(.34,1.56,.64,1) .18s both; }
-.rrp-guide.in.flip .rrp-guide-fig { animation-name: rrpGuideInFlip; }
-.rrp-guide-bob { position: absolute; inset: 0; display: block; transform-origin: 50% 100%; animation: coachGuideBob 3s ease-in-out infinite; }
-.rrp-guide img, .rrp-tours-guide img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
-.rrp-guide img:first-child { filter: drop-shadow(0 3px 4px rgba(40, 22, 8, .2)); }
-.rrp-guide-spark { transform-origin: 77% 12%; animation: coachGuideSpark 1.7s ease-in-out infinite; }
-.rrp-guide:active .rrp-guide-bob { transform: scale(.9); animation: none; }
+.rrp-guide-fig, .rrp-guide-flip, .rrp-guide-bob { position: absolute; inset: 0; display: block; }
+.rrp-guide.flip .rrp-guide-flip { transform: scaleX(-1); }
+.rrp-guide-img, .rrp-guide-spark { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.rrp-guide-img { filter: drop-shadow(0 3px 4px rgba(40, 22, 8, .2)); }
+.rrp-guide-spark { display: none; transform-origin: 77% 12%; animation: coachGuideSpark 1.7s ease-in-out infinite; }
+.rrp-guide[data-pose="point"] .rrp-guide-spark { display: block; }
 .rrp-guide:focus-visible { outline: 2px solid var(--secondary-color); outline-offset: 2px; border-radius: 12px; }
+
+/* Arriving: pops up (standing), slides out from behind (peeking), hops in (leaning). */
+.rrp-guide.in.m-stand .rrp-guide-fig { transform-origin: 50% 100%; animation: rrpGuideIn .62s cubic-bezier(.34,1.56,.64,1) .18s both; }
+.rrp-guide.in.m-peek .rrp-guide-fig { animation: rrpGuidePeekInR .7s cubic-bezier(.34,1.4,.64,1) .2s both; }
+.rrp-guide.in.m-peek.flip .rrp-guide-fig { animation-name: rrpGuidePeekInL; }
+.rrp-guide.in.m-lean .rrp-guide-fig { transform-origin: 50% 100%; animation: rrpGuideLeanIn .66s cubic-bezier(.34,1.5,.64,1) .18s both; }
+/* While you look: floats (standing), peeks in and out (peeking), sways on his hand (leaning). */
+.rrp-guide.m-stand .rrp-guide-bob { transform-origin: 50% 100%; animation: coachGuideBob 3s ease-in-out infinite; }
+.rrp-guide.m-peek .rrp-guide-bob { animation: rrpGuidePeekBob 3.4s ease-in-out 1s infinite; }
+.rrp-guide.m-lean .rrp-guide-bob { transform-origin: 100% 38%; animation: rrpGuideLeanSway 3.2s ease-in-out 1s infinite; }
+/* Tapped: "ouch!" */
+.rrp-guide.poked .rrp-guide-fig { transform-origin: 50% 100%; animation: rrpGuideOuch .44s ease both; }
+.rrp-guide.poked .rrp-guide-bob { animation: none; }
+
 @keyframes rrpGuideIn {
   0% { opacity: 0; transform: translateY(14px) scale(.4) rotate(-14deg); }
   60% { opacity: 1; transform: translateY(-5px) scale(1.08) rotate(4deg); }
   100% { opacity: 1; transform: none; }
 }
-@keyframes rrpGuideInFlip {
-  0% { opacity: 0; transform: scaleX(-1) translateY(14px) scale(.4) rotate(14deg); }
-  60% { opacity: 1; transform: scaleX(-1) translateY(-5px) scale(1.08) rotate(-4deg); }
-  100% { opacity: 1; transform: scaleX(-1); }
+@keyframes rrpGuidePeekInR {
+  0% { opacity: 0; transform: translateX(38%); }
+  20% { opacity: 1; }
+  70% { transform: translateX(-6%); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes rrpGuidePeekInL {
+  0% { opacity: 0; transform: translateX(-38%); }
+  20% { opacity: 1; }
+  70% { transform: translateX(6%); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes rrpGuideLeanIn {
+  0% { opacity: 0; transform: translateY(-18px) rotate(10deg) scale(.7); }
+  55% { opacity: 1; transform: translateY(3px) rotate(-3deg) scale(1.03); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes rrpGuidePeekBob {
+  0%, 62%, 100% { transform: none; }
+  72% { transform: translateX(9%) rotate(2deg); }
+  86% { transform: translateX(-2%) rotate(-1deg); }
+}
+@keyframes rrpGuideLeanSway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-3deg); }
+}
+@keyframes rrpGuideOuch {
+  0% { transform: none; }
+  18% { transform: scale(1.14, .84) rotate(-6deg); }
+  42% { transform: scale(.93, 1.08) rotate(5deg) translateY(-3px); }
+  68% { transform: rotate(-3deg); }
+  100% { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rrp-guide .rrp-guide-fig, .rrp-guide .rrp-guide-bob, .rrp-guide-spark { animation: none !important; }
 }
 /* Tours list (tap the guide) */
 .rrp-tours-hero { display: flex; align-items: center; gap: 12px; padding: 16px 16px 6px; }
-.rrp-tours-guide { position: relative; flex: 0 0 auto; width: 84px; aspect-ratio: 480 / 371; animation: coachGuideBob 3s ease-in-out infinite; }
+.rrp-tours-guide { position: relative; flex: 0 0 auto; width: 84px; aspect-ratio: 300 / 276; animation: coachGuideBob 3s ease-in-out infinite; }
 .rrp-tours-say {
   position: relative; margin: 0; padding: 10px 12px; border-radius: 14px;
   background: var(--card-solid-color, var(--card-color)); border: 1px solid var(--border-color);
@@ -39140,3 +39180,9 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 @media (prefers-reduced-motion: reduce) {
   .rrp-guide.in .rrp-guide-fig, .rrp-guide-bob, .rrp-guide-spark, .rrp-tours-guide, .rrp-tours-say, .rrp-tour { animation: none; }
 }
+
+/* Tour guide poses: 'point' is the layered figure; others are single images, fitted to his box height. */
+.coach-guide-pose { display: none; position: absolute; left: 0; bottom: 0; height: 100%; width: auto; max-width: none; filter: drop-shadow(0 5px 7px rgba(40, 22, 8, .22)); user-select: none; -webkit-user-drag: none; }
+.coach-guide[data-pose]:not([data-pose="point"]) .coach-guide-pose { display: block; }
+.coach-guide[data-pose]:not([data-pose="point"]) :is(.coach-guide-body, .coach-guide-spark, .coach-guide-glint) { display: none; }
+.rrp-tours-guide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
