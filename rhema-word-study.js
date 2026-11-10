@@ -1296,6 +1296,14 @@
     const pos = window.coachPlaceCard
       ? window.coachPlaceCard({ rect: { left: r.left - pad, top: r.top - pad, right: r.right + pad, bottom: r.bottom + pad, width: r.width + pad * 2, height: r.height + pad * 2 }, cardW: tr.width || 320, cardH: th, room: ROOM, guideW: window.coachGuideWidth ? window.coachGuideWidth() : 96, sides: ['below', 'above'], margin: 8 })
       : { top: Math.max(8 + ROOM, r.bottom + 14 + ROOM) };
+    if (window.coachNudgeFor && window.coachNudgeFor(target, { left: r.left - pad, top: r.top - pad, right: r.right + pad, bottom: r.bottom + pad, width: r.width + pad * 2, height: r.height + pad * 2 }, pos, th, ROOM)) {
+      const r2 = window.coachVisibleRect(target);
+      if (r2) {
+        Object.assign(spot.style, { top: `${r2.top - pad}px`, left: `${r2.left - pad}px`, width: `${r2.width + pad * 2}px`, height: `${r2.height + pad * 2}px` });
+        const p2 = window.coachPlaceCard({ rect: { left: r2.left - pad, top: r2.top - pad, right: r2.right + pad, bottom: r2.bottom + pad, width: r2.width + pad * 2, height: r2.height + pad * 2 }, cardW: tr.width || 320, cardH: th, room: ROOM, guideW: window.coachGuideWidth ? window.coachGuideWidth() : 96, sides: ['below', 'above'], margin: 8 });
+        pos.top = p2.top;
+      }
+    }
     tip.style.top = `${Math.round(pos.top)}px`;
     window.coachGuideShow?.(document.body, tip, { last, pose: step.pose || (_tour.i === 0 ? 'wow' : last ? 'cheer' : 'point') });
   }

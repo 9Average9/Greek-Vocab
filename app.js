@@ -45970,6 +45970,26 @@ function coachPlaceCard({ rect, cardW, cardH, room = 0, guideW = 96, preferred =
   clamped.sort((a, b) => (a.cover - b.cover) || (a.i - b.i));
   return clamped[0];
 }
+// If the card still had to cover part of the target, scroll the target's own
+// scroll area the extra distance to make room (then placement runs again).
+function coachNudgeFor(target, rect, pos, cardH, room, gap = 14) {
+  if (!target || !rect || !pos || !pos.cover) return false;
+  let dy;
+  if (pos.side === 'above') dy = -((pos.top + cardH + gap) - rect.top);
+  else if (pos.side === 'below') dy = rect.bottom - (pos.top - room - gap);
+  else return false;
+  if (!dy) return false;
+  for (let node = target.parentElement; node && node !== document.body && node !== document.documentElement; node = node.parentElement) {
+    const cs = getComputedStyle(node);
+    if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight + 2) {
+      const before = node.scrollTop;
+      node.scrollTop = before + dy;
+      return Math.abs(node.scrollTop - before) > 1;
+    }
+  }
+  return false;
+}
+const _coachPadRect = (r, pad) => r && { left: r.left - pad, top: r.top - pad, right: r.right + pad, bottom: r.bottom + pad, width: r.width + pad * 2, height: r.height + pad * 2 };
 function coachSpotlightPad(spotlight, rect, pad, origin = { left: 0, top: 0 }) {
   spotlight.style.left = (rect.left - pad - origin.left) + 'px';
   spotlight.style.top = (rect.top - pad - origin.top) + 'px';
@@ -45979,6 +45999,7 @@ function coachSpotlightPad(spotlight, rect, pad, origin = { left: 0, top: 0 }) {
 window.coachBringIntoView = coachBringIntoView;
 window.coachVisibleRect = coachVisibleRect;
 window.coachPlaceCard = coachPlaceCard;
+window.coachNudgeFor = coachNudgeFor;
 window.coachGuideHide = coachGuideHide;
 window.COACH_GUIDE_ROOM = COACH_GUIDE_ROOM;
 window.coachGuideRoom = coachGuideRoom;
@@ -46349,7 +46370,7 @@ function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
   card.style.width = `${cardW}px`;
   card.style.transform = '';
   if (target) coachBringIntoView(target);
-  const rect = target ? coachVisibleRect(target) : null;
+  let rect = target ? coachVisibleRect(target) : null;
   if (!rect) {
     overlay?.classList.add('coach-full-blur');
     spotlight.classList.add('no-target');
@@ -46364,7 +46385,12 @@ function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
   }
   // Measure in place (moving the card off to measure made it fly in from a corner).
   const cardH = Math.min(card.offsetHeight, window.innerHeight - 28 - ROOM);
-  const pos = coachPlaceCard({ rect: rect && { left: rect.left - PAD, top: rect.top - PAD, right: rect.right + PAD, bottom: rect.bottom + PAD, width: rect.width + PAD * 2, height: rect.height + PAD * 2 }, cardW, cardH, room: ROOM, guideW: coachGuideWidth(), preferred: preferred === 'center' && !rect ? 'below' : preferred });
+  const place = () => coachPlaceCard({ rect: _coachPadRect(rect, PAD), cardW, cardH, room: ROOM, guideW: coachGuideWidth(), preferred: preferred === 'center' && !rect ? 'below' : preferred });
+  let pos = place();
+  if (coachNudgeFor(target, _coachPadRect(rect, PAD), pos, cardH, ROOM)) {
+    const r2 = coachVisibleRect(target);
+    if (r2) { rect = r2; coachSpotlightPad(spotlight, rect, PAD); pos = place(); }
+  }
   card.style.top = `${Math.round(pos.top)}px`;
   card.style.left = `${Math.round(pos.left)}px`;
   card.style.visibility = '';
@@ -46547,18 +46573,23 @@ function _showCoachStep() {
   card.style.marginTop = '';
   card.style.transform = '';
   if (target) coachBringIntoView(target);
-  const rect = target ? coachVisibleRect(target) : null;
+  let rect = target ? coachVisibleRect(target) : null;
   const oRect = overlay.getBoundingClientRect();   // card + spotlight are positioned inside the overlay
   const cardW = Math.min(320, Math.max(220, oRect.width - 32));
   card.style.width = cardW + 'px';
   if (rect) { spotlight.style.display = ''; coachSpotlightPad(spotlight, rect, PAD, oRect); }
   else spotlight.style.display = 'none';
   const cardH = card.offsetHeight;
-  const pos = coachPlaceCard({
-    rect: rect && { left: rect.left - PAD, top: rect.top - PAD, right: rect.right + PAD, bottom: rect.bottom + PAD, width: rect.width + PAD * 2, height: rect.height + PAD * 2 },
+  const place = () => coachPlaceCard({
+    rect: _coachPadRect(rect, PAD),
     cardW, cardH, room: ROOM, guideW: coachGuideWidth(), preferred: step.position === 'above' ? 'above' : 'below',
     bounds: { left: oRect.left, top: oRect.top, right: oRect.right, bottom: oRect.bottom }
   });
+  let pos = place();
+  if (coachNudgeFor(target, _coachPadRect(rect, PAD), pos, cardH, ROOM)) {
+    const r2 = coachVisibleRect(target);
+    if (r2) { rect = r2; coachSpotlightPad(spotlight, rect, PAD, oRect); pos = place(); }
+  }
   card.style.top = Math.round(pos.top - oRect.top) + 'px';
   card.style.left = Math.round(pos.left - oRect.left) + 'px';
   card.style.visibility = '';
