@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.545";
+const APP_VERSION = "3.0.546";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.546 &mdash; Faster interpretations</div>
+<ul>
+  <li><strong>Much quicker</strong> &mdash; A new passage in <em>See interpretations</em> now takes about half a minute instead of several, and saved passages still open right away.</li>
+  <li><strong>Who holds each view</strong> &mdash; Each view now names well-known teachers who hold it, and every quote shows the page it comes from.</li>
+</ul>
 <div class="un-version-label">v3.0.545 &mdash; See interpretations</div>
 <ul>
   <li><strong>See interpretations</strong> &mdash; Tap a verse (or pick a few), then <em>See interpretations</em> to see how different traditions read the passage, with Free Grace first. Each view has a short summary, the reasons behind it, quotes from real teachers and links to read more.</li>
@@ -41634,7 +41639,7 @@ function closeRhemaInterlinear(e) {
 // first. The server researches published teaching, keeps only quotes it found
 // word for word on the linked pages, and saves the result for everyone by
 // passage (so a verse inside Hebrews 6:4–6 opens the saved Hebrews 6:4–6).
-const RHEMA_INTERP_STORE = 'rhemaInterpretations.v1';
+const RHEMA_INTERP_STORE = 'rhemaInterpretations.v2';
 const _rhemaInterpCache = new Map();
 const _rhemaInterpInFlight = new Map();
 let _rhemaInterpSel = null;
@@ -41687,7 +41692,7 @@ function _rhemaInterpFetch(sel) {
     for (;;) {
       const r = await window.PassageInterpretations.get(sel);
       if (r && r.status === 'ready') { _rhemaInterpRemember(key, r); return r; }
-      if (!r || r.status !== 'pending' || Date.now() - started > 6 * 60 * 1000) throw new Error('Interpretations took too long');
+      if (!r || r.status !== 'pending' || Date.now() - started > 3 * 60 * 1000) throw new Error('Interpretations took too long');
       await new Promise(res => setTimeout(res, Math.max(3000, r.retryAfterMs || 6000)));
     }
   })().finally(() => _rhemaInterpInFlight.delete(key));
@@ -41756,7 +41761,7 @@ function _rhemaRenderInterpLoading() {
       <img class="rhema-ip-guide" src="${guidePoseSrc('inspect')}" alt="" width="84" height="91" decoding="async">
       <div class="rhema-ip-step" id="rhemaInterpStep">${RHEMA_INTERP_STEPS[0]}</div>
       <div class="rhema-ip-bar"><span></span></div>
-      <p class="rhema-ip-wait">The first look at a passage takes a minute or two. After that it opens right away for everyone. You can close this. It keeps going.</p>
+      <p class="rhema-ip-wait">The first look at a passage takes about half a minute. After that it opens right away for everyone. You can close this. It keeps going.</p>
     </div>`;
   let i = 0;
   _rhemaInterpStepTimer = setInterval(() => {
@@ -41765,7 +41770,7 @@ function _rhemaRenderInterpLoading() {
     i = Math.min(i + 1, RHEMA_INTERP_STEPS.length - 1);
     el.textContent = RHEMA_INTERP_STEPS[i];
     if (i === RHEMA_INTERP_STEPS.length - 1) clearInterval(_rhemaInterpStepTimer);
-  }, 9000);
+  }, 6000);
 }
 
 function _rhemaRenderInterpError(err) {
@@ -41836,7 +41841,9 @@ function _rhemaRenderInterpretations(data) {
     const quotes = (v.quotes || []).map(q => {
       const href = _rhemaInterpSafeUrl(q.url);
       const work = q.work ? (href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(q.work)}</a>` : esc(q.work)) : '';
-      return `<figure class="rhema-ip-quote"><blockquote>“${esc(q.text)}”</blockquote><figcaption>${esc(q.speaker)}${work ? `, ${work}` : ''}</figcaption></figure>`;
+      // Quotes are the exact words the page itself says; credit the page.
+      const by = q.speaker ? `${esc(q.speaker)}${work ? `, ${work}` : ''}` : `From ${work}${q.site ? ` <span class="rhema-ip-site">· ${esc(q.site)}</span>` : ''}`;
+      return `<figure class="rhema-ip-quote"><blockquote>“${esc(q.text)}”</blockquote><figcaption>${by}</figcaption></figure>`;
     }).join('');
     const sources = (v.sources || []).map(s => {
       const href = _rhemaInterpSafeUrl(s.url);
@@ -41853,6 +41860,7 @@ function _rhemaRenderInterpretations(data) {
       </button>
       <div class="rhema-ip-view-bd"><div class="rhema-ip-view-in">
         <p class="rhema-ip-sum">${esc(v.summary)}</p>
+        ${(v.teachers || []).length ? `<p class="rhema-ip-teachers"><span class="material-symbols-outlined" aria-hidden="true">person</span>Held by ${esc(v.teachers.join(', '))}</p>` : ''}
         ${reasons}${usage}${usedWith}${quotes}
         ${sources ? `<div class="rhema-ip-sub">Read more</div><div class="rhema-ip-srcs">${sources}</div>` : ''}
       </div></div>
@@ -41862,7 +41870,7 @@ function _rhemaRenderInterpretations(data) {
   const updated = data.updatedAt ? new Date(data.updatedAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '';
   body.innerHTML = `${context}${overview}
     ${views.length ? `<div class="rhema-ip-views">${viewHtml}</div>` : '<p class="rhema-ip-empty">No published views were found for this passage yet.</p>'}
-    <p class="rhema-ip-foot">Each view is described the way its own teachers explain it. Quotes are copied from the linked pages.${updated ? ` Updated ${esc(updated)}.` : ''}</p>`;
+    <p class="rhema-ip-foot">Each view is described the way its own teachers explain it. Quotes are the pages’ own words.${updated ? ` Updated ${esc(updated)}.` : ''}</p>`;
 }
 
 function rhemaInterpToggle(i) {

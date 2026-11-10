@@ -31,7 +31,7 @@ main() {
 
   # 2) Otherwise deploy the same function with gcloud, which Cloud Shell has
   #    already signed in. Same settings Firebase would use: Node 22,
-  #    us-central1, 5-minute timeout, 512MB, the shared Anthropic key.
+  #    us-central1, 2-minute timeout, 256MB, the shared Anthropic key.
   say "Firebase CLI isn't signed in here, so deploying with gcloud instead…"
   rm -rf functions/node_modules
   local CONFIG='{"projectId":"greek-vocab-leaderboard","storageBucket":"greek-vocab-leaderboard.firebasestorage.app","locationId":"us-central"}'
@@ -44,8 +44,8 @@ main() {
       --allow-unauthenticated \
       --entry-point="$FN" \
       --source=functions \
-      --memory=512MB \
-      --timeout=300s \
+      --memory=256MB \
+      --timeout=120s \
       --set-secrets="ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest" \
       --set-env-vars="^@^FIREBASE_CONFIG=$CONFIG@GCLOUD_PROJECT=$PROJECT"; then
     ok "Deploy complete! See interpretations is ready."

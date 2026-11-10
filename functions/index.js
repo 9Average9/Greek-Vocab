@@ -1609,29 +1609,40 @@ exports.generateBibleQuiz = functions
 // ─────────────────────────────────────────────────────────────────────────────
 // See interpretations
 //
-// For a selected verse or passage, the server researches how real Christian
-// traditions read it: it searches the web, reads the pages, and keeps only what
-// it can back up. Quotes count only when the server finds them word-for-word in
-// a page it fetched. Links count only when they came up in this research.
+// For a selected verse or passage, the server looks up how real Christian
+// traditions read it. Built to be fast and cheap:
+// - One request to Claude Haiku 5.5 (the low-cost model) with a few web
+//   searches. No page fetching, which was the slow, expensive part.
+// - Every quote is a citation the search API itself returns: the exact words
+//   from the page, with its URL. The model never types a quote.
+// - Links come only from those citations and the search results. A view with no
+//   citation behind it is dropped.
 //
 // Results are saved by "interpretive unit" (for example Hebrews 6:4–6) and
 // shared with everyone. Anyone who opens a verse inside a saved unit gets the
-// saved result right away. Only the first look-up of a new passage costs a
-// research run. Saved results refresh after INTERP_REFRESH_MS.
+// saved result right away. Only the first look-up of a new passage costs
+// anything (about $0.03–0.05: four searches plus a few cents of tokens).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const INTERP_MODEL = "claude-opus-5-5";
-const INTERP_VERSION = 1; // bump to ignore every saved result and research again
+const INTERP_MODEL = "claude-haiku-5-5";
+const INTERP_BACKUP_MODEL = "claude-sonnet-5-5"; // only if Haiku declines or returns nothing usable
+const INTERP_VERSION = 2; // bump to ignore every saved result and research again
 const INTERP_COLLECTION = "passageInterpretations";
 const INTERP_JOBS = "passageInterpretationJobs";
 const INTERP_USAGE = "passageInterpretationUsage";
 const INTERP_REFRESH_MS = 180 * 24 * 60 * 60 * 1000;
-const INTERP_JOB_STALE_MS = 6 * 60 * 1000;
-const INTERP_RETRY_AFTER_FAIL_MS = 5 * 60 * 1000;
-const INTERP_USER_DAILY = 8;     // new passages one person can start per day
-const INTERP_GLOBAL_DAILY = 150; // new passages everyone together can start per day
+const INTERP_JOB_STALE_MS = 150 * 1000;
+const INTERP_RETRY_AFTER_FAIL_MS = 60 * 1000;
+const INTERP_USER_DAILY = 12;    // new passages one person can start per day
+const INTERP_GLOBAL_DAILY = 300; // new passages everyone together can start per day (≈ $15 max)
 const INTERP_MAX_SELECTION = 40; // verses
-const INTERP_DEADLINE_MS = 250 * 1000;
+const INTERP_DEADLINE_MS = 100 * 1000;
+const INTERP_MAX_SEARCHES = 4;
+// Low-value sources for this job: social media, forums, video.
+const INTERP_BLOCKED_DOMAINS = [
+  "reddit.com", "quora.com", "facebook.com", "instagram.com", "tiktok.com",
+  "pinterest.com", "x.com", "twitter.com", "youtube.com", "medium.com"
+];
 
 const INTERP_BOOKS = {
   GEN: "Genesis", EXO: "Exodus", LEV: "Leviticus", NUM: "Numbers", DEU: "Deuteronomy",
@@ -1672,72 +1683,6 @@ const INTERP_TRADITIONS = {
   other: "Other view"
 };
 
-const INTERP_TOOL = {
-  name: "record_interpretations",
-  description: "Save the finished research. Call this once, at the end, after searching and reading pages.",
-  strict: true,
-  input_schema: {
-    type: "object",
-    additionalProperties: false,
-    properties: {
-      unit: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          startChapter: { type: "integer" },
-          startVerse: { type: "integer" },
-          endChapter: { type: "integer" },
-          endVerse: { type: "integer" }
-        },
-        required: ["startChapter", "startVerse", "endChapter", "endVerse"]
-      },
-      scope: { type: "string", enum: ["selection", "part_of_larger", "supporting_verse"] },
-      contextNote: { type: "string" },
-      overview: { type: "string" },
-      views: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            tradition: { type: "string", enum: Object.keys(INTERP_TRADITIONS) },
-            label: { type: "string" },
-            summary: { type: "string" },
-            reasons: { type: "array", items: { type: "string" } },
-            usageNote: { type: "string" },
-            usedWith: { type: "array", items: { type: "string" } },
-            quotes: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  text: { type: "string" },
-                  speaker: { type: "string" },
-                  work: { type: "string" },
-                  url: { type: "string" }
-                },
-                required: ["text", "speaker", "work", "url"]
-              }
-            },
-            sources: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                properties: { title: { type: "string" }, url: { type: "string" } },
-                required: ["title", "url"]
-              }
-            }
-          },
-          required: ["tradition", "label", "summary", "reasons", "usageNote", "usedWith", "quotes", "sources"]
-        }
-      }
-    },
-    required: ["unit", "scope", "contextNote", "overview", "views"]
-  }
-};
-
 function interpPos(chapter, verse) { return chapter * 1000 + verse; }
 
 function interpRefLabel(book, sc, sv, ec, ev) {
@@ -1749,17 +1694,6 @@ function interpRefLabel(book, sc, sv, ec, ev) {
 function interpUnitId(book, sc, sv, ec, ev) { return `${book}.${sc}.${sv}-${ec}.${ev}`; }
 
 function interpDayKey() { return new Date().toISOString().slice(0, 10); }
-
-// Lower-case letters and digits only, so curly quotes, dashes, spacing and
-// punctuation differences between a page and a quote don't matter.
-function interpNorm(s) {
-  return String(s || "")
-    .normalize("NFKD").replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/&[a-z]+;|&#\d+;/g, " ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
 
 function interpCleanUrl(u) {
   try {
@@ -1786,132 +1720,172 @@ function interpClip(s, max) {
   return (at > max * 0.6 ? cut.slice(0, at) : cut).replace(/[,;:\s]+$/, "") + "…";
 }
 
-// Gather everything the research actually saw: every URL from search results
-// and fetches, and the full text of every fetched page.
-function interpHarvest(content, seen) {
-  for (const block of (content || [])) {
-    if (!block || typeof block !== "object") continue;
-    if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
-      for (const r of block.content) {
-        const url = interpCleanUrl(r && r.url);
-        if (url && !seen.urls.has(url)) seen.urls.set(url, String(r.title || "").trim());
-      }
-    } else if (block.type === "web_fetch_tool_result" && block.content && block.content.type === "web_fetch_result") {
-      const url = interpCleanUrl(block.content.url);
-      const doc = block.content.content || {};
-      const title = String(doc.title || "").trim();
-      if (url) {
-        if (!seen.urls.has(url) || (!seen.urls.get(url) && title)) seen.urls.set(url, title);
-        const src = doc.source || {};
-        if (src.type === "text" && typeof src.data === "string") {
-          seen.pages.push({ url, text: interpNorm(src.data) });
+// Strip any citation markup the model might echo, and tidy spacing.
+function interpText(s) {
+  return String(s || "").replace(/<\/?cite[^>]*>/g, "").replace(/\s+/g, " ").trim();
+}
+
+function interpSystemPrompt() {
+  return [
+    "You look up how real Christian traditions interpret a Bible passage, using what real teachers and churches have published.",
+    "The result is shown to Bible readers in a study app and saved for everyone who opens any verse in the same passage.",
+    "",
+    "STEP 1. Pick the interpretive unit: the passage teachers discuss as one piece. It must include every selected verse.",
+    "- Selection inside a well-known debated passage → use that passage, scope part_of_larger (Hebrews 6:5 → Hebrews 6:4-6; John 15:6 → John 15:1-8).",
+    "- Selection is itself the debated unit → use exactly the selection, scope selection.",
+    "- Selection rarely debated on its own, but traditions use it with other verses → keep the selection, scope supporting_verse.",
+    "- Never more than about 25 verses or two chapters.",
+    "",
+    `STEP 2. Search the web (at most ${INTERP_MAX_SEARCHES} searches; make them count).`,
+    "- First search: the Free Grace reading (Grace Evangelical Society faithalone.org, Zane Hodges, Bob Wilkin, Joseph Dillow, Charles Bing gracelife.org, Charles Ryrie).",
+    "- Then search the passage with the traditions that disagree with each other most on it (for example Reformed, Arminian, Catholic, Lutheran, Orthodox, Dispensational).",
+    "- Prefer commentaries, sermons, articles and church documents by real, named people or bodies.",
+    "",
+    "STEP 3. Write the answer in EXACTLY this line format and nothing else. One item per line. No markdown, no extra commentary.",
+    "@UNIT <startChapter>:<startVerse>-<endChapter>:<endVerse>",
+    "@SCOPE <selection | part_of_larger | supporting_verse>",
+    "@CONTEXT <for part_of_larger or supporting_verse: one sentence (~25 words) on how the passage fits a larger reading; otherwise leave empty>",
+    "@OVERVIEW <up to 2 sentences (~45 words): what the passage is about and what the views disagree on>",
+    "Then for each view (Free Grace first, 3 to 6 views total, only traditions with a real, distinct reading; merge traditions that agree):",
+    "@VIEW <key> | <display name>",
+    "@SUMMARY <up to 2 sentences (~45 words): what this tradition says the passage means, backed by your search results>",
+    "@REASON <a reason this tradition gives, under 20 words>  (2 or 3 @REASON lines)",
+    "@TEACHERS <1 to 3 real, well-known teachers who hold this reading, comma-separated>",
+    "@WITH <up to 4 references this tradition reads alongside it, like John 5:24; Romans 4:5>",
+    "@USAGE <for supporting_verse only: one sentence on how this camp uses the verse with those passages; otherwise leave empty>",
+    `Allowed keys: ${Object.keys(INTERP_TRADITIONS).join(", ")}.`,
+    "",
+    "Rules:",
+    "- Back every @SUMMARY with what you found in the search results. If you found nothing for a tradition, leave that view out. Never invent a position.",
+    "- Plain, friendly words a new believer understands. Fair and neutral: describe each view the way its own teachers would, never say which is right.",
+    "- Never mention AI, yourself, searching, sources, or \"this summary\". Don't refer to the specific verse that was selected; write for the whole unit."
+  ].join("\n");
+}
+
+// Rebuild the model's text answer with its citations. Each text block carries
+// the citations the search API attached to it; we keep them with the text so
+// every line knows which real pages back it.
+function interpCollect(contents) {
+  let text = "";
+  const spans = []; // { start, end, cites: [{url, title, cited}] }
+  const results = new Map(); // every search-result URL → title
+  for (const content of contents) {
+    for (const block of (content || [])) {
+      if (!block) continue;
+      if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
+        for (const r of block.content) {
+          const url = interpCleanUrl(r && r.url);
+          if (url && !results.has(url)) results.set(url, String(r.title || "").trim());
         }
-      }
-    } else if (/code_execution_tool_result$/.test(String(block.type || ""))) {
-      // If the API filters pages with code before Claude reads them, the page
-      // text shows up here instead. Keep it so quotes can still be checked.
-      const c = block.content || {};
-      const out = [c.stdout, c.content && c.content.stdout].filter(x => typeof x === "string").join("\n");
-      if (out) {
-        seen.pages.push({ url: "", text: interpNorm(out) });
-        for (const m of out.matchAll(/https?:\/\/[^\s"'<>)\]]+/g)) {
-          const url = interpCleanUrl(m[0]);
-          if (url && !seen.urls.has(url)) seen.urls.set(url, "");
+      } else if (block.type === "text" && typeof block.text === "string") {
+        const start = text.length;
+        text += block.text;
+        const cites = [];
+        for (const c of (block.citations || [])) {
+          const url = interpCleanUrl(c && c.url);
+          if (!url) continue;
+          cites.push({ url, title: String(c.title || "").trim(), cited: interpText(c.cited_text) });
         }
+        spans.push({ start, end: text.length, cites });
       }
     }
   }
+  return { text, spans, results };
 }
 
-// A quote is real when every piece of it (split at "..." or [brackets]) shows
-// up word-for-word in a page the research fetched. Returns that page's URL,
-// "" when it matched only filtered text, or null when it can't be found.
-function interpFindQuote(quote, pages) {
-  const parts = String(quote || "")
-    .split(/\.\.\.|…|\[[^\]]*\]/)
-    .map(interpNorm)
-    .filter(p => p.split(" ").length >= 3);
-  const words = parts.reduce((n, p) => n + p.split(" ").length, 0);
-  if (!parts.length || words < 6) return null;
-  for (const page of pages) {
-    const hay = " " + page.text + " ";
-    if (parts.every(p => hay.includes(" " + p + " "))) return page.url;
+// Parse the "@KEY value" answer. Returns { fields, views } where each line also
+// carries the citations of the text it came from.
+function interpParse(collected) {
+  const { text, spans } = collected;
+  const at = text.indexOf("@UNIT");
+  const out = { unit: "", scope: "", contextNote: "", overview: "", views: [] };
+  if (at < 0) return out;
+  let pos = at;
+  let view = null;
+  const lines = text.slice(at).split("\n");
+  for (const raw of lines) {
+    const lineStart = pos;
+    const lineEnd = pos + raw.length;
+    pos = lineEnd + 1;
+    const m = raw.match(/^\s*@([A-Z]+)\s*(.*)$/);
+    if (!m) continue;
+    const key = m[1];
+    const val = interpText(m[2]);
+    const cites = [];
+    for (const sp of spans) {
+      if (sp.end > lineStart && sp.start < lineEnd) cites.push(...sp.cites);
+    }
+    if (key === "UNIT") out.unit = val;
+    else if (key === "SCOPE") out.scope = val.toLowerCase();
+    else if (key === "CONTEXT") out.contextNote = val;
+    else if (key === "OVERVIEW") out.overview = val;
+    else if (key === "VIEW") {
+      const [k, ...rest] = val.split("|");
+      view = { tradition: interpText(k).toLowerCase().replace(/[\s-]+/g, "_"), label: interpText(rest.join("|")), summary: "", reasons: [], teachers: [], usedWith: [], usageNote: "", cites: [] };
+      out.views.push(view);
+    } else if (view) {
+      view.cites.push(...cites);
+      if (key === "SUMMARY") view.summary = val;
+      else if (key === "REASON") view.reasons.push(val);
+      else if (key === "TEACHERS") view.teachers = val.split(/,|;| and /).map(interpText).filter(Boolean);
+      else if (key === "WITH") view.usedWith = val.split(/;|,(?=\s*[1-3]?\s?[A-Z])/).map(interpText).filter(Boolean);
+      else if (key === "USAGE") view.usageNote = val;
+    }
   }
-  return null;
+  return out;
 }
 
-function interpKnownUrl(u, seen) {
-  const url = interpCleanUrl(u);
-  if (!url) return "";
-  if (seen.urls.has(url)) return url;
-  // Same page with or without "www." / a trailing query string.
-  const bare = url.replace(/^https?:\/\/(www\.)?/, "").replace(/\?.*$/, "");
-  for (const known of seen.urls.keys()) {
-    if (known.replace(/^https?:\/\/(www\.)?/, "").replace(/\?.*$/, "") === bare) return known;
-  }
-  return "";
-}
-
-function interpCleanResult(raw, seen, sel) {
+function interpCleanResult(parsed, collected, sel) {
   const book = sel.book;
   // The unit must hold every selected verse and stay a readable size.
-  let u = raw && raw.unit ? raw.unit : {};
-  let sc = parseInt(u.startChapter, 10), sv = parseInt(u.startVerse, 10);
-  let ec = parseInt(u.endChapter, 10), ev = parseInt(u.endVerse, 10);
-  const ok = [sc, sv, ec, ev].every(n => Number.isFinite(n) && n > 0) &&
+  let sc, sv, ec, ev;
+  const um = String(parsed.unit || "").match(/(\d+)\s*:\s*(\d+)\s*[-–]\s*(?:(\d+)\s*:\s*)?(\d+)/);
+  if (um) { sc = +um[1]; sv = +um[2]; ec = um[3] ? +um[3] : sc; ev = +um[4]; }
+  const ok = um && [sc, sv, ec, ev].every(n => Number.isFinite(n) && n > 0) &&
     interpPos(sc, sv) <= interpPos(sel.chapter, sel.startVerse) &&
     interpPos(ec, ev) >= interpPos(sel.chapter, sel.endVerse) &&
     ec - sc <= 1 &&
     (sc !== ec || ev - sv < 60);
   if (!ok) { sc = ec = sel.chapter; sv = sel.startVerse; ev = sel.endVerse; }
   const sameAsSelection = sc === sel.chapter && ec === sel.chapter && sv === sel.startVerse && ev === sel.endVerse;
-  let scope = ["selection", "part_of_larger", "supporting_verse"].includes(raw && raw.scope) ? raw.scope : "selection";
+  let scope = ["selection", "part_of_larger", "supporting_verse"].includes(parsed.scope) ? parsed.scope : "selection";
   if (scope === "part_of_larger" && sameAsSelection) scope = "selection";
   if (scope === "selection" && !sameAsSelection) scope = "part_of_larger";
 
   const views = [];
-  const usedTraditions = new Set();
-  for (const v of (Array.isArray(raw && raw.views) ? raw.views : [])) {
-    if (!v || typeof v !== "object") continue;
+  const used = new Set();
+  for (const v of parsed.views) {
     const tradition = INTERP_TRADITIONS[v.tradition] ? v.tradition : "other";
-    const quotes = [];
-    for (const q of (Array.isArray(v.quotes) ? v.quotes : [])) {
-      const text = String((q && q.text) || "").replace(/^["“”'\s]+|["“”'\s]+$/g, "").replace(/\s+/g, " ").trim();
-      if (!text || text.length > 420) continue;
-      const foundOn = interpFindQuote(text, seen.pages);
-      if (foundOn === null) continue; // not on any page we read → not shown
-      const url = foundOn || interpKnownUrl(q.url, seen);
-      const speaker = interpClip(q.speaker, 80);
-      if (!speaker) continue;
-      quotes.push({ text, speaker, work: interpClip(q.work, 120), url });
-      if (quotes.length === 2) break;
-    }
-    const sources = [];
-    const addSource = (url, title) => {
-      if (!url || sources.some(s => s.url === url) || sources.length >= 3) return;
-      sources.push({ url, title: interpClip(title || seen.urls.get(url) || interpHost(url), 110), site: interpHost(url) });
-    };
-    for (const s of (Array.isArray(v.sources) ? v.sources : [])) {
-      const url = interpKnownUrl(s && s.url, seen);
-      if (url) addSource(url, (s && s.title) || seen.urls.get(url));
-    }
-    quotes.forEach(q => q.url && addSource(q.url, seen.urls.get(q.url) || q.work));
-    if (!sources.length) continue; // nothing real behind it → leave it out
     const summary = interpClip(v.summary, 420);
     if (!summary) continue;
-    const key = tradition === "other" ? `other:${interpNorm(v.label)}` : tradition;
-    if (usedTraditions.has(key)) continue;
-    usedTraditions.add(key);
+    // Quotes: the exact words the search API pulled from each page.
+    const quotes = [];
+    const sources = [];
+    const seenUrl = new Set();
+    for (const c of v.cites) {
+      if (!seenUrl.has(c.url) && sources.length < 3) {
+        seenUrl.add(c.url);
+        sources.push({ url: c.url, title: interpClip(c.title || collected.results.get(c.url) || interpHost(c.url), 110), site: interpHost(c.url) });
+      }
+      if (quotes.length < 2 && c.cited && c.cited.split(" ").length >= 6 && !quotes.some(q => q.url === c.url || q.text === c.cited)) {
+        quotes.push({ text: interpClip(c.cited, 320), speaker: "", work: interpClip(c.title || interpHost(c.url), 110), url: c.url, site: interpHost(c.url) });
+      }
+    }
+    if (!sources.length) continue; // nothing real behind it → leave it out
+    const key = tradition === "other" ? `other:${v.label.toLowerCase()}` : tradition;
+    if (used.has(key)) continue;
+    used.add(key);
     views.push({
       tradition,
       label: interpClip(v.label || INTERP_TRADITIONS[tradition], 60) || INTERP_TRADITIONS[tradition],
       summary,
-      reasons: (Array.isArray(v.reasons) ? v.reasons : []).map(r => interpClip(r, 220)).filter(Boolean).slice(0, 3),
+      reasons: v.reasons.map(r => interpClip(r, 220)).filter(Boolean).slice(0, 3),
+      teachers: v.teachers.map(t => interpClip(t, 50)).filter(t => t && t.length > 2).slice(0, 3),
       usageNote: scope === "supporting_verse" ? interpClip(v.usageNote, 320) : "",
-      usedWith: (Array.isArray(v.usedWith) ? v.usedWith : [])
+      usedWith: v.usedWith
         .map(r => interpClip(r, 40))
         .filter(r => /^[1-3]?\s?[A-Za-z][A-Za-z ]+\s\d{1,3}(:\d{1,3}([–-]\d{1,3}(:\d{1,3})?)?)?$/.test(r))
-        .slice(0, 5),
+        .slice(0, 4),
       quotes,
       sources
     });
@@ -1925,138 +1899,64 @@ function interpCleanResult(raw, seen, sel) {
     end: interpPos(ec, ev),
     ref: interpRefLabel(book, sc, sv, ec, ev),
     scope,
-    contextNote: scope === "selection" ? "" : interpClip(raw && raw.contextNote, 260),
-    overview: interpClip(raw && raw.overview, 420),
-    views: views.slice(0, 7)
+    contextNote: scope === "selection" ? "" : interpClip(interpText(parsed.contextNote), 260),
+    overview: interpClip(interpText(parsed.overview), 420),
+    views: views.slice(0, 6)
   };
 }
 
-function interpSystemPrompt() {
-  return [
-    "You research how real Christian traditions interpret a Bible passage, using what real teachers and churches have published.",
-    "Your result is shown to Bible readers in a study app, saved, and shared with everyone who opens any verse in the same passage.",
-    "",
-    "1. Pick the interpretive unit.",
-    "- The unit is the passage that teachers actually discuss as one piece. It must include every selected verse.",
-    "- If the selection sits inside a well-known debated passage, use that passage (for example, Hebrews 6:5 → Hebrews 6:4–6; John 15:6 → John 15:1–8). Set scope to \"part_of_larger\".",
-    "- If the selection is itself the debated unit, use exactly the selection. Set scope to \"selection\".",
-    "- If the selection is rarely debated on its own but traditions use it together with other verses to build a view, keep the unit to the selection and set scope to \"supporting_verse\".",
-    "- Keep the unit as small as the debate allows. Never more than about 25 verses, and never more than two chapters.",
-    "",
-    "2. Research on the web.",
-    "- Start with Free Grace teaching: Grace Evangelical Society (faithalone.org), Zane Hodges, Bob Wilkin, Joseph Dillow, Charles Bing (gracelife.org), Charles Ryrie, Lewis Sperry Chafer, Dwight Hunt, Grace Theological Society and similar.",
-    "- Then look for other traditions that read the passage differently: Reformed (Calvin, Ligonier, Desiring God, The Gospel Coalition), Arminian and Wesleyan (Society of Evangelical Arminians, Wesley's Notes, Adam Clarke, Roger Olson), Lutheran, Roman Catholic (Catechism, New Advent, Catholic Answers), Eastern Orthodox (Chrysostom, Orthodox study resources), Dispensational, Pentecostal and others when they apply.",
-    "- Use commentaries, sermons, articles and church documents written by real, named people or bodies. Skip forums, AI-written pages and anonymous content farms.",
-    "- Fetch the pages you plan to quote. A quote must be copied word for word from a page you fetched in this research. If you didn't fetch it, don't quote it.",
-    "",
-    "3. Decide which views to include.",
-    "- Include only traditions that hold a real, distinct reading of this passage. Usually 3 to 6.",
-    "- If two traditions read it the same way, merge them into one view and say so in the label (for example \"Reformed & Lordship\").",
-    "- Always put Free Grace first. Include it whenever a Free Grace teacher addresses this passage or the verses it is used with.",
-    "- Never invent a tradition's position. If you can't find a source for a view, leave that view out.",
-    "- For scope \"supporting_verse\", explain in usageNote how that camp uses this verse together with other passages, and name a real teacher who does so. List those passages in usedWith.",
-    "",
-    "4. Write it plainly.",
-    "- Simple, friendly words a new believer understands. Short sentences.",
-    "- Fair and neutral. Describe each view the way its own teachers would. Don't rank them or say which is right.",
-    "- Never mention AI, yourself, \"we\", this research, searching, or \"this summary\". Just state the content.",
-    "- Everything you write must make sense for anyone opening any verse inside the unit. Don't refer to the specific verse that was selected.",
-    "- overview: up to 2 sentences (about 45 words) on what the passage is about and what the views disagree on.",
-    "- contextNote: for \"part_of_larger\" or \"supporting_verse\", one sentence (about 25 words) explaining how the passage fits a larger reading. Otherwise \"\".",
-    "- label: the tradition's common name.",
-    "- summary: up to 2 sentences (about 45 words) on what this tradition says the passage means.",
-    "- reasons: 2 or 3 short reasons this tradition gives, each under 20 words.",
-    "- usedWith: up to 4 references this tradition reads alongside the passage (\"Book chapter:verse\").",
-    "- quotes: 1 or 2 short quotes (under 45 words each), copied exactly, with the speaker's real name, the work or site, and the page URL.",
-    "- sources: 1 to 3 links from your search results or fetched pages that support this view, with their titles.",
-    "",
-    "When you are done, call record_interpretations once. Don't write anything else."
-  ].join("\n");
-}
-
-function interpTools(variant) {
-  const direct = variant.direct ? { allowed_callers: ["direct"] } : {};
-  return [
-    { type: "web_search_20260209", name: "web_search", max_uses: 8, ...direct },
-    { type: "web_fetch_20260209", name: "web_fetch", max_uses: 8, max_content_tokens: 6000, ...direct },
-    INTERP_TOOL
-  ];
+// One model run: searches, then the "@" answer. Loops on pause_turn (the API
+// pausing a long server-tool turn) until the answer is in.
+async function interpRun(client, model, sel, deadline) {
+  const selRef = interpRefLabel(sel.book, sel.chapter, sel.startVerse, sel.chapter, sel.endVerse);
+  const messages = [{ role: "user", content: `Selected passage: ${selRef}\nWrite the answer in the @ line format.` }];
+  const contents = [];
+  const usage = { model, input_tokens: 0, output_tokens: 0, searches: 0 };
+  for (let turn = 0; turn < 4; turn++) {
+    const remaining = deadline - Date.now();
+    if (remaining < 8000) throw new Error("interpretations research ran out of time");
+    const msg = await client.messages.create({
+      model,
+      max_tokens: 8000,
+      system: interpSystemPrompt(),
+      output_config: { effort: "medium" },
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: INTERP_MAX_SEARCHES, blocked_domains: INTERP_BLOCKED_DOMAINS }],
+      messages
+    }, { timeout: remaining, maxRetries: 1 });
+    const u = msg.usage || {};
+    usage.input_tokens += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
+    usage.output_tokens += u.output_tokens || 0;
+    usage.searches += (u.server_tool_use && u.server_tool_use.web_search_requests) || 0;
+    contents.push(msg.content);
+    if (msg.stop_reason === "refusal") { const e = new Error("declined"); e.declined = true; throw e; }
+    if (msg.stop_reason !== "pause_turn") break;
+    messages.push({ role: "assistant", content: msg.content });
+  }
+  const collected = interpCollect(contents);
+  const parsed = interpParse(collected);
+  return { collected, parsed, usage };
 }
 
 async function interpResearch(sel) {
   const client = anthropicClient();
   const deadline = Date.now() + INTERP_DEADLINE_MS;
   const selRef = interpRefLabel(sel.book, sel.chapter, sel.startVerse, sel.chapter, sel.endVerse);
-  const messages = [{
-    role: "user",
-    content: `Selected passage: ${selRef}\nBook code: ${sel.book}\n\nResearch how Christian traditions interpret this, then call record_interpretations.`
-  }];
-  // Request options newer than some API setups accept. If the API rejects one,
-  // drop it and try again rather than failing the look-up.
-  const variants = [
-    { direct: true, fallbacks: true },
-    { direct: false, fallbacks: true },
-    { direct: false, fallbacks: false }
-  ];
-  let vi = 0;
-  const seen = { urls: new Map(), pages: [] };
-  let nudged = false;
-  let usage = { input_tokens: 0, output_tokens: 0, searches: 0, fetches: 0 };
-
-  for (let turn = 0; turn < 8; turn++) {
-    const remaining = deadline - Date.now();
-    if (remaining < 20000) throw new Error("interpretations research ran out of time");
-    const variant = variants[vi];
-    const params = {
-      model: INTERP_MODEL,
-      max_tokens: 12000,
-      system: interpSystemPrompt(),
-      output_config: { effort: "medium" },
-      tools: interpTools(variant),
-      tool_choice: { type: "auto" },
-      messages
-    };
-    if (variant.fallbacks) {
-      params.betas = ["server-side-fallback-2026-07-01"];
-      params.fallbacks = "default";
-    }
-    let msg;
+  let lastErr;
+  for (const model of [INTERP_MODEL, INTERP_BACKUP_MODEL]) {
     try {
-      msg = await client.beta.messages.create(params, { timeout: remaining, maxRetries: 1 });
+      const run = await interpRun(client, model, sel, deadline);
+      const clean = interpCleanResult(run.parsed, run.collected, sel);
+      console.log("getPassageInterpretations", selRef, JSON.stringify(run.usage), "views", clean.views.length, "of", run.parsed.views.length);
+      if (clean.views.length) return { clean, usage: run.usage };
+      lastErr = new Error("no views with real sources");
     } catch (e) {
-      if (e && e.status === 400 && vi < variants.length - 1 && turn === 0) {
-        console.warn("getPassageInterpretations: retrying with simpler request:", e.message);
-        vi++;
-        turn--;
-        continue;
-      }
-      throw e;
+      lastErr = e;
+      console.warn("getPassageInterpretations", model, "failed:", e && e.message);
+      if (!(e && e.declined) && !isRetryableAnthropicError(e)) break;
     }
-    const u = msg.usage || {};
-    usage.input_tokens += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
-    usage.output_tokens += u.output_tokens || 0;
-    if (u.server_tool_use) {
-      usage.searches += u.server_tool_use.web_search_requests || 0;
-      usage.fetches += u.server_tool_use.web_fetch_requests || 0;
-    }
-    interpHarvest(msg.content, seen);
-
-    const call = (msg.content || []).find(b => b.type === "tool_use" && b.name === INTERP_TOOL.name);
-    if (call) {
-      console.log("getPassageInterpretations done", selRef, JSON.stringify(usage), "urls", seen.urls.size, "pages", seen.pages.length);
-      return { raw: call.input || {}, seen, usage };
-    }
-    if (msg.stop_reason === "refusal") throw new Error("interpretations research was declined");
-    if (msg.stop_reason === "pause_turn") {
-      messages.push({ role: "assistant", content: msg.content });
-      continue;
-    }
-    if (nudged) break;
-    nudged = true;
-    messages.push({ role: "assistant", content: msg.content });
-    messages.push({ role: "user", content: "Call record_interpretations now with what you found." });
+    if (deadline - Date.now() < 30000) break; // not enough time for the backup
   }
-  throw new Error("interpretations research finished without a result");
+  throw lastErr || new Error("interpretations research failed");
 }
 
 // The smallest saved unit that holds the whole selection.
@@ -2119,7 +2019,7 @@ async function interpSpend(uid) {
 }
 
 exports.getPassageInterpretations = functions
-  .runWith({ timeoutSeconds: 300, memory: "512MB", secrets: ["ANTHROPIC_API_KEY"] })
+  .runWith({ timeoutSeconds: 120, memory: "256MB", secrets: ["ANTHROPIC_API_KEY"] })
   .https.onCall(async (data, context) => {
     if (!context.auth || !context.auth.uid) {
       throw new functions.https.HttpsError("unauthenticated", "Sign in to see interpretations.");
@@ -2183,14 +2083,12 @@ exports.getPassageInterpretations = functions
     }
 
     try {
-      const { raw, seen, usage } = await interpResearch(sel);
-      const clean = interpCleanResult(raw, seen, sel);
-      if (!clean.views.length) throw new Error("no views with real sources");
+      const { clean, usage } = await interpResearch(sel);
       const id = interpUnitId(book, clean.startChapter, clean.startVerse, clean.endChapter, clean.endVerse);
       const record = {
         ...clean,
         version: INTERP_VERSION,
-        model: INTERP_MODEL,
+        model: usage.model,
         usage,
         requestedBy: context.auth.uid,
         requested: interpRefLabel(book, chapter, startVerse, chapter, endVerse),

@@ -39446,3 +39446,6 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 }
 /* Featured action: its own full-width row, so the label never squeezes. */
 #rhemaVerseSheetInterpBtn { grid-column: 1 / -1; }
+.rhema-ip-teachers { margin: -2px 0 2px; display: flex; align-items: center; gap: 5px; font-size: 0.82rem; font-weight: 700; color: color-mix(in srgb, var(--font-color, #20303f) 70%, transparent); }
+.rhema-ip-teachers .material-symbols-outlined { font-size: 16px; color: var(--ip-hue); }
+.rhema-ip-site { font-weight: 600; opacity: 0.8; }

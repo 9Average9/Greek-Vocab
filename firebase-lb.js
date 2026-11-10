@@ -2578,11 +2578,11 @@ window.BibleSearchAI = {
   }
 };
 
-// See interpretations: the first look-up of a passage runs a few minutes of
-// research on the server; after that it's a quick read from the shared save.
+// See interpretations: the first look-up of a passage takes about half a
+// minute on the server; after that it's a quick read from the shared save.
 window.PassageInterpretations = {
   async get(selection) {
-    const fn = httpsCallable(functionsApp, "getPassageInterpretations", { timeout: 300000 });
+    const fn = httpsCallable(functionsApp, "getPassageInterpretations", { timeout: 130000 });
     const response = await fn(selection);
     return response.data || {};
   }
