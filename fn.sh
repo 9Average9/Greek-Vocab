@@ -14,11 +14,19 @@ ok() { printf '\n\033[1;32m✔ %s\033[0m\n\n' "$*"; exit 0; }
 main() {
   local PROJECT="greek-vocab-leaderboard"
   local FN="getPassageInterpretations"
-  local REPO="https://github.com/9Average9/Greek-Vocab.git"
+  local RAW="https://raw.githubusercontent.com/9Average9/Greek-Vocab/main"
 
-  say "Getting the latest app code…"
-  cd ~ && rm -rf Greek-Vocab && git clone -q --depth 1 "$REPO" Greek-Vocab || { echo "Couldn't download the code."; exit 1; }
-  cd ~/Greek-Vocab || exit 1
+  # Only the 3 small files the function needs, not the whole (large) app repo,
+  # in a temp folder so it never fills your Cloud Shell home drive.
+  say "Getting the latest function code…"
+  rm -rf ~/Greek-Vocab 2>/dev/null   # leftover from older versions of this script
+  local DIR
+  DIR=$(mktemp -d /tmp/rhema-fn.XXXXXX) || exit 1
+  mkdir -p "$DIR/functions" && cd "$DIR" || exit 1
+  for f in index.js package.json package-lock.json; do
+    curl -fsSL "$RAW/functions/$f?nocache=$RANDOM" -o "functions/$f" || { echo "Couldn't download functions/$f."; exit 1; }
+  done
+  printf '{ "functions": [ { "source": "functions", "codebase": "default" } ] }\n' > firebase.json
 
   gcloud config set project "$PROJECT" --quiet >/dev/null 2>&1
 
