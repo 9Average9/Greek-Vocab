@@ -45796,6 +45796,12 @@ function _syncToolWandIndicator() {
 const COACH_GUIDE_W = 96;
 const COACH_GUIDE_H = Math.round(COACH_GUIDE_W * 371 / 480);
 const COACH_GUIDE_ROOM = COACH_GUIDE_H + 8;   // headroom a card needs above it
+// On short or narrow phones he shrinks (CSS matches this media query) so the
+// card + guide still fit next to what they point at.
+const COACH_GUIDE_SMALL_MQ = '(max-height: 640px), (max-width: 340px)';
+function coachGuideSmall() { return !!window.matchMedia?.(COACH_GUIDE_SMALL_MQ).matches; }
+function coachGuideRoom() { return coachGuideSmall() ? Math.round(70 * 371 / 480) + 6 : COACH_GUIDE_ROOM; }
+function coachGuideWidth() { return coachGuideSmall() ? 70 : COACH_GUIDE_W; }
 // His poses (assets/mascot/guide-<pose>.webp). 'point' is the original
 // two-layer figure (body + twinkling sparkle); the rest are single images.
 // Height ÷ width of each pose image, for sizing him to fit a spot.
@@ -45873,7 +45879,7 @@ function _coachGuideFollow(g, card) {
     g.classList.toggle('is-waiting', hiddenCard);
     if (!hiddenCard) {
       g.style.left = Math.round(cr.left - pr.left + 12) + 'px';
-      g.style.top = Math.round(cr.top - pr.top - COACH_GUIDE_ROOM) + 'px';
+      g.style.top = Math.round(cr.top - pr.top - coachGuideRoom()) + 'px';
     }
     if (performance.now() < until) g._raf = requestAnimationFrame(tick);
   };
@@ -45975,6 +45981,8 @@ window.coachVisibleRect = coachVisibleRect;
 window.coachPlaceCard = coachPlaceCard;
 window.coachGuideHide = coachGuideHide;
 window.COACH_GUIDE_ROOM = COACH_GUIDE_ROOM;
+window.coachGuideRoom = coachGuideRoom;
+window.coachGuideWidth = coachGuideWidth;
 
 // ── Coach mark onboarding ─────────────────────────────────────────────────────
 
@@ -46336,7 +46344,7 @@ function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
   const PAD = 9;
   const vw = window.innerWidth;
   const overlay = document.getElementById('appCoachOverlay');
-  const ROOM = _appCoachHasGuide() ? COACH_GUIDE_ROOM : 0;   // the guide perches above the card
+  const ROOM = _appCoachHasGuide() ? coachGuideRoom() : 0;   // the guide perches above the card
   const cardW = Math.min(360, vw - 28);
   card.style.width = `${cardW}px`;
   card.style.transform = '';
@@ -46356,7 +46364,7 @@ function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
   }
   // Measure in place (moving the card off to measure made it fly in from a corner).
   const cardH = Math.min(card.offsetHeight, window.innerHeight - 28 - ROOM);
-  const pos = coachPlaceCard({ rect: rect && { left: rect.left - PAD, top: rect.top - PAD, right: rect.right + PAD, bottom: rect.bottom + PAD, width: rect.width + PAD * 2, height: rect.height + PAD * 2 }, cardW, cardH, room: ROOM, preferred: preferred === 'center' && !rect ? 'below' : preferred });
+  const pos = coachPlaceCard({ rect: rect && { left: rect.left - PAD, top: rect.top - PAD, right: rect.right + PAD, bottom: rect.bottom + PAD, width: rect.width + PAD * 2, height: rect.height + PAD * 2 }, cardW, cardH, room: ROOM, guideW: coachGuideWidth(), preferred: preferred === 'center' && !rect ? 'below' : preferred });
   card.style.top = `${Math.round(pos.top)}px`;
   card.style.left = `${Math.round(pos.left)}px`;
   card.style.visibility = '';
@@ -46530,7 +46538,7 @@ function _showCoachStep() {
   if (backBtn) backBtn.style.display = _coachIdx === 0 ? 'none' : '';
 
   const target = step.targetFn ? step.targetFn() : null;
-  const ROOM = COACH_GUIDE_ROOM;   // the guide perches above the card
+  const ROOM = coachGuideRoom();   // the guide perches above the card
   const isLast = _coachIdx === _coachSteps.length - 1;
   const PAD = 8;
   const entering = !overlay.dataset.shown;
@@ -46548,7 +46556,7 @@ function _showCoachStep() {
   const cardH = card.offsetHeight;
   const pos = coachPlaceCard({
     rect: rect && { left: rect.left - PAD, top: rect.top - PAD, right: rect.right + PAD, bottom: rect.bottom + PAD, width: rect.width + PAD * 2, height: rect.height + PAD * 2 },
-    cardW, cardH, room: ROOM, preferred: step.position === 'above' ? 'above' : 'below',
+    cardW, cardH, room: ROOM, guideW: coachGuideWidth(), preferred: step.position === 'above' ? 'above' : 'below',
     bounds: { left: oRect.left, top: oRect.top, right: oRect.right, bottom: oRect.bottom }
   });
   card.style.top = Math.round(pos.top - oRect.top) + 'px';

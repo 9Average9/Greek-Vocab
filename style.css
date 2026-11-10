@@ -39222,3 +39222,16 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
   .ws-tour-tip h4 { font-size: .95rem; }
   .ws-tour-tip p { font-size: .82rem; margin-bottom: 8px; }
 }
+
+/* Small phones: a smaller tour guide (keep in sync with coachGuideRoom()). */
+@media (max-height: 640px), (max-width: 340px) {
+  .coach-guide { width: 70px; height: calc(70px * 371 / 480 + 6px); }
+  .coach-guide-fig { width: 70px; height: calc(70px * 371 / 480); }
+  .coach-guide-tail { left: 28px; width: 12px; height: 12px; bottom: -6px; }
+}
+/* The verse menu never runs off the top of a short screen: it scrolls instead. */
+.rhema-vsheet {
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 28px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

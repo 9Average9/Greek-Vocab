@@ -1290,11 +1290,11 @@
     tip.innerHTML = `<div class="ws-tour-step">${_tour.i + 1} / ${steps.length}</div><h4>${step.title}</h4><p>${step.text}</p>
       <div class="ws-tour-btns"><button type="button" class="ws-tour-skip" onclick="rhemaWordStudyTourEnd()">${last ? '' : 'Skip'}</button><button type="button" class="ws-tour-next" onclick="rhemaWordStudyTourNext()">${last ? 'Got it' : 'Next'}</button></div>`;
     spot.classList.add('on'); tip.classList.add('on');
-    const ROOM = window.COACH_GUIDE_ROOM || 0;   // the tour guide perches above the tip
+    const ROOM = window.coachGuideRoom ? window.coachGuideRoom() : (window.COACH_GUIDE_ROOM || 0);   // the tour guide perches above the tip
     const tr = tip.getBoundingClientRect();
     const th = tip.offsetHeight || 150;
     const pos = window.coachPlaceCard
-      ? window.coachPlaceCard({ rect: { left: r.left - pad, top: r.top - pad, right: r.right + pad, bottom: r.bottom + pad, width: r.width + pad * 2, height: r.height + pad * 2 }, cardW: tr.width || 320, cardH: th, room: ROOM, sides: ['below', 'above'], margin: 8 })
+      ? window.coachPlaceCard({ rect: { left: r.left - pad, top: r.top - pad, right: r.right + pad, bottom: r.bottom + pad, width: r.width + pad * 2, height: r.height + pad * 2 }, cardW: tr.width || 320, cardH: th, room: ROOM, guideW: window.coachGuideWidth ? window.coachGuideWidth() : 96, sides: ['below', 'above'], margin: 8 })
       : { top: Math.max(8 + ROOM, r.bottom + 14 + ROOM) };
     tip.style.top = `${Math.round(pos.top)}px`;
     window.coachGuideShow?.(document.body, tip, { last, pose: step.pose || (_tour.i === 0 ? 'wow' : last ? 'cheer' : 'point') });
