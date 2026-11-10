@@ -1278,31 +1278,33 @@
     const step = steps[_tour.i];
     if (!root || !root.offsetParent || !step) return _tourEnd();
     const target = [...scope(step).querySelectorAll(step.sel)].find(el => el.offsetParent && !el.classList.contains('hidden'));
-    // Scroll only the sheet's own scroller (scrollIntoView would also move the
-    // page behind the sheet).
-    let sc = target.parentElement;
-    while (sc && sc !== document.body) {
-      const oy = getComputedStyle(sc).overflowY;
-      if ((oy === 'auto' || oy === 'scroll') && sc.scrollHeight > sc.clientHeight) break;
-      sc = sc.parentElement;
-    }
-    if (sc && sc !== document.body) {
-      const tr = target.getBoundingClientRect(), sr = sc.getBoundingClientRect();
-      if (tr.top < sr.top + 8 || tr.bottom > sr.bottom - 8) sc.scrollTop += tr.top - sr.top - 24;
-    }
-    const r = target.getBoundingClientRect();
+    // Scroll it into view (inside the sheet), spotlight exactly what's on
+    // screen, and put the tip where neither it nor the guide covers it.
+    window.coachBringIntoView?.(target);
+    const r = window.coachVisibleRect ? window.coachVisibleRect(target) : target.getBoundingClientRect();
+    if (!r) return _tourEnd();
     const { spot, tip } = _tourEls();
     const pad = 6;
-    Object.assign(spot.style, { top: `${r.top - pad}px`, left: `${r.left - pad}px`, width: `${r.width + pad * 2}px`, height: `${Math.min(r.height, window.innerHeight * 0.5) + pad * 2}px` });
+    Object.assign(spot.style, { top: `${r.top - pad}px`, left: `${r.left - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` });
     const last = _tour.i === steps.length - 1;
-    const ROOM = window.COACH_GUIDE_ROOM || 0;   // the tour guide perches above the tip
     tip.innerHTML = `<div class="ws-tour-step">${_tour.i + 1} / ${steps.length}</div><h4>${step.title}</h4><p>${step.text}</p>
       <div class="ws-tour-btns"><button type="button" class="ws-tour-skip" onclick="rhemaWordStudyTourEnd()">${last ? '' : 'Skip'}</button><button type="button" class="ws-tour-next" onclick="rhemaWordStudyTourNext()">${last ? 'Got it' : 'Next'}</button></div>`;
     spot.classList.add('on'); tip.classList.add('on');
-    const below = r.top + Math.min(r.height, window.innerHeight * 0.5) + 14 + ROOM;
+    const ROOM = window.coachGuideRoom ? window.coachGuideRoom() : (window.COACH_GUIDE_ROOM || 0);   // the tour guide perches above the tip
+    const tr = tip.getBoundingClientRect();
     const th = tip.offsetHeight || 150;
-    const top = below + th < window.innerHeight - 8 ? below : Math.max(8 + ROOM, r.top - th - 14);
-    tip.style.top = `${top}px`;
+    const pos = window.coachPlaceCard
+      ? window.coachPlaceCard({ rect: { left: r.left - pad, top: r.top - pad, right: r.right + pad, bottom: r.bottom + pad, width: r.width + pad * 2, height: r.height + pad * 2 }, cardW: tr.width || 320, cardH: th, room: ROOM, guideW: window.coachGuideWidth ? window.coachGuideWidth() : 96, sides: ['below', 'above'], margin: 8 })
+      : { top: Math.max(8 + ROOM, r.bottom + 14 + ROOM) };
+    if (window.coachNudgeFor && window.coachNudgeFor(target, { left: r.left - pad, top: r.top - pad, right: r.right + pad, bottom: r.bottom + pad, width: r.width + pad * 2, height: r.height + pad * 2 }, pos, th, ROOM)) {
+      const r2 = window.coachVisibleRect(target);
+      if (r2) {
+        Object.assign(spot.style, { top: `${r2.top - pad}px`, left: `${r2.left - pad}px`, width: `${r2.width + pad * 2}px`, height: `${r2.height + pad * 2}px` });
+        const p2 = window.coachPlaceCard({ rect: { left: r2.left - pad, top: r2.top - pad, right: r2.right + pad, bottom: r2.bottom + pad, width: r2.width + pad * 2, height: r2.height + pad * 2 }, cardW: tr.width || 320, cardH: th, room: ROOM, guideW: window.coachGuideWidth ? window.coachGuideWidth() : 96, sides: ['below', 'above'], margin: 8 });
+        pos.top = p2.top;
+      }
+    }
+    tip.style.top = `${Math.round(pos.top)}px`;
     window.coachGuideShow?.(document.body, tip, { last, pose: step.pose || (_tour.i === 0 ? 'wow' : last ? 'cheer' : 'point') });
   }
   window.rhemaWordStudyTourNext = function () { if (_tour) { _tour.i++; _tourShow(); } };

@@ -39171,9 +39171,10 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rrp-tour:nth-child(4) { animation-delay: .12s; } .rrp-tour:nth-child(5) { animation-delay: .16s; } .rrp-tour:nth-child(6) { animation-delay: .2s; }
 .rrp-tour:active { transform: scale(.98); }
 .rrp-tour-ico {
-  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center;
+  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
   background: color-mix(in srgb, var(--secondary-color) 14%, transparent); color: var(--secondary-color);
 }
+.rrp-tour-ico .material-symbols-outlined { display: block; font-size: 22px; line-height: 1; width: 22px; height: 22px; overflow: hidden; }
 .rrp-tour-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .rrp-tour-copy strong { font-size: .93rem; }
 .rrp-tour-copy small { font-size: .78rem; color: var(--muted-color); line-height: 1.35; }
@@ -39186,3 +39187,51 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .coach-guide[data-pose]:not([data-pose="point"]) .coach-guide-pose { display: block; }
 .coach-guide[data-pose]:not([data-pose="point"]) :is(.coach-guide-body, .coach-guide-spark, .coach-guide-glint) { display: none; }
 .rrp-tours-guide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+
+/* Tour transitions: card, spotlight and guide move together on one curve;
+   while the next step gets ready they fade back slightly instead of sitting
+   on the old spot; the first step appears in place (no fly-in). */
+.app-coach-card, .rhema-coach-card {
+  transition-property: top, left, transform, opacity;
+  transition-duration: .34s;
+  transition-timing-function: cubic-bezier(.4,0,.2,1);
+}
+.app-coach-spotlight, .rhema-coach-spotlight {
+  transition-property: top, left, width, height, border-radius, opacity;
+  transition-duration: .34s;
+  transition-timing-function: cubic-bezier(.4,0,.2,1);
+}
+.app-coach-overlay.coach-moving .app-coach-card,
+.app-coach-overlay.coach-moving > .coach-guide { opacity: .5; }
+.app-coach-overlay.coach-moving .app-coach-spotlight { opacity: .6; }
+.coach-no-anim, .coach-no-anim * { transition: none !important; }
+.ws-tour-spot { transition: opacity .2s, top .34s cubic-bezier(.4,0,.2,1), left .34s cubic-bezier(.4,0,.2,1), width .34s cubic-bezier(.4,0,.2,1), height .34s cubic-bezier(.4,0,.2,1); }
+.ws-tour-tip { transition: opacity .2s, top .34s cubic-bezier(.4,0,.2,1); }
+@media (prefers-reduced-motion: reduce) {
+  .app-coach-card, .rhema-coach-card, .app-coach-spotlight, .rhema-coach-spotlight, .ws-tour-spot, .ws-tour-tip { transition-duration: .01s !important; }
+}
+
+/* Small phones: compact tour cards so they fit beside what they point at. */
+@media (max-height: 640px), (max-width: 340px) {
+  .app-coach-card, .rhema-coach-card { padding: 13px 15px 11px; }
+  .app-coach-title, .rhema-coach-title { font-size: .98rem; margin-bottom: 4px; }
+  .app-coach-body, .rhema-coach-body, .app-coach-body p { font-size: .82rem; line-height: 1.38; }
+  .app-coach-step-label, .rhema-coach-step-label { margin-bottom: 2px; }
+  .coach-longpress-demo { display: none; }
+  .ws-tour-tip { padding: 11px 13px 10px; }
+  .ws-tour-tip h4 { font-size: .95rem; }
+  .ws-tour-tip p { font-size: .82rem; margin-bottom: 8px; }
+}
+
+/* Small phones: a smaller tour guide (keep in sync with coachGuideRoom()). */
+@media (max-height: 640px), (max-width: 340px) {
+  .coach-guide { width: 70px; height: calc(70px * 371 / 480 + 6px); }
+  .coach-guide-fig { width: 70px; height: calc(70px * 371 / 480); }
+  .coach-guide-tail { left: 28px; width: 12px; height: 12px; bottom: -6px; }
+}
+/* The verse menu never runs off the top of a short screen: it scrolls instead. */
+.rhema-vsheet {
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 28px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

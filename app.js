@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.540";
+const APP_VERSION = "3.0.541";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.541 &mdash; Smoother, sharper tours</div>
+<ul>
+  <li><strong>Spot on</strong> &mdash; Every tour step now scrolls what it&rsquo;s talking about into view, the spotlight outlines exactly that, and the card and guide sit where they don&rsquo;t cover it, on any screen size.</li>
+  <li><strong>Smoother moves</strong> &mdash; Cards glide from step to step instead of flying in from the corner, and everything fades softly while the next step gets ready.</li>
+  <li><strong>Right-sized guide</strong> &mdash; In Rhēma&rsquo;s menu the guide now sizes himself to whatever he&rsquo;s peeking behind or leaning on, and he&rsquo;s a bit smaller on small phones.</li>
+  <li><strong>Fixes</strong> &mdash; Tour list icons are centered, and on short phones the verse menu scrolls instead of running off the top of the screen.</li>
+</ul>
 <div class="un-version-label">v3.0.540 &mdash; Your guide has moves</div>
 <ul>
   <li><strong>New poses</strong> &mdash; The Rhēma guide now reacts as you go: excited to start a tour, thinking when you&rsquo;re stuck, peering closely at the details, a thumbs-up when you save something, and a happy jump at the end.</li>
@@ -43332,6 +43339,8 @@ function _rrpGuideCandidates(pane) {
   const st = pane.scrollTop;
   const X = v => v - pr.left, Y = v => v - pr.top + st;
   const out = [];
+  // Sizes follow the thing he's next to: a small close button gets a small
+  // peeker, a tall tile a taller one.
   const rnd = (lo, hi) => lo + Math.random() * Math.max(0, hi - lo);
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   const add = c => out.push(c);
@@ -43349,11 +43358,11 @@ function _rrpGuideCandidates(pane) {
   const titleRight = title ? _rrpTextRight(title) : pr.left;
   if (xBtn) {
     const xr = xBtn.getBoundingClientRect();
-    stand('hdr', titleRight + 12, xr.left - 10, xr.bottom + 2, 42);
+    stand('hdr', titleRight + 12, xr.left - 10, xr.bottom + 2, Math.max(34, Math.min(44, xr.height * 1.15)));
     // 2) Peeking from behind the close button: his flat cut edge (21–64% of
     //    his height) sits flush against the button's left edge, so he reads
     //    as standing behind it.
-    const h = Math.max(52, Math.min(64, xr.height * 1.75)), w = h / GUIDE_POSES.peek;
+    const h = Math.max(36, Math.min(50, xr.height * 1.2)), w = h / GUIDE_POSES.peek;
     const right = xr.left + 1;
     if (right - w >= titleRight + 10) {
       add({ kind: 'peekX', mode: 'peek', pose: 'peek', w, h, left: X(right - w), top: Y(xr.top + xr.height / 2 - h * 0.425), anchor: xBtn, anchorSide: 'right' });
@@ -43361,7 +43370,7 @@ function _rrpGuideCandidates(pane) {
   }
   pane.querySelectorAll('#rrpMainBody .rrp-section-label').forEach((lab, i) => {
     const lr = lab.getBoundingClientRect();
-    stand('lab' + i, _rrpTextRight(lab) + 14, lr.right - 12, lr.bottom - 2, 44);
+    stand('lab' + i, _rrpTextRight(lab) + 14, lr.right - 12, lr.bottom - 2, 40);
   });
   // 3) A lone tile in a two-column grid leaves an empty cell beside it.
   pane.querySelectorAll('#rrpMainBody .rrp-grid').forEach(grid => {
@@ -43372,13 +43381,13 @@ function _rrpGuideCandidates(pane) {
     const cellR = gr.right - parseFloat(getComputedStyle(grid).paddingRight || 0);
     const mid = tr.top + tr.height / 2;
     // peek out from behind the tile's right edge (flipped: flat edge on his left)
-    let h = Math.min(tr.height + 4, 78), w = h / GUIDE_POSES.peek;
+    let h = Math.max(48, Math.min(90, tr.height * 0.95)), w = h / GUIDE_POSES.peek;
     add({ kind: 'tilePeek', mode: 'peek', pose: 'peek', flip: true, w, h, left: X(tr.right - 1), top: Y(mid - h * 0.425), anchor: tile, anchorSide: 'left' });
     // lean a hand on the tile's right side (flipped: hand reaching left)
-    h = Math.min(tr.height + 8, 82); w = h / GUIDE_POSES.lean;
+    h = Math.max(48, Math.min(92, tr.height * 1.0)); w = h / GUIDE_POSES.lean;
     if (tr.right + 2 + w <= cellR) add({ kind: 'tileLean', mode: 'lean', pose: 'lean', flip: true, w, h, left: X(tr.right + 1), top: Y(mid - h * 0.385), anchor: tile, anchorSide: 'left' });
     // or just hang out in the empty cell
-    stand('cell', tr.right + 14, cellR - 6, tr.bottom, Math.min(tr.height - 6, 60));
+    stand('cell', tr.right + 14, cellR - 6, tr.bottom, Math.max(40, Math.min(tr.height * 0.78, 64)));
   });
   // 4) The foot of the menu: stand, or peek in from behind either panel edge
   //    (the pane clips him, so the cut edge sits right on the panel's edge).
@@ -43463,7 +43472,7 @@ const RHEMA_TOURS = [
 function _rhemaToursHtml() {
   const rows = RHEMA_TOURS.filter(t => !t.account || !_guestMode).map(t =>
     `<button class="rrp-tour" onclick="rhemaStartTour('${t.id}')">
-      <span class="rrp-tour-ico material-symbols-outlined">${t.icon}</span>
+      <span class="rrp-tour-ico"><span class="material-symbols-outlined">${t.icon}</span></span>
       <span class="rrp-tour-copy"><strong>${t.title}</strong><small>${t.desc}</small></span>
       <span class="material-symbols-outlined rrp-chev">play_arrow</span>
     </button>`).join('');
@@ -44591,6 +44600,8 @@ function initRhemaVerseSwipe() {
       const delta = y - last;
       area._rhemaLastChromeScrollTop = y;
       if (raw < 0 || raw > max) return; // mid-bounce: never toggle chrome
+      // A tour scrolling a step into view must not slide the bars away.
+      if (document.querySelector('#rhemaCoachOverlay:not(.hidden), #appCoachOverlay:not(.hidden), #wsTourTip.on')) return;
       if (_rhemaVerseSheetOpen?.()) {
         _rhemaSetChromeHidden(false);
         return;
@@ -45792,6 +45803,12 @@ function _syncToolWandIndicator() {
 const COACH_GUIDE_W = 96;
 const COACH_GUIDE_H = Math.round(COACH_GUIDE_W * 371 / 480);
 const COACH_GUIDE_ROOM = COACH_GUIDE_H + 8;   // headroom a card needs above it
+// On short or narrow phones he shrinks (CSS matches this media query) so the
+// card + guide still fit next to what they point at.
+const COACH_GUIDE_SMALL_MQ = '(max-height: 640px), (max-width: 340px)';
+function coachGuideSmall() { return !!window.matchMedia?.(COACH_GUIDE_SMALL_MQ).matches; }
+function coachGuideRoom() { return coachGuideSmall() ? Math.round(70 * 371 / 480) + 6 : COACH_GUIDE_ROOM; }
+function coachGuideWidth() { return coachGuideSmall() ? 70 : COACH_GUIDE_W; }
 // His poses (assets/mascot/guide-<pose>.webp). 'point' is the original
 // two-layer figure (body + twinkling sparkle); the rest are single images.
 // Height ÷ width of each pose image, for sizing him to fit a spot.
@@ -45869,7 +45886,7 @@ function _coachGuideFollow(g, card) {
     g.classList.toggle('is-waiting', hiddenCard);
     if (!hiddenCard) {
       g.style.left = Math.round(cr.left - pr.left + 12) + 'px';
-      g.style.top = Math.round(cr.top - pr.top - COACH_GUIDE_ROOM) + 'px';
+      g.style.top = Math.round(cr.top - pr.top - coachGuideRoom()) + 'px';
     }
     if (performance.now() < until) g._raf = requestAnimationFrame(tick);
   };
@@ -45882,8 +45899,118 @@ function coachGuideHide(host) {
   g.classList.remove('on', 'is-cheer');
 }
 window.coachGuideShow = coachGuideShow;
+
+// ── Tour placement (shared by every tour) ─────────────────────────────────────
+// 1) coachBringIntoView: scroll the target into view inside its own scroll
+//    container(s), so a step never points at something off screen.
+// 2) coachVisibleRect: the part of the target actually on screen; the
+//    spotlight is drawn around exactly that (plus padding).
+// 3) coachPlaceCard: put the card (and the guide perched on top of it) where
+//    both are fully on screen and cover none of the target: below, above, or
+//    beside it on wide screens. If nothing fits cleanly (a tiny phone and a
+//    big target), the spot that covers the least of the target wins.
+function coachBringIntoView(el, { topPad = 96, bottomPad = 60 } = {}) {
+  if (!el) return false;
+  let moved = false;
+  for (let node = el.parentElement; node && node !== document.body && node !== document.documentElement; node = node.parentElement) {
+    const cs = getComputedStyle(node);
+    if (!/(auto|scroll)/.test(cs.overflowY) || node.scrollHeight <= node.clientHeight + 2) continue;
+    const nr = node.getBoundingClientRect(), er = el.getBoundingClientRect();
+    const viewTop = Math.max(nr.top, 0), viewBottom = Math.min(nr.bottom, innerHeight);
+    const avail = viewBottom - viewTop;
+    if (avail <= 0) continue;
+    const pt = Math.min(topPad, avail * 0.25), pb = Math.min(bottomPad, avail * 0.2);
+    if (er.top >= viewTop + pt * 0.5 && er.bottom <= viewBottom - pb * 0.5) continue;
+    let delta;
+    if (er.height > avail - pt - pb) delta = er.top - (viewTop + pt);            // tall: show its top
+    else delta = (er.top + er.height / 2) - (viewTop + avail / 2);               // else centre it
+    const before = node.scrollTop;
+    node.scrollTop = Math.max(0, Math.min(node.scrollHeight - node.clientHeight, before + delta));
+    if (node.scrollTop !== before) moved = true;
+  }
+  return moved;
+}
+function coachVisibleRect(el) {
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return null;
+  let l = r.left, t = r.top, rt = r.right, b = r.bottom;
+  // Clip by every clipping ancestor and the screen.
+  for (let node = el.parentElement; node && node !== document.documentElement; node = node.parentElement) {
+    const cs = getComputedStyle(node);
+    if (/(auto|scroll|hidden|clip)/.test(cs.overflowY + cs.overflowX)) {
+      const nr = node.getBoundingClientRect();
+      if (/(auto|scroll|hidden|clip)/.test(cs.overflowY)) { t = Math.max(t, nr.top); b = Math.min(b, nr.bottom); }
+      if (/(auto|scroll|hidden|clip)/.test(cs.overflowX)) { l = Math.max(l, nr.left); rt = Math.min(rt, nr.right); }
+    }
+  }
+  l = Math.max(l, 0); t = Math.max(t, 0); rt = Math.min(rt, innerWidth); b = Math.min(b, innerHeight);
+  if (rt - l < 2 || b - t < 2) return null;
+  return { left: l, top: t, right: rt, bottom: b, width: rt - l, height: b - t };
+}
+function coachPlaceCard({ rect, cardW, cardH, room = 0, guideW = 96, preferred = 'below', margin = 14, gap = 14, bounds = null, sides = null }) {
+  // bounds: the area the card must stay inside (defaults to the screen).
+  const B = bounds || { left: 0, top: 0, right: innerWidth, bottom: innerHeight };
+  const vw = B.right, vh = B.bottom;
+  const clampL = l => Math.max(B.left + margin, Math.min(l, vw - cardW - margin));
+  const clampT = t => Math.max(B.top + margin + room, Math.min(t, vh - cardH - margin));
+  if (!rect) return { top: clampT(B.top + (vh - B.top - cardH) / 2 + room / 2), left: clampL(B.left + (vw - B.left - cardW) / 2), side: 'center' };
+  const cx = clampL(rect.left + rect.width / 2 - cardW / 2);
+  const midT = rect.top + rect.height / 2 - cardH / 2 + room / 2;
+  const cands = [
+    { side: 'below', top: rect.bottom + gap + room, left: cx },
+    { side: 'above', top: rect.top - gap - cardH, left: cx },
+    { side: 'right', top: midT, left: rect.right + gap },
+    { side: 'left', top: midT, left: rect.left - gap - cardW },
+  ];
+  if (preferred === 'above') cands.unshift(cands.splice(1, 1)[0]);
+  if (preferred === 'right') cands.unshift(cands.splice(2, 1)[0]);
+  if (sides) for (let i = cands.length - 1; i >= 0; i--) if (!sides.includes(cands[i].side)) cands.splice(i, 1);
+  const fits = c => c.top - room >= B.top + margin - 0.5 && c.top + cardH <= vh - margin + 0.5 && c.left >= B.left + margin - 0.5 && c.left + cardW <= vw - margin + 0.5;
+  const covered = c => {
+    const box = (l, t, w, h) => Math.max(0, Math.min(l + w, rect.right) - Math.max(l, rect.left)) * Math.max(0, Math.min(t + h, rect.bottom) - Math.max(t, rect.top));
+    return box(c.left, c.top, cardW, cardH) + (room ? box(c.left + 12, c.top - room, guideW, room) : 0);
+  };
+  const clean = cands.find(c => fits(c) && covered(c) === 0);
+  if (clean) return clean;
+  const clamped = cands.map((c, i) => { const k = { ...c, top: clampT(c.top), left: clampL(c.left), i }; k.cover = covered(k); return k; });
+  clamped.sort((a, b) => (a.cover - b.cover) || (a.i - b.i));
+  return clamped[0];
+}
+// If the card still had to cover part of the target, scroll the target's own
+// scroll area the extra distance to make room (then placement runs again).
+function coachNudgeFor(target, rect, pos, cardH, room, gap = 14) {
+  if (!target || !rect || !pos || !pos.cover) return false;
+  let dy;
+  if (pos.side === 'above') dy = -((pos.top + cardH + gap) - rect.top);
+  else if (pos.side === 'below') dy = rect.bottom - (pos.top - room - gap);
+  else return false;
+  if (!dy) return false;
+  for (let node = target.parentElement; node && node !== document.body && node !== document.documentElement; node = node.parentElement) {
+    const cs = getComputedStyle(node);
+    if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight + 2) {
+      const before = node.scrollTop;
+      node.scrollTop = before + dy;
+      return Math.abs(node.scrollTop - before) > 1;
+    }
+  }
+  return false;
+}
+const _coachPadRect = (r, pad) => r && { left: r.left - pad, top: r.top - pad, right: r.right + pad, bottom: r.bottom + pad, width: r.width + pad * 2, height: r.height + pad * 2 };
+function coachSpotlightPad(spotlight, rect, pad, origin = { left: 0, top: 0 }) {
+  spotlight.style.left = (rect.left - pad - origin.left) + 'px';
+  spotlight.style.top = (rect.top - pad - origin.top) + 'px';
+  spotlight.style.width = (rect.width + pad * 2) + 'px';
+  spotlight.style.height = (rect.height + pad * 2) + 'px';
+}
+window.coachBringIntoView = coachBringIntoView;
+window.coachVisibleRect = coachVisibleRect;
+window.coachPlaceCard = coachPlaceCard;
+window.coachNudgeFor = coachNudgeFor;
 window.coachGuideHide = coachGuideHide;
 window.COACH_GUIDE_ROOM = COACH_GUIDE_ROOM;
+window.coachGuideRoom = coachGuideRoom;
+window.coachGuideWidth = coachGuideWidth;
 
 // ── Coach mark onboarding ─────────────────────────────────────────────────────
 
@@ -45907,6 +46034,18 @@ function _coachVisible(el) {
   return el;
 }
 
+// A verse that's actually on screen right now (not the chapter's first verse,
+// which may be thousands of pixels up).
+function _coachVisibleVerse() {
+  const display = !document.getElementById('rhemaEnglishDisplay')?.classList.contains('hidden') ? '#rhemaEnglishDisplay' : '#rhemaVerseDisplay';
+  const blocks = [...document.querySelectorAll(`${display} .rhema-chapter-block[data-verse]`)];
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  const br = body ? body.getBoundingClientRect() : { top: 0, bottom: innerHeight };
+  const top = br.top + 130, bottom = Math.min(br.bottom, innerHeight) - 60;
+  return blocks.find(b => { const r = b.getBoundingClientRect(); return r.top >= top && r.bottom <= bottom; })
+    || blocks.find(b => { const r = b.getBoundingClientRect(); return r.bottom > top && r.top < bottom; })
+    || blocks[0] || null;
+}
 function _coachFirst(selectors) {
   const list = Array.isArray(selectors) ? selectors : [selectors];
   for (const selector of list) {
@@ -45960,7 +46099,7 @@ const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Interlinear/.test(t)), pose: 'inspect', title: 'Interlinear', body: 'Lines up every Greek (or Hebrew) word with its English, word by word. Tap any word to study it.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Focus/.test(t)), pose: 'inspect', title: 'Focus', body: 'Shows just this one verse so you can slow down with it. Turn Chapter View back on in the menu to see the whole chapter again.' },
   { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetStudy', '#rhemaVerseSheet .rhema-vsheet']), title: 'Your study', body: 'Save a thought about the verse to your Workspace, or add one of its words to your Word Log. (These need you signed in.)' },
-  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetRef', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
+  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetRef', '#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
 ];
 // The menu's reading helpers. Scrolls the menu so each spotlighted part is on screen.
 function _coachMenuShow(pick) {
@@ -45998,10 +46137,10 @@ function startReadingToolsCoach() { _startAppCoach(READING_COACH_STEPS, 'reading
 // The reader's built-in study: its tools live in Rhēma's side menu.
 const STUDY_RHEMA_COACH_STEPS = [
   { before: () => { if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost(); openRhemaReaderPanel(); return _coachPause(460); }, target: () => _coachFirst(['#rrpMainBody .rrp-study-grid', '#rrpMainBody']), title: 'Your study', body: 'Phrasing, Word Log, Trails and Workspace live right here. Anything you add saves to your account by itself.' },
-  { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachFirst(['#rhemaEnglishDisplay .rhema-chapter-block', '#rhemaVerseDisplay .rhema-chapter-block', '#rhemaEnglishDisplay', '#rhemaVerseDisplay']), demo: 'longpress', pose: 'think', title: 'Jot a thought', body: 'Press and hold a verse (or tap it and pick “Observe, interpret, apply or ask”) to save a thought about it to your Workspace.' },
+  { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachVisibleVerse(), demo: 'longpress', pose: 'think', title: 'Jot a thought', body: 'Press and hold a verse (or tap it and pick “Observe, interpret, apply or ask”) to save a thought about it to your Workspace.' },
   { before: () => Promise.resolve(openStudyTool('phrasing')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneVerses .ss-structured-add', '#ssPaneVerses']), title: 'Phrasing', body: 'Tap + and pick a passage. Its words land on a canvas: hold a word to split it off, then drag the pieces around to see how the thought flows.' },
-  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssWordlogList', '#ssPaneWordlog']), pose: 'inspect', title: 'Word Log', body: 'Words you want to remember. Tap a Greek word and press “Add to Word Log”, then tap it here anytime for its meaning, parsing and where it shows up.' },
-  { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssTrailsList', '#ssPaneTrails']), title: 'Trails', body: 'Cross-reference paths you saved. Tap one to pick up right where you left off.' },
+  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssWordlogList .ss-word-item', '#ssPaneWordlog > .ss-hint', '#ssWordlogList']), pose: 'inspect', title: 'Word Log', body: 'Words you want to remember. Tap a Greek word and press “Add to Word Log”, then tap it here anytime for its meaning, parsing and where it shows up.' },
+  { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssTrailsList .ss-trail-item', '#ssTrailsList .ss-hint', '#ssPaneTrails > .ss-hint', '#ssTrailsList']), title: 'Trails', body: 'Cross-reference paths you saved. Tap one to pick up right where you left off.' },
   { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), pose: 'think', title: 'Workspace', body: 'Your thoughts, sorted into Observe, Interpret, Apply and Question. Tap a note’s verse to jump back to it.' },
   { target: () => _coachFirst(['#wsKbdToggleBtn', '.ss-compose']), title: 'Type Greek too', body: 'The α button opens a Greek keyboard for your notes. That’s the tour. Happy studying!' }
 ];
@@ -46055,7 +46194,7 @@ const WORD_LIBRARY_COACH_STEPS = [
   { before: async () => { await loadRhemaScripts(); openWordLibrary(); }, target: () => null, position: 'center', title: 'Word Library', body: 'A Greek dictionary you can search. Handy when the word on the page looks nothing like its dictionary form.' },
   { target: () => _coachFirst(['#wlSearchInput', '.wl-search-row']), pose: 'inspect', title: 'Search any way', body: 'Type a Greek word in any form, spell it with English letters (like “agape”), or type an English meaning.' },
   { target: () => _coachFirst(['#wlKbdToggleBtn', '.wl-search-row']), title: 'Greek keyboard', body: 'Tap α for a Greek keyboard, no phone settings needed.' },
-  { target: () => _coachFirst(['#wlResults', '#wordLibraryOverlay .wl-sheet']), title: 'Open a word', body: 'Tap a result to see what it means, how it’s parsed, and everywhere it shows up.' }
+  { before: () => { const i = document.getElementById('wlSearchInput'); if (i && !i.value.trim()) { i.value = 'agap'; wlOnSearch('agap'); } return _coachPause(300); }, target: () => _coachFirst(['#wlResults .wl-result-item', '#wlResults > *', '#wlResults']), title: 'Open a word', body: 'Tap a result to see what it means, how it’s parsed, and everywhere it shows up.' }
 ];
 
 const PRAISES_COACH_STEPS = [
@@ -46185,8 +46324,13 @@ function _showAppCoachStep() {
   if (!overlay || !spotlight || !card) return;
   const step = _appCoachSteps[_appCoachIdx];
   if (!step) { _endAppCoach(); return; }
+  // While the next step gets ready, the card and spotlight fade back a little
+  // instead of sitting on the old spot.
+  const entering = overlay.classList.contains('hidden');
+  if (!entering) overlay.classList.add('coach-moving');
   const afterBefore = () => setTimeout(() => {
     overlay.classList.remove('hidden');
+    if (entering) { card.classList.add('coach-no-anim'); spotlight.classList.add('coach-no-anim'); }
     document.getElementById('appCoachStep').textContent = `${_appCoachIdx + 1} of ${_appCoachSteps.length}`;
     document.getElementById('appCoachTitle').textContent = step.title;
     document.getElementById('appCoachBody').innerHTML = _coachBodyHtml(step);
@@ -46195,7 +46339,23 @@ function _showAppCoachStep() {
     _placeAppCoachCard(typeof step.target === 'function' ? step.target() : null, card, spotlight, step.position || 'below');
     if (_appCoachHasGuide()) coachGuideShow(overlay, card, { last: _appCoachIdx === _appCoachSteps.length - 1, pose: coachPoseFor(step, _appCoachIdx, _appCoachSteps.length) });
     else { coachGuideHide(overlay); card.classList.remove('coach-bubble'); }
-  }, 90);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      overlay.classList.remove('coach-moving');
+      card.classList.remove('coach-no-anim'); spotlight.classList.remove('coach-no-anim');
+    }));
+    // Some targets finish animating in just after we measure (a button that
+    // pops in): look again shortly and follow it if it moved.
+    const idx = _appCoachIdx, tgt = typeof step.target === 'function' ? step.target() : null;
+    const r0 = tgt && tgt.getBoundingClientRect();
+    if (tgt) setTimeout(() => {
+      if (_appCoachIdx !== idx || overlay.classList.contains('hidden') || !tgt.isConnected) return;
+      const r1 = tgt.getBoundingClientRect();
+      if (Math.abs(r1.left - r0.left) > 1.5 || Math.abs(r1.top - r0.top) > 1.5 || Math.abs(r1.width - r0.width) > 1.5 || Math.abs(r1.height - r0.height) > 1.5) {
+        _placeAppCoachCard(tgt, card, spotlight, step.position || 'below');
+        if (_appCoachHasGuide()) coachGuideShow(overlay, card, { last: _appCoachIdx === _appCoachSteps.length - 1, pose: coachPoseFor(step, _appCoachIdx, _appCoachSteps.length) });
+      }
+    }, 480);
+  }, 40);
   if (typeof step.before === 'function') {
     const result = step.before();
     if (result && typeof result.then === 'function') result.then(afterBefore).catch(afterBefore);
@@ -46222,76 +46382,37 @@ function _coachBodyHtml(step) {
 
 function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
   const PAD = 9;
-  const MARGIN = 14;
   const vw = window.innerWidth;
-  const vh = window.innerHeight;
   const overlay = document.getElementById('appCoachOverlay');
-  const cardW = Math.min(360, vw - MARGIN * 2);
+  const ROOM = _appCoachHasGuide() ? coachGuideRoom() : 0;   // the guide perches above the card
+  const cardW = Math.min(360, vw - 28);
   card.style.width = `${cardW}px`;
-  card.style.visibility = 'hidden';
-  card.style.left = '0px';
-  card.style.top = '0px';
   card.style.transform = '';
-  const rect = target ? target.getBoundingClientRect() : null;
-  if (!rect || rect.width < 4 || rect.height < 4) {
+  if (target) coachBringIntoView(target);
+  let rect = target ? coachVisibleRect(target) : null;
+  if (!rect) {
     overlay?.classList.add('coach-full-blur');
     spotlight.classList.add('no-target');
     spotlight.style.left = `${vw / 2 - 60}px`;
-    spotlight.style.top = `${vh / 2 - 60}px`;
+    spotlight.style.top = `${window.innerHeight / 2 - 60}px`;
     spotlight.style.width = '120px';
     spotlight.style.height = '120px';
   } else {
     overlay?.classList.remove('coach-full-blur');
     spotlight.classList.remove('no-target');
-    spotlight.style.left = `${Math.max(MARGIN, rect.left - PAD)}px`;
-    spotlight.style.top = `${Math.max(MARGIN, rect.top - PAD)}px`;
-    spotlight.style.width = `${Math.min(vw - MARGIN * 2, rect.width + PAD * 2)}px`;
-    spotlight.style.height = `${Math.min(vh - MARGIN * 2, rect.height + PAD * 2)}px`;
+    coachSpotlightPad(spotlight, rect, PAD);
   }
-  requestAnimationFrame(() => {
-    const ROOM = _appCoachHasGuide() ? COACH_GUIDE_ROOM : 0;   // the guide perches above the card
-    const cardH = Math.min(card.offsetHeight, vh - MARGIN * 2 - ROOM);
-    let top;
-    let left;
-    if (!rect) {
-      top = vh / 2 - cardH / 2 + ROOM / 2;
-      left = vw / 2 - cardW / 2;
-    } else if (preferred === 'center') {
-      top = vh / 2 - cardH / 2 + ROOM / 2;
-      left = vw / 2 - cardW / 2;
-    } else if (preferred === 'bottom') {
-      top = vh - cardH - MARGIN - 8;
-      left = vw / 2 - cardW / 2;
-    } else if (preferred === 'above') {
-      top = rect.top - cardH - 18;
-      left = rect.left + rect.width / 2 - cardW / 2;
-      if (top < MARGIN + ROOM) top = rect.bottom + 18 + ROOM;
-    } else if (preferred === 'right') {
-      top = rect.top + rect.height / 2 - cardH / 2;
-      left = rect.right + 18;
-      if (left + cardW > vw - MARGIN) left = rect.left - cardW - 18;
-    } else {
-      const belowTop = rect.bottom + 18 + ROOM;
-      const aboveTop = rect.top - cardH - 18;
-      const belowSpace = vh - rect.bottom - MARGIN - ROOM;
-      const aboveSpace = rect.top - MARGIN - ROOM;
-      top = belowSpace >= cardH + 18 || belowSpace >= aboveSpace ? belowTop : aboveTop;
-      left = rect.left + rect.width / 2 - cardW / 2;
-      if (top + cardH > vh - MARGIN) top = aboveTop;
-      if (top < MARGIN + ROOM) top = Math.min(vh - cardH - MARGIN, Math.max(MARGIN + ROOM, rect.bottom + 18 + ROOM));
-      if (!(top + cardH < rect.top || top - ROOM > rect.bottom)) {
-        top = aboveSpace > belowSpace ? MARGIN + ROOM : vh - cardH - MARGIN;
-      }
-    }
-    if (typeof _appCoachSteps[_appCoachIdx]?.offsetY === 'number') {
-      top += _appCoachSteps[_appCoachIdx].offsetY;
-    }
-    top = Math.max(MARGIN + ROOM, Math.min(top, vh - cardH - MARGIN));
-    left = Math.max(MARGIN, Math.min(left, vw - cardW - MARGIN));
-    card.style.top = `${top}px`;
-    card.style.left = `${left}px`;
-    card.style.visibility = '';
-  });
+  // Measure in place (moving the card off to measure made it fly in from a corner).
+  const cardH = Math.min(card.offsetHeight, window.innerHeight - 28 - ROOM);
+  const place = () => coachPlaceCard({ rect: _coachPadRect(rect, PAD), cardW, cardH, room: ROOM, guideW: coachGuideWidth(), preferred: preferred === 'center' && !rect ? 'below' : preferred });
+  let pos = place();
+  if (coachNudgeFor(target, _coachPadRect(rect, PAD), pos, cardH, ROOM)) {
+    const r2 = coachVisibleRect(target);
+    if (r2) { rect = r2; coachSpotlightPad(spotlight, rect, PAD); pos = place(); }
+  }
+  card.style.top = `${Math.round(pos.top)}px`;
+  card.style.left = `${Math.round(pos.left)}px`;
+  card.style.visibility = '';
 }
 
 function appCoachNext() {
@@ -46354,13 +46475,13 @@ Object.assign(window, {
 
 const _RHEMA_COACH_STEPS = [
   {
-    targetFn: () => _coachFirst(['#rhemaEnglishDisplay:not(.hidden)', '#rhemaVerseDisplay']),
+    targetFn: () => null,
     position: 'center',
     title: 'Hi, I’m your guide!',
     body: 'Welcome to Rhēma, a Bible you can dig into. Read it like any Bible, and swipe left or right to turn to the next or last chapter.',
   },
   {
-    targetFn: () => _coachFirst(['#rhemaEnglishDisplay:not(.hidden) .rhema-chapter-block', '#rhemaVerseDisplay .rhema-chapter-block']),
+    targetFn: () => _coachVisibleVerse(),
     position: 'below',
     title: 'Tap a verse',
     body: 'Tap any verse to highlight it, write a note, compare Bibles, and more. The “Tapping a verse” tour shows you everything in there.',
@@ -46461,91 +46582,38 @@ function _showCoachStep() {
   const backBtn = document.getElementById('rhemaCoachBackBtn');
   if (backBtn) backBtn.style.display = _coachIdx === 0 ? 'none' : '';
 
-  const target = step.targetFn();
-  const modal  = document.getElementById('rhemaModal');
-
-  const ROOM = COACH_GUIDE_ROOM;   // the guide perches above the card
+  const target = step.targetFn ? step.targetFn() : null;
+  const ROOM = coachGuideRoom();   // the guide perches above the card
   const isLast = _coachIdx === _coachSteps.length - 1;
+  const PAD = 8;
+  const entering = !overlay.dataset.shown;
+  overlay.dataset.shown = '1';
+  if (entering) { card.classList.add('coach-no-anim'); spotlight.classList.add('coach-no-anim'); }
   card.style.marginTop = '';
-  if (!target || !modal) {
-    spotlight.style.display = 'none';
-    const CARD_W = Math.min(320, window.innerWidth - 40);
-    card.style.width = CARD_W + 'px';
-    card.style.top  = '50%';
-    card.style.left = '50%';
-    card.style.transform = 'translate(-50%, -50%)';
-    card.style.marginTop = (ROOM / 2) + 'px';
-    coachGuideShow(overlay, card, { last: isLast, pose: coachPoseFor(step, _coachIdx, _coachSteps.length) });
-    return;
-  }
-
-  const mRect = modal.getBoundingClientRect();
-  const tRect = target.getBoundingClientRect();
-  const PAD    = 8;
-  const MARGIN = 16;
-  const CARD_W = Math.min(320, mRect.width - MARGIN * 2);
-
-  const sl = tRect.left - mRect.left - PAD;
-  const st = tRect.top  - mRect.top  - PAD;
-  const sw = tRect.width  + PAD * 2;
-  const sh = tRect.height + PAD * 2;
-
-  spotlight.style.left   = sl + 'px';
-  spotlight.style.top    = st + 'px';
-  spotlight.style.width  = sw + 'px';
-  spotlight.style.height = sh + 'px';
-  spotlight.style.display = '';
-
-  // 'center' position: spotlight the element but place the card centered in the modal
-  if (step.position === 'center') {
-    card.style.width = CARD_W + 'px';
-    card.style.top  = '50%';
-    card.style.left = '50%';
-    card.style.transform = 'translate(-50%, -50%)';
-    card.style.marginTop = (ROOM / 2) + 'px';
-    card.style.visibility = '';
-    coachGuideShow(overlay, card, { last: isLast, pose: coachPoseFor(step, _coachIdx, _coachSteps.length) });
-    return;
-  }
-
   card.style.transform = '';
-  card.style.width = CARD_W + 'px';
-  // Hide temporarily so we can measure the card's rendered height
-  card.style.visibility = 'hidden';
-  card.style.top  = '-9999px';
-  card.style.left = '0';
-
-  requestAnimationFrame(() => {
-    const CARD_H     = card.offsetHeight;
-    const spotBottom = st + sh;
-    const spotRight  = sl + sw;
-    let cardTop, cardLeft;
-
-    if (step.position === 'above') {
-      cardTop  = st - CARD_H - MARGIN;
-      cardLeft = sl + sw / 2 - CARD_W / 2;
-      if (cardTop < MARGIN + ROOM) { cardTop = spotBottom + MARGIN + ROOM; } // flip below
-    } else if (step.position === 'right') {
-      cardTop  = st + sh / 2 - CARD_H / 2;
-      cardLeft = spotRight + MARGIN;
-      if (cardLeft + CARD_W > mRect.width - MARGIN) {
-        cardLeft = sl - CARD_W - MARGIN; // flip left
-      }
-    } else { // below (default)
-      cardTop  = spotBottom + MARGIN + ROOM;
-      cardLeft = sl + sw / 2 - CARD_W / 2;
-      if (cardTop + CARD_H > mRect.height - MARGIN) { cardTop = st - CARD_H - MARGIN; } // flip above
-    }
-
-    // Final clamp — card (and the guide above it) must stay inside the modal
-    cardTop  = Math.max(MARGIN + ROOM, Math.min(cardTop,  mRect.height - CARD_H  - MARGIN));
-    cardLeft = Math.max(MARGIN, Math.min(cardLeft, mRect.width  - CARD_W  - MARGIN));
-
-    card.style.top  = cardTop  + 'px';
-    card.style.left = cardLeft + 'px';
-    card.style.visibility = '';
-    coachGuideShow(overlay, card, { last: isLast, pose: coachPoseFor(step, _coachIdx, _coachSteps.length) });
+  if (target) coachBringIntoView(target);
+  let rect = target ? coachVisibleRect(target) : null;
+  const oRect = overlay.getBoundingClientRect();   // card + spotlight are positioned inside the overlay
+  const cardW = Math.min(320, Math.max(220, oRect.width - 32));
+  card.style.width = cardW + 'px';
+  if (rect) { spotlight.style.display = ''; coachSpotlightPad(spotlight, rect, PAD, oRect); }
+  else spotlight.style.display = 'none';
+  const cardH = card.offsetHeight;
+  const place = () => coachPlaceCard({
+    rect: _coachPadRect(rect, PAD),
+    cardW, cardH, room: ROOM, guideW: coachGuideWidth(), preferred: step.position === 'above' ? 'above' : 'below',
+    bounds: { left: oRect.left, top: oRect.top, right: oRect.right, bottom: oRect.bottom }
   });
+  let pos = place();
+  if (coachNudgeFor(target, _coachPadRect(rect, PAD), pos, cardH, ROOM)) {
+    const r2 = coachVisibleRect(target);
+    if (r2) { rect = r2; coachSpotlightPad(spotlight, rect, PAD, oRect); pos = place(); }
+  }
+  card.style.top = Math.round(pos.top - oRect.top) + 'px';
+  card.style.left = Math.round(pos.left - oRect.left) + 'px';
+  card.style.visibility = '';
+  coachGuideShow(overlay, card, { last: isLast, pose: coachPoseFor(step, _coachIdx, _coachSteps.length) });
+  requestAnimationFrame(() => requestAnimationFrame(() => { card.classList.remove('coach-no-anim'); spotlight.classList.remove('coach-no-anim'); }));
 }
 
 function rhemaCoachNext() {
@@ -46569,7 +46637,7 @@ function rhemaCoachBack() {
 
 function _endRhemaCoach() {
   const overlay = document.getElementById('rhemaCoachOverlay');
-  if (overlay) overlay.classList.add('hidden');
+  if (overlay) { overlay.classList.add('hidden'); delete overlay.dataset.shown; }
   coachGuideHide(overlay);
   _coachMarkSeen(_rhemaCoachSeenKey);
   _resumeHomeFlipAfterCoach();
