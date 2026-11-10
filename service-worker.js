@@ -346,6 +346,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Reader fonts from Google Fonts (only fetched once someone picks or browses
+  // them): keep a copy so a chosen font still works offline. Font files are
+  // immutable; the small CSS is fine to reuse.
+  if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
+    event.respondWith(
+      caches.open(DATA_CACHE).then((cache) => cache.match(req).then((cached) =>
+        cached || fetch(req).then((response) => {
+          if (response && (response.ok || response.type === "opaque")) cache.put(req, response.clone()).catch(() => {});
+          return response;
+        })
+      ))
+    );
+    return;
+  }
+
   // Other cross-origin requests (Firebase APIs, Google sign-in, map tiles, other
   // CDNs) are never intercepted — let the network handle them so nothing here
   // breaks when an external service changes.
