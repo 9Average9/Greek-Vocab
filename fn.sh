@@ -11,29 +11,33 @@ say() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 ok() { printf '\n\033[1;32m✔ %s\033[0m\n\n' "$*"; exit 0; }
 fail() { printf '\n\033[1;31m✘ %s\033[0m\n\n' "$*"; exit 1; }
 
-signed_in() { gcloud auth print-access-token >/dev/null 2>&1; }
+# Run gcloud attached to the real terminal, even when this script arrives
+# through "curl | bash": Cloud Shell's own sign-in needs the terminal, and
+# without it gcloud wrongly reports that no account is signed in.
+TTY=/dev/null
+if [ -r /dev/tty ] && (exec </dev/tty) 2>/dev/null; then TTY=/dev/tty; fi
+g() { gcloud "$@" <"$TTY"; }
 
-# Everything runs inside main(), so bash reads the whole script before running
-# any of it (piped into bash, a command could otherwise eat the rest).
+# Everything runs inside main(), and "main" is the last line, so bash has read
+# the whole script before anything runs.
 main() {
   local PROJECT="greek-vocab-leaderboard"
   local FN="getPassageInterpretations"
   local RAW="https://raw.githubusercontent.com/9Average9/Greek-Vocab/main"
 
   say "Checking your Google sign-in…"
-  if ! signed_in; then
-    # Cloud Shell often has your account but none selected: pick it.
+  if ! g auth print-access-token >/dev/null; then
+    # Cloud Shell sometimes has your account but none selected: pick it.
     local acct
-    acct=$(gcloud auth list --format="value(account)" 2>/dev/null | head -1)
-    [ -n "$acct" ] && gcloud config set account "$acct" --quiet >/dev/null 2>&1
+    acct=$(g auth list --format="value(account)" 2>/dev/null | head -1)
+    if [ -n "$acct" ]; then
+      g config set account "$acct" --quiet >/dev/null 2>&1
+      echo "Using $acct"
+    else
+      echo "(Couldn't confirm the sign-in. Trying the deploy anyway.)"
+    fi
   fi
-  if ! signed_in; then
-    fail "Cloud Shell isn't signed in to Google right now.
-  Fix: tap the X at the top left to close Cloud Shell, open it again,
-  and if a box asks to \"Authorize Cloud Shell\", tap Authorize.
-  Then type the same curl line again."
-  fi
-  gcloud config set project "$PROJECT" --quiet >/dev/null 2>&1
+  g config set project "$PROJECT" --quiet >/dev/null 2>&1
 
   # Only the 3 small files the function needs, not the whole (large) app repo,
   # in a temp folder so it never fills your Cloud Shell home drive.
@@ -50,7 +54,7 @@ main() {
   # 2-minute timeout, 256MB, the shared Anthropic key, Firebase config.
   say "Deploying See interpretations (2–4 minutes)…"
   local CONFIG='{"projectId":"greek-vocab-leaderboard","storageBucket":"greek-vocab-leaderboard.firebasestorage.app","locationId":"us-central"}'
-  if gcloud functions deploy "$FN" \
+  if g functions deploy "$FN" \
       --quiet \
       --no-gen2 \
       --region=us-central1 \
@@ -68,4 +72,4 @@ main() {
   fail "The deploy didn’t finish. Send a screenshot of the lines above and I’ll sort it out."
 }
 
-main "$@" </dev/null
+main "$@"
