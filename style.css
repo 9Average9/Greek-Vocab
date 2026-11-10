@@ -39506,3 +39506,27 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rhema-ip-back-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rhema-ip-back-x { min-width: 44px; min-height: 46px; justify-content: center; opacity: 0.85; border-left: 1px solid rgba(255,255,255,0.3) !important; }
 .rhema-ip-back-x .material-symbols-outlined { font-size: 20px; }
+/* Guide's speech bubble on the loading screen */
+.rhema-ip-note {
+  position: relative;
+  max-width: 34ch;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--secondary-color, #2498df) 12%, var(--card-solid-color, #fff));
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 26%, transparent);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.rhema-ip-note::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  transform: translateX(-50%) rotate(45deg);
+  background: inherit;
+  border-right: inherit;
+  border-bottom: inherit;
+}
+.rhema-ip-keep { margin-top: 2px; }

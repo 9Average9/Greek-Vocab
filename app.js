@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.547";
+const APP_VERSION = "3.0.548";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,8 +30355,9 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.547 &mdash; Interpretations, smoother</div>
+<div class="un-version-label">v3.0.548 &mdash; Interpretations, smoother</div>
 <ul>
+  <li><strong>No need to wait</strong> &mdash; While a new passage loads, tap <em>Keep studying</em>. The guide lets you know the moment the interpretations are in.</li>
   <li><strong>One tap is enough</strong> &mdash; See interpretations keeps trying on its own until the result is in. No more tapping again and again.</li>
   <li><strong>It tells you when it&rsquo;s ready</strong> &mdash; &ldquo;Interpretations on Hebrews 6:4&ndash;6 are in!&rdquo; shows as a banner in the app, or a phone notification if you left. Tap it to open.</li>
   <li><strong>Back to where you were</strong> &mdash; Tap a related verse to read it, then &ldquo;Back to&nbsp;&hellip;&rdquo; takes you to the same spot in the interpretations.</li>
@@ -41838,10 +41839,14 @@ function _rhemaRenderInterpLoading() {
   clearInterval(_rhemaInterpStepTimer);
   body.innerHTML = `
     <div class="rhema-ip-loading" role="status" aria-live="polite">
+      <div class="rhema-ip-note">
+        <b>No need to wait here.</b> Keep studying and I’ll let you know the moment they’re in.
+      </div>
       <img class="rhema-ip-guide" src="${guidePoseSrc('inspect')}" alt="" width="84" height="91" decoding="async">
       <div class="rhema-ip-step" id="rhemaInterpStep">${RHEMA_INTERP_STEPS[0]}</div>
       <div class="rhema-ip-bar"><span></span></div>
-      <p class="rhema-ip-wait">The first look at a passage takes about half a minute. After that it opens right away for everyone. You can close this. It keeps going.</p>
+      <button type="button" class="rhema-ip-retry rhema-ip-keep" onclick="closeRhemaInterpretations()">Keep studying</button>
+      <p class="rhema-ip-wait">Takes about half a minute the first time. After that it opens instantly for everyone.</p>
     </div>`;
   let i = 0;
   _rhemaInterpStepTimer = setInterval(() => {
