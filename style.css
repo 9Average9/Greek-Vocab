@@ -39210,3 +39210,15 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 @media (prefers-reduced-motion: reduce) {
   .app-coach-card, .rhema-coach-card, .app-coach-spotlight, .rhema-coach-spotlight, .ws-tour-spot, .ws-tour-tip { transition-duration: .01s !important; }
 }
+
+/* Small phones: compact tour cards so they fit beside what they point at. */
+@media (max-height: 640px), (max-width: 340px) {
+  .app-coach-card, .rhema-coach-card { padding: 13px 15px 11px; }
+  .app-coach-title, .rhema-coach-title { font-size: .98rem; margin-bottom: 4px; }
+  .app-coach-body, .rhema-coach-body, .app-coach-body p { font-size: .82rem; line-height: 1.38; }
+  .app-coach-step-label, .rhema-coach-step-label { margin-bottom: 2px; }
+  .coach-longpress-demo { display: none; }
+  .ws-tour-tip { padding: 11px 13px 10px; }
+  .ws-tour-tip h4 { font-size: .95rem; }
+  .ws-tour-tip p { font-size: .82rem; margin-bottom: 8px; }
+}
