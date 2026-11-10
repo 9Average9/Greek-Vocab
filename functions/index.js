@@ -1610,23 +1610,25 @@ exports.generateBibleQuiz = functions
 // See interpretations
 //
 // For a selected verse or passage, the server looks up how real Christian
-// traditions read it. Built to be fast and cheap:
-// - One request to Claude Haiku 5.5 (the low-cost model) with a few web
-//   searches. No page fetching, which was the slow, expensive part.
-// - Every quote is a citation the search API itself returns: the exact words
-//   from the page, with its URL. The model never types a quote.
-// - Links come only from those citations and the search results. A view with no
-//   citation behind it is dropped.
+// traditions read it. Built to be fast and cheap, with Claude Haiku 5.5 (the
+// low-cost model) and real pages:
+// 1. Find: Haiku runs up to 3 web searches and picks the best page or two
+//    for each tradition.
+// 2. Read: the server itself downloads those pages all at once and keeps only
+//    the part about this passage (no AI cost, a few seconds).
+// 3. Assemble: Haiku puts the excerpts together. It copies quotes and writes
+//    only the short overview and summaries. The server keeps a quote only if it
+//    appears word for word on its page, and drops any view without a page.
 //
 // Results are saved by "interpretive unit" (for example Hebrews 6:4–6) and
 // shared with everyone. Anyone who opens a verse inside a saved unit gets the
 // saved result right away. Only the first look-up of a new passage costs
-// anything (about $0.03–0.05: four searches plus a few cents of tokens).
+// anything (about $0.03–0.04, mostly the searches).
 // ─────────────────────────────────────────────────────────────────────────────
 
 const INTERP_MODEL = "claude-haiku-5-5";
 const INTERP_BACKUP_MODEL = "claude-sonnet-5-5"; // only if Haiku declines or returns nothing usable
-const INTERP_VERSION = 2; // bump to ignore every saved result and research again
+const INTERP_VERSION = 3; // bump to ignore every saved result and research again
 const INTERP_COLLECTION = "passageInterpretations";
 const INTERP_JOBS = "passageInterpretationJobs";
 const INTERP_USAGE = "passageInterpretationUsage";
@@ -1637,7 +1639,7 @@ const INTERP_USER_DAILY = 12;    // new passages one person can start per day
 const INTERP_GLOBAL_DAILY = 300; // new passages everyone together can start per day (≈ $15 max)
 const INTERP_MAX_SELECTION = 40; // verses
 const INTERP_DEADLINE_MS = 100 * 1000;
-const INTERP_MAX_SEARCHES = 4;
+const INTERP_MAX_SEARCHES = 3;
 // Low-value sources for this job: social media, forums, video.
 const INTERP_BLOCKED_DOMAINS = [
   "reddit.com", "quora.com", "facebook.com", "instagram.com", "tiktok.com",
@@ -1725,121 +1727,188 @@ function interpText(s) {
   return String(s || "").replace(/<\/?cite[^>]*>/g, "").replace(/\s+/g, " ").trim();
 }
 
-function interpSystemPrompt() {
+// Lower-case letters and digits only, so curly quotes, dashes, spacing and
+// punctuation differences between a page and a quote don't matter.
+function interpNorm(s) {
+  return String(s || "")
+    .normalize("NFKD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+// A quote counts only when every piece of it (split at "..." or [brackets])
+// appears word for word in the page text.
+function interpQuoteOnPage(quote, normPage) {
+  const parts = String(quote || "")
+    .split(/\.\.\.|…|\[[^\]]*\]/)
+    .map(interpNorm)
+    .filter(p => p.split(" ").length >= 3);
+  const words = parts.reduce((n, p) => n + p.split(" ").length, 0);
+  if (!parts.length || words < 6) return false;
+  const hay = " " + normPage + " ";
+  return parts.every(p => hay.includes(" " + p + " "));
+}
+
+function interpDecode(s) {
+  return String(s || "")
+    .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;|&rsquo;|&lsquo;/gi, "'").replace(/&ldquo;|&rdquo;/gi, '"')
+    .replace(/&mdash;/gi, "—").replace(/&ndash;/gi, "–").replace(/&hellip;/gi, "…")
+    .replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
+    .replace(/&#(\d+);/g, (_, n) => { try { return String.fromCodePoint(+n); } catch (_) { return " "; } })
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => { try { return String.fromCodePoint(parseInt(n, 16)); } catch (_) { return " "; } })
+    .replace(/&[a-z]+;/gi, " ");
+}
+
+function interpHtmlToText(html) {
+  let h = String(html || "");
+  h = h.replace(/<(script|style|noscript|svg|nav|header|footer|form|aside|iframe|button|select)\b[\s\S]*?<\/\1>/gi, " ");
+  h = h.replace(/<!--[\s\S]*?-->/g, " ");
+  h = h.replace(/<(br|\/p|\/div|\/li|\/h[1-6]|\/blockquote|\/tr|\/section|\/article)\b[^>]*>/gi, "\n");
+  h = h.replace(/<[^>]+>/g, " ");
+  return interpDecode(h).replace(/[ \t\f\r\v]+/g, " ").replace(/\n\s*(\n\s*)+/g, "\n").trim();
+}
+
+// Keep only what a page says about this passage: windows around each mention
+// of its verses (or the book), so the model reads a few hundred words per page
+// instead of the whole site.
+function interpExcerpt(text, sel, unit, bookName) {
+  const hits = [];
+  const chapters = new Set([sel.chapter, unit.sc, unit.ec]);
+  const lo = Math.min(sel.startVerse, unit.sc === sel.chapter ? unit.sv : 1);
+  const hi = Math.max(sel.endVerse, unit.ec === sel.chapter ? unit.ev : sel.endVerse);
+  for (const c of chapters) {
+    const re = new RegExp(`\\b${c}\\s*[:.]\\s*(\\d{1,3})\\b`, "g");
+    let m;
+    while ((m = re.exec(text)) && hits.length < 40) {
+      const v = +m[1];
+      if (c !== sel.chapter || (v >= lo - 2 && v <= hi + 2)) hits.push(m.index);
+    }
+  }
+  if (!hits.length) {
+    const at = text.toLowerCase().indexOf(bookName.toLowerCase());
+    if (at >= 0) hits.push(at);
+  }
+  if (!hits.length) return text.slice(0, 2600);
+  hits.sort((a, b) => a - b);
+  const wins = [];
+  for (const i of hits) {
+    const a = Math.max(0, i - 700), b = Math.min(text.length, i + 1300);
+    const last = wins[wins.length - 1];
+    if (last && a <= last[1]) last[1] = Math.max(last[1], b);
+    else wins.push([a, b]);
+  }
+  let out = "";
+  for (const [a, b] of wins) {
+    if (out.length > 3800) break;
+    out += (out ? " … " : "") + text.slice(a, b);
+  }
+  return out.slice(0, 4200);
+}
+
+async function interpFetchPage(url) {
+  const res = await fetch(url, {
+    redirect: "follow",
+    signal: AbortSignal.timeout(7000),
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,text/plain;q=0.9"
+    }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const type = String(res.headers.get("content-type") || "");
+  if (!/html|text\/plain/i.test(type)) throw new Error(`skipped ${type}`);
+  const html = (await res.text()).slice(0, 1500000);
+  const title = interpDecode(((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "")).replace(/\s+/g, " ").trim();
+  const author = interpDecode(((html.match(/<meta[^>]+name=["']author["'][^>]*content=["']([^"']+)["']/i) ||
+    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*name=["']author["']/i) || [])[1] || "")).trim();
+  return { text: /html/i.test(type) ? interpHtmlToText(html) : html, title, author };
+}
+
+// STEP 1 (cheap model + a few searches): pick the passage unit and the best
+// pages for each tradition.
+function interpFindPrompt() {
   return [
-    "You look up how real Christian traditions interpret a Bible passage, using what real teachers and churches have published.",
-    "The result is shown to Bible readers in a study app and saved for everyone who opens any verse in the same passage.",
+    "You find published pages on how Christian traditions interpret a Bible passage. You do not write the explanation; you only pick pages.",
     "",
-    "STEP 1. Pick the interpretive unit: the passage teachers discuss as one piece. It must include every selected verse.",
-    "- Selection inside a well-known debated passage → use that passage, scope part_of_larger (Hebrews 6:5 → Hebrews 6:4-6; John 15:6 → John 15:1-8).",
-    "- Selection is itself the debated unit → use exactly the selection, scope selection.",
-    "- Selection rarely debated on its own, but traditions use it with other verses → keep the selection, scope supporting_verse.",
+    "1. Pick the interpretive unit: the passage teachers discuss as one piece. It must include every selected verse.",
+    "- Inside a well-known debated passage → that passage, scope part_of_larger (Hebrews 6:5 → Hebrews 6:4-6; John 15:6 → John 15:1-8).",
+    "- The selection is itself the debated unit → exactly the selection, scope selection.",
+    "- Rarely debated alone but used with other verses → the selection, scope supporting_verse.",
     "- Never more than about 25 verses or two chapters.",
+    `2. Search the web, at most ${INTERP_MAX_SEARCHES} searches. First the Free Grace reading (Grace Evangelical Society faithalone.org, Zane Hodges, Bob Wilkin, Joseph Dillow, Charles Bing gracelife.org, Charles Ryrie). Then the other traditions that read it differently (Reformed, Arminian, Catholic, Lutheran, Orthodox, Dispensational and so on).`,
+    "3. Pick 1 or 2 pages per tradition, 3 to 6 traditions, at most 10 pages. Prefer commentaries, articles and sermons by real, named teachers or churches that discuss this passage. Skip forums, video and AI-written pages.",
     "",
-    `STEP 2. Search the web (at most ${INTERP_MAX_SEARCHES} searches; make them count).`,
-    "- First search: the Free Grace reading (Grace Evangelical Society faithalone.org, Zane Hodges, Bob Wilkin, Joseph Dillow, Charles Bing gracelife.org, Charles Ryrie).",
-    "- Then search the passage with the traditions that disagree with each other most on it (for example Reformed, Arminian, Catholic, Lutheran, Orthodox, Dispensational).",
-    "- Prefer commentaries, sermons, articles and church documents by real, named people or bodies.",
-    "",
-    "STEP 3. Write the answer in EXACTLY this line format and nothing else. One item per line. No markdown, no extra commentary.",
+    "Answer with these lines only, nothing else:",
     "@UNIT <startChapter>:<startVerse>-<endChapter>:<endVerse>",
     "@SCOPE <selection | part_of_larger | supporting_verse>",
-    "@CONTEXT <for part_of_larger or supporting_verse: one sentence (~25 words) on how the passage fits a larger reading; otherwise leave empty>",
-    "@OVERVIEW <up to 2 sentences (~45 words): what the passage is about and what the views disagree on>",
-    "Then for each view (Free Grace first, 3 to 6 views total, only traditions with a real, distinct reading; merge traditions that agree):",
-    "@VIEW <key> | <display name>",
-    "@SUMMARY <up to 2 sentences (~45 words): what this tradition says the passage means, backed by your search results>",
-    "@REASON <a reason this tradition gives, under 20 words>  (2 or 3 @REASON lines)",
-    "@TEACHERS <1 to 3 real, well-known teachers who hold this reading, comma-separated>",
-    "@WITH <up to 4 references this tradition reads alongside it, like John 5:24; Romans 4:5>",
-    "@USAGE <for supporting_verse only: one sentence on how this camp uses the verse with those passages; otherwise leave empty>",
-    `Allowed keys: ${Object.keys(INTERP_TRADITIONS).join(", ")}.`,
-    "",
-    "Rules:",
-    "- Back every @SUMMARY with what you found in the search results. If you found nothing for a tradition, leave that view out. Never invent a position.",
-    "- Plain, friendly words a new believer understands. Fair and neutral: describe each view the way its own teachers would, never say which is right.",
-    "- Never mention AI, yourself, searching, sources, or \"this summary\". Don't refer to the specific verse that was selected; write for the whole unit."
+    "@PAGE <tradition key> | <exact URL from your search results>",
+    `Tradition keys: ${Object.keys(INTERP_TRADITIONS).join(", ")}.`
   ].join("\n");
 }
 
-// Rebuild the model's text answer with its citations. Each text block carries
-// the citations the search API attached to it; we keep them with the text so
-// every line knows which real pages back it.
-function interpCollect(contents) {
-  let text = "";
-  const spans = []; // { start, end, cites: [{url, title, cited}] }
-  const results = new Map(); // every search-result URL → title
-  for (const content of contents) {
-    for (const block of (content || [])) {
-      if (!block) continue;
-      if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
-        for (const r of block.content) {
-          const url = interpCleanUrl(r && r.url);
-          if (url && !results.has(url)) results.set(url, String(r.title || "").trim());
-        }
-      } else if (block.type === "text" && typeof block.text === "string") {
-        const start = text.length;
-        text += block.text;
-        const cites = [];
-        for (const c of (block.citations || [])) {
-          const url = interpCleanUrl(c && c.url);
-          if (!url) continue;
-          cites.push({ url, title: String(c.title || "").trim(), cited: interpText(c.cited_text) });
-        }
-        spans.push({ start, end: text.length, cites });
+const INTERP_ASSEMBLE_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    contextNote: { type: "string" },
+    overview: { type: "string" },
+    views: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          tradition: { type: "string", enum: Object.keys(INTERP_TRADITIONS) },
+          label: { type: "string" },
+          summary: { type: "string" },
+          reasons: { type: "array", items: { type: "string" } },
+          teachers: { type: "array", items: { type: "string" } },
+          usedWith: { type: "array", items: { type: "string" } },
+          usageNote: { type: "string" },
+          pages: { type: "array", items: { type: "integer" } },
+          quotes: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: { page: { type: "integer" }, text: { type: "string" }, speaker: { type: "string" } },
+              required: ["page", "text", "speaker"]
+            }
+          }
+        },
+        required: ["tradition", "label", "summary", "reasons", "teachers", "usedWith", "usageNote", "pages", "quotes"]
       }
     }
-  }
-  return { text, spans, results };
+  },
+  required: ["contextNote", "overview", "views"]
+};
+
+// STEP 3 (cheap model, no tools): put the page excerpts together. It mostly
+// gathers and copies; the only fresh writing is the short overview and the
+// one- or two-sentence summaries.
+function interpAssemblePrompt() {
+  return [
+    "You put together a short, fair guide to how Christian traditions read a Bible passage, using ONLY the page excerpts you are given.",
+    "",
+    "- Make one view per tradition the excerpts actually support. Free Grace first. Merge traditions that read it the same way and say so in the label. Leave out any tradition the excerpts don't support. Never invent a position.",
+    "- pages: the numbers of the excerpts that support the view.",
+    "- quotes: 1 or 2 short quotes per view (6 to 45 words) COPIED EXACTLY, character for character, from one excerpt, with that excerpt's number. speaker: the person who said it if the excerpt or page names them, otherwise \"\".",
+    "- summary: up to 2 sentences (about 45 words) restating what the excerpts say this tradition holds.",
+    "- reasons: 2 or 3 short reasons the excerpts give, each under 20 words.",
+    "- teachers: up to 3 real teachers named in the excerpts or well known for this reading.",
+    "- usedWith: up to 4 references the excerpts read alongside the passage (\"Book chapter:verse\").",
+    "- usageNote: only when the scope is supporting_verse, one sentence on how this camp uses the verse with those passages; otherwise \"\".",
+    "- overview: up to 2 sentences (about 45 words): what the passage is about and what the views disagree on.",
+    "- contextNote: for part_of_larger or supporting_verse, one sentence (about 25 words) on how the passage fits a larger reading; otherwise \"\".",
+    "- Plain, friendly words a new believer understands. Neutral: describe each view as its own teachers would and never say which is right. Never mention AI, yourself, excerpts, pages or sources in the text. Don't refer to the specific verse that was selected; write for the whole unit."
+  ].join("\n");
 }
 
-// Parse the "@KEY value" answer. Returns { fields, views } where each line also
-// carries the citations of the text it came from.
-function interpParse(collected) {
-  const { text, spans } = collected;
-  const at = text.indexOf("@UNIT");
-  const out = { unit: "", scope: "", contextNote: "", overview: "", views: [] };
-  if (at < 0) return out;
-  let pos = at;
-  let view = null;
-  const lines = text.slice(at).split("\n");
-  for (const raw of lines) {
-    const lineStart = pos;
-    const lineEnd = pos + raw.length;
-    pos = lineEnd + 1;
-    const m = raw.match(/^\s*@([A-Z]+)\s*(.*)$/);
-    if (!m) continue;
-    const key = m[1];
-    const val = interpText(m[2]);
-    const cites = [];
-    for (const sp of spans) {
-      if (sp.end > lineStart && sp.start < lineEnd) cites.push(...sp.cites);
-    }
-    if (key === "UNIT") out.unit = val;
-    else if (key === "SCOPE") out.scope = val.toLowerCase();
-    else if (key === "CONTEXT") out.contextNote = val;
-    else if (key === "OVERVIEW") out.overview = val;
-    else if (key === "VIEW") {
-      const [k, ...rest] = val.split("|");
-      view = { tradition: interpText(k).toLowerCase().replace(/[\s-]+/g, "_"), label: interpText(rest.join("|")), summary: "", reasons: [], teachers: [], usedWith: [], usageNote: "", cites: [] };
-      out.views.push(view);
-    } else if (view) {
-      view.cites.push(...cites);
-      if (key === "SUMMARY") view.summary = val;
-      else if (key === "REASON") view.reasons.push(val);
-      else if (key === "TEACHERS") view.teachers = val.split(/,|;| and /).map(interpText).filter(Boolean);
-      else if (key === "WITH") view.usedWith = val.split(/;|,(?=\s*[1-3]?\s?[A-Z])/).map(interpText).filter(Boolean);
-      else if (key === "USAGE") view.usageNote = val;
-    }
-  }
-  return out;
-}
-
-function interpCleanResult(parsed, collected, sel) {
-  const book = sel.book;
-  // The unit must hold every selected verse and stay a readable size.
+function interpParseUnit(text, sel) {
+  const um = String(text || "").match(/@UNIT\s*(\d+)\s*:\s*(\d+)\s*[-–]\s*(?:(\d+)\s*:\s*)?(\d+)/);
   let sc, sv, ec, ev;
-  const um = String(parsed.unit || "").match(/(\d+)\s*:\s*(\d+)\s*[-–]\s*(?:(\d+)\s*:\s*)?(\d+)/);
   if (um) { sc = +um[1]; sv = +um[2]; ec = um[3] ? +um[3] : sc; ev = +um[4]; }
   const ok = um && [sc, sv, ec, ev].every(n => Number.isFinite(n) && n > 0) &&
     interpPos(sc, sv) <= interpPos(sel.chapter, sel.startVerse) &&
@@ -1848,42 +1917,189 @@ function interpCleanResult(parsed, collected, sel) {
     (sc !== ec || ev - sv < 60);
   if (!ok) { sc = ec = sel.chapter; sv = sel.startVerse; ev = sel.endVerse; }
   const sameAsSelection = sc === sel.chapter && ec === sel.chapter && sv === sel.startVerse && ev === sel.endVerse;
-  let scope = ["selection", "part_of_larger", "supporting_verse"].includes(parsed.scope) ? parsed.scope : "selection";
+  const sm = String(text || "").match(/@SCOPE\s*([a-z_]+)/i);
+  let scope = sm && ["selection", "part_of_larger", "supporting_verse"].includes(sm[1].toLowerCase()) ? sm[1].toLowerCase() : "selection";
   if (scope === "part_of_larger" && sameAsSelection) scope = "selection";
   if (scope === "selection" && !sameAsSelection) scope = "part_of_larger";
+  return { sc, sv, ec, ev, scope };
+}
 
-  const views = [];
-  const used = new Set();
-  for (const v of parsed.views) {
-    const tradition = INTERP_TRADITIONS[v.tradition] ? v.tradition : "other";
-    const summary = interpClip(v.summary, 420);
-    if (!summary) continue;
-    // Quotes: the exact words the search API pulled from each page.
-    const quotes = [];
-    const sources = [];
-    const seenUrl = new Set();
-    for (const c of v.cites) {
-      if (!seenUrl.has(c.url) && sources.length < 3) {
-        seenUrl.add(c.url);
-        sources.push({ url: c.url, title: interpClip(c.title || collected.results.get(c.url) || interpHost(c.url), 110), site: interpHost(c.url) });
-      }
-      if (quotes.length < 2 && c.cited && c.cited.split(" ").length >= 6 && !quotes.some(q => q.url === c.url || q.text === c.cited)) {
-        quotes.push({ text: interpClip(c.cited, 320), speaker: "", work: interpClip(c.title || interpHost(c.url), 110), url: c.url, site: interpHost(c.url) });
+function interpUsage(usage, msg) {
+  const u = (msg && msg.usage) || {};
+  usage.input_tokens += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
+  usage.output_tokens += u.output_tokens || 0;
+  usage.searches += (u.server_tool_use && u.server_tool_use.web_search_requests) || 0;
+}
+
+async function interpFindPages(client, model, sel, deadline, usage) {
+  const selRef = interpRefLabel(sel.book, sel.chapter, sel.startVerse, sel.chapter, sel.endVerse);
+  const messages = [{ role: "user", content: `Selected passage: ${selRef}` }];
+  const results = new Map();     // search-result URL → title
+  const snippets = new Map();    // URL → cited text the search API returned
+  let text = "";
+  for (let turn = 0; turn < 4; turn++) {
+    const remaining = deadline - Date.now();
+    if (remaining < 15000) throw new Error("ran out of time finding pages");
+    const msg = await client.messages.create({
+      model,
+      max_tokens: 3000,
+      system: interpFindPrompt(),
+      output_config: { effort: "low" },
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: INTERP_MAX_SEARCHES, blocked_domains: INTERP_BLOCKED_DOMAINS }],
+      messages
+    }, { timeout: Math.min(remaining - 10000, 60000), maxRetries: 1 });
+    interpUsage(usage, msg);
+    for (const block of (msg.content || [])) {
+      if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
+        for (const r of block.content) {
+          const url = interpCleanUrl(r && r.url);
+          if (url && !results.has(url)) results.set(url, String(r.title || "").trim());
+        }
+      } else if (block.type === "text") {
+        text += block.text || "";
+        for (const c of (block.citations || [])) {
+          const url = interpCleanUrl(c && c.url);
+          if (url && c.cited_text) snippets.set(url, ((snippets.get(url) || "") + " " + interpText(c.cited_text)).trim());
+        }
       }
     }
+    if (msg.stop_reason === "refusal") { const e = new Error("declined"); e.declined = true; throw e; }
+    if (msg.stop_reason !== "pause_turn") break;
+    messages.push({ role: "assistant", content: msg.content });
+  }
+  const unit = interpParseUnit(text, sel);
+  const pages = [];
+  const seen = new Set();
+  for (const m of text.matchAll(/@PAGE\s*([a-z_ -]+?)\s*\|\s*(\S+)/gi)) {
+    const url = interpCleanUrl(m[2]);
+    // Only pages the search actually returned.
+    const known = url && (results.has(url) ? url : [...results.keys()].find(k => k.replace(/^https?:\/\/(www\.)?/, "") === url.replace(/^https?:\/\/(www\.)?/, "")));
+    if (!known || seen.has(known)) continue;
+    seen.add(known);
+    const hint = m[1].trim().toLowerCase().replace(/[\s-]+/g, "_");
+    pages.push({ url: known, hint: INTERP_TRADITIONS[hint] ? hint : "other", title: results.get(known) || "" });
+    if (pages.length === 10) break;
+  }
+  return { unit, pages, results, snippets };
+}
+
+async function interpResearch(sel) {
+  const client = anthropicClient();
+  const deadline = Date.now() + INTERP_DEADLINE_MS;
+  const usage = { model: INTERP_MODEL, input_tokens: 0, output_tokens: 0, searches: 0, pagesRead: 0 };
+  const bookName = INTERP_BOOKS[sel.book] || sel.book;
+  const selRef = interpRefLabel(sel.book, sel.chapter, sel.startVerse, sel.chapter, sel.endVerse);
+
+  // 1) Find pages (backup model only if the cheap one declines or fails).
+  let found;
+  try {
+    found = await interpFindPages(client, INTERP_MODEL, sel, deadline, usage);
+  } catch (e) {
+    if (!(e && e.declined) && !isRetryableAnthropicError(e)) throw e;
+    console.warn("getPassageInterpretations find retry on backup:", e && e.message);
+    usage.model = INTERP_BACKUP_MODEL;
+    found = await interpFindPages(client, INTERP_BACKUP_MODEL, sel, deadline, usage);
+  }
+  const { unit } = found;
+
+  // 2) Read every page at once; keep the part about this passage.
+  const read = await Promise.all(found.pages.map(async p => {
+    try {
+      const page = await interpFetchPage(p.url);
+      const excerpt = interpExcerpt(page.text, sel, unit, bookName);
+      if (excerpt.length < 200) throw new Error("too little text");
+      return { ...p, title: p.title || page.title, author: page.author, excerpt };
+    } catch (e) {
+      console.warn("getPassageInterpretations page skipped:", p.url, e && e.message);
+      // Blocked or slow page: fall back to the exact lines the search API cited.
+      const cited = found.snippets.get(p.url);
+      return cited && cited.length > 80 ? { ...p, excerpt: cited, author: "" } : null;
+    }
+  }));
+  const pages = read.filter(Boolean);
+  usage.pagesRead = pages.length;
+  if (!pages.length) throw new Error("no readable pages");
+
+  // 3) Put it together from those excerpts only.
+  const unitRef = interpRefLabel(sel.book, unit.sc, unit.sv, unit.ec, unit.ev);
+  const pageText = pages.map((p, i) =>
+    `[${i + 1}] (${INTERP_TRADITIONS[p.hint] || "unknown"}) ${p.title || interpHost(p.url)} — ${interpHost(p.url)}${p.author ? ` — by ${p.author}` : ""}\n${p.excerpt}`
+  ).join("\n\n");
+  const assemble = async model => {
+    const remaining = deadline - Date.now();
+    if (remaining < 8000) throw new Error("ran out of time assembling");
+    const msg = await client.messages.create({
+      model,
+      max_tokens: 6000,
+      system: interpAssemblePrompt(),
+      output_config: { effort: "low", format: { type: "json_schema", schema: INTERP_ASSEMBLE_SCHEMA } },
+      messages: [{ role: "user", content: `Passage: ${unitRef} (scope: ${unit.scope}; selected: ${selRef})\n\nExcerpts:\n\n${pageText}` }]
+    }, { timeout: remaining, maxRetries: 1 });
+    interpUsage(usage, msg);
+    if (msg.stop_reason === "refusal") { const e = new Error("declined"); e.declined = true; throw e; }
+    const block = (msg.content || []).find(b => b.type === "text");
+    return JSON.parse(block ? block.text : "{}");
+  };
+  let raw;
+  try {
+    raw = await assemble(INTERP_MODEL);
+  } catch (e) {
+    if (!(e && e.declined) && !(e instanceof SyntaxError) && !isRetryableAnthropicError(e)) throw e;
+    console.warn("getPassageInterpretations assemble retry on backup:", e && e.message);
+    raw = await assemble(INTERP_BACKUP_MODEL);
+  }
+
+  const clean = interpCleanResult(raw, pages, unit, sel);
+  console.log("getPassageInterpretations", selRef, JSON.stringify(usage), "views", clean.views.length);
+  if (!clean.views.length) throw new Error("no views with real sources");
+  return { clean, usage };
+}
+
+function interpCleanResult(raw, pages, unit, sel) {
+  const { sc, sv, ec, ev, scope } = unit;
+  const norm = pages.map(p => interpNorm(p.excerpt));
+  const views = [];
+  const used = new Set();
+  for (const v of (Array.isArray(raw && raw.views) ? raw.views : [])) {
+    if (!v || typeof v !== "object") continue;
+    const tradition = INTERP_TRADITIONS[v.tradition] ? v.tradition : "other";
+    const summary = interpClip(interpText(v.summary), 420);
+    if (!summary) continue;
+    const idx = new Set((Array.isArray(v.pages) ? v.pages : []).map(n => n - 1).filter(i => pages[i]));
+    const quotes = [];
+    for (const q of (Array.isArray(v.quotes) ? v.quotes : [])) {
+      const i = (q && q.page) - 1;
+      const text = interpText(q && q.text).replace(/^["“”'\s]+|["“”'\s]+$/g, "");
+      if (!pages[i] || !text || text.length > 360) continue;
+      if (!interpQuoteOnPage(text, norm[i])) continue; // not on the page → not shown
+      idx.add(i);
+      quotes.push({
+        text,
+        speaker: interpClip(interpText(q.speaker) || pages[i].author || "", 60),
+        work: interpClip(pages[i].title || interpHost(pages[i].url), 110),
+        url: pages[i].url,
+        site: interpHost(pages[i].url)
+      });
+      if (quotes.length === 2) break;
+    }
+    const sources = [...idx].slice(0, 3).map(i => ({
+      url: pages[i].url,
+      title: interpClip(pages[i].title || interpHost(pages[i].url), 110),
+      site: interpHost(pages[i].url)
+    }));
     if (!sources.length) continue; // nothing real behind it → leave it out
-    const key = tradition === "other" ? `other:${v.label.toLowerCase()}` : tradition;
+    const key = tradition === "other" ? `other:${String(v.label || "").toLowerCase()}` : tradition;
     if (used.has(key)) continue;
     used.add(key);
     views.push({
       tradition,
-      label: interpClip(v.label || INTERP_TRADITIONS[tradition], 60) || INTERP_TRADITIONS[tradition],
+      label: interpClip(interpText(v.label) || INTERP_TRADITIONS[tradition], 60) || INTERP_TRADITIONS[tradition],
       summary,
-      reasons: v.reasons.map(r => interpClip(r, 220)).filter(Boolean).slice(0, 3),
-      teachers: v.teachers.map(t => interpClip(t, 50)).filter(t => t && t.length > 2).slice(0, 3),
-      usageNote: scope === "supporting_verse" ? interpClip(v.usageNote, 320) : "",
-      usedWith: v.usedWith
-        .map(r => interpClip(r, 40))
+      reasons: (Array.isArray(v.reasons) ? v.reasons : []).map(r => interpClip(interpText(r), 220)).filter(Boolean).slice(0, 3),
+      teachers: (Array.isArray(v.teachers) ? v.teachers : []).map(t => interpClip(interpText(t), 50)).filter(t => t.length > 2).slice(0, 3),
+      usageNote: scope === "supporting_verse" ? interpClip(interpText(v.usageNote), 320) : "",
+      usedWith: (Array.isArray(v.usedWith) ? v.usedWith : [])
+        .map(r => interpClip(interpText(r), 40))
         .filter(r => /^[1-3]?\s?[A-Za-z][A-Za-z ]+\s\d{1,3}(:\d{1,3}([–-]\d{1,3}(:\d{1,3})?)?)?$/.test(r))
         .slice(0, 4),
       quotes,
@@ -1891,72 +2107,17 @@ function interpCleanResult(parsed, collected, sel) {
     });
   }
   views.sort((a, b) => (a.tradition === "free_grace" ? 0 : 1) - (b.tradition === "free_grace" ? 0 : 1));
-
   return {
-    book,
+    book: sel.book,
     startChapter: sc, startVerse: sv, endChapter: ec, endVerse: ev,
     start: interpPos(sc, sv),
     end: interpPos(ec, ev),
-    ref: interpRefLabel(book, sc, sv, ec, ev),
+    ref: interpRefLabel(sel.book, sc, sv, ec, ev),
     scope,
-    contextNote: scope === "selection" ? "" : interpClip(interpText(parsed.contextNote), 260),
-    overview: interpClip(interpText(parsed.overview), 420),
+    contextNote: scope === "selection" ? "" : interpClip(interpText(raw && raw.contextNote), 260),
+    overview: interpClip(interpText(raw && raw.overview), 420),
     views: views.slice(0, 6)
   };
-}
-
-// One model run: searches, then the "@" answer. Loops on pause_turn (the API
-// pausing a long server-tool turn) until the answer is in.
-async function interpRun(client, model, sel, deadline) {
-  const selRef = interpRefLabel(sel.book, sel.chapter, sel.startVerse, sel.chapter, sel.endVerse);
-  const messages = [{ role: "user", content: `Selected passage: ${selRef}\nWrite the answer in the @ line format.` }];
-  const contents = [];
-  const usage = { model, input_tokens: 0, output_tokens: 0, searches: 0 };
-  for (let turn = 0; turn < 4; turn++) {
-    const remaining = deadline - Date.now();
-    if (remaining < 8000) throw new Error("interpretations research ran out of time");
-    const msg = await client.messages.create({
-      model,
-      max_tokens: 8000,
-      system: interpSystemPrompt(),
-      output_config: { effort: "medium" },
-      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: INTERP_MAX_SEARCHES, blocked_domains: INTERP_BLOCKED_DOMAINS }],
-      messages
-    }, { timeout: remaining, maxRetries: 1 });
-    const u = msg.usage || {};
-    usage.input_tokens += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
-    usage.output_tokens += u.output_tokens || 0;
-    usage.searches += (u.server_tool_use && u.server_tool_use.web_search_requests) || 0;
-    contents.push(msg.content);
-    if (msg.stop_reason === "refusal") { const e = new Error("declined"); e.declined = true; throw e; }
-    if (msg.stop_reason !== "pause_turn") break;
-    messages.push({ role: "assistant", content: msg.content });
-  }
-  const collected = interpCollect(contents);
-  const parsed = interpParse(collected);
-  return { collected, parsed, usage };
-}
-
-async function interpResearch(sel) {
-  const client = anthropicClient();
-  const deadline = Date.now() + INTERP_DEADLINE_MS;
-  const selRef = interpRefLabel(sel.book, sel.chapter, sel.startVerse, sel.chapter, sel.endVerse);
-  let lastErr;
-  for (const model of [INTERP_MODEL, INTERP_BACKUP_MODEL]) {
-    try {
-      const run = await interpRun(client, model, sel, deadline);
-      const clean = interpCleanResult(run.parsed, run.collected, sel);
-      console.log("getPassageInterpretations", selRef, JSON.stringify(run.usage), "views", clean.views.length, "of", run.parsed.views.length);
-      if (clean.views.length) return { clean, usage: run.usage };
-      lastErr = new Error("no views with real sources");
-    } catch (e) {
-      lastErr = e;
-      console.warn("getPassageInterpretations", model, "failed:", e && e.message);
-      if (!(e && e.declined) && !isRetryableAnthropicError(e)) break;
-    }
-    if (deadline - Date.now() < 30000) break; // not enough time for the backup
-  }
-  throw lastErr || new Error("interpretations research failed");
 }
 
 // The smallest saved unit that holds the whole selection.
