@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.542";
+const APP_VERSION = "3.0.543";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,7 +30355,7 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.542 &mdash; Smoother, sharper tours</div>
+<div class="un-version-label">v3.0.543 &mdash; Smoother, sharper tours</div>
 <ul>
   <li><strong>Spot on</strong> &mdash; Every tour step now scrolls what it&rsquo;s talking about into view, the spotlight outlines exactly that, and the card and guide sit where they don&rsquo;t cover it, on any screen size.</li>
   <li><strong>Smoother moves</strong> &mdash; Cards glide from step to step instead of flying in from the corner, and everything fades softly while the next step gets ready.</li>
@@ -45968,8 +45968,14 @@ function coachPlaceCard({ rect, cardW, cardH, room = 0, guideW = 96, preferred =
   if (preferred === 'right') cands.unshift(cands.splice(2, 1)[0]);
   if (sides) for (let i = cands.length - 1; i >= 0; i--) if (!sides.includes(cands[i].side)) cands.splice(i, 1);
   const fits = c => c.top - room >= B.top + margin - 0.5 && c.top + cardH <= vh - margin + 0.5 && c.left >= B.left + margin - 0.5 && c.left + cardW <= vw - margin + 0.5;
+  // How much of the target a spot covers. On a tall target the top is what
+  // matters (a word study's word, a section's heading), so covering the top
+  // band counts triple: if something must give, the card covers the bottom.
+  const tall = rect.height > (vh - B.top) * 0.45;
+  const band = tall ? rect.top + rect.height * 0.4 : rect.top;
   const covered = c => {
-    const box = (l, t, w, h) => Math.max(0, Math.min(l + w, rect.right) - Math.max(l, rect.left)) * Math.max(0, Math.min(t + h, rect.bottom) - Math.max(t, rect.top));
+    const ov = (l, t, w, h, top, bottom) => Math.max(0, Math.min(l + w, rect.right) - Math.max(l, rect.left)) * Math.max(0, Math.min(t + h, bottom) - Math.max(t, top));
+    const box = (l, t, w, h) => ov(l, t, w, h, rect.top, rect.bottom) + 2 * ov(l, t, w, h, rect.top, band);
     return box(c.left, c.top, cardW, cardH) + (room ? box(c.left + 12, c.top - room, guideW, room) : 0);
   };
   const clean = cands.find(c => fits(c) && covered(c) === 0);
