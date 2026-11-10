@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.541";
+const APP_VERSION = "3.0.542";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,12 +30355,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.541 &mdash; Smoother, sharper tours</div>
+<div class="un-version-label">v3.0.542 &mdash; Smoother, sharper tours</div>
 <ul>
   <li><strong>Spot on</strong> &mdash; Every tour step now scrolls what it&rsquo;s talking about into view, the spotlight outlines exactly that, and the card and guide sit where they don&rsquo;t cover it, on any screen size.</li>
   <li><strong>Smoother moves</strong> &mdash; Cards glide from step to step instead of flying in from the corner, and everything fades softly while the next step gets ready.</li>
   <li><strong>Right-sized guide</strong> &mdash; In Rhēma&rsquo;s menu the guide now sizes himself to whatever he&rsquo;s peeking behind or leaning on, and he&rsquo;s a bit smaller on small phones.</li>
   <li><strong>Fixes</strong> &mdash; Tour list icons are centered, and on short phones the verse menu scrolls instead of running off the top of the screen.</li>
+  <li><strong>Works offline</strong> &mdash; All of the guide&rsquo;s poses are saved with the app, so tours look right even without a connection.</li>
 </ul>
 <div class="un-version-label">v3.0.540 &mdash; Your guide has moves</div>
 <ul>
