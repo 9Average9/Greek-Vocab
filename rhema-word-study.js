@@ -1277,12 +1277,17 @@
     const steps = TOUR.filter(s => root && [...scope(s).querySelectorAll(s.sel)].some(el => el.offsetParent && !el.classList.contains('hidden')));
     const step = steps[_tour.i];
     if (!root || !root.offsetParent || !step) return _tourEnd();
-    const target = [...scope(step).querySelectorAll(step.sel)].find(el => el.offsetParent && !el.classList.contains('hidden'));
-    // Scroll it into view (inside the sheet), spotlight exactly what's on
-    // screen, and put the tip where neither it nor the guide covers it.
-    window.coachBringIntoView?.(target);
-    const r = window.coachVisibleRect ? window.coachVisibleRect(target) : target.getBoundingClientRect();
-    if (!r) return _tourEnd();
+    // Of the matches (e.g. a Save button on several cards), use one that can
+    // actually be shown: scroll it into view and check it's on screen.
+    const matches = [...scope(step).querySelectorAll(step.sel)].filter(el => el.offsetParent && !el.classList.contains('hidden'));
+    let target = null, r = null;
+    for (const el of matches) {
+      window.coachBringIntoView?.(el);
+      const vr = window.coachVisibleRect ? window.coachVisibleRect(el) : el.getBoundingClientRect();
+      if (vr) { target = el; r = vr; break; }
+    }
+    // Nothing on screen for this step: skip it rather than ending the tour.
+    if (!r) { _tour.i++; return _tourShow(); }
     const { spot, tip } = _tourEls();
     const pad = 6;
     Object.assign(spot.style, { top: `${r.top - pad}px`, left: `${r.left - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` });

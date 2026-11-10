@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.543";
+const APP_VERSION = "3.0.544";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.544 &mdash; Fonts galore and a tidier verse menu</div>
+<ul>
+  <li><strong>47 new fonts</strong> &mdash; Handwritten, fancy script, bold display, and fun ones like Old English, 8-bit pixel, Terminal, Comic Book and Typewriter. Pick a style, then tap a tile; Default puts it back.</li>
+  <li><strong>See the verse you tapped</strong> &mdash; It now slides into view right above the verse menu instead of hiding behind it.</li>
+  <li><strong>Simpler verse menu</strong> &mdash; Highlight, note, compare, copy, define and interlinear. Search closes it so it never covers results.</li>
+  <li><strong>Snappier tours</strong> &mdash; Faster steps, and Done always ends the tour.</li>
+  <li><strong>Cleaner side menu</strong> &mdash; No close button; tap outside the menu to close it.</li>
+</ul>
 <div class="un-version-label">v3.0.543 &mdash; Smoother, sharper tours</div>
 <ul>
   <li><strong>Spot on</strong> &mdash; Every tour step now scrolls what it&rsquo;s talking about into view, the spotlight outlines exactly that, and the card and guide sit where they don&rsquo;t cover it, on any screen size.</li>
@@ -38405,6 +38413,8 @@ function toggleRhemaSearch() {
   const modal = document.getElementById('rhemaModal');
   if (!modal) return;
   if (modal.classList.contains('rhema-search-open')) { closeRhemaSearch(); return; }
+  // The verse menu would sit over the results: close it (and its selection).
+  if (typeof _rhemaVerseSheetOpen === 'function' && _rhemaVerseSheetOpen()) closeRhemaVerseSheetAndDeselect();
   modal.classList.add('rhema-search-open');
   _rhemaSetChromeHidden?.(false);
   const toggle = document.getElementById('rhemaSearchToggle');
@@ -39688,6 +39698,7 @@ function rhemaOpenVerseMenu(v, ev) {
   if (typeof _rhemaVerseSheetOpen === 'function' && !_rhemaVerseSheetOpen()) _rhemaSel.clear();
   // Default: toggle selection and open the action sheet immediately.
   rhemaToggleVerseSelect(verse);
+  _rhemaLastTappedVerse = _rhemaSel.has(verse) ? verse : null;
   if (_rhemaSel.size) rhemaOpenSelectionSheet();
   else closeRhemaVerseSheet();
 }
@@ -39706,6 +39717,46 @@ function rhemaOpenSelectionSheet() {
   _rhemaRenderVerseSheet();
   document.getElementById('rhemaVerseSheet')?.classList.add('open');
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
+  const keep = _rhemaLastTappedVerse && verses.includes(_rhemaLastTappedVerse) ? _rhemaLastTappedVerse : verses[verses.length - 1];
+  requestAnimationFrame(() => _rhemaKeepVerseAboveSheet(keep));
+}
+// The verse you just tapped slides into view above the action sheet instead of
+// hiding behind it. The reader gets extra bottom room while the sheet is open
+// so even the last verses of a chapter can scroll clear of it.
+let _rhemaLastTappedVerse = null;
+function _rhemaKeepVerseAboveSheet(verse) {
+  const overlay = document.getElementById('rhemaVerseSheet');
+  const sheet = overlay?.querySelector('.rhema-vsheet');
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  if (!sheet || !body || !overlay.classList.contains('open')) return;
+  const englishOn = !document.getElementById('rhemaEnglishDisplay')?.classList.contains('hidden');
+  const display = document.getElementById(englishOn ? 'rhemaEnglishDisplay' : 'rhemaVerseDisplay');
+  const block = display?.querySelector(`.rhema-chapter-block[data-verse="${verse}"]`);
+  if (!block) return;
+  // Where the sheet will sit once its slide-in finishes.
+  const oRect = overlay.getBoundingClientRect();
+  const sheetBottom = oRect.bottom - (parseFloat(getComputedStyle(sheet).marginBottom) || 0);
+  const sheetTop = sheetBottom - sheet.offsetHeight;
+  // Give the reader room at the bottom first, then measure and scroll on the
+  // next frame (changing the padding mid-scroll throws the position off).
+  const roomPx = Math.max(0, oRect.bottom - sheetTop) + 'px';
+  if (body.style.getPropertyValue('--rhema-sheet-room') !== roomPx) {
+    body.style.setProperty('--rhema-sheet-room', roomPx);
+    requestAnimationFrame(() => _rhemaKeepVerseAboveSheet(verse));
+    return;
+  }
+  // Where the top bars end when shown (they may be mid-slide right now): the
+  // reader keeps exactly that much padding at its top.
+  const topLimit = body.getBoundingClientRect().top + (parseFloat(getComputedStyle(body).paddingTop) || 0) + 10;
+  const r = block.getBoundingClientRect();
+  const room = sheetTop - 14 - topLimit;
+  let delta = 0;
+  if (r.height > room) delta = r.top - topLimit;                 // tall verse: show its start
+  else if (r.bottom > sheetTop - 14) delta = r.bottom - (sheetTop - 14);
+  else if (r.top < topLimit) delta = r.top - topLimit;
+  if (Math.abs(delta) > 2) {
+    try { body.scrollBy({ top: delta, behavior: 'smooth' }); } catch { body.scrollTop += delta; }
+  }
 }
 function _rhemaRenderVerseSheet() {
   const ref = _rhemaMenuRef; if (!ref) return;
@@ -39754,6 +39805,7 @@ function _rhemaRenderVerseSheet() {
 function closeRhemaVerseSheet(e) {
   if (e && e.target !== document.getElementById('rhemaVerseSheet')) return;
   document.getElementById('rhemaVerseSheet')?.classList.remove('open');
+  document.querySelector('#rhemaModal .rhema-body')?.style.removeProperty('--rhema-sheet-room');
   _rhemaMarkActiveVerse(null);
   updateRhemaVerseNav?.();
 }
@@ -43054,37 +43106,112 @@ function closeStudyToolHost() {
 // ── Read-mode reader panel (highlights / notes / cross refs / typography) ──────
 const RHEMA_READER_FONTS = [
   { id: 'default', label: 'Default',   group: 'system', stack: '' },
-  { id: 'serif',   label: 'Serif',     group: 'serif',  stack: 'Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif' },
-  { id: 'rounded', label: 'Rounded',   group: 'sans',   stack: 'ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Varela Round", system-ui, sans-serif' },
+  { id: 'serif',   label: 'Serif',     group: 'classic',  stack: 'Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif' },
+  { id: 'rounded', label: 'Rounded',   group: 'clean',   stack: 'ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Varela Round", system-ui, sans-serif' },
   { id: 'mono',    label: 'Monospace', group: 'mono',   stack: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace' },
-  { id: 'times',        label: 'Times New Roman', group: 'serif', stack: '"Times New Roman", Times, "Liberation Serif", serif' },
-  { id: 'georgia',      label: 'Georgia',         group: 'serif', stack: 'Georgia, "Nimbus Roman", "Times New Roman", serif' },
-  { id: 'palatino',     label: 'Palatino',        group: 'serif', stack: '"Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif' },
-  { id: 'garamond',     label: 'Garamond',        group: 'serif', stack: 'Garamond, "EB Garamond", "Apple Garamond", "Times New Roman", serif' },
-  { id: 'baskerville',  label: 'Baskerville',     group: 'serif', stack: 'Baskerville, "Baskerville Old Face", "Libre Baskerville", "Times New Roman", serif' },
-  { id: 'cambria',      label: 'Cambria',         group: 'serif', stack: 'Cambria, "Hoefler Text", "Liberation Serif", Georgia, serif' },
-  { id: 'bookman',      label: 'Bookman',         group: 'serif', stack: '"Bookman Old Style", "URW Bookman L", "Palatino Linotype", serif' },
-  { id: 'cardo',        label: 'Cardo',           group: 'serif', stack: 'Cardo, "Gentium Plus", "Times New Roman", serif' },
-  { id: 'arial',        label: 'Arial',           group: 'sans',  stack: 'Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif' },
-  { id: 'helvetica',    label: 'Helvetica',       group: 'sans',  stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
-  { id: 'verdana',      label: 'Verdana',         group: 'sans',  stack: 'Verdana, Geneva, "DejaVu Sans", sans-serif' },
-  { id: 'tahoma',       label: 'Tahoma',          group: 'sans',  stack: 'Tahoma, Geneva, Verdana, sans-serif' },
-  { id: 'trebuchet',    label: 'Trebuchet',       group: 'sans',  stack: '"Trebuchet MS", "Segoe UI", "Lucida Grande", sans-serif' },
-  { id: 'segoe',        label: 'Segoe UI',        group: 'sans',  stack: '"Segoe UI", Roboto, system-ui, sans-serif' },
-  { id: 'calibri',      label: 'Calibri',         group: 'sans',  stack: 'Calibri, Candara, "Segoe UI", "Carlito", sans-serif' },
-  { id: 'gillsans',     label: 'Gill Sans',       group: 'sans',  stack: '"Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif' },
-  { id: 'futura',       label: 'Futura',          group: 'sans',  stack: 'Futura, "Century Gothic", "Trebuchet MS", sans-serif' },
-  { id: 'centurygothic',label: 'Century Gothic',  group: 'sans',  stack: '"Century Gothic", "URW Gothic L", "Avant Garde", sans-serif' },
-  { id: 'optima',       label: 'Optima',          group: 'sans',  stack: 'Optima, Candara, "Segoe UI", sans-serif' },
-  { id: 'lucida',       label: 'Lucida',          group: 'sans',  stack: '"Lucida Sans", "Lucida Grande", "Lucida Sans Unicode", sans-serif' },
+  { id: 'times',        label: 'Times New Roman', group: 'classic', stack: '"Times New Roman", Times, "Liberation Serif", serif' },
+  { id: 'georgia',      label: 'Georgia',         group: 'classic', stack: 'Georgia, "Nimbus Roman", "Times New Roman", serif' },
+  { id: 'palatino',     label: 'Palatino',        group: 'classic', stack: '"Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif' },
+  { id: 'garamond',     label: 'Garamond',        group: 'classic', stack: 'Garamond, "EB Garamond", "Apple Garamond", "Times New Roman", serif' },
+  { id: 'baskerville',  label: 'Baskerville',     group: 'classic', stack: 'Baskerville, "Baskerville Old Face", "Libre Baskerville", "Times New Roman", serif' },
+  { id: 'cambria',      label: 'Cambria',         group: 'classic', stack: 'Cambria, "Hoefler Text", "Liberation Serif", Georgia, serif' },
+  { id: 'bookman',      label: 'Bookman',         group: 'classic', stack: '"Bookman Old Style", "URW Bookman L", "Palatino Linotype", serif' },
+  { id: 'cardo',        label: 'Cardo',           group: 'classic', stack: 'Cardo, "Gentium Plus", "Times New Roman", serif' },
+  { id: 'arial',        label: 'Arial',           group: 'clean',  stack: 'Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif' },
+  { id: 'helvetica',    label: 'Helvetica',       group: 'clean',  stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+  { id: 'verdana',      label: 'Verdana',         group: 'clean',  stack: 'Verdana, Geneva, "DejaVu Sans", sans-serif' },
+  { id: 'tahoma',       label: 'Tahoma',          group: 'clean',  stack: 'Tahoma, Geneva, Verdana, sans-serif' },
+  { id: 'trebuchet',    label: 'Trebuchet',       group: 'clean',  stack: '"Trebuchet MS", "Segoe UI", "Lucida Grande", sans-serif' },
+  { id: 'segoe',        label: 'Segoe UI',        group: 'clean',  stack: '"Segoe UI", Roboto, system-ui, sans-serif' },
+  { id: 'calibri',      label: 'Calibri',         group: 'clean',  stack: 'Calibri, Candara, "Segoe UI", "Carlito", sans-serif' },
+  { id: 'gillsans',     label: 'Gill Sans',       group: 'clean',  stack: '"Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif' },
+  { id: 'futura',       label: 'Futura',          group: 'clean',  stack: 'Futura, "Century Gothic", "Trebuchet MS", sans-serif' },
+  { id: 'centurygothic',label: 'Century Gothic',  group: 'clean',  stack: '"Century Gothic", "URW Gothic L", "Avant Garde", sans-serif' },
+  { id: 'optima',       label: 'Optima',          group: 'clean',  stack: 'Optima, Candara, "Segoe UI", sans-serif' },
+  { id: 'lucida',       label: 'Lucida',          group: 'clean',  stack: '"Lucida Sans", "Lucida Grande", "Lucida Sans Unicode", sans-serif' },
   { id: 'courier',      label: 'Courier',         group: 'mono',  stack: '"Courier New", Courier, "Liberation Mono", monospace' }
 ];
+// Web fonts (Google Fonts), loaded only when their category is opened or one
+// of them is the chosen font. `w` lists the weights each family really has.
+const RHEMA_WEB_FONTS = [
+  // Classic
+  ['ebgaramond', 'EB Garamond', 'classic', '"EB Garamond", Garamond, serif', '400;700'],
+  ['lora', 'Lora', 'classic', 'Lora, Georgia, serif', '400;700'],
+  ['merriweather', 'Merriweather', 'classic', 'Merriweather, Georgia, serif', '400;700'],
+  ['crimson', 'Crimson Pro', 'classic', '"Crimson Pro", Georgia, serif', '400;700'],
+  ['librebask', 'Libre Baskerville', 'classic', '"Libre Baskerville", Baskerville, serif', '400;700'],
+  // Clean
+  ['atkinson', 'Atkinson (extra readable)', 'clean', '"Atkinson Hyperlegible", system-ui, sans-serif', '400;700', 'Atkinson Hyperlegible'],
+  ['lexend', 'Lexend', 'clean', 'Lexend, system-ui, sans-serif', '400;700'],
+  ['inter', 'Inter', 'clean', 'Inter, system-ui, sans-serif', '400;700'],
+  ['nunito', 'Nunito', 'clean', 'Nunito, system-ui, sans-serif', '400;700'],
+  ['poppins', 'Poppins', 'clean', 'Poppins, system-ui, sans-serif', '400;700'],
+  ['quicksand', 'Quicksand', 'clean', 'Quicksand, system-ui, sans-serif', '400;700'],
+  ['montserrat', 'Montserrat', 'clean', 'Montserrat, system-ui, sans-serif', '400;700'],
+  // Handwritten
+  ['caveat', 'Caveat', 'hand', 'Caveat, cursive', '400;700'],
+  ['patrickhand', 'Patrick Hand', 'hand', '"Patrick Hand", cursive'],
+  ['kalam', 'Kalam', 'hand', 'Kalam, cursive', '400;700'],
+  ['indieflower', 'Indie Flower', 'hand', '"Indie Flower", cursive'],
+  ['shadows', 'Shadows Into Light', 'hand', '"Shadows Into Light", cursive'],
+  ['gochi', 'Gochi Hand', 'hand', '"Gochi Hand", cursive'],
+  ['architects', 'Architects Daughter', 'hand', '"Architects Daughter", cursive'],
+  ['nanumpen', 'Nanum Pen', 'hand', '"Nanum Pen Script", cursive', '', 'Nanum Pen Script'],
+  // Fancy script
+  ['dancing', 'Dancing Script', 'script', '"Dancing Script", cursive', '400;700'],
+  ['greatvibes', 'Great Vibes', 'script', '"Great Vibes", cursive'],
+  ['pacifico', 'Pacifico', 'script', 'Pacifico, cursive'],
+  ['satisfy', 'Satisfy', 'script', 'Satisfy, cursive'],
+  ['parisienne', 'Parisienne', 'script', 'Parisienne, cursive'],
+  ['sacramento', 'Sacramento', 'script', 'Sacramento, cursive'],
+  // Bold & display
+  ['playfair', 'Playfair Display', 'display', '"Playfair Display", Georgia, serif', '400;700'],
+  ['cinzel', 'Cinzel', 'display', 'Cinzel, serif', '400;700'],
+  ['abril', 'Abril Fatface', 'display', '"Abril Fatface", serif'],
+  ['bebas', 'Bebas Neue', 'display', '"Bebas Neue", Impact, sans-serif'],
+  ['oswald', 'Oswald', 'display', 'Oswald, Impact, sans-serif', '400;700'],
+  ['righteous', 'Righteous', 'display', 'Righteous, sans-serif'],
+  ['lobster', 'Lobster', 'display', 'Lobster, cursive'],
+  ['alfaslab', 'Alfa Slab One', 'display', '"Alfa Slab One", serif'],
+  // Fun & retro
+  ['unifraktur', 'Old English', 'retro', '"UnifrakturMaguntia", serif', '', 'UnifrakturMaguntia'],
+  ['pressstart', 'Pixel (8-bit)', 'retro', '"Press Start 2P", monospace', '', 'Press Start 2P'],
+  ['vt323', 'Terminal', 'retro', 'VT323, monospace', '', 'VT323'],
+  ['orbitron', 'Orbitron', 'retro', 'Orbitron, sans-serif', '400;700'],
+  ['bangers', 'Comic Book', 'retro', 'Bangers, cursive', '', 'Bangers'],
+  ['comicneue', 'Comic Neue', 'retro', '"Comic Neue", cursive', '400;700'],
+  ['fredoka', 'Fredoka', 'retro', 'Fredoka, sans-serif', '400;600'],
+  ['creepster', 'Spooky', 'retro', 'Creepster, cursive', '', 'Creepster'],
+  ['specialelite', 'Typewriter', 'retro', '"Special Elite", monospace', '', 'Special Elite'],
+  // Typewriter & code
+  ['courierprime', 'Courier Prime', 'mono', '"Courier Prime", Courier, monospace', '400;700'],
+  ['jetbrains', 'JetBrains Mono', 'mono', '"JetBrains Mono", monospace', '400;700'],
+  ['plexmono', 'IBM Plex Mono', 'mono', '"IBM Plex Mono", monospace', '400;700'],
+  ['spacemono', 'Space Mono', 'mono', '"Space Mono", monospace', '400;700'],
+].map(([id, label, group, stack, w, family]) => ({ id, label, group, stack, web: { family: family || label, w: w || '' } }));
+RHEMA_READER_FONTS.push(...RHEMA_WEB_FONTS);
+const _rhemaWebFontLinks = new Set();
+function _rhemaLoadWebFonts(fonts) {
+  const fams = (fonts || []).filter(f => f && f.web).map(f => 'family=' + encodeURIComponent(f.web.family).replace(/%20/g, '+') + (f.web.w ? ':wght@' + f.web.w : ''));
+  if (!fams.length) return;
+  const href = 'https://fonts.googleapis.com/css2?' + fams.join('&') + '&display=swap';
+  if (_rhemaWebFontLinks.has(href)) return;
+  _rhemaWebFontLinks.add(href);
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = href;
+  document.head.appendChild(link);
+}
+
 // Category tabs for the font picker — keeps 25 faces browsable without a long scroll.
 const RHEMA_READER_FONT_GROUPS = [
-  { id: 'serif',  label: 'Serif' },
-  { id: 'sans',   label: 'Sans' },
-  { id: 'mono',   label: 'Mono' },
-  { id: 'system', label: 'System' }
+  { id: 'classic', label: 'Classic', icon: 'menu_book' },
+  { id: 'clean',   label: 'Clean',   icon: 'text_fields' },
+  { id: 'hand',    label: 'Handwritten', icon: 'draw' },
+  { id: 'script',  label: 'Fancy',   icon: 'auto_awesome' },
+  { id: 'display', label: 'Bold',    icon: 'format_bold' },
+  { id: 'retro',   label: 'Fun & retro', icon: 'sports_esports' },
+  { id: 'mono',    label: 'Typewriter', icon: 'keyboard' }
 ];
 // Finer, wider range of reading sizes (was 6 coarse steps) — index 4 == 100%.
 const RHEMA_READER_FONT_STEPS = [0.75, 0.80, 0.85, 0.92, 1.0, 1.08, 1.16, 1.25, 1.35, 1.48, 1.62, 1.78, 1.95];
@@ -43107,7 +43234,9 @@ function _applyRhemaReaderFontPrefs() {
   const reader = document.querySelector('#rhemaModal .rhema-reader');
   if (!reader) return;
   const { size, font } = _rhemaReaderFontPrefs();
-  const stack = (RHEMA_READER_FONTS.find(f => f.id === font) || RHEMA_READER_FONTS[0]).stack;
+  const chosen = RHEMA_READER_FONTS.find(f => f.id === font) || RHEMA_READER_FONTS[0];
+  if (chosen.web) _rhemaLoadWebFonts([chosen]);
+  const stack = chosen.stack;
   reader.style.setProperty('--rhema-reader-scale', String(RHEMA_READER_FONT_STEPS[size]));
   reader.style.setProperty('--rhema-reader-font', stack || 'inherit');
 }
@@ -43123,8 +43252,6 @@ function rhemaReaderSetFont(id) {
   prefs.font = id;
   _saveRhemaReaderFontPrefs(prefs);
   _applyRhemaReaderFontPrefs();
-  const picked = RHEMA_READER_FONTS.find(f => f.id === id);
-  if (picked) _rhemaReaderFontTab = picked.group; // follow the selection into its category
   _renderRhemaReaderFontList();
 }
 function rhemaReaderFontTab(group) {
@@ -43195,42 +43322,41 @@ function _renderRhemaReaderFontList() {
   if (!wrap) return;
   const { font } = _rhemaReaderFontPrefs();
   const current = RHEMA_READER_FONTS.find(f => f.id === font) || RHEMA_READER_FONTS[0];
-  // Default the visible tab to whatever category the current font lives in.
+  // Open on the chosen font's category (Default lives in Classic).
   if (!_rhemaReaderFontTab || !RHEMA_READER_FONT_GROUPS.some(g => g.id === _rhemaReaderFontTab)) {
-    _rhemaReaderFontTab = current.group;
+    _rhemaReaderFontTab = RHEMA_READER_FONT_GROUPS.some(g => g.id === current.group) ? current.group : 'classic';
   }
   const tab = _rhemaReaderFontTab;
   const inTab = RHEMA_READER_FONTS.filter(f => f.group === tab);
-
-  // The reader applies '' (Default) as the page's own font; mirror that here so
-  // the preview always shows exactly what the chapter will look like.
+  _rhemaLoadWebFonts(inTab);   // only this category's fonts download
   const previewStack = current.stack || 'var(--rhema-reader-default-font, inherit)';
+  const isDefault = current.id === 'default';
   const previewHtml =
     `<div class="rrp-fp-preview">
       <span class="rrp-fp-verse" style="font-family:${previewStack}">In the beginning was the Word</span>
-      <span class="rrp-fp-meta"><em style="font-family:${previewStack}">${current.label}</em> · <span style="font-family:${previewStack}">Aa Gg&nbsp; 1 2 3</span></span>
+      <span class="rrp-fp-meta"><em>${current.label}</em>${isDefault ? '' : `<button class="rrp-fp-reset" type="button" onclick="rhemaReaderSetFont('default')"><span class="material-symbols-outlined">restart_alt</span>Default</button>`}</span>
     </div>`;
-
-  const tabsHtml =
-    `<div class="rrp-fp-tabs" role="tablist">
+  // Categories: all visible at once (they wrap), so nothing hides off the edge.
+  const catsHtml =
+    `<div class="rrp-fp-cats" role="tablist" aria-label="Font styles">
       ${RHEMA_READER_FONT_GROUPS.map(g => {
         const n = RHEMA_READER_FONTS.filter(f => f.group === g.id).length;
-        if (!n) return '';
-        return `<button class="rrp-fp-tab${g.id === tab ? ' active' : ''}" role="tab" aria-selected="${g.id === tab}" onclick="rhemaReaderFontTab('${g.id}')">${g.label}<span class="rrp-fp-tab-n">${n}</span></button>`;
+        const has = current.group === g.id && !isDefault;
+        return `<button class="rrp-fp-cat${g.id === tab ? ' active' : ''}${has ? ' has-pick' : ''}" role="tab" aria-selected="${g.id === tab}" onclick="rhemaReaderFontTab('${g.id}')"><span class="material-symbols-outlined">${g.icon}</span><span>${g.label}</span><em>${n}</em></button>`;
       }).join('')}
     </div>`;
-
-  const chipsHtml =
-    `<div class="rrp-fp-chips">
+  // Fonts: a grid of preview tiles — the sample is set in the font itself.
+  const tilesHtml =
+    `<div class="rrp-fp-grid">
       ${inTab.map(f =>
-        `<button class="rrp-fp-chip${f.id === font ? ' active' : ''}" onclick="rhemaReaderSetFont('${f.id}')" style="font-family:${f.stack || 'inherit'}" aria-pressed="${f.id === font}">
-          <span class="rrp-fp-chip-check material-symbols-outlined">check</span>
-          <span class="rrp-fp-chip-name">${f.label}</span>
+        `<button class="rrp-fp-tile${f.id === font ? ' active' : ''}" type="button" onclick="rhemaReaderSetFont('${f.id}')" aria-pressed="${f.id === font}" aria-label="${f.label}">
+          <span class="rrp-fp-sample" style="font-family:${f.stack || 'inherit'}">Aa</span>
+          <span class="rrp-fp-name">${f.label}</span>
+          <span class="rrp-fp-tick material-symbols-outlined">check_circle</span>
         </button>`
       ).join('')}
     </div>`;
-
-  wrap.innerHTML = previewHtml + tabsHtml + chipsHtml;
+  wrap.innerHTML = previewHtml + catsHtml + tilesHtml;
 }
 
 function openRhemaReaderPanel() {
@@ -43354,20 +43480,13 @@ function _rrpGuideCandidates(pane) {
       add({ kind, mode: 'stand', pose, w, h, left: X(left), top: Y(bottom - h) });
     }
   };
+  // Header: the free strip between the title and the header's right edge.
   const title = pane.querySelector('.rrp-header .rrp-title');
-  const xBtn = pane.querySelector('.rrp-header .rrp-x');
-  const titleRight = title ? _rrpTextRight(title) : pr.left;
-  if (xBtn) {
-    const xr = xBtn.getBoundingClientRect();
-    stand('hdr', titleRight + 12, xr.left - 10, xr.bottom + 2, Math.max(34, Math.min(44, xr.height * 1.15)));
-    // 2) Peeking from behind the close button: his flat cut edge (21–64% of
-    //    his height) sits flush against the button's left edge, so he reads
-    //    as standing behind it.
-    const h = Math.max(36, Math.min(50, xr.height * 1.2)), w = h / GUIDE_POSES.peek;
-    const right = xr.left + 1;
-    if (right - w >= titleRight + 10) {
-      add({ kind: 'peekX', mode: 'peek', pose: 'peek', w, h, left: X(right - w), top: Y(xr.top + xr.height / 2 - h * 0.425), anchor: xBtn, anchorSide: 'right' });
-    }
+  const header = pane.querySelector('.rrp-header');
+  if (title && header) {
+    const hr = header.getBoundingClientRect();
+    const padR = parseFloat(getComputedStyle(header).paddingRight) || 12;
+    stand('hdr', _rrpTextRight(title) + 14, hr.right - padR, hr.bottom - 6, Math.max(34, Math.min(44, hr.height * 0.55)));
   }
   pane.querySelectorAll('#rrpMainBody .rrp-section-label').forEach((lab, i) => {
     const lr = lab.getBoundingClientRect();
@@ -43462,7 +43581,7 @@ function _rrpPlaceGuide() {
 }
 const RHEMA_TOURS = [
   { id: 'rhema', icon: 'auto_stories', title: 'Rhēma basics', desc: 'Reading, turning pages, search, and getting around.' },
-  { id: 'verses', icon: 'touch_app', title: 'Tapping a verse', desc: 'Highlights, notes, compare, copy, interlinear and more.' },
+  { id: 'verses', icon: 'touch_app', title: 'Tapping a verse', desc: 'Highlights, notes, compare, copy, define and interlinear.' },
   { id: 'reading', icon: 'tune', title: 'The menu', desc: 'Greek and Hebrew, reading helpers, your saved stuff, text size.' },
   { id: 'wordstudy', icon: 'menu_book', title: 'Greek words', desc: 'What a word means here, its parsing, and everywhere it shows up.' },
   { id: 'study', icon: 'layers', title: 'Study tools', desc: 'Phrasing, Word Log, Trails and Workspace.', account: true },
@@ -45997,8 +46116,13 @@ function coachNudgeFor(target, rect, pos, cardH, room, gap = 14) {
     const cs = getComputedStyle(node);
     if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight + 2) {
       const before = node.scrollTop;
+      const wasH = rect.height;
       node.scrollTop = before + dy;
-      return Math.abs(node.scrollTop - before) > 1;
+      if (Math.abs(node.scrollTop - before) <= 1) return false;
+      // Never trade a covered target for one scrolled out of sight.
+      const vr = coachVisibleRect(target);
+      if (!vr || vr.height < Math.min(wasH, target.getBoundingClientRect().height) - 2) { node.scrollTop = before; return false; }
+      return true;
     }
   }
   return false;
@@ -46087,14 +46211,16 @@ const APP_WELCOME_COACH_STEPS = [
 const _coachPause = (ms = 420) => new Promise(r => setTimeout(r, ms));
 // Opens the verse menu on the first verse of the chapter (English, chapter view).
 async function _coachOpenVerseMenu() {
-  if (!_rhemaShowEnglish) rhemaLanguagePick('english');
-  if (!_rhemaFullChapter) toggleRhemaChapterMode();
-  await _coachPause(350);
+  // Only wait when something actually had to change (fast steps otherwise).
+  let changed = false;
+  if (!_rhemaShowEnglish) { rhemaLanguagePick('english'); changed = true; }
+  if (!_rhemaFullChapter) { toggleRhemaChapterMode(); changed = true; }
+  if (changed) await _coachPause(260);
   if (!_rhemaVerseSheetOpen?.()) {
-    const first = document.querySelector('#rhemaEnglishDisplay .rhema-chapter-block[data-verse]');
-    if (first) rhemaOpenVerseMenu(first.dataset.verse);
+    const v = _coachVisibleVerse();
+    if (v?.dataset?.verse) rhemaOpenVerseMenu(v.dataset.verse);
+    return _coachPause(330);   // the sheet's slide-in
   }
-  return _coachPause(420);
 }
 const _coachVsheetBtn = fn => () => _coachFirst([() => [...document.querySelectorAll('#rhemaVerseSheet .rhema-vsheet-action')].find(b => b.offsetParent && fn([...b.querySelectorAll('span')].filter(x => !x.classList.contains('material-symbols-outlined')).map(x => x.textContent).join(' ').trim())), '#rhemaVerseSheet .rhema-vsheet']);
 const VERSE_COACH_STEPS = [
@@ -46104,24 +46230,18 @@ const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), pose: 'thumbs', title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /English word/.test(t)), pose: 'think', title: 'Define a word', body: 'Not sure what a word in your Bible means? Pick it and get a simple definition. Names and places get a Bible dictionary entry.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Interlinear/.test(t)), pose: 'inspect', title: 'Interlinear', body: 'Lines up every Greek (or Hebrew) word with its English, word by word. Tap any word to study it.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Focus/.test(t)), pose: 'inspect', title: 'Focus', body: 'Shows just this one verse so you can slow down with it. Turn Chapter View back on in the menu to see the whole chapter again.' },
-  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetStudy', '#rhemaVerseSheet .rhema-vsheet']), title: 'Your study', body: 'Save a thought about the verse to your Workspace, or add one of its words to your Word Log. (These need you signed in.)' },
-  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetRef', '#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
+  { before: _coachOpenVerseMenu, target: () => _coachFirst([() => document.querySelector(`#rhemaEnglishDisplay .rhema-chapter-block[data-verse="${_rhemaSelectedVersesSorted?.()[0] || _rhemaVerse}"]`), '#rhemaVerseSheetRef', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
 ];
 // The menu's reading helpers. Scrolls the menu so each spotlighted part is on screen.
 function _coachMenuShow(pick) {
   return () => {
-    if (!document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) openRhemaReaderPanel();
-    showReaderPanelSection('main');
-    return _coachPause(380).then(() => {
-      const el = pick();
-      const pane = document.querySelector('#rhemaReaderPanel .rrp-pane-main');
-      if (el && pane) {
-        const r = el.getBoundingClientRect(), pr = pane.getBoundingClientRect();
-        pane.scrollTop += (r.top - pr.top) - pane.clientHeight * 0.3;
-      }
-      return _coachPause(260);
-    });
+    const panel = document.getElementById('rhemaReaderPanel');
+    const wasOpen = document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open');
+    const wasSub = panel?.classList.contains('sub-open');
+    if (!wasOpen) openRhemaReaderPanel();
+    if (wasSub) showReaderPanelSection('main');
+    // Placement scrolls the target into view itself; just let a slide-in finish.
+    return (!wasOpen || wasSub) ? _coachPause(360) : null;
   };
 }
 const _menuSectionAfter = label => () => {
@@ -46144,11 +46264,11 @@ function startReadingToolsCoach() { _startAppCoach(READING_COACH_STEPS, 'reading
 // The reader's built-in study: its tools live in Rhēma's side menu.
 const STUDY_RHEMA_COACH_STEPS = [
   { before: () => { if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost(); openRhemaReaderPanel(); return _coachPause(460); }, target: () => _coachFirst(['#rrpMainBody .rrp-study-grid', '#rrpMainBody']), title: 'Your study', body: 'Phrasing, Word Log, Trails and Workspace live right here. Anything you add saves to your account by itself.' },
-  { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachVisibleVerse(), demo: 'longpress', pose: 'think', title: 'Jot a thought', body: 'Press and hold a verse (or tap it and pick “Observe, interpret, apply or ask”) to save a thought about it to your Workspace.' },
-  { before: () => Promise.resolve(openStudyTool('phrasing')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneVerses .ss-structured-add', '#ssPaneVerses']), title: 'Phrasing', body: 'Tap + and pick a passage. Its words land on a canvas: hold a word to split it off, then drag the pieces around to see how the thought flows.' },
-  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssWordlogList .ss-word-item', '#ssPaneWordlog > .ss-hint', '#ssWordlogList']), pose: 'inspect', title: 'Word Log', body: 'Words you want to remember. Tap a Greek word and press “Add to Word Log”, then tap it here anytime for its meaning, parsing and where it shows up.' },
-  { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssTrailsList .ss-trail-item', '#ssTrailsList .ss-hint', '#ssPaneTrails > .ss-hint', '#ssTrailsList']), title: 'Trails', body: 'Cross-reference paths you saved. Tap one to pick up right where you left off.' },
-  { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(460)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), pose: 'think', title: 'Workspace', body: 'Your thoughts, sorted into Observe, Interpret, Apply and Question. Tap a note’s verse to jump back to it.' },
+  { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachVisibleVerse(), demo: 'longpress', pose: 'think', title: 'Jot a thought', body: 'Press and hold any verse to save a thought about it to your Workspace: observe, interpret, apply or ask.' },
+  { before: () => Promise.resolve(openStudyTool('phrasing')).then(() => _coachPause(240)), target: () => _coachFirst(['#ssPaneVerses .ss-structured-add', '#ssPaneVerses']), title: 'Phrasing', body: 'Tap + and pick a passage. Its words land on a canvas: hold a word to split it off, then drag the pieces around to see how the thought flows.' },
+  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(240)), target: () => _coachFirst(['#ssWordlogList .ss-word-item', '#ssPaneWordlog > .ss-hint', '#ssWordlogList']), pose: 'inspect', title: 'Word Log', body: 'Words you want to remember. Tap a Greek word and press “Add to Word Log”, then tap it here anytime for its meaning, parsing and where it shows up.' },
+  { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(240)), target: () => _coachFirst(['#ssTrailsList .ss-trail-item', '#ssTrailsList .ss-hint', '#ssPaneTrails > .ss-hint', '#ssTrailsList']), title: 'Trails', body: 'Cross-reference paths you saved. Tap one to pick up right where you left off.' },
+  { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(240)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), pose: 'think', title: 'Workspace', body: 'Your thoughts, sorted into Observe, Interpret, Apply and Question. Tap a note’s verse to jump back to it.' },
   { target: () => _coachFirst(['#wsKbdToggleBtn', '.ss-compose']), title: 'Type Greek too', body: 'The α button opens a Greek keyboard for your notes. That’s the tour. Happy studying!' }
 ];
 
@@ -46192,7 +46312,7 @@ APP_WELCOME_COACH_STEPS[8].body = 'Your profile keeps your XP, rank, streak, les
 if (window.matchMedia && window.matchMedia('(min-width: 960px) and (pointer: fine)').matches) {
   STUDY_RHEMA_COACH_STEPS[1].target = () => _coachFirst(['#rhemaDesktopNoteBtn', '#rhemaEnglishDisplay .rhema-chapter-block']);
   STUDY_RHEMA_COACH_STEPS[1].title = 'Jot a thought';
-  STUDY_RHEMA_COACH_STEPS[1].body = 'Click the ✎ button in the verse bar (or click a verse and pick “Observe, interpret, apply or ask”) to save a thought about it to your Workspace.';
+  STUDY_RHEMA_COACH_STEPS[1].body = 'Click the ✎ button in the verse bar to save a thought about the verse to your Workspace: observe, interpret, apply or ask.';
   delete STUDY_RHEMA_COACH_STEPS[1].demo;
 }
 
@@ -46335,7 +46455,10 @@ function _showAppCoachStep() {
   // instead of sitting on the old spot.
   const entering = overlay.classList.contains('hidden');
   if (!entering) overlay.classList.add('coach-moving');
+  const token = (_showAppCoachStep._token = (_showAppCoachStep._token || 0) + 1);
   const afterBefore = () => setTimeout(() => {
+    // Superseded (another Next/Back/Done since) or the tour ended: do nothing.
+    if (token !== _showAppCoachStep._token || _appCoachFinishing || _appCoachSteps[_appCoachIdx] !== step) return;
     overlay.classList.remove('hidden');
     if (entering) { card.classList.add('coach-no-anim'); spotlight.classList.add('coach-no-anim'); }
     document.getElementById('appCoachStep').textContent = `${_appCoachIdx + 1} of ${_appCoachSteps.length}`;
@@ -46437,6 +46560,8 @@ function appCoachBack() {
 
 function _endAppCoach() {
   _appCoachFinishing = true;
+  _showAppCoachStep._token = (_showAppCoachStep._token || 0) + 1;
+  document.getElementById('appCoachOverlay')?.classList.remove('coach-moving');
   const onEnd = _appCoachOnEnd; _appCoachOnEnd = null;
   if (typeof onEnd === 'function') setTimeout(onEnd, 0);
   document.getElementById('appCoachOverlay')?.classList.add('hidden');
