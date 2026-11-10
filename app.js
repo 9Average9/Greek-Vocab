@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.544";
+const APP_VERSION = "3.0.545";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.545 &mdash; See interpretations</div>
+<ul>
+  <li><strong>See interpretations</strong> &mdash; Tap a verse (or pick a few), then <em>See interpretations</em> to see how different traditions read the passage, with Free Grace first. Each view has a short summary, the reasons behind it, quotes from real teachers and links to read more.</li>
+  <li><strong>Bigger picture</strong> &mdash; If your verse is part of a longer passage people read together, it tells you and shows the whole passage. If a verse is mostly used alongside others, it shows which verses each view pairs it with.</li>
+  <li><strong>Saved for everyone</strong> &mdash; The first look at a passage takes a minute or two. After that it opens right away for everyone.</li>
+</ul>
 <div class="un-version-label">v3.0.544 &mdash; Fonts galore and a tidier verse menu</div>
 <ul>
   <li><strong>47 new fonts</strong> &mdash; Handwritten, fancy script, bold display, and fun ones like Old English, 8-bit pixel, Terminal, Comic Book and Typewriter. Pick a style, then tap a tile; Default puts it back.</li>
@@ -38527,12 +38533,18 @@ async function openHomeRhemaResult(index) {
   const result = _homeRhemaResults[index];
   if (!result) return;
   closeRhemaSearch();
+  await _rhemaJumpToVerse(result.book, result.chapter, result.verse);
+}
+
+// Open the reader at one verse, scrolled into view (search results, related
+// verses in See interpretations).
+async function _rhemaJumpToVerse(book, chapter, verse) {
   await showRhema();
   _rhemaTextMode = 'majority';
   _syncRhemaEnglishAlias();
-  _rhemaBook = result.book;
-  _rhemaChapter = String(result.chapter);
-  _rhemaVerse = String(result.verse);
+  _rhemaBook = book;
+  _rhemaChapter = String(chapter);
+  _rhemaVerse = String(verse);
   _rhemaFullChapter = true;
   _rhemaShowEnglish = true;
   _rhemaVerseFocus = true;
@@ -41617,6 +41629,270 @@ function closeRhemaInterlinear(e) {
   // the tool closes (and won't compound onto the next verse you tap).
   try { rhemaClearSelection(); } catch (e) {}
 }
+// ── See interpretations ─────────────────────────────────────────────────────
+// How real Christian traditions read the selected verse or passage, Free Grace
+// first. The server researches published teaching, keeps only quotes it found
+// word for word on the linked pages, and saves the result for everyone by
+// passage (so a verse inside Hebrews 6:4–6 opens the saved Hebrews 6:4–6).
+const RHEMA_INTERP_STORE = 'rhemaInterpretations.v1';
+const _rhemaInterpCache = new Map();
+const _rhemaInterpInFlight = new Map();
+let _rhemaInterpSel = null;
+let _rhemaInterpData = null;
+let _rhemaInterpStepTimer = null;
+const RHEMA_INTERP_STEPS = [
+  'Finding what teachers have written on this passage…',
+  'Reading what each tradition says…',
+  'Checking every quote against its source…',
+  'Putting it all together…'
+];
+
+function _rhemaInterpKey(sel) { return `${sel.book}.${sel.chapter}.${sel.startVerse}-${sel.endVerse}`; }
+function _rhemaInterpSelRef(sel) {
+  const range = sel.endVerse > sel.startVerse ? `${sel.startVerse}–${sel.endVerse}` : `${sel.startVerse}`;
+  return `${_rhemaBookName(sel.book)} ${sel.chapter}:${range}`;
+}
+
+// Recent results stay on the phone so they open instantly, even offline.
+function _rhemaInterpLoadStore() {
+  try { return JSON.parse(localStorage.getItem(RHEMA_INTERP_STORE) || '{}') || {}; } catch { return {}; }
+}
+function _rhemaInterpRemember(key, data) {
+  _rhemaInterpCache.set(key, data);
+  try {
+    const all = _rhemaInterpLoadStore();
+    all[key] = { at: Date.now(), data };
+    const keys = Object.keys(all).sort((a, b) => (all[b].at || 0) - (all[a].at || 0));
+    keys.slice(24).forEach(k => delete all[k]);
+    localStorage.setItem(RHEMA_INTERP_STORE, JSON.stringify(all));
+  } catch {}
+}
+function _rhemaInterpRecall(key) {
+  if (_rhemaInterpCache.has(key)) return _rhemaInterpCache.get(key);
+  const hit = _rhemaInterpLoadStore()[key];
+  // Saved copies refresh from the server after two weeks.
+  if (hit && hit.data && Date.now() - (hit.at || 0) < 14 * 86400000) {
+    _rhemaInterpCache.set(key, hit.data);
+    return hit.data;
+  }
+  return null;
+}
+
+function _rhemaInterpFetch(sel) {
+  const key = _rhemaInterpKey(sel);
+  if (_rhemaInterpInFlight.has(key)) return _rhemaInterpInFlight.get(key);
+  const pending = (async () => {
+    if (!window.PassageInterpretations?.get) throw new Error('Interpretations have not loaded yet');
+    const started = Date.now();
+    for (;;) {
+      const r = await window.PassageInterpretations.get(sel);
+      if (r && r.status === 'ready') { _rhemaInterpRemember(key, r); return r; }
+      if (!r || r.status !== 'pending' || Date.now() - started > 6 * 60 * 1000) throw new Error('Interpretations took too long');
+      await new Promise(res => setTimeout(res, Math.max(3000, r.retryAfterMs || 6000)));
+    }
+  })().finally(() => _rhemaInterpInFlight.delete(key));
+  _rhemaInterpInFlight.set(key, pending);
+  return pending;
+}
+
+function rhemaOpenInterpretationsFromMenu() {
+  let sel = null;
+  const verses = _rhemaSelectedVersesSorted().map(Number).filter(Number.isFinite);
+  if (verses.length) {
+    sel = { book: _rhemaBook, chapter: Number(_rhemaChapter), startVerse: verses[0], endVerse: verses[verses.length - 1] };
+  } else {
+    const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
+    if (p) sel = { book: p.book, chapter: Number(p.chapter), startVerse: Number(p.verse), endVerse: Number(p.endVerse || p.verse) };
+  }
+  if (!sel) return;
+  if (_guestMode || !window.Auth?.getCurrentUser?.()?.uid) {
+    if (typeof _showStudyToast === 'function') _showStudyToast('Create a free account to see interpretations');
+    if (_guestMode && typeof openGuestAccountPrompt === 'function') setTimeout(openGuestAccountPrompt, 400);
+    return;
+  }
+  if (sel.endVerse - sel.startVerse + 1 > 40) {
+    if (typeof _showStudyToast === 'function') _showStudyToast('Pick up to 40 verses to see interpretations');
+    return;
+  }
+  closeRhemaVerseSheet();
+  rhemaOpenInterpretations(sel);
+}
+
+async function rhemaOpenInterpretations(sel) {
+  const modal = document.getElementById('rhemaInterpModal');
+  if (!modal || !sel) return;
+  const bodyEl = document.getElementById('rhemaInterpBody');
+  if (bodyEl && !bodyEl._ipWired) { bodyEl._ipWired = true; bodyEl.addEventListener('click', _rhemaInterpBodyClick); }
+  _rhemaInterpSel = sel;
+  _rhemaInterpData = null;
+  const refEl = document.getElementById('rhemaInterpRef');
+  if (refEl) refEl.textContent = _rhemaInterpSelRef(sel);
+  modal.classList.add('open');
+  const card = modal.querySelector('.rhema-ip-card');
+  if (card) card.scrollTop = 0;
+  const key = _rhemaInterpKey(sel);
+  const known = _rhemaInterpRecall(key);
+  if (known) { _rhemaRenderInterpretations(known); return; }
+  _rhemaRenderInterpLoading();
+  try {
+    const data = await _rhemaInterpFetch(sel);
+    if (_rhemaInterpSel && _rhemaInterpKey(_rhemaInterpSel) === key && modal.classList.contains('open')) {
+      _rhemaRenderInterpretations(data);
+    } else if (typeof _showStudyToast === 'function') {
+      _showStudyToast(`Interpretations for ${data.unit?.ref || _rhemaInterpSelRef(sel)} are ready`);
+    }
+  } catch (err) {
+    if (!_rhemaInterpSel || _rhemaInterpKey(_rhemaInterpSel) !== key || !modal.classList.contains('open')) return;
+    _rhemaRenderInterpError(err);
+  }
+}
+
+function _rhemaRenderInterpLoading() {
+  const body = document.getElementById('rhemaInterpBody');
+  if (!body) return;
+  clearInterval(_rhemaInterpStepTimer);
+  body.innerHTML = `
+    <div class="rhema-ip-loading" role="status" aria-live="polite">
+      <img class="rhema-ip-guide" src="${guidePoseSrc('inspect')}" alt="" width="84" height="91" decoding="async">
+      <div class="rhema-ip-step" id="rhemaInterpStep">${RHEMA_INTERP_STEPS[0]}</div>
+      <div class="rhema-ip-bar"><span></span></div>
+      <p class="rhema-ip-wait">The first look at a passage takes a minute or two. After that it opens right away for everyone. You can close this. It keeps going.</p>
+    </div>`;
+  let i = 0;
+  _rhemaInterpStepTimer = setInterval(() => {
+    const el = document.getElementById('rhemaInterpStep');
+    if (!el) { clearInterval(_rhemaInterpStepTimer); return; }
+    i = Math.min(i + 1, RHEMA_INTERP_STEPS.length - 1);
+    el.textContent = RHEMA_INTERP_STEPS[i];
+    if (i === RHEMA_INTERP_STEPS.length - 1) clearInterval(_rhemaInterpStepTimer);
+  }, 9000);
+}
+
+function _rhemaRenderInterpError(err) {
+  clearInterval(_rhemaInterpStepTimer);
+  const body = document.getElementById('rhemaInterpBody');
+  if (!body) return;
+  const code = String(err?.code || '');
+  let msg = 'Couldn’t load interpretations right now. Check your connection and try again.';
+  if (/resource-exhausted|invalid-argument|unavailable/.test(code) && err?.message) msg = err.message;
+  else if (/unauthenticated/.test(code)) msg = 'Sign in to see interpretations.';
+  body.innerHTML = `
+    <div class="rhema-ip-error">
+      <span class="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+      <p>${_escHtml(msg)}</p>
+      <button type="button" class="rhema-ip-retry" onclick="rhemaOpenInterpretations(_rhemaInterpSel)">Try again</button>
+    </div>`;
+}
+
+function _rhemaInterpSafeUrl(u) {
+  try { const url = new URL(u); return /^https?:$/.test(url.protocol) ? url.href : ''; } catch { return ''; }
+}
+
+function _rhemaRenderInterpretations(data) {
+  clearInterval(_rhemaInterpStepTimer);
+  _rhemaInterpData = data;
+  const body = document.getElementById('rhemaInterpBody');
+  if (!body || !data) return;
+  const sel = _rhemaInterpSel;
+  const u = data.unit || {};
+  const views = Array.isArray(data.views) ? data.views : [];
+  const esc = s => _escHtml(String(s ?? ''));
+  const unitRef = u.ref || '';
+  const refEl = document.getElementById('rhemaInterpRef');
+  if (refEl) refEl.textContent = unitRef || _rhemaInterpSelRef(sel);
+
+  // The saved note is written for the whole passage; this lead line ties it to
+  // the verse(s) the reader actually picked.
+  let context = '';
+  const sameAsUnit = sel && u.startChapter === sel.chapter && u.endChapter === sel.chapter && u.startVerse === sel.startVerse && u.endVerse === sel.endVerse;
+  if (data.scope === 'part_of_larger' || data.scope === 'supporting_verse') {
+    let lead = '';
+    if (data.scope === 'part_of_larger' && sel && !sameAsUnit) {
+      const many = sel.endVerse > sel.startVerse;
+      lead = `${many ? `Verses ${sel.startVerse}–${sel.endVerse} are` : `Verse ${sel.startVerse} is`} part of ${unitRef}.`;
+    } else if (data.scope === 'supporting_verse') {
+      lead = 'This verse is usually read together with others.';
+    }
+    if (lead || data.contextNote) {
+      context = `<div class="rhema-ip-context">
+        <span class="material-symbols-outlined" aria-hidden="true">${data.scope === 'supporting_verse' ? 'hub' : 'unfold_more'}</span>
+        <p>${lead ? `<b>${esc(lead)}</b> ` : ''}${esc(data.contextNote)}</p>
+      </div>`;
+    }
+  }
+  const overview = data.overview
+    ? `<div class="rhema-ip-overview"><div class="rhema-ip-label">In short</div><p>${esc(data.overview)}</p></div>`
+    : '';
+
+  const viewHtml = views.map((v, i) => {
+    const open = i === 0;
+    const reasons = (v.reasons || []).length
+      ? `<div class="rhema-ip-sub">Why they read it this way</div><ul class="rhema-ip-reasons">${v.reasons.map(r => `<li>${esc(r)}</li>`).join('')}</ul>`
+      : '';
+    const usage = v.usageNote ? `<div class="rhema-ip-sub">How it’s used</div><p class="rhema-ip-usage">${esc(v.usageNote)}</p>` : '';
+    const chips = (v.usedWith || []).filter(r => _homeRhemaDirectRef(r)).map(r =>
+      `<button type="button" class="rhema-ip-chip" data-ref="${esc(r)}">${esc(r)}</button>`).join('');
+    const usedWith = chips ? `<div class="rhema-ip-sub">Read alongside</div><div class="rhema-ip-chips">${chips}</div>` : '';
+    const quotes = (v.quotes || []).map(q => {
+      const href = _rhemaInterpSafeUrl(q.url);
+      const work = q.work ? (href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(q.work)}</a>` : esc(q.work)) : '';
+      return `<figure class="rhema-ip-quote"><blockquote>“${esc(q.text)}”</blockquote><figcaption>${esc(q.speaker)}${work ? `, ${work}` : ''}</figcaption></figure>`;
+    }).join('');
+    const sources = (v.sources || []).map(s => {
+      const href = _rhemaInterpSafeUrl(s.url);
+      if (!href) return '';
+      return `<a class="rhema-ip-src" href="${esc(href)}" target="_blank" rel="noopener noreferrer">
+        <span class="rhema-ip-src-text"><b>${esc(s.title || s.site)}</b><small>${esc(s.site || '')}</small></span>
+        <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span></a>`;
+    }).join('');
+    return `<section class="rhema-ip-view${open ? ' open' : ''}" data-trad="${esc(v.tradition)}">
+      <button type="button" class="rhema-ip-view-hd" aria-expanded="${open}" data-ip-toggle="${i}">
+        <span class="rhema-ip-dot" aria-hidden="true"></span>
+        <span class="rhema-ip-name">${esc(v.label)}</span>
+        <span class="material-symbols-outlined rhema-ip-chev" aria-hidden="true">expand_more</span>
+      </button>
+      <div class="rhema-ip-view-bd"><div class="rhema-ip-view-in">
+        <p class="rhema-ip-sum">${esc(v.summary)}</p>
+        ${reasons}${usage}${usedWith}${quotes}
+        ${sources ? `<div class="rhema-ip-sub">Read more</div><div class="rhema-ip-srcs">${sources}</div>` : ''}
+      </div></div>
+    </section>`;
+  }).join('');
+
+  const updated = data.updatedAt ? new Date(data.updatedAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '';
+  body.innerHTML = `${context}${overview}
+    ${views.length ? `<div class="rhema-ip-views">${viewHtml}</div>` : '<p class="rhema-ip-empty">No published views were found for this passage yet.</p>'}
+    <p class="rhema-ip-foot">Each view is described the way its own teachers explain it. Quotes are copied from the linked pages.${updated ? ` Updated ${esc(updated)}.` : ''}</p>`;
+}
+
+function rhemaInterpToggle(i) {
+  const sec = document.querySelectorAll('#rhemaInterpBody .rhema-ip-view')[i];
+  if (!sec) return;
+  const open = !sec.classList.contains('open');
+  sec.classList.toggle('open', open);
+  sec.querySelector('.rhema-ip-view-hd')?.setAttribute('aria-expanded', String(open));
+}
+
+// The card stops click propagation (so taps inside don't close it), so listen
+// on the sheet body itself.
+function _rhemaInterpBodyClick(e) {
+  const t = e.target.closest?.('[data-ip-toggle], .rhema-ip-chip');
+  if (!t) return;
+  if (t.hasAttribute('data-ip-toggle')) { rhemaInterpToggle(Number(t.getAttribute('data-ip-toggle'))); return; }
+  const ref = _homeRhemaDirectRef(t.getAttribute('data-ref'));
+  if (!ref) return;
+  closeRhemaInterpretations();
+  _rhemaJumpToVerse(ref.book, ref.chapter, ref.verse);
+}
+
+function closeRhemaInterpretations(e) {
+  if (e && e.target !== document.getElementById('rhemaInterpModal')) return;
+  document.getElementById('rhemaInterpModal')?.classList.remove('open');
+  clearInterval(_rhemaInterpStepTimer);
+  _rhemaInterpSel = null;
+  try { rhemaClearSelection(); } catch (err) {}
+}
+
 function rhemaStudyLogWordFromMenu() {
   return _rhemaOpenWordPicker('log');
   const p = _rhemaMenuRef ? _rhemaParseRef(_rhemaMenuRef) : null;
@@ -46227,6 +46503,7 @@ const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), title: 'Highlight', body: 'Tap a color to highlight the verse. Tap the crossed-out drop to clear it.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /note/i.test(t)), pose: 'thumbs', title: 'Notes', body: 'Write your own note on the verse. All your highlights and notes are listed in the menu.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Compare/.test(t)), title: 'Compare', body: 'See this verse side by side in other Bibles, like the NIV, KJV and NASB.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^See interpretations/.test(t)), pose: 'inspect', title: 'See interpretations', body: 'How different traditions read this passage, Free Grace first. Each view gets a short summary, real quotes from its teachers, and links to read more.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), pose: 'thumbs', title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /English word/.test(t)), pose: 'think', title: 'Define a word', body: 'Not sure what a word in your Bible means? Pick it and get a simple definition. Names and places get a Bible dictionary entry.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Interlinear/.test(t)), pose: 'inspect', title: 'Interlinear', body: 'Lines up every Greek (or Hebrew) word with its English, word by word. Tap any word to study it.' },
