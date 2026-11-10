@@ -39449,3 +39449,60 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rhema-ip-teachers { margin: -2px 0 2px; display: flex; align-items: center; gap: 5px; font-size: 0.82rem; font-weight: 700; color: color-mix(in srgb, var(--font-color, #20303f) 70%, transparent); }
 .rhema-ip-teachers .material-symbols-outlined { font-size: 16px; color: var(--ip-hue); }
 .rhema-ip-site { font-weight: 600; opacity: 0.8; }
+/* "Interpretations on … are in!" banner */
+.rhema-ip-banner {
+  position: fixed;
+  left: 50%;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  z-index: 10050;
+  width: min(420px, calc(100% - 24px));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 30%, transparent);
+  border-radius: 16px;
+  background: var(--card-solid-color, var(--card-color, #fff));
+  color: var(--font-color, #20303f);
+  box-shadow: 0 14px 34px rgba(8, 18, 28, 0.22);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  transform: translate(-50%, -140%);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(.2,.82,.18,1), opacity 0.2s ease;
+  pointer-events: none;
+}
+.rhema-ip-banner.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.rhema-ip-banner > .material-symbols-outlined { color: var(--secondary-color, #2498df); flex: none; }
+.rhema-ip-banner > span:nth-child(2) { flex: 1; min-width: 0; }
+.rhema-ip-banner-go { flex: none; font-weight: 800; color: var(--secondary-color, #2498df); }
+
+/* "Back to Hebrews 6:4–6" after tapping a related verse */
+.rhema-ip-back {
+  position: absolute;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  z-index: 66;
+  display: flex;
+  align-items: center;
+  max-width: calc(100% - 32px);
+  border-radius: 999px;
+  background: var(--secondary-color, #2498df);
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(8, 18, 28, 0.28);
+  transform: translate(-50%, 140%);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(.2,.82,.18,1), opacity 0.2s ease;
+  pointer-events: none;
+}
+.rhema-ip-back.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+#rhemaModal:has(#rhemaVerseSheet.open) .rhema-ip-back,
+#rhemaModal:has(.rhema-note-overlay.open) .rhema-ip-back { opacity: 0; pointer-events: none; }
+.rhema-ip-back button { border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; }
+.rhema-ip-back-go { gap: 8px; min-height: 46px; padding: 0 6px 0 16px; font-weight: 800; font-size: 0.92rem; min-width: 0; }
+.rhema-ip-back-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rhema-ip-back-x { min-width: 44px; min-height: 46px; justify-content: center; opacity: 0.85; border-left: 1px solid rgba(255,255,255,0.3) !important; }
+.rhema-ip-back-x .material-symbols-outlined { font-size: 20px; }

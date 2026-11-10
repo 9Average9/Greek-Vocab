@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.546";
+const APP_VERSION = "3.0.547";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.547 &mdash; Interpretations, smoother</div>
+<ul>
+  <li><strong>One tap is enough</strong> &mdash; See interpretations keeps trying on its own until the result is in. No more tapping again and again.</li>
+  <li><strong>It tells you when it&rsquo;s ready</strong> &mdash; &ldquo;Interpretations on Hebrews 6:4&ndash;6 are in!&rdquo; shows as a banner in the app, or a phone notification if you left. Tap it to open.</li>
+  <li><strong>Back to where you were</strong> &mdash; Tap a related verse to read it, then &ldquo;Back to&nbsp;&hellip;&rdquo; takes you to the same spot in the interpretations.</li>
+</ul>
 <div class="un-version-label">v3.0.546 &mdash; Faster interpretations</div>
 <ul>
   <li><strong>Much quicker</strong> &mdash; A new passage in <em>See interpretations</em> now takes about half a minute instead of several, and saved passages still open right away.</li>
@@ -33942,6 +33948,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (openParam === 'calendar') {
     setTimeout(() => handleCalendarNotificationOpen(), 900);
   }
+  if (openParam === 'interp') {
+    const q = new URLSearchParams(location.search);
+    const sel = { book: q.get('b'), chapter: q.get('c'), startVerse: q.get('s'), endVerse: q.get('e') || q.get('s') };
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    setTimeout(() => rhemaOpenInterpretationsAt(sel), 900);
+  }
   if (window.__pendingAuthResolved) setAppLaunchText('Finishing setup');
 
   // Preload scripture data in the background so opening the reader skips the
@@ -35280,6 +35292,12 @@ function initFCMForeground() {
     const title = payload.notification?.title || "Disciple Builder";
     const body  = payload.notification?.body  || "Time to grow together.";
     const data  = payload.data || {};
+    if (data.open === "interp") {
+      // In the app: a banner, or nothing if the result is already on screen.
+      const sel = { book: data.book, chapter: +data.chapter, startVerse: +data.startVerse, endVerse: +data.endVerse };
+      if (typeof _rhemaInterpAnnounce === "function") _rhemaInterpAnnounce(sel, data.ref);
+      return;
+    }
     if (Notification.permission !== "granted") return;
     const opts = { body, icon: "./assets/icons/disciple-builder-icon-192.png", data };
     // Use service-worker showNotification so it works on iOS PWA; fall back to
@@ -41683,21 +41701,82 @@ function _rhemaInterpRecall(key) {
   return null;
 }
 
+// Keeps going on its own until the result is in, so one tap is enough:
+// "pending" (someone's look-up is running), a dropped connection, a timeout or
+// a server hiccup all just wait and ask again. Only real answers (daily limit,
+// bad selection, signed out) stop it early.
+const RHEMA_INTERP_GIVE_UP_MS = 4 * 60 * 1000;
 function _rhemaInterpFetch(sel) {
   const key = _rhemaInterpKey(sel);
   if (_rhemaInterpInFlight.has(key)) return _rhemaInterpInFlight.get(key);
   const pending = (async () => {
-    if (!window.PassageInterpretations?.get) throw new Error('Interpretations have not loaded yet');
     const started = Date.now();
+    const wait = ms => new Promise(res => setTimeout(res, ms));
+    let tries = 0;
     for (;;) {
-      const r = await window.PassageInterpretations.get(sel);
+      tries++;
+      // Wait for the service and the sign-in to be ready (app just opened).
+      if (!window.PassageInterpretations?.get || !window.Auth?.getCurrentUser?.()) {
+        if (Date.now() - started > 20000) throw Object.assign(new Error('Sign in to see interpretations.'), { code: 'unauthenticated' });
+        await wait(500);
+        continue;
+      }
+      if (navigator.onLine === false) { await wait(3000); continue; }
+      let r;
+      try {
+        r = await window.PassageInterpretations.get(sel);
+      } catch (err) {
+        const code = String(err?.code || '');
+        if (/resource-exhausted|invalid-argument|unauthenticated|permission-denied|failed-precondition/.test(code)) throw err;
+        if (Date.now() - started > RHEMA_INTERP_GIVE_UP_MS) throw err;
+        await wait(Math.min(12000, 3000 * tries));
+        continue;
+      }
       if (r && r.status === 'ready') { _rhemaInterpRemember(key, r); return r; }
-      if (!r || r.status !== 'pending' || Date.now() - started > 3 * 60 * 1000) throw new Error('Interpretations took too long');
-      await new Promise(res => setTimeout(res, Math.max(3000, r.retryAfterMs || 6000)));
+      if (Date.now() - started > RHEMA_INTERP_GIVE_UP_MS) throw new Error('Interpretations took too long');
+      await wait(Math.max(3000, r?.retryAfterMs || 5000));
     }
   })().finally(() => _rhemaInterpInFlight.delete(key));
   _rhemaInterpInFlight.set(key, pending);
   return pending;
+}
+
+// "Interpretations on Hebrews 6:4–6 are in!" — an in-app banner when the sheet
+// isn't showing it. (When the app is closed, the server sends the same message
+// as a phone notification.) Each result announces itself only once.
+const _rhemaInterpAnnounced = new Set();
+function _rhemaInterpShowingKey() {
+  const open = document.getElementById('rhemaInterpModal')?.classList.contains('open');
+  return open && _rhemaInterpSel ? _rhemaInterpKey(_rhemaInterpSel) : '';
+}
+function _rhemaInterpAnnounce(sel, ref) {
+  const key = _rhemaInterpKey(sel);
+  if (_rhemaInterpAnnounced.has(key) || _rhemaInterpShowingKey() === key) return;
+  _rhemaInterpAnnounced.add(key);
+  let el = document.getElementById('rhemaInterpBanner');
+  if (!el) {
+    el = document.createElement('button');
+    el.type = 'button';
+    el.id = 'rhemaInterpBanner';
+    el.className = 'rhema-ip-banner';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">forum</span><span>Interpretations on <b>${_escHtml(ref || _rhemaInterpSelRef(sel))}</b> are in!</span><span class="rhema-ip-banner-go">Open</span>`;
+  el.onclick = () => { el.classList.remove('show'); rhemaOpenInterpretationsAt(sel); };
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(el._hide);
+  el._hide = setTimeout(() => el.classList.remove('show'), 9000);
+}
+
+// Open the reader at the passage, then its interpretations (banner taps and
+// notification taps from outside the app).
+async function rhemaOpenInterpretationsAt(sel) {
+  if (!sel || !sel.book) return;
+  sel = { book: String(sel.book), chapter: Number(sel.chapter), startVerse: Number(sel.startVerse), endVerse: Number(sel.endVerse || sel.startVerse) };
+  if (!(sel.chapter > 0 && sel.startVerse > 0)) return;
+  _rhemaInterpHideBack();
+  try { await _rhemaJumpToVerse(sel.book, sel.chapter, sel.startVerse); } catch (e) {}
+  rhemaOpenInterpretations(sel);
 }
 
 function rhemaOpenInterpretationsFromMenu() {
@@ -41728,6 +41807,7 @@ async function rhemaOpenInterpretations(sel) {
   if (!modal || !sel) return;
   const bodyEl = document.getElementById('rhemaInterpBody');
   if (bodyEl && !bodyEl._ipWired) { bodyEl._ipWired = true; bodyEl.addEventListener('click', _rhemaInterpBodyClick); }
+  _rhemaInterpHideBack();
   _rhemaInterpSel = sel;
   _rhemaInterpData = null;
   const refEl = document.getElementById('rhemaInterpRef');
@@ -41743,8 +41823,8 @@ async function rhemaOpenInterpretations(sel) {
     const data = await _rhemaInterpFetch(sel);
     if (_rhemaInterpSel && _rhemaInterpKey(_rhemaInterpSel) === key && modal.classList.contains('open')) {
       _rhemaRenderInterpretations(data);
-    } else if (typeof _showStudyToast === 'function') {
-      _showStudyToast(`Interpretations for ${data.unit?.ref || _rhemaInterpSelRef(sel)} are ready`);
+    } else {
+      _rhemaInterpAnnounce(sel, data.unit?.ref);
     }
   } catch (err) {
     if (!_rhemaInterpSel || _rhemaInterpKey(_rhemaInterpSel) !== key || !modal.classList.contains('open')) return;
@@ -41889,8 +41969,53 @@ function _rhemaInterpBodyClick(e) {
   if (t.hasAttribute('data-ip-toggle')) { rhemaInterpToggle(Number(t.getAttribute('data-ip-toggle'))); return; }
   const ref = _homeRhemaDirectRef(t.getAttribute('data-ref'));
   if (!ref) return;
+  // Remember exactly where the reader was, so they can hop back.
+  const card = document.querySelector('#rhemaInterpModal .rhema-ip-card');
+  const back = _rhemaInterpSel ? {
+    sel: { ..._rhemaInterpSel },
+    scroll: card ? card.scrollTop : 0,
+    open: [...document.querySelectorAll('#rhemaInterpBody .rhema-ip-view')].map((v, i) => v.classList.contains('open') ? i : -1).filter(i => i >= 0),
+    ref: document.getElementById('rhemaInterpRef')?.textContent || ''
+  } : null;
   closeRhemaInterpretations();
-  _rhemaJumpToVerse(ref.book, ref.chapter, ref.verse);
+  _rhemaJumpToVerse(ref.book, ref.chapter, ref.verse).then(() => { if (back) _rhemaInterpShowBack(back); });
+}
+
+let _rhemaInterpBack = null;
+function _rhemaInterpShowBack(back) {
+  _rhemaInterpBack = back;
+  let el = document.getElementById('rhemaInterpBackBtn');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'rhemaInterpBackBtn';
+    el.className = 'rhema-ip-back';
+    el.innerHTML = '<button type="button" class="rhema-ip-back-go"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span><span class="rhema-ip-back-label"></span></button><button type="button" class="rhema-ip-back-x" aria-label="Dismiss"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>';
+    el.querySelector('.rhema-ip-back-go').addEventListener('click', rhemaInterpGoBack);
+    el.querySelector('.rhema-ip-back-x').addEventListener('click', _rhemaInterpHideBack);
+    (document.getElementById('rhemaModal') || document.body).appendChild(el);
+  }
+  el.querySelector('.rhema-ip-back-label').textContent = `Back to ${back.ref || 'interpretations'}`;
+  requestAnimationFrame(() => el.classList.add('show'));
+}
+function _rhemaInterpHideBack() {
+  document.getElementById('rhemaInterpBackBtn')?.classList.remove('show');
+}
+async function rhemaInterpGoBack() {
+  const back = _rhemaInterpBack;
+  _rhemaInterpHideBack();
+  if (!back) return;
+  _rhemaInterpBack = null;
+  try { await _rhemaJumpToVerse(back.sel.book, back.sel.chapter, back.sel.startVerse); } catch (e) {}
+  await rhemaOpenInterpretations(back.sel);
+  // Same views open, same scroll spot.
+  const views = document.querySelectorAll('#rhemaInterpBody .rhema-ip-view');
+  views.forEach((v, i) => {
+    const open = back.open.includes(i);
+    v.classList.toggle('open', open);
+    v.querySelector('.rhema-ip-view-hd')?.setAttribute('aria-expanded', String(open));
+  });
+  const card = document.querySelector('#rhemaInterpModal .rhema-ip-card');
+  if (card) requestAnimationFrame(() => { card.scrollTop = back.scroll; });
 }
 
 function closeRhemaInterpretations(e) {

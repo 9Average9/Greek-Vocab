@@ -2179,6 +2179,35 @@ async function interpSpend(uid) {
   });
 }
 
+// "Interpretations on Hebrews 6:4–6 are in!" to the person who asked, so they
+// hear about it even if they left the app. Tapping it opens the result. Inside
+// the app, the page shows a banner instead (or nothing if it's on screen).
+async function interpNotify(uid, sel, ref) {
+  try {
+    const userRef = db.collection("users").doc(uid);
+    const snap = await userRef.get();
+    const tokens = (snap.exists && snap.data().fcmTokens) || [];
+    if (!tokens.length) return;
+    const q = `b=${encodeURIComponent(sel.book)}&c=${sel.chapter}&s=${sel.startVerse}&e=${sel.endVerse}`;
+    await sendToUserTokens(userRef, tokens, {
+      notification: {
+        title: `Interpretations on ${ref} are in!`,
+        body: "Tap to see how different traditions read it."
+      },
+      data: {
+        open: "interp", book: sel.book, chapter: String(sel.chapter),
+        startVerse: String(sel.startVerse), endVerse: String(sel.endVerse), ref
+      },
+      webpush: {
+        fcmOptions: { link: `/Greek-Vocab/?open=interp&${q}` },
+        notification: { icon: "/Greek-Vocab/icon-192.png", tag: `interp-${sel.book}-${sel.chapter}-${sel.startVerse}` }
+      }
+    }, `interpretations ${uid}`);
+  } catch (e) {
+    console.warn("getPassageInterpretations notify failed:", e && e.message);
+  }
+}
+
 exports.getPassageInterpretations = functions
   .runWith({ timeoutSeconds: 120, memory: "256MB", secrets: ["ANTHROPIC_API_KEY"] })
   .https.onCall(async (data, context) => {
@@ -2257,6 +2286,7 @@ exports.getPassageInterpretations = functions
       };
       await db.collection(INTERP_COLLECTION).doc(id).set(record);
       await jobRef.set({ status: "done", unitId: id, finishedAt: FieldValue.serverTimestamp() }, { merge: true });
+      await interpNotify(context.auth.uid, sel, record.ref);
       return interpPublic({ ...record, updatedAt: { toMillis: () => Date.now() } });
     } catch (e) {
       console.error("getPassageInterpretations research error:", e && e.message);
