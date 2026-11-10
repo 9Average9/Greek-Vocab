@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.543";
+const APP_VERSION = "3.0.544";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.544 &mdash; Fonts galore and a tidier verse menu</div>
+<ul>
+  <li><strong>47 new fonts</strong> &mdash; Handwritten, fancy script, bold display, and fun ones like Old English, 8-bit pixel, Terminal, Comic Book and Typewriter. Pick a style, then tap a tile; Default puts it back.</li>
+  <li><strong>See the verse you tapped</strong> &mdash; It now slides into view right above the verse menu instead of hiding behind it.</li>
+  <li><strong>Simpler verse menu</strong> &mdash; Highlight, note, compare, copy, define and interlinear. Search closes it so it never covers results.</li>
+  <li><strong>Snappier tours</strong> &mdash; Faster steps, and Done always ends the tour.</li>
+  <li><strong>Cleaner side menu</strong> &mdash; No close button; tap outside the menu to close it.</li>
+</ul>
 <div class="un-version-label">v3.0.543 &mdash; Smoother, sharper tours</div>
 <ul>
   <li><strong>Spot on</strong> &mdash; Every tour step now scrolls what it&rsquo;s talking about into view, the spotlight outlines exactly that, and the card and guide sit where they don&rsquo;t cover it, on any screen size.</li>
@@ -46108,8 +46116,13 @@ function coachNudgeFor(target, rect, pos, cardH, room, gap = 14) {
     const cs = getComputedStyle(node);
     if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight + 2) {
       const before = node.scrollTop;
+      const wasH = rect.height;
       node.scrollTop = before + dy;
-      return Math.abs(node.scrollTop - before) > 1;
+      if (Math.abs(node.scrollTop - before) <= 1) return false;
+      // Never trade a covered target for one scrolled out of sight.
+      const vr = coachVisibleRect(target);
+      if (!vr || vr.height < Math.min(wasH, target.getBoundingClientRect().height) - 2) { node.scrollTop = before; return false; }
+      return true;
     }
   }
   return false;
@@ -46217,7 +46230,7 @@ const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), pose: 'thumbs', title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /English word/.test(t)), pose: 'think', title: 'Define a word', body: 'Not sure what a word in your Bible means? Pick it and get a simple definition. Names and places get a Bible dictionary entry.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Interlinear/.test(t)), pose: 'inspect', title: 'Interlinear', body: 'Lines up every Greek (or Hebrew) word with its English, word by word. Tap any word to study it.' },
-  { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetRef', '#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
+  { before: _coachOpenVerseMenu, target: () => _coachFirst([() => document.querySelector(`#rhemaEnglishDisplay .rhema-chapter-block[data-verse="${_rhemaSelectedVersesSorted?.()[0] || _rhemaVerse}"]`), '#rhemaVerseSheetRef', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
 ];
 // The menu's reading helpers. Scrolls the menu so each spotlighted part is on screen.
 function _coachMenuShow(pick) {
