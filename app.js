@@ -9125,15 +9125,15 @@ function _swmRenderRefSelectors() {
   const bookSel = document.getElementById('swmBookSelect');
   const chapSel = document.getElementById('swmChapSelect');
   if (!bookSel || !chapSel) return;
-  bookSel.innerHTML = _rhemaBookOrder().map(code =>
+  bookSel.innerHTML = _rhemaPickerBooks().map(code =>
     `<option value="${code}"${code === _swmSavedBook ? ' selected' : ''}>${_escapeRhemaAttr(_rhemaBookName(code))}</option>`).join('');
-  const chapters = Object.keys(_rhemaText()[_swmSavedBook] || {}).map(Number).sort((a, b) => a - b);
+  const chapters = _rhemaChapterList(_swmSavedBook).map(Number);
   chapSel.innerHTML = chapters.map(c =>
     `<option value="${c}"${String(c) === String(_swmSavedChapter) ? ' selected' : ''}>Chapter ${c}</option>`).join('');
 }
 function swmSetBook(code) {
   _swmSavedBook = code;
-  const chapters = Object.keys(_rhemaText()[code] || {}).map(Number).sort((a, b) => a - b);
+  const chapters = _rhemaChapterList(code).map(Number);
   _swmSavedChapter = String(chapters[0] || '1');
   _swmSelectedVerses = new Set([_swmChapterVerseList()[0] || '1']);
   _swmRenderRefSelectors();
@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.548";
+const APP_VERSION = "3.0.549";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30355,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.549 &mdash; Every chapter, every time</div>
+<ul>
+  <li><strong>Steady chapter list</strong> &mdash; The book and chapter picker always lists all 66 books and every chapter right away, even while the Hebrew and Greek text is still loading. No more missing chapters like Proverbs 24.</li>
+</ul>
 <div class="un-version-label">v3.0.548 &mdash; Interpretations, smoother</div>
 <ul>
   <li><strong>No need to wait</strong> &mdash; While a new passage loads, tap <em>Keep studying</em>. The guide lets you know the moment the interpretations are in.</li>
@@ -38694,6 +38698,31 @@ function _rhemaBookOrder() {
   return RHEMA_BOOK_ORDER.filter(code => text[code]);
 }
 
+// Every chapter of every book, fixed. The big Hebrew/Greek text files load in
+// the background, so building the pickers from whatever text happened to be
+// loaded made chapters (and whole books) blink in and out. While a book's text
+// is still loading, the pickers use this table (1,189 chapters, numbered the
+// way the reader shows them: Joel 4 and Malachi 3 follow the Hebrew). Once the
+// text is in, they list exactly its chapters, so every chapter listed opens
+// (the Greek Old Testament numbers Proverbs and Psalms its own way).
+const RHEMA_CHAPTER_COUNTS = {
+  GEN:50, EXO:40, LEV:27, NUM:36, DEU:34, JOS:24, JDG:21, RUT:4, '1SA':31, '2SA':24, '1KI':22,
+  '2KI':25, '1CH':29, '2CH':36, EZR:10, NEH:13, EST:10, JOB:42, PSA:150, PRO:31, ECC:12, SNG:8,
+  ISA:66, JER:52, LAM:5, EZK:48, DAN:12, HOS:14, JOL:4, AMO:9, OBA:1, JON:4, MIC:7, NAM:3,
+  HAB:3, ZEP:3, HAG:2, ZEC:14, MAL:3, MAT:28, MAR:16, LUK:24, JOH:21, ACT:28, ROM:16, '1CO':16,
+  '2CO':13, GAL:6, EPH:6, PHP:4, COL:4, '1TH':5, '2TH':3, '1TI':6, '2TI':4, TIT:3, PHM:1,
+  HEB:13, JAM:5, '1PE':5, '2PE':3, '1JO':5, '2JO':1, '3JO':1, JUD:1, REV:22
+};
+function _rhemaPickerBooks() { return RHEMA_BOOK_ORDER.slice(); }
+function _rhemaChapterList(book) {
+  let loaded = null;
+  try { loaded = _rhemaText()[book] || null; } catch (e) {}
+  const keys = loaded ? Object.keys(loaded).map(Number).filter(c => c > 0) : [];
+  if (keys.length) return keys.sort((a, b) => a - b).map(String);
+  const n = RHEMA_CHAPTER_COUNTS[book] || 1;
+  return Array.from({ length: n }, (_, i) => String(i + 1));
+}
+
 function _rhemaOccurrenceData(strongs) {
   return getCurrentRhemaOccurrences(strongs);
 }
@@ -44557,7 +44586,7 @@ function openRhemaBookPicker() {
   closeRhemaSheet();
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   const overlay = document.getElementById('rhemaBookPickerOverlay');
-  if (!overlay || !_rhemaData()) return;
+  if (!overlay) return; // the list is fixed; it never waits for text to load
   _rhemaBookListOpen = _rhemaBook; // current book opens with its chapters showing
   rhemaRenderBookList();
   overlay.classList.remove('hidden');
@@ -44571,7 +44600,7 @@ let _rhemaBookListOpen = '';
 // The inline chapter grid for one book: the intro ("chapter zero") info cell
 // first, then the chapters — expanded under the book row, Bible-app style.
 function _rhemaBookChaptersHtml(code) {
-  const chapters = Object.keys(_rhemaText()[code] || {}).sort((a, b) => +a - +b);
+  const chapters = _rhemaChapterList(code);
   return `<div class="rhema-book-chapters" data-for="${code}"><div class="rhema-book-chapter-grid">` +
     `<button class="rhema-num-cell rhema-intro-cell" title="About ${_rhemaBookName(code)}" onclick="openBookIntro('${code}')"><span class="material-symbols-outlined">info</span></button>` +
     chapters.map(ch => {
@@ -44585,12 +44614,12 @@ function rhemaRenderBookList(keepSearch = false) {
   const title = document.getElementById('rhemaBookPickerTitle');
   const back = document.getElementById('rhemaBookPickerBack');
   const searchRow = document.querySelector('#rhemaBookPickerOverlay .rhema-picker-search-row');
-  if (!list || !_rhemaData()) return;
+  if (!list) return;
   if (title) title.textContent = 'Select Book';
   back?.classList.add('hidden');
   searchRow?.classList.remove('hidden');
   document.getElementById('rhemaHistoryBtn')?.classList.remove('hidden');
-  const books = _rhemaBookOrder();
+  const books = _rhemaPickerBooks();
   const firstOT = books.find(c => RHEMA_OT_BOOK_ORDER.includes(c));
   const firstNT = books.find(c => RHEMA_NT_BOOK_ORDER.includes(c));
   list.innerHTML = books.map(code => {
@@ -44843,8 +44872,8 @@ function openRhemaChapPicker() {
   closeRhemaSheet();
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   const overlay = document.getElementById('rhemaChapPickerOverlay');
-  if (!overlay || !_rhemaData()) return;
-  const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a-+b);
+  if (!overlay) return;
+  const chapters = _rhemaChapterList(_rhemaBook);
   document.getElementById('rhemaChapGrid').innerHTML =
     `<div class="rhema-num-cell rhema-intro-cell" title="About ${_rhemaBookName(_rhemaBook)}" onclick="closeRhemaPickerSheet();openBookIntro('${_rhemaBook}')"><span class="material-symbols-outlined">info</span></div>` +
     chapters.map(ch => {
@@ -45011,7 +45040,7 @@ function rhemaSelectVerse(v) {
 }
 
 function _rhemaAdjacentBook(dir) {
-  const books = _rhemaBookOrder();
+  const books = _rhemaPickerBooks();
   const idx = books.indexOf(_rhemaBook);
   if (idx < 0) return null;
   return books[idx + dir] || null;
@@ -45023,7 +45052,7 @@ function _rhemaFirstVerseOfChapter(book, chapter) {
 }
 
 function _rhemaLastChapterOfBook(book) {
-  const chapters = Object.keys(_rhemaText()[book] || {}).sort((a, b) => +a - +b);
+  const chapters = _rhemaChapterList(book);
   return chapters[chapters.length - 1] || '1';
 }
 
@@ -45208,8 +45237,8 @@ function rhemaPrevVerse() {
     renderRhemaVerse();
     return;
   }
-  const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a - +b);
-  const chIdx = chapters.indexOf(_rhemaChapter);
+  const chapters = _rhemaChapterList(_rhemaBook);
+  const chIdx = chapters.indexOf(String(_rhemaChapter));
   let changed = false;
   if (_rhemaFullChapter) {
     if (chIdx > 0) {
@@ -45259,8 +45288,8 @@ function rhemaNextVerse() {
     return;
   }
   const bookBefore = _rhemaBook;
-  const chapters = Object.keys(_rhemaText()[_rhemaBook] || {}).sort((a,b) => +a - +b);
-  const chIdx = chapters.indexOf(_rhemaChapter);
+  const chapters = _rhemaChapterList(_rhemaBook);
+  const chIdx = chapters.indexOf(String(_rhemaChapter));
   let changed = false;
   if (_rhemaFullChapter) {
     if (chIdx < chapters.length - 1) {
