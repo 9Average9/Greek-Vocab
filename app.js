@@ -30331,7 +30331,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.552";
+const APP_VERSION = "3.0.553";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30340,7 +30340,7 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-critical.js':  '3.0.23',
   'rhema-critical-fallbacks.js': '3.0.177',
   'rhema-ot-hebrew.js': '3.0.81',
-  'rhema-hebrew-lexicon.js': '3.0.81',
+  'rhema-hebrew-lexicon.js': '3.0.553',
   'rhema-hebrew-bdb.js':    '3.0.379',
   'rhema-lxx.js':       '3.0.65',
   'rhema-lexicon.js':   '3.0.65',
@@ -30354,6 +30354,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.553 &mdash; Real Hebrew meanings</div>
+<ul>
+  <li><strong>Hebrew words say what they mean</strong> &mdash; The small English under each Hebrew word now gives its real meaning (water, God, create, spirit / wind) instead of an odd word picked from an alphabetical list. Same fix in the word sheet and the word library.</li>
+</ul>
 <div class="un-version-label">v3.0.552 &mdash; Cleaner Hebrew layout</div>
 <ul>
   <li><strong>Tidier Hebrew pane</strong> &mdash; Verse badges read normally and aren&rsquo;t cut off at the edge, the words have proper margins, and a short last row sits centered.</li>
@@ -45885,7 +45889,10 @@ function _rhemaMeaningDecision(word = [], {
     const cachedHeb = _deepHebrewEntrySync(strongs);
     const proseDef = cachedHeb && cachedHeb.prose && cachedHeb.prose.def;
     const text = proseDef || getRhemaQuickDefinition(lex);
-    return { word: resolved, lex, gloss: text, definition: text, source: proseDef ? 'Hebrew word study' : 'Hebrew lexicon', confidence: proseDef ? 'AI-generated' : 'Reference', evidence: [] };
+    // The line under each word is the short gloss ("water", "create"); the
+    // full word-study sentence is the definition shown in the word sheet.
+    const gloss = lex?.gloss || lex?.brief || text;
+    return { word: resolved, lex, gloss, definition: text, source: proseDef ? 'Hebrew word study' : 'Hebrew lexicon', confidence: proseDef ? 'AI-generated' : 'Reference', evidence: [] };
   }
 
   const pos = String(morph || '').split('-')[0];
