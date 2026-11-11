@@ -346,7 +346,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.557" rel="stylesheet"/>
+<link href="style.css?v=3.0.558" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -10911,19 +10911,31 @@ Verb Endings
 </div>
 <div class="rhema-note-overlay" id="rhemaEnglishMeaningModal" onclick="closeRhemaEnglishMeaning(event)">
 <div class="rhema-note-card rhema-meaning-card" onclick="event.stopPropagation()">
-<button class="rhema-note-x" onclick="closeRhemaEnglishMeaning()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+<div class="rhema-meaning-head">
 <div class="rhema-note-ref" id="rhemaMeaningWord">Word</div>
+<button class="rhema-note-x" onclick="closeRhemaEnglishMeaning()" aria-label="Close definition"><span class="material-symbols-outlined">close</span></button>
+</div>
 <div class="rhema-meaning-body" id="rhemaMeaningBody"></div>
-<button class="rhema-note-save hidden" id="rhemaMeaningLogBtn" onclick="rhemaAddCurrentEnglishMeaningToStudy()">Add to study word log</button>
+<div class="rhema-meaning-footer"><button class="rhema-note-save hidden" id="rhemaMeaningLogBtn" onclick="rhemaAddCurrentEnglishMeaningToStudy()"><span class="material-symbols-outlined" aria-hidden="true">bookmark_add</span><span>Add to study word log</span></button></div>
+</div>
+</div>
+<div class="rhema-note-overlay rhema-il-choice-overlay" id="rhemaInterlinearChoiceModal" onclick="closeRhemaInterlinearChoice(event)">
+<div class="rhema-note-card rhema-il-choice-card" role="dialog" aria-modal="true" aria-labelledby="rhemaIlChoiceTitle" onclick="event.stopPropagation()">
+<div class="rhema-il-choice-head"><div class="rhema-il-choice-guide"><span class="material-symbols-outlined" aria-hidden="true">auto_stories</span><span>Rhema guide</span></div><button class="rhema-il-choice-x" onclick="closeRhemaInterlinearChoice()" aria-label="Close language choice"><span class="material-symbols-outlined">close</span></button></div>
+<div class="rhema-il-choice-intro"><div><h3 id="rhemaIlChoiceTitle">Which ancient path?</h3>
+<p>Hebrew roots or the Greek Septuagint? Your interlinear, your adventure.</p></div><img src="assets/mascot/guide-think.webp" alt="" width="88" height="88" decoding="async"/></div>
+<div class="rhema-il-choice-actions"><button onclick="chooseRhemaInterlinearLayer('hebrew')"><span class="material-symbols-outlined" aria-hidden="true">menu_book</span><span><strong>Hebrew</strong><small>Original-language text</small></span><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button><button onclick="chooseRhemaInterlinearLayer('lxx')"><span class="material-symbols-outlined" aria-hidden="true">translate</span><span><strong>Greek Septuagint</strong><small>Ancient Greek translation</small></span><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button></div>
 </div>
 </div>
 <!-- Interlinear-lite: the tapped verse, original word by word with gloss -->
 <div class="rhema-note-overlay rhema-il-overlay" id="rhemaInterlinearModal" onclick="closeRhemaInterlinear(event)">
 <div class="rhema-note-card rhema-il-card" onclick="event.stopPropagation()">
-<button class="rhema-note-x" onclick="closeRhemaInterlinear()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
 <div class="rhema-il-head">
+<div class="rhema-il-title">
 <span class="rhema-il-kicker">Interlinear</span>
 <span class="rhema-il-ref" id="rhemaInterlinearRef"></span>
+</div>
+<button class="rhema-note-x" onclick="closeRhemaInterlinear()" aria-label="Close interlinear"><span class="material-symbols-outlined">close</span></button>
 </div>
 <p class="rhema-il-english" id="rhemaInterlinearEnglish"></p>
 <p class="rhema-il-versionnote" id="rhemaInterlinearVersionNote" style="display:none"></p>
@@ -10934,10 +10946,12 @@ Verb Endings
 <!-- See interpretations: how real traditions read the selected passage -->
 <div class="rhema-note-overlay rhema-ip-overlay" id="rhemaInterpModal" onclick="closeRhemaInterpretations(event)">
 <div class="rhema-note-card rhema-ip-card" role="dialog" aria-modal="true" aria-labelledby="rhemaInterpRef" onclick="event.stopPropagation()">
-<button class="rhema-note-x" onclick="closeRhemaInterpretations()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
 <div class="rhema-il-head">
+<div class="rhema-il-title">
 <span class="rhema-il-kicker">Interpretations</span>
 <span class="rhema-il-ref" id="rhemaInterpRef"></span>
+</div>
+<button class="rhema-note-x" onclick="closeRhemaInterpretations()" aria-label="Close interpretations"><span class="material-symbols-outlined">close</span></button>
 </div>
 <div class="rhema-ip-body" id="rhemaInterpBody"></div>
 </div>
@@ -17281,7 +17295,7 @@ Verb Endings
 </main>
 <script src="vocab.js?v=3.0.8"></script>
 <script src="rhema-align.js?v=3.0.557"></script>
-<script src="app.js?v=3.0.557"></script>
+<script src="app.js?v=3.0.558"></script>
 <script src="rhema-word-study.js?v=3.0.557"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
@@ -17292,7 +17306,7 @@ Verb Endings
 <script src="greek-verbs.js?v=3.0.152"></script>
 <script src="sermon-notes.js?v=3.0.460"></script>
 <script src="bible-quiz.js?v=3.0.473"></script>
-<script src="firebase-lb.js?v=3.0.557" type="module"></script>
+<script src="firebase-lb.js?v=3.0.558" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -17476,10 +17490,9 @@ Verb Endings
 <!-- Word detail sheet — slides up from bottom of sandbox when a word log entry is tapped -->
 <div class="ss-wd-backdrop" id="ssWordDetailBackdrop" onclick="closeSandboxWordDetail()"></div>
 <div class="ss-wd-sheet" id="ssWordDetailSheet">
-<button class="sheet-x-close" onclick="closeSandboxWordDetail()"><span class="material-symbols-outlined">close</span></button>
 <div class="ss-wd-top">
-<span class="ss-wd-surface" id="ssWdSurface"></span>
-<span class="ss-wd-strongs" id="ssWdStrongs"></span>
+<div class="ss-wd-title"><span class="ss-wd-surface" id="ssWdSurface"></span><span class="ss-wd-strongs" id="ssWdStrongs"></span></div>
+<button class="sheet-x-close" onclick="closeSandboxWordDetail()" aria-label="Close word log detail"><span class="material-symbols-outlined">close</span></button>
 </div>
 <div class="ss-wd-lemma" id="ssWdLemma"></div>
 <div class="rhema-sheet-tabs">

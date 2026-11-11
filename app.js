@@ -30447,7 +30447,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.557";
+const APP_VERSION = "3.0.558";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30470,6 +30470,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.558 &mdash; Reader polish</div>
+<ul>
+  <li><strong>Old Testament interlinear</strong> &mdash; The Rhema guide lets you choose Hebrew or Greek Septuagint when you open it.</li>
+  <li><strong>Clearer reading tools</strong> &mdash; Font samples now show each font correctly, and the word definition, Word Log and interpretations close buttons have more room.</li>
+</ul>
 <div class="un-version-label">v3.0.557 &mdash; Who does what in Hebrew</div>
 <ul>
   <li><strong>Who Does What</strong> &mdash; In the Hebrew Old Testament, the Syntax tool is now <em>Who Does What</em>: every action in the verse with who does it, what it&rsquo;s done to, and who it&rsquo;s for (Genesis 1:11: <em>bring forth</em> &mdash; the earth makes it happen, vegetation, plants and trees come about). Tap any word to study it.</li>
@@ -41727,10 +41732,32 @@ function rhemaOpenEnglishWordPicker() { _rhemaOpenWordPicker('lookup'); }
 // direction that is actually accurate. English translations are not word-aligned
 // to the Greek, so we never place a Greek word "under" an English one.
 let _rhemaInterlinearRef = null;
+let _rhemaInterlinearChoiceRef = null;
 
 function rhemaOpenInterlinearFromMenu() {
   const ref = _rhemaMenuRef;
   closeRhemaVerseSheet();
+  const p = ref && _rhemaParseRef(ref);
+  if (p && isRhemaOTBook(p.book)) {
+    _rhemaInterlinearChoiceRef = ref;
+    document.getElementById('rhemaInterlinearChoiceModal')?.classList.add('open');
+    document.querySelector('#rhemaInterlinearChoiceModal .rhema-il-choice-x')?.focus();
+    return;
+  }
+  rhemaOpenInterlinear(ref);
+}
+
+function closeRhemaInterlinearChoice(e) {
+  if (e && e.target !== document.getElementById('rhemaInterlinearChoiceModal')) return;
+  document.getElementById('rhemaInterlinearChoiceModal')?.classList.remove('open');
+  _rhemaInterlinearChoiceRef = null;
+}
+
+function chooseRhemaInterlinearLayer(layer) {
+  const ref = _rhemaInterlinearChoiceRef;
+  if (!ref) return;
+  closeRhemaInterlinearChoice();
+  if (_rhemaOTLayer !== layer) setRhemaOTLayer(layer);
   rhemaOpenInterlinear(ref);
 }
 
@@ -41752,6 +41779,11 @@ async function rhemaOpenInterlinear(ref) {
     try { await loadRhemaScripts(); }
     catch { if (gridEl) gridEl.innerHTML = '<div class="rhema-il-loading">Could not load the scripture data. Check your connection.</div>'; return; }
     if (_rhemaInterlinearRef !== ref) return; // user moved on while loading
+  }
+  if (p && isRhemaOTBook(p.book)) {
+    try { await _rhemaLoadDataFile(_rhemaOTLayer === 'lxx' ? 'rhema-lxx.js' : 'rhema-ot-hebrew.js'); }
+    catch { if (gridEl) gridEl.innerHTML = '<div class="rhema-il-loading">Could not load the original-language text. Check your connection.</div>'; return; }
+    if (_rhemaInterlinearRef !== ref) return;
   }
   // Word-for-word English needs the Berean alignment; load it (once) before we
   // render so the very first open already shows the version's words.
@@ -41859,7 +41891,7 @@ function _rhemaRenderInterlinear(ref) {
   if (!gridEl) return;
   const p = _rhemaParseRef(ref);
   if (!p) { gridEl.innerHTML = ''; return; }
-  const layer = getCurrentOriginalLanguageLayer();
+  const layer = getCurrentOriginalLanguageLayer(p.book);
   const isHebrew = layer === 'hebrew';
   const words = _rhemaOrigWords(p.book, p.chapter, p.verse);
   if (!words.length) {
@@ -44102,11 +44134,13 @@ function _renderRhemaReaderFontList() {
   const tab = _rhemaReaderFontTab;
   const inTab = RHEMA_READER_FONTS.filter(f => f.group === tab);
   _rhemaLoadWebFonts(inTab);   // only this category's fonts download
-  const previewStack = current.stack || 'var(--rhema-reader-default-font, inherit)';
+  const readerSample = document.querySelector('#rhemaModal .rhema-reader');
+  const defaultStack = readerSample ? getComputedStyle(readerSample).fontFamily : 'system-ui, sans-serif';
+  const previewStack = current.stack || defaultStack;
   const isDefault = current.id === 'default';
   const previewHtml =
     `<div class="rrp-fp-preview">
-      <span class="rrp-fp-verse" style="font-family:${previewStack}">In the beginning was the Word</span>
+      <span class="rrp-fp-verse">In the beginning was the Word</span>
       <span class="rrp-fp-meta"><em>${current.label}</em>${isDefault ? '' : `<button class="rrp-fp-reset" type="button" onclick="rhemaReaderSetFont('default')"><span class="material-symbols-outlined">restart_alt</span>Default</button>`}</span>
     </div>`;
   // Categories: all visible at once (they wrap), so nothing hides off the edge.
@@ -44123,13 +44157,17 @@ function _renderRhemaReaderFontList() {
     `<div class="rrp-fp-grid">
       ${inTab.map(f =>
         `<button class="rrp-fp-tile${f.id === font ? ' active' : ''}" type="button" onclick="rhemaReaderSetFont('${f.id}')" aria-pressed="${f.id === font}" aria-label="${f.label}">
-          <span class="rrp-fp-sample" style="font-family:${f.stack || 'inherit'}">Aa</span>
+          <span class="rrp-fp-sample">Aa</span>
           <span class="rrp-fp-name">${f.label}</span>
           <span class="rrp-fp-tick material-symbols-outlined">check_circle</span>
         </button>`
       ).join('')}
     </div>`;
   wrap.innerHTML = previewHtml + catsHtml + tilesHtml;
+  wrap.querySelector('.rrp-fp-preview').style.fontFamily = previewStack;
+  wrap.querySelectorAll('.rrp-fp-sample').forEach((sample, i) => {
+    sample.style.fontFamily = inTab[i].stack || defaultStack;
+  });
 }
 
 function openRhemaReaderPanel() {
