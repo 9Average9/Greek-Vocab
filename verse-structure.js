@@ -977,7 +977,17 @@ function _vsDbPut(key, val) {
 
 function _vsChapterKey(trans, book, ch) { return `${trans}|${book}|${String(ch)}`; }
 
+// Chapters saved before the careful join have stray spaces ("L ord" for
+// small-caps LORD, "Lord ’s", "satisfied ;", "“ For"): close them up as printed.
+function _vsRepairJoin(t) {
+  return typeof t !== 'string' ? t : t
+    .replace(/\bL (?:ord|ORD)\b/g, 'LORD').replace(/\bG (?:od|OD)\b/g, 'GOD')
+    .replace(/([“‘]) (?=[A-Za-z])/g, '$1')
+    .replace(/([A-Za-z\]]) (’s\b|[,;:?!])/g, '$1$2')
+    .replace(/([A-Za-z\]]) \.(?! ?\.)/g, '$1.');
+}
 function _vsSeedChapter(trans, book, ch, verses) {
+  if (verses && typeof verses === 'object') for (const v of Object.keys(verses)) verses[v] = _vsRepairJoin(verses[v]);
   const key = _vsChapterKey(trans, book, ch);
   _vsChapterMem.set(key, verses);
   for (const [v, t] of Object.entries(verses)) {
@@ -1055,10 +1065,27 @@ function _vsParsePassageJson(content, apiBook) {
     const m = typeof s === 'string' ? s.match(idRe) : null;
     return m ? { ch: m[1], v: m[2], end: m[3] || null } : null;
   };
+  // Pieces of a verse (paragraphs, poetry lines, italics, small caps) are
+  // joined with a space, except where the printed text has none: before
+  // punctuation ("Lord’s", "satisfied;"), after an opening quote or dash, and
+  // inside a word split for small caps ("L" + "ord" → LORD, "Y" + "ou").
+  let smallCaps = 0;
+  const joinSep = (prev, next, sc) => {
+    if (/\s$/.test(prev) || /^\s/.test(next)) return '';
+    if (/^[,;:.?!’”)\]—–-]/.test(next) || /[“‘(\[—–-]$/.test(prev)) return '';
+    if (sc && /(?:^|[^A-Za-z])[A-Z]$/.test(prev)) return '';
+    return ' ';
+  };
   const visit = (node) => {
     if (!node) return;
     if (Array.isArray(node)) { node.forEach(visit); return; }
     const attrs = node.attrs || {};
+    if (node.type === 'tag' && node.name === 'char' && attrs.style === 'sc' && node.items) {
+      smallCaps++;
+      visit(node.items);
+      smallCaps--;
+      return;
+    }
     const marker = parseId(attrs.sid) || parseId(attrs.verseId) || parseId(attrs.vid);
     if (marker) {
       cur = marker;
@@ -1072,9 +1099,12 @@ function _vsParsePassageJson(content, apiBook) {
       const tgt = own || cur;
       if (tgt) {
         const chOut = out[tgt.ch] || (out[tgt.ch] = {});
-        // Space-join fragments: one verse can span paragraphs/poetry lines and
-        // the pieces don't carry their own separators.
-        chOut[tgt.v] = (chOut[tgt.v] ? chOut[tgt.v] + ' ' : '') + node.text;
+        const prev = chOut[tgt.v] || '';
+        let text = node.text;
+        // Small-caps LORD / GOD (YHWH) print as capitals: "L" + "ord".
+        if (smallCaps && /(?:^|[^A-Za-z])L$/.test(prev)) text = text.replace(/^ord\b/, 'ORD');
+        if (smallCaps && /(?:^|[^A-Za-z])G$/.test(prev)) text = text.replace(/^od\b/, 'OD');
+        chOut[tgt.v] = prev + (prev ? joinSep(prev, text, smallCaps > 0) : '') + text;
       }
     }
     if (node.items) visit(node.items);

@@ -30447,7 +30447,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.557";
+const APP_VERSION = "3.0.558";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30470,6 +30470,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.558 &mdash; Hebrew in your Bible&rsquo;s words</div>
+<ul>
+  <li><strong>Your version, under the Hebrew</strong> &mdash; The English under each Hebrew word now follows the version you read. On the NIV, Genesis 22:2&rsquo;s וְהַעֲלֵהוּ reads &ldquo;Sacrifice&rdquo;; on the KJV, &ldquo;offer him&rdquo;, &ldquo;thou lovest&rdquo;. The same goes for the interlinear, the word panel, and Who Does What.</li>
+  <li><strong>See both</strong> &mdash; When your version words it differently, the word panel also shows the BSB&rsquo;s word for comparison. Words your version doesn&rsquo;t pin down show the BSB&rsquo;s word in grey.</li>
+  <li><strong>Cleaner text</strong> &mdash; Fixed stray spaces in downloaded versions: &ldquo;The L ord&rdquo; is now &ldquo;The LORD&rdquo;, and &ldquo;Lord &rsquo;s&rdquo; and &ldquo;satisfied ;&rdquo; are closed up as printed.</li>
+</ul>
 <div class="un-version-label">v3.0.557 &mdash; Who does what in Hebrew</div>
 <ul>
   <li><strong>Who Does What</strong> &mdash; In the Hebrew Old Testament, the Syntax tool is now <em>Who Does What</em>: every action in the verse with who does it, what it&rsquo;s done to, and who it&rsquo;s for (Genesis 1:11: <em>bring forth</em> &mdash; the earth makes it happen, vegetation, plants and trees come about). Tap any word to study it.</li>
@@ -41897,11 +41903,20 @@ function _rhemaRenderInterlinear(ref) {
   const foot = document.getElementById('rhemaInterlinearFoot');
   if (foot) {
     if (!foot.dataset.greek) foot.dataset.greek = foot.textContent;
+    const hv = _rhemaReaderVersion();
     foot.textContent = isHebrew
-      ? 'Hebrew reads right to left. Under each Hebrew word: how it sounds, then the Berean Standard Bible’s English for it in this verse, from the Berean word-by-word tables. Tap any word to see what it means and how it’s built.'
+      ? (hv && hv !== 'BSB'
+        ? `Hebrew reads right to left. Under each Hebrew word: how it sounds, then the ${hv}’s English for it in this verse, found with the help of the Berean word-by-word tables. Tap any word to see what it means and how it’s built.`
+        : 'Hebrew reads right to left. Under each Hebrew word: how it sounds, then the Berean Standard Bible’s English for it in this verse, from the Berean word-by-word tables. Tap any word to see what it means and how it’s built.')
       : foot.dataset.greek;
   }
-  if (hebIL) {
+  const hebVer = hebIL ? _rhemaHebVersionWords(p.book, ilC, ilV) : null;
+  if (hebIL && hebVer) {
+    // Another version: its own words, found through the BSB's word table; the
+    // BSB's word (grey) where this version's can't be pinned down.
+    renders = hebVer.map((r, i) => (r.kind ? r : (hebIL[i]?.en ? { text: hebIL[i].en, kind: 'bsb' } : r)));
+    _rhemaSetInterlinearVersionNote(hebVer.version, true);
+  } else if (hebIL) {
     // The Berean table is the BSB's own word-by-word English: exact, not guessed.
     renders = hebIL.map(il => il?.en ? { text: il.en, kind: 'exact' } : { text: '', kind: il ? 'none' : '' });
     _rhemaSetInterlinearVersionNote('BSB');
@@ -41921,6 +41936,8 @@ function _rhemaRenderInterlinear(ref) {
       english = `<span class="rhema-il-version rhema-il-inferred" title="Best match by position">≈ ${esc(v.text)}</span>`;
     } else if (v.kind === 'none') {
       english = `<span class="rhema-il-none" title="${esc(versionLabel)} has no separate word for this">—</span>`;
+    } else if (v.text && v.kind === 'bsb') {
+      english = `<span class="rhema-il-gloss" title="The BSB’s word here (not found in ${esc(hebVer?.version || versionLabel)})">${esc(v.text)}</span>`;
     } else {
       english = r.gloss ? `<span class="rhema-il-gloss" title="Literal meaning (not found in ${esc(versionLabel)})">${esc(r.gloss)}</span>` : '';
     }
@@ -41938,7 +41955,7 @@ function _rhemaRenderInterlinear(ref) {
       `</button>`;
   }).join('');
 }
-function _rhemaSetInterlinearVersionNote(versionLabel) {
+function _rhemaSetInterlinearVersionNote(versionLabel, hebBridge) {
   const el = document.getElementById('rhemaInterlinearVersionNote');
   if (!el) return;
   if (versionLabel) {
@@ -41947,7 +41964,7 @@ function _rhemaSetInterlinearVersionNote(versionLabel) {
       `<span><span class="rhema-il-swatch rhema-il-sw-version">word</span> ${esc(versionLabel)}’s word</span>` +
       `<span><span class="rhema-il-swatch rhema-il-sw-inferred">≈</span> best match by position</span>` +
       `<span><span class="rhema-il-swatch rhema-il-sw-none">—</span> no separate word</span>` +
-      `<span><span class="rhema-il-swatch rhema-il-sw-gloss">grey</span> literal meaning</span>` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-gloss">grey</span> ${hebBridge ? 'the BSB’s word (not found)' : 'literal meaning'}</span>` +
       `</span>` +
       `<button type="button" class="rhema-il-detail-btn${_rhemaIlDetails ? ' on' : ''}" onclick="rhemaToggleInterlinearDetails()">` +
       `<span class="material-symbols-outlined">${_rhemaIlDetails ? 'visibility_off' : 'visibility'}</span>${_rhemaIlDetails ? 'Hide' : 'Show'} literal &amp; parsing</button>`;
@@ -46182,10 +46199,10 @@ function _renderVerseWords(words, verse, ochapter) {
       const variant = variantMap[i];
       const cls = `${isXref ? 'rhema-word xref' : 'rhema-word'}${variant ? ' has-variant' : ''}`;
       const decision = _rhemaMeaningDecision(word, { layer, book: _rhemaBook, chapter: _rhemaChapter, verse: verse || _rhemaVerse });
-      // Hebrew: the Berean English for this exact spot ("In the beginning",
-      // "and he said"), falling back to the word's general meaning.
-      const il = isHebrew ? _rhemaHebILWord(_rhemaBook, ochapter || _rhemaChapter, verse || _rhemaVerse, i) : null;
-      const gloss = (il && il.en) ? _escapeRhemaAttr(il.en) : decision.gloss;
+      // Hebrew: the reader's version's English for this exact spot ("In the
+      // beginning", "and he said"), falling back to the word's general meaning.
+      const he = isHebrew ? _rhemaHebEnglish(_rhemaBook, ochapter || _rhemaChapter, verse || _rhemaVerse, i) : null;
+      const gloss = (he && he.text) ? _escapeRhemaAttr(he.text) : decision.gloss;
       const glossHtml = gloss ? `<span class="rhema-gloss">${gloss}</span>` : '';
       const variantTag = variant
         ? `<button class="rhema-variant-tag" onclick="event.stopPropagation();showRhemaVariant('${variant.label}', '${_escapeRhemaAttr(variant.text)}')" title="Text variant">var</button>`
@@ -49576,15 +49593,125 @@ function _rhemaEnsureHebIL() {
     document.querySelectorAll('#rhemaVerseDisplay .rhema-chapter-block[data-ochapter]').forEach(block => {
       const oc = block.dataset.ochapter, ov = block.dataset.overse;
       block.querySelectorAll('.rhema-word[data-idx]').forEach(el => {
-        const il = _rhemaHebILWord(book, oc, ov, el.dataset.idx);
-        if (!il || !il.en) return;
+        const he = _rhemaHebEnglish(book, oc, ov, el.dataset.idx);
+        if (!he.text) return;
         let g = el.querySelector('.rhema-gloss');
         if (!g) { g = document.createElement('span'); g.className = 'rhema-gloss'; el.appendChild(g); }
-        g.textContent = il.en;
+        g.textContent = he.text;
       });
     });
     if (document.getElementById('rhemaInterlinearModal')?.classList.contains('open') && _rhemaInterlinearRef) _rhemaRenderInterlinear(_rhemaInterlinearRef);
   });
+}
+
+// ── Hebrew in the reader's own English version ───────────────────────────────
+// The Berean table gives the BSB's English for every Hebrew word. For any other
+// version (NIV, NKJV, KJV, NASB…), the same bridge the Greek uses finds that
+// word's English inside the version's own verse: seeded by the BSB wording, the
+// word's lexicon meanings, and how this version renders the same Hebrew word in
+// the rest of the chapter. Computed on the device from the reader's own text.
+const _rhemaHebItemsCache = new Map();   // book|c|v -> bridge items
+const _rhemaHebVerLexCache = new Map();  // ver|book|englishChapter -> learned table
+const _rhemaHebVerWordsCache = new Map();
+function _rhemaHebBridgeItems(book, oc, ov) {
+  const k = `${book}|${oc}|${ov}`;
+  if (_rhemaHebItemsCache.has(k)) return _rhemaHebItemsCache.get(k);
+  const words = (window.RhemaHebrewOT?.text?.[book] || {})[String(oc)]?.[String(ov)] || [];
+  const items = words.map((w, i) => {
+    const il = _rhemaHebILWord(book, oc, ov, i);
+    let d = null;
+    try { d = _rhemaMeaningDecision(_rhemaResolveWord(w, book, oc), { layer: 'hebrew', book, chapter: oc, verse: ov }); } catch {}
+    const s = String(w[1] || '');
+    return {
+      bsb: il ? il.en : null,
+      gloss: String((d && d.gloss) || '').split(/[;,(]/)[0],
+      meanings: _rhemaBridgeMeanings(d && d.entry, d && d.lex),
+      key: s ? 'H' + s : '',
+    };
+  });
+  _rhemaHebItemsCache.set(k, items);
+  if (_rhemaHebItemsCache.size > 600) _rhemaHebItemsCache.delete(_rhemaHebItemsCache.keys().next().value);
+  return items;
+}
+// The English verse for a Hebrew (MT) verse, or null for a psalm title.
+function _rhemaHebEngRef(book, oc, ov) {
+  const e = _rhemaVersificationFor(book)?.o2e.get(`${Number(oc)}:${Number(ov)}`);
+  if (e && e.endsWith(':title')) return null;
+  return e ? e.split(':') : [String(oc), String(ov)];
+}
+// How this version renders each Hebrew word across the English chapter.
+function _rhemaHebVersionLexicon(ver, book, ec) {
+  const list = _rhemaVerseList(book, ec);
+  const avail = list.filter(v => _rhemaVersionChapterText(ver, book, ec, v)).length;
+  const key = `${ver}|${book}|${ec}`;
+  const cached = _rhemaHebVerLexCache.get(key);
+  if (cached && cached.avail >= avail) return cached.table;
+  const table = new Map();
+  for (const ev of list) {
+    const text = _rhemaVersionChapterText(ver, book, ec, ev);
+    if (!text) continue;
+    const [oc, ov] = _rhemaOrigRef(book, ec, ev);
+    const items = _rhemaHebBridgeItems(book, oc, ov);
+    if (!items.length) continue;
+    const copy = items.map(it => ({ ...it }));
+    RhemaAlign.learnRenderings(copy, RhemaAlign.bridgeToVersion(copy, text), table);
+  }
+  _rhemaHebVerLexCache.set(key, { table, avail });
+  if (_rhemaHebVerLexCache.size > 24) _rhemaHebVerLexCache.delete(_rhemaHebVerLexCache.keys().next().value);
+  return table;
+}
+// One { text, kind } per Hebrew word of MT verse oc:ov in the reader's version
+// (kind: exact · match · inferred · none · ''), with .version set. null when the
+// reader is on the BSB, or the version's verse isn't on the device yet.
+function _rhemaHebVersionWords(book, oc, ov) {
+  if (!window.RhemaAlign || !_rhemaHebILData(book) || !window.RhemaHebrewOT?.text?.[book]) return null;
+  const ver = _rhemaReaderVersion();
+  if (!ver || ver === 'BSB') return null;
+  const er = _rhemaHebEngRef(book, oc, ov);
+  if (!er) return null;
+  const [ec, ev] = er;
+  const text = _rhemaVersionChapterText(ver, book, ec, ev);
+  if (!text) return null;
+  const ck = `${ver}|${book}|${oc}|${ov}|${text.length}|${_rhemaHebVerLexCache.get(`${ver}|${book}|${ec}`)?.avail || 0}`;
+  if (_rhemaHebVerWordsCache.has(ck)) return _rhemaHebVerWordsCache.get(ck);
+  const items = _rhemaHebBridgeItems(book, oc, ov).map(it => ({ ...it }));
+  if (!items.length) return null;
+  let out;
+  try {
+    if (text === _rhemaEnglishText(book, ec, ev, 'BSB')) {
+      // Same wording as the BSB here (the MSB's Old Testament): exact.
+      out = RhemaAlign.bsbRenderings(items.map(it => it.bsb));
+    } else {
+      let table = null;
+      try { table = _rhemaHebVersionLexicon(ver, book, ec); } catch {}
+      if (table) items.forEach(it => { it.learned = RhemaAlign.learnedFor(table, it.key); });
+      out = RhemaAlign.bridgeToVersion(items, text);
+    }
+  } catch { return null; }
+  out.version = ver;
+  const fk = `${ver}|${book}|${oc}|${ov}|${text.length}|${_rhemaHebVerLexCache.get(`${ver}|${book}|${ec}`)?.avail || 0}`;
+  _rhemaHebVerWordsCache.set(fk, out);
+  if (_rhemaHebVerWordsCache.size > 800) _rhemaHebVerWordsCache.delete(_rhemaHebVerWordsCache.keys().next().value);
+  return out;
+}
+// The English for Hebrew word i of MT verse c:v as the reader's version has it:
+// { text, ver, kind }. The version's own words when they're found; otherwise
+// the BSB's (kind 'bsb'); text '' when neither has a separate word for it.
+function _rhemaHebEnglish(book, c, v, i) {
+  const il = _rhemaHebILWord(book, c, v, i);
+  const vw = _rhemaHebVersionWords(book, c, v);
+  const r = vw?.[Number(i)];
+  if (r && r.text && r.kind !== '') return { text: r.text, ver: vw.version, kind: r.kind };
+  if (r && r.kind === 'none') return { text: '', ver: vw.version, kind: 'none' };
+  const bsb = il?.en ? String(il.en).replace(/\[[^\]]*\]\s*/g, '').replace(/[{}]/g, '').trim() : '';
+  return { text: bsb, ver: 'BSB', kind: bsb ? (vw ? 'bsb' : 'exact') : (il ? 'none' : '') };
+}
+// BSB wording without brackets / braces, for comparing and showing.
+function _rhemaHebPlain(t) { return String(t || '').replace(/\[[^\]]*\]\s*/g, '').replace(/[{}]/g, '').trim(); }
+// Label for credits: which version the English comes from.
+function _rhemaHebEnglishLabel() {
+  const v = _rhemaReaderVersion();
+  return v && v !== 'BSB' ? `${v} (found with the help of the BSB’s word-by-word tables)` : 'BSB';
 }
 
 // ── Who does what (MACULA Hebrew) ────────────────────────────────────────────
@@ -49627,9 +49754,8 @@ function _rhemaHebWho(e, book, oc, ov) {
   const PRON = /^(?:he|him|his|she|her|it|its|they|them|their|you|your|me|my|we|us|our|himself|herself|itself|themselves)$/i;
   const chip = ([c, v, i, eng]) => {
     const w = T[String(c)]?.[String(v)]?.[i];
-    const il = _rhemaHebILWord(book, c, v, i);
-    // The word's own short gloss ("earth", "God"); BSB phrasing only if none.
-    let label = String(eng || '').trim() || String(il?.en || '').replace(/\[[^\]]*\]\s*/g, '').replace(/^(?:and|then|now|so|but|let)\s+/i, '');
+    // The word's own short gloss ("earth", "God"); the version's phrasing only if none.
+    let label = String(eng || '').trim() || _rhemaHebEnglish(book, c, v, i).text.replace(/^(?:and|then|now|so|but|let)\s+/i, '');
     // A pronoun ("him") → who it is ("him = Isaac").
     const r = _rhemaHebRoleWord(book, c, v, i);
     if (r?.p && (PRON.test(label) || /\b(?:him|her|them|it)$/i.test(label))) {
@@ -49675,7 +49801,7 @@ function _rhemaHebrewSentenceMap(book, oc, ov) {
       cards.push(`<div class="rhs-act">
         <button type="button" class="rhs-verb" onclick="openRhemaSheet(${i},'${ov}','${oc}')">
           <span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>
-          <b>${esc(il?.en || (window.RhemaHebrewLexicon?.[w[1]]?.gloss) || '')}</b>
+          <b>${esc(_rhemaHebEnglish(book, oc, ov, i).text || (window.RhemaHebrewLexicon?.[w[1]]?.gloss) || '')}</b>
           ${note ? `<small>${esc(note)}</small>` : ''}
         </button>
         ${rows.map(([k, v]) => `<div class="rhs-row"><span class="rhs-k">${k}</span><div class="rhs-v">${v}</div></div>`).join('')}
@@ -49683,8 +49809,9 @@ function _rhemaHebrewSentenceMap(book, oc, ov) {
     }
     if (e.p && !(e.f || e.s)) {
       const [c, v, j, eng] = e.p;
-      const tgt = _rhemaHebILWord(book, c, v, j)?.en || eng;
-      refs.push(`<li><span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>${il?.en ? ` “${esc(il.en)}”` : ''} — the pronoun means <b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(oc) && String(v) === String(ov) ? '' : ` <small>(${String(c) === String(oc) ? 'v. ' + v : c + ':' + v})</small>`}</li>`);
+      const tgt = _rhemaHebEnglish(book, c, v, j).text || eng;
+      const here = _rhemaHebEnglish(book, oc, ov, i).text;
+      refs.push(`<li><span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>${here ? ` “${esc(here)}”` : ''} — the pronoun means <b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(oc) && String(v) === String(ov) ? '' : ` <small>(${String(c) === String(oc) ? 'v. ' + v : c + ':' + v})</small>`}</li>`);
     }
   });
   if (!cards.length && !refs.length) return '<div class="rhs-map"><p class="rhs-intro">No actions in this verse to map. It describes rather than tells what someone did.</p></div>';
@@ -49692,7 +49819,7 @@ function _rhemaHebrewSentenceMap(book, oc, ov) {
     <p class="rhs-intro">Who does what in this verse, in Hebrew word order. Tap any word to study it.</p>
     ${cards.join('')}
     ${refs.length ? `<div class="rhs-sub">Who’s who</div><ul class="rhs-refs">${refs.join('')}</ul>` : ''}
-    <p class="rhs-credit">Roles and references: MACULA Hebrew (Clear Bible &amp; Groves Center, CC BY 4.0). English: BSB.</p>
+    <p class="rhs-credit">Roles and references: MACULA Hebrew (Clear Bible &amp; Groves Center, CC BY 4.0). English: ${esc(_rhemaHebEnglishLabel())}.</p>
   </div>`;
 }
 
@@ -49923,10 +50050,13 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
   const lex = (window.RhemaHebrewLexicon || {})[strongs] || {};
   const meaning = lex.gloss || lex.brief || '';
   const shown = _rhemaDisplaySurface(surface);
+  const hereEn = ctx.book ? _rhemaHebEnglish(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : { text: '', ver: 'BSB', kind: '' };
   const code = il?.ps || '';
   const parsed = code ? _rhemaParseHebCode(code) : _rhemaParseHebCode(_rhemaOshbToBereanCode(morph));
   const isAramaic = /^A/.test(String(morph || '').split('/').pop() || '');
-  const ref = ctx.book ? `${_rhemaBookName(ctx.book)} ${ctx.chapter}:${ctx.verse}` : '';
+  // Shown by the English reference (Hebrew Malachi 3:19 is Malachi 4:1).
+  const engAt = ctx.book ? _rhemaHebEngRef(ctx.book, ctx.chapter, ctx.verse) : null;
+  const ref = ctx.book ? `${_rhemaBookName(ctx.book)} ${engAt ? engAt.join(':') : `${ctx.chapter}:${ctx.verse}`}` : '';
 
   // Who's acting / who a pronoun means (MACULA Hebrew).
   const role = ctx.book ? _rhemaHebRoleWord(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : null;
@@ -49936,14 +50066,14 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
     if (rows.length) whoHtml = `<div class="rhw-who">${rows.map(([k, v]) => `<div class="rhs-row"><span class="rhs-k">${k}</span><div class="rhs-v">${v}</div></div>`).join('')}</div>`;
   } else if (role?.p) {
     const [c, v, j, eng] = role.p;
-    const tgt = _rhemaHebILWord(ctx.book, c, v, j)?.en || eng;
+    const tgt = _rhemaHebEnglish(ctx.book, c, v, j).text || eng;
     whoHtml = `<div class="rhw-who"><div class="rhs-row"><span class="rhs-k">Refers to</span><div class="rhs-v"><span class="rhs-chip rhs-chip-far"><b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(ctx.chapter) && String(v) === String(ctx.verse) ? '' : `<small>${c}:${v}</small>`}</span></div></div></div>`;
   }
 
   // 1) What it means right here.
   const hero = `<div class="rhw-hero">
-      ${il?.en ? `<div class="rhw-k">In this verse${ref ? ` <span>${esc(ref)}${_rhemaOTLayer === 'hebrew' ? '' : ''}</span>` : ''}</div>
-        <div class="rhw-here">“${esc(il.en)}”<small>BSB</small></div>`
+      ${hereEn.text ? `<div class="rhw-k">In this verse${ref ? ` <span>${esc(ref)}</span>` : ''}</div>
+        <div class="rhw-here">“${esc(hereEn.text)}”<small>${esc(hereEn.ver)}</small></div>${hereEn.kind === 'bsb' && il?.en ? `<div class="rhw-alt">Not pinned down in the ${esc(_rhemaReaderVersion())} wording; the BSB’s word is shown.</div>` : ''}${hereEn.ver !== 'BSB' && il?.en && _rhemaHebPlain(il.en) !== _rhemaHebPlain(hereEn.text) ? `<div class="rhw-alt">BSB: “${esc(_rhemaHebPlain(il.en))}”</div>` : ''}`
       : il ? `<div class="rhw-k">In this verse</div><div class="rhw-here rhw-none">No separate English word<small>its meaning is carried by the words around it</small></div>`
       : `<div class="rhw-k">Meaning</div><div class="rhw-here">${esc(meaning || 'Hebrew word')}</div>`}
       <div class="rhw-say"><span class="rhema-hebrew-text">${esc(shown)}</span>${il?.tr ? `<span class="rhw-tr">${esc(il.tr)}</span>` : ''}${isAramaic ? '<span class="rhw-aram">Aramaic</span>' : ''}</div>
