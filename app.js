@@ -30447,7 +30447,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.556";
+const APP_VERSION = "3.0.557";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30470,6 +30470,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.557 &mdash; Who does what in Hebrew</div>
+<ul>
+  <li><strong>Who Does What</strong> &mdash; In the Hebrew Old Testament, the Syntax tool is now <em>Who Does What</em>: every action in the verse with who does it, what it&rsquo;s done to, and who it&rsquo;s for (Genesis 1:11: <em>bring forth</em> &mdash; the earth makes it happen, vegetation, plants and trees come about). Tap any word to study it.</li>
+  <li><strong>&ldquo;him&rdquo; = whom?</strong> &mdash; Hebrew words like &ldquo;him&rdquo;, &ldquo;it&rdquo; and &ldquo;he&rdquo; (even when built into the verb) show who they point back to, including people named in earlier verses.</li>
+  <li><strong>Plain verb notes</strong> &mdash; Each action says what its Hebrew form is doing: &ldquo;and then&hellip; (the story moves on)&rdquo;, &ldquo;let it&hellip;&rdquo;, &ldquo;causes it&rdquo;.</li>
+</ul>
 <div class="un-version-label">v3.0.556 &mdash; Search Hebrew, exact forms</div>
 <ul>
   <li><strong>Hebrew in the Word Library</strong> &mdash; Switch between Greek NT, Hebrew OT and the Septuagint at the top. Type or paste Hebrew with or without vowel marks (בָּרָא or ברא), how it sounds (bara, chesed, shalom), or what it means (create). Pasting Hebrew switches to Hebrew by itself, and there&rsquo;s a Paste button.</li>
@@ -44479,10 +44485,11 @@ function _rhemaStudyTools() {
   const hebrew = isOT && getCurrentOriginalLanguageLayer() === 'hebrew';
   const orig = hebrew ? 'Hebrew' : 'Greek';
   const tools = [
-    { id: 'syntax', label: 'Syntax Tree', icon: 'account_tree', active: _rhemaSyntaxMode,
-      reason: hebrew ? 'The syntax tree isn’t available for Hebrew.'
-            : _rhemaShowEnglish ? `Select ${orig} in the Language bar first to see the syntax tree.`
-            : _rhemaFullChapter ? 'Switch to verse view first to open the syntax tree.' : '',
+    // Hebrew gets "Who Does What": each action in the verse with who does
+    // it, to what or whom, and who "he"/"it" refers to (MACULA Hebrew).
+    { id: 'syntax', label: hebrew ? 'Who Does What' : 'Syntax Tree', icon: hebrew ? 'groups' : 'account_tree', active: _rhemaSyntaxMode,
+      reason: _rhemaShowEnglish ? `Select ${orig} in the Language bar first to see ${hebrew ? 'who does what' : 'the syntax tree'}.`
+            : _rhemaFullChapter ? `Switch to verse view first to open ${hebrew ? 'who does what' : 'the syntax tree'}.` : '',
       action: () => toggleWheelTool('syntax') },
     { id: 'pos', label: 'Parts of Speech', icon: 'ink_highlighter', active: _rhemaHighlightBarOn, reason: '',
       action: () => toggleWheelTool('highlight') },
@@ -46287,7 +46294,6 @@ function renderRhemaVerse() {
   if (!display) return;
   const layer = getCurrentOriginalLanguageLayer();
   const isHebrew = layer === 'hebrew';
-  if (isHebrew && _rhemaSyntaxMode) _rhemaSyntaxMode = false;
   display.classList.toggle('rhema-hebrew-layer', isHebrew);
   display.classList.toggle('rhema-lxx-layer', layer === 'lxx');
 
@@ -46365,7 +46371,7 @@ function renderRhemaVerse() {
       const label = isTitle ? 'Title' : (oc === here ? ov : `${oc}:${ov}`);
       const isTarget = v === focusVerse;
       const inner = _rhemaSyntaxMode
-        ? _renderSyntaxView(words, ov)
+        ? (isHebrew ? _rhemaHebrewSentenceMap(_rhemaBook, oc, ov) : _renderSyntaxView(words, ov))
         : `<div class="rhema-chapter-word-grid${_rhemaGreekOnly ? ' greek-only' : ''}${isHebrew ? ' rhema-hebrew-layer' : ''}">${_renderVerseWords(words, ov, oc)}</div>`;
       return `<div class="rhema-chapter-block${isTarget ? ' rhema-chapter-block-target' : ''}" data-verse="${v}" data-ochapter="${oc}" data-overse="${ov}">` +
              `<div class="rhema-chapter-verse-label${label !== ov ? ' rhema-verse-label-other' : ''}">${label}</div>` + inner + `</div>`;
@@ -46437,6 +46443,8 @@ function renderRhemaVerse() {
         const engText = _rhemaReaderText(_rhemaBook, _rhemaChapter, _rhemaVerse);
         display.innerHTML = _renderEnglishSyntaxView(engText);
         _requestRhemaEnglishSyntaxRender();
+      } else if (isRhemaOTBook(_rhemaBook) && getCurrentOriginalLanguageLayer() === 'hebrew') {
+        display.innerHTML = _rhemaLayerBadge() + svNote + _rhemaHebrewSentenceMap(_rhemaBook, svOc, svOv);
       } else {
         display.innerHTML = _rhemaLayerBadge() + _renderSyntaxView(words, null);
       }
@@ -46671,13 +46679,6 @@ function toggleWheelTool(tool) {
       showRhemaVariant('Syntax', 'Switch to verse-only mode before opening a syntax tree.');
       return;
     }
-    if (isRhemaOTBook(_rhemaBook) && getCurrentOriginalLanguageLayer() === 'hebrew') {
-      const btn = document.getElementById('wheelItemSyntax');
-      if (btn) { btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 500); }
-      showRhemaVariant('Syntax', 'Syntax view is not available for Hebrew.');
-      closeRhemaWheel();
-      return;
-    }
     _rhemaSyntaxMode = !_rhemaSyntaxMode;
     _syncWheelBtn('syntax', _rhemaSyntaxMode);
     _syncToolWandIndicator();
@@ -46752,14 +46753,9 @@ function _syncRhemaGreekOnlyBtn() {
 function _syncRhemaSyntaxBtn() {
   const btn = document.getElementById('wheelItemSyntax');
   if (!btn) return;
-  const isHebrew = isRhemaOTBook(_rhemaBook) && getCurrentOriginalLanguageLayer() === 'hebrew';
-  const disabled = isHebrew || _rhemaFullChapter;
+  const disabled = _rhemaFullChapter;
   btn.classList.toggle('disabled', disabled);
-  btn.title = isHebrew
-    ? 'Syntax view is not available for Hebrew'
-    : _rhemaFullChapter
-      ? 'Switch to verse-only mode before opening syntax'
-      : '';
+  btn.title = _rhemaFullChapter ? 'Switch to verse-only mode before opening syntax' : '';
 }
 
 function _syncWheelState() {
@@ -49591,6 +49587,115 @@ function _rhemaEnsureHebIL() {
   });
 }
 
+// ── Who does what (MACULA Hebrew) ────────────────────────────────────────────
+// Per book: for each Hebrew word, a verb's semantic roles (who does it, to what
+// or whom, who causes it), who its built-in subject is, who a pronoun refers to,
+// and the Septuagint's Greek word here. Built by scripts/build-hebrew-roles.py.
+const _rhemaHebRoles = new Map();
+function _rhemaHebRolesData(book) { const d = _rhemaHebRoles.get(book); return d && typeof d.then !== 'function' ? d : null; }
+function _rhemaLoadHebRoles(book) {
+  if (!book || !isRhemaOTBook(book)) return Promise.resolve(null);
+  const cur = _rhemaHebRoles.get(book);
+  if (cur) return typeof cur.then === 'function' ? cur : Promise.resolve(cur);
+  const p = fetch(`data/hebrew-roles/${book}.json?v=${RHEMA_HEB_IL_VERSION}`)
+    .then(r => (r.ok ? r.json() : null)).catch(() => null)
+    .then(d => { if (d) _rhemaHebRoles.set(book, d); else _rhemaHebRoles.delete(book); return d; });
+  _rhemaHebRoles.set(book, p);
+  return p;
+}
+function _rhemaHebRoleWord(book, c, v, i) {
+  const e = _rhemaHebRolesData(book)?.[String(c)]?.[String(v)]?.[Number(i)];
+  return e && typeof e === 'object' ? e : null;
+}
+// A short, plain note on what kind of action a verb is.
+function _rhemaHebVerbNote(code) {
+  const seg = String(code || '').split(' | ').find(x => /^V-/.test(x)) || '';
+  const [, stem, formFull] = seg.split('-');
+  const [form, mood] = String(formFull || '').split('.');
+  const notes = [];
+  const F = { Perf: 'done / completed', Imperf: 'ongoing or future', ConsecImperf: 'and then… (the story moves on)', ConjPerf: 'and then (will)…',
+    ConjImperf: 'so that…', Imp: 'a command', Inf: 'to…', InfAbs: 'for emphasis', Prtcpl: 'ongoing (…ing)', QalPassPrtcpl: 'done to it (…ed)' };
+  if (mood === 'Jus') notes.push('let it…');
+  else if (mood === 'Cohort' || mood === 'h') notes.push('let me / let us…');
+  else if (F[form]) notes.push(F[form]);
+  const S = { Nifal: 'passive', Pual: 'passive', Hofal: 'passive', Hifil: 'causes it', Hitpael: 'to or for oneself', Piel: 'stronger form' };
+  if (S[stem]) notes.push(S[stem]);
+  return notes.join(' · ');
+}
+function _rhemaHebWho(e, book, oc, ov) {
+  const T = (_rhemaText()[book] || {});
+  const PRON = /^(?:he|him|his|she|her|it|its|they|them|their|you|your|me|my|we|us|our|himself|herself|itself|themselves)$/i;
+  const chip = ([c, v, i, eng]) => {
+    const w = T[String(c)]?.[String(v)]?.[i];
+    const il = _rhemaHebILWord(book, c, v, i);
+    // The word's own short gloss ("earth", "God"); BSB phrasing only if none.
+    let label = String(eng || '').trim() || String(il?.en || '').replace(/\[[^\]]*\]\s*/g, '').replace(/^(?:and|then|now|so|but|let)\s+/i, '');
+    // A pronoun ("him") → who it is ("him = Isaac").
+    const r = _rhemaHebRoleWord(book, c, v, i);
+    if (r?.p && (PRON.test(label) || /\b(?:him|her|them|it)$/i.test(label))) {
+      const who = String(r.p[3] || '').trim();
+      if (who) label = `${PRON.test(label) ? label : label.split(' ').pop()} = ${who}`;
+    }
+    const here = String(c) === String(oc) && String(v) === String(ov);
+    const where = here ? '' : `<small>${String(c) === String(oc) ? `v. ${v}` : `${c}:${v}`}</small>`;
+    const surf = w ? `<span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>` : '';
+    return here
+      ? `<button type="button" class="rhs-chip" onclick="openRhemaSheet(${i},'${v}','${c}')"><b>${_escapeRhemaAttr(label)}</b>${surf}</button>`
+      : `<span class="rhs-chip rhs-chip-far"><b>${_escapeRhemaAttr(label)}</b>${surf}${where}</span>`;
+  };
+  const by = k => (e.f || []).filter(a => a[0] === k).map(a => a.slice(1));
+  const AA = by('AA'), A0 = by('A0'), A1 = by('A1'), A2 = by('A2');
+  const rows = [];
+  if (AA.length) {
+    rows.push(['Who makes it happen', AA.map(chip).join('')]);
+    if (A0.length) rows.push(['What comes about', A0.map(chip).join('')]);
+  } else if (A0.length) rows.push(['Who', A0.map(chip).join('')]);
+  else if (e.s) rows.push(['Who', chip(e.s) + '<span class="rhs-hint">built into the verb</span>']);
+  if (A1.length) rows.push(['What / whom', A1.map(chip).join('')]);
+  if (A2.length) rows.push(['To / for whom', A2.map(chip).join('')]);
+  return rows;
+}
+function _rhemaHebrewSentenceMap(book, oc, ov) {
+  const esc = _escapeRhemaAttr;
+  if (!_rhemaHebRolesData(book) || !_rhemaHebILData(book)) {
+    Promise.all([_rhemaLoadHebRoles(book), _rhemaLoadHebIL(book)]).then(([a, b]) => {
+      if (a && b && _rhemaBook === book && _rhemaSyntaxMode) renderRhemaVerse();
+    });
+    return '<div class="rhs-map"><p class="rhs-intro">Loading who does what…</p></div>';
+  }
+  const words = (_rhemaText()[book] || {})[String(oc)]?.[String(ov)] || [];
+  const cards = [], refs = [];
+  words.forEach((w, i) => {
+    const e = _rhemaHebRoleWord(book, oc, ov, i);
+    if (!e) return;
+    const il = _rhemaHebILWord(book, oc, ov, i);
+    if (e.f || e.s) {
+      const rows = _rhemaHebWho(e, book, oc, ov);
+      const note = _rhemaHebVerbNote(il?.ps);
+      cards.push(`<div class="rhs-act">
+        <button type="button" class="rhs-verb" onclick="openRhemaSheet(${i},'${ov}','${oc}')">
+          <span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>
+          <b>${esc(il?.en || (window.RhemaHebrewLexicon?.[w[1]]?.gloss) || '')}</b>
+          ${note ? `<small>${esc(note)}</small>` : ''}
+        </button>
+        ${rows.map(([k, v]) => `<div class="rhs-row"><span class="rhs-k">${k}</span><div class="rhs-v">${v}</div></div>`).join('')}
+      </div>`);
+    }
+    if (e.p && !(e.f || e.s)) {
+      const [c, v, j, eng] = e.p;
+      const tgt = _rhemaHebILWord(book, c, v, j)?.en || eng;
+      refs.push(`<li><span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>${il?.en ? ` “${esc(il.en)}”` : ''} — the pronoun means <b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(oc) && String(v) === String(ov) ? '' : ` <small>(${String(c) === String(oc) ? 'v. ' + v : c + ':' + v})</small>`}</li>`);
+    }
+  });
+  if (!cards.length && !refs.length) return '<div class="rhs-map"><p class="rhs-intro">No actions in this verse to map. It describes rather than tells what someone did.</p></div>';
+  return `<div class="rhs-map">
+    <p class="rhs-intro">Who does what in this verse, in Hebrew word order. Tap any word to study it.</p>
+    ${cards.join('')}
+    ${refs.length ? `<div class="rhs-sub">Who’s who</div><ul class="rhs-refs">${refs.join('')}</ul>` : ''}
+    <p class="rhs-credit">Roles and references: MACULA Hebrew (Clear Bible &amp; Groves Center, CC BY 4.0). English: BSB.</p>
+  </div>`;
+}
+
 // Plain-English Hebrew grammar. Reads the Berean parsing code (falls back to
 // the OSHB code) and explains each part the way a teacher would.
 const RHEMA_HEB_PREFIX = {
@@ -49796,6 +49901,15 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
   const esc = _escapeRhemaAttr;
   const ctx = window._rhemaWordCtx || {};
   const il = ctx.book ? _rhemaHebILWord(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : null;
+  if (ctx.book && !_rhemaHebRolesData(ctx.book)) {
+    const wantR = `${ctx.book}|${ctx.chapter}|${ctx.verse}|${ctx.idx}`;
+    _rhemaLoadHebRoles(ctx.book).then(d => {
+      const now = window._rhemaWordCtx || {};
+      if (!d || `${now.book}|${now.chapter}|${now.verse}|${now.idx}` !== wantR) return;
+      const el = document.getElementById('rhemaHebPanel');
+      if (el) el.outerHTML = renderHebrewParsing(surface, strongs, morph, lemma);
+    });
+  }
   if (ctx.book && !il && !_rhemaHebILData(ctx.book)) {
     // Fetch the book's word table, then redraw this panel if it's still open.
     const want = `${ctx.book}|${ctx.chapter}|${ctx.verse}|${ctx.idx}`;
@@ -49814,6 +49928,18 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
   const isAramaic = /^A/.test(String(morph || '').split('/').pop() || '');
   const ref = ctx.book ? `${_rhemaBookName(ctx.book)} ${ctx.chapter}:${ctx.verse}` : '';
 
+  // Who's acting / who a pronoun means (MACULA Hebrew).
+  const role = ctx.book ? _rhemaHebRoleWord(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : null;
+  let whoHtml = '';
+  if (role && (role.f || role.s)) {
+    const rows = _rhemaHebWho(role, ctx.book, ctx.chapter, ctx.verse);
+    if (rows.length) whoHtml = `<div class="rhw-who">${rows.map(([k, v]) => `<div class="rhs-row"><span class="rhs-k">${k}</span><div class="rhs-v">${v}</div></div>`).join('')}</div>`;
+  } else if (role?.p) {
+    const [c, v, j, eng] = role.p;
+    const tgt = _rhemaHebILWord(ctx.book, c, v, j)?.en || eng;
+    whoHtml = `<div class="rhw-who"><div class="rhs-row"><span class="rhs-k">Refers to</span><div class="rhs-v"><span class="rhs-chip rhs-chip-far"><b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(ctx.chapter) && String(v) === String(ctx.verse) ? '' : `<small>${c}:${v}</small>`}</span></div></div></div>`;
+  }
+
   // 1) What it means right here.
   const hero = `<div class="rhw-hero">
       ${il?.en ? `<div class="rhw-k">In this verse${ref ? ` <span>${esc(ref)}${_rhemaOTLayer === 'hebrew' ? '' : ''}</span>` : ''}</div>
@@ -49821,6 +49947,7 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
       : il ? `<div class="rhw-k">In this verse</div><div class="rhw-here rhw-none">No separate English word<small>its meaning is carried by the words around it</small></div>`
       : `<div class="rhw-k">Meaning</div><div class="rhw-here">${esc(meaning || 'Hebrew word')}</div>`}
       <div class="rhw-say"><span class="rhema-hebrew-text">${esc(shown)}</span>${il?.tr ? `<span class="rhw-tr">${esc(il.tr)}</span>` : ''}${isAramaic ? '<span class="rhw-aram">Aramaic</span>' : ''}</div>
+      ${whoHtml}
     </div>`;
 
   // 2) The word's parts: prefixes + core + endings.
