@@ -32,6 +32,7 @@ BOOKS = {
   'Joel': 'JOL', 'Amos': 'AMO', 'Obadiah': 'OBA', 'Jonah': 'JON', 'Micah': 'MIC', 'Nahum': 'NAM', 'Habakkuk': 'HAB',
   'Zephaniah': 'ZEP', 'Haggai': 'HAG', 'Zechariah': 'ZEC', 'Malachi': 'MAL',
 }
+POINTS = re.compile(r'[\u05B0-\u05BC\u05C1\u05C2\u05C7]')
 def cons(s):
     # consonants only (no vowels, accents, maqaf, sof pasuq), final forms folded
     s = re.sub(r'[^א-ת]', '', s or '')
@@ -82,6 +83,19 @@ for book, chapters in heb.items():
                 r = rows[j1 + k]
                 out[c][v][i] = [r[2], r[3], r[4]]
                 m += 1
+    # Ketiv / qere: the text gives the written form unpointed (ketiv) and the
+    # form to read, pointed (qere), right after it. The Berean has one row for
+    # the pair, and it lines up with the ketiv; move it onto the qere, which is
+    # what's read and what its English, sound and parsing describe.
+    moved = 0
+    for c in chapters:
+        for v in chapters[c]:
+            ws, ov = chapters[c][v], out[c][v]
+            for i in range(len(ws) - 1):
+                if ov[i] is not None and ov[i + 1] is None and not POINTS.search(ws[i][0]) and POINTS.search(ws[i + 1][0]):
+                    ov[i + 1], ov[i] = ov[i], None
+                    moved += 1
+    report.append(f'(qere {moved})')
     total += len(toks); matched += m
     report.append(f'{book} {m}/{len(toks)}')
     with open(R + f'data/hebrew-interlinear/{book}.json', 'w', encoding='utf-8') as f:
