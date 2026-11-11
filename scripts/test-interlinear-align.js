@@ -117,7 +117,8 @@ function under(r, surface, nth = 0) {
 {
   const msb = W.RhemaMSB.MAR['1']['22'];
   const r = bridge('MAR', '1', '22', msb);
-  const matched = r.out.filter(o => o.kind === 'match').length, words = r.out.filter(o => o.kind !== 'none').length;
+  // Found = a match, or a best match (≈) for a small word that repeats in the sentence.
+  const matched = r.out.filter(o => o.kind === 'match' || o.kind === 'inferred').length, words = r.out.filter(o => o.kind !== 'none').length;
   check(`MSB Mark 1:22 near-complete (${matched}/${words})`, matched >= words - 1, JSON.stringify(r.out));
 }
 {

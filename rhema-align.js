@@ -204,7 +204,7 @@
     drank: 'drink', drunk: 'drink', wrote: 'write', written: 'write', brought: 'bring', bought: 'buy',
     sought: 'seek', thought: 'think', taught: 'teach', caught: 'catch', found: 'find', stood: 'stand',
     sat: 'sit', led: 'lead', fled: 'flee', fell: 'fall', fallen: 'fall', rose: 'rise', risen: 'rise',
-    arose: 'arise', arisen: 'arise', did: 'do', done: 'do', doth: 'do', made: 'make', men: 'man',
+    arose: 'arise', arisen: 'arise', lying: 'lie', dying: 'die', used: 'use', uses: 'use', using: 'use', seest: 'see', goest: 'go', doest: 'do', fleest: 'flee', liest: 'lie', diest: 'die', seeth: 'see', goeth: 'go', doeth: 'do', fleeth: 'flee', lieth: 'lie', tying: 'tie', lied: 'lie', died: 'die', did: 'do', done: 'do', doth: 'do', made: 'make', men: 'man',
     women: 'woman', children: 'child', brethren: 'brother', feet: 'foot', teeth: 'tooth', kept: 'keep',
     slept: 'sleep', wept: 'weep', sent: 'send', built: 'build', felt: 'feel', met: 'meet', paid: 'pay',
     held: 'hold', told: 'tell', sold: 'sell', threw: 'throw', thrown: 'throw', grew: 'grow', grown: 'grow',
@@ -227,34 +227,79 @@
     wilt: 'will', shalt: 'shall', canst: 'can', couldest: 'could', wouldest: 'would', shouldest: 'should',
     mayest: 'may', mightest: 'might', knowest: 'know', wast: 'be', wert: 'be',
   };
+  // Porter stemmer (M. F. Porter, 1980): every form of a word reduces to the
+  // same stem (render / renders / rendered -> render; deliver / delivered ->
+  // deliv; need / needed -> need), which is what matching needs. Older and
+  // British English are normalised first: -eth/-est/-edst read as -ed
+  // (rendereth, lovest, lovedst), honour -> honor.
+  const _pV = /[aeiouy]/;
+  function _pCons(w, i) { const c = w[i]; if ('aeiou'.includes(c)) return false; if (c === 'y') return i === 0 ? true : !_pCons(w, i - 1); return true; }
+  function _pM(w) { let n = 0, i = 0; const L = w.length; while (i < L && _pCons(w, i)) i++; while (i < L) { while (i < L && !_pCons(w, i)) i++; if (i >= L) break; n++; while (i < L && _pCons(w, i)) i++; } return n; }
+  function _pHasV(w) { for (let i = 0; i < w.length; i++) if (!_pCons(w, i)) return true; return false; }
+  function _pDbl(w) { const L = w.length; return L > 1 && w[L - 1] === w[L - 2] && _pCons(w, L - 1); }
+  function _pCvc(w) { const L = w.length; return L >= 3 && _pCons(w, L - 3) && !_pCons(w, L - 2) && _pCons(w, L - 1) && !'wxy'.includes(w[L - 1]); }
+  const _pS2 = [['ational', 'ate'], ['tional', 'tion'], ['enci', 'ence'], ['anci', 'ance'], ['izer', 'ize'], ['bli', 'ble'], ['alli', 'al'], ['entli', 'ent'], ['eli', 'e'], ['ousli', 'ous'], ['ization', 'ize'], ['ation', 'ate'], ['ator', 'ate'], ['alism', 'al'], ['iveness', 'ive'], ['fulness', 'ful'], ['ousness', 'ous'], ['aliti', 'al'], ['iviti', 'ive'], ['biliti', 'ble'], ['logi', 'log']];
+  const _pS3 = [['icate', 'ic'], ['ative', ''], ['alize', 'al'], ['iciti', 'ic'], ['ical', 'ic'], ['ful', ''], ['ness', '']];
+  const _pS4 = ['al', 'ance', 'ence', 'er', 'ic', 'able', 'ible', 'ant', 'ement', 'ment', 'ent', 'ion', 'ou', 'ism', 'ate', 'iti', 'ous', 'ive', 'ize'];
+  function porter(w) {
+    if (w.length < 3) return w;
+    if (w[0] === 'y') w = 'Y' + w.slice(1);
+    // 1a
+    if (w.endsWith('sses')) w = w.slice(0, -2); else if (w.endsWith('ies')) w = w.slice(0, -2); else if (!w.endsWith('ss') && w.endsWith('s')) w = w.slice(0, -1);
+    // 1b
+    let again = false;
+    if (w.endsWith('eed')) { if (_pM(w.slice(0, -3)) > 0) w = w.slice(0, -1); }
+    else if (w.endsWith('ed') && _pHasV(w.slice(0, -2))) { w = w.slice(0, -2); again = true; }
+    else if (w.endsWith('ing') && _pHasV(w.slice(0, -3))) { w = w.slice(0, -3); again = true; }
+    if (again) {
+      if (/(at|bl|iz)$/.test(w)) w += 'e';
+      else if (_pDbl(w) && !/[lsz]$/.test(w)) w = w.slice(0, -1);
+      else if (_pM(w) === 1 && _pCvc(w)) w += 'e';
+    }
+    // 1c
+    if (w.endsWith('y') && _pHasV(w.slice(0, -1))) w = w.slice(0, -1) + 'i';
+    // 2, 3
+    for (const [a, b] of _pS2) if (w.endsWith(a)) { if (_pM(w.slice(0, -a.length)) > 0) w = w.slice(0, -a.length) + b; break; }
+    for (const [a, b] of _pS3) if (w.endsWith(a)) { if (_pM(w.slice(0, -a.length)) > 0) w = w.slice(0, -a.length) + b; break; }
+    // 4
+    for (const a of _pS4) if (w.endsWith(a)) {
+      const st = w.slice(0, -a.length);
+      if (_pM(st) > 1 && (a !== 'ion' || /[st]$/.test(st))) w = st;
+      break;
+    }
+    // 5
+    // (never down to two letters: one / on, use / us, ore / or stay apart)
+    if (w.endsWith('e') && w.length > 3) { const st = w.slice(0, -1); const m = _pM(st); if (m > 1 || (m === 1 && !_pCvc(st))) w = st; }
+    if (_pM(w) > 1 && _pDbl(w) && w.endsWith('l')) w = w.slice(0, -1);
+    return w.replace(/^Y/, 'y');
+  }
+  const _BRIT = /^(hon|lab|fav|neighb|col|sav|behavi|savi|arm|vig|rig|od|hum|harb|ard|clam|vap|rum|splend|tum|val|rance|fervour|parl|endeav|succ)our/;
+  // -est that is part of the word itself (best, rest, forest), not the old
+  // "thou" ending; and adjectives whose -est/-er is the superlative/comparative.
+  const _EST_WORD = /^(be|gu|hon|inter|man|pri|que|re|te|we|wr|ch|for|gr|harv|j|mol|n|r|v|fe|cr|qu|ne|l|t|z|di|br|lo|mod|prot|invest|arr|ab|chr|conqu|digest|imm)est$|(ll|nn|ss|tt)est$/;
+  const _ADJ = new Set(('great small high low old young strong wise near long short hard soft rich poor deep fair full kind late bright clean ' +
+    'close light loud mean pure quick rough sharp sick slow sweet tall thick thin weak wild bold brave calm cheap cold cool dark dull fast fine ' +
+    'fresh grand harsh lean mild neat odd plain proud rare ripe safe sore stern stiff vast warm wide dear high few big fat wet hot sad red ' +
+    'holy happy mighty heavy early easy lowly worthy wealthy angry busy dry ready lovely costly needy').split(' '));
   function stem(word) {
     let w = String(word || '').toLowerCase().replace(/[’']s$/, '').replace(/[^a-z]/g, '');
     if (!w) return '';
     if (IRREGULAR[w]) w = IRREGULAR[w];
-    for (let pass = 0; pass < 3; pass++) {
-      const before = w;
-      if (w.length > 4 && w.endsWith('ies')) w = w.slice(0, -3) + 'y';
-      else if (w.length > 4 && w.endsWith('ied')) w = w.slice(0, -3) + 'y';
-      else if (w.length > 5 && w.endsWith('ingly')) w = w.slice(0, -5);
-      else if (w.length > 5 && w.endsWith('edly')) w = w.slice(0, -4);
-      else if (w.length > 4 && w.endsWith('ing')) w = w.slice(0, -3);
-      // Older verb endings (curseth, believest, lovedst): strip once, stop.
-      else if (w.length > 4 && w.endsWith('eeth')) { w = w.slice(0, -2); break; }
-      else if (w.length > 4 && w.endsWith('eth')) { w = w.slice(0, -3); break; }
-      else if (w.length > 5 && w.endsWith('edst')) { w = w.slice(0, -4); break; }
-      else if (w.length > 5 && w.endsWith('est') && !/(ll|nn|ss|tt)est$/.test(w) && !/^(be|gu|hon|inter|man|pri|que|re|te|we|wr|ch|for|gr|harv|j|mol|n|r|v)est$/.test(w)) { w = w.slice(0, -3); break; }
-      else if (w.length > 3 && w.endsWith('ed')) { w = w.slice(0, -2); break; }
-      else if (w.length > 4 && /(ss|sh|ch|x|z)es$/.test(w)) w = w.slice(0, -2);
-      else if (w.length > 3 && w.endsWith('s') && !w.endsWith('ss') && !w.endsWith('us') && !w.endsWith('is')) w = w.slice(0, -1);
-      else if (w.length > 4 && w.endsWith('ly')) w = w.slice(0, -2);
-      else if (w.length > 5 && w.endsWith('ness')) w = w.slice(0, -4);
-      else if (w.length > 4 && w.endsWith('er')) w = w.slice(0, -2);
-      if (w === before) break;
+    w = w.replace(_BRIT, (m) => m.slice(0, -3) + 'or');
+    // greatest / greater -> great; holiest / holier -> holy.
+    const sup = w.match(/^(.+?)(est|er)$/);
+    if (sup && (_ADJ.has(sup[1]) || _ADJ.has(sup[1].replace(/(.)\1$/, '$1')) || _ADJ.has(sup[1].replace(/i$/, 'y')))) {
+      w = _ADJ.has(sup[1]) ? sup[1] : _ADJ.has(sup[1].replace(/(.)\1$/, '$1')) ? sup[1].replace(/(.)\1$/, '$1') : sup[1].replace(/i$/, 'y');
+      return porter(w);
     }
-    // runn → run, sinn → sin; love/lov, believe/believ agree.
-    if (w.length > 3 && /([b-df-hj-np-tv-z])\1$/.test(w) && !/(ll|ss|ff|zz)$/.test(w)) w = w.slice(0, -1);
-    if (w.length > 3 && w.endsWith('e')) w = w.slice(0, -1);
-    return w;
+    // lies / dies / ties -> lie (Porter would give "li").
+    if (w.length <= 5 && w.endsWith('ies')) w = w.slice(0, -1);
+    // Older English verb endings read as -ed: curseth, believest, lovedst.
+    if (w.length > 5 && w.endsWith('edst')) w = w.slice(0, -4) + 'ed';
+    else if (w.length > 4 && w.endsWith('eth')) w = w.slice(0, -3) + 'ed';
+    else if (w.length > 5 && w.endsWith('est') && !_EST_WORD.test(w)) w = w.slice(0, -3) + 'ed';
+    if (IRREGULAR[w]) w = IRREGULAR[w];
+    return porter(w);
   }
 
   // English words that translations supply as grammar: articles, prepositions,
@@ -268,6 +313,9 @@
     'could must when while as if then than so not no there here also even just let thee thou thy thine ye unto'
   ).split(' '));
   const isGrammar = (w) => GRAMMAR.has(String(w || '').toLowerCase());
+  // Helper words a rendering leans on but that aren't its meaning.
+  const LIGHT = new Set(['make', 'made', 'do', 'cause', 'give', 'take', 'put', 'set', 'bring', 'come', 'go', 'get', 'way', 'thing', 'one', 'each', 'all', 'every', 'many', 'much']
+    .map(w => stem(w)));
 
   function tokenizeEnglish(text) {
     const out = [];
@@ -305,7 +353,14 @@
       const gloss = glossAll.filter(t => !t.grammar);
       const meanings = new Set();
       for (const m of (it.meanings || [])) for (const t of wordsOf(m)) if (!t.grammar && t.stem.length >= 3) meanings.add(t.stem);
+      const directSet = new Set(directContent.map(t => t.stem).filter(Boolean));
+      const glossSet = new Set(gloss.map(t => t.stem).filter(Boolean));
+      // The rendering's real content words, without helper verbs ("You made
+      // [it] stand" -> stand), when it has any.
+      const heavy = new Set([...directSet].filter(x => !LIGHT.has(x)));
+      const support = new Set([...directSet, ...glossSet, ...meanings]);
       return {
+        directSet, glossSet, heavy,
         none: it.bsb === '' || (direct && direct.length === 0 && it.bsb != null),
         phrase: direct && direct.length ? direct.map(t => t.stem) : null,
         content: new Set([...directContent, ...gloss].map(t => t.stem).filter(Boolean)),
@@ -316,6 +371,9 @@
         meanings,
         // How this version renders the word elsewhere (stem sequences, most
         // frequent first) — see learnRenderings().
+        // A learned wording counts once this version has used it twice, or
+        // when it agrees with the word's own meanings ("cause" learned from
+        // "cause thine ear to hear" must not become the word for "hear").
         learned: Array.isArray(it.learned) ? it.learned.filter(q => q && q.length) : [],
       };
     });
@@ -386,11 +444,22 @@
       let s = j, e = j;
       while (s - 1 >= 0 && !used[s - 1] && !toks[s - 1].grammar && set.has(toks[s - 1].stem)) s--;
       while (e + 1 < toks.length && !used[e + 1] && !toks[e + 1].grammar && set.has(toks[e + 1].stem)) e++;
+      // Keep a rendering whole across its small words: "put them to shame",
+      // not just "put" (only when the far word is part of the same rendering).
+      const across = (from, dir) => {
+        let k = from + dir, hops = 0;
+        while (k >= 0 && k < toks.length && !used[k] && toks[k].grammar && hops < 3) { k += dir; hops++; }
+        return hops > 0 && k >= 0 && k < toks.length && !used[k] && !toks[k].grammar && set.has(toks[k].stem) ? k : -1;
+      };
+      for (let k; (k = across(e, 1)) >= 0;) e = k;
+      for (let k; (k = across(s, -1)) >= 0;) s = k;
       return [s, e];
     };
 
     // Phase 2 — content words of the rendering (distinctive, so a wide cap).
     const wide = Math.max(6, Math.ceil(toks.length * 0.6));
+    // The Berean's own content words first (without helper verbs when it has
+    // others), then the word's dictionary meaning.
     for (let i = 0; i < n; i++) {
       if (span[i] || prep[i].none || !prep[i].content.size) continue;
       const j = nearest(i, prep[i].content, false, wide);
@@ -418,7 +487,7 @@
       // now…") would grab unrelated words across the sentence.
       if (span[i] || prep[i].none || !prep[i].meanings.size || !prep[i].content.size) continue;
       const j = nearest(i, prep[i].meanings, false, wide);
-      if (j >= 0) claim(i, j, j, 'match', 'lexicon');
+      if (j >= 0) claim(i, j, j, 'inferred', 'lexicon'); // ~77% right when graded: shown as ≈
     }
     // Phase 3c — a word the Berean leaves without English of its own (its
     // base text lacks it, or folds it into a phrase) can still have its own
@@ -455,7 +524,7 @@
     for (let i = 0; i < n; i++) {
       if (span[i] || prep[i].none || !prep[i].func.size) continue;
       const j = nearest(i, prep[i].func, true, 2.5);
-      if (j >= 0) claim(i, j, j, 'match', 'grammar');
+      if (j >= 0) claim(i, j, j, 'inferred', 'grammar'); // small words repeat: ~85% right when graded, shown as ≈
     }
     // Phase 5 — a content word with no lexical match, alone in its slot: if
     // the anchors on either side leave a short run of unclaimed English with
@@ -479,7 +548,53 @@
       if (s > e || e - s > 4) continue;
       claim(i, s, e, 'inferred', 'gap');
     }
-    for (let i = 0; i < n; i++) if (!span[i] && prep[i].none) out[i] = { text: '', kind: 'none' };
+    // Phase 6 — names spelled a little differently (KJV "Hazezon-tamar", BSB
+    // "Hazazon-tamar"; "Beth-lehem" / "Bethlehem"): a capitalised word within
+    // two letters of the Berean / lexicon name, near where it's expected.
+    const lev = (x, y) => {
+      if (Math.abs(x.length - y.length) > 2) return 9;
+      const d = Array.from({ length: x.length + 1 }, (_, r) => [r]);
+      for (let c = 1; c <= y.length; c++) d[0][c] = c;
+      for (let r = 1; r <= x.length; r++) for (let c = 1; c <= y.length; c++) d[r][c] = Math.min(d[r - 1][c] + 1, d[r][c - 1] + 1, d[r - 1][c - 1] + (x[r - 1] === y[c - 1] ? 0 : 1));
+      return d[x.length][y.length];
+    };
+    for (let i = 0; i < n; i++) {
+      if (span[i]) continue;
+      const names = [...wordsOf(bsbDirect(items[i].bsb || '')), ...wordsOf(items[i].gloss || '')]
+        .filter(t => /^[A-Z][a-z]/.test(t.raw) && !t.grammar && t.low.length >= 4).map(t => t.low.replace(/[^a-z]/g, ''));
+      if (!names.length) continue;
+      const exp = expectedAt(i);
+      let best = -1, bestD = Infinity;
+      for (let j = 0; j < toks.length; j++) {
+        if (used[j] || !/^[A-Z]/.test(toks[j].raw) || toks[j].grammar) continue;
+        const w = toks[j].low.replace(/[^a-z]/g, '');
+        if (!names.some(nm => lev(nm, w) <= (nm.length >= 6 ? 2 : 1))) continue;
+        const dd = Math.abs(j - exp);
+        if (dd < bestD && dd <= wide) { bestD = dd; best = j; }
+      }
+      if (best >= 0) claim(i, best, best, 'match', 'name');
+    }
+    // Phase 7 — a word the Berean folds into its neighbour's English ("forty
+    // years old" for בֶּן + אַרְבָּעִים + שָׁנָה; "to Bethel"): when this word's
+    // own meaning is one of the words inside a neighbour's span, it shares
+    // that word (the neighbour keeps its whole span).
+    const glossStems = items.map(it => new Set(wordsOf(String(it.gloss || '').replace(/\//g, ' ')).filter(t => !t.grammar).map(t => t.stem)));
+    const owner = new Array(toks.length).fill(-1);
+    span.forEach((sp, k) => { if (sp) for (let q = sp[0]; q <= sp[1]; q++) owner[q] = k; });
+    for (let i = 0; i < n; i++) {
+      if (span[i] || !glossStems[i].size) continue;
+      const exp = expectedAt(i);
+      let best = -1, bestD = Infinity;
+      for (let j = 0; j < toks.length; j++) {
+        const k = owner[j];
+        if (k < 0 || k === i || toks[j].grammar || !glossStems[i].has(toks[j].stem) || glossStems[k].has(toks[j].stem)) continue;
+        if (span[k][0] === span[k][1]) continue; // a one-word span is that word's own rendering
+        const dd = Math.abs(j - exp);
+        if (dd < bestD && dd <= near) { bestD = dd; best = j; }
+      }
+      if (best >= 0) out[i] = { text: toks[best].raw, kind: 'match', via: 'within', start: toks[best].start, end: toks[best].end };
+    }
+    for (let i = 0; i < n; i++) if (!span[i] && !out[i].text && prep[i].none) out[i] = { text: '', kind: 'none' };
     return out;
   }
 
@@ -509,7 +624,7 @@
     const m = table && table.get(key);
     if (!m) return [];
     return [...m.entries()].filter(([, c]) => c >= 1).sort((x, y) => y[1] - x[1] || y[0].length - x[0].length)
-      .slice(0, max).map(([seq]) => seq.split(' '));
+      .slice(0, max).map(([seq, c]) => Object.assign(seq.split(' '), { count: c }));
   }
 
   // Exact Berean display for the BSB itself.

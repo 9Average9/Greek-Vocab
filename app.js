@@ -30447,7 +30447,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.559";
+const APP_VERSION = "3.0.560";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30456,7 +30456,7 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-critical.js':  '3.0.23',
   'rhema-critical-fallbacks.js': '3.0.177',
   'rhema-ot-hebrew.js': '3.0.81',
-  'rhema-hebrew-lexicon.js': '3.0.553',
+  'rhema-hebrew-lexicon.js': '3.0.560',
   'rhema-hebrew-bdb.js':    '3.0.379',
   'rhema-lxx.js':       '3.0.65',
   'rhema-lexicon.js':   '3.0.65',
@@ -30470,6 +30470,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.560 &mdash; A checked, more accurate Hebrew side</div>
+<ul>
+  <li><strong>Your version&rsquo;s words, more often</strong> &mdash; Finding your English version&rsquo;s word for each Hebrew word was graded against the KJV&rsquo;s word-by-word Strong&rsquo;s tagging across all 306,000 Old Testament words: right 93% of the time (98% for plain matches), with fewer wrong picks. Less certain matches are marked &asymp;.</li>
+  <li><strong>Corrected word meanings</strong> &mdash; All 8,640 Hebrew short meanings were checked against how translators actually render each word; 289 were fixed (&ldquo;voice&rdquo;, not &ldquo;human&rdquo;; &ldquo;one&rdquo;, not &ldquo;cardinal number&rdquo;).</li>
+  <li><strong>Septuagint from a real alignment</strong> &mdash; The Greek words for each Hebrew word now come from MACULA Hebrew&rsquo;s word-by-word alignment (בָּרָא &rarr; ποιέω, κτίζω), shown as evidence of how ancient translators understood it, not a definition. Word-study sentences built on the old estimates were removed.</li>
+  <li><strong>Plainer, fairer grammar notes</strong> &mdash; Verb notes now say what a form <em>usually</em> signals (Hebrew forms are flexible), the Piel isn&rsquo;t called simply &ldquo;intensive&rdquo;, and Who Does What says which links are MACULA&rsquo;s tagging and shows &ldquo;Made to do / be it&rdquo; for causative verbs.</li>
+  <li><strong>Small fixes</strong> &mdash; Stats for words filed under two Strong&rsquo;s numbers (like &ldquo;go&rdquo;), English on the word that&rsquo;s read where the text has a marginal reading (qere), and clearer verse-numbering notes.</li>
+</ul>
 <div class="un-version-label">v3.0.559 &mdash; Hebrew in your Bible&rsquo;s words</div>
 <ul>
   <li><strong>Your version, under the Hebrew</strong> &mdash; The English under each Hebrew word now follows the version you read. On the NIV, Genesis 22:2&rsquo;s וְהַעֲלֵהוּ reads &ldquo;Sacrifice&rdquo;; on the KJV, &ldquo;offer him&rdquo;, &ldquo;thou lovest&rdquo;. The same goes for the interlinear, the word panel, and Who Does What.</li>
@@ -30483,9 +30491,9 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.557 &mdash; Who does what in Hebrew</div>
 <ul>
-  <li><strong>Who Does What</strong> &mdash; In the Hebrew Old Testament, the Syntax tool is now <em>Who Does What</em>: every action in the verse with who does it, what it&rsquo;s done to, and who it&rsquo;s for (Genesis 1:11: <em>bring forth</em> &mdash; the earth makes it happen, vegetation, plants and trees come about). Tap any word to study it.</li>
+  <li><strong>Who Does What</strong> &mdash; In the Hebrew Old Testament, the Syntax tool is now <em>Who Does What</em>: every action in the verse with who does it, what it&rsquo;s done to, and who it&rsquo;s for (Genesis 1:11: <em>bring forth</em> &mdash; the earth makes it happen; vegetation, plants and trees are made to sprout). Tap any word to study it.</li>
   <li><strong>&ldquo;him&rdquo; = whom?</strong> &mdash; Hebrew words like &ldquo;him&rdquo;, &ldquo;it&rdquo; and &ldquo;he&rdquo; (even when built into the verb) show who they point back to, including people named in earlier verses.</li>
-  <li><strong>Plain verb notes</strong> &mdash; Each action says what its Hebrew form is doing: &ldquo;and then&hellip; (the story moves on)&rdquo;, &ldquo;let it&hellip;&rdquo;, &ldquo;causes it&rdquo;.</li>
+  <li><strong>Plain verb notes</strong> &mdash; Each action notes what its Hebrew form usually signals: &ldquo;and then&hellip; (the story moves on)&rdquo;, &ldquo;let it&hellip;&rdquo;, &ldquo;causes it&rdquo;.</li>
 </ul>
 <div class="un-version-label">v3.0.556 &mdash; Search Hebrew, exact forms</div>
 <ul>
@@ -30497,13 +30505,13 @@ const UPDATE_NOTES_HTML = `
 <ul>
   <li><strong>How it&rsquo;s translated</strong> &mdash; Every Hebrew word&rsquo;s Definition tab now shows how it&rsquo;s rendered across the whole Old Testament (land 1,434&times;, earth 572&times;, ground 119&times;), with example verses you can tap to open.</li>
   <li><strong>Forms it takes</strong> &mdash; For verbs: which forms the word appears in (Qal, Niphal, Hiphil&hellip;) and what each one does, in plain words.</li>
-  <li><strong>From Hebrew to Greek</strong> &mdash; See the Greek words the Septuagint used for each Hebrew word (בָּרָא &rarr; κτίζω, &ldquo;create&rdquo;) and tap one to open its Greek word study. Back takes you to the Hebrew.</li>
+  <li><strong>From Hebrew to Greek</strong> &mdash; See the Greek words the Septuagint used for each Hebrew word (בָּרָא &rarr; κτίζω, &ldquo;create&rdquo;, among others) and tap one to open its Greek word study. Back takes you to the Hebrew.</li>
   <li><strong>Accurate counts</strong> &mdash; Replaced some miscounted statistics in the Hebrew word notes.</li>
 </ul>
 <div class="un-version-label">v3.0.554 &mdash; The Hebrew Old Testament, opened up</div>
 <ul>
-  <li><strong>Hebrew in context</strong> &mdash; Under every Hebrew word you now see what it means in that exact verse: &ldquo;In the beginning&rdquo;, &ldquo;created&rdquo;, &ldquo;and there was&rdquo;, &ldquo;is my shepherd&rdquo;. Aramaic chapters in Daniel and Ezra too.</li>
-  <li><strong>Tap a Hebrew word</strong> &mdash; See what it means in this verse, how it sounds (way&middot;y&omacr;&middot;mer), what it&rsquo;s built from (and + say), and its grammar explained in plain words: what Qal, Hiphil, the &ldquo;and then&rdquo; storytelling verb, construct &ldquo;of&rdquo; and the object marker actually mean.</li>
+  <li><strong>Hebrew in context</strong> &mdash; Under every Hebrew word you now see how the BSB translates it in that exact verse: &ldquo;In the beginning&rdquo;, &ldquo;created&rdquo;, &ldquo;and there was&rdquo;, &ldquo;is my shepherd&rdquo;. Aramaic chapters in Daniel and Ezra too.</li>
+  <li><strong>Tap a Hebrew word</strong> &mdash; See what it means in this verse, how it sounds (way&middot;y&omacr;&middot;mer), what it&rsquo;s built from (and + say), and its grammar explained in plain words: what Qal, Hiphil, the storytelling verb, construct &ldquo;of&rdquo; and the object marker usually do.</li>
   <li><strong>Hebrew interlinear</strong> &mdash; Word-by-word English and pronunciation straight from the Berean tables, not a best guess.</li>
   <li><strong>Better word colors</strong> &mdash; Parts-of-speech colors now follow the main word (&ldquo;his hand&rdquo; is a noun), and Aramaic words and &ldquo;not&rdquo; are colored correctly.</li>
 </ul>
@@ -46296,7 +46304,7 @@ function _rhemaOrigNoteHtml(book, chapter, list, vmap) {
       : `${layer}'s ${one} ${chapters.join(', ')}`;
     const order = lxx && book === 'JER' && chapters[0] !== String(ch) ? " The Septuagint arranges Jeremiah's chapters in a different order." : '';
     return box(lxx
-      ? `Shown here is ${which}.${order} The Greek translation adds, leaves out or moves some lines in this part, so it won't match the English verse for verse.`
+      ? `Shown here is ${which}.${order} The Greek text is longer, shorter or ordered differently in this part, so it won't match the English verse for verse.`
       : `Shown here is ${which}. The Hebrew numbers a verse or two differently around here, so it may not match the English verse for verse.`);
   }
   const sameNumbers = chapters.length === 1 && chapters[0] === String(ch) && !titles &&
@@ -46308,7 +46316,7 @@ function _rhemaOrigNoteHtml(book, chapter, list, vmap) {
   let why = `${Layer} starts and ends some chapters in different places than English Bibles.`;
   if (lxx && book === 'PSA') why = 'The Septuagint numbers most Psalms one behind English Bibles (English Psalm 23 is its Psalm 22).';
   else if (lxx && book === 'JER') why = "The Septuagint arranges Jeremiah's chapters in a different order.";
-  else if (lxx && book === 'PRO') why = 'The Septuagint places these proverbs later in the book.';
+  else if (lxx && book === 'PRO') why = 'The Septuagint arranges the last chapters of Proverbs in a different order.';
   return box(`In ${layer} this passage is <b>${one} ${ranges.join(' and ')}</b>. ${why} Verse numbers below are ${layer}'s own.`);
 }
 // English pane: only for a chapter the original has and English Bibles don't.
@@ -46316,8 +46324,8 @@ function _rhemaEngNoteHtml(book, chapter, hasEng, hasOrig) {
   if (hasEng || !hasOrig) return '';
   const lxx = _rhemaOTLayer === 'lxx';
   const box = html => `<div class="rhema-versification-note"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span><div>${html}</div></div>`;
-  if (book === 'PSA' && Number(chapter) === 151) return box(`Psalm 151 is found only in the Septuagint, so English Bibles don't include it. Switch the language to Greek to read it.`);
-  return box(`English Bibles don't have ${_escapeRhemaAttr(_rhemaBookName(book))} ${chapter}. It's only in ${lxx ? 'the Septuagint' : 'the Hebrew'}. Switch the language to read it.`);
+  if (book === 'PSA' && Number(chapter) === 151) return box(`Psalm 151 is in the Septuagint (a Hebrew form is in the Dead Sea Scrolls), but most English Bibles leave it out. Switch the language to Greek to read it.`);
+  return box(`Many English Bibles, including this one, don't have ${_escapeRhemaAttr(_rhemaBookName(book))} ${chapter}. It's in ${lxx ? 'the Septuagint' : 'the Hebrew'}. Switch the language to read it.`);
 }
 
 function renderRhemaVerse() {
@@ -49602,7 +49610,7 @@ function buildNounFormHint(surface, strongs, morph) {
 // word sounds (bə·rê·šîṯ) and its parsing ("Conj-w | V-Qal-ConsecImperf-3ms").
 // Built by scripts/build-hebrew-interlinear.py; one file per book, loaded when
 // a book is opened in Hebrew.
-const RHEMA_HEB_IL_VERSION = '1';
+const RHEMA_HEB_IL_VERSION = '2';
 const _rhemaHebIL = new Map(); // book -> data, or a Promise while it loads
 function _rhemaHebILData(book) { const d = _rhemaHebIL.get(book); return d && typeof d.then !== 'function' ? d : null; }
 function _rhemaLoadHebIL(book) {
@@ -49663,13 +49671,51 @@ function _rhemaHebBridgeItems(book, oc, ov) {
     return {
       bsb: il ? il.en : null,
       gloss: String((d && d.gloss) || '').split(/[;,(]/)[0],
-      meanings: _rhemaBridgeMeanings(d && d.entry, d && d.lex),
+      meanings: _rhemaHebMeanings(s),
       key: s ? 'H' + s : '',
     };
   });
-  _rhemaHebItemsCache.set(k, items);
+  // Cache only once everything it's built from has arrived.
+  if (window.RhemaHebrewLexicon && _rhemaHebILData(book)) _rhemaHebItemsCache.set(k, items);
   if (_rhemaHebItemsCache.size > 600) _rhemaHebItemsCache.delete(_rhemaHebItemsCache.keys().next().value);
   return items;
+}
+// Every English word translators use for a Hebrew word: Strong's list of the
+// KJV's renderings, read whole ("ever(-lasting)" -> everlasting, "plenteous(-
+// ness)" -> plenteousness, "(n-)ever" -> never), plus its short meaning. The
+// definition prose ("a primitive root…") is left out: it isn't English the
+// word is ever translated with.
+function _rhemaKjvDefWords(kjv) {
+  const out = [];
+  String(kjv || '').replace(/[X+]/g, ' ').split(/,(?![^()]*\))/).forEach(item => {
+    let it = item.trim();
+    const m = it.match(/^\(([a-z]+)-\)\s*(.*)$/);
+    if (m) { out.push(m[1] + m[2]); it = m[2]; }
+    const base = it.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+    if (base) out.push(base);
+    for (const sm of it.matchAll(/([A-Za-z]+)\(-\s*([a-z]+)(?:,\s*-\s*([a-z]+))*\)/g)) {
+      for (const suf of sm[0].slice(sm[1].length + 1, -1).split(',')) {
+        const x = suf.replace(/[-\s]/g, '');
+        if (x) out.push(sm[1] + x);
+      }
+    }
+    for (const sm of it.matchAll(/\(([^)]*)\)/g)) { const x = sm[1].replace(/-/g, ' ').trim(); if (x && !/^[a-z]{1,3}$/.test(x)) out.push(x); }
+  });
+  return out;
+}
+const _rhemaHebMeaningsCache = new Map();
+function _rhemaHebMeanings(strongs) {
+  const k = String(strongs || '');
+  if (_rhemaHebMeaningsCache.has(k)) return _rhemaHebMeaningsCache.get(k);
+  if (!window.RhemaHebrewLexicon) return []; // not loaded yet: don't cache an empty list
+  const lex = window.RhemaHebrewLexicon[k] || {};
+  const words = new Set();
+  for (const phrase of [lex.gloss || '', ..._rhemaKjvDefWords(lex.kjv_def)]) {
+    for (const w of String(phrase).toLowerCase().split(/[^a-z]+/)) if (w.length > 2 && !(typeof _DEEP_GLUE_WORDS !== 'undefined' && _DEEP_GLUE_WORDS.has(w))) words.add(w);
+  }
+  const out = [...words].slice(0, 120);
+  _rhemaHebMeaningsCache.set(k, out);
+  return out;
 }
 // The English verse for a Hebrew (MT) verse, or null for a psalm title.
 function _rhemaHebEngRef(book, oc, ov) {
@@ -49778,12 +49824,13 @@ function _rhemaHebVerbNote(code) {
   const [, stem, formFull] = seg.split('-');
   const [form, mood] = String(formFull || '').split('.');
   const notes = [];
-  const F = { Perf: 'done / completed', Imperf: 'ongoing or future', ConsecImperf: 'and then… (the story moves on)', ConjPerf: 'and then (will)…',
-    ConjImperf: 'so that…', Imp: 'a command', Inf: 'to…', InfAbs: 'for emphasis', Prtcpl: 'ongoing (…ing)', QalPassPrtcpl: 'done to it (…ed)' };
+  // What the form usually signals; Hebrew forms are flexible, so "often".
+  const F = { Perf: 'often past / completed', Imperf: 'future, repeated or “may”', ConsecImperf: 'and… (main story verb)', ConjPerf: 'often “and (then) will…”',
+    ConjImperf: 'and… / often “so that”', Imp: 'a command or request', Inf: 'to…', InfAbs: 'often emphasis or command', Prtcpl: 'ongoing (…ing)', QalPassPrtcpl: 'passive (…ed)' };
   if (mood === 'Jus') notes.push('let it…');
   else if (mood === 'Cohort' || mood === 'h') notes.push('let me / let us…');
   else if (F[form]) notes.push(F[form]);
-  const S = { Nifal: 'passive', Pual: 'passive', Hofal: 'passive', Hifil: 'causes it', Hitpael: 'to or for oneself', Piel: 'stronger form' };
+  const S = { Nifal: 'often passive / reflexive', Pual: 'passive', Hofal: 'passive', Hifil: 'often causes it', Hitpael: 'often reflexive', Piel: 'often “make…” / result' };
   if (S[stem]) notes.push(S[stem]);
   return notes.join(' · ');
 }
@@ -49812,7 +49859,7 @@ function _rhemaHebWho(e, book, oc, ov) {
   const rows = [];
   if (AA.length) {
     rows.push(['Who makes it happen', AA.map(chip).join('')]);
-    if (A0.length) rows.push(['What comes about', A0.map(chip).join('')]);
+    if (A0.length) rows.push(['Made to do / be it', A0.map(chip).join('')]);
   } else if (A0.length) rows.push(['Who', A0.map(chip).join('')]);
   else if (e.s) rows.push(['Who', chip(e.s) + '<span class="rhs-hint">built into the verb</span>']);
   if (A1.length) rows.push(['What / whom', A1.map(chip).join('')]);
@@ -49849,15 +49896,15 @@ function _rhemaHebrewSentenceMap(book, oc, ov) {
       const [c, v, j, eng] = e.p;
       const tgt = _rhemaHebEnglish(book, c, v, j).text || eng;
       const here = _rhemaHebEnglish(book, oc, ov, i).text;
-      refs.push(`<li><span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>${here ? ` “${esc(here)}”` : ''} — the pronoun means <b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(oc) && String(v) === String(ov) ? '' : ` <small>(${String(c) === String(oc) ? 'v. ' + v : c + ':' + v})</small>`}</li>`);
+      refs.push(`<li><span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>${here ? ` “${esc(here)}”` : ''} — points back to <b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(oc) && String(v) === String(ov) ? '' : ` <small>(${String(c) === String(oc) ? 'v. ' + v : c + ':' + v})</small>`}</li>`);
     }
   });
-  if (!cards.length && !refs.length) return '<div class="rhs-map"><p class="rhs-intro">No actions in this verse to map. It describes rather than tells what someone did.</p></div>';
+  if (!cards.length && !refs.length) return '<div class="rhs-map"><p class="rhs-intro">No verbs with tagged roles in this verse (it may be a list, a title or a sentence without a verb).</p></div>';
   return `<div class="rhs-map">
-    <p class="rhs-intro">Who does what in this verse, in Hebrew word order. Tap any word to study it.</p>
+    <p class="rhs-intro">Who does what in this verse, as tagged by MACULA Hebrew, in Hebrew word order. Tap any word to study it.</p>
     ${cards.join('')}
     ${refs.length ? `<div class="rhs-sub">Who’s who</div><ul class="rhs-refs">${refs.join('')}</ul>` : ''}
-    <p class="rhs-credit">Roles and references: MACULA Hebrew (Clear Bible &amp; Groves Center, CC BY 4.0). English: ${esc(_rhemaHebEnglishLabel())}.</p>
+    <p class="rhs-credit">Roles and who-is-who links: MACULA Hebrew’s tagging (Clear Bible &amp; Groves Center, CC BY 4.0). Some links are judgment calls; check the context. English: ${esc(_rhemaHebEnglishLabel())}.</p>
   </div>`;
 }
 
@@ -49876,30 +49923,30 @@ const RHEMA_HEB_PREFIX = {
   'Pro-r': { say: 'who / that', name: 'Relative “that” (שֶׁ)', explain: '“Who”, “which” or “that”, joined to the front of the word.' },
 };
 const RHEMA_HEB_STEM = {
-  Qal: ['Qal', 'The basic, simple form of the verb: plain action (“he created”, “she went”).'],
+  Qal: ['Qal', 'The basic, simple form of the verb: plain action or state (“she went”, “he was old”).'],
   Nifal: ['Niphal', 'Usually passive or reflexive: the action happens to the subject (“was created”, “hid himself”).'],
-  Piel: ['Piel', 'A stronger or deliberate form: intensifies the action or brings a state about (“shattered”, “made holy”).'],
-  Pual: ['Pual', 'The passive of the Piel: the subject receives that strong action (“was shattered”).'],
-  Hifil: ['Hiphil', 'Causative: makes someone or something do or be it (“made to go out” = “brought out”).'],
+  Piel: ['Piel', 'Often brings about a state or result (“made holy”, “shattered”) or repeats an action. Older books call it “intensive”, now seen as too simple.'],
+  Pual: ['Pual', 'The passive of the Piel: the subject receives the Piel action (“was shattered”).'],
+  Hifil: ['Hiphil', 'Usually causative: makes someone or something do or be it (“made to go out” = “brought out”).'],
   Hofal: ['Hophal', 'The passive of the Hiphil: the subject is caused to do or be it (“was brought out”).'],
   Hitpael: ['Hithpael', 'Reflexive or back-and-forth action: doing it to or for oneself, or repeatedly (“walked about”, “prayed”, “hid themselves”).'],
   QalPass: ['Qal passive', 'An older passive of the basic form (“was taken”).'],
-  Polel: ['Polel', 'A rarer strong form, much like the Piel.'], Polal: ['Polal', 'The passive of the Polel.'],
+  Polel: ['Polel', 'A rarer form that works like the Piel.'], Polal: ['Polal', 'The passive of the Polel.'],
   Hitpolel: ['Hithpolel', 'A rarer reflexive form, much like the Hithpael.'],
-  Pilpel: ['Pilpel', 'A repeated-sound strong form, like the Piel.'], Poel: ['Poel', 'A rarer strong form, like the Piel.'],
-  Hishtafel: ['Hishtaphel', 'The special reflexive form of “bow down / worship”.'],
+  Pilpel: ['Pilpel', 'A form with a repeated syllable; works like the Piel.'], Poel: ['Poel', 'A rarer form that works like the Piel.'],
+  Hishtafel: ['Hishtaphel', 'The special form of “bow down / worship” (older books call it Hithpalel).'],
   Peal: ['Peal (Aramaic)', 'Aramaic’s basic, simple form of the verb.'], Peil: ['Peil (Aramaic)', 'Aramaic passive of the basic form.'],
-  Pael: ['Pael (Aramaic)', 'Aramaic’s strong form, like Hebrew’s Piel.'], Haphel: ['Haphel (Aramaic)', 'Aramaic causative, like Hebrew’s Hiphil.'],
+  Pael: ['Pael (Aramaic)', 'Aramaic’s counterpart of Hebrew’s Piel.'], Haphel: ['Haphel (Aramaic)', 'Aramaic causative, like Hebrew’s Hiphil.'],
   Aphel: ['Aphel (Aramaic)', 'Aramaic causative, like Hebrew’s Hiphil.'], Hophal: ['Hophal (Aramaic)', 'Aramaic passive causative.'],
-  Hitpeel: ['Hithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Hitpaal: ['Hithpaal (Aramaic)', 'Aramaic reflexive of the strong form.'],
-  Ithpeel: ['Ithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Ithpaal: ['Ithpaal (Aramaic)', 'Aramaic reflexive of the strong form.'],
+  Hitpeel: ['Hithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Hitpaal: ['Hithpaal (Aramaic)', 'Aramaic reflexive/passive of the Pael.'],
+  Ithpeel: ['Ithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Ithpaal: ['Ithpaal (Aramaic)', 'Aramaic reflexive/passive of the Pael.'],
   Shafel: ['Shaphel (Aramaic)', 'A rare Aramaic causative.'],
 };
 const RHEMA_HEB_FORM = {
-  Perf: ['Perfect', 'A whole, completed action. Usually past (“he created”), sometimes a settled fact or certainty.'],
-  Imperf: ['Imperfect', 'Unfinished action: future (“he will”), ongoing or repeated (“he keeps”), or possible (“he may”, “he would”).'],
-  ConsecImperf: ['Consecutive imperfect (wayyiqtol)', 'Hebrew’s storytelling verb: “and then he …”. It carries a narrative forward one event at a time, in the past.'],
-  ConjPerf: ['Consecutive perfect (weqatal)', '“And (then) he will …” — continues a sequence of future events or instructions.'],
+  Perf: ['Perfect', 'Views an action as a whole. Usually past (“he created”); with state verbs often present (“I know”); sometimes a settled certainty.'],
+  Imperf: ['Imperfect', 'A flexible form: future (“he will”), ongoing or repeated (“he keeps”), or possible (“he may”, “he would”).'],
+  ConsecImperf: ['Consecutive imperfect (wayyiqtol)', 'Hebrew’s main storytelling verb: “and he …”. Usually moves a past story forward, though not always in strict time order.'],
+  ConjPerf: ['Consecutive perfect (weqatal)', 'Usually “and (then) he will …”, continuing future events or instructions; after past verbs it can mean “he would (regularly) …”.'],
   ConjImperf: ['Imperfect with “and”', 'An imperfect joined by “and”, often expressing purpose or result (“so that he may …”).'],
   Imp: ['Imperative', 'A command or request: “Do this!”'],
   Inf: ['Infinitive construct', 'The verb used like a noun: “to ___” or “when ___ing”. Often has “to”, “in” or “when” in front.'],
@@ -49951,18 +49998,18 @@ function _rhemaParseHebCode(code) {
     rows.push({ label: 'Form', value: f[0], desc: f[1] });
     if (mood && RHEMA_HEB_MOOD[mood]) rows.push({ label: 'Mood', value: RHEMA_HEB_MOOD[mood][0], desc: RHEMA_HEB_MOOD[mood][1] });
     const pgn = parts[3] || '';
-    if (RHEMA_HEB_PGN[pgn]) rows.push({ label: 'Who', value: RHEMA_HEB_PGN[pgn][0], desc: 'The subject is built into the verb.' });
+    if (RHEMA_HEB_PGN[pgn]) rows.push({ label: 'Who', value: RHEMA_HEB_PGN[pgn][0], desc: 'The verb’s form shows who; the subject may also be named.' });
     else if (pgn) {
       const g = _rhemaHebGNS(pgn);
-      if (g.parts?.length) rows.push({ label: 'Describes', value: g.parts.join(', '), desc: g.construct ? 'Linked to the next word (“the ___ of”).' : '' });
+      if (g.parts?.length) rows.push({ label: 'Describes', value: g.parts.join(', '), desc: g.construct ? 'Linked to the next word (“___ of”).' : '' });
     }
   } else if (head === 'N' || head === 'Adj' || head === 'Number') {
     const proper = parts[1] === 'proper';
     kind = head === 'N' ? 'noun' : head === 'Adj' ? 'adjective' : 'number';
     label = head === 'N' ? (proper ? 'Name' : 'Noun') : head === 'Adj' ? 'Adjective' : 'Number';
     const g = _rhemaHebGNS(parts[proper ? 2 : 1]);
-    if (g.parts?.length) rows.push({ label: 'Form', value: g.parts.join(', '), desc: g.parts.includes('dual (a pair)') ? 'Hebrew has a special form for pairs (hands, eyes) and a few set words like “water” and “heavens”.' : '' });
-    if (g.construct) rows.push({ label: 'State', value: 'Construct', desc: 'Linked to the next word: “the ___ of …”. Hebrew shows “of” by joining the two words this way.' });
+    if (g.parts?.length) rows.push({ label: 'Form', value: g.parts.join(', '), desc: g.parts.includes('dual (a pair)') ? 'Hebrew has a special form for pairs (hands, eyes) and some measures (“two days”).' : '' });
+    if (g.construct) rows.push({ label: 'State', value: 'Construct', desc: 'Linked to the next word: “___ of …”. Hebrew shows “of” by joining the two words this way.' });
     if (g.emphatic) rows.push({ label: 'State', value: 'Emphatic (Aramaic)', desc: 'Aramaic’s way of saying “the ___”.' });
   } else if (head === 'Pro') {
     kind = 'pronoun'; label = 'Pronoun';
@@ -49970,7 +50017,7 @@ function _rhemaParseHebCode(code) {
     if (t === 'r') rows.push({ label: 'Type', value: 'Relative', desc: '“Who”, “which”, “that” — introduces a description.' });
     else if (t === 'i') rows.push({ label: 'Type', value: 'Question', desc: '“Who?” or “what?”' });
     else if (t === 'd' || /^d/.test(t)) rows.push({ label: 'Type', value: 'Pointing', desc: '“This”, “that”, “these”.' });
-    else if (RHEMA_HEB_PGN[t]) rows.push({ label: 'Means', value: RHEMA_HEB_PGN[t][0], desc: 'A stand-alone pronoun. Hebrew usually builds “he/she/they” into the verb, so a separate one often adds emphasis.' });
+    else if (RHEMA_HEB_PGN[t]) rows.push({ label: 'Means', value: RHEMA_HEB_PGN[t][0], desc: 'A stand-alone pronoun. Hebrew usually builds “he/she/they” into the verb, so beside a verb it may add emphasis or contrast; in “I am…” sentences it’s simply needed.' });
   } else if (head === 'Adv') {
     kind = 'adverb'; label = parts[1] === 'NegPrt' ? 'Negative' : 'Adverb';
     if (parts[1] === 'NegPrt') rows.push({ label: 'Means', value: 'not / no', desc: 'Says something is not so, or forbids it.' });
@@ -49988,7 +50035,7 @@ function _rhemaParseHebCode(code) {
     label = coreSeg;
   }
   const suffixes = suffixSegs.map(x => x === 'Pn'
-    ? { code: x, say: '', name: 'Extra “n” ending', explain: 'An old ending that adds a little emphasis; it doesn’t change the meaning.' }
+    ? { code: x, say: '', name: 'Extra “n” ending', explain: 'An extra “n” ending; its purpose (style or emphasis) is debated. It doesn’t change the basic meaning.' }
     : { code: x, say: RHEMA_HEB_PGN[x]?.[kind === 'noun' || kind === 'adjective' || kind === 'number' ? 1 : 1] || x,
         name: 'Pronoun ending', explain: kind === 'verb' ? `An object joined to the end of the verb: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` : `Joined to the end: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` });
   return { prefixes, core: { code: coreSeg, kind, label, rows }, suffixes };
@@ -50105,7 +50152,7 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
   } else if (role?.p) {
     const [c, v, j, eng] = role.p;
     const tgt = _rhemaHebEnglish(ctx.book, c, v, j).text || eng;
-    whoHtml = `<div class="rhw-who"><div class="rhs-row"><span class="rhs-k">Refers to</span><div class="rhs-v"><span class="rhs-chip rhs-chip-far"><b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(ctx.chapter) && String(v) === String(ctx.verse) ? '' : `<small>${c}:${v}</small>`}</span></div></div></div>`;
+    whoHtml = `<div class="rhw-who"><div class="rhs-row"><span class="rhs-k">Points back to</span><div class="rhs-v"><span class="rhs-chip rhs-chip-far"><b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(ctx.chapter) && String(v) === String(ctx.verse) ? '' : `<small>${c}:${v}</small>`}</span></div></div></div>`;
   }
 
   // 1) What it means right here.
@@ -50215,7 +50262,11 @@ function _rhemaLoadHebStats(strongs) {
 }
 // Greek words that are mostly grammar ("the", "and", "him", "in"): shown only
 // when they really are the main Greek equivalent.
-const _RHEMA_LXX_FILLER = new Set([3588, 2532, 846, 1722, 1519, 1537, 4314, 1473, 4771, 1909, 575, 3754, 1161, 3739, 5100, 3778, 1565, 3956, 1510, 3361, 3756, 1063, 2443, 5613, 1223, 3326, 2596, 5259, 4012, 1438]);
+// Greek words that stand in for grammar (the, and, him, my…) rather than
+// rendering the Hebrew word's meaning; includes the older Strong's numbers
+// for pronoun forms (σοῦ 4675, ἡμῶν 2257, μου 3450…).
+const _RHEMA_LXX_FILLER = new Set([3588, 2532, 846, 1722, 1519, 1537, 4314, 1473, 4771, 1909, 575, 3754, 1161, 3739, 5100, 3778, 1565, 3956, 1510, 3361, 3756, 1063, 2443, 5613, 1223, 3326, 2596, 5259, 4012, 1438,
+  4675, 2257, 5216, 3450, 4671, 3427, 2254, 5213, 4571, 3165, 2248, 5209, 1691, 1698, 1700, 4674, 5212, 2251, 5212, 848, 1683, 4572, 1438]);
 function _rhemaFillHebrewStudy(elId, strongs) {
   const esc = _escapeRhemaAttr;
   Promise.all([_rhemaLoadHebStats(strongs), loadDeepHebrewLexiconEntry(strongs).catch(() => null)]).then(([st, deep]) => {
@@ -50229,6 +50280,7 @@ function _rhemaFillHebrewStudy(elId, strongs) {
       const untranslated = u && u / st.n >= 0.2
         ? `<p class="rhw-note">Often it has no English word of its own (${u.toLocaleString()} of ${st.n.toLocaleString()} times): its job is carried by the grammar or the words around it.</p>`
         : '';
+      if (st.alias) out.push(`<p class="rhw-note">Counted together with H${Number(st.alias)}: the Berean tables file this same word under that number.</p>`);
       out.push(`<div class="rhw-sub">How it’s translated <small>BSB, across the Old Testament</small></div>
         <p class="rhw-note">Used <b>${st.n.toLocaleString()}</b> times.</p>${untranslated}
         <div class="rhw-bars">${shown.map(([e, c, refs]) => `
@@ -50254,12 +50306,13 @@ function _rhemaFillHebrewStudy(elId, strongs) {
     }
     const lxx = (deep?.lxxGreek || []).filter(x => x && x.g);
     if (lxx.length) {
-      const total = lxx.reduce((a, x) => a + (x.count || 0), 0) || 1;
+      // Share of the places where the Septuagint has a Greek word aligned to it.
+      const total = deep.lxxAligned || lxx.reduce((a, x) => a + (x.count || 0), 0) || 1;
       const main = lxx.filter(x => !_RHEMA_LXX_FILLER.has(Number(x.g)) || x.count / total >= 0.4).slice(0, 4);
       if (main.length) {
         const G = window.RhemaLexicon || {};
         out.push(`<div class="rhw-sub">In the Greek Old Testament</div>
-          <p class="rhw-note">When the Hebrew Bible was translated into Greek (the Septuagint), these are the words used for it, and New Testament writers often use the same ones. Tap one to study the Greek word.</p>
+          <p class="rhw-note">Greek words the Septuagint (an early Greek translation) put in its place, with how often (from MACULA Hebrew’s word-by-word alignment). They show how ancient translators understood it, not a definition. Tap one to study the Greek word.</p>
           <div class="rhw-lxx">${main.map(x => {
             const gl = G[x.g]?.gloss || G[x.g]?.brief || '';
             return `<button type="button" class="rhw-lxx-chip" onclick="rhemaOpenGreekFromHebrew(${Number(x.g)})"><b>${esc(x.lemma || G[x.g]?.lemma || '')}</b><small>${gl ? esc(String(gl).split(/[,;]/)[0]) + ' · ' : ''}${Math.round(x.count / total * 100)}%</small></button>`;
@@ -51103,7 +51156,7 @@ const DEEP_LEXICON_VERSION = '3.0.534';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
-const DEEP_HEBREW_LEXICON_VERSION = '3.0.377';
+const DEEP_HEBREW_LEXICON_VERSION = '3.0.560';
 const _deepHebrewShards = new Map();  // shardFile → Promise<object|null>
 const _deepHebrewData = new Map();    // shardFile → resolved shard (sync access)
 let _deepHebrewShardIndex = null;     // [{file, from, to}] loaded from index.json
