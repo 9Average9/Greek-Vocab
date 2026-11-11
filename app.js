@@ -30332,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.549";
+const APP_VERSION = "3.0.550";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,9 +30355,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
-<div class="un-version-label">v3.0.549 &mdash; Every chapter, every time</div>
+<div class="un-version-label">v3.0.550 &mdash; Every chapter, every time</div>
 <ul>
   <li><strong>Steady chapter list</strong> &mdash; The book and chapter picker always lists all 66 books and every chapter right away, even while the Hebrew and Greek text is still loading. No more missing chapters like Proverbs 24.</li>
+  <li><strong>No hidden English verses</strong> &mdash; Where the Hebrew or the Septuagint numbers a passage differently (Malachi 4, Joel 3, Proverbs 25&ndash;29 in the Septuagint), the English now shows every verse instead of skipping some.</li>
+  <li><strong>Numbering notes</strong> &mdash; When the Septuagint or Hebrew puts a passage under a different number, a short note says where it is, with a button to jump there. Septuagint Psalms note their English number too.</li>
 </ul>
 <div class="un-version-label">v3.0.548 &mdash; Interpretations, smoother</div>
 <ul>
@@ -38700,16 +38702,14 @@ function _rhemaBookOrder() {
 
 // Every chapter of every book, fixed. The big Hebrew/Greek text files load in
 // the background, so building the pickers from whatever text happened to be
-// loaded made chapters (and whole books) blink in and out. While a book's text
-// is still loading, the pickers use this table (1,189 chapters, numbered the
-// way the reader shows them: Joel 4 and Malachi 3 follow the Hebrew). Once the
-// text is in, they list exactly its chapters, so every chapter listed opens
-// (the Greek Old Testament numbers Proverbs and Psalms its own way).
+// loaded made chapters (and whole books) blink in and out. The pickers use the
+// English chapters (this table until the English text is in), and for the Old
+// Testament also any extra chapter the Hebrew or Septuagint has.
 const RHEMA_CHAPTER_COUNTS = {
   GEN:50, EXO:40, LEV:27, NUM:36, DEU:34, JOS:24, JDG:21, RUT:4, '1SA':31, '2SA':24, '1KI':22,
   '2KI':25, '1CH':29, '2CH':36, EZR:10, NEH:13, EST:10, JOB:42, PSA:150, PRO:31, ECC:12, SNG:8,
-  ISA:66, JER:52, LAM:5, EZK:48, DAN:12, HOS:14, JOL:4, AMO:9, OBA:1, JON:4, MIC:7, NAM:3,
-  HAB:3, ZEP:3, HAG:2, ZEC:14, MAL:3, MAT:28, MAR:16, LUK:24, JOH:21, ACT:28, ROM:16, '1CO':16,
+  ISA:66, JER:52, LAM:5, EZK:48, DAN:12, HOS:14, JOL:3, AMO:9, OBA:1, JON:4, MIC:7, NAM:3,
+  HAB:3, ZEP:3, HAG:2, ZEC:14, MAL:4, MAT:28, MAR:16, LUK:24, JOH:21, ACT:28, ROM:16, '1CO':16,
   '2CO':13, GAL:6, EPH:6, PHP:4, COL:4, '1TH':5, '2TH':3, '1TI':6, '2TI':4, TIT:3, PHM:1,
   HEB:13, JAM:5, '1PE':5, '2PE':3, '1JO':5, '2JO':1, '3JO':1, JUD:1, REV:22
 };
@@ -38718,9 +38718,18 @@ function _rhemaChapterList(book) {
   let loaded = null;
   try { loaded = _rhemaText()[book] || null; } catch (e) {}
   const keys = loaded ? Object.keys(loaded).map(Number).filter(c => c > 0) : [];
-  if (keys.length) return keys.sort((a, b) => a - b).map(String);
-  const n = RHEMA_CHAPTER_COUNTS[book] || 1;
-  return Array.from({ length: n }, (_, i) => String(i + 1));
+  const set = new Set(keys);
+  if (!keys.length || isRhemaOTBook(book)) {
+    // Old Testament: every English chapter too (the Hebrew and the Septuagint
+    // number some books differently: Malachi 4, LXX Proverbs 25-29), plus any
+    // extra chapter the original has (Joel 4, Psalm 151).
+    const eng = Object.keys(_rhemaEnglishData()?.[book] || {}).map(Number).filter(c => c > 0);
+    eng.forEach(c => set.add(c));
+    if (!keys.length && !eng.length) {
+      for (let i = 1; i <= (RHEMA_CHAPTER_COUNTS[book] || 1); i++) set.add(i);
+    }
+  }
+  return [...set].sort((a, b) => a - b).map(String);
 }
 
 function _rhemaOccurrenceData(strongs) {
@@ -45861,6 +45870,39 @@ function _rhemaBlockScrollTop(body, block) {
   return block.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - chromeH;
 }
 
+// Where the Hebrew or the Septuagint numbers a passage differently from
+// English Bibles, say so in plain words and offer a one-tap jump to the
+// matching chapter. pane: 'orig' (Greek/Hebrew text) or 'eng' (English).
+function _rhemaVersificationNote(pane, book, chapter, hasOrig, hasEng) {
+  if (!isRhemaOTBook(book)) return '';
+  const ch = Number(chapter);
+  const lxx = _rhemaOTLayer === 'lxx';
+  const layer = lxx ? 'The Septuagint' : 'The Hebrew text';
+  const name = _rhemaBookName(book);
+  const jump = (c, label) => `<button type="button" class="rhema-versification-jump" onclick="rhemaSelectBookChapter('${book}','${c}')">${_escapeRhemaAttr(label || `Open ${name} ${c}`)}</button>`;
+  const box = (html) => `<div class="rhema-versification-note"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span><div>${html}</div></div>`;
+  if (pane === 'orig') {
+    if (book === 'PRO' && lxx && ch >= 25 && ch <= 29) return box(`${layer} places this chapter later in Proverbs, at chapter ${ch + 7}.<br>${jump(ch + 7)}`);
+    if (book === 'MAL' && ch === 4) return box(`${layer} counts these verses as Malachi 3:19–24.<br>${jump(3)}`);
+    if (!hasOrig && hasEng) return box(`${layer} numbers this part of ${_escapeRhemaAttr(name)} differently, so there's no chapter ${ch} in it. The English has it.`);
+    if (book === 'JOL' && ch === 3 && hasOrig) return box(`${layer}'s Joel 3 is Joel 2:28–32 in English Bibles. English Joel 3 is its Joel 4.<br>${jump(4, 'Open Joel 4')}`);
+    if (book === 'PSA' && lxx && ch >= 9 && ch <= 147) {
+      const eng = ch === 9 ? 'Psalms 9–10' : ch === 113 ? 'Psalms 114–115' : (ch === 114 || ch === 115) ? 'Psalm 116'
+        : (ch === 146 || ch === 147) ? 'Psalm 147' : `Psalm ${ch + 1}`;
+      return box(`The Septuagint numbers most Psalms one lower than English Bibles. Its Psalm ${ch} is <b>${eng}</b> in English. (English Psalm 23 is its Psalm 22.)`);
+    }
+    if (book === 'JER' && lxx && ch >= 25) return box(`The Septuagint arranges Jeremiah 25–51 in a different order, so this Greek chapter may not match the English chapter with the same number.`);
+    return '';
+  }
+  // English pane
+  if (hasEng) return '';
+  if (book === 'PRO' && lxx && ch >= 32 && ch <= 36) return box(`This is the Septuagint's number for <b>Proverbs ${ch - 7}</b> in English Bibles.<br>${jump(ch - 7)}`);
+  if (book === 'JOL' && ch === 4) return box(`${layer}'s Joel 4 is <b>Joel 3</b> in English Bibles.<br>${jump(3)}`);
+  if (book === 'PSA' && ch === 151) return box(`Psalm 151 is found only in the Septuagint, so there's no English version here. Switch the language to Greek to read it.`);
+  if (hasOrig) return box(`English Bibles number this part of ${_escapeRhemaAttr(name)} differently, so there's no English chapter ${ch}. Switch the language to read the original here.`);
+  return '';
+}
+
 function renderRhemaVerse() {
   if (!_rhemaData()) return;
   // A navigation into a part of the Bible whose text hasn't loaded yet (e.g.
@@ -45942,7 +45984,18 @@ function renderRhemaVerse() {
     display.classList.remove('greek-only');
     display.classList.toggle('chapter-mode', !_rhemaSyntaxMode);
     display.classList.toggle('rsx-chapter-mode', _rhemaSyntaxMode);
-    display.innerHTML = _rhemaLayerBadge() + verseNums.map(vn => {
+    // The Hebrew and the Septuagint number some passages differently from
+    // English (Malachi 4 is Hebrew 3:19-24; LXX Psalms run one behind). The
+    // English reading lists every English verse of the chapter, so nothing is
+    // hidden just because the original-language text numbers it elsewhere.
+    const engChapter = isRhemaOTBook(_rhemaBook)
+      ? ((_rhemaEnglishData()?.[_rhemaBook] || {})[String(_rhemaChapter)] || {})
+      : {};
+    const englishNums = [...new Set([...verseNums, ...Object.keys(engChapter).map(Number).filter(n => n > 0)])].sort((a, b) => a - b);
+    const hasEngChapter = Object.keys(engChapter).length > 0 || !isRhemaOTBook(_rhemaBook);
+    const origNote = _rhemaVersificationNote('orig', _rhemaBook, _rhemaChapter, verseNums.length > 0, hasEngChapter);
+    const engNote = _rhemaVersificationNote('eng', _rhemaBook, _rhemaChapter, verseNums.length > 0, hasEngChapter);
+    display.innerHTML = _rhemaLayerBadge() + origNote + verseNums.map(vn => {
       const v = String(vn);
       const words = chapterData[v] || [];
       const isTarget = v === focusVerse;
@@ -45958,8 +46011,8 @@ function renderRhemaVerse() {
       EnglishDiv.classList.remove('rhema-english-single');
       EnglishDiv.innerHTML = _rhemaSyntaxMode ? '' :
         `<div class="rhema-english-chapter-title">${_escapeRhemaAttr(_rhemaBookName(_rhemaBook))} ${_escapeRhemaAttr(_rhemaChapter)}</div>` +
-        readerBanner +
-        verseNums.reduce((html, vn) => {
+        readerBanner + engNote +
+        englishNums.reduce((html, vn) => {
           const v = String(vn);
           const engText = _rhemaReaderText(_rhemaBook, _rhemaChapter, v);
           // Translations legitimately omit certain verses (e.g. NIV drops
