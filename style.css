@@ -39582,3 +39582,35 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
   border-right: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
 }
 .rhema-chapter-word-grid.rhema-hebrew-layer .rhema-word:nth-child(4n+1) { border-right: none; }
+
+/* ── Hebrew word panel (tap a Hebrew word) ──────────────────────────────────── */
+.rhw-panel { display: flex; flex-direction: column; gap: 10px; }
+.rhw-hero {
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--secondary-color, #2498df) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 22%, transparent);
+}
+.rhw-k { font-size: 0.66rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: color-mix(in srgb, var(--secondary-color, #2498df) 70%, var(--muted-color, #8a8a8a)); }
+.rhw-k span { letter-spacing: 0.02em; text-transform: none; font-weight: 700; opacity: 0.8; margin-left: 4px; }
+.rhw-here { margin-top: 4px; font-size: 1.3rem; font-weight: 800; line-height: 1.25; color: var(--font-color, #20303f); }
+.rhw-here small { margin-left: 8px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; color: var(--muted-color, #8a8a8a); vertical-align: middle; }
+.rhw-here.rhw-none { font-size: 1.02rem; }
+.rhw-here.rhw-none small { display: block; margin: 2px 0 0; font-weight: 600; letter-spacing: 0; font-size: 0.8rem; }
+.rhw-say { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.rhw-say .rhema-hebrew-text { font-size: 1.5rem; }
+.rhw-tr { font-size: 0.95rem; font-style: italic; color: color-mix(in srgb, var(--font-color, #20303f) 75%, transparent); }
+.rhw-aram { font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, #b8860b 16%, transparent); color: #8a6508; }
+.rhw-sub { font-size: 0.66rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: color-mix(in srgb, var(--secondary-color, #2498df) 62%, var(--muted-color, #8a8a8a)); margin-top: 4px; }
+.rhw-parts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rhw-part { display: inline-flex; flex-direction: column; align-items: center; padding: 6px 10px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--border-color, #d8dde3) 80%, transparent); background: var(--card-solid-color, var(--card-color, #fff)); min-width: 0; }
+.rhw-part b { font-size: 0.92rem; line-height: 1.2; }
+.rhw-part small { font-size: 0.66rem; color: var(--muted-color, #8a8a8a); }
+.rhw-part.pre, .rhw-part.suf { background: color-mix(in srgb, var(--secondary-color, #2498df) 8%, var(--card-solid-color, #fff)); }
+.rhw-part.core { border-color: color-mix(in srgb, var(--secondary-color, #2498df) 40%, transparent); }
+.rhw-plus { color: var(--muted-color, #8a8a8a); font-weight: 800; }
+.rhw-codes { font-size: 0.78rem; color: var(--muted-color, #8a8a8a); }
+.rhw-codes summary { cursor: pointer; font-weight: 700; }
+.rhw-codes div { margin-top: 4px; }
+.rhw-codes code { font-size: 0.78rem; }
+.rhw-credit { margin: 0; font-size: 0.72rem; color: var(--muted-color, #8a8a8a); }

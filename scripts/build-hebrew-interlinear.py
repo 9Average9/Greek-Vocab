@@ -38,8 +38,10 @@ def cons(s):
     return s.translate(str.maketrans('ךםןףץ', 'כמנפצ'))
 
 def clean_eng(e):
+    # '-' = no separate English word; '. . .' = rendered with a neighboring
+    # word; 'vvv' = a Berean placeholder. All three mean "no English here".
     e = re.sub(r'\s+', ' ', (e or '')).strip()
-    return '' if e in ('-', '–', '—', '') else e
+    return '' if e in ('-', '–', '—', '', '. . .', '...', '…', 'vvv') else e
 
 # 1) Berean rows by book, in Hebrew order
 by_book = defaultdict(list)
