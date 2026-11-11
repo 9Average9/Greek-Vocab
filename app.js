@@ -30331,7 +30331,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.553";
+const APP_VERSION = "3.0.554";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30354,6 +30354,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.554 &mdash; The Hebrew Old Testament, opened up</div>
+<ul>
+  <li><strong>Hebrew in context</strong> &mdash; Under every Hebrew word you now see what it means in that exact verse: &ldquo;In the beginning&rdquo;, &ldquo;created&rdquo;, &ldquo;and there was&rdquo;, &ldquo;is my shepherd&rdquo;. Aramaic chapters in Daniel and Ezra too.</li>
+  <li><strong>Tap a Hebrew word</strong> &mdash; See what it means in this verse, how it sounds (way&middot;y&omacr;&middot;mer), what it&rsquo;s built from (and + say), and its grammar explained in plain words: what Qal, Hiphil, the &ldquo;and then&rdquo; storytelling verb, construct &ldquo;of&rdquo; and the object marker actually mean.</li>
+  <li><strong>Hebrew interlinear</strong> &mdash; Word-by-word English and pronunciation straight from the Berean tables, not a best guess.</li>
+  <li><strong>Better word colors</strong> &mdash; Parts-of-speech colors now follow the main word (&ldquo;his hand&rdquo; is a noun), and Aramaic words and &ldquo;not&rdquo; are colored correctly.</li>
+</ul>
 <div class="un-version-label">v3.0.553 &mdash; Real Hebrew meanings</div>
 <ul>
   <li><strong>Hebrew words say what they mean</strong> &mdash; The small English under each Hebrew word now gives its real meaning (water, God, create, spirit / wind) instead of an odd word picked from an alphabetical list. Same fix in the word sheet and the word library.</li>
@@ -38904,10 +38911,17 @@ const RHEMA_ORIGINAL_NEGATIONS = new Set(['οὐ', 'ου', 'οὐκ', 'ουκ', 
 // Maps morph-code prefix → canonical highlight key
 function normalizePosKey(morphCode) {
   if (!morphCode) return null;
-  // Hebrew morphology codes (OSHB/MorphHB) start with 'H'
-  if (morphCode[0] === 'H') {
-    const segs = morphCode.slice(1).split('/');
-    const pos = (segs[segs.length - 1] || '')[0];
+  // Hebrew (H…) and Aramaic (A… like "AVqp3mp", "AR/Ncmsd") codes from
+  // OSHB/MorphHB. Greek codes look different ("A-NSM", "ADV"). A Hebrew word
+  // can carry prefixes (and/the/in) and a pronoun ending (his/my); its color
+  // follows the main word, the last piece that isn't a suffix ("his hand" is a
+  // noun, not a pronoun).
+  const isAramaic = /^A[A-Z][a-z0-9]/.test(morphCode) || /^A[A-Z](\/|$)/.test(morphCode);
+  if (morphCode[0] === 'H' || isAramaic) {
+    const segs = morphCode.slice(1).split('/').filter(Boolean);
+    const main = [...segs].reverse().find(x => x[0] !== 'S') || segs[segs.length - 1] || '';
+    const pos = main[0];
+    if (pos === 'T' && main[1] === 'n') return 'NEG';
     if (pos === 'V') return 'V';
     if (pos === 'N') return 'N';
     if (pos === 'A') return 'ADJ';
@@ -38929,7 +38943,7 @@ function normalizePosKey(morphCode) {
 }
 
 function _rhemaOriginalHighlightKey(word) {
-  const surface = _stripGreekAccents(String(word?.[0] || '')).toLowerCase().replace(/[.,;··]/g, '');
+  const surface = _stripGreekAccents(String(word?.[0] || '')).replace(/[\u0591-\u05C7]/g, '').toLowerCase().replace(/[.,;··]/g, '');
   if (RHEMA_ORIGINAL_NEGATIONS.has(surface) || RHEMA_ORIGINAL_NEGATIONS.has(String(word?.[0] || ''))) return 'NEG';
   return normalizePosKey(word?.[2]);
 }
@@ -41720,25 +41734,46 @@ function _rhemaRenderInterlinear(ref) {
   }
   gridEl.classList.toggle('rhema-il-rtl', isHebrew);
   gridEl.classList.toggle('rhema-il-details', _rhemaIlDetails);
+  // Hebrew: the Berean word table gives each word's English and sound for this
+  // exact verse. Fetch the book's table first if it isn't here yet.
+  const [ilC, ilV] = isHebrew ? _rhemaOrigRef(p.book, p.chapter, p.verse) : [null, null];
+  if (isHebrew && !_rhemaHebILData(p.book)) {
+    _rhemaLoadHebIL(p.book).then(d => { if (d && _rhemaInterlinearRef === ref) _rhemaRenderInterlinear(ref); });
+  }
+  const hebIL = isHebrew && _rhemaHebILData(p.book) ? words.map((_, i) => _rhemaHebILWord(p.book, ilC, ilV, i)) : null;
 
   // Resolve each token once; the decision drives both the literal gloss and the
   // candidate renderings used to find the current version's words.
-  const rows = words.map((w) => {
+  const rows = words.map((w, wi) => {
     const resolved = _rhemaResolveWord(w, p.book, p.chapter);
     const lex = _rhemaLexForWord(resolved, layer, p.book, p.chapter);
     const decision = _rhemaMeaningDecision(resolved, { layer, book: p.book, chapter: p.chapter, verse: p.verse });
     const surface = window.RhemaAlign ? RhemaAlign.cleanSurface(w[0]) : (w[0] || '');
     const translit = !isHebrew && window.RhemaAlign
       ? RhemaAlign.translitGreek(surface)
-      : (lex.translit || lex.pronounce || '');
+      : (hebIL?.[wi]?.tr || lex.translit || lex.pronounce || '');
     return { orig: surface, translit, gloss: decision.gloss || '', decision, strongs: resolved?.[1] || '', morph: resolved?.[2] || '' };
   });
 
   const versionText = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
   const versionLabel = (typeof _rhemaReaderDisplayLabel === 'function' && _rhemaReaderDisplayLabel()) || '';
   const readerVer = (typeof _rhemaReaderVersion === 'function' && _rhemaReaderVersion()) || '';
-  const renders = _rhemaVersionRenderingsForVerse(p, words, rows.map(r => r.decision), versionText, readerVer === 'BSB' ? 'BSB' : versionLabel);
-  _rhemaSetInterlinearVersionNote(versionLabel);
+  let renders;
+  const foot = document.getElementById('rhemaInterlinearFoot');
+  if (foot) {
+    if (!foot.dataset.greek) foot.dataset.greek = foot.textContent;
+    foot.textContent = isHebrew
+      ? 'Hebrew reads right to left. Under each Hebrew word: how it sounds, then the Berean Standard Bible’s English for it in this verse, from the Berean word-by-word tables. Tap any word to see what it means and how it’s built.'
+      : foot.dataset.greek;
+  }
+  if (hebIL) {
+    // The Berean table is the BSB's own word-by-word English: exact, not guessed.
+    renders = hebIL.map(il => il?.en ? { text: il.en, kind: 'exact' } : { text: '', kind: il ? 'none' : '' });
+    _rhemaSetInterlinearVersionNote('BSB');
+  } else {
+    renders = _rhemaVersionRenderingsForVerse(p, words, rows.map(r => r.decision), versionText, readerVer === 'BSB' ? 'BSB' : versionLabel);
+    _rhemaSetInterlinearVersionNote(versionLabel);
+  }
 
   const esc = _escapeRhemaAttr;
   const pfx = isHebrew ? 'H' : 'G';
@@ -46011,7 +46046,10 @@ function _renderVerseWords(words, verse, ochapter) {
       const variant = variantMap[i];
       const cls = `${isXref ? 'rhema-word xref' : 'rhema-word'}${variant ? ' has-variant' : ''}`;
       const decision = _rhemaMeaningDecision(word, { layer, book: _rhemaBook, chapter: _rhemaChapter, verse: verse || _rhemaVerse });
-      const gloss = decision.gloss;
+      // Hebrew: the Berean English for this exact spot ("In the beginning",
+      // "and he said"), falling back to the word's general meaning.
+      const il = isHebrew ? _rhemaHebILWord(_rhemaBook, ochapter || _rhemaChapter, verse || _rhemaVerse, i) : null;
+      const gloss = (il && il.en) ? _escapeRhemaAttr(il.en) : decision.gloss;
       const glossHtml = gloss ? `<span class="rhema-gloss">${gloss}</span>` : '';
       const variantTag = variant
         ? `<button class="rhema-variant-tag" onclick="event.stopPropagation();showRhemaVariant('${variant.label}', '${_escapeRhemaAttr(variant.text)}')" title="Text variant">var</button>`
@@ -46164,6 +46202,7 @@ function renderRhemaVerse() {
         ? `${_rhemaReaderVersion()} covers the ${typeof _vsScopeLabel === 'function' ? _vsScopeLabel(_rhemaReaderVersion()) : ''} only — showing ${_rhemaEnglishLabel()} for this book.`
         : `${typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[_rhemaReaderVersion()]?.stream ? 'Loading' : 'Downloading'} ${_rhemaReaderVersion()}… showing ${_rhemaEnglishLabel()} until it lands.`}</div>`;
 
+  _rhemaEnsureHebIL();
   if (_rhemaFullChapter) {
     const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
     const verseNums = Object.keys(chapterData).map(Number).sort((a, b) => a - b);
@@ -48856,7 +48895,9 @@ function openRhemaSheet(wordIdx, verse, ochapter) {
     lex.lemma ? `${lex.lemma}  (${lex.translit || lex.pronounce || ''})` : (lemma || '');
 
   _wlSelectedForm = null;
-  showRhemaTab(_rhemaActiveTab, word);
+  // Hebrew words open where "In this verse" lives (the word's meaning here,
+  // its sound and its parts); Definition is one tap away.
+  showRhemaTab(_rhemaActiveWordLayer === 'hebrew' && _rhemaActiveTab === 'definition' ? 'parsing' : _rhemaActiveTab, word);
 
   // Study sandbox: show Save Verse and Add to Word Log buttons
   const saveBtn = document.getElementById('rhemaSaveToStudyBtn');
@@ -49374,6 +49415,185 @@ function buildNounFormHint(surface, strongs, morph) {
   return `<div class="rhema-def-sep"></div><div class="rhema-form-hint">${hint}</div>`;
 }
 
+// ── Hebrew word by word (Berean tables) ──────────────────────────────────────
+// For every word of the Hebrew Old Testament: the Berean Standard Bible's
+// English for that exact spot ("In the beginning", "and he said"), how the
+// word sounds (bə·rê·šîṯ) and its parsing ("Conj-w | V-Qal-ConsecImperf-3ms").
+// Built by scripts/build-hebrew-interlinear.py; one file per book, loaded when
+// a book is opened in Hebrew.
+const RHEMA_HEB_IL_VERSION = '1';
+const _rhemaHebIL = new Map(); // book -> data, or a Promise while it loads
+function _rhemaHebILData(book) { const d = _rhemaHebIL.get(book); return d && typeof d.then !== 'function' ? d : null; }
+function _rhemaLoadHebIL(book) {
+  if (!book || !isRhemaOTBook(book)) return Promise.resolve(null);
+  const cur = _rhemaHebIL.get(book);
+  if (cur) return typeof cur.then === 'function' ? cur : Promise.resolve(cur);
+  const p = fetch(`data/hebrew-interlinear/${book}.json?v=${RHEMA_HEB_IL_VERSION}`)
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null)
+    .then(d => { if (d) _rhemaHebIL.set(book, d); else _rhemaHebIL.delete(book); return d; });
+  _rhemaHebIL.set(book, p);
+  return p;
+}
+// { en, tr, ps } for word i of the Hebrew text at chapter:verse (MT numbering).
+function _rhemaHebILWord(book, chapter, verse, i) {
+  const w = _rhemaHebILData(book)?.[String(chapter)]?.[String(verse)]?.[Number(i)];
+  return w ? { en: w[0] || '', tr: w[1] || '', ps: w[2] || '' } : null;
+}
+// The reader paints first and fills in the in-context English when the book's
+// file arrives (in place, so the scroll position never jumps).
+function _rhemaEnsureHebIL() {
+  if (!isRhemaOTBook(_rhemaBook) || getCurrentOriginalLanguageLayer() !== 'hebrew' || _rhemaHebILData(_rhemaBook)) return;
+  const book = _rhemaBook;
+  _rhemaLoadHebIL(book).then(d => {
+    if (!d || _rhemaBook !== book || getCurrentOriginalLanguageLayer() !== 'hebrew') return;
+    document.querySelectorAll('#rhemaVerseDisplay .rhema-chapter-block[data-ochapter]').forEach(block => {
+      const oc = block.dataset.ochapter, ov = block.dataset.overse;
+      block.querySelectorAll('.rhema-word[data-idx]').forEach(el => {
+        const il = _rhemaHebILWord(book, oc, ov, el.dataset.idx);
+        if (!il || !il.en) return;
+        let g = el.querySelector('.rhema-gloss');
+        if (!g) { g = document.createElement('span'); g.className = 'rhema-gloss'; el.appendChild(g); }
+        g.textContent = il.en;
+      });
+    });
+    if (document.getElementById('rhemaInterlinearModal')?.classList.contains('open') && _rhemaInterlinearRef) _rhemaRenderInterlinear(_rhemaInterlinearRef);
+  });
+}
+
+// Plain-English Hebrew grammar. Reads the Berean parsing code (falls back to
+// the OSHB code) and explains each part the way a teacher would.
+const RHEMA_HEB_PREFIX = {
+  'Conj-w': { say: 'and', name: 'Conjunction “and” (וְ)', explain: 'The little word “and” joined to the front of the word. In stories it often reads as “then” or “so”.' },
+  'Conj': { say: 'and', name: 'Conjunction', explain: 'A joining word like “and”, “for” or “that”.' },
+  'Prep-b': { say: 'in / with', name: 'Preposition “in” (בְּ)', explain: '“In”, “with”, “by” or “when”, joined to the front of the word.' },
+  'Prep-l': { say: 'to / for', name: 'Preposition “to” (לְ)', explain: '“To”, “for” or “belonging to”, joined to the front of the word.' },
+  'Prep-k': { say: 'like / as', name: 'Preposition “like” (כְּ)', explain: '“Like”, “as” or “about”, joined to the front of the word.' },
+  'Prep-m': { say: 'from', name: 'Preposition “from” (מִ)', explain: '“From”, “out of” or “more than”, joined to the front of the word.' },
+  'Prep': { say: 'preposition', name: 'Preposition', explain: 'A position or relation word: on, over, before, with.' },
+  'Art': { say: 'the', name: 'Article “the” (הַ)', explain: 'Hebrew’s “the”, joined to the front of the word.' },
+  'Interrog': { say: '(question)', name: 'Question marker (הֲ)', explain: 'Turns the sentence into a yes-or-no question.' },
+  'Pro-r': { say: 'who / that', name: 'Relative “that” (שֶׁ)', explain: '“Who”, “which” or “that”, joined to the front of the word.' },
+};
+const RHEMA_HEB_STEM = {
+  Qal: ['Qal', 'The basic, simple form of the verb: plain action (“he created”, “she went”).'],
+  Nifal: ['Niphal', 'Usually passive or reflexive: the action happens to the subject (“was created”, “hid himself”).'],
+  Piel: ['Piel', 'A stronger or deliberate form: intensifies the action or brings a state about (“shattered”, “made holy”).'],
+  Pual: ['Pual', 'The passive of the Piel: the subject receives that strong action (“was shattered”).'],
+  Hifil: ['Hiphil', 'Causative: makes someone or something do or be it (“made to go out” = “brought out”).'],
+  Hofal: ['Hophal', 'The passive of the Hiphil: the subject is caused to do or be it (“was brought out”).'],
+  Hitpael: ['Hithpael', 'Reflexive or back-and-forth action: doing it to or for oneself, or repeatedly (“walked about”, “prayed”, “hid themselves”).'],
+  QalPass: ['Qal passive', 'An older passive of the basic form (“was taken”).'],
+  Polel: ['Polel', 'A rarer strong form, much like the Piel.'], Polal: ['Polal', 'The passive of the Polel.'],
+  Hitpolel: ['Hithpolel', 'A rarer reflexive form, much like the Hithpael.'],
+  Pilpel: ['Pilpel', 'A repeated-sound strong form, like the Piel.'], Poel: ['Poel', 'A rarer strong form, like the Piel.'],
+  Hishtafel: ['Hishtaphel', 'The special reflexive form of “bow down / worship”.'],
+  Peal: ['Peal (Aramaic)', 'Aramaic’s basic, simple form of the verb.'], Peil: ['Peil (Aramaic)', 'Aramaic passive of the basic form.'],
+  Pael: ['Pael (Aramaic)', 'Aramaic’s strong form, like Hebrew’s Piel.'], Haphel: ['Haphel (Aramaic)', 'Aramaic causative, like Hebrew’s Hiphil.'],
+  Aphel: ['Aphel (Aramaic)', 'Aramaic causative, like Hebrew’s Hiphil.'], Hophal: ['Hophal (Aramaic)', 'Aramaic passive causative.'],
+  Hitpeel: ['Hithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Hitpaal: ['Hithpaal (Aramaic)', 'Aramaic reflexive of the strong form.'],
+  Ithpeel: ['Ithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Ithpaal: ['Ithpaal (Aramaic)', 'Aramaic reflexive of the strong form.'],
+  Shafel: ['Shaphel (Aramaic)', 'A rare Aramaic causative.'],
+};
+const RHEMA_HEB_FORM = {
+  Perf: ['Perfect', 'A whole, completed action. Usually past (“he created”), sometimes a settled fact or certainty.'],
+  Imperf: ['Imperfect', 'Unfinished action: future (“he will”), ongoing or repeated (“he keeps”), or possible (“he may”, “he would”).'],
+  ConsecImperf: ['Consecutive imperfect (wayyiqtol)', 'Hebrew’s storytelling verb: “and then he …”. It carries a narrative forward one event at a time, in the past.'],
+  ConjPerf: ['Consecutive perfect (weqatal)', '“And (then) he will …” — continues a sequence of future events or instructions.'],
+  ConjImperf: ['Imperfect with “and”', 'An imperfect joined by “and”, often expressing purpose or result (“so that he may …”).'],
+  Imp: ['Imperative', 'A command or request: “Do this!”'],
+  Inf: ['Infinitive construct', 'The verb used like a noun: “to ___” or “when ___ing”. Often has “to”, “in” or “when” in front.'],
+  InfAbs: ['Infinitive absolute', 'Often doubles the main verb for emphasis: “you shall surely ___”. Can also act as a command.'],
+  Prtcpl: ['Participle', '“___ing”: ongoing action, or someone described by what they do (“the one who keeps”, “a shepherd”).'],
+  QalPassPrtcpl: ['Passive participle', '“___ed”: describes the result of an action (“blessed”, “written”).'],
+};
+const RHEMA_HEB_MOOD = {
+  Jus: ['Jussive', '“Let it …” / “May he …” — a wish or a command to someone else.'],
+  Cohort: ['Cohortative', '“Let me …” / “Let us …” — the speaker’s resolve or wish.'],
+  h: ['Cohortative (if the context fits)', '“Let me …” / “Let us …” — the speaker’s resolve or wish.'],
+};
+const RHEMA_HEB_PGN = {
+  '1cs': ['I', 'my / me'], '1cp': ['we', 'our / us'], '2ms': ['you (one man)', 'your / you'], '2fs': ['you (one woman)', 'your / you'],
+  '2mp': ['you all', 'your / you'], '2fp': ['you all (women)', 'your / you'], '3ms': ['he / it', 'his / him'], '3fs': ['she / it', 'her'],
+  '3mp': ['they', 'their / them'], '3fp': ['they (women)', 'their / them'], '3cp': ['they', 'their / them'], '2cp': ['you all', 'your / you'],
+};
+const RHEMA_HEB_GENDER = { m: 'masculine', f: 'feminine', c: 'common', b: 'common' };
+const RHEMA_HEB_NUMBER = { s: 'singular', p: 'plural', d: 'dual (a pair)' };
+function _rhemaHebGNS(code) {
+  // "fs", "mpc", "msd" → gender, number, state
+  const m = String(code || '').match(/^([mfcb])?([spd])?([cad])?$/);
+  if (!m) return [];
+  const out = [];
+  if (m[1]) out.push(RHEMA_HEB_GENDER[m[1]]);
+  if (m[2]) out.push(RHEMA_HEB_NUMBER[m[2]]);
+  return { parts: out, construct: m[3] === 'c', emphatic: m[3] === 'd' };
+}
+// Berean code → { prefixes: [...], core: { kind, label, rows: [...] }, suffixes: [...] }
+function _rhemaParseHebCode(code) {
+  const segs = String(code || '').split(' | ').map(x => x.trim()).filter(Boolean);
+  const isSuffix = x => /^[123][mfc][sp]$/.test(x) || x === 'Pn';
+  let coreAt = -1;
+  segs.forEach((x, i) => { if (!isSuffix(x)) coreAt = i; });
+  const prefixSegs = coreAt > 0 ? segs.slice(0, coreAt).flatMap(x => x.split(/,\s*/)) : [];
+  const coreSeg = coreAt >= 0 ? segs[coreAt] : '';
+  const suffixSegs = segs.slice(coreAt + 1);
+  const prefixes = prefixSegs.map(x => ({ code: x, ...(RHEMA_HEB_PREFIX[x] || { say: x, name: x, explain: '' }) }));
+  const rows = [];
+  let kind = 'word', label = 'Word';
+  const parts = coreSeg.split('-');
+  const head = parts[0];
+  if (head === 'V') {
+    kind = 'verb'; label = 'Verb';
+    const stem = RHEMA_HEB_STEM[parts[1]] || [parts[1], ''];
+    const [form, mood] = String(parts[2] || '').split('.');
+    const f = RHEMA_HEB_FORM[form] || [form, ''];
+    rows.push({ label: 'Stem', value: stem[0], desc: stem[1] });
+    rows.push({ label: 'Form', value: f[0], desc: f[1] });
+    if (mood && RHEMA_HEB_MOOD[mood]) rows.push({ label: 'Mood', value: RHEMA_HEB_MOOD[mood][0], desc: RHEMA_HEB_MOOD[mood][1] });
+    const pgn = parts[3] || '';
+    if (RHEMA_HEB_PGN[pgn]) rows.push({ label: 'Who', value: RHEMA_HEB_PGN[pgn][0], desc: 'The subject is built into the verb.' });
+    else if (pgn) {
+      const g = _rhemaHebGNS(pgn);
+      if (g.parts?.length) rows.push({ label: 'Describes', value: g.parts.join(', '), desc: g.construct ? 'Linked to the next word (“the ___ of”).' : '' });
+    }
+  } else if (head === 'N' || head === 'Adj' || head === 'Number') {
+    const proper = parts[1] === 'proper';
+    kind = head === 'N' ? 'noun' : head === 'Adj' ? 'adjective' : 'number';
+    label = head === 'N' ? (proper ? 'Name' : 'Noun') : head === 'Adj' ? 'Adjective' : 'Number';
+    const g = _rhemaHebGNS(parts[proper ? 2 : 1]);
+    if (g.parts?.length) rows.push({ label: 'Form', value: g.parts.join(', '), desc: g.parts.includes('dual (a pair)') ? 'Hebrew has a special form for pairs (hands, eyes) and a few set words like “water” and “heavens”.' : '' });
+    if (g.construct) rows.push({ label: 'State', value: 'Construct', desc: 'Linked to the next word: “the ___ of …”. Hebrew shows “of” by joining the two words this way.' });
+    if (g.emphatic) rows.push({ label: 'State', value: 'Emphatic (Aramaic)', desc: 'Aramaic’s way of saying “the ___”.' });
+  } else if (head === 'Pro') {
+    kind = 'pronoun'; label = 'Pronoun';
+    const t = parts[1] || '';
+    if (t === 'r') rows.push({ label: 'Type', value: 'Relative', desc: '“Who”, “which”, “that” — introduces a description.' });
+    else if (t === 'i') rows.push({ label: 'Type', value: 'Question', desc: '“Who?” or “what?”' });
+    else if (t === 'd' || /^d/.test(t)) rows.push({ label: 'Type', value: 'Pointing', desc: '“This”, “that”, “these”.' });
+    else if (RHEMA_HEB_PGN[t]) rows.push({ label: 'Means', value: RHEMA_HEB_PGN[t][0], desc: 'A stand-alone pronoun. Hebrew usually builds “he/she/they” into the verb, so a separate one often adds emphasis.' });
+  } else if (head === 'Adv') {
+    kind = 'adverb'; label = parts[1] === 'NegPrt' ? 'Negative' : 'Adverb';
+    if (parts[1] === 'NegPrt') rows.push({ label: 'Means', value: 'not / no', desc: 'Says something is not so, or forbids it.' });
+  } else if (head === 'DirObjM') {
+    kind = 'marker'; label = 'Object marker';
+    rows.push({ label: 'Job', value: 'Points to the object', desc: 'אֵת marks the specific thing being acted on (“God created → the heavens”). It has no English word, so translations leave it out.' });
+  } else if (head === 'Interjection') {
+    kind = 'interjection'; label = 'Interjection';
+    rows.push({ label: 'Job', value: 'Exclamation', desc: '“Behold!”, “Look!”, “Oh!” — grabs attention or shows feeling.' });
+  } else if (head === 'Prep' || head === 'Conj' || head === 'Art' || head === 'Interrog') {
+    const d = RHEMA_HEB_PREFIX[coreSeg] || RHEMA_HEB_PREFIX[head];
+    kind = 'particle'; label = d?.name || head;
+    if (d?.explain) rows.push({ label: 'Job', value: d.name, desc: d.explain });
+  } else if (coreSeg) {
+    label = coreSeg;
+  }
+  const suffixes = suffixSegs.map(x => x === 'Pn'
+    ? { code: x, say: '', name: 'Extra “n” ending', explain: 'An old ending that adds a little emphasis; it doesn’t change the meaning.' }
+    : { code: x, say: RHEMA_HEB_PGN[x]?.[kind === 'noun' || kind === 'adjective' || kind === 'number' ? 1 : 1] || x,
+        name: 'Pronoun ending', explain: kind === 'verb' ? `An object joined to the end of the verb: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` : `Joined to the end: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` });
+  return { prefixes, core: { code: coreSeg, kind, label, rows }, suffixes };
+}
+
 const HEBREW_POS = {
   A: 'adjective',
   C: 'conjunction',
@@ -49443,29 +49663,115 @@ function decodeHebrewMorph(morph) {
 }
 
 function renderHebrewParsing(surface, strongs, morph, lemma) {
-  const rows = decodeHebrewMorph(morph);
-  const main = rows.find(r => r.label === 'Part of Speech')?.value || 'Hebrew word';
-  const details = rows
-    .filter(r => ['Stem / Binyan', 'Conjugation', 'Gender', 'Number', 'State', 'Person', 'Noun Type'].includes(r.label))
-    .slice(0, 4)
-    .map(r => r.value)
-    .join(', ');
-  const friendly = `<div class="rhema-hebrew-simple">
-    <strong>${surface}</strong> is a ${main}${details ? ` (${details})` : ''}.
-    <span>These labels describe what job this Hebrew word is doing in the sentence.</span>
-  </div>`;
-  const lemmaText = lemma ? `<div class="rhema-inflected-gloss">Hebrew root key: ${lemma}</div>` : '';
-  if (!rows.length) return `<p style="opacity:.5;font-size:.85rem">No Hebrew parsing data for "${morph || surface}".</p>`;
-  return friendly + lemmaText + `<div class="rhema-parsing-grid">` +
+  const esc = _escapeRhemaAttr;
+  const ctx = window._rhemaWordCtx || {};
+  const il = ctx.book ? _rhemaHebILWord(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : null;
+  if (ctx.book && !il && !_rhemaHebILData(ctx.book)) {
+    // Fetch the book's word table, then redraw this panel if it's still open.
+    const want = `${ctx.book}|${ctx.chapter}|${ctx.verse}|${ctx.idx}`;
+    _rhemaLoadHebIL(ctx.book).then(d => {
+      const now = window._rhemaWordCtx || {};
+      if (!d || `${now.book}|${now.chapter}|${now.verse}|${now.idx}` !== want) return;
+      const el = document.getElementById('rhemaHebPanel');
+      if (el) el.outerHTML = renderHebrewParsing(surface, strongs, morph, lemma);
+    });
+  }
+  const lex = (window.RhemaHebrewLexicon || {})[strongs] || {};
+  const meaning = lex.gloss || lex.brief || '';
+  const shown = _rhemaDisplaySurface(surface);
+  const code = il?.ps || '';
+  const parsed = code ? _rhemaParseHebCode(code) : _rhemaParseHebCode(_rhemaOshbToBereanCode(morph));
+  const isAramaic = /^A/.test(String(morph || '').split('/').pop() || '');
+  const ref = ctx.book ? `${_rhemaBookName(ctx.book)} ${ctx.chapter}:${ctx.verse}` : '';
+
+  // 1) What it means right here.
+  const hero = `<div class="rhw-hero">
+      ${il?.en ? `<div class="rhw-k">In this verse${ref ? ` <span>${esc(ref)}${_rhemaOTLayer === 'hebrew' ? '' : ''}</span>` : ''}</div>
+        <div class="rhw-here">“${esc(il.en)}”<small>BSB</small></div>`
+      : il ? `<div class="rhw-k">In this verse</div><div class="rhw-here rhw-none">No separate English word<small>its meaning is carried by the words around it</small></div>`
+      : `<div class="rhw-k">Meaning</div><div class="rhw-here">${esc(meaning || 'Hebrew word')}</div>`}
+      <div class="rhw-say"><span class="rhema-hebrew-text">${esc(shown)}</span>${il?.tr ? `<span class="rhw-tr">${esc(il.tr)}</span>` : ''}${isAramaic ? '<span class="rhw-aram">Aramaic</span>' : ''}</div>
+    </div>`;
+
+  // 2) The word's parts: prefixes + core + endings.
+  const chip = (cls, big, small) => `<span class="rhw-part ${cls}"><b>${esc(big)}</b><small>${esc(small)}</small></span>`;
+  const coreBig = meaning || parsed.core.label;
+  const pieces = [
+    ...parsed.prefixes.map(x => chip('pre', x.say, x.name.replace(/\s*\(.*\)$/, ''))),
+    chip('core', coreBig, parsed.core.label.toLowerCase()),
+    ...parsed.suffixes.filter(x => x.say).map(x => chip('suf', x.say, x.name.toLowerCase())),
+  ];
+  const anatomy = pieces.length > 1
+    ? `<div class="rhw-sub">Built from</div><div class="rhw-parts">${pieces.join('<span class="rhw-plus">+</span>')}</div>`
+    : '';
+
+  // 3) Grammar, in plain words.
+  const rows = [
+    ...parsed.prefixes.filter(x => x.explain).map(x => ({ label: 'Front', value: x.name, desc: x.explain })),
+    { label: 'Word', value: parsed.core.label + (meaning ? ` · “${meaning}”` : ''), desc: '' },
+    ...parsed.core.rows,
+    ...parsed.suffixes.filter(x => x.explain).map(x => ({ label: 'Ending', value: x.say ? `${x.name}: ${x.say}` : x.name, desc: x.explain })),
+  ];
+  const grid = `<div class="rhw-sub">Grammar, in plain words</div><div class="rhema-parsing-grid">` +
     rows.map(r => `
       <div class="rhema-parse-row">
-        <div class="rhema-parse-label">${r.label}</div>
+        <div class="rhema-parse-label">${esc(r.label)}</div>
         <div>
-          <div class="rhema-parse-value">${r.value}</div>
-          ${r.desc ? `<div class="rhema-parse-desc">${r.desc}</div>` : ''}
+          <div class="rhema-parse-value">${esc(r.value)}</div>
+          ${r.desc ? `<div class="rhema-parse-desc">${esc(r.desc)}</div>` : ''}
         </div>
-      </div>`).join('') +
-    `</div>`;
+      </div>`).join('') + `</div>`;
+  const codes = `<details class="rhw-codes"><summary>Technical codes</summary>
+      ${code ? `<div>Berean parsing: <code>${esc(code)}</code></div>` : ''}
+      ${morph ? `<div>OSHB morphology: <code>${esc(morph)}</code></div>` : ''}
+      ${strongs ? `<div>Strong’s: <code>H${esc(strongs)}</code></div>` : ''}
+    </details>`;
+  const credit = il ? `<p class="rhw-credit">English, sound and parsing for each word: Berean Bible translation tables.</p>` : '';
+  return `<div id="rhemaHebPanel" class="rhw-panel">${hero}${anatomy}${grid}${codes}${credit}</div>`;
+}
+
+// OSHB morphology ("HC/Vqw3ms", "HR/Ncmsc/Sp3ms", "AVqp3mp") → a Berean-style
+// code, so the same plain-English decoder works before the word table loads.
+function _rhemaOshbToBereanCode(morph) {
+  const raw = String(morph || '');
+  const lang = raw[0] === 'A' ? 'A' : 'H';
+  const parts = raw.replace(/^[HA]/, '').split('/').filter(Boolean);
+  const STEM = { q: 'Qal', N: 'Nifal', p: 'Piel', P: 'Pual', h: 'Hifil', H: 'Hofal', t: 'Hitpael', Q: 'QalPass', o: 'Polel', O: 'Polal', r: 'Hitpolel', l: 'Pilpel', m: 'Poel', v: 'Hishtafel' };
+  const ASTEM = { q: 'Peal', Q: 'Peil', p: 'Pael', h: 'Haphel', a: 'Aphel', H: 'Hophal', t: 'Hitpeel', i: 'Ithpeel', T: 'Hitpaal', u: 'Ithpaal', s: 'Shafel' };
+  const FORM = { p: 'Perf', q: 'ConjPerf', i: 'Imperf', w: 'ConsecImperf', h: 'Imperf.Cohort', j: 'Imperf.Jus', v: 'Imp', r: 'Prtcpl', s: 'QalPassPrtcpl', a: 'InfAbs', c: 'Inf' };
+  const out = [];
+  let pre = [];
+  for (const x of parts) {
+    const pos = x[0], b = x.slice(1);
+    if (pos === 'C') { pre.push('Conj-w'); continue; }
+    if (pos === 'R' && parts.indexOf(x) < parts.length - 1) { pre.push('Prep'); continue; }
+    if (pos === 'T' && b[0] === 'd' && parts.indexOf(x) < parts.length - 1) { pre.push('Art'); continue; }
+    if (pos === 'T' && b[0] === 'i') { pre.push('Interrog'); continue; }
+    if (pre.length) { out.push(pre.join(', ')); pre = []; }
+    if (pos === 'V') {
+      const st = (lang === 'A' ? ASTEM : STEM)[b[0]] || b[0];
+      const f = FORM[b[1]] || b[1];
+      const rest = b.slice(2);
+      const pgn = /^[123]/.test(rest) ? rest.slice(0, 3).replace('b', 'c') : rest.slice(0, 2).replace('b', 'c') + (rest[2] === 'c' ? 'c' : '');
+      out.push(`V-${st}-${f}${pgn ? '-' + pgn : ''}`);
+    } else if (pos === 'N') {
+      const proper = b[0] === 'p';
+      const gns = proper ? b.slice(1).replace('b', 'c') : b.slice(1).replace('b', 'c').replace(/a$/, '');
+      out.push(`N-${proper ? 'proper-' : ''}${gns}`);
+    } else if (pos === 'A') {
+      out.push(`Adj-${b.slice(1).replace('b', 'c').replace(/a$/, '')}`);
+    } else if (pos === 'S') {
+      if (b[0] === 'p') out.push(b.slice(1).replace('b', 'c'));
+      else if (b[0] === 'n') out.push('Pn');
+    } else if (pos === 'P') {
+      out.push(b[0] === 'p' ? `Pro-${b.slice(1).replace('b', 'c')}` : `Pro-${b[0] || ''}`);
+    } else if (pos === 'T') {
+      out.push(b[0] === 'o' ? 'DirObjM' : b[0] === 'n' ? 'Adv-NegPrt' : b[0] === 'j' ? 'Interjection' : b[0] === 'd' ? 'Art' : 'Adv');
+    } else if (pos === 'R') out.push('Prep');
+    else if (pos === 'D') out.push('Adv');
+  }
+  if (pre.length) out.push(pre.join(', '));
+  return out.join(' | ');
 }
 
 function renderHebrewDefinition(strongs) {
