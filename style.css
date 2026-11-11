@@ -39650,3 +39650,39 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 }
 .rhw-lxx-chip b { font-size: 1.05rem; }
 .rhw-lxx-chip small { font-size: 0.74rem; color: var(--muted-color, #8a8a8a); font-weight: 700; }
+
+/* Occurrences: All forms / Exact form */
+.rhema-occ-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--muted-color, #8a8a8a) 12%, transparent);
+  margin-bottom: 6px;
+}
+.rhema-occ-mode button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--font-color, #20303f);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  padding: 4px 6px;
+}
+.rhema-occ-mode button small { font-size: 0.72rem; font-weight: 700; color: var(--muted-color, #8a8a8a); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rhema-occ-mode button small.rhema-hebrew-text { font-size: 0.95rem; }
+.rhema-occ-mode button.on { background: var(--card-solid-color, var(--card-color, #fff)); box-shadow: 0 2px 8px rgba(8, 18, 28, 0.1); color: var(--secondary-color, #2498df); }
+.rhema-occ-explain { margin: 0 0 8px; font-size: 0.8rem; color: var(--muted-color, #8a8a8a); }
+
+/* Word Library: language switch + paste */
+.wl-layer-pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; margin: 0 0 10px; border-radius: 14px; background: color-mix(in srgb, var(--muted-color, #8a8a8a) 12%, transparent); }
+.wl-layer-pills button { min-height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--font-color, #20303f); font: inherit; font-size: 0.84rem; font-weight: 800; cursor: pointer; }
+.wl-layer-pills button.on { background: var(--card-solid-color, var(--card-color, #fff)); color: var(--secondary-color, #2498df); box-shadow: 0 2px 8px rgba(8, 18, 28, 0.1); }
+.wl-paste-btn { border: 0; background: transparent; color: var(--muted-color, #8a8a8a); min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 10px; }
+.wl-paste-btn .material-symbols-outlined { font-size: 20px; }
+.wl-kbd-toggle.hidden { display: none; }

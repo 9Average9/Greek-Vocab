@@ -9312,6 +9312,29 @@ function _wlTextForLayer(layer = _wlLibraryLayer) {
   return _rhemaTextForMode(_rhemaTextMode);
 }
 
+// Hebrew without its marks, for searching: strip vowels and accents, fold
+// final letters ("וַיֹּאמֶר" and "ויאמר" both become "ויאמר"), so pasted or
+// typed Hebrew finds the word with or without vowel points.
+// How a Hebrew word sounds, simplified so casual spellings match Strong's
+// pronunciations: "baw-raw'" → "bara", "kheh'-sed" → "hesed", "shaw-lome'" → "salom".
+function _wlHebSound(s) {
+  return String(s || '').toLowerCase()
+    .replace(/[^a-z]/g, '')
+    .replace(/aw/g, 'a').replace(/ay/g, 'e').replace(/eh/g, 'e').replace(/ee/g, 'i').replace(/oo/g, 'u')
+    .replace(/kh|ch/g, 'h').replace(/sh/g, 's').replace(/ph/g, 'p').replace(/th/g, 't').replace(/tz|ts/g, 'z')
+    .replace(/([a-z])\1+/g, '$1');
+}
+function _rhemaHebConsonants(s) {
+  return String(s || '').replace(/[^א-ת]/g, '').replace(/[ךםןףץ]/g, c => ({ 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' })[c]);
+}
+// "Exact form" key: Hebrew keeps its letters and vowels but drops accents,
+// meteg and verse marks; Greek drops accents and case (as before).
+function _rhemaFormKey(surface) {
+  const t = String(surface || '');
+  if (/[א-ת]/.test(t)) return t.replace(/[֑-ֽ֯־׀׃׆]/g, '').replace(/\s+/g, '');
+  return _stripGreekAccents(t).toLowerCase();
+}
+
 function _buildWlIndex() {
   const layer = _wlLibraryLayer || getCurrentOriginalLanguageLayer();
   if (_wlIndex && _wlIndexLayer === layer) return;
@@ -9321,8 +9344,10 @@ function _buildWlIndex() {
     lemma: e.lemma || '',
     translit: e.translit || e.pronounce || '',
     brief: (e.brief || '').split(',')[0].split(';')[0].trim(),
-    occ: e.occ || 0,
+    occ: e.occ || (layer === 'hebrew' ? (window.RhemaHebrewOcc?.[s]?.total || 0) : layer === 'lxx' ? (window.RhemaLXXOcc?.[s]?.total || 0) : 0),
     lemmaStripped: _stripGreekAccents(e.lemma || '').toLowerCase(),
+    lemmaHeb: _rhemaHebConsonants(e.lemma || ''),
+    sound: layer === 'hebrew' ? _wlHebSound(e.translit || e.pronounce || '') : '',
     translitNorm: _normalizeTranslit(e.translit || e.pronounce || ''),
   })).filter(e => e.lemma);
   _wlIndexLayer = layer;
@@ -9331,11 +9356,30 @@ function _buildWlIndex() {
 function _wlSearchLexicon(q, maxResults) {
   _buildWlIndex();
   if (_wlLibraryLayer === 'hebrew' && /[\u0590-\u05ff]/.test(q)) {
-    const qn = q.trim();
-    return _wlIndex.filter(e => e.lemma.includes(qn)).slice(0, maxResults);
+    // Match on letters only, so it works with or without vowel points.
+    const qn = _rhemaHebConsonants(q);
+    if (!qn) return [];
+    const exact = _wlIndex.filter(e => e.lemmaHeb === qn);
+    const pre = _wlIndex.filter(e => e.lemmaHeb !== qn && e.lemmaHeb.startsWith(qn));
+    const inside = _wlIndex.filter(e => !e.lemmaHeb.startsWith(qn) && e.lemmaHeb.includes(qn));
+    const byUse = (a, b) => (b.occ || 0) - (a.occ || 0);
+    return [...exact.sort(byUse), ...pre.sort(byUse), ...inside.sort(byUse)].slice(0, maxResults);
   }
   const hasGreek = /[\u0370-\u03ff\u1f00-\u1fff]/.test(q);
   let prefix, contains;
+  if (_wlLibraryLayer === 'hebrew' && !hasGreek) {
+    // Sound ("bara", "chesed") or English meaning ("create").
+    const qs = _wlHebSound(q);
+    const ql = q.toLowerCase().trim();
+    const byUse = (a, b) => (b.occ || 0) - (a.occ || 0);
+    const soundPre = qs ? [
+      ..._wlIndex.filter(e => e.sound === qs).sort(byUse),                       // "bara" → בָּרָא first
+      ..._wlIndex.filter(e => e.sound !== qs && e.sound.startsWith(qs)).sort(byUse),
+    ] : [];
+    const meaning = ql.length >= 3 ? _wlIndex.filter(e => !soundPre.includes(e) && new RegExp(`(^|[^a-z])${ql.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(e.brief.toLowerCase())).sort(byUse) : [];
+    const soundIn = qs && qs.length >= 3 ? _wlIndex.filter(e => !soundPre.includes(e) && !meaning.includes(e) && e.sound.includes(qs)).sort(byUse) : [];
+    return [...soundPre, ...meaning, ...soundIn].slice(0, maxResults);
+  }
   if (hasGreek) {
     const qn = _stripGreekAccents(q).toLowerCase();
     prefix   = _wlIndex.filter(e => e.lemmaStripped.startsWith(qn));
@@ -9358,8 +9402,9 @@ function _wlSearchLexicon(q, maxResults) {
 function _wlScanNTForm(q) {
   // Find exact surface form matches in NT text for Greek queries
   if (_wlLibraryLayer === 'hebrew') {
-    if (!/[\u0590-\u05ff]/.test(q) || !_rhemaData()) return [];
-    const qn = _stripGreekAccents(q).toLowerCase();
+    if (!/[\u0590-\u05ff]/.test(q)) return [];
+    const qn = _rhemaHebConsonants(q);
+    if (!qn) return [];
     const found = {};
     const texts = _wlTextForLayer();
     for (const book of _wlBooksForLayer()) {
@@ -9367,10 +9412,11 @@ function _wlScanNTForm(q) {
       for (const ch of Object.keys(bdata)) {
         for (const v of Object.keys(bdata[ch])) {
           for (const word of (bdata[ch][v] || [])) {
-            const sn = _stripGreekAccents(word[0]).toLowerCase();
+            const sn = _rhemaHebConsonants(word[0]);
+            const fk = _rhemaFormKey(word[0]);
             if (sn.startsWith(qn) || sn === qn) {
-              if (!found[word[0]]) found[word[0]] = { strongs: word[1], count: 0, surface: word[0], exact: sn === qn };
-              found[word[0]].count++;
+              if (!found[fk]) found[fk] = { strongs: word[1], count: 0, surface: word[0], exact: sn === qn };
+              found[fk].count++;
             }
           }
         }
@@ -9425,7 +9471,7 @@ function _wlScanNTForm(q) {
 
 function _rhemaExactFormOccurrences(surface) {
   const books = {};
-  const norm = _stripGreekAccents(surface).toLowerCase();
+  const norm = _rhemaFormKey(surface);
   const layer = _rhemaActiveWordLayer || _wlLibraryLayer || getCurrentOriginalLanguageLayer();
   const texts = _wlTextForLayer(layer);
   if (!texts) return books;
@@ -9435,13 +9481,75 @@ function _rhemaExactFormOccurrences(surface) {
     for (const ch of Object.keys(bdata)) {
       for (const v of Object.keys(bdata[ch])) {
         for (const word of (bdata[ch][v] || [])) {
-          if (_stripGreekAccents(word[0]).toLowerCase() === norm) count++;
+          if (_rhemaFormKey(word[0]) === norm) count++;
         }
       }
     }
     if (count) books[book] = count;
   }
   return books;
+}
+
+// Word Library languages: Greek NT, Hebrew OT, Septuagint. Typing or pasting
+// Hebrew switches to Hebrew, Greek letters switch back to Greek.
+const WL_LAYERS = [['nt-greek', 'Greek NT'], ['hebrew', 'Hebrew OT'], ['lxx', 'Septuagint']];
+const WL_LAYER_TEXT = {
+  'nt-greek': ['Search Greek or transliteration…', 'Search by Greek (ἀγαπ…), transliteration (agap…), or English meaning.'],
+  hebrew: ['Search Hebrew, sound, or meaning…', 'Type or paste Hebrew (with or without vowel marks: בָּרָא or ברא), how it sounds (bara), or an English meaning (create).'],
+  lxx: ['Search Septuagint Greek…', 'Search the Greek Old Testament by Greek (κτίζω), transliteration (ktizo), or English meaning.'],
+};
+function _wlRenderLayerUi() {
+  const pills = document.getElementById('wlLayerPills');
+  if (pills) pills.innerHTML = WL_LAYERS.map(([k, label]) =>
+    `<button type="button" class="${k === _wlLibraryLayer ? 'on' : ''}" aria-pressed="${k === _wlLibraryLayer}" onclick="wlSetLayer('${k}')">${label}</button>`).join('');
+  const t = WL_LAYER_TEXT[_wlLibraryLayer] || WL_LAYER_TEXT['nt-greek'];
+  const input = document.getElementById('wlSearchInput');
+  if (input) input.placeholder = t[0];
+  // The α keyboard is Greek; hide it for Hebrew.
+  const kbdBtn = document.getElementById('wlKbdToggleBtn');
+  if (kbdBtn) kbdBtn.classList.toggle('hidden', _wlLibraryLayer === 'hebrew');
+  if (_wlLibraryLayer === 'hebrew' && _wlKbdVisible) toggleWlKeyboard();
+  return t[1];
+}
+let _wlLayerLoading = null;
+function _wlLexiconReady(layer) {
+  const lex = getCurrentRhemaLexicon(layer);
+  if (!lex) return false;
+  for (const k in lex) return true; // has at least one entry
+  return false;
+}
+async function wlSetLayer(layer, { search = true } = {}) {
+  if (!WL_LAYER_TEXT[layer]) return;
+  const files = layer === 'hebrew' ? ['rhema-hebrew-lexicon.js', 'rhema-ot-hebrew.js']
+    : layer === 'lxx' ? ['rhema-lexicon.js', 'rhema-lxx.js'] : ['rhema-lexicon.js', 'rhema-nt.js'];
+  const changed = layer !== _wlLibraryLayer;
+  _wlLibraryLayer = layer;
+  _wlIndex = null;
+  const hint = _wlRenderLayerUi();
+  const results = document.getElementById('wlResults');
+  const missing = files.filter(f => !_rhemaDataFileLoaded(f));
+  if (missing.length) {
+    if (results) results.innerHTML = '<p class="wl-hint">Loading words…</p>';
+    const token = _wlLayerLoading = Symbol(layer);
+    try { await Promise.all(missing.map(f => _rhemaLoadDataFile(f))); } catch (e) {}
+    if (_wlLayerLoading !== token) return;
+  }
+  const q = document.getElementById('wlSearchInput')?.value || '';
+  if (search && q.trim()) _wlDoSearch(q);
+  else if (results && (changed || missing.length)) results.innerHTML = `<p class="wl-hint">${_escapeRhemaAttr(hint)}</p>`;
+}
+async function wlPaste() {
+  const input = document.getElementById('wlSearchInput');
+  if (!input) return;
+  try {
+    const text = (await navigator.clipboard.readText() || '').trim().slice(0, 60);
+    if (!text) return;
+    input.value = text;
+    wlOnSearch(text);
+  } catch (e) {
+    if (typeof _showStudyToast === 'function') _showStudyToast('Press and hold the search box, then tap Paste');
+    input.focus();
+  }
 }
 
 function openWordLibrary() {
@@ -9461,10 +9569,11 @@ function openWordLibrary() {
     input.readOnly = _wlKbdVisible;
     setTimeout(() => { if (!_wlKbdVisible) input.focus(); }, 180);
   }
-  document.getElementById('wlResults').innerHTML = '<p class="wl-hint">Search by Greek (ἀγαπ…), transliteration (agap…), or English meaning.</p>';
+  document.getElementById('wlResults').innerHTML = `<p class="wl-hint">${_escapeRhemaAttr(_wlRenderLayerUi())}</p>`;
   // Build keyboard if needed
   _buildWlKeyboard();
-  if (_wlSavedQuery) wlOnSearch(_wlSavedQuery);
+  // Make sure this language's words are loaded (e.g. Hebrew opened from the NT).
+  wlSetLayer(_wlLibraryLayer, { search: !!_wlSavedQuery });
 }
 
 function closeWordLibrary() {
@@ -9582,11 +9691,10 @@ function wlOnSearch(q) {
 function _wlFormLabel(strongs, surface) {
   const morph = _findMorphForSurface(strongs, surface);
   if (_wlLibraryLayer === 'hebrew') {
-    const rows = decodeHebrewMorph(morph);
-    return rows.find(r => r.label === 'Part of Speech')?.value ||
-      rows.find(r => r.label === 'Conjugation')?.value ||
-      rows.find(r => r.label === 'Morphology Code')?.value ||
-      'Hebrew form';
+    const p = _rhemaParseHebCode(_rhemaOshbToBereanCode(morph));
+    const form = p.core.rows.find(r => r.label === 'Form')?.value;
+    const front = p.prefixes.map(x => x.say).join(' + ');
+    return [front && `${front} +`, p.core.label, form && p.core.kind === 'verb' ? form : ''].filter(Boolean).join(' ') || 'Hebrew form';
   }
   const rows = decodeMorph(morph);
   const caseRow = rows.find(r => r.label === 'Case');
@@ -9604,22 +9712,29 @@ function _wlDoSearch(q) {
   if (!results) return;
   const query = q.trim();
   if (!query) {
-    results.innerHTML = '<p class="wl-hint">Search by Greek (ἀγαπ…), transliteration (agap…), or English meaning.</p>';
+    results.innerHTML = `<p class="wl-hint">${_escapeRhemaAttr((WL_LAYER_TEXT[_wlLibraryLayer] || WL_LAYER_TEXT['nt-greek'])[1])}</p>`;
     return;
   }
+  // Hebrew letters → Hebrew library; Greek letters while on Hebrew → Greek.
+  if (/[\u05D0-\u05EA]/.test(query) && _wlLibraryLayer !== 'hebrew') { wlSetLayer('hebrew'); return; }
+  if (/[\u0370-\u03ff\u1f00-\u1fff]/.test(query) && _wlLibraryLayer === 'hebrew') { wlSetLayer('nt-greek'); return; }
+  if (!_wlLexiconReady(_wlLibraryLayer)) { wlSetLayer(_wlLibraryLayer); return; }
   const lexEntries = _wlSearchLexicon(query, 40);
   const formEntries = _wlScanNTForm(query);
 
   let html = '';
   let _i = 0;
   if (formEntries.length) {
-    html += `<div class="wl-section-label">Exact Forms in NT</div>`;
+    const where = _wlLibraryLayer === 'hebrew' ? 'in the Hebrew OT' : _wlLibraryLayer === 'lxx' ? 'in the Septuagint' : 'in NT';
+    html += `<div class="wl-section-label">Exact Forms ${where}</div>`;
     html += formEntries.map(f => {
-      const lex = (window.RhemaLexicon || {})[f.strongs] || {};
+      // The dictionary for this language (Hebrew words looked up in Hebrew).
+      const lex = getCurrentRhemaLexicon(_wlLibraryLayer)[f.strongs] || {};
       const formLabel = _wlFormLabel(f.strongs, f.surface);
+      const isHeb = _wlLibraryLayer === 'hebrew';
       return `<div class="wl-result-item wl-result-form" style="--i:${_i++}" onclick="openWlWordDetail(${f.strongs},'${f.surface.replace(/'/g,"\\'")}')">
-        <span class="wl-result-lemma">${f.surface}</span>
-        <span class="wl-result-translit">${lex.translit || ''}</span>
+        <span class="wl-result-lemma${isHeb ? ' rhema-hebrew-text' : ''}">${isHeb ? _rhemaDisplaySurface(f.surface) : f.surface}</span>
+        <span class="wl-result-translit">${isHeb ? (lex.lemma ? `from ${lex.lemma}` : '') : (lex.translit || '')}</span>
         <span class="wl-result-brief">${(lex.brief||'').split(',')[0].trim()}</span>
         <span class="wl-result-form-tag">Form: ${formLabel}</span>
         <span class="wl-result-count">${f.count}×</span>
@@ -9630,7 +9745,7 @@ function _wlDoSearch(q) {
     html += `<div class="wl-section-label">Lexical Forms</div>`;
     html += lexEntries.map(e =>
       `<div class="wl-result-item" style="--i:${_i++}" onclick="openWlWordDetail(${e.strongs},null)">
-        <span class="wl-result-lemma">${e.lemma}</span>
+        <span class="wl-result-lemma${_wlLibraryLayer === 'hebrew' ? ' rhema-hebrew-text' : ''}">${e.lemma}</span>
         <span class="wl-result-translit">${e.translit}</span>
         <span class="wl-result-brief">${e.brief}</span>
         <span class="wl-result-count">${e.occ || ''}${e.occ ? '×' : ''}</span>
@@ -30332,7 +30447,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.555";
+const APP_VERSION = "3.0.556";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30470,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.556 &mdash; Search Hebrew, exact forms</div>
+<ul>
+  <li><strong>Hebrew in the Word Library</strong> &mdash; Switch between Greek NT, Hebrew OT and the Septuagint at the top. Type or paste Hebrew with or without vowel marks (בָּרָא or ברא), how it sounds (bara, chesed, shalom), or what it means (create). Pasting Hebrew switches to Hebrew by itself, and there&rsquo;s a Paste button.</li>
+  <li><strong>Exact form</strong> &mdash; On any word&rsquo;s Occurrences tab, Greek or Hebrew, switch between <em>All forms</em> (every form of the word) and <em>Exact form</em> (only this spelling, like וַיֹּאמֶר &ldquo;and he said&rdquo;: 1,948&times;).</li>
+  <li><strong>Hebrew occurrences read right</strong> &mdash; Each verse shows its English reference (Hebrew Malachi 3:19 is Malachi 4:1), opens there, and bolds the exact English words for the Hebrew word.</li>
+</ul>
 <div class="un-version-label">v3.0.555 &mdash; Hebrew Word Study</div>
 <ul>
   <li><strong>How it&rsquo;s translated</strong> &mdash; Every Hebrew word&rsquo;s Definition tab now shows how it&rsquo;s rendered across the whole Old Testament (land 1,434&times;, earth 572&times;, ground 119&times;), with example verses you can tap to open.</li>
@@ -51471,42 +51592,54 @@ function _injectDeepLexiconRange(panel, strongs, layer) {
   });
 }
 
+// Occurrences: "All forms" (every place the word appears, in any form) or
+// "Exact form" (only this exact spelling, e.g. וַיֹּאמֶר "and he said" rather
+// than every form of אָמַר "say"). Works for Greek and Hebrew.
+function _rhemaOccFormSurface() {
+  return _wlSelectedForm || (_rhemaActiveWord && _rhemaActiveWord[0]) || '';
+}
+function rhemaOccSetExact(on) {
+  _wlSelectedForm = on ? ((_rhemaActiveWord && _rhemaActiveWord[0]) || null) : null;
+  if (document.getElementById('ssWordDetailSheet')?.classList.contains('open') && typeof showSandboxWordTab === 'function') showSandboxWordTab('occurrences');
+  else showRhemaTab('occurrences');
+}
 function renderRhemaOccurrences(strongs, layer = getCurrentOriginalLanguageLayer()) {
   if (!strongs) return `<p style="opacity:.5;font-size:.85rem">No occurrence data found.</p>`;
-  if (_wlSelectedForm) {
-    const exactBooks = _rhemaExactFormOccurrences(_wlSelectedForm);
-    const exactTotal = Object.values(exactBooks).reduce((a, b) => a + b, 0);
-    if (exactTotal === 0) return `<p style="opacity:.5;font-size:.85rem">No occurrences of "${_wlSelectedForm}" found.</p>`;
-    const bookRows = _rhemaBookOrder()
-      .filter(code => exactBooks[code])
-      .map(code => `
+  const esc = _escapeRhemaAttr;
+  const surface = _rhemaOccFormSurface();
+  const isHeb = /[\u05D0-\u05EA]/.test(surface);
+  const shownForm = isHeb ? _rhemaFormKey(surface) : _rhemaDisplaySurface(surface);
+  const occ = getCurrentRhemaOccurrences(strongs, layer);
+  const exact = !!_wlSelectedForm;
+  const row = (code, n) => `
         <div class="rhema-occ-row tappable" onclick="openRhemaBookVerses('${code}',${strongs})">
           <span class="rhema-occ-book">${_rhemaBookName(code)}</span>
           <div style="display:flex;align-items:center;gap:4px">
-            <span class="rhema-occ-count">${exactBooks[code]}×</span>
+            <span class="rhema-occ-count">${n}×</span>
             <span class="material-symbols-outlined" style="font-size:1rem;opacity:0.4;color:var(--secondary-color)">chevron_right</span>
           </div>
-        </div>`).join('');
-    return `
-      <div class="rhema-occ-total">Form <em>${_wlSelectedForm}</em> appears <span>${exactTotal}</span>× in Rhema</div>
+        </div>`;
+  const toggle = surface ? `
+    <div class="rhema-occ-mode" role="group" aria-label="Which occurrences">
+      <button type="button" class="${exact ? '' : 'on'}" aria-pressed="${!exact}" onclick="rhemaOccSetExact(false)">All forms${occ ? ` <small>${occ.total}×</small>` : ''}</button>
+      <button type="button" class="${exact ? 'on' : ''}" aria-pressed="${exact}" onclick="rhemaOccSetExact(true)">Exact form <small class="${isHeb ? 'rhema-hebrew-text' : ''}">${esc(shownForm)}</small></button>
+    </div>
+    <p class="rhema-occ-explain">${exact
+      ? `Only this exact spelling${isHeb ? ', with the same prefixes and endings' : ''}.`
+      : 'Every place this word appears, in any of its forms.'}</p>` : '';
+
+  if (exact) {
+    const exactBooks = _rhemaExactFormOccurrences(surface);
+    const exactTotal = Object.values(exactBooks).reduce((a, b) => a + b, 0);
+    if (exactTotal === 0) return toggle + `<p style="opacity:.5;font-size:.85rem">No occurrences of "${esc(shownForm)}" found.</p>`;
+    const bookRows = RHEMA_BOOK_ORDER.filter(code => exactBooks[code]).map(code => row(code, exactBooks[code])).join('');
+    return toggle + `
+      <div class="rhema-occ-total">This form appears <span>${exactTotal}</span>×</div>
       <div class="rhema-occ-list">${bookRows}</div>`;
   }
-
-  const occ = getCurrentRhemaOccurrences(strongs, layer);
-  if (!occ) return `<p style="opacity:.5;font-size:.85rem">No occurrence data found.</p>`;
-
-  const bookRows = _rhemaBookOrder()
-    .filter(code => occ.books[code])
-    .map(code => `
-      <div class="rhema-occ-row tappable" onclick="openRhemaBookVerses('${code}',${strongs})">
-        <span class="rhema-occ-book">${_rhemaBookName(code)}</span>
-        <div style="display:flex;align-items:center;gap:4px">
-          <span class="rhema-occ-count">${occ.books[code]}×</span>
-          <span class="material-symbols-outlined" style="font-size:1rem;opacity:0.4;color:var(--secondary-color)">chevron_right</span>
-        </div>
-      </div>`).join('');
-
-  return `
+  if (!occ) return toggle + `<p style="opacity:.5;font-size:.85rem">No occurrence data found.</p>`;
+  const bookRows = RHEMA_BOOK_ORDER.filter(code => occ.books[code]).map(code => row(code, occ.books[code])).join('');
+  return toggle + `
     <div class="rhema-occ-total">Appears <span>${occ.total}</span>× in Rhema</div>
     <div class="rhema-occ-list">${bookRows}</div>`;
 }
@@ -51524,7 +51657,7 @@ function openRhemaBookVerses(code, strongs) {
   const bookText = (_wlTextForLayer(layer) || {})[code];
   if (!bookText) return;
 
-  const formNorm = _wlSelectedForm ? _stripGreekAccents(_wlSelectedForm).toLowerCase() : null;
+  const formNorm = _wlSelectedForm ? _rhemaFormKey(_wlSelectedForm) : null;
   const refs = [];
   const chapters = Object.keys(bookText).sort((a,b) => +a - +b);
   for (const ch of chapters) {
@@ -51535,7 +51668,7 @@ function openRhemaBookVerses(code, strongs) {
       // unnumbered (οὕτως…) and the εἷς/εἰς fix are counted too.
       const isWord = (w) => String((_rhemaResolveWord(w, code, ch) || w)[1]) === String(strongs);
       const wordIdx = formNorm
-        ? words.findIndex(w => isWord(w) && _stripGreekAccents(w[0]).toLowerCase() === formNorm)
+        ? words.findIndex(w => isWord(w) && _rhemaFormKey(w[0]) === formNorm)
         : words.findIndex(isWord);
       if (wordIdx >= 0) refs.push({ ch, v, wordIdx, words });
     }
@@ -51606,7 +51739,11 @@ function _rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver) {
       const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer(code);
       const d = _rhemaMeaningDecision(_rhemaResolveWord(words[wordIdx], code, ch), { layer, book: code, chapter: ch, verse: v });
       const meanings = _rhemaBridgeMeanings(d.entry, d.lex);
-      const bsbEng = _rhemaBsbEnglishForTokens(words, code, ch, v);
+      // Old Testament: the Berean word table for this exact Hebrew verse;
+      // New Testament: the Greek one.
+      const bsbEng = isRhemaOTBook(code)
+        ? words.map((_, i) => _rhemaHebILWord(code, ch, v, i)?.en || null)
+        : _rhemaBsbEnglishForTokens(words, code, ch, v);
       const items = words.map((w, i) => i === wordIdx
         ? { bsb: bsbEng[i], gloss: String(d.gloss || '').split(/[;,(]/)[0], meanings }
         : { bsb: bsbEng[i] });
@@ -51646,10 +51783,25 @@ function renderRhemaBookVerses() {
   const bookName = _rhemaBookName(code);
   const inSandbox = document.getElementById('ssWordDetailSheet')?.classList.contains('open');
 
+  // Old Testament occurrences are listed by the Hebrew's own chapter:verse;
+  // show and open them by the English reference (Hebrew Malachi 3:19 is
+  // English 4:1), and fetch the book's Berean word table for the highlight.
+  const isOT = isRhemaOTBook(code);
+  const vmap = isOT ? _rhemaVersificationFor(code) : null;
+  const engRef = (ch, v) => {
+    const e = vmap?.o2e.get(`${ch}:${v}`);
+    if (!e || e.endsWith(':title')) return { ch: String(ch), v: String(v), title: !!e };
+    const [ec, ev] = e.split(':');
+    return { ch: ec, v: ev, title: false };
+  };
+  if (isOT && _rhemaBVEnglish && !_rhemaHebILData(code)) {
+    _rhemaLoadHebIL(code).then(d => { if (d && _rhemaBVCode === code && _rhemaBVStrongs === strongs) renderRhemaBookVerses(); });
+  }
   const rows = refs.map(({ ch, v, wordIdx, words }) => {
     let previewHtml;
+    const er = isOT ? engRef(ch, v) : { ch, v };
     if (_rhemaBVEnglish) {
-      const { text, ver } = _rhemaBVVerseText(code, ch, v);
+      const { text, ver } = _rhemaBVVerseText(code, er.ch, er.v);
       previewHtml = `<span class="rhema-xref-verse-text">${_rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver)}</span>`;
     } else {
       const start = Math.max(0, wordIdx - 3);
@@ -51660,10 +51812,10 @@ function renderRhemaBookVerses() {
       previewHtml = `<span class="rhema-xref-verse-text">…${preview}…</span>`;
     }
     const jumpFn = inSandbox
-      ? `closeSandboxWordDetail();jumpToRhemaVerse('${code}','${ch}','${v}',${strongs})`
-      : `jumpToRhemaVerse('${code}','${ch}','${v}',${strongs})`;
+      ? `closeSandboxWordDetail();jumpToRhemaVerse('${code}','${er.ch}','${er.v}',${strongs})`
+      : `jumpToRhemaVerse('${code}','${er.ch}','${er.v}',${strongs})`;
     return `<div class="rhema-xref-verse-row" onclick="${jumpFn}">
-      <span class="rhema-xref-verse-ref">${ch}:${v}</span>
+      <span class="rhema-xref-verse-ref">${er.ch}:${er.v}${er.title ? ' <small>(title)</small>' : ''}</span>
       ${previewHtml}
     </div>`;
   }).join('');
