@@ -8988,8 +8988,7 @@ function _updateWsVerseDisplay() {
 
 function wsNavVerse(delta) {
   if (!_rhemaData() || !_rhemaBook || !_rhemaChapter) return;
-  const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
-  const verses = Object.keys(chapterData).map(Number).sort((a, b) => a - b);
+  const verses = _rhemaVerseList(_rhemaBook, _rhemaChapter).map(Number);
   const idx = verses.indexOf(Number(_rhemaVerse));
   if (idx === -1) return;
   const newIdx = idx + delta;
@@ -9057,7 +9056,7 @@ function _getVerseSnippet() {
     const eng = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse) || '';
     return eng.length > 90 ? eng.slice(0, 87) + '...' : eng;
   }
-  const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
+  const words = _rhemaOrigWords(_rhemaBook, _rhemaChapter, _rhemaVerse);
   if (!words.length) return '';
   const greek = words.slice(0, 10).map(w => w[0]).join(' ');
   return greek.length > 60 ? greek.slice(0, 57) + '…' : greek;
@@ -22792,7 +22791,7 @@ function _saveRhemaPosition() {
     return;
   }
   const verseSnippet = _rhemaEnglishText(_rhemaBook, _rhemaChapter, _rhemaVerse);
-  const greekSnippet = _rhemaData() ? (((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {})[_rhemaVerse] || []).map(w => w[0]).join(' ') : '';
+  const greekSnippet = _rhemaData() ? _rhemaOrigWords(_rhemaBook, _rhemaChapter, _rhemaVerse).map(w => w[0]).join(' ') : '';
   const pos = { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion(), translation: _rhemaEnglishLabel(), ts: Date.now(), snippet: verseSnippet, greek: greekSnippet };
   localStorage.setItem('rhemaLastPos', JSON.stringify(pos));
   if (uid && window.LB) {
@@ -30332,7 +30331,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.550";
+const APP_VERSION = "3.0.551";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30355,6 +30354,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.551 &mdash; Hebrew and Septuagint line up with your English</div>
+<ul>
+  <li><strong>Same passage, every language</strong> &mdash; In the Old Testament, chapters and verses always follow your English Bible. Switch to Hebrew or the Septuagint and you see the same passage, even where they number it differently (English Malachi 4 shows Hebrew Malachi 3:19&ndash;24; English Psalm 23 shows Septuagint Psalm 22).</li>
+  <li><strong>A note says why</strong> &mdash; When the Hebrew or Greek numbers a passage differently, a short note explains where it is and why. Psalm titles show as &ldquo;Title&rdquo;.</li>
+  <li><strong>Honest where they differ</strong> &mdash; In places where the Septuagint adds, drops or moves lines (parts of Jeremiah, Daniel, Exodus), you see the whole Greek passage with a note that it won&rsquo;t match verse for verse.</li>
+  <li><strong>Psalm 151</strong> &mdash; Found only in the Septuagint, it&rsquo;s in the Psalms list when you read the Septuagint.</li>
+</ul>
 <div class="un-version-label">v3.0.550 &mdash; Every chapter, every time</div>
 <ul>
   <li><strong>Steady chapter list</strong> &mdash; The book and chapter picker always lists all 66 books and every chapter right away, even while the Hebrew and Greek text is still loading. No more missing chapters like Proverbs 24.</li>
@@ -38700,11 +38706,155 @@ function _rhemaBookOrder() {
   return RHEMA_BOOK_ORDER.filter(code => text[code]);
 }
 
-// Every chapter of every book, fixed. The big Hebrew/Greek text files load in
-// the background, so building the pickers from whatever text happened to be
-// loaded made chapters (and whole books) blink in and out. The pickers use the
-// English chapters (this table until the English text is in), and for the Old
-// Testament also any extra chapter the Hebrew or Septuagint has.
+// ── Old Testament numbering (English ↔ Hebrew ↔ Septuagint) ──────────────────
+// English chapter and verse numbers are the address everywhere in the reader:
+// the picker, next/back, search, notes, highlights. The Hebrew (Masoretic)
+// and the Septuagint (Rahlfs) sometimes number the same passage differently:
+// chapter breaks in other places (English Malachi 4 = Hebrew 3:19-24),
+// psalm titles counted as verse 1, the Septuagint's Psalms one behind, its
+// Jeremiah 25-51 in another order, its Proverbs 25-29 at 30-36, passages it
+// adds or leaves out. This works out, from the texts themselves, which
+// original verses belong to each English chapter, so switching to Hebrew or
+// Greek always shows the same passage — with a note explaining any difference.
+function rhemaBuildVersification(book, layer, engBook, origBook) {
+  const chs = t => Object.keys(t || {}).map(Number).filter(n => n > 0).sort((a, b) => a - b);
+  const vs = (t, c) => Object.keys((t || {})[c] || {}).map(Number).filter(n => n >= 0).sort((a, b) => a - b);
+  const E = chs(engBook), O = chs(origBook);
+  const segsFor = {}; // eng chapter -> [{c, from, to}] in original
+  const whole = c => ({ c, from: -Infinity, to: Infinity });
+  const R = (c, from, to) => ({ c, from, to });
+  let curated = null;
+  if (layer === 'lxx' && book === 'PSA') {
+    curated = {};
+    for (const e of E) {
+      if (e <= 8 || e >= 148) curated[e] = [whole(e)];
+      else if (e === 9) curated[e] = [R(9, 0, 21)];
+      else if (e === 10) curated[e] = [R(9, 22, 999)];
+      else if (e <= 113) curated[e] = [whole(e - 1)];
+      else if (e === 114) curated[e] = [R(113, 0, 8)];
+      else if (e === 115) curated[e] = [R(113, 9, 999)];
+      else if (e === 116) curated[e] = [whole(114), whole(115)];
+      else if (e <= 146) curated[e] = [whole(e - 1)];
+      else if (e === 147) curated[e] = [whole(146), whole(147)];
+    }
+  } else if (layer === 'lxx' && book === 'PRO') {
+    curated = {};
+    for (const e of E) curated[e] = [whole(e >= 25 && e <= 29 ? e + 7 : e)];
+  } else if (layer === 'lxx' && book === 'JER') {
+    curated = {};
+    // Rahlfs order: the oracles on the nations (English 46-51) sit in 25-31,
+    // so English 26-43 are LXX 33-50, and 44-45 share LXX 51.
+    const m = { 25: [R(25, 0, 13), R(32, 0, 999)], 46: [whole(26)], 47: [R(29, 0, 999)], 48: [whole(31)],
+      49: [R(30, 17, 22), R(30, 1, 16), R(30, 29, 33), R(30, 23, 28), R(25, 14, 999)], 50: [whole(27)], 51: [whole(28)], 44: [R(51, 0, 30)], 45: [R(51, 31, 999)] };
+    for (const e of E) curated[e] = m[e] || [whole(e >= 26 && e <= 43 ? e + 7 : e)];
+  }
+  if (curated) Object.assign(segsFor, curated);
+  else if (book === 'PSA') { for (const e of E) segsFor[e] = [whole(e)]; }
+  else {
+    // Generic: walk chapter totals; a region closes when both sides' totals
+    // match at a chapter end (chapter breaks moved, nothing added or lost).
+    const ec = E.map(c => [c, vs(engBook, c).length]), oc = O.map(c => [c, vs(origBook, c).length]);
+    let i = 0, j = 0;
+    while (i < ec.length) {
+      let si = i, sj = j, sE = 0, sO = 0, ok = false;
+      while (i < ec.length || j < oc.length) {
+        if ((sE <= sO && i < ec.length) || j >= oc.length) sE += ec[i++][1]; else sO += oc[j++][1];
+        // Only a real match when both sides span a similar number of chapters
+        // (Malachi 3-4 = Hebrew 3 is fine; four chapters = two is chance).
+        if (sE === sO && sE > 0) { ok = Math.abs((i - si) - (j - sj)) <= 1 && Math.max(i - si, j - sj) <= 3; break; }
+        if (i - si > 3 || j - sj > 3) break;
+      }
+      if (ok) {
+        // Exact region: map verses in order.
+        const eList = ec.slice(si, i).flatMap(([c]) => vs(engBook, c).map(v => [c, v]));
+        const oList = oc.slice(sj, j).flatMap(([c]) => vs(origBook, c).map(v => [c, v]));
+        eList.forEach(([c, v], k) => { (segsFor[c] ||= []).push({ exact: [oList[k][0], oList[k][1]], ev: v }); });
+      } else {
+        // No clean match: pair the same-numbered chapter and flag it.
+        i = si + 1; j = Math.max(sj, oc.findIndex(x => x[0] === ec[si][0]));
+        if (j < 0) j = sj;
+        const c = ec[si][0];
+        segsFor[c] = [{ ...whole(c), approx: true }];
+        j = oc.findIndex(x => x[0] > c); if (j < 0) j = oc.length;
+      }
+    }
+  }
+  // Turn segments into verse pairs and, per English chapter, the list of
+  // original verses to show (in the original's order).
+  const e2o = new Map(), o2e = new Map(), approx = new Set(), show = {};
+  for (const e of E) {
+    const segs = segsFor[e] || [whole(e)];
+    const eVs = vs(engBook, e);
+    if (segs.some(s => s.exact)) {
+      show[e] = segs.map(s => s.exact);
+      segs.forEach(s => { e2o.set(`${e}:${s.ev}`, `${s.exact[0]}:${s.exact[1]}`); o2e.set(`${s.exact[0]}:${s.exact[1]}`, `${e}:${s.ev}`); });
+      continue;
+    }
+    const oVs = segs.flatMap(s => vs(origBook, s.c).filter(v => v >= s.from && v <= s.to).map(v => [s.c, v]));
+    show[e] = oVs;
+    let off = 0, isApprox = segs.some(s => s.approx);
+    if (!isApprox && oVs.length > eVs.length && oVs.length - eVs.length <= 3 && (segs[0].from === -Infinity || segs[0].from === 0)) off = oVs.length - eVs.length; // titles counted as verses
+    else if (oVs.length !== eVs.length) isApprox = true;
+    if (isApprox) { approx.add(e); continue; } // shown whole, never paired verse by verse
+    eVs.forEach((v, k) => { const o = oVs[k + off]; if (o) { e2o.set(`${e}:${v}`, `${o[0]}:${o[1]}`); o2e.set(`${o[0]}:${o[1]}`, `${e}:${v}`); } });
+    oVs.slice(0, off).forEach(o => o2e.set(`${o[0]}:${o[1]}`, `${e}:title`));
+  }
+  // Original chapters that no English chapter shows (e.g. LXX Psalm 151).
+  const shown = new Set(Object.values(show).flat().map(([c, v]) => `${c}:${v}`));
+  const extra = O.filter(c => !vs(origBook, c).some(v => shown.has(`${c}:${v}`)));
+  extra.forEach(c => { show[c] = show[c] || vs(origBook, c).map(v => [c, v]); });
+  const missingVerses = O.flatMap(c => vs(origBook, c).filter(v => !shown.has(`${c}:${v}`) && !extra.includes(c)).map(v => `${c}:${v}`));
+  return { e2o, o2e, approx, show, extra, missingVerses };
+}
+
+const _rhemaVersificationCache = new Map();
+function _rhemaVersificationFor(book) {
+  if (!book || !isRhemaOTBook(book)) return null;
+  const lxx = _rhemaOTLayer === 'lxx';
+  const orig = lxx ? window.RhemaLXX?.text?.[book] : window.RhemaHebrewOT?.text?.[book];
+  const eng = _rhemaEnglishData()?.[book];
+  if (!orig || !eng) return null;
+  const key = `${lxx ? 'lxx' : 'hebrew'}|${_rhemaEnglishVersion()}|${book}`;
+  if (!_rhemaVersificationCache.has(key)) {
+    try { _rhemaVersificationCache.set(key, rhemaBuildVersification(book, lxx ? 'lxx' : 'hebrew', eng, orig)); }
+    catch (e) { console.warn('versification', book, e); _rhemaVersificationCache.set(key, null); }
+  }
+  return _rhemaVersificationCache.get(key);
+}
+// The original-language spot for an English chapter:verse ([chapter, verse]).
+function _rhemaOrigRef(book, chapter, verse) {
+  const m = _rhemaVersificationFor(book);
+  const hit = m?.e2o.get(`${Number(chapter)}:${Number(verse)}`);
+  if (hit) { const [c, v] = hit.split(':'); return [c, v]; }
+  return [String(chapter), String(verse)];
+}
+function _rhemaOrigWords(book, chapter, verse) {
+  const [c, v] = _rhemaOrigRef(book, chapter, verse);
+  return ((_rhemaText()[book] || {})[c] || {})[v] || [];
+}
+// Original verses to show for an English chapter, in the original's order.
+function _rhemaOrigChapterList(book, chapter) {
+  const m = _rhemaVersificationFor(book);
+  const list = m?.show[Number(chapter)];
+  if (list) return list.map(([c, v]) => [String(c), String(v)]);
+  return Object.keys((_rhemaText()[book] || {})[chapter] || {}).map(Number).sort((a, b) => a - b).map(v => [String(chapter), String(v)]);
+}
+function _rhemaOrigChapterWords(book, chapter) {
+  const T = _rhemaText()[book] || {};
+  return _rhemaOrigChapterList(book, chapter).flatMap(([c, v]) => (T[c] || {})[v] || []);
+}
+// The verses of a chapter in the reader's numbering: English for the Old
+// Testament (once the English is in), the Greek text's for the New.
+function _rhemaVerseList(book, chapter) {
+  if (isRhemaOTBook(book)) {
+    const eng = Object.keys((_rhemaEnglishData()?.[book] || {})[String(chapter)] || {}).map(Number).filter(n => n > 0);
+    if (eng.length) return eng.sort((a, b) => a - b).map(String);
+  }
+  return Object.keys((_rhemaText()[book] || {})[chapter] || {}).map(Number).sort((a, b) => a - b).map(String);
+}
+
+// Every chapter of every book, fixed (English numbering). Used until the
+// English text is in, so the pickers never wait on a download.
 const RHEMA_CHAPTER_COUNTS = {
   GEN:50, EXO:40, LEV:27, NUM:36, DEU:34, JOS:24, JDG:21, RUT:4, '1SA':31, '2SA':24, '1KI':22,
   '2KI':25, '1CH':29, '2CH':36, EZR:10, NEH:13, EST:10, JOB:42, PSA:150, PRO:31, ECC:12, SNG:8,
@@ -38715,20 +38865,16 @@ const RHEMA_CHAPTER_COUNTS = {
 };
 function _rhemaPickerBooks() { return RHEMA_BOOK_ORDER.slice(); }
 function _rhemaChapterList(book) {
-  let loaded = null;
-  try { loaded = _rhemaText()[book] || null; } catch (e) {}
-  const keys = loaded ? Object.keys(loaded).map(Number).filter(c => c > 0) : [];
-  const set = new Set(keys);
-  if (!keys.length || isRhemaOTBook(book)) {
-    // Old Testament: every English chapter too (the Hebrew and the Septuagint
-    // number some books differently: Malachi 4, LXX Proverbs 25-29), plus any
-    // extra chapter the original has (Joel 4, Psalm 151).
-    const eng = Object.keys(_rhemaEnglishData()?.[book] || {}).map(Number).filter(c => c > 0);
-    eng.forEach(c => set.add(c));
-    if (!keys.length && !eng.length) {
-      for (let i = 1; i <= (RHEMA_CHAPTER_COUNTS[book] || 1); i++) set.add(i);
-    }
+  const set = new Set();
+  if (isRhemaOTBook(book)) {
+    Object.keys(_rhemaEnglishData()?.[book] || {}).map(Number).filter(c => c > 0).forEach(c => set.add(c));
+    (_rhemaVersificationFor(book)?.extra || []).forEach(c => set.add(Number(c))); // e.g. LXX Psalm 151
+  } else {
+    let loaded = null;
+    try { loaded = _rhemaText()[book] || null; } catch (e) {}
+    Object.keys(loaded || {}).map(Number).filter(c => c > 0).forEach(c => set.add(c));
   }
+  if (!set.size) for (let i = 1; i <= (RHEMA_CHAPTER_COUNTS[book] || 1); i++) set.add(i);
   return [...set].sort((a, b) => a - b).map(String);
 }
 
@@ -39406,8 +39552,7 @@ function _rhemaFlowPresentCats() {
     _rhemaAnalyzeEnglishFlow(text, _rhemaBook, _rhemaChapter, verse).cats.forEach((cat) => cats.add(cat));
   };
   if (_rhemaFullChapter) {
-    const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
-    Object.keys(chapterData).forEach(addVerse);
+    _rhemaVerseList(_rhemaBook, _rhemaChapter).forEach(addVerse);
   } else {
     addVerse(_rhemaVerse);
   }
@@ -39440,8 +39585,7 @@ function _rhemaEnglishPresentCats() {
     _rhemaEnglishVerseCats(_rhemaBook, _rhemaChapter, verse, text).forEach((cat) => cats.add(cat));
   };
   if (_rhemaFullChapter) {
-    const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
-    Object.keys(chapterData).forEach(addVerse);
+    _rhemaVerseList(_rhemaBook, _rhemaChapter).forEach(addVerse);
   } else {
     addVerse(_rhemaVerse);
   }
@@ -41559,7 +41703,7 @@ function _rhemaRenderInterlinear(ref) {
   if (!p) { gridEl.innerHTML = ''; return; }
   const layer = getCurrentOriginalLanguageLayer();
   const isHebrew = layer === 'hebrew';
-  const words = (_rhemaText()[p.book] || {})[p.chapter]?.[p.verse] || [];
+  const words = _rhemaOrigWords(p.book, p.chapter, p.verse);
   if (!words.length) {
     gridEl.innerHTML = '<div class="rhema-il-loading">No original-language text is available for this verse yet.</div>';
     _rhemaSetInterlinearVersionNote('');
@@ -42735,10 +42879,9 @@ function toggleRhemaHighlight(cat) {
 
   let words;
   if (_rhemaFullChapter) {
-    const chData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
-    words = Object.values(chData).flat();
+    words = _rhemaOrigChapterWords(_rhemaBook, _rhemaChapter);
   } else {
-    words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
+    words = _rhemaOrigWords(_rhemaBook, _rhemaChapter, _rhemaVerse);
   }
   const hasMatch = words.some(w => _rhemaOriginalHighlightKey(w) === cat);
 
@@ -42774,10 +42917,9 @@ function updateHighlightToolbar() {
   }
   let words;
   if (_rhemaFullChapter) {
-    const chData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
-    words = Object.values(chData).flat();
+    words = _rhemaOrigChapterWords(_rhemaBook, _rhemaChapter);
   } else {
-    words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
+    words = _rhemaOrigWords(_rhemaBook, _rhemaChapter, _rhemaVerse);
   }
   for (const cat of Object.keys(HIGHLIGHT_CATS)) {
     const btn = document.querySelector(`.rhema-hl-pill[data-cat="${cat}"]`);
@@ -44900,7 +45042,7 @@ function openRhemaVersePicker() {
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   const overlay = document.getElementById('rhemaVersePickerOverlay');
   if (!overlay || !_rhemaData()) return;
-  const verses = Object.keys((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {}).sort((a,b) => +a-+b);
+  const verses = _rhemaVerseList(_rhemaBook, _rhemaChapter);
   document.getElementById('rhemaVerseGrid').innerHTML = verses.map(v => {
     const sel = v === _rhemaVerse ? ' selected' : '';
     return `<div class="rhema-num-cell${sel}" onclick="rhemaSelectVerse('${v}')">${v}</div>`;
@@ -45056,7 +45198,7 @@ function _rhemaAdjacentBook(dir) {
 }
 
 function _rhemaFirstVerseOfChapter(book, chapter) {
-  const verses = Object.keys((_rhemaText()[book] || {})[chapter] || {}).sort((a, b) => +a - +b);
+  const verses = _rhemaVerseList(book, chapter);
   return verses[0] || '1';
 }
 
@@ -45066,7 +45208,7 @@ function _rhemaLastChapterOfBook(book) {
 }
 
 function _rhemaLastVerseOfChapter(book, chapter) {
-  const verses = Object.keys((_rhemaText()[book] || {})[chapter] || {}).sort((a, b) => +a - +b);
+  const verses = _rhemaVerseList(book, chapter);
   return verses[verses.length - 1] || '1';
 }
 
@@ -45262,7 +45404,7 @@ function rhemaPrevVerse() {
       return;
     }
   } else {
-    const verses = Object.keys((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {}).sort((a,b) => +a - +b);
+    const verses = _rhemaVerseList(_rhemaBook, _rhemaChapter);
     const idx = verses.indexOf(_rhemaVerse);
     if (idx > 0) {
       _rhemaVerse = verses[idx - 1];
@@ -45317,7 +45459,7 @@ function rhemaNextVerse() {
       changed = true;
     }
   } else {
-    const verses = Object.keys((_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {}).sort((a,b) => +a - +b);
+    const verses = _rhemaVerseList(_rhemaBook, _rhemaChapter);
     const idx = verses.indexOf(_rhemaVerse);
     if (idx < verses.length - 1) {
       _rhemaVerse = verses[idx + 1];
@@ -45819,8 +45961,10 @@ function _rhemaMeaningDecision(word = [], {
   return { word: resolved, lex, gloss, definition, source, confidence, evidence, inflectedGloss, summary, deep, entry: loadedEntry };
 }
 
-function _renderVerseWords(words, verse) {
-  const vArg = verse ? `, '${verse}'` : '';
+function _renderVerseWords(words, verse, ochapter) {
+  // ochapter: the original-language chapter these words come from, when the
+  // Hebrew/Greek pane shows a passage the original numbers elsewhere.
+  const vArg = verse ? `, '${verse}'${ochapter ? `, '${ochapter}'` : ''}` : '';
   const variantMap = _rhemaVariantMap(words, verse);
   const layer = getCurrentOriginalLanguageLayer();
   const isHebrew = layer === 'hebrew';
@@ -45870,37 +46014,62 @@ function _rhemaBlockScrollTop(body, block) {
   return block.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - chromeH;
 }
 
-// Where the Hebrew or the Septuagint numbers a passage differently from
-// English Bibles, say so in plain words and offer a one-tap jump to the
-// matching chapter. pane: 'orig' (Greek/Hebrew text) or 'eng' (English).
-function _rhemaVersificationNote(pane, book, chapter, hasOrig, hasEng) {
-  if (!isRhemaOTBook(book)) return '';
-  const ch = Number(chapter);
-  const lxx = _rhemaOTLayer === 'lxx';
-  const layer = lxx ? 'The Septuagint' : 'The Hebrew text';
-  const name = _rhemaBookName(book);
-  const jump = (c, label) => `<button type="button" class="rhema-versification-jump" onclick="rhemaSelectBookChapter('${book}','${c}')">${_escapeRhemaAttr(label || `Open ${name} ${c}`)}</button>`;
-  const box = (html) => `<div class="rhema-versification-note"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span><div>${html}</div></div>`;
-  if (pane === 'orig') {
-    if (book === 'PRO' && lxx && ch >= 25 && ch <= 29) return box(`${layer} places this chapter later in Proverbs, at chapter ${ch + 7}.<br>${jump(ch + 7)}`);
-    if (book === 'MAL' && ch === 4) return box(`${layer} counts these verses as Malachi 3:19–24.<br>${jump(3)}`);
-    if (!hasOrig && hasEng) return box(`${layer} numbers this part of ${_escapeRhemaAttr(name)} differently, so there's no chapter ${ch} in it. The English has it.`);
-    if (book === 'JOL' && ch === 3 && hasOrig) return box(`${layer}'s Joel 3 is Joel 2:28–32 in English Bibles. English Joel 3 is its Joel 4.<br>${jump(4, 'Open Joel 4')}`);
-    if (book === 'PSA' && lxx && ch >= 9 && ch <= 147) {
-      const eng = ch === 9 ? 'Psalms 9–10' : ch === 113 ? 'Psalms 114–115' : (ch === 114 || ch === 115) ? 'Psalm 116'
-        : (ch === 146 || ch === 147) ? 'Psalm 147' : `Psalm ${ch + 1}`;
-      return box(`The Septuagint numbers most Psalms one lower than English Bibles. Its Psalm ${ch} is <b>${eng}</b> in English. (English Psalm 23 is its Psalm 22.)`);
-    }
-    if (book === 'JER' && lxx && ch >= 25) return box(`The Septuagint arranges Jeremiah 25–51 in a different order, so this Greek chapter may not match the English chapter with the same number.`);
-    return '';
+// The note on top of the Hebrew/Greek pane when that text numbers this
+// English chapter differently: where the passage is, and why.
+function _rhemaRangesText(book, list) {
+  const parts = [];
+  for (const [c, v] of list) {
+    const last = parts[parts.length - 1];
+    if (last && last.c === c && +v === +last.to + 1) last.to = v;
+    else parts.push({ c, from: v, to: v });
   }
-  // English pane
-  if (hasEng) return '';
-  if (book === 'PRO' && lxx && ch >= 32 && ch <= 36) return box(`This is the Septuagint's number for <b>Proverbs ${ch - 7}</b> in English Bibles.<br>${jump(ch - 7)}`);
-  if (book === 'JOL' && ch === 4) return box(`${layer}'s Joel 4 is <b>Joel 3</b> in English Bibles.<br>${jump(3)}`);
-  if (book === 'PSA' && ch === 151) return box(`Psalm 151 is found only in the Septuagint, so there's no English version here. Switch the language to Greek to read it.`);
-  if (hasOrig) return box(`English Bibles number this part of ${_escapeRhemaAttr(name)} differently, so there's no English chapter ${ch}. Switch the language to read the original here.`);
-  return '';
+  return parts.map(p => `${p.c}:${p.from}${p.to !== p.from ? '–' + p.to : ''}`);
+}
+function _rhemaOrigNoteHtml(book, chapter, list, vmap) {
+  if (!isRhemaOTBook(book)) return '';
+  const lxx = _rhemaOTLayer === 'lxx';
+  const layer = lxx ? 'the Septuagint' : 'the Hebrew';
+  const Layer = lxx ? 'The Septuagint' : 'The Hebrew';
+  const name = _escapeRhemaAttr(_rhemaBookName(book));
+  const ch = Number(chapter);
+  const box = html => `<div class="rhema-versification-note"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span><div>${html}</div></div>`;
+  if (!list.length) return box(`${Layer} has no text for ${name} ${ch}. Switch the language to English to read it.`);
+  if (!vmap) return '';
+  const engVerses = Object.keys((_rhemaEnglishData()?.[book] || {})[String(ch)] || {});
+  if (!engVerses.length) return ''; // a chapter only the original has (Psalm 151): the English pane explains
+  const ranges = _rhemaRangesText(book, list);
+  const chapters = [...new Set(list.map(([c]) => String(c)))];
+  const titles = list.filter(([c, v]) => (vmap.o2e.get(`${c}:${v}`) || '').endsWith(':title')).length;
+  // "Psalm 22", not "Psalms 22".
+  const one = book === 'PSA' ? 'Psalm' : name;
+  if (vmap.approx.has(ch)) {
+    const which = chapters.length === 1 && chapters[0] === String(ch)
+      ? `${layer}'s own ${one} ${ch}`
+      : `${layer}'s ${one} ${chapters.join(', ')}`;
+    const order = lxx && book === 'JER' && chapters[0] !== String(ch) ? " The Septuagint arranges Jeremiah's chapters in a different order." : '';
+    return box(lxx
+      ? `Shown here is ${which}.${order} The Greek translation adds, leaves out or moves some lines in this part, so it won't match the English verse for verse.`
+      : `Shown here is ${which}. The Hebrew numbers a verse or two differently around here, so it may not match the English verse for verse.`);
+  }
+  const sameNumbers = chapters.length === 1 && chapters[0] === String(ch) && !titles &&
+    list.every(([c, v]) => vmap.o2e.get(`${c}:${v}`) === `${ch}:${v}`);
+  if (sameNumbers) return '';
+  if (chapters.length === 1 && chapters[0] === String(ch) && titles) {
+    return box(`${Layer} counts this psalm's title as ${titles === 1 ? 'verse 1' : `verses 1–${titles}`} (shown as “Title”), so its verse numbers run ${titles === 1 ? 'one' : titles} ahead of the English.`);
+  }
+  let why = `${Layer} starts and ends some chapters in different places than English Bibles.`;
+  if (lxx && book === 'PSA') why = 'The Septuagint numbers most Psalms one behind English Bibles (English Psalm 23 is its Psalm 22).';
+  else if (lxx && book === 'JER') why = "The Septuagint arranges Jeremiah's chapters in a different order.";
+  else if (lxx && book === 'PRO') why = 'The Septuagint places these proverbs later in the book.';
+  return box(`In ${layer} this passage is <b>${one} ${ranges.join(' and ')}</b>. ${why} Verse numbers below are ${layer}'s own.`);
+}
+// English pane: only for a chapter the original has and English Bibles don't.
+function _rhemaEngNoteHtml(book, chapter, hasEng, hasOrig) {
+  if (hasEng || !hasOrig) return '';
+  const lxx = _rhemaOTLayer === 'lxx';
+  const box = html => `<div class="rhema-versification-note"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span><div>${html}</div></div>`;
+  if (book === 'PSA' && Number(chapter) === 151) return box(`Psalm 151 is found only in the Septuagint, so English Bibles don't include it. Switch the language to Greek to read it.`);
+  return box(`English Bibles don't have ${_escapeRhemaAttr(_rhemaBookName(book))} ${chapter}. It's only in ${lxx ? 'the Septuagint' : 'the Hebrew'}. Switch the language to read it.`);
 }
 
 function renderRhemaVerse() {
@@ -45984,26 +46153,35 @@ function renderRhemaVerse() {
     display.classList.remove('greek-only');
     display.classList.toggle('chapter-mode', !_rhemaSyntaxMode);
     display.classList.toggle('rsx-chapter-mode', _rhemaSyntaxMode);
-    // The Hebrew and the Septuagint number some passages differently from
-    // English (Malachi 4 is Hebrew 3:19-24; LXX Psalms run one behind). The
-    // English reading lists every English verse of the chapter, so nothing is
-    // hidden just because the original-language text numbers it elsewhere.
-    const engChapter = isRhemaOTBook(_rhemaBook)
-      ? ((_rhemaEnglishData()?.[_rhemaBook] || {})[String(_rhemaChapter)] || {})
-      : {};
-    const englishNums = [...new Set([...verseNums, ...Object.keys(engChapter).map(Number).filter(n => n > 0)])].sort((a, b) => a - b);
-    const hasEngChapter = Object.keys(engChapter).length > 0 || !isRhemaOTBook(_rhemaBook);
-    const origNote = _rhemaVersificationNote('orig', _rhemaBook, _rhemaChapter, verseNums.length > 0, hasEngChapter);
-    const engNote = _rhemaVersificationNote('eng', _rhemaBook, _rhemaChapter, verseNums.length > 0, hasEngChapter);
-    display.innerHTML = _rhemaLayerBadge() + origNote + verseNums.map(vn => {
-      const v = String(vn);
-      const words = chapterData[v] || [];
+    // Old Testament: English numbering is the address. The English pane lists
+    // the English verses; the Hebrew/Greek pane shows the original verses that
+    // ARE this English chapter (maybe numbered elsewhere), each labeled with
+    // its own number when it differs, plus a note explaining why.
+    const isOT = isRhemaOTBook(_rhemaBook);
+    const vmap = isOT ? _rhemaVersificationFor(_rhemaBook) : null;
+    const origList = isOT ? _rhemaOrigChapterList(_rhemaBook, _rhemaChapter) : verseNums.map(v => [String(_rhemaChapter), String(v)]);
+    // English verses only (none for a chapter just the original has, like
+    // Psalm 151 — the English pane explains instead).
+    const englishNums = isOT
+      ? Object.keys((_rhemaEnglishData()?.[_rhemaBook] || {})[String(_rhemaChapter)] || {}).map(Number).filter(n => n > 0).sort((a, b) => a - b)
+      : verseNums;
+    const origNote = isOT ? _rhemaOrigNoteHtml(_rhemaBook, _rhemaChapter, origList, vmap) : '';
+    const engNote = isOT ? _rhemaEngNoteHtml(_rhemaBook, _rhemaChapter, englishNums.length > 0, origList.length > 0) : '';
+    const T = _rhemaText()[_rhemaBook] || {};
+    const here = String(Number(_rhemaChapter));
+    display.innerHTML = _rhemaLayerBadge() + origNote + origList.map(([oc, ov]) => {
+      const words = (T[oc] || {})[ov] || [];
+      const engRef = vmap?.o2e.get(`${oc}:${ov}`) || (oc === here ? `${oc}:${ov}` : '');
+      const [ec, ev] = engRef.split(':');
+      const isTitle = ev === 'title';
+      const v = ec === here && ev && !isTitle ? ev : `${oc}:${ov}`;
+      const label = isTitle ? 'Title' : (oc === here ? ov : `${oc}:${ov}`);
       const isTarget = v === focusVerse;
       const inner = _rhemaSyntaxMode
-        ? _renderSyntaxView(words, v)
-        : `<div class="rhema-chapter-word-grid${_rhemaGreekOnly ? ' greek-only' : ''}${isHebrew ? ' rhema-hebrew-layer' : ''}">${_renderVerseWords(words, v)}</div>`;
-      return `<div class="rhema-chapter-block${isTarget ? ' rhema-chapter-block-target' : ''}" data-verse="${v}">` +
-             `<div class="rhema-chapter-verse-label">${vn}</div>` + inner + `</div>`;
+        ? _renderSyntaxView(words, ov)
+        : `<div class="rhema-chapter-word-grid${_rhemaGreekOnly ? ' greek-only' : ''}${isHebrew ? ' rhema-hebrew-layer' : ''}">${_renderVerseWords(words, ov, oc)}</div>`;
+      return `<div class="rhema-chapter-block${isTarget ? ' rhema-chapter-block-target' : ''}" data-verse="${v}" data-ochapter="${oc}" data-overse="${ov}">` +
+             `<div class="rhema-chapter-verse-label${label !== ov ? ' rhema-verse-label-other' : ''}">${label}</div>` + inner + `</div>`;
     }).join('');
 
     if (EnglishDiv) {
@@ -46056,7 +46234,11 @@ function renderRhemaVerse() {
       _rhemaSetChromeHidden?.(false);
     });
   } else {
-    const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
+    const [svOc, svOv] = _rhemaOrigRef(_rhemaBook, _rhemaChapter, _rhemaVerse);
+    const words = ((_rhemaText()[_rhemaBook] || {})[svOc] || {})[svOv] || [];
+    const svNote = isRhemaOTBook(_rhemaBook) && (svOc !== String(Number(_rhemaChapter)) || svOv !== String(Number(_rhemaVerse)))
+      ? `<div class="rhema-versification-note"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span><div>In ${_rhemaOTLayer === 'lxx' ? 'the Septuagint' : 'the Hebrew'} this verse is <b>${_escapeRhemaAttr(_rhemaBookName(_rhemaBook))} ${svOc}:${svOv}</b>.</div></div>`
+      : '';
     display.classList.remove('chapter-mode', 'rsx-chapter-mode');
     // Single English verse reads in the same Bible-app style as the full
     // chapter view — just one verse.
@@ -46075,7 +46257,9 @@ function renderRhemaVerse() {
       requestAnimationFrame(() => _initDiagramScroll(display.querySelector('.rsx-diagram')));
     } else {
       display.classList.toggle('greek-only', _rhemaGreekOnly);
-      display.innerHTML = _rhemaLayerBadge() + _renderVerseWords(words, null);
+      display.innerHTML = _rhemaLayerBadge() + svNote + (words.length
+        ? _renderVerseWords(words, svOv, svOc)
+        : `<div class="rhema-versification-note"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span><div>This verse isn't in ${_rhemaOTLayer === 'lxx' && isRhemaOTBook(_rhemaBook) ? 'the Septuagint' : 'the original-language text'}.</div></div>`);
       if (EnglishDiv) {
         const engText = _rhemaReaderText(_rhemaBook, _rhemaChapter, _rhemaVerse);
         const _svhl = _rhemaCurMarks()[_rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse)]?.color;
@@ -48610,11 +48794,25 @@ function rhemaFocusEnglishVerse(v) {
 
 // ── Word detail sheet ─────────────────────────────────────────────────────────
 
-function openRhemaSheet(wordIdx, verse) {
+function openRhemaSheet(wordIdx, verse, ochapter) {
   if (!_rhemaData()) return;
-  if (verse) { _rhemaVerse = verse; syncRhemaPicker(); }
-  const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
-  const word  = _rhemaResolveWord(words[wordIdx], _rhemaBook, _rhemaChapter);
+  // The word's real place in the original text. Taps from the Hebrew/Greek
+  // pane carry it (ochapter + verse); anything else gives an English
+  // chapter:verse, which maps to its original spot.
+  let oc, ov;
+  if (ochapter) {
+    oc = String(ochapter); ov = String(verse);
+    const eng = _rhemaVersificationFor(_rhemaBook)?.o2e.get(`${oc}:${ov}`);
+    const [ec, ev] = (eng || '').split(':');
+    if (ec === String(Number(_rhemaChapter)) && ev && ev !== 'title') _rhemaVerse = ev;
+    else if (!eng && oc === String(Number(_rhemaChapter))) _rhemaVerse = ov;
+    syncRhemaPicker();
+  } else {
+    if (verse) { _rhemaVerse = verse; syncRhemaPicker(); }
+    [oc, ov] = _rhemaOrigRef(_rhemaBook, _rhemaChapter, _rhemaVerse);
+  }
+  const words = (_rhemaText()[_rhemaBook] || {})[oc]?.[ov] || [];
+  const word  = _rhemaResolveWord(words[wordIdx], _rhemaBook, oc);
   if (!word) return;
 
   closeRhemaPickerSheet();
@@ -48622,15 +48820,16 @@ function openRhemaSheet(wordIdx, verse) {
   _rhemaActiveWordLayer = getCurrentOriginalLanguageLayer();
   // Where this word was tapped — lets the word study say "in this verse" and
   // line up every translation's rendering of this exact occurrence.
-  window._rhemaWordCtx = { idx: Number(wordIdx), book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, strongs: String(word[1] || '') };
+  window._rhemaWordCtx = { idx: Number(wordIdx), book: _rhemaBook, chapter: oc, verse: ov, strongs: String(word[1] || '') };
 
   // Highlight selected word
   document.querySelectorAll('.rhema-word.selected').forEach(el => el.classList.remove('selected'));
-  document.querySelector(`.rhema-word[data-idx="${wordIdx}"]`)?.classList.add('selected');
+  const blockSel = `#rhemaVerseDisplay .rhema-chapter-block[data-ochapter="${oc}"][data-overse="${ov}"] .rhema-word[data-idx="${wordIdx}"]`;
+  (document.querySelector(blockSel) || document.querySelector(`.rhema-word[data-idx="${wordIdx}"]`))?.classList.add('selected');
 
   // Populate header
   const [surface, strongs, morph, lemma] = word;
-  const lex = _rhemaLexForWord(word, _rhemaActiveWordLayer, _rhemaBook, _rhemaChapter);
+  const lex = _rhemaLexForWord(word, _rhemaActiveWordLayer, _rhemaBook, oc);
 
   document.getElementById('rhemaSheetSurface').textContent = surface;
   document.getElementById('rhemaSheetStrongs').textContent = strongs ? (_rhemaActiveWordLayer === 'hebrew' ? 'H' : 'G') + strongs : (_rhemaActiveWordLayer === 'lxx' ? 'LXX' : '');
@@ -48712,8 +48911,7 @@ function copyRhemaVerseOrChapter() {
   let text = '';
 
   if (_rhemaFullChapter) {
-    const chapterData = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter] || {};
-    const verseNums = Object.keys(chapterData).map(Number).sort((a, b) => a - b);
+    const verseNums = _rhemaVerseList(_rhemaBook, _rhemaChapter).map(Number);
     const header = `${bookName} ${_rhemaChapter}`;
     if (_rhemaShowEnglish) {
       const lines = verseNums.map(vn => {
@@ -48722,9 +48920,11 @@ function copyRhemaVerseOrChapter() {
       }).filter(Boolean);
       text = `${header}\n\n${lines.join('\n')}`;
     } else {
-      const lines = verseNums.map(vn => {
-        const words = chapterData[String(vn)] || [];
-        return `${vn} ${words.map(w => w[0]).join(' ')}`;
+      const T = _rhemaText()[_rhemaBook] || {};
+      const here = String(Number(_rhemaChapter));
+      const lines = _rhemaOrigChapterList(_rhemaBook, _rhemaChapter).map(([oc, ov]) => {
+        const words = (T[oc] || {})[ov] || [];
+        return `${oc === here ? ov : `${oc}:${ov}`} ${words.map(w => w[0]).join(' ')}`;
       });
       text = `${header}\n\n${lines.join('\n')}`;
     }
@@ -48734,7 +48934,7 @@ function copyRhemaVerseOrChapter() {
       const t = _rhemaReaderText(_rhemaBook, _rhemaChapter, _rhemaVerse);
       text = `${ref}\n${t}`;
     } else {
-      const words = (_rhemaText()[_rhemaBook] || {})[_rhemaChapter]?.[_rhemaVerse] || [];
+      const words = _rhemaOrigWords(_rhemaBook, _rhemaChapter, _rhemaVerse);
       text = `${ref}\n${words.map(w => w[0]).join(' ')}`;
     }
   }
@@ -48756,7 +48956,7 @@ function _rhemaVerseTextFor(book, chapter, verse) {
   // like NIV/NKJV/NASB), not the app-wide English mode — otherwise every copy
   // falls back to MSB regardless of what the user selected.
   if (_rhemaShowEnglish) return _rhemaReaderText(book, chapter, verse) || '';
-  const words = (_rhemaText()[book] || {})[String(chapter)]?.[String(verse)] || [];
+  const words = _rhemaOrigWords(book, chapter, verse);
   return words.map(w => w[0]).join(' ');
 }
 function rhemaCopyVerseFromMenu() {
