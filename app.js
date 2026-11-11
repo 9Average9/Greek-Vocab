@@ -9654,7 +9654,7 @@ function openWlWordDetail(strongs, formSurface) {
   _rhemaActiveWord = [surface, strongs, morph];
   _rhemaActiveWordLayer = layer;
   // Populate the standard rhema word sheet
-  document.getElementById('rhemaSheetSurface').textContent = surface;
+  document.getElementById('rhemaSheetSurface').textContent = _rhemaDisplaySurface(surface);
   document.getElementById('rhemaSheetStrongs').textContent = (layer === 'hebrew' ? 'H' : 'G') + strongs;
   document.getElementById('rhemaSheetLemma').textContent   = lex.lemma ? `${lex.lemma}  (${lex.translit || lex.pronounce || ''})` : '';
   // Save-to-study is retired; offer "Add to Word Log" when inside a study.
@@ -30331,7 +30331,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.551";
+const APP_VERSION = "3.0.552";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30354,6 +30354,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.552 &mdash; Cleaner Hebrew layout</div>
+<ul>
+  <li><strong>Tidier Hebrew pane</strong> &mdash; Verse badges read normally and aren&rsquo;t cut off at the edge, the words have proper margins, and a short last row sits centered.</li>
+  <li><strong>No stray dots</strong> &mdash; The Hebrew end-of-verse mark (&#x05C3;) no longer shows up as a random period after the last word.</li>
+</ul>
 <div class="un-version-label">v3.0.551 &mdash; Hebrew and Septuagint line up with your English</div>
 <ul>
   <li><strong>Same passage, every language</strong> &mdash; In the Old Testament, chapters and verses always follow your English Bible. Switch to Hebrew or the Septuagint and you see the same passage, even where they number it differently (English Malachi 4 shows Hebrew Malachi 3:19&ndash;24; English Psalm 23 shows Septuagint Psalm 22).</li>
@@ -45961,6 +45966,13 @@ function _rhemaMeaningDecision(word = [], {
   return { word: resolved, lex, gloss, definition, source, confidence, evidence, inflectedGloss, summary, deep, entry: loadedEntry };
 }
 
+// Hebrew marks every verse end with sof pasuq (׃) and some word breaks with
+// paseq (׀). They're reading punctuation, not part of the word, and showed up
+// as a stray "period" in the word grid, so the grid and word sheet hide them.
+function _rhemaDisplaySurface(surface) {
+  return String(surface || '').replace(/[\u05C3\u05C0]/g, '').trim();
+}
+
 function _renderVerseWords(words, verse, ochapter) {
   // ochapter: the original-language chapter these words come from, when the
   // Hebrew/Greek pane shows a passage the original numbers elsewhere.
@@ -45979,7 +45991,7 @@ function _renderVerseWords(words, verse, ochapter) {
       const variantTag = variant
         ? `<button class="rhema-variant-tag" onclick="event.stopPropagation();showRhemaVariant('${variant.label}', '${_escapeRhemaAttr(variant.text)}')" title="Text variant">var</button>`
         : '';
-      return `<span class="${cls}"${style} data-idx="${i}" onclick="openRhemaSheet(${i}${vArg})"><span class="rhema-greek-text rhema-original-text${isHebrew ? ' rhema-hebrew-text' : ''}">${w[0]}</span>${variantTag}</span>` +
+      return `<span class="${cls}"${style} data-idx="${i}" onclick="openRhemaSheet(${i}${vArg})"><span class="rhema-greek-text rhema-original-text${isHebrew ? ' rhema-hebrew-text' : ''}">${_rhemaDisplaySurface(w[0])}</span>${variantTag}</span>` +
              (i < words.length - 1 ? '<span class="rhema-word-space"> </span>' : '');
     }).join('');
   } else {
@@ -45997,7 +46009,7 @@ function _renderVerseWords(words, verse, ochapter) {
       const variantTag = variant
         ? `<button class="rhema-variant-tag" onclick="event.stopPropagation();showRhemaVariant('${variant.label}', '${_escapeRhemaAttr(variant.text)}')" title="Text variant">var</button>`
         : '';
-      return `<span class="${cls}"${style} data-idx="${i}" onclick="openRhemaSheet(${i}${vArg})"><span class="rhema-greek-text rhema-original-text${isHebrew ? ' rhema-hebrew-text' : ''}">${w[0]}</span>${variantTag}${glossHtml}</span>`;
+      return `<span class="${cls}"${style} data-idx="${i}" onclick="openRhemaSheet(${i}${vArg})"><span class="rhema-greek-text rhema-original-text${isHebrew ? ' rhema-hebrew-text' : ''}">${_rhemaDisplaySurface(w[0])}</span>${variantTag}${glossHtml}</span>`;
     }).join('');
   }
 }
@@ -48831,7 +48843,7 @@ function openRhemaSheet(wordIdx, verse, ochapter) {
   const [surface, strongs, morph, lemma] = word;
   const lex = _rhemaLexForWord(word, _rhemaActiveWordLayer, _rhemaBook, oc);
 
-  document.getElementById('rhemaSheetSurface').textContent = surface;
+  document.getElementById('rhemaSheetSurface').textContent = _rhemaDisplaySurface(surface);
   document.getElementById('rhemaSheetStrongs').textContent = strongs ? (_rhemaActiveWordLayer === 'hebrew' ? 'H' : 'G') + strongs : (_rhemaActiveWordLayer === 'lxx' ? 'LXX' : '');
   document.getElementById('rhemaSheetLemma').textContent   =
     lex.lemma ? `${lex.lemma}  (${lex.translit || lex.pronounce || ''})` : (lemma || '');

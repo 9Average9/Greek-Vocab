@@ -39560,3 +39560,25 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 }
 /* A verse the original numbers in another chapter (e.g. "3:19") or a psalm title */
 .rhema-chapter-verse-label.rhema-verse-label-other { font-size: 0.72rem; }
+
+/* ── Original-language chapter pane: tidy layout ──────────────────────────────
+   Verse badges, notes and the layer label read left to right with a normal
+   margin (they were flipped and clipped in the Hebrew pane). Hebrew words still
+   read right to left; dividers sit between words, and a short last row sits
+   centered instead of looking pushed to one side. */
+.rhema-verse-display.chapter-mode { padding-left: 10px; padding-right: 10px; }
+.rhema-verse-display.chapter-mode.rhema-hebrew-layer { direction: ltr; }
+.rhema-verse-display.chapter-mode > .rhema-layer-label { align-self: center; margin: 2px 0 6px; }
+.rhema-chapter-word-grid.rhema-hebrew-layer {
+  direction: rtl;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 20px;
+}
+.rhema-chapter-word-grid.rhema-hebrew-layer .rhema-word {
+  flex: 0 0 25%;
+  border-left: none;
+  border-right: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
+}
+.rhema-chapter-word-grid.rhema-hebrew-layer .rhema-word:nth-child(4n+1) { border-right: none; }
