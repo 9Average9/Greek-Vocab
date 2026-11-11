@@ -55,7 +55,7 @@ self.addEventListener("notificationclick", (event) => {
 // Before this split, every release renamed the one cache and `activate`
 // deleted the old one, so each update re-downloaded all of the Bible data, and
 // stale-while-revalidate re-fetched multi-megabyte files on every open.
-const APP_SW_VERSION = "3.0.558";
+const APP_SW_VERSION = "3.0.559";
 const SHELL_CACHE = "disciple-builder-v" + APP_SW_VERSION;
 const DATA_CACHE = "disciple-builder-data-v1";
 const KEEP_CACHES = new Set([SHELL_CACHE, DATA_CACHE]);
@@ -74,20 +74,20 @@ const SHELL_NETWORK_TIMEOUT_MS = 3000;
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.558",
+  "./style.css?v=3.0.559",
   "./vocab.js?v=3.0.8",
-  "./rhema-align.js?v=3.0.558",
-  "./app.js?v=3.0.558",
-  "./rhema-word-study.js?v=3.0.558",
+  "./rhema-align.js?v=3.0.559",
+  "./app.js?v=3.0.559",
+  "./rhema-word-study.js?v=3.0.559",
   "./bible-threads.js?v=3.0.402",
-  "./bible-intros.js?v=3.0.558",
+  "./bible-intros.js?v=3.0.559",
   "./rhema-english-dictionary.js?v=3.0.417",
   "./assets/vendor/wink-nlp-en.js?v=3.0.104",
   "./bible-atlas.js?v=3.0.349",
   "./bible-genealogy.js?v=3.0.476",
   "./bible-regions.js?v=3.0.472",
-  "./verse-structure.js?v=3.0.558",
-  "./vs-structure.js?v=3.0.558",
+  "./verse-structure.js?v=3.0.559",
+  "./vs-structure.js?v=3.0.559",
   "./sermon-notes.js?v=3.0.460",
   "./sermon-notes.css?v=3.0.460",
   // Self-hosted fonts (icons + skin fonts) — pinned, they effectively never change
@@ -131,11 +131,11 @@ const FILES_TO_CACHE = [
   "./rhema-scripture-notes.js?v=3.0.160",
   "./rhema-bsb-align.js?v=3.0.2",
   "./rhema-bible-dictionary.js?v=3.0.385",
-  "./rhema-crossrefs-ui.js?v=3.0.558",
+  "./rhema-crossrefs-ui.js?v=3.0.559",
   "./greek-verbs.js?v=3.0.152",
   "./bible-quiz.js?v=3.0.473",
   "./bible-quiz.css?v=3.0.473",
-  "./firebase-lb.js?v=3.0.558",
+  "./firebase-lb.js?v=3.0.559",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",

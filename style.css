@@ -22373,10 +22373,13 @@ body.sandbox-open .rhema-english-display {
 }
 .ss-wd-top {
   display: flex; align-items: center; gap: 10px;
-  padding: 12px 20px 0; flex-shrink: 0;
+  padding: 12px 16px 4px 20px; flex-shrink: 0;
 }
+.ss-wd-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; min-width: 0; flex: 1; }
+.ss-wd-top .sheet-x-close { position: static; flex: 0 0 40px; width: 40px; height: 40px; margin-left: auto; background: color-mix(in srgb, var(--muted-color) 12%, var(--card-color)); color: var(--font-color); border: 1px solid var(--border-color); }
+.ss-wd-top .sheet-x-close:hover { background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color)); }
 .ss-wd-surface {
-  font-size: 1.5rem; font-weight: 700; color: var(--font-color); letter-spacing: 0.02em;
+  font-size: 1.5rem; font-weight: 700; color: var(--font-color); letter-spacing: 0.02em; min-width: 0; overflow-wrap: anywhere;
 }
 .ss-wd-strongs {
   font-size: 0.82rem; font-weight: 600; color: var(--secondary-color);
@@ -35496,8 +35499,36 @@ body.sandbox-open #rhemaSelectionBar:active {
 }
 .rhema-wordpick-group .rhema-word-chips { max-height: none; overflow: visible; margin: 4px 0; }
 #rhemaWordPickChips:has(.rhema-wordpick-group) { max-height: 52vh; }
-.rhema-meaning-card { max-height: 82%; overflow-y: auto; }
-.rhema-meaning-body { display: grid; gap: 12px; margin-top: 8px; }
+.rhema-meaning-card { max-height: min(82%, 720px); display: flex; flex-direction: column; overflow: hidden; }
+.rhema-meaning-head { display: flex; align-items: flex-start; gap: 12px; flex: 0 0 auto; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+.rhema-meaning-head .rhema-note-ref { min-width: 0; flex: 1; margin: 0; padding: 4px 0 0; overflow-wrap: anywhere; }
+.rhema-meaning-head .rhema-note-x { position: static; flex: 0 0 40px; width: 40px; height: 40px; border: 1px solid var(--border-color); background: color-mix(in srgb, var(--muted-color) 12%, var(--card-color)); }
+.rhema-meaning-head .rhema-note-x:hover { background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color)); }
+.rhema-meaning-body { display: grid; gap: 12px; margin-top: 12px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 2px 8px 0; }
+.rhema-meaning-footer { flex: 0 0 auto; border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 4px; }
+#rhemaMeaningLogBtn { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid color-mix(in srgb, var(--secondary-color) 70%, transparent); border-radius: 14px; background: var(--secondary-color); color: #fff; box-shadow: 0 8px 22px -12px var(--secondary-color); font: inherit; font-size: 0.92rem; font-weight: 750; cursor: pointer; transition: transform .16s ease, filter .16s ease; }
+#rhemaMeaningLogBtn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+#rhemaMeaningLogBtn:active { transform: translateY(0); }
+#rhemaMeaningLogBtn .material-symbols-outlined { font-size: 20px; }
+#rhemaMeaningLogBtn.hidden, .rhema-meaning-footer:has(#rhemaMeaningLogBtn.hidden) { display: none; }
+.rhema-il-choice-overlay { z-index: 72; padding: 16px; }
+.rhema-il-choice-card { max-width: 440px; padding: 22px; border-radius: 24px; }
+.rhema-il-choice-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.rhema-il-choice-guide { display: inline-flex; align-items: center; gap: 8px; color: var(--secondary-color); font-size: .78rem; font-weight: 800; letter-spacing: .02em; }
+.rhema-il-choice-guide .material-symbols-outlined { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color)); }
+.rhema-il-choice-x { flex: 0 0 40px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--border-color); background: color-mix(in srgb, var(--muted-color) 12%, var(--card-color)); color: var(--font-color); cursor: pointer; }
+.rhema-il-choice-intro { display: flex; align-items: center; gap: 8px; margin: 14px 0 18px; }
+.rhema-il-choice-intro > div { min-width: 0; flex: 1; }
+.rhema-il-choice-intro img { flex: 0 0 88px; width: 88px; height: 88px; object-fit: contain; }
+.rhema-il-choice-card h3 { margin: 0 0 6px; font-size: 1.35rem; line-height: 1.2; }
+.rhema-il-choice-card p { margin: 0; color: var(--muted-color); line-height: 1.5; font-size: .9rem; }
+.rhema-il-choice-actions { display: grid; gap: 9px; }
+.rhema-il-choice-actions button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px; border: 1px solid var(--border-color); border-radius: 15px; background: color-mix(in srgb, var(--secondary-color) 5%, var(--card-color)); color: var(--font-color); text-align: left; cursor: pointer; }
+.rhema-il-choice-actions button:hover { border-color: var(--secondary-color); background: color-mix(in srgb, var(--secondary-color) 11%, var(--card-color)); }
+.rhema-il-choice-actions button > span:nth-child(2) { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.rhema-il-choice-actions strong { font-size: .95rem; }
+.rhema-il-choice-actions small { color: var(--muted-color); font-size: .75rem; }
+.rhema-il-choice-actions button > .material-symbols-outlined { color: var(--secondary-color); }
 .rhema-meaning-section {
   border: 1px solid rgba(120, 120, 120, 0.18);
   border-radius: 14px;
@@ -35521,12 +35552,14 @@ body.sandbox-open #rhemaSelectionBar:active {
 }
 .rhema-il-head {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 10px;
-  flex-wrap: wrap;
-  padding-right: 46px;
   margin-bottom: 4px;
 }
+.rhema-il-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; min-width: 0; flex: 1; padding-top: 7px; }
+.rhema-il-head .rhema-note-x { position: static; flex: 0 0 40px; width: 40px; height: 40px; border: 1px solid var(--border-color); background: color-mix(in srgb, var(--muted-color) 12%, var(--card-color)); }
+.rhema-il-head .rhema-note-x:hover { background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color)); }
 .rhema-il-kicker {
   font-size: 0.64rem;
   font-weight: 900;
@@ -37788,6 +37821,12 @@ body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
 
   #rhemaModal.open .rhema-meaning-card {
     max-width: 780px;
+    overflow: hidden;
+  }
+
+  #rhemaModal.open .rhema-il-choice-card {
+    width: min(440px, calc(100% - 72px));
+    max-width: 440px;
   }
 
   #rhemaModal.open .rhema-meaning-body {
@@ -39305,8 +39344,9 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
   animation: rhemaIpUp 0.32s cubic-bezier(.2,.82,.18,1);
 }
 @keyframes rhemaIpUp { from { transform: translateY(36px); opacity: 0; } to { transform: none; opacity: 1; } }
-.rhema-ip-card .rhema-note-x { top: 12px; right: 12px; }
-.rhema-ip-card .rhema-il-head { margin-bottom: 12px; padding-right: 50px; }
+.rhema-ip-card .rhema-note-x { position: static; flex: 0 0 40px; width: 40px; height: 40px; border: 1px solid var(--border-color); background: color-mix(in srgb, var(--muted-color) 12%, var(--card-color)); }
+.rhema-ip-card .rhema-note-x:hover { background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-color)); }
+.rhema-ip-card .rhema-il-head { margin-bottom: 12px; padding-right: 0; }
 .rhema-ip-body { display: flex; flex-direction: column; gap: 12px; }
 
 .rhema-ip-context {
