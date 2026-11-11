@@ -1,5 +1,12 @@
 {
   "projects": {
     "default": "greek-vocab-leaderboard"
+  },
+  "targets": {
+    "greek-vocab-leaderboard": {
+      "hosting": {
+        "rhemaDesktop": ["rhema-greek-vocab-desktop"]
+      }
+    }
   }
 }

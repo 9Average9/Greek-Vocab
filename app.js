@@ -16845,8 +16845,8 @@ function _atlasSetHeaderButtons(view) {
   const icon = document.getElementById('atlasBackIcon');
   const info = document.getElementById('atlasInfoBtn');
   const isPlace = view === 'place';
-  if (icon) icon.textContent = isPlace ? 'arrow_back' : 'home';
-  if (left) left.setAttribute('aria-label', isPlace ? 'Back' : 'Home');
+  if (icon) icon.textContent = (isPlace || window.RHEMA_DESKTOP_SITE) ? 'arrow_back' : 'home';
+  if (left) left.setAttribute('aria-label', isPlace ? 'Back' : (window.RHEMA_DESKTOP_SITE ? 'Back to Rhēma' : 'Home'));
   if (info) info.classList.toggle('hidden', !isPlace);
 }
 
@@ -16884,13 +16884,15 @@ function atlasBack() {
     };
     _journeySlideOutThen(detail, 'detail-out', finish);
   } else {
-    _collapseToHome('atlasPage');
+    if (window.RHEMA_DESKTOP_SITE) showRhema();
+    else _collapseToHome('atlasPage');
   }
 }
 
 function closeBibleAtlasPage() {
   _atlasGLToken++;
   try { window.BibleMap?.destroy?.(); } catch (e) {}
+  if (window.RHEMA_DESKTOP_SITE) { _rhemaReturnFromMaps(); return; }
   showNavPage('home');
 }
 
@@ -26214,6 +26216,7 @@ function _hasCompletedAppWelcomeCoach() {
 }
 
 function maybeShowHomeIntroModal() {
+  if (window.RHEMA_DESKTOP_SITE) return;
   if (localStorage.getItem("hasSeenHomeIntro") === "true") return;
   if (!_hasSignedInUser()) return;
   if (_welcomeCoachQueuedAfterAuth) return;
@@ -33047,6 +33050,7 @@ function isRunningAsInstalledApp() {
 }
 
 function registerServiceWorker() {
+  if (window.RHEMA_DESKTOP_SITE) return;
   if (!("serviceWorker" in navigator)) return;
 
   // True when the page is already controlled by a service worker at load time,
@@ -33531,6 +33535,7 @@ function openGuestAccountPrompt() {
 }
 
 function queueAppWelcomeCoachAfterAuth() {
+  if (window.RHEMA_DESKTOP_SITE) return;
   _welcomeCoachQueuedAfterAuth = true;
   setTimeout(_maybeStartAppWelcomeCoachAfterAuth, 180);
 }
@@ -33989,8 +33994,10 @@ window.__onAuthStateReady = async (user) => {
       const streakStat = document.getElementById("profileStreakStat");
       if (streakStat) streakStat.textContent = getStreakDays();
     });
-    _maybeStartAppWelcomeCoachAfterAuth();
-    setTimeout(maybeShowHomeIntroModal, 500);
+    if (!window.RHEMA_DESKTOP_SITE) {
+      _maybeStartAppWelcomeCoachAfterAuth();
+      setTimeout(maybeShowHomeIntroModal, 500);
+    }
     _appInitialDataReady = true;
     // Land straight in Study Rhema on the initial launch — the app is centered on
     // Rhema now. Home stays behind it (the reader's top-left Home button returns
@@ -33998,7 +34005,7 @@ window.__onAuthStateReady = async (user) => {
     if (!_didBootLanding) {
       _didBootLanding = true;
       const _deepLink = /[?&]open=/.test(location.search || '');
-      if (!_deepLink && !(typeof _isDesktopStudyShell === 'function' && _isDesktopStudyShell())) {
+      if (!_deepLink && (window.RHEMA_DESKTOP_SITE || !(typeof _isDesktopStudyShell === 'function' && _isDesktopStudyShell()))) {
         _rhemaReadMode = false;
         try { resumeRhema(); } catch (e) {}
       }
@@ -34053,8 +34060,10 @@ document.addEventListener("DOMContentLoaded", () => {
   setAppLaunchText('Preparing your discipleship tools');
   initLaunchRing();
   setTimeout(() => hideAppLaunchScreen('timeout'), 2800);
-  registerServiceWorker();
-  initFCMForeground();
+  if (!window.RHEMA_DESKTOP_SITE) {
+    registerServiceWorker();
+    initFCMForeground();
+  }
 
   // Detect if Material Symbols font failed to load (e.g., offline on first launch)
   // and hide icon ligature text so the UI doesn't show raw icon names
@@ -34064,15 +34073,11 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     if (!loaded) document.body.classList.add("no-icon-font");
   });
-  setTimeout(() => {
-    if (shouldShowInstallModal()) {
-      showInstallAppModal();
-    }
+  if (!window.RHEMA_DESKTOP_SITE) setTimeout(() => {
+    if (shouldShowInstallModal()) showInstallAppModal();
   }, 700);
 
-  setTimeout(() => {
-    checkForAppUpdateModal();
-  }, 1000);
+  if (!window.RHEMA_DESKTOP_SITE) setTimeout(checkForAppUpdateModal, 1000);
 
   const tryAppBtn = document.getElementById("tryAppVersionBtn");
 
@@ -34085,13 +34090,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Initialize home screen and bottom nav state
-  populateHomeScreen();
-  initHomeQuickActionCarousel();
-  setNavActive('home');
-  showBottomNav();
-  bindHomeNavCollapse();
-  expandHomeNavOnEntry();
-  _startHomeFlip();
+  if (!window.RHEMA_DESKTOP_SITE) {
+    populateHomeScreen();
+    initHomeQuickActionCarousel();
+    setNavActive('home');
+    showBottomNav();
+    bindHomeNavCollapse();
+    expandHomeNavOnEntry();
+    _startHomeFlip();
+  }
   // Guests only ever see the reader — open it now rather than waiting on
   // Firebase, and ignore deep links into the rest of the app.
   if (_guestMode) _guestEnsureRhema();

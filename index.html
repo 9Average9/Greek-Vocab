@@ -3,10 +3,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" name="viewport"/>
-<title>Disciple Builder</title>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Rhēma · Bible Study Desk</title>
 <!-- PWA / Home Screen App Support -->
-<link href="manifest.json" rel="manifest"/>
+<script>window.RHEMA_DESKTOP_SITE = true;</script>
 <!-- theme-color drives the tint iOS paints behind the status bar in an installed
      web app. It was a fixed dark navy while the UI is light blue, so the system
      blended a mismatched band across the top in standalone mode (never in
@@ -352,8 +352,9 @@ antique: {
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
+<link href="desktop-rhema.css?v=1" rel="stylesheet"/>
 </head>
-<body>
+<body class="rhema-desktop-site">
 <div id="rotateLock" aria-hidden="true">
 <span class="material-symbols-outlined">screen_rotation</span>
 <strong>Please rotate to portrait</strong>
@@ -386,30 +387,30 @@ antique: {
 <div class="desktop-brand">
 <span class="material-symbols-outlined">auto_stories</span>
 <div class="desktop-brand-text">
-<strong>Disciple Builder</strong>
-<small>Rhema Study Desk</small>
+<strong>Rhēma</strong>
+<small>Bible study desk</small>
 </div>
 </div>
-<button class="desktop-nav-btn" onclick="_desktopGoHome()" data-nav="home">
-<span class="material-symbols-outlined">home</span>
-<span class="dnb-label">Home</span>
-</button>
-<button class="desktop-nav-btn" onclick="showRhema()" data-nav="rhema">
-<span class="material-symbols-outlined">menu_book</span>
-<span class="dnb-label">Open Rhema</span>
-</button>
-<button class="desktop-nav-btn" onclick="openDesktopStudyDesk()" data-nav="studydesk">
-<span class="material-symbols-outlined">dashboard</span>
-<span class="dnb-label">Study Desk</span>
-</button>
-<button class="desktop-nav-btn" onclick="showNavPage('sermons')" data-nav="sermons">
-<span class="material-symbols-outlined">library_books</span>
-<span class="dnb-label">Sermons</span>
-</button>
-<button class="desktop-nav-btn" onclick="showNavPage('profile')" data-nav="profile">
-<span class="material-symbols-outlined">person</span>
-<span class="dnb-label">Profile</span>
-</button>
+<div class="desktop-rhema-rail-scroll">
+<span class="desktop-rhema-rail-label">SCRIPTURE</span>
+<button class="desktop-nav-btn" onclick="desktopRhemaRead()" data-nav="rhema" data-rhema-view="reader"><span class="material-symbols-outlined">menu_book</span><span class="dnb-label">Bible reader</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaSearch()"><span class="material-symbols-outlined">search</span><span class="dnb-label">Search Scripture</span><kbd>Ctrl K</kbd></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaCrossRefs()"><span class="material-symbols-outlined">hub</span><span class="dnb-label">Cross references</span></button>
+<span class="desktop-rhema-rail-label">STUDY</span>
+<button class="desktop-nav-btn" onclick="desktopRhemaWordLibrary()"><span class="material-symbols-outlined">local_library</span><span class="dnb-label">Word Library</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('phrasing')"><span class="material-symbols-outlined">account_tree</span><span class="dnb-label">Phrasing</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('wordlog')"><span class="material-symbols-outlined">dictionary</span><span class="dnb-label">Word Log</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('workspace')"><span class="material-symbols-outlined">edit_note</span><span class="dnb-label">Notes &amp; insights</span></button>
+<span class="desktop-rhema-rail-label">EXPLORE</span>
+<button class="desktop-nav-btn" onclick="desktopRhemaAtlas('journeys')" data-rhema-view="journeys"><span class="material-symbols-outlined">route</span><span class="dnb-label">Bible journeys</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaAtlas('places')" data-rhema-view="places"><span class="material-symbols-outlined">map</span><span class="dnb-label">Bible Atlas</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaGenealogy()"><span class="material-symbols-outlined">family_history</span><span class="dnb-label">Genealogy</span></button>
+</div>
+<div class="desktop-rhema-rail-footer">
+<button class="desktop-nav-btn" onclick="desktopRhemaReaderTools()"><span class="material-symbols-outlined">tune</span><span class="dnb-label">Reader settings</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaAccount()" aria-expanded="false" id="desktopRhemaAccountBtn"><span class="material-symbols-outlined">account_circle</span><span class="dnb-label" id="desktopRhemaAccountLabel">Account</span></button>
+</div>
+<div class="desktop-rhema-account hidden" id="desktopRhemaAccountPanel" role="dialog" aria-label="Account"><strong id="desktopRhemaAccountName">Account</strong><p id="desktopRhemaAccountHint">Keep your Rhema studies together.</p><button id="desktopRhemaAccountAction" type="button" onclick="desktopRhemaAccountAction()">Sign in or create account</button></div>
 </aside>
 <section class="screen active" id="homeScreen">
 <div class="home-scroll" id="homeScroll">
@@ -18945,6 +18946,6 @@ Save
 </div>
 
 <!-- Google Identity Services for optional Google Calendar OAuth -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="desktop-rhema.js?v=1"></script>
 </body>
 </html>
