@@ -39558,3 +39558,5 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
   font-weight: 800;
   cursor: pointer;
 }
+/* A verse the original numbers in another chapter (e.g. "3:19") or a psalm title */
+.rhema-chapter-verse-label.rhema-verse-label-other { font-size: 0.72rem; }
