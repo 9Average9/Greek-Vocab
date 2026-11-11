@@ -9681,6 +9681,7 @@ function openWlWordDetail(strongs, formSurface) {
 }
 
 function returnToWordLibrarySearch() {
+  if (_rhemaHebReturn) { rhemaReturnToHebrewWord(); return; } // came here from a Hebrew word's Greek link
   closeRhemaSheet();
   document.getElementById('rhemaWlBackBtn')?.classList.add('hidden');
   _wlOpenedDetail = false;
@@ -30331,7 +30332,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.554";
+const APP_VERSION = "3.0.555";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30354,6 +30355,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.555 &mdash; Hebrew Word Study</div>
+<ul>
+  <li><strong>How it&rsquo;s translated</strong> &mdash; Every Hebrew word&rsquo;s Definition tab now shows how it&rsquo;s rendered across the whole Old Testament (land 1,434&times;, earth 572&times;, ground 119&times;), with example verses you can tap to open.</li>
+  <li><strong>Forms it takes</strong> &mdash; For verbs: which forms the word appears in (Qal, Niphal, Hiphil&hellip;) and what each one does, in plain words.</li>
+  <li><strong>From Hebrew to Greek</strong> &mdash; See the Greek words the Septuagint used for each Hebrew word (בָּרָא &rarr; κτίζω, &ldquo;create&rdquo;) and tap one to open its Greek word study. Back takes you to the Hebrew.</li>
+  <li><strong>Accurate counts</strong> &mdash; Replaced some miscounted statistics in the Hebrew word notes.</li>
+</ul>
 <div class="un-version-label">v3.0.554 &mdash; The Hebrew Old Testament, opened up</div>
 <ul>
   <li><strong>Hebrew in context</strong> &mdash; Under every Hebrew word you now see what it means in that exact verse: &ldquo;In the beginning&rdquo;, &ldquo;created&rdquo;, &ldquo;and there was&rdquo;, &ldquo;is my shepherd&rdquo;. Aramaic chapters in Daniel and Ezra too.</li>
@@ -48854,6 +48862,7 @@ function rhemaFocusEnglishVerse(v) {
 
 function openRhemaSheet(wordIdx, verse, ochapter) {
   if (!_rhemaData()) return;
+  _rhemaHebReturn = null;
   // The word's real place in the original text. Taps from the Hebrew/Greek
   // pane carry it (ochapter + verse); anything else gives an English
   // chapter:verse, which maps to its original spot.
@@ -49774,6 +49783,112 @@ function _rhemaOshbToBereanCode(morph) {
   return out.join(' | ');
 }
 
+const _rhemaHebStats = new Map(); // shard start -> data | Promise
+function _rhemaLoadHebStats(strongs) {
+  const n = parseInt(strongs, 10);
+  if (!n || n < 1) return Promise.resolve(null);
+  const start = Math.floor((n - 1) / 100) * 100 + 1;
+  let p = _rhemaHebStats.get(start);
+  if (!p) {
+    p = fetch(`data/hebrew-word-stats/s-${String(start).padStart(4, '0')}.json?v=${RHEMA_HEB_IL_VERSION}`)
+      .then(r => (r.ok ? r.json() : null)).catch(() => null);
+    _rhemaHebStats.set(start, p);
+    p.then(d => { if (!d) _rhemaHebStats.delete(start); });
+  }
+  return p.then(d => (d && d[String(n)]) || null);
+}
+// Greek words that are mostly grammar ("the", "and", "him", "in"): shown only
+// when they really are the main Greek equivalent.
+const _RHEMA_LXX_FILLER = new Set([3588, 2532, 846, 1722, 1519, 1537, 4314, 1473, 4771, 1909, 575, 3754, 1161, 3739, 5100, 3778, 1565, 3956, 1510, 3361, 3756, 1063, 2443, 5613, 1223, 3326, 2596, 5259, 4012, 1438]);
+function _rhemaFillHebrewStudy(elId, strongs) {
+  const esc = _escapeRhemaAttr;
+  Promise.all([_rhemaLoadHebStats(strongs), loadDeepHebrewLexiconEntry(strongs).catch(() => null)]).then(([st, deep]) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const out = [];
+    if (st) {
+      const shown = st.r || [];
+      const max = Math.max(1, ...shown.map(r => r[1]));
+      const u = st.u || 0;
+      const untranslated = u && u / st.n >= 0.2
+        ? `<p class="rhw-note">Often it has no English word of its own (${u.toLocaleString()} of ${st.n.toLocaleString()} times): its job is carried by the grammar or the words around it.</p>`
+        : '';
+      out.push(`<div class="rhw-sub">How it’s translated <small>BSB, across the Old Testament</small></div>
+        <p class="rhw-note">Used <b>${st.n.toLocaleString()}</b> times.</p>${untranslated}
+        <div class="rhw-bars">${shown.map(([e, c, refs]) => `
+          <div class="rhw-bar-row">
+            <div class="rhw-bar-top"><span class="rhw-bar-label">${esc(e)}</span><span class="rhw-bar-n">${c.toLocaleString()}×</span></div>
+            <div class="rhw-bar"><span style="width:${Math.max(3, Math.round(c / max * 100))}%"></span></div>
+            ${refs?.length ? `<div class="rhw-refs">${refs.map(r => `<button type="button" class="rhw-ref" onclick="rhemaHebStudyGo('${esc(r)}')">${esc(_rhemaDisplayRefFromKey ? (_rhemaDisplayRefFromKey(r) || r) : r)}</button>`).join('')}</div>` : ''}
+          </div>`).join('')}</div>`);
+      const stems = Object.entries(st.st || {});
+      if (stems.length) {
+        const forms = Object.entries(st.fm || {}).slice(0, 4);
+        out.push(`<div class="rhw-sub">Forms it takes</div><div class="rhema-parsing-grid">` +
+          stems.map(([k, c]) => {
+            const d = RHEMA_HEB_STEM[k] || [k, ''];
+            return `<div class="rhema-parse-row"><div class="rhema-parse-label">${c.toLocaleString()}×</div><div><div class="rhema-parse-value">${esc(d[0])}</div>${d[1] ? `<div class="rhema-parse-desc">${esc(d[1])}</div>` : ''}</div></div>`;
+          }).join('') + `</div>` +
+          (forms.length ? `<p class="rhw-note">Most often as: ${forms.map(([k, c]) => `${esc((RHEMA_HEB_FORM[k] || [k])[0])} (${c.toLocaleString()}×)`).join(', ')}.</p>` : ''));
+      }
+      const books = Object.entries(st.b || {}).slice(0, 6);
+      if (books.length) {
+        out.push(`<div class="rhw-sub">Where it appears most</div><div class="rhw-books">${books.map(([b, c]) => `<span class="rhw-book"><b>${esc(_rhemaBookName(b))}</b> ${c.toLocaleString()}</span>`).join('')}</div>`);
+      }
+    }
+    const lxx = (deep?.lxxGreek || []).filter(x => x && x.g);
+    if (lxx.length) {
+      const total = lxx.reduce((a, x) => a + (x.count || 0), 0) || 1;
+      const main = lxx.filter(x => !_RHEMA_LXX_FILLER.has(Number(x.g)) || x.count / total >= 0.4).slice(0, 4);
+      if (main.length) {
+        const G = window.RhemaLexicon || {};
+        out.push(`<div class="rhw-sub">In the Greek Old Testament</div>
+          <p class="rhw-note">When the Hebrew Bible was translated into Greek (the Septuagint), these are the words used for it, and New Testament writers often use the same ones. Tap one to study the Greek word.</p>
+          <div class="rhw-lxx">${main.map(x => {
+            const gl = G[x.g]?.gloss || G[x.g]?.brief || '';
+            return `<button type="button" class="rhw-lxx-chip" onclick="rhemaOpenGreekFromHebrew(${Number(x.g)})"><b>${esc(x.lemma || G[x.g]?.lemma || '')}</b><small>${gl ? esc(String(gl).split(/[,;]/)[0]) + ' · ' : ''}${Math.round(x.count / total * 100)}%</small></button>`;
+          }).join('')}</div>`);
+      }
+    }
+    el.innerHTML = out.join('') || '';
+    if (!out.length) el.remove();
+  });
+}
+// Example verse from the study → open it in the reader.
+function rhemaHebStudyGo(ref) {
+  const m = String(ref).match(/^(\S+) (\d+):(\d+)$/);
+  if (!m) return;
+  try { closeRhemaSheet(); } catch (e) {}
+  _rhemaJumpToVerse(m[1], m[2], m[3]);
+}
+// Septuagint chip → the Greek word's study, with a way back to the Hebrew word.
+let _rhemaHebReturn = null;
+function rhemaOpenGreekFromHebrew(g) {
+  if (!window.RhemaLexicon?.[g] || typeof rhemaOpenWordStudy !== 'function') return;
+  _rhemaHebReturn = { word: _rhemaActiveWord, ctx: window._rhemaWordCtx ? { ...window._rhemaWordCtx } : null, sel: {
+    surface: document.getElementById('rhemaSheetSurface')?.textContent || '',
+    strongs: document.getElementById('rhemaSheetStrongs')?.textContent || '',
+    lemma: document.getElementById('rhemaSheetLemma')?.textContent || '' } };
+  rhemaOpenWordStudy(g);
+  setTimeout(() => {
+    const btn = document.getElementById('rhemaWlBackBtn');
+    if (!btn) return;
+    btn.classList.remove('hidden'); // returnToWordLibrarySearch() sends it back to the Hebrew word
+  }, 300);
+}
+function rhemaReturnToHebrewWord() {
+  const r = _rhemaHebReturn;
+  document.getElementById('rhemaWlBackBtn')?.classList.add('hidden');
+  if (!r?.word) return;
+  _rhemaHebReturn = null;
+  window._rhemaWordCtx = r.ctx;
+  _rhemaActiveWord = r.word;
+  _rhemaActiveWordLayer = 'hebrew';
+  const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  set('rhemaSheetSurface', r.sel.surface); set('rhemaSheetStrongs', r.sel.strongs); set('rhemaSheetLemma', r.sel.lemma);
+  showRhemaTab('definition', r.word);
+}
+
 function renderHebrewDefinition(strongs) {
   const lex = (window.RhemaHebrewLexicon || {})[strongs];
   if (!lex) return `<p style="opacity:.5;font-size:.85rem">No Hebrew lexicon entry loaded yet.</p>`;
@@ -49784,6 +49899,11 @@ function renderHebrewDefinition(strongs) {
   const answerId = `rhemaDeepAnswer-${strongs}-${++_deepAnswerSeq}`;
   sections.push(`<div class="rhema-deep-answer hidden" id="${answerId}"></div>`);
   setTimeout(() => _populateDeepAnswer(answerId, strongs, 'hebrew'), 0);
+  // Hebrew Word Study: how it's translated, its forms, where it appears, and
+  // the Greek words the Septuagint used for it (filled when the data arrives).
+  const studyId = `rhemaHebStudy-${strongs}-${_deepAnswerSeq}`;
+  sections.push(`<div class="rhw-study" id="${studyId}"><div class="rhw-loading">Loading word study…</div></div>`);
+  setTimeout(() => _rhemaFillHebrewStudy(studyId, strongs), 0);
 
   if (lex.lemma) {
     sections.push(`<div class="rhema-def-section">
@@ -51150,16 +51270,9 @@ function _populateDeepAnswer(elId, strongs, layer) {
       if (prose.senseLabels && prose.senseLabels.length) {
         lines.push(`<div class="rhema-deep-answer-sub">Range of meaning: ${esc(prose.senseLabels.join(' · '))}</div>`);
       }
-      // Corpus usage statistics (why bullets — already human-readable strings)
-      if (entry.why && entry.why.length) {
-        lines.push(`<div class="rhema-deep-why">${entry.why.map(w => `<p>${esc(w)}</p>`).join('')}</div>`);
-      }
-      // Septuagint (LXX) translation evidence — ancient Greek rendering of this Hebrew word
-      if (entry.lxxGreek && entry.lxxGreek.length) {
-        const top = entry.lxxGreek.slice(0, 2);
-        const renderings = top.map(t => `<em>${esc(t.lemma)}</em> (${Number(t.count).toLocaleString()}×)`).join(', ');
-        lines.push(`<div class="rhema-deep-answer-sub">Septuagint (LXX) translates this as: ${renderings}</div>`);
-      }
+      // Usage counts and the Septuagint's Greek now come from the Hebrew Word
+      // Study below (counted from the Berean tables). The old "why" lines
+      // miscounted prefixed words ("Primarily functions as: q"), so they're gone.
       if (prose.article) {
         lines.push(`<button type="button" class="rhema-deep-article-btn" onclick="event.stopPropagation();this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
           <span>About this word</span><span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>

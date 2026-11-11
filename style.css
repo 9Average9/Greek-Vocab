@@ -39614,3 +39614,39 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rhw-codes div { margin-top: 4px; }
 .rhw-codes code { font-size: 0.78rem; }
 .rhw-credit { margin: 0; font-size: 0.72rem; color: var(--muted-color, #8a8a8a); }
+
+/* ── Hebrew Word Study (Definition tab) ─────────────────────────────────────── */
+.rhw-study { display: flex; flex-direction: column; gap: 8px; }
+.rhw-loading { font-size: 0.85rem; color: var(--muted-color, #8a8a8a); }
+.rhw-sub small { margin-left: 6px; font-weight: 700; letter-spacing: 0.02em; text-transform: none; opacity: 0.8; }
+.rhw-note { margin: 0; font-size: 0.86rem; line-height: 1.45; color: color-mix(in srgb, var(--font-color, #20303f) 80%, transparent); }
+.rhw-bars { display: flex; flex-direction: column; gap: 10px; }
+.rhw-bar-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.rhw-bar-label { font-weight: 800; font-size: 0.95rem; }
+.rhw-bar-n { font-size: 0.8rem; font-weight: 800; color: var(--muted-color, #8a8a8a); font-variant-numeric: tabular-nums; }
+.rhw-bar { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--muted-color, #8a8a8a) 16%, transparent); overflow: hidden; margin-top: 4px; }
+.rhw-bar span { display: block; height: 100%; border-radius: inherit; background: var(--secondary-color, #2498df); }
+.rhw-refs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rhw-ref, .rhw-book {
+  border: 1px solid color-mix(in srgb, var(--border-color, #d8dde3) 80%, transparent);
+  background: var(--card-solid-color, var(--card-color, #fff));
+  color: var(--font-color, #20303f);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.rhw-ref { cursor: pointer; min-height: 32px; }
+.rhw-books { display: flex; flex-wrap: wrap; gap: 6px; }
+.rhw-book b { font-weight: 800; }
+.rhw-lxx { display: flex; flex-wrap: wrap; gap: 8px; }
+.rhw-lxx-chip {
+  display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  min-height: 48px; padding: 8px 12px; border-radius: 12px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 32%, transparent);
+  background: color-mix(in srgb, var(--secondary-color, #2498df) 8%, var(--card-solid-color, #fff));
+  color: var(--font-color, #20303f); font: inherit; text-align: left;
+}
+.rhw-lxx-chip b { font-size: 1.05rem; }
+.rhw-lxx-chip small { font-size: 0.74rem; color: var(--muted-color, #8a8a8a); font-weight: 700; }
