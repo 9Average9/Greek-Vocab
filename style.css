@@ -39530,3 +39530,31 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
   border-bottom: inherit;
 }
 .rhema-ip-keep { margin-top: 2px; }
+/* Shown in the Greek/Hebrew pane when that text numbers the chapter elsewhere */
+.rhema-versification-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 8px 0 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--secondary-color, #2498df) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 22%, transparent);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.rhema-versification-note .material-symbols-outlined { color: var(--secondary-color, #2498df); font-size: 20px; margin-top: 1px; }
+.rhema-versification-note > div { flex: 1; min-width: 0; }
+.rhema-versification-jump {
+  margin-top: 8px;
+  min-height: 38px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--secondary-color, #2498df);
+  color: #fff;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+}
