@@ -352,7 +352,7 @@ antique: {
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
-<link href="desktop-rhema.css?v=2" rel="stylesheet"/>
+<link href="desktop-rhema.css?v=3" rel="stylesheet"/>
 </head>
 <body class="rhema-desktop-site">
 <div id="rotateLock" aria-hidden="true">
@@ -394,9 +394,10 @@ antique: {
 <div class="desktop-rhema-rail-scroll">
 <span class="desktop-rhema-rail-label">SCRIPTURE</span>
 <button class="desktop-nav-btn" onclick="desktopRhemaRead()" data-nav="rhema" data-rhema-view="reader"><span class="material-symbols-outlined">menu_book</span><span class="dnb-label">Bible reader</span></button>
-<button class="desktop-nav-btn" onclick="desktopRhemaSearch()"><span class="material-symbols-outlined">search</span><span class="dnb-label">Search Scripture</span><kbd>Ctrl K</kbd></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaSearch()"><span class="material-symbols-outlined">search</span><span class="dnb-label">Search Scripture</span></button>
 <button class="desktop-nav-btn" onclick="desktopRhemaCrossRefs()"><span class="material-symbols-outlined">hub</span><span class="dnb-label">Cross references</span></button>
 <span class="desktop-rhema-rail-label">STUDY</span>
+<button class="desktop-nav-btn" onclick="desktopRhemaReaderTools()" id="desktopRhemaStudyToolsBtn"><span class="material-symbols-outlined">tune</span><span class="dnb-label">Study tools</span></button>
 <button class="desktop-nav-btn" onclick="desktopRhemaWordLibrary()"><span class="material-symbols-outlined">local_library</span><span class="dnb-label">Word Library</span></button>
 <button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('phrasing')"><span class="material-symbols-outlined">account_tree</span><span class="dnb-label">Phrasing</span></button>
 <button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('wordlog')"><span class="material-symbols-outlined">dictionary</span><span class="dnb-label">Word Log</span></button>
@@ -407,7 +408,6 @@ antique: {
 <button class="desktop-nav-btn" onclick="desktopRhemaGenealogy()"><span class="material-symbols-outlined">family_history</span><span class="dnb-label">Genealogy</span></button>
 </div>
 <div class="desktop-rhema-rail-footer">
-<button class="desktop-nav-btn" onclick="desktopRhemaReaderTools()"><span class="material-symbols-outlined">tune</span><span class="dnb-label">Reader settings</span></button>
 <button class="desktop-nav-btn" onclick="desktopRhemaAccount()" aria-expanded="false" id="desktopRhemaAccountBtn"><span class="material-symbols-outlined">account_circle</span><span class="dnb-label" id="desktopRhemaAccountLabel">Account</span></button>
 </div>
 <div class="desktop-rhema-account hidden" id="desktopRhemaAccountPanel" role="dialog" aria-label="Account"><strong id="desktopRhemaAccountName">Account</strong><p id="desktopRhemaAccountHint">Keep your Rhema studies together.</p><button id="desktopRhemaAccountAction" type="button" onclick="desktopRhemaAccountAction()">Sign in or create account</button></div>
@@ -10617,6 +10617,7 @@ Verb Endings
 <button class="rhema-search-clear hidden" id="rhemaSearchClear" type="button" onclick="clearHomeRhemaSearch()" aria-label="Clear search"><span class="material-symbols-outlined">close</span></button>
 <button class="rhema-search-submit" type="submit">Search</button>
 </form>
+<button class="desktop-rhema-search-close" type="button" onclick="toggleRhemaSearch()" aria-label="Close search"><span class="material-symbols-outlined">close</span></button>
 <p class="rhema-search-help">Enter a reference, remembered words, story, or question, then press Search.</p>
 <div class="rhema-search-ai-status" id="rhemaSearchAiStatus" role="status"></div>
 <div class="rhema-search-results" id="rhemaSearchResults" aria-live="polite"></div>
@@ -10829,6 +10830,7 @@ Verb Endings
 <div class="rrp-pane rrp-pane-main">
 <div class="rrp-header">
 <span class="rrp-title" id="rrpMainTitle">Reader</span>
+<button class="rrp-x" type="button" onclick="closeRhemaReaderPanel()" aria-label="Close study tools"><span class="material-symbols-outlined">close</span></button>
 </div>
 <div id="rrpMainBody"></div>
 </div>
@@ -17296,7 +17298,7 @@ Verb Endings
 </main>
 <script src="vocab.js?v=3.0.8"></script>
 <script src="rhema-align.js?v=3.0.557"></script>
-<script src="app.js?v=3.0.558"></script>
+<script src="app.js?v=3.0.558-desktop2"></script>
 <script src="rhema-word-study.js?v=3.0.557"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
@@ -18946,6 +18948,6 @@ Save
 </div>
 
 <!-- Google Identity Services for optional Google Calendar OAuth -->
-<script src="desktop-rhema.js?v=1"></script>
+<script src="desktop-rhema.js?v=2"></script>
 </body>
 </html>

@@ -47421,7 +47421,10 @@ function _coachBodyHtml(step) {
 
 function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
   const PAD = 9;
-  const vw = window.innerWidth;
+  const bounds = window.RHEMA_DESKTOP_SITE
+    ? { left: 300, top: 28, right: window.innerWidth - 28, bottom: window.innerHeight - 28 }
+    : null;
+  const vw = bounds ? bounds.right - bounds.left : window.innerWidth;
   const overlay = document.getElementById('appCoachOverlay');
   const ROOM = _appCoachHasGuide() ? coachGuideRoom() : 0;   // the guide perches above the card
   const cardW = Math.min(360, vw - 28);
@@ -47432,8 +47435,8 @@ function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
   if (!rect) {
     overlay?.classList.add('coach-full-blur');
     spotlight.classList.add('no-target');
-    spotlight.style.left = `${vw / 2 - 60}px`;
-    spotlight.style.top = `${window.innerHeight / 2 - 60}px`;
+    spotlight.style.left = `${(bounds?.left || 0) + vw / 2 - 60}px`;
+    spotlight.style.top = `${(bounds?.top || 0) + (bounds ? bounds.bottom - bounds.top : window.innerHeight) / 2 - 60}px`;
     spotlight.style.width = '120px';
     spotlight.style.height = '120px';
   } else {
@@ -47442,8 +47445,8 @@ function _placeAppCoachCard(target, card, spotlight, preferred = 'below') {
     coachSpotlightPad(spotlight, rect, PAD);
   }
   // Measure in place (moving the card off to measure made it fly in from a corner).
-  const cardH = Math.min(card.offsetHeight, window.innerHeight - 28 - ROOM);
-  const place = () => coachPlaceCard({ rect: _coachPadRect(rect, PAD), cardW, cardH, room: ROOM, guideW: coachGuideWidth(), preferred: preferred === 'center' && !rect ? 'below' : preferred });
+  const cardH = Math.min(card.offsetHeight, (bounds ? bounds.bottom - bounds.top : window.innerHeight) - 28 - ROOM);
+  const place = () => coachPlaceCard({ rect: _coachPadRect(rect, PAD), cardW, cardH, room: ROOM, guideW: coachGuideWidth(), preferred: preferred === 'center' && !rect ? 'below' : preferred, bounds });
   let pos = place();
   if (coachNudgeFor(target, _coachPadRect(rect, PAD), pos, cardH, ROOM)) {
     const r2 = coachVisibleRect(target);
@@ -47580,7 +47583,13 @@ function startRhemaCoach(force = false) {
     return;
   }
   if (_coachHasSeen('rhemaCoachSeenV3537', force)) return;
-  _coachSteps = _RHEMA_COACH_STEPS;
+  _coachSteps = window.RHEMA_DESKTOP_SITE
+    ? _RHEMA_COACH_STEPS.map((step, index) => {
+        if (index === 2) return { ...step, targetFn: () => null, title: 'Study tools', body: 'Use Study tools in the left sidebar for languages, reading helpers, cross references, and more tours.' };
+        if (index === 3) return { ...step, targetFn: () => null, title: 'Search Scripture', body: 'Use Search Scripture in the left sidebar when you remember part of a verse, a story, or a question.' };
+        return step;
+      })
+    : _RHEMA_COACH_STEPS;
   _coachIdx = 0;
   _coachSyntaxDone = false;
   _rhemaCoachSeenKey = 'rhemaCoachSeenV3537';

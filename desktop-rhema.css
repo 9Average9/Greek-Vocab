@@ -12,14 +12,36 @@ body.rhema-desktop-site #homeScreen .home-scroll,
 body.rhema-desktop-site #installAppModal,
 body.rhema-desktop-site #appUpdateModal { display: none !important; }
 
+/* The left rail replaces the duplicate title, search, and menu header. */
+body.rhema-desktop-site #rhemaSlide .rhema-header { display: none !important; }
+body.rhema-desktop-site .rhema-search-panel { position: relative; }
+body.rhema-desktop-site .rhema-search-form { margin-right: 47px; }
+body.rhema-desktop-site .desktop-rhema-search-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 13px;
+  background: var(--card-solid-color);
+  color: var(--secondary-color);
+  cursor: pointer;
+}
+body.rhema-desktop-site .desktop-rhema-search-close:hover { background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-solid-color)); }
+
 @media (min-width: 960px) {
   body.rhema-desktop-site.guest-mode { --desktop-rhema-rail: 300px; }
   body.rhema-desktop-site #desktopShellNav,
   body.rhema-desktop-site.guest-mode #desktopShellNav {
     display: flex !important;
+    z-index: 50000;
     width: 264px !important;
     padding: 16px;
     gap: 0;
+    overflow: visible;
     background: linear-gradient(160deg, color-mix(in srgb, var(--card-color) 97%, white), var(--card-color));
     border-color: color-mix(in srgb, var(--secondary-color) 15%, var(--border-color));
     box-shadow: 0 18px 48px rgba(18, 39, 76, .1);
@@ -64,14 +86,6 @@ body.rhema-desktop-site #appUpdateModal { display: none !important; }
   body.rhema-desktop-site .desktop-nav-btn:hover { transform: none; }
   body.rhema-desktop-site .desktop-nav-btn .material-symbols-outlined { font-size: 21px; }
   body.rhema-desktop-site .desktop-nav-btn.active { box-shadow: 0 7px 19px color-mix(in srgb, var(--secondary-color) 18%, transparent); }
-  body.rhema-desktop-site .desktop-nav-btn kbd {
-    margin-left: auto;
-    padding: 3px 5px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    color: var(--muted-color);
-    font: 650 .64rem/1 system-ui, sans-serif;
-  }
   .desktop-rhema-rail-footer {
     flex: 0 0 auto;
     border-top: 1px solid var(--border-color);
@@ -79,8 +93,8 @@ body.rhema-desktop-site #appUpdateModal { display: none !important; }
   }
   .desktop-rhema-account {
     position: absolute;
-    left: calc(100% + 12px);
-    bottom: 0;
+    left: calc(100% + 18px);
+    bottom: 10px;
     width: 266px;
     padding: 17px;
     border-radius: 18px;
@@ -105,8 +119,38 @@ body.rhema-desktop-site #appUpdateModal { display: none !important; }
     cursor: pointer;
   }
   body.rhema-desktop-site #rhemaModal.open { box-shadow: 0 24px 65px rgba(18, 39, 76, .13); }
-  body.rhema-desktop-site #rhemaModal.open .rhema-header { border-bottom: 1px solid color-mix(in srgb, var(--secondary-color) 14%, var(--border-color)); }
   body.rhema-desktop-site #rhemaModal.open .rhema-body { scrollbar-width: thin; }
+  body.rhema-desktop-site #rhemaCoachOverlay {
+    inset: 28px 28px 28px 300px;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  body.rhema-desktop-site #rhemaReaderPanelOverlay {
+    inset: 28px 28px 28px 300px;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  body.rhema-desktop-site #appCoachOverlay {
+    clip-path: inset(28px 28px 28px 300px round 24px);
+  }
+  body.rhema-desktop-site .modal-overlay.open {
+    inset: 28px 28px 28px 300px;
+    border-radius: 24px;
+  }
+  body.rhema-desktop-site #wordLibraryOverlay,
+  body.rhema-desktop-site #bibleGenealogyOverlay {
+    inset: 28px 28px 28px 300px;
+    width: auto;
+    height: auto;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 24px 65px rgba(18, 39, 76, .13);
+  }
+  body.rhema-desktop-site #wordLibraryOverlay .wl-sheet {
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+  }
   body.rhema-desktop-site #atlasPage.screen.active,
   body.rhema-desktop-site #journeysPage.screen.active {
     inset: 28px 28px 28px 300px;
