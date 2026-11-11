@@ -39686,3 +39686,31 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .wl-paste-btn { border: 0; background: transparent; color: var(--muted-color, #8a8a8a); min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 10px; }
 .wl-paste-btn .material-symbols-outlined { font-size: 20px; }
 .wl-kbd-toggle.hidden { display: none; }
+
+/* ── Hebrew "Who Does What" map ─────────────────────────────────────────────── */
+.rhs-map { display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 12px; direction: ltr; }
+.rhs-intro { margin: 0; font-size: 0.86rem; color: var(--muted-color, #8a8a8a); }
+.rhs-act { border: 1px solid color-mix(in srgb, var(--border-color, #d8dde3) 80%, transparent); border-radius: 16px; padding: 10px 12px; background: var(--card-solid-color, var(--card-color, #fff)); display: flex; flex-direction: column; gap: 8px; }
+.rhs-verb { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; border: 0; background: transparent; padding: 0; font: inherit; color: var(--font-color, #20303f); text-align: left; cursor: pointer; }
+.rhs-verb .rhema-hebrew-text { font-size: 1.35rem; }
+.rhs-verb b { font-size: 1.05rem; font-weight: 800; color: var(--secondary-color, #2498df); }
+.rhs-verb small { flex-basis: 100%; font-size: 0.78rem; color: var(--muted-color, #8a8a8a); font-weight: 700; }
+.rhs-row { display: grid; grid-template-columns: 96px 1fr; gap: 8px; align-items: start; }
+.rhs-k { font-size: 0.68rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--secondary-color, #2498df) 62%, var(--muted-color, #8a8a8a)); padding-top: 8px; line-height: 1.2; }
+.rhs-v { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rhs-chip { display: inline-flex; align-items: baseline; gap: 6px; min-height: 36px; padding: 6px 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--secondary-color, #2498df) 28%, transparent); background: color-mix(in srgb, var(--secondary-color, #2498df) 8%, transparent); color: var(--font-color, #20303f); font: inherit; font-size: 0.88rem; cursor: pointer; }
+.rhs-chip b { font-weight: 800; }
+.rhs-chip .rhema-hebrew-text { font-size: 1rem; opacity: 0.8; }
+.rhs-chip small { font-size: 0.72rem; color: var(--muted-color, #8a8a8a); font-weight: 700; }
+.rhs-chip-far { cursor: default; background: transparent; border-style: dashed; }
+.rhs-hint { font-size: 0.74rem; color: var(--muted-color, #8a8a8a); font-weight: 700; }
+.rhs-sub { font-size: 0.66rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: color-mix(in srgb, var(--secondary-color, #2498df) 62%, var(--muted-color, #8a8a8a)); margin-top: 2px; }
+.rhs-refs { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; line-height: 1.4; }
+.rhs-refs .rhema-hebrew-text { font-size: 1.05rem; }
+.rhs-credit { margin: 0; font-size: 0.72rem; color: var(--muted-color, #8a8a8a); }
+.rhw-who { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+/* The map is its own left-to-right block, full width (the Hebrew pane around it
+   is right-to-left for word grids). */
+.rhema-verse-display:has(.rhs-map) { direction: ltr; display: block; padding-left: 12px; padding-right: 12px; }
+.rhema-verse-display .rhs-map { width: 100%; box-sizing: border-box; }
+.rhema-verse-display:has(.rhs-map) > .rhema-layer-label { text-align: center; display: block; }
