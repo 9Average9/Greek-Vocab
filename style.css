@@ -39637,6 +39637,7 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rhw-here small { margin-left: 8px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; color: var(--muted-color, #8a8a8a); vertical-align: middle; }
 .rhw-here.rhw-none { font-size: 1.02rem; }
 .rhw-here.rhw-none small { display: block; margin: 2px 0 0; font-weight: 600; letter-spacing: 0; font-size: 0.8rem; }
+.rhw-alt { margin-top: 3px; font-size: 0.8rem; font-weight: 600; color: var(--muted-color, #8a8a8a); }
 .rhw-say { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
 .rhw-say .rhema-hebrew-text { font-size: 1.5rem; }
 .rhw-tr { font-size: 0.95rem; font-style: italic; color: color-mix(in srgb, var(--font-color, #20303f) 75%, transparent); }
