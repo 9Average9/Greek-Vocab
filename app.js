@@ -30447,7 +30447,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.561";
+const APP_VERSION = "3.0.562";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30470,6 +30470,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.562 &mdash; Better links for every version</div>
+<ul>
+  <li><strong>Checked version by version</strong> &mdash; Word links were hand-reviewed in sample chapters of the NIV, NKJV, NASB, CSB and NLT: about 91&ndash;94% of linked words are right in each, and the less certain ones are marked &asymp;.</li>
+  <li><strong>More of your version&rsquo;s wording recognised</strong> &mdash; Modern wording like &ldquo;lives&rdquo; or &ldquo;settled&rdquo; (for &ldquo;dwell&rdquo;), small words like &ldquo;for&rdquo; and &ldquo;if&rdquo;, and whole phrases like &ldquo;lie down&rdquo;, &ldquo;brought up&rdquo; and &ldquo;cast out&rdquo;.</li>
+  <li><strong>Honest with paraphrases</strong> &mdash; For versions that say things in their own words (NLT, The Message&hellip;), the app no longer guesses by position, and Look up a word says why fewer words line up.</li>
+</ul>
 <div class="un-version-label">v3.0.561 &mdash; Look up a word</div>
 <ul>
   <li><strong>The Hebrew or Greek behind your Bible&rsquo;s words</strong> &mdash; Tap a verse, then <em>Look up a word</em>: your version&rsquo;s English in reading order, with the original word under each part (&ldquo;is my shepherd&rdquo; &rarr; רֹעִי, &ldquo;nothing&rdquo; &rarr; לֹא). Tap one to open that word&rsquo;s sheet. &asymp; marks a best match; a faded word is part of the word beside it (&ldquo;his&rdquo; in &ldquo;his name&rdquo;); plain words have no original word behind them, and tap for their English meaning.</li>
@@ -41758,7 +41764,7 @@ let _rhemaLookupLinks = [];
 async function _rhemaEnsureLinkData(book) {
   if (isRhemaOTBook(book)) {
     await Promise.all([_rhemaLoadDataFile('rhema-ot-hebrew.js'), _rhemaLoadDataFile('rhema-hebrew-lexicon.js')]);
-    await _rhemaLoadHebIL(book);
+    await Promise.all([_rhemaLoadHebIL(book), _rhemaLoadHebRend()]);
   } else {
     if (!_rhemaData()) await loadRhemaScripts();
     await _ensureRhemaBsbAlign();
@@ -41786,7 +41792,7 @@ function _rhemaVerseLinks(ref) {
         try { table = _rhemaHebVersionLexicon(ver, p.book, String(p.chapter)); } catch {}
         if (table) items.forEach(it => { it.learned = RhemaAlign.learnedFor(table, it.key); });
       }
-      out = RhemaAlign.bridgeToVersion(items, text);
+      out = RhemaAlign.bridgeToVersion(items, text, _rhemaBridgeOpts(ver));
     } else {
       layer = 'nt-greek';
       oc = String(p.chapter); ov = String(p.verse);
@@ -41884,6 +41890,7 @@ async function _rhemaOpenLookup(again) {
   const ver = _rhemaLookupLinks.find(Boolean)?.ver || '';
   _rhemaWordPickSwitch('English meanings instead', "_rhemaOpenWordPicker('english')");
   if (wrap) wrap.innerHTML = groups +
+    (_rhemaBridgeOpts(ver).loose ? `<p class="rhema-lk-foot">The ${_escapeRhemaAttr(ver)} says things in its own words, so fewer words line up one to one with the ${lang}. For word-for-word study, a more literal version (BSB, NASB, ESV, KJV) links more.</p>` : '') +
     `<p class="rhema-lk-foot">${_escapeRhemaAttr(ver)} in reading order · <b>≈</b> best match · <span class="rhema-lk-key-part">faded</span> part of the word beside it · <span class="rhema-lk-key-none">plain</span> no ${lang} word (tap for its English meaning)</p>` +
     '';
 }
@@ -42058,7 +42065,7 @@ function _rhemaVersionChapterLexicon(book, chapter, version, textOf) {
       itemsByVerse[v] = _rhemaBridgeItems({ book, chapter, verse: v }, ws, decisions);
     }
     const items = itemsByVerse[v].map(it => ({ ...it }));
-    RhemaAlign.learnRenderings(items, RhemaAlign.bridgeToVersion(items, text), table);
+    RhemaAlign.learnRenderings(items, RhemaAlign.bridgeToVersion(items, text, _rhemaBridgeOpts(version)), table);
   }
   _rhemaVerLexCache.set(key, { table, avail });
   if (_rhemaVerLexCache.size > 24) _rhemaVerLexCache.delete(_rhemaVerLexCache.keys().next().value);
@@ -42078,7 +42085,7 @@ function _rhemaVersionRenderingsForVerse(p, words, decisions, versionText, versi
     } catch {}
     if (table) items.forEach(it => { it.learned = RhemaAlign.learnedFor(table, it.key); });
   }
-  return RhemaAlign.bridgeToVersion(items, versionText);
+  return RhemaAlign.bridgeToVersion(items, versionText, _rhemaBridgeOpts(version));
 }
 
 let _rhemaIlDetails = (() => { try { return localStorage.getItem('rhemaIlDetails') === '1'; } catch { return false; } })();
@@ -49851,6 +49858,7 @@ function _rhemaLoadHebIL(book) {
   if (!book || !isRhemaOTBook(book)) return Promise.resolve(null);
   const cur = _rhemaHebIL.get(book);
   if (cur) return typeof cur.then === 'function' ? cur : Promise.resolve(cur);
+  _rhemaLoadHebRend();
   const p = fetch(`data/hebrew-interlinear/${book}.json?v=${RHEMA_HEB_IL_VERSION}`)
     .then(r => (r.ok ? r.json() : null))
     .catch(() => null)
@@ -49890,6 +49898,27 @@ function _rhemaEnsureHebIL() {
 // word's English inside the version's own verse: seeded by the BSB wording, the
 // word's lexicon meanings, and how this version renders the same Hebrew word in
 // the rest of the chapter. Computed on the device from the reader's own text.
+// Meaning-based / paraphrase versions: no position-only guesses (graded on
+// sample chapters: the NLT's ≈ guesses were right only half the time).
+const RHEMA_LOOSE_VERSIONS = new Set(['NLT', 'MSG', 'CEV', 'GNT', 'NIRV', 'T4T', 'FBV', 'ERV', 'ICB', 'TLB', 'NCV']);
+function _rhemaBridgeOpts(ver) { return { loose: RHEMA_LOOSE_VERSIONS.has(String(ver || '').toUpperCase()) }; }
+// Every English word the BSB uses for each Hebrew word across the Old
+// Testament (scripts/build-hebrew-renderings.py): lets the matcher recognise
+// other versions' wording ("lives", "settled" for יָשַׁב). Loaded once.
+let _rhemaHebRend = null, _rhemaHebRendP = null;
+function _rhemaLoadHebRend() {
+  if (_rhemaHebRend || _rhemaHebRendP) return _rhemaHebRendP || Promise.resolve(_rhemaHebRend);
+  _rhemaHebRendP = fetch(`data/hebrew-renderings.json?v=${RHEMA_HEB_IL_VERSION}`).then(r => (r.ok ? r.json() : null)).catch(() => null).then(d => {
+    _rhemaHebRendP = null;
+    if (d) {
+      _rhemaHebRend = d;
+      // Anything worked out before it arrived is redone with it.
+      _rhemaHebMeaningsCache.clear(); _rhemaHebItemsCache.clear(); _rhemaHebVerWordsCache.clear(); _rhemaHebVerLexCache.clear();
+    }
+    return d;
+  });
+  return _rhemaHebRendP;
+}
 const _rhemaHebItemsCache = new Map();   // book|c|v -> bridge items
 const _rhemaHebVerLexCache = new Map();  // ver|book|englishChapter -> learned table
 const _rhemaHebVerWordsCache = new Map();
@@ -49904,6 +49933,7 @@ function _rhemaHebBridgeItems(book, oc, ov) {
     const s = String(w[1] || '');
     return {
       bsb: il ? il.en : null,
+      verb: /(^|\| )V-/.test(il?.ps || ''),
       gloss: String((d && d.gloss) || '').split(/[;,(]/)[0],
       meanings: _rhemaHebMeanings(s),
       key: s ? 'H' + s : '',
@@ -49944,7 +49974,7 @@ function _rhemaHebMeanings(strongs) {
   if (!window.RhemaHebrewLexicon) return []; // not loaded yet: don't cache an empty list
   const lex = window.RhemaHebrewLexicon[k] || {};
   const words = new Set();
-  for (const phrase of [lex.gloss || '', ..._rhemaKjvDefWords(lex.kjv_def)]) {
+  for (const phrase of [lex.gloss || '', ..._rhemaKjvDefWords(lex.kjv_def), (_rhemaHebRend && _rhemaHebRend[k]) || '']) {
     for (const w of String(phrase).toLowerCase().split(/[^a-z]+/)) if (w.length > 2 && !(typeof _DEEP_GLUE_WORDS !== 'undefined' && _DEEP_GLUE_WORDS.has(w))) words.add(w);
   }
   const out = [...words].slice(0, 120);
@@ -49972,7 +50002,7 @@ function _rhemaHebVersionLexicon(ver, book, ec) {
     const items = _rhemaHebBridgeItems(book, oc, ov);
     if (!items.length) continue;
     const copy = items.map(it => ({ ...it }));
-    RhemaAlign.learnRenderings(copy, RhemaAlign.bridgeToVersion(copy, text), table);
+    RhemaAlign.learnRenderings(copy, RhemaAlign.bridgeToVersion(copy, text, _rhemaBridgeOpts(ver)), table);
   }
   _rhemaHebVerLexCache.set(key, { table, avail });
   if (_rhemaHebVerLexCache.size > 24) _rhemaHebVerLexCache.delete(_rhemaHebVerLexCache.keys().next().value);
@@ -50003,7 +50033,7 @@ function _rhemaHebVersionWords(book, oc, ov) {
       let table = null;
       try { table = _rhemaHebVersionLexicon(ver, book, ec); } catch {}
       if (table) items.forEach(it => { it.learned = RhemaAlign.learnedFor(table, it.key); });
-      out = RhemaAlign.bridgeToVersion(items, text);
+      out = RhemaAlign.bridgeToVersion(items, text, _rhemaBridgeOpts(ver));
     }
   } catch { return null; }
   out.version = ver;
@@ -52329,7 +52359,7 @@ function _rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver) {
       const items = words.map((w, i) => i === wordIdx
         ? { bsb: bsbEng[i], gloss: String(d.gloss || '').split(/[;,(]/)[0], meanings }
         : { bsb: bsbEng[i] });
-      r = RhemaAlign.bridgeToVersion(items, text)[wordIdx];
+      r = RhemaAlign.bridgeToVersion(items, text, _rhemaBridgeOpts(ver))[wordIdx];
     } catch { r = null; }
   }
   if (r && r.text && r.start != null) {

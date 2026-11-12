@@ -338,7 +338,9 @@
    * @param {string} versionText  The version's verse sentence.
    * @returns {Array<{text: string, kind: string}>}
    */
-  function bridgeToVersion(items, versionText) {
+  // opts.loose: the version paraphrases (NLT, The Message…): skip the
+  // position-only guesses, which go wrong there more often than right.
+  function bridgeToVersion(items, versionText, opts = {}) {
     const toks = tokenizeEnglish(versionText);
     const n = items.length;
     const out = items.map(() => ({ text: '', kind: '' }));
@@ -487,7 +489,7 @@
       // now…") would grab unrelated words across the sentence.
       if (span[i] || prep[i].none || !prep[i].meanings.size || !prep[i].content.size) continue;
       const j = nearest(i, prep[i].meanings, false, wide);
-      if (j >= 0) claim(i, j, j, 'inferred', 'lexicon'); // ~77% right when graded: shown as ≈
+      if (j >= 0) claim(i, j, j, 'inferred', 'lexicon'); // a meaning match (~77–90% right when graded): shown as ≈
     }
     const near = Math.max(4, Math.ceil(toks.length * 0.25));
     // Phase 3n — a negative (לֹא, οὐ: "not") that this version words as "no",
@@ -523,6 +525,18 @@
       if (j < 0 && prep[i].meanings.size) j = nearest(i, prep[i].meanings, false, near);
       if (j >= 0) claim(i, j, j, 'match', 'second');
     }
+    // Phase 3d — a small word (כִּי "for", אִם "if", עִם "with") that the
+    // Berean leaves without English but this version translates: its gloss
+    // word, when it occurs exactly once among the unclaimed words nearby.
+    for (let i = 0; i < n; i++) {
+      if (span[i] || !prep[i].none) continue;
+      const g = wordsOf(String(items[i].gloss || '').replace(/\//g, ' ')).filter(t => t.grammar).map(t => t.stem);
+      if (!g.length) continue;
+      const exp = expectedAt(i);
+      const hits = [];
+      for (let j = 0; j < toks.length; j++) if (!used[j] && g.includes(toks[j].stem) && Math.abs(j - exp) <= near) hits.push(j);
+      if (hits.length === 1) claim(i, hits[0], hits[0], 'inferred', 'small');
+    }
     // Phase 3b — a grammar-word rendering ("His", "to them") that occurs only
     // once in the sentence is unambiguous even if it sits a few words away.
     for (let i = 0; i < n; i++) {
@@ -539,14 +553,14 @@
     // these words repeat all through a sentence.
     for (let i = 0; i < n; i++) {
       if (span[i] || prep[i].none || !prep[i].func.size) continue;
-      const j = nearest(i, prep[i].func, true, 2.5);
+      const j = opts.loose ? -1 : nearest(i, prep[i].func, true, 2.5);
       if (j >= 0) claim(i, j, j, 'inferred', 'grammar'); // small words repeat: ~85% right when graded, shown as ≈
     }
     // Phase 5 — a content word with no lexical match, alone in its slot: if
     // the anchors on either side leave a short run of unclaimed English with
     // content in it, that run is this version's rendering (NIV "teachers of
     // the law" for γραμματεῖς). Marked as inferred.
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < n && !opts.loose; i++) {
       if (span[i] || prep[i].none || !prep[i].content.size) continue;
       let l = i - 1; while (l >= 0 && !span[l]) l--;
       let r = i + 1; while (r < n && !span[r]) r++;
@@ -561,8 +575,22 @@
       if (s < 0) continue;
       while (s <= e && toks[s].grammar) s++;
       while (e >= s && toks[e].grammar) e--;
-      if (s > e || e - s > 4) continue;
+      if (s > e || e - s > 3) continue; // longer runs swallow neighbours' words ("teachers of the law" fits)
       claim(i, s, e, 'inferred', 'gap');
+    }
+    // Phase 5b — keep a rendering whole at its edges: a verb's particle
+    // ("brought up", "lie down", "cast out") and a preposition the Berean
+    // wording itself has ("with us", "by him").
+    const PARTICLE = new Set(['up', 'down', 'out', 'off', 'away', 'forth', 'back', 'together', 'aside']);
+    for (let i = 0; i < n; i++) {
+      if (!span[i]) continue;
+      const own = new Set(wordsOf(bsbDirect(items[i].bsb || '')).map(t => t.low));
+      let [s0, e0] = span[i];
+      const nx = e0 + 1;
+      if (nx < toks.length && !used[nx] && PARTICLE.has(toks[nx].low) && (own.has(toks[nx].low) || items[i].verb)) e0 = nx;
+      const pv = s0 - 1;
+      if (pv >= 0 && !used[pv] && toks[pv].grammar && own.has(toks[pv].low) && !PARTICLE.has(toks[pv].low)) s0 = pv;
+      if (s0 !== span[i][0] || e0 !== span[i][1]) claim(i, s0, e0, out[i].kind, out[i].via);
     }
     // Phase 6 — names spelled a little differently (KJV "Hazezon-tamar", BSB
     // "Hazazon-tamar"; "Beth-lehem" / "Bethlehem"): a capitalised word within
