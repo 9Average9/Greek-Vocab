@@ -39869,3 +39869,20 @@ html.mv-embed .rhema-header { padding-top: 6px !important; }
 .mv-tab:not(.on) { padding-right: 8px; }
 .mv-tab { min-width: 78px; }
 .mv-tab.on { flex-grow: 1.45; }
+/* Every tab stays on screen and big enough to press: they share the strip
+   evenly and wrap onto a second row when needed (app.js _mvLayoutTabs). The
+   text shrinks to fit its tab instead of being cut off. */
+.mv-tabs { display: grid; grid-template-columns: repeat(var(--mv-cols, 2), minmax(0, 1fr)); gap: 4px; overflow: visible; }
+.mv-tab { min-width: 0; max-width: none; height: 42px; padding: 0 2px 0 8px; touch-action: manipulation; }
+.mv-tabs.mv-two-rows .mv-tab { height: 38px; }
+.mv-tab:not(.on) { padding-right: 8px; }
+.mv-tab-label b, .mv-tab-label small { display: block; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+.mv-tab-x { width: 30px; height: 100%; margin-right: -2px; }
+.mv-add-tab { width: 44px; height: 42px; }
+.mv-exit { width: 42px; height: 42px; }
+.mv-tabbar.mv-stacked { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 4px; }
+.mv-tabbar.mv-stacked .mv-tabs { grid-row: 1 / span 2; align-self: center; }
+.mv-tabbar.mv-stacked .mv-add-tab, .mv-tabbar.mv-stacked .mv-exit { width: 42px; height: 38px; }
+.mv-tabbar.mv-stacked .mv-exit { border-radius: 12px; }
+.mv-tab.on .mv-tab-x { width: 26px; }
+@media (min-width: 700px) { .mv-tabs:not(.mv-two-rows) { grid-template-columns: repeat(var(--mv-cols, 2), minmax(0, 240px)); } }
