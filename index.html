@@ -346,7 +346,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.562" rel="stylesheet"/>
+<link href="style.css?v=3.0.563" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -10887,13 +10887,9 @@ Verb Endings
 <span class="material-symbols-outlined">travel_explore</span>
 <span>Follow this journey</span>
 </button>
-<button class="rhema-vsheet-action" id="rhemaVerseSheetWordBtn" onclick="rhemaOpenEnglishWordPicker()">
+<button class="rhema-vsheet-action" id="rhemaVerseSheetWordBtn" onclick="rhemaOpenWordByWord()">
 <span class="material-symbols-outlined">translate</span>
-<span>Look up a word</span>
-</button>
-<button class="rhema-vsheet-action rhema-vsheet-single-only" id="rhemaVerseSheetInterlinearBtn" onclick="rhemaOpenInterlinearFromMenu()">
-<span class="material-symbols-outlined">reorder</span>
-<span>Interlinear</span>
+<span>Word by word</span>
 </button>
 </div>
 </div>
@@ -10933,11 +10929,13 @@ Verb Endings
 <div class="rhema-note-card rhema-il-card" onclick="event.stopPropagation()">
 <div class="rhema-il-head">
 <div class="rhema-il-title">
-<span class="rhema-il-kicker">Interlinear</span>
-<span class="rhema-il-ref" id="rhemaInterlinearRef"></span>
+<span class="rhema-il-kicker">Word by word</span>
+<span class="rhema-wbw-refrow"><button type="button" class="rhema-wbw-step" id="rhemaWbwPrev" onclick="rhemaWbwStep(-1)" aria-label="Previous verse"><span class="material-symbols-outlined">chevron_left</span></button><span class="rhema-il-ref" id="rhemaInterlinearRef"></span><button type="button" class="rhema-wbw-step" id="rhemaWbwNext" onclick="rhemaWbwStep(1)" aria-label="Next verse"><span class="material-symbols-outlined">chevron_right</span></button></span>
 </div>
-<button class="rhema-note-x" onclick="closeRhemaInterlinear()" aria-label="Close interlinear"><span class="material-symbols-outlined">close</span></button>
+<button class="rhema-note-x" onclick="closeRhemaInterlinear()" aria-label="Close word by word"><span class="material-symbols-outlined">close</span></button>
 </div>
+<div class="rhema-wbw-tabs" id="rhemaWbwTabs" role="tablist"></div>
+<div class="rhema-wbw-en" id="rhemaWbwEnglish" hidden></div>
 <p class="rhema-il-english" id="rhemaInterlinearEnglish"></p>
 <p class="rhema-il-versionnote" id="rhemaInterlinearVersionNote" style="display:none"></p>
 <div class="rhema-il-grid" id="rhemaInterlinearGrid"></div>
@@ -17295,19 +17293,19 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.562"></script>
-<script src="app.js?v=3.0.562"></script>
-<script src="rhema-word-study.js?v=3.0.562"></script>
+<script src="rhema-align.js?v=3.0.563"></script>
+<script src="app.js?v=3.0.563"></script>
+<script src="rhema-word-study.js?v=3.0.563"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.562"></script>
-<script src="verse-structure.js?v=3.0.562"></script>
-<script src="vs-structure.js?v=3.0.562"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.563"></script>
+<script src="verse-structure.js?v=3.0.563"></script>
+<script src="vs-structure.js?v=3.0.563"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
 <script src="sermon-notes.js?v=3.0.460"></script>
 <script src="bible-quiz.js?v=3.0.473"></script>
-<script src="firebase-lb.js?v=3.0.562" type="module"></script>
+<script src="firebase-lb.js?v=3.0.563" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

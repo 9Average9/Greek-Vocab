@@ -30447,7 +30447,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.562";
+const APP_VERSION = "3.0.563";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30470,6 +30470,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.563 &mdash; Word by word</div>
+<ul>
+  <li><strong>One place for a verse&rsquo;s words</strong> &mdash; <em>Look up a word</em> and <em>Interlinear</em> are now one button, <em>Word by word</em>, with tabs: <em>Your English</em> (your version in reading order, the original word under each part) and the original&rsquo;s own order (<em>Hebrew</em> and <em>Septuagint</em> in the Old Testament, <em>Greek</em> in the New).</li>
+  <li><strong>Step through the chapter</strong> &mdash; Arrows beside the reference move to the previous or next verse without closing.</li>
+</ul>
 <div class="un-version-label">v3.0.562 &mdash; Better links for every version</div>
 <ul>
   <li><strong>Checked version by version</strong> &mdash; Word links were hand-reviewed in sample chapters of the NIV, NKJV, NASB, CSB and NLT: about 91&ndash;94% of linked words are right in each, and the less certain ones are marked &asymp;.</li>
@@ -40195,8 +40200,9 @@ function _rhemaRenderVerseSheet() {
   const study = document.getElementById('rhemaVerseSheetStudy');
   if (study) study.style.display = multi ? 'none' : '';
   const wordBtn = document.getElementById('rhemaVerseSheetWordBtn');
-  // Works for one or many selected verses (words are grouped per verse).
-  if (wordBtn) wordBtn.style.display = _rhemaShowEnglish ? '' : 'none';
+  // Word by word: always offered (several selected verses start at the first;
+  // its arrows step through the chapter).
+  if (wordBtn) wordBtn.style.display = '';
   const journeyBtn = document.getElementById('rhemaVerseSheetJourneyBtn');
   if (journeyBtn) {
     if (multi) { journeyBtn.style.display = 'none'; }
@@ -41750,7 +41756,86 @@ function _rhemaOpenWordPicker(mode = 'lookup') {
   closeRhemaVerseSheet();
   document.getElementById('rhemaWordPickModal')?.classList.add('open');
 }
-function rhemaOpenEnglishWordPicker() { _rhemaOpenLookup(); }
+// ── Word by word ──────────────────────────────────────────────────────────────
+// One sheet for a verse's words, two ways round: "Your English" (your version
+// in reading order with the original word under each part) and the original's
+// own order (Hebrew or Septuagint for the Old Testament, Greek for the New).
+// ‹ › step through the chapter's verses.
+let _rhemaWbwTab = 'en';
+let _rhemaWbwRef = null;
+function _rhemaWbwTabsFor(book) {
+  return isRhemaOTBook(book)
+    ? [['en', 'Your English'], ['hebrew', 'Hebrew'], ['lxx', 'Septuagint']]
+    : [['en', 'Your English'], ['greek', 'Greek']];
+}
+function _rhemaWbwOrigTab(book) { return isRhemaOTBook(book) ? (_rhemaOTLayer === 'lxx' ? 'lxx' : 'hebrew') : 'greek'; }
+// Tabs, arrows and which parts of the sheet show, for the current tab.
+function _rhemaWbwChrome(p) {
+  const tabs = _rhemaWbwTabsFor(p.book);
+  if (!tabs.some(t => t[0] === _rhemaWbwTab)) _rhemaWbwTab = 'en';
+  const bar = document.getElementById('rhemaWbwTabs');
+  if (bar) bar.innerHTML = tabs.map(([k, l]) => `<button type="button" role="tab" class="rhema-wbw-tab${k === _rhemaWbwTab ? ' on' : ''}" aria-selected="${k === _rhemaWbwTab}" onclick="rhemaWbwShow(_rhemaWbwRef,'${k}')">${l}</button>`).join('');
+  const isEn = _rhemaWbwTab === 'en';
+  ['rhemaInterlinearEnglish', 'rhemaInterlinearGrid', 'rhemaInterlinearFoot'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = isEn; });
+  const vn = document.getElementById('rhemaInterlinearVersionNote'); if (vn && isEn) vn.style.display = 'none';
+  const en = document.getElementById('rhemaWbwEnglish'); if (en) en.hidden = !isEn;
+  const list = _rhemaVerseList(p.book, String(p.chapter));
+  const at = list.indexOf(String(p.verse));
+  const prev = document.getElementById('rhemaWbwPrev'), next = document.getElementById('rhemaWbwNext');
+  if (prev) prev.disabled = at <= 0;
+  if (next) next.disabled = at < 0 || at >= list.length - 1;
+  const refEl = document.getElementById('rhemaInterlinearRef');
+  if (refEl) refEl.textContent = `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}`;
+}
+function rhemaOpenWordByWord() {
+  const refs = _rhemaSel.size > 1 ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []);
+  if (!refs.length) return;
+  closeRhemaVerseSheet();
+  rhemaWbwShow(refs[0], 'en');
+}
+async function rhemaWbwShow(ref, tab) {
+  const p = ref ? _rhemaParseRef(ref) : null;
+  if (!p) return;
+  if (tab) _rhemaWbwTab = tab;
+  _rhemaWbwRef = ref;
+  if (_rhemaWbwTab !== 'en') {
+    // The original's own order: the interlinear (Hebrew / Septuagint / Greek).
+    if (isRhemaOTBook(p.book)) { const layer = _rhemaWbwTab === 'lxx' ? 'lxx' : 'hebrew'; if (_rhemaOTLayer !== layer) setRhemaOTLayer(layer); }
+    return rhemaOpenInterlinear(ref);
+  }
+  _rhemaInterlinearRef = ref;
+  _rhemaWbwChrome(p);
+  document.getElementById('rhemaInterlinearModal')?.classList.add('open');
+  const en = document.getElementById('rhemaWbwEnglish');
+  if (!en) return;
+  en.innerHTML = '<div class="rhema-lk-loading">Lining up the words…</div>';
+  try { await _rhemaEnsureLinkData(p.book); } catch {}
+  if (_rhemaWbwRef !== ref || _rhemaWbwTab !== 'en') return;
+  const L = _rhemaVerseLinks(ref);
+  _rhemaLookupLinks = [L]; _rhemaLookupRefs = [ref];
+  const lang = isRhemaOTBook(p.book) ? 'Hebrew' : 'Greek';
+  if (!L) { en.innerHTML = `<p class="rhema-lk-foot">This verse’s words can’t be lined up with the ${lang} yet.</p>`; return; }
+  const esc = _escapeRhemaAttr;
+  en.innerHTML = `<div class="rhema-wbw-hint">Tap a word to see the ${lang} behind it</div>` +
+    `<div class="rhema-word-chips rhema-lk-chips">${_rhemaLookupChipsHtml(L, 0)}</div>` +
+    (_rhemaBridgeOpts(L.ver).loose ? `<p class="rhema-lk-foot">The ${esc(L.ver)} says things in its own words, so fewer words line up one to one with the ${lang}. For word-for-word study, a more literal version (BSB, NASB, ESV, KJV) links more.</p>` : '') +
+    `<p class="rhema-lk-foot">${esc(L.ver)} in reading order · <b>≈</b> best match · <span class="rhema-lk-key-part">faded</span> part of the word beside it · <span class="rhema-lk-key-none">plain</span> no ${lang} word (tap for its English meaning)</p>` +
+    `<button type="button" class="rhema-lk-switch" onclick="rhemaWbwEnglishMeanings()">English meanings of every word</button>`;
+}
+function rhemaWbwStep(d) {
+  const p = _rhemaWbwRef ? _rhemaParseRef(_rhemaWbwRef) : null;
+  if (!p) return;
+  const list = _rhemaVerseList(p.book, String(p.chapter));
+  const v = list[list.indexOf(String(p.verse)) + d];
+  if (v) rhemaWbwShow(_rhemaXrefKeyForVerse(p.book, p.chapter, v));
+}
+function rhemaWbwEnglishMeanings() {
+  const ref = _rhemaWbwRef;
+  closeRhemaInterlinear();
+  _rhemaMenuRef = ref;
+  _rhemaOpenWordPicker('english');
+}
+function rhemaOpenEnglishWordPicker() { rhemaOpenWordByWord(); }
 
 // ── Look up a word: the Hebrew / Greek word behind each English word ──────────
 // The verse menu's word picker lists the verse in the reader's own English, in
@@ -41910,23 +41995,26 @@ function rhemaLookupPiece(li, pi) {
   if (pc.orig.length === 1) return rhemaLookupOpen(li, pc.orig[0]);
   const esc = _escapeRhemaAttr;
   const lex = L.layer === 'hebrew' ? (window.RhemaHebrewLexicon || {}) : (window.RhemaLexicon || {});
-  const wrap = document.getElementById('rhemaWordPickChips');
+  const inSheet = document.getElementById('rhemaInterlinearModal')?.classList.contains('open') && _rhemaWbwTab === 'en';
+  const wrap = document.getElementById(inSheet ? 'rhemaWbwEnglish' : 'rhemaWordPickChips');
   const label = document.getElementById('rhemaWordPickLabel');
-  if (label) label.textContent = `“${pc.text}” is ${pc.orig.length} ${L.layer === 'hebrew' ? 'Hebrew' : 'Greek'} words. Pick one:`;
-  if (wrap) wrap.innerHTML = pc.orig.map(i => {
+  const pickMsg = `“${pc.text}” is ${pc.orig.length} ${L.layer === 'hebrew' ? 'Hebrew' : 'Greek'} words. Pick one:`;
+  if (label && !inSheet) label.textContent = pickMsg;
+  if (wrap) wrap.innerHTML = (inSheet ? `<div class="rhema-wbw-hint">${esc(pickMsg)}</div>` : '') + pc.orig.map(i => {
     const w = L.words[i] || [];
     const e = lex[String(w[1])] || {};
     const here = L.layer === 'hebrew' ? (_rhemaHebILWord(L.p.book, L.oc, L.ov, i)?.en || '') : '';
     return `<button type="button" class="rhema-lk-choice" onclick="rhemaLookupOpen(${li},${i})">` +
       `<span><b>${esc(e.gloss || e.brief || here || '')}</b>${here ? `<small>BSB here: “${esc(_rhemaHebPlain(here))}”</small>` : ''}</span>` +
       `<span class="rhema-lk-choice-w${L.layer === 'hebrew' ? ' rhema-hebrew-text' : ''}">${esc(_rhemaOrigSurface(L, i))}</span></button>`;
-  }).join('');
-  _rhemaWordPickSwitch('Back to the verse', '_rhemaOpenLookup(true)');
+  }).join('') + (inSheet ? `<button type="button" class="rhema-lk-switch" onclick="rhemaWbwShow(_rhemaWbwRef,'en')">Back to the verse</button>` : '');
+  if (!inSheet) _rhemaWordPickSwitch('Back to the verse', '_rhemaOpenLookup(true)');
 }
 function rhemaLookupOpen(li, i) {
   const L = _rhemaLookupLinks[li];
   if (!L) return;
   closeRhemaWordPick();
+  if (document.getElementById('rhemaInterlinearModal')?.classList.contains('open')) closeRhemaInterlinear();
   // The Hebrew word's sheet reads the Hebrew text: switch the Old Testament
   // pane from the Septuagint if that's what's showing.
   if (L.layer === 'hebrew' && _rhemaOTLayer === 'lxx') setRhemaOTLayer('hebrew');
@@ -41946,6 +42034,8 @@ let _rhemaInterlinearChoiceRef = null;
 function rhemaOpenInterlinearFromMenu() {
   const ref = _rhemaMenuRef;
   closeRhemaVerseSheet();
+  const p0 = ref && _rhemaParseRef(ref);
+  if (p0) return rhemaWbwShow(ref, _rhemaWbwOrigTab(p0.book));
   const p = ref && _rhemaParseRef(ref);
   if (p && isRhemaOTBook(p.book)) {
     _rhemaInterlinearChoiceRef = ref;
@@ -41979,6 +42069,7 @@ async function rhemaOpenInterlinear(ref) {
   const refEl = document.getElementById('rhemaInterlinearRef');
   const engEl = document.getElementById('rhemaInterlinearEnglish');
   const gridEl = document.getElementById('rhemaInterlinearGrid');
+  if (p) { _rhemaWbwRef = ref; if (_rhemaWbwTab === 'en') _rhemaWbwTab = _rhemaWbwOrigTab(p.book); _rhemaWbwChrome(p); }
   if (refEl && p) refEl.textContent = `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}`;
   if (engEl && p) engEl.textContent = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
   if (gridEl) gridEl.innerHTML = '<div class="rhema-il-loading">Loading…</div>';
