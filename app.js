@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.569";
+const APP_VERSION = "3.0.570";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30471,6 +30471,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.570 &mdash; Tabs that always fit</div>
+<ul>
+  <li><strong>Every tab easy to tap</strong> &mdash; Multi-view tabs now share the strip evenly on any screen, phone to desktop. When there are too many for one row they wrap onto a second row (the + and close buttons stack to make room) instead of sliding off screen.</li>
+  <li><strong>No more &ldquo;&hellip;&rdquo;</strong> &mdash; A tab&rsquo;s passage and translation shrink to fit, so you can always read exactly what each tab has open. Long book names switch to their short form (1 Corinthians &rarr; 1Co) only when the full name won&rsquo;t fit.</li>
+</ul>
 <div class="un-version-label">v3.0.569 &mdash; Multi-view tabs</div>
 <ul>
   <li><strong>Full-size Rhēmas, as tabs</strong> &mdash; Multi-view now gives each Rhēma (almost) the whole screen. Tabs along the very top show each one&rsquo;s passage and translation; tap a tab to switch, tap the guide&rsquo;s + to summon another (up to six), or the open tab&rsquo;s &#10005; to close it.</li>
@@ -53338,7 +53343,7 @@ let _mv = null;             // { tabs: [{ slot, label }], active }
 function _mvStored() { try { return JSON.parse(localStorage.getItem(MV_STORE) || 'null'); } catch { return null; } }
 function _mvPersist() {
   if (!_mv) return;
-  try { localStorage.setItem(MV_STORE, JSON.stringify({ tabs: _mv.tabs.map(t => ({ slot: t.slot, label: t.label || '' })), active: _mv.active })); } catch {}
+  try { localStorage.setItem(MV_STORE, JSON.stringify({ tabs: _mv.tabs.map(t => ({ slot: t.slot, label: t.label || '', short: t.short || '' })), active: _mv.active })); } catch {}
 }
 // A new tab starts at `ref` (or the main reader's place) in the main reader's
 // translation and language; after that it's on its own.
@@ -53389,8 +53394,9 @@ function _mvShell() {
 function _mvOnMessage(e) {
   if (e.origin !== location.origin || !e.data || !e.data.rhemaMV || !_mv) return;
   const t = _mvTab(e.data.rhemaMV);
-  if (!t || !e.data.label || t.label === e.data.label) return;
+  if (!t || !e.data.label || (t.label === e.data.label && t.short === e.data.short)) return;
   t.label = e.data.label;
+  t.short = e.data.short || '';
   _mvRenderTabs();
   _mvPersist();
 }
@@ -53402,22 +53408,68 @@ function _mvWinEl(t) {
   el.querySelector('.mv-frame').addEventListener('load', () => _mvFit(t.slot));
   return el;
 }
+// Tabs never scroll out of sight: they share the strip, and wrap onto a second
+// row when one row would make them too small to press (≥ 84px each).
+const MV_TAB_MIN = 84;
 function _mvRenderTabs() {
   const wrap = document.getElementById('mvTabs');
   if (!wrap || !_mv) return;
   const esc = _escapeRhemaAttr;
-  const crowded = _mv.tabs.length > 2;
   wrap.innerHTML = _mv.tabs.map(t => {
     const on = String(t.slot) === String(_mv.active);
     const [ref, ver] = String(t.label || '').split(' · ');
-    const refShown = t.label ? (crowded ? _mvShortLabel(ref) : ref) : 'Opening…';
+    const full = t.label ? ref : 'Opening…';
     return `<div class="mv-tab${on ? ' on' : ''}" role="tab" aria-selected="${on}" data-slot="${t.slot}" onclick="rhemaMvShow('${t.slot}')" title="${esc(t.label || '')}">` +
-      `<span class="mv-tab-label"><b>${esc(refShown)}</b>${ver ? `<small>${esc(ver)}</small>` : ''}</span>` +
+      `<span class="mv-tab-label"><b data-full="${esc(full)}" data-short="${esc(t.short || _mvShortLabel(full))}">${esc(full)}</b>${ver ? `<small>${esc(ver)}</small>` : ''}</span>` +
       `<button type="button" class="mv-tab-x" onclick="event.stopPropagation();rhemaMvRemove('${t.slot}')" aria-label="Close this tab"><span class="material-symbols-outlined">close</span></button></div>`;
   }).join('');
   const plus = document.getElementById('mvPlus');
   if (plus) plus.disabled = _mv.tabs.length >= MV_MAX;
-  wrap.querySelector('.mv-tab.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  _mvLayoutTabs();
+}
+function _mvLayoutTabs() {
+  const wrap = document.getElementById('mvTabs');
+  if (!wrap || !_mv) return;
+  const n = _mv.tabs.length;
+  const bar = wrap.closest('.mv-tabbar');
+  const perRowAt = () => { const w = wrap.clientWidth; return w ? Math.max(1, Math.min(n, Math.floor((w + 4) / (MV_TAB_MIN + 4)))) : 0; };
+  bar?.classList.remove('mv-stacked');
+  let perRow = perRowAt();
+  if (!perRow) return;
+  // Needs a second row: stack + and close so the tabs get that width back
+  // (unless that would fit them all on one row; then one slightly snug row).
+  if (perRow < n && bar) {
+    bar.classList.add('mv-stacked');
+    const stacked = perRowAt();
+    if (stacked >= n) { bar.classList.remove('mv-stacked'); perRow = n; } else perRow = stacked;
+  }
+  const rows = Math.ceil(n / perRow);
+  // Even rows: 5 tabs on a 3-wide strip become 3 + 2, not 4 + 1.
+  const cols = Math.ceil(n / rows);
+  wrap.style.setProperty('--mv-cols', cols);
+  wrap.classList.toggle('mv-two-rows', rows > 1);
+  wrap.querySelectorAll('.mv-tab-label').forEach(_mvFitLabel);
+}
+// Shrink a label's text until it fits its tab (never cut off with "…"). The
+// full book name is tried first, then the short one ("1Co 13:4").
+function _mvFitLabel(lab) {
+  const b = lab.querySelector('b'), sm = lab.querySelector('small');
+  const room = lab.clientWidth;
+  if (!room) return;
+  const fit = (el, max, min) => {
+    let px = max;
+    el.style.fontSize = px + 'px';
+    while (px > min && el.scrollWidth > room) { px -= 0.5; el.style.fontSize = px + 'px'; }
+    return el.scrollWidth <= room;
+  };
+  if (b) {
+    b.textContent = b.dataset.full;
+    if (!fit(b, 13, 10.5) && b.dataset.short && b.dataset.short !== b.dataset.full) {
+      b.textContent = b.dataset.short;
+      fit(b, 13, 8);
+    } else if (b.scrollWidth > room) fit(b, 10.5, 8);
+  }
+  if (sm) fit(sm, 10.5, 7.5);
 }
 // The Rhēma in a tab fills it; on a narrow screen it shrinks a little to keep
 // a phone-width layout (never below 55%).
@@ -53447,7 +53499,7 @@ function rhemaOpenMultiView(ref) {
   if (!_mv) {
     const st = _mvStored();
     const saved = (st?.tabs || st?.wins || []).filter(t => t && /^[1-6]$/.test(String(t.slot))).slice(0, MV_MAX);
-    _mv = { tabs: saved.map(t => ({ slot: String(t.slot), label: t.label || '' })), active: st?.active ? String(st.active) : null };
+    _mv = { tabs: saved.map(t => ({ slot: String(t.slot), label: t.label || '', short: t.short || '' })), active: st?.active ? String(st.active) : null };
     if (!_mv.tabs.length) {
       // First summon: two tabs at the main reader's place.
       ['1', '2'].forEach(slot => { _mvSeed(slot, null); _mv.tabs.push({ slot, label: '' }); });
@@ -53499,7 +53551,7 @@ function rhemaCloseMultiView() {
   _mv = null;
   try { _rhemaLoadLocalMarks(); renderRhemaVerse(); } catch {}
 }
-window.addEventListener('resize', () => { if (_mv) _mvFit(_mv.active); });
+window.addEventListener('resize', () => { if (_mv) { _mvFit(_mv.active); _mvLayoutTabs(); } });
 // From the verse menu: Multi-view with this verse in a new tab.
 function rhemaMultiViewFromMenu() {
   const ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
@@ -53541,7 +53593,8 @@ if (window.RHEMA_MV_SLOT) {
       try {
         if (!_rhemaBook) return;
         const label = `${_rhemaBookName(_rhemaBook)} ${_rhemaChapter}:${_rhemaVerse} · ${_rhemaReaderDisplayLabel()}`;
-        if (label !== last) { last = label; parent.postMessage({ rhemaMV: window.RHEMA_MV_SLOT, label }, location.origin); }
+        const short = `${RHEMA_BOOK_ABBR[_rhemaBook] || _rhemaBook} ${_rhemaChapter}:${_rhemaVerse}`;
+        if (label !== last) { last = label; parent.postMessage({ rhemaMV: window.RHEMA_MV_SLOT, label, short }, location.origin); }
       } catch {}
     }, 1000);
   };
