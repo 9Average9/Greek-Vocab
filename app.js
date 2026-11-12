@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.564";
+const APP_VERSION = "3.0.565";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30471,6 +30471,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.565 &mdash; Multi-view windows, your way</div>
+<ul>
+  <li><strong>Windows you can move anywhere</strong> &mdash; Drag a window by its title to place it anywhere; windows can overlap, and the one you touch comes to the front, like browser windows. Tidy (top) lays them all out neatly again.</li>
+  <li><strong>Resize from the corner</strong> &mdash; Drag the gold corner at a window&rsquo;s bottom left diagonally to make it bigger or smaller.</li>
+  <li><strong>Everything shrinks to fit</strong> &mdash; Inside a smaller window, the whole Rhēma scales down to fit, word sheets and menus included, so there&rsquo;s nothing to pan around.</li>
+  <li><strong>Matches your theme</strong> &mdash; Multi-view and its windows use your app colours, light or dark. The reference bar now stays put while you scroll inside a window.</li>
+</ul>
 <div class="un-version-label">v3.0.564 &mdash; Multi-view</div>
 <ul>
   <li><strong>Up to six Rhēmas at once</strong> &mdash; Open <em>Multi-view</em> (in the &#9776; menu&rsquo;s tools, or <em>Multi-view</em> on any verse) and the guide summons mini Rhēmas side by side. Each one is the full Rhēma, with its own passage, translation and language: Psalm 23 in Hebrew next to John 10 in Greek next to Ezekiel 34 in the NASB. Tap the gold + for more.</li>
@@ -53281,24 +53288,24 @@ function _gtCheckCompletion(topic, entry) {
 }
 
 // ── Multi-view ────────────────────────────────────────────────────────────────
-// The guide summons up to six mini Rhēmas, side by side. Each window is the
-// whole Rhēma (the app itself in window mode, index.html?mv=N): its own book,
-// chapter, translation and language, every tool, nothing that leaves Rhēma.
-// What a window shows is kept in its own storage slot, so the main reader keeps
-// its place; highlights, notes and saves are shared with everything (and every
-// window refreshes when another saves). Windows can be resized (drag the bar
-// under one), maximised (⤢), reordered (drag the handle), shown in one or two
-// columns, and Multi-view itself can be tucked into a pill to read the main
-// Rhēma and come back.
+// The guide summons up to six mini Rhēmas. Each window is the whole Rhēma (the
+// app itself in window mode, index.html?mv=N): its own book, chapter,
+// translation and language, every tool, nothing that leaves Rhēma. A window's
+// place is kept in its own storage slot, so the main reader keeps its place;
+// highlights, notes and saves are shared (every copy reloads them when another
+// saves). Windows float like browser windows: drag the title bar to move one,
+// the one you touch comes to the front, drag the bottom-left corner to resize,
+// ⤢ fills the screen, Tidy lays them all out. Inside, the Rhēma shrinks to fit
+// the window (sheets and all). Multi-view itself can shrink to a pill.
 const MV_MAX = 6;
 const MV_STORE = 'rhemaMultiView';
-let _mv = null;             // { wins: [{ slot, h, label }], cols, tucked, max }
+let _mv = null;             // { wins: [{ slot, r: {x,y,w,h} as fractions of the stage, z, label }], tucked, max, z }
 let _mvMinimized = false;
 
 function _mvStored() { try { return JSON.parse(localStorage.getItem(MV_STORE) || 'null'); } catch { return null; } }
 function _mvPersist() {
   if (!_mv) return;
-  try { localStorage.setItem(MV_STORE, JSON.stringify({ wins: _mv.wins.map(w => ({ slot: w.slot, h: w.h || null, label: w.label || '' })), cols: _mv.cols, tucked: !!_mv.tucked })); } catch {}
+  try { localStorage.setItem(MV_STORE, JSON.stringify({ wins: _mv.wins.map(w => ({ slot: w.slot, r: w.r, z: w.z, label: w.label || '' })), tucked: !!_mv.tucked })); } catch {}
 }
 // A new window starts at `ref` (or the main reader's place) in the main
 // reader's translation and language; after that it's on its own.
@@ -53320,6 +53327,38 @@ function _mvFreeSlot() {
   for (let i = 1; i <= MV_MAX; i++) if (!used.has(String(i))) return String(i);
   return null;
 }
+function _mvStage() { return document.getElementById('mvStage'); }
+function _mvStageSize() { const s = _mvStage(); return { W: s?.clientWidth || 360, H: s?.clientHeight || 560 }; }
+function _mvWinBySlot(slot) { return _mv?.wins.find(w => String(w.slot) === String(slot)) || null; }
+function _mvEl(slot) { return _mvStage()?.querySelector(`.mv-win[data-slot="${slot}"]`) || null; }
+
+// Tidy: a neat grid that fills the stage (1 column for two windows, then 2).
+function _mvTidyRects(n) {
+  const cols = n <= 2 ? 1 : 2, rows = Math.ceil(n / cols), g = 0.02;
+  const w = (1 - g * (cols + 1)) / cols, h = (1 - g * (rows + 1)) / rows;
+  const rects = Array.from({ length: n }, (_, i) => ({ x: g + (i % cols) * (w + g), y: g + Math.floor(i / cols) * (h + g), w, h }));
+  // An odd one out takes the full width of its row.
+  if (cols === 2 && n % 2) { const last = rects[n - 1]; last.x = g; last.w = 1 - 2 * g; }
+  return rects;
+}
+// A new window: cascaded from the front window, a comfortable size.
+function _mvNewRect() {
+  const top = _mv.wins.slice().sort((a, b) => (b.z || 0) - (a.z || 0))[0];
+  const w = 0.88, h = 0.55;
+  if (!top) return { x: 0.06, y: 0.04, w, h };
+  let x = Math.min(1 - w, (top.r?.x || 0) + 0.05), y = (top.r?.y || 0) + 0.08;
+  if (y + h > 1) y = 0.02;
+  return { x: Math.max(0, x), y, w, h };
+}
+function _mvClampRect(r) {
+  const { W, H } = _mvStageSize();
+  const minW = Math.min(1, 190 / W), minH = Math.min(1, 170 / H);
+  const w = Math.max(minW, Math.min(1, r.w)), h = Math.max(minH, Math.min(1, r.h));
+  // Keep at least the title bar reachable.
+  const x = Math.max(-w + 80 / W, Math.min(1 - 80 / W, r.x));
+  const y = Math.max(0, Math.min(1 - 44 / H, r.y));
+  return { x, y, w, h };
+}
 function _mvShell() {
   let ov = document.getElementById('mvOverlay');
   if (ov) return ov;
@@ -53330,16 +53369,16 @@ function _mvShell() {
   ov.setAttribute('aria-label', 'Multi-view');
   ov.innerHTML = `
     <div class="mv-top">
-      <div class="mv-title">Multi-view<small id="mvSub"></small></div>
+      <div class="mv-title">Multi-view<small id="mvSub">Your main reading stays where you left it</small></div>
       <div class="mv-top-actions">
-        <button type="button" class="mv-ibtn" id="mvColsBtn" onclick="rhemaMvToggleCols()" aria-label="One or two columns"><span class="material-symbols-outlined">grid_view</span></button>
+        <button type="button" class="mv-ibtn" onclick="rhemaMvTidy()" aria-label="Tidy: lay the windows out neatly"><span class="material-symbols-outlined">auto_awesome_mosaic</span></button>
         <button type="button" class="mv-ibtn" onclick="rhemaMvMinimize()" aria-label="Shrink Multi-view to read your main Rhēma"><span class="material-symbols-outlined">picture_in_picture_alt</span></button>
         <button type="button" class="mv-ibtn" onclick="rhemaCloseMultiView()" aria-label="Close Multi-view"><span class="material-symbols-outlined">close</span></button>
       </div>
     </div>
     <div class="mv-stage" id="mvStage"></div>
     <div class="mv-bottom">
-      <div class="mv-hint" id="mvHint">Drag ═ to resize · ⤢ to fill · ⠿ to move</div>
+      <div class="mv-hint" id="mvHint"><b>Drag the title</b> to move · <b>drag the <span class="material-symbols-outlined">open_in_full</span> corner</b> to resize · tap a window to bring it forward</div>
       <button type="button" class="mv-guide" id="mvGuide" onclick="rhemaMvToggleTuck()" aria-label="Tuck the guide away for more room"><span class="mv-glow"></span><img src="assets/mascot/guide-summon.webp" alt="" width="210" height="212" decoding="async"/></button>
       <div class="mv-add"><button type="button" class="mv-plus" id="mvPlus" onclick="rhemaMvAdd()" aria-label="Summon another Rhēma"><span class="material-symbols-outlined">add</span></button><span class="mv-count" id="mvCount"></span></div>
     </div>`;
@@ -53356,10 +53395,12 @@ function _mvShell() {
 }
 function _mvOnMessage(e) {
   if (e.origin !== location.origin || !e.data || !e.data.rhemaMV || !_mv) return;
-  const w = _mv.wins.find(x => String(x.slot) === String(e.data.rhemaMV));
-  if (!w || !e.data.label || w.label === e.data.label) return;
+  const w = _mvWinBySlot(e.data.rhemaMV);
+  if (!w) return;
+  if (e.data.focus) { _mvFocus(w.slot); return; }
+  if (!e.data.label || w.label === e.data.label) return;
   w.label = e.data.label;
-  const el = document.querySelector(`#mvStage .mv-win[data-slot="${w.slot}"] .mv-label`);
+  const el = _mvEl(w.slot)?.querySelector('.mv-label');
   if (el) el.textContent = w.label;
   _mvPersist();
 }
@@ -53368,72 +53409,90 @@ function _mvWinEl(w) {
   el.className = 'mv-win mv-summoned';
   el.dataset.slot = w.slot;
   el.innerHTML = `
-    <div class="mv-wbar">
-      <span class="mv-grip material-symbols-outlined" aria-label="Drag to move">drag_indicator</span>
+    <div class="mv-wbar" title="Drag to move">
       <span class="mv-label">${_escapeRhemaAttr(w.label || 'Opening…')}</span>
-      <button type="button" class="mv-wbtn" onclick="rhemaMvMaximize('${w.slot}')" aria-label="Fill the screen with this window"><span class="material-symbols-outlined">open_in_full</span></button>
-      <button type="button" class="mv-wbtn" onclick="rhemaMvRemove('${w.slot}')" aria-label="Send this window away"><span class="material-symbols-outlined">close</span></button>
+      <button type="button" class="mv-wbtn" data-act="max" aria-label="Fill the screen with this window"><span class="material-symbols-outlined">open_in_full</span></button>
+      <button type="button" class="mv-wbtn" data-act="close" aria-label="Send this window away"><span class="material-symbols-outlined">close</span></button>
     </div>
     <div class="mv-body"><iframe class="mv-frame" title="Rhēma window" src="index.html?mv=${w.slot}"></iframe></div>
-    <div class="mv-resize" aria-label="Drag to resize"><span></span></div>`;
-  el.querySelector('.mv-grip').addEventListener('pointerdown', (ev) => _mvStartMove(ev, w.slot));
-  el.querySelector('.mv-resize').addEventListener('pointerdown', (ev) => _mvStartResize(ev, w.slot));
+    <button type="button" class="mv-corner" aria-label="Drag to resize"><span class="material-symbols-outlined">open_in_full</span></button>`;
+  el.querySelector('[data-act="max"]').addEventListener('click', () => rhemaMvMaximize(w.slot));
+  el.querySelector('[data-act="close"]').addEventListener('click', () => rhemaMvRemove(w.slot));
+  el.querySelector('.mv-wbar').addEventListener('pointerdown', (ev) => { if (!ev.target.closest('button')) _mvStartMove(ev, w.slot); });
   el.querySelector('.mv-wbar').addEventListener('dblclick', (ev) => { if (!ev.target.closest('button')) rhemaMvMaximize(w.slot); });
+  el.querySelector('.mv-corner').addEventListener('pointerdown', (ev) => _mvStartResize(ev, w.slot));
+  el.addEventListener('pointerdown', () => _mvFocus(w.slot), true);
+  el.querySelector('.mv-frame').addEventListener('load', () => _mvFit(w.slot));
   setTimeout(() => el.classList.remove('mv-summoned'), 900);
   return el;
 }
-// Lay the windows out: order, column count, heights, the maximised one.
+// The touched window comes to the front.
+function _mvFocus(slot) {
+  const w = _mvWinBySlot(slot);
+  if (!w) return;
+  const topZ = Math.max(0, ..._mv.wins.map(x => x.z || 0));
+  if ((w.z || 0) < topZ || _mv.wins.filter(x => (x.z || 0) === topZ).length > 1) { w.z = topZ + 1; _mvPlace(w); _mvPersist(); }
+  _mvStage()?.querySelectorAll('.mv-win').forEach(e => e.classList.toggle('mv-front', e.dataset.slot === String(slot)));
+}
+// The Rhēma inside a window shrinks to fit it: laid out for about a phone's
+// width, scaled down when the window is narrower or shorter (never below 55%).
+function _mvFit(slot) {
+  const el = _mvEl(slot);
+  const fr = el?.querySelector('.mv-frame');
+  if (!el || !fr) return;
+  const b = el.querySelector('.mv-body').getBoundingClientRect();
+  const s = Math.max(0.55, Math.min(1, b.width / 380, b.height / 520));
+  try {
+    const de = fr.contentDocument?.documentElement;
+    if (de && de.style.zoom !== String(+s.toFixed(3))) de.style.zoom = String(+s.toFixed(3));
+  } catch {}
+}
+function _mvPlace(w) {
+  const el = _mvEl(w.slot);
+  if (!el) return;
+  const { W, H } = _mvStageSize();
+  if (String(_mv.max) === String(w.slot)) {
+    Object.assign(el.style, { left: '0px', top: '0px', width: W + 'px', height: H + 'px', zIndex: 900 });
+  } else {
+    const r = w.r;
+    Object.assign(el.style, { left: Math.round(r.x * W) + 'px', top: Math.round(r.y * H) + 'px', width: Math.round(r.w * W) + 'px', height: Math.round(r.h * H) + 'px', zIndex: String(10 + (w.z || 0)) });
+  }
+  el.classList.toggle('mv-max', String(_mv.max) === String(w.slot));
+}
 function _mvLayout() {
   if (!_mv) return;
-  const stage = document.getElementById('mvStage');
   const ov = document.getElementById('mvOverlay');
-  if (!stage || !ov) return;
+  ov?.classList.toggle('mv-tucked', !!_mv.tucked);
+  _mv.wins.forEach(w => { w.r = _mvClampRect(w.r || _mvNewRect()); _mvPlace(w); });
   const n = _mv.wins.length;
-  stage.classList.toggle('mv-two', _mv.cols === 2);
-  stage.classList.toggle('mv-has-max', !!_mv.max);
-  ov.classList.toggle('mv-tucked', !!_mv.tucked);
-  const H = stage.clientHeight || 500;
-  const perRow = _mv.cols === 2 ? 2 : 1;
-  const rows = Math.max(1, Math.ceil(n / perRow));
-  const auto = Math.max(170, Math.floor((H - 10 * (Math.min(rows, 2) - 1)) / Math.min(rows, 2)));
-  _mv.wins.forEach((w, i) => {
-    const el = stage.querySelector(`.mv-win[data-slot="${w.slot}"]`);
-    if (!el) return;
-    el.style.order = String(i);
-    el.classList.toggle('mv-max', String(_mv.max) === String(w.slot));
-    el.style.height = _mv.max ? '' : `${Math.min(H, w.h || auto)}px`;
-  });
   const cnt = document.getElementById('mvCount');
   if (cnt) cnt.textContent = `${n} of ${MV_MAX}`;
   const plus = document.getElementById('mvPlus');
   if (plus) plus.disabled = n >= MV_MAX;
-  const sub = document.getElementById('mvSub');
-  if (sub) sub.textContent = 'Your main reading stays where you left it';
-  const cb = document.getElementById('mvColsBtn');
-  if (cb) cb.querySelector('.material-symbols-outlined').textContent = _mv.cols === 2 ? 'view_agenda' : 'grid_view';
+  requestAnimationFrame(() => _mv && _mv.wins.forEach(w => _mvFit(w.slot)));
 }
 function rhemaOpenMultiView(ref) {
   try { closeRhemaWheel(); } catch {}
   const ov = _mvShell();
   if (!_mv) {
     const st = _mvStored();
-    _mv = { wins: (st?.wins || []).filter(w => w && /^[1-6]$/.test(String(w.slot))).slice(0, MV_MAX), cols: st?.cols === 2 ? 2 : 1, tucked: !!st?.tucked, max: null };
+    _mv = { wins: (st?.wins || []).filter(w => w && /^[1-6]$/.test(String(w.slot))).slice(0, MV_MAX), tucked: !!st?.tucked, max: null };
+    _mv.wins.forEach(w => { if (!w.r || typeof w.r.x !== 'number') w.r = null; });
     if (!_mv.wins.length) {
-      // First summon: two windows at the main reader's place.
-      ['1', '2'].forEach(slot => { _mvSeed(slot, null); _mv.wins.push({ slot, h: null, label: '' }); });
+      // First summon: two windows at the main reader's place, one above the other.
+      ['1', '2'].forEach(slot => { _mvSeed(slot, null); _mv.wins.push({ slot, r: null, z: 0, label: '' }); });
     }
-    const stage = document.getElementById('mvStage');
+    const tidy = _mvTidyRects(_mv.wins.length);
+    _mv.wins.forEach((w, i) => { if (!w.r) w.r = tidy[i]; });
+    const stage = _mvStage();
     stage.innerHTML = '';
     _mv.wins.forEach(w => stage.appendChild(_mvWinEl(w)));
   }
-  if (ref) { rhemaMvAdd(ref); }
   _mvMinimized = false;
   document.getElementById('mvPill').hidden = true;
   ov.classList.add('open');
-  ov.classList.remove('mv-summon');
-  void ov.offsetWidth;
-  ov.classList.add('mv-summon');
-  requestAnimationFrame(_mvLayout);
+  ov.classList.remove('mv-summon'); void ov.offsetWidth; ov.classList.add('mv-summon');
+  requestAnimationFrame(() => { _mvLayout(); if (ref) rhemaMvAdd(ref); });
   _mvPersist();
 }
 function rhemaMvAdd(ref) {
@@ -53442,22 +53501,22 @@ function rhemaMvAdd(ref) {
   const slot = _mvFreeSlot();
   if (!slot) return;
   _mvSeed(slot, ref || null);
-  const w = { slot, h: null, label: '' };
+  const z = Math.max(0, ..._mv.wins.map(x => x.z || 0)) + 1;
+  const w = { slot, r: _mvNewRect(), z, label: '' };
   _mv.wins.push(w);
   _mv.max = null;
-  const stage = document.getElementById('mvStage');
-  stage.appendChild(_mvWinEl(w));
+  _mvStage().appendChild(_mvWinEl(w));
   const ov = document.getElementById('mvOverlay');
   ov.classList.remove('mv-summon'); void ov.offsetWidth; ov.classList.add('mv-summon');
   _mvLayout();
+  _mvFocus(slot);
   _mvPersist();
-  setTimeout(() => stage.querySelector(`.mv-win[data-slot="${slot}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
 }
 function rhemaMvRemove(slot) {
   if (!_mv) return;
   _mv.wins = _mv.wins.filter(w => String(w.slot) !== String(slot));
   if (String(_mv.max) === String(slot)) _mv.max = null;
-  document.querySelector(`#mvStage .mv-win[data-slot="${slot}"]`)?.remove();
+  _mvEl(slot)?.remove();
   _mvLayout();
   _mvPersist();
   if (!_mv.wins.length) rhemaCloseMultiView();
@@ -53465,12 +53524,25 @@ function rhemaMvRemove(slot) {
 function rhemaMvMaximize(slot) {
   if (!_mv) return;
   _mv.max = String(_mv.max) === String(slot) ? null : String(slot);
-  const btn = document.querySelector(`#mvStage .mv-win[data-slot="${slot}"] .mv-wbtn .material-symbols-outlined`);
-  if (btn) btn.textContent = _mv.max ? 'close_fullscreen' : 'open_in_full';
+  _mvStage()?.querySelectorAll('.mv-win').forEach(e => {
+    const ic = e.querySelector('[data-act="max"] .material-symbols-outlined');
+    if (ic) ic.textContent = String(_mv.max) === e.dataset.slot ? 'close_fullscreen' : 'open_in_full';
+  });
   _mvLayout();
+  _mvFocus(slot);
 }
-function rhemaMvToggleCols() { if (!_mv) return; _mv.cols = _mv.cols === 2 ? 1 : 2; _mv.wins.forEach(w => { w.h = null; }); _mvLayout(); _mvPersist(); }
-function rhemaMvToggleTuck() { if (!_mv) return; _mv.tucked = !_mv.tucked; _mvLayout(); _mvPersist(); }
+function rhemaMvTidy() {
+  if (!_mv) return;
+  _mv.max = null;
+  const order = _mv.wins.slice().sort((a, b) => (a.r?.y || 0) - (b.r?.y || 0) || (a.r?.x || 0) - (b.r?.x || 0));
+  const rects = _mvTidyRects(order.length);
+  order.forEach((w, i) => { w.r = rects[i]; });
+  _mvStage()?.classList.add('mv-animate');
+  _mvLayout();
+  setTimeout(() => _mvStage()?.classList.remove('mv-animate'), 350);
+  _mvPersist();
+}
+function rhemaMvToggleTuck() { if (!_mv) return; _mv.tucked = !_mv.tucked; requestAnimationFrame(_mvLayout); _mvLayout(); _mvPersist(); }
 // Shrink Multi-view to a pill over the main Rhēma (the windows keep running).
 function rhemaMvMinimize() {
   const ov = document.getElementById('mvOverlay');
@@ -53496,72 +53568,56 @@ function rhemaCloseMultiView() {
   const pill = document.getElementById('mvPill');
   if (pill) pill.hidden = true;
   _mvPersist();
-  const stage = document.getElementById('mvStage');
+  const stage = _mvStage();
   if (stage) stage.innerHTML = '';
   _mv = null;
   _mvMinimized = false;
   try { _rhemaLoadLocalMarks(); renderRhemaVerse(); } catch {}
 }
-// Drag the bar under a window to make it taller or shorter.
-function _mvStartResize(ev, slot) {
-  if (!_mv || _mv.max) return;
+// Shared pointer-drag plumbing (frames ignore the pointer while dragging, so
+// the drag can't get lost inside one).
+function _mvDrag(ev, onMove) {
   ev.preventDefault();
-  const el = document.querySelector(`#mvStage .mv-win[data-slot="${slot}"]`);
-  const w = _mv.wins.find(x => String(x.slot) === String(slot));
-  if (!el || !w) return;
   const ov = document.getElementById('mvOverlay');
-  const stage = document.getElementById('mvStage');
-  const y0 = ev.clientY, h0 = el.getBoundingClientRect().height, H = stage.clientHeight;
   ov.classList.add('mv-dragging');
-  const move = (e) => {
-    w.h = Math.round(Math.max(150, Math.min(H, h0 + (e.clientY - y0))));
-    el.style.height = `${w.h}px`;
-  };
+  const x0 = ev.clientX, y0 = ev.clientY;
+  const move = (e) => onMove(e.clientX - x0, e.clientY - y0);
   const up = () => {
     ov.classList.remove('mv-dragging');
     window.removeEventListener('pointermove', move);
     window.removeEventListener('pointerup', up);
     window.removeEventListener('pointercancel', up);
-    _mvPersist();
+    if (_mv) { _mv.wins.forEach(w => _mvFit(w.slot)); _mvPersist(); }
   };
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', up);
   window.addEventListener('pointercancel', up);
 }
-// Drag a window's handle to move it among the others (CSS order only, so the
-// windows never reload).
 function _mvStartMove(ev, slot) {
-  if (!_mv || _mv.max || _mv.wins.length < 2) return;
-  ev.preventDefault();
-  const ov = document.getElementById('mvOverlay');
-  const stage = document.getElementById('mvStage');
-  ov.classList.add('mv-dragging');
-  const me = stage.querySelector(`.mv-win[data-slot="${slot}"]`);
-  me?.classList.add('mv-moving');
-  const move = (e) => {
-    const others = _mv.wins.filter(w => String(w.slot) !== String(slot));
-    let idx = others.length;
-    for (let i = 0; i < others.length; i++) {
-      const r = stage.querySelector(`.mv-win[data-slot="${others[i].slot}"]`)?.getBoundingClientRect();
-      if (!r) continue;
-      const before = _mv.cols === 2 ? (e.clientY < r.top + r.height / 2 && (e.clientY < r.top || e.clientX < r.left + r.width / 2)) : e.clientY < r.top + r.height / 2;
-      if (before) { idx = i; break; }
-    }
-    const mine = _mv.wins.find(w => String(w.slot) === String(slot));
-    const next = others.slice(); next.splice(idx, 0, mine);
-    if (next.map(w => w.slot).join() !== _mv.wins.map(w => w.slot).join()) { _mv.wins = next; _mvLayout(); }
-  };
-  const up = () => {
-    ov.classList.remove('mv-dragging');
-    me?.classList.remove('mv-moving');
-    window.removeEventListener('pointermove', move);
-    window.removeEventListener('pointerup', up);
-    window.removeEventListener('pointercancel', up);
-    _mvPersist();
-  };
-  window.addEventListener('pointermove', move);
-  window.addEventListener('pointerup', up);
-  window.addEventListener('pointercancel', up);
+  const w = _mvWinBySlot(slot);
+  if (!w) return;
+  if (String(_mv.max) === String(slot)) return;
+  _mvFocus(slot);
+  const { W, H } = _mvStageSize();
+  const r0 = { ...w.r };
+  _mvDrag(ev, (dx, dy) => { w.r = _mvClampRect({ ...r0, x: r0.x + dx / W, y: r0.y + dy / H }); _mvPlace(w); });
+}
+// Bottom-left corner: drag diagonally. Left edge and bottom edge follow.
+function _mvStartResize(ev, slot) {
+  const w = _mvWinBySlot(slot);
+  if (!w) return;
+  if (String(_mv.max) === String(slot)) { _mv.max = null; _mvLayout(); }
+  _mvFocus(slot);
+  const { W, H } = _mvStageSize();
+  const r0 = { ...w.r };
+  const right = r0.x + r0.w;
+  _mvDrag(ev, (dx, dy) => {
+    const minW = 190 / W;
+    const x = Math.min(right - minW, Math.max(-0.02, r0.x + dx / W));
+    w.r = _mvClampRect({ x, y: r0.y, w: right - x, h: Math.min(1 - r0.y, r0.h + dy / H) });
+    _mvPlace(w);
+    _mvFit(slot);
+  });
 }
 window.addEventListener('resize', () => { if (_mv && !_mvMinimized) _mvLayout(); });
 // From the verse menu: Multi-view with this verse in a new window.
@@ -53589,6 +53645,10 @@ if (window.RHEMA_MV_SLOT) {
   window.startRhemaCoach = function () {};
   window.rhemaOpenMultiView = function () {};
   window.rhemaMultiViewFromMenu = function () {};
+  // The top bar stays put in a window (hiding it saves almost nothing there).
+  window._rhemaSetChromeHidden = function () {};
+  // Touching anything in a window brings it to the front in Multi-view.
+  document.addEventListener('pointerdown', () => { try { parent.postMessage({ rhemaMV: window.RHEMA_MV_SLOT, focus: true }, location.origin); } catch {} }, true);
   const mvBoot = () => {
     _rhemaAdoptParentData();
     try { _appLaunchReleased = true; } catch {}
