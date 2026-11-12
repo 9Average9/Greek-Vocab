@@ -39637,6 +39637,7 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rhw-here small { margin-left: 8px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; color: var(--muted-color, #8a8a8a); vertical-align: middle; }
 .rhw-here.rhw-none { font-size: 1.02rem; }
 .rhw-here.rhw-none small { display: block; margin: 2px 0 0; font-weight: 600; letter-spacing: 0; font-size: 0.8rem; }
+.rhw-alt { margin-top: 3px; font-size: 0.8rem; font-weight: 600; color: var(--muted-color, #8a8a8a); }
 .rhw-say { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
 .rhw-say .rhema-hebrew-text { font-size: 1.5rem; }
 .rhw-tr { font-size: 0.95rem; font-style: italic; color: color-mix(in srgb, var(--font-color, #20303f) 75%, transparent); }
@@ -39754,3 +39755,134 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rhema-verse-display:has(.rhs-map) { direction: ltr; display: block; padding-left: 12px; padding-right: 12px; }
 .rhema-verse-display .rhs-map { width: 100%; box-sizing: border-box; }
 .rhema-verse-display:has(.rhs-map) > .rhema-layer-label { text-align: center; display: block; }
+
+/* Look up a word: the verse in reading order, original word under each part. */
+.rhema-lk-chips { gap: 6px 6px !important; }
+.rhema-word-chip.rhema-lk-chip {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  border-radius: 14px !important; padding: 6px 10px 5px !important; line-height: 1.15;
+  border-color: color-mix(in srgb, var(--secondary-color, #1f4fd8) 30%, transparent);
+  background: color-mix(in srgb, var(--secondary-color, #1f4fd8) 7%, transparent);
+}
+.rhema-lk-en { font-weight: 700; font-size: 0.92rem; }
+.rhema-lk-orig { font-size: 0.95rem; color: var(--secondary-color, #1f4fd8); font-weight: 600; white-space: nowrap; }
+.rhema-lk-orig.rhema-hebrew-text { font-size: 1.12rem; direction: rtl; unicode-bidi: isolate; }
+.rhema-word-chip.rhema-lk-approx { border-style: dashed; }
+.rhema-word-chip.rhema-lk-none { background: transparent; border-color: rgba(120, 120, 120, 0.22); opacity: 0.72; }
+.rhema-word-chip.rhema-lk-none .rhema-lk-en { font-weight: 500; }
+.rhema-lk-loading { padding: 14px 4px; color: var(--muted-color, #6b7a8c); font-size: 0.92rem; }
+.rhema-lk-foot { width: 100%; margin: 10px 2px 4px; font-size: 0.8rem; line-height: 1.4; color: var(--muted-color, #6b7a8c); }
+.rhema-lk-switch { width: 100%; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 1px dashed rgba(120, 120, 120, 0.4);
+  background: transparent; color: var(--secondary-color, #1f4fd8); font-weight: 700; font-size: 0.88rem; cursor: pointer; }
+.rhema-lk-choice { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left;
+  padding: 12px 14px; margin-bottom: 8px; border-radius: 14px; cursor: pointer; color: var(--font-color, #20303f);
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #1f4fd8) 30%, transparent);
+  background: color-mix(in srgb, var(--secondary-color, #1f4fd8) 6%, transparent); }
+.rhema-lk-choice b { display: block; font-size: 1rem; }
+.rhema-lk-choice small { display: block; margin-top: 2px; color: var(--muted-color, #6b7a8c); font-size: 0.8rem; }
+.rhema-lk-choice-w { font-size: 1.5rem; color: var(--secondary-color, #1f4fd8); white-space: nowrap; }
+/* Interlinear: the verse's words and the tiles light up together. */
+.rhema-il-en { cursor: pointer; border-radius: 5px; transition: background 0.15s ease; }
+.rhema-il-en.lit { background: #ffe58a; color: #3d2c00; box-shadow: 0 0 0 2px #ffe58a; }
+.rhema-il-word.lit { background: #fff3c4 !important; border-color: #e3b200 !important; box-shadow: 0 0 0 3px rgba(227, 178, 0, 0.28); }
+.rhema-il-word { -webkit-touch-callout: none; user-select: none; }
+.rhema-word-chip.rhema-lk-part .rhema-lk-orig { opacity: 0.55; }
+.rhema-lk-foot b { color: var(--secondary-color, #1f4fd8); }
+.rhema-lk-key-part { opacity: 0.55; font-weight: 700; }
+.rhema-lk-key-none { font-weight: 700; }
+.rhema-lk-switch-btn { color: var(--secondary-color, #1f4fd8) !important; font-weight: 700; }
+.rhema-lk-switch-btn[hidden] { display: none !important; }
+
+/* Word by word: one sheet, two ways round. */
+#rhemaInterlinearModal [hidden] { display: none !important; }
+.rhema-wbw-refrow { display: inline-flex; align-items: center; gap: 2px; }
+.rhema-wbw-step { border: 0; background: transparent; color: var(--secondary-color, #1f4fd8); width: 32px; height: 32px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.rhema-wbw-step:disabled { opacity: 0.25; cursor: default; }
+.rhema-wbw-step .material-symbols-outlined { font-size: 26px; }
+.rhema-wbw-tabs { display: flex; gap: 4px; margin: 10px 0 12px; padding: 4px; border-radius: 14px;
+  background: color-mix(in srgb, var(--secondary-color, #1f4fd8) 8%, transparent); }
+.rhema-wbw-tab { flex: 1; border: 0; background: transparent; padding: 9px 6px; border-radius: 10px; font-weight: 700; font-size: 0.88rem;
+  color: var(--muted-color, #5b6b80); cursor: pointer; white-space: nowrap; }
+.rhema-wbw-tab.on { background: var(--card-bg, #fff); color: var(--secondary-color, #1f4fd8); box-shadow: 0 1px 4px rgba(20, 40, 80, 0.14); }
+.rhema-wbw-hint { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--secondary-color, #1f4fd8); margin: 2px 0 10px; }
+.rhema-wbw-en .rhema-lk-chips { display: flex; flex-wrap: wrap; }
+
+/* ── Multi-view: full-size Rhēmas as tabs ───────────────────────────────── */
+/* Follows the app theme (light/dark and the chosen colours). */
+.mv-overlay { position: fixed; inset: 0; z-index: 4000; display: none; flex-direction: column;
+  background: var(--card-solid-color, #fff); color: var(--font-color, #172033); padding-bottom: 0; }
+.mv-overlay.open { display: flex; }
+.mv-tabbar { flex: none; display: flex; align-items: center; gap: 4px; padding: calc(env(safe-area-inset-top, 0px) + 5px) 6px 5px;
+  background: color-mix(in srgb, var(--secondary-color, #1d4ed8) 7%, var(--card-solid-color, #fff)); border-bottom: 1px solid var(--border-color, #93c5fd); }
+.mv-tabs { flex: 1; min-width: 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.mv-tabs::-webkit-scrollbar { display: none; }
+.mv-tab { flex: 1 1 0; min-width: 92px; max-width: 220px; display: flex; align-items: center; gap: 2px; height: 36px; padding: 0 2px 0 10px;
+  border-radius: 11px; cursor: pointer; user-select: none; -webkit-user-select: none;
+  background: color-mix(in srgb, var(--secondary-color, #1d4ed8) 6%, transparent); border: 1px solid transparent; color: var(--muted-color, #475569); }
+.mv-tab.on { background: var(--card-solid-color, #fff); color: var(--font-color, #172033); border-color: var(--border-color, #93c5fd);
+  box-shadow: 0 2px 6px rgba(20, 40, 80, 0.12), inset 0 -3px 0 var(--accent-color, #f59e0b); }
+.mv-tab-label { flex: 1; min-width: 0; font-weight: 800; font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mv-tab-x { flex: none; width: 26px; height: 26px; border: 0; border-radius: 8px; background: transparent; color: inherit; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.75; }
+.mv-tab-x .material-symbols-outlined { font-size: 16px; }
+.mv-add-tab { flex: none; position: relative; width: 40px; height: 36px; border: 0; border-radius: 11px; cursor: pointer; padding: 0;
+  background: color-mix(in srgb, var(--accent-color, #f59e0b) 22%, transparent); display: inline-flex; align-items: center; justify-content: center; }
+.mv-add-tab img { width: 30px; height: 30px; object-fit: contain; }
+.mv-add-tab .material-symbols-outlined { position: absolute; right: -2px; bottom: -2px; width: 17px; height: 17px; border-radius: 50%; font-size: 15px; font-weight: 800;
+  color: var(--btn-text-color, #fff); background: var(--accent-color, #f59e0b); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--card-solid-color, #fff); }
+.mv-add-tab:disabled { opacity: 0.4; cursor: default; }
+.mv-exit { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-color, #93c5fd); background: var(--card-solid-color, #fff);
+  color: var(--secondary-color, #1d4ed8); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.mv-exit .material-symbols-outlined { font-size: 20px; }
+.mv-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.mv-win { position: absolute; inset: 0; background: var(--card-solid-color, #fff); }
+.mv-win[hidden] { display: none; }
+.mv-frame { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0; display: block; background: transparent; }
+/* summoning: the guide on the + hops, the new tab's Rhēma rises in */
+.mv-overlay.mv-summon .mv-add-tab img { animation: mvHop 0.7s ease both; }
+.mv-overlay.mv-summon .mv-win:not([hidden]) { animation: mvRise 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.1) both; }
+@keyframes mvHop { 0% { transform: translateY(6px) scale(0.8); } 45% { transform: translateY(-5px) scale(1.12); } 100% { transform: none; } }
+@keyframes mvRise { from { opacity: 0; transform: translateY(40px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+/* ── Multi-view window mode: only Rhēma, nothing that leads out of it ─────── */
+html.mv-embed #appLaunchScreen, html.mv-embed #rotateLock, html.mv-embed #statusBarBg, html.mv-embed .app-header, html.mv-embed #desktopShellNav,
+html.mv-embed main.app > section.screen, html.mv-embed #bottomNav, html.mv-embed #rhemaLaunchMenu, html.mv-embed #authModal,
+html.mv-embed #notifPromptModal, html.mv-embed #installAppModal, html.mv-embed #updateModal, html.mv-embed #appCoachOverlay,
+html.mv-embed #lbIntroModal, html.mv-embed #lbModal, html.mv-embed #reminderModal, html.mv-embed #coachReplayModal,
+html.mv-embed .rhema-back-btn, html.mv-embed .rhema-guest-btn, html.mv-embed #rhemaWorkshopBackBtn, html.mv-embed #rhemaSermonNotesBackBtn,
+html.mv-embed .rhema-title-block, html.mv-embed #wheelItemTrails, html.mv-embed .rhema-mv-menu-btn, html.mv-embed #rhemaVerseSheetJourneyBtn,
+html.mv-embed #rhemaVerseSheetStudy, html.mv-embed .mv-overlay, html.mv-embed .mv-pill { display: none !important; }
+html.mv-embed .rhema-header { min-height: 0; padding-top: 6px; padding-bottom: 4px; }
+/* A window's page never scrolls itself (jumping to a verse would push its
+   header out of view); only the reader inside it scrolls. */
+html.mv-embed, html.mv-embed body { height: 100%; overflow: hidden !important; overscroll-behavior: none; }
+/* In a window the top bar slides fully away (no strip kept for a notch). */
+html.mv-embed #rhemaModal.rhema-chrome-hidden:not(.rhema-search-open) .rhema-header { transform: translateY(-100%) !important; }
+html.mv-embed .rhema-header { padding-top: 6px !important; }
+.mv-tab { height: 40px; }
+.mv-tab-label { display: flex; flex-direction: column; line-height: 1.1; }
+.mv-tab-label b { font-weight: 800; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; }
+.mv-tab-label small { font-weight: 700; font-size: 0.64rem; letter-spacing: 0.04em; opacity: 0.75; overflow: hidden; text-overflow: ellipsis; }
+.mv-add-tab, .mv-exit { height: 40px; }
+/* Like phone browsers: only the open tab shows its ✕ (more room for names). */
+.mv-tab:not(.on) .mv-tab-x { display: none; }
+.mv-tab:not(.on) { padding-right: 8px; }
+.mv-tab { min-width: 78px; }
+.mv-tab.on { flex-grow: 1.45; }
+/* Every tab stays on screen and big enough to press: they share the strip
+   evenly and wrap onto a second row when needed (app.js _mvLayoutTabs). The
+   text shrinks to fit its tab instead of being cut off. */
+.mv-tabs { display: grid; grid-template-columns: repeat(var(--mv-cols, 2), minmax(0, 1fr)); gap: 4px; overflow: visible; }
+.mv-tab { min-width: 0; max-width: none; height: 42px; padding: 0 2px 0 8px; touch-action: manipulation; }
+.mv-tabs.mv-two-rows .mv-tab { height: 38px; }
+.mv-tab:not(.on) { padding-right: 8px; }
+.mv-tab-label b, .mv-tab-label small { display: block; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+.mv-tab-x { width: 30px; height: 100%; margin-right: -2px; }
+.mv-add-tab { width: 44px; height: 42px; }
+.mv-exit { width: 42px; height: 42px; }
+.mv-tabbar.mv-stacked { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 4px; }
+.mv-tabbar.mv-stacked .mv-tabs { grid-row: 1 / span 2; align-self: center; }
+.mv-tabbar.mv-stacked .mv-add-tab, .mv-tabbar.mv-stacked .mv-exit { width: 42px; height: 38px; }
+.mv-tabbar.mv-stacked .mv-exit { border-radius: 12px; }
+.mv-tab.on .mv-tab-x { width: 26px; }
+@media (min-width: 700px) { .mv-tabs:not(.mv-two-rows) { grid-template-columns: repeat(var(--mv-cols, 2), minmax(0, 240px)); } }

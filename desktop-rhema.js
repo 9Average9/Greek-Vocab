@@ -1,5 +1,6 @@
 /* Desktop-only Rhema navigation. This file is not loaded by the phone site. */
 (function () {
+  if (window.RHEMA_MV_SLOT) return;
   function readerOpen() {
     return document.getElementById('rhemaModal')?.classList.contains('open');
   }

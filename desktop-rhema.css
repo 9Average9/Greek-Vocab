@@ -170,6 +170,22 @@ body.rhema-desktop-site .desktop-rhema-search-close:hover { background: color-mi
 }
 
 @media (min-width: 960px) {
+  body.rhema-desktop-site .mv-overlay {
+    inset: 28px 28px 28px 300px;
+    border: 1px solid color-mix(in srgb, var(--secondary-color) 16%, var(--border-color));
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 24px 65px rgba(18, 39, 76, .13);
+  }
+  body.rhema-desktop-site .mv-tabbar { padding: 12px 16px; gap: 10px; }
+  body.rhema-desktop-site .mv-tabs { justify-content: start; gap: 8px; }
+  body.rhema-desktop-site .mv-tab { min-height: 44px; border-radius: 12px; }
+  body.rhema-desktop-site .mv-tab:hover { background: color-mix(in srgb, var(--secondary-color) 12%, var(--card-solid-color)); }
+  body.rhema-desktop-site .mv-tab-x { display: inline-flex; }
+  body.rhema-desktop-site .mv-tab-x:hover,
+  body.rhema-desktop-site .mv-exit:hover { background: color-mix(in srgb, var(--secondary-color) 13%, var(--card-solid-color)); }
+  body.rhema-desktop-site .mv-add-tab,
+  body.rhema-desktop-site .mv-exit { min-width: 44px; min-height: 44px; }
   body.rhema-desktop-site.guest-mode { --desktop-rhema-rail: 300px; }
   body.rhema-desktop-site #desktopShellNav,
   body.rhema-desktop-site.guest-mode #desktopShellNav {

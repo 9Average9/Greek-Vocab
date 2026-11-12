@@ -3,10 +3,35 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
+<script>
+/* Multi-view window mode (index.html?mv=N): this page is one of the mini
+   Rhemas inside Multi-view. Its reading place, translation and language live
+   in their own storage slot so they never move the main Rhema or the other
+   windows; highlights, notes and saves stay shared with everything. */
+(function () {
+  var m = /[?&]mv=([1-6])\b/.exec(location.search);
+  if (!m) return;
+  window.RHEMA_MV_SLOT = m[1];
+  document.documentElement.classList.add('mv-embed');
+  var OWN = { rhemaLastPos: 1, rhemaEnglishVersion: 1, rhemaTextMode: 1, rhemaReaderVersion: 1, rhemaOTLayer: 1, rhemaChapterSnap: 1, rhemaRefHistory: 1, rhemaCompareExtras: 1 };
+  var ns = function (k) { return OWN[k] ? k + '::mv' + m[1] : k; };
+  try {
+    var P = Storage.prototype, g = P.getItem, s = P.setItem, r = P.removeItem;
+    P.getItem = function (k) { return g.call(this, this === window.localStorage ? ns(k) : k); };
+    P.setItem = function (k, v) { return s.call(this, this === window.localStorage ? ns(k) : k, v); };
+    P.removeItem = function (k) { return r.call(this, this === window.localStorage ? ns(k) : k); };
+  } catch (e) {}
+})();
+</script>
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<script>
+/* A Multi-view window isn't at the screen's edge: no notch / home-bar insets
+   (they'd leave empty strips at the top of the reader and its panels). */
+if (window.RHEMA_MV_SLOT) { var vp = document.querySelector('meta[name="viewport"]'); if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content'); }
+</script>
 <title>Rhēma · Bible Study Desk</title>
 <!-- PWA / Home Screen App Support -->
-<script>window.RHEMA_DESKTOP_SITE = true;</script>
+<script>window.RHEMA_DESKTOP_SITE = !window.RHEMA_MV_SLOT;</script>
 <!-- theme-color drives the tint iOS paints behind the status bar in an installed
      web app. It was a fixed dark navy while the UI is light blue, so the system
      blended a mismatched band across the top in standalone mode (never in
@@ -346,15 +371,16 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.558" rel="stylesheet"/>
+<link href="style.css?v=3.0.570" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
-<link href="desktop-rhema.css?v=4" rel="stylesheet"/>
+<link href="desktop-rhema.css?v=5" rel="stylesheet"/>
 </head>
 <body class="rhema-desktop-site">
+<script>if (window.RHEMA_MV_SLOT) document.body.classList.remove('rhema-desktop-site');</script>
 <div id="rotateLock" aria-hidden="true">
 <span class="material-symbols-outlined">screen_rotation</span>
 <strong>Please rotate to portrait</strong>
@@ -10810,9 +10836,9 @@ Verb Endings
 <span class="material-symbols-outlined">local_library</span>
 <span class="rwi-label">Word Library</span>
 </button>
-<button class="rhema-wheel-item" id="wheelItemTrails" onclick="closeRhemaWheel();rhemaOpenCompare()">
-<span class="material-symbols-outlined">compare_arrows</span>
-<span class="rwi-label">Compare</span>
+<button class="rhema-wheel-item" id="wheelItemTrails" onclick="closeRhemaWheel();rhemaOpenMultiView()">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="rwi-label">Multi-view</span>
 </button>
 <button class="rhema-wheel-item" id="wheelItemHighlightsNotes" onclick="closeRhemaWheel();rhemaOpenHighlightsNotes()">
 <span class="material-symbols-outlined">sticky_note_2</span>
@@ -10880,9 +10906,9 @@ Verb Endings
 <span class="material-symbols-outlined">edit_note</span>
 <span id="rhemaVerseSheetNoteLabel">Add note</span>
 </button>
-<button class="rhema-vsheet-action" onclick="rhemaAddToCompareFromMenu()">
-<span class="material-symbols-outlined">library_add</span>
-<span>Compare</span>
+<button class="rhema-vsheet-action rhema-mv-menu-btn" onclick="rhemaMultiViewFromMenu()">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Multi-view</span>
 </button>
 <button class="rhema-vsheet-action" id="rhemaVerseSheetInterpBtn" onclick="rhemaOpenInterpretationsFromMenu()">
 <span class="material-symbols-outlined">forum</span>
@@ -10896,13 +10922,9 @@ Verb Endings
 <span class="material-symbols-outlined">travel_explore</span>
 <span>Follow this journey</span>
 </button>
-<button class="rhema-vsheet-action" id="rhemaVerseSheetWordBtn" onclick="rhemaOpenEnglishWordPicker()">
-<span class="material-symbols-outlined">dictionary</span>
-<span>Define an English word</span>
-</button>
-<button class="rhema-vsheet-action rhema-vsheet-single-only" id="rhemaVerseSheetInterlinearBtn" onclick="rhemaOpenInterlinearFromMenu()">
-<span class="material-symbols-outlined">reorder</span>
-<span>Interlinear</span>
+<button class="rhema-vsheet-action" id="rhemaVerseSheetWordBtn" onclick="rhemaOpenWordByWord()">
+<span class="material-symbols-outlined">translate</span>
+<span>Word by word</span>
 </button>
 </div>
 </div>
@@ -10915,6 +10937,7 @@ Verb Endings
 <div class="rhema-word-chips" id="rhemaWordPickChips"></div>
 <div class="rhema-note-actions">
 <button class="rhema-note-cancel" onclick="closeRhemaWordPick()">Close</button>
+<button class="rhema-note-cancel rhema-lk-switch-btn" id="rhemaWordPickSwitch" hidden></button>
 </div>
 </div>
 </div>
@@ -10941,11 +10964,13 @@ Verb Endings
 <div class="rhema-note-card rhema-il-card" onclick="event.stopPropagation()">
 <div class="rhema-il-head">
 <div class="rhema-il-title">
-<span class="rhema-il-kicker">Interlinear</span>
-<span class="rhema-il-ref" id="rhemaInterlinearRef"></span>
+<span class="rhema-il-kicker">Word by word</span>
+<span class="rhema-wbw-refrow"><button type="button" class="rhema-wbw-step" id="rhemaWbwPrev" onclick="rhemaWbwStep(-1)" aria-label="Previous verse"><span class="material-symbols-outlined">chevron_left</span></button><span class="rhema-il-ref" id="rhemaInterlinearRef"></span><button type="button" class="rhema-wbw-step" id="rhemaWbwNext" onclick="rhemaWbwStep(1)" aria-label="Next verse"><span class="material-symbols-outlined">chevron_right</span></button></span>
 </div>
-<button class="rhema-note-x" onclick="closeRhemaInterlinear()" aria-label="Close interlinear"><span class="material-symbols-outlined">close</span></button>
+<button class="rhema-note-x" onclick="closeRhemaInterlinear()" aria-label="Close word by word"><span class="material-symbols-outlined">close</span></button>
 </div>
+<div class="rhema-wbw-tabs" id="rhemaWbwTabs" role="tablist"></div>
+<div class="rhema-wbw-en" id="rhemaWbwEnglish" hidden></div>
 <p class="rhema-il-english" id="rhemaInterlinearEnglish"></p>
 <p class="rhema-il-versionnote" id="rhemaInterlinearVersionNote" style="display:none"></p>
 <div class="rhema-il-grid" id="rhemaInterlinearGrid"></div>
@@ -17303,19 +17328,19 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.557"></script>
-<script src="app.js?v=3.0.558-desktop3"></script>
-<script src="rhema-word-study.js?v=3.0.557"></script>
+<script src="rhema-align.js?v=3.0.570"></script>
+<script src="app.js?v=3.0.570-desktop1"></script>
+<script src="rhema-word-study.js?v=3.0.570"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.557"></script>
-<script src="verse-structure.js?v=3.0.429"></script>
-<script src="vs-structure.js?v=3.0.557"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.570"></script>
+<script src="verse-structure.js?v=3.0.570"></script>
+<script src="vs-structure.js?v=3.0.570"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
 <script src="sermon-notes.js?v=3.0.460"></script>
 <script src="bible-quiz.js?v=3.0.473"></script>
-<script src="firebase-lb.js?v=3.0.558" type="module"></script>
+<script src="firebase-lb.js?v=3.0.570" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -18954,6 +18979,6 @@ Save
 </div>
 
 <!-- Google Identity Services for optional Google Calendar OAuth -->
-<script src="desktop-rhema.js?v=2"></script>
+<script src="desktop-rhema.js?v=3"></script>
 </body>
 </html>

@@ -9547,7 +9547,9 @@ async function wlPaste() {
     input.value = text;
     wlOnSearch(text);
   } catch (e) {
-    if (typeof _showStudyToast === 'function') _showStudyToast('Press and hold the search box, then tap Paste');
+    if (typeof _showStudyToast === 'function') _showStudyToast(window.RHEMA_DESKTOP_SITE
+      ? 'Click the search box and press Ctrl+V (or ⌘V on Mac)'
+      : 'Press and hold the search box, then tap Paste');
     input.focus();
   }
 }
@@ -22912,6 +22914,7 @@ function _saveRhemaPosition() {
   const greekSnippet = _rhemaData() ? _rhemaOrigWords(_rhemaBook, _rhemaChapter, _rhemaVerse).map(w => w[0]).join(' ') : '';
   const pos = { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion(), translation: _rhemaEnglishLabel(), ts: Date.now(), snippet: verseSnippet, greek: greekSnippet };
   localStorage.setItem('rhemaLastPos', JSON.stringify(pos));
+  if (window.RHEMA_MV_SLOT) return; // a Multi-view window: its place stays on this device, in its own slot
   if (uid && window.LB) {
     window.LB.saveRhemaPosition?.(uid, pos)?.catch?.(() => {});
   }
@@ -30450,7 +30453,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.558";
+const APP_VERSION = "3.0.570";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30459,7 +30462,7 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-critical.js':  '3.0.23',
   'rhema-critical-fallbacks.js': '3.0.177',
   'rhema-ot-hebrew.js': '3.0.81',
-  'rhema-hebrew-lexicon.js': '3.0.553',
+  'rhema-hebrew-lexicon.js': '3.0.560',
   'rhema-hebrew-bdb.js':    '3.0.379',
   'rhema-lxx.js':       '3.0.65',
   'rhema-lexicon.js':   '3.0.65',
@@ -30473,6 +30476,75 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.570 &mdash; Tabs that always fit</div>
+<ul>
+  <li><strong>Every tab easy to tap</strong> &mdash; Multi-view tabs now share the strip evenly on any screen, phone to desktop. When there are too many for one row they wrap onto a second row (the + and close buttons stack to make room) instead of sliding off screen.</li>
+  <li><strong>No more &ldquo;&hellip;&rdquo;</strong> &mdash; A tab&rsquo;s passage and translation shrink to fit, so you can always read exactly what each tab has open. Long book names switch to their short form (1 Corinthians &rarr; 1Co) only when the full name won&rsquo;t fit.</li>
+</ul>
+<div class="un-version-label">v3.0.569 &mdash; Multi-view tabs</div>
+<ul>
+  <li><strong>Full-size Rhēmas, as tabs</strong> &mdash; Multi-view now gives each Rhēma (almost) the whole screen. Tabs along the very top show each one&rsquo;s passage and translation; tap a tab to switch, tap the guide&rsquo;s + to summon another (up to six), or the open tab&rsquo;s &#10005; to close it.</li>
+  <li><strong>Tabs always within reach</strong> &mdash; The tab strip stays on screen whatever a Rhēma is showing (Word by word, a word sheet, or when its own top bar slides away), so swapping is always one tap.</li>
+  <li><strong>Each tab keeps its own place</strong> &mdash; its book, chapter, translation and language, remembered next time; your main reading stays where you left it, and highlights and saves are shared.</li>
+  <li><strong>Word by word fix</strong> &mdash; Pronouns built into a Hebrew word now go to the right one: &ldquo;I&rdquo; in &ldquo;I shall not want&rdquo; is the verb אֶחְסָר, not &ldquo;my shepherd&rdquo;.</li>
+</ul>
+<div class="un-version-label">v3.0.568 &mdash; Cleaner Multi-view windows</div>
+<ul>
+  <li><strong>One full-view button</strong> &mdash; Each window&rsquo;s title bar now has just its &#10005;. Use the &#10530; button at the top for a full view of the selected window (or double-tap a window&rsquo;s title).</li>
+</ul>
+<div class="un-version-label">v3.0.567 &mdash; Roomier Multi-view</div>
+<ul>
+  <li><strong>More room for the windows</strong> &mdash; A slimmer top bar and a smaller guide at the bottom (tap him to tuck him away even smaller).</li>
+  <li><strong>Full view of the selected window</strong> &mdash; The &#10530; button at the top fills the screen with the window you last touched; press it again to go back.</li>
+  <li><strong>No more empty strips on iPhone</strong> &mdash; The reference bar slides fully away inside windows, and the study tools panel no longer has a blank space at the top.</li>
+</ul>
+<div class="un-version-label">v3.0.566 &mdash; Multi-view reference bar</div>
+<ul>
+  <li><strong>Slides away like the main Rhēma</strong> &mdash; In each Multi-view window, the top bar and reference bar slide out of the way as you scroll down, giving the text the whole window, and come back as soon as you scroll up.</li>
+</ul>
+<div class="un-version-label">v3.0.565 &mdash; Multi-view windows, your way</div>
+<ul>
+  <li><strong>Windows you can move anywhere</strong> &mdash; Drag a window by its title to place it anywhere; windows can overlap, and the one you touch comes to the front, like browser windows. Tidy (top) lays them all out neatly again.</li>
+  <li><strong>Resize from the corner</strong> &mdash; Drag the gold corner at a window&rsquo;s bottom left diagonally to make it bigger or smaller.</li>
+  <li><strong>Everything shrinks to fit</strong> &mdash; Inside a smaller window, the whole Rhēma scales down to fit, word sheets and menus included, so there&rsquo;s nothing to pan around.</li>
+  <li><strong>Matches your theme</strong> &mdash; Multi-view and its windows use your app colours, light or dark. The reference bar now stays put while you scroll inside a window.</li>
+</ul>
+<div class="un-version-label">v3.0.564 &mdash; Multi-view</div>
+<ul>
+  <li><strong>Up to six Rhēmas at once</strong> &mdash; Open <em>Multi-view</em> (in the &#9776; menu&rsquo;s tools, or <em>Multi-view</em> on any verse) and the guide summons mini Rhēmas side by side. Each one is the full Rhēma, with its own passage, translation and language: Psalm 23 in Hebrew next to John 10 in Greek next to Ezekiel 34 in the NASB. Tap the gold + for more.</li>
+  <li><strong>Make room your way</strong> &mdash; Drag the bar under a window to make it taller or shorter, tap &#10530; to fill the screen with one, drag &#10303; to move a window, switch between one and two columns, tap the guide to tuck him away, or shrink Multi-view to a pill and come back to it later.</li>
+  <li><strong>Your place is kept</strong> &mdash; Nothing you do in a window moves your main reading. Highlights, notes and saves made in any window are shared everywhere, and your windows are remembered for next time.</li>
+</ul>
+<div class="un-version-label">v3.0.563 &mdash; Word by word</div>
+<ul>
+  <li><strong>One place for a verse&rsquo;s words</strong> &mdash; <em>Look up a word</em> and <em>Interlinear</em> are now one button, <em>Word by word</em>, with tabs: <em>Your English</em> (your version in reading order, the original word under each part) and the original&rsquo;s own order (<em>Hebrew</em> and <em>Septuagint</em> in the Old Testament, <em>Greek</em> in the New).</li>
+  <li><strong>Step through the chapter</strong> &mdash; Arrows beside the reference move to the previous or next verse without closing.</li>
+</ul>
+<div class="un-version-label">v3.0.562 &mdash; Better links for every version</div>
+<ul>
+  <li><strong>Checked version by version</strong> &mdash; Word links were hand-reviewed in sample chapters of the NIV, NKJV, NASB, CSB and NLT: about 91&ndash;94% of linked words are right in each, and the less certain ones are marked &asymp;.</li>
+  <li><strong>More of your version&rsquo;s wording recognised</strong> &mdash; Modern wording like &ldquo;lives&rdquo; or &ldquo;settled&rdquo; (for &ldquo;dwell&rdquo;), small words like &ldquo;for&rdquo; and &ldquo;if&rdquo;, and whole phrases like &ldquo;lie down&rdquo;, &ldquo;brought up&rdquo; and &ldquo;cast out&rdquo;.</li>
+  <li><strong>Honest with paraphrases</strong> &mdash; For versions that say things in their own words (NLT, The Message&hellip;), the app no longer guesses by position, and Look up a word says why fewer words line up.</li>
+</ul>
+<div class="un-version-label">v3.0.561 &mdash; Look up a word</div>
+<ul>
+  <li><strong>The Hebrew or Greek behind your Bible&rsquo;s words</strong> &mdash; Tap a verse, then <em>Look up a word</em>: your version&rsquo;s English in reading order, with the original word under each part (&ldquo;is my shepherd&rdquo; &rarr; רֹעִי, &ldquo;nothing&rdquo; &rarr; לֹא). Tap one to open that word&rsquo;s sheet. &asymp; marks a best match; a faded word is part of the word beside it (&ldquo;his&rdquo; in &ldquo;his name&rdquo;); plain words have no original word behind them, and tap for their English meaning.</li>
+  <li><strong>See the link in the interlinear</strong> &mdash; Press and hold a Hebrew or Greek word to light up its English in the verse above; tap a word in the verse to light up its original word.</li>
+</ul>
+<div class="un-version-label">v3.0.560 &mdash; A checked, more accurate Hebrew side</div>
+<ul>
+  <li><strong>Your version&rsquo;s words, more often</strong> &mdash; Finding your English version&rsquo;s word for each Hebrew word was graded against the KJV&rsquo;s word-by-word Strong&rsquo;s tagging across all 306,000 Old Testament words: right 93% of the time (98% for plain matches), with fewer wrong picks. Less certain matches are marked &asymp;.</li>
+  <li><strong>Corrected word meanings</strong> &mdash; All 8,640 Hebrew short meanings were checked against how translators actually render each word; 289 were fixed (&ldquo;voice&rdquo;, not &ldquo;human&rdquo;; &ldquo;one&rdquo;, not &ldquo;cardinal number&rdquo;).</li>
+  <li><strong>Septuagint from a real alignment</strong> &mdash; The Greek words for each Hebrew word now come from MACULA Hebrew&rsquo;s word-by-word alignment (בָּרָא &rarr; ποιέω, κτίζω), shown as evidence of how ancient translators understood it, not a definition. Word-study sentences built on the old estimates were removed.</li>
+  <li><strong>Plainer, fairer grammar notes</strong> &mdash; Verb notes now say what a form <em>usually</em> signals (Hebrew forms are flexible), the Piel isn&rsquo;t called simply &ldquo;intensive&rdquo;, and Who Does What says which links are MACULA&rsquo;s tagging and shows &ldquo;Made to do / be it&rdquo; for causative verbs.</li>
+  <li><strong>Small fixes</strong> &mdash; Stats for words filed under two Strong&rsquo;s numbers (like &ldquo;go&rdquo;), English on the word that&rsquo;s read where the text has a marginal reading (qere), and clearer verse-numbering notes.</li>
+</ul>
+<div class="un-version-label">v3.0.559 &mdash; Hebrew in your Bible&rsquo;s words</div>
+<ul>
+  <li><strong>Your version, under the Hebrew</strong> &mdash; The English under each Hebrew word now follows the version you read. On the NIV, Genesis 22:2&rsquo;s וְהַעֲלֵהוּ reads &ldquo;Sacrifice&rdquo;; on the KJV, &ldquo;offer him&rdquo;, &ldquo;thou lovest&rdquo;. The same goes for the interlinear, the word panel, and Who Does What.</li>
+  <li><strong>See both</strong> &mdash; When your version words it differently, the word panel also shows the BSB&rsquo;s word for comparison. Words your version doesn&rsquo;t pin down show the BSB&rsquo;s word in grey.</li>
+  <li><strong>Cleaner text</strong> &mdash; Fixed stray spaces in downloaded versions: &ldquo;The L ord&rdquo; is now &ldquo;The LORD&rdquo;, and &ldquo;Lord &rsquo;s&rdquo; and &ldquo;satisfied ;&rdquo; are closed up as printed.</li>
+</ul>
 <div class="un-version-label">v3.0.558 &mdash; Reader polish</div>
 <ul>
   <li><strong>Old Testament interlinear</strong> &mdash; The Rhema guide lets you choose Hebrew or Greek Septuagint when you open it.</li>
@@ -30480,9 +30552,9 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.557 &mdash; Who does what in Hebrew</div>
 <ul>
-  <li><strong>Who Does What</strong> &mdash; In the Hebrew Old Testament, the Syntax tool is now <em>Who Does What</em>: every action in the verse with who does it, what it&rsquo;s done to, and who it&rsquo;s for (Genesis 1:11: <em>bring forth</em> &mdash; the earth makes it happen, vegetation, plants and trees come about). Tap any word to study it.</li>
+  <li><strong>Who Does What</strong> &mdash; In the Hebrew Old Testament, the Syntax tool is now <em>Who Does What</em>: every action in the verse with who does it, what it&rsquo;s done to, and who it&rsquo;s for (Genesis 1:11: <em>bring forth</em> &mdash; the earth makes it happen; vegetation, plants and trees are made to sprout). Tap any word to study it.</li>
   <li><strong>&ldquo;him&rdquo; = whom?</strong> &mdash; Hebrew words like &ldquo;him&rdquo;, &ldquo;it&rdquo; and &ldquo;he&rdquo; (even when built into the verb) show who they point back to, including people named in earlier verses.</li>
-  <li><strong>Plain verb notes</strong> &mdash; Each action says what its Hebrew form is doing: &ldquo;and then&hellip; (the story moves on)&rdquo;, &ldquo;let it&hellip;&rdquo;, &ldquo;causes it&rdquo;.</li>
+  <li><strong>Plain verb notes</strong> &mdash; Each action notes what its Hebrew form usually signals: &ldquo;and then&hellip; (the story moves on)&rdquo;, &ldquo;let it&hellip;&rdquo;, &ldquo;causes it&rdquo;.</li>
 </ul>
 <div class="un-version-label">v3.0.556 &mdash; Search Hebrew, exact forms</div>
 <ul>
@@ -30494,13 +30566,13 @@ const UPDATE_NOTES_HTML = `
 <ul>
   <li><strong>How it&rsquo;s translated</strong> &mdash; Every Hebrew word&rsquo;s Definition tab now shows how it&rsquo;s rendered across the whole Old Testament (land 1,434&times;, earth 572&times;, ground 119&times;), with example verses you can tap to open.</li>
   <li><strong>Forms it takes</strong> &mdash; For verbs: which forms the word appears in (Qal, Niphal, Hiphil&hellip;) and what each one does, in plain words.</li>
-  <li><strong>From Hebrew to Greek</strong> &mdash; See the Greek words the Septuagint used for each Hebrew word (בָּרָא &rarr; κτίζω, &ldquo;create&rdquo;) and tap one to open its Greek word study. Back takes you to the Hebrew.</li>
+  <li><strong>From Hebrew to Greek</strong> &mdash; See the Greek words the Septuagint used for each Hebrew word (בָּרָא &rarr; κτίζω, &ldquo;create&rdquo;, among others) and tap one to open its Greek word study. Back takes you to the Hebrew.</li>
   <li><strong>Accurate counts</strong> &mdash; Replaced some miscounted statistics in the Hebrew word notes.</li>
 </ul>
 <div class="un-version-label">v3.0.554 &mdash; The Hebrew Old Testament, opened up</div>
 <ul>
-  <li><strong>Hebrew in context</strong> &mdash; Under every Hebrew word you now see what it means in that exact verse: &ldquo;In the beginning&rdquo;, &ldquo;created&rdquo;, &ldquo;and there was&rdquo;, &ldquo;is my shepherd&rdquo;. Aramaic chapters in Daniel and Ezra too.</li>
-  <li><strong>Tap a Hebrew word</strong> &mdash; See what it means in this verse, how it sounds (way&middot;y&omacr;&middot;mer), what it&rsquo;s built from (and + say), and its grammar explained in plain words: what Qal, Hiphil, the &ldquo;and then&rdquo; storytelling verb, construct &ldquo;of&rdquo; and the object marker actually mean.</li>
+  <li><strong>Hebrew in context</strong> &mdash; Under every Hebrew word you now see how the BSB translates it in that exact verse: &ldquo;In the beginning&rdquo;, &ldquo;created&rdquo;, &ldquo;and there was&rdquo;, &ldquo;is my shepherd&rdquo;. Aramaic chapters in Daniel and Ezra too.</li>
+  <li><strong>Tap a Hebrew word</strong> &mdash; See what it means in this verse, how it sounds (way&middot;y&omacr;&middot;mer), what it&rsquo;s built from (and + say), and its grammar explained in plain words: what Qal, Hiphil, the storytelling verb, construct &ldquo;of&rdquo; and the object marker usually do.</li>
   <li><strong>Hebrew interlinear</strong> &mdash; Word-by-word English and pronunciation straight from the Berean tables, not a best guess.</li>
   <li><strong>Better word colors</strong> &mdash; Parts-of-speech colors now follow the main word (&ldquo;his hand&rdquo; is a noun), and Aramaic words and &ldquo;not&rdquo; are colored correctly.</li>
 </ul>
@@ -33052,6 +33124,7 @@ function isRunningAsInstalledApp() {
 function registerServiceWorker() {
   if (window.RHEMA_DESKTOP_SITE) return;
   if (!("serviceWorker" in navigator)) return;
+  if (window.RHEMA_MV_SLOT) return; // Multi-view windows: the main page handles updates
 
   // True when the page is already controlled by a service worker at load time,
   // i.e. a returning session rather than the very first install. We only force
@@ -38972,9 +39045,10 @@ function rhemaBuildVersification(book, layer, engBook, origBook) {
 }
 
 const _rhemaVersificationCache = new Map();
-function _rhemaVersificationFor(book) {
+// layer: 'hebrew' / 'lxx' to ask about one text whatever the reader shows.
+function _rhemaVersificationFor(book, layer) {
   if (!book || !isRhemaOTBook(book)) return null;
-  const lxx = _rhemaOTLayer === 'lxx';
+  const lxx = layer ? layer === 'lxx' : _rhemaOTLayer === 'lxx';
   const orig = lxx ? window.RhemaLXX?.text?.[book] : window.RhemaHebrewOT?.text?.[book];
   const eng = _rhemaEnglishData()?.[book];
   if (!orig || !eng) return null;
@@ -38986,8 +39060,8 @@ function _rhemaVersificationFor(book) {
   return _rhemaVersificationCache.get(key);
 }
 // The original-language spot for an English chapter:verse ([chapter, verse]).
-function _rhemaOrigRef(book, chapter, verse) {
-  const m = _rhemaVersificationFor(book);
+function _rhemaOrigRef(book, chapter, verse, layer) {
+  const m = _rhemaVersificationFor(book, layer);
   const hit = m?.e2o.get(`${Number(chapter)}:${Number(verse)}`);
   if (hit) { const [c, v] = hit.split(':'); return [c, v]; }
   return [String(chapter), String(verse)];
@@ -40189,8 +40263,9 @@ function _rhemaRenderVerseSheet() {
   const study = document.getElementById('rhemaVerseSheetStudy');
   if (study) study.style.display = multi ? 'none' : '';
   const wordBtn = document.getElementById('rhemaVerseSheetWordBtn');
-  // Works for one or many selected verses (words are grouped per verse).
-  if (wordBtn) wordBtn.style.display = _rhemaShowEnglish ? '' : 'none';
+  // Word by word: always offered (several selected verses start at the first;
+  // its arrows step through the chapter).
+  if (wordBtn) wordBtn.style.display = '';
   const journeyBtn = document.getElementById('rhemaVerseSheetJourneyBtn');
   if (journeyBtn) {
     if (multi) { journeyBtn.style.display = 'none'; }
@@ -41739,11 +41814,291 @@ function _rhemaOpenWordPicker(mode = 'lookup') {
     if (refEl) refEl.textContent = _rhemaDisplayRefFromKey(refs[0]) || refs[0];
   }
   _rhemaWordPickMode = mode;
-  if (label) label.textContent = mode === 'log' ? "Tap a word to add it to the study's word log" : 'Tap a word to see its meaning';
+  if (label) label.textContent = mode === 'log' ? "Tap a word to add it to the study's word log" : 'Tap a word to see its English meaning';
+  _rhemaWordPickSwitch(mode === 'english' && _rhemaLookupLinks.some(Boolean) ? 'Show the original words' : '', '_rhemaOpenLookup(true)');
   closeRhemaVerseSheet();
   document.getElementById('rhemaWordPickModal')?.classList.add('open');
 }
-function rhemaOpenEnglishWordPicker() { _rhemaOpenWordPicker('lookup'); }
+// ── Word by word ──────────────────────────────────────────────────────────────
+// One sheet for a verse's words, two ways round: "Your English" (your version
+// in reading order with the original word under each part) and the original's
+// own order (Hebrew or Septuagint for the Old Testament, Greek for the New).
+// ‹ › step through the chapter's verses.
+let _rhemaWbwTab = 'en';
+let _rhemaWbwRef = null;
+function _rhemaWbwTabsFor(book) {
+  return isRhemaOTBook(book)
+    ? [['en', 'Your English'], ['hebrew', 'Hebrew'], ['lxx', 'Septuagint']]
+    : [['en', 'Your English'], ['greek', 'Greek']];
+}
+function _rhemaWbwOrigTab(book) { return isRhemaOTBook(book) ? (_rhemaOTLayer === 'lxx' ? 'lxx' : 'hebrew') : 'greek'; }
+// Tabs, arrows and which parts of the sheet show, for the current tab.
+function _rhemaWbwChrome(p) {
+  const tabs = _rhemaWbwTabsFor(p.book);
+  if (!tabs.some(t => t[0] === _rhemaWbwTab)) _rhemaWbwTab = 'en';
+  const bar = document.getElementById('rhemaWbwTabs');
+  if (bar) bar.innerHTML = tabs.map(([k, l]) => `<button type="button" role="tab" class="rhema-wbw-tab${k === _rhemaWbwTab ? ' on' : ''}" aria-selected="${k === _rhemaWbwTab}" onclick="rhemaWbwShow(_rhemaWbwRef,'${k}')">${l}</button>`).join('');
+  const isEn = _rhemaWbwTab === 'en';
+  ['rhemaInterlinearEnglish', 'rhemaInterlinearGrid', 'rhemaInterlinearFoot'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = isEn; });
+  const vn = document.getElementById('rhemaInterlinearVersionNote'); if (vn && isEn) vn.style.display = 'none';
+  const en = document.getElementById('rhemaWbwEnglish'); if (en) en.hidden = !isEn;
+  const list = _rhemaVerseList(p.book, String(p.chapter));
+  const at = list.indexOf(String(p.verse));
+  const prev = document.getElementById('rhemaWbwPrev'), next = document.getElementById('rhemaWbwNext');
+  if (prev) prev.disabled = at <= 0;
+  if (next) next.disabled = at < 0 || at >= list.length - 1;
+  const refEl = document.getElementById('rhemaInterlinearRef');
+  if (refEl) refEl.textContent = `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}`;
+}
+function rhemaOpenWordByWord() {
+  const refs = _rhemaSel.size > 1 ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []);
+  if (!refs.length) return;
+  closeRhemaVerseSheet();
+  rhemaWbwShow(refs[0], 'en');
+}
+async function rhemaWbwShow(ref, tab) {
+  const p = ref ? _rhemaParseRef(ref) : null;
+  if (!p) return;
+  if (tab) _rhemaWbwTab = tab;
+  _rhemaWbwRef = ref;
+  if (_rhemaWbwTab !== 'en') {
+    // The original's own order: the interlinear (Hebrew / Septuagint / Greek).
+    if (isRhemaOTBook(p.book)) { const layer = _rhemaWbwTab === 'lxx' ? 'lxx' : 'hebrew'; if (_rhemaOTLayer !== layer) setRhemaOTLayer(layer); }
+    return rhemaOpenInterlinear(ref);
+  }
+  _rhemaInterlinearRef = ref;
+  _rhemaWbwChrome(p);
+  document.getElementById('rhemaInterlinearModal')?.classList.add('open');
+  const en = document.getElementById('rhemaWbwEnglish');
+  if (!en) return;
+  en.innerHTML = '<div class="rhema-lk-loading">Lining up the words…</div>';
+  try { await _rhemaEnsureLinkData(p.book); } catch {}
+  if (_rhemaWbwRef !== ref || _rhemaWbwTab !== 'en') return;
+  const L = _rhemaVerseLinks(ref);
+  _rhemaLookupLinks = [L]; _rhemaLookupRefs = [ref];
+  const lang = isRhemaOTBook(p.book) ? 'Hebrew' : 'Greek';
+  if (!L) { en.innerHTML = `<p class="rhema-lk-foot">This verse’s words can’t be lined up with the ${lang} yet.</p>`; return; }
+  const esc = _escapeRhemaAttr;
+  const chooseWord = window.RHEMA_DESKTOP_SITE ? 'Click' : 'Tap';
+  en.innerHTML = `<div class="rhema-wbw-hint">${chooseWord} a word to see the ${lang} behind it</div>` +
+    `<div class="rhema-word-chips rhema-lk-chips">${_rhemaLookupChipsHtml(L, 0)}</div>` +
+    (_rhemaBridgeOpts(L.ver).loose ? `<p class="rhema-lk-foot">The ${esc(L.ver)} says things in its own words, so fewer words line up one to one with the ${lang}. For word-for-word study, a more literal version (BSB, NASB, ESV, KJV) links more.</p>` : '') +
+    `<p class="rhema-lk-foot">${esc(L.ver)} in reading order · <b>≈</b> best match · <span class="rhema-lk-key-part">faded</span> part of the word beside it · <span class="rhema-lk-key-none">plain</span> no ${lang} word (${chooseWord.toLowerCase()} for its English meaning)</p>` +
+    `<button type="button" class="rhema-lk-switch" onclick="rhemaWbwEnglishMeanings()">English meanings of every word</button>`;
+}
+function rhemaWbwStep(d) {
+  const p = _rhemaWbwRef ? _rhemaParseRef(_rhemaWbwRef) : null;
+  if (!p) return;
+  const list = _rhemaVerseList(p.book, String(p.chapter));
+  const v = list[list.indexOf(String(p.verse)) + d];
+  if (v) rhemaWbwShow(_rhemaXrefKeyForVerse(p.book, p.chapter, v));
+}
+function rhemaWbwEnglishMeanings() {
+  const ref = _rhemaWbwRef;
+  closeRhemaInterlinear();
+  _rhemaMenuRef = ref;
+  _rhemaOpenWordPicker('english');
+}
+function rhemaOpenEnglishWordPicker() { rhemaOpenWordByWord(); }
+
+// ── Look up a word: the Hebrew / Greek word behind each English word ──────────
+// The verse menu's word picker lists the verse in the reader's own English, in
+// reading order, with the original word under each piece of it. Tapping a
+// piece opens that Hebrew (Old Testament) or Greek (New Testament) word's
+// sheet. The pairing is the interlinear's matcher run on the version on
+// screen: "≈" marks a best match; words with no original word behind them
+// (supplied for English, or worded too differently to pin down) stay plain and
+// open their English meaning instead.
+let _rhemaLookupLinks = [];
+async function _rhemaEnsureLinkData(book) {
+  if (isRhemaOTBook(book)) {
+    await Promise.all([_rhemaLoadDataFile('rhema-ot-hebrew.js'), _rhemaLoadDataFile('rhema-hebrew-lexicon.js')]);
+    await Promise.all([_rhemaLoadHebIL(book), _rhemaLoadHebRend()]);
+  } else {
+    if (!_rhemaData()) await loadRhemaScripts();
+    await _ensureRhemaBsbAlign();
+  }
+  if (!window.RhemaAlign) throw new Error('aligner missing');
+}
+// The verse's English cut into pieces in reading order, each with the original
+// words it renders: { text, start, end, orig: [index…], kind }.
+function _rhemaVerseLinks(ref) {
+  const p = ref ? _rhemaParseRef(ref) : null;
+  if (!p || !window.RhemaAlign) return null;
+  const text = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
+  if (!text) return null;
+  const ver = (typeof _rhemaReaderDisplayLabel === 'function' && _rhemaReaderDisplayLabel()) || 'BSB';
+  let words, out, oc, ov, layer;
+  try {
+    if (isRhemaOTBook(p.book)) {
+      layer = 'hebrew';
+      [oc, ov] = _rhemaOrigRef(p.book, p.chapter, p.verse, 'hebrew');
+      words = (window.RhemaHebrewOT?.text?.[p.book] || {})[oc]?.[ov] || [];
+      if (!words.length || !_rhemaHebILData(p.book)) return null;
+      const items = _rhemaHebBridgeItems(p.book, oc, ov).map(it => ({ ...it }));
+      if (ver !== 'BSB') {
+        let table = null;
+        try { table = _rhemaHebVersionLexicon(ver, p.book, String(p.chapter)); } catch {}
+        if (table) items.forEach(it => { it.learned = RhemaAlign.learnedFor(table, it.key); });
+      }
+      out = RhemaAlign.bridgeToVersion(items, text, _rhemaBridgeOpts(ver));
+    } else {
+      layer = 'nt-greek';
+      oc = String(p.chapter); ov = String(p.verse);
+      words = _rhemaOrigWords(p.book, p.chapter, p.verse);
+      if (!words.length) return null;
+      const decisions = words.map(w => _rhemaMeaningDecision(_rhemaResolveWord(w, p.book, p.chapter), { layer, book: p.book, chapter: p.chapter, verse: p.verse }));
+      // Bridge even for the BSB itself: the pieces need character positions.
+      out = _rhemaVersionRenderingsForVerse(p, words, decisions, text, ver === 'BSB' ? 'BSB text' : ver, ver === 'BSB' ? { learn: false } : {});
+    }
+  } catch (e) { console.warn('lookup links', e); return null; }
+  const toks = RhemaAlign.tokenizeEnglish(text);
+  const owners = toks.map(() => []);
+  out.forEach((r, i) => {
+    if (!r || !r.text || r.start == null) return;
+    toks.forEach((t, k) => { if (t.start >= r.start && t.end <= r.end) owners[k].push(i); });
+  });
+  const pieces = [];
+  toks.forEach((t, k) => {
+    const key = owners[k].join(',');
+    const last = pieces[pieces.length - 1];
+    if (last && key && last.key === key && last.endTok === k - 1) { last.end = t.end; last.endTok = k; last.text = text.slice(last.start, last.end); return; }
+    const kinds = owners[k].map(i => out[i].kind);
+    pieces.push({ key, start: t.start, end: t.end, endTok: k, text: t.raw, orig: owners[k], kind: !owners[k].length ? '' : kinds.every(x => x === 'match' || x === 'exact') ? 'match' : 'inferred' });
+  });
+  // Hebrew packs pronouns and "and" into its words: "he refreshes" is one verb
+  // (its ending says "he"), "his name" is one noun with a "his" ending, "and"
+  // is the וְ on the front of the next word. A pronoun or "and" left over goes
+  // with the neighbouring word whose grammar (Berean parsing) shows exactly it.
+  if (layer === 'hebrew') {
+    const PGN = { he: ['3ms'], him: ['3ms'], his: ['3ms'], himself: ['3ms'], she: ['3fs'], her: ['3fs'], herself: ['3fs'], it: ['3ms', '3fs'], its: ['3ms', '3fs'],
+      they: ['3mp', '3fp', '3cp'], them: ['3mp', '3fp', '3cp'], their: ['3mp', '3fp', '3cp'], themselves: ['3mp', '3fp', '3cp'],
+      i: ['1cs'], me: ['1cs'], my: ['1cs'], mine: ['1cs'], myself: ['1cs'], we: ['1cp'], us: ['1cp'], our: ['1cp'],
+      you: ['2ms', '2fs', '2mp', '2fp'], your: ['2ms', '2fs', '2mp', '2fp'], yourself: ['2ms', '2fs'], thou: ['2ms', '2fs'], thee: ['2ms', '2fs'], thy: ['2ms', '2fs'], thine: ['2ms', '2fs'], ye: ['2mp', '2fp'] };
+    // "I", "he", "they"… (the one doing it) live in a verb's ending; "my",
+    // "his", "them"… (whose / to whom) in a word's suffix ("| 1cs").
+    const SUBJ = new Set(['i', 'he', 'she', 'we', 'they', 'thou', 'ye']);
+    const OBJ = new Set(['me', 'my', 'mine', 'myself', 'him', 'his', 'himself', 'her', 'herself', 'us', 'our', 'them', 'their', 'themselves', 'thee', 'thy', 'thine', 'yourself']);
+    const fits = (ps, low, g) => {
+      const [main, ...suf] = String(ps).split(' | ');
+      const inVerb = /^(?:.*, )?V-/.test(main) && new RegExp(`-${g}\\b`).test(main);
+      const inSuffix = suf.some(x => x.trim() === g);
+      return SUBJ.has(low) ? inVerb : OBJ.has(low) ? inSuffix : (inVerb || inSuffix);
+    };
+    pieces.forEach((pc, k) => {
+      if (pc.orig.length) return;
+      const low = pc.text.toLowerCase();
+      const want = PGN[low] || (low === 'and' ? 'and' : null);
+      if (!want) return;
+      // The nearest word (either side, up to three pieces away) whose grammar fits.
+      let best = null;
+      for (const dir of (want === 'and' ? [1] : [1, -1])) {
+        for (let d = 1; d <= 3; d++) {
+          const x = pieces[k + dir * d]; if (!x) break;
+          if (!x.orig.length) continue;
+          const hit = x.orig.find(i => {
+            const ps = _rhemaHebILWord(p.book, oc, ov, i)?.ps || '';
+            return want === 'and' ? /(^|\| )Conj-w\b/.test(ps) : want.some(g => fits(ps, low, g));
+          });
+          if (hit != null) { if (!best || d < best.d) best = { hit, d }; break; }
+        }
+      }
+      if (best) { pc.orig = [best.hit]; pc.kind = 'match'; pc.part = true; }
+    });
+  }
+  return { ref, p, text, ver, layer, oc, ov, words, out, pieces };
+}
+function _rhemaOrigSurface(L, i) {
+  const w = L.words[i];
+  return w ? (L.layer === 'hebrew' ? _rhemaDisplaySurface(w[0]) : (window.RhemaAlign ? RhemaAlign.cleanSurface(w[0]) : w[0])) : '';
+}
+function _rhemaLookupChipsHtml(L, li) {
+  const esc = _escapeRhemaAttr;
+  return L.pieces.map((pc, pi) => {
+    if (!pc.orig.length) {
+      return `<button class="rhema-word-chip rhema-lk-chip rhema-lk-none" onclick="rhemaShowEnglishMeaning(decodeURIComponent('${encodeURIComponent(pc.text)}'))"><span class="rhema-lk-en">${esc(pc.text)}</span><span class="rhema-lk-orig">&nbsp;</span></button>`;
+    }
+    const orig = pc.orig.map(i => _rhemaOrigSurface(L, i)).join(' · ');
+    return `<button class="rhema-word-chip rhema-lk-chip${pc.kind === 'inferred' ? ' rhema-lk-approx' : ''}${pc.part ? ' rhema-lk-part' : ''}" onclick="rhemaLookupPiece(${li},${pi})"${pc.part ? ` title="Part of this ${L.layer === 'hebrew' ? 'Hebrew' : 'Greek'} word"` : ''}>` +
+      `<span class="rhema-lk-en">${esc(pc.text)}</span>` +
+      `<span class="rhema-lk-orig${L.layer === 'hebrew' ? ' rhema-hebrew-text' : ''}">${pc.kind === 'inferred' ? '≈ ' : ''}${esc(orig)}</span></button>`;
+  }).join('');
+}
+let _rhemaLookupRefs = [];
+async function _rhemaOpenLookup(again) {
+  const refs = again && _rhemaLookupRefs.length ? _rhemaLookupRefs
+    : (_rhemaSel.size > 1 ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []));
+  if (!refs.length) return;
+  _rhemaLookupRefs = refs;
+  const p0 = _rhemaParseRef(refs[0]);
+  const wrap = document.getElementById('rhemaWordPickChips');
+  const refEl = document.getElementById('rhemaWordPickRef');
+  const label = document.getElementById('rhemaWordPickLabel');
+  _rhemaWordPickMode = 'lookup';
+  closeRhemaVerseSheet();
+  document.getElementById('rhemaWordPickModal')?.classList.add('open');
+  const lang = p0 && isRhemaOTBook(p0.book) ? 'Hebrew' : 'Greek';
+  if (label) label.textContent = `Tap a word to see the ${lang} behind it`;
+  if (refEl) refEl.textContent = refs.length > 1 ? `${refs.length} verses` : (_rhemaDisplayRefFromKey(refs[0]) || refs[0]);
+  if (wrap) wrap.innerHTML = '<div class="rhema-lk-loading">Lining up the words…</div>';
+  try { await _rhemaEnsureLinkData(p0.book); } catch {}
+  if (!document.getElementById('rhemaWordPickModal')?.classList.contains('open') || _rhemaWordPickMode !== 'lookup') return;
+  _rhemaLookupLinks = refs.map(_rhemaVerseLinks);
+  if (!_rhemaLookupLinks.some(Boolean)) { _rhemaOpenWordPicker('lookup'); return; } // no original text here: English meanings
+  const groups = _rhemaLookupLinks.map((L, li) => {
+    if (!L) return '';
+    const chips = `<div class="rhema-word-chips rhema-lk-chips">${_rhemaLookupChipsHtml(L, li)}</div>`;
+    return refs.length > 1 ? `<div class="rhema-wordpick-group"><div class="rhema-wordpick-grouphd">${_escapeRhemaAttr(_rhemaDisplayRefFromKey(L.ref) || L.ref)}</div>${chips}</div>` : chips;
+  }).join('');
+  const ver = _rhemaLookupLinks.find(Boolean)?.ver || '';
+  _rhemaWordPickSwitch('English meanings instead', "_rhemaOpenWordPicker('english')");
+  if (wrap) wrap.innerHTML = groups +
+    (_rhemaBridgeOpts(ver).loose ? `<p class="rhema-lk-foot">The ${_escapeRhemaAttr(ver)} says things in its own words, so fewer words line up one to one with the ${lang}. For word-for-word study, a more literal version (BSB, NASB, ESV, KJV) links more.</p>` : '') +
+    `<p class="rhema-lk-foot">${_escapeRhemaAttr(ver)} in reading order · <b>≈</b> best match · <span class="rhema-lk-key-part">faded</span> part of the word beside it · <span class="rhema-lk-key-none">plain</span> no ${lang} word (tap for its English meaning)</p>` +
+    '';
+}
+// The picker's second button (next to Close): switch between the original
+// words and English meanings; hidden when there's nothing to switch to.
+function _rhemaWordPickSwitch(label, action) {
+  const b = document.getElementById('rhemaWordPickSwitch');
+  if (!b) return;
+  b.hidden = !label;
+  if (label) { b.textContent = label; b.setAttribute('onclick', action); }
+}
+// A piece of English → its original word's sheet; two or more → choose one.
+function rhemaLookupPiece(li, pi) {
+  const L = _rhemaLookupLinks[li];
+  const pc = L?.pieces?.[pi];
+  if (!pc || !pc.orig.length) return;
+  if (pc.orig.length === 1) return rhemaLookupOpen(li, pc.orig[0]);
+  const esc = _escapeRhemaAttr;
+  const lex = L.layer === 'hebrew' ? (window.RhemaHebrewLexicon || {}) : (window.RhemaLexicon || {});
+  const inSheet = document.getElementById('rhemaInterlinearModal')?.classList.contains('open') && _rhemaWbwTab === 'en';
+  const wrap = document.getElementById(inSheet ? 'rhemaWbwEnglish' : 'rhemaWordPickChips');
+  const label = document.getElementById('rhemaWordPickLabel');
+  const pickMsg = `“${pc.text}” is ${pc.orig.length} ${L.layer === 'hebrew' ? 'Hebrew' : 'Greek'} words. Pick one:`;
+  if (label && !inSheet) label.textContent = pickMsg;
+  if (wrap) wrap.innerHTML = (inSheet ? `<div class="rhema-wbw-hint">${esc(pickMsg)}</div>` : '') + pc.orig.map(i => {
+    const w = L.words[i] || [];
+    const e = lex[String(w[1])] || {};
+    const here = L.layer === 'hebrew' ? (_rhemaHebILWord(L.p.book, L.oc, L.ov, i)?.en || '') : '';
+    return `<button type="button" class="rhema-lk-choice" onclick="rhemaLookupOpen(${li},${i})">` +
+      `<span><b>${esc(e.gloss || e.brief || here || '')}</b>${here ? `<small>BSB here: “${esc(_rhemaHebPlain(here))}”</small>` : ''}</span>` +
+      `<span class="rhema-lk-choice-w${L.layer === 'hebrew' ? ' rhema-hebrew-text' : ''}">${esc(_rhemaOrigSurface(L, i))}</span></button>`;
+  }).join('') + (inSheet ? `<button type="button" class="rhema-lk-switch" onclick="rhemaWbwShow(_rhemaWbwRef,'en')">Back to the verse</button>` : '');
+  if (!inSheet) _rhemaWordPickSwitch('Back to the verse', '_rhemaOpenLookup(true)');
+}
+function rhemaLookupOpen(li, i) {
+  const L = _rhemaLookupLinks[li];
+  if (!L) return;
+  closeRhemaWordPick();
+  if (document.getElementById('rhemaInterlinearModal')?.classList.contains('open')) closeRhemaInterlinear();
+  // The Hebrew word's sheet reads the Hebrew text: switch the Old Testament
+  // pane from the Septuagint if that's what's showing.
+  if (L.layer === 'hebrew' && _rhemaOTLayer === 'lxx') setRhemaOTLayer('hebrew');
+  if (L.p.book !== _rhemaBook) return;
+  openRhemaSheet(i, L.ov, L.oc);
+}
 
 // ── Interlinear-lite ───────────────────────────────────────────────────────────
 // Tap a verse → the original text word by word, each with transliteration and a
@@ -41757,6 +42112,8 @@ let _rhemaInterlinearChoiceRef = null;
 function rhemaOpenInterlinearFromMenu() {
   const ref = _rhemaMenuRef;
   closeRhemaVerseSheet();
+  const p0 = ref && _rhemaParseRef(ref);
+  if (p0) return rhemaWbwShow(ref, _rhemaWbwOrigTab(p0.book));
   const p = ref && _rhemaParseRef(ref);
   if (p && isRhemaOTBook(p.book)) {
     _rhemaInterlinearChoiceRef = ref;
@@ -41790,6 +42147,7 @@ async function rhemaOpenInterlinear(ref) {
   const refEl = document.getElementById('rhemaInterlinearRef');
   const engEl = document.getElementById('rhemaInterlinearEnglish');
   const gridEl = document.getElementById('rhemaInterlinearGrid');
+  if (p) { _rhemaWbwRef = ref; if (_rhemaWbwTab === 'en') _rhemaWbwTab = _rhemaWbwOrigTab(p.book); _rhemaWbwChrome(p); }
   if (refEl && p) refEl.textContent = `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}`;
   if (engEl && p) engEl.textContent = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
   if (gridEl) gridEl.innerHTML = '<div class="rhema-il-loading">Loading…</div>';
@@ -41876,7 +42234,7 @@ function _rhemaVersionChapterLexicon(book, chapter, version, textOf) {
       itemsByVerse[v] = _rhemaBridgeItems({ book, chapter, verse: v }, ws, decisions);
     }
     const items = itemsByVerse[v].map(it => ({ ...it }));
-    RhemaAlign.learnRenderings(items, RhemaAlign.bridgeToVersion(items, text), table);
+    RhemaAlign.learnRenderings(items, RhemaAlign.bridgeToVersion(items, text, _rhemaBridgeOpts(version)), table);
   }
   _rhemaVerLexCache.set(key, { table, avail });
   if (_rhemaVerLexCache.size > 24) _rhemaVerLexCache.delete(_rhemaVerLexCache.keys().next().value);
@@ -41896,7 +42254,7 @@ function _rhemaVersionRenderingsForVerse(p, words, decisions, versionText, versi
     } catch {}
     if (table) items.forEach(it => { it.learned = RhemaAlign.learnedFor(table, it.key); });
   }
-  return RhemaAlign.bridgeToVersion(items, versionText);
+  return RhemaAlign.bridgeToVersion(items, versionText, _rhemaBridgeOpts(version));
 }
 
 let _rhemaIlDetails = (() => { try { return localStorage.getItem('rhemaIlDetails') === '1'; } catch { return false; } })();
@@ -41949,11 +42307,20 @@ function _rhemaRenderInterlinear(ref) {
   const foot = document.getElementById('rhemaInterlinearFoot');
   if (foot) {
     if (!foot.dataset.greek) foot.dataset.greek = foot.textContent;
+    const hv = _rhemaReaderVersion();
     foot.textContent = isHebrew
-      ? 'Hebrew reads right to left. Under each Hebrew word: how it sounds, then the Berean Standard Bible’s English for it in this verse, from the Berean word-by-word tables. Tap any word to see what it means and how it’s built.'
+      ? (hv && hv !== 'BSB'
+        ? `Hebrew reads right to left. Under each Hebrew word: how it sounds, then the ${hv}’s English for it in this verse, found with the help of the Berean word-by-word tables. Tap any word to see what it means and how it’s built.`
+        : 'Hebrew reads right to left. Under each Hebrew word: how it sounds, then the Berean Standard Bible’s English for it in this verse, from the Berean word-by-word tables. Tap any word to see what it means and how it’s built.')
       : foot.dataset.greek;
   }
-  if (hebIL) {
+  const hebVer = hebIL ? _rhemaHebVersionWords(p.book, ilC, ilV) : null;
+  if (hebIL && hebVer) {
+    // Another version: its own words, found through the BSB's word table; the
+    // BSB's word (grey) where this version's can't be pinned down.
+    renders = hebVer.map((r, i) => (r.kind ? r : (hebIL[i]?.en ? { text: hebIL[i].en, kind: 'bsb' } : r)));
+    _rhemaSetInterlinearVersionNote(hebVer.version, true);
+  } else if (hebIL) {
     // The Berean table is the BSB's own word-by-word English: exact, not guessed.
     renders = hebIL.map(il => il?.en ? { text: il.en, kind: 'exact' } : { text: '', kind: il ? 'none' : '' });
     _rhemaSetInterlinearVersionNote('BSB');
@@ -41973,6 +42340,8 @@ function _rhemaRenderInterlinear(ref) {
       english = `<span class="rhema-il-version rhema-il-inferred" title="Best match by position">≈ ${esc(v.text)}</span>`;
     } else if (v.kind === 'none') {
       english = `<span class="rhema-il-none" title="${esc(versionLabel)} has no separate word for this">—</span>`;
+    } else if (v.text && v.kind === 'bsb') {
+      english = `<span class="rhema-il-gloss" title="The BSB’s word here (not found in ${esc(hebVer?.version || versionLabel)})">${esc(v.text)}</span>`;
     } else {
       english = r.gloss ? `<span class="rhema-il-gloss" title="Literal meaning (not found in ${esc(versionLabel)})">${esc(r.gloss)}</span>` : '';
     }
@@ -41989,8 +42358,53 @@ function _rhemaRenderInterlinear(ref) {
       english + details +
       `</button>`;
   }).join('');
+  _rhemaLinkInterlinear(ref, layer);
 }
-function _rhemaSetInterlinearVersionNote(versionLabel) {
+// Press and hold a tile to light up its English in the verse above; tap a word
+// of the verse to light up its tile(s). Same pairing as Look up a word.
+let _rhemaIlLinks = null, _rhemaIlHoldTimer = 0, _rhemaIlHeld = false;
+function _rhemaLinkInterlinear(ref, layer) {
+  const engEl = document.getElementById('rhemaInterlinearEnglish');
+  _rhemaIlLinks = (layer === 'hebrew' || layer === 'nt-greek') ? _rhemaVerseLinks(ref) : null;
+  const L = _rhemaIlLinks;
+  if (!engEl || !L) return;
+  const esc = _escapeRhemaAttr;
+  let html = '', at = 0;
+  L.pieces.forEach((pc, k) => {
+    html += esc(L.text.slice(at, pc.start));
+    html += pc.orig.length ? `<span class="rhema-il-en" data-p="${k}" onclick="rhemaIlLightFromEnglish(${k})">${esc(L.text.slice(pc.start, pc.end))}</span>` : esc(L.text.slice(pc.start, pc.end));
+    at = pc.end;
+  });
+  engEl.innerHTML = html + esc(L.text.slice(at));
+  document.querySelectorAll('#rhemaInterlinearGrid .rhema-il-word').forEach((tile, i) => {
+    const start = () => { clearTimeout(_rhemaIlHoldTimer); _rhemaIlHoldTimer = setTimeout(() => { _rhemaIlHeld = true; rhemaIlLightFromTile(i); }, 380); };
+    const stop = () => clearTimeout(_rhemaIlHoldTimer);
+    tile.addEventListener('pointerdown', start);
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => tile.addEventListener(ev, stop));
+    tile.addEventListener('contextmenu', e => e.preventDefault());
+  });
+}
+function _rhemaIlClearLight() {
+  document.querySelectorAll('#rhemaInterlinearEnglish .lit, #rhemaInterlinearGrid .lit').forEach(el => el.classList.remove('lit'));
+}
+function rhemaIlLightFromTile(i) {
+  const L = _rhemaIlLinks; if (!L) return;
+  _rhemaIlClearLight();
+  document.querySelectorAll('#rhemaInterlinearGrid .rhema-il-word')[i]?.classList.add('lit');
+  let first = null;
+  L.pieces.forEach((pc, k) => { if (pc.orig.includes(i)) { const el = document.querySelector(`#rhemaInterlinearEnglish [data-p="${k}"]`); el?.classList.add('lit'); first = first || el; } });
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch {}
+  first?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function rhemaIlLightFromEnglish(k) {
+  const L = _rhemaIlLinks; const pc = L?.pieces?.[k]; if (!pc) return;
+  _rhemaIlClearLight();
+  document.querySelector(`#rhemaInterlinearEnglish [data-p="${k}"]`)?.classList.add('lit');
+  const tiles = document.querySelectorAll('#rhemaInterlinearGrid .rhema-il-word');
+  pc.orig.forEach(i => tiles[i]?.classList.add('lit'));
+  tiles[pc.orig[0]]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function _rhemaSetInterlinearVersionNote(versionLabel, hebBridge) {
   const el = document.getElementById('rhemaInterlinearVersionNote');
   if (!el) return;
   if (versionLabel) {
@@ -41999,7 +42413,7 @@ function _rhemaSetInterlinearVersionNote(versionLabel) {
       `<span><span class="rhema-il-swatch rhema-il-sw-version">word</span> ${esc(versionLabel)}’s word</span>` +
       `<span><span class="rhema-il-swatch rhema-il-sw-inferred">≈</span> best match by position</span>` +
       `<span><span class="rhema-il-swatch rhema-il-sw-none">—</span> no separate word</span>` +
-      `<span><span class="rhema-il-swatch rhema-il-sw-gloss">grey</span> literal meaning</span>` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-gloss">grey</span> ${hebBridge ? 'the BSB’s word (not found)' : 'literal meaning'}</span>` +
       `</span>` +
       `<button type="button" class="rhema-il-detail-btn${_rhemaIlDetails ? ' on' : ''}" onclick="rhemaToggleInterlinearDetails()">` +
       `<span class="material-symbols-outlined">${_rhemaIlDetails ? 'visibility_off' : 'visibility'}</span>${_rhemaIlDetails ? 'Hide' : 'Show'} literal &amp; parsing</button>`;
@@ -42017,6 +42431,7 @@ function _rhemaSetInterlinearVersionNote(versionLabel) {
 const RHEMA_BSB_ALIGN_VERSION = '3.0.2';
 let _rhemaBsbAlignPromise = null;
 function _ensureRhemaBsbAlign() {
+  if (!window.RhemaBSBAlign && window.RHEMA_MV_SLOT) _rhemaAdoptParentData();
   if (window.RhemaBSBAlign) return Promise.resolve(window.RhemaBSBAlign);
   if (_rhemaBsbAlignPromise) return _rhemaBsbAlignPromise;
   _rhemaBsbAlignPromise = new Promise((resolve) => {
@@ -42049,6 +42464,7 @@ function _rhemaBsbEnglishForTokens(appTokens, book, chapter, verse) {
 }
 
 function _rhemaInterlinearOpenWord(idx) {
+  if (_rhemaIlHeld) { _rhemaIlHeld = false; return; } // that was a press-and-hold
   const ref = _rhemaInterlinearRef;
   const p = ref ? _rhemaParseRef(ref) : null;
   if (!p) return;
@@ -43409,6 +43825,22 @@ function decodeMorph(code) {
 // One shared loader per data file, so the reader, Memorize, Threads etc. never
 // inject the same multi-MB script twice.
 const _rhemaFilePromises = {};
+// Multi-view windows share the main page's Bible data (the same objects, not
+// copies): six windows cost little more memory than one.
+function _rhemaAdoptParentData() {
+  if (!window.RHEMA_MV_SLOT) return 0;
+  let P = null;
+  try { P = window.parent; if (!P || P === window) return 0; void P.document; } catch { return 0; }
+  let n = 0;
+  try {
+    for (const k of Object.keys(P)) {
+      if (!/^Rhema[A-Z]/.test(k) || k === 'RhemaAlign' || window[k]) continue;
+      const v = P[k];
+      if (v && typeof v === 'object') { window[k] = v; n++; }
+    }
+  } catch {}
+  return n;
+}
 function _rhemaDataGlobalReady(file) {
   const g = {
     'rhema-nt.js': 'RhemaNT', 'rhema-critical.js': 'RhemaCriticalNT',
@@ -43423,7 +43855,23 @@ function _rhemaDataGlobalReady(file) {
 }
 function _rhemaLoadDataFile(file) {
   if (_rhemaFilePromises[file]) return _rhemaFilePromises[file];
+  if (window.RHEMA_MV_SLOT) _rhemaAdoptParentData();
   if (_rhemaDataGlobalReady(file)) return (_rhemaFilePromises[file] = Promise.resolve());
+  // A Multi-view window: have the main page load it (once), then share it.
+  if (window.RHEMA_MV_SLOT) {
+    let P = null;
+    try { P = window.parent; if (P === window || typeof P._rhemaLoadDataFile !== 'function') P = null; } catch { P = null; }
+    if (P) {
+      return (_rhemaFilePromises[file] = Promise.resolve(P._rhemaLoadDataFile(file)).then(() => {
+        _rhemaAdoptParentData();
+        if (!_rhemaDataGlobalReady(file)) throw new Error('not shared');
+      }).catch(() => { delete _rhemaFilePromises[file]; return _rhemaLoadOwnDataFile(file); }));
+    }
+  }
+  return _rhemaLoadOwnDataFile(file);
+}
+function _rhemaLoadOwnDataFile(file) {
+  if (_rhemaFilePromises[file] && !window.RHEMA_MV_SLOT) return _rhemaFilePromises[file];
   const p = new Promise((res, rej) => {
     const s = document.createElement('script');
     s.src = file + '?v=' + (RHEMA_DATA_VERSIONS[file] || APP_VERSION);
@@ -44563,6 +45011,9 @@ function _rhemaStudyTools() {
             : _rhemaShowEnglish ? 'Switch to Greek to choose a text type.' : '',
       action: () => toggleWheelTool('critical') }
   ];
+  // Multi-view: up to six Rhēmas side by side (not inside a Multi-view window).
+  if (!window.RHEMA_MV_SLOT) tools.push({ id: 'multiview', label: 'Multi-view', icon: 'dashboard', active: false, reason: '',
+    action: () => { try { closeRhemaReaderPanel(); } catch {} rhemaOpenMultiView(); } });
   return tools;
 }
 function _rhemaStudyTileHtml(t) {
@@ -46241,10 +46692,10 @@ function _renderVerseWords(words, verse, ochapter) {
       const variant = variantMap[i];
       const cls = `${isXref ? 'rhema-word xref' : 'rhema-word'}${variant ? ' has-variant' : ''}`;
       const decision = _rhemaMeaningDecision(word, { layer, book: _rhemaBook, chapter: _rhemaChapter, verse: verse || _rhemaVerse });
-      // Hebrew: the Berean English for this exact spot ("In the beginning",
-      // "and he said"), falling back to the word's general meaning.
-      const il = isHebrew ? _rhemaHebILWord(_rhemaBook, ochapter || _rhemaChapter, verse || _rhemaVerse, i) : null;
-      const gloss = (il && il.en) ? _escapeRhemaAttr(il.en) : decision.gloss;
+      // Hebrew: the reader's version's English for this exact spot ("In the
+      // beginning", "and he said"), falling back to the word's general meaning.
+      const he = isHebrew ? _rhemaHebEnglish(_rhemaBook, ochapter || _rhemaChapter, verse || _rhemaVerse, i) : null;
+      const gloss = (he && he.text) ? _escapeRhemaAttr(he.text) : decision.gloss;
       const glossHtml = gloss ? `<span class="rhema-gloss">${gloss}</span>` : '';
       const variantTag = variant
         ? `<button class="rhema-variant-tag" onclick="event.stopPropagation();showRhemaVariant('${variant.label}', '${_escapeRhemaAttr(variant.text)}')" title="Text variant">var</button>`
@@ -46300,7 +46751,7 @@ function _rhemaOrigNoteHtml(book, chapter, list, vmap) {
       : `${layer}'s ${one} ${chapters.join(', ')}`;
     const order = lxx && book === 'JER' && chapters[0] !== String(ch) ? " The Septuagint arranges Jeremiah's chapters in a different order." : '';
     return box(lxx
-      ? `Shown here is ${which}.${order} The Greek translation adds, leaves out or moves some lines in this part, so it won't match the English verse for verse.`
+      ? `Shown here is ${which}.${order} The Greek text is longer, shorter or ordered differently in this part, so it won't match the English verse for verse.`
       : `Shown here is ${which}. The Hebrew numbers a verse or two differently around here, so it may not match the English verse for verse.`);
   }
   const sameNumbers = chapters.length === 1 && chapters[0] === String(ch) && !titles &&
@@ -46312,7 +46763,7 @@ function _rhemaOrigNoteHtml(book, chapter, list, vmap) {
   let why = `${Layer} starts and ends some chapters in different places than English Bibles.`;
   if (lxx && book === 'PSA') why = 'The Septuagint numbers most Psalms one behind English Bibles (English Psalm 23 is its Psalm 22).';
   else if (lxx && book === 'JER') why = "The Septuagint arranges Jeremiah's chapters in a different order.";
-  else if (lxx && book === 'PRO') why = 'The Septuagint places these proverbs later in the book.';
+  else if (lxx && book === 'PRO') why = 'The Septuagint arranges the last chapters of Proverbs in a different order.';
   return box(`In ${layer} this passage is <b>${one} ${ranges.join(' and ')}</b>. ${why} Verse numbers below are ${layer}'s own.`);
 }
 // English pane: only for a chapter the original has and English Bibles don't.
@@ -46320,8 +46771,8 @@ function _rhemaEngNoteHtml(book, chapter, hasEng, hasOrig) {
   if (hasEng || !hasOrig) return '';
   const lxx = _rhemaOTLayer === 'lxx';
   const box = html => `<div class="rhema-versification-note"><span class="material-symbols-outlined" aria-hidden="true">swap_vert</span><div>${html}</div></div>`;
-  if (book === 'PSA' && Number(chapter) === 151) return box(`Psalm 151 is found only in the Septuagint, so English Bibles don't include it. Switch the language to Greek to read it.`);
-  return box(`English Bibles don't have ${_escapeRhemaAttr(_rhemaBookName(book))} ${chapter}. It's only in ${lxx ? 'the Septuagint' : 'the Hebrew'}. Switch the language to read it.`);
+  if (book === 'PSA' && Number(chapter) === 151) return box(`Psalm 151 is in the Septuagint (a Hebrew form is in the Dead Sea Scrolls), but most English Bibles leave it out. Switch the language to Greek to read it.`);
+  return box(`Many English Bibles, including this one, don't have ${_escapeRhemaAttr(_rhemaBookName(book))} ${chapter}. It's in ${lxx ? 'the Septuagint' : 'the Hebrew'}. Switch the language to read it.`);
 }
 
 function renderRhemaVerse() {
@@ -47148,11 +47599,10 @@ const _coachVsheetBtn = fn => () => _coachFirst([() => [...document.querySelecto
 const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), title: 'Highlight', body: 'Tap a color to highlight the verse. Tap the crossed-out drop to clear it.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /note/i.test(t)), pose: 'thumbs', title: 'Notes', body: 'Write your own note on the verse. All your highlights and notes are listed in the menu.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Compare/.test(t)), title: 'Compare', body: 'See this verse side by side in other Bibles, like the NIV, KJV and NASB.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Multi-view/.test(t)), title: 'Multi-view', body: 'Open this verse in a new Rhēma tab: up to six full Rhēmas, each with its own passage, translation and language. Tap a tab at the top to switch.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^See interpretations/.test(t)), pose: 'inspect', title: 'See interpretations', body: 'How different traditions read this passage, Free Grace first. Each view gets a short summary, real quotes from its teachers, and links to read more.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), pose: 'thumbs', title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /English word/.test(t)), pose: 'think', title: 'Define a word', body: 'Not sure what a word in your Bible means? Pick it and get a simple definition. Names and places get a Bible dictionary entry.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Interlinear/.test(t)), pose: 'inspect', title: 'Interlinear', body: 'Lines up every Greek (or Hebrew) word with its English, word by word. Tap any word to study it.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Word by word/.test(t)), pose: 'inspect', title: 'Word by word', body: 'Your Bible’s words with the Greek or Hebrew under each one, or the original word by word in its own order. Tap any word to study it.' },
   { before: _coachOpenVerseMenu, target: () => _coachFirst([() => document.querySelector(`#rhemaEnglishDisplay .rhema-chapter-block[data-verse="${_rhemaSelectedVersesSorted?.()[0] || _rhemaVerse}"]`), '#rhemaVerseSheetRef', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
 ];
 // The menu's reading helpers. Scrolls the menu so each spotlighted part is on screen.
@@ -49626,13 +50076,14 @@ function buildNounFormHint(surface, strongs, morph) {
 // word sounds (bə·rê·šîṯ) and its parsing ("Conj-w | V-Qal-ConsecImperf-3ms").
 // Built by scripts/build-hebrew-interlinear.py; one file per book, loaded when
 // a book is opened in Hebrew.
-const RHEMA_HEB_IL_VERSION = '1';
+const RHEMA_HEB_IL_VERSION = '2';
 const _rhemaHebIL = new Map(); // book -> data, or a Promise while it loads
 function _rhemaHebILData(book) { const d = _rhemaHebIL.get(book); return d && typeof d.then !== 'function' ? d : null; }
 function _rhemaLoadHebIL(book) {
   if (!book || !isRhemaOTBook(book)) return Promise.resolve(null);
   const cur = _rhemaHebIL.get(book);
   if (cur) return typeof cur.then === 'function' ? cur : Promise.resolve(cur);
+  _rhemaLoadHebRend();
   const p = fetch(`data/hebrew-interlinear/${book}.json?v=${RHEMA_HEB_IL_VERSION}`)
     .then(r => (r.ok ? r.json() : null))
     .catch(() => null)
@@ -49655,15 +50106,185 @@ function _rhemaEnsureHebIL() {
     document.querySelectorAll('#rhemaVerseDisplay .rhema-chapter-block[data-ochapter]').forEach(block => {
       const oc = block.dataset.ochapter, ov = block.dataset.overse;
       block.querySelectorAll('.rhema-word[data-idx]').forEach(el => {
-        const il = _rhemaHebILWord(book, oc, ov, el.dataset.idx);
-        if (!il || !il.en) return;
+        const he = _rhemaHebEnglish(book, oc, ov, el.dataset.idx);
+        if (!he.text) return;
         let g = el.querySelector('.rhema-gloss');
         if (!g) { g = document.createElement('span'); g.className = 'rhema-gloss'; el.appendChild(g); }
-        g.textContent = il.en;
+        g.textContent = he.text;
       });
     });
     if (document.getElementById('rhemaInterlinearModal')?.classList.contains('open') && _rhemaInterlinearRef) _rhemaRenderInterlinear(_rhemaInterlinearRef);
   });
+}
+
+// ── Hebrew in the reader's own English version ───────────────────────────────
+// The Berean table gives the BSB's English for every Hebrew word. For any other
+// version (NIV, NKJV, KJV, NASB…), the same bridge the Greek uses finds that
+// word's English inside the version's own verse: seeded by the BSB wording, the
+// word's lexicon meanings, and how this version renders the same Hebrew word in
+// the rest of the chapter. Computed on the device from the reader's own text.
+// Meaning-based / paraphrase versions: no position-only guesses (graded on
+// sample chapters: the NLT's ≈ guesses were right only half the time).
+const RHEMA_LOOSE_VERSIONS = new Set(['NLT', 'MSG', 'CEV', 'GNT', 'NIRV', 'T4T', 'FBV', 'ERV', 'ICB', 'TLB', 'NCV']);
+function _rhemaBridgeOpts(ver) { return { loose: RHEMA_LOOSE_VERSIONS.has(String(ver || '').toUpperCase()) }; }
+// Every English word the BSB uses for each Hebrew word across the Old
+// Testament (scripts/build-hebrew-renderings.py): lets the matcher recognise
+// other versions' wording ("lives", "settled" for יָשַׁב). Loaded once.
+let _rhemaHebRend = null, _rhemaHebRendP = null;
+function _rhemaLoadHebRend() {
+  if (_rhemaHebRend || _rhemaHebRendP) return _rhemaHebRendP || Promise.resolve(_rhemaHebRend);
+  _rhemaHebRendP = fetch(`data/hebrew-renderings.json?v=${RHEMA_HEB_IL_VERSION}`).then(r => (r.ok ? r.json() : null)).catch(() => null).then(d => {
+    _rhemaHebRendP = null;
+    if (d) {
+      _rhemaHebRend = d;
+      // Anything worked out before it arrived is redone with it.
+      _rhemaHebMeaningsCache.clear(); _rhemaHebItemsCache.clear(); _rhemaHebVerWordsCache.clear(); _rhemaHebVerLexCache.clear();
+    }
+    return d;
+  });
+  return _rhemaHebRendP;
+}
+const _rhemaHebItemsCache = new Map();   // book|c|v -> bridge items
+const _rhemaHebVerLexCache = new Map();  // ver|book|englishChapter -> learned table
+const _rhemaHebVerWordsCache = new Map();
+function _rhemaHebBridgeItems(book, oc, ov) {
+  const k = `${book}|${oc}|${ov}`;
+  if (_rhemaHebItemsCache.has(k)) return _rhemaHebItemsCache.get(k);
+  const words = (window.RhemaHebrewOT?.text?.[book] || {})[String(oc)]?.[String(ov)] || [];
+  const items = words.map((w, i) => {
+    const il = _rhemaHebILWord(book, oc, ov, i);
+    let d = null;
+    try { d = _rhemaMeaningDecision(_rhemaResolveWord(w, book, oc), { layer: 'hebrew', book, chapter: oc, verse: ov }); } catch {}
+    const s = String(w[1] || '');
+    return {
+      bsb: il ? il.en : null,
+      verb: /(^|\| )V-/.test(il?.ps || ''),
+      gloss: String((d && d.gloss) || '').split(/[;,(]/)[0],
+      meanings: _rhemaHebMeanings(s),
+      key: s ? 'H' + s : '',
+    };
+  });
+  // Cache only once everything it's built from has arrived.
+  if (window.RhemaHebrewLexicon && _rhemaHebILData(book)) _rhemaHebItemsCache.set(k, items);
+  if (_rhemaHebItemsCache.size > 600) _rhemaHebItemsCache.delete(_rhemaHebItemsCache.keys().next().value);
+  return items;
+}
+// Every English word translators use for a Hebrew word: Strong's list of the
+// KJV's renderings, read whole ("ever(-lasting)" -> everlasting, "plenteous(-
+// ness)" -> plenteousness, "(n-)ever" -> never), plus its short meaning. The
+// definition prose ("a primitive root…") is left out: it isn't English the
+// word is ever translated with.
+function _rhemaKjvDefWords(kjv) {
+  const out = [];
+  String(kjv || '').replace(/[X+]/g, ' ').split(/,(?![^()]*\))/).forEach(item => {
+    let it = item.trim();
+    const m = it.match(/^\(([a-z]+)-\)\s*(.*)$/);
+    if (m) { out.push(m[1] + m[2]); it = m[2]; }
+    const base = it.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+    if (base) out.push(base);
+    for (const sm of it.matchAll(/([A-Za-z]+)\(-\s*([a-z]+)(?:,\s*-\s*([a-z]+))*\)/g)) {
+      for (const suf of sm[0].slice(sm[1].length + 1, -1).split(',')) {
+        const x = suf.replace(/[-\s]/g, '');
+        if (x) out.push(sm[1] + x);
+      }
+    }
+    for (const sm of it.matchAll(/\(([^)]*)\)/g)) { const x = sm[1].replace(/-/g, ' ').trim(); if (x && !/^[a-z]{1,3}$/.test(x)) out.push(x); }
+  });
+  return out;
+}
+const _rhemaHebMeaningsCache = new Map();
+function _rhemaHebMeanings(strongs) {
+  const k = String(strongs || '');
+  if (_rhemaHebMeaningsCache.has(k)) return _rhemaHebMeaningsCache.get(k);
+  if (!window.RhemaHebrewLexicon) return []; // not loaded yet: don't cache an empty list
+  const lex = window.RhemaHebrewLexicon[k] || {};
+  const words = new Set();
+  for (const phrase of [lex.gloss || '', ..._rhemaKjvDefWords(lex.kjv_def), (_rhemaHebRend && _rhemaHebRend[k]) || '']) {
+    for (const w of String(phrase).toLowerCase().split(/[^a-z]+/)) if (w.length > 2 && !(typeof _DEEP_GLUE_WORDS !== 'undefined' && _DEEP_GLUE_WORDS.has(w))) words.add(w);
+  }
+  const out = [...words].slice(0, 120);
+  _rhemaHebMeaningsCache.set(k, out);
+  return out;
+}
+// The English verse for a Hebrew (MT) verse, or null for a psalm title.
+function _rhemaHebEngRef(book, oc, ov) {
+  const e = _rhemaVersificationFor(book, 'hebrew')?.o2e.get(`${Number(oc)}:${Number(ov)}`);
+  if (e && e.endsWith(':title')) return null;
+  return e ? e.split(':') : [String(oc), String(ov)];
+}
+// How this version renders each Hebrew word across the English chapter.
+function _rhemaHebVersionLexicon(ver, book, ec) {
+  const list = _rhemaVerseList(book, ec);
+  const avail = list.filter(v => _rhemaVersionChapterText(ver, book, ec, v)).length;
+  const key = `${ver}|${book}|${ec}`;
+  const cached = _rhemaHebVerLexCache.get(key);
+  if (cached && cached.avail >= avail) return cached.table;
+  const table = new Map();
+  for (const ev of list) {
+    const text = _rhemaVersionChapterText(ver, book, ec, ev);
+    if (!text) continue;
+    const [oc, ov] = _rhemaOrigRef(book, ec, ev, 'hebrew');
+    const items = _rhemaHebBridgeItems(book, oc, ov);
+    if (!items.length) continue;
+    const copy = items.map(it => ({ ...it }));
+    RhemaAlign.learnRenderings(copy, RhemaAlign.bridgeToVersion(copy, text, _rhemaBridgeOpts(ver)), table);
+  }
+  _rhemaHebVerLexCache.set(key, { table, avail });
+  if (_rhemaHebVerLexCache.size > 24) _rhemaHebVerLexCache.delete(_rhemaHebVerLexCache.keys().next().value);
+  return table;
+}
+// One { text, kind } per Hebrew word of MT verse oc:ov in the reader's version
+// (kind: exact · match · inferred · none · ''), with .version set. null when the
+// reader is on the BSB, or the version's verse isn't on the device yet.
+function _rhemaHebVersionWords(book, oc, ov) {
+  if (!window.RhemaAlign || !_rhemaHebILData(book) || !window.RhemaHebrewOT?.text?.[book]) return null;
+  const ver = _rhemaReaderVersion();
+  if (!ver || ver === 'BSB') return null;
+  const er = _rhemaHebEngRef(book, oc, ov);
+  if (!er) return null;
+  const [ec, ev] = er;
+  const text = _rhemaVersionChapterText(ver, book, ec, ev);
+  if (!text) return null;
+  const ck = `${ver}|${book}|${oc}|${ov}|${text.length}|${_rhemaHebVerLexCache.get(`${ver}|${book}|${ec}`)?.avail || 0}`;
+  if (_rhemaHebVerWordsCache.has(ck)) return _rhemaHebVerWordsCache.get(ck);
+  const items = _rhemaHebBridgeItems(book, oc, ov).map(it => ({ ...it }));
+  if (!items.length) return null;
+  let out;
+  try {
+    if (text === _rhemaEnglishText(book, ec, ev, 'BSB')) {
+      // Same wording as the BSB here (the MSB's Old Testament): exact.
+      out = RhemaAlign.bsbRenderings(items.map(it => it.bsb));
+    } else {
+      let table = null;
+      try { table = _rhemaHebVersionLexicon(ver, book, ec); } catch {}
+      if (table) items.forEach(it => { it.learned = RhemaAlign.learnedFor(table, it.key); });
+      out = RhemaAlign.bridgeToVersion(items, text, _rhemaBridgeOpts(ver));
+    }
+  } catch { return null; }
+  out.version = ver;
+  const fk = `${ver}|${book}|${oc}|${ov}|${text.length}|${_rhemaHebVerLexCache.get(`${ver}|${book}|${ec}`)?.avail || 0}`;
+  if (window.RhemaHebrewLexicon) _rhemaHebVerWordsCache.set(fk, out); // not before its meanings have arrived
+  if (_rhemaHebVerWordsCache.size > 800) _rhemaHebVerWordsCache.delete(_rhemaHebVerWordsCache.keys().next().value);
+  return out;
+}
+// The English for Hebrew word i of MT verse c:v as the reader's version has it:
+// { text, ver, kind }. The version's own words when they're found; otherwise
+// the BSB's (kind 'bsb'); text '' when neither has a separate word for it.
+function _rhemaHebEnglish(book, c, v, i) {
+  const il = _rhemaHebILWord(book, c, v, i);
+  const vw = _rhemaHebVersionWords(book, c, v);
+  const r = vw?.[Number(i)];
+  if (r && r.text && r.kind !== '') return { text: r.text, ver: vw.version, kind: r.kind };
+  if (r && r.kind === 'none') return { text: '', ver: vw.version, kind: 'none' };
+  const bsb = il?.en ? String(il.en).replace(/\[[^\]]*\]\s*/g, '').replace(/[{}]/g, '').trim() : '';
+  return { text: bsb, ver: 'BSB', kind: bsb ? (vw ? 'bsb' : 'exact') : (il ? 'none' : '') };
+}
+// BSB wording without brackets / braces, for comparing and showing.
+function _rhemaHebPlain(t) { return String(t || '').replace(/\[[^\]]*\]\s*/g, '').replace(/[{}]/g, '').trim(); }
+// Label for credits: which version the English comes from.
+function _rhemaHebEnglishLabel() {
+  const v = _rhemaReaderVersion();
+  return v && v !== 'BSB' ? `${v} (found with the help of the BSB’s word-by-word tables)` : 'BSB';
 }
 
 // ── Who does what (MACULA Hebrew) ────────────────────────────────────────────
@@ -49692,12 +50313,13 @@ function _rhemaHebVerbNote(code) {
   const [, stem, formFull] = seg.split('-');
   const [form, mood] = String(formFull || '').split('.');
   const notes = [];
-  const F = { Perf: 'done / completed', Imperf: 'ongoing or future', ConsecImperf: 'and then… (the story moves on)', ConjPerf: 'and then (will)…',
-    ConjImperf: 'so that…', Imp: 'a command', Inf: 'to…', InfAbs: 'for emphasis', Prtcpl: 'ongoing (…ing)', QalPassPrtcpl: 'done to it (…ed)' };
+  // What the form usually signals; Hebrew forms are flexible, so "often".
+  const F = { Perf: 'often past / completed', Imperf: 'future, repeated or “may”', ConsecImperf: 'and… (main story verb)', ConjPerf: 'often “and (then) will…”',
+    ConjImperf: 'and… / often “so that”', Imp: 'a command or request', Inf: 'to…', InfAbs: 'often emphasis or command', Prtcpl: 'ongoing (…ing)', QalPassPrtcpl: 'passive (…ed)' };
   if (mood === 'Jus') notes.push('let it…');
   else if (mood === 'Cohort' || mood === 'h') notes.push('let me / let us…');
   else if (F[form]) notes.push(F[form]);
-  const S = { Nifal: 'passive', Pual: 'passive', Hofal: 'passive', Hifil: 'causes it', Hitpael: 'to or for oneself', Piel: 'stronger form' };
+  const S = { Nifal: 'often passive / reflexive', Pual: 'passive', Hofal: 'passive', Hifil: 'often causes it', Hitpael: 'often reflexive', Piel: 'often “make…” / result' };
   if (S[stem]) notes.push(S[stem]);
   return notes.join(' · ');
 }
@@ -49706,9 +50328,8 @@ function _rhemaHebWho(e, book, oc, ov) {
   const PRON = /^(?:he|him|his|she|her|it|its|they|them|their|you|your|me|my|we|us|our|himself|herself|itself|themselves)$/i;
   const chip = ([c, v, i, eng]) => {
     const w = T[String(c)]?.[String(v)]?.[i];
-    const il = _rhemaHebILWord(book, c, v, i);
-    // The word's own short gloss ("earth", "God"); BSB phrasing only if none.
-    let label = String(eng || '').trim() || String(il?.en || '').replace(/\[[^\]]*\]\s*/g, '').replace(/^(?:and|then|now|so|but|let)\s+/i, '');
+    // The word's own short gloss ("earth", "God"); the version's phrasing only if none.
+    let label = String(eng || '').trim() || _rhemaHebEnglish(book, c, v, i).text.replace(/^(?:and|then|now|so|but|let)\s+/i, '');
     // A pronoun ("him") → who it is ("him = Isaac").
     const r = _rhemaHebRoleWord(book, c, v, i);
     if (r?.p && (PRON.test(label) || /\b(?:him|her|them|it)$/i.test(label))) {
@@ -49727,7 +50348,7 @@ function _rhemaHebWho(e, book, oc, ov) {
   const rows = [];
   if (AA.length) {
     rows.push(['Who makes it happen', AA.map(chip).join('')]);
-    if (A0.length) rows.push(['What comes about', A0.map(chip).join('')]);
+    if (A0.length) rows.push(['Made to do / be it', A0.map(chip).join('')]);
   } else if (A0.length) rows.push(['Who', A0.map(chip).join('')]);
   else if (e.s) rows.push(['Who', chip(e.s) + '<span class="rhs-hint">built into the verb</span>']);
   if (A1.length) rows.push(['What / whom', A1.map(chip).join('')]);
@@ -49754,7 +50375,7 @@ function _rhemaHebrewSentenceMap(book, oc, ov) {
       cards.push(`<div class="rhs-act">
         <button type="button" class="rhs-verb" onclick="openRhemaSheet(${i},'${ov}','${oc}')">
           <span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>
-          <b>${esc(il?.en || (window.RhemaHebrewLexicon?.[w[1]]?.gloss) || '')}</b>
+          <b>${esc(_rhemaHebEnglish(book, oc, ov, i).text || (window.RhemaHebrewLexicon?.[w[1]]?.gloss) || '')}</b>
           ${note ? `<small>${esc(note)}</small>` : ''}
         </button>
         ${rows.map(([k, v]) => `<div class="rhs-row"><span class="rhs-k">${k}</span><div class="rhs-v">${v}</div></div>`).join('')}
@@ -49762,16 +50383,17 @@ function _rhemaHebrewSentenceMap(book, oc, ov) {
     }
     if (e.p && !(e.f || e.s)) {
       const [c, v, j, eng] = e.p;
-      const tgt = _rhemaHebILWord(book, c, v, j)?.en || eng;
-      refs.push(`<li><span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>${il?.en ? ` “${esc(il.en)}”` : ''} — the pronoun means <b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(oc) && String(v) === String(ov) ? '' : ` <small>(${String(c) === String(oc) ? 'v. ' + v : c + ':' + v})</small>`}</li>`);
+      const tgt = _rhemaHebEnglish(book, c, v, j).text || eng;
+      const here = _rhemaHebEnglish(book, oc, ov, i).text;
+      refs.push(`<li><span class="rhema-hebrew-text">${_rhemaDisplaySurface(w[0])}</span>${here ? ` “${esc(here)}”` : ''} — points back to <b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(oc) && String(v) === String(ov) ? '' : ` <small>(${String(c) === String(oc) ? 'v. ' + v : c + ':' + v})</small>`}</li>`);
     }
   });
-  if (!cards.length && !refs.length) return '<div class="rhs-map"><p class="rhs-intro">No actions in this verse to map. It describes rather than tells what someone did.</p></div>';
+  if (!cards.length && !refs.length) return '<div class="rhs-map"><p class="rhs-intro">No verbs with tagged roles in this verse (it may be a list, a title or a sentence without a verb).</p></div>';
   return `<div class="rhs-map">
-    <p class="rhs-intro">Who does what in this verse, in Hebrew word order. Tap any word to study it.</p>
+    <p class="rhs-intro">Who does what in this verse, as tagged by MACULA Hebrew, in Hebrew word order. Tap any word to study it.</p>
     ${cards.join('')}
     ${refs.length ? `<div class="rhs-sub">Who’s who</div><ul class="rhs-refs">${refs.join('')}</ul>` : ''}
-    <p class="rhs-credit">Roles and references: MACULA Hebrew (Clear Bible &amp; Groves Center, CC BY 4.0). English: BSB.</p>
+    <p class="rhs-credit">Roles and who-is-who links: MACULA Hebrew’s tagging (Clear Bible &amp; Groves Center, CC BY 4.0). Some links are judgment calls; check the context. English: ${esc(_rhemaHebEnglishLabel())}.</p>
   </div>`;
 }
 
@@ -49790,30 +50412,30 @@ const RHEMA_HEB_PREFIX = {
   'Pro-r': { say: 'who / that', name: 'Relative “that” (שֶׁ)', explain: '“Who”, “which” or “that”, joined to the front of the word.' },
 };
 const RHEMA_HEB_STEM = {
-  Qal: ['Qal', 'The basic, simple form of the verb: plain action (“he created”, “she went”).'],
+  Qal: ['Qal', 'The basic, simple form of the verb: plain action or state (“she went”, “he was old”).'],
   Nifal: ['Niphal', 'Usually passive or reflexive: the action happens to the subject (“was created”, “hid himself”).'],
-  Piel: ['Piel', 'A stronger or deliberate form: intensifies the action or brings a state about (“shattered”, “made holy”).'],
-  Pual: ['Pual', 'The passive of the Piel: the subject receives that strong action (“was shattered”).'],
-  Hifil: ['Hiphil', 'Causative: makes someone or something do or be it (“made to go out” = “brought out”).'],
+  Piel: ['Piel', 'Often brings about a state or result (“made holy”, “shattered”) or repeats an action. Older books call it “intensive”, now seen as too simple.'],
+  Pual: ['Pual', 'The passive of the Piel: the subject receives the Piel action (“was shattered”).'],
+  Hifil: ['Hiphil', 'Usually causative: makes someone or something do or be it (“made to go out” = “brought out”).'],
   Hofal: ['Hophal', 'The passive of the Hiphil: the subject is caused to do or be it (“was brought out”).'],
   Hitpael: ['Hithpael', 'Reflexive or back-and-forth action: doing it to or for oneself, or repeatedly (“walked about”, “prayed”, “hid themselves”).'],
   QalPass: ['Qal passive', 'An older passive of the basic form (“was taken”).'],
-  Polel: ['Polel', 'A rarer strong form, much like the Piel.'], Polal: ['Polal', 'The passive of the Polel.'],
+  Polel: ['Polel', 'A rarer form that works like the Piel.'], Polal: ['Polal', 'The passive of the Polel.'],
   Hitpolel: ['Hithpolel', 'A rarer reflexive form, much like the Hithpael.'],
-  Pilpel: ['Pilpel', 'A repeated-sound strong form, like the Piel.'], Poel: ['Poel', 'A rarer strong form, like the Piel.'],
-  Hishtafel: ['Hishtaphel', 'The special reflexive form of “bow down / worship”.'],
+  Pilpel: ['Pilpel', 'A form with a repeated syllable; works like the Piel.'], Poel: ['Poel', 'A rarer form that works like the Piel.'],
+  Hishtafel: ['Hishtaphel', 'The special form of “bow down / worship” (older books call it Hithpalel).'],
   Peal: ['Peal (Aramaic)', 'Aramaic’s basic, simple form of the verb.'], Peil: ['Peil (Aramaic)', 'Aramaic passive of the basic form.'],
-  Pael: ['Pael (Aramaic)', 'Aramaic’s strong form, like Hebrew’s Piel.'], Haphel: ['Haphel (Aramaic)', 'Aramaic causative, like Hebrew’s Hiphil.'],
+  Pael: ['Pael (Aramaic)', 'Aramaic’s counterpart of Hebrew’s Piel.'], Haphel: ['Haphel (Aramaic)', 'Aramaic causative, like Hebrew’s Hiphil.'],
   Aphel: ['Aphel (Aramaic)', 'Aramaic causative, like Hebrew’s Hiphil.'], Hophal: ['Hophal (Aramaic)', 'Aramaic passive causative.'],
-  Hitpeel: ['Hithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Hitpaal: ['Hithpaal (Aramaic)', 'Aramaic reflexive of the strong form.'],
-  Ithpeel: ['Ithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Ithpaal: ['Ithpaal (Aramaic)', 'Aramaic reflexive of the strong form.'],
+  Hitpeel: ['Hithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Hitpaal: ['Hithpaal (Aramaic)', 'Aramaic reflexive/passive of the Pael.'],
+  Ithpeel: ['Ithpeel (Aramaic)', 'Aramaic passive or reflexive.'], Ithpaal: ['Ithpaal (Aramaic)', 'Aramaic reflexive/passive of the Pael.'],
   Shafel: ['Shaphel (Aramaic)', 'A rare Aramaic causative.'],
 };
 const RHEMA_HEB_FORM = {
-  Perf: ['Perfect', 'A whole, completed action. Usually past (“he created”), sometimes a settled fact or certainty.'],
-  Imperf: ['Imperfect', 'Unfinished action: future (“he will”), ongoing or repeated (“he keeps”), or possible (“he may”, “he would”).'],
-  ConsecImperf: ['Consecutive imperfect (wayyiqtol)', 'Hebrew’s storytelling verb: “and then he …”. It carries a narrative forward one event at a time, in the past.'],
-  ConjPerf: ['Consecutive perfect (weqatal)', '“And (then) he will …” — continues a sequence of future events or instructions.'],
+  Perf: ['Perfect', 'Views an action as a whole. Usually past (“he created”); with state verbs often present (“I know”); sometimes a settled certainty.'],
+  Imperf: ['Imperfect', 'A flexible form: future (“he will”), ongoing or repeated (“he keeps”), or possible (“he may”, “he would”).'],
+  ConsecImperf: ['Consecutive imperfect (wayyiqtol)', 'Hebrew’s main storytelling verb: “and he …”. Usually moves a past story forward, though not always in strict time order.'],
+  ConjPerf: ['Consecutive perfect (weqatal)', 'Usually “and (then) he will …”, continuing future events or instructions; after past verbs it can mean “he would (regularly) …”.'],
   ConjImperf: ['Imperfect with “and”', 'An imperfect joined by “and”, often expressing purpose or result (“so that he may …”).'],
   Imp: ['Imperative', 'A command or request: “Do this!”'],
   Inf: ['Infinitive construct', 'The verb used like a noun: “to ___” or “when ___ing”. Often has “to”, “in” or “when” in front.'],
@@ -49865,18 +50487,18 @@ function _rhemaParseHebCode(code) {
     rows.push({ label: 'Form', value: f[0], desc: f[1] });
     if (mood && RHEMA_HEB_MOOD[mood]) rows.push({ label: 'Mood', value: RHEMA_HEB_MOOD[mood][0], desc: RHEMA_HEB_MOOD[mood][1] });
     const pgn = parts[3] || '';
-    if (RHEMA_HEB_PGN[pgn]) rows.push({ label: 'Who', value: RHEMA_HEB_PGN[pgn][0], desc: 'The subject is built into the verb.' });
+    if (RHEMA_HEB_PGN[pgn]) rows.push({ label: 'Who', value: RHEMA_HEB_PGN[pgn][0], desc: 'The verb’s form shows who; the subject may also be named.' });
     else if (pgn) {
       const g = _rhemaHebGNS(pgn);
-      if (g.parts?.length) rows.push({ label: 'Describes', value: g.parts.join(', '), desc: g.construct ? 'Linked to the next word (“the ___ of”).' : '' });
+      if (g.parts?.length) rows.push({ label: 'Describes', value: g.parts.join(', '), desc: g.construct ? 'Linked to the next word (“___ of”).' : '' });
     }
   } else if (head === 'N' || head === 'Adj' || head === 'Number') {
     const proper = parts[1] === 'proper';
     kind = head === 'N' ? 'noun' : head === 'Adj' ? 'adjective' : 'number';
     label = head === 'N' ? (proper ? 'Name' : 'Noun') : head === 'Adj' ? 'Adjective' : 'Number';
     const g = _rhemaHebGNS(parts[proper ? 2 : 1]);
-    if (g.parts?.length) rows.push({ label: 'Form', value: g.parts.join(', '), desc: g.parts.includes('dual (a pair)') ? 'Hebrew has a special form for pairs (hands, eyes) and a few set words like “water” and “heavens”.' : '' });
-    if (g.construct) rows.push({ label: 'State', value: 'Construct', desc: 'Linked to the next word: “the ___ of …”. Hebrew shows “of” by joining the two words this way.' });
+    if (g.parts?.length) rows.push({ label: 'Form', value: g.parts.join(', '), desc: g.parts.includes('dual (a pair)') ? 'Hebrew has a special form for pairs (hands, eyes) and some measures (“two days”).' : '' });
+    if (g.construct) rows.push({ label: 'State', value: 'Construct', desc: 'Linked to the next word: “___ of …”. Hebrew shows “of” by joining the two words this way.' });
     if (g.emphatic) rows.push({ label: 'State', value: 'Emphatic (Aramaic)', desc: 'Aramaic’s way of saying “the ___”.' });
   } else if (head === 'Pro') {
     kind = 'pronoun'; label = 'Pronoun';
@@ -49884,7 +50506,7 @@ function _rhemaParseHebCode(code) {
     if (t === 'r') rows.push({ label: 'Type', value: 'Relative', desc: '“Who”, “which”, “that” — introduces a description.' });
     else if (t === 'i') rows.push({ label: 'Type', value: 'Question', desc: '“Who?” or “what?”' });
     else if (t === 'd' || /^d/.test(t)) rows.push({ label: 'Type', value: 'Pointing', desc: '“This”, “that”, “these”.' });
-    else if (RHEMA_HEB_PGN[t]) rows.push({ label: 'Means', value: RHEMA_HEB_PGN[t][0], desc: 'A stand-alone pronoun. Hebrew usually builds “he/she/they” into the verb, so a separate one often adds emphasis.' });
+    else if (RHEMA_HEB_PGN[t]) rows.push({ label: 'Means', value: RHEMA_HEB_PGN[t][0], desc: 'A stand-alone pronoun. Hebrew usually builds “he/she/they” into the verb, so beside a verb it may add emphasis or contrast; in “I am…” sentences it’s simply needed.' });
   } else if (head === 'Adv') {
     kind = 'adverb'; label = parts[1] === 'NegPrt' ? 'Negative' : 'Adverb';
     if (parts[1] === 'NegPrt') rows.push({ label: 'Means', value: 'not / no', desc: 'Says something is not so, or forbids it.' });
@@ -49902,7 +50524,7 @@ function _rhemaParseHebCode(code) {
     label = coreSeg;
   }
   const suffixes = suffixSegs.map(x => x === 'Pn'
-    ? { code: x, say: '', name: 'Extra “n” ending', explain: 'An old ending that adds a little emphasis; it doesn’t change the meaning.' }
+    ? { code: x, say: '', name: 'Extra “n” ending', explain: 'An extra “n” ending; its purpose (style or emphasis) is debated. It doesn’t change the basic meaning.' }
     : { code: x, say: RHEMA_HEB_PGN[x]?.[kind === 'noun' || kind === 'adjective' || kind === 'number' ? 1 : 1] || x,
         name: 'Pronoun ending', explain: kind === 'verb' ? `An object joined to the end of the verb: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` : `Joined to the end: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` });
   return { prefixes, core: { code: coreSeg, kind, label, rows }, suffixes };
@@ -50002,10 +50624,13 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
   const lex = (window.RhemaHebrewLexicon || {})[strongs] || {};
   const meaning = lex.gloss || lex.brief || '';
   const shown = _rhemaDisplaySurface(surface);
+  const hereEn = ctx.book ? _rhemaHebEnglish(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : { text: '', ver: 'BSB', kind: '' };
   const code = il?.ps || '';
   const parsed = code ? _rhemaParseHebCode(code) : _rhemaParseHebCode(_rhemaOshbToBereanCode(morph));
   const isAramaic = /^A/.test(String(morph || '').split('/').pop() || '');
-  const ref = ctx.book ? `${_rhemaBookName(ctx.book)} ${ctx.chapter}:${ctx.verse}` : '';
+  // Shown by the English reference (Hebrew Malachi 3:19 is Malachi 4:1).
+  const engAt = ctx.book ? _rhemaHebEngRef(ctx.book, ctx.chapter, ctx.verse) : null;
+  const ref = ctx.book ? `${_rhemaBookName(ctx.book)} ${engAt ? engAt.join(':') : `${ctx.chapter}:${ctx.verse}`}` : '';
 
   // Who's acting / who a pronoun means (MACULA Hebrew).
   const role = ctx.book ? _rhemaHebRoleWord(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : null;
@@ -50015,14 +50640,14 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
     if (rows.length) whoHtml = `<div class="rhw-who">${rows.map(([k, v]) => `<div class="rhs-row"><span class="rhs-k">${k}</span><div class="rhs-v">${v}</div></div>`).join('')}</div>`;
   } else if (role?.p) {
     const [c, v, j, eng] = role.p;
-    const tgt = _rhemaHebILWord(ctx.book, c, v, j)?.en || eng;
-    whoHtml = `<div class="rhw-who"><div class="rhs-row"><span class="rhs-k">Refers to</span><div class="rhs-v"><span class="rhs-chip rhs-chip-far"><b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(ctx.chapter) && String(v) === String(ctx.verse) ? '' : `<small>${c}:${v}</small>`}</span></div></div></div>`;
+    const tgt = _rhemaHebEnglish(ctx.book, c, v, j).text || eng;
+    whoHtml = `<div class="rhw-who"><div class="rhs-row"><span class="rhs-k">Points back to</span><div class="rhs-v"><span class="rhs-chip rhs-chip-far"><b>${esc(String(tgt || '').replace(/^(?:and|the)\s+/i, ''))}</b>${String(c) === String(ctx.chapter) && String(v) === String(ctx.verse) ? '' : `<small>${c}:${v}</small>`}</span></div></div></div>`;
   }
 
   // 1) What it means right here.
   const hero = `<div class="rhw-hero">
-      ${il?.en ? `<div class="rhw-k">In this verse${ref ? ` <span>${esc(ref)}${_rhemaOTLayer === 'hebrew' ? '' : ''}</span>` : ''}</div>
-        <div class="rhw-here">“${esc(il.en)}”<small>BSB</small></div>`
+      ${hereEn.text ? `<div class="rhw-k">In this verse${ref ? ` <span>${esc(ref)}</span>` : ''}</div>
+        <div class="rhw-here">“${esc(hereEn.text)}”<small>${esc(hereEn.ver)}</small></div>${hereEn.kind === 'bsb' && il?.en ? `<div class="rhw-alt">Not pinned down in the ${esc(_rhemaReaderVersion())} wording; the BSB’s word is shown.</div>` : ''}${hereEn.ver !== 'BSB' && il?.en && _rhemaHebPlain(il.en) !== _rhemaHebPlain(hereEn.text) ? `<div class="rhw-alt">BSB: “${esc(_rhemaHebPlain(il.en))}”</div>` : ''}`
       : il ? `<div class="rhw-k">In this verse</div><div class="rhw-here rhw-none">No separate English word<small>its meaning is carried by the words around it</small></div>`
       : `<div class="rhw-k">Meaning</div><div class="rhw-here">${esc(meaning || 'Hebrew word')}</div>`}
       <div class="rhw-say"><span class="rhema-hebrew-text">${esc(shown)}</span>${il?.tr ? `<span class="rhw-tr">${esc(il.tr)}</span>` : ''}${isAramaic ? '<span class="rhw-aram">Aramaic</span>' : ''}</div>
@@ -50126,7 +50751,11 @@ function _rhemaLoadHebStats(strongs) {
 }
 // Greek words that are mostly grammar ("the", "and", "him", "in"): shown only
 // when they really are the main Greek equivalent.
-const _RHEMA_LXX_FILLER = new Set([3588, 2532, 846, 1722, 1519, 1537, 4314, 1473, 4771, 1909, 575, 3754, 1161, 3739, 5100, 3778, 1565, 3956, 1510, 3361, 3756, 1063, 2443, 5613, 1223, 3326, 2596, 5259, 4012, 1438]);
+// Greek words that stand in for grammar (the, and, him, my…) rather than
+// rendering the Hebrew word's meaning; includes the older Strong's numbers
+// for pronoun forms (σοῦ 4675, ἡμῶν 2257, μου 3450…).
+const _RHEMA_LXX_FILLER = new Set([3588, 2532, 846, 1722, 1519, 1537, 4314, 1473, 4771, 1909, 575, 3754, 1161, 3739, 5100, 3778, 1565, 3956, 1510, 3361, 3756, 1063, 2443, 5613, 1223, 3326, 2596, 5259, 4012, 1438,
+  4675, 2257, 5216, 3450, 4671, 3427, 2254, 5213, 4571, 3165, 2248, 5209, 1691, 1698, 1700, 4674, 5212, 2251, 5212, 848, 1683, 4572, 1438]);
 function _rhemaFillHebrewStudy(elId, strongs) {
   const esc = _escapeRhemaAttr;
   Promise.all([_rhemaLoadHebStats(strongs), loadDeepHebrewLexiconEntry(strongs).catch(() => null)]).then(([st, deep]) => {
@@ -50140,6 +50769,7 @@ function _rhemaFillHebrewStudy(elId, strongs) {
       const untranslated = u && u / st.n >= 0.2
         ? `<p class="rhw-note">Often it has no English word of its own (${u.toLocaleString()} of ${st.n.toLocaleString()} times): its job is carried by the grammar or the words around it.</p>`
         : '';
+      if (st.alias) out.push(`<p class="rhw-note">Counted together with H${Number(st.alias)}: the Berean tables file this same word under that number.</p>`);
       out.push(`<div class="rhw-sub">How it’s translated <small>BSB, across the Old Testament</small></div>
         <p class="rhw-note">Used <b>${st.n.toLocaleString()}</b> times.</p>${untranslated}
         <div class="rhw-bars">${shown.map(([e, c, refs]) => `
@@ -50165,12 +50795,13 @@ function _rhemaFillHebrewStudy(elId, strongs) {
     }
     const lxx = (deep?.lxxGreek || []).filter(x => x && x.g);
     if (lxx.length) {
-      const total = lxx.reduce((a, x) => a + (x.count || 0), 0) || 1;
+      // Share of the places where the Septuagint has a Greek word aligned to it.
+      const total = deep.lxxAligned || lxx.reduce((a, x) => a + (x.count || 0), 0) || 1;
       const main = lxx.filter(x => !_RHEMA_LXX_FILLER.has(Number(x.g)) || x.count / total >= 0.4).slice(0, 4);
       if (main.length) {
         const G = window.RhemaLexicon || {};
         out.push(`<div class="rhw-sub">In the Greek Old Testament</div>
-          <p class="rhw-note">When the Hebrew Bible was translated into Greek (the Septuagint), these are the words used for it, and New Testament writers often use the same ones. Tap one to study the Greek word.</p>
+          <p class="rhw-note">Greek words the Septuagint (an early Greek translation) put in its place, with how often (from MACULA Hebrew’s word-by-word alignment). They show how ancient translators understood it, not a definition. Tap one to study the Greek word.</p>
           <div class="rhw-lxx">${main.map(x => {
             const gl = G[x.g]?.gloss || G[x.g]?.brief || '';
             return `<button type="button" class="rhw-lxx-chip" onclick="rhemaOpenGreekFromHebrew(${Number(x.g)})"><b>${esc(x.lemma || G[x.g]?.lemma || '')}</b><small>${gl ? esc(String(gl).split(/[,;]/)[0]) + ' · ' : ''}${Math.round(x.count / total * 100)}%</small></button>`;
@@ -51014,7 +51645,7 @@ const DEEP_LEXICON_VERSION = '3.0.534';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
-const DEEP_HEBREW_LEXICON_VERSION = '3.0.377';
+const DEEP_HEBREW_LEXICON_VERSION = '3.0.560';
 const _deepHebrewShards = new Map();  // shardFile → Promise<object|null>
 const _deepHebrewData = new Map();    // shardFile → resolved shard (sync access)
 let _deepHebrewShardIndex = null;     // [{file, from, to}] loaded from index.json
@@ -51953,7 +52584,7 @@ function _rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver) {
       const items = words.map((w, i) => i === wordIdx
         ? { bsb: bsbEng[i], gloss: String(d.gloss || '').split(/[;,(]/)[0], meanings }
         : { bsb: bsbEng[i] });
-      r = RhemaAlign.bridgeToVersion(items, text)[wordIdx];
+      r = RhemaAlign.bridgeToVersion(items, text, _rhemaBridgeOpts(ver))[wordIdx];
     } catch { r = null; }
   }
   if (r && r.text && r.start != null) {
@@ -52738,4 +53369,279 @@ function _gtCheckCompletion(topic, entry) {
   } else if (count < topic.verses.length && entry.done) {
     delete entry.done;
   }
+}
+
+// ── Multi-view ────────────────────────────────────────────────────────────────
+// Up to six full-size Rhēmas as tabs. A tab strip sits at the very top, above
+// the Rhēma (so it stays put whatever the Rhēma shows: Word by word, a word
+// sheet, the scroll-hiding top bar); tap a tab to switch, + to summon another.
+// Each tab is the whole Rhēma (the app itself in window mode, index.html?mv=N)
+// with its own book, chapter, translation and language, every tool, nothing
+// that leaves Rhēma. A tab's place is kept in its own storage slot, so the main
+// reader keeps its place; highlights, notes and saves are shared (every copy
+// reloads them when another saves). Tabs are remembered for next time.
+const MV_MAX = 6;
+const MV_STORE = 'rhemaMultiView';
+let _mv = null;             // { tabs: [{ slot, label }], active }
+
+function _mvStored() { try { return JSON.parse(localStorage.getItem(MV_STORE) || 'null'); } catch { return null; } }
+function _mvPersist() {
+  if (!_mv) return;
+  try { localStorage.setItem(MV_STORE, JSON.stringify({ tabs: _mv.tabs.map(t => ({ slot: t.slot, label: t.label || '', short: t.short || '' })), active: _mv.active })); } catch {}
+}
+// A new tab starts at `ref` (or the main reader's place) in the main reader's
+// translation and language; after that it's on its own.
+function _mvSeed(slot, ref) {
+  const p = (ref && _rhemaParseRef(ref)) || { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse };
+  const sfx = '::mv' + slot;
+  try {
+    localStorage.setItem('rhemaLastPos' + sfx, JSON.stringify({ book: p.book, chapter: String(p.chapter), verse: String(p.verse), textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion() }));
+    ['rhemaReaderVersion', 'rhemaOTLayer', 'rhemaEnglishVersion', 'rhemaTextMode'].forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v != null) localStorage.setItem(k + sfx, v); else localStorage.removeItem(k + sfx);
+    });
+    localStorage.removeItem('rhemaChapterSnap' + sfx);
+    localStorage.removeItem('rhemaRefHistory' + sfx);
+  } catch {}
+}
+function _mvFreeSlot() {
+  const used = new Set((_mv?.tabs || []).map(t => String(t.slot)));
+  for (let i = 1; i <= MV_MAX; i++) if (!used.has(String(i))) return String(i);
+  return null;
+}
+function _mvStage() { return document.getElementById('mvStage'); }
+function _mvTab(slot) { return _mv?.tabs.find(t => String(t.slot) === String(slot)) || null; }
+function _mvEl(slot) { return _mvStage()?.querySelector(`.mv-win[data-slot="${slot}"]`) || null; }
+function _mvShortLabel(label) {
+  // "Psalms 23:1 · NIV" → "Ps 23:1 · NIV" when tabs are crowded.
+  return String(label || '').replace(/^(\d?\s?[A-Za-z]{2,3})[A-Za-z]* /, '$1 ');
+}
+function _mvShell() {
+  let ov = document.getElementById('mvOverlay');
+  if (ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'mvOverlay';
+  ov.className = 'mv-overlay';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-label', 'Multi-view');
+  ov.innerHTML = `
+    <div class="mv-tabbar">
+      <div class="mv-tabs" id="mvTabs" role="tablist"></div>
+      <button type="button" class="mv-add-tab" id="mvPlus" onclick="rhemaMvAdd()" aria-label="Summon another Rhēma"><img src="assets/mascot/guide-summon.webp" alt="" width="30" height="30"/><span class="material-symbols-outlined">add</span></button>
+      <button type="button" class="mv-exit" onclick="rhemaCloseMultiView()" aria-label="Close Multi-view and go back to your Rhēma"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="mv-stage" id="mvStage"></div>`;
+  document.body.appendChild(ov);
+  window.addEventListener('message', _mvOnMessage);
+  return ov;
+}
+function _mvOnMessage(e) {
+  if (e.origin !== location.origin || !e.data || !e.data.rhemaMV || !_mv) return;
+  const t = _mvTab(e.data.rhemaMV);
+  if (!t || !e.data.label || (t.label === e.data.label && t.short === e.data.short)) return;
+  t.label = e.data.label;
+  t.short = e.data.short || '';
+  _mvRenderTabs();
+  _mvPersist();
+}
+function _mvWinEl(t) {
+  const el = document.createElement('div');
+  el.className = 'mv-win';
+  el.dataset.slot = t.slot;
+  el.innerHTML = `<iframe class="mv-frame" title="Rhēma tab" src="index.html?mv=${t.slot}"></iframe>`;
+  el.querySelector('.mv-frame').addEventListener('load', () => _mvFit(t.slot));
+  return el;
+}
+// Tabs never scroll out of sight: they share the strip, and wrap onto a second
+// row when one row would make them too small to press (≥ 84px each).
+const MV_TAB_MIN = 84;
+function _mvRenderTabs() {
+  const wrap = document.getElementById('mvTabs');
+  if (!wrap || !_mv) return;
+  const esc = _escapeRhemaAttr;
+  wrap.innerHTML = _mv.tabs.map(t => {
+    const on = String(t.slot) === String(_mv.active);
+    const [ref, ver] = String(t.label || '').split(' · ');
+    const full = t.label ? ref : 'Opening…';
+    return `<div class="mv-tab${on ? ' on' : ''}" role="tab" aria-selected="${on}" data-slot="${t.slot}" onclick="rhemaMvShow('${t.slot}')" title="${esc(t.label || '')}">` +
+      `<span class="mv-tab-label"><b data-full="${esc(full)}" data-short="${esc(t.short || _mvShortLabel(full))}">${esc(full)}</b>${ver ? `<small>${esc(ver)}</small>` : ''}</span>` +
+      `<button type="button" class="mv-tab-x" onclick="event.stopPropagation();rhemaMvRemove('${t.slot}')" aria-label="Close this tab"><span class="material-symbols-outlined">close</span></button></div>`;
+  }).join('');
+  const plus = document.getElementById('mvPlus');
+  if (plus) plus.disabled = _mv.tabs.length >= MV_MAX;
+  _mvLayoutTabs();
+}
+function _mvLayoutTabs() {
+  const wrap = document.getElementById('mvTabs');
+  if (!wrap || !_mv) return;
+  const n = _mv.tabs.length;
+  const bar = wrap.closest('.mv-tabbar');
+  const perRowAt = () => { const w = wrap.clientWidth; return w ? Math.max(1, Math.min(n, Math.floor((w + 4) / (MV_TAB_MIN + 4)))) : 0; };
+  bar?.classList.remove('mv-stacked');
+  let perRow = perRowAt();
+  if (!perRow) return;
+  // Needs a second row: stack + and close so the tabs get that width back
+  // (unless that would fit them all on one row; then one slightly snug row).
+  if (perRow < n && bar) {
+    bar.classList.add('mv-stacked');
+    const stacked = perRowAt();
+    if (stacked >= n) { bar.classList.remove('mv-stacked'); perRow = n; } else perRow = stacked;
+  }
+  const rows = Math.ceil(n / perRow);
+  // Even rows: 5 tabs on a 3-wide strip become 3 + 2, not 4 + 1.
+  const cols = Math.ceil(n / rows);
+  wrap.style.setProperty('--mv-cols', cols);
+  wrap.classList.toggle('mv-two-rows', rows > 1);
+  wrap.querySelectorAll('.mv-tab-label').forEach(_mvFitLabel);
+}
+// Shrink a label's text until it fits its tab (never cut off with "…"). The
+// full book name is tried first, then the short one ("1Co 13:4").
+function _mvFitLabel(lab) {
+  const b = lab.querySelector('b'), sm = lab.querySelector('small');
+  const room = lab.clientWidth;
+  if (!room) return;
+  const fit = (el, max, min) => {
+    let px = max;
+    el.style.fontSize = px + 'px';
+    while (px > min && el.scrollWidth > room) { px -= 0.5; el.style.fontSize = px + 'px'; }
+    return el.scrollWidth <= room;
+  };
+  if (b) {
+    b.textContent = b.dataset.full;
+    if (!fit(b, 13, 10.5) && b.dataset.short && b.dataset.short !== b.dataset.full) {
+      b.textContent = b.dataset.short;
+      fit(b, 13, 8);
+    } else if (b.scrollWidth > room) fit(b, 10.5, 8);
+  }
+  if (sm) fit(sm, 10.5, 7.5);
+}
+// The Rhēma in a tab fills it; on a narrow screen it shrinks a little to keep
+// a phone-width layout (never below 55%).
+function _mvFit(slot) {
+  const el = _mvEl(slot);
+  const fr = el?.querySelector('.mv-frame');
+  if (!el || !fr || el.hidden) return;
+  const b = el.getBoundingClientRect();
+  if (!b.width) return;
+  const s = Math.max(0.55, Math.min(1, b.width / 360));
+  try {
+    const de = fr.contentDocument?.documentElement;
+    if (de && de.style.zoom !== String(+s.toFixed(3))) de.style.zoom = String(+s.toFixed(3));
+  } catch {}
+}
+function rhemaMvShow(slot) {
+  if (!_mv || !_mvTab(slot)) return;
+  _mv.active = String(slot);
+  _mvStage()?.querySelectorAll('.mv-win').forEach(el => { el.hidden = el.dataset.slot !== String(slot); });
+  _mvRenderTabs();
+  _mvFit(slot);
+  _mvPersist();
+}
+function rhemaOpenMultiView(ref) {
+  try { closeRhemaWheel(); } catch {}
+  const ov = _mvShell();
+  if (!_mv) {
+    const st = _mvStored();
+    const saved = (st?.tabs || st?.wins || []).filter(t => t && /^[1-6]$/.test(String(t.slot))).slice(0, MV_MAX);
+    _mv = { tabs: saved.map(t => ({ slot: String(t.slot), label: t.label || '', short: t.short || '' })), active: st?.active ? String(st.active) : null };
+    if (!_mv.tabs.length) {
+      // First summon: two tabs at the main reader's place.
+      ['1', '2'].forEach(slot => { _mvSeed(slot, null); _mv.tabs.push({ slot, label: '' }); });
+    }
+    // A remembered tab with no place of its own starts at the main reader's.
+    _mv.tabs.forEach(t => { try { if (!localStorage.getItem('rhemaLastPos::mv' + t.slot)) _mvSeed(t.slot, null); } catch {} });
+    if (!_mvTab(_mv.active)) _mv.active = _mv.tabs[0].slot;
+    const stage = _mvStage();
+    stage.innerHTML = '';
+    _mv.tabs.forEach(t => stage.appendChild(_mvWinEl(t)));
+  }
+  ov.classList.add('open');
+  ov.classList.remove('mv-summon'); void ov.offsetWidth; ov.classList.add('mv-summon');
+  rhemaMvShow(_mv.active);
+  if (ref) rhemaMvAdd(ref);
+  _mvPersist();
+}
+function rhemaMvAdd(ref) {
+  if (!_mv) return rhemaOpenMultiView(ref);
+  if (_mv.tabs.length >= MV_MAX) { if (typeof _showStudyToast === 'function') _showStudyToast(`Multi-view holds up to ${MV_MAX} Rhēmas. Close a tab (✕) to add another.`); return; }
+  const slot = _mvFreeSlot();
+  if (!slot) return;
+  _mvSeed(slot, ref || null);
+  const t = { slot, label: '' };
+  _mv.tabs.push(t);
+  _mvStage().appendChild(_mvWinEl(t));
+  const ov = document.getElementById('mvOverlay');
+  ov.classList.remove('mv-summon'); void ov.offsetWidth; ov.classList.add('mv-summon');
+  rhemaMvShow(slot);
+}
+function rhemaMvRemove(slot) {
+  if (!_mv) return;
+  const i = _mv.tabs.findIndex(t => String(t.slot) === String(slot));
+  if (i < 0) return;
+  _mv.tabs.splice(i, 1);
+  _mvEl(slot)?.remove();
+  if (!_mv.tabs.length) { _mvPersist(); return rhemaCloseMultiView(); }
+  if (String(_mv.active) === String(slot)) _mv.active = _mv.tabs[Math.max(0, i - 1)].slot;
+  rhemaMvShow(_mv.active);
+}
+// Close: back to the main Rhēma (tabs are remembered for next time), showing
+// anything highlighted or saved in them.
+function rhemaCloseMultiView() {
+  const ov = document.getElementById('mvOverlay');
+  if (ov) ov.classList.remove('open');
+  _mvPersist();
+  const stage = _mvStage();
+  if (stage) stage.innerHTML = '';
+  _mv = null;
+  try { _rhemaLoadLocalMarks(); renderRhemaVerse(); } catch {}
+}
+window.addEventListener('resize', () => { if (_mv) { _mvFit(_mv.active); _mvLayoutTabs(); } });
+// From the verse menu: Multi-view with this verse in a new tab.
+function rhemaMultiViewFromMenu() {
+  const ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
+  rhemaClearSelection();
+  closeRhemaVerseSheet();
+  rhemaOpenMultiView(ref);
+}
+
+// Highlights and notes are shared by the main Rhēma and every Multi-view
+// window: when another of them saves, reload them here so nothing is lost.
+window.addEventListener('storage', (e) => {
+  if (e.key !== 'rhemaMarks') return;
+  try { _rhemaLoadLocalMarks(); } catch {}
+  if (document.getElementById('rhemaModal')?.classList.contains('open')) { try { renderRhemaVerse(); } catch {} }
+});
+
+// ── Multi-view window mode (this page is one of the windows) ─────────────────
+if (window.RHEMA_MV_SLOT) {
+  // Nothing in a window leads out of Rhēma, or opens Multi-view inside itself.
+  window.closeRhema = function () {};
+  window.showScreen = function () {};
+  window.rhemaGoBack = function () {};
+  window.startRhemaCoach = function () {};
+  window.rhemaOpenMultiView = function () {};
+  window.rhemaMultiViewFromMenu = function () {};
+  const mvBoot = () => {
+    _rhemaAdoptParentData();
+    try { _appLaunchReleased = true; } catch {}
+    document.getElementById('appLaunchScreen')?.classList.add('dismissed', 'hidden');
+    document.getElementById('authModal')?.classList.remove('open');
+    try { resumeRhema(); } catch (e) { console.warn('Multi-view window boot', e); }
+    // Keep the window's page itself at the top (see style.css).
+    const pin = () => { if (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } };
+    window.addEventListener('scroll', pin, { passive: true });
+    document.body.addEventListener('scroll', pin, { passive: true });
+    // Tell Multi-view what this window shows, whenever it changes.
+    let last = '';
+    setInterval(() => {
+      try {
+        if (!_rhemaBook) return;
+        const label = `${_rhemaBookName(_rhemaBook)} ${_rhemaChapter}:${_rhemaVerse} · ${_rhemaReaderDisplayLabel()}`;
+        const short = `${RHEMA_BOOK_ABBR[_rhemaBook] || _rhemaBook} ${_rhemaChapter}:${_rhemaVerse}`;
+        if (label !== last) { last = label; parent.postMessage({ rhemaMV: window.RHEMA_MV_SLOT, label, short }, location.origin); }
+      } catch {}
+    }, 1000);
+  };
+  if (document.readyState === 'complete') setTimeout(mvBoot, 0);
+  else window.addEventListener('load', () => setTimeout(mvBoot, 0));
 }
