@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.567";
+const APP_VERSION = "3.0.568";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30471,6 +30471,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.568 &mdash; Cleaner Multi-view windows</div>
+<ul>
+  <li><strong>One full-view button</strong> &mdash; Each window&rsquo;s title bar now has just its &#10005;. Use the &#10530; button at the top for a full view of the selected window (or double-tap a window&rsquo;s title).</li>
+</ul>
 <div class="un-version-label">v3.0.567 &mdash; Roomier Multi-view</div>
 <ul>
   <li><strong>More room for the windows</strong> &mdash; A slimmer top bar and a smaller guide at the bottom (tap him to tuck him away even smaller).</li>
@@ -53420,12 +53424,10 @@ function _mvWinEl(w) {
   el.innerHTML = `
     <div class="mv-wbar" title="Drag to move">
       <span class="mv-label">${_escapeRhemaAttr(w.label || 'Opening…')}</span>
-      <button type="button" class="mv-wbtn" data-act="max" aria-label="Fill the screen with this window"><span class="material-symbols-outlined">open_in_full</span></button>
       <button type="button" class="mv-wbtn" data-act="close" aria-label="Send this window away"><span class="material-symbols-outlined">close</span></button>
     </div>
     <div class="mv-body"><iframe class="mv-frame" title="Rhēma window" src="index.html?mv=${w.slot}"></iframe></div>
     <button type="button" class="mv-corner" aria-label="Drag to resize"><span class="material-symbols-outlined">open_in_full</span></button>`;
-  el.querySelector('[data-act="max"]').addEventListener('click', () => rhemaMvMaximize(w.slot));
   el.querySelector('[data-act="close"]').addEventListener('click', () => rhemaMvRemove(w.slot));
   el.querySelector('.mv-wbar').addEventListener('pointerdown', (ev) => { if (!ev.target.closest('button')) _mvStartMove(ev, w.slot); });
   el.querySelector('.mv-wbar').addEventListener('dblclick', (ev) => { if (!ev.target.closest('button')) rhemaMvMaximize(w.slot); });
