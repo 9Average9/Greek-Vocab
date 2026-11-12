@@ -52,6 +52,28 @@
     });
   }
 
+  window.syncDesktopRhemaLanguageUi = function () {
+    const bar = document.getElementById('desktopRhemaLanguageBar');
+    if (!bar || typeof _rhemaBook === 'undefined') return;
+    const isOT = isRhemaOTBook(_rhemaBook);
+    const active = _rhemaShowEnglish ? 'english' : isOT && _rhemaOTLayer === 'hebrew' ? 'hebrew' : 'greek';
+    const hebrew = bar.querySelector('[data-rhema-language="hebrew"]');
+    const greek = bar.querySelector('[data-rhema-language="greek"]');
+    if (hebrew) hebrew.hidden = !isOT;
+    if (greek) greek.title = isOT ? 'Greek Septuagint' : 'Greek New Testament';
+    bar.querySelectorAll('button').forEach(button => {
+      const selected = button.dataset.rhemaLanguage === active;
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+  };
+
+  window.desktopRhemaLanguagePick = function (language) {
+    if (language === 'hebrew' && !isRhemaOTBook(_rhemaBook)) return;
+    rhemaLanguagePick(language === 'greek' && isRhemaOTBook(_rhemaBook) ? 'lxx' : language);
+    window.syncDesktopRhemaLanguageUi();
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
     const observer = new MutationObserver(syncRail);
     ['atlasPage', 'atlasTabPlaces', 'atlasTabJourneys', 'rhemaModal'].forEach(id => {
@@ -59,6 +81,7 @@
       if (element) observer.observe(element, { attributes: true, attributeFilter: ['class'] });
     });
     syncRail();
+    window.syncDesktopRhemaLanguageUi();
   });
 
   window.desktopRhemaRead = async function () { settleView(); await read(); };

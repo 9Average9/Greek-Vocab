@@ -33,6 +33,43 @@ body.rhema-desktop-site .desktop-rhema-search-close {
 body.rhema-desktop-site .desktop-rhema-search-close:hover { background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-solid-color)); }
 
 .desktop-rhema-sheet-kicker { display: none; }
+.desktop-rhema-language { display: none; }
+
+@media (min-width: 960px) {
+  body.rhema-desktop-site #rhemaModal .rhema-picker { align-items: center; }
+  body.rhema-desktop-site .desktop-rhema-language {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 0 0 auto;
+    padding: 4px;
+    border: 1px solid color-mix(in srgb, var(--secondary-color) 15%, var(--border-color));
+    border-radius: 15px;
+    background: color-mix(in srgb, var(--secondary-color) 5%, var(--card-solid-color));
+    box-shadow: inset 0 1px 2px rgba(18, 39, 76, .05);
+  }
+  body.rhema-desktop-site .desktop-rhema-language button {
+    min-height: 32px;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--muted-color);
+    font: inherit;
+    font-size: .74rem;
+    font-weight: 780;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  body.rhema-desktop-site .desktop-rhema-language button[hidden] { display: none !important; }
+  body.rhema-desktop-site .desktop-rhema-language button:hover:not(.active) { background: color-mix(in srgb, var(--secondary-color) 8%, transparent); color: var(--font-color); }
+  body.rhema-desktop-site .desktop-rhema-language button.active {
+    background: var(--secondary-color);
+    color: var(--btn-text-color);
+    box-shadow: 0 3px 9px color-mix(in srgb, var(--secondary-color) 22%, transparent);
+  }
+}
 
 @media (min-width: 960px) {
   body.rhema-desktop-site #rhemaModal.open .rhema-vsheet-overlay {

@@ -38791,6 +38791,7 @@ function setRhemaOTLayer(layer) {
   _syncWheelState();
   _syncToolWandIndicator();
   renderCurrentRhemaOriginalText();
+  window.syncDesktopRhemaLanguageUi?.();
 }
 
 function _rhemaLayerForBook(bookCode = _rhemaBook) {
@@ -44541,17 +44542,18 @@ function _rhemaStudyTools() {
   const isNT = isRhemaNTBook(_rhemaBook);
   const hebrew = isOT && getCurrentOriginalLanguageLayer() === 'hebrew';
   const orig = hebrew ? 'Hebrew' : 'Greek';
+  const languageLocation = window.RHEMA_DESKTOP_SITE ? 'the reference bar' : 'the Language bar';
   const tools = [
     // Hebrew gets "Who Does What": each action in the verse with who does
     // it, to what or whom, and who "he"/"it" refers to (MACULA Hebrew).
     { id: 'syntax', label: hebrew ? 'Who Does What' : 'Syntax Tree', icon: hebrew ? 'groups' : 'account_tree', active: _rhemaSyntaxMode,
-      reason: _rhemaShowEnglish ? `Select ${orig} in the Language bar first to see ${hebrew ? 'who does what' : 'the syntax tree'}.`
+      reason: _rhemaShowEnglish ? `Select ${orig} in ${languageLocation} first to see ${hebrew ? 'who does what' : 'the syntax tree'}.`
             : _rhemaFullChapter ? `Switch to verse view first to open ${hebrew ? 'who does what' : 'the syntax tree'}.` : '',
       action: () => toggleWheelTool('syntax') },
     { id: 'pos', label: 'Parts of Speech', icon: 'ink_highlighter', active: _rhemaHighlightBarOn, reason: '',
       action: () => toggleWheelTool('highlight') },
     { id: 'greek', label: `${orig} Only`, icon: 'translate', active: _rhemaGreekOnly,
-      reason: _rhemaShowEnglish ? `Select ${orig} in the Language bar first.` : '',
+      reason: _rhemaShowEnglish ? `Select ${orig} in ${languageLocation} first.` : '',
       action: () => toggleWheelTool('greek-only') },
     { id: 'chapter', label: 'Chapter View', icon: 'article', active: _rhemaFullChapter, reason: '',
       action: () => toggleRhemaChapterMode() },
@@ -44599,8 +44601,7 @@ function _rhemaStudyPanelHtml() {
     <div class="rrp-grid">${display}</div>
     <div class="rrp-section-label">Text</div>
     <div class="rrp-grid">${textTiles}</div>
-    <div class="rrp-section-label">Language</div>
-    ${_rhemaLanguageBarHtml()}
+    ${window.RHEMA_DESKTOP_SITE ? '' : `<div class="rrp-section-label">Language</div>${_rhemaLanguageBarHtml()}`}
     <div class="rrp-section-label">Study</div>
     <div class="rrp-list">
       <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(openRhemaCrossReferences,220)"><span class="material-symbols-outlined rrp-row-icon">hub</span><span class="rrp-row-label">Cross references</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
@@ -44967,6 +44968,7 @@ function syncRhemaPicker() {
   const v = document.getElementById('rhemaPillVerse');
   if (b) b.textContent = _rhemaIntroMode ? `${bookName} · Intro` : `${bookName} ${_rhemaChapter}`;
   if (v) v.textContent = 'v' + _rhemaVerse;
+  window.syncDesktopRhemaLanguageUi?.();
 }
 
 function openRhemaBookPicker() {
@@ -47180,7 +47182,17 @@ const READING_COACH_STEPS = [
   { before: _coachMenuShow(() => document.querySelector('#rhemaReaderPanel .rrp-guide.in')), target: () => _coachFirst(['#rhemaReaderPanel .rrp-guide.in', '#rhemaReaderMenuBtn']), title: 'That’s me!', body: 'I pop up somewhere new in this menu each time. Tap me whenever you want another tour.' }
 ];
 function startVerseCoach() { _startAppCoach(VERSE_COACH_STEPS, 'verseCoachSeenV3539', true); _appCoachOnEnd = () => { try { closeRhemaVerseSheetAndDeselect(); } catch (e) {} }; }
-function startReadingToolsCoach() { _startAppCoach(READING_COACH_STEPS, 'readingToolsCoachSeenV3539', true); }
+function startReadingToolsCoach() {
+  const steps = window.RHEMA_DESKTOP_SITE
+    ? READING_COACH_STEPS.map((step, index) => index === 0
+        ? { ...step,
+            before: () => { closeRhemaReaderPanel(); return _coachPause(400); },
+            target: () => document.getElementById('desktopRhemaLanguageBar'),
+            body: 'Use the reference bar to switch between English and Greek. In the Old Testament, Hebrew appears there too. In Greek or Hebrew, tap a word to study it.' }
+        : step)
+    : READING_COACH_STEPS;
+  _startAppCoach(steps, 'readingToolsCoachSeenV3539', true);
+}
 
 // The reader's built-in study: its tools live in Rhēma's side menu.
 const STUDY_RHEMA_COACH_STEPS = [
@@ -49019,6 +49031,7 @@ function updateRhemaSwapVisibility() {
       ? `Go deeper — open the ${original} text`
       : `Swap to English (${_rhemaEnglishLabel()})`;
   }
+  window.syncDesktopRhemaLanguageUi?.();
 }
 
 // Tapping a verse in the English reading view selects it, so the verse pill,
