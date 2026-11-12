@@ -22910,6 +22910,7 @@ function _saveRhemaPosition() {
   const greekSnippet = _rhemaData() ? _rhemaOrigWords(_rhemaBook, _rhemaChapter, _rhemaVerse).map(w => w[0]).join(' ') : '';
   const pos = { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion(), translation: _rhemaEnglishLabel(), ts: Date.now(), snippet: verseSnippet, greek: greekSnippet };
   localStorage.setItem('rhemaLastPos', JSON.stringify(pos));
+  if (window.RHEMA_MV_SLOT) return; // a Multi-view window: its place stays on this device, in its own slot
   if (uid && window.LB) {
     window.LB.saveRhemaPosition?.(uid, pos)?.catch?.(() => {});
   }
@@ -30447,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.563";
+const APP_VERSION = "3.0.564";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30470,6 +30471,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.564 &mdash; Multi-view</div>
+<ul>
+  <li><strong>Up to six Rhēmas at once</strong> &mdash; Open <em>Multi-view</em> (in the &#9776; menu&rsquo;s tools, or <em>Multi-view</em> on any verse) and the guide summons mini Rhēmas side by side. Each one is the full Rhēma, with its own passage, translation and language: Psalm 23 in Hebrew next to John 10 in Greek next to Ezekiel 34 in the NASB. Tap the gold + for more.</li>
+  <li><strong>Make room your way</strong> &mdash; Drag the bar under a window to make it taller or shorter, tap &#10530; to fill the screen with one, drag &#10303; to move a window, switch between one and two columns, tap the guide to tuck him away, or shrink Multi-view to a pill and come back to it later.</li>
+  <li><strong>Your place is kept</strong> &mdash; Nothing you do in a window moves your main reading. Highlights, notes and saves made in any window are shared everywhere, and your windows are remembered for next time.</li>
+</ul>
 <div class="un-version-label">v3.0.563 &mdash; Word by word</div>
 <ul>
   <li><strong>One place for a verse&rsquo;s words</strong> &mdash; <em>Look up a word</em> and <em>Interlinear</em> are now one button, <em>Word by word</em>, with tabs: <em>Your English</em> (your version in reading order, the original word under each part) and the original&rsquo;s own order (<em>Hebrew</em> and <em>Septuagint</em> in the Old Testament, <em>Greek</em> in the New).</li>
@@ -33078,6 +33085,7 @@ function isRunningAsInstalledApp() {
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
+  if (window.RHEMA_MV_SLOT) return; // Multi-view windows: the main page handles updates
 
   // True when the page is already controlled by a service worker at load time,
   // i.e. a returning session rather than the very first install. We only force
@@ -42353,6 +42361,7 @@ function _rhemaSetInterlinearVersionNote(versionLabel, hebBridge) {
 const RHEMA_BSB_ALIGN_VERSION = '3.0.2';
 let _rhemaBsbAlignPromise = null;
 function _ensureRhemaBsbAlign() {
+  if (!window.RhemaBSBAlign && window.RHEMA_MV_SLOT) _rhemaAdoptParentData();
   if (window.RhemaBSBAlign) return Promise.resolve(window.RhemaBSBAlign);
   if (_rhemaBsbAlignPromise) return _rhemaBsbAlignPromise;
   _rhemaBsbAlignPromise = new Promise((resolve) => {
@@ -43746,6 +43755,22 @@ function decodeMorph(code) {
 // One shared loader per data file, so the reader, Memorize, Threads etc. never
 // inject the same multi-MB script twice.
 const _rhemaFilePromises = {};
+// Multi-view windows share the main page's Bible data (the same objects, not
+// copies): six windows cost little more memory than one.
+function _rhemaAdoptParentData() {
+  if (!window.RHEMA_MV_SLOT) return 0;
+  let P = null;
+  try { P = window.parent; if (!P || P === window) return 0; void P.document; } catch { return 0; }
+  let n = 0;
+  try {
+    for (const k of Object.keys(P)) {
+      if (!/^Rhema[A-Z]/.test(k) || k === 'RhemaAlign' || window[k]) continue;
+      const v = P[k];
+      if (v && typeof v === 'object') { window[k] = v; n++; }
+    }
+  } catch {}
+  return n;
+}
 function _rhemaDataGlobalReady(file) {
   const g = {
     'rhema-nt.js': 'RhemaNT', 'rhema-critical.js': 'RhemaCriticalNT',
@@ -43760,7 +43785,23 @@ function _rhemaDataGlobalReady(file) {
 }
 function _rhemaLoadDataFile(file) {
   if (_rhemaFilePromises[file]) return _rhemaFilePromises[file];
+  if (window.RHEMA_MV_SLOT) _rhemaAdoptParentData();
   if (_rhemaDataGlobalReady(file)) return (_rhemaFilePromises[file] = Promise.resolve());
+  // A Multi-view window: have the main page load it (once), then share it.
+  if (window.RHEMA_MV_SLOT) {
+    let P = null;
+    try { P = window.parent; if (P === window || typeof P._rhemaLoadDataFile !== 'function') P = null; } catch { P = null; }
+    if (P) {
+      return (_rhemaFilePromises[file] = Promise.resolve(P._rhemaLoadDataFile(file)).then(() => {
+        _rhemaAdoptParentData();
+        if (!_rhemaDataGlobalReady(file)) throw new Error('not shared');
+      }).catch(() => { delete _rhemaFilePromises[file]; return _rhemaLoadOwnDataFile(file); }));
+    }
+  }
+  return _rhemaLoadOwnDataFile(file);
+}
+function _rhemaLoadOwnDataFile(file) {
+  if (_rhemaFilePromises[file] && !window.RHEMA_MV_SLOT) return _rhemaFilePromises[file];
   const p = new Promise((res, rej) => {
     const s = document.createElement('script');
     s.src = file + '?v=' + (RHEMA_DATA_VERSIONS[file] || APP_VERSION);
@@ -44899,6 +44940,9 @@ function _rhemaStudyTools() {
             : _rhemaShowEnglish ? 'Switch to Greek to choose a text type.' : '',
       action: () => toggleWheelTool('critical') }
   ];
+  // Multi-view: up to six Rhēmas side by side (not inside a Multi-view window).
+  if (!window.RHEMA_MV_SLOT) tools.push({ id: 'multiview', label: 'Multi-view', icon: 'dashboard', active: false, reason: '',
+    action: () => { try { closeRhemaReaderPanel(); } catch {} rhemaOpenMultiView(); } });
   return tools;
 }
 function _rhemaStudyTileHtml(t) {
@@ -47484,11 +47528,10 @@ const _coachVsheetBtn = fn => () => _coachFirst([() => [...document.querySelecto
 const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), title: 'Highlight', body: 'Tap a color to highlight the verse. Tap the crossed-out drop to clear it.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /note/i.test(t)), pose: 'thumbs', title: 'Notes', body: 'Write your own note on the verse. All your highlights and notes are listed in the menu.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Compare/.test(t)), title: 'Compare', body: 'See this verse side by side in other Bibles, like the NIV, KJV and NASB.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Multi-view/.test(t)), title: 'Multi-view', body: 'Open this verse in its own window beside others: up to six Rhēmas at once, each with its own passage, translation and language.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^See interpretations/.test(t)), pose: 'inspect', title: 'See interpretations', body: 'How different traditions read this passage, Free Grace first. Each view gets a short summary, real quotes from its teachers, and links to read more.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), pose: 'thumbs', title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /English word/.test(t)), pose: 'think', title: 'Define a word', body: 'Not sure what a word in your Bible means? Pick it and get a simple definition. Names and places get a Bible dictionary entry.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Interlinear/.test(t)), pose: 'inspect', title: 'Interlinear', body: 'Lines up every Greek (or Hebrew) word with its English, word by word. Tap any word to study it.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Word by word/.test(t)), pose: 'inspect', title: 'Word by word', body: 'Your Bible’s words with the Greek or Hebrew under each one, or the original word by word in its own order. Tap any word to study it.' },
   { before: _coachOpenVerseMenu, target: () => _coachFirst([() => document.querySelector(`#rhemaEnglishDisplay .rhema-chapter-block[data-verse="${_rhemaSelectedVersesSorted?.()[0] || _rhemaVerse}"]`), '#rhemaVerseSheetRef', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
 ];
 // The menu's reading helpers. Scrolls the menu so each spotlighted part is on screen.
@@ -53235,4 +53278,337 @@ function _gtCheckCompletion(topic, entry) {
   } else if (count < topic.verses.length && entry.done) {
     delete entry.done;
   }
+}
+
+// ── Multi-view ────────────────────────────────────────────────────────────────
+// The guide summons up to six mini Rhēmas, side by side. Each window is the
+// whole Rhēma (the app itself in window mode, index.html?mv=N): its own book,
+// chapter, translation and language, every tool, nothing that leaves Rhēma.
+// What a window shows is kept in its own storage slot, so the main reader keeps
+// its place; highlights, notes and saves are shared with everything (and every
+// window refreshes when another saves). Windows can be resized (drag the bar
+// under one), maximised (⤢), reordered (drag the handle), shown in one or two
+// columns, and Multi-view itself can be tucked into a pill to read the main
+// Rhēma and come back.
+const MV_MAX = 6;
+const MV_STORE = 'rhemaMultiView';
+let _mv = null;             // { wins: [{ slot, h, label }], cols, tucked, max }
+let _mvMinimized = false;
+
+function _mvStored() { try { return JSON.parse(localStorage.getItem(MV_STORE) || 'null'); } catch { return null; } }
+function _mvPersist() {
+  if (!_mv) return;
+  try { localStorage.setItem(MV_STORE, JSON.stringify({ wins: _mv.wins.map(w => ({ slot: w.slot, h: w.h || null, label: w.label || '' })), cols: _mv.cols, tucked: !!_mv.tucked })); } catch {}
+}
+// A new window starts at `ref` (or the main reader's place) in the main
+// reader's translation and language; after that it's on its own.
+function _mvSeed(slot, ref) {
+  const p = (ref && _rhemaParseRef(ref)) || { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse };
+  const sfx = '::mv' + slot;
+  try {
+    localStorage.setItem('rhemaLastPos' + sfx, JSON.stringify({ book: p.book, chapter: String(p.chapter), verse: String(p.verse), textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion() }));
+    ['rhemaReaderVersion', 'rhemaOTLayer', 'rhemaEnglishVersion', 'rhemaTextMode'].forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v != null) localStorage.setItem(k + sfx, v); else localStorage.removeItem(k + sfx);
+    });
+    localStorage.removeItem('rhemaChapterSnap' + sfx);
+    localStorage.removeItem('rhemaRefHistory' + sfx);
+  } catch {}
+}
+function _mvFreeSlot() {
+  const used = new Set((_mv?.wins || []).map(w => String(w.slot)));
+  for (let i = 1; i <= MV_MAX; i++) if (!used.has(String(i))) return String(i);
+  return null;
+}
+function _mvShell() {
+  let ov = document.getElementById('mvOverlay');
+  if (ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'mvOverlay';
+  ov.className = 'mv-overlay';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-label', 'Multi-view');
+  ov.innerHTML = `
+    <div class="mv-top">
+      <div class="mv-title">Multi-view<small id="mvSub"></small></div>
+      <div class="mv-top-actions">
+        <button type="button" class="mv-ibtn" id="mvColsBtn" onclick="rhemaMvToggleCols()" aria-label="One or two columns"><span class="material-symbols-outlined">grid_view</span></button>
+        <button type="button" class="mv-ibtn" onclick="rhemaMvMinimize()" aria-label="Shrink Multi-view to read your main Rhēma"><span class="material-symbols-outlined">picture_in_picture_alt</span></button>
+        <button type="button" class="mv-ibtn" onclick="rhemaCloseMultiView()" aria-label="Close Multi-view"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+    <div class="mv-stage" id="mvStage"></div>
+    <div class="mv-bottom">
+      <div class="mv-hint" id="mvHint">Drag ═ to resize · ⤢ to fill · ⠿ to move</div>
+      <button type="button" class="mv-guide" id="mvGuide" onclick="rhemaMvToggleTuck()" aria-label="Tuck the guide away for more room"><span class="mv-glow"></span><img src="assets/mascot/guide-summon.webp" alt="" width="210" height="212" decoding="async"/></button>
+      <div class="mv-add"><button type="button" class="mv-plus" id="mvPlus" onclick="rhemaMvAdd()" aria-label="Summon another Rhēma"><span class="material-symbols-outlined">add</span></button><span class="mv-count" id="mvCount"></span></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const pill = document.createElement('button');
+  pill.type = 'button';
+  pill.id = 'mvPill';
+  pill.className = 'mv-pill';
+  pill.hidden = true;
+  pill.setAttribute('onclick', 'rhemaMvRestore()');
+  document.body.appendChild(pill);
+  window.addEventListener('message', _mvOnMessage);
+  return ov;
+}
+function _mvOnMessage(e) {
+  if (e.origin !== location.origin || !e.data || !e.data.rhemaMV || !_mv) return;
+  const w = _mv.wins.find(x => String(x.slot) === String(e.data.rhemaMV));
+  if (!w || !e.data.label || w.label === e.data.label) return;
+  w.label = e.data.label;
+  const el = document.querySelector(`#mvStage .mv-win[data-slot="${w.slot}"] .mv-label`);
+  if (el) el.textContent = w.label;
+  _mvPersist();
+}
+function _mvWinEl(w) {
+  const el = document.createElement('div');
+  el.className = 'mv-win mv-summoned';
+  el.dataset.slot = w.slot;
+  el.innerHTML = `
+    <div class="mv-wbar">
+      <span class="mv-grip material-symbols-outlined" aria-label="Drag to move">drag_indicator</span>
+      <span class="mv-label">${_escapeRhemaAttr(w.label || 'Opening…')}</span>
+      <button type="button" class="mv-wbtn" onclick="rhemaMvMaximize('${w.slot}')" aria-label="Fill the screen with this window"><span class="material-symbols-outlined">open_in_full</span></button>
+      <button type="button" class="mv-wbtn" onclick="rhemaMvRemove('${w.slot}')" aria-label="Send this window away"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="mv-body"><iframe class="mv-frame" title="Rhēma window" src="index.html?mv=${w.slot}"></iframe></div>
+    <div class="mv-resize" aria-label="Drag to resize"><span></span></div>`;
+  el.querySelector('.mv-grip').addEventListener('pointerdown', (ev) => _mvStartMove(ev, w.slot));
+  el.querySelector('.mv-resize').addEventListener('pointerdown', (ev) => _mvStartResize(ev, w.slot));
+  el.querySelector('.mv-wbar').addEventListener('dblclick', (ev) => { if (!ev.target.closest('button')) rhemaMvMaximize(w.slot); });
+  setTimeout(() => el.classList.remove('mv-summoned'), 900);
+  return el;
+}
+// Lay the windows out: order, column count, heights, the maximised one.
+function _mvLayout() {
+  if (!_mv) return;
+  const stage = document.getElementById('mvStage');
+  const ov = document.getElementById('mvOverlay');
+  if (!stage || !ov) return;
+  const n = _mv.wins.length;
+  stage.classList.toggle('mv-two', _mv.cols === 2);
+  stage.classList.toggle('mv-has-max', !!_mv.max);
+  ov.classList.toggle('mv-tucked', !!_mv.tucked);
+  const H = stage.clientHeight || 500;
+  const perRow = _mv.cols === 2 ? 2 : 1;
+  const rows = Math.max(1, Math.ceil(n / perRow));
+  const auto = Math.max(170, Math.floor((H - 10 * (Math.min(rows, 2) - 1)) / Math.min(rows, 2)));
+  _mv.wins.forEach((w, i) => {
+    const el = stage.querySelector(`.mv-win[data-slot="${w.slot}"]`);
+    if (!el) return;
+    el.style.order = String(i);
+    el.classList.toggle('mv-max', String(_mv.max) === String(w.slot));
+    el.style.height = _mv.max ? '' : `${Math.min(H, w.h || auto)}px`;
+  });
+  const cnt = document.getElementById('mvCount');
+  if (cnt) cnt.textContent = `${n} of ${MV_MAX}`;
+  const plus = document.getElementById('mvPlus');
+  if (plus) plus.disabled = n >= MV_MAX;
+  const sub = document.getElementById('mvSub');
+  if (sub) sub.textContent = 'Your main reading stays where you left it';
+  const cb = document.getElementById('mvColsBtn');
+  if (cb) cb.querySelector('.material-symbols-outlined').textContent = _mv.cols === 2 ? 'view_agenda' : 'grid_view';
+}
+function rhemaOpenMultiView(ref) {
+  try { closeRhemaWheel(); } catch {}
+  const ov = _mvShell();
+  if (!_mv) {
+    const st = _mvStored();
+    _mv = { wins: (st?.wins || []).filter(w => w && /^[1-6]$/.test(String(w.slot))).slice(0, MV_MAX), cols: st?.cols === 2 ? 2 : 1, tucked: !!st?.tucked, max: null };
+    if (!_mv.wins.length) {
+      // First summon: two windows at the main reader's place.
+      ['1', '2'].forEach(slot => { _mvSeed(slot, null); _mv.wins.push({ slot, h: null, label: '' }); });
+    }
+    const stage = document.getElementById('mvStage');
+    stage.innerHTML = '';
+    _mv.wins.forEach(w => stage.appendChild(_mvWinEl(w)));
+  }
+  if (ref) { rhemaMvAdd(ref); }
+  _mvMinimized = false;
+  document.getElementById('mvPill').hidden = true;
+  ov.classList.add('open');
+  ov.classList.remove('mv-summon');
+  void ov.offsetWidth;
+  ov.classList.add('mv-summon');
+  requestAnimationFrame(_mvLayout);
+  _mvPersist();
+}
+function rhemaMvAdd(ref) {
+  if (!_mv) return rhemaOpenMultiView(ref);
+  if (_mv.wins.length >= MV_MAX) { if (typeof _showStudyToast === 'function') _showStudyToast(`Multi-view holds up to ${MV_MAX} windows. Send one away (✕) to add another.`); return; }
+  const slot = _mvFreeSlot();
+  if (!slot) return;
+  _mvSeed(slot, ref || null);
+  const w = { slot, h: null, label: '' };
+  _mv.wins.push(w);
+  _mv.max = null;
+  const stage = document.getElementById('mvStage');
+  stage.appendChild(_mvWinEl(w));
+  const ov = document.getElementById('mvOverlay');
+  ov.classList.remove('mv-summon'); void ov.offsetWidth; ov.classList.add('mv-summon');
+  _mvLayout();
+  _mvPersist();
+  setTimeout(() => stage.querySelector(`.mv-win[data-slot="${slot}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
+}
+function rhemaMvRemove(slot) {
+  if (!_mv) return;
+  _mv.wins = _mv.wins.filter(w => String(w.slot) !== String(slot));
+  if (String(_mv.max) === String(slot)) _mv.max = null;
+  document.querySelector(`#mvStage .mv-win[data-slot="${slot}"]`)?.remove();
+  _mvLayout();
+  _mvPersist();
+  if (!_mv.wins.length) rhemaCloseMultiView();
+}
+function rhemaMvMaximize(slot) {
+  if (!_mv) return;
+  _mv.max = String(_mv.max) === String(slot) ? null : String(slot);
+  const btn = document.querySelector(`#mvStage .mv-win[data-slot="${slot}"] .mv-wbtn .material-symbols-outlined`);
+  if (btn) btn.textContent = _mv.max ? 'close_fullscreen' : 'open_in_full';
+  _mvLayout();
+}
+function rhemaMvToggleCols() { if (!_mv) return; _mv.cols = _mv.cols === 2 ? 1 : 2; _mv.wins.forEach(w => { w.h = null; }); _mvLayout(); _mvPersist(); }
+function rhemaMvToggleTuck() { if (!_mv) return; _mv.tucked = !_mv.tucked; _mvLayout(); _mvPersist(); }
+// Shrink Multi-view to a pill over the main Rhēma (the windows keep running).
+function rhemaMvMinimize() {
+  const ov = document.getElementById('mvOverlay');
+  if (!ov || !_mv) return;
+  ov.classList.remove('open');
+  _mvMinimized = true;
+  const pill = document.getElementById('mvPill');
+  pill.innerHTML = `<img src="assets/mascot/guide-summon.webp" alt="" width="34" height="34"/><span>Multi-view · ${_mv.wins.length}</span>`;
+  pill.hidden = false;
+  try { renderRhemaVerse(); } catch {}
+}
+function rhemaMvRestore() {
+  document.getElementById('mvPill').hidden = true;
+  _mvMinimized = false;
+  document.getElementById('mvOverlay')?.classList.add('open');
+  requestAnimationFrame(_mvLayout);
+}
+// Close: the windows go away (their places are remembered for next time) and
+// the main Rhēma shows anything highlighted or saved in them.
+function rhemaCloseMultiView() {
+  const ov = document.getElementById('mvOverlay');
+  if (ov) ov.classList.remove('open');
+  const pill = document.getElementById('mvPill');
+  if (pill) pill.hidden = true;
+  _mvPersist();
+  const stage = document.getElementById('mvStage');
+  if (stage) stage.innerHTML = '';
+  _mv = null;
+  _mvMinimized = false;
+  try { _rhemaLoadLocalMarks(); renderRhemaVerse(); } catch {}
+}
+// Drag the bar under a window to make it taller or shorter.
+function _mvStartResize(ev, slot) {
+  if (!_mv || _mv.max) return;
+  ev.preventDefault();
+  const el = document.querySelector(`#mvStage .mv-win[data-slot="${slot}"]`);
+  const w = _mv.wins.find(x => String(x.slot) === String(slot));
+  if (!el || !w) return;
+  const ov = document.getElementById('mvOverlay');
+  const stage = document.getElementById('mvStage');
+  const y0 = ev.clientY, h0 = el.getBoundingClientRect().height, H = stage.clientHeight;
+  ov.classList.add('mv-dragging');
+  const move = (e) => {
+    w.h = Math.round(Math.max(150, Math.min(H, h0 + (e.clientY - y0))));
+    el.style.height = `${w.h}px`;
+  };
+  const up = () => {
+    ov.classList.remove('mv-dragging');
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    window.removeEventListener('pointercancel', up);
+    _mvPersist();
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
+}
+// Drag a window's handle to move it among the others (CSS order only, so the
+// windows never reload).
+function _mvStartMove(ev, slot) {
+  if (!_mv || _mv.max || _mv.wins.length < 2) return;
+  ev.preventDefault();
+  const ov = document.getElementById('mvOverlay');
+  const stage = document.getElementById('mvStage');
+  ov.classList.add('mv-dragging');
+  const me = stage.querySelector(`.mv-win[data-slot="${slot}"]`);
+  me?.classList.add('mv-moving');
+  const move = (e) => {
+    const others = _mv.wins.filter(w => String(w.slot) !== String(slot));
+    let idx = others.length;
+    for (let i = 0; i < others.length; i++) {
+      const r = stage.querySelector(`.mv-win[data-slot="${others[i].slot}"]`)?.getBoundingClientRect();
+      if (!r) continue;
+      const before = _mv.cols === 2 ? (e.clientY < r.top + r.height / 2 && (e.clientY < r.top || e.clientX < r.left + r.width / 2)) : e.clientY < r.top + r.height / 2;
+      if (before) { idx = i; break; }
+    }
+    const mine = _mv.wins.find(w => String(w.slot) === String(slot));
+    const next = others.slice(); next.splice(idx, 0, mine);
+    if (next.map(w => w.slot).join() !== _mv.wins.map(w => w.slot).join()) { _mv.wins = next; _mvLayout(); }
+  };
+  const up = () => {
+    ov.classList.remove('mv-dragging');
+    me?.classList.remove('mv-moving');
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    window.removeEventListener('pointercancel', up);
+    _mvPersist();
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
+}
+window.addEventListener('resize', () => { if (_mv && !_mvMinimized) _mvLayout(); });
+// From the verse menu: Multi-view with this verse in a new window.
+function rhemaMultiViewFromMenu() {
+  const ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
+  rhemaClearSelection();
+  closeRhemaVerseSheet();
+  rhemaOpenMultiView(ref);
+}
+
+// Highlights and notes are shared by the main Rhēma and every Multi-view
+// window: when another of them saves, reload them here so nothing is lost.
+window.addEventListener('storage', (e) => {
+  if (e.key !== 'rhemaMarks') return;
+  try { _rhemaLoadLocalMarks(); } catch {}
+  if (document.getElementById('rhemaModal')?.classList.contains('open')) { try { renderRhemaVerse(); } catch {} }
+});
+
+// ── Multi-view window mode (this page is one of the windows) ─────────────────
+if (window.RHEMA_MV_SLOT) {
+  // Nothing in a window leads out of Rhēma, or opens Multi-view inside itself.
+  window.closeRhema = function () {};
+  window.showScreen = function () {};
+  window.rhemaGoBack = function () {};
+  window.startRhemaCoach = function () {};
+  window.rhemaOpenMultiView = function () {};
+  window.rhemaMultiViewFromMenu = function () {};
+  const mvBoot = () => {
+    _rhemaAdoptParentData();
+    try { _appLaunchReleased = true; } catch {}
+    document.getElementById('appLaunchScreen')?.classList.add('dismissed', 'hidden');
+    document.getElementById('authModal')?.classList.remove('open');
+    try { resumeRhema(); } catch (e) { console.warn('Multi-view window boot', e); }
+    // Keep the window's page itself at the top (see style.css).
+    const pin = () => { if (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } };
+    window.addEventListener('scroll', pin, { passive: true });
+    document.body.addEventListener('scroll', pin, { passive: true });
+    // Tell Multi-view what this window shows, whenever it changes.
+    let last = '';
+    setInterval(() => {
+      try {
+        if (!_rhemaBook) return;
+        const label = `${_rhemaBookName(_rhemaBook)} ${_rhemaChapter}:${_rhemaVerse} · ${_rhemaReaderDisplayLabel()}`;
+        if (label !== last) { last = label; parent.postMessage({ rhemaMV: window.RHEMA_MV_SLOT, label }, location.origin); }
+      } catch {}
+    }, 1000);
+  };
+  if (document.readyState === 'complete') setTimeout(mvBoot, 0);
+  else window.addEventListener('load', () => setTimeout(mvBoot, 0));
 }
