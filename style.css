@@ -39792,3 +39792,18 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rhema-lk-key-none { font-weight: 700; }
 .rhema-lk-switch-btn { color: var(--secondary-color, #1f4fd8) !important; font-weight: 700; }
 .rhema-lk-switch-btn[hidden] { display: none !important; }
+
+/* Word by word: one sheet, two ways round. */
+#rhemaInterlinearModal [hidden] { display: none !important; }
+.rhema-wbw-refrow { display: inline-flex; align-items: center; gap: 2px; }
+.rhema-wbw-step { border: 0; background: transparent; color: var(--secondary-color, #1f4fd8); width: 32px; height: 32px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.rhema-wbw-step:disabled { opacity: 0.25; cursor: default; }
+.rhema-wbw-step .material-symbols-outlined { font-size: 26px; }
+.rhema-wbw-tabs { display: flex; gap: 4px; margin: 10px 0 12px; padding: 4px; border-radius: 14px;
+  background: color-mix(in srgb, var(--secondary-color, #1f4fd8) 8%, transparent); }
+.rhema-wbw-tab { flex: 1; border: 0; background: transparent; padding: 9px 6px; border-radius: 10px; font-weight: 700; font-size: 0.88rem;
+  color: var(--muted-color, #5b6b80); cursor: pointer; white-space: nowrap; }
+.rhema-wbw-tab.on { background: var(--card-bg, #fff); color: var(--secondary-color, #1f4fd8); box-shadow: 0 1px 4px rgba(20, 40, 80, 0.14); }
+.rhema-wbw-hint { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--secondary-color, #1f4fd8); margin: 2px 0 10px; }
+.rhema-wbw-en .rhema-lk-chips { display: flex; flex-wrap: wrap; }
