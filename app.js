@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.570";
+const APP_VERSION = "3.0.571";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30471,6 +30471,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.571 &mdash; Open a verse in a new tab</div>
+<ul>
+  <li><strong>Open in new tab</strong> &mdash; Inside Multi-view, a verse&rsquo;s menu now has <em>Open in new tab</em> where the empty gap used to be. It opens that verse in a new tab with the same translation and language as the tab you&rsquo;re in.</li>
+</ul>
 <div class="un-version-label">v3.0.570 &mdash; Tabs that always fit</div>
 <ul>
   <li><strong>Every tab easy to tap</strong> &mdash; Multi-view tabs now share the strip evenly on any screen, phone to desktop. When there are too many for one row they wrap onto a second row (the + and close buttons stack to make room) instead of sliding off screen.</li>
@@ -53347,13 +53351,16 @@ function _mvPersist() {
 }
 // A new tab starts at `ref` (or the main reader's place) in the main reader's
 // translation and language; after that it's on its own.
-function _mvSeed(slot, ref) {
+// `from` (a tab's slot): copy that tab's translation and language instead.
+function _mvSeed(slot, ref, from) {
   const p = (ref && _rhemaParseRef(ref)) || { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse };
   const sfx = '::mv' + slot;
+  const src = from ? '::mv' + from : '';
   try {
-    localStorage.setItem('rhemaLastPos' + sfx, JSON.stringify({ book: p.book, chapter: String(p.chapter), verse: String(p.verse), textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion() }));
+    const srcPos = from ? JSON.parse(localStorage.getItem('rhemaLastPos' + src) || 'null') : null;
+    localStorage.setItem('rhemaLastPos' + sfx, JSON.stringify({ book: p.book, chapter: String(p.chapter), verse: String(p.verse), textMode: srcPos?.textMode || _rhemaTextMode, englishVersion: srcPos?.englishVersion || _rhemaEnglishVersion() }));
     ['rhemaReaderVersion', 'rhemaOTLayer', 'rhemaEnglishVersion', 'rhemaTextMode'].forEach(k => {
-      const v = localStorage.getItem(k);
+      const v = localStorage.getItem(k + src);
       if (v != null) localStorage.setItem(k + sfx, v); else localStorage.removeItem(k + sfx);
     });
     localStorage.removeItem('rhemaChapterSnap' + sfx);
@@ -53517,12 +53524,12 @@ function rhemaOpenMultiView(ref) {
   if (ref) rhemaMvAdd(ref);
   _mvPersist();
 }
-function rhemaMvAdd(ref) {
+function rhemaMvAdd(ref, from) {
   if (!_mv) return rhemaOpenMultiView(ref);
   if (_mv.tabs.length >= MV_MAX) { if (typeof _showStudyToast === 'function') _showStudyToast(`Multi-view holds up to ${MV_MAX} Rhēmas. Close a tab (✕) to add another.`); return; }
   const slot = _mvFreeSlot();
   if (!slot) return;
-  _mvSeed(slot, ref || null);
+  _mvSeed(slot, ref || null, from && _mvTab(from) ? from : null);
   const t = { slot, label: '' };
   _mv.tabs.push(t);
   _mvStage().appendChild(_mvWinEl(t));
@@ -53576,7 +53583,22 @@ if (window.RHEMA_MV_SLOT) {
   window.rhemaGoBack = function () {};
   window.startRhemaCoach = function () {};
   window.rhemaOpenMultiView = function () {};
-  window.rhemaMultiViewFromMenu = function () {};
+  // In a tab, the verse menu's Multi-view button opens the verse in a new tab
+  // (same translation and language as this one).
+  window.rhemaMultiViewFromMenu = function () {
+    const ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
+    rhemaClearSelection();
+    closeRhemaVerseSheet();
+    try {
+      if (parent.document.querySelectorAll('#mvTabs .mv-tab').length >= MV_MAX) { _showStudyToast(`Multi-view holds up to ${MV_MAX} Rhēmas. Close a tab (✕) to add another.`); return; }
+      parent.rhemaMvAdd(ref, window.RHEMA_MV_SLOT);
+    } catch (e) { console.warn('Open in new tab', e); }
+  };
+  const mvRelabel = () => {
+    const btn = document.querySelector('.rhema-mv-menu-btn');
+    if (btn) btn.innerHTML = '<span class="material-symbols-outlined">add_to_photos</span><span>Open in new tab</span>';
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mvRelabel); else mvRelabel();
   const mvBoot = () => {
     _rhemaAdoptParentData();
     try { _appLaunchReleased = true; } catch {}
