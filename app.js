@@ -9788,7 +9788,7 @@ function openWlWordDetail(strongs, formSurface) {
   }
   // Show definition tab
   showRhemaTab('definition', _rhemaActiveWord);
-  document.getElementById('rhemaWlBackBtn')?.classList.remove('hidden');
+  _rhemaBackBtn('search', 'Back to search');
   const sheet = document.getElementById('rhemaSheet');
   sheet?.classList.add('open');
   document.getElementById('rhemaSheetBackdrop')?.classList.add('visible');
@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.572";
+const APP_VERSION = "3.0.573";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30456,10 +30456,11 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-nt.js':        '3.0.65',
   'rhema-critical.js':  '3.0.23',
   'rhema-critical-fallbacks.js': '3.0.177',
+  'rhema-critical-extra.js': '3.0.573',
   'rhema-ot-hebrew.js': '3.0.81',
   'rhema-hebrew-lexicon.js': '3.0.560',
   'rhema-hebrew-bdb.js':    '3.0.379',
-  'rhema-lxx.js':       '3.0.65',
+  'rhema-lxx.js':       '3.0.573',
   'rhema-lexicon.js':   '3.0.65',
   'rhema-mm.js':        '3.0.65',
   'rhema-msb.js':       '3.0.65',
@@ -30471,6 +30472,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.573 &mdash; No more empty words</div>
+<ul>
+  <li><strong>Every Septuagint word now has information</strong> &mdash; About 1 Septuagint word in 15 (names like Γεδσων, and words the New Testament never uses) showed an empty card, because the Greek dictionaries are keyed to Strong&rsquo;s numbers, which only cover New Testament words. Each now shows its dictionary form, a short gloss, how often it appears, every place it appears in that book, and, for most, the Hebrew word it translates right there (tap it to study the Hebrew).</li>
+  <li><strong>A mislabelled word fixed</strong> &mdash; In Numbers 4:27, ἀρτά (&ldquo;loads, what is carried&rdquo;; the Hebrew is מַשָּׂא) was labelled as ἄρτος &ldquo;bread&rdquo; in the source data.</li>
+  <li><strong>Hebrew prepositions with endings</strong> &mdash; Words like בּוֹ &ldquo;in him&rdquo;, לָהֶם &ldquo;to them&rdquo; and כָּמוֹךָ &ldquo;like you&rdquo; now say which preposition they are and what it means; Strong&rsquo;s doesn&rsquo;t number these one-letter prepositions. מִמֶּנּוּ &ldquo;from him&rdquo; now opens מִן.</li>
+  <li><strong>Critical-text words</strong> &mdash; The last 110 words in the critical Greek text without an entry (like βελόνη &ldquo;needle&rdquo; in Luke 18:25) now have one: from STEPBible&rsquo;s extended numbering with Abbott-Smith&rsquo;s definitions, or the matching entry where it&rsquo;s just a different spelling (Βόος = Boaz).</li>
+</ul>
 <div class="un-version-label">v3.0.572 &mdash; Linked tabs</div>
 <ul>
   <li><strong>Link your tabs</strong> &mdash; Tap the chain in Multi-view&rsquo;s tab strip and every tab follows the one you&rsquo;re in: same book, chapter and verse, scrolled to the same spot. Each tab keeps its own translation and language, so you can flip between versions while staying on the same verse. Tap the chain again to let each tab move on its own.</li>
@@ -38899,7 +38907,22 @@ function getCurrentRhemaTextDataset(bookCode = _rhemaBook) {
 }
 
 function getCurrentRhemaLexicon(layer = getCurrentOriginalLanguageLayer()) {
+  if (layer !== 'hebrew') _rhemaMergeCriticalExtra();
   return layer === 'hebrew' ? (window.RhemaHebrewLexicon || {}) : (window.RhemaLexicon || {});
+}
+// Critical-text words Strong's doesn't number (rhema-critical-extra.js): add
+// their entries (STEPBible's Extended Strong's G6000+, or "SBL…" for the few
+// with a short gloss added by Rhēma) to the Greek dictionary once both load.
+let _rhemaCriticalExtraMerged = false;
+function _rhemaMergeCriticalExtra() {
+  if (_rhemaCriticalExtraMerged || !window.RhemaLexicon || !window.RhemaCriticalExtra?.lex) return;
+  for (const [k, e] of Object.entries(window.RhemaCriticalExtra.lex)) if (!window.RhemaLexicon[k]) window.RhemaLexicon[k] = e;
+  _rhemaCriticalExtraMerged = true;
+}
+// How a Greek dictionary number is shown: G + Strong's (STEPBible's extended
+// numbers too); "SBLGNT" for critical-text words with no number at all.
+function _rhemaGreekNumLabel(strongs) {
+  return /^\d+$/.test(String(strongs)) ? `G${strongs}` : 'SBLGNT';
 }
 
 function getCurrentRhemaOccurrences(strongs, layer = getCurrentOriginalLanguageLayer()) {
@@ -42285,6 +42308,17 @@ function _rhemaRenderInterlinear(ref) {
       : (hebIL?.[wi]?.tr || lex.translit || lex.pronounce || '');
     return { orig: surface, translit, gloss: decision.gloss || '', decision, strongs: resolved?.[1] || '', morph: resolved?.[2] || '' };
   });
+  // Septuagint words with no Strong's number: the short gloss from the LXX
+  // word data (loaded per book; draw again once it arrives).
+  if (layer === 'lxx' && rows.some(r => !r.strongs)) {
+    const [lc, lv] = _rhemaOrigRef(p.book, p.chapter, p.verse);
+    if (!_rhemaLxxWordsData.has(p.book)) _rhemaLoadLxxWords(p.book).then(d => { if (d && _rhemaInterlinearRef === ref) _rhemaRenderInterlinear(ref); });
+    rows.forEach((r, i) => {
+      if (r.strongs || r.gloss) return;
+      const e = _rhemaLxxWordSync(p.book, lc, lv, i);
+      if (e?.gloss) r.gloss = String(e.gloss).split(/\s*;\s*/)[0];
+    });
+  }
 
   const versionText = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
   const versionLabel = (typeof _rhemaReaderDisplayLabel === 'function' && _rhemaReaderDisplayLabel()) || '';
@@ -43835,7 +43869,7 @@ function _rhemaDataGlobalReady(file) {
     'rhema-lexicon.js': 'RhemaLexicon', 'rhema-mm.js': 'RhemaMoultonMilligan',
     'rhema-hebrew-lexicon.js': 'RhemaHebrewLexicon', 'rhema-hebrew-bdb.js': 'RhemaHebrewBDB',
     'rhema-crossrefs.js': 'RhemaCrossRefs', 'rhema-scripture-notes.js': 'RhemaScriptureNotes',
-    'rhema-critical-fallbacks.js': 'RhemaCriticalFallbacks',
+    'rhema-critical-fallbacks.js': 'RhemaCriticalFallbacks', 'rhema-critical-extra.js': 'RhemaCriticalExtra',
   }[file];
   return !!(g && window[g]);
 }
@@ -43862,7 +43896,7 @@ function _rhemaLoadOwnDataFile(file) {
     const s = document.createElement('script');
     s.src = file + '?v=' + (RHEMA_DATA_VERSIONS[file] || APP_VERSION);
     s.async = true;
-    s.onload = res;
+    s.onload = () => { if (file === 'rhema-lexicon.js' || file === 'rhema-critical-extra.js') _rhemaMergeCriticalExtra(); res(); };
     s.onerror = () => { delete _rhemaFilePromises[file]; rej(new Error('Failed to load ' + file)); };
     document.head.appendChild(s);
   });
@@ -43894,7 +43928,7 @@ function _rhemaPendingView() {
 // Exactly the datasets needed to paint a chapter of `book`. MSB + the Byzantine
 // NT are structural (book list, picker), the lexicon powers word taps.
 function _rhemaFilesForView(view = _rhemaPendingView()) {
-  const files = ['rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-scripture-notes.js'];
+  const files = ['rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-critical-extra.js', 'rhema-scripture-notes.js'];
   if (view.english === 'BSB') files.push('rhema-bsb.js');
   if (isRhemaOTBook(view.book)) {
     files.push(view.otLayer === 'lxx' ? 'rhema-lxx.js' : 'rhema-ot-hebrew.js');
@@ -43912,7 +43946,7 @@ function _rhemaMissingViewFiles() {
 
 // Everything else, in the order a reader is most likely to reach for it.
 const RHEMA_DATA_ALL = [
-  'rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-scripture-notes.js',
+  'rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-critical-extra.js', 'rhema-scripture-notes.js',
   'rhema-critical.js', 'rhema-hebrew-lexicon.js', 'rhema-ot-hebrew.js', 'rhema-bsb.js', 'rhema-mm.js',
   'rhema-crossrefs.js', 'rhema-lxx.js', 'rhema-syntax.js', 'rhema-hebrew-bdb.js', 'rhema-bible-dictionary.js',
 ];
@@ -46388,8 +46422,23 @@ const RHEMA_CONTEXTUAL_BRIEFS = {
   },
 };
 
+// Hebrew one-letter prepositions (written joined to the next word). Strong's
+// gives them no numbers, so a preposition carrying only a pronoun ending (בּוֹ
+// "in him", לָהֶם "to them", כָּמוֹךָ "like you") had no dictionary entry.
+// מִן "from" does have one (H4480).
+const RHEMA_HEB_INSEP_PREP = {
+  b: { heb: 'בְּ', tr: 'bə', gloss: 'in, at, with, by', explain: 'The one-letter preposition בְּ, “in, at, with, by”. With a pronoun ending it stands as its own word: בּוֹ “in him / in it”, בָּהֶם “in them”.' },
+  l: { heb: 'לְ', tr: 'lə', gloss: 'to, for', explain: 'The one-letter preposition לְ, “to, for”; it can also mark belonging (“of, belonging to”). With a pronoun ending it stands as its own word: לוֹ “to him / for him”, לָהֶם “to them”. With “there is / was”, לְ is how Hebrew says “have”: “there is to him” = “he has”.' },
+  k: { heb: 'כְּ', tr: 'kə', gloss: 'like, as', explain: 'The one-letter preposition כְּ, “like, as”. With a pronoun ending it takes a longer form: כָּמוֹהוּ “like him”, כָּמוֹךָ “like you”.' },
+};
+function _rhemaHebPrepCode(word) {
+  if (!Array.isArray(word) || word[1] || !/^[HA]/.test(String(word[2] || ''))) return '';
+  const last = String(word[3] || '').split('/').pop();
+  return /^[blkm]$/.test(last) ? last : '';
+}
 function _rhemaResolveWord(word = [], book = _rhemaBook, chapter = _rhemaChapter) {
   if (!Array.isArray(word)) return word;
+  if (_rhemaHebPrepCode(word) === 'm') return [word[0], '4480', word[2] || '', word[3] || ''];
   // Correct a known SBLGNT mistag: ἕν "one" (εἷς, G1520) carries εἰς's number
   // (G1519) in the Critical text. εἰς is only ever a preposition, so an
   // adjective morph on G1519 is unambiguously εἷς "one".
@@ -46399,7 +46448,7 @@ function _rhemaResolveWord(word = [], book = _rhemaBook, chapter = _rhemaChapter
   if (word[1]) return word;
   const key = _rhemaGreekSurfaceKey(word[0]);
   const fallback = RHEMA_SURFACE_STRONGS_FALLBACKS[key] || window.RhemaCriticalFallbacks?.[key]
-    || _rhemaStrongsFromLemma(word[3]);
+    || _rhemaStrongsFromLemma(word[3]) || window.RhemaCriticalExtra?.lemma?.[word[3]];
   return fallback ? [word[0], fallback, word[2] || '', word[3] || ''] : word;
 }
 
@@ -49510,10 +49559,12 @@ function openRhemaSheet(wordIdx, verse, ochapter) {
   const lex = _rhemaLexForWord(word, _rhemaActiveWordLayer, _rhemaBook, oc);
 
   document.getElementById('rhemaSheetSurface').textContent = _rhemaDisplaySurface(surface);
-  document.getElementById('rhemaSheetStrongs').textContent = strongs ? (_rhemaActiveWordLayer === 'hebrew' ? 'H' : 'G') + strongs : (_rhemaActiveWordLayer === 'lxx' ? 'LXX' : '');
+  document.getElementById('rhemaSheetStrongs').textContent = strongs ? (_rhemaActiveWordLayer === 'hebrew' ? `H${strongs}` : _rhemaGreekNumLabel(strongs)) : (_rhemaActiveWordLayer === 'lxx' ? 'LXX' : '');
+  const hebPrep = _rhemaActiveWordLayer === 'hebrew' ? RHEMA_HEB_INSEP_PREP[_rhemaHebPrepCode(word)] : null;
   document.getElementById('rhemaSheetLemma').textContent   =
-    lex.lemma ? `${lex.lemma}  (${lex.translit || lex.pronounce || ''})` : (lemma || '');
+    lex.lemma ? `${lex.lemma}  (${lex.translit || lex.pronounce || ''})` : hebPrep ? `${hebPrep.heb}  (${hebPrep.tr}) + ending` : (_rhemaActiveWordLayer === 'hebrew' ? '' : (lemma || ''));
 
+  if (_rhemaIsLxxOnly(word, _rhemaActiveWordLayer)) _rhemaFillLxxOnlyHeader(window._rhemaWordCtx);
   _wlSelectedForm = null;
   // Hebrew words open where "In this verse" lives (the word's meaning here,
   // its sound and its parts); Definition is one tap away.
@@ -50587,7 +50638,8 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
     });
   }
   const lex = (window.RhemaHebrewLexicon || {})[strongs] || {};
-  const meaning = lex.gloss || lex.brief || '';
+  const prep = !strongs ? RHEMA_HEB_INSEP_PREP[_rhemaHebPrepCode([surface, strongs, morph, lemma])] : null;
+  const meaning = lex.gloss || lex.brief || (prep ? `${prep.heb} ${prep.gloss}` : '');
   const shown = _rhemaDisplaySurface(surface);
   const hereEn = ctx.book ? _rhemaHebEnglish(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : { text: '', ver: 'BSB', kind: '' };
   const code = il?.ps || '';
@@ -50634,7 +50686,7 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
   // 3) Grammar, in plain words.
   const rows = [
     ...parsed.prefixes.filter(x => x.explain).map(x => ({ label: 'Front', value: x.name, desc: x.explain })),
-    { label: 'Word', value: parsed.core.label + (meaning ? ` · “${meaning}”` : ''), desc: '' },
+    { label: 'Word', value: parsed.core.label + (meaning ? ` · “${meaning}”` : ''), desc: prep ? prep.explain : '' },
     ...parsed.core.rows,
     ...parsed.suffixes.filter(x => x.explain).map(x => ({ label: 'Ending', value: x.say ? `${x.name}: ${x.say}` : x.name, desc: x.explain })),
   ];
@@ -50786,6 +50838,14 @@ function rhemaHebStudyGo(ref) {
 }
 // Septuagint chip → the Greek word's study, with a way back to the Hebrew word.
 let _rhemaHebReturn = null;
+// The sheet's back button: "Back to search" from the word library, or back to
+// the word you came from (Hebrew ⇄ Greek links).
+function _rhemaBackBtn(icon, label) {
+  const btn = document.getElementById('rhemaWlBackBtn');
+  if (!btn) return;
+  btn.innerHTML = `<span class="material-symbols-outlined">${icon}</span><span>${_escapeRhemaAttr(label)}</span>`;
+  btn.classList.remove('hidden');
+}
 function rhemaOpenGreekFromHebrew(g) {
   if (!window.RhemaLexicon?.[g] || typeof rhemaOpenWordStudy !== 'function') return;
   _rhemaHebReturn = { word: _rhemaActiveWord, ctx: window._rhemaWordCtx ? { ...window._rhemaWordCtx } : null, sel: {
@@ -50794,9 +50854,8 @@ function rhemaOpenGreekFromHebrew(g) {
     lemma: document.getElementById('rhemaSheetLemma')?.textContent || '' } };
   rhemaOpenWordStudy(g);
   setTimeout(() => {
-    const btn = document.getElementById('rhemaWlBackBtn');
-    if (!btn) return;
-    btn.classList.remove('hidden'); // returnToWordLibrarySearch() sends it back to the Hebrew word
+    // returnToWordLibrarySearch() sends it back to the Hebrew word
+    _rhemaBackBtn('arrow_back', `Back to ${_rhemaHebReturn?.sel?.surface || 'the Hebrew word'}`);
   }, 300);
 }
 function rhemaReturnToHebrewWord() {
@@ -50806,10 +50865,22 @@ function rhemaReturnToHebrewWord() {
   _rhemaHebReturn = null;
   window._rhemaWordCtx = r.ctx;
   _rhemaActiveWord = r.word;
-  _rhemaActiveWordLayer = 'hebrew';
+  _rhemaActiveWordLayer = r.layer || 'hebrew';
   const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
   set('rhemaSheetSurface', r.sel.surface); set('rhemaSheetStrongs', r.sel.strongs); set('rhemaSheetLemma', r.sel.lemma);
   showRhemaTab('definition', r.word);
+}
+
+function renderHebrewPrepDefinition(prep) {
+  const esc = _escapeRhemaAttr;
+  return `<div class="ws rhema-lxxonly">
+    <div class="ws-hero">
+      <div class="ws-hero-top"><span class="ws-lemma rhema-hebrew-text" lang="he" dir="rtl">${esc(prep.heb)}</span><span class="ws-translit">${esc(prep.tr)}</span><span class="ws-g">Preposition</span></div>
+      <div class="ws-answer"><span class="ws-answer-k">Meaning</span><strong>${esc(prep.gloss)}</strong><span class="ws-form">+ a pronoun ending (see Parsing)</span></div>
+    </div>
+    <section class="ws-card"><p class="ws-note">${esc(prep.explain)}</p>
+      <p class="ws-note">Why there’s no number: Strong’s numbering (which the Hebrew dictionaries here use) doesn’t give the one-letter prepositions בְּ, לְ and כְּ numbers of their own, because they’re normally written joined to the next word. The Parsing tab shows the ending and what it refers to in this verse.</p></section>
+  </div>`;
 }
 
 function renderHebrewDefinition(strongs) {
@@ -51161,8 +51232,140 @@ function _rhemaMeaningEvidenceHtml(decision = {}) {
     : '';
 }
 
+// ── Septuagint words with no Strong's number ────────────────────────────────
+// Strong's numbers (what the Greek dictionaries here are keyed to) only cover
+// New Testament words, so about 1 Septuagint word in 15 (names, and words the
+// NT never uses) has none. data/lxx-words/<BOOK>.json gives each such word its
+// dictionary form and a short gloss (CenterBLC LXX) and the Hebrew word it
+// translates there (MACULA Hebrew's alignment of the Hebrew with the LXX).
+// Built by scripts/build-lxx-words.py.
+const RHEMA_LXX_WORDS_VERSION = '1';
+const _rhemaLxxWordsData = new Map();   // book -> data
+const _rhemaLxxWordsLoading = new Map(); // book -> Promise
+function _rhemaLoadLxxWords(book) {
+  if (_rhemaLxxWordsData.has(book)) return Promise.resolve(_rhemaLxxWordsData.get(book));
+  let p = _rhemaLxxWordsLoading.get(book);
+  if (!p) {
+    p = fetch(`data/lxx-words/${encodeURIComponent(book)}.json?v=${RHEMA_LXX_WORDS_VERSION}`)
+      .then(r => (r.ok ? r.json() : null)).catch(() => null)
+      .then(d => { _rhemaLxxWordsLoading.delete(book); if (d) _rhemaLxxWordsData.set(book, d); return d; });
+    _rhemaLxxWordsLoading.set(book, p);
+  }
+  return p;
+}
+// The entry for one word (book, Septuagint chapter:verse, word index), once loaded.
+function _rhemaLxxWordSync(book, oc, ov, idx) {
+  const d = _rhemaLxxWordsData.get(book);
+  const rec = d?.w?.[`${oc}:${ov}`]?.[String(idx)];
+  if (!rec) return null;
+  const [lemma, heb, hebHere, how] = rec;
+  const [gloss, pos, count] = d.lemmas?.[lemma] || ['', '', 0];
+  const h = heb ? d.heb?.[heb] : null;
+  return { lemma, gloss, pos, count, heb: heb || '', hebHere: hebHere || '', byHand: how === 'hand', hebLemma: h?.[0] || '', hebTranslit: h?.[1] || '', hebUsual: h?.[2] || '',
+    name: /^\p{Lu}/u.test(lemma) };
+}
+function _rhemaIsLxxOnly(word, layer) { return layer === 'lxx' && Array.isArray(word) && !word[1]; }
+function _rhemaLxxOnlyHtml(e, ctx) {
+  const esc = _escapeRhemaAttr;
+  if (!e) return `<div class="ws"><p class="ws-note">This Septuagint word has no entry in the word data yet.</p></div>`;
+  const where = ctx ? `${_rhemaBookName(ctx.book)} ${ctx.chapter}:${ctx.verse}` : '';
+  const gloss = String(e.gloss || '').replace(/\s*;\s*/g, '; ');
+  const heb = e.heb ? `
+    <section class="ws-card rhema-lxxonly-heb">
+      <div class="ws-answer-k">The Hebrew behind it${e.hebHere ? ' here' : ''}</div>
+      <button type="button" class="rhw-lxx-chip rhema-lxxonly-chip" onclick="rhemaOpenHebrewFromLxx('${esc(e.heb)}')">
+        <b class="rhema-hebrew-text" lang="he" dir="rtl">${esc(e.hebLemma)}</b>
+        <small>${e.hebHere ? `“${esc(e.hebHere)}” · ` : (e.hebUsual ? `“${esc(e.hebUsual)}” · ` : '')}H${esc(e.heb)}</small>
+      </button>
+      <p class="ws-note">${e.byHand
+        ? 'The source data tags this word as ἄρτος “bread”, but the Hebrew at this spot is מַשָּׂא “load, what is carried”, so Rhēma lists it separately. Tap to study the Hebrew word.'
+        : e.hebHere
+        ? 'From MACULA Hebrew’s word-by-word alignment of the Hebrew text with the Septuagint. Tap to study the Hebrew word.'
+        : 'This spot isn’t aligned word by word, so this is the Hebrew word it usually translates (MACULA Hebrew). Tap to study it.'}</p>
+    </section>` : '';
+  const stats = [`${Number(e.count || 1).toLocaleString()}× in the Septuagint`, 'Not in the New Testament'];
+  return `<div class="ws rhema-lxxonly">
+    <div class="ws-hero">
+      <div class="ws-hero-top"><span class="ws-lemma">${esc(e.lemma)}</span><span class="ws-g">LXX only</span></div>
+      ${gloss ? `<div class="ws-answer"><span class="ws-answer-k">${e.name ? 'Name' : (where ? `In ${esc(where)}` : 'Meaning')}</span><strong>${esc(gloss)}</strong></div>` : ''}
+      <div class="ws-glance">${stats.map(x => `<span>${esc(x)}</span>`).join('')}</div>
+    </div>
+    ${heb}
+    <section class="ws-card">
+      <div class="ws-answer-k">Why there’s less here</div>
+      <p class="ws-note">The Greek dictionaries in Rhēma are keyed to Strong’s numbers, which only cover words used in the New Testament. ${e.name ? 'This name' : 'This word'} appears only in the Septuagint, so it has no number. Its dictionary form and short gloss come from the CenterBLC Septuagint data (Rahlfs 1935, the text shown here).</p>
+    </section>
+  </div>`;
+}
+function renderRhemaLxxOnly() {
+  const ctx = window._rhemaWordCtx;
+  if (!ctx) return '';
+  const id = `rhemaLxxOnly-${Date.now()}`;
+  const now = _rhemaLxxWordSync(ctx.book, ctx.chapter, ctx.verse, ctx.idx);
+  if (now) return _rhemaLxxOnlyHtml(now, ctx);
+  _rhemaLoadLxxWords(ctx.book).then(() => {
+    const el = document.getElementById(id);
+    if (el) el.outerHTML = _rhemaLxxOnlyHtml(_rhemaLxxWordSync(ctx.book, ctx.chapter, ctx.verse, ctx.idx), ctx);
+  });
+  return `<div id="${id}"><div class="ws-loading">Looking up this word…</div></div>`;
+}
+// Header: the dictionary form under the word, "LXX only" in place of a number.
+function _rhemaFillLxxOnlyHeader(ctx) {
+  const set = () => {
+    if (window._rhemaWordCtx !== ctx) return;
+    const e = _rhemaLxxWordSync(ctx.book, ctx.chapter, ctx.verse, ctx.idx);
+    const el = document.getElementById('rhemaSheetLemma');
+    if (el && e) el.textContent = e.gloss && e.name ? `${e.lemma}  (${String(e.gloss).split(';')[0]})` : e.lemma;
+  };
+  const st = document.getElementById('rhemaSheetStrongs');
+  if (st) st.textContent = 'LXX only';
+  _rhemaLoadLxxWords(ctx.book).then(set);
+}
+// Occurrences of an LXX-only word: every place in this book, and the total.
+function renderRhemaLxxOnlyOccurrences() {
+  const ctx = window._rhemaWordCtx;
+  const esc = _escapeRhemaAttr;
+  const e = ctx && _rhemaLxxWordSync(ctx.book, ctx.chapter, ctx.verse, ctx.idx);
+  const d = ctx && _rhemaLxxWordsData.get(ctx.book);
+  if (!e || !d) return `<p style="opacity:.5;font-size:.85rem">No occurrence data found.</p>`;
+  const refs = [];
+  for (const [ref, ws] of Object.entries(d.w)) if (Object.values(ws).some(r => r[0] === e.lemma)) refs.push(ref);
+  const vf = _rhemaVersificationFor(ctx.book, 'lxx');
+  const rows = refs.map(r => {
+    const eng = vf?.o2e?.get(r) || r;
+    const [c, v] = String(eng).split(':');
+    return `<button type="button" class="rhw-ref" onclick="rhemaHebStudyGo('${esc(`${ctx.book} ${c}:${v}`)}')">${esc(`${_rhemaBookName(ctx.book)} ${eng}`)}</button>`;
+  });
+  return `<div class="rhema-lxxonly-occ">
+    <p class="rhema-occ-explain">${esc(e.lemma)} appears ${Number(e.count || refs.length).toLocaleString()}× in the Septuagint${refs.length ? `, ${refs.length} of them in ${esc(_rhemaBookName(ctx.book))}` : ''}. It isn’t in the New Testament.</p>
+    <div class="rhw-refs">${rows.join('')}</div>
+  </div>`;
+}
+// The Hebrew word behind an LXX-only word → its Hebrew study, with a way back.
+async function rhemaOpenHebrewFromLxx(h) {
+  try { await _rhemaLoadDataFile('rhema-hebrew-lexicon.js'); } catch {}
+  const lx = window.RhemaHebrewLexicon?.[h];
+  if (!lx) return;
+  _rhemaHebReturn = { word: _rhemaActiveWord, layer: _rhemaActiveWordLayer, ctx: window._rhemaWordCtx ? { ...window._rhemaWordCtx } : null, sel: {
+    surface: document.getElementById('rhemaSheetSurface')?.textContent || '',
+    strongs: document.getElementById('rhemaSheetStrongs')?.textContent || '',
+    lemma: document.getElementById('rhemaSheetLemma')?.textContent || '' } };
+  window._rhemaWordCtx = null;
+  _rhemaActiveWordLayer = 'hebrew';
+  _rhemaActiveWord = [lx.lemma || '', String(h), '', ''];
+  const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  set('rhemaSheetSurface', lx.lemma || ''); set('rhemaSheetStrongs', `H${h}`); set('rhemaSheetLemma', lx.pronounce || lx.translit || '');
+  showRhemaTab('definition', _rhemaActiveWord);
+  _rhemaBackBtn('arrow_back', `Back to ${_rhemaHebReturn.sel.surface || 'the Greek word'}`);
+}
+
 function renderRhemaDefinition(strongs, morph, layer = getCurrentOriginalLanguageLayer()) {
+  if (layer === 'hebrew' && !strongs) {
+    const prep = RHEMA_HEB_INSEP_PREP[_rhemaHebPrepCode(_rhemaActiveWord)];
+    if (prep) return renderHebrewPrepDefinition(prep);
+  }
   if (layer === 'hebrew') return renderHebrewDefinition(strongs);
+  if (_rhemaIsLxxOnly(_rhemaActiveWord, layer) && !strongs) return renderRhemaLxxOnly();
   // Greek (NT + LXX): the full Word Study (rhema-word-study.js).
   if (typeof renderRhemaWordStudy === 'function') return renderRhemaWordStudy(strongs, morph, layer);
   const activeWord = _rhemaActiveWord && String(_rhemaActiveWord[1]) === String(strongs)
@@ -52406,6 +52609,7 @@ function rhemaOccSetExact(on) {
   else showRhemaTab('occurrences');
 }
 function renderRhemaOccurrences(strongs, layer = getCurrentOriginalLanguageLayer()) {
+  if (!strongs && _rhemaIsLxxOnly(_rhemaActiveWord, layer)) return renderRhemaLxxOnlyOccurrences();
   if (!strongs) return `<p style="opacity:.5;font-size:.85rem">No occurrence data found.</p>`;
   const esc = _escapeRhemaAttr;
   const surface = _rhemaOccFormSurface();
