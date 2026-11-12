@@ -30453,7 +30453,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.570";
+const APP_VERSION = "3.0.572";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30476,6 +30476,15 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.572 &mdash; Linked tabs</div>
+<ul>
+  <li><strong>Link your tabs</strong> &mdash; Tap the chain in Multi-view&rsquo;s tab strip and every tab follows the one you&rsquo;re in: same book, chapter and verse, scrolled to the same spot. Each tab keeps its own translation and language, so you can flip between versions while staying on the same verse. Tap the chain again to let each tab move on its own.</li>
+  <li><strong>Tab names follow your scrolling</strong> &mdash; a tab now shows the verse at the top of its screen.</li>
+</ul>
+<div class="un-version-label">v3.0.571 &mdash; Open a verse in a new tab</div>
+<ul>
+  <li><strong>Open in new tab</strong> &mdash; Inside Multi-view, a verse&rsquo;s menu now has <em>Open in new tab</em> where the empty gap used to be. It opens that verse in a new tab with the same translation and language as the tab you&rsquo;re in.</li>
+</ul>
 <div class="un-version-label">v3.0.570 &mdash; Tabs that always fit</div>
 <ul>
   <li><strong>Every tab easy to tap</strong> &mdash; Multi-view tabs now share the strip evenly on any screen, phone to desktop. When there are too many for one row they wrap onto a second row (the + and close buttons stack to make room) instead of sliding off screen.</li>
@@ -34140,12 +34149,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Detect if Material Symbols font failed to load (e.g., offline on first launch)
   // and hide icon ligature text so the UI doesn't show raw icon names
-  document.fonts.ready.then(() => {
-    const loaded = [...document.fonts].some(
-      f => f.family.includes("Material Symbols") && f.status === "loaded"
-    );
-    if (!loaded) document.body.classList.add("no-icon-font");
-  });
+  // Request the actual symbol face before deciding whether icons are available.
+  // In Multi-view, an inactive iframe can finish its first layout before the
+  // font is requested, so document.fonts.ready alone gives a false failure.
+  document.fonts.load('24px "Material Symbols Outlined"', 'search menu').then(faces => {
+    document.body.classList.toggle('no-icon-font', !faces.some(f => f.status === 'loaded'));
+  }).catch(() => document.body.classList.add('no-icon-font'));
   if (!window.RHEMA_DESKTOP_SITE) setTimeout(() => {
     if (shouldShowInstallModal()) showInstallAppModal();
   }, 700);
@@ -53387,17 +53396,20 @@ let _mv = null;             // { tabs: [{ slot, label }], active }
 function _mvStored() { try { return JSON.parse(localStorage.getItem(MV_STORE) || 'null'); } catch { return null; } }
 function _mvPersist() {
   if (!_mv) return;
-  try { localStorage.setItem(MV_STORE, JSON.stringify({ tabs: _mv.tabs.map(t => ({ slot: t.slot, label: t.label || '', short: t.short || '' })), active: _mv.active })); } catch {}
+  try { localStorage.setItem(MV_STORE, JSON.stringify({ tabs: _mv.tabs.map(t => ({ slot: t.slot, label: t.label || '', short: t.short || '' })), active: _mv.active, linked: !!_mv.linked })); } catch {}
 }
 // A new tab starts at `ref` (or the main reader's place) in the main reader's
 // translation and language; after that it's on its own.
-function _mvSeed(slot, ref) {
+// `from` (a tab's slot): copy that tab's translation and language instead.
+function _mvSeed(slot, ref, from) {
   const p = (ref && _rhemaParseRef(ref)) || { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse };
   const sfx = '::mv' + slot;
+  const src = from ? '::mv' + from : '';
   try {
-    localStorage.setItem('rhemaLastPos' + sfx, JSON.stringify({ book: p.book, chapter: String(p.chapter), verse: String(p.verse), textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion() }));
+    const srcPos = from ? JSON.parse(localStorage.getItem('rhemaLastPos' + src) || 'null') : null;
+    localStorage.setItem('rhemaLastPos' + sfx, JSON.stringify({ book: p.book, chapter: String(p.chapter), verse: String(p.verse), textMode: srcPos?.textMode || _rhemaTextMode, englishVersion: srcPos?.englishVersion || _rhemaEnglishVersion() }));
     ['rhemaReaderVersion', 'rhemaOTLayer', 'rhemaEnglishVersion', 'rhemaTextMode'].forEach(k => {
-      const v = localStorage.getItem(k);
+      const v = localStorage.getItem(k + src);
       if (v != null) localStorage.setItem(k + sfx, v); else localStorage.removeItem(k + sfx);
     });
     localStorage.removeItem('rhemaChapterSnap' + sfx);
@@ -53427,6 +53439,7 @@ function _mvShell() {
   ov.innerHTML = `
     <div class="mv-tabbar">
       <div class="mv-tabs" id="mvTabs" role="tablist"></div>
+      <button type="button" class="mv-link" id="mvLink" onclick="rhemaMvToggleLink()" aria-pressed="false" aria-label="Link tabs: every tab follows the same passage"><span class="material-symbols-outlined">link</span></button>
       <button type="button" class="mv-add-tab" id="mvPlus" onclick="rhemaMvAdd()" aria-label="Summon another Rhēma"><img src="assets/mascot/guide-summon.webp" alt="" width="30" height="30"/><span class="material-symbols-outlined">add</span></button>
       <button type="button" class="mv-exit" onclick="rhemaCloseMultiView()" aria-label="Close Multi-view and go back to your Rhēma"><span class="material-symbols-outlined">close</span></button>
     </div>
@@ -53436,7 +53449,9 @@ function _mvShell() {
   return ov;
 }
 function _mvOnMessage(e) {
-  if (e.origin !== location.origin || !e.data || !e.data.rhemaMV || !_mv) return;
+  if (e.origin !== location.origin || !e.data || !_mv) return;
+  if (e.data.rhemaMVPos) return _mvOnPos(String(e.data.rhemaMVPos), e.data.pos);
+  if (!e.data.rhemaMV) return;
   const t = _mvTab(e.data.rhemaMV);
   if (!t || !e.data.label || (t.label === e.data.label && t.short === e.data.short)) return;
   t.label = e.data.label;
@@ -53454,7 +53469,7 @@ function _mvWinEl(t) {
 }
 // Tabs never scroll out of sight: they share the strip, and wrap onto a second
 // row when one row would make them too small to press (≥ 84px each).
-const MV_TAB_MIN = 84;
+const MV_TAB_MIN = 72;
 function _mvRenderTabs() {
   const wrap = document.getElementById('mvTabs');
   if (!wrap || !_mv) return;
@@ -53491,6 +53506,11 @@ function _mvLayoutTabs() {
   // Even rows: 5 tabs on a 3-wide strip become 3 + 2, not 4 + 1.
   const cols = Math.ceil(n / rows);
   wrap.style.setProperty('--mv-cols', cols);
+  // The open tab's column is a little wider: it also holds the ✕.
+  const activeCol = Math.max(0, _mv.tabs.findIndex(t => String(t.slot) === String(_mv.active))) % cols;
+  const wide = rows === 1 && window.innerWidth >= 700; // big screens: tabs keep a browser-like width
+  wrap.style.gridTemplateColumns = cols > 1 || wide ? Array.from({ length: cols }, (_, c) => c === activeCol
+    ? (wide ? 'minmax(0, 280px)' : 'minmax(0, 1.35fr)') : (wide ? 'minmax(0, 240px)' : 'minmax(0, 1fr)')).join(' ') : '';
   wrap.classList.toggle('mv-two-rows', rows > 1);
   wrap.querySelectorAll('.mv-tab-label').forEach(_mvFitLabel);
 }
@@ -53535,6 +53555,7 @@ function rhemaMvShow(slot) {
   _mvStage()?.querySelectorAll('.mv-win').forEach(el => { el.hidden = el.dataset.slot !== String(slot); });
   _mvRenderTabs();
   _mvFit(slot);
+  if (_mv.linked && _mv.linkPos) _mvFrameCall(slot, w => w._mvApplyPos(_mv.linkPos, true));
   _mvPersist();
 }
 function rhemaOpenMultiView(ref) {
@@ -53543,7 +53564,7 @@ function rhemaOpenMultiView(ref) {
   if (!_mv) {
     const st = _mvStored();
     const saved = (st?.tabs || st?.wins || []).filter(t => t && /^[1-6]$/.test(String(t.slot))).slice(0, MV_MAX);
-    _mv = { tabs: saved.map(t => ({ slot: String(t.slot), label: t.label || '', short: t.short || '' })), active: st?.active ? String(st.active) : null };
+    _mv = { tabs: saved.map(t => ({ slot: String(t.slot), label: t.label || '', short: t.short || '' })), active: st?.active ? String(st.active) : null, linked: !!st?.linked, linkPos: null };
     if (!_mv.tabs.length) {
       // First summon: two tabs at the main reader's place.
       ['1', '2'].forEach(slot => { _mvSeed(slot, null); _mv.tabs.push({ slot, label: '' }); });
@@ -53557,16 +53578,62 @@ function rhemaOpenMultiView(ref) {
   }
   ov.classList.add('open');
   ov.classList.remove('mv-summon'); void ov.offsetWidth; ov.classList.add('mv-summon');
+  _mvRenderLink();
   rhemaMvShow(_mv.active);
   if (ref) rhemaMvAdd(ref);
   _mvPersist();
 }
-function rhemaMvAdd(ref) {
+// ── Linked tabs ──────────────────────────────────────────────────────────────
+// With the chain on, every tab follows the open one: same book, chapter and
+// verse, scrolled to the same point (matched verse by verse, so translations
+// of different lengths still line up). Each tab keeps its own translation and
+// language, so swapping tabs compares versions at the same spot.
+function _mvFrameCall(slot, fn) {
+  try {
+    const w = _mvEl(slot)?.querySelector('.mv-frame')?.contentWindow;
+    if (w && typeof w._mvApplyPos === 'function') fn(w);
+  } catch {}
+}
+function _mvSetLinkPos(pos, except) {
+  _mv.linkPos = pos;
+  // Tabs out of view move to the passage now (so their labels match); they
+  // scroll to the exact spot when shown.
+  _mv.tabs.forEach(t => { if (String(t.slot) !== String(except)) _mvFrameCall(t.slot, w => w._mvApplyPos(pos, false)); });
+}
+function _mvOnPos(slot, pos) {
+  if (!_mv?.linked || !pos?.book || String(slot) !== String(_mv.active)) return;
+  _mvSetLinkPos(pos, slot);
+}
+// A tab that finishes opening while linked asks where to be.
+function rhemaMvLinkedPos() { return _mv?.linked ? _mv.linkPos : null; }
+function _mvRenderLink() {
+  const b = document.getElementById('mvLink');
+  if (!b || !_mv) return;
+  b.classList.toggle('on', !!_mv.linked);
+  b.setAttribute('aria-pressed', String(!!_mv.linked));
+  b.querySelector('.material-symbols-outlined').textContent = _mv.linked ? 'link' : 'link_off';
+  b.setAttribute('aria-label', _mv.linked ? 'Tabs linked: tap to let each tab move on its own' : 'Link tabs: every tab follows the same passage');
+  document.getElementById('mvOverlay')?.classList.toggle('mv-linked', !!_mv.linked);
+}
+function rhemaMvToggleLink() {
+  if (!_mv) return;
+  _mv.linked = !_mv.linked;
+  if (_mv.linked) {
+    let pos = null;
+    _mvFrameCall(_mv.active, w => { pos = w._mvCurrentPos(); });
+    if (pos) _mvSetLinkPos(pos, _mv.active);
+  } else _mv.linkPos = null;
+  _mvRenderLink();
+  _mvPersist();
+  if (typeof _showStudyToast === 'function') _showStudyToast(_mv.linked ? 'Tabs linked: they all follow the same verse. Each keeps its own translation.' : 'Tabs unlinked: each moves on its own.');
+}
+function rhemaMvAdd(ref, from) {
   if (!_mv) return rhemaOpenMultiView(ref);
   if (_mv.tabs.length >= MV_MAX) { if (typeof _showStudyToast === 'function') _showStudyToast(`Multi-view holds up to ${MV_MAX} Rhēmas. Close a tab (✕) to add another.`); return; }
   const slot = _mvFreeSlot();
   if (!slot) return;
-  _mvSeed(slot, ref || null);
+  _mvSeed(slot, ref || null, from && _mvTab(from) ? from : null);
+  if (ref && _mv.linked) { const p = _rhemaParseRef(ref); if (p) _mvSetLinkPos({ book: p.book, chapter: String(p.chapter), verse: String(p.verse), frac: 0, top: false }, slot); }
   const t = { slot, label: '' };
   _mv.tabs.push(t);
   _mvStage().appendChild(_mvWinEl(t));
@@ -53613,6 +53680,65 @@ window.addEventListener('storage', (e) => {
 });
 
 // ── Multi-view window mode (this page is one of the windows) ─────────────────
+// Linked tabs (window side): where this Rhēma is, as book, chapter, the verse
+// at the top of the reader and how far into it, and how to go there.
+let _mvApplying = 0, _mvUserAt = 0;
+function _mvDisplay() {
+  const eng = document.getElementById('rhemaEnglishDisplay');
+  return (_rhemaShowEnglish && !_rhemaSyntaxMode && eng && !eng.classList.contains('hidden')) ? eng : document.getElementById('rhemaVerseDisplay');
+}
+function _mvCurrentPos() {
+  if (!_rhemaBook) return null;
+  const pos = { book: _rhemaBook, chapter: String(_rhemaChapter), verse: String(_rhemaVerse || '1'), frac: 0, top: false };
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  const blocks = [..._mvDisplay()?.querySelectorAll('.rhema-chapter-block[data-verse]') || []];
+  if (!body || !blocks.length || !body.clientHeight) return pos;
+  const y = body.scrollTop;
+  const first = _rhemaBlockScrollTop(body, blocks[0]);
+  if (y < first - 24) { pos.verse = blocks[0].dataset.verse; pos.top = true; return pos; }
+  let cur = blocks[0], curTop = first;
+  // A verse sitting just below the top edge counts as the top verse (jumps
+  // to a verse leave a small gap above it).
+  for (const b of blocks) { const t = _rhemaBlockScrollTop(body, b); if (t <= y + 24) { cur = b; curTop = t; } else break; }
+  pos.verse = cur.dataset.verse;
+  pos.frac = Math.max(0, Math.min(1, (y - curTop) / Math.max(1, cur.offsetHeight)));
+  return pos;
+}
+function _mvApplyPos(pos, scroll) {
+  if (!pos?.book) return;
+  _mvApplying = Date.now();
+  const startedAt = _mvApplying;
+  if (pos.book !== _rhemaBook || String(pos.chapter) !== String(_rhemaChapter)) {
+    const from = _rhemaBook;
+    _rhemaBook = pos.book;
+    _rhemaChapter = String(pos.chapter);
+    _rhemaVerse = String(pos.verse || '1');
+    _rhemaVerseFocus = false;
+    if (isRhemaOTBook(pos.book) && !isRhemaOTBook(from)) _rhemaOTLayer = 'hebrew';
+    try { closeRhemaSheet(); } catch {}
+    _rhemaOpenSelectedReference(true);
+  } else if (String(_rhemaVerse) !== String(pos.verse)) {
+    _rhemaVerse = String(pos.verse);
+    if (scroll) try { syncRhemaPicker(); } catch {}
+  }
+  if (!scroll) return;
+  let tries = 0, done = false;
+  const go = () => {
+    if (startedAt !== _mvApplying || _mvUserAt > startedAt) return; // superseded, or the reader took over
+    const body = document.querySelector('#rhemaModal .rhema-body');
+    const block = _mvDisplay()?.querySelector(`.rhema-chapter-block[data-verse="${String(pos.verse)}"]`);
+    if (body && block && body.clientHeight) {
+      const top = pos.top ? 0 : Math.max(0, _rhemaBlockScrollTop(body, block) + (pos.frac || 0) * block.offsetHeight);
+      body.scrollTop = top;
+      _mvApplying = startedAt;
+      if (!done) { done = true; setTimeout(go, 250); } // once more after late layout (fonts, notes)
+      return;
+    }
+    if (++tries < 25) setTimeout(go, 120);
+  };
+  requestAnimationFrame(go);
+}
+
 if (window.RHEMA_MV_SLOT) {
   // Nothing in a window leads out of Rhēma, or opens Multi-view inside itself.
   window.closeRhema = function () {};
@@ -53620,7 +53746,22 @@ if (window.RHEMA_MV_SLOT) {
   window.rhemaGoBack = function () {};
   window.startRhemaCoach = function () {};
   window.rhemaOpenMultiView = function () {};
-  window.rhemaMultiViewFromMenu = function () {};
+  // In a tab, the verse menu's Multi-view button opens the verse in a new tab
+  // (same translation and language as this one).
+  window.rhemaMultiViewFromMenu = function () {
+    const ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
+    rhemaClearSelection();
+    closeRhemaVerseSheet();
+    try {
+      if (parent.document.querySelectorAll('#mvTabs .mv-tab').length >= MV_MAX) { _showStudyToast(`Multi-view holds up to ${MV_MAX} Rhēmas. Close a tab (✕) to add another.`); return; }
+      parent.rhemaMvAdd(ref, window.RHEMA_MV_SLOT);
+    } catch (e) { console.warn('Open in new tab', e); }
+  };
+  const mvRelabel = () => {
+    const btn = document.querySelector('.rhema-mv-menu-btn');
+    if (btn) btn.innerHTML = '<span class="material-symbols-outlined">add_to_photos</span><span>Open in new tab</span>';
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mvRelabel); else mvRelabel();
   const mvBoot = () => {
     _rhemaAdoptParentData();
     try { _appLaunchReleased = true; } catch {}
@@ -53631,13 +53772,37 @@ if (window.RHEMA_MV_SLOT) {
     const pin = () => { if (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop) { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } };
     window.addEventListener('scroll', pin, { passive: true });
     document.body.addEventListener('scroll', pin, { passive: true });
+    // Linked tabs: report this tab's place as it scrolls or moves, and pick up
+    // the shared place once open.
+    let posTimer = 0, bodyBound = false, lastCh = '';
+    const sendPos = () => {
+      posTimer = 0;
+      if (Date.now() - _mvApplying < 900) return;
+      const pos = _mvCurrentPos();
+      if (pos) parent.postMessage({ rhemaMVPos: window.RHEMA_MV_SLOT, pos }, location.origin);
+    };
+    const bindBody = () => {
+      const body = document.querySelector('#rhemaModal .rhema-body');
+      if (!body || bodyBound) return;
+      bodyBound = true;
+      body.addEventListener('scroll', () => { if (!posTimer) posTimer = setTimeout(sendPos, 120); }, { passive: true });
+      ['touchstart', 'wheel', 'pointerdown'].forEach(ev => body.addEventListener(ev, () => { _mvUserAt = Date.now(); }, { passive: true }));
+    };
+    setInterval(() => {
+      bindBody();
+      const ch = `${_rhemaBook} ${_rhemaChapter}`;
+      if (_rhemaBook && ch !== lastCh) { lastCh = ch; if (!posTimer) posTimer = setTimeout(sendPos, 300); }
+    }, 400);
+    setTimeout(() => { try { const p = parent.rhemaMvLinkedPos?.(); if (p) _mvApplyPos(p, true); } catch {} }, 300);
     // Tell Multi-view what this window shows, whenever it changes.
     let last = '';
     setInterval(() => {
       try {
         if (!_rhemaBook) return;
-        const label = `${_rhemaBookName(_rhemaBook)} ${_rhemaChapter}:${_rhemaVerse} · ${_rhemaReaderDisplayLabel()}`;
-        const short = `${RHEMA_BOOK_ABBR[_rhemaBook] || _rhemaBook} ${_rhemaChapter}:${_rhemaVerse}`;
+        // The verse at the top of the reader (where it's scrolled), not just the last one picked.
+        const v = _mvCurrentPos()?.verse || _rhemaVerse;
+        const label = `${_rhemaBookName(_rhemaBook)} ${_rhemaChapter}:${v} · ${_rhemaReaderDisplayLabel()}`;
+        const short = `${RHEMA_BOOK_ABBR[_rhemaBook] || _rhemaBook} ${_rhemaChapter}:${v}`;
         if (label !== last) { last = label; parent.postMessage({ rhemaMV: window.RHEMA_MV_SLOT, label, short }, location.origin); }
       } catch {}
     }, 1000);

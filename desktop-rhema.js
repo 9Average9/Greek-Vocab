@@ -20,6 +20,7 @@
   }
 
   function settleView(keep) {
+    if (document.getElementById('mvOverlay')?.classList.contains('open')) rhemaCloseMultiView();
     const panel = document.getElementById('rhemaReaderPanelOverlay');
     if (keep !== 'panel' && panel?.classList.contains('open')) {
       closeRhemaReaderPanel();

@@ -35,7 +35,26 @@ body.rhema-desktop-site .desktop-rhema-search-close:hover { background: color-mi
 .desktop-rhema-sheet-kicker { display: none; }
 .desktop-rhema-language { display: none; }
 
+html.mv-embed #rhemaEnglishVersionBtn {
+  flex: 0 0 auto;
+  min-width: 88px;
+  min-height: 44px;
+  padding: 9px 16px;
+  border-radius: 14px;
+  font-size: .88rem;
+  letter-spacing: .02em;
+}
+
 @media (min-width: 960px) {
+  body.rhema-desktop-site #rhemaEnglishVersionBtn {
+    flex: 0 0 auto;
+    min-width: 88px;
+    min-height: 44px;
+    padding: 9px 16px;
+    border-radius: 14px;
+    font-size: .88rem;
+    letter-spacing: .02em;
+  }
   body.rhema-desktop-site #rhemaModal .rhema-picker { align-items: center; }
   body.rhema-desktop-site .desktop-rhema-language {
     display: flex;
@@ -70,6 +89,22 @@ body.rhema-desktop-site .desktop-rhema-search-close:hover { background: color-mi
     box-shadow: 0 3px 9px color-mix(in srgb, var(--secondary-color) 22%, transparent);
   }
 }
+
+/* Multi-view iframes fill their tab; the parent supplies the desktop frame. */
+html.mv-embed { --desktop-rhema-rail: 0px; --desktop-rhema-gutter: 0px; }
+html.mv-embed #rhemaModal.open #rhemaSlide {
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+html.mv-embed .rhema-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px 16px 5px !important;
+}
+html.mv-embed .rhema-header-actions { margin-left: auto; }
+html.mv-embed .rhema-picker { align-items: center; }
 
 @media (min-width: 960px) {
   body.rhema-desktop-site #rhemaModal.open .rhema-vsheet-overlay {

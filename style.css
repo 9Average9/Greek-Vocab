@@ -39850,7 +39850,7 @@ html.mv-embed main.app > section.screen, html.mv-embed #bottomNav, html.mv-embed
 html.mv-embed #notifPromptModal, html.mv-embed #installAppModal, html.mv-embed #updateModal, html.mv-embed #appCoachOverlay,
 html.mv-embed #lbIntroModal, html.mv-embed #lbModal, html.mv-embed #reminderModal, html.mv-embed #coachReplayModal,
 html.mv-embed .rhema-back-btn, html.mv-embed .rhema-guest-btn, html.mv-embed #rhemaWorkshopBackBtn, html.mv-embed #rhemaSermonNotesBackBtn,
-html.mv-embed .rhema-title-block, html.mv-embed #wheelItemTrails, html.mv-embed .rhema-mv-menu-btn, html.mv-embed #rhemaVerseSheetJourneyBtn,
+html.mv-embed .rhema-title-block, html.mv-embed #wheelItemTrails, html.mv-embed #rhemaVerseSheetJourneyBtn,
 html.mv-embed #rhemaVerseSheetStudy, html.mv-embed .mv-overlay, html.mv-embed .mv-pill { display: none !important; }
 html.mv-embed .rhema-header { min-height: 0; padding-top: 6px; padding-bottom: 4px; }
 /* A window's page never scrolls itself (jumping to a verse would push its
@@ -39880,9 +39880,17 @@ html.mv-embed .rhema-header { padding-top: 6px !important; }
 .mv-tab-x { width: 30px; height: 100%; margin-right: -2px; }
 .mv-add-tab { width: 44px; height: 42px; }
 .mv-exit { width: 42px; height: 42px; }
-.mv-tabbar.mv-stacked { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 4px; }
-.mv-tabbar.mv-stacked .mv-tabs { grid-row: 1 / span 2; align-self: center; }
-.mv-tabbar.mv-stacked .mv-add-tab, .mv-tabbar.mv-stacked .mv-exit { width: 42px; height: 38px; }
-.mv-tabbar.mv-stacked .mv-exit { border-radius: 12px; }
+/* Link (chain): every tab follows the same passage. */
+.mv-link { flex: none; width: 40px; height: 42px; border-radius: 11px; border: 1px solid var(--border-color, #93c5fd);
+  background: var(--card-solid-color, #fff); color: var(--muted-color, #475569); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; touch-action: manipulation; }
+.mv-link .material-symbols-outlined { font-size: 22px; }
+.mv-link.on { background: var(--secondary-color, #1d4ed8); border-color: var(--secondary-color, #1d4ed8); color: var(--btn-text-color, #fff); }
+.mv-overlay.mv-linked .mv-tab.on { box-shadow: 0 2px 6px rgba(20, 40, 80, 0.12), inset 0 -3px 0 var(--secondary-color, #1d4ed8); }
+/* Two rows of tabs: the mascot + on top, link and close underneath. */
+.mv-tabbar.mv-stacked { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-rows: auto auto; gap: 4px; }
+.mv-tabbar.mv-stacked .mv-tabs { grid-row: 1 / span 2; grid-column: 1; align-self: center; }
+.mv-tabbar.mv-stacked .mv-add-tab { grid-row: 1; grid-column: 2 / span 2; width: auto; height: 38px; }
+.mv-tabbar.mv-stacked .mv-link { grid-row: 2; grid-column: 2; width: 36px; height: 38px; }
+.mv-tabbar.mv-stacked .mv-exit { grid-row: 2; grid-column: 3; width: 36px; height: 38px; border-radius: 11px; }
 .mv-tab.on .mv-tab-x { width: 26px; }
 @media (min-width: 700px) { .mv-tabs:not(.mv-two-rows) { grid-template-columns: repeat(var(--mv-cols, 2), minmax(0, 240px)); } }
