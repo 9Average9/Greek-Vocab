@@ -40121,6 +40121,18 @@ function _rhemaKeepVerseAboveSheet(verse) {
   const display = document.getElementById(englishOn ? 'rhemaEnglishDisplay' : 'rhemaVerseDisplay');
   const block = display?.querySelector(`.rhema-chapter-block[data-verse="${verse}"]`);
   if (!block) return;
+  if (window.RHEMA_DESKTOP_SITE) {
+    body.style.removeProperty('--rhema-sheet-room');
+    if (window.innerWidth >= 1360) {
+      const r = block.getBoundingClientRect();
+      const b = body.getBoundingClientRect();
+      const top = b.top + (parseFloat(getComputedStyle(body).paddingTop) || 0) + 10;
+      const bottom = b.bottom - 20;
+      const delta = r.top < top ? r.top - top : r.bottom > bottom ? r.bottom - bottom : 0;
+      if (Math.abs(delta) > 2) body.scrollBy({ top: delta, behavior: 'smooth' });
+    }
+    return;
+  }
   // Where the sheet will sit once its slide-in finishes.
   const oRect = overlay.getBoundingClientRect();
   const sheetBottom = oRect.bottom - (parseFloat(getComputedStyle(sheet).marginBottom) || 0);
