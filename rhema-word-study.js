@@ -305,7 +305,7 @@
       <div class="ws-hero-top">
         <span class="ws-lemma">${esc(lex.lemma || '')}</span>
         <span class="ws-translit">${esc(lex.translit || '')}</span>
-        <span class="ws-g">G${esc(strongs)}</span>
+        <span class="ws-g">${esc(typeof _rhemaGreekNumLabel === 'function' ? _rhemaGreekNumLabel(strongs) : `G${strongs}`)}</span>
         <span class="ws-hero-save" id="${uid}-hsave"></span>
       </div>
       ${gloss ? `<div class="ws-answer"><span class="ws-answer-k">${where ? `In ${esc(where)}` : 'Core meaning'}</span><strong>${esc(gloss)}</strong>${form ? `<span class="ws-form">this form: ${esc(form)}</span>` : ''}</div>` : ''}
@@ -1369,7 +1369,11 @@
         fillHero(uid, entry, strongs);
         const put = (id, h) => { const el = document.getElementById(`${uid}-${id}`); if (el) el.innerHTML = h || ''; };
         const range = rangeHtml(entry, strongs, uid);
-        put('range', range || (entry ? '' : section('range', 'auto_awesome', 'Meaning', '<p class="ws-note">This word has no measured New Testament usage; the lexicons carry its meaning.</p>')));
+        const noUsage = lex.source
+          // Critical-text-only word (rhema-critical-extra.js).
+          ? `<p class="ws-note">This word is in the critical Greek text (SBLGNT) but not in the Majority text or Strong’s numbering, so Rhēma has no measured usage for it.${lex.note ? ' ' + esc(lex.note) : ''}</p><p class="ws-note">Source: ${esc(lex.source)}.</p>`
+          : '<p class="ws-note">This word has no measured New Testament usage; the lexicons carry its meaning.</p>';
+        put('range', range || (entry ? '' : section('range', 'auto_awesome', 'Meaning', noUsage)));
         put('authors', authorsHtml(entry, strongs));
         put('history', historyHtml(entry, lex, strongs));
         put('method', methodHtml(entry));
