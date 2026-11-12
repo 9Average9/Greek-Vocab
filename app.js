@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.566";
+const APP_VERSION = "3.0.567";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30471,6 +30471,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.567 &mdash; Roomier Multi-view</div>
+<ul>
+  <li><strong>More room for the windows</strong> &mdash; A slimmer top bar and a smaller guide at the bottom (tap him to tuck him away even smaller).</li>
+  <li><strong>Full view of the selected window</strong> &mdash; The &#10530; button at the top fills the screen with the window you last touched; press it again to go back.</li>
+  <li><strong>No more empty strips on iPhone</strong> &mdash; The reference bar slides fully away inside windows, and the study tools panel no longer has a blank space at the top.</li>
+</ul>
 <div class="un-version-label">v3.0.566 &mdash; Multi-view reference bar</div>
 <ul>
   <li><strong>Slides away like the main Rhēma</strong> &mdash; In each Multi-view window, the top bar and reference bar slide out of the way as you scroll down, giving the text the whole window, and come back as soon as you scroll up.</li>
@@ -53373,16 +53379,15 @@ function _mvShell() {
   ov.setAttribute('aria-label', 'Multi-view');
   ov.innerHTML = `
     <div class="mv-top">
-      <div class="mv-title">Multi-view<small id="mvSub">Your main reading stays where you left it</small></div>
+      <div class="mv-title">Multi-view</div>
       <div class="mv-top-actions">
-        <button type="button" class="mv-ibtn" onclick="rhemaMvTidy()" aria-label="Tidy: lay the windows out neatly"><span class="material-symbols-outlined">auto_awesome_mosaic</span></button>
-        <button type="button" class="mv-ibtn" onclick="rhemaMvMinimize()" aria-label="Shrink Multi-view to read your main Rhēma"><span class="material-symbols-outlined">picture_in_picture_alt</span></button>
+        <button type="button" class="mv-ibtn" onclick="rhemaMvTidy()" aria-label="Tidy: lay the windows out neatly" title="Tidy"><span class="material-symbols-outlined">auto_awesome_mosaic</span></button>
+        <button type="button" class="mv-ibtn" id="mvFillBtn" onclick="rhemaMvFillSelected()" aria-label="Fill the screen with the selected window" title="Full view of the selected window"><span class="material-symbols-outlined">open_in_full</span></button>
         <button type="button" class="mv-ibtn" onclick="rhemaCloseMultiView()" aria-label="Close Multi-view"><span class="material-symbols-outlined">close</span></button>
       </div>
     </div>
     <div class="mv-stage" id="mvStage"></div>
     <div class="mv-bottom">
-      <div class="mv-hint" id="mvHint"><b>Drag the title</b> to move · <b>drag the <span class="material-symbols-outlined">open_in_full</span> corner</b> to resize · tap a window to bring it forward</div>
       <button type="button" class="mv-guide" id="mvGuide" onclick="rhemaMvToggleTuck()" aria-label="Tuck the guide away for more room"><span class="mv-glow"></span><img src="assets/mascot/guide-summon.webp" alt="" width="210" height="212" decoding="async"/></button>
       <div class="mv-add"><button type="button" class="mv-plus" id="mvPlus" onclick="rhemaMvAdd()" aria-label="Summon another Rhēma"><span class="material-symbols-outlined">add</span></button><span class="mv-count" id="mvCount"></span></div>
     </div>`;
@@ -53532,12 +53537,24 @@ function rhemaMvMaximize(slot) {
     const ic = e.querySelector('[data-act="max"] .material-symbols-outlined');
     if (ic) ic.textContent = String(_mv.max) === e.dataset.slot ? 'close_fullscreen' : 'open_in_full';
   });
+  const fi = document.querySelector('#mvFillBtn .material-symbols-outlined');
+  if (fi) fi.textContent = _mv.max ? 'close_fullscreen' : 'open_in_full';
   _mvLayout();
   _mvFocus(slot);
+}
+// Top button: the selected (front) window fills the screen; again to restore.
+function rhemaMvFillSelected() {
+  if (!_mv || !_mv.wins.length) return;
+  if (_mv.max) return rhemaMvMaximize(_mv.max);
+  const front = _mvStage()?.querySelector('.mv-win.mv-front')?.dataset.slot
+    || _mv.wins.slice().sort((a, b) => (b.z || 0) - (a.z || 0))[0].slot;
+  rhemaMvMaximize(front);
 }
 function rhemaMvTidy() {
   if (!_mv) return;
   _mv.max = null;
+  const fi = document.querySelector('#mvFillBtn .material-symbols-outlined');
+  if (fi) fi.textContent = 'open_in_full';
   const order = _mv.wins.slice().sort((a, b) => (a.r?.y || 0) - (b.r?.y || 0) || (a.r?.x || 0) - (b.r?.x || 0));
   const rects = _mvTidyRects(order.length);
   order.forEach((w, i) => { w.r = rects[i]; });
