@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.565";
+const APP_VERSION = "3.0.566";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30471,6 +30471,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.566 &mdash; Multi-view reference bar</div>
+<ul>
+  <li><strong>Slides away like the main Rhēma</strong> &mdash; In each Multi-view window, the top bar and reference bar slide out of the way as you scroll down, giving the text the whole window, and come back as soon as you scroll up.</li>
+</ul>
 <div class="un-version-label">v3.0.565 &mdash; Multi-view windows, your way</div>
 <ul>
   <li><strong>Windows you can move anywhere</strong> &mdash; Drag a window by its title to place it anywhere; windows can overlap, and the one you touch comes to the front, like browser windows. Tidy (top) lays them all out neatly again.</li>
@@ -53645,8 +53649,6 @@ if (window.RHEMA_MV_SLOT) {
   window.startRhemaCoach = function () {};
   window.rhemaOpenMultiView = function () {};
   window.rhemaMultiViewFromMenu = function () {};
-  // The top bar stays put in a window (hiding it saves almost nothing there).
-  window._rhemaSetChromeHidden = function () {};
   // Touching anything in a window brings it to the front in Multi-view.
   document.addEventListener('pointerdown', () => { try { parent.postMessage({ rhemaMV: window.RHEMA_MV_SLOT, focus: true }, location.origin); } catch {} }, true);
   const mvBoot = () => {
