@@ -30447,7 +30447,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.560";
+const APP_VERSION = "3.0.561";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30470,6 +30470,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.561 &mdash; Look up a word</div>
+<ul>
+  <li><strong>The Hebrew or Greek behind your Bible&rsquo;s words</strong> &mdash; Tap a verse, then <em>Look up a word</em>: your version&rsquo;s English in reading order, with the original word under each part (&ldquo;is my shepherd&rdquo; &rarr; רֹעִי, &ldquo;nothing&rdquo; &rarr; לֹא). Tap one to open that word&rsquo;s sheet. &asymp; marks a best match; a faded word is part of the word beside it (&ldquo;his&rdquo; in &ldquo;his name&rdquo;); plain words have no original word behind them, and tap for their English meaning.</li>
+  <li><strong>See the link in the interlinear</strong> &mdash; Press and hold a Hebrew or Greek word to light up its English in the verse above; tap a word in the verse to light up its original word.</li>
+</ul>
 <div class="un-version-label">v3.0.560 &mdash; A checked, more accurate Hebrew side</div>
 <ul>
   <li><strong>Your version&rsquo;s words, more often</strong> &mdash; Finding your English version&rsquo;s word for each Hebrew word was graded against the KJV&rsquo;s word-by-word Strong&rsquo;s tagging across all 306,000 Old Testament words: right 93% of the time (98% for plain matches), with fewer wrong picks. Less certain matches are marked &asymp;.</li>
@@ -38978,9 +38983,10 @@ function rhemaBuildVersification(book, layer, engBook, origBook) {
 }
 
 const _rhemaVersificationCache = new Map();
-function _rhemaVersificationFor(book) {
+// layer: 'hebrew' / 'lxx' to ask about one text whatever the reader shows.
+function _rhemaVersificationFor(book, layer) {
   if (!book || !isRhemaOTBook(book)) return null;
-  const lxx = _rhemaOTLayer === 'lxx';
+  const lxx = layer ? layer === 'lxx' : _rhemaOTLayer === 'lxx';
   const orig = lxx ? window.RhemaLXX?.text?.[book] : window.RhemaHebrewOT?.text?.[book];
   const eng = _rhemaEnglishData()?.[book];
   if (!orig || !eng) return null;
@@ -38992,8 +38998,8 @@ function _rhemaVersificationFor(book) {
   return _rhemaVersificationCache.get(key);
 }
 // The original-language spot for an English chapter:verse ([chapter, verse]).
-function _rhemaOrigRef(book, chapter, verse) {
-  const m = _rhemaVersificationFor(book);
+function _rhemaOrigRef(book, chapter, verse, layer) {
+  const m = _rhemaVersificationFor(book, layer);
   const hit = m?.e2o.get(`${Number(chapter)}:${Number(verse)}`);
   if (hit) { const [c, v] = hit.split(':'); return [c, v]; }
   return [String(chapter), String(verse)];
@@ -41733,11 +41739,193 @@ function _rhemaOpenWordPicker(mode = 'lookup') {
     if (refEl) refEl.textContent = _rhemaDisplayRefFromKey(refs[0]) || refs[0];
   }
   _rhemaWordPickMode = mode;
-  if (label) label.textContent = mode === 'log' ? "Tap a word to add it to the study's word log" : 'Tap a word to see its meaning';
+  if (label) label.textContent = mode === 'log' ? "Tap a word to add it to the study's word log" : 'Tap a word to see its English meaning';
+  _rhemaWordPickSwitch(mode === 'english' && _rhemaLookupLinks.some(Boolean) ? 'Show the original words' : '', '_rhemaOpenLookup(true)');
   closeRhemaVerseSheet();
   document.getElementById('rhemaWordPickModal')?.classList.add('open');
 }
-function rhemaOpenEnglishWordPicker() { _rhemaOpenWordPicker('lookup'); }
+function rhemaOpenEnglishWordPicker() { _rhemaOpenLookup(); }
+
+// ── Look up a word: the Hebrew / Greek word behind each English word ──────────
+// The verse menu's word picker lists the verse in the reader's own English, in
+// reading order, with the original word under each piece of it. Tapping a
+// piece opens that Hebrew (Old Testament) or Greek (New Testament) word's
+// sheet. The pairing is the interlinear's matcher run on the version on
+// screen: "≈" marks a best match; words with no original word behind them
+// (supplied for English, or worded too differently to pin down) stay plain and
+// open their English meaning instead.
+let _rhemaLookupLinks = [];
+async function _rhemaEnsureLinkData(book) {
+  if (isRhemaOTBook(book)) {
+    await Promise.all([_rhemaLoadDataFile('rhema-ot-hebrew.js'), _rhemaLoadDataFile('rhema-hebrew-lexicon.js')]);
+    await _rhemaLoadHebIL(book);
+  } else {
+    if (!_rhemaData()) await loadRhemaScripts();
+    await _ensureRhemaBsbAlign();
+  }
+  if (!window.RhemaAlign) throw new Error('aligner missing');
+}
+// The verse's English cut into pieces in reading order, each with the original
+// words it renders: { text, start, end, orig: [index…], kind }.
+function _rhemaVerseLinks(ref) {
+  const p = ref ? _rhemaParseRef(ref) : null;
+  if (!p || !window.RhemaAlign) return null;
+  const text = _rhemaReaderText(p.book, p.chapter, p.verse) || '';
+  if (!text) return null;
+  const ver = (typeof _rhemaReaderDisplayLabel === 'function' && _rhemaReaderDisplayLabel()) || 'BSB';
+  let words, out, oc, ov, layer;
+  try {
+    if (isRhemaOTBook(p.book)) {
+      layer = 'hebrew';
+      [oc, ov] = _rhemaOrigRef(p.book, p.chapter, p.verse, 'hebrew');
+      words = (window.RhemaHebrewOT?.text?.[p.book] || {})[oc]?.[ov] || [];
+      if (!words.length || !_rhemaHebILData(p.book)) return null;
+      const items = _rhemaHebBridgeItems(p.book, oc, ov).map(it => ({ ...it }));
+      if (ver !== 'BSB') {
+        let table = null;
+        try { table = _rhemaHebVersionLexicon(ver, p.book, String(p.chapter)); } catch {}
+        if (table) items.forEach(it => { it.learned = RhemaAlign.learnedFor(table, it.key); });
+      }
+      out = RhemaAlign.bridgeToVersion(items, text);
+    } else {
+      layer = 'nt-greek';
+      oc = String(p.chapter); ov = String(p.verse);
+      words = _rhemaOrigWords(p.book, p.chapter, p.verse);
+      if (!words.length) return null;
+      const decisions = words.map(w => _rhemaMeaningDecision(_rhemaResolveWord(w, p.book, p.chapter), { layer, book: p.book, chapter: p.chapter, verse: p.verse }));
+      // Bridge even for the BSB itself: the pieces need character positions.
+      out = _rhemaVersionRenderingsForVerse(p, words, decisions, text, ver === 'BSB' ? 'BSB text' : ver, ver === 'BSB' ? { learn: false } : {});
+    }
+  } catch (e) { console.warn('lookup links', e); return null; }
+  const toks = RhemaAlign.tokenizeEnglish(text);
+  const owners = toks.map(() => []);
+  out.forEach((r, i) => {
+    if (!r || !r.text || r.start == null) return;
+    toks.forEach((t, k) => { if (t.start >= r.start && t.end <= r.end) owners[k].push(i); });
+  });
+  const pieces = [];
+  toks.forEach((t, k) => {
+    const key = owners[k].join(',');
+    const last = pieces[pieces.length - 1];
+    if (last && key && last.key === key && last.endTok === k - 1) { last.end = t.end; last.endTok = k; last.text = text.slice(last.start, last.end); return; }
+    const kinds = owners[k].map(i => out[i].kind);
+    pieces.push({ key, start: t.start, end: t.end, endTok: k, text: t.raw, orig: owners[k], kind: !owners[k].length ? '' : kinds.every(x => x === 'match' || x === 'exact') ? 'match' : 'inferred' });
+  });
+  // Hebrew packs pronouns and "and" into its words: "he refreshes" is one verb
+  // (its ending says "he"), "his name" is one noun with a "his" ending, "and"
+  // is the וְ on the front of the next word. A pronoun or "and" left over goes
+  // with the neighbouring word whose grammar (Berean parsing) shows exactly it.
+  if (layer === 'hebrew') {
+    const PGN = { he: ['3ms'], him: ['3ms'], his: ['3ms'], himself: ['3ms'], she: ['3fs'], her: ['3fs'], herself: ['3fs'], it: ['3ms', '3fs'], its: ['3ms', '3fs'],
+      they: ['3mp', '3fp', '3cp'], them: ['3mp', '3fp', '3cp'], their: ['3mp', '3fp', '3cp'], themselves: ['3mp', '3fp', '3cp'],
+      i: ['1cs'], me: ['1cs'], my: ['1cs'], mine: ['1cs'], myself: ['1cs'], we: ['1cp'], us: ['1cp'], our: ['1cp'],
+      you: ['2ms', '2fs', '2mp', '2fp'], your: ['2ms', '2fs', '2mp', '2fp'], yourself: ['2ms', '2fs'], thou: ['2ms', '2fs'], thee: ['2ms', '2fs'], thy: ['2ms', '2fs'], thine: ['2ms', '2fs'], ye: ['2mp', '2fp'] };
+    pieces.forEach((pc, k) => {
+      if (pc.orig.length) return;
+      const low = pc.text.toLowerCase();
+      const want = PGN[low] || (low === 'and' ? 'and' : null);
+      if (!want) return;
+      for (const dir of (want === 'and' ? [1] : [1, -1])) {
+        let q = null;
+        for (let d = 1; d <= 3; d++) { const x = pieces[k + dir * d]; if (!x) break; if (x.orig.length) { q = x; break; } }
+        if (!q) continue;
+        const hit = q.orig.find(i => {
+          const ps = _rhemaHebILWord(p.book, oc, ov, i)?.ps || '';
+          return want === 'and' ? /(^|\| )Conj-w\b/.test(ps) : want.some(g => new RegExp(`(^|[-| ])${g}\\b`).test(ps));
+        });
+        if (hit != null) { pc.orig = [hit]; pc.kind = 'match'; pc.part = true; break; }
+      }
+    });
+  }
+  return { ref, p, text, ver, layer, oc, ov, words, out, pieces };
+}
+function _rhemaOrigSurface(L, i) {
+  const w = L.words[i];
+  return w ? (L.layer === 'hebrew' ? _rhemaDisplaySurface(w[0]) : (window.RhemaAlign ? RhemaAlign.cleanSurface(w[0]) : w[0])) : '';
+}
+function _rhemaLookupChipsHtml(L, li) {
+  const esc = _escapeRhemaAttr;
+  return L.pieces.map((pc, pi) => {
+    if (!pc.orig.length) {
+      return `<button class="rhema-word-chip rhema-lk-chip rhema-lk-none" onclick="rhemaShowEnglishMeaning(decodeURIComponent('${encodeURIComponent(pc.text)}'))"><span class="rhema-lk-en">${esc(pc.text)}</span><span class="rhema-lk-orig">&nbsp;</span></button>`;
+    }
+    const orig = pc.orig.map(i => _rhemaOrigSurface(L, i)).join(' · ');
+    return `<button class="rhema-word-chip rhema-lk-chip${pc.kind === 'inferred' ? ' rhema-lk-approx' : ''}${pc.part ? ' rhema-lk-part' : ''}" onclick="rhemaLookupPiece(${li},${pi})"${pc.part ? ` title="Part of this ${L.layer === 'hebrew' ? 'Hebrew' : 'Greek'} word"` : ''}>` +
+      `<span class="rhema-lk-en">${esc(pc.text)}</span>` +
+      `<span class="rhema-lk-orig${L.layer === 'hebrew' ? ' rhema-hebrew-text' : ''}">${pc.kind === 'inferred' ? '≈ ' : ''}${esc(orig)}</span></button>`;
+  }).join('');
+}
+let _rhemaLookupRefs = [];
+async function _rhemaOpenLookup(again) {
+  const refs = again && _rhemaLookupRefs.length ? _rhemaLookupRefs
+    : (_rhemaSel.size > 1 ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []));
+  if (!refs.length) return;
+  _rhemaLookupRefs = refs;
+  const p0 = _rhemaParseRef(refs[0]);
+  const wrap = document.getElementById('rhemaWordPickChips');
+  const refEl = document.getElementById('rhemaWordPickRef');
+  const label = document.getElementById('rhemaWordPickLabel');
+  _rhemaWordPickMode = 'lookup';
+  closeRhemaVerseSheet();
+  document.getElementById('rhemaWordPickModal')?.classList.add('open');
+  const lang = p0 && isRhemaOTBook(p0.book) ? 'Hebrew' : 'Greek';
+  if (label) label.textContent = `Tap a word to see the ${lang} behind it`;
+  if (refEl) refEl.textContent = refs.length > 1 ? `${refs.length} verses` : (_rhemaDisplayRefFromKey(refs[0]) || refs[0]);
+  if (wrap) wrap.innerHTML = '<div class="rhema-lk-loading">Lining up the words…</div>';
+  try { await _rhemaEnsureLinkData(p0.book); } catch {}
+  if (!document.getElementById('rhemaWordPickModal')?.classList.contains('open') || _rhemaWordPickMode !== 'lookup') return;
+  _rhemaLookupLinks = refs.map(_rhemaVerseLinks);
+  if (!_rhemaLookupLinks.some(Boolean)) { _rhemaOpenWordPicker('lookup'); return; } // no original text here: English meanings
+  const groups = _rhemaLookupLinks.map((L, li) => {
+    if (!L) return '';
+    const chips = `<div class="rhema-word-chips rhema-lk-chips">${_rhemaLookupChipsHtml(L, li)}</div>`;
+    return refs.length > 1 ? `<div class="rhema-wordpick-group"><div class="rhema-wordpick-grouphd">${_escapeRhemaAttr(_rhemaDisplayRefFromKey(L.ref) || L.ref)}</div>${chips}</div>` : chips;
+  }).join('');
+  const ver = _rhemaLookupLinks.find(Boolean)?.ver || '';
+  _rhemaWordPickSwitch('English meanings instead', "_rhemaOpenWordPicker('english')");
+  if (wrap) wrap.innerHTML = groups +
+    `<p class="rhema-lk-foot">${_escapeRhemaAttr(ver)} in reading order · <b>≈</b> best match · <span class="rhema-lk-key-part">faded</span> part of the word beside it · <span class="rhema-lk-key-none">plain</span> no ${lang} word (tap for its English meaning)</p>` +
+    '';
+}
+// The picker's second button (next to Close): switch between the original
+// words and English meanings; hidden when there's nothing to switch to.
+function _rhemaWordPickSwitch(label, action) {
+  const b = document.getElementById('rhemaWordPickSwitch');
+  if (!b) return;
+  b.hidden = !label;
+  if (label) { b.textContent = label; b.setAttribute('onclick', action); }
+}
+// A piece of English → its original word's sheet; two or more → choose one.
+function rhemaLookupPiece(li, pi) {
+  const L = _rhemaLookupLinks[li];
+  const pc = L?.pieces?.[pi];
+  if (!pc || !pc.orig.length) return;
+  if (pc.orig.length === 1) return rhemaLookupOpen(li, pc.orig[0]);
+  const esc = _escapeRhemaAttr;
+  const lex = L.layer === 'hebrew' ? (window.RhemaHebrewLexicon || {}) : (window.RhemaLexicon || {});
+  const wrap = document.getElementById('rhemaWordPickChips');
+  const label = document.getElementById('rhemaWordPickLabel');
+  if (label) label.textContent = `“${pc.text}” is ${pc.orig.length} ${L.layer === 'hebrew' ? 'Hebrew' : 'Greek'} words. Pick one:`;
+  if (wrap) wrap.innerHTML = pc.orig.map(i => {
+    const w = L.words[i] || [];
+    const e = lex[String(w[1])] || {};
+    const here = L.layer === 'hebrew' ? (_rhemaHebILWord(L.p.book, L.oc, L.ov, i)?.en || '') : '';
+    return `<button type="button" class="rhema-lk-choice" onclick="rhemaLookupOpen(${li},${i})">` +
+      `<span><b>${esc(e.gloss || e.brief || here || '')}</b>${here ? `<small>BSB here: “${esc(_rhemaHebPlain(here))}”</small>` : ''}</span>` +
+      `<span class="rhema-lk-choice-w${L.layer === 'hebrew' ? ' rhema-hebrew-text' : ''}">${esc(_rhemaOrigSurface(L, i))}</span></button>`;
+  }).join('');
+  _rhemaWordPickSwitch('Back to the verse', '_rhemaOpenLookup(true)');
+}
+function rhemaLookupOpen(li, i) {
+  const L = _rhemaLookupLinks[li];
+  if (!L) return;
+  closeRhemaWordPick();
+  // The Hebrew word's sheet reads the Hebrew text: switch the Old Testament
+  // pane from the Septuagint if that's what's showing.
+  if (L.layer === 'hebrew' && _rhemaOTLayer === 'lxx') setRhemaOTLayer('hebrew');
+  if (L.p.book !== _rhemaBook) return;
+  openRhemaSheet(i, L.ov, L.oc);
+}
 
 // ── Interlinear-lite ───────────────────────────────────────────────────────────
 // Tap a verse → the original text word by word, each with transliteration and a
@@ -41994,6 +42182,51 @@ function _rhemaRenderInterlinear(ref) {
       english + details +
       `</button>`;
   }).join('');
+  _rhemaLinkInterlinear(ref, layer);
+}
+// Press and hold a tile to light up its English in the verse above; tap a word
+// of the verse to light up its tile(s). Same pairing as Look up a word.
+let _rhemaIlLinks = null, _rhemaIlHoldTimer = 0, _rhemaIlHeld = false;
+function _rhemaLinkInterlinear(ref, layer) {
+  const engEl = document.getElementById('rhemaInterlinearEnglish');
+  _rhemaIlLinks = (layer === 'hebrew' || layer === 'nt-greek') ? _rhemaVerseLinks(ref) : null;
+  const L = _rhemaIlLinks;
+  if (!engEl || !L) return;
+  const esc = _escapeRhemaAttr;
+  let html = '', at = 0;
+  L.pieces.forEach((pc, k) => {
+    html += esc(L.text.slice(at, pc.start));
+    html += pc.orig.length ? `<span class="rhema-il-en" data-p="${k}" onclick="rhemaIlLightFromEnglish(${k})">${esc(L.text.slice(pc.start, pc.end))}</span>` : esc(L.text.slice(pc.start, pc.end));
+    at = pc.end;
+  });
+  engEl.innerHTML = html + esc(L.text.slice(at));
+  document.querySelectorAll('#rhemaInterlinearGrid .rhema-il-word').forEach((tile, i) => {
+    const start = () => { clearTimeout(_rhemaIlHoldTimer); _rhemaIlHoldTimer = setTimeout(() => { _rhemaIlHeld = true; rhemaIlLightFromTile(i); }, 380); };
+    const stop = () => clearTimeout(_rhemaIlHoldTimer);
+    tile.addEventListener('pointerdown', start);
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => tile.addEventListener(ev, stop));
+    tile.addEventListener('contextmenu', e => e.preventDefault());
+  });
+}
+function _rhemaIlClearLight() {
+  document.querySelectorAll('#rhemaInterlinearEnglish .lit, #rhemaInterlinearGrid .lit').forEach(el => el.classList.remove('lit'));
+}
+function rhemaIlLightFromTile(i) {
+  const L = _rhemaIlLinks; if (!L) return;
+  _rhemaIlClearLight();
+  document.querySelectorAll('#rhemaInterlinearGrid .rhema-il-word')[i]?.classList.add('lit');
+  let first = null;
+  L.pieces.forEach((pc, k) => { if (pc.orig.includes(i)) { const el = document.querySelector(`#rhemaInterlinearEnglish [data-p="${k}"]`); el?.classList.add('lit'); first = first || el; } });
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch {}
+  first?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function rhemaIlLightFromEnglish(k) {
+  const L = _rhemaIlLinks; const pc = L?.pieces?.[k]; if (!pc) return;
+  _rhemaIlClearLight();
+  document.querySelector(`#rhemaInterlinearEnglish [data-p="${k}"]`)?.classList.add('lit');
+  const tiles = document.querySelectorAll('#rhemaInterlinearGrid .rhema-il-word');
+  pc.orig.forEach(i => tiles[i]?.classList.add('lit'));
+  tiles[pc.orig[0]]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 function _rhemaSetInterlinearVersionNote(versionLabel, hebBridge) {
   const el = document.getElementById('rhemaInterlinearVersionNote');
@@ -42054,6 +42287,7 @@ function _rhemaBsbEnglishForTokens(appTokens, book, chapter, verse) {
 }
 
 function _rhemaInterlinearOpenWord(idx) {
+  if (_rhemaIlHeld) { _rhemaIlHeld = false; return; } // that was a press-and-hold
   const ref = _rhemaInterlinearRef;
   const p = ref ? _rhemaParseRef(ref) : null;
   if (!p) return;
@@ -49719,7 +49953,7 @@ function _rhemaHebMeanings(strongs) {
 }
 // The English verse for a Hebrew (MT) verse, or null for a psalm title.
 function _rhemaHebEngRef(book, oc, ov) {
-  const e = _rhemaVersificationFor(book)?.o2e.get(`${Number(oc)}:${Number(ov)}`);
+  const e = _rhemaVersificationFor(book, 'hebrew')?.o2e.get(`${Number(oc)}:${Number(ov)}`);
   if (e && e.endsWith(':title')) return null;
   return e ? e.split(':') : [String(oc), String(ov)];
 }
@@ -49734,7 +49968,7 @@ function _rhemaHebVersionLexicon(ver, book, ec) {
   for (const ev of list) {
     const text = _rhemaVersionChapterText(ver, book, ec, ev);
     if (!text) continue;
-    const [oc, ov] = _rhemaOrigRef(book, ec, ev);
+    const [oc, ov] = _rhemaOrigRef(book, ec, ev, 'hebrew');
     const items = _rhemaHebBridgeItems(book, oc, ov);
     if (!items.length) continue;
     const copy = items.map(it => ({ ...it }));
@@ -49774,7 +50008,7 @@ function _rhemaHebVersionWords(book, oc, ov) {
   } catch { return null; }
   out.version = ver;
   const fk = `${ver}|${book}|${oc}|${ov}|${text.length}|${_rhemaHebVerLexCache.get(`${ver}|${book}|${ec}`)?.avail || 0}`;
-  _rhemaHebVerWordsCache.set(fk, out);
+  if (window.RhemaHebrewLexicon) _rhemaHebVerWordsCache.set(fk, out); // not before its meanings have arrived
   if (_rhemaHebVerWordsCache.size > 800) _rhemaHebVerWordsCache.delete(_rhemaHebVerWordsCache.keys().next().value);
   return out;
 }

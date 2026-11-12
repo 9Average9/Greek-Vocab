@@ -489,11 +489,27 @@
       const j = nearest(i, prep[i].meanings, false, wide);
       if (j >= 0) claim(i, j, j, 'inferred', 'lexicon'); // ~77% right when graded: shown as ≈
     }
+    const near = Math.max(4, Math.ceil(toks.length * 0.25));
+    // Phase 3n — a negative (לֹא, οὐ: "not") that this version words as "no",
+    // "nothing", "never"… ("I shall not want" / NIV "I lack nothing").
+    const NEG = new Set(['not', 'no', 'nothing', 'never', 'none', 'neither', 'nor', 'nobody', 'cannot', 'without', 'nowhere', 'nay', 'nought', 'naught']);
+    for (let i = 0; i < n; i++) {
+      if (span[i]) continue;
+      const own = [...wordsOf(bsbDirect(items[i].bsb || '')), ...wordsOf(items[i].gloss || '')];
+      if (!own.some(t => NEG.has(t.low))) continue;
+      const exp = expectedAt(i);
+      let best = -1, bestD = Infinity;
+      for (let j = 0; j < toks.length; j++) {
+        if (used[j] || !NEG.has(toks[j].low)) continue;
+        const dd = Math.abs(j - exp);
+        if (dd < bestD && dd <= near) { bestD = dd; best = j; }
+      }
+      if (best >= 0) claim(i, best, best, 'match', 'neg');
+    }
     // Phase 3c — a word the Berean leaves without English of its own (its
     // base text lacks it, or folds it into a phrase) can still have its own
     // word in this version ("lo", "trespasses"): try this version's learned
     // wording, the gloss and the lexicon meanings — close to where expected.
-    const near = Math.max(4, Math.ceil(toks.length * 0.25));
     for (let i = 0; i < n; i++) {
       if (span[i] || !prep[i].none || !prep[i].content.size) continue;
       const exp = expectedAt(i);

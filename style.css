@@ -39755,3 +39755,40 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rhema-verse-display:has(.rhs-map) { direction: ltr; display: block; padding-left: 12px; padding-right: 12px; }
 .rhema-verse-display .rhs-map { width: 100%; box-sizing: border-box; }
 .rhema-verse-display:has(.rhs-map) > .rhema-layer-label { text-align: center; display: block; }
+
+/* Look up a word: the verse in reading order, original word under each part. */
+.rhema-lk-chips { gap: 6px 6px !important; }
+.rhema-word-chip.rhema-lk-chip {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  border-radius: 14px !important; padding: 6px 10px 5px !important; line-height: 1.15;
+  border-color: color-mix(in srgb, var(--secondary-color, #1f4fd8) 30%, transparent);
+  background: color-mix(in srgb, var(--secondary-color, #1f4fd8) 7%, transparent);
+}
+.rhema-lk-en { font-weight: 700; font-size: 0.92rem; }
+.rhema-lk-orig { font-size: 0.95rem; color: var(--secondary-color, #1f4fd8); font-weight: 600; white-space: nowrap; }
+.rhema-lk-orig.rhema-hebrew-text { font-size: 1.12rem; direction: rtl; unicode-bidi: isolate; }
+.rhema-word-chip.rhema-lk-approx { border-style: dashed; }
+.rhema-word-chip.rhema-lk-none { background: transparent; border-color: rgba(120, 120, 120, 0.22); opacity: 0.72; }
+.rhema-word-chip.rhema-lk-none .rhema-lk-en { font-weight: 500; }
+.rhema-lk-loading { padding: 14px 4px; color: var(--muted-color, #6b7a8c); font-size: 0.92rem; }
+.rhema-lk-foot { width: 100%; margin: 10px 2px 4px; font-size: 0.8rem; line-height: 1.4; color: var(--muted-color, #6b7a8c); }
+.rhema-lk-switch { width: 100%; margin-top: 6px; padding: 9px 12px; border-radius: 12px; border: 1px dashed rgba(120, 120, 120, 0.4);
+  background: transparent; color: var(--secondary-color, #1f4fd8); font-weight: 700; font-size: 0.88rem; cursor: pointer; }
+.rhema-lk-choice { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left;
+  padding: 12px 14px; margin-bottom: 8px; border-radius: 14px; cursor: pointer; color: var(--font-color, #20303f);
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #1f4fd8) 30%, transparent);
+  background: color-mix(in srgb, var(--secondary-color, #1f4fd8) 6%, transparent); }
+.rhema-lk-choice b { display: block; font-size: 1rem; }
+.rhema-lk-choice small { display: block; margin-top: 2px; color: var(--muted-color, #6b7a8c); font-size: 0.8rem; }
+.rhema-lk-choice-w { font-size: 1.5rem; color: var(--secondary-color, #1f4fd8); white-space: nowrap; }
+/* Interlinear: the verse's words and the tiles light up together. */
+.rhema-il-en { cursor: pointer; border-radius: 5px; transition: background 0.15s ease; }
+.rhema-il-en.lit { background: #ffe58a; color: #3d2c00; box-shadow: 0 0 0 2px #ffe58a; }
+.rhema-il-word.lit { background: #fff3c4 !important; border-color: #e3b200 !important; box-shadow: 0 0 0 3px rgba(227, 178, 0, 0.28); }
+.rhema-il-word { -webkit-touch-callout: none; user-select: none; }
+.rhema-word-chip.rhema-lk-part .rhema-lk-orig { opacity: 0.55; }
+.rhema-lk-foot b { color: var(--secondary-color, #1f4fd8); }
+.rhema-lk-key-part { opacity: 0.55; font-weight: 700; }
+.rhema-lk-key-none { font-weight: 700; }
+.rhema-lk-switch-btn { color: var(--secondary-color, #1f4fd8) !important; font-weight: 700; }
+.rhema-lk-switch-btn[hidden] { display: none !important; }
