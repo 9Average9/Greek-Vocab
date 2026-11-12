@@ -3,6 +3,26 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
+<script>
+/* Multi-view window mode (index.html?mv=N): this page is one of the mini
+   Rhemas inside Multi-view. Its reading place, translation and language live
+   in their own storage slot so they never move the main Rhema or the other
+   windows; highlights, notes and saves stay shared with everything. */
+(function () {
+  var m = /[?&]mv=([1-6])\b/.exec(location.search);
+  if (!m) return;
+  window.RHEMA_MV_SLOT = m[1];
+  document.documentElement.classList.add('mv-embed');
+  var OWN = { rhemaLastPos: 1, rhemaEnglishVersion: 1, rhemaTextMode: 1, rhemaReaderVersion: 1, rhemaOTLayer: 1, rhemaChapterSnap: 1, rhemaRefHistory: 1, rhemaCompareExtras: 1 };
+  var ns = function (k) { return OWN[k] ? k + '::mv' + m[1] : k; };
+  try {
+    var P = Storage.prototype, g = P.getItem, s = P.setItem, r = P.removeItem;
+    P.getItem = function (k) { return g.call(this, this === window.localStorage ? ns(k) : k); };
+    P.setItem = function (k, v) { return s.call(this, this === window.localStorage ? ns(k) : k, v); };
+    P.removeItem = function (k) { return r.call(this, this === window.localStorage ? ns(k) : k); };
+  } catch (e) {}
+})();
+</script>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" name="viewport"/>
 <title>Disciple Builder</title>
 <!-- PWA / Home Screen App Support -->
@@ -346,7 +366,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.563" rel="stylesheet"/>
+<link href="style.css?v=3.0.564" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -10803,9 +10823,9 @@ Verb Endings
 <span class="material-symbols-outlined">local_library</span>
 <span class="rwi-label">Word Library</span>
 </button>
-<button class="rhema-wheel-item" id="wheelItemTrails" onclick="closeRhemaWheel();rhemaOpenCompare()">
-<span class="material-symbols-outlined">compare_arrows</span>
-<span class="rwi-label">Compare</span>
+<button class="rhema-wheel-item" id="wheelItemTrails" onclick="closeRhemaWheel();rhemaOpenMultiView()">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="rwi-label">Multi-view</span>
 </button>
 <button class="rhema-wheel-item" id="wheelItemHighlightsNotes" onclick="closeRhemaWheel();rhemaOpenHighlightsNotes()">
 <span class="material-symbols-outlined">sticky_note_2</span>
@@ -10871,9 +10891,9 @@ Verb Endings
 <span class="material-symbols-outlined">edit_note</span>
 <span id="rhemaVerseSheetNoteLabel">Add note</span>
 </button>
-<button class="rhema-vsheet-action" onclick="rhemaAddToCompareFromMenu()">
-<span class="material-symbols-outlined">library_add</span>
-<span>Compare</span>
+<button class="rhema-vsheet-action rhema-mv-menu-btn" onclick="rhemaMultiViewFromMenu()">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Multi-view</span>
 </button>
 <button class="rhema-vsheet-action" id="rhemaVerseSheetInterpBtn" onclick="rhemaOpenInterpretationsFromMenu()">
 <span class="material-symbols-outlined">forum</span>
@@ -17293,19 +17313,19 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.563"></script>
-<script src="app.js?v=3.0.563"></script>
-<script src="rhema-word-study.js?v=3.0.563"></script>
+<script src="rhema-align.js?v=3.0.564"></script>
+<script src="app.js?v=3.0.564"></script>
+<script src="rhema-word-study.js?v=3.0.564"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.563"></script>
-<script src="verse-structure.js?v=3.0.563"></script>
-<script src="vs-structure.js?v=3.0.563"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.564"></script>
+<script src="verse-structure.js?v=3.0.564"></script>
+<script src="vs-structure.js?v=3.0.564"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
 <script src="sermon-notes.js?v=3.0.460"></script>
 <script src="bible-quiz.js?v=3.0.473"></script>
-<script src="firebase-lb.js?v=3.0.563" type="module"></script>
+<script src="firebase-lb.js?v=3.0.564" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

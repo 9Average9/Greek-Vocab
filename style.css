@@ -39807,3 +39807,81 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 .rhema-wbw-tab.on { background: var(--card-bg, #fff); color: var(--secondary-color, #1f4fd8); box-shadow: 0 1px 4px rgba(20, 40, 80, 0.14); }
 .rhema-wbw-hint { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--secondary-color, #1f4fd8); margin: 2px 0 10px; }
 .rhema-wbw-en .rhema-lk-chips { display: flex; flex-wrap: wrap; }
+
+/* ── Multi-view ─────────────────────────────────────────────────────────── */
+.mv-overlay { position: fixed; inset: 0; z-index: 4000; display: none; flex-direction: column;
+  background: radial-gradient(120% 70% at 50% 100%, #3b2a5e 0%, #1e2547 45%, #141a33 100%); color: #fff;
+  padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0); }
+.mv-overlay.open { display: flex; }
+.mv-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 8px; flex: none; }
+.mv-title { font-weight: 900; font-size: 1.3rem; letter-spacing: 0.2px; line-height: 1.1; }
+.mv-title small { display: block; margin-top: 3px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #c9b8ff; }
+.mv-top-actions { display: flex; gap: 6px; }
+.mv-ibtn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.14); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.mv-ibtn .material-symbols-outlined { font-size: 22px; }
+.mv-stage { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
+.mv-stage.mv-two { display: grid; grid-template-columns: 1fr 1fr; align-content: start; gap: 8px; }
+.mv-win { position: relative; flex: none; display: flex; flex-direction: column; min-height: 150px; border-radius: 18px; overflow: hidden; background: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 214, 120, 0.55), 0 10px 28px rgba(0, 0, 0, 0.35), 0 0 30px rgba(242, 181, 49, 0.22); }
+.mv-win.mv-moving { box-shadow: 0 0 0 3px #ffd46b, 0 16px 36px rgba(0, 0, 0, 0.5); transform: scale(0.985); }
+.mv-wbar { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 2px; background: #f3f7ff; border-bottom: 1.5px solid #dbe6fb; flex: none; color: #24364d; }
+.mv-grip { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: #8a99ad; cursor: grab; touch-action: none; font-size: 20px; }
+.mv-label { flex: 1; min-width: 0; font-weight: 800; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mv-wbtn { width: 30px; height: 30px; border: 0; border-radius: 10px; background: transparent; color: #4a5b72; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.mv-wbtn .material-symbols-outlined { font-size: 18px; }
+/* Each window's Rhēma; in two columns it's the full phone layout, scaled to fit. */
+.mv-body { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #fff; }
+.mv-frame { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+.mv-stage.mv-two .mv-win:not(.mv-max) .mv-frame { width: 160%; height: 160%; transform: scale(0.625); transform-origin: 0 0; }
+.mv-resize { flex: none; height: 18px; display: flex; align-items: center; justify-content: center; background: #f3f7ff; border-top: 1.5px solid #dbe6fb; cursor: ns-resize; touch-action: none; }
+.mv-resize span { width: 46px; height: 5px; border-radius: 3px; background: #b7c6dd; box-shadow: 0 -4px 0 -1px #d5dfee; }
+.mv-overlay.mv-dragging .mv-frame { pointer-events: none; }
+.mv-overlay.mv-dragging { user-select: none; -webkit-user-select: none; }
+.mv-stage.mv-has-max .mv-win:not(.mv-max) { display: none; }
+.mv-stage.mv-has-max { display: flex !important; }
+.mv-win.mv-max { flex: 1; height: auto !important; }
+.mv-win.mv-max .mv-resize { display: none; }
+/* summoned: rise out of the guide's hands */
+.mv-win.mv-summoned { animation: mvRise 0.75s cubic-bezier(0.2, 0.9, 0.25, 1.15) both; transform-origin: 50% 120%; }
+@keyframes mvRise { from { opacity: 0; transform: translateY(160px) scale(0.35); filter: brightness(1.8) blur(3px); } 60% { opacity: 1; filter: brightness(1.2) blur(0); } to { opacity: 1; transform: none; filter: none; } }
+.mv-bottom { position: relative; flex: none; height: 150px; display: flex; align-items: flex-end; justify-content: center; transition: height 0.3s ease; }
+.mv-guide { position: relative; border: 0; background: transparent; padding: 0; width: 150px; cursor: pointer; transition: transform 0.3s ease, width 0.3s ease; }
+.mv-guide img { width: 100%; height: auto; display: block; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45)); }
+.mv-glow { position: absolute; left: 50%; top: 10%; width: 260px; height: 110px; transform: translate(-50%, -40%); border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 214, 120, 0.5), rgba(255, 214, 120, 0)); pointer-events: none; opacity: 0.55; }
+.mv-overlay.mv-summon .mv-glow { animation: mvGlow 1.2s ease both; }
+.mv-overlay.mv-summon .mv-guide img { animation: mvHop 0.7s ease both; }
+@keyframes mvGlow { 0% { opacity: 0; transform: translate(-50%, -40%) scale(0.6); } 40% { opacity: 1; transform: translate(-50%, -40%) scale(1.15); } 100% { opacity: 0.55; transform: translate(-50%, -40%) scale(1); } }
+@keyframes mvHop { 0% { transform: translateY(14px); } 45% { transform: translateY(-10px); } 100% { transform: none; } }
+.mv-add { position: absolute; right: 18px; bottom: 16px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mv-plus { width: 58px; height: 58px; border-radius: 50%; border: 0; cursor: pointer; color: #3b2400;
+  background: linear-gradient(145deg, #ffd46b, #f2a531); box-shadow: 0 6px 18px rgba(242, 165, 49, 0.55), 0 0 0 4px rgba(255, 255, 255, 0.16);
+  display: flex; align-items: center; justify-content: center; }
+.mv-plus .material-symbols-outlined { font-size: 34px; font-weight: 700; }
+.mv-plus:disabled { opacity: 0.4; cursor: default; }
+.mv-count { font-size: 0.72rem; font-weight: 800; color: #ffe7b0; letter-spacing: 0.04em; }
+.mv-hint { position: absolute; left: 16px; bottom: 18px; width: 110px; font-size: 0.7rem; line-height: 1.35; color: #c9d2ea; }
+/* tucked guide: more room for the windows */
+.mv-overlay.mv-tucked .mv-bottom { height: 70px; }
+.mv-overlay.mv-tucked .mv-guide { width: 64px; }
+.mv-overlay.mv-tucked .mv-hint { display: none; }
+.mv-overlay.mv-tucked .mv-add { flex-direction: row; bottom: 12px; }
+.mv-overlay.mv-tucked .mv-plus { width: 46px; height: 46px; }
+.mv-pill { position: fixed; z-index: 3990; right: 14px; bottom: calc(18px + env(safe-area-inset-bottom, 0)); display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px 6px 6px; border: 0; border-radius: 999px; cursor: pointer; color: #fff; font-weight: 800; font-size: 0.9rem;
+  background: linear-gradient(145deg, #2b2f63, #3b2a5e); box-shadow: 0 0 0 2px rgba(255, 214, 120, 0.6), 0 8px 22px rgba(0, 0, 0, 0.35); }
+.mv-pill[hidden] { display: none; }
+.mv-pill img { width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); object-fit: contain; }
+
+/* ── Multi-view window mode: only Rhēma, nothing that leads out of it ─────── */
+html.mv-embed #appLaunchScreen, html.mv-embed #rotateLock, html.mv-embed #statusBarBg, html.mv-embed .app-header, html.mv-embed #desktopShellNav,
+html.mv-embed main.app > section.screen, html.mv-embed #bottomNav, html.mv-embed #rhemaLaunchMenu, html.mv-embed #authModal,
+html.mv-embed #notifPromptModal, html.mv-embed #installAppModal, html.mv-embed #updateModal, html.mv-embed #appCoachOverlay,
+html.mv-embed #lbIntroModal, html.mv-embed #lbModal, html.mv-embed #reminderModal, html.mv-embed #coachReplayModal,
+html.mv-embed .rhema-back-btn, html.mv-embed .rhema-guest-btn, html.mv-embed #rhemaWorkshopBackBtn, html.mv-embed #rhemaSermonNotesBackBtn,
+html.mv-embed .rhema-title-block, html.mv-embed #wheelItemTrails, html.mv-embed .rhema-mv-menu-btn, html.mv-embed #rhemaVerseSheetJourneyBtn,
+html.mv-embed #rhemaVerseSheetStudy, html.mv-embed .mv-overlay, html.mv-embed .mv-pill { display: none !important; }
+html.mv-embed .rhema-header { min-height: 0; padding-top: 6px; padding-bottom: 4px; }
+/* A window's page never scrolls itself (jumping to a verse would push its
+   header out of view); only the reader inside it scrolls. */
+html.mv-embed, html.mv-embed body { height: 100%; overflow: hidden !important; overscroll-behavior: none; }
