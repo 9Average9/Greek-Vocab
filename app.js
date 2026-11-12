@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.568";
+const APP_VERSION = "3.0.569";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30471,6 +30471,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.569 &mdash; Multi-view tabs</div>
+<ul>
+  <li><strong>Full-size Rhēmas, as tabs</strong> &mdash; Multi-view now gives each Rhēma (almost) the whole screen. Tabs along the very top show each one&rsquo;s passage and translation; tap a tab to switch, tap the guide&rsquo;s + to summon another (up to six), or the open tab&rsquo;s &#10005; to close it.</li>
+  <li><strong>Tabs always within reach</strong> &mdash; The tab strip stays on screen whatever a Rhēma is showing (Word by word, a word sheet, or when its own top bar slides away), so swapping is always one tap.</li>
+  <li><strong>Each tab keeps its own place</strong> &mdash; its book, chapter, translation and language, remembered next time; your main reading stays where you left it, and highlights and saves are shared.</li>
+  <li><strong>Word by word fix</strong> &mdash; Pronouns built into a Hebrew word now go to the right one: &ldquo;I&rdquo; in &ldquo;I shall not want&rdquo; is the verb אֶחְסָר, not &ldquo;my shepherd&rdquo;.</li>
+</ul>
 <div class="un-version-label">v3.0.568 &mdash; Cleaner Multi-view windows</div>
 <ul>
   <li><strong>One full-view button</strong> &mdash; Each window&rsquo;s title bar now has just its &#10005;. Use the &#10530; button at the top for a full view of the selected window (or double-tap a window&rsquo;s title).</li>
@@ -41940,21 +41947,35 @@ function _rhemaVerseLinks(ref) {
       they: ['3mp', '3fp', '3cp'], them: ['3mp', '3fp', '3cp'], their: ['3mp', '3fp', '3cp'], themselves: ['3mp', '3fp', '3cp'],
       i: ['1cs'], me: ['1cs'], my: ['1cs'], mine: ['1cs'], myself: ['1cs'], we: ['1cp'], us: ['1cp'], our: ['1cp'],
       you: ['2ms', '2fs', '2mp', '2fp'], your: ['2ms', '2fs', '2mp', '2fp'], yourself: ['2ms', '2fs'], thou: ['2ms', '2fs'], thee: ['2ms', '2fs'], thy: ['2ms', '2fs'], thine: ['2ms', '2fs'], ye: ['2mp', '2fp'] };
+    // "I", "he", "they"… (the one doing it) live in a verb's ending; "my",
+    // "his", "them"… (whose / to whom) in a word's suffix ("| 1cs").
+    const SUBJ = new Set(['i', 'he', 'she', 'we', 'they', 'thou', 'ye']);
+    const OBJ = new Set(['me', 'my', 'mine', 'myself', 'him', 'his', 'himself', 'her', 'herself', 'us', 'our', 'them', 'their', 'themselves', 'thee', 'thy', 'thine', 'yourself']);
+    const fits = (ps, low, g) => {
+      const [main, ...suf] = String(ps).split(' | ');
+      const inVerb = /^(?:.*, )?V-/.test(main) && new RegExp(`-${g}\\b`).test(main);
+      const inSuffix = suf.some(x => x.trim() === g);
+      return SUBJ.has(low) ? inVerb : OBJ.has(low) ? inSuffix : (inVerb || inSuffix);
+    };
     pieces.forEach((pc, k) => {
       if (pc.orig.length) return;
       const low = pc.text.toLowerCase();
       const want = PGN[low] || (low === 'and' ? 'and' : null);
       if (!want) return;
+      // The nearest word (either side, up to three pieces away) whose grammar fits.
+      let best = null;
       for (const dir of (want === 'and' ? [1] : [1, -1])) {
-        let q = null;
-        for (let d = 1; d <= 3; d++) { const x = pieces[k + dir * d]; if (!x) break; if (x.orig.length) { q = x; break; } }
-        if (!q) continue;
-        const hit = q.orig.find(i => {
-          const ps = _rhemaHebILWord(p.book, oc, ov, i)?.ps || '';
-          return want === 'and' ? /(^|\| )Conj-w\b/.test(ps) : want.some(g => new RegExp(`(^|[-| ])${g}\\b`).test(ps));
-        });
-        if (hit != null) { pc.orig = [hit]; pc.kind = 'match'; pc.part = true; break; }
+        for (let d = 1; d <= 3; d++) {
+          const x = pieces[k + dir * d]; if (!x) break;
+          if (!x.orig.length) continue;
+          const hit = x.orig.find(i => {
+            const ps = _rhemaHebILWord(p.book, oc, ov, i)?.ps || '';
+            return want === 'and' ? /(^|\| )Conj-w\b/.test(ps) : want.some(g => fits(ps, low, g));
+          });
+          if (hit != null) { if (!best || d < best.d) best = { hit, d }; break; }
+        }
       }
+      if (best) { pc.orig = [best.hit]; pc.kind = 'match'; pc.part = true; }
     });
   }
   return { ref, p, text, ver, layer, oc, ov, words, out, pieces };
@@ -47549,7 +47570,7 @@ const _coachVsheetBtn = fn => () => _coachFirst([() => [...document.querySelecto
 const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), title: 'Highlight', body: 'Tap a color to highlight the verse. Tap the crossed-out drop to clear it.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /note/i.test(t)), pose: 'thumbs', title: 'Notes', body: 'Write your own note on the verse. All your highlights and notes are listed in the menu.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Multi-view/.test(t)), title: 'Multi-view', body: 'Open this verse in its own window beside others: up to six Rhēmas at once, each with its own passage, translation and language.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Multi-view/.test(t)), title: 'Multi-view', body: 'Open this verse in a new Rhēma tab: up to six full Rhēmas, each with its own passage, translation and language. Tap a tab at the top to switch.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^See interpretations/.test(t)), pose: 'inspect', title: 'See interpretations', body: 'How different traditions read this passage, Free Grace first. Each view gets a short summary, real quotes from its teachers, and links to read more.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), pose: 'thumbs', title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Word by word/.test(t)), pose: 'inspect', title: 'Word by word', body: 'Your Bible’s words with the Greek or Hebrew under each one, or the original word by word in its own order. Tap any word to study it.' },
@@ -53302,27 +53323,25 @@ function _gtCheckCompletion(topic, entry) {
 }
 
 // ── Multi-view ────────────────────────────────────────────────────────────────
-// The guide summons up to six mini Rhēmas. Each window is the whole Rhēma (the
-// app itself in window mode, index.html?mv=N): its own book, chapter,
-// translation and language, every tool, nothing that leaves Rhēma. A window's
-// place is kept in its own storage slot, so the main reader keeps its place;
-// highlights, notes and saves are shared (every copy reloads them when another
-// saves). Windows float like browser windows: drag the title bar to move one,
-// the one you touch comes to the front, drag the bottom-left corner to resize,
-// ⤢ fills the screen, Tidy lays them all out. Inside, the Rhēma shrinks to fit
-// the window (sheets and all). Multi-view itself can shrink to a pill.
+// Up to six full-size Rhēmas as tabs. A tab strip sits at the very top, above
+// the Rhēma (so it stays put whatever the Rhēma shows: Word by word, a word
+// sheet, the scroll-hiding top bar); tap a tab to switch, + to summon another.
+// Each tab is the whole Rhēma (the app itself in window mode, index.html?mv=N)
+// with its own book, chapter, translation and language, every tool, nothing
+// that leaves Rhēma. A tab's place is kept in its own storage slot, so the main
+// reader keeps its place; highlights, notes and saves are shared (every copy
+// reloads them when another saves). Tabs are remembered for next time.
 const MV_MAX = 6;
 const MV_STORE = 'rhemaMultiView';
-let _mv = null;             // { wins: [{ slot, r: {x,y,w,h} as fractions of the stage, z, label }], tucked, max, z }
-let _mvMinimized = false;
+let _mv = null;             // { tabs: [{ slot, label }], active }
 
 function _mvStored() { try { return JSON.parse(localStorage.getItem(MV_STORE) || 'null'); } catch { return null; } }
 function _mvPersist() {
   if (!_mv) return;
-  try { localStorage.setItem(MV_STORE, JSON.stringify({ wins: _mv.wins.map(w => ({ slot: w.slot, r: w.r, z: w.z, label: w.label || '' })), tucked: !!_mv.tucked })); } catch {}
+  try { localStorage.setItem(MV_STORE, JSON.stringify({ tabs: _mv.tabs.map(t => ({ slot: t.slot, label: t.label || '' })), active: _mv.active })); } catch {}
 }
-// A new window starts at `ref` (or the main reader's place) in the main
-// reader's translation and language; after that it's on its own.
+// A new tab starts at `ref` (or the main reader's place) in the main reader's
+// translation and language; after that it's on its own.
 function _mvSeed(slot, ref) {
   const p = (ref && _rhemaParseRef(ref)) || { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse };
   const sfx = '::mv' + slot;
@@ -53337,41 +53356,16 @@ function _mvSeed(slot, ref) {
   } catch {}
 }
 function _mvFreeSlot() {
-  const used = new Set((_mv?.wins || []).map(w => String(w.slot)));
+  const used = new Set((_mv?.tabs || []).map(t => String(t.slot)));
   for (let i = 1; i <= MV_MAX; i++) if (!used.has(String(i))) return String(i);
   return null;
 }
 function _mvStage() { return document.getElementById('mvStage'); }
-function _mvStageSize() { const s = _mvStage(); return { W: s?.clientWidth || 360, H: s?.clientHeight || 560 }; }
-function _mvWinBySlot(slot) { return _mv?.wins.find(w => String(w.slot) === String(slot)) || null; }
+function _mvTab(slot) { return _mv?.tabs.find(t => String(t.slot) === String(slot)) || null; }
 function _mvEl(slot) { return _mvStage()?.querySelector(`.mv-win[data-slot="${slot}"]`) || null; }
-
-// Tidy: a neat grid that fills the stage (1 column for two windows, then 2).
-function _mvTidyRects(n) {
-  const cols = n <= 2 ? 1 : 2, rows = Math.ceil(n / cols), g = 0.02;
-  const w = (1 - g * (cols + 1)) / cols, h = (1 - g * (rows + 1)) / rows;
-  const rects = Array.from({ length: n }, (_, i) => ({ x: g + (i % cols) * (w + g), y: g + Math.floor(i / cols) * (h + g), w, h }));
-  // An odd one out takes the full width of its row.
-  if (cols === 2 && n % 2) { const last = rects[n - 1]; last.x = g; last.w = 1 - 2 * g; }
-  return rects;
-}
-// A new window: cascaded from the front window, a comfortable size.
-function _mvNewRect() {
-  const top = _mv.wins.slice().sort((a, b) => (b.z || 0) - (a.z || 0))[0];
-  const w = 0.88, h = 0.55;
-  if (!top) return { x: 0.06, y: 0.04, w, h };
-  let x = Math.min(1 - w, (top.r?.x || 0) + 0.05), y = (top.r?.y || 0) + 0.08;
-  if (y + h > 1) y = 0.02;
-  return { x: Math.max(0, x), y, w, h };
-}
-function _mvClampRect(r) {
-  const { W, H } = _mvStageSize();
-  const minW = Math.min(1, 190 / W), minH = Math.min(1, 170 / H);
-  const w = Math.max(minW, Math.min(1, r.w)), h = Math.max(minH, Math.min(1, r.h));
-  // Keep at least the title bar reachable.
-  const x = Math.max(-w + 80 / W, Math.min(1 - 80 / W, r.x));
-  const y = Math.max(0, Math.min(1 - 44 / H, r.y));
-  return { x, y, w, h };
+function _mvShortLabel(label) {
+  // "Psalms 23:1 · NIV" → "Ps 23:1 · NIV" when tabs are crowded.
+  return String(label || '').replace(/^(\d?\s?[A-Za-z]{2,3})[A-Za-z]* /, '$1 ');
 }
 function _mvShell() {
   let ov = document.getElementById('mvOverlay');
@@ -53382,268 +53376,131 @@ function _mvShell() {
   ov.setAttribute('role', 'dialog');
   ov.setAttribute('aria-label', 'Multi-view');
   ov.innerHTML = `
-    <div class="mv-top">
-      <div class="mv-title">Multi-view</div>
-      <div class="mv-top-actions">
-        <button type="button" class="mv-ibtn" onclick="rhemaMvTidy()" aria-label="Tidy: lay the windows out neatly" title="Tidy"><span class="material-symbols-outlined">auto_awesome_mosaic</span></button>
-        <button type="button" class="mv-ibtn" id="mvFillBtn" onclick="rhemaMvFillSelected()" aria-label="Fill the screen with the selected window" title="Full view of the selected window"><span class="material-symbols-outlined">open_in_full</span></button>
-        <button type="button" class="mv-ibtn" onclick="rhemaCloseMultiView()" aria-label="Close Multi-view"><span class="material-symbols-outlined">close</span></button>
-      </div>
+    <div class="mv-tabbar">
+      <div class="mv-tabs" id="mvTabs" role="tablist"></div>
+      <button type="button" class="mv-add-tab" id="mvPlus" onclick="rhemaMvAdd()" aria-label="Summon another Rhēma"><img src="assets/mascot/guide-summon.webp" alt="" width="30" height="30"/><span class="material-symbols-outlined">add</span></button>
+      <button type="button" class="mv-exit" onclick="rhemaCloseMultiView()" aria-label="Close Multi-view and go back to your Rhēma"><span class="material-symbols-outlined">close</span></button>
     </div>
-    <div class="mv-stage" id="mvStage"></div>
-    <div class="mv-bottom">
-      <button type="button" class="mv-guide" id="mvGuide" onclick="rhemaMvToggleTuck()" aria-label="Tuck the guide away for more room"><span class="mv-glow"></span><img src="assets/mascot/guide-summon.webp" alt="" width="210" height="212" decoding="async"/></button>
-      <div class="mv-add"><button type="button" class="mv-plus" id="mvPlus" onclick="rhemaMvAdd()" aria-label="Summon another Rhēma"><span class="material-symbols-outlined">add</span></button><span class="mv-count" id="mvCount"></span></div>
-    </div>`;
+    <div class="mv-stage" id="mvStage"></div>`;
   document.body.appendChild(ov);
-  const pill = document.createElement('button');
-  pill.type = 'button';
-  pill.id = 'mvPill';
-  pill.className = 'mv-pill';
-  pill.hidden = true;
-  pill.setAttribute('onclick', 'rhemaMvRestore()');
-  document.body.appendChild(pill);
   window.addEventListener('message', _mvOnMessage);
   return ov;
 }
 function _mvOnMessage(e) {
   if (e.origin !== location.origin || !e.data || !e.data.rhemaMV || !_mv) return;
-  const w = _mvWinBySlot(e.data.rhemaMV);
-  if (!w) return;
-  if (e.data.focus) { _mvFocus(w.slot); return; }
-  if (!e.data.label || w.label === e.data.label) return;
-  w.label = e.data.label;
-  const el = _mvEl(w.slot)?.querySelector('.mv-label');
-  if (el) el.textContent = w.label;
+  const t = _mvTab(e.data.rhemaMV);
+  if (!t || !e.data.label || t.label === e.data.label) return;
+  t.label = e.data.label;
+  _mvRenderTabs();
   _mvPersist();
 }
-function _mvWinEl(w) {
+function _mvWinEl(t) {
   const el = document.createElement('div');
-  el.className = 'mv-win mv-summoned';
-  el.dataset.slot = w.slot;
-  el.innerHTML = `
-    <div class="mv-wbar" title="Drag to move">
-      <span class="mv-label">${_escapeRhemaAttr(w.label || 'Opening…')}</span>
-      <button type="button" class="mv-wbtn" data-act="close" aria-label="Send this window away"><span class="material-symbols-outlined">close</span></button>
-    </div>
-    <div class="mv-body"><iframe class="mv-frame" title="Rhēma window" src="index.html?mv=${w.slot}"></iframe></div>
-    <button type="button" class="mv-corner" aria-label="Drag to resize"><span class="material-symbols-outlined">open_in_full</span></button>`;
-  el.querySelector('[data-act="close"]').addEventListener('click', () => rhemaMvRemove(w.slot));
-  el.querySelector('.mv-wbar').addEventListener('pointerdown', (ev) => { if (!ev.target.closest('button')) _mvStartMove(ev, w.slot); });
-  el.querySelector('.mv-wbar').addEventListener('dblclick', (ev) => { if (!ev.target.closest('button')) rhemaMvMaximize(w.slot); });
-  el.querySelector('.mv-corner').addEventListener('pointerdown', (ev) => _mvStartResize(ev, w.slot));
-  el.addEventListener('pointerdown', () => _mvFocus(w.slot), true);
-  el.querySelector('.mv-frame').addEventListener('load', () => _mvFit(w.slot));
-  setTimeout(() => el.classList.remove('mv-summoned'), 900);
+  el.className = 'mv-win';
+  el.dataset.slot = t.slot;
+  el.innerHTML = `<iframe class="mv-frame" title="Rhēma tab" src="index.html?mv=${t.slot}"></iframe>`;
+  el.querySelector('.mv-frame').addEventListener('load', () => _mvFit(t.slot));
   return el;
 }
-// The touched window comes to the front.
-function _mvFocus(slot) {
-  const w = _mvWinBySlot(slot);
-  if (!w) return;
-  const topZ = Math.max(0, ..._mv.wins.map(x => x.z || 0));
-  if ((w.z || 0) < topZ || _mv.wins.filter(x => (x.z || 0) === topZ).length > 1) { w.z = topZ + 1; _mvPlace(w); _mvPersist(); }
-  _mvStage()?.querySelectorAll('.mv-win').forEach(e => e.classList.toggle('mv-front', e.dataset.slot === String(slot)));
+function _mvRenderTabs() {
+  const wrap = document.getElementById('mvTabs');
+  if (!wrap || !_mv) return;
+  const esc = _escapeRhemaAttr;
+  const crowded = _mv.tabs.length > 2;
+  wrap.innerHTML = _mv.tabs.map(t => {
+    const on = String(t.slot) === String(_mv.active);
+    const [ref, ver] = String(t.label || '').split(' · ');
+    const refShown = t.label ? (crowded ? _mvShortLabel(ref) : ref) : 'Opening…';
+    return `<div class="mv-tab${on ? ' on' : ''}" role="tab" aria-selected="${on}" data-slot="${t.slot}" onclick="rhemaMvShow('${t.slot}')" title="${esc(t.label || '')}">` +
+      `<span class="mv-tab-label"><b>${esc(refShown)}</b>${ver ? `<small>${esc(ver)}</small>` : ''}</span>` +
+      `<button type="button" class="mv-tab-x" onclick="event.stopPropagation();rhemaMvRemove('${t.slot}')" aria-label="Close this tab"><span class="material-symbols-outlined">close</span></button></div>`;
+  }).join('');
+  const plus = document.getElementById('mvPlus');
+  if (plus) plus.disabled = _mv.tabs.length >= MV_MAX;
+  wrap.querySelector('.mv-tab.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
-// The Rhēma inside a window shrinks to fit it: laid out for about a phone's
-// width, scaled down when the window is narrower or shorter (never below 55%).
+// The Rhēma in a tab fills it; on a narrow screen it shrinks a little to keep
+// a phone-width layout (never below 55%).
 function _mvFit(slot) {
   const el = _mvEl(slot);
   const fr = el?.querySelector('.mv-frame');
-  if (!el || !fr) return;
-  const b = el.querySelector('.mv-body').getBoundingClientRect();
-  const s = Math.max(0.55, Math.min(1, b.width / 380, b.height / 520));
+  if (!el || !fr || el.hidden) return;
+  const b = el.getBoundingClientRect();
+  if (!b.width) return;
+  const s = Math.max(0.55, Math.min(1, b.width / 360));
   try {
     const de = fr.contentDocument?.documentElement;
     if (de && de.style.zoom !== String(+s.toFixed(3))) de.style.zoom = String(+s.toFixed(3));
   } catch {}
 }
-function _mvPlace(w) {
-  const el = _mvEl(w.slot);
-  if (!el) return;
-  const { W, H } = _mvStageSize();
-  if (String(_mv.max) === String(w.slot)) {
-    Object.assign(el.style, { left: '0px', top: '0px', width: W + 'px', height: H + 'px', zIndex: 900 });
-  } else {
-    const r = w.r;
-    Object.assign(el.style, { left: Math.round(r.x * W) + 'px', top: Math.round(r.y * H) + 'px', width: Math.round(r.w * W) + 'px', height: Math.round(r.h * H) + 'px', zIndex: String(10 + (w.z || 0)) });
-  }
-  el.classList.toggle('mv-max', String(_mv.max) === String(w.slot));
-}
-function _mvLayout() {
-  if (!_mv) return;
-  const ov = document.getElementById('mvOverlay');
-  ov?.classList.toggle('mv-tucked', !!_mv.tucked);
-  _mv.wins.forEach(w => { w.r = _mvClampRect(w.r || _mvNewRect()); _mvPlace(w); });
-  const n = _mv.wins.length;
-  const cnt = document.getElementById('mvCount');
-  if (cnt) cnt.textContent = `${n} of ${MV_MAX}`;
-  const plus = document.getElementById('mvPlus');
-  if (plus) plus.disabled = n >= MV_MAX;
-  requestAnimationFrame(() => _mv && _mv.wins.forEach(w => _mvFit(w.slot)));
+function rhemaMvShow(slot) {
+  if (!_mv || !_mvTab(slot)) return;
+  _mv.active = String(slot);
+  _mvStage()?.querySelectorAll('.mv-win').forEach(el => { el.hidden = el.dataset.slot !== String(slot); });
+  _mvRenderTabs();
+  _mvFit(slot);
+  _mvPersist();
 }
 function rhemaOpenMultiView(ref) {
   try { closeRhemaWheel(); } catch {}
   const ov = _mvShell();
   if (!_mv) {
     const st = _mvStored();
-    _mv = { wins: (st?.wins || []).filter(w => w && /^[1-6]$/.test(String(w.slot))).slice(0, MV_MAX), tucked: !!st?.tucked, max: null };
-    _mv.wins.forEach(w => { if (!w.r || typeof w.r.x !== 'number') w.r = null; });
-    if (!_mv.wins.length) {
-      // First summon: two windows at the main reader's place, one above the other.
-      ['1', '2'].forEach(slot => { _mvSeed(slot, null); _mv.wins.push({ slot, r: null, z: 0, label: '' }); });
+    const saved = (st?.tabs || st?.wins || []).filter(t => t && /^[1-6]$/.test(String(t.slot))).slice(0, MV_MAX);
+    _mv = { tabs: saved.map(t => ({ slot: String(t.slot), label: t.label || '' })), active: st?.active ? String(st.active) : null };
+    if (!_mv.tabs.length) {
+      // First summon: two tabs at the main reader's place.
+      ['1', '2'].forEach(slot => { _mvSeed(slot, null); _mv.tabs.push({ slot, label: '' }); });
     }
-    const tidy = _mvTidyRects(_mv.wins.length);
-    _mv.wins.forEach((w, i) => { if (!w.r) w.r = tidy[i]; });
+    // A remembered tab with no place of its own starts at the main reader's.
+    _mv.tabs.forEach(t => { try { if (!localStorage.getItem('rhemaLastPos::mv' + t.slot)) _mvSeed(t.slot, null); } catch {} });
+    if (!_mvTab(_mv.active)) _mv.active = _mv.tabs[0].slot;
     const stage = _mvStage();
     stage.innerHTML = '';
-    _mv.wins.forEach(w => stage.appendChild(_mvWinEl(w)));
+    _mv.tabs.forEach(t => stage.appendChild(_mvWinEl(t)));
   }
-  _mvMinimized = false;
-  document.getElementById('mvPill').hidden = true;
   ov.classList.add('open');
   ov.classList.remove('mv-summon'); void ov.offsetWidth; ov.classList.add('mv-summon');
-  requestAnimationFrame(() => { _mvLayout(); if (ref) rhemaMvAdd(ref); });
+  rhemaMvShow(_mv.active);
+  if (ref) rhemaMvAdd(ref);
   _mvPersist();
 }
 function rhemaMvAdd(ref) {
   if (!_mv) return rhemaOpenMultiView(ref);
-  if (_mv.wins.length >= MV_MAX) { if (typeof _showStudyToast === 'function') _showStudyToast(`Multi-view holds up to ${MV_MAX} windows. Send one away (✕) to add another.`); return; }
+  if (_mv.tabs.length >= MV_MAX) { if (typeof _showStudyToast === 'function') _showStudyToast(`Multi-view holds up to ${MV_MAX} Rhēmas. Close a tab (✕) to add another.`); return; }
   const slot = _mvFreeSlot();
   if (!slot) return;
   _mvSeed(slot, ref || null);
-  const z = Math.max(0, ..._mv.wins.map(x => x.z || 0)) + 1;
-  const w = { slot, r: _mvNewRect(), z, label: '' };
-  _mv.wins.push(w);
-  _mv.max = null;
-  _mvStage().appendChild(_mvWinEl(w));
+  const t = { slot, label: '' };
+  _mv.tabs.push(t);
+  _mvStage().appendChild(_mvWinEl(t));
   const ov = document.getElementById('mvOverlay');
   ov.classList.remove('mv-summon'); void ov.offsetWidth; ov.classList.add('mv-summon');
-  _mvLayout();
-  _mvFocus(slot);
-  _mvPersist();
+  rhemaMvShow(slot);
 }
 function rhemaMvRemove(slot) {
   if (!_mv) return;
-  _mv.wins = _mv.wins.filter(w => String(w.slot) !== String(slot));
-  if (String(_mv.max) === String(slot)) _mv.max = null;
+  const i = _mv.tabs.findIndex(t => String(t.slot) === String(slot));
+  if (i < 0) return;
+  _mv.tabs.splice(i, 1);
   _mvEl(slot)?.remove();
-  _mvLayout();
-  _mvPersist();
-  if (!_mv.wins.length) rhemaCloseMultiView();
+  if (!_mv.tabs.length) { _mvPersist(); return rhemaCloseMultiView(); }
+  if (String(_mv.active) === String(slot)) _mv.active = _mv.tabs[Math.max(0, i - 1)].slot;
+  rhemaMvShow(_mv.active);
 }
-function rhemaMvMaximize(slot) {
-  if (!_mv) return;
-  _mv.max = String(_mv.max) === String(slot) ? null : String(slot);
-  _mvStage()?.querySelectorAll('.mv-win').forEach(e => {
-    const ic = e.querySelector('[data-act="max"] .material-symbols-outlined');
-    if (ic) ic.textContent = String(_mv.max) === e.dataset.slot ? 'close_fullscreen' : 'open_in_full';
-  });
-  const fi = document.querySelector('#mvFillBtn .material-symbols-outlined');
-  if (fi) fi.textContent = _mv.max ? 'close_fullscreen' : 'open_in_full';
-  _mvLayout();
-  _mvFocus(slot);
-}
-// Top button: the selected (front) window fills the screen; again to restore.
-function rhemaMvFillSelected() {
-  if (!_mv || !_mv.wins.length) return;
-  if (_mv.max) return rhemaMvMaximize(_mv.max);
-  const front = _mvStage()?.querySelector('.mv-win.mv-front')?.dataset.slot
-    || _mv.wins.slice().sort((a, b) => (b.z || 0) - (a.z || 0))[0].slot;
-  rhemaMvMaximize(front);
-}
-function rhemaMvTidy() {
-  if (!_mv) return;
-  _mv.max = null;
-  const fi = document.querySelector('#mvFillBtn .material-symbols-outlined');
-  if (fi) fi.textContent = 'open_in_full';
-  const order = _mv.wins.slice().sort((a, b) => (a.r?.y || 0) - (b.r?.y || 0) || (a.r?.x || 0) - (b.r?.x || 0));
-  const rects = _mvTidyRects(order.length);
-  order.forEach((w, i) => { w.r = rects[i]; });
-  _mvStage()?.classList.add('mv-animate');
-  _mvLayout();
-  setTimeout(() => _mvStage()?.classList.remove('mv-animate'), 350);
-  _mvPersist();
-}
-function rhemaMvToggleTuck() { if (!_mv) return; _mv.tucked = !_mv.tucked; requestAnimationFrame(_mvLayout); _mvLayout(); _mvPersist(); }
-// Shrink Multi-view to a pill over the main Rhēma (the windows keep running).
-function rhemaMvMinimize() {
-  const ov = document.getElementById('mvOverlay');
-  if (!ov || !_mv) return;
-  ov.classList.remove('open');
-  _mvMinimized = true;
-  const pill = document.getElementById('mvPill');
-  pill.innerHTML = `<img src="assets/mascot/guide-summon.webp" alt="" width="34" height="34"/><span>Multi-view · ${_mv.wins.length}</span>`;
-  pill.hidden = false;
-  try { renderRhemaVerse(); } catch {}
-}
-function rhemaMvRestore() {
-  document.getElementById('mvPill').hidden = true;
-  _mvMinimized = false;
-  document.getElementById('mvOverlay')?.classList.add('open');
-  requestAnimationFrame(_mvLayout);
-}
-// Close: the windows go away (their places are remembered for next time) and
-// the main Rhēma shows anything highlighted or saved in them.
+// Close: back to the main Rhēma (tabs are remembered for next time), showing
+// anything highlighted or saved in them.
 function rhemaCloseMultiView() {
   const ov = document.getElementById('mvOverlay');
   if (ov) ov.classList.remove('open');
-  const pill = document.getElementById('mvPill');
-  if (pill) pill.hidden = true;
   _mvPersist();
   const stage = _mvStage();
   if (stage) stage.innerHTML = '';
   _mv = null;
-  _mvMinimized = false;
   try { _rhemaLoadLocalMarks(); renderRhemaVerse(); } catch {}
 }
-// Shared pointer-drag plumbing (frames ignore the pointer while dragging, so
-// the drag can't get lost inside one).
-function _mvDrag(ev, onMove) {
-  ev.preventDefault();
-  const ov = document.getElementById('mvOverlay');
-  ov.classList.add('mv-dragging');
-  const x0 = ev.clientX, y0 = ev.clientY;
-  const move = (e) => onMove(e.clientX - x0, e.clientY - y0);
-  const up = () => {
-    ov.classList.remove('mv-dragging');
-    window.removeEventListener('pointermove', move);
-    window.removeEventListener('pointerup', up);
-    window.removeEventListener('pointercancel', up);
-    if (_mv) { _mv.wins.forEach(w => _mvFit(w.slot)); _mvPersist(); }
-  };
-  window.addEventListener('pointermove', move);
-  window.addEventListener('pointerup', up);
-  window.addEventListener('pointercancel', up);
-}
-function _mvStartMove(ev, slot) {
-  const w = _mvWinBySlot(slot);
-  if (!w) return;
-  if (String(_mv.max) === String(slot)) return;
-  _mvFocus(slot);
-  const { W, H } = _mvStageSize();
-  const r0 = { ...w.r };
-  _mvDrag(ev, (dx, dy) => { w.r = _mvClampRect({ ...r0, x: r0.x + dx / W, y: r0.y + dy / H }); _mvPlace(w); });
-}
-// Bottom-left corner: drag diagonally. Left edge and bottom edge follow.
-function _mvStartResize(ev, slot) {
-  const w = _mvWinBySlot(slot);
-  if (!w) return;
-  if (String(_mv.max) === String(slot)) { _mv.max = null; _mvLayout(); }
-  _mvFocus(slot);
-  const { W, H } = _mvStageSize();
-  const r0 = { ...w.r };
-  const right = r0.x + r0.w;
-  _mvDrag(ev, (dx, dy) => {
-    const minW = 190 / W;
-    const x = Math.min(right - minW, Math.max(-0.02, r0.x + dx / W));
-    w.r = _mvClampRect({ x, y: r0.y, w: right - x, h: Math.min(1 - r0.y, r0.h + dy / H) });
-    _mvPlace(w);
-    _mvFit(slot);
-  });
-}
-window.addEventListener('resize', () => { if (_mv && !_mvMinimized) _mvLayout(); });
-// From the verse menu: Multi-view with this verse in a new window.
+window.addEventListener('resize', () => { if (_mv) _mvFit(_mv.active); });
+// From the verse menu: Multi-view with this verse in a new tab.
 function rhemaMultiViewFromMenu() {
   const ref = _rhemaMenuRef || (_rhemaSel.size ? _rhemaSelectedRefs()[0] : null);
   rhemaClearSelection();
@@ -53668,8 +53525,6 @@ if (window.RHEMA_MV_SLOT) {
   window.startRhemaCoach = function () {};
   window.rhemaOpenMultiView = function () {};
   window.rhemaMultiViewFromMenu = function () {};
-  // Touching anything in a window brings it to the front in Multi-view.
-  document.addEventListener('pointerdown', () => { try { parent.postMessage({ rhemaMV: window.RHEMA_MV_SLOT, focus: true }, location.origin); } catch {} }, true);
   const mvBoot = () => {
     _rhemaAdoptParentData();
     try { _appLaunchReleased = true; } catch {}
