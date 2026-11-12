@@ -39850,7 +39850,7 @@ html.mv-embed main.app > section.screen, html.mv-embed #bottomNav, html.mv-embed
 html.mv-embed #notifPromptModal, html.mv-embed #installAppModal, html.mv-embed #updateModal, html.mv-embed #appCoachOverlay,
 html.mv-embed #lbIntroModal, html.mv-embed #lbModal, html.mv-embed #reminderModal, html.mv-embed #coachReplayModal,
 html.mv-embed .rhema-back-btn, html.mv-embed .rhema-guest-btn, html.mv-embed #rhemaWorkshopBackBtn, html.mv-embed #rhemaSermonNotesBackBtn,
-html.mv-embed .rhema-title-block, html.mv-embed #wheelItemTrails, html.mv-embed .rhema-mv-menu-btn, html.mv-embed #rhemaVerseSheetJourneyBtn,
+html.mv-embed .rhema-title-block, html.mv-embed #wheelItemTrails, html.mv-embed #rhemaVerseSheetJourneyBtn,
 html.mv-embed #rhemaVerseSheetStudy, html.mv-embed .mv-overlay, html.mv-embed .mv-pill { display: none !important; }
 html.mv-embed .rhema-header { min-height: 0; padding-top: 6px; padding-bottom: 4px; }
 /* A window's page never scrolls itself (jumping to a verse would push its
