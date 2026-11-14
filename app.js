@@ -22911,7 +22911,9 @@ function _saveRhemaPosition() {
   const pos = { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion(), translation: _rhemaEnglishLabel(), ts: Date.now(), snippet: verseSnippet, greek: greekSnippet };
   localStorage.setItem('rhemaLastPos', JSON.stringify(pos));
   if (window.RHEMA_MV_SLOT) return; // a Multi-view window: its place stays on this device, in its own slot
-  if (uid && window.LB) {
+  // The cloud copy only when actually signed in as this user (signed out, the
+  // fallback ID has no permission and every save was refused).
+  if (uid && window.LB && window.Auth?.getCurrentUser?.()?.uid === uid) {
     window.LB.saveRhemaPosition?.(uid, pos)?.catch?.(() => {});
   }
 }
@@ -30561,7 +30563,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.576";
+const APP_VERSION = "3.0.577";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30585,6 +30587,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.577 &mdash; Steadier syncing</div>
+<ul>
+  <li><strong>Firebase updated</strong> &mdash; The sign-in and sync library moved from version 10 to 13, and its offline cache now works safely with the app open in more than one place (several tabs, or Multi-view). Before, a second copy could crash syncing until the app was reopened.</li>
+  <li><strong>Multi-view tabs stay quiet</strong> &mdash; Each tab no longer starts its own copy of your account syncing (profile, habits, calendar, highlights); the app around it already does that, and the tabs still share your highlights.</li>
+  <li><strong>No failed saves when signed out</strong> &mdash; Your reading place is only copied to the cloud when you&rsquo;re signed in (it&rsquo;s always kept on the device).</li>
+</ul>
 <div class="un-version-label">v3.0.576 &mdash; Home fits every phone</div>
 <ul>
   <li><strong>Same Home on every iPhone</strong> &mdash; On bigger phones (Plus, Pro Max) the Tools row used to stop well above the nav bar, leaving an awkward empty gap, and on small ones it could run under it. Home now measures the room it has: on bigger phones the Habit Builder and Journey Maps cards get a little taller and the tool buttons get bigger, so the Tools row always ends the same short distance above the nav bar.</li>
@@ -40062,6 +40070,9 @@ function _rhemaPersistLocalMarks() {
 }
 function _rhemaStartMarksSync() {
   _rhemaLoadLocalMarks();
+  // A Multi-view tab gets highlights from the app around it (the storage event
+  // below reloads them); only the app itself keeps a live cloud listener.
+  if (window.RHEMA_MV_SLOT) return;
   const uid = window.Auth?.getCurrentUser?.()?.uid;
   _rhemaMarksUnsub?.(); _rhemaMarksUnsub = null;
   if (!uid || !window.Auth?.listenRhemaMarks) return;
@@ -54033,6 +54044,11 @@ if (window.RHEMA_MV_SLOT) {
   window.rhemaGoBack = function () {};
   window.startRhemaCoach = function () {};
   window.rhemaOpenMultiView = function () {};
+  // Signing in inside a tab must not start a second copy of the app's account
+  // work (profile restore and write-back, habits/calendar/encouragement
+  // listeners, leaderboards, highlight sync): the app around it already does
+  // all of that. Several copies at once fought over Firestore's cache.
+  window.__onAuthStateReady = async () => { _authReady = true; _appInitialDataReady = true; };
   // In a tab, the verse menu's Multi-view button opens the verse in a new tab
   // (same translation and language as this one).
   window.rhemaMultiViewFromMenu = function () {
