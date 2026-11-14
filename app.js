@@ -30563,7 +30563,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.581";
+const APP_VERSION = "3.0.582";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30587,6 +30587,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.582 &mdash; Whole words in the Greek reader</div>
+<ul>
+  <li><strong>No more split words</strong> &mdash; On phones, about 1 Greek word in 6 broke across two lines inside its box (μονογεν / ῆ). Words now stay whole; the few too long for their box are made just small enough to fit. Hebrew too.</li>
+  <li><strong>&ldquo;offered&rdquo;, not &ldquo;offerred&rdquo;</strong> &mdash; Word glosses doubled the last letter of verbs like offer, suffer and limit (&ldquo;offerred&rdquo;). Now only verbs like prefer, occur and commit do.</li>
+</ul>
 <div class="un-version-label">v3.0.581 &mdash; Truer Greek grammar notes</div>
 <ul>
   <li><strong>The aorist, explained right</strong> &mdash; It views an action as a whole; it doesn&rsquo;t mean &ldquo;once&rdquo;, and outside statements it doesn&rsquo;t mark past time. The parsing label no longer calls every aorist a &ldquo;completed past action&rdquo;.</li>
@@ -48506,6 +48511,10 @@ function _engPlural(base) {
 
 // Single-syllable guard: consonant doubling only applies to 1-syllable words
 // (e.g. run→running, stop→stopped) not multi-syllable (enter→entering, suffer→suffered)
+// Two-syllable verbs stressed on the end double the last letter (prefer →
+// preferred, occur → occurred, commit → committed); offer, suffer, differ,
+// limit, vomit are stressed first and don't (offered, limited).
+const _ENG_DOUBLE_FINAL = /^(?:(?:re|pre|con|in|trans|de)fer|(?:oc|in|re|con)cur|(?:com|sub|per|o|ad|e|re|trans)mit)$/i;
 function _isSingleSyllable(w) {
   return (w.toLowerCase().match(/[aeiou]+/g) || []).length === 1;
 }
@@ -48518,7 +48527,7 @@ function _engIng(v) {
   const lw = w.toLowerCase();
   if (lw === 'am' || lw === 'is' || lw === 'are' || lw === 'be') w = 'being';
   else if (/ie$/.test(w)) w = w.slice(0, -2) + 'ying';                  // lie→lying, die→dying
-  else if (/(?:fer|cur|mit)$/.test(w)) w = w + w.slice(-1) + 'ing';     // transfer→transferring
+  else if (_ENG_DOUBLE_FINAL.test(w)) w = w + w.slice(-1) + 'ing';      // transfer→transferring (not offer→offering)
   else if (/[^aeiou]e$/.test(w)) w = w.slice(0, -1) + 'ing';            // love→loving
   else if (_isSingleSyllable(w) && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) w = w + w.slice(-1) + 'ing'; // run→running
   else w = w + 'ing';
@@ -48532,7 +48541,7 @@ function _engPast(v) {
   const key = words[0].toLowerCase();
   if (_IRREG_PAST_PART[key]) { words[0] = _IRREG_PAST_PART[key]; return words.join(' '); }
   const w = words[0];
-  if (/(?:fer|cur|mit)$/.test(w)) words[0] = w + w.slice(-1) + 'ed';    // transfer→transferred
+  if (_ENG_DOUBLE_FINAL.test(w)) words[0] = w + w.slice(-1) + 'ed';     // transfer→transferred (not offer→offered)
   else if (/e$/.test(w)) words[0] = w + 'd';
   else if (/[^aeiou]y$/.test(w)) words[0] = w.slice(0, -1) + 'ied';
   else if (_isSingleSyllable(w) && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) words[0] = w + w.slice(-1) + 'ed';
@@ -49782,6 +49791,43 @@ function openRhemaSheet(wordIdx, verse, ochapter) {
   document.querySelector('.rhema-sandbox-arrows')?.classList.remove('visible');
   initRhemaSwipeDown(sheet);
 }
+
+// Reader word grid: shrink the few Greek/Hebrew words too wide for their tile
+// so they fit on one line instead of splitting mid-word (style.css keeps them
+// whole). Measures all tiles first, then sets sizes, so it's one layout pass.
+function _rhemaFitWordTiles(root) {
+  const scope = root || document.getElementById('rhemaVerseDisplay');
+  if (!scope) return;
+  const texts = [...scope.querySelectorAll('.rhema-chapter-word-grid:not(.greek-only) .rhema-word > .rhema-greek-text')];
+  if (!texts.length) return;
+  texts.forEach(t => { if (t.style.fontSize) { t.style.fontSize = ''; t.style.letterSpacing = ''; } });
+  const plan = [];
+  for (const t of texts) {
+    const room = t.parentElement.clientWidth - 8;
+    const need = t.scrollWidth;
+    if (room > 0 && need > room) plan.push([t, Math.max(0.68, room / need)]);
+  }
+  for (const [t, ratio] of plan) {
+    const base = parseFloat(getComputedStyle(t).fontSize) || 18;
+    t.style.letterSpacing = '0';
+    t.style.fontSize = `${(base * ratio * 0.98).toFixed(2)}px`;
+  }
+}
+let _rhemaFitTilesTimer = 0;
+function _rhemaScheduleFitWordTiles() {
+  cancelAnimationFrame(_rhemaFitTilesTimer);
+  _rhemaFitTilesTimer = requestAnimationFrame(() => _rhemaFitWordTiles());
+}
+(function bindRhemaFitWordTiles() {
+  const start = () => {
+    const el = document.getElementById('rhemaVerseDisplay');
+    if (!el) return;
+    new MutationObserver(_rhemaScheduleFitWordTiles).observe(el, { childList: true, subtree: true });
+    window.addEventListener('resize', _rhemaScheduleFitWordTiles);
+    document.fonts?.ready?.then(_rhemaScheduleFitWordTiles);
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
 
 function closeRhemaSheet() {
   window.rhemaWordStudyTourClose?.();
