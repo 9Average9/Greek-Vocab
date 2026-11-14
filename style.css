@@ -39894,3 +39894,20 @@ html.mv-embed .rhema-header { padding-top: 6px !important; }
 .mv-tabbar.mv-stacked .mv-exit { grid-row: 2; grid-column: 3; width: 36px; height: 38px; border-radius: 11px; }
 .mv-tab.on .mv-tab-x { width: 26px; }
 @media (min-width: 700px) { .mv-tabs:not(.mv-two-rows) { grid-template-columns: repeat(var(--mv-cols, 2), minmax(0, 240px)); } }
+
+/* ── iOS installed app: no blur on anything that's hidden ─────────────────────
+   In the Home-Screen (installed) app on iPhone, an element that stays in the
+   page with a frosted-glass backdrop-filter, even fully transparent, can make
+   iOS paint a hazy strip across the very top of the screen (see v3.0.461–465:
+   the app toast). These four live in the page all the time, invisible until
+   used — the XP pop-up parks right under the status bar — so each keeps its
+   blur only while it's actually showing. */
+.xp-toast:not(.open),
+.rhema-copy-banner:not(.show),
+.rhema-sheet-backdrop:not(.visible),
+.rhema-compare-overlay:not(.open) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* The XP pop-up is tucked away out of view, not parked under the status bar. */
+.xp-toast:not(.open) { visibility: hidden; transition: transform 0.28s ease, opacity 0.28s ease, visibility 0s linear 0.28s; }

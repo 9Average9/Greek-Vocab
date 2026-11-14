@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.573";
+const APP_VERSION = "3.0.574";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30472,6 +30472,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.574 &mdash; Top-of-screen blur, again</div>
+<ul>
+  <li><strong>No more hazy strip at the top of the installed app</strong> &mdash; On iPhone, the Home-Screen app could show a blurred band across the very top. iOS paints it when an invisible element with a frosted-glass effect stays in the page; the XP pop-up sat hidden right under the status bar with one, and a few hidden reader backgrounds had one too. They now keep their blur only while they&rsquo;re actually showing.</li>
+</ul>
 <div class="un-version-label">v3.0.573 &mdash; No more empty words</div>
 <ul>
   <li><strong>Every Septuagint word now has information</strong> &mdash; About 1 Septuagint word in 15 (names like Γεδσων, and words the New Testament never uses) showed an empty card, because the Greek dictionaries are keyed to Strong&rsquo;s numbers, which only cover New Testament words. Each now shows its dictionary form, a short gloss, how often it appears, every place it appears in that book, and, for most, the Hebrew word it translates right there (tap it to study the Hebrew).</li>
