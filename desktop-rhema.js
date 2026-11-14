@@ -17,10 +17,21 @@
   function dismissAccount() {
     document.getElementById('desktopRhemaAccountPanel')?.classList.add('hidden');
     document.getElementById('desktopRhemaAccountBtn')?.setAttribute('aria-expanded', 'false');
+    syncRail();
   }
 
   function settleView(keep) {
     if (document.getElementById('mvOverlay')?.classList.contains('open')) rhemaCloseMultiView();
+    const host = document.getElementById('studySandbox');
+    if (keep !== 'tool' && host?.classList.contains('tool-host')) {
+      closeStudyToolHost();
+      host.classList.add('hidden');
+      host.classList.remove('tool-host', 'in');
+    }
+    if (keep !== 'crossrefs' && document.getElementById('rhemaModal')?.classList.contains('xref-open')) {
+      if (typeof _closeRhemaXrefShell === 'function') _closeRhemaXrefShell();
+    }
+    if (keep !== 'atlas' && document.getElementById('atlasPage')?.classList.contains('active') && typeof _rhemaMapsReturn !== 'undefined' && _rhemaMapsReturn) _rhemaReturnFromMaps();
     const panel = document.getElementById('rhemaReaderPanelOverlay');
     if (keep !== 'panel' && panel?.classList.contains('open')) {
       closeRhemaReaderPanel();
@@ -39,13 +50,27 @@
     if (keep !== 'search' && document.getElementById('rhemaModal')?.classList.contains('rhema-search-open')) toggleRhemaSearch();
     if (!document.getElementById('rhemaCoachOverlay')?.classList.contains('hidden')) rhemaCoachSkip();
     if (!document.getElementById('appCoachOverlay')?.classList.contains('hidden') && typeof _endAppCoach === 'function') _endAppCoach();
+    requestAnimationFrame(syncRail);
   }
 
   function syncRail() {
     const atlasOpen = document.getElementById('atlasPage')?.classList.contains('active');
-    const view = atlasOpen
-      ? (document.getElementById('atlasTabPlaces')?.classList.contains('active') ? 'places' : 'journeys')
-      : 'reader';
+    const host = document.getElementById('studySandbox');
+    const toolPane = host?.classList.contains('tool-host') && !host.classList.contains('hidden')
+      ? host.querySelector('.ss-pane.active')?.id : null;
+    const toolView = { ssPaneVerses: 'phrasing', ssPaneWordlog: 'wordlog', ssPaneTrails: 'trails', ssPaneNotes: 'workspace' }[toolPane];
+    const panelOpen = document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open');
+    const toursOpen = panelOpen && document.getElementById('rhemaReaderPanel')?.classList.contains('sub-open')
+      && document.getElementById('rrpSubTitle')?.textContent?.trim() === 'Tours';
+    const view = !document.getElementById('desktopRhemaAccountPanel')?.classList.contains('hidden') ? 'account'
+      : atlasOpen ? (document.getElementById('atlasTabPlaces')?.classList.contains('active') ? 'places' : 'journeys')
+      : document.getElementById('bibleGenealogyOverlay')?.classList.contains('open') ? 'genealogy'
+      : document.getElementById('rhemaXrefPage') && !document.getElementById('rhemaXrefPage').classList.contains('hidden') ? 'crossrefs'
+      : document.getElementById('rhemaXrefSelectPage') && !document.getElementById('rhemaXrefSelectPage').classList.contains('hidden') ? 'crossrefs'
+      : toolView || (!document.getElementById('wordLibraryOverlay')?.classList.contains('hidden') ? 'library'
+      : toursOpen ? 'guide'
+      : panelOpen ? 'studytools'
+      : document.getElementById('rhemaModal')?.classList.contains('rhema-search-open') ? 'search' : 'reader');
     document.querySelectorAll('#desktopShellNav [data-rhema-view]').forEach(button => {
       const current = button.dataset.rhemaView === view;
       button.classList.toggle('active', current);
@@ -78,10 +103,11 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const observer = new MutationObserver(syncRail);
-    ['atlasPage', 'atlasTabPlaces', 'atlasTabJourneys', 'rhemaModal'].forEach(id => {
+    ['atlasPage', 'atlasTabPlaces', 'atlasTabJourneys', 'rhemaModal', 'rhemaReaderPanelOverlay', 'rhemaReaderPanel', 'rrpSubTitle', 'wordLibraryOverlay', 'rhemaXrefPage', 'rhemaXrefSelectPage', 'studySandbox', 'ssPaneVerses', 'ssPaneWordlog', 'ssPaneTrails', 'ssPaneNotes', 'desktopRhemaAccountPanel'].forEach(id => {
       const element = document.getElementById(id);
-      if (element) observer.observe(element, { attributes: true, attributeFilter: ['class'] });
+      if (element) observer.observe(element, { attributes: true, attributeFilter: ['class'], childList: id === 'rrpSubTitle' });
     });
+    observer.observe(document.body, { childList: true });
     syncRail();
     window.syncDesktopRhemaLanguageUi();
   });
@@ -97,7 +123,7 @@
     });
   };
   window.desktopRhemaCrossRefs = async function () {
-    settleView();
+    settleView('crossrefs');
     await read();
     openRhemaCrossReferences();
   };
@@ -107,18 +133,29 @@
     openWordLibrary();
   };
   window.desktopRhemaStudyTool = async function (tool) {
-    settleView();
+    settleView('tool');
     await read();
-    openStudyTool(tool);
+    await openStudyTool(tool);
+    syncRail();
   };
   window.desktopRhemaReaderTools = async function () {
-    await read();
     if (document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) { closeRhemaReaderPanel(); return; }
     settleView('panel');
+    await read();
     openRhemaReaderPanel();
   };
+  window.desktopRhemaGuide = async function () {
+    const button = document.getElementById('desktopRhemaGuideBtn');
+    button?.classList.add('poked');
+    setTimeout(() => button?.classList.remove('poked'), 380);
+    settleView('panel');
+    await read();
+    if (!document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) openRhemaReaderPanel();
+    showReaderPanelSection('tours');
+    syncRail();
+  };
   window.desktopRhemaAtlas = async function (tab) {
-    settleView();
+    settleView('atlas');
     if (typeof _rhemaMapsReturn !== 'undefined' && _rhemaMapsReturn) {
       if (document.getElementById('atlasPage')?.classList.contains('active')) setAtlasTab(tab);
       else { _rhemaReturnFromMaps(); await read(); _rhemaStashForMaps(); openBibleAtlasPage(); setAtlasTab(tab); }
@@ -149,6 +186,7 @@
     document.getElementById('desktopRhemaAccountAction').textContent = user ? 'Sign out' : 'Sign in or create account';
     panel.classList.remove('hidden');
     button.setAttribute('aria-expanded', 'true');
+    syncRail();
   };
   window.desktopRhemaAccountAction = function () {
     dismissAccount();

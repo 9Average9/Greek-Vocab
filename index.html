@@ -371,13 +371,13 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.572" rel="stylesheet"/>
+<link href="style.css?v=3.0.573" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
-<link href="desktop-rhema.css?v=6" rel="stylesheet"/>
+<link href="desktop-rhema.css?v=7" rel="stylesheet"/>
 </head>
 <body class="rhema-desktop-site">
 <script>if (window.RHEMA_MV_SLOT) document.body.classList.remove('rhema-desktop-site');</script>
@@ -420,21 +420,23 @@ antique: {
 <div class="desktop-rhema-rail-scroll">
 <span class="desktop-rhema-rail-label">SCRIPTURE</span>
 <button class="desktop-nav-btn" onclick="desktopRhemaRead()" data-nav="rhema" data-rhema-view="reader"><span class="material-symbols-outlined">menu_book</span><span class="dnb-label">Bible reader</span></button>
-<button class="desktop-nav-btn" onclick="desktopRhemaSearch()"><span class="material-symbols-outlined">search</span><span class="dnb-label">Search Scripture</span></button>
-<button class="desktop-nav-btn" onclick="desktopRhemaCrossRefs()"><span class="material-symbols-outlined">hub</span><span class="dnb-label">Cross references</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaSearch()" data-rhema-view="search"><span class="material-symbols-outlined">search</span><span class="dnb-label">Search Scripture</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaCrossRefs()" data-rhema-view="crossrefs"><span class="material-symbols-outlined">hub</span><span class="dnb-label">Cross references</span></button>
 <span class="desktop-rhema-rail-label">STUDY</span>
-<button class="desktop-nav-btn" onclick="desktopRhemaReaderTools()" id="desktopRhemaStudyToolsBtn"><span class="material-symbols-outlined">tune</span><span class="dnb-label">Study tools</span></button>
-<button class="desktop-nav-btn" onclick="desktopRhemaWordLibrary()"><span class="material-symbols-outlined">local_library</span><span class="dnb-label">Word Library</span></button>
-<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('phrasing')"><span class="material-symbols-outlined">account_tree</span><span class="dnb-label">Phrasing</span></button>
-<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('wordlog')"><span class="material-symbols-outlined">dictionary</span><span class="dnb-label">Word Log</span></button>
-<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('workspace')"><span class="material-symbols-outlined">edit_note</span><span class="dnb-label">Notes &amp; insights</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaReaderTools()" id="desktopRhemaStudyToolsBtn" data-rhema-view="studytools"><span class="material-symbols-outlined">tune</span><span class="dnb-label">Study tools</span></button>
+<button class="desktop-rhema-guide" id="desktopRhemaGuideBtn" type="button" onclick="desktopRhemaGuide()" data-rhema-view="guide" aria-label="Open guided tours"><img src="assets/mascot/guide-peek.webp" alt=""/><span>Guided tours</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaWordLibrary()" data-rhema-view="library"><span class="material-symbols-outlined">local_library</span><span class="dnb-label">Word Library</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('phrasing')" data-rhema-view="phrasing"><span class="material-symbols-outlined">account_tree</span><span class="dnb-label">Phrasing</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('wordlog')" data-rhema-view="wordlog"><span class="material-symbols-outlined">dictionary</span><span class="dnb-label">Word Log</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('trails')" data-rhema-view="trails"><span class="material-symbols-outlined">route</span><span class="dnb-label">Trails</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaStudyTool('workspace')" data-rhema-view="workspace"><span class="material-symbols-outlined">edit_note</span><span class="dnb-label">Workspace</span></button>
 <span class="desktop-rhema-rail-label">EXPLORE</span>
 <button class="desktop-nav-btn" onclick="desktopRhemaAtlas('journeys')" data-rhema-view="journeys"><span class="material-symbols-outlined">route</span><span class="dnb-label">Bible journeys</span></button>
 <button class="desktop-nav-btn" onclick="desktopRhemaAtlas('places')" data-rhema-view="places"><span class="material-symbols-outlined">map</span><span class="dnb-label">Bible Atlas</span></button>
-<button class="desktop-nav-btn" onclick="desktopRhemaGenealogy()"><span class="material-symbols-outlined">family_history</span><span class="dnb-label">Genealogy</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaGenealogy()" data-rhema-view="genealogy"><span class="material-symbols-outlined">family_history</span><span class="dnb-label">Genealogy</span></button>
 </div>
 <div class="desktop-rhema-rail-footer">
-<button class="desktop-nav-btn" onclick="desktopRhemaAccount()" aria-expanded="false" id="desktopRhemaAccountBtn"><span class="material-symbols-outlined">account_circle</span><span class="dnb-label" id="desktopRhemaAccountLabel">Account</span></button>
+<button class="desktop-nav-btn" onclick="desktopRhemaAccount()" aria-expanded="false" id="desktopRhemaAccountBtn" data-rhema-view="account"><span class="material-symbols-outlined">account_circle</span><span class="dnb-label" id="desktopRhemaAccountLabel">Account</span></button>
 </div>
 <div class="desktop-rhema-account hidden" id="desktopRhemaAccountPanel" role="dialog" aria-label="Account"><strong id="desktopRhemaAccountName">Account</strong><p id="desktopRhemaAccountHint">Keep your Rhema studies together.</p><button id="desktopRhemaAccountAction" type="button" onclick="desktopRhemaAccountAction()">Sign in or create account</button></div>
 </aside>
@@ -17328,19 +17330,19 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.572"></script>
-<script src="app.js?v=3.0.572-desktop2"></script>
-<script src="rhema-word-study.js?v=3.0.572"></script>
+<script src="rhema-align.js?v=3.0.573"></script>
+<script src="app.js?v=3.0.573-desktop2"></script>
+<script src="rhema-word-study.js?v=3.0.573-desktop1"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.572"></script>
-<script src="verse-structure.js?v=3.0.572"></script>
-<script src="vs-structure.js?v=3.0.572"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.573"></script>
+<script src="verse-structure.js?v=3.0.573"></script>
+<script src="vs-structure.js?v=3.0.573"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
 <script src="sermon-notes.js?v=3.0.460"></script>
 <script src="bible-quiz.js?v=3.0.473"></script>
-<script src="firebase-lb.js?v=3.0.572" type="module"></script>
+<script src="firebase-lb.js?v=3.0.573" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -18979,6 +18981,6 @@ Save
 </div>
 
 <!-- Google Identity Services for optional Google Calendar OAuth -->
-<script src="desktop-rhema.js?v=4"></script>
+<script src="desktop-rhema.js?v=5"></script>
 </body>
 </html>
