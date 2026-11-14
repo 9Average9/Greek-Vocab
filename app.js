@@ -30448,7 +30448,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.574";
+const APP_VERSION = "3.0.575";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30472,6 +30472,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.575 &mdash; Top-of-screen blur, deeper fix</div>
+<ul>
+  <li><strong>The reader no longer stays a blur layer</strong> &mdash; Rhēma&rsquo;s open animation fades in from a soft blur, and it was leaving that blur effect switched on (at zero) for as long as the reader was open &mdash; the kind of layer the installed iPhone app turns into a hazy strip across the top. It now switches off as soon as the reader has opened. It looks exactly the same.</li>
+  <li><strong>No frosted glass in the installed app</strong> &mdash; In the Home-Screen app on iPhone, every frosted-glass effect is now off (the fix from v3.0.479 is back); panels sit over a plain dimmed background instead. The website keeps its frosted look.</li>
+</ul>
 <div class="un-version-label">v3.0.574 &mdash; Top-of-screen blur, again</div>
 <ul>
   <li><strong>No more hazy strip at the top of the installed app</strong> &mdash; On iPhone, the Home-Screen app could show a blurred band across the very top. iOS paints it when an invisible element with a frosted-glass effect stays in the page; the XP pop-up sat hidden right under the status bar with one, and a few hidden reader backgrounds had one too. They now keep their blur only while they&rsquo;re actually showing.</li>

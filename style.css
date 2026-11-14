@@ -39911,3 +39911,33 @@ html.mv-embed .rhema-header { padding-top: 6px !important; }
 }
 /* The XP pop-up is tucked away out of view, not parked under the status bar. */
 .xp-toast:not(.open) { visibility: hidden; transition: transform 0.28s ease, opacity 0.28s ease, visibility 0s linear 0.28s; }
+
+/* ── Reader: no lingering blur layer after it opens ───────────────────────────
+   The open animation fades the reader in from a blur. With fill-mode "both" it
+   kept filter: blur(0) applied (and will-change: filter) for as long as the
+   reader was open, leaving the full-screen reader as a live filter layer, the
+   kind of layer the installed iOS app paints a hazy strip at the top for. Once
+   the animation ends the reader now goes back to plain (no filter, no
+   transform), which looks identical. */
+#rhemaSlide { will-change: auto; }
+#rhemaModal.open #rhemaSlide { animation-fill-mode: backwards; }
+
+/* ── Installed app (Home Screen): no frosted glass at all ─────────────────────
+   On iPhone, in the installed app only, iOS can mirror any frosted-glass
+   (backdrop-filter) layer as a hazy strip across the top of the screen. While
+   running as the installed app, every backdrop blur is off; the surfaces that
+   used it already have solid or near-solid backgrounds. The website keeps its
+   frosted look. Matched by the standalone media query and by the
+   .pwa-standalone class set before first paint (index.html). */
+@media all and (display-mode: standalone) {
+  *, *::before, *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+html.pwa-standalone *,
+html.pwa-standalone *::before,
+html.pwa-standalone *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
