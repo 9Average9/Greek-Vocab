@@ -126,7 +126,7 @@ const FILES_TO_CACHE = [
   "./rhema-msb.js?v=3.0.65",
   "./rhema-bsb.js?v=3.0.65",
   // Rhema support data (pinned)
-  "./rhema-lexicon.js?v=3.0.65",
+  "./rhema-lexicon.js?v=3.0.580",
   "./rhema-mm.js?v=3.0.65",
   "./rhema-syntax.js?v=3.0.65",
   "./rhema-crossrefs.js?v=3.0.65",

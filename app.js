@@ -30576,7 +30576,7 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-hebrew-lexicon.js': '3.0.579',
   'rhema-hebrew-bdb.js':    '3.0.379',
   'rhema-lxx.js':       '3.0.573',
-  'rhema-lexicon.js':   '3.0.65',
+  'rhema-lexicon.js':   '3.0.580',
   'rhema-mm.js':        '3.0.65',
   'rhema-msb.js':       '3.0.65',
   'rhema-bsb.js':       '3.0.65',
