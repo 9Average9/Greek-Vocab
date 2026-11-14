@@ -30563,7 +30563,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.580";
+const APP_VERSION = "3.0.581";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30587,6 +30587,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.581 &mdash; Truer Greek grammar notes</div>
+<ul>
+  <li><strong>The aorist, explained right</strong> &mdash; It views an action as a whole; it doesn&rsquo;t mean &ldquo;once&rdquo;, and outside statements it doesn&rsquo;t mark past time. The parsing label no longer calls every aorist a &ldquo;completed past action&rdquo;.</li>
+  <li><strong>Other tenses and moods</strong> &mdash; Present, pluperfect (ᾔδει simply means &ldquo;he knew&rdquo;), indicative and subjunctive notes updated &mdash; the subjunctive also stands on its own (&ldquo;let us love&rdquo;) and follows ὅταν, ἕως and οὐ μή, not only ἵνα, ἐάν and μή.</li>
+  <li><strong>Voice labels fixed</strong> &mdash; Four voice codes were mislabelled (ἀπεκρίθη &ldquo;he answered&rdquo; showed as middle-passive). Verbs with no active form are now described the way current grammars do, rather than as &ldquo;deponent&rdquo;; the &ldquo;divine passive&rdquo; is noted as something context decides.</li>
+</ul>
 <div class="un-version-label">v3.0.580 &mdash; Cleaner &ldquo;how it&rsquo;s translated&rdquo;</div>
 <ul>
   <li><strong>Junk renderings removed</strong> &mdash; The measured list of how the English renders each Greek word was built by machine-matching words, and about 3,750 of its 9,400 rows were stray fragments (&ldquo;consented began Jesus&rdquo;). Those are gone, and forms of the same English word are combined (preach / preached / preaching).</li>
@@ -43873,26 +43879,28 @@ const MORPH_CASE = {
 const MORPH_NUM  = { S:'Singular', P:'Plural' };
 const MORPH_GEN  = { M:'Masculine', F:'Feminine', N:'Neuter' };
 const MORPH_TENSE = {
-  P:{l:'Present',     d:'ongoing action'},
+  P:{l:'Present',     d:'action in progress (or a general truth)'},
   I:{l:'Imperfect',   d:'ongoing past action'},
   F:{l:'Future',      d:'future action'},
-  A:{l:'Aorist',      d:'completed past action'},
+  A:{l:'Aorist',      d:'action viewed as a whole (past in statements)'},
   R:{l:'Perfect',     d:'completed with present result'},
   L:{l:'Pluperfect',  d:'completed past with past result'},
-  '2A':{l:'2nd Aorist', d:'completed past action (2nd form)'},
+  '2A':{l:'2nd Aorist', d:'action viewed as a whole (2nd form)'},
   '2R':{l:'2nd Perfect',d:'completed with present result (2nd form)'},
 };
 const MORPH_VOICE = {
   A:{l:'Active',         d:'subject performs the action'},
   M:{l:'Middle',         d:'subject acts for itself'},
   P:{l:'Passive',        d:'subject receives the action'},
-  D:{l:'Middle/Deponent',d:'active meaning, middle form'},
-  O:{l:'Middle-Passive', d:'middle or passive'},
-  N:{l:'Middle or Passive',d:'voice ambiguous'},
-  Q:{l:'Middle Deponent', d:'deponent with middle form'},
+  E:{l:'Middle or Passive', d:'the form fits both; context decides'},
+  D:{l:'Middle (no active form)', d:'middle form; English often says it actively'},
+  O:{l:'Passive (no active form)', d:'passive form; English often says it actively'},
+  N:{l:'Middle or Passive (no active form)', d:'middle or passive form; English often says it actively'},
+  Q:{l:'Impersonal Active', d:'used without a personal subject: “it is …”'},
+  X:{l:'No voice stated', d:''},
 };
 const MORPH_MOOD = {
-  I:{l:'Indicative',  d:'stating a fact'},
+  I:{l:'Indicative',  d:'presents as actual (statement or question)'},
   S:{l:'Subjunctive', d:'possibility or contingency'},
   O:{l:'Optative',    d:'wish or remote possibility'},
   M:{l:'Imperative',  d:'command'},
@@ -50053,31 +50061,32 @@ function showRhemaTab(tab, word) {
 
 const GRAMMAR_EXAMPLES = {
   tense: {
-    'Present':     { title:'Present Tense', en:'"He is writing" or "He writes"', body:'The present tense describes action happening now or as an ongoing habit. In Greek it emphasizes the continuous or repeated nature of the action. ὁ ἄνθρωπος γράφει — "The man is writing (right now / habitually)."' },
-    'Imperfect':   { title:'Imperfect Tense', en:'"He was writing"', body:'The imperfect describes continuous or repeated action in past time. It paints a scene of ongoing activity. ἔγραφεν — "He was writing (over and over, or for a period of time)."' },
-    'Aorist':      { title:'Aorist Tense', en:'"He wrote" or "He wrote it (once)"', body:'The aorist views an action as a simple completed event without stressing duration. It\'s the default "past tense" of Greek narrative. ἔγραψεν — "He wrote" — a single point event.' },
-    '2nd Aorist':  { title:'2nd Aorist Tense', en:'"He threw" (irregular stem)', body:'Same meaning as the aorist — a completed past event — but the verb uses a different stem form (like English "throw/threw"). The grammar is identical; only the form differs.' },
-    'Perfect':     { title:'Perfect Tense', en:'"He has written" (and the letter still exists)', body:'The perfect describes a past completed action whose results are still felt now. λέλυκεν — "He has loosed" — it\'s done and the loosing matters now. Theologically powerful: τετέλεσται, "It is finished."' },
-    '2nd Perfect': { title:'2nd Perfect Tense', en:'"He has become" (irregular stem)', body:'Same meaning as the perfect — past action with present result — using an alternate stem. οἶδα ("I know") is technically a perfect-tense form meaning "I have come to know = I know."' },
-    'Pluperfect':  { title:'Pluperfect Tense', en:'"He had written" (before something else happened)', body:'The pluperfect describes a completed action in the past whose result was felt at a prior past point. Rare in the NT. ᾔδει — "He had known (before that moment)."' },
-    'Future':      { title:'Future Tense', en:'"He will write"', body:'The future describes expected or anticipated action. It can be predictive (will happen), deliberate (planning), or imperatival. σώσει — "He will save."' },
+    'Present':     { title:'Present Tense', en:'"He writes" or "He is writing"', body:'The present presents an action as in progress or unfolding — now, habitually, or as a general truth. In statements it usually refers to the present; in commands, infinitives and participles it gives the in-progress view without fixing a time. Context decides how much the ongoing sense matters. ὁ ἄνθρωπος γράφει — "The man is writing" or "The man writes."' },
+    'Imperfect':   { title:'Imperfect Tense', en:'"He was writing"', body:'The imperfect presents a past action as in progress — continuing, repeated, or just beginning ("he began to …"). It often paints the background of a story. ἔγραφεν — "He was writing."' },
+    'Aorist':      { title:'Aorist Tense', en:'"He wrote" (the action seen as a whole)', body:'The aorist presents an action as a whole, without commenting on how long it lasted or whether it was repeated. In statements it usually refers to the past and is the ordinary storytelling tense. Outside statements (commands, subjunctives, infinitives, participles) it does not mark time — it simply views the action as a whole. It does not mean "once" or "instantaneous": the aorist can sum up a long or repeated action (ἔζησεν … ἔτη, "he lived … years"). ἔγραψεν — "He wrote."' },
+    '2nd Aorist':  { title:'2nd Aorist Tense', en:'"He threw" (irregular stem)', body:'Same meaning as the aorist — the action viewed as a whole — but the verb uses a different stem (like English "throw/threw"). Only the form differs.' },
+    'Perfect':     { title:'Perfect Tense', en:'"He has written" (and it stands written)', body:'The perfect presents a state that results from an earlier action: done, and still in effect. λέλυκεν — "He has loosed." τετέλεσται — "It is finished" (John 19:30).' },
+    '2nd Perfect': { title:'2nd Perfect Tense', en:'"He has become" (irregular stem)', body:'Same meaning as the perfect — a resulting state — using an alternate stem. οἶδα ("I know") is perfect in form and simply means "I know."' },
+    'Pluperfect':  { title:'Pluperfect Tense', en:'"He had written"', body:'The pluperfect presents a state that already existed at a point in the past: "had ___". Rare in the NT. With οἶδα, the pluperfect ᾔδει simply means "he knew."' },
+    'Future':      { title:'Future Tense', en:'"He will write"', body:'The future presents an action as expected or intended. It can predict, promise, or (sometimes) command. σώσει — "He will save."' },
   },
   voice: {
-    'Active':          { title:'Active Voice', en:'"Paul wrote the letter"', body:'The subject performs the action on something or someone outside itself. The most common voice. ἔγραψεν Παῦλος — Paul (subject) acted.' },
-    'Middle':          { title:'Middle Voice', en:'"He washed himself" or "He had himself healed"', body:'The subject participates in or benefits from the action. Often means the subject acts for its own interest. No exact English equivalent — sometimes translated active, sometimes reflexive.' },
-    'Passive':         { title:'Passive Voice', en:'"He was healed" or "The letter was written"', body:'The subject receives the action from an outside agent. ἐθεραπεύθη — "He was healed (by someone)." Greek passive is often used for divine action: "was justified," "was saved."' },
-    'Middle/Deponent': { title:'Middle/Deponent', en:'"He answered" or "He came"', body:'Deponent verbs have middle or passive form but active meaning — they never appear in the active voice. ἔρχομαι — "I come" — looks middle/passive but means active. Common deponents: ἔρχομαι, ἀποκρίνομαι, γίνομαι.' },
-    'Middle-Passive':  { title:'Middle-Passive Voice', en:'Could be "he washed himself" or "he was washed"', body:'Some forms are identical in the middle and passive. Context and the tense system determine which is meant. In the present/imperfect, middle and passive forms are identical.' },
-    'Middle or Passive':{ title:'Middle or Passive Voice', en:'Context determines: "he washed" or "he was washed"', body:'Form is ambiguous between middle and passive. Check the tense, context, and lexical notes to determine which nuance applies.' },
-    'Middle Deponent':  { title:'Middle Deponent', en:'"He asked" or "He came"', body:'A deponent using specifically the middle form. Active meaning, middle form. Common in NT Greek.' },
+    'Active':          { title:'Active Voice', en:'"Paul wrote the letter"', body:'The subject does the action. The most common voice. ἔγραψεν Παῦλος — Paul (the subject) wrote.' },
+    'Middle':          { title:'Middle Voice', en:'"He washed (himself)" or "He got (for himself)"', body:'The subject is involved in or affected by its own action — doing it to itself, for itself, or as something that happens within it. English has no exact equivalent, so translations use an ordinary active verb or a reflexive ("himself").' },
+    'Passive':         { title:'Passive Voice', en:'"He was healed" or "The letter was written"', body:'The subject receives the action. ἐθεραπεύθη — "He was healed." The one who acts is often left unstated; where God is implied, scholars call it a "divine passive", but whether that applies is decided by context.' },
+    'Middle or Passive':{ title:'Middle or Passive', en:'Context decides: "he washed" or "he was washed"', body:'In the present, imperfect and perfect, middle and passive share one set of forms. Context and the verb\'s usual use decide which is meant.' },
+    'Middle (no active form)': { title:'Middle Form, No Active', en:'"He came", "He answered"', body:'Some verbs appear only (or mainly) in middle forms — ἔρχομαι "I come", γίνομαι "I become". English says them actively. Older grammars call these "deponent" (as if their active had been laid aside); many grammarians now treat them simply as middle verbs whose meaning involves the subject.' },
+    'Passive (no active form)': { title:'Passive Form, No Active', en:'"He answered" (ἀπεκρίθη)', body:'Some verbs use passive-looking forms with a meaning English says actively — ἀπεκρίθη "he answered", ἐφοβήθη "he was afraid". Older grammars call them "passive deponents"; many now see these -θη- forms as another way of marking the middle.' },
+    'Middle or Passive (no active form)': { title:'Middle or Passive Form, No Active', en:'"He comes", "It happens"', body:'A form that could be middle or passive, from a verb with no active in use. English normally says it actively.' },
+    'Impersonal Active': { title:'Impersonal Active', en:'"It is necessary" (δεῖ)', body:'Used without a personal subject: δεῖ "it is necessary", ἔξεστιν "it is permitted".' },
   },
   mood: {
-    'Indicative':   { title:'Indicative Mood', en:'"He goes to the temple" (stating a fact)', body:'The indicative asserts something as actual — a statement of reality. The most common mood. ὑπάγει — "He goes." Negated with οὐ (not μή).' },
-    'Subjunctive':  { title:'Subjunctive Mood', en:'"that he might go" or "if he goes"', body:'The subjunctive expresses possibility, purpose, condition, or contingency. Always with ἵνα (purpose), ἐάν (if), or μή (prohibition). ἵνα σωθῶσιν — "that they might be saved."' },
-    'Optative':     { title:'Optative Mood', en:'"May it never be!" (μὴ γένοιτο)', body:'The optative expresses a wish, prayer, or remote possibility. Rare in the NT (67 occurrences). Paul\'s famous μὴ γένοιτο — "May it never be!" / "God forbid!" — is optative.' },
-    'Imperative':   { title:'Imperative Mood', en:'"Go!" or "Love one another!"', body:'The imperative gives a command or prohibition. 2nd person imperative is most common. ἀγαπᾶτε ἀλλήλους — "Love one another!" Prohibitions use μή + imperative or subjunctive.' },
-    'Infinitive':   { title:'Infinitive Mood', en:'"to go" or "going"', body:'The infinitive is a verbal noun — it can be a subject, object, or complement. θέλω πιστεύειν — "I want to believe." Often used in purpose or result clauses.' },
-    'Participle':   { title:'Participle Mood', en:'"the one going" or "while going"', body:'The participle is a verbal adjective — it has tense and voice like a verb, plus case/number/gender like a noun. It modifies nouns or expresses attendant circumstances. Often translated "while Xing," "after Xing," or "the one who X."' },
+    'Indicative':   { title:'Indicative Mood', en:'"He goes", "Does he go?"', body:'The indicative presents something as actual — the ordinary mood for statements and questions. (It says how the speaker presents it, not whether it is true.) ὑπάγει — "He goes." Usually negated with οὐ.' },
+    'Subjunctive':  { title:'Subjunctive Mood', en:'"that he may go", "if he goes", "let us go"', body:'The subjunctive presents an action as possible or intended. It is common after ἵνα (purpose), ἐάν (if), ὅταν (whenever) and ἕως (until), with μή in prohibitions and οὐ μή ("never"), and on its own for "let us …" (ἀγαπῶμεν, "let us love") and "should we …?". ἵνα σωθῶσιν — "that they may be saved."' },
+    'Optative':     { title:'Optative Mood', en:'"May it never be!" (μὴ γένοιτο)', body:'The optative expresses a wish or a remote possibility. Rare in the NT (under 70 times). Paul\'s μὴ γένοιτο — "May it never be!" — is optative.' },
+    'Imperative':   { title:'Imperative Mood', en:'"Go!" or "Love one another!"', body:'The imperative gives a command or request. ἀγαπᾶτε ἀλλήλους — "Love one another!" Prohibitions use μή with the imperative or the aorist subjunctive.' },
+    'Infinitive':   { title:'Infinitive', en:'"to go" or "going"', body:'The infinitive is a verbal noun — it can be a subject, object or complement, and often expresses purpose or result. θέλω πιστεύειν — "I want to believe."' },
+    'Participle':   { title:'Participle', en:'"the one going" or "while going"', body:'The participle is a verbal adjective — it has tense and voice like a verb, plus case, number and gender like a noun. It can describe a noun ("the one who …") or add a circumstance ("while …", "after …", "because …").' },
   },
 };
 
