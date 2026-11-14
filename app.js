@@ -9691,7 +9691,7 @@ function wlOnSearch(q) {
 function _wlFormLabel(strongs, surface) {
   const morph = _findMorphForSurface(strongs, surface);
   if (_wlLibraryLayer === 'hebrew') {
-    const p = _rhemaParseHebCode(_rhemaOshbToBereanCode(morph));
+    const p = _rhemaParseHebCode(_rhemaOshbToBereanCode(morph), morph);
     const form = p.core.rows.find(r => r.label === 'Form')?.value;
     const front = p.prefixes.map(x => x.say).join(' + ');
     return [front && `${front} +`, p.core.label, form && p.core.kind === 'verb' ? form : ''].filter(Boolean).join(' ') || 'Hebrew form';
@@ -30563,7 +30563,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.578";
+const APP_VERSION = "3.0.579";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30573,7 +30573,7 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-critical-fallbacks.js': '3.0.177',
   'rhema-critical-extra.js': '3.0.573',
   'rhema-ot-hebrew.js': '3.0.81',
-  'rhema-hebrew-lexicon.js': '3.0.560',
+  'rhema-hebrew-lexicon.js': '3.0.579',
   'rhema-hebrew-bdb.js':    '3.0.379',
   'rhema-lxx.js':       '3.0.573',
   'rhema-lexicon.js':   '3.0.65',
@@ -30587,6 +30587,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.579 &mdash; Hebrew accuracy pass</div>
+<ul>
+  <li><strong>Endings explained correctly</strong> &mdash; The &ldquo;toward&rdquo; ending (סְדֹמָה &ldquo;toward Sodom&rdquo;, 1,084 words) and the lengthened ending on commands (הָבָה &ldquo;come!&rdquo;) were shown as the pronoun &ldquo;her&rdquo;; they now say what they are. Infinitives with an ending say who does the action (&ldquo;when they were created&rdquo;), nouns with &ldquo;his/their&rdquo; no longer say &ldquo;linked to the next word&rdquo;, commands show &ldquo;you&rdquo;, the rarer &ldquo;extra n&rdquo; endings are recognised, and the Aramaic badge shows only on Aramaic.</li>
+  <li><strong>Verses line up in 1 Samuel 21&ndash;24 and Psalm 13</strong> &mdash; These were paired one verse off with the Hebrew (English 1 Sam 21:1 is Hebrew 21:2; Psalm 13:1 is Hebrew 13:2).</li>
+  <li><strong>Better short meanings</strong> &mdash; About 90 meanings had been cut down to just &ldquo;be&rdquo;, &ldquo;act&rdquo; or &ldquo;treat&rdquo; (צָדַק now &ldquo;be righteous&rdquo;, חָזַק &ldquo;be strong&rdquo;), and about 40 added &ldquo;divine&rdquo; or &ldquo;sacred&rdquo; the word doesn&rsquo;t carry (מַלְאָךְ &ldquo;messenger, angel&rdquo;, מִצְוָה &ldquo;commandment&rdquo;). עַלְמָה now reads &ldquo;young woman, maiden&rdquo;, as the standard dictionaries give it.</li>
+  <li><strong>Dictionary forms repaired</strong> &mdash; 285 damaged headwords fixed from the original source (אֵת, אִישׁ, אִם, כֶּסֶף, מֵאָה&hellip;).</li>
+  <li><strong>Word studies</strong> &mdash; Stem counts corrected (כָּפַר is Piel 92&times;, not 17), &ldquo;intensive&rdquo; descriptions of verb stems updated, cut-off articles tidied, and Septuagint word lists now say how many places they&rsquo;re based on (hidden when too few line up, and for names).</li>
+</ul>
 <div class="un-version-label">v3.0.578 &mdash; Critical text: the right word every time</div>
 <ul>
   <li><strong>1,200 critical-text words now point to the right dictionary entry</strong> &mdash; In the critical Greek text (SBLGNT), words that differ from another word only by an accent were filed under the wrong one: τίς &ldquo;who?&rdquo; showed τὶς &ldquo;someone&rdquo; (554 places), δεῖ &ldquo;it is necessary&rdquo; showed δέω &ldquo;bind&rdquo; (98), plus ποῦ &ldquo;where?&rdquo;, ἄρα &ldquo;then&rdquo;, εἷς &ldquo;one&rdquo;, πότε &ldquo;when?&rdquo;, Στέφανος (Stephen, not &ldquo;crown&rdquo;) and more.</li>
@@ -39197,6 +39205,33 @@ function rhemaBuildVersification(book, layer, engBook, origBook) {
     if (isApprox) { approx.add(e); continue; } // shown whole, never paired verse by verse
     eVs.forEach((v, k) => { const o = oVs[k + off]; if (o) { e2o.set(`${e}:${v}`, `${o[0]}:${o[1]}`); o2e.set(`${o[0]}:${o[1]}`, `${e}:${v}`); } });
     oVs.slice(0, off).forEach(o => o2e.set(`${o[0]}:${o[1]}`, `${e}:title`));
+  }
+  // Curated: places where matching chapter totals pair verses wrongly.
+  const pairs = (e, list, extra = []) => { // list: [engVerse, origC, origV]
+    show[e] = [];
+    for (const [ev, oc, ov] of list) { e2o.set(`${e}:${ev}`, `${oc}:${ov}`); o2e.set(`${oc}:${ov}`, `${e}:${ev}`); show[e].push([oc, ov]); }
+    for (const [oc, ov, to] of extra) { o2e.set(`${oc}:${ov}`, to); show[e].push([oc, ov]); }
+    show[e] = [...new Map(show[e].map(x => [`${x[0]}:${x[1]}`, x])).values()];
+    approx.delete(e);
+  };
+  if (layer === 'hebrew' && book === '1SA' && vs(origBook, 21).length === 16) {
+    // English 20:42 = Hebrew 20:42 + 21:1; English 21 = Hebrew 21:2-16;
+    // English 23:29 = Hebrew 24:1; English 24 = Hebrew 24:2-23.
+    pairs(20, vs(engBook, 20).map(v => [v, 20, v]), [[21, 1, '20:42']]);
+    pairs(21, vs(engBook, 21).map(v => [v, 21, v + 1]));
+    pairs(22, vs(engBook, 22).map(v => [v, 22, v]));
+    pairs(23, vs(engBook, 23).map(v => (v <= 28 ? [v, 23, v] : [v, 24, 1])));
+    pairs(24, vs(engBook, 24).map(v => [v, 24, v + 1]));
+  }
+  if (book === 'PSA') {
+    // Psalm 13: the original counts the title as verse 1 and joins English
+    // 5-6 in its verse 6 (the Septuagint's Psalm 12 does the same).
+    const oc = layer === 'lxx' ? 12 : 13;
+    if (vs(origBook, oc).length === 6 && vs(engBook, 13).length === 6) {
+      pairs(13, [[1, oc, 2], [2, oc, 3], [3, oc, 4], [4, oc, 5], [5, oc, 6], [6, oc, 6]], [[oc, 1, '13:title']]);
+      show[13] = [1, 2, 3, 4, 5, 6].map(v => [oc, v]);
+      o2e.set(`${oc}:6`, '13:5');
+    }
   }
   // Original chapters that no English chapter shows (e.g. LXX Psalm 151).
   const shown = new Set(Object.values(show).flat().map(([c, v]) => `${c}:${v}`));
@@ -50624,14 +50659,19 @@ function _rhemaHebGNS(code) {
   return { parts: out, construct: m[3] === 'c', emphatic: m[3] === 'd' };
 }
 // Berean code → { prefixes: [...], core: { kind, label, rows: [...] }, suffixes: [...] }
-function _rhemaParseHebCode(code) {
+// `oshb` (optional): the word's OSHB morphology, which marks the endings the
+// Berean code folds into "3fs": the direction ending ה ("toward", Sd) and the
+// lengthened ending ה (Sh). Neither means "her".
+function _rhemaParseHebCode(code, oshb = '') {
   const segs = String(code || '').split(' | ').map(x => x.trim()).filter(Boolean);
-  const isSuffix = x => /^[123][mfc][sp]$/.test(x) || x === 'Pn';
+  // Pronoun endings, incl. the "energic" variants (1cse, 2fs2…) and lists ("1cs, Pn").
+  const isSuffix = x => x.split(/,\s*/).every(y => /^[123][mfc][sp][e2]?$/.test(y) || y === 'Pn');
   let coreAt = -1;
   segs.forEach((x, i) => { if (!isSuffix(x)) coreAt = i; });
   const prefixSegs = coreAt > 0 ? segs.slice(0, coreAt).flatMap(x => x.split(/,\s*/)) : [];
   const coreSeg = coreAt >= 0 ? segs[coreAt] : '';
-  const suffixSegs = segs.slice(coreAt + 1);
+  const suffixSegs = segs.slice(coreAt + 1).flatMap(x => x.split(/,\s*/));
+  const oshbEnd = String(oshb || '').match(/\/S([dhn])\b/)?.[1] || '';
   const prefixes = prefixSegs.map(x => ({ code: x, ...(RHEMA_HEB_PREFIX[x] || { say: x, name: x, explain: '' }) }));
   const rows = [];
   let kind = 'word', label = 'Word';
@@ -50645,7 +50685,9 @@ function _rhemaParseHebCode(code) {
     rows.push({ label: 'Stem', value: stem[0], desc: stem[1] });
     rows.push({ label: 'Form', value: f[0], desc: f[1] });
     if (mood && RHEMA_HEB_MOOD[mood]) rows.push({ label: 'Mood', value: RHEMA_HEB_MOOD[mood][0], desc: RHEMA_HEB_MOOD[mood][1] });
-    const pgn = parts[3] || '';
+    let pgn = parts[3] || '';
+    // Commands are always addressed to "you": the code gives only gender/number.
+    if (form === 'Imp' && /^[mf][sp]$/.test(pgn)) pgn = '2' + pgn;
     if (RHEMA_HEB_PGN[pgn]) rows.push({ label: 'Who', value: RHEMA_HEB_PGN[pgn][0], desc: 'The verb’s form shows who; the subject may also be named.' });
     else if (pgn) {
       const g = _rhemaHebGNS(pgn);
@@ -50657,7 +50699,11 @@ function _rhemaParseHebCode(code) {
     label = head === 'N' ? (proper ? 'Name' : 'Noun') : head === 'Adj' ? 'Adjective' : 'Number';
     const g = _rhemaHebGNS(parts[proper ? 2 : 1]);
     if (g.parts?.length) rows.push({ label: 'Form', value: g.parts.join(', '), desc: g.parts.includes('dual (a pair)') ? 'Hebrew has a special form for pairs (hands, eyes) and some measures (“two days”).' : '' });
-    if (g.construct) rows.push({ label: 'State', value: 'Construct', desc: 'Linked to the next word: “___ of …”. Hebrew shows “of” by joining the two words this way.' });
+    // A noun with a pronoun ending is written in its "construct" shape, but the
+    // ending (not the next word) completes it: "his ___", "their ___".
+    const hasPronounEnd = suffixSegs.some(x => /^[123]/.test(x)) && !oshbEnd;
+    if (g.construct && hasPronounEnd) rows.push({ label: 'State', value: 'With a pronoun ending', desc: 'The ending works like “of”: “his ___”, “their ___”.' });
+    else if (g.construct) rows.push({ label: 'State', value: 'Construct', desc: 'Linked to the next word: “___ of …”. Hebrew shows “of” by joining the two words this way.' });
     if (g.emphatic) rows.push({ label: 'State', value: 'Emphatic (Aramaic)', desc: 'Aramaic’s way of saying “the ___”.' });
   } else if (head === 'Pro') {
     kind = 'pronoun'; label = 'Pronoun';
@@ -50682,10 +50728,23 @@ function _rhemaParseHebCode(code) {
   } else if (coreSeg) {
     label = coreSeg;
   }
-  const suffixes = suffixSegs.map(x => x === 'Pn'
-    ? { code: x, say: '', name: 'Extra “n” ending', explain: 'An extra “n” ending; its purpose (style or emphasis) is debated. It doesn’t change the basic meaning.' }
-    : { code: x, say: RHEMA_HEB_PGN[x]?.[kind === 'noun' || kind === 'adjective' || kind === 'number' ? 1 : 1] || x,
-        name: 'Pronoun ending', explain: kind === 'verb' ? `An object joined to the end of the verb: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` : `Joined to the end: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` });
+  const isInf = kind === 'verb' && /^Inf(\b|$)/.test(String(parts[2] || ''));
+  const suffixes = suffixSegs.map(x => {
+    if (x === 'Pn') return { code: x, say: '', name: 'Extra “n” ending', explain: 'An extra “n” ending; its purpose (style or emphasis) is debated. It doesn’t change the basic meaning.' };
+    // OSHB marks these two; the Berean code shows them as "her" (3fs).
+    if (oshbEnd === 'd') return { code: x, say: 'toward', name: 'Direction ending (ה)', explain: 'A final -āh meaning “toward ___”: סְדֹמָה “toward Sodom”, אַרְצָה “to the ground”. It is not the pronoun “her”.' };
+    if (oshbEnd === 'h') return { code: x, say: '', name: 'Lengthened ending (ה)', explain: 'An extra -āh, common on commands (“come!”, “let us …”) and for style. It doesn’t add a meaning and is not the pronoun “her”.' };
+    const base = x.replace(/[e2]$/, '');
+    const say = RHEMA_HEB_PGN[base]?.[1] || x;
+    const energic = base !== x;
+    const name = energic ? 'Pronoun ending (with an extra “n”)' : 'Pronoun ending';
+    let explain;
+    if (isInf) explain = `Joined to an infinitive, the ending usually says who does the action (בְּהִבָּרְאָם “when they were created”), sometimes who receives it: “${say}”.`;
+    else if (kind === 'verb') explain = `An object joined to the end of the verb: “${say}”.`;
+    else explain = `Joined to the end: “${say}”.`;
+    if (energic) explain += ' The extra “n” before it is a stylistic (“energic”) form.';
+    return { code: x, say, name, explain };
+  });
   return { prefixes, core: { code: coreSeg, kind, label, rows }, suffixes };
 }
 
@@ -50786,8 +50845,9 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
   const shown = _rhemaDisplaySurface(surface);
   const hereEn = ctx.book ? _rhemaHebEnglish(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : { text: '', ver: 'BSB', kind: '' };
   const code = il?.ps || '';
-  const parsed = code ? _rhemaParseHebCode(code) : _rhemaParseHebCode(_rhemaOshbToBereanCode(morph));
-  const isAramaic = /^A/.test(String(morph || '').split('/').pop() || '');
+  const parsed = code ? _rhemaParseHebCode(code, morph) : _rhemaParseHebCode(_rhemaOshbToBereanCode(morph), morph);
+  // OSHB morphology starts with the language: H (Hebrew) or A (Aramaic).
+  const isAramaic = /^A/.test(String(morph || ''));
   // Shown by the English reference (Hebrew Malachi 3:19 is Malachi 4:1).
   const engAt = ctx.book ? _rhemaHebEngRef(ctx.book, ctx.chapter, ctx.verse) : null;
   const ref = ctx.book ? `${_rhemaBookName(ctx.book)} ${engAt ? engAt.join(':') : `${ctx.chapter}:${ctx.verse}`}` : '';
@@ -50957,11 +51017,17 @@ function _rhemaFillHebrewStudy(elId, strongs) {
     if (lxx.length) {
       // Share of the places where the Septuagint has a Greek word aligned to it.
       const total = deep.lxxAligned || lxx.reduce((a, x) => a + (x.count || 0), 0) || 1;
+      // How much of the word the alignment actually covers: MACULA links only
+      // Greek words that have New Testament (Strong's) numbers, so for some
+      // words just a handful of places line up and the chips would mislead.
+      const uses = deep.count || total;
+      const coverage = total / Math.max(1, uses);
+      const isName = /\b(?:proper name|name of|an? (?:Israelite|Levite|Edomite|Canaanite|Philistine|Moabite|Ammonite|Egyptian|place|town|city|region|district|mountain|river|valley|king|priest|chief)\b)/i.test((window.RhemaHebrewLexicon || {})[strongs]?.strongs_def || '');
       const main = lxx.filter(x => !_RHEMA_LXX_FILLER.has(Number(x.g)) || x.count / total >= 0.4).slice(0, 4);
-      if (main.length) {
+      if (main.length && !isName && (coverage >= 0.25 || total >= 20)) {
         const G = window.RhemaLexicon || {};
         out.push(`<div class="rhw-sub">In the Greek Old Testament</div>
-          <p class="rhw-note">Greek words the Septuagint (an early Greek translation) put in its place, with how often (from MACULA Hebrew’s word-by-word alignment). They show how ancient translators understood it, not a definition. Tap one to study the Greek word.</p>
+          <p class="rhw-note">Greek words the Septuagint (an early Greek translation) put in its place, with how often — based on the ${total.toLocaleString()} of its ${uses.toLocaleString()} places that line up word for word (MACULA Hebrew’s alignment, which only links Greek words also found in the New Testament). They show how ancient translators understood it, not a definition. Tap one to study the Greek word.</p>
           <div class="rhw-lxx">${main.map(x => {
             const gl = G[x.g]?.gloss || G[x.g]?.brief || '';
             return `<button type="button" class="rhw-lxx-chip" onclick="rhemaOpenGreekFromHebrew(${Number(x.g)})"><b>${esc(x.lemma || G[x.g]?.lemma || '')}</b><small>${gl ? esc(String(gl).split(/[,;]/)[0]) + ' · ' : ''}${Math.round(x.count / total * 100)}%</small></button>`;
@@ -51956,7 +52022,7 @@ const DEEP_LEXICON_VERSION = '3.0.578';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
-const DEEP_HEBREW_LEXICON_VERSION = '3.0.560';
+const DEEP_HEBREW_LEXICON_VERSION = '3.0.579';
 const _deepHebrewShards = new Map();  // shardFile → Promise<object|null>
 const _deepHebrewData = new Map();    // shardFile → resolved shard (sync access)
 let _deepHebrewShardIndex = null;     // [{file, from, to}] loaded from index.json
