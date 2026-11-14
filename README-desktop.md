@@ -4,6 +4,8 @@ This branch hosts the desktop Bible study site at `https://rhema-desktop.web.app
 
 The former `rhema-greek-vocab-desktop.web.app` site redirects to the new address. Its Hosting configuration is `firebase-desktop-legacy.json`.
 
+On desktop, clicking a verse opens its action sheet and right-clicking opens the Observe/Interpret/Apply/Question study wheel. The sleeping guide beside the Rhēma title opens tours after a brief wake-up animation; its desktop-only art is `assets/mascot/guide-sleep-desktop.webp`.
+
 The phone/PWA code lives on `main` and its Hosting site is `greek-vocab-leaderboard`. Keep desktop changes on this branch. The desktop-only entry points are `desktop-rhema.css` and `desktop-rhema.js`; `index.html` and `app.js` have desktop-specific guards. The existing Rhema code and data power both sites.
 
 Deploy only the named desktop target:

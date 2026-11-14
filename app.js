@@ -9108,8 +9108,9 @@ function closeStudyMiniWheel() {
   setTimeout(() => overlay.classList.add('hidden'), 220);
 }
 
-function selectMiniWheelItem(type) {
+async function selectMiniWheelItem(type) {
   closeStudyMiniWheel();
+  if ((window.RHEMA_DESKTOP_SITE || window.RHEMA_MV_SLOT) && !(await _rhemaRequireStudy())) return;
   setTimeout(() => openWritingModal(type), 240);
 }
 
@@ -40218,8 +40219,8 @@ function rhemaOpenVerseMenu(v, ev) {
   else closeRhemaVerseSheet();
 }
 
-// Desktop readers use the conventional context-menu gesture for verse actions.
-// A fresh right-click targets that verse; ordinary clicks can add more verses.
+// On desktop a click keeps the verse action sheet; a right-click opens the
+// PWA's study wheel for Observe, Interpret, Apply, or Question.
 document.addEventListener('contextmenu', ev => {
   if (!window.RHEMA_DESKTOP_SITE && !window.RHEMA_MV_SLOT) return;
   const target = ev.target instanceof Element ? ev.target : null;
@@ -40227,8 +40228,13 @@ document.addEventListener('contextmenu', ev => {
   const word = target?.closest('#rhemaModal.open #rhemaVerseDisplay .rhema-word');
   if (!block && !word) return;
   ev.preventDefault();
+  ev.stopPropagation();
+  if (_rhemaVerseSheetOpen()) closeRhemaVerseSheetAndDeselect();
   _rhemaSel.clear();
-  rhemaOpenVerseMenu(block?.dataset.verse || _rhemaVerse, ev);
+  _rhemaVerse = String(block?.dataset.verse || _rhemaVerse);
+  _rhemaMenuRef = _rhemaXrefKeyForVerse(_rhemaBook, _rhemaChapter, _rhemaVerse);
+  syncRhemaPicker?.();
+  openStudyMiniWheel();
 });
 
 // Opens the action sheet for the current selection (1 or many).
@@ -44947,7 +44953,7 @@ const RHEMA_TOURS = [
 ];
 function _rhemaToursHtml() {
   const tours = window.RHEMA_DESKTOP_SITE ? RHEMA_TOURS.map(t => {
-    if (t.id === 'verses') return { ...t, title: 'Right-click a verse', desc: 'Open the verse sheet for highlights, notes, interpretations, and copying.' };
+    if (t.id === 'verses') return { ...t, title: 'Verse actions and notes', desc: 'Click for the action sheet; right-click for Observe, Interpret, Apply, and Question.' };
     if (t.id === 'reading') return { ...t, title: 'Study tools panel', desc: 'Reading helpers, text choices, saved marks, and font size.' };
     if (t.id === 'study') return { ...t, desc: 'Phrasing, Word Log, Trails, and Workspace in the left sidebar.' };
     if (t.id === 'rhema') return { ...t, desc: 'Desktop reading, search, the reference bar, and the left sidebar.' };
@@ -47734,14 +47740,16 @@ const READING_COACH_STEPS = [
 function startVerseCoach() {
   const steps = window.RHEMA_DESKTOP_SITE
     ? [
-        { before: () => { closeRhemaVerseSheetAndDeselect(); return _coachPause(180); }, target: () => _coachVisibleVerse(), title: 'Right-click a verse', body: 'Right-click a verse to open its actions. Left-click also opens them; while the sheet is open, left-click more verses to select a group.' },
+        { before: () => { closeRhemaVerseSheetAndDeselect(); return _coachPause(180); }, target: () => _coachVisibleVerse(), title: 'Click for verse actions', body: 'Click a verse to open the action sheet for highlights, notes, interpretations, copying, and more. Click another verse while it is open to add it to the selection.' },
+        { before: () => { const verse = _coachVisibleVerse()?.dataset?.verse; if (verse) _rhemaVerse = String(verse); openStudyMiniWheel(); return _coachPause(260); }, target: () => _coachFirst(['#studyMiniWheelOverlay .smw-obs', '#studyMiniWheelOverlay .smw-wheel']), title: 'Right-click to write', body: 'Right-click a verse to open these study bubbles. Choose Observe, Interpret, Apply, or Question to write about that verse in Workspace.' },
         ...VERSE_COACH_STEPS.map((step, index) => ({ ...step,
+          before: async () => { if (document.getElementById('studyMiniWheelOverlay')?.classList.contains('open')) { closeStudyMiniWheel(); await _coachPause(240); } await step.before?.(); },
           body: index === 2 ? 'Open this verse in Multi-view, with up to six reader tabs. Click a tab to switch or link them with the chain button.'
             : step.body.replaceAll('Tap ', 'Click ').replaceAll('tap ', 'click ') }))
       ]
     : VERSE_COACH_STEPS;
   _startAppCoach(steps, 'verseCoachSeenV3539', true);
-  _appCoachOnEnd = () => { try { closeRhemaVerseSheetAndDeselect(); } catch (e) {} };
+  _appCoachOnEnd = () => { try { closeRhemaVerseSheetAndDeselect(); closeStudyMiniWheel(); } catch (e) {} };
 }
 function startReadingToolsCoach() {
   const steps = window.RHEMA_DESKTOP_SITE
@@ -47752,7 +47760,7 @@ function startReadingToolsCoach() {
         if (index === 3) return { ...step, title: 'Copy verses', body: 'Use Copy verse here to select and copy several verses. Cross references and Word Library have their own buttons in the left sidebar.' };
         if (index === 4) return { ...step, body: 'Your highlights, notes, and saved word meanings are listed here. Click one to return to its verse.' };
         if (index === 5) return { ...step, body: 'Drag the slider or use the A buttons to change reader text size. The font previews below show each typeface.' };
-        return { ...step, before: () => { closeRhemaReaderPanel(); return _coachPause(300); }, target: () => null, title: 'Your guide', body: 'Find me peeking below Study tools in the left sidebar. Click Guided tours whenever you want another walkthrough.' };
+        return { ...step, before: () => { closeRhemaReaderPanel(); return _coachPause(300); }, target: () => null, title: 'Your guide', body: 'Find me snoozing beside the Rhēma title at the top of the left sidebar. Click me to wake me up and open the tours.' };
       })
     : READING_COACH_STEPS;
   _startAppCoach(steps, 'readingToolsCoachSeenV3539', true);
@@ -47846,12 +47854,12 @@ function startStudyRhemaCoach(force = false) {
   if (!document.getElementById('rhemaModal')?.classList.contains('open')) return;
   const steps = window.RHEMA_DESKTOP_SITE ? STUDY_RHEMA_COACH_STEPS.map((step, index) => {
     if (index === 0) return { ...step, before: () => { closeRhemaReaderPanel(); return _coachPause(220); }, target: () => null, title: 'Your study is on the left', body: 'Open Phrasing, Word Log, Trails, or Workspace from the left sidebar. Your saved work follows your account.' };
-    if (index === 1) { const { demo, ...rest } = step; return { ...rest, target: () => _coachVisibleVerse(), title: 'Right-click a verse', body: 'Right-click any verse for its action sheet. Add a note, then choose Observe, Interpret, Apply, or Question to save a thought in Workspace.' }; }
+    if (index === 1) { const { demo, ...rest } = step; return { ...rest, target: () => _coachVisibleVerse(), title: 'Right-click to write', body: 'Right-click any verse for Observe, Interpret, Apply, and Question bubbles. Choose one to write a thought in Workspace. A normal click opens the verse action sheet.' }; }
     if (index === 2) return { ...step, body: 'Open Phrasing from the left sidebar. Click + to choose a passage, then arrange its pieces to see how the thought flows.' };
     if (index === 3) return { ...step, body: 'Open Word Log from the left sidebar. Add a Greek or Hebrew word from its word study, then return here to review it.' };
     if (index === 4) return { ...step, body: 'Trails in the left sidebar holds cross-reference paths you saved. Click one to continue where you left off.' };
     if (index === 5) return { ...step, body: 'Workspace in the left sidebar holds your Observe, Interpret, Apply, and Question notes. Click a note’s verse to return to it.' };
-    return { ...step, body: 'Click α to type Greek in your notes. Your guide stays beside Study tools in the left sidebar whenever you want another tour.' };
+    return { ...step, body: 'Click α to type Greek in your notes. Your guide sleeps beside the Rhēma title at the top of the left sidebar whenever you want another tour.' };
   }) : STUDY_RHEMA_COACH_STEPS;
   _startAppCoach(steps, 'studyToolsCoachSeenV3537', force);
 }
@@ -48187,8 +48195,8 @@ function startRhemaCoach(force = false) {
   _coachSteps = window.RHEMA_DESKTOP_SITE
     ? _RHEMA_COACH_STEPS.map((step, index) => {
         if (index === 0) return { ...step, body: 'Welcome to the desktop Rhēma reader. Your Bible and study panels fill this workspace; the left sidebar keeps every destination close.' };
-        if (index === 1) return { ...step, title: 'Right-click a verse', body: 'Right-click a verse for highlights, notes, interpretations, copying, and word-by-word study. Left-click works too.' };
-        if (index === 2) return { ...step, targetFn: () => null, title: 'The left sidebar', body: 'Open Study tools for reading helpers and font size. Cross references, Word Library, Phrasing, Word Log, Trails, and Workspace each have their own button. I peek out below Study tools.' };
+        if (index === 1) return { ...step, title: 'Two ways to open a verse', body: 'Click a verse for the action sheet: highlight, note, interpretations, copy, and word study. Right-click the verse for Observe, Interpret, Apply, and Question bubbles.' };
+        if (index === 2) return { ...step, targetFn: () => null, title: 'The left sidebar', body: 'Open Study tools for reading helpers and font size. Cross references, Word Library, Phrasing, Word Log, Trails, and Workspace each have their own button. I snooze beside the Rhēma title up top.' };
         if (index === 3) return { ...step, targetFn: () => null, title: 'Search Scripture', body: 'Click Search Scripture in the left sidebar. Enter remembered words, a story, or a question; the closest passage appears first, followed by other likely matches.' };
         return { ...step, body: 'Click the reference bar to choose a book and chapter or change versions. English, Hebrew, and Greek switches sit beside it; Hebrew appears for Old Testament books.' };
       })

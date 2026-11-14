@@ -108,6 +108,8 @@
       if (element) observer.observe(element, { attributes: true, attributeFilter: ['class'], childList: id === 'rrpSubTitle' });
     });
     observer.observe(document.body, { childList: true });
+    const wakePose = new Image();
+    wakePose.src = 'assets/mascot/guide-ouch.webp';
     syncRail();
     window.syncDesktopRhemaLanguageUi();
   });
@@ -146,8 +148,17 @@
   };
   window.desktopRhemaGuide = async function () {
     const button = document.getElementById('desktopRhemaGuideBtn');
+    if (!button || button.dataset.poking === 'true') return;
+    button.dataset.poking = 'true';
+    const image = button.querySelector('img');
+    if (image) image.src = 'assets/mascot/guide-ouch.webp';
+    button.classList.remove('poked');
+    void button.offsetWidth;
     button?.classList.add('poked');
-    setTimeout(() => button?.classList.remove('poked'), 380);
+    await new Promise(resolve => setTimeout(resolve, 460));
+    button.classList.remove('poked');
+    if (image) image.src = 'assets/mascot/guide-sleep-desktop.webp';
+    button.dataset.poking = 'false';
     settleView('panel');
     await read();
     if (!document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) openRhemaReaderPanel();
