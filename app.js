@@ -30563,13 +30563,13 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.577";
+const APP_VERSION = "3.0.578";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
 const RHEMA_DATA_VERSIONS = {
   'rhema-nt.js':        '3.0.65',
-  'rhema-critical.js':  '3.0.23',
+  'rhema-critical.js':  '3.0.578',
   'rhema-critical-fallbacks.js': '3.0.177',
   'rhema-critical-extra.js': '3.0.573',
   'rhema-ot-hebrew.js': '3.0.81',
@@ -30587,6 +30587,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.578 &mdash; Critical text: the right word every time</div>
+<ul>
+  <li><strong>1,200 critical-text words now point to the right dictionary entry</strong> &mdash; In the critical Greek text (SBLGNT), words that differ from another word only by an accent were filed under the wrong one: τίς &ldquo;who?&rdquo; showed τὶς &ldquo;someone&rdquo; (554 places), δεῖ &ldquo;it is necessary&rdquo; showed δέω &ldquo;bind&rdquo; (98), plus ποῦ &ldquo;where?&rdquo;, ἄρα &ldquo;then&rdquo;, εἷς &ldquo;one&rdquo;, πότε &ldquo;when?&rdquo;, Στέφανος (Stephen, not &ldquo;crown&rdquo;) and more.</li>
+  <li><strong>No more false &ldquo;not in the critical text&rdquo; notes</strong> &mdash; Those mix-ups made about 200 word studies claim a word was missing from the critical text when it isn&rsquo;t (ἄρα, ἐκπλήσσω, Boaz, Eliakim&hellip;). The counts were recounted and those statements corrected; notes about a specific verse that really differs are kept.</li>
+</ul>
 <div class="un-version-label">v3.0.577 &mdash; Steadier syncing</div>
 <ul>
   <li><strong>Firebase updated</strong> &mdash; The sign-in and sync library moved from version 10 to 13, and its offline cache now works safely with the app open in more than one place (several tabs, or Multi-view). Before, a second copy could crash syncing until the app was reopened.</li>
@@ -51947,7 +51952,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.534';
+const DEEP_LEXICON_VERSION = '3.0.578';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
