@@ -30438,6 +30438,119 @@ function applyJourneyCardState() {
   if (btn) btn.setAttribute("aria-expanded", String(!collapsed));
 }
 
+// ── Home: same layout on every phone size ────────────────────────────────────
+// The greeting and cards above the Tools row are fixed sizes, so on a tall
+// phone (Plus / Pro Max) the row ended far above the nav bar, and on a short one
+// it ran under it. After layout, measure the room between the Tools row and the
+// nav bar and size things so the gap matches a 16 Pro's: the Habit Builder and
+// Journey Maps cards grow taller first (up to 40px each), the Tools tiles take
+// the rest (mostly taller, a little wider, so the next tile still peeks in).
+const HOME_FIT_GAP = 28;       // px between the Tools row and the nav bar
+const HOME_FIT_CARD_MAX = 40;  // most each card grows
+let _homeFitBusy = false;
+// Where an element sits with no animation transforms applied (Home's entrance
+// animations slide and scale things; measuring mid-animation gave fake gaps).
+function _homeLayoutTop(el) {
+  let y = 0;
+  for (let e = el; e; e = e.offsetParent) y += e.offsetTop - (e !== el && e.scrollTop ? e.scrollTop : 0);
+  return y;
+}
+function _homeFitMeasure(home, grid, nav, cards) {
+  const tile = grid.querySelector('.home-action-tile');
+  const navTop = nav.offsetTop || (window.innerHeight - nav.offsetHeight - (parseFloat(getComputedStyle(nav).bottom) || 0));
+  return { tile, tileH: tile.offsetHeight, tileW: tile.offsetWidth, gap: navTop - (_homeLayoutTop(tile) + tile.offsetHeight) };
+}
+function fitHomeLayout() {
+  if (_homeFitBusy) return;
+  const home = document.getElementById('homeScreen');
+  const grid = home?.querySelector('.home-actions-grid');
+  const nav = document.getElementById('bottomNav');
+  if (!home || !grid || !home.classList.contains('active') || !nav) return;
+  if (!nav.offsetHeight || getComputedStyle(nav).display === 'none') return;
+  _homeFitBusy = true;
+  try {
+    const cards = [home.querySelector('.home-habit-widget'), home.querySelector('.home-journey-widget')].filter(Boolean);
+    // Back to the natural layout to measure it. (The sizes live on #homeScreen,
+    // not the row: an older rule zeroes the height of Home's last child when it
+    // has an inline style.)
+    grid.classList.remove('ht-fit');
+    ['--ht-col', '--ht-h', '--ht-icon', '--ht-art', '--ht-title', '--ht-sub'].forEach(k => home.style.removeProperty(k));
+    cards.forEach(c => { c.style.removeProperty('min-height'); c.classList.remove('hw-fit'); });
+    const m = _homeFitMeasure(home, grid, nav, cards);
+    if (!m.tile || !m.tileH) return;
+    const extra = m.gap - HOME_FIT_GAP;
+    if (Math.abs(extra) < 4) return;
+    let toolsGrow = extra;
+    if (extra > 0 && cards.length) {
+      const perCard = Math.min(HOME_FIT_CARD_MAX, Math.round(extra * 0.65 / cards.length));
+      cards.forEach(c => { c.style.minHeight = `${c.offsetHeight + perCard}px`; c.classList.add('hw-fit'); });
+      toolsGrow = extra - perCard * cards.length;
+    }
+    const sH = Math.max(0.82, Math.min(1.5, (m.tileH + toolsGrow) / m.tileH));
+    const sW = sH >= 1 ? 1 + (sH - 1) * 0.55 : sH;
+    const tile = m.tile;
+    const icon = tile.querySelector('.hat-icon');
+    const iconH = icon ? icon.offsetHeight : m.tileH * 0.55;
+    const cs = getComputedStyle(tile);
+    const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+    const col = m.tileW * sW;
+    const iconNew = iconH * (1 + (sH - 1) * 0.8);
+    const title = tile.querySelector('.hat-text strong'), sub = tile.querySelector('.hat-text small');
+    home.style.setProperty('--ht-col', `${col.toFixed(1)}px`);
+    home.style.setProperty('--ht-h', `${(m.tileH * sH).toFixed(1)}px`);
+    home.style.setProperty('--ht-icon', `${iconNew.toFixed(1)}px`);
+    home.style.setProperty('--ht-art', `${(Math.min(iconNew, col - padX) * 0.94).toFixed(1)}px`);
+    if (title) home.style.setProperty('--ht-title', `${(parseFloat(getComputedStyle(title).fontSize) * sW).toFixed(2)}px`);
+    if (sub) home.style.setProperty('--ht-sub', `${(parseFloat(getComputedStyle(sub).fontSize) * sW).toFixed(2)}px`);
+    grid.classList.add('ht-fit');
+    // Land exactly on the gap: the tiles' height moves the row's bottom 1:1.
+    const after = _homeFitMeasure(home, grid, nav, cards);
+    const fix = after.gap - HOME_FIT_GAP;
+    if (fix < -2) {
+      // Short screens: the artwork gives up the height (text stays readable).
+      const iconFit = Math.max(64, iconNew + fix);
+      home.style.setProperty('--ht-icon', `${iconFit.toFixed(1)}px`);
+      home.style.setProperty('--ht-art', `${(Math.min(iconFit, col - padX) * 0.94).toFixed(1)}px`);
+      home.style.setProperty('--ht-h', `${Math.max(120, after.tileH + fix).toFixed(1)}px`);
+    } else if (fix > 2) {
+      home.style.setProperty('--ht-h', `${(after.tileH + fix).toFixed(1)}px`);
+    }
+  } finally {
+    _homeFitBusy = false;
+  }
+}
+let _homeFitTimer = 0;
+function scheduleHomeFit() {
+  clearTimeout(_homeFitTimer);
+  _homeFitTimer = setTimeout(() => {
+    // Let entrance animations (Home, nav bar) finish first.
+    const els = [document.getElementById('homeScreen'), document.getElementById('bottomNav')].filter(Boolean);
+    const anims = els.flatMap(el => (el.getAnimations ? el.getAnimations({ subtree: true }) : []))
+      .filter(a => a.playState === 'running' && a.effect?.getTiming?.().iterations !== Infinity);
+    const done = Promise.race([Promise.all(anims.map(a => a.finished.catch(() => {}))), new Promise(r => setTimeout(r, 1500))]);
+    done.then(() => requestAnimationFrame(fitHomeLayout));
+  }, 60);
+}
+(function bindHomeFit() {
+  const start = () => {
+    const home = document.getElementById('homeScreen');
+    if (!home) return;
+    // Home shown again, its content changed size (greeting, habit progress),
+    // fonts arrived, or the screen turned.
+    new MutationObserver(() => { if (home.classList.contains('active')) scheduleHomeFit(); })
+      .observe(home, { attributes: true, attributeFilter: ['class'] });
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(scheduleHomeFit);
+      home.querySelectorAll('.hhw-main, .hjw-main, .home-greeting-wrap').forEach(el => ro.observe(el));
+    }
+    window.addEventListener('resize', scheduleHomeFit);
+    window.addEventListener('orientationchange', scheduleHomeFit);
+    document.fonts?.ready?.then(scheduleHomeFit);
+    scheduleHomeFit();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
 function initHomeQuickActionCarousel() {
   const row = document.querySelector('#homeScreen .home-actions-grid');
   if (!row || row.dataset.carouselReady === '1') return;
@@ -30448,7 +30561,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.575";
+const APP_VERSION = "3.0.576";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30472,6 +30585,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.576 &mdash; Home fits every phone</div>
+<ul>
+  <li><strong>Same Home on every iPhone</strong> &mdash; On bigger phones (Plus, Pro Max) the Tools row used to stop well above the nav bar, leaving an awkward empty gap, and on small ones it could run under it. Home now measures the room it has: on bigger phones the Habit Builder and Journey Maps cards get a little taller and the tool buttons get bigger, so the Tools row always ends the same short distance above the nav bar.</li>
+  <li><strong>Family Tree has its own artwork</strong> &mdash; Its tool button now has a 3D illustration and green card like the other tools.</li>
+</ul>
 <div class="un-version-label">v3.0.575 &mdash; Top-of-screen blur, deeper fix</div>
 <ul>
   <li><strong>The reader no longer stays a blur layer</strong> &mdash; Rhēma&rsquo;s open animation fades in from a soft blur, and it was leaving that blur effect switched on (at zero) for as long as the reader was open &mdash; the kind of layer the installed iPhone app turns into a hazy strip across the top. It now switches off as soon as the reader has opened. It looks exactly the same.</li>

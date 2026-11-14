@@ -24539,6 +24539,15 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   --qa-subtitle: #86680f;
 }
 
+#homeScreen .quick-action-genealogy {
+  --qa-card-bg: linear-gradient(180deg, rgba(214, 238, 222, 0.98), rgba(236, 248, 240, 0.9));
+  --qa-card-border: rgba(47, 125, 80, 0.2);
+  --qa-card-shadow: rgba(39, 106, 67, 0.14);
+  --qa-image-shadow: rgba(33, 96, 58, 0.2);
+  --qa-title: #2f7d50;
+  --qa-subtitle: #256640;
+}
+
 #homeScreen .quick-action-test {
   --qa-card-bg: linear-gradient(180deg, rgba(255, 226, 232, 0.98), rgba(255, 241, 244, 0.9));
   --qa-card-border: rgba(225, 50, 82, 0.16);
@@ -39941,3 +39950,19 @@ html.pwa-standalone *::after {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+
+/* ── Home fits every phone (app.js fitHomeLayout) ─────────────────────────────
+   Sizes measured from the room left above the nav bar. */
+#homeScreen .home-actions-grid.ht-fit { grid-auto-columns: var(--ht-col) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile { min-height: var(--ht-h) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile .hat-icon { height: var(--ht-icon) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile .qa-img { --qa-art-size: var(--ht-art) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile .hat-text strong { font-size: var(--ht-title) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile .hat-text small { font-size: var(--ht-sub) !important; }
+/* Taller cards keep their words centred top to bottom. */
+#homeScreen .home-habit-widget.hw-fit,
+#homeScreen .home-journey-widget.hw-fit { display: flex; flex-direction: column; justify-content: center; }
+/* An older rule zeroes the height of Home's last child when it carries an inline
+   style (meant for a leftover spacer). The Tools row is that last child; never
+   let it collapse. */
+body:has(#homeScreen.screen.active) #homeScreen .home-scroll > div.home-actions-grid:last-child[style] { height: auto !important; }

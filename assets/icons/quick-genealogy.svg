@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Family Tree tool icon, in the style of the other Home tools: a beveled
+       3D tile with one chunky object. A leafy tree whose canopy holds portrait
+       medallions: an ancestor at the top, two children, and you at the trunk. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4fa36f"/>
+      <stop offset="0.6" stop-color="#358357"/>
+      <stop offset="1" stop-color="#276a43"/>
+    </linearGradient>
+    <linearGradient id="tileEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a6a44"/>
+      <stop offset="1" stop-color="#174a2d"/>
+    </linearGradient>
+    <radialGradient id="tileGlow" cx="0.3" cy="0.12" r="0.8">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bevelLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="0.25" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="canopy" cx="0.38" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#bfe9a6"/>
+      <stop offset="0.55" stop-color="#86cc78"/>
+      <stop offset="1" stop-color="#4f9e57"/>
+    </radialGradient>
+    <radialGradient id="canopyDark" cx="0.4" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#9fd98c"/>
+      <stop offset="1" stop-color="#3f8a4a"/>
+    </radialGradient>
+    <linearGradient id="trunk" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8b5a32"/>
+      <stop offset="0.42" stop-color="#d8a776"/>
+      <stop offset="0.7" stop-color="#b98251"/>
+      <stop offset="1" stop-color="#7a4c28"/>
+    </linearGradient>
+    <linearGradient id="branch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9c48f"/>
+      <stop offset="1" stop-color="#b27c46"/>
+    </linearGradient>
+    <radialGradient id="medal" cx="0.36" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.65" stop-color="#fbf2de"/>
+      <stop offset="1" stop-color="#ead6aa"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe08a"/>
+      <stop offset="0.5" stop-color="#eab43c"/>
+      <stop offset="1" stop-color="#b9821c"/>
+    </linearGradient>
+    <linearGradient id="person" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4c9a68"/>
+      <stop offset="1" stop-color="#256340"/>
+    </linearGradient>
+    <filter id="soft" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#0c3520" flood-opacity="0.38"/>
+    </filter>
+    <filter id="tileShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#14402a" flood-opacity="0.3"/>
+    </filter>
+    <g id="medallion">
+      <circle r="47" fill="#9a6b1c" opacity="0.35" cy="4"/>
+      <circle r="46" fill="url(#ring)"/>
+      <circle r="38" fill="url(#medal)"/>
+      <circle cy="-10" r="13" fill="url(#person)"/>
+      <path d="M-24 26 C-24 8 -12 2 0 2 C12 2 24 8 24 26 Z" fill="url(#person)"/>
+      <ellipse cx="-14" cy="-21" rx="11" ry="6" fill="#ffffff" opacity="0.7" transform="rotate(-32 -14 -21)"/>
+      <path d="M-40 -14 A42 42 0 0 1 -14 -40" stroke="#fff6d2" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8"/>
+    </g>
+    <path id="sparkle" d="M0 -16 C2 -5 5 -2 16 0 C5 2 2 5 0 16 C-2 5 -5 2 -16 0 C-5 -2 -2 -5 0 -16 Z" fill="#ffffff"/>
+  </defs>
+
+  <!-- Tile with thickness, face, glow and bevel -->
+  <g filter="url(#tileShadow)">
+    <rect x="28" y="38" width="450" height="446" rx="80" fill="url(#tileEdge)"/>
+    <rect x="28" y="28" width="450" height="442" rx="80" fill="url(#tile)"/>
+    <rect x="28" y="28" width="450" height="442" rx="80" fill="url(#tileGlow)"/>
+    <rect x="30" y="30" width="446" height="438" rx="78" fill="none" stroke="url(#bevelLight)" stroke-width="5"/>
+    <rect x="40" y="40" width="426" height="418" rx="70" fill="none" stroke="#1e5a37" stroke-opacity="0.25" stroke-width="3"/>
+  </g>
+
+  <!-- Ground shadow -->
+  <ellipse cx="256" cy="430" rx="104" ry="15" fill="#123d25" opacity="0.4"/>
+
+  <!-- Leafy canopy (3D clusters) -->
+  <g filter="url(#soft)">
+    <circle cx="164" cy="206" r="74" fill="url(#canopyDark)"/>
+    <circle cx="348" cy="206" r="74" fill="url(#canopyDark)"/>
+    <circle cx="256" cy="132" r="82" fill="url(#canopy)"/>
+    <circle cx="204" cy="262" r="70" fill="url(#canopy)"/>
+    <circle cx="308" cy="262" r="70" fill="url(#canopy)"/>
+    <circle cx="256" cy="214" r="78" fill="url(#canopy)"/>
+    <!-- highlights on the leaves -->
+    <ellipse cx="226" cy="92" rx="30" ry="14" fill="#ffffff" opacity="0.28" transform="rotate(-20 226 92)"/>
+    <ellipse cx="136" cy="170" rx="22" ry="10" fill="#ffffff" opacity="0.2" transform="rotate(-30 136 170)"/>
+  </g>
+
+  <!-- Trunk and roots -->
+  <g filter="url(#soft)">
+    <path d="M228 432 C232 392 234 352 230 312 L282 312 C278 352 280 392 284 432 C302 434 318 438 330 444 L182 444 C194 438 210 434 228 432 Z" fill="url(#trunk)"/>
+    <path d="M246 330 C248 370 249 400 251 430" stroke="#6b4022" stroke-width="4" fill="none" opacity="0.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Lines joining the generations -->
+  <g stroke="url(#branch)" stroke-linecap="round" fill="none" filter="url(#soft)">
+    <path d="M256 304 C256 284 256 270 256 256" stroke-width="12"/>
+    <path d="M256 258 C226 252 186 240 160 220" stroke-width="11"/>
+    <path d="M256 258 C286 252 326 240 352 220" stroke-width="11"/>
+    <path d="M160 196 C184 166 220 146 256 140" stroke-width="10"/>
+    <path d="M352 196 C328 166 292 146 256 140" stroke-width="10"/>
+  </g>
+
+  <!-- Generations: ancestor, two children, and you -->
+  <g filter="url(#soft)">
+    <use href="#medallion" x="256" y="112"/>
+    <use href="#medallion" x="158" y="214"/>
+    <use href="#medallion" x="354" y="214"/>
+    <use href="#medallion" x="256" y="310"/>
+  </g>
+
+  <!-- Sparkles -->
+  <use href="#sparkle" x="414" y="90"/>
+  <use href="#sparkle" x="96" y="372" opacity="0.92" transform="translate(96 372) scale(0.8) translate(-96 -372)"/>
+  <use href="#sparkle" x="420" y="388" opacity="0.85" transform="translate(420 388) scale(0.55) translate(-420 -388)"/>
+  <circle cx="100" cy="96" r="6" fill="#ffffff" opacity="0.8"/>
+  <circle cx="404" cy="140" r="4" fill="#ffffff" opacity="0.65"/>
+</svg>
