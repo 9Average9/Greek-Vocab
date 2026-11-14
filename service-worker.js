@@ -1,5 +1,5 @@
-importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/13.3.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/13.3.0/firebase-messaging-compat.js");
 
 firebase.initializeApp({
   apiKey: "AIzaSyDVWKRCtjg7ppR-D8ZNs-TfSwPlWdXXQ5Q",
@@ -55,7 +55,7 @@ self.addEventListener("notificationclick", (event) => {
 // Before this split, every release renamed the one cache and `activate`
 // deleted the old one, so each update re-downloaded all of the Bible data, and
 // stale-while-revalidate re-fetched multi-megabyte files on every open.
-const APP_SW_VERSION = "3.0.576";
+const APP_SW_VERSION = "3.0.577";
 const SHELL_CACHE = "disciple-builder-v" + APP_SW_VERSION;
 const DATA_CACHE = "disciple-builder-data-v1";
 const KEEP_CACHES = new Set([SHELL_CACHE, DATA_CACHE]);
@@ -74,20 +74,20 @@ const SHELL_NETWORK_TIMEOUT_MS = 3000;
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.576",
+  "./style.css?v=3.0.577",
   "./vocab.js?v=3.0.8",
-  "./rhema-align.js?v=3.0.576",
-  "./app.js?v=3.0.576",
-  "./rhema-word-study.js?v=3.0.576",
+  "./rhema-align.js?v=3.0.577",
+  "./app.js?v=3.0.577",
+  "./rhema-word-study.js?v=3.0.577",
   "./bible-threads.js?v=3.0.402",
-  "./bible-intros.js?v=3.0.576",
+  "./bible-intros.js?v=3.0.577",
   "./rhema-english-dictionary.js?v=3.0.417",
   "./assets/vendor/wink-nlp-en.js?v=3.0.104",
   "./bible-atlas.js?v=3.0.349",
   "./bible-genealogy.js?v=3.0.476",
   "./bible-regions.js?v=3.0.472",
-  "./verse-structure.js?v=3.0.576",
-  "./vs-structure.js?v=3.0.576",
+  "./verse-structure.js?v=3.0.577",
+  "./vs-structure.js?v=3.0.577",
   "./sermon-notes.js?v=3.0.460",
   "./sermon-notes.css?v=3.0.460",
   // Self-hosted fonts (icons + skin fonts) — pinned, they effectively never change
@@ -119,7 +119,7 @@ const FILES_TO_CACHE = [
   "./rhema-critical-fallbacks.js?v=3.0.177",
   "./rhema-critical-extra.js?v=3.0.573",
   "./rhema-ot-hebrew.js?v=3.0.81",
-  "./rhema-hebrew-lexicon.js?v=3.0.576",
+  "./rhema-hebrew-lexicon.js?v=3.0.577",
   "./rhema-hebrew-bdb.js?v=3.0.379",
   "./rhema-lxx.js?v=3.0.573",
   // Rhema English translations (pinned)
@@ -133,11 +133,11 @@ const FILES_TO_CACHE = [
   "./rhema-scripture-notes.js?v=3.0.160",
   "./rhema-bsb-align.js?v=3.0.2",
   "./rhema-bible-dictionary.js?v=3.0.385",
-  "./rhema-crossrefs-ui.js?v=3.0.576",
+  "./rhema-crossrefs-ui.js?v=3.0.577",
   "./greek-verbs.js?v=3.0.152",
   "./bible-quiz.js?v=3.0.473",
   "./bible-quiz.css?v=3.0.473",
-  "./firebase-lb.js?v=3.0.576",
+  "./firebase-lb.js?v=3.0.577",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",
@@ -330,7 +330,7 @@ function _swShellResponse(req) {
 // Firebase SDK modules: pinned version in the path, so they are immutable and
 // can be cached — sign-in (which gates the launch screen) no longer waits on a
 // CDN round-trip for ~400 KB of SDK on every open.
-const FIREBASE_SDK_PREFIX = "https://www.gstatic.com/firebasejs/10.14.1/";
+const FIREBASE_SDK_PREFIX = "https://www.gstatic.com/firebasejs/13.3.0/";
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
