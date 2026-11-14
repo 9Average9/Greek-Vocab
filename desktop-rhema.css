@@ -355,6 +355,12 @@ html.mv-embed .rhema-picker { align-items: center; }
   body.rhema-desktop-site .desktop-rhema-guide.active { background: color-mix(in srgb, var(--secondary-color) 7%, transparent); }
   body.rhema-desktop-site .desktop-rhema-guide.poked .desktop-rhema-guide-figure { animation: rrpGuideOuch .44s ease both; }
   body.rhema-desktop-site .desktop-rhema-guide.poked .desktop-rhema-guide-snot { opacity: 0; animation: none; }
+  body.rhema-desktop-site .desktop-rhema-guide.tour-away,
+  body.rhema-desktop-site .desktop-rhema-guide.returning { pointer-events: none; }
+  body.rhema-desktop-site .desktop-rhema-guide.tour-away .desktop-rhema-guide-figure { animation: desktopGuideLeave .28s ease-in both; }
+  body.rhema-desktop-site .desktop-rhema-guide.returning .desktop-rhema-guide-figure { animation: desktopGuideReturn .72s cubic-bezier(.2,.9,.25,1) both; }
+  body.rhema-desktop-site .desktop-rhema-guide.tour-away .desktop-rhema-guide-snot,
+  body.rhema-desktop-site .desktop-rhema-guide.returning .desktop-rhema-guide-snot { opacity: 0; animation: none; }
   body.rhema-desktop-site #rhemaReaderPanel .rrp-guide,
   body.rhema-desktop-site #rhemaReaderPanel .rrp-guide-room { display: none !important; }
   .desktop-rhema-rail-footer {
@@ -445,9 +451,13 @@ html.mv-embed .rhema-picker { align-items: center; }
 
 @keyframes desktopGuideSleep { 0%, 100% { transform: translateY(0) rotate(2deg); } 50% { transform: translateY(1px) rotate(4deg); } }
 @keyframes desktopGuideSleepBubble { 0%, 100% { transform: translateY(2px) scale(.45); opacity: .62; } 48% { transform: translateY(-2px) scale(1); opacity: 1; } 68% { transform: translateY(-3px) scale(1.16); opacity: .86; } }
+@keyframes desktopGuideLeave { from { opacity: 1; transform: translateX(0) rotate(2deg); } to { opacity: 0; transform: translateX(110%) rotate(12deg); } }
+@keyframes desktopGuideReturn { 0% { opacity: 0; transform: translateX(110%) rotate(12deg) scale(.8); } 62% { opacity: 1; transform: translateX(-8%) rotate(-4deg) scale(1.04); } 82% { transform: translateX(3%) rotate(3deg); } 100% { opacity: 1; transform: translateX(0) rotate(2deg) scale(1); } }
 @media (prefers-reduced-motion: reduce) {
   body.rhema-desktop-site .desktop-rhema-guide-figure,
   body.rhema-desktop-site .desktop-rhema-guide-snot { animation: none; }
+  body.rhema-desktop-site .desktop-rhema-guide.tour-away .desktop-rhema-guide-figure { opacity: 0; transform: translateX(110%); }
+  body.rhema-desktop-site .desktop-rhema-guide.returning .desktop-rhema-guide-figure { opacity: 1; transform: none; }
 }
 
 @media (max-width: 959px) {

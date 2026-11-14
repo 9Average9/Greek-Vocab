@@ -1,6 +1,43 @@
 /* Desktop-only Rhema navigation. This file is not loaded by the phone site. */
 (function () {
   if (window.RHEMA_MV_SLOT) return;
+  let guideReturnTimer = 0;
+  let guideSleepTimer = 0;
+
+  function guideBusy() {
+    const panel = document.getElementById('rhemaReaderPanel');
+    const toursOpen = document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')
+      && panel?.classList.contains('sub-open')
+      && document.getElementById('rrpSubTitle')?.textContent?.trim() === 'Tours';
+    return toursOpen || ['rhemaCoachOverlay', 'appCoachOverlay'].some(id => {
+      const overlay = document.getElementById(id);
+      return overlay && !overlay.classList.contains('hidden');
+    });
+  }
+
+  function syncGuide() {
+    const button = document.getElementById('desktopRhemaGuideBtn');
+    if (!button) return;
+    if (guideBusy()) {
+      clearTimeout(guideReturnTimer);
+      clearTimeout(guideSleepTimer);
+      guideReturnTimer = guideSleepTimer = 0;
+      button.classList.remove('returning');
+      button.classList.add('tour-away');
+      return;
+    }
+    if (!button.classList.contains('tour-away') || guideReturnTimer) return;
+    guideReturnTimer = setTimeout(() => {
+      guideReturnTimer = 0;
+      if (guideBusy()) return;
+      button.classList.remove('tour-away');
+      button.classList.add('returning');
+      guideSleepTimer = setTimeout(() => {
+        button.classList.remove('returning');
+        guideSleepTimer = 0;
+      }, 720);
+    }, 160);
+  }
   function readerOpen() {
     return document.getElementById('rhemaModal')?.classList.contains('open');
   }
@@ -77,6 +114,7 @@
       if (current) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
     });
+    syncGuide();
   }
 
   window.syncDesktopRhemaLanguageUi = function () {
@@ -103,7 +141,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const observer = new MutationObserver(syncRail);
-    ['atlasPage', 'atlasTabPlaces', 'atlasTabJourneys', 'rhemaModal', 'rhemaReaderPanelOverlay', 'rhemaReaderPanel', 'rrpSubTitle', 'wordLibraryOverlay', 'rhemaXrefPage', 'rhemaXrefSelectPage', 'studySandbox', 'ssPaneVerses', 'ssPaneWordlog', 'ssPaneTrails', 'ssPaneNotes', 'desktopRhemaAccountPanel'].forEach(id => {
+    ['atlasPage', 'atlasTabPlaces', 'atlasTabJourneys', 'rhemaModal', 'rhemaReaderPanelOverlay', 'rhemaReaderPanel', 'rrpSubTitle', 'rhemaCoachOverlay', 'appCoachOverlay', 'wordLibraryOverlay', 'rhemaXrefPage', 'rhemaXrefSelectPage', 'studySandbox', 'ssPaneVerses', 'ssPaneWordlog', 'ssPaneTrails', 'ssPaneNotes', 'desktopRhemaAccountPanel'].forEach(id => {
       const element = document.getElementById(id);
       if (element) observer.observe(element, { attributes: true, attributeFilter: ['class'], childList: id === 'rrpSubTitle' });
     });
