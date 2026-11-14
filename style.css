@@ -39966,3 +39966,13 @@ html.pwa-standalone *::after {
    style (meant for a leftover spacer). The Tools row is that last child; never
    let it collapse. */
 body:has(#homeScreen.screen.active) #homeScreen .home-scroll > div.home-actions-grid:last-child[style] { height: auto !important; }
+
+/* ── Reader word grid: a word never splits across lines ───────────────────────
+   Greek and Hebrew words stay whole in their tile; the few too wide for it are
+   shrunk to fit by _rhemaFitWordTiles (app.js). */
+.rhema-chapter-word-grid:not(.greek-only) .rhema-word .rhema-greek-text {
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+  max-width: 100%;
+}
