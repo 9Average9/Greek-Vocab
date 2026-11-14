@@ -30563,7 +30563,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.579";
+const APP_VERSION = "3.0.580";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30587,6 +30587,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.580 &mdash; Cleaner &ldquo;how it&rsquo;s translated&rdquo;</div>
+<ul>
+  <li><strong>Junk renderings removed</strong> &mdash; The measured list of how the English renders each Greek word was built by machine-matching words, and about 3,750 of its 9,400 rows were stray fragments (&ldquo;consented began Jesus&rdquo;). Those are gone, and forms of the same English word are combined (preach / preached / preaching).</li>
+  <li><strong>Labels match their verses</strong> &mdash; Short meaning labels were attached to those rows by position, so a label could sit over verses that don&rsquo;t mean that (συλλαμβάνω&rsquo;s &ldquo;arrested&rdquo; under &ldquo;helped&rdquo;). Each label is now attached only where its verses back it up; otherwise the row shows the plain English.</li>
+  <li><strong>Dictionary fixes</strong> &mdash; Alpha, Jesus, Joseph, the forms of &ldquo;you&rdquo; (σοί, ὑμῖν&hellip;), ἀγράμματος, μόδιος and ἐκχωρέω were showing another word&rsquo;s Abbott-Smith entry. The BSB is now described as the MSB&rsquo;s sister edition rather than an independent check.</li>
+</ul>
 <div class="un-version-label">v3.0.579 &mdash; Hebrew accuracy pass</div>
 <ul>
   <li><strong>Endings explained correctly</strong> &mdash; The &ldquo;toward&rdquo; ending (סְדֹמָה &ldquo;toward Sodom&rdquo;, 1,084 words) and the lengthened ending on commands (הָבָה &ldquo;come!&rdquo;) were shown as the pronoun &ldquo;her&rdquo;; they now say what they are. Infinitives with an ending say who does the action (&ldquo;when they were created&rdquo;), nouns with &ldquo;his/their&rdquo; no longer say &ldquo;linked to the next word&rdquo;, commands show &ldquo;you&rdquo;, the rarer &ldquo;extra n&rdquo; endings are recognised, and the Aramaic badge shows only on Aramaic.</li>
@@ -52018,7 +52024,7 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.578';
+const DEEP_LEXICON_VERSION = '3.0.580';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
