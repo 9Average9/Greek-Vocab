@@ -352,7 +352,6 @@ html.mv-embed .rhema-picker { align-items: center; }
     animation: desktopGuideSleepBubble 2.4s ease-in-out infinite;
   }
   body.rhema-desktop-site .desktop-rhema-guide:hover .desktop-rhema-guide-figure { filter: brightness(1.04); }
-  body.rhema-desktop-site .desktop-rhema-guide.active { background: color-mix(in srgb, var(--secondary-color) 7%, transparent); }
   body.rhema-desktop-site .desktop-rhema-guide.poked .desktop-rhema-guide-figure { animation: rrpGuideOuch .44s ease both; }
   body.rhema-desktop-site .desktop-rhema-guide.poked .desktop-rhema-guide-snot { opacity: 0; animation: none; }
   body.rhema-desktop-site .desktop-rhema-guide.tour-away,

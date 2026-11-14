@@ -3,6 +3,7 @@
   if (window.RHEMA_MV_SLOT) return;
   let guideReturnTimer = 0;
   let guideSleepTimer = 0;
+  let guideSession = false;
 
   function guideBusy() {
     const panel = document.getElementById('rhemaReaderPanel');
@@ -30,6 +31,12 @@
     guideReturnTimer = setTimeout(() => {
       guideReturnTimer = 0;
       if (guideBusy()) return;
+      if (guideSession) {
+        guideSession = false;
+        const panel = document.getElementById('rhemaReaderPanelOverlay');
+        if (panel?.classList.contains('open')) showReaderPanelSection('main');
+        else if (readerOpen()) openRhemaReaderPanel();
+      }
       button.classList.remove('tour-away');
       button.classList.add('returning');
       guideSleepTimer = setTimeout(() => {
@@ -58,6 +65,7 @@
   }
 
   function settleView(keep) {
+    if (keep !== 'panel') guideSession = false;
     if (document.getElementById('mvOverlay')?.classList.contains('open')) rhemaCloseMultiView();
     const host = document.getElementById('studySandbox');
     if (keep !== 'tool' && host?.classList.contains('tool-host')) {
@@ -105,7 +113,7 @@
       : document.getElementById('rhemaXrefPage') && !document.getElementById('rhemaXrefPage').classList.contains('hidden') ? 'crossrefs'
       : document.getElementById('rhemaXrefSelectPage') && !document.getElementById('rhemaXrefSelectPage').classList.contains('hidden') ? 'crossrefs'
       : toolView || (!document.getElementById('wordLibraryOverlay')?.classList.contains('hidden') ? 'library'
-      : toursOpen ? 'guide'
+      : toursOpen ? 'studytools'
       : panelOpen ? 'studytools'
       : document.getElementById('rhemaModal')?.classList.contains('rhema-search-open') ? 'search' : 'reader');
     document.querySelectorAll('#desktopShellNav [data-rhema-view]').forEach(button => {
@@ -187,6 +195,7 @@
   window.desktopRhemaGuide = async function () {
     const button = document.getElementById('desktopRhemaGuideBtn');
     if (!button || button.dataset.poking === 'true') return;
+    guideSession = true;
     button.dataset.poking = 'true';
     const image = button.querySelector('img');
     if (image) image.src = 'assets/mascot/guide-ouch.webp';
@@ -197,6 +206,7 @@
     button.classList.remove('poked');
     if (image) image.src = 'assets/mascot/guide-sleep-desktop.webp';
     button.dataset.poking = 'false';
+    if (!guideSession) return;
     settleView('panel');
     await read();
     if (!document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) openRhemaReaderPanel();
