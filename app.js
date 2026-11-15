@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.587";
+const APP_VERSION = "3.0.588";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30590,6 +30590,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.588 &mdash; The guide gets around</div>
+<ul>
+  <li><strong>Off to the study panel</strong> &mdash; When the side panel opens, the guide hops off the title to hang around in there. When it closes, he flies from his spot in the panel back to the title, lands, and drifts off to sleep again.</li>
+  <li><strong>Tap him</strong> &mdash; Tapping the napping guide gives the same &ldquo;ouch!&rdquo; as in the study panel, then opens the tours.</li>
+</ul>
 <div class="un-version-label">v3.0.587 &mdash; Don&rsquo;t wake the guide</div>
 <ul>
   <li><strong>A napping guide</strong> &mdash; The guide now dozes against the Rhēma title at the top of the reader. Pull the page down fast to bring the top bars back and the header jolts him awake; he looks around, then slowly drifts back to sleep. Scroll on and he&rsquo;s fast asleep again.</li>
@@ -44897,6 +44902,7 @@ function openRhemaReaderPanel() {
   if (title) title.textContent = _rhemaReadMode ? 'Reader' : 'Study tools';
   _renderRhemaPanelMain();
   showReaderPanelSection('main');
+  _rhemaNapAway();
   ov.classList.add('open');
   requestAnimationFrame(() => requestAnimationFrame(_rrpPlaceGuide));
   if (_rhemaStudyId() && !_localFlagSet('studyToolsCoachSeenV3537') && document.getElementById('appCoachOverlay')?.classList.contains('hidden') !== false) {
@@ -44908,6 +44914,19 @@ function openRhemaReaderPanel() {
 function closeRhemaReaderPanel() {
   const ov = document.getElementById('rhemaReaderPanelOverlay');
   if (!ov || !ov.classList.contains('open')) return;
+  // The guide heads home from wherever he was standing in the panel.
+  const pg = document.querySelector('#rhemaReaderPanel:not(.sub-open) .rrp-guide.in');
+  const pr = pg?.getBoundingClientRect();
+  let from = pr && pr.width && pr.right > 0 && pr.left < window.innerWidth ? { left: pr.left, top: pr.top, width: pr.width, height: pr.height } : null;
+  let src = pg?.querySelector('.rrp-guide-img')?.getAttribute('src');
+  // Peeking or leaning poses are cut off or one-sided: he flies home standing.
+  if (from && /^(peek|lean)$/.test(pg.dataset.pose || '')) {
+    const w = from.height / GUIDE_POSES.point;
+    from = { left: from.left + (from.width - w) / 2, top: from.top, width: w, height: from.height };
+    src = guidePoseSrc('point');
+  }
+  if (pg) pg.classList.remove('in');
+  _rhemaNapReturn(from, src);
   ov.classList.remove('in');            // slide + fade out
   clearTimeout(closeRhemaReaderPanel._t);
   closeRhemaReaderPanel._t = setTimeout(() => ov.classList.remove('open'), 360);
@@ -46203,7 +46222,7 @@ function rhemaNapSleep() {
 }
 function rhemaNapWake() {
   const g = _rhemaNapEl();
-  if (!g || window.RHEMA_MV_SLOT || _rhemaNapState === 'wake' || _rhemaNapReducedMotion()) return;
+  if (!g || window.RHEMA_MV_SLOT || _rhemaNapState === 'wake' || g._poking || g.classList.contains('rng-away') || _rhemaNapReducedMotion()) return;
   g.classList.add('rng-ready');
   _rhemaNapTimers.forEach(clearTimeout);
   _rhemaNapTimers = [];
@@ -46217,6 +46236,88 @@ function rhemaNapWake() {
     _rhemaNapTimers.push(setTimeout(() => { _rhemaNapState = 'drowse-done'; rhemaNapSleep(); }, RHEMA_NAP.drowseMs));
   }, RHEMA_NAP.wakeMs + RHEMA_NAP.holdMs));
 }
+// Then drift back off to sleep (the drowse clip ends in the sleep loop).
+function _rhemaNapDrowse() {
+  const g = _rhemaNapEl();
+  if (!g) return;
+  g.classList.add('rng-ready');
+  _rhemaNapTimers.forEach(clearTimeout);
+  _rhemaNapTimers = [];
+  if (_rhemaNapReducedMotion()) { _rhemaNapState = 'drowse-done'; rhemaNapSleep(); return; }
+  _rhemaNapState = 'drowse';
+  _rhemaNapTo('drowse');
+  _rhemaNapTimers.push(setTimeout(() => { _rhemaNapState = 'drowse-done'; rhemaNapSleep(); }, RHEMA_NAP.drowseMs));
+}
+// Tapped: the side menu's "ouch!" jolt, then the tours.
+function rhemaNapPoke() {
+  const g = _rhemaNapEl();
+  if (!g || g._poking || g.classList.contains('rng-away')) return;
+  g._poking = true;
+  _rhemaNapTimers.forEach(clearTimeout);
+  _rhemaNapTimers = [];
+  const img = g.querySelector('.rng-ouch');
+  if (img && !img.getAttribute('src')) img.setAttribute('src', guidePoseSrc('ouch'));
+  g.classList.remove('rng-poked'); void g.offsetWidth; g.classList.add('rng-poked');
+  setTimeout(() => {
+    g._poking = false;
+    openRhemaReaderPanel();
+    showReaderPanelSection('tours');
+    setTimeout(() => g.classList.remove('rng-poked'), 320);
+  }, 460);
+}
+// The study panel is opening: he's off to hang around in there.
+function _rhemaNapAway() {
+  const g = _rhemaNapEl();
+  if (!g) return;
+  _rhemaNapTimers.forEach(clearTimeout);
+  _rhemaNapTimers = [];
+  _rhemaNapState = 'away';
+  g.classList.remove('rng-land');
+  g.classList.add('rng-away');
+}
+// The panel is closing: he flies from his spot in the panel back to the
+// title, lands, and dozes off. `from` is his on-screen box in the panel.
+function _rhemaNapReturn(from, src) {
+  const g = _rhemaNapEl();
+  if (!g || !g.classList.contains('rng-away')) return;
+  const header = g.closest('.rhema-header');
+  const land = () => {
+    g.classList.add('rng-snap');
+    g.classList.remove('rng-away');
+    void g.offsetWidth;
+    g.classList.remove('rng-snap');
+    g.classList.remove('rng-land'); void g.offsetWidth; g.classList.add('rng-land');
+    setTimeout(() => g.classList.remove('rng-land'), 460);
+    _rhemaNapDrowse();
+  };
+  const visible = g.classList.contains('placed') && !g.classList.contains('no-room') && header && header.offsetParent;
+  if (!visible || _rhemaNapReducedMotion()) { land(); return; }
+  _rhemaNapPlace();
+  const hr = header.getBoundingClientRect();
+  const to = { left: hr.left + parseFloat(g.style.left || 0), top: hr.top + parseFloat(g.style.top || 0), width: g.offsetWidth, height: g.offsetHeight };
+  // Not in the panel (a sub-page was open)? He comes in from the panel's edge.
+  if (!from || !from.width) from = { left: window.innerWidth - 70, top: to.top + 40, width: 52, height: 64 };
+  if (!src) src = guidePoseSrc('point');
+  const fly = document.createElement('img');
+  fly.className = 'rhema-nap-flyer';
+  fly.alt = '';
+  fly.src = src;
+  Object.assign(fly.style, { left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px' });
+  document.body.appendChild(fly);
+  const s = to.height / from.height;
+  const dx = to.left + (to.width - from.width * s) / 2 - from.left;
+  const dy = to.top - from.top;
+  const anim = fly.animate([
+    { transform: 'translate(0, 0) scale(1) rotate(0deg)', opacity: 1 },
+    { transform: `translate(${dx * 0.5}px, ${Math.min(dy * 0.5, 0) - 46}px) scale(${(1 + s) / 2}) rotate(-12deg)`, opacity: 1, offset: 0.5 },
+    { transform: `translate(${dx}px, ${dy}px) scale(${s}) rotate(0deg)`, opacity: 1 }
+  ], { duration: 640, easing: 'cubic-bezier(.45,.05,.35,1)', fill: 'forwards' });
+  let done = false;
+  const finish = () => { if (done) return; done = true; land(); fly.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' }); setTimeout(() => fly.remove(), 180); };
+  anim.onfinish = finish;
+  setTimeout(finish, 900);
+}
+
 // Sit just right of the title text, leaning on it; hide if the header
 // buttons leave no room.
 function _rhemaNapPlace() {
@@ -46242,6 +46343,11 @@ function _rhemaNapPlace() {
 }
 function _rhemaNapInit() {
   const g = _rhemaNapEl();
+  // Left in the panel when the reader closed: he's back on the title.
+  if (g && g.classList.contains('rng-away') && !document.getElementById('rhemaReaderPanelOverlay')?.classList.contains('open')) {
+    g.classList.add('rng-snap'); g.classList.remove('rng-away'); void g.offsetWidth; g.classList.remove('rng-snap');
+    _rhemaNapState = 'away-done'; rhemaNapSleep();
+  }
   if (!g || g._rhemaNapInit) { _rhemaNapPlace(); return; }
   g._rhemaNapInit = true;
   if (window.RHEMA_MV_SLOT) { g.remove(); return; }
