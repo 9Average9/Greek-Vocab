@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.588";
+const APP_VERSION = "3.0.589";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30590,6 +30590,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.589 &mdash; Reference bar back in place</div>
+<ul>
+  <li><strong>No more gap</strong> &mdash; The book/chapter bar sits right under the Rhēma title again. The napping guide&rsquo;s update had pushed it down.</li>
+</ul>
 <div class="un-version-label">v3.0.588 &mdash; The guide gets around</div>
 <ul>
   <li><strong>Off to the study panel</strong> &mdash; When the side panel opens, the guide hops off the title to hang around in there. When it closes, he flies from his spot in the panel back to the title, lands, and drifts off to sleep again.</li>
