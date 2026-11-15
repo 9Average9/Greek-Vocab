@@ -1361,9 +1361,13 @@
       ${deckHtml(uid, loading)}
     </div>`;
 
+    // Moulton–Milligan (5 MB) loads with the first Greek word study, not the reader.
+    const mmWas = !!_mmText(strongs);
+    const mmLoad = !mmWas && !window.RhemaMoultonMilligan && typeof _rhemaLoadDataFile === 'function'
+      ? _rhemaLoadDataFile('rhema-mm.js').catch(() => {}) : null;
     setTimeout(() => {
       _wsRefreshDeck(uid);
-      loadDeepLexiconEntry(strongs).then((entry) => {
+      Promise.all([loadDeepLexiconEntry(strongs), mmLoad]).then(([entry]) => {
         if (!document.getElementById(uid)) return;
         const st = _studies.get(uid); if (st) st.entry = entry || null;
         fillHero(uid, entry, strongs);
@@ -1377,7 +1381,7 @@
         put('authors', authorsHtml(entry, strongs));
         put('history', historyHtml(entry, lex, strongs));
         put('method', methodHtml(entry));
-        if (_lsjText(entry)) put('lex', lexiconsHtml(lex, strongs, entry, uid));
+        if (_lsjText(entry) || (!mmWas && _mmText(strongs))) put('lex', lexiconsHtml(lex, strongs, entry, uid));
         if (isNT && _wsOccurrences(strongs).length) {
           // Draw the Translations card now; counting starts when it's viewed.
           const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';

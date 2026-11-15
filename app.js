@@ -9117,8 +9117,7 @@ function selectMiniWheelItem(type) {
 
 let _swmSelectedVerses = new Set();
 function _swmChapterVerseList() {
-  const chData = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter] || {};
-  return Object.keys(chData).map(Number).sort((a, b) => a - b).map(String);
+  return _rhemaVerseList(_swmSavedBook, _swmSavedChapter);
 }
 function _swmRenderRefSelectors() {
   const bookSel = document.getElementById('swmBookSelect');
@@ -9138,6 +9137,11 @@ function swmSetBook(code) {
   _swmRenderRefSelectors();
   _swmRenderVerseChips();
   _updateSwmVerseDisplay();
+  // Showing the original text of the other Testament: load it, then redraw.
+  const file = isRhemaOTBook(code) ? (_rhemaOTLayer === 'lxx' ? 'rhema-lxx.js' : 'rhema-ot-hebrew.js') : null;
+  if (!_rhemaShowEnglish && file && !_rhemaDataFileLoaded(file)) {
+    _rhemaLoadDataFile(file).then(() => { if (_swmSavedBook === code) _updateSwmVerseDisplay(); }).catch(() => {});
+  }
 }
 function swmSetChapter(ch) {
   _swmSavedChapter = String(ch);
@@ -9224,8 +9228,7 @@ function _updateSwmVerseDisplay() {
 
 function swmNavVerse(delta) {
   if (!_rhemaData() || !_swmDisplayBook || !_swmDisplayChapter) return;
-  const chapterData = (_rhemaText()[_swmDisplayBook] || {})[_swmDisplayChapter] || {};
-  const verses = Object.keys(chapterData).map(Number).sort((a, b) => a - b);
+  const verses = _rhemaVerseList(_swmDisplayBook, _swmDisplayChapter).map(Number);
   const idx = verses.indexOf(Number(_swmDisplayVerse));
   if (idx === -1) return;
   const newIdx = idx + delta;
@@ -30563,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.582";
+const APP_VERSION = "3.0.583";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30587,6 +30590,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.583 &mdash; A lighter app on your phone</div>
+<ul>
+  <li><strong>About a third of the memory</strong> &mdash; After launch the app used to load all of its Bible data (both Testaments, the Septuagint, the critical text, cross references, the papyri lexicon) into your phone&rsquo;s memory. Now it loads only what the open chapter needs; the rest loads the first time you use it. In testing, memory after launch went from about 195&nbsp;MB to 63&nbsp;MB.</li>
+  <li><strong>Still works offline</strong> &mdash; Everything is still saved to your phone in the background for offline use; it just isn&rsquo;t held in memory until you need it.</li>
+  <li><strong>Install video</strong> &mdash; The 3&nbsp;MB &ldquo;Add to Home Screen&rdquo; video now downloads only when you open those steps.</li>
+</ul>
 <div class="un-version-label">v3.0.582 &mdash; Whole words in the Greek reader</div>
 <ul>
   <li><strong>No more split words</strong> &mdash; On phones, about 1 Greek word in 6 broke across two lines inside its box (μονογεν / ῆ). Words now stay whole; the few too long for their box are made just small enough to fit. Hebrew too.</li>
@@ -33395,6 +33404,9 @@ function showInstallSteps(device) {
 
   if (device === "iphone") {
     iphoneSteps.classList.remove("hidden");
+    // The 3 MB how-to video downloads only when these steps are opened.
+    const vid = iphoneSteps.querySelector("video");
+    if (vid) { try { vid.preload = "auto"; const p = vid.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
   }
 
   if (device === "android") {
@@ -44128,7 +44140,9 @@ function _rhemaFilesForView(view = _rhemaPendingView()) {
   const files = ['rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-critical-extra.js', 'rhema-scripture-notes.js'];
   if (view.english === 'BSB') files.push('rhema-bsb.js');
   if (isRhemaOTBook(view.book)) {
-    files.push(view.otLayer === 'lxx' ? 'rhema-lxx.js' : 'rhema-ot-hebrew.js');
+    // Hebrew word taps read the Hebrew dictionary straight away.
+    if (view.otLayer === 'lxx') files.push('rhema-lxx.js');
+    else files.push('rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js');
   } else {
     // NT chapters mark critical/majority differences, so both texts are needed.
     files.push('rhema-critical.js');
@@ -44141,12 +44155,14 @@ function _rhemaMissingViewFiles() {
   return _rhemaFilesForView().filter(f => !_rhemaDataFileLoaded(f));
 }
 
-// Everything else, in the order a reader is most likely to reach for it.
-const RHEMA_DATA_ALL = [
-  'rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-critical-extra.js', 'rhema-scripture-notes.js',
-  'rhema-critical.js', 'rhema-hebrew-lexicon.js', 'rhema-ot-hebrew.js', 'rhema-bsb.js', 'rhema-mm.js',
-  'rhema-crossrefs.js', 'rhema-lxx.js', 'rhema-syntax.js', 'rhema-hebrew-bdb.js', 'rhema-bible-dictionary.js',
-];
+// Small helpers loaded once the reader is idle. The big datasets are NOT
+// loaded into memory up front any more (that was ~70 MB of parsed script on a
+// phone): each loads the first time something needs it — the other Testament
+// or text when you go there (renderRhemaVerse), the Septuagint / BSB when you
+// switch to them, cross references when that screen opens, Moulton–Milligan
+// with the first Greek word study, the Hebrew dictionary with Hebrew text.
+// The service worker still saves every file to disk for offline use.
+const RHEMA_DATA_IDLE = ['rhema-syntax.js', 'rhema-hebrew-bdb.js', 'rhema-bible-dictionary.js'];
 
 function loadRhemaScripts() {
   return new Promise((resolve, reject) => {
@@ -44183,7 +44199,7 @@ let _rhemaRestStarted = false;
 function _rhemaLoadRestInBackground() {
   if (_rhemaRestStarted) return;
   _rhemaRestStarted = true;
-  const queue = RHEMA_DATA_ALL.filter(f => !_rhemaDataFileLoaded(f));
+  const queue = RHEMA_DATA_IDLE.filter(f => !_rhemaDataFileLoaded(f));
   const idle = (fn) => (typeof requestIdleCallback === 'function'
     ? requestIdleCallback(fn, { timeout: 1500 })
     : setTimeout(fn, 60));
@@ -44194,8 +44210,8 @@ function _rhemaLoadRestInBackground() {
       try { _rhemaMergeDictionaryPhrases(); } catch {}
       _ensureRhemaBibleData();
       _syncRhemaEnglishAlias();
-      // Everything the reader uses is now on the device; let the service worker
-      // fill in whatever else full offline use needs, in its own time.
+      // Let the service worker save whatever else full offline use needs to
+      // disk (not memory), in its own time.
       setTimeout(() => {
         try { navigator.serviceWorker?.controller?.postMessage({ type: 'warm-offline' }); } catch {}
       }, 8000);
@@ -46046,7 +46062,7 @@ function rhemaShowHistory() {
 }
 function rhemaGoHistory(i) {
   const e = _rhemaHistoryList()[i];
-  if (!e || !_rhemaText()?.[e.b]) return;
+  if (!e || !RHEMA_BOOK_ORDER.includes(e.b)) return; // renderRhemaVerse loads its text
   const fromBook = _rhemaBook;
   _rhemaBook = e.b;
   _rhemaChapter = String(e.c);
