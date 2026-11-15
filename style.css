@@ -40013,7 +40013,6 @@ html.dark .ws-debate.ws-ck-myth > summary, body.dark .ws-debate.ws-ck-myth > sum
 /* The guide naps against the reader title. A fast pull that brings the top
    bars back jolts the header and wakes him; he blinks, then dozes off again.
    Each clip is a horizontal strip of frames played with steps(). */
-.rhema-header { position: relative; }
 .rhema-nap-guide { --rng-h: 44px; position: absolute; left: 0; top: 0; width: calc(var(--rng-h) * 157 / 168); height: var(--rng-h); padding: 0; margin: 0; border: 0; background: none; color: inherit; cursor: pointer; pointer-events: none; z-index: 1; opacity: 0; transition: opacity .3s ease, transform .3s ease; -webkit-tap-highlight-color: transparent; }
 .rhema-nap-guide::before { content: ''; position: absolute; inset: -6px -6px -4px; } /* bigger tap area */
 .rhema-nap-guide.placed { opacity: 1; pointer-events: auto; }
