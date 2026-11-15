@@ -1,7 +1,9 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
 import {
   initializeFirestore,
   persistentLocalCache,
+  persistentMultipleTabManager,
+  memoryLocalCache,
   doc,
   setDoc,
   getDoc,
@@ -22,7 +24,7 @@ import {
   arrayRemove,
   increment,
   deleteField
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -34,23 +36,23 @@ import {
   reauthenticateWithCredential,
   verifyBeforeUpdateEmail,
   sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
 import {
   getMessaging,
   getToken,
   onMessage
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
+} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-messaging.js";
 import {
   getStorage,
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
   deleteObject
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-storage.js";
 import {
   getFunctions,
   httpsCallable
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
+} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-functions.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDVWKRCtjg7ppR-D8ZNs-TfSwPlWdXXQ5Q",
@@ -62,7 +64,16 @@ const firebaseConfig = {
 };
 
 const fbApp = initializeApp(firebaseConfig);
-const db = initializeFirestore(fbApp, { localCache: persistentLocalCache() });
+// Offline cache shared safely by every open copy of the app (browser tabs, the
+// installed app). The default single-tab cache let a second copy fight the
+// first for it, which crashes Firestore ("INTERNAL ASSERTION FAILED: Unexpected
+// state") and stops syncing. A Multi-view tab (index.html?mv=N) is a copy of
+// the reader inside the app: it keeps an in-memory cache and leaves syncing to
+// the app around it.
+const _inMultiViewTab = /[?&]mv=\d/.test(location.search);
+const db = initializeFirestore(fbApp, {
+  localCache: _inMultiViewTab ? memoryLocalCache() : persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});
 const auth = getAuth(fbApp);
 const storage = getStorage(fbApp);
 const functionsApp = getFunctions(fbApp);

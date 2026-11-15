@@ -231,6 +231,8 @@
   window.desktopRhemaGenealogy = function () {
     settleView('genealogy');
     if (typeof openGenealogyMap === 'function') openGenealogyMap();
+    // The tree marks itself open a frame after it's added; re-check the rail then.
+    setTimeout(syncRail, 120);
   };
   window.desktopRhemaAccount = function () {
     const panel = document.getElementById('desktopRhemaAccountPanel');
