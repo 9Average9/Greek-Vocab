@@ -39988,3 +39988,25 @@ body:has(#homeScreen.screen.active) #homeScreen .home-scroll > div.home-actions-
 .ws-mx-top .ws-prov-tag { margin: 0 4px 0 6px; }
 .ws-tip > div { min-width: 0; }
 body.dark .ws-prov-fg, body.dark .ws-prov-mini, body.dark-mode .ws-prov-fg, body.dark-mode .ws-prov-mini { color: #c4b5fd; }
+
+/* Caution box kinds: only real debates keep the amber "debated" look. */
+.ws-debate.ws-ck-note { border-color: color-mix(in srgb, #3b82f6 35%, transparent); background: color-mix(in srgb, #3b82f6 7%, transparent); }
+.ws-debate.ws-ck-note > summary { color: #1d4ed8; }
+.ws-debate.ws-ck-mss { border-color: color-mix(in srgb, #0d9488 38%, transparent); background: color-mix(in srgb, #0d9488 7%, transparent); }
+.ws-debate.ws-ck-mss > summary { color: #0f766e; }
+.ws-debate.ws-ck-myth { border-color: color-mix(in srgb, #e11d48 32%, transparent); background: color-mix(in srgb, #e11d48 6%, transparent); }
+.ws-debate.ws-ck-myth > summary { color: #be123c; }
+html.dark .ws-debate.ws-ck-note > summary, body.dark .ws-debate.ws-ck-note > summary, body.dark-mode .ws-debate.ws-ck-note > summary { color: #93c5fd; }
+html.dark .ws-debate.ws-ck-mss > summary, body.dark .ws-debate.ws-ck-mss > summary, body.dark-mode .ws-debate.ws-ck-mss > summary { color: #5eead4; }
+html.dark .ws-debate.ws-ck-myth > summary, body.dark .ws-debate.ws-ck-myth > summary, body.dark-mode .ws-debate.ws-ck-myth > summary { color: #fda4af; }
+
+/* Tap targets: at least ~40px of touch area on phones. */
+.rhema-vs-swatch { position: relative; width: clamp(30px, 9.6vw, 42px); height: clamp(30px, 9.6vw, 42px); }
+.rhema-vs-swatch::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; }
+.rhema-wbw-step { width: 40px; height: 40px; }
+.rhema-wbw-tab { padding-top: 11px; padding-bottom: 11px; }
+.ws-depth-b { padding-top: 10px; padding-bottom: 10px; }
+.ws-save { position: relative; padding-top: 7px; padding-bottom: 7px; }
+.ws-save::before { content: ''; position: absolute; inset: -5px -3px; }
+.ws-tour-skip { padding: 10px 12px; margin: -10px -6px; }
+.ws-tour-next { padding-top: 11px; padding-bottom: 11px; }

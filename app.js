@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.584";
+const APP_VERSION = "3.0.585";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30590,6 +30590,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.585 &mdash; Clearer notes, easier taps</div>
+<ul>
+  <li><strong>Not everything is &ldquo;debated&rdquo;</strong> &mdash; The note box in a word study used to say &ldquo;A debated point&rdquo; every time. Now it says what the note is: <em>A debated point</em> (real disagreements, like whether Mark ends at 16:8), <em>Manuscripts differ</em>, <em>A common misreading</em> (like &ldquo;power = dynamite&rdquo;), or <em>Worth knowing</em>.</li>
+  <li><strong>Bigger tap targets</strong> &mdash; Highlight colors, the Word by word arrows and tabs, Quick / Study / Deep, and Save are easier to hit on a phone.</li>
+</ul>
 <div class="un-version-label">v3.0.584 &mdash; Labels: Free Grace reading and AI-written</div>
 <ul>
   <li><strong>Free Grace reading, labelled</strong> &mdash; The word studies still follow the Free Grace view where they take a theological direction, but every note written or reworded in that review now says so with a <em>Free Grace reading</em> tag (about 670 notes in 270 words). Tap a tag to see what the view holds and that other traditions read some passages differently.</li>

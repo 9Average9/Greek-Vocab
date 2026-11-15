@@ -370,7 +370,8 @@
       if (study?.caution) {
         const here = _mentionsVerse(study.caution, ctx);
         const fgC = _fgMarked(study, 'caution');
-        parts.push(`<details class="ws-debate${here ? ' here' : ' ws-not-quick'}"><summary><span class="material-symbols-outlined">forum</span>${here ? 'Debated in this verse' : 'A debated point'}${fgC ? '<span class="ws-prov-mini">Free Grace reading</span>' : ''}<span class="material-symbols-outlined ws-chev">expand_more</span></summary><p>${esc(study.caution)}</p>${fgTag(study, 'caution')}</details>`);
+        const ck = _cautionKind(study.caution);
+        parts.push(`<details class="ws-debate ws-ck-${ck.key}${here ? ' here' : ' ws-not-quick'}"><summary><span class="material-symbols-outlined">${ck.icon}</span>${here ? ck.here : ck.label}${fgC ? '<span class="ws-prov-mini">Free Grace reading</span>' : ''}<span class="material-symbols-outlined ws-chev">expand_more</span></summary><p>${esc(study.caution)}</p>${fgTag(study, 'caution')}</details>`);
       }
       if (study?.exegesisTip) parts.push(`<div class="ws-tip ws-not-quick"><span class="material-symbols-outlined">lightbulb</span><div><p>${esc(study.exegesisTip)}</p>${fgTag(study, 'exegesisTip')}</div></div>`);
       if (entry?.audit?.verdict === 'misleading') {
@@ -605,6 +606,17 @@
       if (idx >= 0 && typeof _rhemaBVEnglishHtml === 'function') html = _rhemaBVEnglishHtml(eng, b, c, v, words, idx, strongs, ver);
       return `<blockquote class="ws-mx-ex"><p>${html}</p><footer>${_refChip(b, c, v, strongs)}<span class="ws-fine">${esc(ver)}</span></footer></blockquote>`;
     } catch { return ''; }
+  }
+
+  // The study's caution note isn't always a debate: name it by what it says.
+  const _CK_MSS = /\b(?:manuscripts?|textual|critical texts?|byzantine text|majority text|textus receptus|scribes|copyists|some copies|later copies|editions? (?:read|have|differ))\b/i;
+  const _CK_DEBATE = /debat|disput|contested|\b(?:scholars|interpreters|commentators|translations|versions) (?:differ|disagree|are divided)|uncertain|unclear|\bwhether\b|\bsome (?:take|read|see|understand|argue|scholars|interpreters|commentators|think|hold|link|suggest)|\bothers? (?:take|read|see|argue|understand|hold|think)|views? differ|variously|controvers|ambigu|open question|not certain|disagree/i;
+  const _CK_MYTH = /popular|\bmyth|often (?:said|claimed|taught|heard|drawn)|commonly (?:said|claimed|taught)|anachronis|overdrawn|overstat|goes beyond the evidence|lacks? (?:lexical )?support|fallacy|should not be (?:read|pressed|over-?read)|over-?read|press(?:ed)? too|older (?:works|writers|studies|commentators)|\bnot an etymology|not (?:a )?technical/i;
+  function _cautionKind(t) {
+    if (_CK_MSS.test(t)) return { key: 'mss', icon: 'history_edu', label: 'Manuscripts differ', here: 'Manuscripts differ here' };
+    if (_CK_DEBATE.test(t)) return { key: 'debate', icon: 'forum', label: 'A debated point', here: 'Debated in this verse' };
+    if (_CK_MYTH.test(t)) return { key: 'myth', icon: 'report', label: 'A common misreading', here: 'A common misreading here' };
+    return { key: 'note', icon: 'info', label: 'Worth knowing', here: 'Worth knowing about this verse' };
   }
 
   // Provenance labels. Study prose is written by AI (checked by machine, see
