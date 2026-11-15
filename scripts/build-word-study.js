@@ -58,6 +58,7 @@ const ROOT = path.join(__dirname, '..');
 const DEEP_DIR = path.join(ROOT, 'data', 'deep-lexicon');
 const OUT_DIR = path.join(DEEP_DIR, 'study');
 const RESULTS_FILE = path.join(OUT_DIR, 'results.jsonl');
+const { freeGraceMarks, reviewPairs, FG_MODEL } = require('./free-grace-marks.js');
 const STATE_FILE = path.join(OUT_DIR, 'state.json');
 const STUDY_VERSION = 1;
 
@@ -458,6 +459,7 @@ function mergeIntoShards(W, entries, lexicon, mm) {
   const done = loadDone();
   if (!done.size) { console.log('No results to merge.'); return; }
   const verifier = makeVerifier(W);
+  const fgPairs = reviewPairs(RESULTS_FILE);
   const index = JSON.parse(fs.readFileSync(path.join(DEEP_DIR, 'index.json'), 'utf8'));
   const totals = { merged: 0, refsChecked: 0, refsDropped: 0, sensesDropped: 0, backgroundDropped: 0 };
   for (const shard of index.shards) {
@@ -470,6 +472,11 @@ function mergeIntoShards(W, entries, lexicon, mm) {
       const { sources } = buildPack(entry, lexicon[s], mm[s], W);
       const study = verifyStudy(r.study, entry, sources, verifier);
       entry.study = { ...study, model: r.model, v: STUDY_VERSION };
+      // Label what the Free Grace review wrote (see scripts/free-grace-marks.js).
+      if (FG_MODEL.test(r.model || '')) {
+        const prev = fgPairs.get(Number(s))?.prev;
+        entry.study.fg = prev ? freeGraceMarks(prev, entry.study) : ['summary'];
+      }
       for (const k of ['refsChecked', 'refsDropped', 'sensesDropped', 'backgroundDropped']) totals[k] += study.verified[k];
       totals.merged++;
       changed = true;

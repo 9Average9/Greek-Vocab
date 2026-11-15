@@ -348,7 +348,7 @@
 
     const hs = document.getElementById(`${uid}-hsense`);
     if (hs) hs.innerHTML = hereI >= 0
-      ? `<span class="ws-answer-k">Meaning here</span><button type="button" class="ws-hsense-b" onclick="rhemaWordStudyOpenSense('${uid}',${hereI})"><b>${esc(study.senses[hereI].label)}</b> — ${esc(study.senses[hereI].definition)}</button>`
+      ? `<span class="ws-answer-k">Meaning here</span><button type="button" class="ws-hsense-b" onclick="rhemaWordStudyOpenSense('${uid}',${hereI})"><b>${esc(study.senses[hereI].label)}</b> — ${esc(study.senses[hereI].definition)}</button>${fgTag(study, `senses.${hereI}`)}`
       : '';
 
     // Save from the answer card: the meaning used here, else the core one.
@@ -365,12 +365,15 @@
       const parts = [];
       if (study?.summary) parts.push(`<p>${esc(study.summary)}</p>`);
       else if (prose.def) parts.push(`<p>${esc(prose.def)}</p>`);
+      parts.push(provRow(entry));
       // Debated? Say so — prominently when it's this very verse.
       if (study?.caution) {
         const here = _mentionsVerse(study.caution, ctx);
-        parts.push(`<details class="ws-debate${here ? ' here' : ' ws-not-quick'}"><summary><span class="material-symbols-outlined">forum</span>${here ? 'Debated in this verse' : 'A debated point'}<span class="material-symbols-outlined ws-chev">expand_more</span></summary><p>${esc(study.caution)}</p></details>`);
+        const fgC = _fgMarked(study, 'caution');
+        const ck = _cautionKind(study.caution);
+        parts.push(`<details class="ws-debate ws-ck-${ck.key}${here ? ' here' : ' ws-not-quick'}"><summary><span class="material-symbols-outlined">${ck.icon}</span>${here ? ck.here : ck.label}${fgC ? '<span class="ws-prov-mini">Free Grace reading</span>' : ''}<span class="material-symbols-outlined ws-chev">expand_more</span></summary><p>${esc(study.caution)}</p>${fgTag(study, 'caution')}</details>`);
       }
-      if (study?.exegesisTip) parts.push(`<div class="ws-tip ws-not-quick"><span class="material-symbols-outlined">lightbulb</span><p>${esc(study.exegesisTip)}</p></div>`);
+      if (study?.exegesisTip) parts.push(`<div class="ws-tip ws-not-quick"><span class="material-symbols-outlined">lightbulb</span><div><p>${esc(study.exegesisTip)}</p>${fgTag(study, 'exegesisTip')}</div></div>`);
       if (entry?.audit?.verdict === 'misleading') {
         parts.push(`<div class="ws-flag"><span class="material-symbols-outlined">flag</span>Rhema’s own review flagged this summary as possibly misleading. Lean on the measured range, the verses and the lexicons.</div>`);
       }
@@ -503,7 +506,7 @@
     el.innerHTML = section('here', 'translate', 'In this verse',
       `${senseLine}
        <div class="ws-tr">${groupsHtml}</div>
-       ${entry?.study?.translationNote ? more('Why translations differ', `<p>${esc(entry.study.translationNote)}</p>`, true) : ''}
+       ${entry?.study?.translationNote ? more('Why translations differ', `<p>${esc(entry.study.translationNote)}</p>${fgTag(entry.study, 'translationNote')}`, true) : ''}
        ${loadBtn}`,
       esc(teaser));
     // "Your NIV" must really be the reader's NIV. If that text isn't on the
@@ -605,6 +608,32 @@
     } catch { return ''; }
   }
 
+  // The study's caution note isn't always a debate: name it by what it says.
+  const _CK_MSS = /\b(?:manuscripts?|textual|critical texts?|byzantine text|majority text|textus receptus|scribes|copyists|some copies|later copies|editions? (?:read|have|differ))\b/i;
+  const _CK_DEBATE = /debat|disput|contested|\b(?:scholars|interpreters|commentators|translations|versions) (?:differ|disagree|are divided)|uncertain|unclear|\bwhether\b|\bsome (?:take|read|see|understand|argue|scholars|interpreters|commentators|think|hold|link|suggest)|\bothers? (?:take|read|see|argue|understand|hold|think)|views? differ|variously|controvers|ambigu|open question|not certain|disagree/i;
+  const _CK_MYTH = /popular|\bmyth|often (?:said|claimed|taught|heard|drawn)|commonly (?:said|claimed|taught)|anachronis|overdrawn|overstat|goes beyond the evidence|lacks? (?:lexical )?support|fallacy|should not be (?:read|pressed|over-?read)|over-?read|press(?:ed)? too|older (?:works|writers|studies|commentators)|\bnot an etymology|not (?:a )?technical/i;
+  function _cautionKind(t) {
+    if (_CK_MSS.test(t)) return { key: 'mss', icon: 'history_edu', label: 'Manuscripts differ', here: 'Manuscripts differ here' };
+    if (_CK_DEBATE.test(t)) return { key: 'debate', icon: 'forum', label: 'A debated point', here: 'Debated in this verse' };
+    if (_CK_MYTH.test(t)) return { key: 'myth', icon: 'report', label: 'A common misreading', here: 'A common misreading here' };
+    return { key: 'note', icon: 'info', label: 'Worth knowing', here: 'Worth knowing about this verse' };
+  }
+
+  // Provenance labels. Study prose is written by AI (checked by machine, see
+  // "How we know"); notes written or reworded in the Free Grace review carry
+  // study.fg paths (scripts/free-grace-marks.js) and are labelled where shown.
+  const _fgMarked = (study, p) => !!(study && Array.isArray(study.fg) && study.fg.includes(p));
+  const _provBtn = (key, cls, label) => `<button type="button" class="ws-prov-tag ${cls}" onclick="event.stopPropagation();event.preventDefault();showRhemaSourceTagHelp('${key}')">${label}</button>`;
+  function fgTag(study, p) {
+    return _fgMarked(study, p) ? _provBtn('freegrace', 'ws-prov-fg', 'Free Grace reading') : '';
+  }
+  function provRow(entry) {
+    const study = entry?.study;
+    if (!study && !entry?.prose?.def) return '';
+    if (!(study?.fg || []).length) return '';
+    return `<div class="ws-prov">${_provBtn('freegrace', 'ws-prov-fg', 'Includes a Free Grace reading')}</div>`;
+  }
+
   // The meaning explorer: numbered chips on top (tap one), one meaning card at
   // a time below — what it means, why, a real verse, every other verse, and a
   // save button.
@@ -627,7 +656,7 @@
       const refs = s.refs || [];
       const example = _exampleHtml(refs[0], strongs);
       return `<article class="ws-mx-card${i === sel ? ' on' : ''}" data-i="${i}" style="--c:${senseColor(i)}">
-        <div class="ws-mx-top"><span class="ws-mx-count">${n > 1 ? `Meaning ${i + 1} of ${n}` : 'Its meaning'}</span>${i === hereI ? '<span class="ws-mx-herebadge"><span class="material-symbols-outlined">my_location</span>this verse</span>' : ''}${saveButton(uid, `s${i}`, strongs, { label: s.label, definition: s.definition, note: s.note || '', refs }, ref)}</div>
+        <div class="ws-mx-top"><span class="ws-mx-count">${n > 1 ? `Meaning ${i + 1} of ${n}` : 'Its meaning'}</span>${fgTag(entry.study, `senses.${i}`)}${i === hereI ? '<span class="ws-mx-herebadge"><span class="material-symbols-outlined">my_location</span>this verse</span>' : ''}${saveButton(uid, `s${i}`, strongs, { label: s.label, definition: s.definition, note: s.note || '', refs }, ref)}</div>
         <h4 class="ws-mx-label">${esc(s.label)}</h4>
         <p class="ws-mx-def">${esc(s.definition)}</p>
         ${s.note ? `<div class="ws-mx-why"><span class="material-symbols-outlined">psychology_alt</span><p><b>Why</b> ${esc(s.note)}</p></div>` : ''}
@@ -754,7 +783,7 @@
         <div class="ws-bar ws-bar-author"><span style="width:${Math.max(4, Math.round(100 * a.count / max))}%"></span></div>
         ${multiSense && a.topI != null && a.total >= 2 ? `<div class="ws-fine">mostly “${esc(_senseName(entry, entry.senses[a.topI], a.topI))}” (${a.topN} of ${a.total} measured)</div>` : ''}
       </div>`).join('');
-    const studyNotes = (entry.study?.authorNotes || []).map(a => `<div class="ws-author-note"><span class="material-symbols-outlined">edit_note</span><div><p><b>${esc(a.author)}.</b> ${esc(a.note)}</p>${a.refs?.length ? `<div class="ws-refs">${a.refs.map(r => _refChipFromKey(r, strongs)).join('')}</div>` : ''}</div></div>`).join('');
+    const studyNotes = (entry.study?.authorNotes || []).map((a, i) => `<div class="ws-author-note"><span class="material-symbols-outlined">edit_note</span><div><p><b>${esc(a.author)}.</b> ${esc(a.note)}</p>${fgTag(entry.study, `authorNotes.${i}`)}${a.refs?.length ? `<div class="ws-refs">${a.refs.map(r => _refChipFromKey(r, strongs)).join('')}</div>` : ''}</div></div>`).join('');
     // Only reviewed study notes — the older generated author note isn't shown
     // when a study exists (it predates the theological review).
     const note = studyNotes ? studyNotes : !entry.study && entry.audit?.author_note && !/definition|label|digest|entry/i.test(entry.audit.author_note)
@@ -861,6 +890,8 @@
         <li>BSB words come from the Berean translators’ own word-for-word tables. Other versions are matched to them word by word, using the lexicons and how that version itself words the same Greek word elsewhere in the chapter (≈ marks a weaker match).</li>
         <li>Tested against a Greek-tagged King James and World English Bible: when a main word is matched, it is the right word about 97–98% of the time.</li>
         <li>Across-translation counts are made on your device from each version’s own text.</li>
+        ${entry.study || entry.prose?.def ? `<li><b>How the study is put together.</b> The meanings, author notes, tips and notes are drawn from every verse with the word in the Greek text, the lexicons (Abbott-Smith, Moulton–Milligan, LSJ, Dodson, Strong’s) and how the English versions render it. Any cited verse that doesn’t contain the word, and any history quote not found in the lexicon text, is removed. It’s a study tool: the verses and lexicons are right here so you can weigh every claim for yourself.</li>` : ''}
+        ${(entry.study?.fg || []).length ? `<li><b>Free Grace reading.</b> This study was revised to follow the Free Grace view where it takes a theological direction; the ${entry.study.fg.length === 1 ? 'note' : `${entry.study.fg.length} notes`} written or reworded in that review are labelled. Other traditions read some of these passages differently. The measured renderings and the lexicons were not changed.</li>` : ''}
       </ul>` + more('Evidence trail',
       `${why.map(w => `<p>${esc(w)}</p>`).join('')}
        <p class="ws-fine">English renderings are measured by aligning every occurrence in the Byzantine text with the Majority Standard Bible (and checked independently against the Berean Standard Bible), then grouping the English renderings. Translation wording approximates meaning; where the lexicons recognise a sense the English hides, it is listed separately.</p>`));
@@ -1369,9 +1400,13 @@
       ${deckHtml(uid, loading)}
     </div>`;
 
+    // Moulton–Milligan (5 MB) loads with the first Greek word study, not the reader.
+    const mmWas = !!_mmText(strongs);
+    const mmLoad = !mmWas && !window.RhemaMoultonMilligan && typeof _rhemaLoadDataFile === 'function'
+      ? _rhemaLoadDataFile('rhema-mm.js').catch(() => {}) : null;
     setTimeout(() => {
       _wsRefreshDeck(uid);
-      loadDeepLexiconEntry(strongs).then((entry) => {
+      Promise.all([loadDeepLexiconEntry(strongs), mmLoad]).then(([entry]) => {
         if (!document.getElementById(uid)) return;
         const st = _studies.get(uid); if (st) st.entry = entry || null;
         fillHero(uid, entry, strongs);
@@ -1385,7 +1420,7 @@
         put('authors', authorsHtml(entry, strongs));
         put('history', historyHtml(entry, lex, strongs));
         put('method', methodHtml(entry));
-        if (_lsjText(entry)) put('lex', lexiconsHtml(lex, strongs, entry, uid));
+        if (_lsjText(entry) || (!mmWas && _mmText(strongs))) put('lex', lexiconsHtml(lex, strongs, entry, uid));
         if (isNT && _wsOccurrences(strongs).length) {
           // Draw the Translations card now; counting starts when it's viewed.
           const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';

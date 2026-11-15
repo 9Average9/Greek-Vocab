@@ -24539,6 +24539,15 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   --qa-subtitle: #86680f;
 }
 
+#homeScreen .quick-action-genealogy {
+  --qa-card-bg: linear-gradient(180deg, rgba(214, 238, 222, 0.98), rgba(236, 248, 240, 0.9));
+  --qa-card-border: rgba(47, 125, 80, 0.2);
+  --qa-card-shadow: rgba(39, 106, 67, 0.14);
+  --qa-image-shadow: rgba(33, 96, 58, 0.2);
+  --qa-title: #2f7d50;
+  --qa-subtitle: #256640;
+}
+
 #homeScreen .quick-action-test {
   --qa-card-bg: linear-gradient(180deg, rgba(255, 226, 232, 0.98), rgba(255, 241, 244, 0.9));
   --qa-card-border: rgba(225, 50, 82, 0.16);
@@ -39894,3 +39903,109 @@ html.mv-embed .rhema-header { padding-top: 6px !important; }
 .mv-tabbar.mv-stacked .mv-exit { grid-row: 2; grid-column: 3; width: 36px; height: 38px; border-radius: 11px; }
 .mv-tab.on .mv-tab-x { width: 26px; }
 @media (min-width: 700px) { .mv-tabs:not(.mv-two-rows) { grid-template-columns: repeat(var(--mv-cols, 2), minmax(0, 240px)); } }
+
+/* ── iOS installed app: no blur on anything that's hidden ─────────────────────
+   In the Home-Screen (installed) app on iPhone, an element that stays in the
+   page with a frosted-glass backdrop-filter, even fully transparent, can make
+   iOS paint a hazy strip across the very top of the screen (see v3.0.461–465:
+   the app toast). These four live in the page all the time, invisible until
+   used — the XP pop-up parks right under the status bar — so each keeps its
+   blur only while it's actually showing. */
+.xp-toast:not(.open),
+.rhema-copy-banner:not(.show),
+.rhema-sheet-backdrop:not(.visible),
+.rhema-compare-overlay:not(.open) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* The XP pop-up is tucked away out of view, not parked under the status bar. */
+.xp-toast:not(.open) { visibility: hidden; transition: transform 0.28s ease, opacity 0.28s ease, visibility 0s linear 0.28s; }
+
+/* ── Reader: no lingering blur layer after it opens ───────────────────────────
+   The open animation fades the reader in from a blur. With fill-mode "both" it
+   kept filter: blur(0) applied (and will-change: filter) for as long as the
+   reader was open, leaving the full-screen reader as a live filter layer, the
+   kind of layer the installed iOS app paints a hazy strip at the top for. Once
+   the animation ends the reader now goes back to plain (no filter, no
+   transform), which looks identical. */
+#rhemaSlide { will-change: auto; }
+#rhemaModal.open #rhemaSlide { animation-fill-mode: backwards; }
+
+/* ── Installed app (Home Screen): no frosted glass at all ─────────────────────
+   On iPhone, in the installed app only, iOS can mirror any frosted-glass
+   (backdrop-filter) layer as a hazy strip across the top of the screen. While
+   running as the installed app, every backdrop blur is off; the surfaces that
+   used it already have solid or near-solid backgrounds. The website keeps its
+   frosted look. Matched by the standalone media query and by the
+   .pwa-standalone class set before first paint (index.html). */
+@media all and (display-mode: standalone) {
+  *, *::before, *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+html.pwa-standalone *,
+html.pwa-standalone *::before,
+html.pwa-standalone *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ── Home fits every phone (app.js fitHomeLayout) ─────────────────────────────
+   Sizes measured from the room left above the nav bar. */
+#homeScreen .home-actions-grid.ht-fit { grid-auto-columns: var(--ht-col) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile { min-height: var(--ht-h) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile .hat-icon { height: var(--ht-icon) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile .qa-img { --qa-art-size: var(--ht-art) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile .hat-text strong { font-size: var(--ht-title) !important; }
+#homeScreen .home-actions-grid.ht-fit .home-action-tile .hat-text small { font-size: var(--ht-sub) !important; }
+/* Taller cards keep their words centred top to bottom. */
+#homeScreen .home-habit-widget.hw-fit,
+#homeScreen .home-journey-widget.hw-fit { display: flex; flex-direction: column; justify-content: center; }
+/* An older rule zeroes the height of Home's last child when it carries an inline
+   style (meant for a leftover spacer). The Tools row is that last child; never
+   let it collapse. */
+body:has(#homeScreen.screen.active) #homeScreen .home-scroll > div.home-actions-grid:last-child[style] { height: auto !important; }
+
+/* ── Reader word grid: a word never splits across lines ───────────────────────
+   Greek and Hebrew words stay whole in their tile; the few too wide for it are
+   shrunk to fit by _rhemaFitWordTiles (app.js). */
+.rhema-chapter-word-grid:not(.greek-only) .rhema-word .rhema-greek-text {
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+  max-width: 100%;
+}
+
+/* Word study provenance labels: AI-written prose, Free Grace review notes. */
+.ws-prov { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.ws-prov-tag { position: relative; display: inline-flex; align-items: center; gap: 3px; min-height: 26px; margin: 4px 0 0; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--ws-line, rgba(127,127,127,.3)); background: transparent; color: inherit; font: inherit; font-size: .72rem; font-weight: 700; line-height: 1.2; letter-spacing: .01em; cursor: pointer; opacity: .85; }
+.ws-prov-tag::before { content: ''; position: absolute; inset: -9px -4px; } /* bigger tap area */
+.ws-prov-tag .material-symbols-outlined { font-size: .9rem; }
+.ws-prov-fg { color: #6d28d9; border-color: color-mix(in srgb, #7c3aed 40%, transparent); background: color-mix(in srgb, #7c3aed 8%, transparent); }
+.ws-prov-mini { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: .66rem; font-weight: 700; color: #6d28d9; background: color-mix(in srgb, #7c3aed 10%, transparent); }
+.ws-mx-top .ws-prov-tag { margin: 0 4px 0 6px; }
+.ws-tip > div { min-width: 0; }
+body.dark .ws-prov-fg, body.dark .ws-prov-mini, body.dark-mode .ws-prov-fg, body.dark-mode .ws-prov-mini { color: #c4b5fd; }
+
+/* Caution box kinds: only real debates keep the amber "debated" look. */
+.ws-debate.ws-ck-note { border-color: color-mix(in srgb, #3b82f6 35%, transparent); background: color-mix(in srgb, #3b82f6 7%, transparent); }
+.ws-debate.ws-ck-note > summary { color: #1d4ed8; }
+.ws-debate.ws-ck-mss { border-color: color-mix(in srgb, #0d9488 38%, transparent); background: color-mix(in srgb, #0d9488 7%, transparent); }
+.ws-debate.ws-ck-mss > summary { color: #0f766e; }
+.ws-debate.ws-ck-myth { border-color: color-mix(in srgb, #e11d48 32%, transparent); background: color-mix(in srgb, #e11d48 6%, transparent); }
+.ws-debate.ws-ck-myth > summary { color: #be123c; }
+html.dark .ws-debate.ws-ck-note > summary, body.dark .ws-debate.ws-ck-note > summary, body.dark-mode .ws-debate.ws-ck-note > summary { color: #93c5fd; }
+html.dark .ws-debate.ws-ck-mss > summary, body.dark .ws-debate.ws-ck-mss > summary, body.dark-mode .ws-debate.ws-ck-mss > summary { color: #5eead4; }
+html.dark .ws-debate.ws-ck-myth > summary, body.dark .ws-debate.ws-ck-myth > summary, body.dark-mode .ws-debate.ws-ck-myth > summary { color: #fda4af; }
+
+/* Tap targets: at least ~40px of touch area on phones. */
+.rhema-vs-swatch { position: relative; width: clamp(30px, 9.6vw, 42px); height: clamp(30px, 9.6vw, 42px); }
+.rhema-vs-swatch::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; }
+.rhema-wbw-step { width: 40px; height: 40px; }
+.rhema-wbw-tab { padding-top: 11px; padding-bottom: 11px; }
+.ws-depth-b { padding-top: 10px; padding-bottom: 10px; }
+.ws-save { position: relative; padding-top: 7px; padding-bottom: 7px; }
+.ws-save::before { content: ''; position: absolute; inset: -5px -3px; }
+.ws-tour-skip { padding: 10px 12px; margin: -10px -6px; }
+.ws-tour-next { padding-top: 11px; padding-bottom: 11px; }

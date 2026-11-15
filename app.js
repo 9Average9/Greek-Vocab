@@ -9118,8 +9118,7 @@ async function selectMiniWheelItem(type) {
 
 let _swmSelectedVerses = new Set();
 function _swmChapterVerseList() {
-  const chData = (_rhemaText()[_swmSavedBook] || {})[_swmSavedChapter] || {};
-  return Object.keys(chData).map(Number).sort((a, b) => a - b).map(String);
+  return _rhemaVerseList(_swmSavedBook, _swmSavedChapter);
 }
 function _swmRenderRefSelectors() {
   const bookSel = document.getElementById('swmBookSelect');
@@ -9139,6 +9138,11 @@ function swmSetBook(code) {
   _swmRenderRefSelectors();
   _swmRenderVerseChips();
   _updateSwmVerseDisplay();
+  // Showing the original text of the other Testament: load it, then redraw.
+  const file = isRhemaOTBook(code) ? (_rhemaOTLayer === 'lxx' ? 'rhema-lxx.js' : 'rhema-ot-hebrew.js') : null;
+  if (!_rhemaShowEnglish && file && !_rhemaDataFileLoaded(file)) {
+    _rhemaLoadDataFile(file).then(() => { if (_swmSavedBook === code) _updateSwmVerseDisplay(); }).catch(() => {});
+  }
 }
 function swmSetChapter(ch) {
   _swmSavedChapter = String(ch);
@@ -9225,8 +9229,7 @@ function _updateSwmVerseDisplay() {
 
 function swmNavVerse(delta) {
   if (!_rhemaData() || !_swmDisplayBook || !_swmDisplayChapter) return;
-  const chapterData = (_rhemaText()[_swmDisplayBook] || {})[_swmDisplayChapter] || {};
-  const verses = Object.keys(chapterData).map(Number).sort((a, b) => a - b);
+  const verses = _rhemaVerseList(_swmDisplayBook, _swmDisplayChapter).map(Number);
   const idx = verses.indexOf(Number(_swmDisplayVerse));
   if (idx === -1) return;
   const newIdx = idx + delta;
@@ -9694,7 +9697,7 @@ function wlOnSearch(q) {
 function _wlFormLabel(strongs, surface) {
   const morph = _findMorphForSurface(strongs, surface);
   if (_wlLibraryLayer === 'hebrew') {
-    const p = _rhemaParseHebCode(_rhemaOshbToBereanCode(morph));
+    const p = _rhemaParseHebCode(_rhemaOshbToBereanCode(morph), morph);
     const form = p.core.rows.find(r => r.label === 'Form')?.value;
     const front = p.prefixes.map(x => x.say).join(' + ');
     return [front && `${front} +`, p.core.label, form && p.core.kind === 'verb' ? form : ''].filter(Boolean).join(' ') || 'Hebrew form';
@@ -22916,7 +22919,9 @@ function _saveRhemaPosition() {
   const pos = { book: _rhemaBook, chapter: _rhemaChapter, verse: _rhemaVerse, textMode: _rhemaTextMode, englishVersion: _rhemaEnglishVersion(), translation: _rhemaEnglishLabel(), ts: Date.now(), snippet: verseSnippet, greek: greekSnippet };
   localStorage.setItem('rhemaLastPos', JSON.stringify(pos));
   if (window.RHEMA_MV_SLOT) return; // a Multi-view window: its place stays on this device, in its own slot
-  if (uid && window.LB) {
+  // The cloud copy only when actually signed in as this user (signed out, the
+  // fallback ID has no permission and every save was refused).
+  if (uid && window.LB && window.Auth?.getCurrentUser?.()?.uid === uid) {
     window.LB.saveRhemaPosition?.(uid, pos)?.catch?.(() => {});
   }
 }
@@ -30444,6 +30449,119 @@ function applyJourneyCardState() {
   if (btn) btn.setAttribute("aria-expanded", String(!collapsed));
 }
 
+// ── Home: same layout on every phone size ────────────────────────────────────
+// The greeting and cards above the Tools row are fixed sizes, so on a tall
+// phone (Plus / Pro Max) the row ended far above the nav bar, and on a short one
+// it ran under it. After layout, measure the room between the Tools row and the
+// nav bar and size things so the gap matches a 16 Pro's: the Habit Builder and
+// Journey Maps cards grow taller first (up to 40px each), the Tools tiles take
+// the rest (mostly taller, a little wider, so the next tile still peeks in).
+const HOME_FIT_GAP = 28;       // px between the Tools row and the nav bar
+const HOME_FIT_CARD_MAX = 40;  // most each card grows
+let _homeFitBusy = false;
+// Where an element sits with no animation transforms applied (Home's entrance
+// animations slide and scale things; measuring mid-animation gave fake gaps).
+function _homeLayoutTop(el) {
+  let y = 0;
+  for (let e = el; e; e = e.offsetParent) y += e.offsetTop - (e !== el && e.scrollTop ? e.scrollTop : 0);
+  return y;
+}
+function _homeFitMeasure(home, grid, nav, cards) {
+  const tile = grid.querySelector('.home-action-tile');
+  const navTop = nav.offsetTop || (window.innerHeight - nav.offsetHeight - (parseFloat(getComputedStyle(nav).bottom) || 0));
+  return { tile, tileH: tile.offsetHeight, tileW: tile.offsetWidth, gap: navTop - (_homeLayoutTop(tile) + tile.offsetHeight) };
+}
+function fitHomeLayout() {
+  if (_homeFitBusy) return;
+  const home = document.getElementById('homeScreen');
+  const grid = home?.querySelector('.home-actions-grid');
+  const nav = document.getElementById('bottomNav');
+  if (!home || !grid || !home.classList.contains('active') || !nav) return;
+  if (!nav.offsetHeight || getComputedStyle(nav).display === 'none') return;
+  _homeFitBusy = true;
+  try {
+    const cards = [home.querySelector('.home-habit-widget'), home.querySelector('.home-journey-widget')].filter(Boolean);
+    // Back to the natural layout to measure it. (The sizes live on #homeScreen,
+    // not the row: an older rule zeroes the height of Home's last child when it
+    // has an inline style.)
+    grid.classList.remove('ht-fit');
+    ['--ht-col', '--ht-h', '--ht-icon', '--ht-art', '--ht-title', '--ht-sub'].forEach(k => home.style.removeProperty(k));
+    cards.forEach(c => { c.style.removeProperty('min-height'); c.classList.remove('hw-fit'); });
+    const m = _homeFitMeasure(home, grid, nav, cards);
+    if (!m.tile || !m.tileH) return;
+    const extra = m.gap - HOME_FIT_GAP;
+    if (Math.abs(extra) < 4) return;
+    let toolsGrow = extra;
+    if (extra > 0 && cards.length) {
+      const perCard = Math.min(HOME_FIT_CARD_MAX, Math.round(extra * 0.65 / cards.length));
+      cards.forEach(c => { c.style.minHeight = `${c.offsetHeight + perCard}px`; c.classList.add('hw-fit'); });
+      toolsGrow = extra - perCard * cards.length;
+    }
+    const sH = Math.max(0.82, Math.min(1.5, (m.tileH + toolsGrow) / m.tileH));
+    const sW = sH >= 1 ? 1 + (sH - 1) * 0.55 : sH;
+    const tile = m.tile;
+    const icon = tile.querySelector('.hat-icon');
+    const iconH = icon ? icon.offsetHeight : m.tileH * 0.55;
+    const cs = getComputedStyle(tile);
+    const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+    const col = m.tileW * sW;
+    const iconNew = iconH * (1 + (sH - 1) * 0.8);
+    const title = tile.querySelector('.hat-text strong'), sub = tile.querySelector('.hat-text small');
+    home.style.setProperty('--ht-col', `${col.toFixed(1)}px`);
+    home.style.setProperty('--ht-h', `${(m.tileH * sH).toFixed(1)}px`);
+    home.style.setProperty('--ht-icon', `${iconNew.toFixed(1)}px`);
+    home.style.setProperty('--ht-art', `${(Math.min(iconNew, col - padX) * 0.94).toFixed(1)}px`);
+    if (title) home.style.setProperty('--ht-title', `${(parseFloat(getComputedStyle(title).fontSize) * sW).toFixed(2)}px`);
+    if (sub) home.style.setProperty('--ht-sub', `${(parseFloat(getComputedStyle(sub).fontSize) * sW).toFixed(2)}px`);
+    grid.classList.add('ht-fit');
+    // Land exactly on the gap: the tiles' height moves the row's bottom 1:1.
+    const after = _homeFitMeasure(home, grid, nav, cards);
+    const fix = after.gap - HOME_FIT_GAP;
+    if (fix < -2) {
+      // Short screens: the artwork gives up the height (text stays readable).
+      const iconFit = Math.max(64, iconNew + fix);
+      home.style.setProperty('--ht-icon', `${iconFit.toFixed(1)}px`);
+      home.style.setProperty('--ht-art', `${(Math.min(iconFit, col - padX) * 0.94).toFixed(1)}px`);
+      home.style.setProperty('--ht-h', `${Math.max(120, after.tileH + fix).toFixed(1)}px`);
+    } else if (fix > 2) {
+      home.style.setProperty('--ht-h', `${(after.tileH + fix).toFixed(1)}px`);
+    }
+  } finally {
+    _homeFitBusy = false;
+  }
+}
+let _homeFitTimer = 0;
+function scheduleHomeFit() {
+  clearTimeout(_homeFitTimer);
+  _homeFitTimer = setTimeout(() => {
+    // Let entrance animations (Home, nav bar) finish first.
+    const els = [document.getElementById('homeScreen'), document.getElementById('bottomNav')].filter(Boolean);
+    const anims = els.flatMap(el => (el.getAnimations ? el.getAnimations({ subtree: true }) : []))
+      .filter(a => a.playState === 'running' && a.effect?.getTiming?.().iterations !== Infinity);
+    const done = Promise.race([Promise.all(anims.map(a => a.finished.catch(() => {}))), new Promise(r => setTimeout(r, 1500))]);
+    done.then(() => requestAnimationFrame(fitHomeLayout));
+  }, 60);
+}
+(function bindHomeFit() {
+  const start = () => {
+    const home = document.getElementById('homeScreen');
+    if (!home) return;
+    // Home shown again, its content changed size (greeting, habit progress),
+    // fonts arrived, or the screen turned.
+    new MutationObserver(() => { if (home.classList.contains('active')) scheduleHomeFit(); })
+      .observe(home, { attributes: true, attributeFilter: ['class'] });
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(scheduleHomeFit);
+      home.querySelectorAll('.hhw-main, .hjw-main, .home-greeting-wrap').forEach(el => ro.observe(el));
+    }
+    window.addEventListener('resize', scheduleHomeFit);
+    window.addEventListener('orientationchange', scheduleHomeFit);
+    document.fonts?.ready?.then(scheduleHomeFit);
+    scheduleHomeFit();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
 function initHomeQuickActionCarousel() {
   const row = document.querySelector('#homeScreen .home-actions-grid');
   if (!row || row.dataset.carouselReady === '1') return;
@@ -30454,20 +30572,20 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.573";
+const APP_VERSION = "3.0.586";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
 const RHEMA_DATA_VERSIONS = {
   'rhema-nt.js':        '3.0.65',
-  'rhema-critical.js':  '3.0.23',
+  'rhema-critical.js':  '3.0.578',
   'rhema-critical-fallbacks.js': '3.0.177',
   'rhema-critical-extra.js': '3.0.573',
   'rhema-ot-hebrew.js': '3.0.81',
-  'rhema-hebrew-lexicon.js': '3.0.560',
+  'rhema-hebrew-lexicon.js': '3.0.579',
   'rhema-hebrew-bdb.js':    '3.0.379',
   'rhema-lxx.js':       '3.0.573',
-  'rhema-lexicon.js':   '3.0.65',
+  'rhema-lexicon.js':   '3.0.580',
   'rhema-mm.js':        '3.0.65',
   'rhema-msb.js':       '3.0.65',
   'rhema-bsb.js':       '3.0.65',
@@ -30478,6 +30596,77 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.586 &mdash; Simpler word study labels</div>
+<ul>
+  <li><strong>Fewer tags</strong> &mdash; The extra tag on every word study is gone. &ldquo;How we know&rdquo; still shows where each study&rsquo;s notes come from and how every verse and quote is checked, with the verses and lexicons right there to weigh for yourself.</li>
+</ul>
+<div class="un-version-label">v3.0.585 &mdash; Clearer notes, easier taps</div>
+<ul>
+  <li><strong>Not everything is &ldquo;debated&rdquo;</strong> &mdash; The note box in a word study used to say &ldquo;A debated point&rdquo; every time. Now it says what the note is: <em>A debated point</em> (real disagreements, like whether Mark ends at 16:8), <em>Manuscripts differ</em>, <em>A common misreading</em> (like &ldquo;power = dynamite&rdquo;), or <em>Worth knowing</em>.</li>
+  <li><strong>Bigger tap targets</strong> &mdash; Highlight colors, the Word by word arrows and tabs, Quick / Study / Deep, and Save are easier to hit on a phone.</li>
+</ul>
+<div class="un-version-label">v3.0.584 &mdash; Labels: Free Grace reading and AI-written</div>
+<ul>
+  <li><strong>Free Grace reading, labelled</strong> &mdash; The word studies still follow the Free Grace view where they take a theological direction, but every note written or reworded in that review now says so with a <em>Free Grace reading</em> tag (about 670 notes in 270 words). Tap a tag to see what the view holds and that other traditions read some passages differently.</li>
+  <li><strong>How we know</strong> &mdash; Each word study&rsquo;s &ldquo;How we know&rdquo; section explains where its notes come from and how every verse and quote is checked.</li>
+  <li><strong>Interpretations</strong> &mdash; The note at the bottom now says the summaries are AI-written and why Free Grace is listed first. The 1&nbsp;John book intro now names its reading as the Free Grace one.</li>
+</ul>
+<div class="un-version-label">v3.0.583 &mdash; A lighter app on your phone</div>
+<ul>
+  <li><strong>About a third of the memory</strong> &mdash; After launch the app used to load all of its Bible data (both Testaments, the Septuagint, the critical text, cross references, the papyri lexicon) into your phone&rsquo;s memory. Now it loads only what the open chapter needs; the rest loads the first time you use it. In testing, memory after launch went from about 195&nbsp;MB to 63&nbsp;MB.</li>
+  <li><strong>Still works offline</strong> &mdash; Everything is still saved to your phone in the background for offline use; it just isn&rsquo;t held in memory until you need it.</li>
+  <li><strong>Install video</strong> &mdash; The 3&nbsp;MB &ldquo;Add to Home Screen&rdquo; video now downloads only when you open those steps.</li>
+</ul>
+<div class="un-version-label">v3.0.582 &mdash; Whole words in the Greek reader</div>
+<ul>
+  <li><strong>No more split words</strong> &mdash; On phones, about 1 Greek word in 6 broke across two lines inside its box (μονογεν / ῆ). Words now stay whole; the few too long for their box are made just small enough to fit. Hebrew too.</li>
+  <li><strong>&ldquo;offered&rdquo;, not &ldquo;offerred&rdquo;</strong> &mdash; Word glosses doubled the last letter of verbs like offer, suffer and limit (&ldquo;offerred&rdquo;). Now only verbs like prefer, occur and commit do.</li>
+</ul>
+<div class="un-version-label">v3.0.581 &mdash; Truer Greek grammar notes</div>
+<ul>
+  <li><strong>The aorist, explained right</strong> &mdash; It views an action as a whole; it doesn&rsquo;t mean &ldquo;once&rdquo;, and outside statements it doesn&rsquo;t mark past time. The parsing label no longer calls every aorist a &ldquo;completed past action&rdquo;.</li>
+  <li><strong>Other tenses and moods</strong> &mdash; Present, pluperfect (ᾔδει simply means &ldquo;he knew&rdquo;), indicative and subjunctive notes updated &mdash; the subjunctive also stands on its own (&ldquo;let us love&rdquo;) and follows ὅταν, ἕως and οὐ μή, not only ἵνα, ἐάν and μή.</li>
+  <li><strong>Voice labels fixed</strong> &mdash; Four voice codes were mislabelled (ἀπεκρίθη &ldquo;he answered&rdquo; showed as middle-passive). Verbs with no active form are now described the way current grammars do, rather than as &ldquo;deponent&rdquo;; the &ldquo;divine passive&rdquo; is noted as something context decides.</li>
+</ul>
+<div class="un-version-label">v3.0.580 &mdash; Cleaner &ldquo;how it&rsquo;s translated&rdquo;</div>
+<ul>
+  <li><strong>Junk renderings removed</strong> &mdash; The measured list of how the English renders each Greek word was built by machine-matching words, and about 3,750 of its 9,400 rows were stray fragments (&ldquo;consented began Jesus&rdquo;). Those are gone, and forms of the same English word are combined (preach / preached / preaching).</li>
+  <li><strong>Labels match their verses</strong> &mdash; Short meaning labels were attached to those rows by position, so a label could sit over verses that don&rsquo;t mean that (συλλαμβάνω&rsquo;s &ldquo;arrested&rdquo; under &ldquo;helped&rdquo;). Each label is now attached only where its verses back it up; otherwise the row shows the plain English.</li>
+  <li><strong>Dictionary fixes</strong> &mdash; Alpha, Jesus, Joseph, the forms of &ldquo;you&rdquo; (σοί, ὑμῖν&hellip;), ἀγράμματος, μόδιος and ἐκχωρέω were showing another word&rsquo;s Abbott-Smith entry. The BSB is now described as the MSB&rsquo;s sister edition rather than an independent check.</li>
+</ul>
+<div class="un-version-label">v3.0.579 &mdash; Hebrew accuracy pass</div>
+<ul>
+  <li><strong>Endings explained correctly</strong> &mdash; The &ldquo;toward&rdquo; ending (סְדֹמָה &ldquo;toward Sodom&rdquo;, 1,084 words) and the lengthened ending on commands (הָבָה &ldquo;come!&rdquo;) were shown as the pronoun &ldquo;her&rdquo;; they now say what they are. Infinitives with an ending say who does the action (&ldquo;when they were created&rdquo;), nouns with &ldquo;his/their&rdquo; no longer say &ldquo;linked to the next word&rdquo;, commands show &ldquo;you&rdquo;, the rarer &ldquo;extra n&rdquo; endings are recognised, and the Aramaic badge shows only on Aramaic.</li>
+  <li><strong>Verses line up in 1 Samuel 21&ndash;24 and Psalm 13</strong> &mdash; These were paired one verse off with the Hebrew (English 1 Sam 21:1 is Hebrew 21:2; Psalm 13:1 is Hebrew 13:2).</li>
+  <li><strong>Better short meanings</strong> &mdash; About 90 meanings had been cut down to just &ldquo;be&rdquo;, &ldquo;act&rdquo; or &ldquo;treat&rdquo; (צָדַק now &ldquo;be righteous&rdquo;, חָזַק &ldquo;be strong&rdquo;), and about 40 added &ldquo;divine&rdquo; or &ldquo;sacred&rdquo; the word doesn&rsquo;t carry (מַלְאָךְ &ldquo;messenger, angel&rdquo;, מִצְוָה &ldquo;commandment&rdquo;). עַלְמָה now reads &ldquo;young woman, maiden&rdquo;, as the standard dictionaries give it.</li>
+  <li><strong>Dictionary forms repaired</strong> &mdash; 285 damaged headwords fixed from the original source (אֵת, אִישׁ, אִם, כֶּסֶף, מֵאָה&hellip;).</li>
+  <li><strong>Word studies</strong> &mdash; Stem counts corrected (כָּפַר is Piel 92&times;, not 17), &ldquo;intensive&rdquo; descriptions of verb stems updated, cut-off articles tidied, and Septuagint word lists now say how many places they&rsquo;re based on (hidden when too few line up, and for names).</li>
+</ul>
+<div class="un-version-label">v3.0.578 &mdash; Critical text: the right word every time</div>
+<ul>
+  <li><strong>1,200 critical-text words now point to the right dictionary entry</strong> &mdash; In the critical Greek text (SBLGNT), words that differ from another word only by an accent were filed under the wrong one: τίς &ldquo;who?&rdquo; showed τὶς &ldquo;someone&rdquo; (554 places), δεῖ &ldquo;it is necessary&rdquo; showed δέω &ldquo;bind&rdquo; (98), plus ποῦ &ldquo;where?&rdquo;, ἄρα &ldquo;then&rdquo;, εἷς &ldquo;one&rdquo;, πότε &ldquo;when?&rdquo;, Στέφανος (Stephen, not &ldquo;crown&rdquo;) and more.</li>
+  <li><strong>No more false &ldquo;not in the critical text&rdquo; notes</strong> &mdash; Those mix-ups made about 200 word studies claim a word was missing from the critical text when it isn&rsquo;t (ἄρα, ἐκπλήσσω, Boaz, Eliakim&hellip;). The counts were recounted and those statements corrected; notes about a specific verse that really differs are kept.</li>
+</ul>
+<div class="un-version-label">v3.0.577 &mdash; Steadier syncing</div>
+<ul>
+  <li><strong>Firebase updated</strong> &mdash; The sign-in and sync library moved from version 10 to 13, and its offline cache now works safely with the app open in more than one place (several tabs, or Multi-view). Before, a second copy could crash syncing until the app was reopened.</li>
+  <li><strong>Multi-view tabs stay quiet</strong> &mdash; Each tab no longer starts its own copy of your account syncing (profile, habits, calendar, highlights); the app around it already does that, and the tabs still share your highlights.</li>
+  <li><strong>No failed saves when signed out</strong> &mdash; Your reading place is only copied to the cloud when you&rsquo;re signed in (it&rsquo;s always kept on the device).</li>
+</ul>
+<div class="un-version-label">v3.0.576 &mdash; Home fits every phone</div>
+<ul>
+  <li><strong>Same Home on every iPhone</strong> &mdash; On bigger phones (Plus, Pro Max) the Tools row used to stop well above the nav bar, leaving an awkward empty gap, and on small ones it could run under it. Home now measures the room it has: on bigger phones the Habit Builder and Journey Maps cards get a little taller and the tool buttons get bigger, so the Tools row always ends the same short distance above the nav bar.</li>
+  <li><strong>Family Tree has its own artwork</strong> &mdash; Its tool button now has a 3D illustration and green card like the other tools.</li>
+</ul>
+<div class="un-version-label">v3.0.575 &mdash; Top-of-screen blur, deeper fix</div>
+<ul>
+  <li><strong>The reader no longer stays a blur layer</strong> &mdash; Rhēma&rsquo;s open animation fades in from a soft blur, and it was leaving that blur effect switched on (at zero) for as long as the reader was open &mdash; the kind of layer the installed iPhone app turns into a hazy strip across the top. It now switches off as soon as the reader has opened. It looks exactly the same.</li>
+  <li><strong>No frosted glass in the installed app</strong> &mdash; In the Home-Screen app on iPhone, every frosted-glass effect is now off (the fix from v3.0.479 is back); panels sit over a plain dimmed background instead. The website keeps its frosted look.</li>
+</ul>
+<div class="un-version-label">v3.0.574 &mdash; Top-of-screen blur, again</div>
+<ul>
+  <li><strong>No more hazy strip at the top of the installed app</strong> &mdash; On iPhone, the Home-Screen app could show a blurred band across the very top. iOS paints it when an invisible element with a frosted-glass effect stays in the page; the XP pop-up sat hidden right under the status bar with one, and a few hidden reader backgrounds had one too. They now keep their blur only while they&rsquo;re actually showing.</li>
+</ul>
 <div class="un-version-label">v3.0.573 &mdash; No more empty words</div>
 <ul>
   <li><strong>Every Septuagint word now has information</strong> &mdash; About 1 Septuagint word in 15 (names like Γεδσων, and words the New Testament never uses) showed an empty card, because the Greek dictionaries are keyed to Strong&rsquo;s numbers, which only cover New Testament words. Each now shows its dictionary form, a short gloss, how often it appears, every place it appears in that book, and, for most, the Hebrew word it translates right there (tap it to study the Hebrew).</li>
@@ -33237,6 +33426,9 @@ function showInstallSteps(device) {
 
   if (device === "iphone") {
     iphoneSteps.classList.remove("hidden");
+    // The 3 MB how-to video downloads only when these steps are opened.
+    const vid = iphoneSteps.querySelector("video");
+    if (vid) { try { vid.preload = "auto"; const p = vid.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
   }
 
   if (device === "android") {
@@ -39089,6 +39281,33 @@ function rhemaBuildVersification(book, layer, engBook, origBook) {
     eVs.forEach((v, k) => { const o = oVs[k + off]; if (o) { e2o.set(`${e}:${v}`, `${o[0]}:${o[1]}`); o2e.set(`${o[0]}:${o[1]}`, `${e}:${v}`); } });
     oVs.slice(0, off).forEach(o => o2e.set(`${o[0]}:${o[1]}`, `${e}:title`));
   }
+  // Curated: places where matching chapter totals pair verses wrongly.
+  const pairs = (e, list, extra = []) => { // list: [engVerse, origC, origV]
+    show[e] = [];
+    for (const [ev, oc, ov] of list) { e2o.set(`${e}:${ev}`, `${oc}:${ov}`); o2e.set(`${oc}:${ov}`, `${e}:${ev}`); show[e].push([oc, ov]); }
+    for (const [oc, ov, to] of extra) { o2e.set(`${oc}:${ov}`, to); show[e].push([oc, ov]); }
+    show[e] = [...new Map(show[e].map(x => [`${x[0]}:${x[1]}`, x])).values()];
+    approx.delete(e);
+  };
+  if (layer === 'hebrew' && book === '1SA' && vs(origBook, 21).length === 16) {
+    // English 20:42 = Hebrew 20:42 + 21:1; English 21 = Hebrew 21:2-16;
+    // English 23:29 = Hebrew 24:1; English 24 = Hebrew 24:2-23.
+    pairs(20, vs(engBook, 20).map(v => [v, 20, v]), [[21, 1, '20:42']]);
+    pairs(21, vs(engBook, 21).map(v => [v, 21, v + 1]));
+    pairs(22, vs(engBook, 22).map(v => [v, 22, v]));
+    pairs(23, vs(engBook, 23).map(v => (v <= 28 ? [v, 23, v] : [v, 24, 1])));
+    pairs(24, vs(engBook, 24).map(v => [v, 24, v + 1]));
+  }
+  if (book === 'PSA') {
+    // Psalm 13: the original counts the title as verse 1 and joins English
+    // 5-6 in its verse 6 (the Septuagint's Psalm 12 does the same).
+    const oc = layer === 'lxx' ? 12 : 13;
+    if (vs(origBook, oc).length === 6 && vs(engBook, 13).length === 6) {
+      pairs(13, [[1, oc, 2], [2, oc, 3], [3, oc, 4], [4, oc, 5], [5, oc, 6], [6, oc, 6]], [[oc, 1, '13:title']]);
+      show[13] = [1, 2, 3, 4, 5, 6].map(v => [oc, v]);
+      o2e.set(`${oc}:6`, '13:5');
+    }
+  }
   // Original chapters that no English chapter shows (e.g. LXX Psalm 151).
   const shown = new Set(Object.values(show).flat().map(([c, v]) => `${c}:${v}`));
   const extra = O.filter(c => !vs(origBook, c).some(v => shown.has(`${c}:${v}`)));
@@ -39966,6 +40185,9 @@ function _rhemaPersistLocalMarks() {
 }
 function _rhemaStartMarksSync() {
   _rhemaLoadLocalMarks();
+  // A Multi-view tab gets highlights from the app around it (the storage event
+  // below reloads them); only the app itself keeps a live cloud listener.
+  if (window.RHEMA_MV_SLOT) return;
   const uid = window.Auth?.getCurrentUser?.()?.uid;
   _rhemaMarksUnsub?.(); _rhemaMarksUnsub = null;
   if (!uid || !window.Auth?.listenRhemaMarks) return;
@@ -42866,7 +43088,7 @@ function _rhemaRenderInterpretations(data) {
   const updated = data.updatedAt ? new Date(data.updatedAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '';
   body.innerHTML = `${context}${overview}
     ${views.length ? `<div class="rhema-ip-views">${viewHtml}</div>` : '<p class="rhema-ip-empty">No published views were found for this passage yet.</p>'}
-    <p class="rhema-ip-foot">Each view is described the way its own teachers explain it. Quotes are the pages’ own words.${updated ? ` Updated ${esc(updated)}.` : ''}</p>`;
+    <p class="rhema-ip-foot">Each view is described the way its own teachers explain it. The summaries are drawn from the published sources linked under each view; quotes are the pages’ own words, so you can read them in full. Free Grace, the reading Rhēma follows, is listed first and searched first; the other views follow in the order the research found them.${updated ? ` Updated ${esc(updated)}.` : ''}</p>`;
 }
 
 function rhemaInterpToggle(i) {
@@ -43751,26 +43973,28 @@ const MORPH_CASE = {
 const MORPH_NUM  = { S:'Singular', P:'Plural' };
 const MORPH_GEN  = { M:'Masculine', F:'Feminine', N:'Neuter' };
 const MORPH_TENSE = {
-  P:{l:'Present',     d:'ongoing action'},
+  P:{l:'Present',     d:'action in progress (or a general truth)'},
   I:{l:'Imperfect',   d:'ongoing past action'},
   F:{l:'Future',      d:'future action'},
-  A:{l:'Aorist',      d:'completed past action'},
+  A:{l:'Aorist',      d:'action viewed as a whole (past in statements)'},
   R:{l:'Perfect',     d:'completed with present result'},
   L:{l:'Pluperfect',  d:'completed past with past result'},
-  '2A':{l:'2nd Aorist', d:'completed past action (2nd form)'},
+  '2A':{l:'2nd Aorist', d:'action viewed as a whole (2nd form)'},
   '2R':{l:'2nd Perfect',d:'completed with present result (2nd form)'},
 };
 const MORPH_VOICE = {
   A:{l:'Active',         d:'subject performs the action'},
   M:{l:'Middle',         d:'subject acts for itself'},
   P:{l:'Passive',        d:'subject receives the action'},
-  D:{l:'Middle/Deponent',d:'active meaning, middle form'},
-  O:{l:'Middle-Passive', d:'middle or passive'},
-  N:{l:'Middle or Passive',d:'voice ambiguous'},
-  Q:{l:'Middle Deponent', d:'deponent with middle form'},
+  E:{l:'Middle or Passive', d:'the form fits both; context decides'},
+  D:{l:'Middle (no active form)', d:'middle form; English often says it actively'},
+  O:{l:'Passive (no active form)', d:'passive form; English often says it actively'},
+  N:{l:'Middle or Passive (no active form)', d:'middle or passive form; English often says it actively'},
+  Q:{l:'Impersonal Active', d:'used without a personal subject: “it is …”'},
+  X:{l:'No voice stated', d:''},
 };
 const MORPH_MOOD = {
-  I:{l:'Indicative',  d:'stating a fact'},
+  I:{l:'Indicative',  d:'presents as actual (statement or question)'},
   S:{l:'Subjunctive', d:'possibility or contingency'},
   O:{l:'Optative',    d:'wish or remote possibility'},
   M:{l:'Imperative',  d:'command'},
@@ -43993,7 +44217,9 @@ function _rhemaFilesForView(view = _rhemaPendingView()) {
   const files = ['rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-critical-extra.js', 'rhema-scripture-notes.js'];
   if (view.english === 'BSB') files.push('rhema-bsb.js');
   if (isRhemaOTBook(view.book)) {
-    files.push(view.otLayer === 'lxx' ? 'rhema-lxx.js' : 'rhema-ot-hebrew.js');
+    // Hebrew word taps read the Hebrew dictionary straight away.
+    if (view.otLayer === 'lxx') files.push('rhema-lxx.js');
+    else files.push('rhema-ot-hebrew.js', 'rhema-hebrew-lexicon.js');
   } else {
     // NT chapters mark critical/majority differences, so both texts are needed.
     files.push('rhema-critical.js');
@@ -44006,12 +44232,14 @@ function _rhemaMissingViewFiles() {
   return _rhemaFilesForView().filter(f => !_rhemaDataFileLoaded(f));
 }
 
-// Everything else, in the order a reader is most likely to reach for it.
-const RHEMA_DATA_ALL = [
-  'rhema-nt.js', 'rhema-msb.js', 'rhema-lexicon.js', 'rhema-critical-fallbacks.js', 'rhema-critical-extra.js', 'rhema-scripture-notes.js',
-  'rhema-critical.js', 'rhema-hebrew-lexicon.js', 'rhema-ot-hebrew.js', 'rhema-bsb.js', 'rhema-mm.js',
-  'rhema-crossrefs.js', 'rhema-lxx.js', 'rhema-syntax.js', 'rhema-hebrew-bdb.js', 'rhema-bible-dictionary.js',
-];
+// Small helpers loaded once the reader is idle. The big datasets are NOT
+// loaded into memory up front any more (that was ~70 MB of parsed script on a
+// phone): each loads the first time something needs it — the other Testament
+// or text when you go there (renderRhemaVerse), the Septuagint / BSB when you
+// switch to them, cross references when that screen opens, Moulton–Milligan
+// with the first Greek word study, the Hebrew dictionary with Hebrew text.
+// The service worker still saves every file to disk for offline use.
+const RHEMA_DATA_IDLE = ['rhema-syntax.js', 'rhema-hebrew-bdb.js', 'rhema-bible-dictionary.js'];
 
 function loadRhemaScripts() {
   return new Promise((resolve, reject) => {
@@ -44048,7 +44276,7 @@ let _rhemaRestStarted = false;
 function _rhemaLoadRestInBackground() {
   if (_rhemaRestStarted) return;
   _rhemaRestStarted = true;
-  const queue = RHEMA_DATA_ALL.filter(f => !_rhemaDataFileLoaded(f));
+  const queue = RHEMA_DATA_IDLE.filter(f => !_rhemaDataFileLoaded(f));
   const idle = (fn) => (typeof requestIdleCallback === 'function'
     ? requestIdleCallback(fn, { timeout: 1500 })
     : setTimeout(fn, 60));
@@ -44059,8 +44287,8 @@ function _rhemaLoadRestInBackground() {
       try { _rhemaMergeDictionaryPhrases(); } catch {}
       _ensureRhemaBibleData();
       _syncRhemaEnglishAlias();
-      // Everything the reader uses is now on the device; let the service worker
-      // fill in whatever else full offline use needs, in its own time.
+      // Let the service worker save whatever else full offline use needs to
+      // disk (not memory), in its own time.
       setTimeout(() => {
         try { navigator.serviceWorker?.controller?.postMessage({ type: 'warm-offline' }); } catch {}
       }, 8000);
@@ -45658,7 +45886,7 @@ function rhemaShowChaptersForBook(code) {
 // Curated intro cards (bible-intros.js): author, date, setting, purpose, a
 // text-anchored theme, reading time from real word counts, outline, and fair
 // both-sides write-ups where authorship/date/purpose are genuinely debated.
-const BIBLE_INTROS_VERSION = '3.0.534';
+const BIBLE_INTROS_VERSION = '3.0.584';
 function _loadBibleIntros() {
   if (window.BibleIntros) return Promise.resolve(window.BibleIntros);
   return new Promise((resolve, reject) => {
@@ -45921,7 +46149,7 @@ function rhemaShowHistory() {
 }
 function rhemaGoHistory(i) {
   const e = _rhemaHistoryList()[i];
-  if (!e || !_rhemaText()?.[e.b]) return;
+  if (!e || !RHEMA_BOOK_ORDER.includes(e.b)) return; // renderRhemaVerse loads its text
   const fromBook = _rhemaBook;
   _rhemaBook = e.b;
   _rhemaChapter = String(e.c);
@@ -48436,6 +48664,10 @@ function _engPlural(base) {
 
 // Single-syllable guard: consonant doubling only applies to 1-syllable words
 // (e.g. run→running, stop→stopped) not multi-syllable (enter→entering, suffer→suffered)
+// Two-syllable verbs stressed on the end double the last letter (prefer →
+// preferred, occur → occurred, commit → committed); offer, suffer, differ,
+// limit, vomit are stressed first and don't (offered, limited).
+const _ENG_DOUBLE_FINAL = /^(?:(?:re|pre|con|in|trans|de)fer|(?:oc|in|re|con)cur|(?:com|sub|per|o|ad|e|re|trans)mit)$/i;
 function _isSingleSyllable(w) {
   return (w.toLowerCase().match(/[aeiou]+/g) || []).length === 1;
 }
@@ -48448,7 +48680,7 @@ function _engIng(v) {
   const lw = w.toLowerCase();
   if (lw === 'am' || lw === 'is' || lw === 'are' || lw === 'be') w = 'being';
   else if (/ie$/.test(w)) w = w.slice(0, -2) + 'ying';                  // lie→lying, die→dying
-  else if (/(?:fer|cur|mit)$/.test(w)) w = w + w.slice(-1) + 'ing';     // transfer→transferring
+  else if (_ENG_DOUBLE_FINAL.test(w)) w = w + w.slice(-1) + 'ing';      // transfer→transferring (not offer→offering)
   else if (/[^aeiou]e$/.test(w)) w = w.slice(0, -1) + 'ing';            // love→loving
   else if (_isSingleSyllable(w) && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) w = w + w.slice(-1) + 'ing'; // run→running
   else w = w + 'ing';
@@ -48462,7 +48694,7 @@ function _engPast(v) {
   const key = words[0].toLowerCase();
   if (_IRREG_PAST_PART[key]) { words[0] = _IRREG_PAST_PART[key]; return words.join(' '); }
   const w = words[0];
-  if (/(?:fer|cur|mit)$/.test(w)) words[0] = w + w.slice(-1) + 'ed';    // transfer→transferred
+  if (_ENG_DOUBLE_FINAL.test(w)) words[0] = w + w.slice(-1) + 'ed';     // transfer→transferred (not offer→offered)
   else if (/e$/.test(w)) words[0] = w + 'd';
   else if (/[^aeiou]y$/.test(w)) words[0] = w.slice(0, -1) + 'ied';
   else if (_isSingleSyllable(w) && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) words[0] = w + w.slice(-1) + 'ed';
@@ -49714,6 +49946,43 @@ function openRhemaSheet(wordIdx, verse, ochapter) {
   initRhemaSwipeDown(sheet);
 }
 
+// Reader word grid: shrink the few Greek/Hebrew words too wide for their tile
+// so they fit on one line instead of splitting mid-word (style.css keeps them
+// whole). Measures all tiles first, then sets sizes, so it's one layout pass.
+function _rhemaFitWordTiles(root) {
+  const scope = root || document.getElementById('rhemaVerseDisplay');
+  if (!scope) return;
+  const texts = [...scope.querySelectorAll('.rhema-chapter-word-grid:not(.greek-only) .rhema-word > .rhema-greek-text')];
+  if (!texts.length) return;
+  texts.forEach(t => { if (t.style.fontSize) { t.style.fontSize = ''; t.style.letterSpacing = ''; } });
+  const plan = [];
+  for (const t of texts) {
+    const room = t.parentElement.clientWidth - 8;
+    const need = t.scrollWidth;
+    if (room > 0 && need > room) plan.push([t, Math.max(0.68, room / need)]);
+  }
+  for (const [t, ratio] of plan) {
+    const base = parseFloat(getComputedStyle(t).fontSize) || 18;
+    t.style.letterSpacing = '0';
+    t.style.fontSize = `${(base * ratio * 0.98).toFixed(2)}px`;
+  }
+}
+let _rhemaFitTilesTimer = 0;
+function _rhemaScheduleFitWordTiles() {
+  cancelAnimationFrame(_rhemaFitTilesTimer);
+  _rhemaFitTilesTimer = requestAnimationFrame(() => _rhemaFitWordTiles());
+}
+(function bindRhemaFitWordTiles() {
+  const start = () => {
+    const el = document.getElementById('rhemaVerseDisplay');
+    if (!el) return;
+    new MutationObserver(_rhemaScheduleFitWordTiles).observe(el, { childList: true, subtree: true });
+    window.addEventListener('resize', _rhemaScheduleFitWordTiles);
+    document.fonts?.ready?.then(_rhemaScheduleFitWordTiles);
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
 function closeRhemaSheet() {
   window.rhemaWordStudyTourClose?.();
   const sheet = document.getElementById('rhemaSheet');
@@ -49992,31 +50261,32 @@ function showRhemaTab(tab, word) {
 
 const GRAMMAR_EXAMPLES = {
   tense: {
-    'Present':     { title:'Present Tense', en:'"He is writing" or "He writes"', body:'The present tense describes action happening now or as an ongoing habit. In Greek it emphasizes the continuous or repeated nature of the action. ὁ ἄνθρωπος γράφει — "The man is writing (right now / habitually)."' },
-    'Imperfect':   { title:'Imperfect Tense', en:'"He was writing"', body:'The imperfect describes continuous or repeated action in past time. It paints a scene of ongoing activity. ἔγραφεν — "He was writing (over and over, or for a period of time)."' },
-    'Aorist':      { title:'Aorist Tense', en:'"He wrote" or "He wrote it (once)"', body:'The aorist views an action as a simple completed event without stressing duration. It\'s the default "past tense" of Greek narrative. ἔγραψεν — "He wrote" — a single point event.' },
-    '2nd Aorist':  { title:'2nd Aorist Tense', en:'"He threw" (irregular stem)', body:'Same meaning as the aorist — a completed past event — but the verb uses a different stem form (like English "throw/threw"). The grammar is identical; only the form differs.' },
-    'Perfect':     { title:'Perfect Tense', en:'"He has written" (and the letter still exists)', body:'The perfect describes a past completed action whose results are still felt now. λέλυκεν — "He has loosed" — it\'s done and the loosing matters now. Theologically powerful: τετέλεσται, "It is finished."' },
-    '2nd Perfect': { title:'2nd Perfect Tense', en:'"He has become" (irregular stem)', body:'Same meaning as the perfect — past action with present result — using an alternate stem. οἶδα ("I know") is technically a perfect-tense form meaning "I have come to know = I know."' },
-    'Pluperfect':  { title:'Pluperfect Tense', en:'"He had written" (before something else happened)', body:'The pluperfect describes a completed action in the past whose result was felt at a prior past point. Rare in the NT. ᾔδει — "He had known (before that moment)."' },
-    'Future':      { title:'Future Tense', en:'"He will write"', body:'The future describes expected or anticipated action. It can be predictive (will happen), deliberate (planning), or imperatival. σώσει — "He will save."' },
+    'Present':     { title:'Present Tense', en:'"He writes" or "He is writing"', body:'The present presents an action as in progress or unfolding — now, habitually, or as a general truth. In statements it usually refers to the present; in commands, infinitives and participles it gives the in-progress view without fixing a time. Context decides how much the ongoing sense matters. ὁ ἄνθρωπος γράφει — "The man is writing" or "The man writes."' },
+    'Imperfect':   { title:'Imperfect Tense', en:'"He was writing"', body:'The imperfect presents a past action as in progress — continuing, repeated, or just beginning ("he began to …"). It often paints the background of a story. ἔγραφεν — "He was writing."' },
+    'Aorist':      { title:'Aorist Tense', en:'"He wrote" (the action seen as a whole)', body:'The aorist presents an action as a whole, without commenting on how long it lasted or whether it was repeated. In statements it usually refers to the past and is the ordinary storytelling tense. Outside statements (commands, subjunctives, infinitives, participles) it does not mark time — it simply views the action as a whole. It does not mean "once" or "instantaneous": the aorist can sum up a long or repeated action (ἔζησεν … ἔτη, "he lived … years"). ἔγραψεν — "He wrote."' },
+    '2nd Aorist':  { title:'2nd Aorist Tense', en:'"He threw" (irregular stem)', body:'Same meaning as the aorist — the action viewed as a whole — but the verb uses a different stem (like English "throw/threw"). Only the form differs.' },
+    'Perfect':     { title:'Perfect Tense', en:'"He has written" (and it stands written)', body:'The perfect presents a state that results from an earlier action: done, and still in effect. λέλυκεν — "He has loosed." τετέλεσται — "It is finished" (John 19:30).' },
+    '2nd Perfect': { title:'2nd Perfect Tense', en:'"He has become" (irregular stem)', body:'Same meaning as the perfect — a resulting state — using an alternate stem. οἶδα ("I know") is perfect in form and simply means "I know."' },
+    'Pluperfect':  { title:'Pluperfect Tense', en:'"He had written"', body:'The pluperfect presents a state that already existed at a point in the past: "had ___". Rare in the NT. With οἶδα, the pluperfect ᾔδει simply means "he knew."' },
+    'Future':      { title:'Future Tense', en:'"He will write"', body:'The future presents an action as expected or intended. It can predict, promise, or (sometimes) command. σώσει — "He will save."' },
   },
   voice: {
-    'Active':          { title:'Active Voice', en:'"Paul wrote the letter"', body:'The subject performs the action on something or someone outside itself. The most common voice. ἔγραψεν Παῦλος — Paul (subject) acted.' },
-    'Middle':          { title:'Middle Voice', en:'"He washed himself" or "He had himself healed"', body:'The subject participates in or benefits from the action. Often means the subject acts for its own interest. No exact English equivalent — sometimes translated active, sometimes reflexive.' },
-    'Passive':         { title:'Passive Voice', en:'"He was healed" or "The letter was written"', body:'The subject receives the action from an outside agent. ἐθεραπεύθη — "He was healed (by someone)." Greek passive is often used for divine action: "was justified," "was saved."' },
-    'Middle/Deponent': { title:'Middle/Deponent', en:'"He answered" or "He came"', body:'Deponent verbs have middle or passive form but active meaning — they never appear in the active voice. ἔρχομαι — "I come" — looks middle/passive but means active. Common deponents: ἔρχομαι, ἀποκρίνομαι, γίνομαι.' },
-    'Middle-Passive':  { title:'Middle-Passive Voice', en:'Could be "he washed himself" or "he was washed"', body:'Some forms are identical in the middle and passive. Context and the tense system determine which is meant. In the present/imperfect, middle and passive forms are identical.' },
-    'Middle or Passive':{ title:'Middle or Passive Voice', en:'Context determines: "he washed" or "he was washed"', body:'Form is ambiguous between middle and passive. Check the tense, context, and lexical notes to determine which nuance applies.' },
-    'Middle Deponent':  { title:'Middle Deponent', en:'"He asked" or "He came"', body:'A deponent using specifically the middle form. Active meaning, middle form. Common in NT Greek.' },
+    'Active':          { title:'Active Voice', en:'"Paul wrote the letter"', body:'The subject does the action. The most common voice. ἔγραψεν Παῦλος — Paul (the subject) wrote.' },
+    'Middle':          { title:'Middle Voice', en:'"He washed (himself)" or "He got (for himself)"', body:'The subject is involved in or affected by its own action — doing it to itself, for itself, or as something that happens within it. English has no exact equivalent, so translations use an ordinary active verb or a reflexive ("himself").' },
+    'Passive':         { title:'Passive Voice', en:'"He was healed" or "The letter was written"', body:'The subject receives the action. ἐθεραπεύθη — "He was healed." The one who acts is often left unstated; where God is implied, scholars call it a "divine passive", but whether that applies is decided by context.' },
+    'Middle or Passive':{ title:'Middle or Passive', en:'Context decides: "he washed" or "he was washed"', body:'In the present, imperfect and perfect, middle and passive share one set of forms. Context and the verb\'s usual use decide which is meant.' },
+    'Middle (no active form)': { title:'Middle Form, No Active', en:'"He came", "He answered"', body:'Some verbs appear only (or mainly) in middle forms — ἔρχομαι "I come", γίνομαι "I become". English says them actively. Older grammars call these "deponent" (as if their active had been laid aside); many grammarians now treat them simply as middle verbs whose meaning involves the subject.' },
+    'Passive (no active form)': { title:'Passive Form, No Active', en:'"He answered" (ἀπεκρίθη)', body:'Some verbs use passive-looking forms with a meaning English says actively — ἀπεκρίθη "he answered", ἐφοβήθη "he was afraid". Older grammars call them "passive deponents"; many now see these -θη- forms as another way of marking the middle.' },
+    'Middle or Passive (no active form)': { title:'Middle or Passive Form, No Active', en:'"He comes", "It happens"', body:'A form that could be middle or passive, from a verb with no active in use. English normally says it actively.' },
+    'Impersonal Active': { title:'Impersonal Active', en:'"It is necessary" (δεῖ)', body:'Used without a personal subject: δεῖ "it is necessary", ἔξεστιν "it is permitted".' },
   },
   mood: {
-    'Indicative':   { title:'Indicative Mood', en:'"He goes to the temple" (stating a fact)', body:'The indicative asserts something as actual — a statement of reality. The most common mood. ὑπάγει — "He goes." Negated with οὐ (not μή).' },
-    'Subjunctive':  { title:'Subjunctive Mood', en:'"that he might go" or "if he goes"', body:'The subjunctive expresses possibility, purpose, condition, or contingency. Always with ἵνα (purpose), ἐάν (if), or μή (prohibition). ἵνα σωθῶσιν — "that they might be saved."' },
-    'Optative':     { title:'Optative Mood', en:'"May it never be!" (μὴ γένοιτο)', body:'The optative expresses a wish, prayer, or remote possibility. Rare in the NT (67 occurrences). Paul\'s famous μὴ γένοιτο — "May it never be!" / "God forbid!" — is optative.' },
-    'Imperative':   { title:'Imperative Mood', en:'"Go!" or "Love one another!"', body:'The imperative gives a command or prohibition. 2nd person imperative is most common. ἀγαπᾶτε ἀλλήλους — "Love one another!" Prohibitions use μή + imperative or subjunctive.' },
-    'Infinitive':   { title:'Infinitive Mood', en:'"to go" or "going"', body:'The infinitive is a verbal noun — it can be a subject, object, or complement. θέλω πιστεύειν — "I want to believe." Often used in purpose or result clauses.' },
-    'Participle':   { title:'Participle Mood', en:'"the one going" or "while going"', body:'The participle is a verbal adjective — it has tense and voice like a verb, plus case/number/gender like a noun. It modifies nouns or expresses attendant circumstances. Often translated "while Xing," "after Xing," or "the one who X."' },
+    'Indicative':   { title:'Indicative Mood', en:'"He goes", "Does he go?"', body:'The indicative presents something as actual — the ordinary mood for statements and questions. (It says how the speaker presents it, not whether it is true.) ὑπάγει — "He goes." Usually negated with οὐ.' },
+    'Subjunctive':  { title:'Subjunctive Mood', en:'"that he may go", "if he goes", "let us go"', body:'The subjunctive presents an action as possible or intended. It is common after ἵνα (purpose), ἐάν (if), ὅταν (whenever) and ἕως (until), with μή in prohibitions and οὐ μή ("never"), and on its own for "let us …" (ἀγαπῶμεν, "let us love") and "should we …?". ἵνα σωθῶσιν — "that they may be saved."' },
+    'Optative':     { title:'Optative Mood', en:'"May it never be!" (μὴ γένοιτο)', body:'The optative expresses a wish or a remote possibility. Rare in the NT (under 70 times). Paul\'s μὴ γένοιτο — "May it never be!" — is optative.' },
+    'Imperative':   { title:'Imperative Mood', en:'"Go!" or "Love one another!"', body:'The imperative gives a command or request. ἀγαπᾶτε ἀλλήλους — "Love one another!" Prohibitions use μή with the imperative or the aorist subjunctive.' },
+    'Infinitive':   { title:'Infinitive', en:'"to go" or "going"', body:'The infinitive is a verbal noun — it can be a subject, object or complement, and often expresses purpose or result. θέλω πιστεύειν — "I want to believe."' },
+    'Participle':   { title:'Participle', en:'"the one going" or "while going"', body:'The participle is a verbal adjective — it has tense and voice like a verb, plus case, number and gender like a noun. It can describe a noun ("the one who …") or add a circumstance ("while …", "after …", "because …").' },
   },
 };
 
@@ -50041,6 +50311,11 @@ function closeRhemaGrammarModal(e) {
 }
 
 const RHEMA_SOURCE_TAG_HELP = {
+  freegrace: {
+    title: 'Free Grace reading',
+    label: 'A theological reading, labelled',
+    body: 'Where a word study takes a theological direction, Rhēma follows the Free Grace view. Notes marked <b>Free Grace reading</b> were written or reworded in that review. In brief, the Free Grace view holds that eternal life is a free gift received by faith alone, apart from works or perseverance; that repentance is a change of mind, not an added condition; that assurance rests on Christ’s promise; and that rewards, inheritance and discipleship are distinct from receiving eternal life, so many warnings to believers concern discipline or loss of reward. Other traditions (Reformed, Arminian, Lutheran, Catholic, Orthodox) read some of these passages differently. The measured English renderings and the lexicon entries are the same as for every other word.'
+  },
   simple: {
     title: 'Simple Meaning',
     label: 'Best first step',
@@ -50604,14 +50879,19 @@ function _rhemaHebGNS(code) {
   return { parts: out, construct: m[3] === 'c', emphatic: m[3] === 'd' };
 }
 // Berean code → { prefixes: [...], core: { kind, label, rows: [...] }, suffixes: [...] }
-function _rhemaParseHebCode(code) {
+// `oshb` (optional): the word's OSHB morphology, which marks the endings the
+// Berean code folds into "3fs": the direction ending ה ("toward", Sd) and the
+// lengthened ending ה (Sh). Neither means "her".
+function _rhemaParseHebCode(code, oshb = '') {
   const segs = String(code || '').split(' | ').map(x => x.trim()).filter(Boolean);
-  const isSuffix = x => /^[123][mfc][sp]$/.test(x) || x === 'Pn';
+  // Pronoun endings, incl. the "energic" variants (1cse, 2fs2…) and lists ("1cs, Pn").
+  const isSuffix = x => x.split(/,\s*/).every(y => /^[123][mfc][sp][e2]?$/.test(y) || y === 'Pn');
   let coreAt = -1;
   segs.forEach((x, i) => { if (!isSuffix(x)) coreAt = i; });
   const prefixSegs = coreAt > 0 ? segs.slice(0, coreAt).flatMap(x => x.split(/,\s*/)) : [];
   const coreSeg = coreAt >= 0 ? segs[coreAt] : '';
-  const suffixSegs = segs.slice(coreAt + 1);
+  const suffixSegs = segs.slice(coreAt + 1).flatMap(x => x.split(/,\s*/));
+  const oshbEnd = String(oshb || '').match(/\/S([dhn])\b/)?.[1] || '';
   const prefixes = prefixSegs.map(x => ({ code: x, ...(RHEMA_HEB_PREFIX[x] || { say: x, name: x, explain: '' }) }));
   const rows = [];
   let kind = 'word', label = 'Word';
@@ -50625,7 +50905,9 @@ function _rhemaParseHebCode(code) {
     rows.push({ label: 'Stem', value: stem[0], desc: stem[1] });
     rows.push({ label: 'Form', value: f[0], desc: f[1] });
     if (mood && RHEMA_HEB_MOOD[mood]) rows.push({ label: 'Mood', value: RHEMA_HEB_MOOD[mood][0], desc: RHEMA_HEB_MOOD[mood][1] });
-    const pgn = parts[3] || '';
+    let pgn = parts[3] || '';
+    // Commands are always addressed to "you": the code gives only gender/number.
+    if (form === 'Imp' && /^[mf][sp]$/.test(pgn)) pgn = '2' + pgn;
     if (RHEMA_HEB_PGN[pgn]) rows.push({ label: 'Who', value: RHEMA_HEB_PGN[pgn][0], desc: 'The verb’s form shows who; the subject may also be named.' });
     else if (pgn) {
       const g = _rhemaHebGNS(pgn);
@@ -50637,7 +50919,11 @@ function _rhemaParseHebCode(code) {
     label = head === 'N' ? (proper ? 'Name' : 'Noun') : head === 'Adj' ? 'Adjective' : 'Number';
     const g = _rhemaHebGNS(parts[proper ? 2 : 1]);
     if (g.parts?.length) rows.push({ label: 'Form', value: g.parts.join(', '), desc: g.parts.includes('dual (a pair)') ? 'Hebrew has a special form for pairs (hands, eyes) and some measures (“two days”).' : '' });
-    if (g.construct) rows.push({ label: 'State', value: 'Construct', desc: 'Linked to the next word: “___ of …”. Hebrew shows “of” by joining the two words this way.' });
+    // A noun with a pronoun ending is written in its "construct" shape, but the
+    // ending (not the next word) completes it: "his ___", "their ___".
+    const hasPronounEnd = suffixSegs.some(x => /^[123]/.test(x)) && !oshbEnd;
+    if (g.construct && hasPronounEnd) rows.push({ label: 'State', value: 'With a pronoun ending', desc: 'The ending works like “of”: “his ___”, “their ___”.' });
+    else if (g.construct) rows.push({ label: 'State', value: 'Construct', desc: 'Linked to the next word: “___ of …”. Hebrew shows “of” by joining the two words this way.' });
     if (g.emphatic) rows.push({ label: 'State', value: 'Emphatic (Aramaic)', desc: 'Aramaic’s way of saying “the ___”.' });
   } else if (head === 'Pro') {
     kind = 'pronoun'; label = 'Pronoun';
@@ -50662,10 +50948,23 @@ function _rhemaParseHebCode(code) {
   } else if (coreSeg) {
     label = coreSeg;
   }
-  const suffixes = suffixSegs.map(x => x === 'Pn'
-    ? { code: x, say: '', name: 'Extra “n” ending', explain: 'An extra “n” ending; its purpose (style or emphasis) is debated. It doesn’t change the basic meaning.' }
-    : { code: x, say: RHEMA_HEB_PGN[x]?.[kind === 'noun' || kind === 'adjective' || kind === 'number' ? 1 : 1] || x,
-        name: 'Pronoun ending', explain: kind === 'verb' ? `An object joined to the end of the verb: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` : `Joined to the end: “${RHEMA_HEB_PGN[x]?.[1] || x}”.` });
+  const isInf = kind === 'verb' && /^Inf(\b|$)/.test(String(parts[2] || ''));
+  const suffixes = suffixSegs.map(x => {
+    if (x === 'Pn') return { code: x, say: '', name: 'Extra “n” ending', explain: 'An extra “n” ending; its purpose (style or emphasis) is debated. It doesn’t change the basic meaning.' };
+    // OSHB marks these two; the Berean code shows them as "her" (3fs).
+    if (oshbEnd === 'd') return { code: x, say: 'toward', name: 'Direction ending (ה)', explain: 'A final -āh meaning “toward ___”: סְדֹמָה “toward Sodom”, אַרְצָה “to the ground”. It is not the pronoun “her”.' };
+    if (oshbEnd === 'h') return { code: x, say: '', name: 'Lengthened ending (ה)', explain: 'An extra -āh, common on commands (“come!”, “let us …”) and for style. It doesn’t add a meaning and is not the pronoun “her”.' };
+    const base = x.replace(/[e2]$/, '');
+    const say = RHEMA_HEB_PGN[base]?.[1] || x;
+    const energic = base !== x;
+    const name = energic ? 'Pronoun ending (with an extra “n”)' : 'Pronoun ending';
+    let explain;
+    if (isInf) explain = `Joined to an infinitive, the ending usually says who does the action (בְּהִבָּרְאָם “when they were created”), sometimes who receives it: “${say}”.`;
+    else if (kind === 'verb') explain = `An object joined to the end of the verb: “${say}”.`;
+    else explain = `Joined to the end: “${say}”.`;
+    if (energic) explain += ' The extra “n” before it is a stylistic (“energic”) form.';
+    return { code: x, say, name, explain };
+  });
   return { prefixes, core: { code: coreSeg, kind, label, rows }, suffixes };
 }
 
@@ -50766,8 +51065,9 @@ function renderHebrewParsing(surface, strongs, morph, lemma) {
   const shown = _rhemaDisplaySurface(surface);
   const hereEn = ctx.book ? _rhemaHebEnglish(ctx.book, ctx.chapter, ctx.verse, ctx.idx) : { text: '', ver: 'BSB', kind: '' };
   const code = il?.ps || '';
-  const parsed = code ? _rhemaParseHebCode(code) : _rhemaParseHebCode(_rhemaOshbToBereanCode(morph));
-  const isAramaic = /^A/.test(String(morph || '').split('/').pop() || '');
+  const parsed = code ? _rhemaParseHebCode(code, morph) : _rhemaParseHebCode(_rhemaOshbToBereanCode(morph), morph);
+  // OSHB morphology starts with the language: H (Hebrew) or A (Aramaic).
+  const isAramaic = /^A/.test(String(morph || ''));
   // Shown by the English reference (Hebrew Malachi 3:19 is Malachi 4:1).
   const engAt = ctx.book ? _rhemaHebEngRef(ctx.book, ctx.chapter, ctx.verse) : null;
   const ref = ctx.book ? `${_rhemaBookName(ctx.book)} ${engAt ? engAt.join(':') : `${ctx.chapter}:${ctx.verse}`}` : '';
@@ -50937,11 +51237,17 @@ function _rhemaFillHebrewStudy(elId, strongs) {
     if (lxx.length) {
       // Share of the places where the Septuagint has a Greek word aligned to it.
       const total = deep.lxxAligned || lxx.reduce((a, x) => a + (x.count || 0), 0) || 1;
+      // How much of the word the alignment actually covers: MACULA links only
+      // Greek words that have New Testament (Strong's) numbers, so for some
+      // words just a handful of places line up and the chips would mislead.
+      const uses = deep.count || total;
+      const coverage = total / Math.max(1, uses);
+      const isName = /\b(?:proper name|name of|an? (?:Israelite|Levite|Edomite|Canaanite|Philistine|Moabite|Ammonite|Egyptian|place|town|city|region|district|mountain|river|valley|king|priest|chief)\b)/i.test((window.RhemaHebrewLexicon || {})[strongs]?.strongs_def || '');
       const main = lxx.filter(x => !_RHEMA_LXX_FILLER.has(Number(x.g)) || x.count / total >= 0.4).slice(0, 4);
-      if (main.length) {
+      if (main.length && !isName && (coverage >= 0.25 || total >= 20)) {
         const G = window.RhemaLexicon || {};
         out.push(`<div class="rhw-sub">In the Greek Old Testament</div>
-          <p class="rhw-note">Greek words the Septuagint (an early Greek translation) put in its place, with how often (from MACULA Hebrew’s word-by-word alignment). They show how ancient translators understood it, not a definition. Tap one to study the Greek word.</p>
+          <p class="rhw-note">Greek words the Septuagint (an early Greek translation) put in its place, with how often — based on the ${total.toLocaleString()} of its ${uses.toLocaleString()} places that line up word for word (MACULA Hebrew’s alignment, which only links Greek words also found in the New Testament). They show how ancient translators understood it, not a definition. Tap one to study the Greek word.</p>
           <div class="rhw-lxx">${main.map(x => {
             const gl = G[x.g]?.gloss || G[x.g]?.brief || '';
             return `<button type="button" class="rhw-lxx-chip" onclick="rhemaOpenGreekFromHebrew(${Number(x.g)})"><b>${esc(x.lemma || G[x.g]?.lemma || '')}</b><small>${gl ? esc(String(gl).split(/[,;]/)[0]) + ' · ' : ''}${Math.round(x.count / total * 100)}%</small></button>`;
@@ -51932,11 +52238,11 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.534';
+const DEEP_LEXICON_VERSION = '3.0.584';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
-const DEEP_HEBREW_LEXICON_VERSION = '3.0.560';
+const DEEP_HEBREW_LEXICON_VERSION = '3.0.579';
 const _deepHebrewShards = new Map();  // shardFile → Promise<object|null>
 const _deepHebrewData = new Map();    // shardFile → resolved shard (sync access)
 let _deepHebrewShardIndex = null;     // [{file, from, to}] loaded from index.json
@@ -54029,6 +54335,11 @@ if (window.RHEMA_MV_SLOT) {
   window.rhemaGoBack = function () {};
   window.startRhemaCoach = function () {};
   window.rhemaOpenMultiView = function () {};
+  // Signing in inside a tab must not start a second copy of the app's account
+  // work (profile restore and write-back, habits/calendar/encouragement
+  // listeners, leaderboards, highlight sync): the app around it already does
+  // all of that. Several copies at once fought over Firestore's cache.
+  window.__onAuthStateReady = async () => { _authReady = true; _appInitialDataReady = true; };
   // In a tab, the verse menu's Multi-view button opens the verse in a new tab
   // (same translation and language as this one).
   window.rhemaMultiViewFromMenu = function () {

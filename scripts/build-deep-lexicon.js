@@ -565,7 +565,7 @@ function buildWhy(entry, bookNames, hebLexicon) {
     const eg = top.refs.slice(0, 2).map(r => r.replace(/^(\w+)/, m => bn(m))).join('; ');
     why.push(`The Majority Standard Bible — translated from this same Greek text — renders it “${top.display}” in ${top.count} of those places (${pct}%)${eg ? `, e.g. ${eg}` : ''}. This is observed translation data, not an editorial opinion.`);
     if (top.bsbAgree != null) {
-      why.push(`The Berean Standard Bible, an independent translation, agrees with that rendering in ${Math.round(top.bsbAgree * 100)}% of the same verses.`);
+      why.push(`The Berean Standard Bible (the MSB’s sister edition, translated from a different Greek text but sharing most of its English) agrees with that rendering in ${Math.round(top.bsbAgree * 100)}% of the same verses.`);
     }
     if (top.corroborated.length) {
       const names = { dodson: 'Dodson', strongs: "Strong's", kjv: 'the KJV glosses' };
@@ -603,7 +603,7 @@ function buildWhy(entry, bookNames, hebLexicon) {
   }
 
   const tierText = {
-    high: 'High confidence: large sample, a dominant sense, independent translation agreement, and lexicon corroboration all converge.',
+    high: 'High confidence: large sample, a dominant sense, agreement with the BSB, and lexicon corroboration all converge.',
     good: 'Good confidence: solid sample with corroborated or dominant primary sense.',
     moderate: 'Moderate confidence: limited occurrences — the range shown is attested but may be incomplete.',
     low: 'Low confidence: very few occurrences; lexicon definitions carry more weight than corpus statistics here.',
