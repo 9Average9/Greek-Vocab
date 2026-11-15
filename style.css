@@ -40014,9 +40014,24 @@ html.dark .ws-debate.ws-ck-myth > summary, body.dark .ws-debate.ws-ck-myth > sum
    bars back jolts the header and wakes him; he blinks, then dozes off again.
    Each clip is a horizontal strip of frames played with steps(). */
 .rhema-header { position: relative; }
-.rhema-nap-guide { --rng-h: 44px; position: absolute; left: 0; top: 0; width: calc(var(--rng-h) * 157 / 168); height: var(--rng-h); pointer-events: none; z-index: 1; opacity: 0; transition: opacity .3s ease; }
-.rhema-nap-guide.placed { opacity: 1; }
-.rhema-nap-guide.no-room { opacity: 0 !important; }
+.rhema-nap-guide { --rng-h: 44px; position: absolute; left: 0; top: 0; width: calc(var(--rng-h) * 157 / 168); height: var(--rng-h); padding: 0; margin: 0; border: 0; background: none; color: inherit; cursor: pointer; pointer-events: none; z-index: 1; opacity: 0; transition: opacity .3s ease, transform .3s ease; -webkit-tap-highlight-color: transparent; }
+.rhema-nap-guide::before { content: ''; position: absolute; inset: -6px -6px -4px; } /* bigger tap area */
+.rhema-nap-guide.placed { opacity: 1; pointer-events: auto; }
+.rhema-nap-guide.no-room { opacity: 0 !important; pointer-events: none; }
+.rhema-nap-guide:focus-visible { outline: 2px solid var(--secondary-color); outline-offset: 2px; border-radius: 10px; }
+.rhema-nap-guide .rng-fig { position: absolute; inset: 0; display: block; transform-origin: 50% 100%; }
+/* Off to the study panel: hops up and away to the right. */
+.rhema-nap-guide.rng-away { opacity: 0 !important; pointer-events: none; transform: translate(16px, -10px) scale(.55) rotate(10deg); transition: opacity .22s ease, transform .3s cubic-bezier(.5,0,.75,0); }
+.rhema-nap-guide.rng-snap { transition: none !important; }
+/* Back from the panel: a little landing squash. */
+.rhema-nap-guide.rng-land .rng-fig { animation: rng-land .42s cubic-bezier(.34,1.56,.64,1); }
+@keyframes rng-land { 0% { transform: scale(1.12, .82); } 55% { transform: scale(.94, 1.07) translateY(-2px); } 100% { transform: none; } }
+/* Tapped: the side menu's "ouch!" jolt, then the tours. */
+.rhema-nap-guide .rng-ouch { position: absolute; left: 50%; bottom: 0; height: 100%; width: auto; transform: translateX(-50%); opacity: 0; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.rhema-nap-guide.rng-poked .rng-ouch { opacity: 1; }
+.rhema-nap-guide.rng-poked .rng-l { opacity: 0 !important; transition: none; }
+.rhema-nap-guide.rng-poked .rng-fig { animation: rrpGuideOuch .44s ease both; }
+.rhema-nap-flyer { position: fixed; z-index: 10050; pointer-events: none; transform-origin: 0 0; filter: drop-shadow(0 3px 4px rgba(40, 22, 8, .2)); }
 .rhema-nap-guide .rng-l { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity .26s ease; }
 .rhema-nap-guide .rng-l.vis { opacity: 1; }
 .rhema-nap-guide .rng-l > i { display: block; height: 100%; background-repeat: no-repeat; background-size: 100% 100%; will-change: transform; }
@@ -40041,6 +40056,6 @@ html.dark .ws-debate.ws-ck-myth > summary, body.dark .ws-debate.ws-ck-myth > sum
 #rhemaModal.rhema-search-open .rhema-nap-guide,
 body:has(#rhemaCoachOverlay:not(.hidden)) .rhema-nap-guide { opacity: 0 !important; }
 @media (prefers-reduced-motion: reduce) {
-  .rhema-nap-guide .rng-l > i { animation: none !important; }
+  .rhema-nap-guide .rng-l > i, .rhema-nap-guide .rng-fig { animation: none !important; }
   .rhema-header.rng-shake { animation: none; }
 }
