@@ -630,9 +630,8 @@
   function provRow(entry) {
     const study = entry?.study;
     if (!study && !entry?.prose?.def) return '';
-    const tags = [_provBtn('ai', 'ws-prov-ai', '<span class="material-symbols-outlined">auto_awesome</span>AI-written')];
-    if ((study?.fg || []).length) tags.push(_provBtn('freegrace', 'ws-prov-fg', 'Includes a Free Grace reading'));
-    return `<div class="ws-prov">${tags.join('')}</div>`;
+    if (!(study?.fg || []).length) return '';
+    return `<div class="ws-prov">${_provBtn('freegrace', 'ws-prov-fg', 'Includes a Free Grace reading')}</div>`;
   }
 
   // The meaning explorer: numbered chips on top (tap one), one meaning card at
@@ -891,7 +890,7 @@
         <li>BSB words come from the Berean translators’ own word-for-word tables. Other versions are matched to them word by word, using the lexicons and how that version itself words the same Greek word elsewhere in the chapter (≈ marks a weaker match).</li>
         <li>Tested against a Greek-tagged King James and World English Bible: when a main word is matched, it is the right word about 97–98% of the time.</li>
         <li>Across-translation counts are made on your device from each version’s own text.</li>
-        ${entry.study || entry.prose?.def ? `<li><b>Written by AI.</b> The meanings, author notes, tips and debated points were written by an AI model (Anthropic’s Claude) from the Greek verses, the lexicons and the measured renderings. A machine check removes any cited verse that doesn’t contain the word and any history quote not found in the lexicon text. No Greek scholar has reviewed the wording.</li>` : ''}
+        ${entry.study || entry.prose?.def ? `<li><b>How the study is put together.</b> The meanings, author notes, tips and notes are drawn from every verse with the word in the Greek text, the lexicons (Abbott-Smith, Moulton–Milligan, LSJ, Dodson, Strong’s) and how the English versions render it. Any cited verse that doesn’t contain the word, and any history quote not found in the lexicon text, is removed. It’s a study tool: the verses and lexicons are right here so you can weigh every claim for yourself.</li>` : ''}
         ${(entry.study?.fg || []).length ? `<li><b>Free Grace reading.</b> This study was revised to follow the Free Grace view where it takes a theological direction; the ${entry.study.fg.length === 1 ? 'note' : `${entry.study.fg.length} notes`} written or reworded in that review are labelled. Other traditions read some of these passages differently. The measured renderings and the lexicons were not changed.</li>` : ''}
       </ul>` + more('Evidence trail',
       `${why.map(w => `<p>${esc(w)}</p>`).join('')}

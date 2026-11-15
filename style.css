@@ -39982,7 +39982,6 @@ body:has(#homeScreen.screen.active) #homeScreen .home-scroll > div.home-actions-
 .ws-prov-tag { position: relative; display: inline-flex; align-items: center; gap: 3px; min-height: 26px; margin: 4px 0 0; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--ws-line, rgba(127,127,127,.3)); background: transparent; color: inherit; font: inherit; font-size: .72rem; font-weight: 700; line-height: 1.2; letter-spacing: .01em; cursor: pointer; opacity: .85; }
 .ws-prov-tag::before { content: ''; position: absolute; inset: -9px -4px; } /* bigger tap area */
 .ws-prov-tag .material-symbols-outlined { font-size: .9rem; }
-.ws-prov-ai { color: color-mix(in srgb, currentColor 75%, #64748b); }
 .ws-prov-fg { color: #6d28d9; border-color: color-mix(in srgb, #7c3aed 40%, transparent); background: color-mix(in srgb, #7c3aed 8%, transparent); }
 .ws-prov-mini { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: .66rem; font-weight: 700; color: #6d28d9; background: color-mix(in srgb, #7c3aed 10%, transparent); }
 .ws-mx-top .ws-prov-tag { margin: 0 4px 0 6px; }

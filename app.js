@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.585";
+const APP_VERSION = "3.0.586";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30590,6 +30590,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.586 &mdash; Simpler word study labels</div>
+<ul>
+  <li><strong>Fewer tags</strong> &mdash; The extra tag on every word study is gone. &ldquo;How we know&rdquo; still shows where each study&rsquo;s notes come from and how every verse and quote is checked, with the verses and lexicons right there to weigh for yourself.</li>
+</ul>
 <div class="un-version-label">v3.0.585 &mdash; Clearer notes, easier taps</div>
 <ul>
   <li><strong>Not everything is &ldquo;debated&rdquo;</strong> &mdash; The note box in a word study used to say &ldquo;A debated point&rdquo; every time. Now it says what the note is: <em>A debated point</em> (real disagreements, like whether Mark ends at 16:8), <em>Manuscripts differ</em>, <em>A common misreading</em> (like &ldquo;power = dynamite&rdquo;), or <em>Worth knowing</em>.</li>
@@ -30598,7 +30602,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.584 &mdash; Labels: Free Grace reading and AI-written</div>
 <ul>
   <li><strong>Free Grace reading, labelled</strong> &mdash; The word studies still follow the Free Grace view where they take a theological direction, but every note written or reworded in that review now says so with a <em>Free Grace reading</em> tag (about 670 notes in 270 words). Tap a tag to see what the view holds and that other traditions read some passages differently.</li>
-  <li><strong>AI-written, said plainly</strong> &mdash; Word studies carry an <em>AI-written</em> tag, and &ldquo;How we know&rdquo; explains how they were written and machine-checked.</li>
+  <li><strong>How we know</strong> &mdash; Each word study&rsquo;s &ldquo;How we know&rdquo; section explains where its notes come from and how every verse and quote is checked.</li>
   <li><strong>Interpretations</strong> &mdash; The note at the bottom now says the summaries are AI-written and why Free Grace is listed first. The 1&nbsp;John book intro now names its reading as the Free Grace one.</li>
 </ul>
 <div class="un-version-label">v3.0.583 &mdash; A lighter app on your phone</div>
@@ -43022,7 +43026,7 @@ function _rhemaRenderInterpretations(data) {
   const updated = data.updatedAt ? new Date(data.updatedAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '';
   body.innerHTML = `${context}${overview}
     ${views.length ? `<div class="rhema-ip-views">${viewHtml}</div>` : '<p class="rhema-ip-empty">No published views were found for this passage yet.</p>'}
-    <p class="rhema-ip-foot">Each view is described the way its own teachers explain it. The summaries are written by AI from published sources; quotes are the pages’ own words. Free Grace, the reading Rhēma follows, is listed first and searched first; the other views follow in the order the research found them.${updated ? ` Updated ${esc(updated)}.` : ''}</p>`;
+    <p class="rhema-ip-foot">Each view is described the way its own teachers explain it. The summaries are drawn from the published sources linked under each view; quotes are the pages’ own words, so you can read them in full. Free Grace, the reading Rhēma follows, is listed first and searched first; the other views follow in the order the research found them.${updated ? ` Updated ${esc(updated)}.` : ''}</p>`;
 }
 
 function rhemaInterpToggle(i) {
@@ -50184,11 +50188,6 @@ function closeRhemaGrammarModal(e) {
 }
 
 const RHEMA_SOURCE_TAG_HELP = {
-  ai: {
-    title: 'Written by AI',
-    label: 'Drafted by AI, checked by machine',
-    body: 'The word studies (the meanings, author notes, tips and debated points) were written by an AI model, Anthropic’s Claude, from an evidence pack: every verse with the word in the Greek text, the lexicons (Abbott-Smith, Moulton–Milligan, LSJ, Dodson, Strong’s) and how the English versions render it. A machine check then removes any cited verse that doesn’t contain the word and any history quotation not found in the lexicon text. No Greek scholar has reviewed the wording, so use it as a well-sourced starting point and check it against the lexicons and verses in the study.'
-  },
   freegrace: {
     title: 'Free Grace reading',
     label: 'A theological reading, labelled',
