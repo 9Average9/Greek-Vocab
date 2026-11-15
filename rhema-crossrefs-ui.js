@@ -332,15 +332,30 @@ function _renderXrefBreadcrumb() {
   });
 }
 
+// The cross-reference data (11 MB) loads the first time this screen is used,
+// not with the reader. Until it's in, show a loading line, then draw `again`.
+function _xrefWaitForData(body, again) {
+  if (window.RhemaCrossRefs || typeof _rhemaLoadDataFile !== 'function') return false;
+  const key = _xrefKey();
+  body.innerHTML = _xrefTopCardHtml() + '<div class="rx-loading" style="padding:18px 4px;opacity:.65;font-size:.9rem">Loading cross references…</div>';
+  _rhemaLoadDataFile('rhema-crossrefs.js').then(() => {
+    if (_xrefKey() === key) again();
+  }).catch(() => {
+    if (_xrefKey() === key) body.innerHTML = _xrefTopCardHtml() + '<div class="rx-loading" style="padding:18px 4px;opacity:.65;font-size:.9rem">Couldn’t load cross references. Check your connection and try again.</div>';
+  });
+  return true;
+}
+
 function renderRhemaCrossReferences() {
   _rhemaXrefView = 'main';
   _showRhemaXrefShell('main');
   const title = document.getElementById('rxPageTitle');
   if (title) title.textContent = 'Cross References';
   _renderXrefBreadcrumb();
-  const data = _xrefCurrentData();
   const body = document.getElementById('rxMainView');
   if (!body) return;
+  if (_xrefWaitForData(body, () => { if (_rhemaXrefView === 'main') renderRhemaCrossReferences(); })) return;
+  const data = _xrefCurrentData();
   const allRefs = [];
   body.innerHTML = _xrefTopCardHtml() + `<div class="rx-category-list">${RHEMA_XREF_CATEGORIES.map(cat => {
     const refs = data[cat.key] || [];
@@ -387,6 +402,8 @@ function renderRhemaXrefTrail() {
   if (title) title.textContent = cat.title;
   _showRhemaXrefShell('main');
   _renderXrefBreadcrumb();
+  const trailBody = document.getElementById('rxMainView');
+  if (trailBody && _xrefWaitForData(trailBody, () => { if (_rhemaXrefCategory === cat.key) renderRhemaXrefTrail(); })) return;
   const refs = (_xrefCurrentData()[cat.key] || []);
   const cards = refs.map(item => `<button class="rx-verse-card" onclick="rhemaXrefFollow('${item.ref.replace(/'/g, "\\'")}')">
     <span class="rx-verse-copy">

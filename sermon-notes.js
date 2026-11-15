@@ -1432,7 +1432,11 @@
   function sbRhemaReady() { try { return typeof window._rhemaText === 'function' && window._rhemaText(); } catch (e) { return false; } }
   function sbSuffix(ch, v) { return ch != null ? ' ' + ch + (v != null ? ':' + v : '') : ''; }
   // Return a book's chapter map from Rhema, or null if data isn't available.
-  function sbChapters(code) { const T = sbRhemaReady(); return (T && T[code]) || null; }
+  // English numbering (always loaded with the reader); the original text if not.
+  function sbChapters(code) {
+    try { const E = (typeof window._rhemaEnglishData === 'function' && window._rhemaEnglishData()) || window.RhemaMSB; if (E && E[code]) return E[code]; } catch (e) {}
+    const T = sbRhemaReady(); return (T && T[code]) || null;
+  }
   // Repair a (chapter, verse) so it points at a real passage. Speech often merges
   // "chapter 1 verse 2" into "12"; if the raw chapter doesn't exist we try
   // splitting the digits into a real chapter+verse. Falls back to chapter-only or
@@ -1843,7 +1847,7 @@
       root.appendChild(search);
       const list = el('div', { class: 'sn-vp-books' });
       root.appendChild(list);
-      const codes = window._rhemaBookOrder();
+      const codes = window._rhemaPickerBooks();
       const paint = q => {
         list.innerHTML = '';
         codes.forEach(code => {
@@ -1859,14 +1863,14 @@
     }
     function renderChapters() {
       root.appendChild(crumb());
-      const chapters = Object.keys((window._rhemaText()[state.code]) || {}).sort((a, b) => +a - +b);
+      const chapters = window._rhemaChapterList(state.code);
       const grid = el('div', { class: 'sn-vp-grid' });
       chapters.forEach(ch => grid.appendChild(el('button', { class: 'sn-vp-cell', text: ch, onclick: () => { state.chapter = ch; state.start = state.end = null; state.step = 'verse'; render(); } })));
       root.appendChild(grid);
     }
     function renderVersesGrid() {
       root.appendChild(crumb());
-      const verses = Object.keys(((window._rhemaText()[state.code]) || {})[state.chapter] || {}).sort((a, b) => +a - +b);
+      const verses = window._rhemaVerseList(state.code, state.chapter);
       const hint = el('div', { class: 'sn-vp-hint', text: 'Tap a verse. Tap a second verse to make a range.' });
       root.appendChild(hint);
       const grid = el('div', { class: 'sn-vp-grid' });
