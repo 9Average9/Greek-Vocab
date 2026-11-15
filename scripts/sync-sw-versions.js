@@ -11,11 +11,11 @@ let sw = fs.readFileSync(swPath, 'utf8');
 const i = app.indexOf('const RHEMA_DATA_VERSIONS = {');
 const want = {};
 for (const m of app.slice(i, app.indexOf('};', i)).matchAll(/'([^']+\.js)':\s*'([^']+)'/g)) want[m[1]] = m[2];
-for (const [file, cname] of [['rhema-bsb-align.js', 'RHEMA_BSB_ALIGN_VERSION'], ['rhema-english-dictionary.js', 'RHEMA_ENGLISH_DICT_VERSION']]) {
+for (const [file, cname] of [['rhema-bsb-align.js', 'RHEMA_BSB_ALIGN_VERSION'], ['rhema-english-dictionary.js', 'RHEMA_ENGLISH_DICT_VERSION'], ['bible-intros.js', 'BIBLE_INTROS_VERSION']]) {
   const m = app.match(new RegExp(`const ${cname} = '([^']+)'`)); if (m) want[file] = m[1];
 }
 let n = 0;
-sw = sw.replace(/"\.\/(rhema-[a-z0-9-]+\.js)\?v=([0-9.]+)"/g, (all, f, v) => {
+sw = sw.replace(/"\.\/((?:rhema|bible)-[a-z0-9-]+\.js)\?v=([0-9.]+)"/g, (all, f, v) => {
   if (want[f] && want[f] !== v) { n++; return `"./${f}?v=${want[f]}"`; }
   return all;
 });
