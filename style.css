@@ -40009,3 +40009,38 @@ html.dark .ws-debate.ws-ck-myth > summary, body.dark .ws-debate.ws-ck-myth > sum
 .ws-save::before { content: ''; position: absolute; inset: -5px -3px; }
 .ws-tour-skip { padding: 10px 12px; margin: -10px -6px; }
 .ws-tour-next { padding-top: 11px; padding-bottom: 11px; }
+
+/* The guide naps against the reader title. A fast pull that brings the top
+   bars back jolts the header and wakes him; he blinks, then dozes off again.
+   Each clip is a horizontal strip of frames played with steps(). */
+.rhema-header { position: relative; }
+.rhema-nap-guide { --rng-h: 44px; position: absolute; left: 0; top: 0; width: calc(var(--rng-h) * 157 / 168); height: var(--rng-h); pointer-events: none; z-index: 1; opacity: 0; transition: opacity .3s ease; }
+.rhema-nap-guide.placed { opacity: 1; }
+.rhema-nap-guide.no-room { opacity: 0 !important; }
+.rhema-nap-guide .rng-l { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity .26s ease; }
+.rhema-nap-guide .rng-l.vis { opacity: 1; }
+.rhema-nap-guide .rng-l > i { display: block; height: 100%; background-repeat: no-repeat; background-size: 100% 100%; will-change: transform; }
+.rhema-nap-guide .rng-sleep > i { width: 600%; background-image: url('assets/mascot/guide-nap-sleep.webp?v=1'); }
+.rhema-nap-guide .rng-wake > i, .rhema-nap-guide .rng-drowse > i { width: 900%; }
+.rhema-nap-guide.rng-ready .rng-wake > i { background-image: url('assets/mascot/guide-nap-wake.webp?v=1'); }
+.rhema-nap-guide.rng-ready .rng-drowse > i { background-image: url('assets/mascot/guide-nap-drowse.webp?v=1'); }
+.rhema-nap-guide .rng-sleep.play > i { animation: rng-strip6 1.6s steps(6, jump-none) infinite; }
+.rhema-nap-guide .rng-wake.play > i { animation: rng-strip9 1.08s steps(9, jump-none) 1 forwards; }
+.rhema-nap-guide .rng-drowse.play > i { animation: rng-strip9 2.6s steps(9, jump-none) 1 forwards; }
+@keyframes rng-strip6 { from { transform: translateX(0); } to { transform: translateX(-83.3333%); } }
+@keyframes rng-strip9 { from { transform: translateX(0); } to { transform: translateX(-88.8889%); } }
+.rhema-header.rng-shake { animation: rng-header-shake .46s cubic-bezier(.36,.07,.19,.97); }
+@keyframes rng-header-shake {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  15% { translate: -4px 1px; rotate: -.6deg; }
+  30% { translate: 4px -1px; rotate: .6deg; }
+  45% { translate: -3px 0; rotate: -.4deg; }
+  60% { translate: 3px 0; rotate: .3deg; }
+  78% { translate: -1px 0; rotate: 0deg; }
+}
+#rhemaModal.rhema-search-open .rhema-nap-guide,
+body:has(#rhemaCoachOverlay:not(.hidden)) .rhema-nap-guide { opacity: 0 !important; }
+@media (prefers-reduced-motion: reduce) {
+  .rhema-nap-guide .rng-l > i { animation: none !important; }
+  .rhema-header.rng-shake { animation: none; }
+}

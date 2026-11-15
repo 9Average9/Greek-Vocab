@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.586";
+const APP_VERSION = "3.0.587";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30590,6 +30590,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.587 &mdash; Don&rsquo;t wake the guide</div>
+<ul>
+  <li><strong>A napping guide</strong> &mdash; The guide now dozes against the Rhēma title at the top of the reader. Pull the page down fast to bring the top bars back and the header jolts him awake; he looks around, then slowly drifts back to sleep. Scroll on and he&rsquo;s fast asleep again.</li>
+</ul>
 <div class="un-version-label">v3.0.586 &mdash; Simpler word study labels</div>
 <ul>
   <li><strong>Fewer tags</strong> &mdash; The extra tag on every word study is gone. &ldquo;How we know&rdquo; still shows where each study&rsquo;s notes come from and how every verse and quote is checked, with the verses and lexicons right there to weigh for yourself.</li>
@@ -45505,6 +45509,7 @@ function _syncRhemaChapterUi() {
 }
 
 function closeRhema(keepSandbox = false) {
+  rhemaNapSleep();
   // Guests have nowhere to close the reader to — it is the whole app for them.
   if (_guestMode && !keepSandbox) return;
   closeRhemaSearch();
@@ -46164,6 +46169,95 @@ function _rhemaHandleBookBoundaryLayer(nextBook, prevBook) {
 
 // ── Verse swipe navigation ────────────────────────────────────────────────────
 
+// ── The napping guide ────────────────────────────────────────────────────────
+// He sleeps against the reader title. A fast pull that brings the hidden top
+// bars back shakes the header and wakes him; he blinks, then dozes off again.
+// If the bars slide away before he's back asleep, he's simply asleep again.
+const RHEMA_NAP = { wakeMs: 1080, holdMs: 700, drowseMs: 2600, flickPxPerMs: 2.2 };
+let _rhemaNapState = 'sleep';
+let _rhemaNapTimers = [];
+function _rhemaNapEl() { return document.getElementById('rhemaNapGuide'); }
+function _rhemaNapReducedMotion() {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
+}
+// Show one clip: the new layer restarts and fades in over the old one, which
+// keeps its last frame while it fades out (no snap back to frame one).
+function _rhemaNapTo(layer) {
+  const g = _rhemaNapEl();
+  if (!g) return;
+  g.querySelectorAll('.rng-l').forEach(l => {
+    if (l.classList.contains('rng-' + layer)) {
+      l.classList.remove('play'); void l.offsetWidth; l.classList.add('play', 'vis');
+    } else if (l.classList.contains('vis')) {
+      l.classList.remove('vis');
+      setTimeout(() => { if (!l.classList.contains('vis')) l.classList.remove('play'); }, 300);
+    }
+  });
+}
+function rhemaNapSleep() {
+  _rhemaNapTimers.forEach(clearTimeout);
+  _rhemaNapTimers = [];
+  if (_rhemaNapState === 'sleep') return;
+  _rhemaNapState = 'sleep';
+  _rhemaNapTo('sleep');
+}
+function rhemaNapWake() {
+  const g = _rhemaNapEl();
+  if (!g || window.RHEMA_MV_SLOT || _rhemaNapState === 'wake' || _rhemaNapReducedMotion()) return;
+  g.classList.add('rng-ready');
+  _rhemaNapTimers.forEach(clearTimeout);
+  _rhemaNapTimers = [];
+  _rhemaNapState = 'wake';
+  const header = g.closest('.rhema-header');
+  if (header) { header.classList.remove('rng-shake'); void header.offsetWidth; header.classList.add('rng-shake'); setTimeout(() => header.classList.remove('rng-shake'), 500); }
+  _rhemaNapTo('wake');
+  _rhemaNapTimers.push(setTimeout(() => {
+    _rhemaNapState = 'drowse';
+    _rhemaNapTo('drowse');
+    _rhemaNapTimers.push(setTimeout(() => { _rhemaNapState = 'drowse-done'; rhemaNapSleep(); }, RHEMA_NAP.drowseMs));
+  }, RHEMA_NAP.wakeMs + RHEMA_NAP.holdMs));
+}
+// Sit just right of the title text, leaning on it; hide if the header
+// buttons leave no room.
+function _rhemaNapPlace() {
+  const g = _rhemaNapEl();
+  if (!g) return;
+  const header = g.closest('.rhema-header');
+  const title = document.getElementById('rhemaTitleMain');
+  const sub = document.getElementById('rhemaTitleSub');
+  const actions = header?.querySelector('.rhema-header-actions');
+  if (window.RHEMA_MV_SLOT || !header || !title || !title.offsetParent) { g.classList.remove('placed'); return; }
+  const hr = header.getBoundingClientRect();
+  const tr = title.getBoundingClientRect();
+  const sr = sub?.offsetParent ? sub.getBoundingClientRect() : tr;
+  const h = g.offsetHeight || 44;
+  const w = g.offsetWidth || Math.round(h * 157 / 168);
+  const left = Math.max(tr.right, sr.right) - hr.left - 5;
+  const top = Math.max(tr.bottom, sr.bottom) - hr.top + 5 - h;
+  const limit = actions?.offsetParent ? actions.getBoundingClientRect().left - hr.left - 2 : hr.width - 4;
+  g.style.left = Math.round(left) + 'px';
+  g.style.top = Math.round(top) + 'px';
+  g.classList.toggle('no-room', left + w > limit);
+  g.classList.add('placed');
+}
+function _rhemaNapInit() {
+  const g = _rhemaNapEl();
+  if (!g || g._rhemaNapInit) { _rhemaNapPlace(); return; }
+  g._rhemaNapInit = true;
+  if (window.RHEMA_MV_SLOT) { g.remove(); return; }
+  const header = g.closest('.rhema-header');
+  if (typeof ResizeObserver !== 'undefined' && header) {
+    const ro = new ResizeObserver(() => _rhemaNapPlace());
+    ro.observe(header);
+    header.querySelectorAll('.rhema-title-block, .rhema-header-actions').forEach(el => ro.observe(el));
+  }
+  const block = header?.querySelector('.rhema-title-block');
+  if (block && typeof MutationObserver !== 'undefined') new MutationObserver(() => _rhemaNapPlace()).observe(block, { childList: true, subtree: true, characterData: true });
+  // The wake-up clips load once the reader is open, before anyone pulls.
+  setTimeout(() => g.classList.add('rng-ready'), 1500);
+  requestAnimationFrame(_rhemaNapPlace);
+}
+
 let _rhemaChromeHidden = false;
 function _rhemaSetChromeHidden(hidden) {
   const shouldHide = !!hidden && !_rhemaVerseSheetOpen?.();
@@ -46175,6 +46269,7 @@ function _rhemaSetChromeHidden(hidden) {
     body?.classList.contains('rhema-chrome-hidden') === shouldHide
   ) return;
   _rhemaChromeHidden = shouldHide;
+  if (shouldHide) rhemaNapSleep();
   modal?.classList.toggle('rhema-chrome-hidden', shouldHide);
   body?.classList.toggle('rhema-chrome-hidden', shouldHide);
   updateRhemaVerseNav?.();
@@ -46233,6 +46328,7 @@ function _initRhemaChromeMetrics() {
 
 function initRhemaVerseSwipe() {
   _initRhemaChromeMetrics();
+  _rhemaNapInit();
   // Only attach to the verse scroll area — not the header, picker, breadcrumb,
   // highlight bar, or word-detail sheet which each have their own scroll behaviour
   const area = document.querySelector('#rhemaModal .rhema-body');
@@ -46250,6 +46346,18 @@ function initRhemaVerseSwipe() {
       const last = area._rhemaLastChromeScrollTop || 0;
       const delta = y - last;
       area._rhemaLastChromeScrollTop = y;
+      // Recent positions, to tell a fast pull from a slow scroll (napping guide).
+      const now0 = performance.now();
+      const samples = area._rhemaNapSamples || (area._rhemaNapSamples = []);
+      samples.push([now0, y]);
+      while (samples.length > 1 && now0 - samples[0][0] > 120) samples.shift();
+      const pullSpeed = () => { const [t0, y0] = samples[0]; return now0 - t0 > 8 ? (y0 - y) / (now0 - t0) : 0; };
+      // The bars come back on the first event of a pull, before its speed is
+      // known: judge it over the next few events.
+      if (area._rhemaNapCheckUntil) {
+        if (now0 > area._rhemaNapCheckUntil || _rhemaChromeHidden) area._rhemaNapCheckUntil = 0;
+        else if (pullSpeed() >= RHEMA_NAP.flickPxPerMs) { area._rhemaNapCheckUntil = 0; rhemaNapWake(); }
+      }
       if (raw < 0 || raw > max) return; // mid-bounce: never toggle chrome
       // A tour scrolling a step into view must not slide the bars away.
       if (document.querySelector('#rhemaCoachOverlay:not(.hidden), #appCoachOverlay:not(.hidden), #wsTourTip.on')) return;
@@ -46258,6 +46366,7 @@ function initRhemaVerseSwipe() {
         return;
       }
       if (y <= 18) {
+        if (_rhemaChromeHidden) area._rhemaNapCheckUntil = now0 + 180;
         _rhemaSetChromeHidden(false);
         return;
       }
@@ -46282,6 +46391,8 @@ function initRhemaVerseSwipe() {
       } else if (dir === -1 && _rhemaChromeHidden) {
         area._rhemaChromeToggleAt = now;
         _rhemaSetChromeHidden(false);
+        if (pullSpeed() >= RHEMA_NAP.flickPxPerMs) rhemaNapWake();
+        else area._rhemaNapCheckUntil = now0 + 180;
       }
     }, { passive: true });
   }
