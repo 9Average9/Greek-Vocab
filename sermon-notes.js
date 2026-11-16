@@ -141,7 +141,7 @@
     s.classList.remove('sn-open');
     setTimeout(() => s.remove(), 240);
   }
-  // Returns a Promise resolving to the entered string, or null if cancelled.
+  // Returns a Promise resolving to the entered string, or null if canceled.
   function snPrompt(opts) {
     return new Promise(resolve => {
       let input;
@@ -161,7 +161,7 @@
       setTimeout(() => { if (input) { input.focus(); input.select(); } }, 120);
     });
   }
-  // Returns a Promise resolving true (confirmed) / false (cancelled).
+  // Returns a Promise resolving true (confirmed) / false (canceled).
   function snConfirm(opts) {
     return new Promise(resolve => {
       const done = val => { closeDialog(); resolve(val); };
@@ -1026,7 +1026,7 @@
       const rec = makeRecorder(stream);
       audioState.recorder = rec;
       // Remember the container/codec the recorder actually produced so the saved
-      // Blob is labelled correctly (iOS records AAC/mp4, not webm) and plays back
+      // Blob is labeled correctly (iOS records AAC/mp4, not webm) and plays back
       // cleanly everywhere. rec.mimeType is the source of truth once started.
       audioState.mime = (rec && rec.mimeType) || audioState.recMime || 'audio/webm';
       rec.ondataavailable = e => { if (e.data && e.data.size) audioState.chunks.push(e.data); };

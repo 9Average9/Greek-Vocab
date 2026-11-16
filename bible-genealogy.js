@@ -62,7 +62,7 @@
     black: '#211b1a', darkbrown: '#3a2519', brown: '#5b3a22', auburn: '#7a3b1e',
     gray: '#9b9490', grey: '#9b9490', silver: '#c9c6c1', white: '#e9e6df', red: '#8a3a1c'
   };
-  // (guard a typo above by normalising unknown hair to brown at read time)
+  // (guard a typo above by normalizing unknown hair to brown at read time)
   function hairHex(k) { return HAIR[k] || '#5b3a22'; }
 
   /* ========================================================================
@@ -337,7 +337,7 @@
         {ref:'RUT 4:9', q:'Publicly redeemed Naomi’s land and married Ruth.'} ],
       av:{skin:'olive', hair:'darkbrown', style:'short', beard:'full', head:'turban'} },
 
-    { id:'obed', name:'Obed', gender:'m', meaning:'“servant / worshipper”', lived:null, bornWhenFather:null,
+    { id:'obed', name:'Obed', gender:'m', meaning:'“servant / worshiper”', lived:null, bornWhenFather:null,
       origin:'Bethlehem', role:'Grandfather of David', era:'judges',
       blurb:'Son of Boaz and Ruth; the women of Bethlehem rejoiced over his birth.',
       gen:['RUT 4:21','RUT 4:22','MAT 1:5','1CH 2:12','LUK 3:32'],
@@ -957,7 +957,7 @@
     /* ── Samuel’s family (1 Samuel 1; 1 Chronicles 6) ── */
     { id:'elkanah', name:'Elkanah', gender:'m', branchOf:'levi', meaning:'“God has created”', era:'judges',
       role:'Father of Samuel', blurb:'A Levite of the hill country of Ephraim; husband of Hannah and Peninnah.',
-      gen:['1SA 1:1','1CH 6:27'], mentions:[{ref:'1SA 1:19', q:'Worshipped at Shiloh before the LORD.'}],
+      gen:['1SA 1:1','1CH 6:27'], mentions:[{ref:'1SA 1:19', q:'Worshiped at Shiloh before the LORD.'}],
       av:{skin:'olive', hair:'brown', style:'short', beard:'full', head:'turban'} },
     { id:'hannah', name:'Hannah', gender:'f', branchOf:'levi', meaning:'“grace / favor”', era:'judges',
       role:'Mother of Samuel', blurb:'Prayed for a son and gave him back to the LORD; her song foreshadows Mary’s.',
@@ -1100,7 +1100,7 @@
     var uid = 'g' + h.toString(36);
     var acc = era.accent;
 
-    // garment / shoulders colour keyed to era, a touch darker for depth
+    // garment / shoulders color keyed to era, a touch darker for depth
     var robe = shade(acc, isF ? 8 : -4);
     var robe2 = shade(acc, -26);
 
@@ -1230,7 +1230,7 @@
     }
   }
 
-  // lighten(+)/darken(-) a hex colour by percent
+  // lighten(+)/darken(-) a hex color by percent
   function shade(hex, pct) {
     hex = (hex || '#888').replace('#', '');
     if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
@@ -1251,9 +1251,9 @@
     // Everything is driven by the app's own theme tokens (--card-color,
     // --font-color, --secondary/accent, color-mix on --font-color) exactly like
     // the reader's other overlays — so the map follows whatever theme the user
-    // picked (light, dark, or any of the colour themes). The per-era accent
-    // colours stay only as identity highlights (the dot, the card's tint, the
-    // hero header), washed INTO the theme's card colour so text stays readable
+    // picked (light, dark, or any of the color themes). The per-era accent
+    // colors stay only as identity highlights (the dot, the card's tint, the
+    // hero header), washed INTO the theme's card color so text stays readable
     // on light and dark themes alike.
     var css = ''
 + '.rgen-overlay{position:fixed;inset:0;z-index:4200;display:flex;flex-direction:column;'

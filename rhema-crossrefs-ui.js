@@ -291,7 +291,7 @@ function _rxLoadBook(book) {
   return _rxShards.get(book);
 }
 function _rxShardNow(book) { return _rxShardData.get(book); }
-// The links for the active verse, ranked: fulfilments, quotes and parallels
+// The links for the active verse, ranked: fulfillments, quotes and parallels
 // first, then everything else by readers' votes.
 function _rxRows(key = _xrefKey()) {
   if (_rxRowsCache.key === key) return _rxRowsCache.rows;

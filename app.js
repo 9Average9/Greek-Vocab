@@ -10512,7 +10512,7 @@ function _mergeStudyNotificationMessages(msgs = []) {
       else if (m.type === 'eventReminder')       text = `Reminder: "${m.eventTitle || 'an event'}" is coming up!`;
       else if (m.type === 'eventAccepted')       text = `${name} is coming to your event!`;
       else if (m.type === 'eventDeclined')       text = `${name} declined "${m.eventTitle || 'your event'}"`;
-      else if (m.type === 'eventCancelled')      text = `${name} cancelled "${m.eventTitle || 'an event'}"`;
+      else if (m.type === 'eventCancelled')      text = `${name} canceled "${m.eventTitle || 'an event'}"`;
       if (text) _showStudyToast(text);
     });
   }
@@ -12561,7 +12561,7 @@ const BIBLE_JOURNEYS = [
     certainty: 'Approximate route',
     refs: [{ book: 'GEN', chFrom: 32, chTo: 33 }],
     distance: 45,
-    mode: 'Travelling with family and flocks',
+    mode: 'Traveling with family and flocks',
     days: 'A few tense days',
     modern: 'The Gilead highlands across the Jabbok into the central hills',
     note: 'Peniel and Succoth lie along the Jabbok; the precise tells are debated.',
@@ -12590,7 +12590,7 @@ const BIBLE_JOURNEYS = [
     certainty: 'Approximate route',
     refs: [{ book: 'EXO', chFrom: 4, chTo: 4 }],
     distance: 280,
-    mode: 'Travelling with family on a donkey',
+    mode: 'Traveling with family on a donkey',
     days: 'Many days across the wilderness',
     modern: 'Northwest Arabia across Sinai to the Nile Delta',
     note: 'Midian lay east of the Gulf of Aqaba; the route crosses the Sinai wilderness to Goshen.',
@@ -13431,7 +13431,7 @@ const BIBLE_JOURNEYS = [
     certainty: 'Approximate route',
     refs: [{ book: 'GEN', chFrom: 35, chTo: 35 }],
     distance: 55,
-    mode: 'Travelling with family and flocks',
+    mode: 'Traveling with family and flocks',
     days: 'A journey of grief and worship',
     modern: 'The central hills from Shechem down to Hebron',
     note: 'Rachel dies on the way to Ephrath (Bethlehem); Jacob reaches Isaac at Hebron.',
@@ -17082,7 +17082,7 @@ function _atlasRenderDetail(place) {
       <button onclick="setAtlasDetailMode('modern')">Modern</button>
     </div>` : ''}
     <div class="atlas-map" id="atlasMapShell"></div>
-    ${inTiles && _atlasRegionOutline(place) ? `<p class="atlas-extent-note"><span class="material-symbols-outlined">crop_free</span>Shaded area shows the <strong>approximate extent</strong> of ${_journeyEsc(_atlasRegionOutline(place).name)} — ancient borders are debated and shifted over time. Faint dotted areas are neighbouring lands; small dots are nearby places.</p>` : ''}
+    ${inTiles && _atlasRegionOutline(place) ? `<p class="atlas-extent-note"><span class="material-symbols-outlined">crop_free</span>Shaded area shows the <strong>approximate extent</strong> of ${_journeyEsc(_atlasRegionOutline(place).name)} — ancient borders are debated and shifted over time. Faint dotted areas are neighboring lands; small dots are nearby places.</p>` : ''}
     <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>${conf.tier === 'debated' ? 'Most-accepted location' : 'Where it is today'}</strong><span>${_journeyEsc(place.modern)}</span></div></div>
     ${_atlasAltsHtml(place)}
     ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
@@ -17162,7 +17162,7 @@ let _atlasPeekMode = 'ancient';
 // Confidence tier for how sure the identification is. Set per-place in the
 // gazetteer (certain | likely | debated); falls back to a text heuristic for
 // any older cached entry without the field.
-// Per-kind colours for map outlines/pins — kept in sync with the .bmkind-*
+// Per-kind colors for map outlines/pins — kept in sync with the .bmkind-*
 // values in style.css so a GL region fill matches its label and dot.
 const _ATLAS_KIND_COLORS = {
   city: '#b91c1c', town: '#ea580c', village: '#d97706', site: '#7c3aed',
@@ -17200,7 +17200,7 @@ function _atlasContainingRegion(place) {
   return best;
 }
 // The focus-territory outline for a place: the land it sits in (or is), tinted to
-// MATCH the place's own colour so the spot and its territory read as one unit.
+// MATCH the place's own color so the spot and its territory read as one unit.
 // Null if the place isn't inside any bundled territory.
 function _atlasRegionOutline(place) {
   if (!place) return null;
@@ -17209,7 +17209,7 @@ function _atlasRegionOutline(place) {
   const c = _ringCentroid(cr.ring);
   return {
     geometry: { type: 'Polygon', coordinates: [cr.ring] },
-    color: _atlasKindColor(place.kind),   // spot + territory share one colour
+    color: _atlasKindColor(place.kind),   // spot + territory share one color
     name: cr.name,
     cx: c.x, cy: c.y,
     focusIsRegion: cr.isSelf
@@ -17265,7 +17265,7 @@ function _journeyRegionContext(journey) {
   return out.slice(0, 10);
 }
 
-// Neighbouring territories around the focused place — drawn as faint outline-only
+// Neighboring territories around the focused place — drawn as faint outline-only
 // context so the wider geography reads without cluttering the view. Keyed off the
 // land the place sits in (or a small box around the point when it's in none), and
 // excludes that home territory (which is already the highlighted focus).
@@ -17299,7 +17299,7 @@ function _atlasRegionContext(place) {
 
 // The nearest gazetteer places around a focused place, for surrounding context so
 // the reader sees a spot in relation to what's near it. Capped by count and a
-// sensible radius, coloured by kind, and carrying both names so the label follows
+// sensible radius, colored by kind, and carrying both names so the label follows
 // the Bible/Modern map mode.
 function _atlasContextPlaces(place, n) {
   if (!place || typeof place.lon !== 'number' || typeof place.lat !== 'number') return [];
@@ -17420,7 +17420,7 @@ function _atlasBuildNameMatcher() {
   });
   const terms = [...termToNames.keys()].sort((a, b) => b.length - a.length);
   const esc = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  // Case-sensitive + word-boundaried: place names are always capitalised in the
+  // Case-sensitive + word-boundaried: place names are always capitalized in the
   // text, so this avoids matching ordinary lowercase words.
   _atlasNameMatcher = { regex: terms.length ? new RegExp(`\\b(${esc.join('|')})\\b`, 'g') : null, termToNames };
 }
@@ -23431,7 +23431,7 @@ async function _loadNotifications() {
           <div class="notif-icon"><span class="material-symbols-outlined">event_busy</span></div>
           <div class="notif-body">
             <div class="notif-title">${_calEsc(n.fromName)}</div>
-            <div class="notif-sub">Cancelled "${_calEsc(n.eventTitle)}"</div>
+            <div class="notif-sub">Canceled "${_calEsc(n.eventTitle)}"</div>
           </div>
           <button class="notif-x-btn" onclick="event.stopPropagation();notifDismissEventCancelled('${n.id}','${n.msgId||''}','${n.eventId||''}')" title="Dismiss"><span class="material-symbols-outlined">close</span></button>
         </div>`;
@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.591";
+const APP_VERSION = "3.0.592";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30576,7 +30576,7 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-critical-fallbacks.js': '3.0.177',
   'rhema-critical-extra.js': '3.0.573',
   'rhema-ot-hebrew.js': '3.0.81',
-  'rhema-hebrew-lexicon.js': '3.0.579',
+  'rhema-hebrew-lexicon.js': '3.0.592',
   'rhema-hebrew-bdb.js':    '3.0.379',
   'rhema-lxx.js':       '3.0.573',
   'rhema-lexicon.js':   '3.0.580',
@@ -30589,10 +30589,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.592 &mdash; American spelling throughout</div>
+<ul>
+  <li><strong>Color, not colour</strong> &mdash; The app&rsquo;s own text now uses American spelling everywhere: labels, notes, word studies, glosses and update notes (honor, favor, recognized, labeled, center, defense and so on, about 1,600 words). Bible text and quotations from older works, like the King James Version&rsquo;s &ldquo;our Saviour,&rdquo; keep their original spelling.</li>
+</ul>
 <div class="un-version-label">v3.0.591 &mdash; Cross references, rebuilt</div>
 <ul>
   <li><strong>Better links, best first</strong> &mdash; Cross references now come from OpenBible.info&rsquo;s 340,000 reader-voted links, so the strongest connections lead (John 3:16 starts with Romans 5:8, 1 John 4:9 and John 3:36), and none get cut off any more.</li>
-  <li><strong>Every link says why</strong> &mdash; Quote, Fulfillment (where the New Testament says so), Echo, Parallel passage, or the Greek or Hebrew word both verses share, found by comparing the original texts, never guessed. The old &ldquo;prophecy&rdquo; group that labelled any Psalm-to-Gospel link a prophecy is gone.</li>
+  <li><strong>Every link says why</strong> &mdash; Quote, Fulfillment (where the New Testament says so), Echo, Parallel passage, or the Greek or Hebrew word both verses share, found by comparing the original texts, never guessed. The old &ldquo;prophecy&rdquo; group that labeled any Psalm-to-Gospel link a prophecy is gone.</li>
   <li><strong>Compare</strong> &mdash; Put the two verses side by side with their shared words highlighted, then read it or follow its links.</li>
   <li><strong>Simpler screen</strong> &mdash; One list with quick filters (Quotes, Parallels, Echoes, Same word, All) instead of five buttons to dig through. Loads only the book you&rsquo;re in.</li>
 </ul>
@@ -30624,7 +30628,7 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.584 &mdash; Labels: Free Grace reading and AI-written</div>
 <ul>
-  <li><strong>Free Grace reading, labelled</strong> &mdash; The word studies still follow the Free Grace view where they take a theological direction, but every note written or reworded in that review now says so with a <em>Free Grace reading</em> tag (about 670 notes in 270 words). Tap a tag to see what the view holds and that other traditions read some passages differently.</li>
+  <li><strong>Free Grace reading, labeled</strong> &mdash; The word studies still follow the Free Grace view where they take a theological direction, but every note written or reworded in that review now says so with a <em>Free Grace reading</em> tag (about 670 notes in 270 words). Tap a tag to see what the view holds and that other traditions read some passages differently.</li>
   <li><strong>How we know</strong> &mdash; Each word study&rsquo;s &ldquo;How we know&rdquo; section explains where its notes come from and how every verse and quote is checked.</li>
   <li><strong>Interpretations</strong> &mdash; The note at the bottom now says the summaries are AI-written and why Free Grace is listed first. The 1&nbsp;John book intro now names its reading as the Free Grace one.</li>
 </ul>
@@ -30643,7 +30647,7 @@ const UPDATE_NOTES_HTML = `
 <ul>
   <li><strong>The aorist, explained right</strong> &mdash; It views an action as a whole; it doesn&rsquo;t mean &ldquo;once&rdquo;, and outside statements it doesn&rsquo;t mark past time. The parsing label no longer calls every aorist a &ldquo;completed past action&rdquo;.</li>
   <li><strong>Other tenses and moods</strong> &mdash; Present, pluperfect (ᾔδει simply means &ldquo;he knew&rdquo;), indicative and subjunctive notes updated &mdash; the subjunctive also stands on its own (&ldquo;let us love&rdquo;) and follows ὅταν, ἕως and οὐ μή, not only ἵνα, ἐάν and μή.</li>
-  <li><strong>Voice labels fixed</strong> &mdash; Four voice codes were mislabelled (ἀπεκρίθη &ldquo;he answered&rdquo; showed as middle-passive). Verbs with no active form are now described the way current grammars do, rather than as &ldquo;deponent&rdquo;; the &ldquo;divine passive&rdquo; is noted as something context decides.</li>
+  <li><strong>Voice labels fixed</strong> &mdash; Four voice codes were mislabeled (ἀπεκρίθη &ldquo;he answered&rdquo; showed as middle-passive). Verbs with no active form are now described the way current grammars do, rather than as &ldquo;deponent&rdquo;; the &ldquo;divine passive&rdquo; is noted as something context decides.</li>
 </ul>
 <div class="un-version-label">v3.0.580 &mdash; Cleaner &ldquo;how it&rsquo;s translated&rdquo;</div>
 <ul>
@@ -30653,7 +30657,7 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.579 &mdash; Hebrew accuracy pass</div>
 <ul>
-  <li><strong>Endings explained correctly</strong> &mdash; The &ldquo;toward&rdquo; ending (סְדֹמָה &ldquo;toward Sodom&rdquo;, 1,084 words) and the lengthened ending on commands (הָבָה &ldquo;come!&rdquo;) were shown as the pronoun &ldquo;her&rdquo;; they now say what they are. Infinitives with an ending say who does the action (&ldquo;when they were created&rdquo;), nouns with &ldquo;his/their&rdquo; no longer say &ldquo;linked to the next word&rdquo;, commands show &ldquo;you&rdquo;, the rarer &ldquo;extra n&rdquo; endings are recognised, and the Aramaic badge shows only on Aramaic.</li>
+  <li><strong>Endings explained correctly</strong> &mdash; The &ldquo;toward&rdquo; ending (סְדֹמָה &ldquo;toward Sodom&rdquo;, 1,084 words) and the lengthened ending on commands (הָבָה &ldquo;come!&rdquo;) were shown as the pronoun &ldquo;her&rdquo;; they now say what they are. Infinitives with an ending say who does the action (&ldquo;when they were created&rdquo;), nouns with &ldquo;his/their&rdquo; no longer say &ldquo;linked to the next word&rdquo;, commands show &ldquo;you&rdquo;, the rarer &ldquo;extra n&rdquo; endings are recognized, and the Aramaic badge shows only on Aramaic.</li>
   <li><strong>Verses line up in 1 Samuel 21&ndash;24 and Psalm 13</strong> &mdash; These were paired one verse off with the Hebrew (English 1 Sam 21:1 is Hebrew 21:2; Psalm 13:1 is Hebrew 13:2).</li>
   <li><strong>Better short meanings</strong> &mdash; About 90 meanings had been cut down to just &ldquo;be&rdquo;, &ldquo;act&rdquo; or &ldquo;treat&rdquo; (צָדַק now &ldquo;be righteous&rdquo;, חָזַק &ldquo;be strong&rdquo;), and about 40 added &ldquo;divine&rdquo; or &ldquo;sacred&rdquo; the word doesn&rsquo;t carry (מַלְאָךְ &ldquo;messenger, angel&rdquo;, מִצְוָה &ldquo;commandment&rdquo;). עַלְמָה now reads &ldquo;young woman, maiden&rdquo;, as the standard dictionaries give it.</li>
   <li><strong>Dictionary forms repaired</strong> &mdash; 285 damaged headwords fixed from the original source (אֵת, אִישׁ, אִם, כֶּסֶף, מֵאָה&hellip;).</li>
@@ -30687,7 +30691,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.573 &mdash; No more empty words</div>
 <ul>
   <li><strong>Every Septuagint word now has information</strong> &mdash; About 1 Septuagint word in 15 (names like Γεδσων, and words the New Testament never uses) showed an empty card, because the Greek dictionaries are keyed to Strong&rsquo;s numbers, which only cover New Testament words. Each now shows its dictionary form, a short gloss, how often it appears, every place it appears in that book, and, for most, the Hebrew word it translates right there (tap it to study the Hebrew).</li>
-  <li><strong>A mislabelled word fixed</strong> &mdash; In Numbers 4:27, ἀρτά (&ldquo;loads, what is carried&rdquo;; the Hebrew is מַשָּׂא) was labelled as ἄρτος &ldquo;bread&rdquo; in the source data.</li>
+  <li><strong>A mislabeled word fixed</strong> &mdash; In Numbers 4:27, ἀρτά (&ldquo;loads, what is carried&rdquo;; the Hebrew is מַשָּׂא) was labeled as ἄρτος &ldquo;bread&rdquo; in the source data.</li>
   <li><strong>Hebrew prepositions with endings</strong> &mdash; Words like בּוֹ &ldquo;in him&rdquo;, לָהֶם &ldquo;to them&rdquo; and כָּמוֹךָ &ldquo;like you&rdquo; now say which preposition they are and what it means; Strong&rsquo;s doesn&rsquo;t number these one-letter prepositions. מִמֶּנּוּ &ldquo;from him&rdquo; now opens מִן.</li>
   <li><strong>Critical-text words</strong> &mdash; The last 110 words in the critical Greek text without an entry (like βελόνη &ldquo;needle&rdquo; in Luke 18:25) now have one: from STEPBible&rsquo;s extended numbering with Abbott-Smith&rsquo;s definitions, or the matching entry where it&rsquo;s just a different spelling (Βόος = Boaz).</li>
 </ul>
@@ -30731,7 +30735,7 @@ const UPDATE_NOTES_HTML = `
   <li><strong>Windows you can move anywhere</strong> &mdash; Drag a window by its title to place it anywhere; windows can overlap, and the one you touch comes to the front, like browser windows. Tidy (top) lays them all out neatly again.</li>
   <li><strong>Resize from the corner</strong> &mdash; Drag the gold corner at a window&rsquo;s bottom left diagonally to make it bigger or smaller.</li>
   <li><strong>Everything shrinks to fit</strong> &mdash; Inside a smaller window, the whole Rhēma scales down to fit, word sheets and menus included, so there&rsquo;s nothing to pan around.</li>
-  <li><strong>Matches your theme</strong> &mdash; Multi-view and its windows use your app colours, light or dark. The reference bar now stays put while you scroll inside a window.</li>
+  <li><strong>Matches your theme</strong> &mdash; Multi-view and its windows use your app colors, light or dark. The reference bar now stays put while you scroll inside a window.</li>
 </ul>
 <div class="un-version-label">v3.0.564 &mdash; Multi-view</div>
 <ul>
@@ -30747,7 +30751,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.562 &mdash; Better links for every version</div>
 <ul>
   <li><strong>Checked version by version</strong> &mdash; Word links were hand-reviewed in sample chapters of the NIV, NKJV, NASB, CSB and NLT: about 91&ndash;94% of linked words are right in each, and the less certain ones are marked &asymp;.</li>
-  <li><strong>More of your version&rsquo;s wording recognised</strong> &mdash; Modern wording like &ldquo;lives&rdquo; or &ldquo;settled&rdquo; (for &ldquo;dwell&rdquo;), small words like &ldquo;for&rdquo; and &ldquo;if&rdquo;, and whole phrases like &ldquo;lie down&rdquo;, &ldquo;brought up&rdquo; and &ldquo;cast out&rdquo;.</li>
+  <li><strong>More of your version&rsquo;s wording recognized</strong> &mdash; Modern wording like &ldquo;lives&rdquo; or &ldquo;settled&rdquo; (for &ldquo;dwell&rdquo;), small words like &ldquo;for&rdquo; and &ldquo;if&rdquo;, and whole phrases like &ldquo;lie down&rdquo;, &ldquo;brought up&rdquo; and &ldquo;cast out&rdquo;.</li>
   <li><strong>Honest with paraphrases</strong> &mdash; For versions that say things in their own words (NLT, The Message&hellip;), the app no longer guesses by position, and Look up a word says why fewer words line up.</li>
 </ul>
 <div class="un-version-label">v3.0.561 &mdash; Look up a word</div>
@@ -30766,7 +30770,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.559 &mdash; Hebrew in your Bible&rsquo;s words</div>
 <ul>
   <li><strong>Your version, under the Hebrew</strong> &mdash; The English under each Hebrew word now follows the version you read. On the NIV, Genesis 22:2&rsquo;s וְהַעֲלֵהוּ reads &ldquo;Sacrifice&rdquo;; on the KJV, &ldquo;offer him&rdquo;, &ldquo;thou lovest&rdquo;. The same goes for the interlinear, the word panel, and Who Does What.</li>
-  <li><strong>See both</strong> &mdash; When your version words it differently, the word panel also shows the BSB&rsquo;s word for comparison. Words your version doesn&rsquo;t pin down show the BSB&rsquo;s word in grey.</li>
+  <li><strong>See both</strong> &mdash; When your version words it differently, the word panel also shows the BSB&rsquo;s word for comparison. Words your version doesn&rsquo;t pin down show the BSB&rsquo;s word in gray.</li>
   <li><strong>Cleaner text</strong> &mdash; Fixed stray spaces in downloaded versions: &ldquo;The L ord&rdquo; is now &ldquo;The LORD&rdquo;, and &ldquo;Lord &rsquo;s&rdquo; and &ldquo;satisfied ;&rdquo; are closed up as printed.</li>
 </ul>
 <div class="un-version-label">v3.0.558 &mdash; Reader polish</div>
@@ -31050,7 +31054,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.495 &mdash; Word studies, wave 2</div>
 <ul>
   <li><strong>100 Greek words now have full studies</strong> &mdash; Fifty more, including &sigma;&#8182;&mu;&alpha;, &zeta;&omega;&#8053;, &delta;&omicron;&#8166;&lambda;&omicron;&sigmaf;, &alpha;&#7984;&#974;&nu;, &mu;&#8051;&nu;&omega;, &#7936;&lambda;&#8053;&theta;&epsilon;&iota;&alpha;, &sigma;&#8061;&zeta;&omega;, &psi;&upsilon;&chi;&#8053;, &alpha;&#7991;&mu;&alpha; and &delta;&iota;&kappa;&alpha;&iota;&omicron;&sigma;&#8059;&nu;&eta; &mdash; every cited verse checked against the Greek text.</li>
-  <li><strong>More trustworthy sources</strong> &mdash; Papyri (Moulton&ndash;Milligan) articles that were filed under the wrong word are no longer shown, and the Majority-vs-critical count is only compared where both texts catalogue the word the same way.</li>
+  <li><strong>More trustworthy sources</strong> &mdash; Papyri (Moulton&ndash;Milligan) articles that were filed under the wrong word are no longer shown, and the Majority-vs-critical count is only compared where both texts catalog the word the same way.</li>
 </ul>
 <div class="un-version-label">v3.0.494 &mdash; Scholarly word studies, wave 1</div>
 <ul>
@@ -31107,8 +31111,8 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.482 &mdash; Interlinear now shows your version's word under each Greek word</div>
 <ul>
-  <li><strong>See how your translation renders each Greek word</strong> &mdash; In the Interlinear, under each Greek word you now see the word(s) your current version actually used to translate it (in colour), alongside the literal meaning (in grey). No more guessing which English word in the verse goes with which Greek word.</li>
-  <li><strong>Works with every version, fully offline</strong> &mdash; It matches each Greek word&rsquo;s known meanings to the words of the version on screen, allowing for the different word order between Greek and English. It&rsquo;s an approximation (clearly labelled), so when there&rsquo;s no confident match it simply shows the literal meaning instead of guessing.</li>
+  <li><strong>See how your translation renders each Greek word</strong> &mdash; In the Interlinear, under each Greek word you now see the word(s) your current version actually used to translate it (in color), alongside the literal meaning (in gray). No more guessing which English word in the verse goes with which Greek word.</li>
+  <li><strong>Works with every version, fully offline</strong> &mdash; It matches each Greek word&rsquo;s known meanings to the words of the version on screen, allowing for the different word order between Greek and English. It&rsquo;s an approximation (clearly labeled), so when there&rsquo;s no confident match it simply shows the literal meaning instead of guessing.</li>
 </ul>
 <div class="un-version-label">v3.0.481 &mdash; Home screen fits the screen again (no vertical scroll)</div>
 <ul>
@@ -31199,7 +31203,7 @@ const UPDATE_NOTES_HTML = `
 <ul>
   <li><strong>Omitted verses just disappear</strong> &mdash; When a translation doesn&rsquo;t include a verse (like Matthew 17:21 in the NIV), the reader now skips it entirely &mdash; the way the YouVersion app does &mdash; instead of leaving a numbered gap that says &ldquo;not included in this translation.&rdquo;</li>
   <li><strong>Copyright at the foot of every chapter</strong> &mdash; Each chapter now closes with the version&rsquo;s copyright / attribution notice, just like a standard Bible app.</li>
-  <li><strong>Home screen &amp; version picker polish</strong> &mdash; The Sermon Notes tile now matches the other Tools tiles in deep purple, and the download icon in the version picker sits perfectly centred whether or not the version is selected.</li>
+  <li><strong>Home screen &amp; version picker polish</strong> &mdash; The Sermon Notes tile now matches the other Tools tiles in deep purple, and the download icon in the version picker sits perfectly centerd whether or not the version is selected.</li>
 </ul>
 <div class="un-version-label">v3.0.428 &mdash; Smooth Rhema scrolling</div>
 <ul>
@@ -31515,7 +31519,7 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.369 &mdash; Select multiple verses</div>
 <ul>
-  <li><strong>Multi-verse selection</strong> &mdash; In the reader, tap verses to select them (they underline in your theme colour). A button appears at the bottom — tap it to act on the whole selection.</li>
+  <li><strong>Multi-verse selection</strong> &mdash; In the reader, tap verses to select them (they underline in your theme color). A button appears at the bottom — tap it to act on the whole selection.</li>
   <li><strong>Highlight, compare &amp; note many at once</strong> &mdash; Highlight every selected verse, send them all to Compare, or open one note sheet to note several verses — pick which ones, and give each its own note or one note for all.</li>
 </ul>
 <div class="un-version-label">v3.0.368 &mdash; Friend encouragement shows who</div>
@@ -31589,7 +31593,7 @@ const UPDATE_NOTES_HTML = `
   <li><strong>Polished swipes</strong> &mdash; Opening a journey or place slides in from the right and the back button slides cleanly back, with a quick swap when switching Journeys/Places.</li>
   <li><strong>Reset view button</strong> &mdash; Pan or zoom a map and a Reset button appears top-right to fly the camera back to the opening view.</li>
   <li><strong>Whole journey in frame</strong> &mdash; The opening zoom now settles with the entire route in view instead of the middle.</li>
-  <li><strong>Smoother route playback</strong> &mdash; The travelling marker and follow camera move more evenly.</li>
+  <li><strong>Smoother route playback</strong> &mdash; The traveling marker and follow camera move more evenly.</li>
   <li><strong>Tidier home tile</strong> &mdash; Removed the extra arrow on the Journey Maps tile.</li>
 </ul>
 <div class="un-version-label">v3.0.354 &mdash; Tool launch origin fix</div>
@@ -32008,7 +32012,7 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.269 &mdash; Neutral Bible context notes</div>
 <ul>
-  <li><strong>English word cards</strong> &mdash; The interpretive helper is now labelled <strong>Bible Context</strong> and reads as a usage note, not a theological definition.</li>
+  <li><strong>English word cards</strong> &mdash; The interpretive helper is now labeled <strong>Bible Context</strong> and reads as a usage note, not a theological definition.</li>
   <li><strong>Safer wording</strong> &mdash; Built-in notes now point users back to the modern definition, the verse, and the author&apos;s context, while keeping salvation/faith wording Free Grace-friendly.</li>
 </ul>
 <div class="un-version-label">v3.0.268 &mdash; Better English definitions</div>
@@ -32028,7 +32032,7 @@ const UPDATE_NOTES_HTML = `
 <ul>
   <li><strong>English in your studies</strong> &mdash; In a study's Rhema you can save English verses, add English words to the word log, and capture Observation/Interpretation/Application/Question — all from tapping a verse.</li>
   <li><strong>Study highlights stay in the study</strong> &mdash; Highlights and notes made inside a study no longer appear in other studies or the main reader.</li>
-  <li><strong>Pressing a verse</strong> underlines it in your theme colour so it's clear which verse you're marking.</li>
+  <li><strong>Pressing a verse</strong> underlines it in your theme color so it's clear which verse you're marking.</li>
   <li><strong>Trails</strong> &mdash; The English tool wand now has a Trails button, and Compare has an "Add another verse" step so building a comparison is clearer. Saving in a study goes to that study's Trails.</li>
 </ul>
 <div class="un-version-label">v3.0.265 &mdash; Rhema compare &amp; English focus</div>
@@ -32038,8 +32042,8 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.264 &mdash; Rhema highlights &amp; notes</div>
 <ul>
-  <li><strong>Highlight verses</strong> &mdash; Tap any English verse to highlight it in a colour of your choice.</li>
-  <li><strong>Personal notes</strong> &mdash; Add a note to any verse; a coloured note marker appears at the end of the verse. Tap it later to see when you wrote it, read it, and edit it.</li>
+  <li><strong>Highlight verses</strong> &mdash; Tap any English verse to highlight it in a color of your choice.</li>
+  <li><strong>Personal notes</strong> &mdash; Add a note to any verse; a colored note marker appears at the end of the verse. Tap it later to see when you wrote it, read it, and edit it.</li>
   <li>Your highlights and notes are saved on your device and synced to your account when you're signed in.</li>
 </ul>
 <div class="un-version-label">v3.0.263 &mdash; Rhema English study (phase 1)</div>
@@ -32439,7 +32443,7 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.183 &mdash; Library Against the Wall</div>
 <ul>
-  <li><strong>A proper bookcase</strong> &mdash; The Study Library is now one tall wooden bookcase with crown moulding, a floor plinth, and at least four shelves &mdash; empty shelves included &mdash; standing against a softly lit wall.</li>
+  <li><strong>A proper bookcase</strong> &mdash; The Study Library is now one tall wooden bookcase with crown molding, a floor plinth, and at least four shelves &mdash; empty shelves included &mdash; standing against a softly lit wall.</li>
   <li><strong>Clearer Home tile</strong> &mdash; The Quick Action tile now reads &#8220;Study Library.&#8221;</li>
 </ul>
 <div class="un-version-label">v3.0.182 &mdash; Study Library</div>
@@ -32636,7 +32640,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.135 &mdash; Google Calendar Re-Link Prompt Fix</div>
 <ul>
   <li><strong>Google Calendar stays linked</strong> &mdash; The calendar no longer re-prompts linked users on every reopen just because the short-lived Google access token needs a quiet refresh.</li>
-  <li><strong>Sync refresh is quieter</strong> &mdash; Creating, accepting, and cancelling events now try a silent Google token refresh first, then only ask for action when Google actually requires it.</li>
+  <li><strong>Sync refresh is quieter</strong> &mdash; Creating, accepting, and canceling events now try a silent Google token refresh first, then only ask for action when Google actually requires it.</li>
 </ul>
 <div class="un-version-label">v3.0.134 &mdash; Calendar Polish &amp; Event Notifications</div>
 <ul>
@@ -32684,7 +32688,7 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.115 &mdash; Graceful API Limit Handling</div>
 <ul>
-  <li><strong>No broken experience when API limit is reached</strong> &mdash; If the monthly api.bible quota is exhausted, the app automatically switches to MSB, greys out the NIV/NKJV/NASB chips, and shows a clear banner explaining the situation and when access resets.</li>
+  <li><strong>No broken experience when API limit is reached</strong> &mdash; If the monthly api.bible quota is exhausted, the app automatically switches to MSB, grays out the NIV/NKJV/NASB chips, and shows a clear banner explaining the situation and when access resets.</li>
   <li><strong>Cached verses still work</strong> &mdash; Any NIV/NKJV/NASB verse already stored on the device loads instantly even when the limit is active.</li>
   <li><strong>Auto-resets next month</strong> &mdash; The limit flag clears on the 1st of the following month when the api.bible quota renews.</li>
 </ul>
@@ -34698,7 +34702,7 @@ function _startCalendarListener(uid) {
   _unsubCalendar?.();
   _unsubCalendar = window.Events?.listen?.(uid, events => {
     // Auto-delete from Google Calendar any events that were active before
-    // but are now gone (cancelled by creator) while this user has GCal linked.
+    // but are now gone (canceled by creator) while this user has GCal linked.
     if (_calGCalToken && Date.now() < _calGCalTokenExpiry) {
       const newIds = new Set(events.map(e => e.id));
       _calendarEvents.forEach(prev => {
@@ -35494,7 +35498,7 @@ async function cancelEvent(eventId) {
       { eventId, eventTitle: ev.title }, `evtcancel_${eventId}_${inv.uid}`);
   }
   closeEventDetail();
-  _showStudyToast('Event cancelled');
+  _showStudyToast('Event canceled');
 }
 
 // ── ICS / Google Calendar helpers ──────────────────────────────────────────────
@@ -40136,7 +40140,7 @@ function _rhemaXrefKeyForVerse(book = _rhemaBook, chapter = _rhemaChapter, verse
 
 // ── Rhema verse marks: user highlights + notes ────────────────────────────────
 // Stored per verse reference ("John 3:16"). Each mark can carry a highlight
-// colour and/or a note (with its own icon colour + timestamps). Persisted to
+// color and/or a note (with its own icon color + timestamps). Persisted to
 // localStorage for everyone and synced to Firestore for signed-in users.
 const RHEMA_MARK_COLORS = ['#ffe08a', '#ffb0b8', '#a9d8ff', '#bdeab2', '#e6c6ff', '#ffc69a', '#b9efe6'];
 let _rhemaScopedMarks = {};     // { scope: { ref: mark } } — home vs per-study
@@ -40222,7 +40226,7 @@ function _rhemaFmtNoteDate(ts) {
   catch { return ''; }
 }
 
-// Underline the verse being acted on, in the theme colour, as a visual cue.
+// Underline the verse being acted on, in the theme color, as a visual cue.
 function _rhemaMarkActiveVerse(verse) {
   document.querySelectorAll('.rhema-english-verse.rhema-verse-acting')
     .forEach(el => el.classList.remove('rhema-verse-acting'));
@@ -40616,7 +40620,7 @@ function _rhemaRenderNoteColors() {
   const cr = document.getElementById('rhemaNoteColors');
   if (!cr) return;
   cr.innerHTML = RHEMA_MARK_COLORS.map(c =>
-    `<button class="rhema-vs-swatch${c === _rhemaNoteColor ? ' active' : ''}" style="background:${c}" onclick="rhemaPickNoteColor('${c}')" aria-label="Note colour"></button>`
+    `<button class="rhema-vs-swatch${c === _rhemaNoteColor ? ' active' : ''}" style="background:${c}" onclick="rhemaPickNoteColor('${c}')" aria-label="Note color"></button>`
   ).join('');
 }
 function rhemaPickNoteColor(c) { _rhemaNoteColor = c; _rhemaRenderNoteColors(); }
@@ -40674,7 +40678,7 @@ function _rhemaRenderBatchNoteColors() {
   const cr = document.getElementById('rhemaBatchNoteColors');
   if (!cr) return;
   cr.innerHTML = RHEMA_MARK_COLORS.map(c =>
-    `<button class="rhema-vs-swatch${c === _rhemaBatchNoteColor ? ' active' : ''}" style="background:${c}" onclick="_rhemaPickBatchNoteColor('${c}')" aria-label="Note colour"></button>`
+    `<button class="rhema-vs-swatch${c === _rhemaBatchNoteColor ? ' active' : ''}" style="background:${c}" onclick="_rhemaPickBatchNoteColor('${c}')" aria-label="Note color"></button>`
   ).join('');
 }
 function _rhemaPickBatchNoteColor(c) { _rhemaBatchNoteColor = c; _rhemaRenderBatchNoteColors(); }
@@ -42223,7 +42227,7 @@ function _rhemaVerseLinks(ref) {
   // Hebrew packs pronouns and "and" into its words: "he refreshes" is one verb
   // (its ending says "he"), "his name" is one noun with a "his" ending, "and"
   // is the וְ on the front of the next word. A pronoun or "and" left over goes
-  // with the neighbouring word whose grammar (Berean parsing) shows exactly it.
+  // with the neighboring word whose grammar (Berean parsing) shows exactly it.
   if (layer === 'hebrew') {
     const PGN = { he: ['3ms'], him: ['3ms'], his: ['3ms'], himself: ['3ms'], she: ['3fs'], her: ['3fs'], herself: ['3fs'], it: ['3ms', '3fs'], its: ['3ms', '3fs'],
       they: ['3mp', '3fp', '3cp'], them: ['3mp', '3fp', '3cp'], their: ['3mp', '3fp', '3cp'], themselves: ['3mp', '3fp', '3cp'],
@@ -42582,7 +42586,7 @@ function _rhemaRenderInterlinear(ref) {
   const hebVer = hebIL ? _rhemaHebVersionWords(p.book, ilC, ilV) : null;
   if (hebIL && hebVer) {
     // Another version: its own words, found through the BSB's word table; the
-    // BSB's word (grey) where this version's can't be pinned down.
+    // BSB's word (gray) where this version's can't be pinned down.
     renders = hebVer.map((r, i) => (r.kind ? r : (hebIL[i]?.en ? { text: hebIL[i].en, kind: 'bsb' } : r)));
     _rhemaSetInterlinearVersionNote(hebVer.version, true);
   } else if (hebIL) {
@@ -42678,7 +42682,7 @@ function _rhemaSetInterlinearVersionNote(versionLabel, hebBridge) {
       `<span><span class="rhema-il-swatch rhema-il-sw-version">word</span> ${esc(versionLabel)}’s word</span>` +
       `<span><span class="rhema-il-swatch rhema-il-sw-inferred">≈</span> best match by position</span>` +
       `<span><span class="rhema-il-swatch rhema-il-sw-none">—</span> no separate word</span>` +
-      `<span><span class="rhema-il-swatch rhema-il-sw-gloss">grey</span> ${hebBridge ? 'the BSB’s word (not found)' : 'literal meaning'}</span>` +
+      `<span><span class="rhema-il-swatch rhema-il-sw-gloss">gray</span> ${hebBridge ? 'the BSB’s word (not found)' : 'literal meaning'}</span>` +
       `</span>` +
       `<button type="button" class="rhema-il-detail-btn${_rhemaIlDetails ? ' on' : ''}" onclick="rhemaToggleInterlinearDetails()">` +
       `<span class="material-symbols-outlined">${_rhemaIlDetails ? 'visibility_off' : 'visibility'}</span>${_rhemaIlDetails ? 'Hide' : 'Show'} literal &amp; parsing</button>`;
@@ -45449,7 +45453,7 @@ function _rhemaReaderMarksHtml(kind) {
     return `<div class="rrp-empty">${wantNote ? 'No notes saved yet. Long-press a verse to add one.' : 'No highlights yet. Tap a verse to highlight it.'}</div>`;
   }
   // Group the (already canonically sorted) marks by book so each book becomes
-  // one labelled dropdown — easier to scan than a long flat list.
+  // one labeled dropdown — easier to scan than a long flat list.
   const groups = [];
   const byBook = {};
   for (const [ref, m] of marks) {
@@ -46447,7 +46451,7 @@ function initRhemaVerseSwipe() {
   _initRhemaChromeMetrics();
   _rhemaNapInit();
   // Only attach to the verse scroll area — not the header, picker, breadcrumb,
-  // highlight bar, or word-detail sheet which each have their own scroll behaviour
+  // highlight bar, or word-detail sheet which each have their own scroll behavior
   const area = document.querySelector('#rhemaModal .rhema-body');
   if (!area) return;
   if (!area._rhemaChromeScrollInit) {
@@ -47849,7 +47853,7 @@ function coachGuideShow(host, card, opts = {}) {
   fig.classList.add(entering ? 'is-pop' : 'is-hop');
   // The card is his speech bubble: its words "arrive" as he speaks.
   card.classList.add('coach-bubble');
-  // The speech-bubble tail takes the card's own colours.
+  // The speech-bubble tail takes the card's own colors.
   const cs = getComputedStyle(card);
   g.style.setProperty('--guide-tail-bg', cs.backgroundColor && cs.backgroundColor !== 'rgba(0, 0, 0, 0)' ? cs.backgroundColor : 'var(--card-color, #fff)');
   g.style.setProperty('--guide-tail-border', parseFloat(cs.borderTopWidth) > 0 ? cs.borderTopColor : 'transparent');
@@ -47906,7 +47910,7 @@ function coachBringIntoView(el, { topPad = 96, bottomPad = 60 } = {}) {
     if (er.top >= viewTop + pt * 0.5 && er.bottom <= viewBottom - pb * 0.5) continue;
     let delta;
     if (er.height > avail - pt - pb) delta = er.top - (viewTop + pt);            // tall: show its top
-    else delta = (er.top + er.height / 2) - (viewTop + avail / 2);               // else centre it
+    else delta = (er.top + er.height / 2) - (viewTop + avail / 2);               // else center it
     const before = node.scrollTop;
     node.scrollTop = Math.max(0, Math.min(node.scrollHeight - node.clientHeight, before + delta));
     if (node.scrollTop !== before) moved = true;
@@ -50419,7 +50423,7 @@ function closeRhemaGrammarModal(e) {
 const RHEMA_SOURCE_TAG_HELP = {
   freegrace: {
     title: 'Free Grace reading',
-    label: 'A theological reading, labelled',
+    label: 'A theological reading, labeled',
     body: 'Where a word study takes a theological direction, Rhēma follows the Free Grace view. Notes marked <b>Free Grace reading</b> were written or reworded in that review. In brief, the Free Grace view holds that eternal life is a free gift received by faith alone, apart from works or perseverance; that repentance is a change of mind, not an added condition; that assurance rests on Christ’s promise; and that rewards, inheritance and discipleship are distinct from receiving eternal life, so many warnings to believers concern discipline or loss of reward. Other traditions (Reformed, Arminian, Lutheran, Catholic, Orthodox) read some of these passages differently. The measured English renderings and the lexicon entries are the same as for every other word.'
   },
   simple: {
@@ -50648,7 +50652,7 @@ function _rhemaEnsureHebIL() {
 const RHEMA_LOOSE_VERSIONS = new Set(['NLT', 'MSG', 'CEV', 'GNT', 'NIRV', 'T4T', 'FBV', 'ERV', 'ICB', 'TLB', 'NCV']);
 function _rhemaBridgeOpts(ver) { return { loose: RHEMA_LOOSE_VERSIONS.has(String(ver || '').toUpperCase()) }; }
 // Every English word the BSB uses for each Hebrew word across the Old
-// Testament (scripts/build-hebrew-renderings.py): lets the matcher recognise
+// Testament (scripts/build-hebrew-renderings.py): lets the matcher recognize
 // other versions' wording ("lives", "settled" for יָשַׁב). Loaded once.
 let _rhemaHebRend = null, _rhemaHebRendP = null;
 function _rhemaLoadHebRend() {
@@ -51774,7 +51778,7 @@ function _rhemaMeaningEvidenceHtml(decision = {}) {
 // dictionary form and a short gloss (CenterBLC LXX) and the Hebrew word it
 // translates there (MACULA Hebrew's alignment of the Hebrew with the LXX).
 // Built by scripts/build-lxx-words.py.
-const RHEMA_LXX_WORDS_VERSION = '1';
+const RHEMA_LXX_WORDS_VERSION = '3.0.592';
 const _rhemaLxxWordsData = new Map();   // book -> data
 const _rhemaLxxWordsLoading = new Map(); // book -> Promise
 function _rhemaLoadLxxWords(book) {
@@ -52344,11 +52348,11 @@ function toggleRhemaRangeMeaning(strongs, layer = getCurrentOriginalLanguageLaye
 // Strong's numbers each) fetched on demand, so the app never carries the
 // whole dataset: in-memory cache here, service-worker runtime cache offline.
 
-const DEEP_LEXICON_VERSION = '3.0.584';
+const DEEP_LEXICON_VERSION = '3.0.592';
 const _deepLexiconShards = new Map(); // shard lo-number → Promise<object|null>
 const _deepLexiconData = new Map();   // shard lo-number → resolved shard (sync access)
 
-const DEEP_HEBREW_LEXICON_VERSION = '3.0.579';
+const DEEP_HEBREW_LEXICON_VERSION = '3.0.592';
 const _deepHebrewShards = new Map();  // shardFile → Promise<object|null>
 const _deepHebrewData = new Map();    // shardFile → resolved shard (sync access)
 let _deepHebrewShardIndex = null;     // [{file, from, to}] loaded from index.json
@@ -53231,7 +53235,7 @@ function toggleRhemaBookViewEnglish() {
 
 // The English view needs the Berean word table (to find the exact English
 // words) and, for a downloaded version, its chapters. Chapters are fetched one
-// at a time so a single ~250-verse block covers its neighbours; each lands in
+// at a time so a single ~250-verse block covers its neighbors; each lands in
 // the device's permanent version store and the list redraws as it arrives.
 async function _rhemaBVPrepareEnglish() {
   const token = ++_rhemaBVFetchToken;
