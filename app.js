@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.589";
+const APP_VERSION = "3.0.590";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30590,6 +30590,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.590 &mdash; The guide naps in your study tools too</div>
+<ul>
+  <li><strong>Phrasing, Word Log, Trails, Workspace</strong> &mdash; The guide now sleeps against the page title in each study tool. Tap him for an &ldquo;ouch!&rdquo; and he takes you to the tours.</li>
+</ul>
 <div class="un-version-label">v3.0.589 &mdash; Reference bar back in place</div>
 <ul>
   <li><strong>No more gap</strong> &mdash; The book/chapter bar sits right under the Rhēma title again. The napping guide&rsquo;s update had pushed it down.</li>
@@ -44609,7 +44613,7 @@ async function openStudyTool(tool) {
   // arrows, so the panes now use the full vertical height.
   host.classList.remove('hidden');
   host.classList.add('tool-host');
-  requestAnimationFrame(() => requestAnimationFrame(() => host.classList.add('in')));
+  requestAnimationFrame(() => requestAnimationFrame(() => { host.classList.add('in'); _ssNapPlace(); }));
 }
 function closeStudyToolHost() {
   const host = document.getElementById('studySandbox');
@@ -46253,10 +46257,23 @@ function _rhemaNapDrowse() {
   _rhemaNapTimers.push(setTimeout(() => { _rhemaNapState = 'drowse-done'; rhemaNapSleep(); }, RHEMA_NAP.drowseMs));
 }
 // Tapped: the side menu's "ouch!" jolt, then the tours.
-function rhemaNapPoke() {
-  const g = _rhemaNapEl();
+function rhemaNapPoke(btn) {
+  const g = btn instanceof Element ? btn : _rhemaNapEl();
   if (!g || g._poking || g.classList.contains('rng-away')) return;
   g._poking = true;
+  // On a study tool page: "ouch!", then back to the reader with the tours open
+  // (the reader's menu sits underneath the tool pages).
+  if (g.id === 'ssNapGuide') {
+    const img = g.querySelector('.rng-ouch');
+    if (img && !img.getAttribute('src')) img.setAttribute('src', guidePoseSrc('ouch'));
+    g.classList.remove('rng-poked'); void g.offsetWidth; g.classList.add('rng-poked');
+    setTimeout(() => {
+      g._poking = false;
+      closeStudyToolHost();
+      setTimeout(() => { g.classList.remove('rng-poked'); openRhemaReaderPanel(); showReaderPanelSection('tours'); }, 300);
+    }, 460);
+    return;
+  }
   _rhemaNapTimers.forEach(clearTimeout);
   _rhemaNapTimers = [];
   const img = g.querySelector('.rng-ouch');
@@ -46320,6 +46337,25 @@ function _rhemaNapReturn(from, src) {
   const finish = () => { if (done) return; done = true; land(); fly.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' }); setTimeout(() => fly.remove(), 180); };
   anim.onfinish = finish;
   setTimeout(finish, 900);
+}
+
+// On a study tool page: asleep against the page title (no wake-ups there).
+function _ssNapPlace() {
+  const g = document.getElementById('ssNapGuide');
+  const title = document.getElementById('ssTitle');
+  const wrap = g?.parentElement;
+  if (!g || !title || !wrap || !title.offsetParent) { g?.classList.remove('placed'); return; }
+  if (!g._ro && typeof ResizeObserver !== 'undefined') { g._ro = new ResizeObserver(() => _ssNapPlace()); g._ro.observe(wrap); }
+  const wr = wrap.getBoundingClientRect();
+  const tr = title.getBoundingClientRect();
+  const h = g.offsetHeight || 40;
+  const w = g.offsetWidth || Math.round(h * 157 / 168);
+  const left = tr.right - wr.left - 4;
+  const top = tr.bottom - wr.top + 7 - h;
+  g.style.left = Math.round(left) + 'px';
+  g.style.top = Math.round(top) + 'px';
+  g.classList.toggle('no-room', left + w > wr.width + 2);
+  g.classList.add('placed');
 }
 
 // Sit just right of the title text, leaning on it; hide if the header
