@@ -1,10 +1,3 @@
-const RHEMA_XREF_CATEGORIES = [
-  { key: 'quoted', title: 'Quoted / Alluded Scripture', short: 'Quoted', icon: 'format_quote', desc: 'Passages this verse directly quotes, cites, or clearly echoes.' },
-  { key: 'direct', title: 'Direct Cross References', short: 'Direct', icon: 'menu_book', desc: 'Closely related passages — the same event, wording, or immediate context.' },
-  { key: 'otNt', title: 'Old & New Testament Links', short: 'OT/NT', icon: 'link', desc: 'Connections that bridge the Old and New Testaments.' },
-  { key: 'prophecy', title: 'Prophecy & Fulfillment', short: 'Prophecy', icon: 'workspace_premium', desc: 'A prophecy paired with the passage that fulfills it.' },
-  { key: 'themes', title: 'Thematic & Parallel Links', short: 'Themes', icon: 'hub', desc: 'Verses that share a theme, topic, or parallel idea.' }
-];
 
 let _rhemaXrefCursor = 0;
 let _rhemaXrefEnglishVersion = null;
@@ -35,103 +28,39 @@ function _xrefBookName(code) {
   return window.RhemaBookNames?.[code] || window.RhemaEnglishBooks?.find(b => b.code === code)?.name || window.RhemaNT?.names?.[code] || code;
 }
 
+// "JOH 3:16", "PSA 33:6-9", "GEN 1:31-2:3"
 function _xrefParseRef(ref) {
-  const m = String(ref || '').trim().match(/^([1-3]?[A-Z]{2,3})\s+(\d+):(\d+)(?:-(\d+))?$/);
+  const m = String(ref || '').trim().match(/^([1-3]?[A-Z]{2,3})\s+(\d+):(\d+)(?:-(?:(\d+):)?(\d+))?$/);
   if (!m) return null;
-  return { book: m[1], chapter: m[2], verse: m[3], endVerse: m[4] || null };
+  const out = { book: m[1], chapter: m[2], verse: m[3], endVerse: m[5] || null };
+  if (m[4] && m[4] !== m[2]) out.endChapter = m[4];
+  return out;
 }
 
 function _xrefKey(obj = _rhemaXrefActive) {
-  return `${obj.book} ${obj.chapter}:${obj.verse}${obj.endVerse ? '-' + obj.endVerse : ''}`;
+  return `${obj.book} ${obj.chapter}:${obj.verse}${obj.endVerse ? '-' + (obj.endChapter ? obj.endChapter + ':' : '') + obj.endVerse : ''}`;
 }
 
 function _xrefDisplay(ref) {
   const parsed = _xrefParseRef(ref);
   if (!parsed) return ref;
-  return `${_xrefBookName(parsed.book)} ${parsed.chapter}:${parsed.verse}${parsed.endVerse ? '-' + parsed.endVerse : ''}`;
+  const end = parsed.endVerse ? '-' + (parsed.endChapter ? parsed.endChapter + ':' : '') + parsed.endVerse : '';
+  return `${_xrefBookName(parsed.book)} ${parsed.chapter}:${parsed.verse}${end}`;
 }
 
 function _xrefEnglishText(refOrObj) {
   const p = typeof refOrObj === 'string' ? _xrefParseRef(refOrObj) : refOrObj;
   if (!p) return '';
-  const chapter = (_xrefEnglishData()?.[p.book] || {})[String(p.chapter)] || {};
-  const start = Number(p.verse);
-  const end = Number(p.endVerse || p.verse);
+  const data = _xrefEnglishData()?.[p.book] || {};
+  const c1 = Number(p.chapter), c2 = Number(p.endChapter || p.chapter);
   const verses = [];
-  for (let v = start; v <= end; v++) {
-    if (chapter[String(v)]) verses.push(chapter[String(v)]);
+  for (let c = c1; c <= c2; c++) {
+    const chapter = data[String(c)] || {};
+    const from = c === c1 ? Number(p.verse) : 1;
+    const to = c === c2 ? Number(p.endVerse || (c === c1 ? p.verse : 999)) : 999;
+    Object.keys(chapter).map(Number).sort((a, b) => a - b).forEach(v => { if (v >= from && v <= to) verses.push(chapter[String(v)]); });
   }
   return verses.join(' ');
-}
-
-// Source data labels (the "|N" suffix on each ref) and how they map to a single
-// display category. The raw buckets (d/t/o/p/f) overlap heavily — the generator
-// puts the same verses in "direct", "themes", and "parallel" with rotating
-// labels — so showing the buckets as-is makes every category look identical.
-// Instead we collapse to ONE category per verse, chosen by its strongest
-// relationship label, so each tab holds a distinct, trustworthy set.
-//   0 Immediate context · 1 Same book · 2 Related reference  -> direct
-//   3 NT connection      · 4 OT foundation                   -> otNt
-//   5 Prophecy connection                                    -> prophecy
-//   6 Parallel idea      · 7 Related theme                   -> themes
-function _xrefCategoryForLabels(labelSet) {
-  if (labelSet.has(5)) return { key: 'prophecy', label: 5 };
-  if (labelSet.has(4)) return { key: 'otNt', label: 4 };
-  if (labelSet.has(3)) return { key: 'otNt', label: 3 };
-  if (labelSet.has(7)) return { key: 'themes', label: 7 };
-  if (labelSet.has(6)) return { key: 'themes', label: 6 };
-  if (labelSet.has(0)) return { key: 'direct', label: 0 };
-  if (labelSet.has(1)) return { key: 'direct', label: 1 };
-  return { key: 'direct', label: 2 };
-}
-
-function _xrefCurrentData() {
-  const key = _xrefKey();
-  const raw = window.RhemaCrossRefs?.[key] || {};
-  // Rare pre-expanded/curated form: still enforce single-category membership.
-  if (raw.direct || raw.themes || raw.otNt || raw.parallel || raw.prophecy || raw.quoted) {
-    return _xrefApplyCuratedScriptureNotes(_xrefDedupeExpanded(raw), key);
-  }
-  const labels = window.RhemaCrossRefLabels || [];
-  // Gather every target verse once, unioning the labels it carries across buckets.
-  const seen = new Map(); // ref -> { ref, labels:Set<number>, order:number }
-  let order = 0;
-  const ingest = (arr) => (arr || []).forEach(value => {
-    const [ref, li] = String(value).split('|');
-    if (!ref) return;
-    let entry = seen.get(ref);
-    if (!entry) { entry = { ref, labels: new Set(), order: order++ }; seen.set(ref, entry); }
-    const idx = Number(li);
-    if (!Number.isNaN(idx)) entry.labels.add(idx);
-  });
-  ['d', 't', 'o', 'p', 'f'].forEach(k => ingest(raw[k]));
-  const cats = { quoted: [], direct: [], otNt: [], prophecy: [], themes: [] };
-  for (const entry of seen.values()) {
-    const pick = _xrefCategoryForLabels(entry.labels);
-    cats[pick.key].push({ ref: entry.ref, label: labels[pick.label] || 'Related reference', order: entry.order });
-  }
-  Object.values(cats).forEach(list => list.sort((a, b) => a.order - b.order));
-  return _xrefApplyCuratedScriptureNotes(cats, key);
-}
-
-// Enforce one-category membership for the (rare) pre-expanded data shape, so the
-// same ref never appears under two tabs. Higher-priority categories win, and any
-// leftover "parallel" data is folded into "themes".
-function _xrefDedupeExpanded(raw) {
-  const priority = ['quoted', 'prophecy', 'otNt', 'themes', 'direct', 'parallel'];
-  const claimed = new Set();
-  const out = {};
-  RHEMA_XREF_CATEGORIES.forEach(c => { out[c.key] = []; });
-  priority.forEach(catKey => {
-    const target = catKey === 'parallel' ? 'themes' : catKey;
-    (raw[catKey] || []).forEach(item => {
-      const ref = item && item.ref ? item.ref : null;
-      if (!ref || claimed.has(ref)) return;
-      claimed.add(ref);
-      (out[target] = out[target] || []).push(item);
-    });
-  });
-  return out;
 }
 
 function _xrefCuratedScriptureNotes(key) {
@@ -139,27 +68,6 @@ function _xrefCuratedScriptureNotes(key) {
     return window.getRhemaScriptureNotesForKey(key);
   }
   return [];
-}
-
-function _xrefApplyCuratedScriptureNotes(data, key) {
-  const curated = _xrefCuratedScriptureNotes(key);
-  if (!curated.length) return data;
-  const curatedRefs = new Set(curated.map(item => item.ref));
-  const next = {};
-  RHEMA_XREF_CATEGORIES.forEach(cat => { next[cat.key] = []; });
-  Object.entries(data || {}).forEach(([category, refs]) => {
-    next[category] = Array.isArray(refs) ? refs.filter(item => !curatedRefs.has(item.ref)) : [];
-  });
-  next.quoted = curated.map(item => ({
-    ref: item.ref,
-    label: item.label,
-    type: item.type
-  }));
-  return next;
-}
-
-function _xrefCategoryMeta(key) {
-  return RHEMA_XREF_CATEGORIES.find(c => c.key === key) || RHEMA_XREF_CATEGORIES[0];
 }
 
 function _xrefClip(text, max = 86) {
@@ -219,6 +127,7 @@ function _showRhemaXrefShell(view) {
 }
 
 function _closeRhemaXrefShell() {
+  document.getElementById('rxCompareSheet')?.remove();
   document.getElementById('rhemaXrefPage')?.classList.add('hidden');
   document.getElementById('rhemaXrefSelectPage')?.classList.add('hidden');
   document.getElementById('rhemaXrefInfoModal')?.classList.add('hidden');
@@ -332,18 +241,151 @@ function _renderXrefBreadcrumb() {
   });
 }
 
-// The cross-reference data (11 MB) loads the first time this screen is used,
-// not with the reader. Until it's in, show a loading line, then draw `again`.
-function _xrefWaitForData(body, again) {
-  if (window.RhemaCrossRefs || typeof _rhemaLoadDataFile !== 'function') return false;
-  const key = _xrefKey();
-  body.innerHTML = _xrefTopCardHtml() + '<div class="rx-loading" style="padding:18px 4px;opacity:.65;font-size:.9rem">Loading cross references…</div>';
-  _rhemaLoadDataFile('rhema-crossrefs.js').then(() => {
-    if (_xrefKey() === key) again();
-  }).catch(() => {
-    if (_xrefKey() === key) body.innerHTML = _xrefTopCardHtml() + '<div class="rx-loading" style="padding:18px 4px;opacity:.65;font-size:.9rem">Couldn’t load cross references. Check your connection and try again.</div>';
+// ── Cross references ─────────────────────────────────────────────────────────
+// data/xrefs/<BOOK>.json (scripts/build-crossrefs-v2.js): OpenBible.info's
+// links (CC BY), ranked by readers' votes, each with the reason it's there —
+// found from the Greek and Hebrew texts, never guessed:
+//   q/Q quotes · f/F fulfillment (the NT says so) · e/E echoes the wording ·
+//   p parallel account · s similar wording · w same uncommon word · '' related.
+const RHEMA_XREFS_VERSION = '3.0.591';
+const RX_FILTERS = [
+  { key: 'best', label: 'Best' },
+  { key: 'quotes', label: 'Quotes', kinds: 'qQfFn' },
+  { key: 'parallels', label: 'Parallels', kinds: 'ps' },
+  { key: 'echoes', label: 'Echoes', kinds: 'eE' },
+  { key: 'words', label: 'Same word', kinds: 'w' },
+  { key: 'all', label: 'All' }
+];
+const RX_KIND = {
+  f: { icon: 'verified', label: 'Fulfillment', cls: 'q' },
+  F: { icon: 'verified', label: 'Fulfillment', cls: 'q' },
+  q: { icon: 'format_quote', label: 'Quote', cls: 'q' },
+  Q: { icon: 'format_quote', label: 'Quote', cls: 'q' },
+  n: { icon: 'sticky_note_2', label: 'Footnote', cls: 'q' },
+  p: { icon: 'compare_arrows', label: 'Parallel', cls: 'p' },
+  s: { icon: 'compare_arrows', label: 'Similar', cls: 'p' },
+  e: { icon: 'graphic_eq', label: 'Echo', cls: 'e' },
+  E: { icon: 'graphic_eq', label: 'Echo', cls: 'e' },
+  w: { icon: 'translate', label: 'Same word', cls: 'w' },
+  '': { icon: 'link', label: 'Related', cls: 'r' }
+};
+// Old saved trails stored a category; map it to a filter.
+const RX_OLD_CATEGORY = { quoted: 'quotes', prophecy: 'quotes', direct: 'best', otNt: 'best', themes: 'all', parallel: 'parallels' };
+const RX_PAGE = 15;
+let _rxShown = RX_PAGE;
+let _rxRowsCache = { key: '', rows: [] };
+const _rxShards = new Map();     // book → loading promise
+const _rxShardData = new Map();  // book → loaded shard
+
+function _rxFilter() {
+  const f = _rhemaXrefCategory;
+  return RX_FILTERS.some(x => x.key === f) ? f : (RX_OLD_CATEGORY[f] || 'best');
+}
+function _rxLoadBook(book) {
+  if (!_rxShards.has(book)) {
+    _rxShards.set(book, fetch(`data/xrefs/${book}.json?v=${RHEMA_XREFS_VERSION}`)
+      .then(r => { if (!r.ok) throw new Error('xrefs ' + r.status); return r.json(); })
+      .then(j => { _rxShardData.set(book, j); return j; })
+      .catch(e => { _rxShards.delete(book); throw e; }));
+  }
+  return _rxShards.get(book);
+}
+function _rxShardNow(book) { return _rxShardData.get(book); }
+// The links for the active verse, ranked: fulfilments, quotes and parallels
+// first, then everything else by readers' votes.
+function _rxRows(key = _xrefKey()) {
+  if (_rxRowsCache.key === key) return _rxRowsCache.rows;
+  const p = _xrefParseRef(key);
+  const shard = p && _rxShardNow(p.book);
+  if (!shard) return null;
+  const raw = shard.v?.[`${p.chapter}:${p.verse}`] || [];
+  const rows = raw.map(([ref, votes, kind = '', info = null]) => ({ ref, votes: votes || 0, kind, info, word: kind === 'w' ? shard.w?.[info] : null }));
+  // Official footnote citations (MSB/BSB): add them, or mark the matching link.
+  const seen = new Map(rows.map(r => [r.ref, r]));
+  const inRange = (range, ref) => {
+    const a = _xrefParseRef(range), b = _xrefParseRef(ref);
+    if (!a || !b || a.book !== b.book || !a.endVerse) return false;
+    const at = (c, v) => Number(c) * 1000 + Number(v);
+    const x = at(b.chapter, b.verse);
+    return x >= at(a.chapter, a.verse) && x <= at(a.endChapter || a.chapter, a.endVerse);
+  };
+  _xrefCuratedScriptureNotes(key).forEach(n => {
+    const hit = seen.get(n.ref) || rows.find(r => inRange(r.ref, n.ref));
+    if (hit) hit.footnote = true;
+    else rows.push({ ref: n.ref, votes: 0, kind: 'n', info: null, footnote: true });
   });
-  return true;
+  const top = r => (/[fFqQnp]/.test(r.kind) || r.footnote) ? 1 : 0;
+  rows.sort((a, b) => top(b) - top(a) || b.votes - a.votes);
+  _rxRowsCache = { key, rows };
+  return rows;
+}
+function _rxFiltered(rows, filter = _rxFilter()) {
+  const f = RX_FILTERS.find(x => x.key === filter);
+  if (!f || !f.kinds) return filter === 'best' ? rows.slice(0, 12) : rows;
+  return rows.filter(r => (r.kind && f.kinds.includes(r.kind)) || (filter === 'quotes' && r.footnote));
+}
+
+// Words two verses share, for highlighting (English, ignoring the small words).
+const RX_STOP = new Set('the a an and or but of to in on at by for with from as is are was were be been being it its he him his she her they them their we us our you your i me my mine this that these those who whom which what not no nor so then than there here when will shall would should may might can could do does did have has had all any every one into upon out up down over under also even just let like say said says unto said'.split(' '));
+function _rxStem(w) {
+  let s = w.toLowerCase().replace(/[’']s$/, '').replace(/[^a-z]/g, '');
+  if (s.length > 4) s = s.replace(/(ing|ed|es|s)$/, '');
+  return s;
+}
+function _rxWordSet(text) {
+  return new Set(String(text || '').split(/\s+/).map(_rxStem).filter(s => s.length > 2 && !RX_STOP.has(s)));
+}
+function _rxHighlight(text, against) {
+  const set = against instanceof Set ? against : _rxWordSet(against);
+  return String(text || '').split(/(\s+)/).map(tok => {
+    const s = _rxStem(tok);
+    const safe = _xrefEscape(tok);
+    return s.length > 2 && !RX_STOP.has(s) && set.has(s) ? `<mark class="rx-hl">${safe}</mark>` : safe;
+  }).join('');
+}
+
+function _rxBookOf(ref) { return _xrefBookName(String(ref).split(' ')[0]); }
+// Why this link is here, in plain words.
+function _rxWhy(row, src) {
+  const why = _rxWhyBase(row, src);
+  return row.footnote && row.kind && row.kind !== 'n' ? `${why} · cited in the ${_xrefEnglishLabel()} footnotes` : why;
+}
+function _rxWhyBase(row, src) {
+  const n = row.info ? ` · ${row.info} words alike in the Greek` : '';
+  switch (row.kind) {
+    case 'f': return `${_xrefDisplay(src)} quotes this and says it was fulfilled${n}`;
+    case 'F': return `Quotes this verse and says it was fulfilled${n}`;
+    case 'q': return `${_xrefDisplay(src)} quotes this${n}`;
+    case 'Q': return `Quotes this verse${n}`;
+    case 'e': case 'E': return `Same wording, without a quote formula${n}`;
+    case 'p': return _rxBookOf(row.ref) === _rxBookOf(src) ? 'A parallel passage' : `A parallel passage in ${_rxBookOf(row.ref)}`;
+    case 's': return 'Very similar wording';
+    case 'w': return row.word ? `Both use ${row.word[0]}${row.word[1] ? ` “${row.word[1]}”` : ''}` : 'Both use the same uncommon word';
+    case 'n': return `Cited in the ${_xrefEnglishLabel()} footnotes`;
+    default: return row.footnote ? `Cited in the ${_xrefEnglishLabel()} footnotes` : 'Linked by readers';
+  }
+}
+
+function _rxCardHtml(row, i, srcSet) {
+  const k = RX_KIND[row.kind] || RX_KIND[''];
+  const ref = row.ref;
+  const esc = _xrefEscape;
+  const js = String(ref).replace(/'/g, "\\'");
+  const text = _xrefRefText(ref);
+  const hl = /[qQfFeEpsn]/.test(row.kind) ? _rxHighlight(text, srcSet) : esc(text);
+  return `<article class="rx-link rx-k-${k.cls}">
+    <button type="button" class="rx-link-main" onclick="rhemaXrefFollow('${js}')">
+      <span class="rx-link-top"><strong>${esc(_xrefDisplay(ref))}</strong><span class="rx-kind"><span class="material-symbols-outlined">${k.icon}</span>${k.label}</span></span>
+      <span class="rx-link-text" data-xref-ref="${esc(ref)}">${hl}</span>
+      <span class="rx-link-why">${esc(_rxWhy(row, _xrefKey()))}</span>
+    </button>
+    <div class="rx-link-actions">
+      <button type="button" onclick="rxCompare(${i})"><span class="material-symbols-outlined">splitscreen</span>Compare</button>
+      <button type="button" onclick="rxOpenInReader('${js}')"><span class="material-symbols-outlined">menu_book</span>Read</button>
+      <button type="button" onclick="rhemaXrefFollow('${js}')"><span class="material-symbols-outlined">alt_route</span>Its links</button>
+      ${row.votes > 0 ? `<span class="rx-votes" title="Readers who voted for this link on OpenBible.info">${row.votes.toLocaleString()} ${row.votes === 1 ? 'vote' : 'votes'}</span>` : ''}
+    </div>
+  </article>`;
 }
 
 function renderRhemaCrossReferences() {
@@ -354,75 +396,109 @@ function renderRhemaCrossReferences() {
   _renderXrefBreadcrumb();
   const body = document.getElementById('rxMainView');
   if (!body) return;
-  if (_xrefWaitForData(body, () => { if (_rhemaXrefView === 'main') renderRhemaCrossReferences(); })) return;
-  const data = _xrefCurrentData();
-  const allRefs = [];
-  body.innerHTML = _xrefTopCardHtml() + `<div class="rx-category-list">${RHEMA_XREF_CATEGORIES.map(cat => {
-    const refs = data[cat.key] || [];
-    const isEmpty = refs.length === 0;
-    if (!isEmpty) refs.forEach(item => allRefs.push(item.ref));
-    const preview = !isEmpty ? refs.slice(0, 2).map(item => {
-      allRefs.push(item.ref);
-      return `<div class="rx-preview-line"><strong>${_xrefEscape(_xrefDisplay(item.ref))}</strong><span data-xref-ref="${_xrefEscape(item.ref)}" data-xref-clip="1">${_xrefEscape(_xrefClip(_xrefRefText(item.ref)))}</span></div>`;
-    }).join('') : '';
-    const chips = cat.key === 'themes' && !isEmpty ? refs.slice(0, 5).map(item => `<span>${_xrefEscape(item.label)}</span>`).join('') : '';
-    return `<button class="rx-category-card${isEmpty ? ' rx-no-data' : ''}" data-xref-cat="${cat.key}" onclick="openRhemaXrefCategory('${cat.key}')">
-      <span class="rx-category-icon"><span class="material-symbols-outlined">${cat.icon}</span></span>
-      <span class="rx-category-copy">
-        <span class="rx-category-title">${cat.title} <em>${isEmpty ? '—' : refs.length}</em></span>
-        <span class="rx-category-desc">${cat.desc}</span>
-        ${isEmpty ? '' : chips ? `<span class="rx-chip-row">${chips}</span>` : preview}
-      </span>
-      <span class="material-symbols-outlined rx-card-arrow">${isEmpty ? 'block' : 'chevron_right'}</span>
-    </button>`;
-  }).join('')}</div>`;
-  _xrefLoadAsyncVerseTexts([_xrefKey(_rhemaXrefActive), ...allRefs]);
-}
-
-function openRhemaXrefCategory(key) {
-  const refs = _xrefCurrentData()[key] || [];
-  if (!refs.length) {
-    const card = document.querySelector(`[data-xref-cat="${key}"]`);
-    if (card) {
-      card.classList.remove('rx-shaking');
-      void card.offsetWidth;
-      card.classList.add('rx-shaking');
-      setTimeout(() => card.classList.remove('rx-shaking'), 400);
-    }
+  const key = _xrefKey();
+  const book = _rhemaXrefActive.book;
+  const rows = _rxRows(key);
+  if (!rows) {
+    body.innerHTML = _xrefTopCardHtml() + '<div class="rx-loading">Loading cross references…</div>';
+    _rxLoadBook(book).then(() => {
+      if (_xrefKey() === key && _rhemaXrefView === 'main') renderRhemaCrossReferences();
+    }).catch(() => {
+      if (_xrefKey() === key) body.innerHTML = _xrefTopCardHtml() + '<div class="rx-loading">Couldn’t load cross references. Check your connection and try again.</div>';
+    });
     return;
   }
-  _rhemaXrefCategory = key;
-  _rhemaXrefView = 'trail';
-  renderRhemaXrefTrail();
+  const filter = _rxFilter();
+  const counts = Object.fromEntries(RX_FILTERS.map(f => [f.key, f.key === 'best' ? Math.min(12, rows.length) : _rxFiltered(rows, f.key).length]));
+  const chips = RX_FILTERS.filter(f => f.key === 'best' || f.key === 'all' || counts[f.key]).map(f =>
+    `<button type="button" role="tab" aria-selected="${f.key === filter}" class="rx-chip${f.key === filter ? ' on' : ''}" onclick="rxSetFilter('${f.key}')">${f.label}${f.key === 'best' ? '' : `<span>${counts[f.key]}</span>`}</button>`).join('');
+  const list = _rxFiltered(rows, filter);
+  const shown = list.slice(0, filter === 'best' ? 12 : _rxShown);
+  const srcSet = _rxWordSet(_xrefTopCardText());
+  const cards = shown.map(r => _rxCardHtml(r, rows.indexOf(r), srcSet)).join('');
+  const more = list.length > shown.length
+    ? `<button type="button" class="rx-more" onclick="rxShowMore()">Show ${Math.min(RX_PAGE, list.length - shown.length)} more <span>of ${list.length - shown.length}</span></button>`
+    : filter === 'best' && rows.length > shown.length
+      ? `<button type="button" class="rx-more" onclick="rxSetFilter('all')">See all ${rows.length} links</button>` : '';
+  const inStudy = typeof _rhemaStudyId === 'function' ? _rhemaStudyId() : _studySandboxId;
+  const save = inStudy && rows.length ? `<button class="rx-save-trail-btn" onclick="saveCurrentRhemaTrail()"><span class="material-symbols-outlined">bookmark</span>Save trail</button>` : '';
+  body.innerHTML = _xrefTopCardHtml() +
+    (rows.length ? `<div class="rx-filters" role="tablist" aria-label="Kinds of link">${chips}</div>` : '') +
+    `<div class="rx-links">${cards || `<p class="rx-empty">${rows.length ? 'None of this kind for this verse.' : 'No cross references for this verse yet.'}</p>`}</div>` +
+    more + save +
+    `<p class="rx-credit">Links from OpenBible.info (CC BY), ranked by readers’ votes. Quotes, parallels and shared words are found by comparing the Greek and Hebrew texts. <button type="button" onclick="openRhemaCrossRefInfo()">How this works</button></p>`;
+  _xrefLoadAsyncVerseTexts([key, ...shown.map(r => r.ref)]);
 }
+function rxSetFilter(key) {
+  _rhemaXrefCategory = key === 'best' ? null : key;
+  _rxShown = RX_PAGE;
+  renderRhemaCrossReferences();
+  document.querySelector('#rxMainView .rx-filters')?.scrollIntoView({ block: 'nearest' });
+}
+function rxShowMore() {
+  const y = document.getElementById('rxMainView')?.scrollTop;
+  _rxShown += RX_PAGE;
+  renderRhemaCrossReferences();
+  const body = document.getElementById('rxMainView');
+  if (body && y != null) body.scrollTop = y;
+}
+// Old entry points: a "category" is now a filter on the same screen.
+function openRhemaXrefCategory(key) { rxSetFilter(RX_OLD_CATEGORY[key] || key); }
+function renderRhemaXrefTrail() { renderRhemaCrossReferences(); }
 
-function renderRhemaXrefTrail() {
-  const cat = _xrefCategoryMeta(_rhemaXrefCategory);
-  const title = document.getElementById('rxPageTitle');
-  if (title) title.textContent = cat.title;
-  _showRhemaXrefShell('main');
-  _renderXrefBreadcrumb();
-  const trailBody = document.getElementById('rxMainView');
-  if (trailBody && _xrefWaitForData(trailBody, () => { if (_rhemaXrefCategory === cat.key) renderRhemaXrefTrail(); })) return;
-  const refs = (_xrefCurrentData()[cat.key] || []);
-  const cards = refs.map(item => `<button class="rx-verse-card" onclick="rhemaXrefFollow('${item.ref.replace(/'/g, "\\'")}')">
-    <span class="rx-verse-copy">
-      <strong>${_xrefEscape(_xrefDisplay(item.ref))}</strong>
-      <span data-xref-ref="${_xrefEscape(item.ref)}">${_xrefEscape(_xrefRefText(item.ref))}</span>
-      <em>${_xrefEscape(item.label)}</em>
-    </span>
-    <span class="rx-arrow-btn material-symbols-outlined">arrow_forward</span>
-  </button>`).join('');
-  const save = (typeof _rhemaStudyId === 'function' ? _rhemaStudyId() : _studySandboxId) ? `<button class="rx-save-trail-btn" onclick="saveCurrentRhemaTrail()"><span class="material-symbols-outlined">bookmark</span>Save Trail</button>` : '';
-  document.getElementById('rxMainView').innerHTML = _xrefTopCardHtml() +
-    `<div class="rx-active-category" data-xref-cat="${cat.key}"><span class="rx-category-icon"><span class="material-symbols-outlined">${cat.icon}</span></span><div><strong>${cat.title} <em>${refs.length}</em></strong><p>${cat.desc}</p></div></div>` +
-    `<div class="rx-verse-stack">${cards || '<p class="rx-empty">No starter links are loaded for this verse yet.</p>'}</div>${save}`;
-  _xrefLoadAsyncVerseTexts([_xrefKey(_rhemaXrefActive), ...refs.map(r => r.ref)]);
+// Side by side: the verse you're on and the linked one, shared words marked.
+function rxCompare(i) {
+  const rows = _rxRows() || [];
+  const row = rows[i];
+  if (!row) return;
+  const src = _xrefKey();
+  const esc = _xrefEscape;
+  const a = _xrefTopCardText();
+  const b = _xrefRefText(row.ref);
+  const k = RX_KIND[row.kind] || RX_KIND[''];
+  const js = String(row.ref).replace(/'/g, "\\'");
+  document.getElementById('rxCompareSheet')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'rxCompareSheet';
+  ov.className = 'rx-compare-ov';
+  ov.addEventListener('click', e => { if (e.target === ov) rxCloseCompare(); });
+  ov.innerHTML = `<div class="rx-compare" role="dialog" aria-label="Compare verses">
+    <div class="rx-compare-hd"><strong>Compare</strong><button type="button" class="rx-icon-btn" onclick="rxCloseCompare()" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+    <div class="rx-compare-v"><span>${esc(_xrefDisplay(src))}</span><p>${_rxHighlight(a, b)}</p></div>
+    <div class="rx-compare-why rx-k-${k.cls}"><span class="material-symbols-outlined">${k.icon}</span>${esc(_rxWhy(row, src))}</div>
+    <div class="rx-compare-v"><span>${esc(_xrefDisplay(row.ref))}</span><p>${_rxHighlight(b, a)}</p></div>
+    <p class="rx-compare-note">Highlighted: words the two verses share in the ${esc(_xrefEnglishLabel())}.</p>
+    <div class="rx-compare-actions">
+      <button type="button" onclick="rxCloseCompare();rhemaXrefFollow('${js}')"><span class="material-symbols-outlined">alt_route</span>Its links</button>
+      <button type="button" class="primary" onclick="rxCloseCompare();rxOpenInReader('${js}')"><span class="material-symbols-outlined">menu_book</span>Read it</button>
+    </div>
+  </div>`;
+  document.getElementById('rhemaXrefPage')?.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('open'));
+}
+function rxCloseCompare() {
+  const ov = document.getElementById('rxCompareSheet');
+  if (!ov) return;
+  ov.classList.remove('open');
+  setTimeout(() => ov.remove(), 220);
+}
+// Go read the linked verse in the reader.
+function rxOpenInReader(ref) {
+  const p = _xrefParseRef(ref);
+  if (!p) return;
+  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
+  if (inVsCtx) { rhemaXrefFollow(ref); return; }
+  rxCloseCompare();
+  _closeRhemaXrefShell();
+  if (typeof jumpToRhemaVerse === 'function') jumpToRhemaVerse(p.book, p.chapter, p.verse);
 }
 
 function rhemaXrefFollow(ref) {
-  const parsed = _xrefParseRef(ref);
-  if (!parsed) return;
+  const full = _xrefParseRef(ref);
+  if (!full) return;
+  const parsed = { book: full.book, chapter: full.chapter, verse: full.verse };
+  rxCloseCompare();
+  _rxShown = RX_PAGE;
   _rhemaXrefActive = parsed;
   _rhemaBook = parsed.book;
   _rhemaChapter = parsed.chapter;
@@ -449,11 +525,11 @@ function openRhemaXrefTrailFromReader(sourceRef, targetRef = null, category = nu
   _rhemaXrefBreadcrumb = [_xrefKey(source)];
   if (target) _rhemaXrefBreadcrumb.push(_xrefKey(target));
   _rhemaXrefCursor = _rhemaXrefBreadcrumb.length - 1;
-  _rhemaXrefCategory = !target && category ? category : null;
-  _rhemaXrefView = _rhemaXrefCategory ? 'trail' : 'main';
+  _rhemaXrefCategory = !target && category ? (RX_OLD_CATEGORY[category] || category) : null;
+  _rhemaXrefView = 'main';
+  _rxShown = RX_PAGE;
   if (typeof syncRhemaPicker === 'function') syncRhemaPicker();
-  if (_rhemaXrefCategory) renderRhemaXrefTrail();
-  else renderRhemaCrossReferences();
+  renderRhemaCrossReferences();
 }
 
 function rhemaXrefJumpBreadcrumb(idx) {
@@ -481,7 +557,8 @@ function rhemaCrossRefBack() {
     rhemaXrefJumpBreadcrumb(_rhemaXrefCursor - 1);
     return;
   }
-  if (_rhemaXrefView === 'trail') {
+  if (document.getElementById('rxCompareSheet')) { rxCloseCompare(); return; }
+  if (_rhemaXrefCategory) {
     _rhemaXrefCategory = null;
     renderRhemaCrossReferences();
     return;
@@ -503,7 +580,7 @@ function openRhemaCrossRefSelect() {
 
 function closeRhemaCrossRefSelect() {
   _showRhemaXrefShell('main');
-  _rhemaXrefView = _rhemaXrefCategory ? 'trail' : 'main';
+  _rhemaXrefView = 'main';
 }
 
 function renderRhemaXrefSelect() {
@@ -625,16 +702,16 @@ function rxTrailSaveDismiss() {
 }
 
 async function saveCurrentRhemaTrail() {
-  if (!_rhemaXrefCategory) return;
   const uid = window.Auth?.getCurrentUser()?.uid;
   const studyId = uid ? await _rhemaRequireStudy() : null;
   if (!uid || !studyId) return;
-  const cat = _xrefCategoryMeta(_rhemaXrefCategory);
-  const refs = (_xrefCurrentData()[_rhemaXrefCategory] || []).map(item => ({
-    reference: _xrefDisplay(item.ref),
-    rawRef: item.ref,
-    label: item.label,
-    text: _xrefEnglishText(item.ref),
+  const filter = _rxFilter();
+  const label = RX_FILTERS.find(f => f.key === filter)?.label || 'Best';
+  const refs = _rxFiltered(_rxRows() || [], filter).map(row => ({
+    reference: _xrefDisplay(row.ref),
+    rawRef: row.ref,
+    label: _rxWhy(row, _xrefKey()),
+    text: _xrefEnglishText(row.ref),
     translation: _xrefEnglishLabel()
   }));
   const defaultTitle = `${_xrefDisplay(_rhemaXrefBreadcrumb[0])} Trail`;
@@ -645,8 +722,8 @@ async function saveCurrentRhemaTrail() {
     startVerse: _xrefDisplay(_rhemaXrefBreadcrumb[0]),
     currentVerse: _xrefDisplay(_xrefKey()),
     activeRef: _xrefKey(),
-    categoryKey: _rhemaXrefCategory,
-    categoryPath: cat.title,
+    categoryKey: filter,
+    categoryPath: `Cross references · ${label}`,
     translation: _xrefEnglishLabel(),
     breadcrumbTrail: _rhemaXrefBreadcrumb.map(_xrefDisplay),
     rawBreadcrumbTrail: [..._rhemaXrefBreadcrumb],
@@ -666,11 +743,12 @@ function openSavedRhemaTrail(trailId) {
   _rhemaXrefBreadcrumb = (trail.rawBreadcrumbTrail || [trail.activeRef]).filter(Boolean);
   const _restoredCursorIdx = trail.activeRef ? _rhemaXrefBreadcrumb.lastIndexOf(trail.activeRef) : -1;
   _rhemaXrefCursor = _restoredCursorIdx >= 0 ? _restoredCursorIdx : _rhemaXrefBreadcrumb.length - 1;
-  _rhemaXrefCategory = trail.categoryKey || 'direct';
+  const savedFilter = RX_OLD_CATEGORY[trail.categoryKey] || trail.categoryKey;
+  _rhemaXrefCategory = savedFilter && savedFilter !== 'best' ? savedFilter : null;
   _rhemaBook = active.book;
   _rhemaChapter = active.chapter;
   _rhemaVerse = active.verse;
-  _rhemaXrefView = 'trail';
+  _rhemaXrefView = 'main';
   // The reader's own study: the reader is already open behind the Trails tool.
   if (!_studySandboxId && document.getElementById('rhemaModal')?.classList.contains('open')) {
     if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost();
@@ -743,5 +821,10 @@ Object.assign(window, {
   closeRxBookPicker,
   rxFilterBooks,
   rxTrailSaveConfirm,
-  rxTrailSaveDismiss
+  rxTrailSaveDismiss,
+  rxSetFilter,
+  rxShowMore,
+  rxCompare,
+  rxCloseCompare,
+  rxOpenInReader
 });

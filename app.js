@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.590";
+const APP_VERSION = "3.0.591";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30584,12 +30584,18 @@ const RHEMA_DATA_VERSIONS = {
   'rhema-msb.js':       '3.0.65',
   'rhema-bsb.js':       '3.0.65',
   'rhema-syntax.js':    '3.0.65',
-  'rhema-crossrefs.js': '3.0.65',
   'rhema-scripture-notes.js': '3.0.160',
   'rhema-bible-dictionary.js': '3.0.385',
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.591 &mdash; Cross references, rebuilt</div>
+<ul>
+  <li><strong>Better links, best first</strong> &mdash; Cross references now come from OpenBible.info&rsquo;s 340,000 reader-voted links, so the strongest connections lead (John 3:16 starts with Romans 5:8, 1 John 4:9 and John 3:36), and none get cut off any more.</li>
+  <li><strong>Every link says why</strong> &mdash; Quote, Fulfillment (where the New Testament says so), Echo, Parallel passage, or the Greek or Hebrew word both verses share, found by comparing the original texts, never guessed. The old &ldquo;prophecy&rdquo; group that labelled any Psalm-to-Gospel link a prophecy is gone.</li>
+  <li><strong>Compare</strong> &mdash; Put the two verses side by side with their shared words highlighted, then read it or follow its links.</li>
+  <li><strong>Simpler screen</strong> &mdash; One list with quick filters (Quotes, Parallels, Echoes, Same word, All) instead of five buttons to dig through. Loads only the book you&rsquo;re in.</li>
+</ul>
 <div class="un-version-label">v3.0.590 &mdash; The guide naps in your study tools too</div>
 <ul>
   <li><strong>Phrasing, Word Log, Trails, Workspace</strong> &mdash; The guide now sleeps against the page title in each study tool. Tap him for an &ldquo;ouch!&rdquo; and he takes you to the tours.</li>
@@ -43588,41 +43594,6 @@ function _rhemaCuratedScriptureNotesForKey(key) {
 
 window.getRhemaScriptureNotesForKey = _rhemaCuratedScriptureNotesForKey;
 
-function _rhemaExpandedCrossRefsForKey(key) {
-  const raw = window.RhemaCrossRefs?.[key] || {};
-  const labels = window.RhemaCrossRefLabels || [];
-  const curated = _rhemaCuratedScriptureNotesForKey(key);
-  const curatedRefs = new Set(curated.map(item => item.ref));
-  const maps = [
-    ['d', 'direct', 'Direct Cross References', 'menu_book'],
-    ['t', 'themes', 'Themes', 'hub'],
-    ['o', 'otNt', 'OT/NT Connections', 'link'],
-    ['p', 'parallel', 'Parallel Ideas', 'sync_alt'],
-    ['f', 'prophecy', 'Prophecy', 'workspace_premium']
-  ];
-  const groups = maps.map(([shortKey, keyName, title, icon]) => ({
-    key: keyName,
-    title,
-    icon,
-    refs: (raw[shortKey] || []).map(value => {
-      const [ref, labelIndex] = String(value).split('|');
-      return { ref, label: labels[Number(labelIndex)] || 'Related reference' };
-    }).filter(item => !curatedRefs.has(item.ref))
-  })).filter(group => group.refs.length);
-  if (curated.length) {
-    groups.unshift({
-      key: 'quoted',
-      title: 'Quoted / Alluded Scripture',
-      icon: 'format_quote',
-      refs: curated.map(item => ({
-        ref: item.ref,
-        label: item.label,
-        type: item.type
-      }))
-    });
-  }
-  return groups;
-}
 
 function _rhemaInlineNoteHtml(book, chapter, verse) {
   const key = _rhemaXrefKeyForVerse(book, chapter, verse);
@@ -44109,7 +44080,7 @@ function _rhemaDataGlobalReady(file) {
     'rhema-msb.js': 'RhemaMSB', 'rhema-bsb.js': 'RhemaBSB',
     'rhema-lexicon.js': 'RhemaLexicon', 'rhema-mm.js': 'RhemaMoultonMilligan',
     'rhema-hebrew-lexicon.js': 'RhemaHebrewLexicon', 'rhema-hebrew-bdb.js': 'RhemaHebrewBDB',
-    'rhema-crossrefs.js': 'RhemaCrossRefs', 'rhema-scripture-notes.js': 'RhemaScriptureNotes',
+    'rhema-scripture-notes.js': 'RhemaScriptureNotes',
     'rhema-critical-fallbacks.js': 'RhemaCriticalFallbacks', 'rhema-critical-extra.js': 'RhemaCriticalExtra',
   }[file];
   return !!(g && window[g]);
@@ -48080,7 +48051,7 @@ function _coachFirst(selectors) {
 
 let _appCoachSteps = [];
 // Rhēma's guide narrates Rhēma's own tours only.
-const _RHEMA_GUIDE_TOURS = new Set(['studyToolsCoachSeenV3537', 'crossRefCoachSeenV275', 'wordLibraryCoachSeenV275', 'verseCoachSeenV3539', 'readingToolsCoachSeenV3539']);
+const _RHEMA_GUIDE_TOURS = new Set(['studyToolsCoachSeenV3537', 'crossRefCoachSeenV3591', 'wordLibraryCoachSeenV275', 'verseCoachSeenV3539', 'readingToolsCoachSeenV3539']);
 let _appCoachOnEnd = null;   // cleanup for a tour (e.g. close the verse menu)
 function _appCoachHasGuide() { return _RHEMA_GUIDE_TOURS.has(_appCoachSeenKey); }
 let _appCoachIdx = 0;
@@ -48166,9 +48137,10 @@ const STUDY_RHEMA_COACH_STEPS = [
 
 const XREF_COACH_STEPS = [
   { target: () => _coachFirst(['.rx-top-card', '#rxMainView']), title: 'Your starting verse', body: 'This card is the verse you’re exploring. Tap it to pick a different one.' },
-  { target: () => _coachFirst(['.rx-category-card', '#rxMainView']), pose: 'inspect', title: 'Groups of connections', body: 'Linked verses are sorted into groups: Scripture it quotes, direct links, Old and New Testament links, prophecy and fulfillment, and shared themes.' },
-  { target: () => _coachFirst(['.rx-category-card .rx-mini-list', '.rx-category-card']), title: 'A peek, then the full list', body: 'Each group shows a few verses. Tap it to see them all.' },
-  { target: () => _coachFirst(['.rx-breadcrumb', '.rx-page-header']), title: 'Follow the trail', body: 'Tap any linked verse to jump to it and see its own connections. The trail at the top remembers every stop, so you can hop back.' },
+  { target: () => _coachFirst(['.rx-filters', '#rxMainView']), pose: 'inspect', title: 'The best links first', body: 'Links are ranked by how many readers confirmed them. Narrow them down: Quotes, Parallels (the same account elsewhere), Echoes, or Same word.' },
+  { target: () => _coachFirst(['.rx-link .rx-link-why', '.rx-link', '#rxMainView']), title: 'Why it’s linked', body: 'Each link says why it’s there: a quote, a fulfillment the New Testament names, the same account in another book, or an uncommon Greek or Hebrew word both verses use. Shared words are highlighted.' },
+  { target: () => _coachFirst(['.rx-link-actions', '.rx-link']), title: 'Compare, read, or keep going', body: 'Compare puts the two verses side by side. Read opens it in the Bible. Its links (or tapping the card) follows the trail to that verse’s own links.' },
+  { target: () => _coachFirst(['.rx-breadcrumb', '.rx-page-header']), title: 'Your trail', body: 'Every stop is remembered at the top, so you can hop back.' },
   { target: () => _coachFirst(['.rx-save-trail-btn', '.rx-page-header']), title: 'Save your trail', body: 'Found a great path? Save Trail keeps it in Trails (in the menu) so you can pick it up later. You’ll need to be signed in.' }
 ];
 
@@ -48243,8 +48215,8 @@ function startStudyRhemaCoach(force = false) {
 }
 
 function startCrossRefCoach(force = false) {
-  if (_coachHasSeen('crossRefCoachSeenV275', force)) return;
-  _startAppCoach(XREF_COACH_STEPS, 'crossRefCoachSeenV275');
+  if (_coachHasSeen('crossRefCoachSeenV3591', force)) return;
+  _startAppCoach(XREF_COACH_STEPS, 'crossRefCoachSeenV3591');
 }
 
 function startWordLibraryCoach(force = false) {
