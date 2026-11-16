@@ -29,12 +29,9 @@
 //          Samuel–Kings and Chronicles (and the other known doublets), by
 //          shared wording in the original language.
 //   s      similar wording: 2 Peter–Jude, Ephesians–Colossians.
-//   w      both verses use the same Greek or Hebrew word (the rarest they share, if it is uncommon) (info = the
-//          word's key in the shard's word list).
 //   ''     related: readers linked them (ranked by votes).
 // Links below 2 votes are dropped unless the texts show a quote or parallel.
-// Writes data/xrefs/<BOOK>.json: { v: { "c:v": [[ref, votes, kind, info]…] },
-// w: { G2435: [lemma, gloss] } }.
+// Writes data/xrefs/<BOOK>.json: { v: { "c:v": [[ref, votes, kind, info]…] } }.
 
 const fs = require('fs');
 const path = require('path');
@@ -48,8 +45,6 @@ const NT = load('rhema-nt.js').RhemaNT.text;
 const LXX = load('rhema-lxx.js').RhemaLXX.text;
 const HEB = load('rhema-ot-hebrew.js').RhemaHebrewOT.text;
 const MSB = load('rhema-msb.js').RhemaMSB;
-const GLEX = load('rhema-lexicon.js').RhemaLexicon;
-const HLEX = (() => { const s = fs.readFileSync(path.join(R, 'rhema-hebrew-lexicon.js'), 'utf8'); const a = s.indexOf('window.RhemaHebrewLexicon = ') + 28; return new Function('return ' + s.slice(a, s.indexOf(';\nwindow.', a) > 0 ? s.indexOf(';\nwindow.', a) : s.lastIndexOf(';')))(); })();
 const VM = JSON.parse(fs.readFileSync(VMAP, 'utf8'));
 
 const OT = ['GEN','EXO','LEV','NUM','DEU','JOS','JDG','RUT','1SA','2SA','1KI','2KI','1CH','2CH','EZR','NEH','EST','JOB','PSA','PRO','ECC','SNG','ISA','JER','LAM','EZK','DAN','HOS','JOL','AMO','OBA','JON','MIC','NAM','HAB','ZEP','HAG','ZEC','MAL'];
@@ -263,38 +258,13 @@ for (const [nt, ot, len, kind] of quotes) {
 }
 for (const [a, b, kind] of parallels) { add(a, b, votesOf(a, b), kind, null); add(b, a, votesOf(b, a), kind, null); }
 
-// ── 4. Shared uncommon word, for links with no other reason ──────────────────
-const words = {}; // key → [lemma, gloss]
-// Dodson glosses verbs as "I love": drop the "I".
-const gGloss = (s) => String(GLEX[s]?.brief || GLEX[s]?.kjv_def || '').split(/[;,(]/)[0].trim().replace(/^I /, '');
-const hGloss = (s) => String(HLEX[s]?.gloss || HLEX[s]?.brief || HLEX[s]?.kjv_def || '').split(/[;,(]/)[0].trim();
-function sharedWord(from, to) {
-  const [fb] = from.split(' '), tb = to.split(' ')[0];
-  const verseToks = (ref, fn) => expand(ref).flatMap(([b, c, v]) => fn(b, String(c), String(v)));
-  let best = null;
-  if (isOT.has(fb) && isOT.has(tb)) {
-    const A = new Set(content(verseToks(from, hebToks), HSTOP));
-    for (const t of new Set(content(verseToks(to, hebToks), HSTOP))) {
-      const n = hebCount.get(t) || 0;
-      if (A.has(t) && n <= 400 && HLEX[t] && (!best || n < best.n)) best = { key: 'H' + t, n, lemma: HLEX[t].lemma, gloss: hGloss(t) };
-    }
-  } else {
-    const A = new Set(content(verseToks(from, greekToks), GSTOP));
-    for (const t of new Set(content(verseToks(to, greekToks), GSTOP))) {
-      const n = ntCount.get(t) || 0;
-      if (A.has(t) && n && n <= 300 && GLEX[t] && (!best || n < best.n)) best = { key: 'G' + t, n, lemma: GLEX[t].lemma, gloss: gGloss(t) };
-    }
-  }
-  return best;
-}
-
-// ── 5. Write per-book shards ────────────────────────────────────────────────
+// ── 4. Write per-book shards ────────────────────────────────────────────────
 const outDir = path.join(R, 'data', 'xrefs');
 fs.mkdirSync(outDir, { recursive: true });
 const PRI = { f: 0, F: 0, q: 1, Q: 1, p: 2, e: 3, E: 3, s: 3 };
-const stats = { verses: 0, links: 0, q: 0, f: 0, e: 0, p: 0, s: 0, w: 0, bytes: 0 };
+const stats = { verses: 0, links: 0, q: 0, f: 0, e: 0, p: 0, s: 0, bytes: 0 };
 for (const book of [...OT, ...NTB]) {
-  const shard = { v: {}, w: {} };
+  const shard = { v: {} };
   for (const [from, m] of links) {
     if (!from.startsWith(book + ' ')) continue;
     const special = [], rest = [];
@@ -303,11 +273,7 @@ for (const book of [...OT, ...NTB]) {
     rest.sort((a, b) => b[1].votes - a[1].votes);
     const keep = [...special, ...rest.slice(0, Math.max(0, 40 - special.length))];
     shard.v[from.split(' ')[1]] = keep.map(([to, L]) => {
-      let kind = L.kind, info = L.info;
-      if (!kind) {
-        const sw = sharedWord(from, to);
-        if (sw) { kind = 'w'; info = sw.key; shard.w[sw.key] = [sw.lemma, sw.gloss]; }
-      }
+      const kind = L.kind, info = L.info;
       if (kind) stats[kind.toLowerCase()] = (stats[kind.toLowerCase()] || 0) + 1;
       const row = [to, L.votes];
       if (kind) row.push(kind);

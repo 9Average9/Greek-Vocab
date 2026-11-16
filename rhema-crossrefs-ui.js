@@ -318,14 +318,13 @@ function _renderXrefBreadcrumb() {
 // links (CC BY), ranked by readers' votes, each with the reason it's there —
 // found from the Greek and Hebrew texts, never guessed:
 //   q/Q quotes · f/F fulfillment (the NT says so) · e/E echoes the wording ·
-//   p parallel account · s similar wording · w same uncommon word · '' related.
-const RHEMA_XREFS_VERSION = '3.0.591';
+//   p parallel account · s similar wording · '' related (readers linked them).
+const RHEMA_XREFS_VERSION = '3.0.595';
 const RX_FILTERS = [
   { key: 'best', label: 'Best' },
   { key: 'quotes', label: 'Quotes', kinds: 'qQfFn' },
   { key: 'parallels', label: 'Parallels', kinds: 'ps' },
   { key: 'echoes', label: 'Echoes', kinds: 'eE' },
-  { key: 'words', label: 'Same word', kinds: 'w' },
   { key: 'all', label: 'All' }
 ];
 const RX_KIND = {
@@ -338,7 +337,6 @@ const RX_KIND = {
   s: { icon: 'compare_arrows', label: 'Similar', cls: 'p' },
   e: { icon: 'graphic_eq', label: 'Echo', cls: 'e' },
   E: { icon: 'graphic_eq', label: 'Echo', cls: 'e' },
-  w: { icon: 'translate', label: 'Same word', cls: 'w' },
   '': { icon: 'link', label: 'Related', cls: 'r' }
 };
 // Old saved trails stored a category; map it to a filter.
@@ -371,7 +369,7 @@ function _rxRows(key = _xrefKey()) {
   const shard = p && _rxShardNow(p.book);
   if (!shard) return null;
   const raw = shard.v?.[`${p.chapter}:${p.verse}`] || [];
-  const rows = raw.map(([ref, votes, kind = '', info = null]) => ({ ref, votes: votes || 0, kind, info, word: kind === 'w' ? shard.w?.[info] : null }));
+  const rows = raw.map(([ref, votes, kind = '', info = null]) => ({ ref, votes: votes || 0, kind, info }));
   // Official footnote citations (MSB/BSB): add them, or mark the matching link.
   const seen = new Map(rows.map(r => [r.ref, r]));
   const inRange = (range, ref) => {
@@ -432,7 +430,6 @@ function _rxWhyBase(row, src) {
     case 'e': case 'E': return `Same wording, without a quote formula${n}`;
     case 'p': return _rxBookOf(row.ref) === _rxBookOf(src) ? 'A parallel passage' : `A parallel passage in ${_rxBookOf(row.ref)}`;
     case 's': return 'Very similar wording';
-    case 'w': return row.word ? `Both use ${row.word[0]}${row.word[1] ? ` “${row.word[1]}”` : ''}` : 'Both use the same uncommon word';
     case 'n': return `Cited in the ${_xrefLocalVersion()} footnotes`;
     default: return row.footnote ? `Cited in the ${_xrefLocalVersion()} footnotes` : 'Linked by readers';
   }
