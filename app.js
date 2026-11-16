@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.601";
+const APP_VERSION = "3.0.602";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.602 &mdash; Who Does What removed</div>
+<ul>
+  <li><strong>Cleaner Display tools</strong> &mdash; The Who Does What button is gone from Rhēma&rsquo;s menu in the Hebrew Old Testament. Display now holds Parts of Speech, Font, and Greek or Hebrew Only.</li>
+</ul>
 <div class="un-version-label">v3.0.601 &mdash; A new Font sheet</div>
 <ul>
   <li><strong>Font is a Display tool</strong> &mdash; In Rhēma&rsquo;s menu, tap <em>Font</em> next to Parts of Speech. A sheet slides up with a live preview, the text size slider, style categories (Serif, Sans Serif, Handwritten, Script, Display, Retro, Typewriter) and every font shown in its own lettering. Sort them A&ndash;Z, and drag the sheet down to close it.</li>
@@ -45558,13 +45562,7 @@ function _rhemaStudyTools() {
   const hebrew = isOT && getCurrentOriginalLanguageLayer() === 'hebrew';
   const orig = hebrew ? 'Hebrew' : 'Greek';
   const tools = [
-    // The Greek syntax tree was retired; Hebrew keeps "Who Does What": each
-    // action in the verse with who does it, to what or whom, and who "he"/"it"
-    // refers to (MACULA Hebrew).
-    ...(hebrew ? [{ id: 'syntax', label: 'Who Does What', icon: 'groups', active: _rhemaSyntaxMode,
-      reason: _rhemaShowEnglish ? 'Select Hebrew in the Language bar first to see who does what.'
-            : _rhemaFullChapter ? 'Switch to verse view first to open who does what.' : '',
-      action: () => toggleWheelTool('syntax') }] : []),
+    // The syntax tree and Hebrew "Who Does What" were retired.
     { id: 'pos', label: 'Parts of Speech', icon: 'ink_highlighter', active: _rhemaHighlightBarOn, reason: '',
       action: () => toggleWheelTool('highlight') },
     { id: 'font', label: 'Font', icon: 'match_case', active: false, reason: '',
@@ -45614,7 +45612,7 @@ function _rhemaStudyToolsGridHtml() {
 function _rhemaStudyPanelHtml() {
   const tools = _rhemaStudyTools();
   const pick = ids => tools.filter(t => ids.includes(t.id)).map(_rhemaStudyTileHtml).join('');
-  const display = pick(['syntax', 'pos', 'font', 'greek']);
+  const display = pick(['pos', 'font', 'greek']);
   const textTiles = pick(['chapter', 'critical']);
   return `${_rhemaStudyToolsGridHtml()}
     <div class="rrp-section-label">Display</div>
@@ -47595,9 +47593,9 @@ function _rhemaEngNoteHtml(book, chapter, hasEng, hasOrig) {
 
 function renderRhemaVerse() {
   if (!_rhemaData()) return;
-  // The Greek syntax tree was retired (only Hebrew "Who Does What" remains), so
-  // a saved position or study can't strand the reader in it.
-  if (_rhemaSyntaxMode && !(isRhemaOTBook(_rhemaBook) && getCurrentOriginalLanguageLayer() === 'hebrew')) _rhemaSyntaxMode = false;
+  // The syntax tree and Who Does What were retired, so a saved position or
+  // study can't strand the reader in them.
+  if (_rhemaSyntaxMode) _rhemaSyntaxMode = false;
   // A navigation into a part of the Bible whose text hasn't loaded yet (e.g.
   // Genesis while the Hebrew OT is still queued, or switching to BSB / LXX):
   // fetch just that dataset, then render.
