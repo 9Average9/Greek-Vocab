@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.594";
+const APP_VERSION = "3.0.595";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.595 &mdash; Simpler cross references</div>
+<ul>
+  <li><strong>No more &ldquo;Same word&rdquo;</strong> &mdash; Cross references no longer label links by a Greek or Hebrew word the two verses share; it was confusing and often wasn&rsquo;t why the verses belong together. Those links now simply say they were linked by readers. To trace a word, tap it and use <em>Occurrences</em>.</li>
+</ul>
 <div class="un-version-label">v3.0.594 &mdash; Cross references from the verse menu</div>
 <ul>
   <li><strong>Right where you tap</strong> &mdash; Tap a verse and the menu now has <em>Cross references</em> with how many links that verse has (grayed out when it has none). Tap it to see the best ones right there, each with why it&rsquo;s linked.</li>
@@ -48154,8 +48158,8 @@ const STUDY_RHEMA_COACH_STEPS = [
 
 const XREF_COACH_STEPS = [
   { target: () => _coachFirst(['.rx-top-card', '#rxMainView']), title: 'Your starting verse', body: 'This card is the verse you’re exploring. Tap it to pick a different one.' },
-  { target: () => _coachFirst(['.rx-filters', '#rxMainView']), pose: 'inspect', title: 'The best links first', body: 'Links are ranked by how many readers confirmed them. Narrow them down: Quotes, Parallels (the same account elsewhere), Echoes, or Same word.' },
-  { target: () => _coachFirst(['.rx-link .rx-link-why', '.rx-link', '#rxMainView']), title: 'Why it’s linked', body: 'Each link says why it’s there: a quote, a fulfillment the New Testament names, the same account in another book, or an uncommon Greek or Hebrew word both verses use. Shared words are highlighted.' },
+  { target: () => _coachFirst(['.rx-filters', '#rxMainView']), pose: 'inspect', title: 'The best links first', body: 'Links are ranked by how many readers confirmed them. Narrow them down: Quotes, Parallels (the same account elsewhere), or Echoes.' },
+  { target: () => _coachFirst(['.rx-link .rx-link-why', '.rx-link', '#rxMainView']), title: 'Why it’s linked', body: 'Each link says why it’s there: a quote, a fulfillment the New Testament names, the same account in another book, or simply that readers linked them. Shared words are highlighted.' },
   { target: () => _coachFirst(['.rx-link-actions', '.rx-link']), title: 'Compare, read, or keep going', body: 'Compare puts the two verses side by side. Read opens it in the Bible. Its links (or tapping the card) follows the trail to that verse’s own links.' },
   { target: () => _coachFirst(['.rx-breadcrumb', '.rx-page-header']), title: 'Your trail', body: 'Every stop is remembered at the top, so you can hop back.' },
   { target: () => _coachFirst(['.rx-save-trail-btn', '.rx-page-header']), title: 'Save your trail', body: 'Found a great path? Save Trail keeps it in Trails (in the menu) so you can pick it up later. You’ll need to be signed in.' }
