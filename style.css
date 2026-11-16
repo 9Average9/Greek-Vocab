@@ -40157,7 +40157,7 @@ body.dark .rx-k-w, body.dark-mode .rx-k-w { --rx-k: #60a5fa; }
 .rhema-vsheet-xref.open { border-color: var(--secondary-color); background: color-mix(in srgb, var(--secondary-color) 9%, var(--primary-light, var(--card-color))); }
 .rhema-vsheet-xref.muted, .rhema-vsheet-xref:disabled { opacity: .5; cursor: default; }
 .rhema-vsheet-xref.muted .rhema-vs-xref-n { color: var(--muted-color, #8a8a8a); background: color-mix(in srgb, var(--text-color) 7%, transparent); }
-.rhema-vsheet-xrefs { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: min(36vh, 330px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.rhema-vsheet-xrefs { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: min(30vh, 250px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .rhema-vsheet-xrefs.hidden { display: none; }
 .rx-sheet-link { --rx-k: var(--secondary-color); position: relative; display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 10px 12px 10px 15px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--rx-k) 16%, var(--border-color)); background: var(--card-color); color: inherit; font: inherit; text-align: left; cursor: pointer; overflow: hidden; flex-shrink: 0; }
 .rx-sheet-link::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--rx-k); opacity: .75; }
@@ -40167,3 +40167,10 @@ body.dark .rx-k-w, body.dark-mode .rx-k-w { --rx-k: #60a5fa; }
 .rx-sheet-all { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; border-radius: 12px; border: 0; background: color-mix(in srgb, var(--secondary-color) 10%, transparent); color: var(--secondary-color); font: inherit; font-size: .86rem; font-weight: 800; cursor: pointer; flex-shrink: 0; }
 .rx-sheet-all .material-symbols-outlined { font-size: 18px; }
 .rhema-vs-xref-n { flex-shrink: 0; }
+/* Verse menu: three one-line previews and See all, no scrolling */
+.rx-sheet-text { -webkit-line-clamp: 1; }
+.rhema-vsheet-xrefs { max-height: min(40vh, 290px); }
+.rx-sheet-link { padding-top: 9px; padding-bottom: 9px; }
+/* See all stays in view; only the three previews scroll if they must */
+.rhema-vsheet-xrefs { max-height: none; overflow: visible; }
+.rx-sheet-list { display: flex; flex-direction: column; gap: 8px; max-height: min(36vh, 285px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
