@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.600";
+const APP_VERSION = "3.0.601";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.601 &mdash; A new Font sheet</div>
+<ul>
+  <li><strong>Font is a Display tool</strong> &mdash; In Rhēma&rsquo;s menu, tap <em>Font</em> next to Parts of Speech. A sheet slides up with a live preview, the text size slider, style categories (Serif, Sans Serif, Handwritten, Script, Display, Retro, Typewriter) and every font shown in its own lettering. Sort them A&ndash;Z, and drag the sheet down to close it.</li>
+</ul>
 <div class="un-version-label">v3.0.600 &mdash; Simpler Display tools</div>
 <ul>
   <li><strong>Simpler Display tools</strong> &mdash; The Syntax Tree button is gone from Rhēma&rsquo;s menu (and its tour). Hebrew still has Who Does What.</li>
@@ -44888,6 +44892,7 @@ function rhemaReaderSetFont(id) {
   _saveRhemaReaderFontPrefs(prefs);
   _applyRhemaReaderFontPrefs();
   _renderRhemaReaderFontList();
+  _syncRhemaFontSheetPick();
 }
 function rhemaReaderFontTab(group) {
   _rhemaReaderFontTab = group;
@@ -44998,6 +45003,194 @@ function _renderRhemaReaderFontList() {
   wrap.querySelectorAll('.rrp-fp-sample').forEach((sample, i) => {
     sample.style.fontFamily = inTab[i].stack || defaultStack;
   });
+}
+
+// ── Font sheet: Study tools → Display → Font ────────────────────────────────
+// A bottom sheet for the reader's typeface and text size: a live preview, the
+// size slider, style chips (All + each category) and a two-column grid of
+// fonts, each sample set in its own face. Drag the handle down (or tap the
+// dimmed reader) to close. Web fonts download only as their tiles scroll in.
+const RHEMA_FONT_SHEET_CATS = {
+  classic: { label: 'Serif', glyph: 'serif' },
+  clean:   { label: 'Sans Serif', glyph: 'sans' },
+  hand:    { label: 'Handwritten', icon: 'gesture' },
+  script:  { label: 'Script', icon: 'ink_pen' },
+  display: { label: 'Display', icon: 'auto_awesome' },
+  retro:   { label: 'Retro', icon: 'sports_esports' },
+  mono:    { label: 'Typewriter', icon: 'keyboard' }
+};
+let _rhemaFontSheetCat = 'all';
+let _rhemaFontSheetSort = 'suggested';
+function _rhemaFontSheetEl() {
+  let ov = document.getElementById('rhemaFontSheet');
+  if (ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'rhemaFontSheet';
+  ov.className = 'rfs-overlay';
+  ov.setAttribute('onclick', 'closeRhemaFontSheet()');
+  ov.innerHTML = `<div class="rfs-sheet" role="dialog" aria-modal="true" aria-labelledby="rfsTitle" onclick="event.stopPropagation()">
+      <div class="rfs-drag">
+        <div class="rfs-handle" aria-hidden="true"></div>
+        <div class="rfs-head"><span class="rfs-badge" aria-hidden="true">Aa</span><h2 id="rfsTitle">Font</h2></div>
+      </div>
+      <div class="rfs-body" id="rfsBody"></div>
+    </div>`;
+  document.body.appendChild(ov);
+  _rhemaFontSheetDrag(ov);
+  return ov;
+}
+function openRhemaFontSheet() {
+  try { closeRhemaReaderPanel(); } catch {}
+  const ov = _rhemaFontSheetEl();
+  _renderRhemaFontSheet();
+  const body = document.getElementById('rfsBody');
+  if (body) body.scrollTop = 0;
+  ov.classList.add('open');
+  requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add('in')));
+}
+function closeRhemaFontSheet() {
+  const ov = document.getElementById('rhemaFontSheet');
+  if (!ov || !ov.classList.contains('open')) return;
+  ov.classList.remove('in');
+  clearTimeout(closeRhemaFontSheet._t);
+  closeRhemaFontSheet._t = setTimeout(() => {
+    ov.classList.remove('open');
+    const sh = ov.querySelector('.rfs-sheet');
+    if (sh) { sh.style.transform = ''; sh.style.transition = ''; }
+  }, 320);
+}
+function _rhemaFontSheetDrag(ov) {
+  const sheet = ov.querySelector('.rfs-sheet');
+  const grip = ov.querySelector('.rfs-drag');
+  let y0 = 0, dy = 0, on = false;
+  grip.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; dy = 0; on = true; sheet.style.transition = 'none'; }, { passive: true });
+  grip.addEventListener('touchmove', e => {
+    if (!on) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    if (dy > 0) { e.preventDefault(); sheet.style.transform = `translateY(${dy}px)`; }
+  }, { passive: false });
+  grip.addEventListener('touchend', () => {
+    if (!on) return;
+    on = false;
+    sheet.style.transition = '';
+    if (dy > 90) { sheet.style.transform = 'translateY(105%)'; closeRhemaFontSheet(); }
+    else sheet.style.transform = '';
+  });
+}
+function _rhemaFontSheetList() {
+  let list = RHEMA_READER_FONTS.filter(f => f.id !== 'default' && RHEMA_FONT_SHEET_CATS[f.group]);
+  if (_rhemaFontSheetCat !== 'all') list = list.filter(f => f.group === _rhemaFontSheetCat);
+  else {
+    // Suggested order for All: category by category, as listed above.
+    const order = Object.keys(RHEMA_FONT_SHEET_CATS);
+    list = list.slice().sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
+  }
+  if (_rhemaFontSheetSort !== 'suggested') {
+    list = list.slice().sort((a, b) => a.label.localeCompare(b.label));
+    if (_rhemaFontSheetSort === 'za') list.reverse();
+  }
+  return list;
+}
+function _rhemaFontSheetDefaultStack() {
+  const r = document.querySelector('#rhemaModal .rhema-reader');
+  return r ? getComputedStyle(r).fontFamily : 'system-ui, sans-serif';
+}
+function _renderRhemaFontSheet() {
+  const body = document.getElementById('rfsBody');
+  if (!body) return;
+  const { font } = _rhemaReaderFontPrefs();
+  const cur = RHEMA_READER_FONTS.find(f => f.id === font) || RHEMA_READER_FONTS[0];
+  const list = _rhemaFontSheetList();
+  const chip = (id, label, ico, active) =>
+    `<button class="rfs-cat${active ? ' active' : ''}" type="button" role="tab" aria-selected="${active}" onclick="rhemaFontSheetCat('${id}')">${ico}<span>${label}</span></button>`;
+  const cats = chip('all', 'All', '<span class="material-symbols-outlined">menu_book</span>', _rhemaFontSheetCat === 'all') +
+    Object.entries(RHEMA_FONT_SHEET_CATS).map(([id, c]) => chip(id, c.label,
+      c.glyph ? `<span class="rfs-cat-aa rfs-aa-${c.glyph}">Aa</span>` : `<span class="material-symbols-outlined">${c.icon}</span>`,
+      _rhemaFontSheetCat === id)).join('');
+  const sortLabel = { suggested: 'Suggested', az: 'A–Z', za: 'Z–A' };
+  body.innerHTML = `
+    <div class="rfs-preview">
+      <span class="rfs-quote" aria-hidden="true">&ldquo;</span>
+      <p class="rfs-verse">In the beginning was the Word.</p>
+      <div class="rfs-preview-foot">
+        <span class="rfs-cur" id="rfsCur">${cur.id === 'default' ? 'Default font' : cur.label}</span>
+        <button class="rfs-default" type="button" id="rfsDefault" onclick="rhemaReaderSetFont('default')"${cur.id === 'default' ? ' hidden' : ''}><span class="material-symbols-outlined">restart_alt</span>Default</button>
+      </div>
+    </div>
+    <div class="rfs-size">
+      <button class="rfs-size-a" type="button" onclick="rhemaReaderFontStep(-1)" aria-label="Smaller text">Aa</button>
+      <span class="rfs-size-label">Text Size</span>
+      <div class="rrp-fs-track rfs-track" id="rrpFsTrack" role="slider" tabindex="0" aria-label="Text size"
+           aria-valuemin="0" aria-valuemax="${RHEMA_READER_FONT_STEPS.length - 1}"
+           onpointerdown="rhemaReaderFontSizeDragStart(event)" onkeydown="rhemaReaderFontSizeKey(event)">
+        <div class="rrp-fs-fill" id="rrpFsFill"></div><div class="rrp-fs-knob" id="rrpFsKnob"></div>
+      </div>
+      <button class="rfs-size-a rfs-size-big" type="button" onclick="rhemaReaderFontStep(1)" aria-label="Larger text">Aa</button>
+    </div>
+    <h3 class="rfs-h">Categories</h3>
+    <div class="rfs-cats" role="tablist" aria-label="Font styles">${cats}</div>
+    <div class="rfs-list-head">
+      <h3 class="rfs-h">Fonts <span>(${list.length})</span></h3>
+      <label class="rfs-sort"><span class="material-symbols-outlined">swap_vert</span><span>${sortLabel[_rhemaFontSheetSort]}</span><span class="material-symbols-outlined">expand_more</span>
+        <select aria-label="Sort fonts" onchange="rhemaFontSheetSort(this.value)">
+          ${Object.entries(sortLabel).map(([v, l]) => `<option value="${v}"${v === _rhemaFontSheetSort ? ' selected' : ''}>${l}</option>`).join('')}
+        </select></label>
+    </div>
+    <div class="rfs-grid">
+      ${list.map(f => `<button class="rfs-tile${f.id === font ? ' active' : ''}" type="button" data-font="${f.id}" onclick="rhemaReaderSetFont('${f.id}')" aria-pressed="${f.id === font}">
+          <span class="rfs-sample">Aa</span><span class="rfs-name">${f.label}</span>
+          <span class="rfs-tick material-symbols-outlined" aria-hidden="true">check</span>
+        </button>`).join('')}
+    </div>`;
+  const dflt = _rhemaFontSheetDefaultStack();
+  body.querySelectorAll('.rfs-tile').forEach((t, i) => { t.querySelector('.rfs-sample').style.fontFamily = list[i].stack || dflt; });
+  const prev = body.querySelector('.rfs-preview');
+  if (prev) prev.style.fontFamily = cur.stack || dflt;
+  _syncRhemaReaderFontSizeUi();
+  _rhemaFontSheetLazyFonts(list);
+}
+// Web fonts load in small batches as their tiles come into view.
+function _rhemaFontSheetLazyFonts(list) {
+  const body = document.getElementById('rfsBody');
+  if (!body) return;
+  const byId = Object.fromEntries(list.map(f => [f.id, f]));
+  const cur = RHEMA_READER_FONTS.find(f => f.id === _rhemaReaderFontPrefs().font);
+  if (cur?.web) _rhemaLoadWebFonts([cur]);
+  if (!('IntersectionObserver' in window)) { _rhemaLoadWebFonts(list); return; }
+  _rhemaFontSheetLazyFonts._io?.disconnect();
+  let batch = [], t = 0;
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      io.unobserve(e.target);
+      const f = byId[e.target.dataset.font];
+      if (f?.web) batch.push(f);
+    }
+    clearTimeout(t);
+    t = setTimeout(() => { if (batch.length) { _rhemaLoadWebFonts(batch); batch = []; } }, 60);
+  }, { root: body, rootMargin: '200px 0px' });
+  _rhemaFontSheetLazyFonts._io = io;
+  body.querySelectorAll('.rfs-tile').forEach(t => io.observe(t));
+}
+function rhemaFontSheetCat(id) { _rhemaFontSheetCat = id; _renderRhemaFontSheet(); }
+function rhemaFontSheetSort(v) { _rhemaFontSheetSort = v; _renderRhemaFontSheet(); }
+// After a pick: update the preview and ticks in place (keeps the scroll spot).
+function _syncRhemaFontSheetPick() {
+  const body = document.getElementById('rfsBody');
+  if (!body || !document.getElementById('rhemaFontSheet')?.classList.contains('open')) return;
+  const { font } = _rhemaReaderFontPrefs();
+  const cur = RHEMA_READER_FONTS.find(f => f.id === font) || RHEMA_READER_FONTS[0];
+  body.querySelectorAll('.rfs-tile').forEach(t => {
+    const on = t.dataset.font === font;
+    t.classList.toggle('active', on);
+    t.setAttribute('aria-pressed', String(on));
+  });
+  const prev = body.querySelector('.rfs-preview');
+  if (prev) prev.style.fontFamily = cur.stack || _rhemaFontSheetDefaultStack();
+  const name = document.getElementById('rfsCur');
+  if (name) name.textContent = cur.id === 'default' ? 'Default font' : cur.label;
+  const d = document.getElementById('rfsDefault');
+  if (d) d.hidden = cur.id === 'default';
 }
 
 function openRhemaReaderPanel() {
@@ -45374,6 +45567,8 @@ function _rhemaStudyTools() {
       action: () => toggleWheelTool('syntax') }] : []),
     { id: 'pos', label: 'Parts of Speech', icon: 'ink_highlighter', active: _rhemaHighlightBarOn, reason: '',
       action: () => toggleWheelTool('highlight') },
+    { id: 'font', label: 'Font', icon: 'match_case', active: false, reason: '',
+      action: () => openRhemaFontSheet() },
     // Greek/Hebrew Only shows only while the original language is on screen.
     ...(!_rhemaShowEnglish ? [{ id: 'greek', label: `${orig} Only`, icon: 'translate', active: _rhemaGreekOnly, reason: '',
       action: () => toggleWheelTool('greek-only') }] : []),
@@ -45419,7 +45614,7 @@ function _rhemaStudyToolsGridHtml() {
 function _rhemaStudyPanelHtml() {
   const tools = _rhemaStudyTools();
   const pick = ids => tools.filter(t => ids.includes(t.id)).map(_rhemaStudyTileHtml).join('');
-  const display = pick(['syntax', 'pos', 'greek']);
+  const display = pick(['syntax', 'pos', 'font', 'greek']);
   const textTiles = pick(['chapter', 'critical']);
   return `${_rhemaStudyToolsGridHtml()}
     <div class="rrp-section-label">Display</div>
@@ -45438,8 +45633,7 @@ function _rhemaStudyPanelHtml() {
       <button class="rrp-row" onclick="showReaderPanelSection('highlights')"><span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span><span class="rrp-row-label">Highlights</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="showReaderPanelSection('notes')"><span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span><span class="rrp-row-label">Notes</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="showReaderPanelSection('meanings')"><span class="material-symbols-outlined rrp-row-icon">bookmarks</span><span class="rrp-row-label">Saved meanings</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
-    </div>
-    ${_rhemaFontControlsHtml()}`;
+    </div>`;
 }
 function rhemaStudyTool(id, ev) {
   const t = _rhemaStudyTools().find(x => x.id === id);
@@ -48253,11 +48447,10 @@ const _menuSectionAfter = label => () => {
 };
 const READING_COACH_STEPS = [
   { before: _coachMenuShow(_menuSectionAfter('language')), target: _menuSectionAfter('language'), title: 'Language', body: 'Flip the chapter between English and Greek. In the Old Testament you can pick Hebrew or the Greek Old Testament too. In Greek, tap any word to see what it means.' },
-  { before: _coachMenuShow(_menuSectionAfter('display')), target: _menuSectionAfter('display'), pose: 'inspect', title: 'Reading helpers', body: 'Parts of Speech adds a row of word types: tap one, like Verb, to color every verb. When Greek is selected, Greek Only hides the small English under each Greek word. A grayed-out tile tells you what to turn on first.' },
+  { before: _coachMenuShow(_menuSectionAfter('display')), target: _menuSectionAfter('display'), pose: 'inspect', title: 'Reading helpers', body: 'Parts of Speech adds a row of word types: tap one, like Verb, to color every verb. Font opens the text size and every font you can read in. When Greek is selected, Greek Only hides the small English under each Greek word. A grayed-out tile tells you what to turn on first.' },
   { before: _coachMenuShow(_menuSectionAfter('text')), target: _menuSectionAfter('text'), pose: 'think', title: 'Chapter or verse', body: 'Chapter View shows the whole chapter; turn it off to read one verse at a time. Critical Text switches the Greek New Testament between its two main manuscript traditions.' },
   { before: _coachMenuShow(_menuSectionAfter('study')), target: _menuSectionAfter('study'), title: 'More tools', body: 'The Word Library to look up Greek words, and Copy verse to grab several verses at once. (Cross references are on each verse: tap a verse.)' },
   { before: _coachMenuShow(_menuSectionAfter('marks')), target: _menuSectionAfter('marks'), pose: 'thumbs', title: 'Your saved stuff', body: 'Every highlight, note, and saved word meaning in one place. Tap one to jump to its verse.' },
-  { before: _coachMenuShow(() => document.querySelector('#rrpMainBody .rrp-fontsize')), target: () => _coachFirst(['#rrpMainBody .rrp-fontsize']), pose: 'thumbs', title: 'Make it yours', body: 'Slide to change the text size, and pick a font you like just below.' },
   { before: _coachMenuShow(() => document.querySelector('#rhemaReaderPanel .rrp-guide.in')), target: () => _coachFirst(['#rhemaReaderPanel .rrp-guide.in', '#rhemaReaderMenuBtn']), title: 'That’s me!', body: 'I pop up somewhere new in this menu each time. Tap me whenever you want another tour.' }
 ];
 function startVerseCoach() { _startAppCoach(VERSE_COACH_STEPS, 'verseCoachSeenV3539', true); _appCoachOnEnd = () => { try { closeRhemaVerseSheetAndDeselect(); } catch (e) {} }; }
