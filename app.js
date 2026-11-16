@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.597";
+const APP_VERSION = "3.0.598";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.598 &mdash; Back to where you were</div>
+<ul>
+  <li><strong>One tap back</strong> &mdash; When something takes the reader to another verse (a word&rsquo;s occurrences, verses in a word study, search results, <em>Read</em> in cross references, a saved highlight or note), a <em>Back to John 3:16</em> button appears at the bottom. Tap it to return to the verse you were reading, right where you left off; tap &#10005; to stay where you are.</li>
+  <li><strong>It remembers your first spot</strong> &mdash; Even after several jumps, it takes you back to where you started. The back arrow at the top does the same.</li>
+</ul>
 <div class="un-version-label">v3.0.597 &mdash; Cross references, tidier</div>
 <ul>
   <li><strong>You stay where you were</strong> &mdash; Following a trail of cross references no longer moves your reader. Close it and you&rsquo;re back at the verse you started from. (<em>Read</em> still takes you to a verse when you want to go there.)</li>
@@ -39059,9 +39064,85 @@ async function openHomeRhemaResult(index) {
   await _rhemaJumpToVerse(result.book, result.chapter, result.verse);
 }
 
+// ── Back to where you were ───────────────────────────────────────────────────
+// Tools that take the reader somewhere else (a word's occurrences, verse chips
+// in a word study, search results, Read in cross references, a saved note or
+// highlight, Family Tree verses) remember the verse you were reading. A pill at
+// the bottom brings you straight back to it; ✕ dismisses it. It keeps your
+// first spot through several jumps. Moving on your own (the book/chapter
+// picker, History) or closing the reader forgets it; swiping chapters keeps it.
+let _rhemaReturnTo = null;
+function _rhemaMarkJumpOrigin() {
+  if (window.RHEMA_MV_SLOT || _rhemaReturnTo) return;
+  if (!document.getElementById('rhemaModal')?.classList.contains('open') || !_rhemaBook) return;
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  _rhemaReturnTo = {
+    book: _rhemaBook, chapter: String(_rhemaChapter), verse: String(_rhemaVerse),
+    intro: !!_rhemaIntroMode, full: !!_rhemaFullChapter, english: !!_rhemaShowEnglish,
+    textMode: _rhemaTextMode, otLayer: _rhemaOTLayer, scroll: body ? body.scrollTop : null
+  };
+}
+function _rhemaReturnLabel(r) {
+  const name = _rhemaBookName(r.book);
+  return r.intro ? `${name} · Intro` : `${name} ${r.chapter}:${r.verse}`;
+}
+function _rhemaSyncReturnPill() {
+  const r = _rhemaReturnTo;
+  let el = document.getElementById('rhemaReturnBtn');
+  const away = r && (r.book !== _rhemaBook || r.chapter !== String(_rhemaChapter) || r.verse !== String(_rhemaVerse) || r.intro !== !!_rhemaIntroMode);
+  if (!away) { el?.classList.remove('show'); return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'rhemaReturnBtn';
+    el.className = 'rhema-ip-back rhema-return-pill';
+    el.innerHTML = '<button type="button" class="rhema-ip-back-go" onclick="rhemaReturnToOrigin()"><span class="material-symbols-outlined" aria-hidden="true">undo</span><span class="rhema-ip-back-label"></span></button><button type="button" class="rhema-ip-back-x" onclick="rhemaForgetReturn()" aria-label="Stay here"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>';
+    (document.getElementById('rhemaModal') || document.body).appendChild(el);
+  }
+  el.querySelector('.rhema-ip-back-label').textContent = `Back to ${_rhemaReturnLabel(r)}`;
+  requestAnimationFrame(() => el.classList.add('show'));
+}
+function rhemaForgetReturn() {
+  _rhemaReturnTo = null;
+  document.getElementById('rhemaReturnBtn')?.classList.remove('show');
+}
+function rhemaReturnToOrigin() {
+  const r = _rhemaReturnTo;
+  rhemaForgetReturn();
+  if (!r) return;
+  closeRhemaSheet?.();
+  _rhemaIntroMode = r.intro;
+  _rhemaBook = r.book;
+  _rhemaChapter = r.chapter;
+  _rhemaVerse = r.verse;
+  _rhemaFullChapter = r.full;
+  _rhemaShowEnglish = r.english;
+  _rhemaTextMode = r.textMode;
+  _rhemaOTLayer = r.otLayer;
+  _rhemaVerseFocus = false;
+  _rhemaHighlightStrongs = null;
+  _rhemaTrail = [];
+  _rhemaTrailPos = -1;
+  _syncRhemaEnglishAlias?.();
+  syncRhemaPicker();
+  _syncRhemaChapterUi?.();
+  renderRhemaVerse();
+  updateRhemaSwapVisibility?.();
+  // Same scroll spot (the chapter may still be loading: try again shortly).
+  const restore = () => {
+    if (_rhemaBook !== r.book || _rhemaChapter !== r.chapter) return;
+    const body = document.querySelector('#rhemaModal .rhema-body');
+    if (body && r.scroll != null) body.scrollTop = r.scroll;
+    else _rhemaScrollVerseToTop?.(r.verse, { smooth: false });
+  };
+  requestAnimationFrame(() => requestAnimationFrame(restore));
+  setTimeout(restore, 350);
+  setTimeout(restore, 1200);
+}
+
 // Open the reader at one verse, scrolled into view (search results, related
 // verses in See interpretations).
-async function _rhemaJumpToVerse(book, chapter, verse) {
+async function _rhemaJumpToVerse(book, chapter, verse, opts = {}) {
+  if (!opts.noReturn) _rhemaMarkJumpOrigin();
   await showRhema();
   _rhemaTextMode = 'majority';
   _syncRhemaEnglishAlias();
@@ -42000,6 +42081,7 @@ function closeRhemaHighlightsNotes(e) {
 function rhemaOpenSavedMark(ref) {
   const p = _rhemaParseRef(ref);
   if (!p) return;
+  _rhemaMarkJumpOrigin();
   closeRhemaHighlightsNotes();
   _rhemaClearVerseActionSelection();
   _rhemaIntroMode = false;
@@ -43107,7 +43189,7 @@ function _rhemaInterpBodyClick(e) {
     ref: document.getElementById('rhemaInterpRef')?.textContent || ''
   } : null;
   closeRhemaInterpretations();
-  _rhemaJumpToVerse(ref.book, ref.chapter, ref.verse).then(() => { if (back) _rhemaInterpShowBack(back); });
+  _rhemaJumpToVerse(ref.book, ref.chapter, ref.verse, { noReturn: !!back }).then(() => { if (back) _rhemaInterpShowBack(back); });
 }
 
 let _rhemaInterpBack = null;
@@ -43134,7 +43216,7 @@ async function rhemaInterpGoBack() {
   _rhemaInterpHideBack();
   if (!back) return;
   _rhemaInterpBack = null;
-  try { await _rhemaJumpToVerse(back.sel.book, back.sel.chapter, back.sel.startVerse); } catch (e) {}
+  try { await _rhemaJumpToVerse(back.sel.book, back.sel.chapter, back.sel.startVerse, { noReturn: true }); } catch (e) {}
   await rhemaOpenInterpretations(back.sel);
   // Same views open, same scroll spot.
   const views = document.querySelectorAll('#rhemaInterpBody .rhema-ip-view');
@@ -45536,6 +45618,7 @@ function _syncRhemaChapterUi() {
 
 function closeRhema(keepSandbox = false) {
   rhemaNapSleep();
+  rhemaForgetReturn();
   // Guests have nowhere to close the reader to — it is the whole app for them.
   if (_guestMode && !keepSandbox) return;
   closeRhemaSearch();
@@ -45664,6 +45747,9 @@ function rhemaGoBack() {
   // In a study: the reader home button closes the reader to home (which clears
   // the study and restores the bottom nav). Reopening starts on the default.
   if (_studySandboxId) { closeRhema(); return; }
+  // Back to where a tool took you from (the "Back to …" pill); otherwise home.
+  if (_rhemaReturnTo) { rhemaReturnToOrigin(); return; }
+  closeRhema(); return;
   if (_rhemaTrail.length === 0) { closeRhema(); return; }
   // Move cursor back without removing any items
   if (_rhemaTrailPos === -1) {
@@ -46057,6 +46143,7 @@ function rhemaFilterBooks(query) {
 // Selecting any reference always opens the whole chapter; the verse picker
 // then jumps to (and marks) a verse inside it.
 function _rhemaOpenSelectedReference(skipHistory = false) {
+  rhemaForgetReturn();
   _rhemaIntroMode = false;
   _rhemaFullChapter = true;
   _rhemaSyntaxMode = false;
@@ -46149,6 +46236,7 @@ function rhemaSelectChap(ch) {
 }
 
 function rhemaSelectVerse(v) {
+  rhemaForgetReturn();
   _rhemaVerse = v;
   _rhemaVerseFocus = true;
   _rhemaHighlightStrongs = null;
@@ -46691,6 +46779,7 @@ function rhemaNextVerse() {
 // ── Cross-reference jumping ───────────────────────────────────────────────────
 
 function jumpToRhemaVerse(book, chapter, verse, highlightStrongs) {
+  _rhemaMarkJumpOrigin();
   const fromBook = _rhemaBook;
   // First jump: also record the origin verse so the trail starts from the beginning
   if (_rhemaTrail.length === 0) {
@@ -46734,6 +46823,9 @@ function snSetRhemaVerse(book, chapter, verse) {
 function updateRhemaBreadcrumb() {
   const el = document.getElementById('rhemaBreadcrumb');
   if (!el) return;
+  // Replaced by the "Back to …" pill (_rhemaSyncReturnPill).
+  el.classList.add('hidden');
+  return;
   if (_rhemaTrail.length === 0) { el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
 
@@ -47316,6 +47408,7 @@ function renderRhemaVerse() {
   closeRhemaSheet();
   closeRhemaSyntaxSheet();
   _bindRhemaBottomWave();
+  _rhemaSyncReturnPill();
 
   const display = document.getElementById('rhemaVerseDisplay');
   const EnglishDiv  = document.getElementById('rhemaEnglishDisplay');
@@ -54079,6 +54172,7 @@ async function gtOpenVerse(idx) {
     _gtCheckCompletion(topic, entry);
     _gtPersistProgress(false);
   }
+  _rhemaMarkJumpOrigin();
   _rhemaBook = p.b;
   _rhemaChapter = String(p.c);
   _rhemaVerse = String(p.v);

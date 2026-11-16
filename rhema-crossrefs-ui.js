@@ -811,6 +811,7 @@ function openSavedRhemaTrail(trailId) {
   _rhemaChapter = active.chapter;
   _rhemaVerse = active.verse;
   _rhemaXrefView = 'main';
+  if (typeof _rhemaMarkJumpOrigin === 'function') _rhemaMarkJumpOrigin();
   // The reader's own study: the reader is already open behind the Trails tool.
   if (!_studySandboxId && document.getElementById('rhemaModal')?.classList.contains('open')) {
     if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost();

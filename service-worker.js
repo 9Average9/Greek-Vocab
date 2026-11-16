@@ -55,7 +55,7 @@ self.addEventListener("notificationclick", (event) => {
 // Before this split, every release renamed the one cache and `activate`
 // deleted the old one, so each update re-downloaded all of the Bible data, and
 // stale-while-revalidate re-fetched multi-megabyte files on every open.
-const APP_SW_VERSION = "3.0.597";
+const APP_SW_VERSION = "3.0.598";
 const SHELL_CACHE = "disciple-builder-v" + APP_SW_VERSION;
 const DATA_CACHE = "disciple-builder-data-v1";
 const KEEP_CACHES = new Set([SHELL_CACHE, DATA_CACHE]);
@@ -74,11 +74,11 @@ const SHELL_NETWORK_TIMEOUT_MS = 3000;
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.597",
+  "./style.css?v=3.0.598",
   "./vocab.js?v=3.0.8",
-  "./rhema-align.js?v=3.0.597",
-  "./app.js?v=3.0.597",
-  "./rhema-word-study.js?v=3.0.597",
+  "./rhema-align.js?v=3.0.598",
+  "./app.js?v=3.0.598",
+  "./rhema-word-study.js?v=3.0.598",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.584",
   "./rhema-english-dictionary.js?v=3.0.417",
@@ -86,9 +86,9 @@ const FILES_TO_CACHE = [
   "./bible-atlas.js?v=3.0.349",
   "./bible-genealogy.js?v=3.0.476",
   "./bible-regions.js?v=3.0.472",
-  "./verse-structure.js?v=3.0.597",
-  "./vs-structure.js?v=3.0.597",
-  "./sermon-notes.js?v=3.0.597",
+  "./verse-structure.js?v=3.0.598",
+  "./vs-structure.js?v=3.0.598",
+  "./sermon-notes.js?v=3.0.598",
   "./sermon-notes.css?v=3.0.460",
   // Self-hosted fonts (icons + skin fonts) — pinned, they effectively never change
   "./assets/fonts/fonts.css?v=3.0.415",
@@ -135,11 +135,11 @@ const FILES_TO_CACHE = [
   "./rhema-scripture-notes.js?v=3.0.160",
   "./rhema-bsb-align.js?v=3.0.2",
   "./rhema-bible-dictionary.js?v=3.0.385",
-  "./rhema-crossrefs-ui.js?v=3.0.597",
+  "./rhema-crossrefs-ui.js?v=3.0.598",
   "./greek-verbs.js?v=3.0.152",
   "./bible-quiz.js?v=3.0.473",
   "./bible-quiz.css?v=3.0.473",
-  "./firebase-lb.js?v=3.0.597",
+  "./firebase-lb.js?v=3.0.598",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",

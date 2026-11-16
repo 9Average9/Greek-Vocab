@@ -40174,3 +40174,6 @@ body.dark .rx-k-w, body.dark-mode .rx-k-w { --rx-k: #60a5fa; }
 /* See all stays in view; only the three previews scroll if they must */
 .rhema-vsheet-xrefs { max-height: none; overflow: visible; }
 .rx-sheet-list { display: flex; flex-direction: column; gap: 8px; max-height: min(36vh, 285px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+/* "Back to …" after a tool moves the reader (one pill at a time) */
+#rhemaModal:has(#rhemaInterpBackBtn.show) #rhemaReturnBtn,
+#rhemaModal:has(#rhemaReaderPanelOverlay.open) #rhemaReturnBtn { opacity: 0; pointer-events: none; }
