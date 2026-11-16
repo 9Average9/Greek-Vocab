@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.592";
+const APP_VERSION = "3.0.593";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.593 &mdash; Cross references in every version</div>
+<ul>
+  <li><strong>Your version</strong> &mdash; Cross references now open in whatever version you read in (NIV, ESV, NKJV, NASB, KJV, NLT, CSB and the rest), not just MSB or BSB. Tap the version bar to switch to any of them.</li>
+  <li><strong>Quick and offline-friendly</strong> &mdash; Downloaded versions fetch a chapter at a time and stay on your phone; your MSB or BSB fills in for a moment while a chapter arrives, and for verses a version doesn&rsquo;t include.</li>
+</ul>
 <div class="un-version-label">v3.0.592 &mdash; American spelling throughout</div>
 <ul>
   <li><strong>Color, not colour</strong> &mdash; The app&rsquo;s own text now uses American spelling everywhere: labels, notes, word studies, glosses and update notes (honor, favor, recognized, labeled, center, defense and so on, about 1,600 words). Bible text and quotations from older works, like the King James Version&rsquo;s &ldquo;our Saviour,&rdquo; keep their original spelling.</li>

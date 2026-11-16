@@ -2,17 +2,32 @@
 let _rhemaXrefCursor = 0;
 let _rhemaXrefEnglishVersion = null;
 
+// Cross references read in any version the reader offers (MSB/BSB on the
+// device; NIV, ESV, NKJV… downloaded a chapter at a time and kept, like the
+// reader). It opens in the reader's own version.
 function _xrefEnglishVersion() {
-  return _rhemaXrefEnglishVersion || (typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB');
+  const v = _rhemaXrefEnglishVersion;
+  if (v && (v === 'MSB' || v === 'BSB' || (typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[v]))) return v;
+  return typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : (typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB');
+}
+// The on-device version (MSB or BSB) that fills in while a download arrives.
+function _xrefLocalVersion() {
+  const v = _xrefEnglishVersion();
+  if (v === 'MSB' || v === 'BSB') return v;
+  return typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
+}
+function _xrefIsApi(ver = _xrefEnglishVersion()) {
+  return typeof VS_API_TRANSLATIONS !== 'undefined' && VS_API_TRANSLATIONS.includes(ver);
 }
 
-function _xrefEnglishData(version = _xrefEnglishVersion()) {
-  if (typeof _rhemaEnglishData === 'function') return _rhemaEnglishData(version);
-  return version === 'BSB' ? window.RhemaBSB : window.RhemaMSB;
+function _xrefEnglishData(version = _xrefLocalVersion()) {
+  const v = version === 'BSB' || version === 'MSB' ? version : _xrefLocalVersion();
+  if (typeof _rhemaEnglishData === 'function') return _rhemaEnglishData(v);
+  return v === 'BSB' ? window.RhemaBSB : window.RhemaMSB;
 }
 
 function _xrefEnglishLabel(version = _xrefEnglishVersion()) {
-  return version === 'BSB' ? 'BSB' : 'MSB';
+  return version || 'MSB';
 }
 
 function _xrefBookList() {
@@ -89,7 +104,7 @@ async function openRhemaCrossReferences(forceCoach = false) {
   if (inVsCtx && typeof _vsTranslation !== 'undefined') {
     _rhemaXrefEnglishVersion = _vsTranslation;
   } else {
-    _rhemaXrefEnglishVersion = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
+    _rhemaXrefEnglishVersion = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : (typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB');
   }
   _rhemaXrefActive = { book: _rhemaBook || 'JOH', chapter: _rhemaChapter || '1', verse: _rhemaVerse || '1' };
   _rhemaXrefBreadcrumb = [_xrefKey(_rhemaXrefActive)];
@@ -104,12 +119,10 @@ async function openRhemaCrossReferences(forceCoach = false) {
 }
 
 function setRhemaXrefEnglishVersion(version) {
-  // Cross-references are local-only (MSB/BSB). The api.bible translations
-  // (NIV/NKJV/NASB) live exclusively in the Rhema compare feature now, to keep
-  // network calls to an absolute minimum.
-  _rhemaXrefEnglishVersion = version === 'BSB' ? 'BSB' : 'MSB';
-  if (_rhemaXrefView === 'trail') renderRhemaXrefTrail();
-  else renderRhemaCrossReferences();
+  const ok = version === 'MSB' || version === 'BSB' || (typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[version]);
+  _rhemaXrefEnglishVersion = ok ? version : 'MSB';
+  rxCloseVersionPicker();
+  renderRhemaCrossReferences();
 }
 
 function _showRhemaXrefShell(view) {
@@ -143,81 +156,138 @@ function _closeRhemaXrefShell() {
 }
 
 function _xrefTopCardText() {
-  const v = _xrefEnglishVersion();
-  if (v === 'MSB' || v === 'BSB') return _xrefEnglishText(_rhemaXrefActive);
-  // VS context with API translation: try cache, fall back to MSB/BSB local
-  if (typeof _vsTextCache !== 'undefined') {
-    const key = `${v}|${_rhemaXrefActive.book}|${_rhemaXrefActive.chapter}|${_rhemaXrefActive.verse}`;
-    const cached = _vsTextCache.get(key);
-    if (cached) return cached;
-  }
-  return _xrefEnglishText(_rhemaXrefActive);
+  return _xrefRefText(_rhemaXrefActive);
 }
 
-function _xrefRefText(refOrObj) {
+// A reference's text in the chosen version; the on-device version's while that
+// chapter downloads, when the version doesn't include the book (e.g. an
+// NT-only version in Isaiah), or when its daily/monthly limit is reached.
+function _xrefRefTextInfo(refOrObj) {
   const p = typeof refOrObj === 'string' ? _xrefParseRef(refOrObj) : refOrObj;
-  if (!p) return '';
-  const v = _xrefEnglishVersion();
-  if (v === 'MSB' || v === 'BSB') return _xrefEnglishText(refOrObj);
-  if (typeof _vsTextCache !== 'undefined') {
-    const key = `${v}|${p.book}|${p.chapter}|${p.verse}`;
-    const cached = _vsTextCache.get(key);
-    if (cached) return cached;
+  if (!p) return { text: '', ver: '' };
+  const ver = _xrefEnglishVersion();
+  if (!_xrefIsApi(ver)) return { text: _xrefEnglishText(p), ver };
+  const inScope = typeof _vsBookInScope !== 'function' || _vsBookInScope(ver, p.book);
+  if (inScope && typeof _vsChapterFromMemory === 'function') {
+    const out = [];
+    let ok = true;
+    for (let c = Number(p.chapter); c <= Number(p.endChapter || p.chapter); c++) {
+      const chap = _vsChapterFromMemory(ver, p.book, String(c));
+      if (!chap) { ok = false; break; }
+      const from = c === Number(p.chapter) ? Number(p.verse) : 1;
+      const to = c === Number(p.endChapter || p.chapter) ? Number(p.endVerse || (p.endChapter ? 999 : p.verse)) : 999;
+      Object.keys(chap).map(Number).sort((a, b) => a - b).forEach(v => { if (v >= from && v <= to && chap[String(v)]) out.push(chap[String(v)]); });
+    }
+    if (ok && out.length) return { text: out.join(' ').replace(/¶\s*/g, '').trim(), ver };
   }
-  return _xrefEnglishText(refOrObj);
+  return { text: _xrefEnglishText(p), ver: _xrefLocalVersion(), outOfScope: !inScope };
+}
+function _xrefRefText(refOrObj) {
+  return _xrefRefTextInfo(refOrObj).text;
 }
 
+// Download the chapters the visible links need in the chosen version (each
+// once; kept on the device like the reader), then redraw.
+let _rxTextToken = 0;
 async function _xrefLoadAsyncVerseTexts(refs) {
-  const v = _xrefEnglishVersion();
-  if (v === 'MSB' || v === 'BSB') return;
-  if (typeof _vsFetchVerse !== 'function') return;
-  const toFetch = refs.filter(r => {
+  const ver = _xrefEnglishVersion();
+  if (!_xrefIsApi(ver) || typeof _vsEnsureChapter !== 'function') return;
+  if (typeof _vsTransLimited === 'function' && _vsTransLimited(ver)) return;
+  const need = new Map();
+  refs.forEach(r => {
     const p = _xrefParseRef(r);
-    if (!p) return false;
-    return !_vsTextCache?.has(`${v}|${p.book}|${p.chapter}|${p.verse}`);
-  });
-  if (!toFetch.length) return;
-  await Promise.all(toFetch.map(async r => {
-    const p = _xrefParseRef(r);
-    if (!p) return;
-    await _vsFetchVerse(v, p.book, p.chapter, p.verse);
-  }));
-  // Update DOM spans by data-xref-ref
-  const body = document.getElementById('rxMainView');
-  if (!body) return;
-  body.querySelectorAll('[data-xref-ref]').forEach(el => {
-    const ref = el.dataset.xrefRef;
-    const p = _xrefParseRef(ref);
-    if (!p) return;
-    const key = `${v}|${p.book}|${p.chapter}|${p.verse}`;
-    const text = _vsTextCache?.get(key);
-    if (text) {
-      const clipped = el.dataset.xrefClip === '1' ? _xrefClip(text) : text;
-      el.textContent = clipped;
+    if (!p || (typeof _vsBookInScope === 'function' && !_vsBookInScope(ver, p.book))) return;
+    for (let c = Number(p.chapter); c <= Number(p.endChapter || p.chapter); c++) {
+      if (!_vsChapterFromMemory(ver, p.book, String(c))) {
+        if (!need.has(p.book)) need.set(p.book, new Set());
+        need.get(p.book).add(c);
+      }
     }
   });
-  // Also update top card text
-  const topCardP = body.querySelector('.rx-top-card p');
-  if (topCardP) {
-    const text = _xrefTopCardText();
-    if (text) topCardP.textContent = text;
-  }
+  if (!need.size) return;
+  const token = ++_rxTextToken;
+  const key = _xrefKey();
+  document.getElementById('rxVerNote')?.classList.add('loading');
+  let got = false;
+  // One book's chapters in order, so a downloaded block covers the next ones.
+  await Promise.all([...need].map(async ([book, chs]) => {
+    for (const c of [...chs].sort((a, b) => a - b)) {
+      if (!_vsChapterFromMemory(ver, book, String(c))) {
+        try { await _vsEnsureChapter(ver, book, String(c)); } catch {}
+      }
+      if (_vsChapterFromMemory(ver, book, String(c))) got = true;
+    }
+  }));
+  if (token !== _rxTextToken || key !== _xrefKey() || ver !== _xrefEnglishVersion()) return;
+  document.getElementById('rxVerNote')?.classList.remove('loading');
+  if (got) _rxRedrawKeepScroll();
+}
+function _rxRedrawKeepScroll() {
+  const body = document.getElementById('rxMainView');
+  const y = body?.scrollTop || 0;
+  if (_rhemaXrefView !== 'main' || document.getElementById('rhemaXrefPage')?.classList.contains('hidden')) return;
+  renderRhemaCrossReferences();
+  if (body) body.scrollTop = y;
 }
 
 function _xrefTopCardHtml() {
   const ref = _xrefKey();
-  const versions = ['MSB', 'BSB'];
+  const ver = _xrefEnglishVersion();
+  const name = (typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[ver]?.name) || ver;
+  const top = _xrefRefTextInfo(_rhemaXrefActive);
+  const limited = _xrefIsApi(ver) && typeof _vsTransLimited === 'function' && _vsTransLimited(ver);
+  const note = limited
+    ? `${ver} has reached its ${typeof _vsLimitLabel === 'function' ? _vsLimitLabel(ver) : ''} download limit, so this shows the ${_xrefLocalVersion()}.`
+    : top.outOfScope ? `${ver} has only the ${typeof _vsScopeLabel === 'function' ? _vsScopeLabel(ver) : 'other Testament'}, so verses outside it show the ${_xrefLocalVersion()}.`
+    : top.ver && top.ver !== ver ? `Loading ${ver}… showing the ${top.ver} until it arrives.` : '';
   return `<div class="rx-top-card" role="button" tabindex="0" onclick="openRhemaCrossRefSelect()" onkeydown="if(event.key==='Enter'||event.key===' ')openRhemaCrossRefSelect()">
     <div class="rx-top-card-copy">
       <h3>${_xrefEscape(_xrefDisplay(ref))}</h3>
-      <p>${_xrefEscape(_xrefTopCardText())}</p>
+      <p>${_xrefEscape(top.text)}</p>
       <span class="rx-change"><span class="material-symbols-outlined">touch_app</span>Tap to change verse</span>
     </div>
     <span class="material-symbols-outlined rx-top-watermark">auto_stories</span>
   </div>
-  <div class="rx-translation-toggle" aria-label="English translation">
-    ${versions.map(version => `<button class="${_xrefEnglishVersion() === version ? 'active' : ''}" onclick="setRhemaXrefEnglishVersion('${version}')">${version}</button>`).join('')}
+  <button type="button" class="rx-ver-btn" onclick="rxOpenVersionPicker()" aria-label="Bible version: ${_xrefEscape(name)}. Change">
+    <span class="material-symbols-outlined">menu_book</span><b>${_xrefEscape(ver)}</b><span class="rx-ver-name">${_xrefEscape(name)}</span><span class="material-symbols-outlined rx-ver-chev">expand_more</span>
+  </button>
+  <p class="rx-ver-note${note ? '' : ' hidden'}" id="rxVerNote">${_xrefEscape(note)}</p>`;
+}
+
+// Every version the reader offers.
+function rxOpenVersionPicker() {
+  const all = typeof VS_VERSIONS !== 'undefined' ? VS_VERSIONS : [{ code: 'MSB', name: 'Majority Standard Bible', local: true }, { code: 'BSB', name: 'Berean Standard Bible', local: true }];
+  const cur = _xrefEnglishVersion();
+  const esc = _xrefEscape;
+  const row = v => {
+    const limited = !v.local && typeof _vsTransLimited === 'function' && _vsTransLimited(v.code);
+    const scope = v.scope === 'nt' ? 'New Testament only' : v.scope === 'ot' ? 'Old Testament only' : '';
+    const tag = v.local ? 'On your device' : limited ? 'Unavailable right now' : scope;
+    return `<button type="button" class="rx-ver-row${v.code === cur ? ' on' : ''}" onclick="setRhemaXrefEnglishVersion('${v.code}')"${limited ? ' disabled' : ''}>
+      <b>${esc(v.code)}</b><span>${esc(v.name)}${tag ? `<small>${esc(tag)}</small>` : ''}</span>${v.code === cur ? '<span class="material-symbols-outlined">check</span>' : ''}
+    </button>`;
+  };
+  const group = (title, list) => list.length ? `<div class="rx-ver-group">${esc(title)}</div>${list.map(row).join('')}` : '';
+  document.getElementById('rxVersionSheet')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'rxVersionSheet';
+  ov.className = 'rx-compare-ov';
+  ov.addEventListener('click', e => { if (e.target === ov) rxCloseVersionPicker(); });
+  ov.innerHTML = `<div class="rx-compare rx-ver-sheet" role="dialog" aria-label="Bible version">
+    <div class="rx-compare-hd"><strong>Bible version</strong><button type="button" class="rx-icon-btn" onclick="rxCloseVersionPicker()" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+    ${group('Versions', all.filter(v => !v.more))}
+    ${group('Additional versions', all.filter(v => v.more))}
+    <p class="rx-compare-note">Versions other than MSB and BSB download a chapter at a time and stay on your device.</p>
   </div>`;
+  document.getElementById('rhemaXrefPage')?.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('open'));
+  ov.querySelector('.rx-ver-row.on')?.scrollIntoView({ block: 'center' });
+}
+function rxCloseVersionPicker() {
+  const ov = document.getElementById('rxVersionSheet');
+  if (!ov) return;
+  ov.classList.remove('open');
+  setTimeout(() => ov.remove(), 220);
 }
 
 function _renderXrefBreadcrumb() {
@@ -348,7 +418,7 @@ function _rxBookOf(ref) { return _xrefBookName(String(ref).split(' ')[0]); }
 // Why this link is here, in plain words.
 function _rxWhy(row, src) {
   const why = _rxWhyBase(row, src);
-  return row.footnote && row.kind && row.kind !== 'n' ? `${why} · cited in the ${_xrefEnglishLabel()} footnotes` : why;
+  return row.footnote && row.kind && row.kind !== 'n' ? `${why} · cited in the ${_xrefLocalVersion()} footnotes` : why;
 }
 function _rxWhyBase(row, src) {
   const n = row.info ? ` · ${row.info} words alike in the Greek` : '';
@@ -361,8 +431,8 @@ function _rxWhyBase(row, src) {
     case 'p': return _rxBookOf(row.ref) === _rxBookOf(src) ? 'A parallel passage' : `A parallel passage in ${_rxBookOf(row.ref)}`;
     case 's': return 'Very similar wording';
     case 'w': return row.word ? `Both use ${row.word[0]}${row.word[1] ? ` “${row.word[1]}”` : ''}` : 'Both use the same uncommon word';
-    case 'n': return `Cited in the ${_xrefEnglishLabel()} footnotes`;
-    default: return row.footnote ? `Cited in the ${_xrefEnglishLabel()} footnotes` : 'Linked by readers';
+    case 'n': return `Cited in the ${_xrefLocalVersion()} footnotes`;
+    default: return row.footnote ? `Cited in the ${_xrefLocalVersion()} footnotes` : 'Linked by readers';
   }
 }
 
@@ -371,11 +441,13 @@ function _rxCardHtml(row, i, srcSet) {
   const ref = row.ref;
   const esc = _xrefEscape;
   const js = String(ref).replace(/'/g, "\\'");
-  const text = _xrefRefText(ref);
+  const info = _xrefRefTextInfo(ref);
+  const text = info.text;
   const hl = /[qQfFeEpsn]/.test(row.kind) ? _rxHighlight(text, srcSet) : esc(text);
+  const verTag = info.ver && info.ver !== _xrefEnglishVersion() ? ` <span class="rx-ver-tag">${esc(info.ver)}</span>` : '';
   return `<article class="rx-link rx-k-${k.cls}">
     <button type="button" class="rx-link-main" onclick="rhemaXrefFollow('${js}')">
-      <span class="rx-link-top"><strong>${esc(_xrefDisplay(ref))}</strong><span class="rx-kind"><span class="material-symbols-outlined">${k.icon}</span>${k.label}</span></span>
+      <span class="rx-link-top"><strong>${esc(_xrefDisplay(ref))}</strong>${verTag}<span class="rx-kind"><span class="material-symbols-outlined">${k.icon}</span>${k.label}</span></span>
       <span class="rx-link-text" data-xref-ref="${esc(ref)}">${hl}</span>
       <span class="rx-link-why">${esc(_rxWhy(row, _xrefKey()))}</span>
     </button>
@@ -398,6 +470,12 @@ function renderRhemaCrossReferences() {
   if (!body) return;
   const key = _xrefKey();
   const book = _rhemaXrefActive.book;
+  // BSB loads on first use (it isn't kept in memory by default).
+  if (_xrefLocalVersion() === 'BSB' && !window.RhemaBSB && typeof _rhemaLoadDataFile === 'function') {
+    body.innerHTML = '<div class="rx-loading">Loading the BSB…</div>';
+    _rhemaLoadDataFile('rhema-bsb.js').then(() => { if (_xrefKey() === key) renderRhemaCrossReferences(); }).catch(() => {});
+    return;
+  }
   const rows = _rxRows(key);
   if (!rows) {
     body.innerHTML = _xrefTopCardHtml() + '<div class="rx-loading">Loading cross references…</div>';
@@ -426,6 +504,7 @@ function renderRhemaCrossReferences() {
     (rows.length ? `<div class="rx-filters" role="tablist" aria-label="Kinds of link">${chips}</div>` : '') +
     `<div class="rx-links">${cards || `<p class="rx-empty">${rows.length ? 'None of this kind for this verse.' : 'No cross references for this verse yet.'}</p>`}</div>` +
     more + save +
+    (typeof _vsCopyright === 'function' && _vsCopyright(_xrefEnglishVersion()) ? `<p class="rx-credit rx-copyright">${_vsCopyright(_xrefEnglishVersion())}</p>` : '') +
     `<p class="rx-credit">Links from OpenBible.info (CC BY), ranked by readers’ votes. Quotes, parallels and shared words are found by comparing the Greek and Hebrew texts. <button type="button" onclick="openRhemaCrossRefInfo()">How this works</button></p>`;
   _xrefLoadAsyncVerseTexts([key, ...shown.map(r => r.ref)]);
 }
@@ -517,7 +596,7 @@ function openRhemaXrefTrailFromReader(sourceRef, targetRef = null, category = nu
   const active = target || source;
   if (!source || !active) return;
   if (typeof closeRhemaWheel === 'function') closeRhemaWheel();
-  _rhemaXrefEnglishVersion = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
+  _rhemaXrefEnglishVersion = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : (typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB');
   _rhemaXrefActive = active;
   _rhemaBook = active.book;
   _rhemaChapter = active.chapter;
@@ -711,7 +790,7 @@ async function saveCurrentRhemaTrail() {
     reference: _xrefDisplay(row.ref),
     rawRef: row.ref,
     label: _rxWhy(row, _xrefKey()),
-    text: _xrefEnglishText(row.ref),
+    text: _xrefRefText(row.ref),
     translation: _xrefEnglishLabel()
   }));
   const defaultTitle = `${_xrefDisplay(_rhemaXrefBreadcrumb[0])} Trail`;
@@ -826,5 +905,7 @@ Object.assign(window, {
   rxShowMore,
   rxCompare,
   rxCloseCompare,
-  rxOpenInReader
+  rxOpenInReader,
+  rxOpenVersionPicker,
+  rxCloseVersionPicker
 });

@@ -40131,3 +40131,22 @@ body.dark .rx-k-w, body.dark-mode .rx-k-w { --rx-k: #60a5fa; }
 .rhema-xref-page .rx-change { margin-top: 10px; }
 .rhema-xref-page .rx-top-watermark { top: 18px; right: 18px; font-size: 36px; }
 .rhema-xref-page .rx-translation-toggle { margin: -4px 2px 4px; }
+/* Cross references: Bible version */
+.rx-ver-btn { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 46px; margin: -4px 0 0; padding: 0 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--secondary-color) 22%, var(--border-color)); background: var(--card-color); color: var(--text-color); font: inherit; cursor: pointer; flex-shrink: 0; text-align: left; }
+.rx-ver-btn > .material-symbols-outlined:first-child { font-size: 20px; color: var(--secondary-color); }
+.rx-ver-btn b { font-size: .9rem; font-weight: 850; color: var(--secondary-color); }
+.rx-ver-name { flex: 1; min-width: 0; font-size: .84rem; color: var(--muted-color, #8a8a8a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rx-ver-chev { font-size: 20px; color: var(--secondary-color); }
+.rx-ver-note { margin: -6px 4px 0; font-size: .76rem; color: var(--muted-color, #8a8a8a); }
+.rx-ver-note.hidden { display: none; }
+.rx-ver-tag { display: inline-block; padding: 1px 6px; border-radius: 6px; font-size: .64rem; font-weight: 800; letter-spacing: .02em; color: var(--muted-color, #8a8a8a); background: color-mix(in srgb, var(--text-color) 7%, transparent); vertical-align: 2px; }
+.rx-ver-sheet { max-height: 80%; }
+.rx-ver-group { margin: 12px 4px 6px; font-size: .72rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-color, #8a8a8a); }
+.rx-ver-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 8px 12px; margin-bottom: 4px; border: 1px solid transparent; border-radius: 12px; background: var(--card-color); color: var(--text-color); font: inherit; text-align: left; cursor: pointer; }
+.rx-ver-row b { flex: 0 0 58px; font-size: .86rem; font-weight: 850; color: var(--secondary-color); }
+.rx-ver-row span { flex: 1; min-width: 0; font-size: .88rem; line-height: 1.3; }
+.rx-ver-row small { display: block; font-size: .72rem; color: var(--muted-color, #8a8a8a); }
+.rx-ver-row .material-symbols-outlined { flex: 0 0 auto; color: var(--secondary-color); }
+.rx-ver-row.on { border-color: var(--secondary-color); background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color)); }
+.rx-ver-row:disabled { opacity: .45; cursor: default; }
+.rx-copyright { font-style: italic; }
