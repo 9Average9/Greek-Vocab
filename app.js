@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.599";
+const APP_VERSION = "3.0.600";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.600 &mdash; Simpler Display tools</div>
+<ul>
+  <li><strong>Simpler Display tools</strong> &mdash; The Syntax Tree button is gone from Rhēma&rsquo;s menu (and its tour). Hebrew still has Who Does What.</li>
+  <li><strong>Greek Only when it applies</strong> &mdash; The Greek Only (or Hebrew Only) tile now shows only while Greek or Hebrew is selected, instead of sitting grayed out in English.</li>
+</ul>
 <div class="un-version-label">v3.0.599 &mdash; Back button, only when a tool moved you</div>
 <ul>
   <li><strong>Moving yourself stays clean</strong> &mdash; Turning chapters, the verse arrows, the book picker and typing a reference in search (&ldquo;Romans 8&rdquo;) never add a <em>Back to</em> button. It appears only when a tool takes you somewhere: occurrences, word-study verses, word or topic search results, cross references, saved notes and highlights.</li>
@@ -45236,7 +45241,6 @@ const RHEMA_TOURS = [
   { id: 'wordstudy', icon: 'menu_book', title: 'Greek words', desc: 'What a word means here, its parsing, and everywhere it shows up.' },
   { id: 'study', icon: 'layers', title: 'Study tools', desc: 'Phrasing, Word Log, Trails and Workspace.', account: true },
   { id: 'xref', icon: 'hub', title: 'Cross references', desc: 'Tap a verse, then Cross references: find verses that connect and follow the trail.' },
-  { id: 'syntax', icon: 'account_tree', title: 'Syntax tree', desc: 'See how a verse is put together.' },
   { id: 'wordlib', icon: 'local_library', title: 'Word Library', desc: 'Look up any Greek word, any way you can spell it.' }
 ];
 function _rhemaToursHtml() {
@@ -45361,17 +45365,18 @@ function _rhemaStudyTools() {
   const hebrew = isOT && getCurrentOriginalLanguageLayer() === 'hebrew';
   const orig = hebrew ? 'Hebrew' : 'Greek';
   const tools = [
-    // Hebrew gets "Who Does What": each action in the verse with who does
-    // it, to what or whom, and who "he"/"it" refers to (MACULA Hebrew).
-    { id: 'syntax', label: hebrew ? 'Who Does What' : 'Syntax Tree', icon: hebrew ? 'groups' : 'account_tree', active: _rhemaSyntaxMode,
-      reason: _rhemaShowEnglish ? `Select ${orig} in the Language bar first to see ${hebrew ? 'who does what' : 'the syntax tree'}.`
-            : _rhemaFullChapter ? `Switch to verse view first to open ${hebrew ? 'who does what' : 'the syntax tree'}.` : '',
-      action: () => toggleWheelTool('syntax') },
+    // The Greek syntax tree was retired; Hebrew keeps "Who Does What": each
+    // action in the verse with who does it, to what or whom, and who "he"/"it"
+    // refers to (MACULA Hebrew).
+    ...(hebrew ? [{ id: 'syntax', label: 'Who Does What', icon: 'groups', active: _rhemaSyntaxMode,
+      reason: _rhemaShowEnglish ? 'Select Hebrew in the Language bar first to see who does what.'
+            : _rhemaFullChapter ? 'Switch to verse view first to open who does what.' : '',
+      action: () => toggleWheelTool('syntax') }] : []),
     { id: 'pos', label: 'Parts of Speech', icon: 'ink_highlighter', active: _rhemaHighlightBarOn, reason: '',
       action: () => toggleWheelTool('highlight') },
-    { id: 'greek', label: `${orig} Only`, icon: 'translate', active: _rhemaGreekOnly,
-      reason: _rhemaShowEnglish ? `Select ${orig} in the Language bar first.` : '',
-      action: () => toggleWheelTool('greek-only') },
+    // Greek/Hebrew Only shows only while the original language is on screen.
+    ...(!_rhemaShowEnglish ? [{ id: 'greek', label: `${orig} Only`, icon: 'translate', active: _rhemaGreekOnly, reason: '',
+      action: () => toggleWheelTool('greek-only') }] : []),
     { id: 'chapter', label: 'Chapter View', icon: 'article', active: _rhemaFullChapter, reason: '',
       action: () => toggleRhemaChapterMode() },
     { id: 'critical', label: _rhemaTextMode === 'critical' ? 'Majority Text' : 'Critical Text', icon: 'difference',
@@ -47396,6 +47401,9 @@ function _rhemaEngNoteHtml(book, chapter, hasEng, hasOrig) {
 
 function renderRhemaVerse() {
   if (!_rhemaData()) return;
+  // The Greek syntax tree was retired (only Hebrew "Who Does What" remains), so
+  // a saved position or study can't strand the reader in it.
+  if (_rhemaSyntaxMode && !(isRhemaOTBook(_rhemaBook) && getCurrentOriginalLanguageLayer() === 'hebrew')) _rhemaSyntaxMode = false;
   // A navigation into a part of the Bible whose text hasn't loaded yet (e.g.
   // Genesis while the Hebrew OT is still queued, or switching to BSB / LXX):
   // fetch just that dataset, then render.
@@ -48245,7 +48253,7 @@ const _menuSectionAfter = label => () => {
 };
 const READING_COACH_STEPS = [
   { before: _coachMenuShow(_menuSectionAfter('language')), target: _menuSectionAfter('language'), title: 'Language', body: 'Flip the chapter between English and Greek. In the Old Testament you can pick Hebrew or the Greek Old Testament too. In Greek, tap any word to see what it means.' },
-  { before: _coachMenuShow(_menuSectionAfter('display')), target: _menuSectionAfter('display'), pose: 'inspect', title: 'Reading helpers', body: 'Syntax Tree draws a verse as a diagram of its parts. Parts of Speech adds a row of word types: tap one, like Verb, to color every verb. Greek Only hides the small English under each Greek word. A greyed-out tile tells you what to turn on first.' },
+  { before: _coachMenuShow(_menuSectionAfter('display')), target: _menuSectionAfter('display'), pose: 'inspect', title: 'Reading helpers', body: 'Parts of Speech adds a row of word types: tap one, like Verb, to color every verb. When Greek is selected, Greek Only hides the small English under each Greek word. A grayed-out tile tells you what to turn on first.' },
   { before: _coachMenuShow(_menuSectionAfter('text')), target: _menuSectionAfter('text'), pose: 'think', title: 'Chapter or verse', body: 'Chapter View shows the whole chapter; turn it off to read one verse at a time. Critical Text switches the Greek New Testament between its two main manuscript traditions.' },
   { before: _coachMenuShow(_menuSectionAfter('study')), target: _menuSectionAfter('study'), title: 'More tools', body: 'The Word Library to look up Greek words, and Copy verse to grab several verses at once. (Cross references are on each verse: tap a verse.)' },
   { before: _coachMenuShow(_menuSectionAfter('marks')), target: _menuSectionAfter('marks'), pose: 'thumbs', title: 'Your saved stuff', body: 'Every highlight, note, and saved word meaning in one place. Tap one to jump to its verse.' },
