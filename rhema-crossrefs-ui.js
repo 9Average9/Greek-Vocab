@@ -415,7 +415,8 @@ function _rxHighlight(text, against) {
 }
 
 function _rxBookOf(ref) { return _xrefBookName(String(ref).split(' ')[0]); }
-// Why this link is here, in plain words.
+// Why this link is here, in plain words ('' for a plain reader link: the
+// Related badge already says it, so no filler line).
 function _rxWhy(row, src) {
   const why = _rxWhyBase(row, src);
   return row.footnote && row.kind && row.kind !== 'n' ? `${why} · cited in the ${_xrefLocalVersion()} footnotes` : why;
@@ -431,7 +432,7 @@ function _rxWhyBase(row, src) {
     case 'p': return _rxBookOf(row.ref) === _rxBookOf(src) ? 'A parallel passage' : `A parallel passage in ${_rxBookOf(row.ref)}`;
     case 's': return 'Very similar wording';
     case 'n': return `Cited in the ${_xrefLocalVersion()} footnotes`;
-    default: return row.footnote ? `Cited in the ${_xrefLocalVersion()} footnotes` : 'Linked by readers';
+    default: return row.footnote ? `Cited in the ${_xrefLocalVersion()} footnotes` : '';
   }
 }
 
@@ -448,7 +449,7 @@ function _rxCardHtml(row, i, srcSet) {
     <button type="button" class="rx-link-main" onclick="rhemaXrefFollow('${js}')">
       <span class="rx-link-top"><strong>${esc(_xrefDisplay(ref))}</strong>${verTag}<span class="rx-kind"><span class="material-symbols-outlined">${k.icon}</span>${k.label}</span></span>
       <span class="rx-link-text" data-xref-ref="${esc(ref)}">${hl}</span>
-      <span class="rx-link-why">${esc(_rxWhy(row, _xrefKey()))}</span>
+      ${(w => w ? `<span class="rx-link-why">${esc(w)}</span>` : '')(_rxWhy(row, _xrefKey()))}
     </button>
     <div class="rx-link-actions">
       <button type="button" onclick="rxCompare(${i})"><span class="material-symbols-outlined">splitscreen</span>Compare</button>
@@ -543,7 +544,7 @@ function rxCompare(i) {
   ov.innerHTML = `<div class="rx-compare" role="dialog" aria-label="Compare verses">
     <div class="rx-compare-hd"><strong>Compare</strong><button type="button" class="rx-icon-btn" onclick="rxCloseCompare()" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
     <div class="rx-compare-v"><span>${esc(_xrefDisplay(src))}</span><p>${_rxHighlight(a, b)}</p></div>
-    <div class="rx-compare-why rx-k-${k.cls}"><span class="material-symbols-outlined">${k.icon}</span>${esc(_rxWhy(row, src))}</div>
+    <div class="rx-compare-why rx-k-${k.cls}"><span class="material-symbols-outlined">${k.icon}</span>${esc(_rxWhy(row, src) || 'Linked by readers')}</div>
     <div class="rx-compare-v"><span>${esc(_xrefDisplay(row.ref))}</span><p>${_rxHighlight(b, a)}</p></div>
     <p class="rx-compare-note">Highlighted: words the two verses share in the ${esc(_xrefEnglishLabel())}.</p>
     <div class="rx-compare-actions">
@@ -577,15 +578,12 @@ function rhemaXrefFollow(ref) {
   const parsed = { book: full.book, chapter: full.chapter, verse: full.verse };
   rxCloseCompare();
   _rxShown = RX_PAGE;
+  // Following links never moves the reader: closing returns to the verse you
+  // started from (Read it is the way to go to one).
   _rhemaXrefActive = parsed;
-  _rhemaBook = parsed.book;
-  _rhemaChapter = parsed.chapter;
-  _rhemaVerse = parsed.verse;
   _rhemaXrefBreadcrumb.push(_xrefKey(parsed));
   _rhemaXrefCursor = _rhemaXrefBreadcrumb.length - 1;
   _rhemaXrefCategory = null;
-  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
-  if (!inVsCtx && typeof syncRhemaPicker === 'function') syncRhemaPicker();
   renderRhemaCrossReferences();
 }
 
@@ -597,16 +595,12 @@ function openRhemaXrefTrailFromReader(sourceRef, targetRef = null, category = nu
   if (typeof closeRhemaWheel === 'function') closeRhemaWheel();
   _rhemaXrefEnglishVersion = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : (typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB');
   _rhemaXrefActive = active;
-  _rhemaBook = active.book;
-  _rhemaChapter = active.chapter;
-  _rhemaVerse = active.verse;
   _rhemaXrefBreadcrumb = [_xrefKey(source)];
   if (target) _rhemaXrefBreadcrumb.push(_xrefKey(target));
   _rhemaXrefCursor = _rhemaXrefBreadcrumb.length - 1;
   _rhemaXrefCategory = !target && category ? (RX_OLD_CATEGORY[category] || category) : null;
   _rhemaXrefView = 'main';
   _rxShown = RX_PAGE;
-  if (typeof syncRhemaPicker === 'function') syncRhemaPicker();
   renderRhemaCrossReferences();
 }
 
@@ -615,12 +609,7 @@ function rhemaXrefJumpBreadcrumb(idx) {
   if (!parsed) return;
   _rhemaXrefCursor = idx;
   _rhemaXrefActive = parsed;
-  _rhemaBook = parsed.book;
-  _rhemaChapter = parsed.chapter;
-  _rhemaVerse = parsed.verse;
   _rhemaXrefCategory = null;
-  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
-  if (!inVsCtx && typeof syncRhemaPicker === 'function') syncRhemaPicker();
   renderRhemaCrossReferences();
 }
 
@@ -734,14 +723,9 @@ function rhemaXrefSelectVerse(v) {
 
 function applyRhemaXrefSelection() {
   _rhemaXrefActive = { ..._rhemaXrefSelect };
-  _rhemaBook = _rhemaXrefActive.book;
-  _rhemaChapter = _rhemaXrefActive.chapter;
-  _rhemaVerse = _rhemaXrefActive.verse;
   _rhemaXrefBreadcrumb = [_xrefKey(_rhemaXrefActive)];
   _rhemaXrefCursor = 0;
   _rhemaXrefCategory = null;
-  const inVsCtx = typeof _vsXrefContext !== 'undefined' && _vsXrefContext;
-  if (!inVsCtx && typeof syncRhemaPicker === 'function') syncRhemaPicker();
   renderRhemaCrossReferences();
 }
 
@@ -907,18 +891,18 @@ function _rxSheetRender() {
   if (!panel || !ref) return;
   const rows = _rxRows(ref);
   if (!rows) { panel.innerHTML = '<div class="rx-loading">Loading cross references…</div>'; return; }
-  const top = rows.slice(0, 5);
+  const top = rows.slice(0, 3);
   const esc = _xrefEscape;
-  panel.innerHTML = top.map((r, i) => {
+  panel.innerHTML = '<div class="rx-sheet-list">' + top.map((r, i) => {
     const k = RX_KIND[r.kind] || RX_KIND[''];
     const info = _xrefRefTextInfo(r.ref);
     const tag = info.ver && info.ver !== _xrefEnglishVersion() ? ` <span class="rx-ver-tag">${esc(info.ver)}</span>` : '';
     return `<button type="button" class="rx-sheet-link rx-k-${k.cls}" onclick="rxSheetFollow(${i})">
       <span class="rx-link-top"><strong>${esc(_xrefDisplay(r.ref))}</strong>${tag}<span class="rx-kind"><span class="material-symbols-outlined">${k.icon}</span>${k.label}</span></span>
       <span class="rx-sheet-text">${esc(info.text)}</span>
-      <span class="rx-link-why">${esc(_rxWhy(r, ref))}</span>
+      ${(w => w ? `<span class="rx-link-why">${esc(w)}</span>` : '')(_rxWhy(r, ref))}
     </button>`;
-  }).join('') + `<button type="button" class="rx-sheet-all" onclick="rxSheetOpenAll()">${rows.length > top.length ? `See all ${rows.length} cross references` : 'Open in Cross references'}<span class="material-symbols-outlined">arrow_forward</span></button>`;
+  }).join('') + '</div>' + `<button type="button" class="rx-sheet-all" onclick="rxSheetOpenAll()">${rows.length > top.length ? `See all ${rows.length} cross references` : 'Open in Cross references'}<span class="material-symbols-outlined">arrow_forward</span></button>`;
   _xrefLoadAsyncVerseTexts(top.map(r => r.ref), () => { if (_rxSheetRef === ref && !panel.classList.contains('hidden')) _rxSheetRender(); });
 }
 function rxToggleSheetXrefs() {

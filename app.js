@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.596";
+const APP_VERSION = "3.0.597";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.597 &mdash; Cross references, tidier</div>
+<ul>
+  <li><strong>You stay where you were</strong> &mdash; Following a trail of cross references no longer moves your reader. Close it and you&rsquo;re back at the verse you started from. (<em>Read</em> still takes you to a verse when you want to go there.)</li>
+  <li><strong>Less clutter</strong> &mdash; Links readers made don&rsquo;t repeat &ldquo;Linked by readers&rdquo; under every card any more; a reason line now appears only when there&rsquo;s a real one (a quote, fulfillment, echo or parallel).</li>
+  <li><strong>A shorter menu</strong> &mdash; Cross references in the verse menu now shows the top three as one-line previews, so the menu rises less.</li>
+</ul>
 <div class="un-version-label">v3.0.596 &mdash; Cross references live on the verse</div>
 <ul>
   <li><strong>One place</strong> &mdash; Cross references are no longer in the side menu; tap any verse and use <em>Cross references</em> in its menu, which shows how many links that verse has.</li>
