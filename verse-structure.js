@@ -225,7 +225,7 @@ function _vsLimitLabel(trans) {
 }
 
 function _vsApplyLimitedState() {
-  // Grey out chips per-version (ESV's daily limit is independent of api.bible's)
+  // Gray out chips per-version (ESV's daily limit is independent of api.bible's)
   document.querySelectorAll('#vsTransRow .vs-trans-chip').forEach(chip => {
     chip.classList.toggle('limited', _vsTransLimited(chip.dataset.trans));
   });

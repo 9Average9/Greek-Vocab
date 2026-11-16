@@ -21,7 +21,16 @@ const fs = require('fs');
 const path = require('path');
 
 const FG_MODEL = /free-grace/;
-const words = (s) => String(s || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+// British and American spellings count as the same word (the studies were
+// later changed to American spelling: scripts/americanize-spelling.py).
+const US = (t) => t.replace(/^practis/, 'practic').replace(/^jewellery$/, 'jewelry').replace(/^catalogue(s|d)?$/, 'catalog$1')
+  .replace(/^acknowledgement/, 'acknowledgment').replace(/^programme(s)?$/, 'program$1').replace(/^(whilst)$/, 'while').replace(/^learnt$/, 'learned')
+  .replace(/our(s|ed|ing|able|ably|ite|ites|ful|hood|er|ers|al)?$/, 'or$1')
+  .replace(/is(e|ed|es|ing|ation|ations)$/, 'iz$1').replace(/yse(d)?$/, 'yze$1')
+  .replace(/([aeiou][^aeiou])l(ed|ing|er|ers)$/, '$1$2').replace(/pp(ed|ing|er|ers)$/, 'p$1')
+  .replace(/^fulfil(s|ment)?$/, 'fulfill$1').replace(/(c|f|t|m|b)re(s|d)?$/, '$1er$2').replace(/ence(s)?$/, 'ense$1')
+  .replace(/^grey/, 'gray').replace(/^judgement/, 'judgment').replace(/^mould/, 'mold').replace(/^plough/, 'plow');
+const words = (s) => String(s || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean).map(US);
 
 // Word-level similarity, 0..1 (2·LCS / total words), like difflib's ratio.
 function similarity(a, b) {

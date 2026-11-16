@@ -436,10 +436,10 @@
   // nation. Drawn as a translucent colour-coded fill with a dashed border (the
   // dashes signal "approximate extent"). Sits beneath the HTML name labels/pins,
   // which always paint on top of GL layers.
-  // Neighbouring / passed-through territories drawn as thin muted dashed outlines
+  // Neighboring / passed-through territories drawn as thin muted dashed outlines
   // with NO fill — enough to show how the lands fit together (or which lands a
-  // journey crossed) without stacking colours into mud. Each keeps its own kind
-  // colour. Independent of any focus region, so it works on journey maps too.
+  // journey crossed) without stacking colors into mud. Each keeps its own kind
+  // color. Independent of any focus region, so it works on journey maps too.
   function _addRegionContext() {
     var map = state.map;
     var ctx = (state.opts && state.opts.regionContext) || [];
@@ -513,7 +513,7 @@
     }
   }
 
-  // Small, quiet name tags at the centre of each neighbouring territory so a
+  // Small, quiet name tags at the center of each neighboring territory so a
   // bare context outline isn't a mystery shape. Kept subtle (muted, no pill) so
   // the focused region stays the clear subject.
   function _addRegionContextLabels() {
@@ -815,8 +815,8 @@
     _clearGeoFeatures();
   }
 
-  // Known place kinds that get their own outline colour. Anything else falls
-  // back to a neutral pin so an unrecognised kind still marks the exact spot.
+  // Known place kinds that get their own outline color. Anything else falls
+  // back to a neutral pin so an unrecognized kind still marks the exact spot.
   var PIN_KINDS = {
     city: 1, town: 1, village: 1, site: 1, region: 1, nation: 1,
     mountain: 1, valley: 1, river: 1, lake: 1, sea: 1, port: 1,
@@ -866,9 +866,9 @@
     // On a single-place map (the Atlas / verse pins) there's no route line and no
     // stop circle, so the label alone floats near — but not on — the coordinate.
     // Drop a colour-coded dot on the exact spot so it's unmistakable where the
-    // place sits, and tint the label's outline to the same colour by kind.
+    // place sits, and tint the label's outline to the same color by kind.
     // A region/nation view draws a filled outline instead of a pinpoint dot, so
-    // the dot would just clutter the area's centre.
+    // the dot would just clutter the area's center.
     var hasRegion = !!(state.opts && state.opts.regionOutline && state.opts.regionOutline.geometry);
     var singlePlace = state.coords.length < 2 && !hasRegion;
     pts.forEach(function (p, i) {

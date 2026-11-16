@@ -583,7 +583,7 @@
     };
   }
 
-  // Each meaning gets its own colour, used by its chip, card and number.
+  // Each meaning gets its own color, used by its chip, card and number.
   const SENSE_COLORS = ['#2498df', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#0ea5e9', '#d946ef', '#84cc16'];
   const senseColor = (i) => SENSE_COLORS[i % SENSE_COLORS.length];
 
@@ -621,7 +621,7 @@
 
   // Provenance labels. Study prose is written by AI (checked by machine, see
   // "How we know"); notes written or reworded in the Free Grace review carry
-  // study.fg paths (scripts/free-grace-marks.js) and are labelled where shown.
+  // study.fg paths (scripts/free-grace-marks.js) and are labeled where shown.
   const _fgMarked = (study, p) => !!(study && Array.isArray(study.fg) && study.fg.includes(p));
   const _provBtn = (key, cls, label) => `<button type="button" class="ws-prov-tag ${cls}" onclick="event.stopPropagation();event.preventDefault();showRhemaSourceTagHelp('${key}')">${label}</button>`;
   function fgTag(study, p) {
@@ -715,7 +715,7 @@
         </div>`;
       }).join('')}</div>`;
       if (labels.length > senses.length) {
-        measured += `<div class="ws-extra"><div class="ws-extra-h">Also recognised by the lexicons</div>
+        measured += `<div class="ws-extra"><div class="ws-extra-h">Also recognized by the lexicons</div>
           <ul>${labels.slice(senses.length).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>`;
       }
     }
@@ -842,7 +842,7 @@
   }
 
   // Majority vs critical count. A small gap is textual variation; a large one
-  // means the two editions catalogue the word differently (SBLGNT files δεῖ
+  // means the two editions catalog the word differently (SBLGNT files δεῖ
   // under δέω and πρῶτον under πρῶτος), so the numbers aren't comparable.
   function _critNote(count, crit) {
     if (crit == null) return '';
@@ -891,10 +891,10 @@
         <li>Tested against a Greek-tagged King James and World English Bible: when a main word is matched, it is the right word about 97–98% of the time.</li>
         <li>Across-translation counts are made on your device from each version’s own text.</li>
         ${entry.study || entry.prose?.def ? `<li><b>How the study is put together.</b> The meanings, author notes, tips and notes are drawn from every verse with the word in the Greek text, the lexicons (Abbott-Smith, Moulton–Milligan, LSJ, Dodson, Strong’s) and how the English versions render it. Any cited verse that doesn’t contain the word, and any history quote not found in the lexicon text, is removed. It’s a study tool: the verses and lexicons are right here so you can weigh every claim for yourself.</li>` : ''}
-        ${(entry.study?.fg || []).length ? `<li><b>Free Grace reading.</b> This study was revised to follow the Free Grace view where it takes a theological direction; the ${entry.study.fg.length === 1 ? 'note' : `${entry.study.fg.length} notes`} written or reworded in that review are labelled. Other traditions read some of these passages differently. The measured renderings and the lexicons were not changed.</li>` : ''}
+        ${(entry.study?.fg || []).length ? `<li><b>Free Grace reading.</b> This study was revised to follow the Free Grace view where it takes a theological direction; the ${entry.study.fg.length === 1 ? 'note' : `${entry.study.fg.length} notes`} written or reworded in that review are labeled. Other traditions read some of these passages differently. The measured renderings and the lexicons were not changed.</li>` : ''}
       </ul>` + more('Evidence trail',
       `${why.map(w => `<p>${esc(w)}</p>`).join('')}
-       <p class="ws-fine">English renderings are measured by aligning every occurrence in the Byzantine text with the Majority Standard Bible (and checked independently against the Berean Standard Bible), then grouping the English renderings. Translation wording approximates meaning; where the lexicons recognise a sense the English hides, it is listed separately.</p>`));
+       <p class="ws-fine">English renderings are measured by aligning every occurrence in the Byzantine text with the Majority Standard Bible (and checked independently against the Berean Standard Bible), then grouping the English renderings. Translation wording approximates meaning; where the lexicons recognize a sense the English hides, it is listed separately.</p>`));
   }
 
 
@@ -980,7 +980,7 @@
       if (ver === 'BSB' && typeof _rhemaLoadDataFile === 'function') await _rhemaLoadDataFile('rhema-bsb.js').catch(() => {});
       const occs = _wsOccurrences(strongs);
       // 1. Chapters (licensed versions only), one at a time so each block
-      //    download covers its neighbours.
+      //    download covers its neighbors.
       let missing = _wsMissingChapters(ver, occs);
       if (missing.length) {
         busy.phase = 'download'; busy.total = missing.length; redraw();
