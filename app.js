@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.595";
+const APP_VERSION = "3.0.596";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.596 &mdash; Cross references live on the verse</div>
+<ul>
+  <li><strong>One place</strong> &mdash; Cross references are no longer in the side menu; tap any verse and use <em>Cross references</em> in its menu, which shows how many links that verse has.</li>
+</ul>
 <div class="un-version-label">v3.0.595 &mdash; Simpler cross references</div>
 <ul>
   <li><strong>No more &ldquo;Same word&rdquo;</strong> &mdash; Cross references no longer label links by a Greek or Hebrew word the two verses share; it was confusing and often wasn&rsquo;t why the verses belong together. Those links now simply say they were linked by readers. To trace a word, tap it and use <em>Occurrences</em>.</li>
@@ -45134,7 +45138,7 @@ const RHEMA_TOURS = [
   { id: 'reading', icon: 'tune', title: 'The menu', desc: 'Greek and Hebrew, reading helpers, your saved stuff, text size.' },
   { id: 'wordstudy', icon: 'menu_book', title: 'Greek words', desc: 'What a word means here, its parsing, and everywhere it shows up.' },
   { id: 'study', icon: 'layers', title: 'Study tools', desc: 'Phrasing, Word Log, Trails and Workspace.', account: true },
-  { id: 'xref', icon: 'hub', title: 'Cross references', desc: 'Find verses that connect and follow the trail.' },
+  { id: 'xref', icon: 'hub', title: 'Cross references', desc: 'Tap a verse, then Cross references: find verses that connect and follow the trail.' },
   { id: 'syntax', icon: 'account_tree', title: 'Syntax tree', desc: 'See how a verse is put together.' },
   { id: 'wordlib', icon: 'local_library', title: 'Word Library', desc: 'Look up any Greek word, any way you can spell it.' }
 ];
@@ -45247,7 +45251,6 @@ function _rhemaReadPanelHtml() {
       <button class="rrp-row" onclick="showReaderPanelSection('highlights')"><span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span><span class="rrp-row-label">Highlights</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="showReaderPanelSection('notes')"><span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span><span class="rrp-row-label">Notes</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="showReaderPanelSection('meanings')"><span class="material-symbols-outlined rrp-row-icon">bookmarks</span><span class="rrp-row-label">Saved meanings</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
-      <button class="rrp-row" onclick="showReaderPanelSection('crossrefs')"><span class="material-symbols-outlined rrp-row-icon">hub</span><span class="rrp-row-label">Cross references</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
     </div>
     ${_rhemaFontControlsHtml()}`;
 }
@@ -45325,7 +45328,6 @@ function _rhemaStudyPanelHtml() {
     ${_rhemaLanguageBarHtml()}
     <div class="rrp-section-label">Study</div>
     <div class="rrp-list">
-      <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(openRhemaCrossReferences,220)"><span class="material-symbols-outlined rrp-row-icon">hub</span><span class="rrp-row-label">Cross references</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="closeRhemaReaderPanel();setTimeout(openWordLibrary,220)"><span class="material-symbols-outlined rrp-row-icon">local_library</span><span class="rrp-row-label">Word Library</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="startRhemaCopyMode()"><span class="material-symbols-outlined rrp-row-icon">content_copy</span><span class="rrp-row-label">Copy verse</span></button>
     </div>
@@ -48137,7 +48139,7 @@ const READING_COACH_STEPS = [
   { before: _coachMenuShow(_menuSectionAfter('language')), target: _menuSectionAfter('language'), title: 'Language', body: 'Flip the chapter between English and Greek. In the Old Testament you can pick Hebrew or the Greek Old Testament too. In Greek, tap any word to see what it means.' },
   { before: _coachMenuShow(_menuSectionAfter('display')), target: _menuSectionAfter('display'), pose: 'inspect', title: 'Reading helpers', body: 'Syntax Tree draws a verse as a diagram of its parts. Parts of Speech adds a row of word types: tap one, like Verb, to color every verb. Greek Only hides the small English under each Greek word. A greyed-out tile tells you what to turn on first.' },
   { before: _coachMenuShow(_menuSectionAfter('text')), target: _menuSectionAfter('text'), pose: 'think', title: 'Chapter or verse', body: 'Chapter View shows the whole chapter; turn it off to read one verse at a time. Critical Text switches the Greek New Testament between its two main manuscript traditions.' },
-  { before: _coachMenuShow(_menuSectionAfter('study')), target: _menuSectionAfter('study'), title: 'More tools', body: 'Cross references for verses that connect, the Word Library to look up Greek words, and Copy verse to grab several verses at once.' },
+  { before: _coachMenuShow(_menuSectionAfter('study')), target: _menuSectionAfter('study'), title: 'More tools', body: 'The Word Library to look up Greek words, and Copy verse to grab several verses at once. (Cross references are on each verse: tap a verse.)' },
   { before: _coachMenuShow(_menuSectionAfter('marks')), target: _menuSectionAfter('marks'), pose: 'thumbs', title: 'Your saved stuff', body: 'Every highlight, note, and saved word meaning in one place. Tap one to jump to its verse.' },
   { before: _coachMenuShow(() => document.querySelector('#rrpMainBody .rrp-fontsize')), target: () => _coachFirst(['#rrpMainBody .rrp-fontsize']), pose: 'thumbs', title: 'Make it yours', body: 'Slide to change the text size, and pick a font you like just below.' },
   { before: _coachMenuShow(() => document.querySelector('#rhemaReaderPanel .rrp-guide.in')), target: () => _coachFirst(['#rhemaReaderPanel .rrp-guide.in', '#rhemaReaderMenuBtn']), title: 'That’s me!', body: 'I pop up somewhere new in this menu each time. Tap me whenever you want another tour.' }
