@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.598";
+const APP_VERSION = "3.0.599";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.599 &mdash; Back button, only when a tool moved you</div>
+<ul>
+  <li><strong>Moving yourself stays clean</strong> &mdash; Turning chapters, the verse arrows, the book picker and typing a reference in search (&ldquo;Romans 8&rdquo;) never add a <em>Back to</em> button. It appears only when a tool takes you somewhere: occurrences, word-study verses, word or topic search results, cross references, saved notes and highlights.</li>
+</ul>
 <div class="un-version-label">v3.0.598 &mdash; Back to where you were</div>
 <ul>
   <li><strong>One tap back</strong> &mdash; When something takes the reader to another verse (a word&rsquo;s occurrences, verses in a word study, search results, <em>Read</em> in cross references, a saved highlight or note), a <em>Back to John 3:16</em> button appears at the bottom. Tap it to return to the verse you were reading, right where you left off; tap &#10005; to stay where you are.</li>
@@ -39060,14 +39064,19 @@ function openHomeRhemaTopResult() {
 async function openHomeRhemaResult(index) {
   const result = _homeRhemaResults[index];
   if (!result) return;
+  // Typing a reference ("Romans 8") is moving yourself, like the picker: no
+  // "Back to …". Searching words or a topic is a tool finding verses: keep one.
+  const query = document.getElementById('rhemaSearchInput')?.value || '';
+  const typedRef = !!_homeRhemaDirectRef(query);
   closeRhemaSearch();
-  await _rhemaJumpToVerse(result.book, result.chapter, result.verse);
+  if (typedRef) rhemaForgetReturn();
+  await _rhemaJumpToVerse(result.book, result.chapter, result.verse, { noReturn: typedRef });
 }
 
 // ── Back to where you were ───────────────────────────────────────────────────
 // Tools that take the reader somewhere else (a word's occurrences, verse chips
-// in a word study, search results, Read in cross references, a saved note or
-// highlight, Family Tree verses) remember the verse you were reading. A pill at
+// in a word study, word/topic search results, Read in cross references, a
+// saved note or highlight, Thread verses) remember the verse you were reading. A pill at
 // the bottom brings you straight back to it; ✕ dismisses it. It keeps your
 // first spot through several jumps. Moving on your own (the book/chapter
 // picker, History) or closing the reader forgets it; swiping chapters keeps it.
@@ -39083,7 +39092,7 @@ function _rhemaMarkJumpOrigin() {
   };
 }
 function _rhemaReturnLabel(r) {
-  const name = _rhemaBookName(r.book);
+  const name = r.book === 'PSA' && !r.intro ? 'Psalm' : _rhemaBookName(r.book);
   return r.intro ? `${name} · Intro` : `${name} ${r.chapter}:${r.verse}`;
 }
 function _rhemaSyncReturnPill() {
