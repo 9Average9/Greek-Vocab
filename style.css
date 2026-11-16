@@ -40058,3 +40058,9 @@ body:has(#rhemaCoachOverlay:not(.hidden)) .rhema-nap-guide { opacity: 0 !importa
   .rhema-nap-guide .rng-l > i, .rhema-nap-guide .rng-fig { animation: none !important; }
   .rhema-header.rng-shake { animation: none; }
 }
+
+/* The same napping guide on the study tool pages (Phrasing, Word Log, Trails,
+   Workspace): asleep against the page title, tap for "ouch!" and the tours. */
+.ss-title-wrap { position: relative; }
+.rhema-nap-guide.ss-nap-guide { --rng-h: 40px; }
+.study-sandbox:not(.tool-host) .ss-nap-guide { display: none; }
