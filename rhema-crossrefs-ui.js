@@ -189,7 +189,7 @@ function _xrefRefText(refOrObj) {
 // Download the chapters the visible links need in the chosen version (each
 // once; kept on the device like the reader), then redraw.
 let _rxTextToken = 0;
-async function _xrefLoadAsyncVerseTexts(refs) {
+async function _xrefLoadAsyncVerseTexts(refs, onLoaded) {
   const ver = _xrefEnglishVersion();
   if (!_xrefIsApi(ver) || typeof _vsEnsureChapter !== 'function') return;
   if (typeof _vsTransLimited === 'function' && _vsTransLimited(ver)) return;
@@ -218,7 +218,9 @@ async function _xrefLoadAsyncVerseTexts(refs) {
       if (_vsChapterFromMemory(ver, book, String(c))) got = true;
     }
   }));
-  if (token !== _rxTextToken || key !== _xrefKey() || ver !== _xrefEnglishVersion()) return;
+  if (ver !== _xrefEnglishVersion()) return;
+  if (onLoaded) { if (got) onLoaded(); return; }
+  if (token !== _rxTextToken || key !== _xrefKey()) return;
   document.getElementById('rxVerNote')?.classList.remove('loading');
   if (got) _rxRedrawKeepScroll();
 }
@@ -872,7 +874,94 @@ async function deleteSandboxTrail(trailId) {
   await window.Studies?.deleteTrail?.(studyId, trailId);
 }
 
+// ── In the verse sheet ───────────────────────────────────────────────────────
+// A Cross references button with the verse's count (muted when there are
+// none). It opens the best links right in the sheet; tapping one starts a
+// trail on the cross-reference screen.
+let _rxSheetRef = null;
+function rxSheetSync(ref) {
+  _rxSheetRef = ref;
+  const btn = document.getElementById('rhemaVerseSheetXrefBtn');
+  const panel = document.getElementById('rhemaVerseSheetXrefs');
+  if (panel) { panel.classList.add('hidden'); panel.innerHTML = ''; }
+  if (!btn) return;
+  btn.setAttribute('aria-expanded', 'false');
+  btn.classList.remove('open');
+  const p = _xrefParseRef(ref);
+  btn.style.display = p ? '' : 'none';
+  if (!p) return;
+  const paint = () => {
+    if (_rxSheetRef !== ref) return;
+    const rows = _rxShardNow(p.book) ? _rxRows(ref) : null;
+    const n = rows ? rows.length : null;
+    btn.classList.toggle('muted', n === 0);
+    btn.disabled = n === 0;
+    btn.querySelector('.rhema-vs-xref-n').textContent = n == null ? '' : String(n);
+    btn.setAttribute('aria-label', n === 0 ? 'No cross references for this verse' : `Cross references${n ? `, ${n}` : ''}`);
+  };
+  btn.classList.remove('muted');
+  btn.disabled = false;
+  paint();
+  if (!_rxShardNow(p.book)) _rxLoadBook(p.book).then(paint).catch(() => {});
+}
+function _rxSheetRender() {
+  const panel = document.getElementById('rhemaVerseSheetXrefs');
+  const ref = _rxSheetRef;
+  if (!panel || !ref) return;
+  const rows = _rxRows(ref);
+  if (!rows) { panel.innerHTML = '<div class="rx-loading">Loading cross references…</div>'; return; }
+  const top = rows.slice(0, 5);
+  const esc = _xrefEscape;
+  panel.innerHTML = top.map((r, i) => {
+    const k = RX_KIND[r.kind] || RX_KIND[''];
+    const info = _xrefRefTextInfo(r.ref);
+    const tag = info.ver && info.ver !== _xrefEnglishVersion() ? ` <span class="rx-ver-tag">${esc(info.ver)}</span>` : '';
+    return `<button type="button" class="rx-sheet-link rx-k-${k.cls}" onclick="rxSheetFollow(${i})">
+      <span class="rx-link-top"><strong>${esc(_xrefDisplay(r.ref))}</strong>${tag}<span class="rx-kind"><span class="material-symbols-outlined">${k.icon}</span>${k.label}</span></span>
+      <span class="rx-sheet-text">${esc(info.text)}</span>
+      <span class="rx-link-why">${esc(_rxWhy(r, ref))}</span>
+    </button>`;
+  }).join('') + `<button type="button" class="rx-sheet-all" onclick="rxSheetOpenAll()">${rows.length > top.length ? `See all ${rows.length} cross references` : 'Open in Cross references'}<span class="material-symbols-outlined">arrow_forward</span></button>`;
+  _xrefLoadAsyncVerseTexts(top.map(r => r.ref), () => { if (_rxSheetRef === ref && !panel.classList.contains('hidden')) _rxSheetRender(); });
+}
+function rxToggleSheetXrefs() {
+  const btn = document.getElementById('rhemaVerseSheetXrefBtn');
+  const panel = document.getElementById('rhemaVerseSheetXrefs');
+  if (!panel || !_rxSheetRef || btn?.disabled) return;
+  const opening = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !opening);
+  btn?.classList.toggle('open', opening);
+  btn?.setAttribute('aria-expanded', String(opening));
+  if (!opening) { panel.innerHTML = ''; }
+  else {
+    // The links read in the reader's version.
+    _rhemaXrefEnglishVersion = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : null;
+    _rxSheetRender();
+    if (!_rxRows(_rxSheetRef)) {
+      const p = _xrefParseRef(_rxSheetRef);
+      if (p) _rxLoadBook(p.book).then(_rxSheetRender).catch(() => {});
+    }
+  }
+  requestAnimationFrame(() => { if (typeof _rhemaKeepVerseAboveSheet === 'function') _rhemaKeepVerseAboveSheet(_rhemaLastTappedVerse || _rhemaVerse); });
+}
+function rxSheetFollow(i) {
+  const ref = _rxSheetRef;
+  const row = (_rxRows(ref) || [])[i];
+  if (!row) return;
+  if (typeof closeRhemaVerseSheetAndDeselect === 'function') closeRhemaVerseSheetAndDeselect();
+  openRhemaXrefTrailFromReader(ref, row.ref);
+}
+function rxSheetOpenAll() {
+  const ref = _rxSheetRef;
+  if (typeof closeRhemaVerseSheetAndDeselect === 'function') closeRhemaVerseSheetAndDeselect();
+  openRhemaXrefTrailFromReader(ref);
+}
+
 Object.assign(window, {
+  rxSheetSync,
+  rxToggleSheetXrefs,
+  rxSheetFollow,
+  rxSheetOpenAll,
   openRhemaCrossReferences,
   renderRhemaCrossReferences,
   openRhemaXrefCategory,

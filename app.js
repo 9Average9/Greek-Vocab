@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.593";
+const APP_VERSION = "3.0.594";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.594 &mdash; Cross references from the verse menu</div>
+<ul>
+  <li><strong>Right where you tap</strong> &mdash; Tap a verse and the menu now has <em>Cross references</em> with how many links that verse has (grayed out when it has none). Tap it to see the best ones right there, each with why it&rsquo;s linked.</li>
+  <li><strong>Start a trail</strong> &mdash; Tap any of them to open it in Cross references and keep following the links from there; your trail starts at the verse you tapped.</li>
+</ul>
 <div class="un-version-label">v3.0.593 &mdash; Cross references in every version</div>
 <ul>
   <li><strong>Your version</strong> &mdash; Cross references now open in whatever version you read in (NIV, ESV, NKJV, NASB, KJV, NLT, CSB and the rest), not just MSB or BSB. Tap the version bar to switch to any of them.</li>
@@ -40530,6 +40535,8 @@ function _rhemaRenderVerseSheet() {
   // Word by word: always offered (several selected verses start at the first;
   // its arrows step through the chapter).
   if (wordBtn) wordBtn.style.display = '';
+  // Cross references for the (first) selected verse: a count, muted when none.
+  if (typeof rxSheetSync === 'function') rxSheetSync(ref);
   const journeyBtn = document.getElementById('rhemaVerseSheetJourneyBtn');
   if (journeyBtn) {
     if (multi) { journeyBtn.style.display = 'none'; }
@@ -48099,6 +48106,7 @@ const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: () => _coachFirst(['#rhemaVerseSheetColors', '#rhemaVerseSheet .rhema-vsheet']), title: 'Highlight', body: 'Tap a color to highlight the verse. Tap the crossed-out drop to clear it.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /note/i.test(t)), pose: 'thumbs', title: 'Notes', body: 'Write your own note on the verse. All your highlights and notes are listed in the menu.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Multi-view/.test(t)), title: 'Multi-view', body: 'Open this verse in a new Rhēma tab: up to six full Rhēmas, each with its own passage, translation and language. Tap a tab at the top to switch.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Cross references/.test(t)), title: 'Cross references', body: 'How many verses link to this one. Tap to see the best of them right here, with why each is linked; tap one to start a trail through Scripture.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^See interpretations/.test(t)), pose: 'inspect', title: 'See interpretations', body: 'How different traditions read this passage, Free Grace first. Each view gets a short summary, real quotes from its teachers, and links to read more.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), pose: 'thumbs', title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Word by word/.test(t)), pose: 'inspect', title: 'Word by word', body: 'Your Bible’s words with the Greek or Hebrew under each one, or the original word by word in its own order. Tap any word to study it.' },
