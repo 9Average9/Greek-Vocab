@@ -19017,7 +19017,22 @@ function applyRpBookPicker() {
 }
 
 /* ---------- save / commit ---------- */
+// One save at a time: a second tap while the first is still talking to Habit
+// Builder used to make a second plan and a second habit.
 async function rpSavePlan() {
+  if (rpSavePlan._busy) return;
+  rpSavePlan._busy = true;
+  const btn = document.getElementById('rpSaveBtn');
+  const label = btn?.innerHTML;
+  if (btn) { btn.disabled = true; btn.classList.add('is-busy'); btn.innerHTML = '<span class="material-symbols-outlined rp-spin">progress_activity</span>Starting…'; }
+  try { await _rpSavePlanNow(); }
+  finally {
+    rpSavePlan._busy = false;
+    const b = document.getElementById('rpSaveBtn');
+    if (b && b === btn && document.body.contains(b)) { b.disabled = false; b.classList.remove('is-busy'); b.innerHTML = label; }
+  }
+}
+async function _rpSavePlanNow() {
   const calc = rpCompute();
   if (!calc.total) { _showStudyToast("Pick what to read first"); return; }
   if (!calc.days || calc.days <= 0) { _showStudyToast("Pick a deadline in the future"); return; }
@@ -19270,6 +19285,11 @@ function closeRpPlanView() {
 }
 function rpCancelEdit() { _rpState = _rpFreshState(); rpRenderForm(); }
 async function rpCommitSaved(id) {
+  if (rpCommitSaved._busy) return;
+  rpCommitSaved._busy = true;
+  try { await _rpCommitSavedNow(id); } finally { rpCommitSaved._busy = false; }
+}
+async function _rpCommitSavedNow(id) {
   const plans = rpLoadPlans();
   const plan = plans.find(p => p.id === id);
   if (!plan) return;
@@ -19685,6 +19705,49 @@ function rpOpenScheduleRow(planId, start, isNext) {
   _rpOpenChapter(_rpRhemaBook(it.code), it.ch, { show: true });
 }
 
+/* Duplicates from a double-tapped save (before the save was locked): the
+   same plan saved twice within a couple of minutes, and/or a second habit for
+   it. Keep the first (or the current) plan; drop the copy, and delete the
+   copy's habit only if nothing on it was ever checked off. Runs once per
+   session, after the habits (and their entries) have loaded. */
+function _rpDedupePlansLocal() {
+  const plans = rpLoadPlans();
+  const key = p => JSON.stringify([p.name, p.scope, p.customMode, [...(p.browseBooks || [])].sort(), p.typeText || "", p.order, p.timeframe, p.customDate || ""]);
+  const activeId = _rpActiveId();
+  const drop = new Set();
+  plans.forEach((p, i) => plans.slice(i + 1).forEach(q => {
+    if (drop.has(p.id) || drop.has(q.id) || key(p) !== key(q)) return;
+    if (Math.abs((p.createdAt || 0) - (q.createdAt || 0)) > 120000) return;
+    if ((p.read || 0) !== (q.read || 0) && (p.read || q.read)) return; // both used: leave them
+    const keepP = q.id === activeId ? false : p.id === activeId ? true : (p.createdAt || 0) <= (q.createdAt || 0);
+    drop.add(keepP ? q.id : p.id);
+  }));
+  if (drop.size) rpPersistPlans(plans.filter(p => !drop.has(p.id)));
+  return drop.size;
+}
+let _rpDedupeHabitsDone = false;
+async function _rpDedupeHabits() {
+  if (_rpDedupeHabitsDone) return;
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!uid || !window.Habits?.delete || !_habitsLoaded) return;
+  _rpDedupeHabitsDone = true;
+  const droppedPlans = _rpDedupePlansLocal();
+  const linked = new Set(rpLoadPlans().map(p => p.habitId).filter(Boolean));
+  const habits = _habitItems.slice();
+  let removed = 0;
+  for (const h of habits) {
+    if (!/^rp_/.test(h.id) || linked.has(h.id)) continue;
+    const twin = habits.find(o => o.id !== h.id && linked.has(o.id) && o.name === h.name &&
+      Math.abs((o.createdAtMs || 0) - (h.createdAtMs || 0)) < 120000);
+    if (!twin) continue;
+    const entries = Object.values(h.entries || {});
+    if (!entries.length) continue; // entries not loaded yet: leave it
+    if (entries.some(e => e.status === "success" || e.status === "skipped")) continue;
+    try { if (await window.Habits.delete(uid, h.id)) removed++; } catch (e) { console.warn("reading plan dedupe", e); }
+  }
+  if (droppedPlans || removed) { _rpRefreshSurfaces(); _showStudyToast("Removed a duplicate reading plan"); }
+}
+
 /* Today tab */
 function rpRenderToday() {
   const host = document.getElementById('rpTodayView');
@@ -19822,6 +19885,7 @@ function _bindHomeSwipe() {
 }
 (function initHomePlanWidget() {
   const start = () => {
+    try { _rpDedupePlansLocal(); } catch {}
     renderHomePlanWidget();
     const home = document.getElementById('homeScreen');
     if (home) new MutationObserver(() => { if (home.classList.contains('active')) renderHomePlanWidget(); })
@@ -22495,6 +22559,10 @@ function _startHabitsListener() {
   _habitsUnsub = window.Habits.listen(uid, habits => {
     _habitItems = habits || [];
     _habitsLoaded = true;
+    if (typeof _rpDedupeHabits === 'function' && !_rpDedupeHabitsDone) {
+      clearTimeout(_startHabitsListener._rpT);
+      _startHabitsListener._rpT = setTimeout(_rpDedupeHabits, 4000);
+    }
     if (document.getElementById("habitsPage")?.classList.contains("active")) renderHabits();
     _renderHomeHabitWidget();
   });
@@ -31226,7 +31294,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.608";
+const APP_VERSION = "3.0.609";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31249,6 +31317,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.609 &mdash; No more double plans</div>
+<ul>
+  <li><strong>Fix</strong> &mdash; Tapping <em>Start plan</em> more than once while it was saving could make the plan (and its habit) twice. The button now shows <em>Starting&hellip;</em> and ignores extra taps, and a duplicate made this way is cleaned up automatically the next time you open the app (only if nothing on it was checked off).</li>
+</ul>
 <div class="un-version-label">v3.0.608 &mdash; One button to start a plan</div>
 <ul>
   <li><strong>Start plan</strong> &mdash; <em>Save plan</em> and <em>Commit to Habit Builder</em> are now one <em>Start plan</em> button (<em>Save changes</em> when editing). Signed in, every plan goes into Habit Builder with each day&rsquo;s reading on its calendar, so your streak, friends, reminder and the quiz after each day all just work. No more &ldquo;add to your calendar?&rdquo; pop-up.</li>
