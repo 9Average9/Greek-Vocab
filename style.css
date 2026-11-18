@@ -40444,7 +40444,11 @@ body.dark .rp-reader-bar { background: #1f2937; }
 .rp-rf-actions { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 
 /* Home: Reading Plan card swipes with Journey Maps */
-.home-swipe { position: relative; margin: -2px 0 8px; }
+/* The pair takes exactly the room Journey Maps alone always took: Journey Maps
+   sets the height (the plan card is size-contained and stretches to it), and the
+   dots sit in the empty middle of the "Tools" heading row below, so Home's tools
+   and nav never move or resize whether or not a plan is showing. */
+#homeScreen #homeSwipe { position: relative; z-index: 2; margin: -2px 0 8px; }
 .home-swipe-track { display: flex; gap: 40px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory;
   overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch;
   margin: -6px -20px -26px; padding: 6px 20px 26px; scroll-padding: 0 20px; }
@@ -40452,9 +40456,10 @@ body.dark .rp-reader-bar { background: #1f2937; }
 .home-swipe-track > .home-swipe-slide { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; margin: 0; }
 .home-swipe-track > .home-swipe-slide.hidden { display: none; }
 .home-swipe:not(.has-plan) .home-swipe-track { overflow-x: hidden; }
-.home-swipe-dots { position: relative; z-index: 2; display: flex; justify-content: center; gap: 4px; margin-top: 0; }
+.home-swipe-dots { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); height: 22px;
+  display: flex; align-items: center; justify-content: center; gap: 2px; z-index: 3; }
 .home-swipe-dots.hidden { display: none; }
-.home-swipe-dots button { width: 24px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.home-swipe-dots button { width: 22px; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
 .home-swipe-dots button::before { content: ""; width: 7px; height: 7px; border-radius: 99px;
   background: color-mix(in srgb, var(--secondary-color) 28%, var(--border-color)); transition: width 0.2s ease, background 0.2s ease; }
 .home-swipe-dots button.active::before { width: 18px; background: var(--secondary-color); }
@@ -40470,3 +40475,17 @@ body.dark .rp-reader-bar { background: #1f2937; }
 .hpw-go.hidden { display: none; }
 .hpw-go .material-symbols-outlined { font-size: 22px; }
 .hpw-go:active { transform: scale(0.96); }
+
+.home-swipe-track > .home-plan-widget { contain: size; }
+.home-plan-widget .hjw-main { display: flex; flex-direction: column; justify-content: center; min-height: 100%; }
+.home-plan-widget .hjw-kicker { white-space: nowrap; }
+.home-plan-widget .hjw-main { max-width: min(66vw, 262px); }
+.home-plan-widget .hjw-headline { font-size: 1rem; }
+@media (max-width: 360px) { .home-plan-widget .hjw-headline { font-size: 0.94rem; } }
+/* Its own block formatting context: the track's negative margins stay inside,
+   so the pair sits exactly where Journey Maps did and the dots land between
+   the card and "Tools". */
+#homeScreen #homeSwipe { display: flow-root; }
+@media (max-width: 360px) { .home-plan-widget .hjw-headline { -webkit-line-clamp: 3; } }
+.rp-step-hint { margin: -2px 2px 10px; color: var(--muted-color); font-size: 0.84rem; line-height: 1.45; }
+.rp-friend-picker .habit-friend-chip { min-height: 48px; }
