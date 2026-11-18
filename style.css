@@ -40290,3 +40290,14 @@ body.dark .rfs-tile.active { background: color-mix(in srgb, var(--secondary-colo
 .rfs-tile.active .rfs-tick { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .rfs-sheet, .rfs-overlay { transition: none; } }
 body.dark .rfs-cat.active { background: var(--secondary-color); border-color: var(--secondary-color); color: #fff; }
+
+/* iOS 27 top-edge blur fix: a solid strip under the status bar (installed app
+   on iPhone/iPad only; created and color-matched in app.js). */
+#iosTopFill {
+  position: fixed; top: 0; left: 0; right: 0; width: 100%;
+  height: var(--ios-top-fill-h, env(safe-area-inset-top, 0px));
+  background-color: #dbeafe;
+  pointer-events: none;
+  z-index: 2147483000;
+  transition: background-color .2s ease;
+}

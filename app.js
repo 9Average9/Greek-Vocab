@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.602";
+const APP_VERSION = "3.0.603";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.603 &mdash; No more blur at the top on iPhone</div>
+<ul>
+  <li><strong>Clear status bar</strong> &mdash; iOS 27 started drawing a frosted blur across the top of Home Screen apps. The app now places a solid band behind the clock and battery that matches the screen below it (headers, menus, sheets, light or dark), which tells iOS to skip the blur.</li>
+</ul>
 <div class="un-version-label">v3.0.602 &mdash; Who Does What removed</div>
 <ul>
   <li><strong>Cleaner Display tools</strong> &mdash; The Who Does What button is gone from Rhēma&rsquo;s menu in the Hebrew Old Testament. Display now holds Parts of Speech, Font, and Greek or Hebrew Only.</li>
@@ -54841,3 +54845,96 @@ if (window.RHEMA_MV_SLOT) {
   if (document.readyState === 'complete') setTimeout(mvBoot, 0);
   else window.addEventListener('load', () => setTimeout(mvBoot, 0));
 }
+
+// ── iOS 27 top-edge blur ─────────────────────────────────────────────────────
+// iOS 27 draws a frosted blur over the top of installed web apps unless a
+// fixed, opaque element sits under the status bar (WebKit samples the top few
+// pixels and extends that color instead; theme-color is ignored). So in the
+// installed app on iPhone/iPad we pin a solid strip exactly the height of the
+// status bar area, and keep its color matched to whatever is just below it —
+// headers, sheets, dimmed overlays, light or dark — by compositing the
+// background colors stacked at that spot.
+(function iosTopFill() {
+  if (window.self !== window.top) return;            // Multi-view windows
+  const ua = navigator.userAgent || '';
+  const iOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const standalone = window.navigator.standalone === true || window.matchMedia?.('(display-mode: standalone)').matches;
+  const forced = (() => { try { return localStorage.getItem('iosTopFillTest') === '1'; } catch { return false; } })();
+  if (!forced && !(iOS && standalone)) return;
+  const strip = document.createElement('div');
+  strip.id = 'iosTopFill';
+  strip.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(strip);
+
+  const parse = (c) => {
+    const m = /rgba?\(([^)]+)\)/.exec(c || '');
+    if (!m) return null;
+    const p = m[1].split(/[,\s/]+/).filter(Boolean).map(Number);
+    return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+  };
+  const firstGradientColor = (img) => {
+    if (!img || img === 'none') return null;
+    const m = /rgba?\([^)]+\)/.exec(img);
+    return m ? parse(m[0]) : null;
+  };
+  let opCache = new Map();
+  const opacityOf = (el) => {
+    if (!el || el.nodeType !== 1) return 1;
+    if (opCache.has(el)) return opCache.get(el);
+    const v = parseFloat(getComputedStyle(el).opacity);
+    const o = (isNaN(v) ? 1 : v) * (v < 0.02 ? 1 : opacityOf(el.parentElement));
+    opCache.set(el, o);
+    return o;
+  };
+  let last = '';
+  function sample() {
+    const h = strip.offsetHeight;
+    if (!h) return;
+    opCache = new Map();
+    const x = Math.round(window.innerWidth / 2), y = h + 2;
+    const stack = (document.elementsFromPoint?.(x, y) || []).filter(el => el !== strip);
+    // Composite front-to-back until opaque.
+    let r = 0, g = 0, b = 0, a = 0;
+    const minW = window.innerWidth * 0.6;
+    for (const el of stack) {
+      // Only full-width surfaces (bars, sheets, overlays, the page) count;
+      // a button or title under the status bar shouldn't set its color.
+      if (el !== document.body && el !== document.documentElement && el.getBoundingClientRect().width < minW) continue;
+      const cs = getComputedStyle(el);
+      if (cs.visibility === 'hidden') continue;
+      let c = parse(cs.backgroundColor);
+      if (!c || c.a === 0) c = firstGradientColor(cs.backgroundImage);
+      if (!c || c.a === 0) continue;
+      const ca = c.a * opacityOf(el);
+      if (ca <= 0.01) continue;
+      const w = (1 - a) * ca;
+      r += c.r * w; g += c.g * w; b += c.b * w; a += w;
+      if (a > 0.985) break;
+    }
+    if (a < 0.985) {
+      // Fall back to the page color underneath everything.
+      const base = parse(getComputedStyle(document.documentElement).backgroundColor);
+      const fb = base && base.a > 0 ? base : (document.body.classList.contains('dark') ? { r: 17, g: 24, b: 39 } : { r: 219, g: 234, b: 254 });
+      const w = 1 - a;
+      r += fb.r * w; g += fb.g * w; b += fb.b * w;
+    }
+    const col = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+    if (col !== last) { last = col; strip.style.backgroundColor = col; }
+  }
+  let t = 0, pending = false;
+  function schedule() {
+    if (pending) return;
+    pending = true;
+    clearTimeout(t);
+    t = setTimeout(() => { pending = false; requestAnimationFrame(sample); }, 120);
+  }
+  new MutationObserver(schedule).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style', 'hidden', 'open'] });
+  window.addEventListener('scroll', schedule, { capture: true, passive: true });
+  window.addEventListener('resize', schedule, { passive: true });
+  window.addEventListener('orientationchange', schedule);
+  document.addEventListener('visibilitychange', schedule);
+  document.addEventListener('transitionend', schedule, true);
+  sample();
+  setTimeout(sample, 600);
+  window._iosTopFillSample = sample;
+})();
