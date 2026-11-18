@@ -40291,11 +40291,14 @@ body.dark .rfs-tile.active { background: color-mix(in srgb, var(--secondary-colo
 @media (prefers-reduced-motion: reduce) { .rfs-sheet, .rfs-overlay { transition: none; } }
 body.dark .rfs-cat.active { background: var(--secondary-color); border-color: var(--secondary-color); color: #fff; }
 
-/* iOS 27 top-edge blur fix: a solid strip under the status bar (installed app
-   on iPhone/iPad only; created and color-matched in app.js). */
+/* iOS 27 top-edge blur fix: WebKit skips its blur when a fixed, opaque
+   element covers the top few pixels. This is the smallest such band (12px,
+   beside the camera cutout, above the clock), color-matched in app.js to the
+   surface right under it so it can't be seen. Installed app on iPhone/iPad
+   only; none in landscape, where there's no status bar. */
 #iosTopFill {
   position: fixed; top: 0; left: 0; right: 0; width: 100%;
-  height: var(--ios-top-fill-h, env(safe-area-inset-top, 0px));
+  height: var(--ios-top-fill-h, min(12px, env(safe-area-inset-top, 0px)));
   background-color: #dbeafe;
   pointer-events: none;
   z-index: 2147483000;

@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.603";
+const APP_VERSION = "3.0.604";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.604 &mdash; Blur fix, now invisible</div>
+<ul>
+  <li><strong>Nothing new to see</strong> &mdash; The fix for iOS 27&rsquo;s top blur is now a tiny sliver at the very top edge, beside the camera, colored to match the screen beneath it. The blur stays off without adding a visible bar.</li>
+</ul>
 <div class="un-version-label">v3.0.603 &mdash; No more blur at the top on iPhone</div>
 <ul>
   <li><strong>Clear status bar</strong> &mdash; iOS 27 started drawing a frosted blur across the top of Home Screen apps. The app now places a solid band behind the clock and battery that matches the screen below it (headers, menus, sheets, light or dark), which tells iOS to skip the blur.</li>
@@ -54850,8 +54854,8 @@ if (window.RHEMA_MV_SLOT) {
 // iOS 27 draws a frosted blur over the top of installed web apps unless a
 // fixed, opaque element sits under the status bar (WebKit samples the top few
 // pixels and extends that color instead; theme-color is ignored). So in the
-// installed app on iPhone/iPad we pin a solid strip exactly the height of the
-// status bar area, and keep its color matched to whatever is just below it —
+// installed app on iPhone/iPad we pin the smallest such strip (12px at the very
+// top edge), and keep its color matched to whatever is just below it —
 // headers, sheets, dimmed overlays, light or dark — by compositing the
 // background colors stacked at that spot.
 (function iosTopFill() {
