@@ -36,6 +36,13 @@ try {
       (window.RHEMA_MV_SLOT && window.parent.document.documentElement.classList.contains('pwa-standalone'))) {
     document.documentElement.classList.add('pwa-standalone');
   }
+  /* iPhone/iPad installed app: turns on the iOS 27 top-blur fix (#iosTopFill). */
+  var ua = navigator.userAgent || '';
+  var iOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var st = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (!window.RHEMA_MV_SLOT && ((iOS && st) || localStorage.getItem('iosTopFillTest') === '1')) {
+    document.documentElement.classList.add('ios-standalone');
+  }
 } catch (e) {}
 </script>
 <title>Disciple Builder</title>
@@ -380,7 +387,7 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.604" rel="stylesheet"/>
+<link href="style.css?v=3.0.605" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
 <link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
@@ -388,6 +395,7 @@ antique: {
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
 </head>
 <body>
+<div id="iosTopFill" aria-hidden="true"></div>
 <div id="rotateLock" aria-hidden="true">
 <span class="material-symbols-outlined">screen_rotation</span>
 <strong>Please rotate to portrait</strong>
@@ -17334,19 +17342,19 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.604"></script>
-<script src="app.js?v=3.0.604"></script>
-<script src="rhema-word-study.js?v=3.0.604"></script>
+<script src="rhema-align.js?v=3.0.605"></script>
+<script src="app.js?v=3.0.605"></script>
+<script src="rhema-word-study.js?v=3.0.605"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.604"></script>
-<script src="verse-structure.js?v=3.0.604"></script>
-<script src="vs-structure.js?v=3.0.604"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.605"></script>
+<script src="verse-structure.js?v=3.0.605"></script>
+<script src="vs-structure.js?v=3.0.605"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.604"></script>
+<script src="sermon-notes.js?v=3.0.605"></script>
 <script src="bible-quiz.js?v=3.0.473"></script>
-<script src="firebase-lb.js?v=3.0.604" type="module"></script>
+<script src="firebase-lb.js?v=3.0.605" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
