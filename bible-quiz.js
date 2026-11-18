@@ -1303,6 +1303,11 @@
 
   function startHabitQuiz(refs, opts) {
     opts = opts || {};
+    // Offered at the end of a Reading Plan day inside Rhēma: the quiz page sits
+    // under the reader, so step out of the reader first.
+    try {
+      if (document.getElementById('rhemaModal')?.classList.contains('open') && typeof window.closeRhema === 'function') window.closeRhema();
+    } catch (e) {}
     buildShell();
     store = loadStore();
     form = defaultForm();

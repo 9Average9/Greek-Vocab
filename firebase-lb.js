@@ -1492,9 +1492,11 @@ async function sendHabitEncouragementOnce(fromUid, toUid, habitId, habitName, da
   }
 }
 
-async function createHabit(uid, { name, description = "", scheduleType = "daily", accountabilityUids = [], icon = "menu_book", color = "" } = {}) {
+async function createHabit(uid, { name, description = "", scheduleType = "daily", accountabilityUids = [], icon = "menu_book", color = "", id = "" } = {}) {
   try {
-    const habitId = habitIdFromName(name);
+    // A caller-supplied id (Reading Plan: one habit per plan) keeps two habits
+    // with the same name from merging into one document.
+    const habitId = id ? String(id).replace(/[\/\s]+/g, "-") : habitIdFromName(name);
     const partners = [...new Set(accountabilityUids || [])].filter(friendUid => friendUid && friendUid !== uid);
     await setDoc(doc(db, "users", uid, "habits", habitId), {
       ownerUid: uid,
@@ -1519,13 +1521,17 @@ async function createHabit(uid, { name, description = "", scheduleType = "daily"
   }
 }
 
-async function updateHabit(uid, habitId, { name, description = "", scheduleType = "daily", accountabilityUids = [], icon = "menu_book", color = "" } = {}) {
+async function updateHabit(uid, habitId, { name, description = "", scheduleType = "daily", accountabilityUids, icon = "menu_book", color = "" } = {}) {
   try {
     const habitRef = doc(db, "users", uid, "habits", habitId);
     const before = await getDoc(habitRef);
     if (!before.exists()) return false;
     const previousPartners = new Set(before.data().accountabilityUids || before.data().shareUids || []);
-    const partners = [...new Set(accountabilityUids || [])].filter(friendUid => friendUid && friendUid !== uid);
+    // Leaving accountabilityUids out keeps the partners already on the habit
+    // (the Reading Plan updates name/description without touching them).
+    const partners = accountabilityUids === undefined
+      ? [...previousPartners]
+      : [...new Set(accountabilityUids || [])].filter(friendUid => friendUid && friendUid !== uid);
     await setDoc(habitRef, {
       name: String(name || "").trim(),
       description: String(description || "").trim(),
@@ -1624,22 +1630,46 @@ async function setHabitEntry(uid, habitId, { date, status, comment = "", source 
 
 // Bulk-write per-day entries (used by Reading Plan to seed each day's reference
 // into the habit note calendar). entries: [{ date, comment, status }].
-async function setHabitEntriesBulk(uid, habitId, entries = []) {
+// A day already marked done or skipped keeps its status (only its note is
+// refreshed). opts.pruneFrom ('YYYY-MM-DD'): open reading-plan days on or after
+// that date that aren't in `entries` (left over from an earlier schedule) are
+// removed.
+async function setHabitEntriesBulk(uid, habitId, entries = [], opts = {}) {
   try {
+    const existing = {};
+    try {
+      const snap = await getDocs(collection(db, "users", uid, "habits", habitId, "entries"));
+      snap.forEach(d => { existing[d.id] = d.data() || {}; });
+    } catch (e) { /* new habit: nothing to keep */ }
+    const keep = new Set();
     let batch = writeBatch(db);
     let writes = 0;
+    const flush = async () => { if (writes >= 400) { await batch.commit(); batch = writeBatch(db); writes = 0; } };
     for (const e of entries) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(String(e.date || ""))) continue;
-      batch.set(doc(db, "users", uid, "habits", habitId, "entries", e.date), {
+      keep.add(e.date);
+      const prev = existing[e.date];
+      const finished = prev && (prev.status === "success" || prev.status === "skipped");
+      const data = {
         date: e.date,
-        status: e.status || "open",
         comment: String(e.comment || ""),
         source: "reading-plan",
         updatedAt: serverTimestamp(),
         updatedAtMs: Date.now()
-      }, { merge: true });
+      };
+      if (!finished) data.status = e.status || "open";
+      batch.set(doc(db, "users", uid, "habits", habitId, "entries", e.date), data, { merge: true });
       writes++;
-      if (writes >= 400) { await batch.commit(); batch = writeBatch(db); writes = 0; }
+      await flush();
+    }
+    if (opts.pruneFrom) {
+      for (const [date, prev] of Object.entries(existing)) {
+        if (keep.has(date) || date < opts.pruneFrom) continue;
+        if (prev.source !== "reading-plan" || (prev.status && prev.status !== "open")) continue;
+        batch.delete(doc(db, "users", uid, "habits", habitId, "entries", date));
+        writes++;
+        await flush();
+      }
     }
     if (writes > 0) await batch.commit();
     await setDoc(doc(db, "users", uid, "habits", habitId), {
