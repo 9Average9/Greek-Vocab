@@ -40489,3 +40489,6 @@ body.dark .rp-reader-bar { background: #1f2937; }
 @media (max-width: 360px) { .home-plan-widget .hjw-headline { -webkit-line-clamp: 3; } }
 .rp-step-hint { margin: -2px 2px 10px; color: var(--muted-color); font-size: 0.84rem; line-height: 1.45; }
 .rp-friend-picker .habit-friend-chip { min-height: 48px; }
+.rp-actions.rp-actions-one { grid-template-columns: 1fr; }
+.rp-actions-one .rp-btn { min-height: 54px; font-size: 1rem; }
+.rp-actions-note { margin: 10px 4px 0; text-align: center; color: var(--muted-color); font-size: 0.82rem; line-height: 1.45; }

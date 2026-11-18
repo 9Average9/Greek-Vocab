@@ -18840,7 +18840,7 @@ function rpRenderForm() {
         ${s.reminderOn ? `<div class="rp-reminder-time">
           <label for="rpReminderTime">Remind me at</label>
           <input type="time" id="rpReminderTime" class="rp-date" value="${s.reminderTime}" onchange="rpOnReminderTime(this.value)"/>
-          <p class="rp-reminder-hint">You'll get a daily “Reading Plan” notification — <em>“It's ${rpFmtDate(_rpStartOfDay(new Date()))}, time to read ${rpFmtReading((calc.flat||[]).slice(0, calc.perDay||1))}.”</em> Turning this on also adds each day's reference to your habit calendar.</p>
+          <p class="rp-reminder-hint">You'll get a daily “Reading Plan” notification — <em>“It's ${rpFmtDate(_rpStartOfDay(new Date()))}, time to read ${rpFmtReading((calc.flat||[]).slice(0, calc.perDay||1))}.”</em> </p>
         </div>` : ""}
       </div>
     </div>
@@ -18851,10 +18851,12 @@ function rpRenderForm() {
       <div class="habit-friend-picker rp-friend-picker" id="rpFriendsList"></div>
     </div>
 
-    <div class="rp-actions">
-      <button class="rp-btn rp-btn-ghost" onclick="rpSavePlan(false)" id="rpSaveBtn"><span class="material-symbols-outlined">bookmark_add</span>${s.editingId ? "Update plan" : "Save plan"}</button>
-      <button class="rp-btn rp-btn-primary" onclick="rpSavePlan(true)" id="rpCommitBtn"><span class="material-symbols-outlined">add_task</span>Commit to Habit Builder</button>
+    <div class="rp-actions rp-actions-one">
+      <button class="rp-btn rp-btn-primary" onclick="rpSavePlan()" id="rpSaveBtn"><span class="material-symbols-outlined">${s.editingId ? "check" : "play_arrow"}</span>${s.editingId ? "Save changes" : "Start plan"}</button>
     </div>
+    <p class="rp-actions-note">${window.Auth?.getCurrentUser?.()?.uid
+      ? "Your plan is added to Habit Builder, so each day you read counts toward your streak."
+      : "Sign in to track your streak in Habit Builder and read with friends."}</p>
     ${s.editingId ? `<button class="rp-cancel-edit" onclick="rpCancelEdit()">Cancel edit</button>` : ""}
   `;
   _rpRenderFriendPicker();
@@ -19015,7 +19017,7 @@ function applyRpBookPicker() {
 }
 
 /* ---------- save / commit ---------- */
-async function rpSavePlan(commit) {
+async function rpSavePlan() {
   const calc = rpCompute();
   if (!calc.total) { _showStudyToast("Pick what to read first"); return; }
   if (!calc.days || calc.days <= 0) { _showStudyToast("Pick a deadline in the future"); return; }
@@ -19071,9 +19073,10 @@ async function rpSavePlan(commit) {
     }
   }
 
-  // Tagged friends live on the habit, so tagging any means committing.
-  if (commit || plan.habitId || plan.partners.length) {
-    const habitId = await rpCommitToHabit(plan, { askCalendar: commit || !plan.habitId, partnersTouched: s.partnersTouched || !plan.habitId });
+  // Signed in: every plan lives on Habit Builder too (streak, friends,
+  // reminders, the quiz after each day).
+  if (window.Auth?.getCurrentUser?.()?.uid) {
+    const habitId = await rpCommitToHabit(plan, { partnersTouched: s.partnersTouched || !plan.habitId });
     if (habitId) plan.habitId = habitId;
   }
 
@@ -19087,9 +19090,10 @@ async function rpSavePlan(commit) {
   rpRenderSaved();
   setReadingPlanTab(rpActivePlan()?.id === plan.id ? 'today' : 'saved');
   _rpRefreshSurfaces();
+  const verb = existingIdx >= 0 ? "Plan updated" : "Plan started";
   _showStudyToast(plan.habitId
-    ? (plan.partners.length ? `Plan saved · ${plan.partners.length} friend${plan.partners.length > 1 ? "s" : ""} will be notified` : "Plan saved & added to habits")
-    : "Reading plan saved");
+    ? (plan.partners.length ? `${verb} · ${plan.partners.length} friend${plan.partners.length > 1 ? "s" : ""} will be notified` : `${verb} · tracking in Habit Builder`)
+    : verb);
 }
 
 async function rpCommitToHabit(plan, opts = {}) {
@@ -19118,18 +19122,11 @@ async function rpCommitToHabit(plan, opts = {}) {
   } catch (e) { console.warn("reading plan habit commit failed", e); _showStudyToast("Could not reach Habit Builder"); return null; }
   if (!habitId) return null;
 
-  // Write each day's reference into the habit note calendar. Always do this when
-  // a reminder is on (the daily notification reads today's reference from there);
-  // otherwise ask first.
+  // Each day's reading goes into the habit's note calendar (the reminder and
+  // the quiz after each day read it from there).
   const reminderOn = !!(plan.reminderOn && plan.reminderTime);
-  let wantCal = reminderOn;
-  if (opts.askCalendar && !reminderOn) {
-    wantCal = confirm("Would you like to add the daily references to your habit note calendar?\n\nEach day will show that day's reading right inside the habit's calendar.");
-  }
-  if (wantCal) {
-    const ok = await _rpSeedHabitCalendar(plan, uid, habitId);
-    if (!reminderOn) _showStudyToast(ok ? "References added to your habit calendar" : "Couldn't sync the calendar");
-  }
+  const ok = await _rpSeedHabitCalendar(plan, uid, habitId);
+  if (!ok) _showStudyToast("Couldn't add the daily readings to your habit calendar");
 
   // Daily reminder at the chosen time.
   if (reminderOn) {
@@ -19276,7 +19273,7 @@ async function rpCommitSaved(id) {
   const plans = rpLoadPlans();
   const plan = plans.find(p => p.id === id);
   if (!plan) return;
-  const habitId = await rpCommitToHabit(plan, { askCalendar: true });
+  const habitId = await rpCommitToHabit(plan, { partnersTouched: true });
   if (habitId) { plan.habitId = habitId; plan.updatedAt = Date.now(); rpPersistPlans(plans); rpRenderSaved(); _rpRefreshSurfaces(); }
 }
 async function rpDeletePlan(id) {
@@ -31229,7 +31226,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.607";
+const APP_VERSION = "3.0.608";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31252,6 +31249,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.608 &mdash; One button to start a plan</div>
+<ul>
+  <li><strong>Start plan</strong> &mdash; <em>Save plan</em> and <em>Commit to Habit Builder</em> are now one <em>Start plan</em> button (<em>Save changes</em> when editing). Signed in, every plan goes into Habit Builder with each day&rsquo;s reading on its calendar, so your streak, friends, reminder and the quiz after each day all just work. No more &ldquo;add to your calendar?&rdquo; pop-up.</li>
+</ul>
 <div class="un-version-label">v3.0.607 &mdash; Read with friends</div>
 <ul>
   <li><strong>Tag friends on a reading plan</strong> &mdash; A new <em>Read with friends</em> step lets you pick accountability partners when you make or edit a plan. They&rsquo;re added to the plan&rsquo;s habit in Habit Builder and get a notification each time you mark a day&rsquo;s reading done (catch-up days too). The Today page shows who you&rsquo;re reading with.</li>
