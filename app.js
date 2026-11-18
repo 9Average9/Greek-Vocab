@@ -18453,7 +18453,9 @@ function _rpFreshState() {
     name: "",
     nameEdited: false,
     editingId: null,
-    committedHabitId: null
+    committedHabitId: null,
+    partners: new Set(),     // friends tagged on the plan's habit
+    partnersTouched: false
   };
 }
 
@@ -18843,12 +18845,35 @@ function rpRenderForm() {
       </div>
     </div>
 
+    <div class="rp-step">
+      <div class="rp-step-label"><span class="rp-step-num">6</span> Read with friends</div>
+      <p class="rp-step-hint">Tag friends as accountability partners. They're added to this plan's habit in Habit Builder and get a notification each time you finish a day's reading.</p>
+      <div class="habit-friend-picker rp-friend-picker" id="rpFriendsList"></div>
+    </div>
+
     <div class="rp-actions">
       <button class="rp-btn rp-btn-ghost" onclick="rpSavePlan(false)" id="rpSaveBtn"><span class="material-symbols-outlined">bookmark_add</span>${s.editingId ? "Update plan" : "Save plan"}</button>
       <button class="rp-btn rp-btn-primary" onclick="rpSavePlan(true)" id="rpCommitBtn"><span class="material-symbols-outlined">add_task</span>Commit to Habit Builder</button>
     </div>
     ${s.editingId ? `<button class="rp-cancel-edit" onclick="rpCancelEdit()">Cancel edit</button>` : ""}
   `;
+  _rpRenderFriendPicker();
+}
+function _rpRenderFriendPicker() {
+  const el = document.getElementById('rpFriendsList');
+  if (!el) return;
+  if (!window.Auth?.getCurrentUser?.()?.uid) {
+    el.innerHTML = '<p class="study-board-empty">Sign in to read with friends.</p>';
+    return;
+  }
+  _renderHabitFriendPicker('rpFriendsList', _rpState.partners, 'rpToggleFriend');
+}
+function rpToggleFriend(uid) {
+  const set = _rpState.partners;
+  if (set.has(uid)) set.delete(uid); else set.add(uid);
+  _rpState.partnersTouched = true;
+  const el = document.getElementById('rpFriendsList');
+  if (el) _drawFriendChips(el, (friendsList || []).filter(Boolean), set, 'rpToggleFriend');
 }
 
 function rpCalcInner(calc) {
@@ -19017,6 +19042,7 @@ async function rpSavePlan(commit) {
     startDate: prevPlan?.startDate || _rpTodayKeyLocal(),
     endDate: calc.end ? `${calc.end.getFullYear()}-${String(calc.end.getMonth()+1).padStart(2,"0")}-${String(calc.end.getDate()).padStart(2,"0")}` : "",
     habitId: s.committedHabitId || null,
+    partners: [...(s.partners || [])],
     createdAt: now,
     updatedAt: now
   };
@@ -19045,8 +19071,9 @@ async function rpSavePlan(commit) {
     }
   }
 
-  if (commit || plan.habitId) {
-    const habitId = await rpCommitToHabit(plan, { askCalendar: commit || !plan.habitId });
+  // Tagged friends live on the habit, so tagging any means committing.
+  if (commit || plan.habitId || plan.partners.length) {
+    const habitId = await rpCommitToHabit(plan, { askCalendar: commit || !plan.habitId, partnersTouched: s.partnersTouched || !plan.habitId });
     if (habitId) plan.habitId = habitId;
   }
 
@@ -19060,7 +19087,9 @@ async function rpSavePlan(commit) {
   rpRenderSaved();
   setReadingPlanTab(rpActivePlan()?.id === plan.id ? 'today' : 'saved');
   _rpRefreshSurfaces();
-  _showStudyToast(plan.habitId ? "Plan saved & added to habits" : "Reading plan saved");
+  _showStudyToast(plan.habitId
+    ? (plan.partners.length ? `Plan saved · ${plan.partners.length} friend${plan.partners.length > 1 ? "s" : ""} will be notified` : "Plan saved & added to habits")
+    : "Reading plan saved");
 }
 
 async function rpCommitToHabit(plan, opts = {}) {
@@ -19072,16 +19101,18 @@ async function rpCommitToHabit(plan, opts = {}) {
   let habitId = plan.habitId || null;
   try {
     if (habitId) {
-      // No accountabilityUids: the partners already on the habit stay.
+      // Partners: the plan's tagged friends when they were changed here;
+      // otherwise leave the habit's partners (maybe set in Habit Builder) alone.
       const ok = await window.Habits?.update?.(uid, habitId, {
-        name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488"
+        name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488",
+        ...(opts.partnersTouched ? { accountabilityUids: plan.partners || [] } : {})
       });
       if (ok === false) habitId = null; // deleted in Habit Builder: make a new one
     }
     if (!habitId) {
       habitId = await window.Habits?.create?.(uid, {
         name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488",
-        id: plan.id
+        id: plan.id, accountabilityUids: plan.partners || []
       }) || null;
     }
   } catch (e) { console.warn("reading plan habit commit failed", e); _showStudyToast("Could not reach Habit Builder"); return null; }
@@ -19183,6 +19214,9 @@ function rpEditPlan(id) {
     name: plan.name, nameEdited: true,
     editingId: plan.id, committedHabitId: plan.habitId || null
   });
+  const onHabit = plan.habitId ? (_habitItems.find(h => h.id === plan.habitId)?.accountabilityUids || null) : null;
+  _rpState.partners = new Set(onHabit || plan.partners || []);
+  _rpState.partnersTouched = false;
   setReadingPlanTab('new');
   rpRenderForm();
 }
@@ -19593,7 +19627,7 @@ async function _rpCompleteHabitDay(plan, dateKey, note) {
     const habit = _habitItems.find(h => h.id === plan.habitId);
     const before = new Set(habit?.awardedMilestones || []);
     const ok = await window.Habits.setEntry(uid, plan.habitId, {
-      date: dateKey, status: "success", comment: note, source: "reading-plan", notify: dateKey === today
+      date: dateKey, status: "success", comment: note, source: "reading-plan", notify: dateKey <= today
     });
     if (!ok) _showStudyToast("Saved here, but your habit couldn't be updated");
     else if (habit) {
@@ -19715,8 +19749,11 @@ function rpRenderToday() {
       <span class="rp-today-label">Coming up</span>
       ${rows.map(r => `<div class="rp-today-next-row"><span>${_rpStartOfDay(r.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span>${_rpEsc(r.reading)}</div>`).join("")}
     </div>` : "";
+  const partnerNames = (plan.partners || []).map(u => _habitFriendCache[u]?.displayName).filter(Boolean);
   const habit = plan.habitId
-    ? `<div class="rp-today-habit"><span class="material-symbols-outlined">task_alt</span><span>Marking a day done checks it off in Habit Builder, so friends see your streak.</span></div>`
+    ? `<div class="rp-today-habit"><span class="material-symbols-outlined">${partnerNames.length ? "group" : "task_alt"}</span><span>${partnerNames.length
+        ? `Reading with ${_rpEsc(partnerNames.join(", "))}. They're notified each time you mark a day done.`
+        : "Marking a day done checks it off in Habit Builder, so friends see your streak."}</span></div>`
     : `<button class="rp-today-habit rp-today-habit-add" onclick="rpCommitSaved('${plan.id}')"><span class="material-symbols-outlined">add_task</span><span>Add to Habit Builder to track your streak with friends</span></button>`;
   host.innerHTML = head + behind + card + upcoming + habit +
     `<button class="rp-today-link" onclick="rpViewPlan('${plan.id}')"><span class="material-symbols-outlined">calendar_month</span>Full schedule</button>`;
@@ -31192,7 +31229,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.606";
+const APP_VERSION = "3.0.607";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31215,6 +31252,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.607 &mdash; Read with friends</div>
+<ul>
+  <li><strong>Tag friends on a reading plan</strong> &mdash; A new <em>Read with friends</em> step lets you pick accountability partners when you make or edit a plan. They&rsquo;re added to the plan&rsquo;s habit in Habit Builder and get a notification each time you mark a day&rsquo;s reading done (catch-up days too). The Today page shows who you&rsquo;re reading with.</li>
+  <li><strong>Home stays put</strong> &mdash; With a reading plan card or without, Home&rsquo;s cards, Tools, tile sizes and the bottom bar sit in exactly the same spots. The swipe dots now sit in the Tools heading row instead of pushing things down.</li>
+</ul>
 <div class="un-version-label">v3.0.606 &mdash; Reading Plan, revamped</div>
 <ul>
   <li><strong>Read right in Rhēma</strong> &mdash; Tap <em>Start reading</em> and today&rsquo;s reading opens in the reader, one part at a time. Finish Genesis 3 and a <em>Continue to the next part &rarr; Joshua 5&ndash;6</em> button is waiting at the bottom. Wander off to look something up and a pill brings you back.</li>
