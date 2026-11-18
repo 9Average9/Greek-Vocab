@@ -18433,6 +18433,10 @@ const RP_CHRONO = [
 ];
 const RP_CHRONO_INDEX = Object.fromEntries(RP_CHRONO.map((c, i) => [c, i]));
 const RP_PLANS_KEY = "rp_plans_v1";
+const RP_ACTIVE_KEY = "rp_active_plan_v1";
+// The plan's book table uses a few different codes from the reader (Rhēma).
+const RP_TO_RHEMA = { JHN: "JOH", MRK: "MAR", JAS: "JAM", "1JN": "1JO", "2JN": "2JO", "3JN": "3JO" };
+function _rpRhemaBook(code) { return RP_TO_RHEMA[code] || code; }
 
 let _rpState = null;
 function _rpFreshState() {
@@ -18453,20 +18457,27 @@ function _rpFreshState() {
   };
 }
 
-function openReadingPlanPage() {
+function openReadingPlanPage(tab) {
   setNavActive('reading-plan');
   hideBottomNav();
   showScreen('readingPlanPage');
   hideBottomNav();
   if (!_rpState) _rpState = _rpFreshState();
-  setReadingPlanTab('new');
   rpRenderForm();
   rpRenderSaved();
+  setReadingPlanTab(tab || (rpActivePlan() ? 'today' : 'new'));
   setTimeout(_applyPendingAppUpdateReload, 50);
 }
 function closeReadingPlan() { showNavPage('home'); }
 
 function setReadingPlanTab(tab) {
+  const hasActive = !!rpActivePlan();
+  if (tab === 'today' && !hasActive) tab = 'new';
+  const todayTab = document.getElementById('rpTabToday');
+  todayTab?.classList.toggle('hidden', !hasActive);
+  todayTab?.classList.toggle('active', tab === 'today');
+  document.getElementById('rpTodayView')?.classList.toggle('hidden', tab !== 'today');
+  if (tab === 'today') rpRenderToday();
   document.getElementById('rpTabNew')?.classList.toggle('active', tab === 'new');
   document.getElementById('rpTabSaved')?.classList.toggle('active', tab === 'saved');
   document.getElementById('rpNewView')?.classList.toggle('hidden', tab !== 'new');
@@ -18541,8 +18552,47 @@ function rpFlatChapters(segments, order, perDayHint = null) {
     });
     keyed.sort((a, b) => (a.pos !== b.pos ? a.pos - b.pos : a.ci - b.ci));
     flat = keyed.flatMap(k => k.chunk);
+  } else if (order === "balanced") {
+    flat = _rpBalancedOrder(flat, perDayHint);
   }
   return flat;
+}
+
+// Balanced mix: every day takes a share of each stream — the Old Testament,
+// Psalms & Proverbs, and the New Testament — sized so all three finish together
+// (a day of four chapters reads like "Genesis 1–2, Psalm 1, Matthew 1"). Each
+// day is exactly perDay chapters, so the daily slices line up with the mix.
+function _rpBalancedOrder(flat, perDay) {
+  const wis = c => c === "PSA" || c === "PRO";
+  const streams = [
+    flat.filter(i => RP_BOOK_BY_CODE[i.code].t === "OT" && !wis(i.code)),
+    flat.filter(i => wis(i.code)),
+    flat.filter(i => RP_BOOK_BY_CODE[i.code].t === "NT")
+  ].filter(st => st.length);
+  if (streams.length < 2) return flat;
+  const P = Math.max(1, perDay || 1);
+  const total = flat.length;
+  const pos = streams.map(() => 0);
+  const out = [];
+  while (out.length < total) {
+    const take = Math.min(P, total - out.length);
+    const after = out.length + take;
+    // How far each stream should be by the end of this day, then hand out the
+    // day's chapters one at a time to whichever stream is furthest behind.
+    const need = streams.map((st, k) => st.length * after / total - pos[k]);
+    const q = streams.map(() => 0);
+    for (let n = 0; n < take; n++) {
+      let best = -1;
+      for (let k = 0; k < streams.length; k++) {
+        if (pos[k] + q[k] >= streams[k].length) continue;
+        if (best < 0 || need[k] - q[k] > need[best] - q[best]) best = k;
+      }
+      if (best < 0) break;
+      q[best]++;
+    }
+    streams.forEach((st, k) => { out.push(...st.slice(pos[k], pos[k] + q[k])); pos[k] += q[k]; });
+  }
+  return out;
 }
 
 function _rpStartOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
@@ -18577,7 +18627,7 @@ function rpCompute(st = _rpState) {
     const daysNeeded = Math.ceil(total / perDay);
     finishDate = new Date(_rpStartOfDay(new Date()).getTime() + (daysNeeded - 1) * 86400000);
   }
-  const flat = st.order === "fresh" ? rpFlatChapters(segments, st.order, perDay) : baseFlat;
+  const flat = (st.order === "fresh" || st.order === "balanced") ? rpFlatChapters(segments, st.order, perDay) : baseFlat;
   return { segments, flat, total, days, perDay, end, finishDate };
 }
 
@@ -18629,7 +18679,7 @@ function rpSegLabel(seg) {
   return `${b.name} ${seg.from || 1}–${seg.to || b.ch}`;
 }
 function rpOrderLabel(o) {
-  return o === "chronological" ? "Chronological" : o === "fresh" ? "Fresh mix" : "Straight through";
+  return o === "chronological" ? "Chronological" : o === "fresh" ? "Fresh mix" : o === "balanced" ? "Balanced mix" : "Straight through";
 }
 // Compress a chapter list (one day's reading) into "Genesis 1–4, Exodus 1".
 function rpFmtReading(items) {
@@ -18642,7 +18692,7 @@ function rpFmtReading(items) {
     cur = { code: it.code, name: it.name, first: it.ch, last: it.ch };
   });
   if (cur) out.push(cur);
-  return out.map(r => r.first === r.last ? `${r.name} ${r.first}` : `${r.name} ${r.first}–${r.last}`).join(", ");
+  return out.map(r => r.first === r.last ? `${r.code === "PSA" ? "Psalm" : r.name} ${r.first}` : `${r.name} ${r.first}–${r.last}`).join(", ");
 }
 
 /* ---------- reference text parser ---------- */
@@ -18723,7 +18773,8 @@ function rpRenderForm() {
   const orderChips = [
     ["straight","Straight through","In canonical order"],
     ["chronological","Chronological","Roughly in time order"],
-    ["fresh","Fresh mix","Bounce between books"]
+    ["fresh","Fresh mix","Bounce between books"],
+    ["balanced","Balanced mix","OT, Psalms & NT mixed"]
   ].map(([v,l,sub]) => rpChip(l, s.order === v, `rpSetOrder('${v}')`, sub)).join("");
 
   let customBlock = "";
@@ -18739,7 +18790,7 @@ function rpRenderForm() {
           <button class="${s.customMode==='type'?'active':''}" onclick="rpSetCustomMode('type')"><span class="material-symbols-outlined">edit</span>Type references</button>
         </div>
         ${s.customMode === "browse"
-          ? `<button class="rp-picker-open" onclick="openRpBookPicker()"><span class="material-symbols-outlined">menu_book</span>Choose books &amp; ranges</button>
+          ? `<button class="rp-picker-open" onclick="openRpBookPicker()"><span class="material-symbols-outlined">menu_book</span>Choose books</button>
              <div class="rp-selection-summary">${summary}</div>`
           : `<textarea id="rpTypeInput" class="rp-textarea" placeholder="e.g. John, Romans 1–8, Psalms 1-50, 1 John" oninput="rpOnTypeInput(this.value)">${s.typeText.replace(/</g,"&lt;")}</textarea>
              <div class="rp-selection-summary">${segs.length ? `Recognized: ${summary}` : `<span class="rp-muted">Type book names with optional chapter ranges, separated by commas.</span>`}</div>`}
@@ -18767,7 +18818,7 @@ function rpRenderForm() {
 
     <div class="rp-step">
       <div class="rp-step-label"><span class="rp-step-num">3</span> Reading order</div>
-      <div class="rp-chip-row">${orderChips}</div>
+      <div class="rp-chip-row" id="rpOrderChips">${orderChips}</div>
     </div>
 
     <div class="rp-calc" id="rpCalc">${rpCalcInner(calc)}</div>
@@ -18849,8 +18900,8 @@ function rpSetScope(v) { _rpState.scope = v; rpRenderForm(); }
 function rpSetTimeframe(v) { _rpState.timeframe = v; rpRenderForm(); }
 function rpSetOrder(v) { _rpState.order = v; rpRefreshCalc(); _rpSyncOrderChips(); }
 function _rpSyncOrderChips() {
-  document.querySelectorAll('#rpNewView .rp-chip-row')[2]?.querySelectorAll('.rp-chip').forEach((c, i) => {
-    c.classList.toggle('active', ["straight","chronological","fresh"][i] === _rpState.order);
+  document.querySelectorAll('#rpOrderChips .rp-chip').forEach((c, i) => {
+    c.classList.toggle('active', ["straight","chronological","fresh","balanced"][i] === _rpState.order);
   });
 }
 function rpSetCustomMode(m) { _rpState.customMode = m; rpRenderForm(); }
@@ -18946,6 +18997,7 @@ async function rpSavePlan(commit) {
   const s = _rpState;
   const name = (s.name || rpDefaultName(calc)).trim() || rpDefaultName(calc);
   const now = Date.now();
+  const prevPlan = s.editingId ? rpLoadPlans().find(p => p.id === s.editingId) : null;
   const plan = {
     id: s.editingId || ("rp_" + now.toString(36) + Math.random().toString(36).slice(2, 6)),
     name,
@@ -18962,7 +19014,7 @@ async function rpSavePlan(commit) {
     total: calc.total,
     perDay: calc.perDay,
     days: calc.days,
-    startDate: _rpTodayKeyLocal(),
+    startDate: prevPlan?.startDate || _rpTodayKeyLocal(),
     endDate: calc.end ? `${calc.end.getFullYear()}-${String(calc.end.getMonth()+1).padStart(2,"0")}-${String(calc.end.getDate()).padStart(2,"0")}` : "",
     habitId: s.committedHabitId || null,
     createdAt: now,
@@ -18972,6 +19024,26 @@ async function rpSavePlan(commit) {
   const plans = rpLoadPlans();
   const existingIdx = plans.findIndex(p => p.id === plan.id);
   if (existingIdx >= 0) { plan.createdAt = plans[existingIdx].createdAt || now; plan.habitId = plans[existingIdx].habitId || plan.habitId; }
+  // Progress: where today's reading comes from. A new plan (or one whose
+  // books/order changed) starts fresh today; a new deadline keeps your place
+  // and re-paces what's left; anything else (name, reminder) changes nothing.
+  const prev = existingIdx >= 0 ? _rpNormalizePlan(plans[existingIdx]) : null;
+  const sameContent = prev && prev.scope === plan.scope && (prev.customMode || "browse") === plan.customMode &&
+    JSON.stringify([...(prev.browseBooks || [])].sort()) === JSON.stringify([...plan.browseBooks].sort()) &&
+    (prev.typeText || "") === (plan.typeText || "") && prev.order === plan.order;
+  if (!sameContent) {
+    if (prev && (prev.read || 0) > 0 && !confirm("Changing what you read starts this plan over from today. Continue?")) return;
+    Object.assign(plan, { startDate: _rpTodayKeyLocal(), mixHint: calc.perDay, read: 0, log: {}, session: null,
+      anchor: { date: _rpTodayKeyLocal(), idx: 0, perDay: calc.perDay } });
+  } else {
+    Object.assign(plan, { mixHint: prev.mixHint, read: prev.read || 0, log: prev.log || {}, session: prev.session || null, anchor: prev.anchor });
+    if (prev.timeframe !== plan.timeframe || (prev.customDate || "") !== (plan.customDate || "")) {
+      _rpReanchor(plan, plan.endDate);
+    } else {
+      plan.perDay = prev.anchor.perDay;
+      plan.days = prev.days;
+    }
+  }
 
   if (commit || plan.habitId) {
     const habitId = await rpCommitToHabit(plan, { askCalendar: commit || !plan.habitId });
@@ -18980,15 +19052,19 @@ async function rpSavePlan(commit) {
 
   if (existingIdx >= 0) plans[existingIdx] = plan; else plans.push(plan);
   rpPersistPlans(plans);
+  // A newly made plan becomes the one you're reading.
+  if (existingIdx < 0 || !rpActivePlan()) rpSetActivePlan(plan.id, true);
 
   _rpState = _rpFreshState();
   rpRenderForm();
   rpRenderSaved();
-  setReadingPlanTab('saved');
+  setReadingPlanTab(rpActivePlan()?.id === plan.id ? 'today' : 'saved');
+  _rpRefreshSurfaces();
   _showStudyToast(plan.habitId ? "Plan saved & added to habits" : "Reading plan saved");
 }
 
 async function rpCommitToHabit(plan, opts = {}) {
+  if (!plan.anchor) _rpNormalizePlan(plan);
   const uid = window.Auth?.getCurrentUser?.()?.uid;
   if (!uid) { _showStudyToast("Sign in to add it to Habit Builder"); return null; }
   const endDateObj = plan.endDate ? _rpStartOfDay(plan.endDate + "T00:00:00") : null;
@@ -18996,12 +19072,16 @@ async function rpCommitToHabit(plan, opts = {}) {
   let habitId = plan.habitId || null;
   try {
     if (habitId) {
-      await window.Habits?.update?.(uid, habitId, {
+      // No accountabilityUids: the partners already on the habit stay.
+      const ok = await window.Habits?.update?.(uid, habitId, {
         name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488"
       });
-    } else {
+      if (ok === false) habitId = null; // deleted in Habit Builder: make a new one
+    }
+    if (!habitId) {
       habitId = await window.Habits?.create?.(uid, {
-        name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488"
+        name: plan.name, description: desc, scheduleType: "daily", icon: "auto_stories", color: "#0d9488",
+        id: plan.id
       }) || null;
     }
   } catch (e) { console.warn("reading plan habit commit failed", e); _showStudyToast("Could not reach Habit Builder"); return null; }
@@ -19016,13 +19096,8 @@ async function rpCommitToHabit(plan, opts = {}) {
     wantCal = confirm("Would you like to add the daily references to your habit note calendar?\n\nEach day will show that day's reading right inside the habit's calendar.");
   }
   if (wantCal) {
-    try {
-      const calc = rpCompute(rpCfgFromPlan(plan));
-      const schedule = rpDailySchedule(calc).slice(0, 400);
-      const entries = schedule.map(d => ({ date: d.date, status: "open", comment: `📖 ${d.reading}` }));
-      const ok = await window.Habits?.setEntriesBulk?.(uid, habitId, entries);
-      if (!reminderOn) _showStudyToast(ok ? "References added to your habit calendar" : "Couldn't sync the calendar");
-    } catch (e) { console.warn("reading plan calendar sync failed", e); }
+    const ok = await _rpSeedHabitCalendar(plan, uid, habitId);
+    if (!reminderOn) _showStudyToast(ok ? "References added to your habit calendar" : "Couldn't sync the calendar");
   }
 
   // Daily reminder at the chosen time.
@@ -19059,30 +19134,39 @@ function rpPersistPlans(plans) {
 function rpRenderSaved() {
   const host = document.getElementById('rpSavedView');
   if (!host) return;
-  const plans = rpLoadPlans().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const plans = rpLoadPlans().map(_rpNormalizePlan).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   if (!plans.length) {
     host.innerHTML = `<div class="rp-empty"><span class="material-symbols-outlined">bookmarks</span><p>No saved plans yet.</p><button class="rp-btn rp-btn-primary" onclick="setReadingPlanTab('new')">Create a plan</button></div>`;
     return;
   }
+  const activeId = _rpActiveId();
   host.innerHTML = plans.map(p => {
-    const end = p.endDate ? _rpStartOfDay(p.endDate + "T00:00:00") : null;
-    return `<div class="rp-saved-card">
+    const st = _rpPlanStatus(p);
+    const pct = st.total ? Math.round(st.read / st.total * 100) : 0;
+    const isActive = p.id === activeId;
+    return `<div class="rp-saved-card${isActive ? ' is-current' : ''}">
       <div class="rp-saved-top">
         <strong>${(p.name||"Reading plan").replace(/</g,"&lt;")}</strong>
+        ${isActive ? `<span class="rp-badge rp-badge-current"><span class="material-symbols-outlined">bookmark</span> Current</span>` : ""}
         ${p.habitId ? `<span class="rp-badge"><span class="material-symbols-outlined">task_alt</span> Habit</span>` : ""}
       </div>
       <div class="rp-saved-sub">${p.scopeLabel || ""}</div>
+      <div class="rp-saved-progress"><span style="width:${pct}%"></span></div>
       <div class="rp-saved-stats">
-        <span><strong>${p.perDay}</strong>/day</span>
-        <span>${(p.total||0).toLocaleString()} ch</span>
-        <span>by ${rpFmtDate(end)}</span>
+        <span><strong>${pct}%</strong> read</span>
+        <span><strong>${st.P}</strong>/day</span>
+        <span>${(st.total||0).toLocaleString()} ch</span>
+        <span>by ${rpFmtDate(st.finish)}</span>
         <span>${rpOrderLabel(p.order)}</span>
       </div>
       <div class="rp-saved-actions">
+        ${isActive
+          ? `<button onclick="setReadingPlanTab('today')"><span class="material-symbols-outlined">today</span>Today</button>`
+          : `<button onclick="rpSetActivePlan('${p.id}')"><span class="material-symbols-outlined">bookmark_add</span>Make current</button>`}
         <button onclick="rpViewPlan('${p.id}')"><span class="material-symbols-outlined">visibility</span>View</button>
         <button onclick="rpEditPlan('${p.id}')"><span class="material-symbols-outlined">edit</span>Edit</button>
         ${p.habitId ? "" : `<button onclick="rpCommitSaved('${p.id}')"><span class="material-symbols-outlined">add_task</span>Add habit</button>`}
-        <button class="rp-del" onclick="rpDeletePlan('${p.id}')"><span class="material-symbols-outlined">delete</span></button>
+        <button class="rp-del" onclick="rpDeletePlan('${p.id}')" aria-label="Delete plan"><span class="material-symbols-outlined">delete</span></button>
       </div>
     </div>`;
   }).join("");
@@ -19102,11 +19186,11 @@ function rpEditPlan(id) {
   setReadingPlanTab('new');
   rpRenderForm();
 }
-// Open a read-only viewer showing the full day-by-day schedule of a saved plan —
-// every date paired with that day's reading reference. Rebuilt from the stored
-// plan config so it works entirely offline from what's saved on the device.
+// The full day-by-day schedule of a plan: every date with its reading, a check
+// on the days already read, and today's / the next reading highlighted. The next
+// unread day starts the guided reading; any other day opens in the reader.
 function rpViewPlan(id) {
-  const plan = rpLoadPlans().find(p => p.id === id);
+  const plan = _rpNormalizePlan(rpGetPlan(id));
   if (!plan) return;
   const overlay = document.getElementById('rpViewOverlay');
   const nameEl = document.getElementById('rpViewName');
@@ -19114,52 +19198,41 @@ function rpViewPlan(id) {
   const metaEl = document.getElementById('rpViewMeta');
   const listEl = document.getElementById('rpViewList');
   if (!overlay || !listEl) return;
-
-  const calc = rpCompute(rpCfgFromPlan(plan));
-  // Recreate the schedule using the plan's own start date so the references and
-  // dates line up with the plan exactly as it was saved.
-  const startKey = plan.startDate || _rpTodayKeyLocal();
-  const start = _rpStartOfDay(startKey + "T00:00:00");
-  const schedule = [];
-  if (calc.total && calc.perDay) {
-    let day = 0;
-    for (let i = 0; i < calc.flat.length; i += calc.perDay) {
-      const chunk = calc.flat.slice(i, i + calc.perDay);
-      const d = new Date(start.getTime() + day * 86400000);
-      schedule.push({ date: d, reading: rpFmtReading(chunk) });
-      day++;
-    }
-  }
+  const st = _rpPlanStatus(plan);
+  const rows = _rpScheduleRows(plan, st);
 
   if (nameEl) nameEl.textContent = plan.name || "Reading plan";
   if (subEl) subEl.textContent = plan.scopeLabel || "";
   if (metaEl) {
-    const end = plan.endDate ? _rpStartOfDay(plan.endDate + "T00:00:00") : null;
+    const pct = st.total ? Math.round(st.read / st.total * 100) : 0;
     metaEl.innerHTML =
-      `<span><span class="material-symbols-outlined">menu_book</span>${(plan.total || 0).toLocaleString()} chapters</span>` +
-      `<span><span class="material-symbols-outlined">bolt</span>${plan.perDay}/day</span>` +
-      `<span><span class="material-symbols-outlined">event</span>${schedule.length} day${schedule.length === 1 ? '' : 's'}</span>` +
-      `<span><span class="material-symbols-outlined">flag</span>by ${rpFmtDate(end)}</span>` +
+      `<span><span class="material-symbols-outlined">menu_book</span>${(st.total || 0).toLocaleString()} chapters</span>` +
+      `<span><span class="material-symbols-outlined">done_all</span>${pct}% read</span>` +
+      `<span><span class="material-symbols-outlined">bolt</span>${st.P}/day</span>` +
+      `<span><span class="material-symbols-outlined">flag</span>by ${rpFmtDate(st.finish)}</span>` +
       `<span><span class="material-symbols-outlined">sort</span>${rpOrderLabel(plan.order)}</span>`;
   }
-
   const todayKey = _rpTodayKeyLocal();
-  listEl.innerHTML = schedule.length
-    ? schedule.map((row, i) => {
-        const key = `${row.date.getFullYear()}-${String(row.date.getMonth() + 1).padStart(2, "0")}-${String(row.date.getDate()).padStart(2, "0")}`;
-        const isToday = key === todayKey;
-        const dateLabel = row.date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-        return `<div class="rp-view-row${isToday ? ' is-today' : ''}">
-          <span class="rp-view-daynum">${i + 1}</span>
+  listEl.innerHTML = rows.length
+    ? rows.map((row, i) => {
+        const isToday = row.date === todayKey;
+        const isNext = st.next && row.start === st.next.start;
+        const d = _rpStartOfDay(row.date + "T00:00:00");
+        const dateLabel = d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+        const state = row.done ? ' is-done' : (row.date < todayKey ? ' is-missed' : '');
+        return `<button type="button" class="rp-view-row${isToday ? ' is-today' : ''}${isNext ? ' is-next' : ''}${state}" onclick="rpOpenScheduleRow('${plan.id}', ${row.start}, ${isNext ? 1 : 0})">
+          <span class="rp-view-daynum">${row.done ? '<span class="material-symbols-outlined">check</span>' : i + 1}</span>
           <span class="rp-view-body">
-            <span class="rp-view-date">${dateLabel}${isToday ? ' &middot; Today' : ''}</span>
+            <span class="rp-view-date">${dateLabel}${isToday ? ' &middot; Today' : ''}${isNext && !isToday ? (row.date < todayKey ? ' &middot; Catch up' : ' &middot; Up next') : ''}</span>
             <span class="rp-view-ref">${(row.reading || '').replace(/</g, "&lt;")}</span>
           </span>
-        </div>`;
+          ${isNext ? '<span class="material-symbols-outlined rp-view-go">play_circle</span>' : ''}
+        </button>`;
       }).join("")
     : `<div class="rp-empty"><span class="material-symbols-outlined">error</span><p>Couldn't rebuild this plan's schedule. Try editing it to refresh.</p></div>`;
 
   overlay.classList.remove('hidden');
+  requestAnimationFrame(() => listEl.querySelector('.is-next, .is-today')?.scrollIntoView({ block: 'center' }));
 }
 function closeRpPlanView() {
   document.getElementById('rpViewOverlay')?.classList.add('hidden');
@@ -19170,7 +19243,7 @@ async function rpCommitSaved(id) {
   const plan = plans.find(p => p.id === id);
   if (!plan) return;
   const habitId = await rpCommitToHabit(plan, { askCalendar: true });
-  if (habitId) { plan.habitId = habitId; plan.updatedAt = Date.now(); rpPersistPlans(plans); rpRenderSaved(); }
+  if (habitId) { plan.habitId = habitId; plan.updatedAt = Date.now(); rpPersistPlans(plans); rpRenderSaved(); _rpRefreshSurfaces(); }
 }
 async function rpDeletePlan(id) {
   const plans = rpLoadPlans();
@@ -19178,9 +19251,551 @@ async function rpDeletePlan(id) {
   if (!plan) return;
   if (!confirm(`Delete "${plan.name}"?${plan.habitId ? "\n\n(The linked habit will stay in Habit Builder.)" : ""}`)) return;
   rpPersistPlans(plans.filter(p => p.id !== id));
+  if (_rpActiveId() === id) rpSetActivePlan(null, true);
   rpRenderSaved();
+  setReadingPlanTab('saved');
+  _rpRefreshSurfaces();
   _showStudyToast("Plan deleted");
 }
+
+/* ---------- progress, current plan, guided reading ----------
+   A plan's chapters come in a fixed order (_rpPlanFlat). Progress is `read`:
+   how many of them are done, always whole days. `anchor` says how they map to
+   dates: from anchor.date, day k is chapters [idx + k·perDay, +perDay). Spreading
+   the rest out (or a new deadline) re-anchors at today from where you are. */
+function rpGetPlan(id) { return rpLoadPlans().find(p => p.id === id) || null; }
+function _rpActiveId() { try { return localStorage.getItem(RP_ACTIVE_KEY) || ""; } catch { return ""; } }
+function rpActivePlan() {
+  const id = _rpActiveId();
+  const p = id ? rpGetPlan(id) : null;
+  return p ? _rpNormalizePlan(p) : null;
+}
+function rpSetActivePlan(id, silent) {
+  try { id ? localStorage.setItem(RP_ACTIVE_KEY, id) : localStorage.removeItem(RP_ACTIVE_KEY); } catch {}
+  if (silent) return;
+  rpRenderSaved();
+  setReadingPlanTab('today');
+  _rpRefreshSurfaces();
+  _showStudyToast("This is now your current plan");
+}
+function _rpWritePlan(plan) {
+  const plans = rpLoadPlans();
+  const i = plans.findIndex(p => p.id === plan.id);
+  if (i < 0) return;
+  plans[i] = plan;
+  rpPersistPlans(plans);
+}
+function _rpKeyOf(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function _rpAddDays(key, n) { const d = _rpStartOfDay(key + "T00:00:00"); d.setDate(d.getDate() + n); return _rpKeyOf(d); }
+function _rpDayDiff(a, b) { return Math.round((_rpStartOfDay(b + "T00:00:00") - _rpStartOfDay(a + "T00:00:00")) / 86400000); }
+function _rpWeekday(key) { return _rpStartOfDay(key + "T00:00:00").toLocaleDateString(undefined, { weekday: "long" }); }
+function _rpEsc(t) { return String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+const _rpFlatCache = new Map();
+function _rpPlanFlat(plan) {
+  const key = JSON.stringify([plan.scope, plan.customMode, plan.browseBooks, plan.typeText, plan.order, plan.mixHint || plan.perDay]);
+  let flat = _rpFlatCache.get(key);
+  if (!flat) {
+    flat = rpFlatChapters(rpSegments(rpCfgFromPlan(plan)), plan.order, plan.mixHint || plan.perDay);
+    _rpFlatCache.set(key, flat);
+  }
+  return flat;
+}
+// Plans saved before progress tracking get an anchor at their start date and
+// are assumed to be on pace up to today (they had no way to mark days read).
+function _rpNormalizePlan(p) {
+  if (!p || p.anchor) return p;
+  const today = _rpTodayKeyLocal();
+  const P = Math.max(1, p.perDay || 1);
+  const start = p.startDate && p.startDate <= today ? p.startDate : today;
+  p.mixHint = p.mixHint || P;
+  p.anchor = { date: start, idx: 0, perDay: P };
+  p.read = Math.min(_rpPlanFlat(p).length, Math.max(0, _rpDayDiff(start, today)) * P);
+  p.log = p.log || {};
+  p.session = null;
+  _rpWritePlan(p);
+  return p;
+}
+function _rpPlanStatus(plan) {
+  const flat = _rpPlanFlat(plan);
+  const total = flat.length;
+  const a = plan.anchor;
+  const P = Math.max(1, a.perDay || 1);
+  const today = _rpTodayKeyLocal();
+  const tj = _rpDayDiff(a.date, today);
+  const read = Math.min(Math.max(plan.read || 0, 0), total);
+  const dueBefore = Math.min(total, a.idx + Math.max(0, tj) * P);
+  const dueToday = Math.min(total, a.idx + Math.max(0, tj + 1) * P);
+  const behind = Math.max(0, dueBefore - read);
+  let next = null;
+  if (read < total) {
+    const j = Math.max(0, Math.floor((read - a.idx) / P));
+    const end = Math.min(total, Math.max(read + 1, a.idx + (j + 1) * P));
+    next = { j, start: read, end, date: _rpAddDays(a.date, j), chapters: flat.slice(read, end) };
+  }
+  const finish = _rpStartOfDay(_rpAddDays(a.date, Math.max(0, Math.ceil((total - a.idx) / P) - 1)) + "T00:00:00");
+  return {
+    flat, total, P, today, read, finish, next,
+    done: read >= total,
+    todayDone: read >= dueToday,
+    behind, behindDays: Math.ceil(behind / P),
+    dayNum: Math.max(1, _rpDayDiff(plan.startDate || a.date, today) + 1)
+  };
+}
+// Re-pace what's left from today so it finishes by endKey (or, if that date has
+// passed, keep the pace and move the finish date out).
+function _rpReanchor(plan, endKey) {
+  const total = _rpPlanFlat(plan).length;
+  const today = _rpTodayKeyLocal();
+  const read = Math.min(plan.read || 0, total);
+  const remaining = Math.max(0, total - read);
+  const daysLeft = endKey ? _rpDayDiff(today, endKey) + 1 : 0;
+  let P = Math.max(1, plan.anchor?.perDay || plan.perDay || 1);
+  if (daysLeft > 0 && remaining > 0) P = Math.max(1, Math.ceil(remaining / daysLeft));
+  plan.anchor = { date: today, idx: read, perDay: P };
+  plan.perDay = P;
+  plan.days = Math.max(1, Math.ceil(remaining / P));
+  if (!(daysLeft > 0)) plan.endDate = _rpAddDays(today, plan.days - 1);
+  plan.session = null;
+}
+function _rpScheduleRows(plan, st) {
+  st = st || _rpPlanStatus(plan);
+  const rows = [];
+  for (let start = plan.anchor.idx, j = 0; start < st.total; start += st.P, j++) {
+    const end = Math.min(st.total, start + st.P);
+    rows.push({ date: _rpAddDays(plan.anchor.date, j), start, end, reading: rpFmtReading(st.flat.slice(start, end)), done: end <= st.read });
+  }
+  return rows;
+}
+// Today onward into the habit's note calendar (days already done keep their check).
+async function _rpSeedHabitCalendar(plan, uid, habitId) {
+  try {
+    const today = _rpTodayKeyLocal();
+    const entries = _rpScheduleRows(plan).filter(r => r.date >= today && !r.done).slice(0, 400)
+      .map(r => ({ date: r.date, status: "open", comment: `📖 ${r.reading}` }));
+    plan.calendarSeeded = true;
+    return !!(await window.Habits?.setEntriesBulk?.(uid, habitId, entries, { pruneFrom: today }));
+  } catch (e) { console.warn("reading plan calendar sync failed", e); return false; }
+}
+// One day's chapters as the parts you read in a row: Genesis 1–3, then Joshua 5–6.
+function _rpParts(chapters) {
+  const out = [];
+  chapters.forEach(it => {
+    const cur = out[out.length - 1];
+    if (cur && cur.code === it.code && it.ch === cur.last + 1) { cur.last = it.ch; return; }
+    out.push({ code: it.code, name: it.name, book: _rpRhemaBook(it.code), first: it.ch, last: it.ch });
+  });
+  return out;
+}
+function _rpPartLabel(p) {
+  const name = p.code === "PSA" && p.first === p.last ? "Psalm" : p.name;
+  return p.first === p.last ? `${name} ${p.first}` : `${name} ${p.first}–${p.last}`;
+}
+function _rpDayName(dateKey) {
+  const today = _rpTodayKeyLocal();
+  if (dateKey === today) return "today's reading";
+  if (dateKey === _rpAddDays(today, -1)) return "yesterday's reading";
+  if (dateKey < today) return `${_rpWeekday(dateKey)}'s reading`;
+  if (dateKey === _rpAddDays(today, 1)) return "tomorrow's reading";
+  return `${_rpWeekday(dateKey)}'s reading`;
+}
+function _rpCap(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
+
+/* Guided reading: the day's parts open one after another in Rhēma. */
+let _rpSession = null;
+async function rpStartReading(planId) {
+  const plan = planId ? _rpNormalizePlan(rpGetPlan(planId)) : rpActivePlan();
+  if (!plan) { openReadingPlanPage('new'); return; }
+  const st = _rpPlanStatus(plan);
+  if (!st.next) { _showStudyToast("You've finished this plan! 🎉"); return; }
+  const parts = _rpParts(st.next.chapters);
+  const saved = plan.session && plan.session.start === st.next.start ? plan.session : null;
+  const part = saved ? Math.min(Math.max(0, saved.part || 0), parts.length - 1) : 0;
+  let ch = parts[part].first;
+  if (saved && saved.ch >= parts[part].first && saved.ch <= parts[part].last) ch = saved.ch;
+  _rpSession = { planId: plan.id, start: st.next.start, end: st.next.end, date: st.next.date, parts, part, done: false };
+  closeRpPlanView();
+  await _rpOpenChapter(parts[part].book, ch, { show: true });
+}
+async function _rpOpenChapter(book, ch, opts = {}) {
+  if (opts.show) await showRhema();
+  try { rhemaForgetReturn(); } catch {}
+  try { closeRhemaSheet(); } catch {}
+  const from = _rhemaBook;
+  _rhemaIntroMode = false;
+  _rhemaTrail = []; _rhemaTrailPos = -1;
+  _rhemaBook = book;
+  _rhemaChapter = String(ch);
+  let v = "1";
+  try { v = _rhemaFirstVerseOfChapter(book, String(ch)) || "1"; } catch {}
+  _rhemaVerse = String(v);
+  if (isRhemaOTBook(book) && !isRhemaOTBook(from)) _rhemaOTLayer = 'hebrew';
+  _rhemaFullChapter = true;
+  _rhemaShowEnglish = true;
+  _rhemaVerseFocus = false;
+  _rhemaGreekOnly = false;
+  _rhemaSyntaxMode = false;
+  _rhemaHighlightStrongs = null;
+  syncRhemaPicker();
+  try { _syncRhemaChapterUi(); } catch {}
+  renderRhemaVerse();
+  try { updateRhemaSwapVisibility(); } catch {}
+  const body = document.querySelector('#rhemaModal .rhema-body');
+  const top = () => { if (body) body.scrollTop = 0; };
+  top(); requestAnimationFrame(top); setTimeout(top, 180);
+}
+function _rpRememberSpot(s, part, ch) {
+  const plan = rpGetPlan(s.planId);
+  if (!plan) return;
+  const cur = plan.session || {};
+  if (cur.start === s.start && cur.part === part && cur.ch === ch) return;
+  plan.session = { start: s.start, part, ch };
+  _rpWritePlan(plan);
+}
+// Called after every reader render: the plan bar and the end-of-chapter card.
+function _rpSyncReader() {
+  const modal = document.getElementById('rhemaModal');
+  const s = _rpSession;
+  let bar = document.getElementById('rpReaderBar');
+  let foot = document.getElementById('rpReaderFoot');
+  if (!s || !modal?.classList.contains('open') || window.RHEMA_MV_SLOT) {
+    bar?.classList.remove('show');
+    if (foot) foot.hidden = true;
+    return;
+  }
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'rpReaderBar';
+    bar.className = 'rp-reader-bar';
+    modal.appendChild(bar);
+  }
+  if (!foot) {
+    foot = document.createElement('div');
+    foot.id = 'rpReaderFoot';
+    foot.className = 'rp-reader-foot';
+    document.querySelector('#rhemaModal .rhema-content-area')?.appendChild(foot);
+  }
+  const ch = parseInt(_rhemaChapter, 10);
+  const idx = _rhemaIntroMode ? -1 : s.parts.findIndex(p => p.book === _rhemaBook && ch >= p.first && ch <= p.last);
+  if (idx >= 0 && !s.done) { s.part = idx; _rpRememberSpot(s, idx, ch); }
+  const part = s.parts[s.part];
+  const of = s.parts.length > 1 ? ` · ${s.part + 1} of ${s.parts.length}` : "";
+  const away = idx < 0;
+  const label = s.done ? `${_rpCap(_rpDayName(s.date))} is done` : away ? `Back to ${_rpPartLabel(part)}` : `${_rpPartLabel(part)}${of}`;
+  const icon = s.done ? "task_alt" : away ? "undo" : "auto_stories";
+  bar.innerHTML = `<button type="button" class="rp-rb-go" onclick="rpReaderBarTap()"${away ? "" : ' tabindex="-1"'}><span class="material-symbols-outlined" aria-hidden="true">${icon}</span><span class="rp-rb-label">${_rpEsc(label)}</span></button>` +
+    `<button type="button" class="rp-rb-x" onclick="rpEndSession()" aria-label="Stop reading the plan"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>`;
+  bar.classList.toggle('is-away', away);
+  requestAnimationFrame(() => bar.classList.add('show'));
+  if (away || !_rhemaFullChapter) { foot.hidden = true; return; }
+  foot.hidden = false;
+  foot.innerHTML = _rpFootHtml(s, idx, ch);
+}
+function _rpFootHtml(s, idx, ch) {
+  const dayName = _rpDayName(s.date);
+  const steps = s.parts.length > 1
+    ? `<div class="rp-rf-steps" aria-hidden="true">${s.parts.map((q, i) => `<span class="${s.done || i < idx ? "done" : i === idx ? "on" : ""}"></span>`).join("")}</div>` : "";
+  if (s.done) {
+    const plan = rpGetPlan(s.planId);
+    const st = plan ? _rpPlanStatus(_rpNormalizePlan(plan)) : null;
+    const more = st && st.next && st.next.date <= st.today;
+    const msg = st?.done ? "You finished the whole plan! 🎉"
+      : more ? `Next up: ${_rpDayName(st.next.date)}, ${_rpEsc(rpFmtReading(st.next.chapters))}.`
+      : "Nice work. See you tomorrow.";
+    return `<div class="rp-rf-card rp-rf-done">
+      <span class="material-symbols-outlined rp-rf-check" aria-hidden="true">task_alt</span>
+      <strong>${_rpCap(dayName)} is done</strong>
+      <p>${msg}</p>
+      <div class="rp-rf-actions">
+        ${more ? `<button type="button" class="rp-rf-primary" onclick="rpStartReading()">Keep going<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>` : ""}
+        <button type="button" class="rp-rf-ghost" onclick="rpBackToPlan()">Back to plan</button>
+      </div>
+    </div>`;
+  }
+  const p = s.parts[idx];
+  if (ch < p.last) {
+    const nextName = `${p.code === "PSA" ? "Psalm" : p.name} ${ch + 1}`;
+    return `<div class="rp-rf-card">${steps}
+      <span class="rp-rf-kicker">Chapter ${ch - p.first + 1} of ${p.last - p.first + 1} · ${_rpEsc(_rpPartLabel(p))}</span>
+      <button type="button" class="rp-rf-primary" onclick="rpReaderNextChapter()">Next: ${_rpEsc(nextName)}<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>
+    </div>`;
+  }
+  if (idx < s.parts.length - 1) {
+    const n = s.parts[idx + 1];
+    return `<div class="rp-rf-card">${steps}
+      <span class="rp-rf-kicker">${_rpEsc(_rpPartLabel(p))} done · part ${idx + 1} of ${s.parts.length}</span>
+      <button type="button" class="rp-rf-primary rp-rf-continue" onclick="rpContinuePart()">
+        <span class="rp-rf-btn-text"><small>Continue to the next part</small>${_rpEsc(_rpPartLabel(n))}</span>
+        <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+      </button>
+    </div>`;
+  }
+  return `<div class="rp-rf-card">${steps}
+    <span class="rp-rf-kicker">That's all of ${dayName}</span>
+    <button type="button" class="rp-rf-primary rp-rf-finish" onclick="rpMarkDone()"><span class="material-symbols-outlined" aria-hidden="true">check_circle</span>Mark ${dayName === "today's reading" ? "today" : dayName.replace(/'s reading$/, "")} done</button>
+  </div>`;
+}
+function rpReaderBarTap() {
+  const s = _rpSession;
+  if (!s) return;
+  const ch = parseInt(_rhemaChapter, 10);
+  const inPlan = !_rhemaIntroMode && s.parts.some(p => p.book === _rhemaBook && ch >= p.first && ch <= p.last);
+  if (inPlan || s.done) return;
+  const p = s.parts[s.part];
+  const saved = rpGetPlan(s.planId)?.session;
+  const to = saved && saved.start === s.start && saved.part === s.part && saved.ch >= p.first && saved.ch <= p.last ? saved.ch : p.first;
+  _rpOpenChapter(p.book, to);
+}
+function rpReaderNextChapter() {
+  const ch = parseInt(_rhemaChapter, 10);
+  _rpOpenChapter(_rhemaBook, ch + 1);
+}
+function rpContinuePart() {
+  const s = _rpSession;
+  if (!s || s.part >= s.parts.length - 1) return;
+  s.part++;
+  const n = s.parts[s.part];
+  _rpOpenChapter(n.book, n.first);
+}
+function rpEndSession() {
+  _rpSession = null;
+  _rpSyncReader();
+}
+function rpBackToPlan() {
+  _rpSession = null;
+  try { closeRhema(); } catch {}
+  setTimeout(() => openReadingPlanPage('today'), 60);
+}
+async function rpMarkDone() {
+  const s = _rpSession;
+  if (!s || s.done) return;
+  const plans = rpLoadPlans();
+  const plan = plans.find(p => p.id === s.planId);
+  if (!plan) return;
+  const flat = _rpPlanFlat(plan);
+  plan.read = Math.max(plan.read || 0, s.end);
+  plan.log = { ...(plan.log || {}), [s.date]: true };
+  plan.session = null;
+  rpPersistPlans(plans);
+  s.done = true;
+  _rpSyncReader();
+  _rpRefreshSurfaces();
+  const note = `📖 ${rpFmtReading(flat.slice(s.start, s.end))}`;
+  await _rpCompleteHabitDay(plan, s.date, note);
+}
+// Mark the day done on the plan's habit (streak, friends, partner notification
+// for today) the way Habit Builder's own Complete button does, then offer the
+// Bible quiz for exactly what was read.
+async function _rpCompleteHabitDay(plan, dateKey, note) {
+  const today = _rpTodayKeyLocal();
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (uid && plan.habitId && window.Habits?.setEntry) {
+    const habit = _habitItems.find(h => h.id === plan.habitId);
+    const before = new Set(habit?.awardedMilestones || []);
+    const ok = await window.Habits.setEntry(uid, plan.habitId, {
+      date: dateKey, status: "success", comment: note, source: "reading-plan", notify: dateKey === today
+    });
+    if (!ok) _showStudyToast("Saved here, but your habit couldn't be updated");
+    else if (habit) {
+      habit.entries = { ...(habit.entries || {}), [dateKey]: { ...(habit.entries?.[dateKey] || {}), date: dateKey, status: "success", comment: note } };
+      if (dateKey === today) {
+        const m = _habitMilestoneForStreak(_habitCurrentStreak(habit.entries));
+        if (m && !before.has(m.key)) {
+          addXP(m.xp, `${habit.name}: ${m.label}`, true);
+          await window.Habits?.awardMilestone?.(uid, plan.habitId, m.key);
+        }
+      }
+    }
+  }
+  // habitName heads the offer ("… complete"): name the day, not the whole plan.
+  window.BibleQuiz?.maybeOfferHabitQuiz?.({ habitId: plan.habitId || `rp-${plan.id}`, habitName: _rpCap(_rpDayName(dateKey)), dateKey, note });
+}
+// Completing the plan's habit in Habit Builder counts as reading that day.
+function _rpOnHabitCompleted(habitId, dateKey) {
+  const plans = rpLoadPlans();
+  const plan = plans.find(p => p.habitId === habitId);
+  if (!plan) return;
+  _rpNormalizePlan(plan);
+  const st = _rpPlanStatus(plan);
+  if (!st.next || st.next.date > dateKey) return;
+  plan.read = st.next.end;
+  plan.log = { ...(plan.log || {}), [st.next.date]: true };
+  plan.session = null;
+  rpPersistPlans(plans);
+  _rpRefreshSurfaces();
+}
+// Behind: re-pace the rest from today (keeping the finish date if it's still
+// ahead) and refresh the habit calendar.
+async function rpSpreadOut() {
+  const plans = rpLoadPlans();
+  const plan = plans.find(p => p.id === _rpActiveId());
+  if (!plan) return;
+  _rpNormalizePlan(plan);
+  const before = plan.endDate;
+  _rpReanchor(plan, plan.endDate);
+  rpPersistPlans(plans);
+  rpRenderToday();
+  _rpRefreshSurfaces();
+  const moved = plan.endDate !== before;
+  _showStudyToast(moved ? `New pace: ${plan.perDay}/day, finishing ${rpFmtDate(_rpStartOfDay(plan.endDate + "T00:00:00"))}` : `New pace: ${plan.perDay} chapter${plan.perDay > 1 ? "s" : ""} a day`);
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (uid && plan.habitId && (plan.calendarSeeded || plan.reminderOn)) {
+    await _rpSeedHabitCalendar(plan, uid, plan.habitId);
+    _rpWritePlan(plan);
+  }
+}
+function rpOpenScheduleRow(planId, start, isNext) {
+  if (isNext) { rpStartReading(planId); return; }
+  const plan = rpGetPlan(planId);
+  const it = plan && _rpPlanFlat(plan)[start];
+  if (!it) return;
+  closeRpPlanView();
+  _rpSession = null;
+  _rpOpenChapter(_rpRhemaBook(it.code), it.ch, { show: true });
+}
+
+/* Today tab */
+function rpRenderToday() {
+  const host = document.getElementById('rpTodayView');
+  if (!host) return;
+  const plan = rpActivePlan();
+  if (!plan) { host.innerHTML = ""; return; }
+  const st = _rpPlanStatus(plan);
+  const pct = st.total ? Math.round(st.read / st.total * 100) : 0;
+  const head = `<div class="rp-today-hero">
+      <div class="rp-today-ring" style="--p:${pct}"><span>${pct}%</span></div>
+      <div class="rp-today-title">
+        <span class="rp-kicker">Current plan</span>
+        <strong>${_rpEsc(plan.name || "Reading plan")}</strong>
+        <small>${st.read.toLocaleString()} of ${st.total.toLocaleString()} chapters · Day ${st.dayNum} · finish ${rpFmtDate(st.finish)}</small>
+      </div>
+    </div>`;
+  if (st.done) {
+    host.innerHTML = head + `<div class="rp-today-card rp-today-done">
+      <span class="material-symbols-outlined">celebration</span>
+      <strong>You finished ${_rpEsc(plan.name || "this plan")}!</strong>
+      <p>Every chapter read. Start another plan whenever you're ready.</p>
+      <button class="rp-btn rp-btn-primary" onclick="setReadingPlanTab('new')"><span class="material-symbols-outlined">add_circle</span>New plan</button>
+    </div>`;
+    return;
+  }
+  const n = st.next;
+  const parts = _rpParts(n.chapters);
+  const sess = plan.session && plan.session.start === n.start ? plan.session : null;
+  const isAhead = n.date > st.today;
+  const isCatchUp = n.date < st.today;
+  const behind = st.behindDays > 0 ? `<div class="rp-behind">
+      <span class="material-symbols-outlined">schedule</span>
+      <div><strong>You're ${st.behindDays} day${st.behindDays > 1 ? "s" : ""} behind</strong>
+      <p>No stress. Catch up on what you missed, or spread the rest of the plan out from today.</p>
+      <div class="rp-behind-actions">
+        <button class="rp-btn rp-btn-primary" onclick="rpStartReading()"><span class="material-symbols-outlined">play_arrow</span>Catch up</button>
+        <button class="rp-btn rp-btn-ghost" onclick="rpSpreadOut()"><span class="material-symbols-outlined">date_range</span>Spread it out</button>
+      </div></div>
+    </div>` : "";
+  const title = isCatchUp ? `Catch up: ${_rpDayName(n.date)}` : isAhead ? "Today's reading is done" : "Today's reading";
+  const partRows = parts.map((p, i) => {
+    const state = sess && i < (sess.part || 0) ? "done" : sess && i === (sess.part || 0) ? "on" : "";
+    return `<li class="${state}"><span class="material-symbols-outlined">${state === "done" ? "check_circle" : state === "on" ? "play_circle" : "radio_button_unchecked"}</span>${_rpEsc(_rpPartLabel(p))}</li>`;
+  }).join("");
+  const card = isAhead
+    ? `<div class="rp-today-card rp-today-ok">
+        <span class="material-symbols-outlined rp-today-check">task_alt</span>
+        <strong>${title}</strong>
+        <p>Want to keep going? ${_rpCap(_rpDayName(n.date))}: ${_rpEsc(rpFmtReading(n.chapters))}.</p>
+        <button class="rp-btn rp-btn-ghost" onclick="rpStartReading()"><span class="material-symbols-outlined">fast_forward</span>Read ahead</button>
+      </div>`
+    : `<div class="rp-today-card">
+        <span class="rp-today-label">${title}</span>
+        <ul class="rp-today-parts">${partRows}</ul>
+        <button class="rp-btn rp-btn-primary rp-today-start" onclick="rpStartReading()"><span class="material-symbols-outlined">${sess ? "play_circle" : "auto_stories"}</span>${sess ? "Resume reading" : "Start reading"}</button>
+      </div>`;
+  const rows = _rpScheduleRows(plan, st).filter(r => !r.done && r.start > n.start).slice(0, 3);
+  const upcoming = rows.length ? `<div class="rp-today-next">
+      <span class="rp-today-label">Coming up</span>
+      ${rows.map(r => `<div class="rp-today-next-row"><span>${_rpStartOfDay(r.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span>${_rpEsc(r.reading)}</div>`).join("")}
+    </div>` : "";
+  const habit = plan.habitId
+    ? `<div class="rp-today-habit"><span class="material-symbols-outlined">task_alt</span><span>Marking a day done checks it off in Habit Builder, so friends see your streak.</span></div>`
+    : `<button class="rp-today-habit rp-today-habit-add" onclick="rpCommitSaved('${plan.id}')"><span class="material-symbols-outlined">add_task</span><span>Add to Habit Builder to track your streak with friends</span></button>`;
+  host.innerHTML = head + behind + card + upcoming + habit +
+    `<button class="rp-today-link" onclick="rpViewPlan('${plan.id}')"><span class="material-symbols-outlined">calendar_month</span>Full schedule</button>`;
+}
+function _rpRefreshSurfaces() {
+  try { renderHomePlanWidget(); } catch (e) { console.warn(e); }
+  if (document.getElementById('readingPlanPage')?.classList.contains('active')) {
+    if (!document.getElementById('rpTodayView')?.classList.contains('hidden')) rpRenderToday();
+    rpRenderSaved();
+    document.getElementById('rpTabToday')?.classList.toggle('hidden', !rpActivePlan());
+  }
+}
+
+/* Home: the current plan's card, swiping with Journey Maps. */
+function renderHomePlanWidget() {
+  const w = document.getElementById('homePlanWidget');
+  if (!w) return;
+  const plan = _guestMode ? null : rpActivePlan();
+  const wasHidden = w.classList.contains('hidden');
+  w.classList.toggle('hidden', !plan);
+  document.getElementById('homeSwipeDots')?.classList.toggle('hidden', !plan);
+  document.getElementById('homeSwipe')?.classList.toggle('has-plan', !!plan);
+  _bindHomeSwipe();
+  if (!plan) return;
+  if (wasHidden) homeSwipeTo(0, true);
+  const st = _rpPlanStatus(plan);
+  const pct = st.total ? Math.round(st.read / st.total * 100) : 0;
+  const head = document.getElementById('hpwHeadline');
+  const sub = document.getElementById('hpwSub');
+  const go = document.getElementById('hpwGo');
+  const goLabel = document.getElementById('hpwGoLabel');
+  let h, sb, g = "Read";
+  if (st.done) { h = "Plan complete! 🎉"; sb = plan.name; g = ""; }
+  else if (st.next.date > st.today) { h = "Today’s reading done ✓"; sb = `Next: ${rpFmtReading(st.next.chapters)}`; g = "Ahead"; }
+  else if (st.next.date < st.today) { h = rpFmtReading(st.next.chapters); sb = `${st.behindDays} day${st.behindDays > 1 ? "s" : ""} behind · ${plan.name}`; g = "Catch up"; }
+  else { h = rpFmtReading(st.next.chapters); sb = `Today · ${plan.name}`; g = plan.session && plan.session.start === st.next.start ? "Resume" : "Read"; }
+  if (head) head.textContent = h;
+  if (sub) sub.textContent = sb;
+  if (go) go.classList.toggle('hidden', !g);
+  if (goLabel) goLabel.textContent = g;
+  const fill = document.getElementById('hpwBarFill');
+  if (fill) fill.style.width = `${pct}%`;
+  const count = document.getElementById('hpwCount');
+  if (count) count.textContent = `${pct}%`;
+}
+function openReadingPlanFromWidget() { openReadingPlanPage('today'); }
+function homeSwipeTo(i, instant) {
+  const track = document.getElementById('homeSwipeTrack');
+  const slides = track ? [...track.querySelectorAll('.home-swipe-slide:not(.hidden)')] : [];
+  const el = slides[i];
+  if (!track || !el) return;
+  track.scrollTo({ left: el.offsetLeft - track.offsetLeft - (parseFloat(getComputedStyle(track).paddingLeft) || 0), behavior: instant ? 'auto' : 'smooth' });
+}
+function _bindHomeSwipe() {
+  const track = document.getElementById('homeSwipeTrack');
+  if (!track || track._rpBound) return;
+  track._rpBound = true;
+  const sync = () => {
+    const slides = [...track.querySelectorAll('.home-swipe-slide:not(.hidden)')];
+    const w = track.clientWidth || 1;
+    const i = Math.max(0, Math.min(slides.length - 1, Math.round(track.scrollLeft / w)));
+    document.querySelectorAll('#homeSwipeDots button').forEach((b, k) => {
+      b.classList.toggle('active', k === i);
+      b.setAttribute('aria-selected', String(k === i));
+    });
+  };
+  track.addEventListener('scroll', () => { cancelAnimationFrame(track._rpRaf); track._rpRaf = requestAnimationFrame(sync); }, { passive: true });
+  sync();
+}
+(function initHomePlanWidget() {
+  const start = () => {
+    renderHomePlanWidget();
+    const home = document.getElementById('homeScreen');
+    if (home) new MutationObserver(() => { if (home.classList.contains('active')) renderHomePlanWidget(); })
+      .observe(home, { attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) _rpRefreshSurfaces(); });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else setTimeout(start, 0);
+})();
 
 /* =========================
    MEMORIZATION PRACTICE
@@ -22364,6 +22979,8 @@ async function toggleHabitToday(habitId, status) {
       window.BibleQuiz?.maybeOfferHabitQuiz?.({
         habitId, habitName: habit.name, dateKey: _habitTodayKey(), note: existingComment
       });
+      // A Reading Plan habit: completing it here counts as reading the day.
+      if (typeof _rpOnHabitCompleted === 'function') _rpOnHabitCompleted(habitId, _habitTodayKey());
     }
   } finally {
     _habitEntryInProgress.delete(lockKey);
@@ -22403,6 +23020,7 @@ async function catchUpHabitYesterday(habitId) {
   });
   if (!ok) { alert("Could not catch up that habit."); return; }
   _showStudyToast("Yesterday marked complete");
+  if (typeof _rpOnHabitCompleted === 'function') _rpOnHabitCompleted(habitId, yesterday);
   // Catching up a Bible-reading habit still offers the knowledge check, so no
   // completion path silently skips the quiz prompt.
   if (habit) {
@@ -30474,7 +31092,10 @@ function fitHomeLayout() {
   if (!nav.offsetHeight || getComputedStyle(nav).display === 'none') return;
   _homeFitBusy = true;
   try {
-    const cards = [home.querySelector('.home-habit-widget'), home.querySelector('.home-journey-widget')].filter(Boolean);
+    const swipe = home.querySelector('.home-swipe-track');
+    const slides = swipe ? [...swipe.querySelectorAll('.home-swipe-slide')] : [];
+    const cards = [home.querySelector('.home-habit-widget'), swipe || home.querySelector('.home-journey-widget')].filter(Boolean);
+    slides.forEach(c => { c.style.removeProperty('min-height'); c.classList.remove('hw-fit'); });
     // Back to the natural layout to measure it. (The sizes live on #homeScreen,
     // not the row: an older rule zeroes the height of Home's last child when it
     // has an inline style.)
@@ -30488,7 +31109,12 @@ function fitHomeLayout() {
     let toolsGrow = extra;
     if (extra > 0 && cards.length) {
       const perCard = Math.min(HOME_FIT_CARD_MAX, Math.round(extra * 0.65 / cards.length));
-      cards.forEach(c => { c.style.minHeight = `${c.offsetHeight + perCard}px`; c.classList.add('hw-fit'); });
+      cards.forEach(c => {
+        if (c === swipe) {
+          const h = Math.max(...slides.filter(x => !x.classList.contains('hidden')).map(x => x.offsetHeight), 0);
+          slides.forEach(x => { x.style.minHeight = `${h + perCard}px`; x.classList.add('hw-fit'); });
+        } else { c.style.minHeight = `${c.offsetHeight + perCard}px`; c.classList.add('hw-fit'); }
+      });
       toolsGrow = extra - perCard * cards.length;
     }
     const sH = Math.max(0.82, Math.min(1.5, (m.tileH + toolsGrow) / m.tileH));
@@ -30566,7 +31192,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.605";
+const APP_VERSION = "3.0.606";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +31215,16 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.606 &mdash; Reading Plan, revamped</div>
+<ul>
+  <li><strong>Read right in Rhēma</strong> &mdash; Tap <em>Start reading</em> and today&rsquo;s reading opens in the reader, one part at a time. Finish Genesis 3 and a <em>Continue to the next part &rarr; Joshua 5&ndash;6</em> button is waiting at the bottom. Wander off to look something up and a pill brings you back.</li>
+  <li><strong>Mark today done</strong> &mdash; The last chapter ends with <em>Mark today done</em>. It checks off the plan&rsquo;s habit in Habit Builder (your streak, friends and partners all see it), then offers a knowledge check on exactly what you read.</li>
+  <li><strong>On your Home screen</strong> &mdash; Your current plan gets its own card next to Habit Builder, showing today&rsquo;s reading with a Read button. Swipe it to get to Journey Maps.</li>
+  <li><strong>A Today page</strong> &mdash; Your progress, today&rsquo;s parts with checkmarks, what&rsquo;s coming up, and the full schedule with every day you&rsquo;ve read checked off.</li>
+  <li><strong>Fall behind? No stress</strong> &mdash; Catch up on the days you missed, or spread the rest of the plan out from today.</li>
+  <li><strong>Balanced mix</strong> &mdash; A new reading order that mixes Old Testament, Psalms &amp; Proverbs, and New Testament through each week, so you&rsquo;re never stuck for weeks in one book.</li>
+  <li><strong>Fixes</strong> &mdash; Editing a plan no longer erases your habit&rsquo;s accountability partners or un-checks days you&rsquo;ve already done, two plans with the same name no longer merge into one habit, and a plan&rsquo;s start date no longer resets every time you save it. Completing the plan&rsquo;s habit in Habit Builder now counts as reading that day, and the daily reminder opens today&rsquo;s reading.</li>
+</ul>
 <div class="un-version-label">v3.0.605 &mdash; Another go at the iPhone top blur</div>
 <ul>
   <li><strong>Blur fix, take two</strong> &mdash; Uses the method other web apps report works on iOS 27: an invisible marker at the very top of the screen, present from the moment the app opens, plus a one-time invisible nudge at launch. Nothing you can see is added.</li>
@@ -34477,7 +35113,13 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => showNavPage('habits'), 900);
   }
   if (openParam === 'reading-plan') {
-    setTimeout(() => openReadingPlanPage(), 900);
+    // The daily reminder: open today's reading itself when there's one to read.
+    setTimeout(() => {
+      const plan = rpActivePlan();
+      const st = plan ? _rpPlanStatus(plan) : null;
+      if (st && st.next && st.next.date <= st.today) rpStartReading();
+      else openReadingPlanPage(plan ? 'today' : undefined);
+    }, 900);
   }
   if (openParam === 'calendar') {
     setTimeout(() => handleCalendarNotificationOpen(), 900);
@@ -45835,6 +46477,7 @@ function _syncRhemaChapterUi() {
 }
 
 function closeRhema(keepSandbox = false) {
+  if (typeof _rpSession !== 'undefined' && _rpSession) { _rpSession = null; try { _rpSyncReader(); } catch {} }
   rhemaNapSleep();
   rhemaForgetReturn();
   // Guests have nowhere to close the reader to — it is the whole app for them.
@@ -47630,6 +48273,7 @@ function renderRhemaVerse() {
   closeRhemaSyntaxSheet();
   _bindRhemaBottomWave();
   _rhemaSyncReturnPill();
+  if (typeof _rpSyncReader === 'function') _rpSyncReader();
 
   const display = document.getElementById('rhemaVerseDisplay');
   const EnglishDiv  = document.getElementById('rhemaEnglishDisplay');

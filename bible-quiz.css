@@ -1302,3 +1302,6 @@ body.dark .bq-hm-card {
     transition: none !important;
   }
 }
+
+/* Offered at the end of a Reading Plan day while Rhēma is open: show it above the reader. */
+body:has(#rhemaModal.open) .bq-hm-overlay { z-index: 1300; }

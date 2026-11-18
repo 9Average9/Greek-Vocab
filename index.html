@@ -387,9 +387,9 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.605" rel="stylesheet"/>
+<link href="style.css?v=3.0.606" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.473" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.606" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -579,8 +579,26 @@ Habit Builder</span>
 </div>
 <div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-art.png" alt="" width="260" height="163"/><span class="hhw-art-tint"></span></div>
 </div>
+<div class="home-swipe" id="homeSwipe">
+<div class="home-swipe-track" id="homeSwipeTrack">
+<!-- Reading Plan widget (shown when a plan is selected; swipes with Journey Maps) -->
+<div class="home-journey-widget home-plan-widget home-swipe-slide hidden" id="homePlanWidget" onclick="openReadingPlanFromWidget(event)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReadingPlanFromWidget(event)}">
+<div class="hjw-main">
+<span class="hhw-kicker hjw-kicker">
+<span class="material-symbols-outlined">auto_stories</span>
+Reading Plan</span>
+<h3 class="hhw-headline hjw-headline" id="hpwHeadline">Today&rsquo;s reading</h3>
+<p class="hhw-sub hjw-sub" id="hpwSub"></p>
+<div class="hhw-progress" id="hpwProgress">
+<div class="hhw-bar"><span id="hpwBarFill" style="width:0%"></span></div>
+<strong class="hhw-count" id="hpwCount"></strong>
+</div>
+</div>
+<button type="button" class="hpw-go" id="hpwGo" onclick="event.stopPropagation();rpStartReading()"><span class="material-symbols-outlined">play_arrow</span><span id="hpwGoLabel">Read</span></button>
+<div class="hjw-art hpw-art" aria-hidden="true"><img src="assets/icons/reading-plan-art.webp" alt="" width="260" height="146"/><span class="hjw-art-tint"></span></div>
+</div>
 <!-- Journey Maps widget -->
-<div class="home-journey-widget" id="homeJourneyWidget" onclick="openJourneysFromWidget()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJourneysFromWidget()}">
+<div class="home-journey-widget home-swipe-slide" id="homeJourneyWidget" onclick="openJourneysFromWidget()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJourneysFromWidget()}">
 <div class="hjw-main">
 <span class="hhw-kicker hjw-kicker">
 <span class="material-symbols-outlined">location_on</span>
@@ -589,6 +607,12 @@ Journey Maps</span>
 <p class="hhw-sub hjw-sub">Trace Bible routes with ancient and modern maps, distances, and Scripture steps.</p>
 </div>
 <div class="hjw-art" aria-hidden="true"><img src="assets/icons/ChatGPT Image Jun 23, 2026, 10_26_34 PM.png" alt="" width="260" height="163"/><span class="hjw-art-tint"></span></div>
+</div>
+</div>
+<div class="home-swipe-dots hidden" id="homeSwipeDots" role="tablist" aria-label="Home cards">
+<button type="button" class="active" aria-label="Reading plan" onclick="homeSwipeTo(0)"></button>
+<button type="button" aria-label="Journey Maps" onclick="homeSwipeTo(1)"></button>
+</div>
 </div>
 <div class="home-section-label">Tools</div>
 <div class="home-actions-grid">
@@ -915,10 +939,12 @@ Journey Maps</span>
 <span class="rp-icon-btn rp-icon-ghost" aria-hidden="true"><span class="material-symbols-outlined">menu_book</span></span>
 </header>
 <div class="rp-tabs" role="tablist" aria-label="Reading plan sections">
+<button class="hidden" id="rpTabToday" onclick="setReadingPlanTab('today')"><span class="material-symbols-outlined">today</span>Today</button>
 <button class="active" id="rpTabNew" onclick="setReadingPlanTab('new')"><span class="material-symbols-outlined">add_circle</span>New plan</button>
 <button id="rpTabSaved" onclick="setReadingPlanTab('saved')"><span class="material-symbols-outlined">bookmarks</span>Saved plans</button>
 </div>
 <div class="rp-scroll">
+<div class="rp-view hidden" id="rpTodayView"></div>
 <div class="rp-view" id="rpNewView"></div>
 <div class="rp-view hidden" id="rpSavedView"></div>
 </div>
@@ -926,7 +952,7 @@ Journey Maps</span>
 <div class="rp-picker-overlay hidden" id="rpBookPickerOverlay" onclick="if(event.target===this)closeRpBookPicker()">
 <div class="rp-picker-sheet">
 <div class="rp-picker-hdr">
-<strong>Choose books &amp; chapters</strong>
+<strong>Choose books</strong>
 <button class="rp-picker-close" onclick="closeRpBookPicker()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
 </div>
 <div class="rp-quick-row" id="rpQuickRow"></div>
@@ -17342,19 +17368,19 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.605"></script>
-<script src="app.js?v=3.0.605"></script>
-<script src="rhema-word-study.js?v=3.0.605"></script>
+<script src="rhema-align.js?v=3.0.606"></script>
+<script src="app.js?v=3.0.606"></script>
+<script src="rhema-word-study.js?v=3.0.606"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.605"></script>
-<script src="verse-structure.js?v=3.0.605"></script>
-<script src="vs-structure.js?v=3.0.605"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.606"></script>
+<script src="verse-structure.js?v=3.0.606"></script>
+<script src="vs-structure.js?v=3.0.606"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.605"></script>
-<script src="bible-quiz.js?v=3.0.473"></script>
-<script src="firebase-lb.js?v=3.0.605" type="module"></script>
+<script src="sermon-notes.js?v=3.0.606"></script>
+<script src="bible-quiz.js?v=3.0.606"></script>
+<script src="firebase-lb.js?v=3.0.606" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
