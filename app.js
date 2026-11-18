@@ -30566,7 +30566,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.604";
+const APP_VERSION = "3.0.605";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -30589,6 +30589,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.605 &mdash; Another go at the iPhone top blur</div>
+<ul>
+  <li><strong>Blur fix, take two</strong> &mdash; Uses the method other web apps report works on iOS 27: an invisible marker at the very top of the screen, present from the moment the app opens, plus a one-time invisible nudge at launch. Nothing you can see is added.</li>
+</ul>
 <div class="un-version-label">v3.0.604 &mdash; Blur fix, now invisible</div>
 <ul>
   <li><strong>Nothing new to see</strong> &mdash; The fix for iOS 27&rsquo;s top blur is now a tiny sliver at the very top edge, beside the camera, colored to match the screen beneath it. The blur stays off without adding a visible bar.</li>
@@ -54852,23 +54856,31 @@ if (window.RHEMA_MV_SLOT) {
 
 // ── iOS 27 top-edge blur ─────────────────────────────────────────────────────
 // iOS 27 draws a frosted blur over the top of installed web apps unless a
-// fixed, opaque element sits under the status bar (WebKit samples the top few
-// pixels and extends that color instead; theme-color is ignored). So in the
-// installed app on iPhone/iPad we pin the smallest such strip (12px at the very
-// top edge), and keep its color matched to whatever is just below it —
-// headers, sheets, dimmed overlays, light or dark — by compositing the
-// background colors stacked at that spot.
+// fixed element with an opaque background sits in the top few pixels (WebKit
+// samples there; theme-color is ignored). #iosTopFill (index.html + style.css)
+// is that element, invisible via background-clip: text. Here we keep its color
+// matched to the surface just below it, since iOS extends that color into the
+// status bar, and run the one-shot "panel kick" reported to keep the blur from
+// coming back: an invisible fixed panel slides in and out once on launch and
+// stays parked off-screen (it shifts WebKit's compositing layers).
 (function iosTopFill() {
-  if (window.self !== window.top) return;            // Multi-view windows
-  const ua = navigator.userAgent || '';
-  const iOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  const standalone = window.navigator.standalone === true || window.matchMedia?.('(display-mode: standalone)').matches;
-  const forced = (() => { try { return localStorage.getItem('iosTopFillTest') === '1'; } catch { return false; } })();
-  if (!forced && !(iOS && standalone)) return;
-  const strip = document.createElement('div');
-  strip.id = 'iosTopFill';
-  strip.setAttribute('aria-hidden', 'true');
-  document.body.appendChild(strip);
+  if (!document.documentElement.classList.contains('ios-standalone')) return;
+  const strip = document.getElementById('iosTopFill');
+  if (!strip) return;
+  function kick() {
+    if (kick.done) return;
+    kick.done = true;
+    const cover = document.createElement('div'); cover.className = 'ios-blur-cover'; cover.setAttribute('aria-hidden', 'true');
+    const panel = document.createElement('div'); panel.className = 'ios-blur-panel'; panel.setAttribute('aria-hidden', 'true');
+    document.body.append(cover, panel);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      cover.classList.add('is-on'); panel.classList.add('is-in');
+      setTimeout(() => { cover.classList.remove('is-on'); panel.classList.remove('is-in'); }, 450);
+      setTimeout(() => cover.remove(), 900); // the panel stays parked off-screen
+    }));
+  }
+  if (document.readyState === 'complete') setTimeout(kick, 300);
+  else window.addEventListener('load', () => setTimeout(kick, 300), { once: true });
 
   const parse = (c) => {
     const m = /rgba?\(([^)]+)\)/.exec(c || '');
@@ -54896,7 +54908,7 @@ if (window.RHEMA_MV_SLOT) {
     if (!h) return;
     opCache = new Map();
     const x = Math.round(window.innerWidth / 2), y = h + 2;
-    const stack = (document.elementsFromPoint?.(x, y) || []).filter(el => el !== strip);
+    const stack = (document.elementsFromPoint?.(x, y) || []).filter(el => el !== strip && !el.classList.contains('ios-blur-cover') && !el.classList.contains('ios-blur-panel'));
     // Composite front-to-back until opaque.
     let r = 0, g = 0, b = 0, a = 0;
     const minW = window.innerWidth * 0.6;

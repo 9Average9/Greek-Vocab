@@ -40291,16 +40291,32 @@ body.dark .rfs-tile.active { background: color-mix(in srgb, var(--secondary-colo
 @media (prefers-reduced-motion: reduce) { .rfs-sheet, .rfs-overlay { transition: none; } }
 body.dark .rfs-cat.active { background: var(--secondary-color); border-color: var(--secondary-color); color: #fff; }
 
-/* iOS 27 top-edge blur fix: WebKit skips its blur when a fixed, opaque
-   element covers the top few pixels. This is the smallest such band (12px,
-   beside the camera cutout, above the clock), color-matched in app.js to the
-   surface right under it so it can't be seen. Installed app on iPhone/iPad
-   only; none in landscape, where there's no status bar. */
-#iosTopFill {
+/* iOS 27 top-edge blur fix. WebKit skips the blur it draws over installed web
+   apps when a fixed element with an opaque background sits in the top few
+   pixels. The strip is in the initial HTML (index.html) and shown only in the
+   installed app on iPhone/iPad (html.ios-standalone, set before first paint).
+   background-clip: text clips its paint to its text — it has none — so it
+   draws nothing you can see, while WebKit still reads its solid background.
+   app.js keeps that color matched to the surface below (iOS uses it for the
+   status bar) and runs a one-shot invisible panel slide on launch. */
+#iosTopFill { display: none; }
+html.ios-standalone #iosTopFill {
+  display: block;
   position: fixed; top: 0; left: 0; right: 0; width: 100%;
-  height: var(--ios-top-fill-h, min(12px, env(safe-area-inset-top, 0px)));
+  height: var(--ios-top-fill-h, 11px);
   background-color: #dbeafe;
+  -webkit-background-clip: text;
+  background-clip: text;
   pointer-events: none;
-  z-index: 2147483000;
-  transition: background-color .2s ease;
+  z-index: 2147483647;
 }
+html.ios-standalone .ios-blur-cover {
+  position: fixed; inset: 0; pointer-events: none; z-index: 2147483646;
+  background: rgba(255, 255, 255, 0.01); opacity: 0; transition: opacity .3s;
+}
+html.ios-standalone .ios-blur-cover.is-on { opacity: 1; }
+html.ios-standalone .ios-blur-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 90%; pointer-events: none; z-index: 2147483646;
+  background: rgba(255, 255, 255, 0.01); transform: translateX(110%); transition: transform .3s;
+}
+html.ios-standalone .ios-blur-panel.is-in { transform: translateX(0); }
