@@ -40492,3 +40492,6 @@ body.dark .rp-reader-bar { background: #1f2937; }
 .rp-actions.rp-actions-one { grid-template-columns: 1fr; }
 .rp-actions-one .rp-btn { min-height: 54px; font-size: 1rem; }
 .rp-actions-note { margin: 10px 4px 0; text-align: center; color: var(--muted-color); font-size: 0.82rem; line-height: 1.45; }
+.rp-btn.is-busy { opacity: 0.75; pointer-events: none; }
+.rp-spin { animation: rpSpin 0.9s linear infinite; }
+@keyframes rpSpin { to { transform: rotate(360deg); } }
