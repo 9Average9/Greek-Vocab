@@ -31329,7 +31329,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.612";
+const APP_VERSION = "3.0.613";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31352,6 +31352,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.613 &mdash; Four looks and At a glance</div>
+<ul>
+  <li><strong>Four looks for Across translations</strong> &mdash; The chart of how your version translates a word (Greek and Hebrew) now comes in four looks: Ring, Bubbles, Stripes and Tree. Tap the little cycle button to switch; it&rsquo;s always the same data, just shown a different way, and the app remembers the one you like. The first time, the guide shows you the button.</li>
+  <li><strong>Only exact matches are counted</strong> &mdash; The chart now counts only the places where your version&rsquo;s own words line up with the Greek or Hebrew word. Spots placed only by meaning or position are left out and listed in the fine print. Checked against Strong&rsquo;s-tagged KJV and WEB texts, the counted renderings are about 99% right for Greek and 98% for Hebrew.</li>
+  <li><strong>At a glance</strong> &mdash; Tap the eye next to the chapter title for a quick view of the chapter: its key words (counted from the Greek or Hebrew), Old Testament quotes (or where the New Testament quotes it), parallel accounts, the most cross-referenced verses, and your own highlights and notes. Every card says where its data comes from. Nothing is written by AI.</li>
+  <li><strong>Mark&rsquo;s footnotes are back</strong> &mdash; The official MSB/BSB Scripture footnotes in Mark were not showing; they now appear in the reader and in Cross references.</li>
+</ul>
 <div class="un-version-label">v3.0.612 &mdash; Search the Greek and Hebrew</div>
 <ul>
   <li><strong>Every form like this</strong> &mdash; Rhēma&rsquo;s search now finds words and grammar in the original text, exactly: try &ldquo;aorist imperatives in James&rdquo;, &ldquo;ἀγάπη in 1 John&rdquo;, &ldquo;H2617 in Psalms&rdquo; or &ldquo;Qal imperative in Genesis&rdquo;. Results show the verse with the word marked in your English, the Greek or Hebrew form and its parsing. Tap a chip&rsquo;s &times; to widen (any tense, any book), or a book to narrow.</li>
@@ -44567,11 +44574,14 @@ async function rhemaLogEnglishWord(word) {
 
 function _rhemaCuratedScriptureNotesForKey(key) {
   const version = typeof _rhemaEnglishVersion === 'function' ? _rhemaEnglishVersion() : 'MSB';
-  const official = window.RhemaScriptureNotes?.[version]?.[key]
-    || (version === 'MSB' ? window.RhemaScriptureNotes?.BSB?.[key] : null)
+  // The footnote data spells Mark "MRK" (USFM); the app's code is "MAR".
+  const k = String(key || '').replace(/^MAR /, 'MRK ');
+  const official = window.RhemaScriptureNotes?.[version]?.[k]
+    || (version === 'MSB' ? window.RhemaScriptureNotes?.BSB?.[k] : null)
     || [];
   return official.map(item => ({
     ...item,
+    ref: String(item.ref || '').replace(/^MRK /, 'MAR '),
     label: item.label || 'Scripture citation footnote.',
     type: item.type || 'scripture citation',
     source: item.source || `${version} official footnote`
@@ -48596,7 +48606,7 @@ function renderRhemaVerse() {
       EnglishDiv.classList.toggle('rhema-english-reading', !_rhemaSyntaxMode);
       EnglishDiv.classList.remove('rhema-english-single');
       EnglishDiv.innerHTML = _rhemaSyntaxMode ? '' :
-        `<div class="rhema-english-chapter-title">${_escapeRhemaAttr(_rhemaBookName(_rhemaBook))} ${_escapeRhemaAttr(_rhemaChapter)}</div>` +
+        `<div class="rhema-english-chapter-title"><span class="rhema-chapter-title-text">${_escapeRhemaAttr(_rhemaBookName(_rhemaBook))} ${_escapeRhemaAttr(_rhemaChapter)}</span>${window.RhemaGlance && !window.RHEMA_MV_SLOT ? RhemaGlance.buttonHtml() : ''}</div>` +
         readerBanner + engNote +
         englishNums.reduce((html, vn) => {
           const v = String(vn);
@@ -49266,7 +49276,7 @@ function _coachFirst(selectors) {
 
 let _appCoachSteps = [];
 // Rhēma's guide narrates Rhēma's own tours only.
-const _RHEMA_GUIDE_TOURS = new Set(['studyToolsCoachSeenV3537', 'crossRefCoachSeenV3591', 'wordLibraryCoachSeenV275', 'verseCoachSeenV3539', 'readingToolsCoachSeenV3539']);
+const _RHEMA_GUIDE_TOURS = new Set(['studyToolsCoachSeenV3537', 'crossRefCoachSeenV3591', 'wordLibraryCoachSeenV275', 'verseCoachSeenV3539', 'readingToolsCoachSeenV3539', 'xlLooksCoachSeenV1']);
 let _appCoachOnEnd = null;   // cleanup for a tour (e.g. close the verse menu)
 function _appCoachHasGuide() { return _RHEMA_GUIDE_TOURS.has(_appCoachSeenKey); }
 let _appCoachIdx = 0;
@@ -49512,6 +49522,33 @@ function startCoachReplay(type) {
   }
 }
 
+// Across translations: the first time the chart is on screen, the guide shows
+// the cycle button, then plays a look change and explains it.
+const XL_LOOKS_COACH_KEY = 'xlLooksCoachSeenV1';
+function _xlOtherTourUp() {
+  return document.getElementById('appCoachOverlay')?.classList.contains('hidden') === false
+    || !!document.querySelector('#wsTourTip.on');
+}
+function startXlLooksCoach(key, force = false, tries = 0) {
+  if (_coachHasSeen(XL_LOOKS_COACH_KEY, force)) return;
+  // Another tour (the word study's own first-run tips) is up: wait for it to
+  // finish, as long as the chart is still on screen.
+  if (_xlOtherTourUp()) {
+    if (tries < 90) setTimeout(() => {
+      if (document.querySelector('.xlv-host .xlv')?.offsetParent) startXlLooksCoach(key, force, tries + 1);
+    }, 1000);
+    return;
+  }
+  if (tries) document.querySelector('.xlv-host')?.scrollIntoView({ block: 'center' });
+  const card = () => document.querySelector(`.xlv-host .xlv`)?.closest('.xlv-host');
+  _startAppCoach([
+    { target: () => _coachFirst(['.xlv-cycle']), pose: 'point', title: 'Try pushing this!',
+      body: 'This little button changes how the chart looks. Press Next and I’ll push it for you.' },
+    { before: async () => { window.RhemaXlViews?.cycle(key, { fromCoach: true }); await _coachPause(900); },
+      target: () => _coachFirst([card]), pose: 'cheer', title: 'Same data, new look',
+      body: 'This shows how your selected version translates this word across the Bible. Tap the cycle button to change the way the app shows it. <b>Note:</b> the data is the same — just pick the look you like best.' },
+  ], XL_LOOKS_COACH_KEY);
+}
 function _startAppCoach(steps, seenKey, replayMode = false) {
   if (!document.getElementById('appCoachOverlay') || !steps?.length) return;
   _pauseHomeFlipForCoach();
@@ -52634,11 +52671,16 @@ async function _rhwMeasure(strongs, ver) {
       }
     }
     const tally = new Map();
-    let none = 0, unmatched = 0, noText = 0;
+    let none = 0, unmatched = 0, noText = 0, guessed = 0;
     for (const x of results) {
       if (!x || x.noText) { noText++; continue; }
       if (x.r.kind === 'none') { none++; continue; }
       if (!x.r.text) { unmatched++; continue; }
+      // Accuracy first: placed only by meaning or position ("inferred", ~85%
+      // right against the Strong's-tagged KJV), or by the weaker fallbacks
+      // ("second", "learned" ~91–92%, "neg"), isn't counted. What's counted
+      // grades 97.8% right against the KJV's tagging.
+      if (x.r.kind === 'inferred' || /^(neg|second|learned)$/.test(x.r.via || '')) { guessed++; continue; }
       let shown = _rhwTidy(x.r.text);
       if (x.r.start != null && /^[A-Z][a-z]/.test(shown) && !/^(God|Lord|LORD|I)\b/.test(shown) && (x.r.start === 0 || /[.!?“"‘'(—:;]\s*$/.test(x.text.slice(0, x.r.start)))) shown = shown.charAt(0).toLowerCase() + shown.slice(1);
       const norm = shown.toLowerCase();
@@ -52650,7 +52692,7 @@ async function _rhwMeasure(strongs, ver) {
     }
     const renderings = [...tally.values()].map(t => ({ text: [...t.forms.entries()].sort((a, b) => b[1] - a[1])[0][0], count: t.count, refs: t.refs }))
       .sort((a, b) => b.count - a.count);
-    _rhwStats.set(key, { ver, total: occs.length, matched: occs.length - none - unmatched - noText, none, unmatched, noText, renderings, limited: !!busy.limited });
+    _rhwStats.set(key, { ver, total: occs.length, matched: occs.length - none - unmatched - noText - guessed, none, unmatched, noText, guessed, renderings, limited: !!busy.limited });
   } finally {
     _rhwBusy.delete(key);
     redraw();
@@ -52730,28 +52772,17 @@ function _rhwRender(strongs) {
       : busy.phase === 'measure' ? `Lining up all ${busy.total.toLocaleString()} uses in ${esc(sel)}…` : 'Preparing…';
     body = `<div class="ws-progress"><div class="ws-note">${msg}</div><div class="ws-bar"><span style="width:${Math.max(3, pct)}%"></span></div></div>`;
   } else if (stats) {
-    const covered = Math.max(1, stats.total - stats.noText);
-    const top = stats.renderings.slice(0, 14);
-    const max = top[0]?.count || 1;
-    body = `<p class="ws-note"><b>${esc(sel === 'BSB' ? 'The BSB (and MSB)' : sel)}</b> renders it <b>${stats.renderings.length}</b> way${stats.renderings.length === 1 ? '' : 's'} across ${covered.toLocaleString()} Old Testament use${covered === 1 ? '' : 's'}${top[0] ? `, most often “${esc(top[0].text)}” (${Math.round(100 * top[0].count / covered)}%)` : ''}.</p>
-      <div class="rhw-bars">${top.map((r, i) => {
-        const all = _rhwOpen.has(`${sel}|${strongs}|${i}`);
-        const refs = all ? r.refs : r.refs.slice(0, 24);
-        return `<div class="rhw-bar-row">
-          <div class="rhw-bar-top"><span class="rhw-bar-label">${esc(r.text)}</span><span class="rhw-bar-n">${r.count.toLocaleString()}× · ${Math.round(100 * r.count / covered)}%</span></div>
-          <div class="rhw-bar"><span style="width:${Math.max(3, Math.round(r.count / max * 100))}%"></span></div>
-          ${r.forms.length ? `<div class="rhw-xl-forms">${r.forms.slice(0, 4).map(([f, c]) => `${esc(f)} ${c}`).join(' · ')}</div>` : ''}
-          <details class="rhw-xl-refs"${all ? ' open' : ''}><summary>${r.refs.length.toLocaleString()} verse${r.refs.length === 1 ? '' : 's'}</summary>
-            <div class="rhw-refs">${refs.map(x => `<button type="button" class="rhw-ref" onclick="rhemaHebStudyGo('${esc(x)}')">${esc(_rhemaDisplayRefFromKey(x) || x)}</button>`).join('')}${!all && r.refs.length > refs.length ? `<button type="button" class="rhw-ref rhw-ref-all" onclick="rhemaHebXlAll('${esc(strongs)}','${esc(sel)}',${i})">Show all ${r.refs.length.toLocaleString()}</button>` : ''}</div>
-          </details>
-        </div>`;
-      }).join('')}</div>
-      ${stats.renderings.length > top.length ? `<p class="ws-fine">…and ${stats.renderings.length - top.length} rarer renderings.</p>` : ''}
+    const counted = stats.renderings.reduce((x, r) => x + r.count, 0);
+    const withText = Math.max(1, stats.total - stats.noText);
+    const top = stats.renderings[0];
+    body = `<p class="ws-note"><b>${esc(sel === 'BSB' ? 'The BSB (and MSB)' : sel)}</b> renders it <b>${stats.renderings.length}</b> way${stats.renderings.length === 1 ? '' : 's'} across ${counted.toLocaleString()} Old Testament use${counted === 1 ? '' : 's'}${top ? `, most often “${esc(top.text)}” (${Math.round(100 * top.count / Math.max(1, counted))}%)` : ''}.</p>
+      <div class="xlv-host" id="${_rhwHost.get(String(strongs))}-xlv"></div>
+      <div class="xlv-acc"><span class="material-symbols-outlined">verified</span><span>${sel === 'BSB' ? `From the Berean translators’ word-by-word tables: ${counted.toLocaleString()} of ${withText.toLocaleString()} uses have an English word of their own.` : `Matched word for word in ${esc(sel)}’s own text: ${counted.toLocaleString()} of ${withText.toLocaleString()} uses (${Math.round(100 * counted / withText)}%). Only these are in the chart.`}</span></div>
       <p class="ws-fine">${[
+        stats.guessed ? `${stats.guessed} placed only by meaning or position (left out, to keep it exact)` : '',
         stats.none ? `${stats.none.toLocaleString()} use${stats.none === 1 ? '' : 's'} with no English word of its own` : '',
         stats.unmatched ? `${stats.unmatched} not confidently matched` : '',
         stats.noText ? `${stats.noText} in verses ${esc(sel)} doesn’t have here${stats.limited ? ' (download limit reached — try again later)' : ''}` : '',
-        sel !== 'BSB' ? 'Lined up on this device from ' + esc(sel) + '’s own text' : 'From the Berean translation tables',
       ].filter(Boolean).join(' · ')}</p>`;
   } else if (sel !== 'BSB') {
     const limited = typeof _vsTransLimited === 'function' && _vsTransLimited(sel);
@@ -52772,6 +52803,16 @@ function _rhwRender(strongs) {
       return `<tr><td><b>${esc(m.ver === 'BSB' ? 'BSB' : m.ver)}</b></td><td>${t ? `${esc(t.text)} <span class="ws-fine">${Math.round(100 * t.count / cov)}%</span>` : '—'}${t2 ? `<div class="ws-fine">then ${esc(t2.text)} ${Math.round(100 * t2.count / cov)}%</div>` : ''}</td><td>${m.renderings.length}</td></tr>`;
     }).join('')}</tbody></table></div>` : '';
   el.innerHTML = `<div class="rhw-sub">Across translations <small>every Old Testament use</small></div><div class="ws-vchips">${chips}</div>${body}${table}`;
+  const xlHost = document.getElementById(`${_rhwHost.get(String(strongs))}-xlv`);
+  if (xlHost && stats && !busy && window.RhemaXlViews) {
+    const tidy = (m) => ({ ver: m.ver === 'BSB' ? 'BSB · MSB' : m.ver, covered: m.renderings.reduce((x, r) => x + r.count, 0), renderings: m.renderings });
+    window.RhemaXlViews.render(xlHost, {
+      key: `H${strongs}`, ver: sel === 'BSB' ? 'BSB · MSB' : sel, word: (window.RhemaHebrewLexicon || {})[strongs]?.lemma || '',
+      total: stats.total, covered: tidy(stats).covered, renderings: stats.renderings,
+      compare: measured.filter(m => m.ver !== sel).map(tidy),
+      refChip: (x) => `<button type="button" class="rhw-ref" onclick="rhemaHebStudyGo('${esc(x)}')">${esc(_rhemaDisplayRefFromKey(x) || x)}</button>`,
+    });
+  }
 }
 
 function _rhemaFillHebrewStudy(elId, strongs) {
