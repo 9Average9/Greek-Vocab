@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.618";
+const APP_VERSION = "3.0.619";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.619 &mdash; A calmer Hebrew word page</div>
+<ul>
+  <li><strong>Hebrew definitions, cleaned up</strong> &mdash; A Hebrew word now opens like a Greek one: an answer card (the word, its sound, a quick definition, the word study summary and how often it&rsquo;s used), then cards you swipe: <em>Across translations</em>, <em>Meanings</em> (Brown-Driver-Briggs), <em>Forms</em> and <em>Where it&rsquo;s used</em> (books and the Greek Old Testament). The full Strong&rsquo;s entry is folded below. Everything that was there before is still there.</li>
+  <li><strong>Hebrew Across translations in your Bible</strong> &mdash; It opens in your reader version and counts it right away (only missing chapters download), with the same version dropdown as Greek words, and the percentages match everywhere.</li>
+  <li><strong>Card buttons stay put</strong> &mdash; The card buttons sit right under the cards instead of floating over the page as you scroll.</li>
+</ul>
 <div class="un-version-label">v3.0.618 &mdash; Wider word cards</div>
 <ul>
   <li><strong>Wider cards</strong> &mdash; The cards in a word&rsquo;s sheet (Definition, Parsing, Occurrences) now use nearly the full width of your phone.</li>
@@ -52926,15 +52932,28 @@ function _rhwGroup(renderings) {
     }),
   })).sort((a, b) => b.count - a.count);
 }
+const _rhwMenu = new Set();
 function rhemaHebXlVersion(strongs, ver) {
   _rhwSel.set(String(strongs), ver);
+  _rhwMenu.delete(String(strongs));
   const key = `${ver}|${strongs}`;
   if (ver !== 'BSB' && !_rhwStats.has(key) && !_rhwBusy.has(key)) {
-    // Licensed versions measure straight away only when their chapters are here.
-    const occs = window.RhemaHebrewOT ? _rhwOccurrences(strongs) : [];
-    if (occs.length && !_rhwMissing(ver, occs).length) _rhwMeasure(String(strongs), ver);
+    // Measure right away: only the chapters this word needs that aren't on
+    // the device are downloaded (each is kept), unless the limit is reached.
+    const limited = typeof _vsTransLimited === 'function' && _vsTransLimited(ver);
+    if (!limited) _rhwMeasure(String(strongs), ver);
   }
   _rhwRender(String(strongs));
+}
+function rhemaHebVerMenu(strongs) {
+  const k = String(strongs);
+  if (_rhwMenu.has(k)) _rhwMenu.delete(k); else _rhwMenu.add(k);
+  const host = _rhwHost.get(k);
+  const m = document.getElementById(`${host}-vmenu`);
+  const b = document.getElementById(`${host}-vpick`);
+  if (m) m.hidden = !_rhwMenu.has(k);
+  if (b) b.setAttribute('aria-expanded', String(_rhwMenu.has(k)));
+  document.querySelectorAll('.rhd').forEach(r => _rhdFit(r.id));
 }
 function rhemaHebXlMeasure(strongs, ver) { _rhwMeasure(String(strongs), ver); }
 function rhemaHebXlAll(strongs, ver, i) { _rhwOpen.add(`${ver}|${strongs}|${i}`); _rhwRender(String(strongs)); }
@@ -52951,10 +52970,23 @@ function _rhwRender(strongs) {
       : _rhwStats.get(`${v}|${strongs}`);
     return raw ? { ...raw, renderings: _rhwGroup(raw.renderings) } : null;
   };
-  const chips = vers.map(v => {
+  const reader = _rhemaReaderVersion();
+  const host = _rhwHost.get(String(strongs));
+  const order = [...new Set([vers.includes(reader) ? reader : null, ...vers].filter(Boolean))];
+  const label = (v) => v === 'BSB' ? 'BSB · MSB' : v;
+  const items = order.map(v => {
     const done = !!statsFor(v);
-    return `<button type="button" class="ws-vchip${v === sel ? ' on' : ''}${done ? ' done' : ''}" onclick="rhemaHebXlVersion('${esc(strongs)}','${esc(v)}')">${esc(v === 'BSB' ? 'BSB · MSB' : v)}${done && v !== 'BSB' ? ' ✓' : ''}</button>`;
+    const sub = v === reader || (v === 'BSB' && (reader === 'MSB' || reader === 'BSB')) ? 'Your reader version'
+      : (typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[v]?.name) || (v === 'BSB' ? 'Berean Standard Bible' : done ? 'On this device' : 'Downloads once');
+    return `<button type="button" role="option" aria-selected="${v === sel}" class="ws-vitem${v === sel ? ' on' : ''}" onclick="rhemaHebXlVersion('${esc(strongs)}','${esc(v)}')">
+      <b>${esc(label(v))}</b><small>${esc(sub)}</small><span class="material-symbols-outlined">${done ? 'check_circle' : v === 'BSB' ? 'radio_button_unchecked' : 'download'}</span></button>`;
   }).join('');
+  const open = _rhwMenu.has(String(strongs));
+  const chips = `<div class="ws-vpickwrap">
+    <button type="button" class="ws-vpick" id="${host}-vpick" aria-haspopup="listbox" aria-expanded="${open}" onclick="rhemaHebVerMenu('${esc(strongs)}')">
+      <span class="material-symbols-outlined">menu_book</span><b>${esc(label(sel))}</b>${sel === reader || (sel === 'BSB' && (reader === 'MSB' || reader === 'BSB')) ? '<small>your Bible</small>' : ''}<span class="material-symbols-outlined ws-vpick-chev">expand_more</span></button>
+    <div class="ws-vmenu" id="${host}-vmenu" role="listbox" ${open ? '' : 'hidden'}>${items}</div>
+  </div>`;
   const stats = statsFor(sel);
   const busy = _rhwBusy.get(`${sel}|${strongs}`);
   let body = '';
@@ -52991,11 +53023,14 @@ function _rhwRender(strongs) {
   const measured = vers.map(statsFor).filter(Boolean);
   const table = measured.length >= 2 ? `<div class="ws-vtable"><div class="ws-sub-h">Side by side</div>
     <table><thead><tr><th>Version</th><th>Most often</th><th>Ways</th></tr></thead><tbody>${measured.map(m => {
-      const cov = Math.max(1, m.total - m.noText);
+      const cov = Math.max(1, m.renderings.reduce((x, r) => x + r.count, 0)); // same count as the chart
       const t = m.renderings[0], t2 = m.renderings[1];
       return `<tr><td><b>${esc(m.ver === 'BSB' ? 'BSB' : m.ver)}</b></td><td>${t ? `${esc(t.text)} <span class="ws-fine">${Math.round(100 * t.count / cov)}%</span>` : '—'}${t2 ? `<div class="ws-fine">then ${esc(t2.text)} ${Math.round(100 * t2.count / cov)}%</div>` : ''}</td><td>${m.renderings.length}</td></tr>`;
     }).join('')}</tbody></table></div>` : '';
-  el.innerHTML = `<div class="rhw-sub">Across translations <small>every Old Testament use</small></div><div class="ws-vchips">${chips}</div>${body}${table}`;
+  const inDeck = !!el.closest('.rhd');
+  el.innerHTML = `${inDeck ? '' : '<div class="rhw-sub">Across translations <small>every Old Testament use</small></div>'}${chips}${body}${table}`;
+  const deckRoot = el.closest('.rhd');
+  if (deckRoot) setTimeout(() => _rhdFit(deckRoot.id), 0);
   const xlHost = document.getElementById(`${_rhwHost.get(String(strongs))}-xlv`);
   if (xlHost && stats && !busy && window.RhemaXlViews) {
     const tidy = (m) => ({ ver: m.ver === 'BSB' ? 'BSB · MSB' : m.ver, covered: m.renderings.reduce((x, r) => x + r.count, 0), renderings: m.renderings });
@@ -53011,12 +53046,13 @@ function _rhwRender(strongs) {
   }
 }
 
-function _rhemaFillHebrewStudy(elId, strongs) {
+function _rhemaFillHebrewStudy(elId, strongs, uid) {
   const esc = _escapeRhemaAttr;
   Promise.all([_rhemaLoadHebStats(strongs), loadDeepHebrewLexiconEntry(strongs).catch(() => null)]).then(([st, deep]) => {
     const el = document.getElementById(elId);
     if (!el) return;
     const out = [];
+    const parts = { versions: [], forms: [], where: [] };
     if (st) {
       const shown = st.r || [];
       const max = Math.max(1, ...shown.map(r => r[1]));
@@ -53029,6 +53065,7 @@ function _rhemaFillHebrewStudy(elId, strongs) {
       _rhwBsb.set(String(strongs), st);
       _rhwHost.set(String(strongs), `${elId}-xl`);
       out.push(`<p class="rhw-note">Used <b>${st.n.toLocaleString()}</b> times.</p>${untranslated}<div class="rhw-xl" id="${elId}-xl"></div>`);
+      parts.versions.push(`${untranslated}<div class="rhw-xl" id="${elId}-xl"></div>`);
       const stems = Object.entries(st.st || {});
       if (stems.length) {
         const forms = Object.entries(st.fm || {}).slice(0, 4);
@@ -53038,10 +53075,12 @@ function _rhemaFillHebrewStudy(elId, strongs) {
             return `<div class="rhema-parse-row"><div class="rhema-parse-label">${c.toLocaleString()}×</div><div><div class="rhema-parse-value">${esc(d[0])}</div>${d[1] ? `<div class="rhema-parse-desc">${esc(d[1])}</div>` : ''}</div></div>`;
           }).join('') + `</div>` +
           (forms.length ? `<p class="rhw-note">Most often as: ${forms.map(([k, c]) => `${esc((RHEMA_HEB_FORM[k] || [k])[0])} (${c.toLocaleString()}×)`).join(', ')}.</p>` : ''));
+        parts.forms.push(out[out.length - 1].replace('<div class="rhw-sub">Forms it takes</div>', '<p class="rhw-note">The stems (verb patterns) it appears in, counted in every use.</p>'));
       }
       const books = Object.entries(st.b || {}).slice(0, 6);
       if (books.length) {
         out.push(`<div class="rhw-sub">Where it appears most</div><div class="rhw-books">${books.map(([b, c]) => `<span class="rhw-book"><b>${esc(_rhemaBookName(b))}</b> ${c.toLocaleString()}</span>`).join('')}</div>`);
+        parts.where.push(out[out.length - 1]);
       }
     }
     const lxx = (deep?.lxxGreek || []).filter(x => x && x.g);
@@ -53063,7 +53102,33 @@ function _rhemaFillHebrewStudy(elId, strongs) {
             const gl = G[x.g]?.gloss || G[x.g]?.brief || '';
             return `<button type="button" class="rhw-lxx-chip" onclick="rhemaOpenGreekFromHebrew(${Number(x.g)})"><b>${esc(x.lemma || G[x.g]?.lemma || '')}</b><small>${gl ? esc(String(gl).split(/[,;]/)[0]) + ' · ' : ''}${Math.round(x.count / total * 100)}%</small></button>`;
           }).join('')}</div>`);
+        parts.where.push(out[out.length - 1]);
       }
+    }
+    if (uid && document.getElementById(uid)) {
+      // The answer card's one-line glance, then each card's own content.
+      const glance = document.getElementById(`${uid}-glance`);
+      if (glance && st) {
+        const topBook = Object.entries(st.b || {})[0];
+        glance.innerHTML = [`${st.n.toLocaleString()}× in the Hebrew OT`, topBook ? `most in ${esc(_rhemaBookName(topBook[0]))}` : '']
+          .filter(Boolean).map(x => `<span>${x}</span>`).join('');
+      }
+      const put = (id, items) => {
+        const slot = document.getElementById(`${uid}-${id}`);
+        if (!slot) return;
+        const c = RHD_CARDS.find(k => k.id === id);
+        slot.innerHTML = items.length ? `<section class="ws-card"><header class="ws-card-h"><span class="material-symbols-outlined">${c.icon}</span><span class="ws-card-t">${c.label}</span></header>${items.join('')}</section>` : '';
+      };
+      put('versions', parts.versions);
+      put('forms', parts.forms);
+      put('where', parts.where);
+      _rhdRefresh(uid);
+      el.remove();
+      if (st) {
+        const vers = _rhwVersions();
+        rhemaHebXlVersion(strongs, _rhwSel.get(String(strongs)) || (vers.includes(_rhemaReaderVersion()) ? _rhemaReaderVersion() : 'BSB'));
+      }
+      return;
     }
     el.innerHTML = out.join('') || '';
     if (!out.length) { el.remove(); return; }
@@ -53127,92 +53192,130 @@ function renderHebrewPrepDefinition(prep) {
   </div>`;
 }
 
+// Hebrew Definition: the same calm layout as a Greek word — an answer card,
+// then cards you swipe (Across translations · Meanings · Forms · Where it's
+// used), with the full lexicon entries folded below. Nothing is left out.
+const RHD_CARDS = [
+  { id: 'versions', label: 'Across translations', icon: 'compare_arrows' },
+  { id: 'meanings', label: 'Meanings', icon: 'auto_awesome' },
+  { id: 'forms', label: 'Forms', icon: 'category' },
+  { id: 'where', label: 'Where it’s used', icon: 'travel_explore' },
+];
 function renderHebrewDefinition(strongs) {
   const lex = (window.RhemaHebrewLexicon || {})[strongs];
   if (!lex) return `<p style="opacity:.5;font-size:.85rem">No Hebrew lexicon entry loaded yet.</p>`;
   const esc = _escapeRhemaAttr;
-  const sections = [];
-
-  // Async-fill block — populated from deep-hebrew-lexicon shard once it arrives.
-  const answerId = `rhemaDeepAnswer-${strongs}-${++_deepAnswerSeq}`;
-  sections.push(`<div class="rhema-deep-answer hidden" id="${answerId}"></div>`);
-  setTimeout(() => _populateDeepAnswer(answerId, strongs, 'hebrew'), 0);
-  // Hebrew Word Study: how it's translated, its forms, where it appears, and
-  // the Greek words the Septuagint used for it (filled when the data arrives).
+  const uid = `rhd${++_deepAnswerSeq}`;
+  const answerId = `rhemaDeepAnswer-${strongs}-${_deepAnswerSeq}`;
   const studyId = `rhemaHebStudy-${strongs}-${_deepAnswerSeq}`;
-  sections.push(`<div class="rhw-study" id="${studyId}"><div class="rhw-loading">Loading word study…</div></div>`);
-  setTimeout(() => _rhemaFillHebrewStudy(studyId, strongs), 0);
-
-  if (lex.lemma) {
-    sections.push(`<div class="rhema-def-section">
-      <div class="rhema-def-label">Hebrew Root</div>
-      <div class="rhema-def-text rhema-hebrew-root">${esc(lex.lemma)}</div>
-      ${lex.pronounce ? `<div class="rhema-def-text" style="opacity:.65;font-style:italic">${esc(lex.pronounce)}</div>` : ''}
-    </div>`);
-  }
-
+  setTimeout(() => _populateDeepAnswer(answerId, strongs, 'hebrew'), 0);
+  setTimeout(() => { _rhdRefresh(uid); _rhemaFillHebrewStudy(studyId, strongs, uid); }, 0);
   const quick = getRhemaQuickDefinition(lex);
-  if (quick) {
-    sections.push(`<div class="rhema-def-section rhema-def-quick">
-      <div class="rhema-def-label">Quick Definition</div>
-      <div class="rhema-def-quick-text"><strong>${esc(quick)}</strong></div>
-    </div>`);
-  }
 
-  const refSections = [];
-
-  // BDB (Brown-Driver-Briggs) — loaded alongside the basic Hebrew lexicon
+  // Meanings: BDB's senses (every homonym), else Strong's.
   const bdbEntry = (window.RhemaHebrewBDB || {})[parseInt(strongs, 10)];
+  const bdbBlock = (e, label) => {
+    const parts = [];
+    if (e.pos) parts.push(`<div class="rhema-def-text" style="opacity:.6;font-style:italic">${esc(e.pos)}</div>`);
+    if (e.def) parts.push(`<div class="rhema-def-text"><strong>${esc(e.def)}</strong></div>`);
+    if (e.senses && e.senses.length) parts.push(`<ol class="rhema-bdb-senses">${e.senses.map(x => `<li>${esc(x)}</li>`).join('')}</ol>`);
+    return `<div class="rhema-def-section"><div class="rhema-def-label">${label}</div>${parts.join('')}</div>`;
+  };
+  const meanings = [];
   if (bdbEntry) {
-    const renderBdbEntry = (e, label) => {
-      const parts = [];
-      if (e.pos) parts.push(`<div class="rhema-def-text" style="opacity:.6;font-style:italic">${esc(e.pos)}</div>`);
-      if (e.def) parts.push(`<div class="rhema-def-text"><strong>${esc(e.def)}</strong></div>`);
-      if (e.senses && e.senses.length) {
-        parts.push(`<ol class="rhema-bdb-senses">${e.senses.map(s => `<li>${esc(s)}</li>`).join('')}</ol>`);
-      }
-      return `<div class="rhema-def-section">
-        <div class="rhema-def-label">${label}</div>
-        ${parts.join('')}
-      </div>`;
-    };
-    if (bdbEntry.entries) {
-      // Multiple homonyms: show as I., II., etc.
-      bdbEntry.entries.forEach((e, i) => {
-        refSections.push(renderBdbEntry(e, `BDB — Brown-Driver-Briggs${bdbEntry.entries.length > 1 ? ` (${['I','II','III','IV'][i] || i+1})` : ''}`));
-      });
-    } else {
-      refSections.push(renderBdbEntry(bdbEntry, 'BDB — Brown-Driver-Briggs'));
+    const list = bdbEntry.entries || [bdbEntry];
+    list.forEach((e, i) => meanings.push(bdbBlock(e, `Brown-Driver-Briggs${list.length > 1 ? ` (${['I', 'II', 'III', 'IV'][i] || i + 1})` : ''}`)));
+  }
+  const strongsBlock = (lex.strongs_def || lex.extended)
+    ? `<div class="rhema-def-section"><div class="rhema-def-label">Strong's Hebrew Definition</div><div class="rhema-def-text">${esc(lex.strongs_def || lex.extended)}</div>${lex.kjv_def ? `<div class="rhema-def-english">Glosses: ${esc(lex.kjv_def)}</div>` : ''}</div>`
+    : lex.kjv_def ? `<div class="rhema-def-section"><div class="rhema-def-label">English Glosses</div><div class="rhema-def-english">${esc(lex.kjv_def)}</div></div>` : '';
+  if (!meanings.length && strongsBlock) meanings.push(strongsBlock);
+  const card = (id, body) => {
+    const c = RHD_CARDS.find(x => x.id === id);
+    return `<div class="ws-slot" id="${uid}-${id}" data-card="${id}">${body ? `<section class="ws-card"><header class="ws-card-h"><span class="material-symbols-outlined">${c.icon}</span><span class="ws-card-t">${c.label}</span></header>${body}</section>` : ''}</div>`;
+  };
+  const loading = '<div class="rhw-loading">Counting every use…</div>';
+  // Full entries folded below the cards: Strong's (when BDB leads the
+  // Meanings card) — the Hebrew root and pronunciation sit in the answer card.
+  const extras = bdbEntry && strongsBlock ? strongsBlock : '';
+
+  return `<div class="ws rhd" id="${uid}" data-strongs="${esc(strongs)}">
+    <div class="ws-hero rhd-hero">
+      <div class="ws-hero-top">
+        <span class="ws-lemma rhd-lemma">${esc(lex.lemma || '')}</span>
+        <span class="ws-translit">${esc(lex.pronounce || lex.translit || '')}</span>
+        <span class="ws-hero-r"><span class="ws-g">H${esc(strongs)}</span></span>
+      </div>
+      ${quick ? `<div class="ws-answer"><span class="ws-answer-k">Quick definition</span><strong>${esc(quick)}</strong></div>` : ''}
+      <div class="rhema-deep-answer hidden" id="${answerId}"></div>
+      <div class="ws-glance rhd-glance" id="${uid}-glance"></div>
+    </div>
+    <div class="ws-deckwrap">
+      <div class="ws-deck" id="${uid}-deck">
+        ${card('versions', loading)}
+        ${card('meanings', meanings.join('<div class="rhema-def-sep"></div>'))}
+        ${card('forms', loading)}
+        ${card('where', loading)}
+      </div>
+      <nav class="ws-dots" id="${uid}-dots" aria-label="Cards"></nav>
+    </div>
+    ${extras ? `<details class="ws-extras"><summary><span class="material-symbols-outlined">library_books</span>Full lexicon entry · Strong's<span class="material-symbols-outlined ws-extras-chev">expand_more</span></summary><div class="ws-xslot">${extras}</div></details>` : ''}
+    <div id="${studyId}" hidden></div>
+  </div>`;
+}
+// The swipe deck for a Hebrew word (same look and feel as a Greek word's).
+const _rhdActive = new Map();
+function _rhdSlots(uid) {
+  return [...document.querySelectorAll(`#${uid}-deck > .ws-slot`)].filter(x => x.innerHTML.trim());
+}
+function _rhdRefresh(uid) {
+  const root = document.getElementById(uid);
+  if (!root) return;
+  root.querySelectorAll('.ws-deck > .ws-slot').forEach(x => x.classList.toggle('ws-slot-empty', !x.innerHTML.trim()));
+  const slots = _rhdSlots(uid);
+  let active = _rhdActive.get(uid);
+  if (!slots.some(x => x.dataset.card === active)) active = slots[0]?.dataset.card;
+  _rhdActive.set(uid, active);
+  const dots = document.getElementById(`${uid}-dots`);
+  if (dots) dots.innerHTML = slots.length > 1 ? slots.map(x => {
+    const c = RHD_CARDS.find(k => k.id === x.dataset.card);
+    return `<button type="button" class="ws-dot${x.dataset.card === active ? ' on' : ''}" data-card="${c.id}" aria-label="${c.label}" onclick="rhemaHebDeckGo('${uid}','${c.id}')"><span class="material-symbols-outlined">${c.icon}</span><span class="ws-dot-l">${c.label}</span></button>`;
+  }).join('') : '';
+  const deck = document.getElementById(`${uid}-deck`);
+  if (deck && !deck._rhdInit) {
+    deck._rhdInit = true;
+    ['touchstart', 'touchmove', 'touchend'].forEach(t => deck.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+    let timer = 0;
+    deck.addEventListener('scroll', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        let best = null, bestD = Infinity;
+        for (const x of _rhdSlots(uid)) { const d = Math.abs(x.offsetLeft - deck.scrollLeft); if (d < bestD) { bestD = d; best = x; } }
+        if (best) _rhdSetActive(uid, best.dataset.card, false);
+      }, 60);
+    }, { passive: true });
+    if (typeof ResizeObserver === 'function') {
+      const ro = new ResizeObserver(() => _rhdFit(uid));
+      deck.querySelectorAll('.ws-slot').forEach(x => ro.observe(x));
     }
   }
-
-  if (lex.strongs_def || lex.extended) {
-    refSections.push(`<div class="rhema-def-section">
-      <div class="rhema-def-label">Strong's Hebrew Definition</div>
-      <div class="rhema-def-text">${esc(lex.strongs_def || lex.extended)}</div>
-      ${lex.kjv_def ? `<div class="rhema-def-english">Glosses: ${esc(lex.kjv_def)}</div>` : ''}
-    </div>`);
-  } else if (lex.kjv_def) {
-    refSections.push(`<div class="rhema-def-section">
-      <div class="rhema-def-label">English Glosses</div>
-      <div class="rhema-def-english">${esc(lex.kjv_def)}</div>
-    </div>`);
-  }
-
-  if (refSections.length) {
-    const lexNames = [];
-    if (bdbEntry) lexNames.push('BDB');
-    lexNames.push("Strong's");
-    sections.push(`<button type="button" class="rhema-deep-lexica-btn" onclick="this.nextElementSibling.classList.toggle('hidden');this.classList.toggle('open')">
-      <span class="material-symbols-outlined">menu_book</span>
-      <span>Full lexicon entries · ${lexNames.join(', ')}</span>
-      <span class="material-symbols-outlined rhema-deep-why-arrow">expand_more</span>
-    </button>
-    <div class="rhema-deep-lexica hidden">${refSections.join('<div class="rhema-def-sep"></div>')}</div>`);
-  }
-
-  return sections.join('<div class="rhema-def-sep"></div>') || `<p style="opacity:.5;font-size:.85rem">No Hebrew lexicon entry loaded yet.</p>`;
+  _rhdSetActive(uid, active, false);
 }
+function _rhdFit(uid) {
+  const deck = document.getElementById(`${uid}-deck`);
+  const slot = document.getElementById(`${uid}-${_rhdActive.get(uid)}`);
+  if (deck && slot && slot.offsetHeight) deck.style.height = `${slot.offsetHeight}px`;
+}
+function _rhdSetActive(uid, id, scroll) {
+  if (!id) return;
+  _rhdActive.set(uid, id);
+  document.querySelectorAll(`#${uid}-dots .ws-dot`).forEach(d => d.classList.toggle('on', d.dataset.card === id));
+  const deck = document.getElementById(`${uid}-deck`);
+  const slot = document.getElementById(`${uid}-${id}`);
+  if (deck && slot && scroll) deck.scrollTo({ left: slot.offsetLeft, behavior: 'smooth' });
+  _rhdFit(uid);
+}
+function rhemaHebDeckGo(uid, id) { _rhdSetActive(uid, id, true); }
 
 function renderRhemaParsing(surface, strongs, morph, lemma, layer = getCurrentOriginalLanguageLayer()) {
   if (layer === 'hebrew') return renderHebrewParsing(surface, strongs, morph, lemma);
