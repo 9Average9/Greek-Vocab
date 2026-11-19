@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.617";
+const APP_VERSION = "3.0.618";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.618 &mdash; Wider word cards</div>
+<ul>
+  <li><strong>Wider cards</strong> &mdash; The cards in a word&rsquo;s sheet (Definition, Parsing, Occurrences) now use nearly the full width of your phone.</li>
+</ul>
 <div class="un-version-label">v3.0.617 &mdash; Search button back in Occurrences</div>
 <ul>
   <li><strong>Find every form like this</strong> &mdash; Back on the Occurrences tab. It stays off the Parsing tab (the Parsing tab itself is unchanged).</li>
