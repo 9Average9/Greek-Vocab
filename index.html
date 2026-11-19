@@ -387,9 +387,9 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.621" rel="stylesheet"/>
+<link href="style.css?v=3.0.622" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.621" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.622" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -10665,7 +10665,7 @@ Verb Endings
 <span class="rhema-title" id="rhemaTitleMain">Rhēma</span>
 <span class="rhema-title-greek" id="rhemaTitleSub">Bible reader</span>
 </div>
-<button type="button" class="rhema-nap-guide" id="rhemaNapGuide" aria-label="Wake the guide for a tour" title="Wake me for a tour" onclick="rhemaNapPoke()"><span class="rng-fig"><span class="rng-l rng-sleep vis play"><i></i></span><span class="rng-l rng-wake"><i></i></span><span class="rng-l rng-drowse"><i></i></span><img class="rng-ouch" alt="" draggable="false" decoding="async"></span></button>
+<button type="button" class="rhema-nap-guide" id="rhemaNapGuide" aria-label="Tap the guide: Challenge My Theology or App Tours" title="Tap me!" onclick="rhemaNapPoke()"><span class="rng-fig"><span class="rng-l rng-sleep vis play"><i></i></span><span class="rng-l rng-wake"><i></i></span><span class="rng-l rng-drowse"><i></i></span><img class="rng-ouch" alt="" draggable="false" decoding="async"></span></button>
 <div class="rhema-header-actions">
 <button class="rhema-reader-menu-btn rhema-search-toggle" id="rhemaSearchToggle" type="button" onclick="toggleRhemaSearch()" title="Search the Bible" aria-label="Search the Bible" aria-expanded="false"><span class="material-symbols-outlined">search</span></button>
 <button class="rhema-tool-btn" id="rhemaToolBtn" onclick="toggleRhemaWheel()" title="Tools">
@@ -17372,22 +17372,23 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.621"></script>
-<script src="app.js?v=3.0.621"></script>
-<script src="rhema-word-study.js?v=3.0.621"></script>
-<script src="rhema-grammar-search.js?v=3.0.621"></script>
-<script src="rhema-xl-views.js?v=3.0.621"></script>
-<script src="rhema-glance.js?v=3.0.621"></script>
+<script src="rhema-align.js?v=3.0.622"></script>
+<script src="app.js?v=3.0.622"></script>
+<script src="rhema-word-study.js?v=3.0.622"></script>
+<script src="rhema-grammar-search.js?v=3.0.622"></script>
+<script src="rhema-xl-views.js?v=3.0.622"></script>
+<script src="rhema-glance.js?v=3.0.622"></script>
+<script src="challenge.js?v=3.0.622"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.621"></script>
-<script src="verse-structure.js?v=3.0.621"></script>
-<script src="vs-structure.js?v=3.0.621"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.622"></script>
+<script src="verse-structure.js?v=3.0.622"></script>
+<script src="vs-structure.js?v=3.0.622"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.621"></script>
-<script src="bible-quiz.js?v=3.0.621"></script>
-<script src="firebase-lb.js?v=3.0.621" type="module"></script>
+<script src="sermon-notes.js?v=3.0.622"></script>
+<script src="bible-quiz.js?v=3.0.622"></script>
+<script src="firebase-lb.js?v=3.0.622" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -17497,7 +17498,7 @@ Verb Endings
 <div class="ss-title-wrap">
 <span class="ss-icon material-symbols-outlined" id="ssIcon">menu_book</span>
 <span class="ss-title" id="ssTitle">Study</span>
-<button type="button" class="rhema-nap-guide ss-nap-guide" id="ssNapGuide" aria-label="Wake the guide for a tour" title="Wake me for a tour" onclick="rhemaNapPoke(this)"><span class="rng-fig"><span class="rng-l rng-sleep vis play"><i></i></span><img class="rng-ouch" alt="" draggable="false" decoding="async"></span></button>
+<button type="button" class="rhema-nap-guide ss-nap-guide" id="ssNapGuide" aria-label="Tap the guide: Challenge My Theology or App Tours" title="Tap me!" onclick="rhemaNapPoke(this)"><span class="rng-fig"><span class="rng-l rng-sleep vis play"><i></i></span><img class="rng-ouch" alt="" draggable="false" decoding="async"></span></button>
 </div>
 <button class="ss-members" id="ssMembers" onclick="openStudyMembersModal()" type="button"></button>
 </div>

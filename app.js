@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.621";
+const APP_VERSION = "3.0.622";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.622 &mdash; Challenge My Theology</div>
+<ul>
+  <li><strong>Tap the guide</strong> &mdash; Wherever he is, tapping the guide now asks &ldquo;What would you like to do?&rdquo;: <em>Challenge My Theology</em> or <em>App Tours</em>.</li>
+  <li><strong>Challenge My Theology</strong> &mdash; Pick a tradition (Catholic, Orthodox, Calvinist, Arminian, Lutheran, Pentecostal), another faith or view (Mormon, Jehovah&rsquo;s Witness, Islam, Judaism, Skeptic), a claim made from the verse you&rsquo;re reading, what&rsquo;s trending, or type anything. The guide researches one major claim they really teach and presents it in their own words, with the passage they use and the sources it comes from. Every quote is checked word for word against the page it links to. He doesn&rsquo;t argue back: you study Scripture to answer it.</li>
+  <li><strong>Your study</strong> &mdash; Work through it in your own notes (private unless you share your answer). While you&rsquo;re working on a challenge, tapping the guide takes you straight back to it.</li>
+  <li><strong>Community</strong> &mdash; Every challenge is posted with who got it, so anyone can open it, take it on and see the answers others chose to share.</li>
+</ul>
 <div class="un-version-label">v3.0.621 &mdash; Long words fit</div>
 <ul>
   <li><strong>Long Greek and Hebrew words fit</strong> &mdash; A long word at the top of a word&rsquo;s sheet now shrinks a little so it never runs into the Copy and Save buttons or the close button.</li>
@@ -46350,7 +46357,7 @@ function _rrpGuideEl(pane) {
   }
   return g;
 }
-// Tapped: a quick "ouch!" jolt, then the tours list.
+// Tapped: a quick "ouch!" jolt, then "What would you like to do?" (or the current challenge).
 function _rrpGuidePoke(g) {
   if (g._poking) return;
   g._poking = true;
@@ -46362,7 +46369,8 @@ function _rrpGuidePoke(g) {
     g._poking = false;
     g.classList.remove('poked');
     _rrpGuideSetPose(g, g.dataset.prevPose, parseFloat(g.style.height) || 46);
-    showReaderPanelSection('tours');
+    if (window.RhemaChallenge) { closeRhemaReaderPanel?.(); RhemaChallenge.guideTap(); }
+    else showReaderPanelSection('tours');
   }, 460);
 }
 function _rrpGuideSetPose(g, pose, h) {
@@ -47662,6 +47670,12 @@ function _rhemaNapDrowse() {
   _rhemaNapTimers.push(setTimeout(() => { _rhemaNapState = 'drowse-done'; rhemaNapSleep(); }, RHEMA_NAP.drowseMs));
 }
 // Tapped: the side menu's "ouch!" jolt, then the tours.
+// Tapping the guide: "What would you like to do?" (Challenge My Theology or
+// App Tours) — or straight back to the challenge you're working on.
+function _rhemaGuideTapped() {
+  if (window.RhemaChallenge) RhemaChallenge.guideTap();
+  else { openRhemaReaderPanel(); showReaderPanelSection('tours'); }
+}
 function rhemaNapPoke(btn) {
   const g = btn instanceof Element ? btn : _rhemaNapEl();
   if (!g || g._poking || g.classList.contains('rng-away')) return;
@@ -47675,7 +47689,7 @@ function rhemaNapPoke(btn) {
     setTimeout(() => {
       g._poking = false;
       closeStudyToolHost();
-      setTimeout(() => { g.classList.remove('rng-poked'); openRhemaReaderPanel(); showReaderPanelSection('tours'); }, 300);
+      setTimeout(() => { g.classList.remove('rng-poked'); _rhemaGuideTapped(); }, 300);
     }, 460);
     return;
   }
@@ -47686,8 +47700,7 @@ function rhemaNapPoke(btn) {
   g.classList.remove('rng-poked'); void g.offsetWidth; g.classList.add('rng-poked');
   setTimeout(() => {
     g._poking = false;
-    openRhemaReaderPanel();
-    showReaderPanelSection('tours');
+    _rhemaGuideTapped();
     setTimeout(() => g.classList.remove('rng-poked'), 320);
   }, 460);
 }
