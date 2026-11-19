@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.616";
+const APP_VERSION = "3.0.617";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.617 &mdash; Search button back in Occurrences</div>
+<ul>
+  <li><strong>Find every form like this</strong> &mdash; Back on the Occurrences tab. It stays off the Parsing tab (the Parsing tab itself is unchanged).</li>
+</ul>
 <div class="un-version-label">v3.0.616 &mdash; A calmer word page</div>
 <ul>
   <li><strong>A cleaner Definition page</strong> &mdash; The Quick/Study/Deep bar is gone, the &ldquo;?&rdquo; is a small button in the corner of the first card, and the first card is a little bigger. The cards now go <em>Across translations</em>, <em>Meanings</em>, <em>In this verse</em>, <em>Authors</em>; the dots at the bottom are the card buttons, and the one you&rsquo;re on grows into a labeled pill. History, the lexicons and &ldquo;how we know&rdquo; are folded up below.</li>
@@ -51794,7 +51798,7 @@ function showRhemaTab(tab, word) {
   } else if (tab === 'definition') {
     content.innerHTML = renderRhemaDefinition(strongs, morph, layer);
   } else {
-    content.innerHTML = renderRhemaOccurrences(strongs, layer);
+    content.innerHTML = _rhemaFormsLikeThisBtn(layer) + renderRhemaOccurrences(strongs, layer);
   }
 }
 
