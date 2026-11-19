@@ -1036,13 +1036,18 @@
         }
       }
       const tally = new Map();
-      let none = 0, unmatched = 0, noText = 0;
+      let none = 0, unmatched = 0, noText = 0, guessed = 0;
       for (let k = 0; k < occs.length; k++) {
         const x = results[k];
         if (!x || x.noText) { noText++; continue; }
         const r = x.r, vk = x.vk;
         if (r.kind === 'none') none++;
         else if (!r.text) unmatched++;
+        // Accuracy first: a use placed only by meaning or position (the
+        // aligner's "inferred", graded ~74–90% right against Strong's-tagged
+        // KJV/WEB) or by its weaker fallbacks ("second" ~94–96%, "neg") is not
+        // counted. What's counted grades 99.1% (KJV) and 99.4% (WEB) right.
+        else if (r.kind === 'inferred' || /^(neg|second)$/.test(r.via || '')) guessed++;
         else {
           let shown = _wsTidy(r.text);
           // "Then"/"But" only because they open the sentence → "then"/"but";
@@ -1063,7 +1068,7 @@
       const renderings = [...tally.values()].map(t => ({
         text: [...t.forms.entries()].sort((a, b) => b[1] - a[1])[0][0], count: t.count, refs: t.refs, approx: t.approx,
       })).sort((a, b) => b.count - a.count);
-      _wsVerStats.set(key, { ver, total: occs.length, matched: occs.length - none - unmatched - noText, none, unmatched, noText, renderings, limited: !!busy.limited });
+      _wsVerStats.set(key, { ver, total: occs.length, matched: occs.length - none - unmatched - noText - guessed, none, unmatched, noText, guessed, renderings, limited: !!busy.limited });
     } finally {
       _wsVerBusy.delete(key);
       redraw();
@@ -1115,21 +1120,14 @@
         : busy.phase === 'measure' ? `Lining up all ${busy.total.toLocaleString()} uses in ${esc(sel)}…` : 'Preparing…'}</div>
         <div class="ws-bar"><span style="width:${Math.max(3, pctDone)}%"></span></div></div>`;
     } else if (stats) {
-      const top = stats.renderings.slice(0, 14);
-      const max = top[0]?.count || 1;
-      const covered = stats.total - stats.noText;
-      body = `<p class="ws-note"><b>${esc(sel)}</b> renders it <b>${stats.renderings.length}</b> different way${stats.renderings.length === 1 ? '' : 's'} across ${covered.toLocaleString()} NT use${covered === 1 ? '' : 's'}${top[0] ? ` — most often “${esc(top[0].text)}” (${Math.round(100 * top[0].count / Math.max(1, covered))}%)` : ''}.</p>
-        <div class="ws-vlist">${top.map(r => `<div class="ws-vrow">
-            <div class="ws-sense-top"><b>${esc(r.text)}</b>${r.approx ? `<span class="ws-fine" title="Some matched by position">≈${r.approx}</span>` : ''}<span class="ws-count">${r.count}× · ${Math.round(100 * r.count / Math.max(1, covered))}%</span></div>
-            <div class="ws-bar"><span style="width:${Math.max(2, Math.round(100 * r.count / max))}%"></span></div>
-            ${(() => {
-              const all = st.allRefs && st.allRefs.has(`${sel}|${r.text}`);
-              const shown = all ? r.refs : r.refs.slice(0, 40);
-              return more(`${r.refs.length} verse${r.refs.length === 1 ? '' : 's'}`, `<div class="ws-refs">${shown.map(x => _refChipFromKey(x, strongs)).join('')}${shown.length < r.refs.length ? `<button type="button" class="ws-ref-all" onclick="rhemaWordStudyAllRefs('${uid}','${esc(sel)}','${esc(r.text).replace(/'/g, '&#39;')}')">Show all ${r.refs.length}</button>` : ''}</div>`, all);
-            })()}
-          </div>`).join('')}</div>
-        ${stats.renderings.length > top.length ? `<p class="ws-fine">…and ${stats.renderings.length - top.length} rarer renderings.</p>` : ''}
+      const counted = stats.renderings.reduce((x, r) => x + r.count, 0);
+      const withText = Math.max(1, stats.total - stats.noText);
+      const top = stats.renderings[0];
+      body = `<p class="ws-note"><b>${esc(sel)}</b> renders it <b>${stats.renderings.length}</b> different way${stats.renderings.length === 1 ? '' : 's'} across ${counted.toLocaleString()} NT use${counted === 1 ? '' : 's'}${top ? ` — most often “${esc(top.text)}” (${Math.round(100 * top.count / Math.max(1, counted))}%)` : ''}.</p>
+        <div class="xlv-host" id="${uid}-xlv"></div>
+        <div class="xlv-acc"><span class="material-symbols-outlined">verified</span><span>${sel === 'BSB' ? `From the BSB’s own word-by-word tables: ${counted.toLocaleString()} of ${withText.toLocaleString()} uses have an English word of their own.` : `Matched word for word in ${esc(sel)}’s own text: ${counted.toLocaleString()} of ${withText.toLocaleString()} uses (${Math.round(100 * counted / withText)}%). Only these are in the chart.`}</span></div>
         <p class="ws-fine">${[
+          stats.guessed ? `${stats.guessed} placed only by meaning or position (left out, to keep it exact)` : '',
           stats.none ? `${stats.none} use${stats.none === 1 ? '' : 's'} with no separate English word` : '',
           stats.unmatched ? `${stats.unmatched} not confidently matched` : '',
           stats.noText ? `${stats.noText} in verses ${esc(sel)} doesn’t have${stats.limited ? ' (download limit reached — try again later)' : ''}` : '',
@@ -1155,6 +1153,16 @@
     el.innerHTML = section('versions', 'compare_arrows', 'Across translations',
       `<div class="ws-vchips">${chips}</div>${body || '<p class="ws-fine">Counting…</p>'}${table}`,
       esc(teaser));
+    const xlHost = document.getElementById(`${uid}-xlv`);
+    if (xlHost && stats && window.RhemaXlViews) {
+      const tidy = (m) => ({ ver: m.ver, covered: m.renderings.reduce((x, r) => x + r.count, 0), renderings: m.renderings });
+      window.RhemaXlViews.render(xlHost, {
+        key: `${uid}`, ver: sel, word: (window.RhemaLexicon || {})[strongs]?.lemma || '',
+        total: stats.total, covered: tidy(stats).covered, renderings: stats.renderings,
+        compare: measured.filter(m => m.ver !== sel).map(tidy),
+        refChip: (x) => _refChipFromKey(x, strongs),
+      });
+    }
     _wsRefreshDeck(uid);
   }
 
