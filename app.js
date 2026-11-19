@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.615";
+const APP_VERSION = "3.0.616";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,15 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.616 &mdash; A calmer word page</div>
+<ul>
+  <li><strong>A cleaner Definition page</strong> &mdash; The Quick/Study/Deep bar is gone, the &ldquo;?&rdquo; is a small button in the corner of the first card, and the first card is a little bigger. The cards now go <em>Across translations</em>, <em>Meanings</em>, <em>In this verse</em>, <em>Authors</em>; the dots at the bottom are the card buttons, and the one you&rsquo;re on grows into a labeled pill. History, the lexicons and &ldquo;how we know&rdquo; are folded up below.</li>
+  <li><strong>Across translations opens in your Bible</strong> &mdash; It starts in the version you read in (NIV, NKJV&hellip;) and counts it right away, downloading only the chapters that word needs that aren&rsquo;t already on your phone. Pick another version from the dropdown; versions already counted have a check. Each way a word is translated opens to its verses, with the word in bold. The percentages now match everywhere (one count, the uses in the chart).</li>
+  <li><strong>Meanings</strong> &mdash; A hint shows the meaning pills swipe, and &ldquo;Previous&rdquo; / &ldquo;Next meaning&rdquo; fit inside the card.</li>
+  <li><strong>Occurrences show the Greek and Hebrew</strong> &mdash; Each verse in a book&rsquo;s list shows your version with the word in bold, then the original words around it, its parsing and its word-for-word English.</li>
+  <li><strong>Back to exactly where you were</strong> &mdash; Jumping to a verse from Occurrences, Search or a verse&rsquo;s tools and tapping &ldquo;Back&rdquo; reopens the same word, tab and list, with your verse and word still highlighted. Closing Search brings back the word you had open.</li>
+  <li><strong>Fixes</strong> &mdash; Tapping in Across translations no longer slides the reader up to show the home screen; search results wrap to fit your screen instead of scrolling sideways; &ldquo;Find every form like this&rdquo; is gone from Parsing (Occurrences now shows that data directly).</li>
+</ul>
 <div class="un-version-label">v3.0.615 &mdash; Back to your chapter</div>
 <ul>
   <li><strong>Back to your chapter</strong> &mdash; Opening &ldquo;About the book&rdquo; from At a glance takes you to the book&rsquo;s start; a &ldquo;Back to John 3&rdquo; button at the bottom now brings you right back to the spot you were reading.</li>
@@ -39912,6 +39921,9 @@ function toggleRhemaSearch() {
   if (modal.classList.contains('rhema-search-open')) { closeRhemaSearch(); return; }
   // The verse menu would sit over the results: close it (and its selection).
   if (typeof _rhemaVerseSheetOpen === 'function' && _rhemaVerseSheetOpen()) closeRhemaVerseSheetAndDeselect();
+  // An open word sheet steps aside; closing Search brings it back as it was,
+  // and a verse picked from the results remembers it for "Back to …".
+  _rhemaTakeSearchSheetSnap();
   modal.classList.add('rhema-search-open');
   _rhemaSetChromeHidden?.(false);
   const toggle = document.getElementById('rhemaSearchToggle');
@@ -39923,9 +39935,22 @@ function toggleRhemaSearch() {
   document.getElementById('rhemaSearchInput')?.focus({ preventScroll: true });
 }
 
+function _rhemaTakeSearchSheetSnap() {
+  const snap = _rhemaSheetSnapshot();
+  if (snap) { _rhemaSearchSheetSnap = snap; closeRhemaSheet(); }
+}
 function closeRhemaSearch() {
   const modal = document.getElementById('rhemaModal');
+  const wasOpen = modal?.classList.contains('rhema-search-open');
   modal?.classList.remove('rhema-search-open');
+  // Closed without picking a verse: reopen the word sheet it covered. (A
+  // picked verse jumps right after this and takes the snapshot with it.)
+  const snap = _rhemaSearchSheetSnap;
+  if (wasOpen && snap) setTimeout(() => {
+    if (_rhemaSearchSheetSnap !== snap) return;
+    _rhemaSearchSheetSnap = null;
+    _rhemaRestoreSheet(snap);
+  }, 0);
   const toggle = document.getElementById('rhemaSearchToggle');
   toggle?.setAttribute('aria-expanded', 'false');
   toggle?.setAttribute('aria-label', 'Search the Bible');
@@ -40051,14 +40076,61 @@ async function openHomeRhemaResult(index) {
 // first spot through several jumps. Moving on your own (the book/chapter
 // picker, History) or closing the reader forgets it; swiping chapters keeps it.
 let _rhemaReturnTo = null;
+// The word sheet as it was (word, tab, the Occurrences book list, the card in
+// view, scroll), so coming back reopens exactly that screen — selected word
+// highlighted again — not just the chapter.
+let _rhemaSearchSheetSnap = null; // the sheet that was open when Search opened
+function _rhemaSheetSnapshot() {
+  const sheet = document.getElementById('rhemaSheet');
+  if (!sheet?.classList.contains('open') || !_rhemaActiveWord) return null;
+  const content = document.getElementById('rhemaTabContent');
+  const bvOpen = !!content?.querySelector('.rhema-xref-header') && _rhemaBVCode;
+  return {
+    word: _rhemaActiveWord, layer: _rhemaActiveWordLayer,
+    ctx: window._rhemaWordCtx ? { ...window._rhemaWordCtx } : null,
+    tab: _rhemaActiveTab, form: _wlSelectedForm || null,
+    bv: bvOpen ? { code: _rhemaBVCode, strongs: _rhemaBVStrongs } : null,
+    card: content?.querySelector('.ws-dtab.on')?.dataset.card || null,
+    uid: content?.querySelector('.ws')?.id || null,
+    scroll: content ? content.scrollTop : 0
+  };
+}
+function _rhemaRestoreSheet(snap) {
+  if (!snap || !snap.word) return;
+  try {
+    const c = snap.ctx;
+    if (c && c.book === _rhemaBook) openRhemaSheet(c.idx, c.verse, c.chapter);
+    else if (snap.word[1]) { _wlLibraryLayer = snap.layer; openWlWordDetail(String(snap.word[1]), snap.form || undefined); }
+    else return;
+  } catch { return; }
+  const after = () => {
+    if (!document.getElementById('rhemaSheet')?.classList.contains('open')) return;
+    _wlSelectedForm = snap.form || null;
+    if (snap.tab && snap.tab !== _rhemaActiveTab) showRhemaTab(snap.tab);
+    if (snap.bv) openRhemaBookVerses(snap.bv.code, snap.bv.strongs);
+    const content = document.getElementById('rhemaTabContent');
+    const card = () => { const uid = content?.querySelector('.ws')?.id; if (uid && snap.card && typeof rhemaWordStudyGo === 'function') rhemaWordStudyGo(uid, snap.card); };
+    if (snap.tab === 'definition' && snap.card) setTimeout(card, 450);
+    const scroll = () => { if (content) content.scrollTop = snap.scroll || 0; };
+    requestAnimationFrame(scroll); setTimeout(scroll, 300); setTimeout(scroll, 900);
+  };
+  setTimeout(after, 60);
+}
 function _rhemaMarkJumpOrigin() {
+  const searchSnap = _rhemaSearchSheetSnap;
+  _rhemaSearchSheetSnap = null;
   if (window.RHEMA_MV_SLOT || _rhemaReturnTo) return;
   if (!document.getElementById('rhemaModal')?.classList.contains('open') || !_rhemaBook) return;
   const body = document.querySelector('#rhemaModal .rhema-body');
   _rhemaReturnTo = {
     book: _rhemaBook, chapter: String(_rhemaChapter), verse: String(_rhemaVerse),
     intro: !!_rhemaIntroMode, full: !!_rhemaFullChapter, english: !!_rhemaShowEnglish,
-    textMode: _rhemaTextMode, otLayer: _rhemaOTLayer, scroll: body ? body.scrollTop : null
+    textMode: _rhemaTextMode, otLayer: _rhemaOTLayer, scroll: body ? body.scrollTop : null,
+    focus: !!_rhemaVerseFocus, highlight: _rhemaHighlightStrongs || null,
+    sheet: _rhemaSheetSnapshot() || searchSnap,
+    // The verse(s) being worked on stay selected when you come back.
+    sel: _rhemaSel.size ? [..._rhemaSel] : [],
+    menu: typeof _rhemaVerseSheetOpen === 'function' && _rhemaVerseSheetOpen()
   };
 }
 function _rhemaReturnLabel(r) {
@@ -40097,8 +40169,8 @@ function rhemaReturnToOrigin() {
   _rhemaShowEnglish = r.english;
   _rhemaTextMode = r.textMode;
   _rhemaOTLayer = r.otLayer;
-  _rhemaVerseFocus = false;
-  _rhemaHighlightStrongs = null;
+  _rhemaVerseFocus = !!r.focus;
+  _rhemaHighlightStrongs = r.highlight || null;
   _rhemaTrail = [];
   _rhemaTrailPos = -1;
   _syncRhemaEnglishAlias?.();
@@ -40116,6 +40188,15 @@ function rhemaReturnToOrigin() {
   requestAnimationFrame(() => requestAnimationFrame(restore));
   setTimeout(restore, 350);
   setTimeout(restore, 1200);
+  if (r.sheet) setTimeout(() => _rhemaRestoreSheet(r.sheet), 380);
+  else if (r.sel?.length) setTimeout(() => {
+    if (_rhemaBook !== r.book || String(_rhemaChapter) !== r.chapter) return;
+    _rhemaSel = new Set(r.sel);
+    _rhemaSelScope = _rhemaSelScopeKey();
+    _rhemaSyncVerseSelectionUI();
+    if (r.menu) rhemaOpenSelectionSheet();
+    else _rhemaMarkActiveVerse(r.sel[0]);
+  }, 380);
 }
 
 // Open the reader at one verse, scrolled into view (search results, related
@@ -51709,11 +51790,11 @@ function showRhemaTab(tab, word) {
   if (!content) return;
 
   if (tab === 'parsing') {
-    content.innerHTML = renderRhemaParsing(surface, strongs, morph, lemma, layer) + _rhemaFormsLikeThisBtn(layer);
+    content.innerHTML = renderRhemaParsing(surface, strongs, morph, lemma, layer);
   } else if (tab === 'definition') {
     content.innerHTML = renderRhemaDefinition(strongs, morph, layer);
   } else {
-    content.innerHTML = _rhemaFormsLikeThisBtn(layer) + renderRhemaOccurrences(strongs, layer);
+    content.innerHTML = renderRhemaOccurrences(strongs, layer);
   }
 }
 
@@ -52915,6 +52996,9 @@ function _rhwRender(strongs) {
       total: stats.total, covered: tidy(stats).covered, renderings: stats.renderings,
       compare: measured.filter(m => m.ver !== sel).map(tidy),
       refChip: (x) => `<button type="button" class="rhw-ref" onclick="rhemaHebStudyGo('${esc(x)}')">${esc(_rhemaDisplayRefFromKey(x) || x)}</button>`,
+      // The MSB's Old Testament is the BSB's own text, so it stands in when the
+      // BSB's OT isn't on the device.
+      verseText: (x) => { const m = String(x).match(/^(\S+) (\d+):(\d+)$/); try { return m ? (_rhemaVersionChapterText(sel, m[1], m[2], m[3]) || (sel === 'BSB' ? _rhemaVersionChapterText('MSB', m[1], m[2], m[3]) : '') || '') : ''; } catch { return ''; } },
     });
   }
 }
@@ -54836,7 +54920,7 @@ function openRhemaBookVerses(code, strongs) {
   _rhemaBVStrongs = strongs;
   _rhemaBVRefs    = refs;
   renderRhemaBookVerses();
-  if (_rhemaBVEnglish) _rhemaBVPrepareEnglish();
+  _rhemaBVPrepareEnglish();
 }
 
 function toggleRhemaBookViewEnglish() {
@@ -54853,7 +54937,7 @@ function toggleRhemaBookViewEnglish() {
 async function _rhemaBVPrepareEnglish() {
   const token = ++_rhemaBVFetchToken;
   const code = _rhemaBVCode;
-  const stillHere = () => token === _rhemaBVFetchToken && _rhemaBVEnglish && _rhemaBVCode === code;
+  const stillHere = () => token === _rhemaBVFetchToken && _rhemaBVCode === code;
   if (!window.RhemaBSBAlign && typeof _ensureRhemaBsbAlign === 'function') {
     await _ensureRhemaBsbAlign();
     if (!stillHere()) return;
@@ -54952,29 +55036,38 @@ function renderRhemaBookVerses() {
     const [ec, ev] = e.split(':');
     return { ch: ec, v: ev, title: false };
   };
-  if (isOT && _rhemaBVEnglish && !_rhemaHebILData(code)) {
+  if (isOT && !_rhemaHebILData(code)) {
     _rhemaLoadHebIL(code).then(d => { if (d && _rhemaBVCode === code && _rhemaBVStrongs === strongs) renderRhemaBookVerses(); });
   }
+  // Each verse: the reader's own version with this word's English in bold,
+  // then the original line — a few words around it, the word itself, its
+  // parsing and its word-for-word English (like the grammar search rows).
+  const lang = isOT ? 'hebrew' : 'greek';
   const rows = refs.map(({ ch, v, wordIdx, words }) => {
-    let previewHtml;
     const er = isOT ? engRef(ch, v) : { ch, v };
-    if (_rhemaBVEnglish) {
-      const { text, ver } = _rhemaBVVerseText(code, er.ch, er.v);
-      previewHtml = `<span class="rhema-xref-verse-text">${_rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver)}</span>`;
-    } else {
-      const start = Math.max(0, wordIdx - 3);
-      const end   = Math.min(words.length - 1, wordIdx + 4);
-      const preview = words.slice(start, end + 1).map((w, i) =>
-        (start + i) === wordIdx ? `<span class="xref-match">${w[0]}</span>` : w[0]
-      ).join(' ');
-      previewHtml = `<span class="rhema-xref-verse-text">…${preview}…</span>`;
-    }
+    const { text, ver } = _rhemaBVVerseText(code, er.ch, er.v);
+    const english = text ? `<span class="rhema-xref-verse-text">${_rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver)}</span>` : '';
+    const w = _rhemaResolveWord(words[wordIdx], code, ch) || words[wordIdx];
+    const start = Math.max(0, wordIdx - 2);
+    const end   = Math.min(words.length - 1, wordIdx + 2);
+    const snippet = words.slice(start, end + 1).map((x, i) => (start + i) === wordIdx
+      ? `<b>${_escapeRhemaAttr(_rhemaDisplaySurface(x[0]))}</b>` : _escapeRhemaAttr(_rhemaDisplaySurface(x[0]))).join(' ');
+    const form = window.RhemaGrammarSearch?.formLabel ? window.RhemaGrammarSearch.formLabel(w?.[2] || '', lang) : '';
+    let wordEn = '';
+    try {
+      wordEn = isOT ? (_rhemaHebILWord(code, ch, v, wordIdx)?.en || '')
+        : ((_rhemaBsbEnglishForTokens(words, code, ch, v) || [])[wordIdx] || '');
+    } catch { wordEn = ''; }
+    wordEn = String(wordEn).replace(/\[[^\]]*\]/g, ' ').replace(/\s+/g, ' ').trim();
+    const orig = `<span class="rhema-occ-orig${isOT ? ' rhema-occ-orig-heb' : ''}"><span class="rhema-occ-snip">${start > 0 ? '… ' : ''}${snippet}${end < words.length - 1 ? ' …' : ''}</span>` +
+      `<span class="rhema-occ-parse">${_escapeRhemaAttr(form)}${wordEn ? ` · “${_escapeRhemaAttr(wordEn)}”` : ''}</span></span>`;
     const jumpFn = inSandbox
       ? `closeSandboxWordDetail();jumpToRhemaVerse('${code}','${er.ch}','${er.v}',${strongs})`
       : `jumpToRhemaVerse('${code}','${er.ch}','${er.v}',${strongs})`;
-    return `<div class="rhema-xref-verse-row" onclick="${jumpFn}">
-      <span class="rhema-xref-verse-ref">${er.ch}:${er.v}${er.title ? ' <small>(title)</small>' : ''}</span>
-      ${previewHtml}
+    return `<div class="rhema-xref-verse-row rhema-occ-verse" onclick="${jumpFn}">
+      <span class="rhema-xref-verse-ref">${_escapeRhemaAttr(bookName)} ${er.ch}:${er.v}${er.title ? ' <small>(title)</small>' : ''}</span>
+      ${english}
+      ${orig}
     </div>`;
   }).join('');
 
@@ -54982,11 +55075,10 @@ function renderRhemaBookVerses() {
   const content = document.getElementById(contentId);
   if (!content) return;
   const backFn = inSandbox ? "showSandboxWordTab('occurrences')" : "showRhemaTab('occurrences')";
-  const EnglishCls = `rhema-xref-english-btn${_rhemaBVEnglish ? ' active' : ''}`;
   const readerVer = _rhemaReaderVersion();
   // Tell the reader when some verses are still in the on-device version.
   let note = '';
-  if (_rhemaBVEnglish && _rhemaReaderVersionIsApi()) {
+  if (_rhemaReaderVersionIsApi()) {
     const waiting = refs.some(r => _rhemaBVVerseText(code, r.ch, r.v).fallback);
     if (waiting) {
       const limited = typeof _vsTransLimited === 'function' && _vsTransLimited(readerVer);
@@ -55000,7 +55092,7 @@ function renderRhemaBookVerses() {
     <div class="rhema-xref-header">
       <button class="rhema-xref-back-btn" onclick="${backFn}">← Occurrences</button>
       <span class="rhema-xref-title">${bookName} · ${refs.length} verse${refs.length !== 1 ? 's' : ''}</span>
-      <button class="${EnglishCls}" onclick="toggleRhemaBookViewEnglish()" title="${_rhemaBVEnglish ? 'Show the Greek' : `Show in ${_escapeRhemaAttr(readerVer)}`}">${_escapeRhemaAttr(readerVer)}</button>
+      <span class="rhema-occ-ver">${_escapeRhemaAttr(_rhemaBVVerseText(code, refs[0]?.ch || 1, refs[0]?.v || 1).ver || readerVer)}</span>
     </div>
     ${note}
     <div>${rows}</div>`;

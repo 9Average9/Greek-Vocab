@@ -153,8 +153,8 @@
     ['study', 'Study', 'menu_book'],
     ['deep', 'Deep', 'school'],
   ];
-  let _wsDepth = _ls.get('rhemaWsDepth', 'study');
-  if (!DEPTHS.some(d => d[0] === _wsDepth)) _wsDepth = 'study';
+  // The Quick/Study/Deep bar is gone: every word opens the same way.
+  let _wsDepth = 'study';
   function depthHtml(uid) {
     return `<div class="ws-depth" role="radiogroup" aria-label="How deep to go">${DEPTHS.map(([k, label, icon]) =>
       `<button type="button" role="radio" aria-checked="${k === _wsDepth}" class="ws-depth-b${k === _wsDepth ? ' on' : ''}" data-depth="${k}" onclick="rhemaWordStudyDepth('${uid}','${k}')"><span class="material-symbols-outlined">${icon}</span>${label}</button>`).join('')}</div>`;
@@ -178,41 +178,47 @@
   // A horizontal scroll-snap strip: native swipe on phones, tabs on top for
   // taps. The strip takes the height of the card in view, so a short card
   // doesn't leave a long blank under it.
+  // Swipe order: how your Bible translates it, what it means, this verse,
+  // the authors. History, the lexicons and the method sit below, folded.
   const CARDS = [
-    { id: 'range', label: 'Meanings', icon: 'auto_awesome', depth: 'study' },
-    { id: 'here', label: 'This verse', icon: 'translate', depth: 'study' },
-    { id: 'versions', label: 'Translations', icon: 'compare_arrows', depth: 'study' },
-    { id: 'authors', label: 'Authors', icon: 'groups', depth: 'study' },
-    { id: 'history', label: 'History', icon: 'timeline', depth: 'deep' },
-    { id: 'lex', label: 'Lexicons', icon: 'library_books', depth: 'deep' },
-    { id: 'method', label: 'How we know', icon: 'science', depth: 'deep' },
+    { id: 'versions', label: 'Across translations', icon: 'compare_arrows' },
+    { id: 'range', label: 'Meanings', icon: 'auto_awesome' },
+    { id: 'here', label: 'In this verse', icon: 'translate' },
+    { id: 'authors', label: 'Authors', icon: 'groups' },
+  ];
+  const EXTRAS = [
+    { id: 'history', label: 'History', icon: 'timeline' },
+    { id: 'lex', label: 'Lexicons', icon: 'library_books' },
+    { id: 'method', label: 'How we know', icon: 'science' },
   ];
   function deckHtml(uid, loading) {
     return `<div class="ws-deckwrap">
-      <div class="ws-dtabs" id="${uid}-dtabs" role="tablist"></div>
       <div class="ws-deck" id="${uid}-deck">${CARDS.map(c =>
-        `<div class="ws-slot" id="${uid}-${c.id}" data-card="${c.id}" data-depth="${c.depth}">${loading[c.id] || ''}</div>`).join('')}</div>
-      <div class="ws-dots" id="${uid}-dots" aria-hidden="true"></div>
-    </div>`;
+        `<div class="ws-slot" id="${uid}-${c.id}" data-card="${c.id}">${loading[c.id] || ''}</div>`).join('')}</div>
+      <nav class="ws-dots" id="${uid}-dots" aria-label="Cards"></nav>
+    </div>
+    <details class="ws-extras" id="${uid}-extras"><summary><span class="material-symbols-outlined">library_books</span>History, lexicons &amp; how we know<span class="material-symbols-outlined ws-extras-chev">expand_more</span></summary>
+      ${EXTRAS.map(c => `<div class="ws-xslot" id="${uid}-${c.id}" data-card="${c.id}">${loading[c.id] || ''}</div>`).join('')}
+    </details>`;
   }
   function _wsSlots(root) {
-    return [...root.querySelectorAll('.ws-slot')].filter(s =>
-      !s.classList.contains('ws-slot-empty') && !(s.dataset.depth === 'deep' && _wsDepth !== 'deep'));
+    return [...root.querySelectorAll('.ws-deck > .ws-slot')].filter(s => !s.classList.contains('ws-slot-empty'));
   }
   function _wsRefreshDeck(uid) {
     const root = document.getElementById(uid);
     if (!root) return;
     root.querySelectorAll('.ws-slot').forEach(s => s.classList.toggle('ws-slot-empty', !s.innerHTML.trim()));
+    root.querySelectorAll('.ws-xslot').forEach(s => s.classList.toggle('ws-slot-empty', !s.innerHTML.trim()));
+    const extras = document.getElementById(`${uid}-extras`);
+    if (extras) extras.hidden = ![...extras.querySelectorAll('.ws-xslot')].some(s => s.innerHTML.trim());
     const slots = _wsSlots(root);
     const st = _studies.get(uid);
     const active = st?.active && slots.some(s => s.dataset.card === st.active) ? st.active : slots[0]?.dataset.card;
-    const tabs = document.getElementById(`${uid}-dtabs`);
-    if (tabs) tabs.innerHTML = slots.map(s => {
-      const c = CARDS.find(x => x.id === s.dataset.card);
-      return `<button type="button" role="tab" class="ws-dtab${s.dataset.card === active ? ' on' : ''}" data-card="${c.id}" onclick="rhemaWordStudyGo('${uid}','${c.id}')"><span class="material-symbols-outlined">${c.icon}</span>${c.label}</button>`;
-    }).join('');
     const dots = document.getElementById(`${uid}-dots`);
-    if (dots) dots.innerHTML = slots.length > 1 ? slots.map(s => `<i class="${s.dataset.card === active ? 'on' : ''}"></i>`).join('') : '';
+    if (dots) dots.innerHTML = slots.length > 1 ? slots.map(s => {
+      const c = CARDS.find(x => x.id === s.dataset.card);
+      return `<button type="button" class="ws-dot${s.dataset.card === active ? ' on' : ''}" data-card="${c.id}" aria-label="${c.label}" onclick="rhemaWordStudyGo('${uid}','${c.id}')"><span class="material-symbols-outlined">${c.icon}</span><span class="ws-dot-l">${c.label}</span></button>`;
+    }).join('') : '';
     _wsDeckInit(uid);
     // Cards appear/disappear with the depth; keep the strip on the active one.
     const deck = document.getElementById(`${uid}-deck`);
@@ -264,14 +270,7 @@
     const root = document.getElementById(uid);
     if (!st || !root || !id) return;
     st.active = id;
-    root.querySelectorAll('.ws-dtab').forEach(b => b.classList.toggle('on', b.dataset.card === id));
-    const slots = _wsSlots(root);
-    root.querySelectorAll(`#${uid}-dots i`).forEach((d, i) => d.classList.toggle('on', slots[i]?.dataset.card === id));
-    const tab = root.querySelector(`.ws-dtab[data-card="${id}"]`);
-    if (tab && tab.parentElement) {
-      const p = tab.parentElement;
-      p.scrollTo({ left: Math.max(0, tab.offsetLeft - p.clientWidth / 2 + tab.offsetWidth / 2), behavior: 'smooth' });
-    }
+    root.querySelectorAll(`#${uid}-dots .ws-dot`).forEach(d => d.classList.toggle('on', d.dataset.card === id));
     const deck = document.getElementById(`${uid}-deck`);
     const slot = document.getElementById(`${uid}-${id}`);
     if (scroll && deck && slot) deck.scrollTo({ left: slot.offsetLeft, behavior: 'smooth' });
@@ -280,16 +279,28 @@
     // the reader actually looks at the Translations card.
     if (id === 'versions' && !st.versionsStarted && st.entry !== undefined) {
       st.versionsStarted = true;
-      const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
-      rhemaWordStudyVersion(uid, st.ver || (_wsIsLocal(reader) ? reader : 'MSB'));
+      rhemaWordStudyVersion(uid, st.ver || _wsDefaultVersion());
     }
   }
   window.rhemaWordStudyGo = function (uid, id) {
-    if (_wsDepth === 'quick') rhemaWordStudyDepth(uid, 'study');
-    const c = CARDS.find(x => x.id === id);
-    if (c && c.depth === 'deep' && _wsDepth !== 'deep') rhemaWordStudyDepth(uid, 'deep');
+    if (EXTRAS.some(x => x.id === id)) {
+      const ex = document.getElementById(`${uid}-extras`);
+      if (ex) { ex.open = true; _wsScrollInto(document.getElementById(`${uid}-${id}`)); }
+      return;
+    }
     _wsSetActive(uid, id, true);
   };
+  // Scroll the word sheet's own content (never the page behind it: on iPhone,
+  // scrollIntoView can slide the whole reader up and show the home screen).
+  function _wsScrollInto(el, pad = 12) {
+    if (!el) return;
+    let box = el.parentElement;
+    while (box && box !== document.body && !(box.scrollHeight > box.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(box).overflowY))) box = box.parentElement;
+    if (!box || box === document.body) return;
+    const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - pad;
+    box.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+  window._wsScrollInto = _wsScrollInto;
 
   // ── Answer card ──────────────────────────────────────────────────────────
   // One card that answers "what does this word mean here?" before anything
@@ -305,7 +316,7 @@
       <div class="ws-hero-top">
         <span class="ws-lemma">${esc(lex.lemma || '')}</span>
         <span class="ws-translit">${esc(lex.translit || '')}</span>
-        <span class="ws-g">${esc(typeof _rhemaGreekNumLabel === 'function' ? _rhemaGreekNumLabel(strongs) : `G${strongs}`)}</span>
+        <span class="ws-hero-r"><button type="button" class="ws-help" onclick="rhemaWordStudyTour('${uid}',true)" title="How this works" aria-label="How this works">?</button><span class="ws-g">${esc(typeof _rhemaGreekNumLabel === 'function' ? _rhemaGreekNumLabel(strongs) : `G${strongs}`)}</span></span>
       </div>
       ${gloss ? `<div class="ws-answer"><span class="ws-answer-k">${where ? `In ${esc(where)}` : 'Core meaning'}</span><strong>${esc(gloss)}</strong>${form ? `<span class="ws-form">this form: ${esc(form)}</span>` : ''}</div>` : ''}
       <div class="ws-hsense" id="${uid}-hsense"></div>
@@ -650,7 +661,7 @@
       const rest = refs.slice(6).map(r => _refChipFromKey(r, strongs)).join('');
       return (shown ? `<div class="ws-refs">${shown}</div>` : '') + (rest ? more(`All ${refs.length} verses`, `<div class="ws-refs">${rest}</div>`) : '');
     };
-    const picks = n > 1 ? `<div class="ws-mx-picks" role="tablist">${senses.map((s, i) =>
+    const picks = n > 1 ? `<div class="ws-mx-hint"><span class="material-symbols-outlined">swipe</span>Swipe the meanings below to see all ${n}</div><div class="ws-mx-picks" role="tablist">${senses.map((s, i) =>
       `<button type="button" role="tab" class="ws-mx-pick${i === sel ? ' on' : ''}${i === hereI ? ' here' : ''}" style="--c:${senseColor(i)}" onclick="rhemaWordStudySense('${uid}',${i})"><span class="ws-mx-n">${i + 1}</span><span class="ws-mx-l">${esc(s.label)}</span></button>`).join('')}</div>` : '';
     const cards = senses.map((s, i) => {
       const refs = s.refs || [];
@@ -663,8 +674,8 @@
         ${example}
         ${chips(example ? refs.slice(1) : refs)}
         ${n > 1 ? `<div class="ws-mx-nav">
-          <button type="button" ${i === 0 ? 'disabled' : ''} onclick="rhemaWordStudySense('${uid}',${i - 1})"><span class="material-symbols-outlined">chevron_left</span>${i > 0 ? esc(senses[i - 1].label) : ''}</button>
-          <button type="button" ${i === n - 1 ? 'disabled' : ''} onclick="rhemaWordStudySense('${uid}',${i + 1})">${i < n - 1 ? esc(senses[i + 1].label) : ''}<span class="material-symbols-outlined">chevron_right</span></button>
+          <button type="button" class="ws-mx-prev" ${i === 0 ? 'disabled' : ''} onclick="rhemaWordStudySense('${uid}',${i - 1})"><span class="material-symbols-outlined">chevron_left</span><span><small>Previous</small>${i > 0 ? esc(senses[i - 1].label) : ''}</span></button>
+          <button type="button" class="ws-mx-next" ${i === n - 1 ? 'disabled' : ''} onclick="rhemaWordStudySense('${uid}',${i + 1})"><span><small>Next meaning</small>${i < n - 1 ? esc(senses[i + 1].label) : ''}</span><span class="material-symbols-outlined">chevron_right</span></button>
         </div>` : ''}
       </article>`;
     }).join('');
@@ -929,11 +940,16 @@
     return out;
   }
 
+  // The reader's own version leads the list (it's the one the card opens in).
   function _wsVersionList() {
     const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
-    const list = [...new Set(['MSB', 'BSB', reader, ..._apiVersions()])];
+    const list = [...new Set([reader, 'MSB', 'BSB', ..._apiVersions()])];
     const known = typeof VS_VERSIONS !== 'undefined' ? new Set(VS_VERSIONS.map(v => v.code)) : null;
-    return list.filter(v => !known || known.has(v));
+    return list.filter(v => !known || known.has(v) || v === reader);
+  }
+  function _wsDefaultVersion() {
+    const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
+    return _wsVersionList().includes(reader) ? reader : 'MSB';
   }
   const _wsIsLocal = (ver) => WS_LOCAL.includes(ver);
   const _wsVerStats = new Map();   // `${ver}|${mode}|${strongs}` → stats
@@ -1079,10 +1095,13 @@
     const st = _studies.get(uid);
     if (!st) return;
     st.ver = ver;
+    st.vmenu = false;
     const key = `${ver}|${_rhemaTextMode}|${st.strongs}`;
-    // Local versions measure straight away; a licensed version measures
-    // straight away only when its chapters are already on the device.
-    if (!_wsVerStats.has(key) && (_wsIsLocal(ver) || !_wsMissingChapters(ver, _wsOccurrences(st.strongs)).length)) {
+    // Measure right away. A downloaded version fetches only the chapters this
+    // word needs that aren't on the device yet (each is kept, so a chapter is
+    // never fetched twice), unless its usage limit is reached.
+    const limited = typeof _vsTransLimited === 'function' && _vsTransLimited(ver);
+    if (!_wsVerStats.has(key) && !(limited && !_wsIsLocal(ver) && _wsMissingChapters(ver, _wsOccurrences(st.strongs)).length)) {
       _wsMeasure(uid, st.strongs, ver);
     }
     _wsRenderVersions(uid, st.strongs);
@@ -1093,6 +1112,16 @@
     if (!st) return;
     (st.allRefs = st.allRefs || new Set()).add(`${ver}|${text}`);
     _wsRenderVersions(uid, st.strongs);
+  };
+  window.rhemaWordStudyVerMenu = function (uid, open) {
+    const st = _studies.get(uid);
+    if (!st) return;
+    st.vmenu = open == null ? !st.vmenu : !!open;
+    const m = document.getElementById(`${uid}-vmenu`);
+    const b = document.getElementById(`${uid}-vpick`);
+    if (m) m.hidden = !st.vmenu;
+    if (b) b.setAttribute('aria-expanded', String(st.vmenu));
+    _wsFitDeck(uid);
   };
   window.rhemaWordStudyMeasure = function (uid, ver) {
     const st = _studies.get(uid);
@@ -1105,18 +1134,29 @@
     if (!el || !st) return;
     const vers = _wsVersionList();
     const sel = st.ver || vers[0];
+    const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
     const keyOf = (v) => `${v}|${_rhemaTextMode}|${strongs}`;
-    const chips = vers.map(v => {
+    const vName = (v) => (typeof VS_VERSION_INFO !== 'undefined' && VS_VERSION_INFO[v]?.name) || '';
+    const items = vers.map(v => {
       const done = _wsVerStats.has(keyOf(v));
-      return `<button type="button" class="ws-vchip${v === sel ? ' on' : ''}${done ? ' done' : ''}" onclick="rhemaWordStudyVersion('${uid}','${esc(v)}')">${esc(v)}${done ? ' ✓' : ''}</button>`;
+      const local = _wsIsLocal(v) || done;
+      const sub = v === reader ? 'Your reader version' : (vName(v) || (local ? 'On this device' : 'Downloads once'));
+      return `<button type="button" role="option" aria-selected="${v === sel}" class="ws-vitem${v === sel ? ' on' : ''}" onclick="rhemaWordStudyVersion('${uid}','${esc(v)}')">
+        <b>${esc(v)}</b><small>${esc(sub)}</small>
+        <span class="material-symbols-outlined">${done ? 'check_circle' : local ? 'radio_button_unchecked' : 'download'}</span></button>`;
     }).join('');
+    const chips = `<div class="ws-vpickwrap">
+      <button type="button" class="ws-vpick" id="${uid}-vpick" aria-haspopup="listbox" aria-expanded="${!!st.vmenu}" onclick="rhemaWordStudyVerMenu('${uid}')">
+        <span class="material-symbols-outlined">menu_book</span><b>${esc(sel)}</b>${sel === reader ? '<small>your Bible</small>' : ''}<span class="material-symbols-outlined ws-vpick-chev">expand_more</span></button>
+      <div class="ws-vmenu" id="${uid}-vmenu" role="listbox" ${st.vmenu ? '' : 'hidden'}>${items}</div>
+    </div>`;
     const stats = _wsVerStats.get(keyOf(sel));
     const busy = _wsVerBusy.get(keyOf(sel));
     let body = '';
     if (busy) {
       const pctDone = busy.total ? Math.round(100 * busy.done / busy.total) : 0;
       body = `<div class="ws-progress"><div class="ws-note">${busy.phase === 'download'
-        ? `Downloading ${esc(sel)}’s New Testament chapters for this word… ${busy.done}/${busy.total}`
+        ? `Getting the ${busy.total} ${esc(sel)} chapter${busy.total === 1 ? '' : 's'} this word needs (only ones not already on your device)… ${busy.done}/${busy.total}`
         : busy.phase === 'measure' ? `Lining up all ${busy.total.toLocaleString()} uses in ${esc(sel)}…` : 'Preparing…'}</div>
         <div class="ws-bar"><span style="width:${Math.max(3, pctDone)}%"></span></div></div>`;
     } else if (stats) {
@@ -1144,14 +1184,15 @@
     const measured = vers.map(v => _wsVerStats.get(keyOf(v))).filter(Boolean);
     const table = measured.length >= 2 ? `<div class="ws-vtable"><div class="ws-sub-h">Side by side</div>
       <table><thead><tr><th>Version</th><th>Most often</th><th>Ways</th></tr></thead><tbody>${measured.map(m => {
-        const covered = Math.max(1, m.total - m.noText);
+        // Same denominator as the chart and the summary: the uses counted.
+        const covered = Math.max(1, m.renderings.reduce((x, r) => x + r.count, 0));
         const t = m.renderings[0];
         return `<tr><td><b>${esc(m.ver)}</b></td><td>${t ? `${esc(t.text)} <span class="ws-fine">${Math.round(100 * t.count / covered)}%</span>` : '—'}${m.renderings[1] ? `<div class="ws-fine">then ${esc(m.renderings[1].text)} ${Math.round(100 * m.renderings[1].count / covered)}%</div>` : ''}</td><td>${m.renderings.length}</td></tr>`;
       }).join('')}</tbody></table></div>` : '';
     const top = stats?.renderings?.[0];
-    const teaser = top ? `${sel}: “${top.text}” ${Math.round(100 * top.count / Math.max(1, stats.total - stats.noText))}%` : 'every NT use, per version';
+    const teaser = top ? `${sel}: “${top.text}” ${Math.round(100 * top.count / Math.max(1, stats.renderings.reduce((x, r) => x + r.count, 0)))}%` : 'every NT use, per version';
     el.innerHTML = section('versions', 'compare_arrows', 'Across translations',
-      `<div class="ws-vchips">${chips}</div>${body || '<p class="ws-fine">Counting…</p>'}${table}`,
+      `${chips}${body || '<p class="ws-fine">Counting…</p>'}${table}`,
       esc(teaser));
     const xlHost = document.getElementById(`${uid}-xlv`);
     if (xlHost && stats && window.RhemaXlViews) {
@@ -1161,6 +1202,7 @@
         total: stats.total, covered: tidy(stats).covered, renderings: stats.renderings,
         compare: measured.filter(m => m.ver !== sel).map(tidy),
         refChip: (x) => _refChipFromKey(x, strongs),
+        verseText: (x) => { const m = String(x).match(/^(\S+) (\d+):(\d+)$/); return m ? _wsVerseText(sel, m[1], m[2], m[3]) : ''; },
       });
     }
     _wsRefreshDeck(uid);
@@ -1298,12 +1340,10 @@
   const TOUR_KEY = 'rhemaWsTourDone';
   const TOUR = [
     { sel: '.ws-hero', title: 'The answer first', text: 'Tap any Greek word and this is what you get: what it means right here, and how your Bible words it. Often that’s all you need!' },
-    { sel: '.ws-depth', pose: 'think', title: 'How deep?', text: '<b>Quick</b> is just the answer. <b>Study</b> adds every meaning and how Bibles translate it. <b>Deep</b> adds its history, the dictionaries, and how we know.' },
-    { sel: '.ws-dtabs', title: 'Swipe the cards', text: 'Swipe sideways (or tap a tab): <b>Meanings</b>, <b>This verse</b>, <b>Translations</b> and <b>Authors</b>, plus more cards in Deep.' },
+    { sel: '.ws-dots', title: 'Swipe the cards', text: 'Swipe sideways, or tap a dot down here: <b>Across translations</b>, <b>Meanings</b>, <b>In this verse</b> and <b>Authors</b>. The history and lexicons are folded up below.' },
     { sel: '#rhemaSaveWordBtn', global: true, pose: 'thumbs', title: 'Keep a word', text: 'Tap <b>Save</b> up here to keep this word, with its meaning in this verse, in your <b>Word Log</b> (Rhēma menu → Word Log).' },
     { sel: '#rhemaTabParsing', global: true, pose: 'inspect', title: 'Parsing', text: 'Breaks down this exact form of the word, like its tense, voice and mood, in plain words. Tap a tense, voice or mood to see an example.' },
     { sel: '#rhemaTabOcc', global: true, pose: 'inspect', title: 'Occurrences', text: 'Every place the word shows up, counted book by book. Tap a book to read those verses.' },
-    { sel: '#rhemaAddToWordLogBtn', global: true, title: 'Word Log', text: 'Want to remember this word? Add it to your Word Log and find it later in the menu.' },
   ];
   let _tour = null;
   window.rhemaWordStudyTour = function (uid, force) {
@@ -1378,6 +1418,7 @@
   }
 
   // ── Main entry ───────────────────────────────────────────────────────────
+  const isNTWord = (occ, layer) => layer === 'nt-greek' || !!(occ && occ.total);
   const _studies = new Map();
   let _seq = 0;
 
@@ -1395,8 +1436,9 @@
     _studies.set(uid, { strongs, ctx, entry: undefined, gloss: decision.gloss || '' });
     if (_studies.size > 20) _studies.delete(_studies.keys().next().value);
 
-    const isNT = layer === 'nt-greek' || !!(occ && occ.total);
+    const isNT = isNTWord(occ, layer);
     const loading = {
+      versions: isNTWord(occ, layer) ? `<section class="ws-card"><div class="ws-loading">Counting how your Bible translates it across the New Testament…</div></section>` : '',
       range: `<section class="ws-card"><div class="ws-loading">Gathering every meaning across the New Testament…</div></section>`,
       here: ctx ? `<section class="ws-card"><div class="ws-loading">Lining up the translations…</div></section>` : '',
       lex: lexiconsHtml(lex, strongs, null, uid),
@@ -1404,11 +1446,6 @@
 
     const html = `<div class="ws ws-d-${_wsDepth}" id="${uid}">
       ${heroHtml(strongs, lex, decision, ctxRaw, occ, uid)}
-      <div class="ws-bar-row">
-        ${depthHtml(uid)}
-        <button type="button" class="ws-icon-b" onclick="rhemaWordStudyTour('${uid}',true)" title="How this works" aria-label="How this works"><span class="material-symbols-outlined">help</span></button>
-      </div>
-      <button type="button" class="ws-go-deeper" onclick="rhemaWordStudyDepth('${uid}','study')">See every meaning, the translations &amp; more<span class="material-symbols-outlined">arrow_forward</span></button>
       ${deckHtml(uid, loading)}
     </div>`;
 
@@ -1435,9 +1472,10 @@
         if (_lsjText(entry) || (!mmWas && _mmText(strongs))) put('lex', lexiconsHtml(lex, strongs, entry, uid));
         if (isNT && _wsOccurrences(strongs).length) {
           // Draw the Translations card now; counting starts when it's viewed.
-          const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'MSB';
-          if (st && !st.ver) st.ver = _wsIsLocal(reader) ? reader : 'MSB';
+          if (st && !st.ver) st.ver = _wsDefaultVersion();
           _wsRenderVersions(uid, strongs);
+        } else {
+          put('versions', '');
         }
         if (ctx) renderHere(uid, ctx, strongs, entry);
         _wsRefreshDeck(uid);

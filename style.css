@@ -40548,7 +40548,7 @@ body.dark .rhw-xl { --ws-accent: color-mix(in srgb, var(--secondary-color, #2498
 .rgs-chip-word { flex-direction: row; gap: 6px; }
 .rgs-chip-word b { font-family: 'Gentium Plus', 'SBL Greek', 'Ezra SIL', Georgia, serif; font-size: 1.02rem; }
 .rgs-chip-word small { font-weight: 700; opacity: .8; }
-.rgs-books { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.rgs-books { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 2px; }
 .rgs-books::-webkit-scrollbar { display: none; }
 .rgs-books button { flex: 0 0 auto; min-height: 32px; padding: 0 10px; border-radius: 10px; cursor: pointer; font: inherit; font-size: .78rem;
   border: 1px solid var(--border-color); background: var(--card-color); color: var(--muted-color); }
@@ -40789,3 +40789,97 @@ body.dark .xlv { --xl-a: color-mix(in srgb, var(--secondary-color, #2498df) 40%,
 .ss-word-verse { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--font-color); font: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
 .ss-word-verse .material-symbols-outlined { font-size: 14px; color: var(--secondary-color); }
 .glw-n small { font-size: .62rem; font-weight: 700; margin-left: 2px; color: var(--muted-color); }
+
+/* Search results stay inside the screen: chips, titles and verse rows wrap. */
+.rgs, .rgs-head, .rgs-list, .rgs-row { min-width: 0; max-width: 100%; }
+.rgs-chip { max-width: 100%; flex-wrap: wrap; text-align: left; line-height: 1.25; padding-top: 4px; padding-bottom: 4px; }
+.rgs-head strong, .rgs-text, .rgs-word, .rgs-ref { overflow-wrap: anywhere; }
+#rhemaSearchResults { max-width: 100%; overflow-x: hidden; }
+
+/* Occurrences: each verse in the reader's version, then the original line */
+.rhema-occ-verse { display: flex; flex-direction: column; gap: 4px; }
+.rhema-occ-verse .rhema-xref-verse-ref { font-weight: 900; color: var(--secondary-color); }
+.rhema-occ-orig { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: .76rem; color: var(--muted-color); min-width: 0; }
+.rhema-occ-snip { font-family: 'Gentium Plus', 'SBL Greek', 'Ezra SIL', Georgia, serif; font-size: .95rem; color: var(--font-color); overflow-wrap: anywhere; }
+.rhema-occ-snip b { color: var(--secondary-color); }
+.rhema-occ-orig-heb .rhema-occ-snip { direction: rtl; font-family: 'Ezra SIL', 'SBL Hebrew', 'Taamey Frank CLM', serif; font-size: 1.05rem; }
+.rhema-occ-parse { overflow-wrap: anywhere; }
+.rhema-occ-ver { margin-left: auto; font-size: .72rem; font-weight: 900; padding: 4px 9px; border-radius: 999px; background: color-mix(in srgb, var(--secondary-color) 14%, transparent); color: var(--secondary-color); }
+
+/* ── Word study: cleaner Definition page (v3.0.616) ────────────────────── */
+/* Nothing behind the reader can scroll while it's open (on iPhone a jump
+   inside a sheet could slide the whole reader up and show the home screen). */
+html:has(#rhemaModal.open), body:has(#rhemaModal.open) { overflow: hidden; overscroll-behavior: none; }
+/* A slightly bigger answer card */
+.ws-hero { padding: 18px 18px 16px; border-radius: 20px; }
+.ws-lemma { font-size: 1.8rem; }
+.ws-answer strong { font-size: 1.36rem; }
+.ws-def { font-size: 1rem; line-height: 1.55; }
+.ws-hero-r { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; align-self: flex-start; margin-top: -6px; margin-right: -6px; }
+.ws-hero-r .ws-g { margin-left: 0; }
+.ws-help { width: 20px; height: 20px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--ws-accent) 40%, transparent); background: transparent; color: var(--ws-accent); font: inherit; font-size: .68rem; font-weight: 900; line-height: 1; display: grid; place-items: center; cursor: pointer; opacity: .75; padding: 0; }
+.ws-help:active { transform: scale(.9); }
+/* Old controls gone */
+.ws-depth, .ws-bar-row, .ws-go-deeper, .ws-dtabs { display: none !important; }
+.ws-d-quick .ws-deckwrap { display: block !important; }
+/* The dots are the card nav: the card in view inflates into a labeled pill. */
+.ws-dots { position: sticky; bottom: 6px; z-index: 3; display: flex; justify-content: center; align-items: center; gap: 6px; min-height: 38px; margin: 8px auto 0; padding: 5px 7px; width: fit-content; max-width: 100%; border-radius: 999px; background: color-mix(in srgb, var(--card-solid-color, var(--card-color, #fff)) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,.10); border: 1px solid var(--ws-line); }
+.ws-dot { display: inline-flex; align-items: center; justify-content: center; gap: 0; height: 26px; min-width: 26px; padding: 0; border-radius: 999px; border: 0; background: color-mix(in srgb, var(--font-color, #20303f) 10%, transparent); color: color-mix(in srgb, var(--font-color, #20303f) 55%, transparent); font: inherit; cursor: pointer; transition: background .25s, color .25s, padding .3s cubic-bezier(.3,1.4,.5,1); -webkit-tap-highlight-color: transparent; }
+.ws-dot .material-symbols-outlined { font-size: 15px; }
+.ws-dot-l { max-width: 0; overflow: hidden; white-space: nowrap; font-size: .76rem; font-weight: 850; transition: max-width .35s cubic-bezier(.3,1.2,.5,1), margin .3s; }
+.ws-dot.on { padding: 0 12px 0 9px; background: var(--ws-accent); color: var(--btn-text-color, #fff); }
+.ws-dot.on .ws-dot-l { max-width: 180px; margin-left: 5px; }
+.ws-dot:active { transform: scale(.92); }
+/* History, lexicons & how we know: folded below the cards */
+.ws-extras { margin-top: 14px; border: 1px solid var(--ws-line); border-radius: 16px; background: var(--card-color, #fff); overflow: hidden; }
+.ws-extras > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 12px 14px; cursor: pointer; font-weight: 800; font-size: .88rem; }
+.ws-extras > summary::-webkit-details-marker { display: none; }
+.ws-extras > summary .material-symbols-outlined:first-child { color: var(--ws-accent); font-size: 19px; }
+.ws-extras-chev { margin-left: auto; transition: transform .2s; opacity: .6; }
+.ws-extras[open] .ws-extras-chev { transform: rotate(180deg); }
+.ws-xslot { padding: 0 8px 8px; }
+.ws-xslot.ws-slot-empty { display: none; }
+/* Meanings: a clear hint that the pills swipe, and next/previous that fit */
+.ws-mx-hint { display: flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 750; color: var(--ws-accent); margin: -2px 2px 6px; }
+.ws-mx-hint .material-symbols-outlined { font-size: 17px; animation: wsSwipeHint 2.6s ease-in-out infinite; }
+@keyframes wsSwipeHint { 0%, 55%, 100% { transform: translateX(0); } 70% { transform: translateX(-5px); } 85% { transform: translateX(5px); } }
+.ws-mx-picks { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.ws-mx-nav { align-items: stretch; }
+.ws-mx-nav button { flex: 1 1 0; max-width: 50%; min-width: 0; align-items: center; gap: 4px; padding: 8px 8px; border-radius: 12px; background: color-mix(in srgb, var(--c, var(--ws-accent)) 8%, transparent); text-align: left; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; font-size: .8rem; font-weight: 750; }
+.ws-mx-nav button > span:not(.material-symbols-outlined) { display: flex; flex-direction: column; min-width: 0; }
+.ws-mx-nav button small { font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; opacity: .6; }
+.ws-mx-nav .ws-mx-next { justify-content: flex-end; text-align: right; margin-left: auto; }
+/* Across translations: the version dropdown */
+.ws-vpickwrap { position: relative; margin-bottom: 10px; }
+.ws-vpick { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 12px; border: 1.5px solid var(--ws-accent); background: color-mix(in srgb, var(--ws-accent) 10%, transparent); color: var(--font-color); font: inherit; font-size: .9rem; cursor: pointer; }
+.ws-vpick .material-symbols-outlined { font-size: 19px; color: var(--ws-accent); }
+.ws-vpick small { font-size: .7rem; opacity: .65; font-weight: 700; }
+.ws-vpick-chev { transition: transform .2s; }
+.ws-vpick[aria-expanded="true"] .ws-vpick-chev { transform: rotate(180deg); }
+.ws-vmenu { margin-top: 6px; border: 1px solid var(--ws-line); border-radius: 14px; background: var(--card-solid-color, var(--card-color, #fff)); box-shadow: 0 10px 28px rgba(0,0,0,.12); overflow: hidden; }
+.ws-vmenu[hidden] { display: none; }
+.ws-vitem { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 2px 10px; width: 100%; padding: 10px 12px; border: 0; border-bottom: 1px solid var(--ws-line); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ws-vitem:last-child { border-bottom: 0; }
+.ws-vitem b { font-size: .9rem; min-width: 48px; }
+.ws-vitem small { font-size: .74rem; opacity: .7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-vitem .material-symbols-outlined { font-size: 19px; color: color-mix(in srgb, var(--font-color, #20303f) 40%, transparent); }
+.ws-vitem.on { background: color-mix(in srgb, var(--ws-accent) 10%, transparent); }
+/* Every verse, by rendering: rows that open */
+.xlv-verses { margin-top: 12px; border-top: 1px solid var(--ws-line, var(--border-color)); padding-top: 10px; }
+.xlv-vh { font-size: .74rem; font-weight: 850; letter-spacing: .04em; color: color-mix(in srgb, var(--font-color, #20303f) 60%, transparent); margin-bottom: 6px; }
+.xlv-acc-row { border: 1px solid var(--ws-line, var(--border-color)); border-radius: 12px; margin-bottom: 6px; overflow: hidden; background: var(--card-color, #fff); }
+.xlv-acc-h { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.xlv-acc-h i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.xlv-acc-h b { font-size: .9rem; min-width: 0; overflow-wrap: anywhere; }
+.xlv-acc-h span:not(.material-symbols-outlined) { margin-left: auto; font-size: .76rem; font-weight: 800; color: color-mix(in srgb, var(--font-color, #20303f) 60%, transparent); white-space: nowrap; }
+.xlv-acc-h .material-symbols-outlined { font-size: 20px; opacity: .55; transition: transform .2s; }
+.xlv-acc-row.open .xlv-acc-h .material-symbols-outlined { transform: rotate(180deg); }
+.xlv-acc-row.open { border-color: color-mix(in srgb, var(--ws-accent, var(--secondary-color)) 45%, transparent); }
+.xlv-acc-b { padding: 0 10px 10px; display: flex; flex-direction: column; gap: 6px; }
+.xlv-vrow { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--ws-accent, var(--secondary-color)) 5%, transparent); cursor: pointer; }
+.xlv-vrow .ws-ref, .xlv-vrow .rhw-ref { border: 0; background: none; padding: 0; font-weight: 900; color: var(--ws-accent, var(--secondary-color)); font-size: .8rem; }
+.xlv-vtext { font-size: .86rem; line-height: 1.45; }
+.xlv-vtext b { color: var(--ws-accent, var(--secondary-color)); }
+.xlv-vrow-chip { background: transparent; padding: 2px 0; }
+.xlv-all { align-self: flex-start; }
+.xlv-acc-h i { background: var(--c, var(--xl-c0)); }

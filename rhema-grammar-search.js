@@ -342,8 +342,8 @@
     const re = new RegExp(`\\b(${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'i');
     return t.replace(re, '<mark>$1</mark>');
   }
-  function formLabel(code) {
-    const hebrew = _spec.lang === 'hebrew';
+  function formLabel(code, lang) {
+    const hebrew = (lang || _spec?.lang) === 'hebrew';
     const f = hebrew ? heFeatures(code) : gkFeatures(code);
     const order = hebrew ? ['stem', 'form', 'person', 'gender', 'number'] : ['tense', 'voice', 'mood', 'person', 'case', 'number', 'gender'];
     const out = order.filter(k => f[k]).map(k => label(hebrew ? 'hebrew' : 'greek', k, f[k]).replace(/ \(.*\)$/, '').toLowerCase());
@@ -440,7 +440,7 @@
     if (hebrew && want.gender === 'c') delete want.gender;
     delete want.pos;
     const spec = { lang: hebrew ? 'hebrew' : 'greek', want, strongs: strongs ? [Number(strongs)] : null, surface: null, typed: null, scope: null };
-    try { window.closeRhemaSheet?.(); } catch (e) {}
+    try { window._rhemaTakeSearchSheetSnap?.(); window.closeRhemaSheet?.(); } catch (e) {}
     const modal = document.getElementById('rhemaModal');
     if (modal && !modal.classList.contains('rhema-search-open') && typeof window.toggleRhemaSearch === 'function') window.toggleRhemaSearch();
     const input = document.getElementById('rhemaSearchInput');
@@ -472,5 +472,5 @@
     return { lang, want, strongs, surface: null, typed: null, scope, fromAi: true };
   }
 
-  window.RhemaGrammarSearch = { fromAi, parse, run, show, open, drop, book, more, fromWord, title, gkFeatures, heFeatures, active: () => !!_spec, reset: () => { _spec = null; _res = null; } };
+  window.RhemaGrammarSearch = { fromAi, parse, run, show, open, drop, book, more, fromWord, title, formLabel, gkFeatures, heFeatures, active: () => !!_spec, reset: () => { _spec = null; _res = null; } };
 })();
