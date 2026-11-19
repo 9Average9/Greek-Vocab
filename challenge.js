@@ -263,7 +263,7 @@
       </form>
       <div class="ch-quick">
         ${ref ? `<button type="button" class="ch-pill" onclick="RhemaChallenge.start('verse')"><img class="ch-books-img" src="${BOOKS}" alt="" decoding="async"><span><b>From ${esc(ref.label)}</b><small>A claim made from this verse</small></span></button>` : ''}
-        <button type="button" class="ch-pill" onclick="RhemaChallenge.start('trending')"><img src="assets/challenge/trending.webp" alt="" decoding="async" onerror="this.remove()"><span><b>What's trending</b><small>A claim being debated right now</small></span></button>
+        <button type="button" class="ch-pill" onclick="RhemaChallenge.topics('trending')"><img src="assets/challenge/trending.webp" alt="" decoding="async" onerror="this.remove()"><span><b>What's trending</b><small>A claim being debated right now</small></span></button>
       </div>
       <div class="ch-sec">Christian traditions</div>
       <div class="ch-tiles">${TAGS.traditions.map(([k, l]) => tile(k, l)).join('')}</div>
@@ -273,26 +273,27 @@
 
   // Picking a group opens a few topics they're known for (or "surprise me").
   const TOPICS = {
-    catholic: ['Papal authority', 'Scripture & Tradition', 'The Eucharist', 'Mary', 'Purgatory', 'Justification & works', 'Confession to a priest', 'Praying to saints'],
-    orthodox: ['Theosis', 'Icons', 'Holy Tradition & councils', 'The Filioque', 'Sacraments & salvation', 'Mary the Theotokos', 'The one true Church'],
-    calvinist: ['TULIP', 'Election', 'Predestination', 'Limited atonement', 'Irresistible grace', 'Total depravity', 'Perseverance of the saints', 'Sovereignty & free will'],
-    arminian: ['Free will', 'Prevenient grace', 'Conditional election', 'Losing salvation', 'Christ died for all', 'Resisting grace'],
-    lutheran: ['Baptismal regeneration', 'Real presence in the Supper', 'Law & Gospel', 'Infant baptism', 'Two kingdoms'],
-    pentecostal: ['Baptism in the Spirit', 'Speaking in tongues', 'Healing', 'Prophecy today', 'Tongues as initial evidence'],
-    lds: ['The nature of God', 'Exaltation', 'The Book of Mormon', 'The Great Apostasy', 'Temples & ordinances', 'Pre-mortal life'],
-    jw: ['Jesus & the Trinity', 'The 144,000', 'The holy spirit', 'Soul & hell', 'Blood transfusions', 'The name Jehovah'],
-    islam: ['Jesus as a prophet', 'The crucifixion', 'The Bible changed', 'The Trinity', 'Salvation & good deeds', 'Muhammad foretold'],
-    judaism: ['The Messiah', 'Isaiah 53', 'The Trinity', 'Keeping the Law', 'The resurrection of Jesus'],
-    skeptic: ['Bible contradictions', 'The resurrection', 'The problem of evil', 'Are the Gospels reliable?', 'Miracles', 'Hell'],
+    catholic: ['Salvation', 'Papal authority', 'Scripture & Tradition', 'The Eucharist', 'Mary', 'Purgatory', 'Justification & works', 'Baptism', 'Confession to a priest', 'Praying to saints'],
+    orthodox: ['Salvation', 'Theosis', 'Icons', 'Holy Tradition & councils', 'Baptism & chrismation', 'The Filioque', 'Sacraments & grace', 'Mary the Theotokos', 'The one true Church'],
+    calvinist: ['Salvation', 'TULIP', 'Election', 'Predestination', 'Limited atonement', 'Irresistible grace', 'Total depravity', 'Perseverance of the saints', 'Lordship & assurance', 'Sovereignty & free will'],
+    arminian: ['Salvation', 'Free will', 'Prevenient grace', 'Conditional election', 'Losing salvation', 'Christ died for all', 'Resisting grace', 'Assurance'],
+    lutheran: ['Salvation', 'Baptismal regeneration', 'Real presence in the Supper', 'Law & Gospel', 'Infant baptism', 'Losing faith', 'Two kingdoms'],
+    pentecostal: ['Salvation', 'Baptism in the Spirit', 'Speaking in tongues', 'Healing', 'Prophecy today', 'Tongues as initial evidence', 'Prosperity'],
+    lds: ['Salvation', 'The nature of God', 'Jesus & Lucifer', 'Exaltation', 'The Book of Mormon', 'The Great Apostasy', 'Temples & baptism for the dead', 'Pre-mortal life'],
+    jw: ['Salvation', 'Jesus & the Trinity', 'Jesus as Michael', 'The 144,000', 'The holy spirit', 'Soul & hell', 'Blood transfusions', 'The name Jehovah'],
+    islam: ['Salvation', 'Jesus as a prophet', 'The crucifixion', 'The Bible changed', 'The Trinity', 'Sin & forgiveness', 'Muhammad foretold'],
+    judaism: ['Salvation', 'The Messiah', 'Isaiah 53', 'The Trinity', 'Keeping the Law', 'Atonement without sacrifice', 'The resurrection of Jesus'],
+    skeptic: ['Salvation & fairness', 'Bible contradictions', 'The resurrection', 'The problem of evil', 'Are the Gospels reliable?', 'Miracles', 'Hell', 'Science & Scripture'],
+    trending: ['Salvation', 'The gospel message', 'End times', 'The church & culture', 'Gender & sexuality', 'The Holy Spirit today', 'Science & creation', 'Hell & judgment'],
   };
-  const TAG_NAMES = Object.fromEntries([...TAGS.traditions, ...TAGS.others]);
+  const TAG_NAMES = Object.fromEntries([...TAGS.traditions, ...TAGS.others, ['trending', "What's trending"]]);
   function topics(key) {
     const list = TOPICS[key];
     if (!list) { start(key); return; }
     show(`${topBar(iconBtn('arrow_back', 'Back', 'RhemaChallenge.picker()'), iconBtn('groups', 'Community challenges', 'RhemaChallenge.community()'))}
       <div class="ch-topic-head">
         <span class="ch-tile-img ch-topic-img"><img src="assets/challenge/${key}.webp" alt="" decoding="async" onerror="this.remove()"></span>
-        <div><span class="ch-kicker">Challenge me on</span><h1 class="ch-h1 ch-h1-left ch-topic-h">${esc(TAG_NAMES[key] || key)}</h1></div>
+        <div><span class="ch-kicker">${key === 'trending' ? 'A trending debate about' : 'Challenge me on'}</span><h1 class="ch-h1 ch-h1-left ch-topic-h">${esc(TAG_NAMES[key] || key)}</h1></div>
       </div>
       <p class="ch-lead">Pick what you'd like to be challenged on.</p>
       <div class="ch-topics">${list.map(t => `<button type="button" class="ch-topic" onclick="RhemaChallenge.start('${key}','${jsq(t)}')">${esc(t)}<span class="material-symbols-outlined">arrow_forward</span></button>`).join('')}

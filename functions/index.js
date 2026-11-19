@@ -2604,7 +2604,7 @@ exports.challengeMyTheology = functions
     if (tag === "verse") {
       request = `Find a major claim a real Christian tradition or other group makes FROM this passage that differs from a plain Protestant reading: ${INTERP_BOOKS[ref.book]} ${ref.chapter}:${ref.verse}.${refText ? ` Text: "${refText}"` : ""}${prompt ? ` The person adds: ${prompt}` : ""}`;
     } else if (tag === "trending") {
-      request = `Find a theological claim being debated right now (news, books or well-known teachers in the last few months) and the group or teacher making it.${prompt ? ` The person adds: ${prompt}` : ""}`;
+      request = `Find a theological claim being debated right now (news, books or well-known teachers in the last few months) and the group or teacher making it.${prompt ? ` Topic: ${prompt}.` : ""}`;
     } else if (tag === "free") {
       request = `The person asked to be challenged on: "${prompt}". Find a major claim a real group or tradition makes about this.`;
     } else {

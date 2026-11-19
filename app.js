@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.624";
+const APP_VERSION = "3.0.625";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.625 &mdash; More topics</div>
+<ul>
+  <li><strong>Salvation for everyone</strong> &mdash; Every group&rsquo;s topics now start with Salvation, with more added (baptism, assurance, losing salvation, Jesus as Michael, atonement without sacrifice and more). &ldquo;What&rsquo;s trending&rdquo; has topics too: salvation, the gospel, end times, the church &amp; culture, the Holy Spirit today and more.</li>
+</ul>
 <div class="un-version-label">v3.0.624 &mdash; Pick a topic</div>
 <ul>
   <li><strong>Pick a topic</strong> &mdash; Tapping a group now lets you choose what to be challenged on: Calvinist offers TULIP, election, predestination, limited atonement and more; Catholic offers papal authority, the Eucharist, Mary, purgatory&hellip; Or tap &ldquo;Surprise me&rdquo;.</li>
