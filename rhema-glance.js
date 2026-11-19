@@ -259,12 +259,12 @@
         const vs = [...w.verses].map(x => x === 'title' ? 'title' : x).sort((a, b) => num(a) - num(b));
         const where = vs.length > 4 ? `vv. ${vs.slice(0, 4).join(', ')}…` : `v${vs.length > 1 ? 'v' : ''}. ${vs.join(', ')}`;
         return `<button type="button" class="glw" onclick="RhemaGlance.word('${esc(oc)}','${esc(ov)}',${idx})">` +
-          `<span class="glw-top"><span class="glw-lemma${kw.layer === 'hebrew' ? ' glw-heb' : ''}">${esc(w.lemma)}</span><span class="glw-gloss">${esc(w.gloss)}</span><span class="glw-n">${w.here}×</span></span>` +
+          `<span class="glw-top"><span class="glw-lemma${kw.layer === 'hebrew' ? ' glw-heb' : ''}">${esc(w.lemma)}</span><span class="glw-gloss">${esc(w.gloss)}</span><span class="glw-n">${w.here}×<small>here</small></span></span>` +
           `<span class="glw-bar"><i style="width:${Math.round(w.here / max * 100)}%"></i></span>` +
-          `<span class="glw-sub">${esc(where)} · ${w.total.toLocaleString()}× in all of ${layerShort(kw.layer)}</span></button>`;
+          `<span class="glw-sub">${w.here} times in this chapter (${esc(where)}) · ${w.total.toLocaleString()} in all of ${layerShort(kw.layer)}</span></button>`;
       }).join('');
       out.push(card(i++, 'key', 'Key words', `<div class="glw-list">${rows}</div>`,
-        `Counted from the ${layerName(kw.layer)} on screen: words used at least ${MIN_HERE} times here, and at least ${MIN_RATIO}× more often than usual for ${layerShort(kw.layer)}. Names and the most common words (be, say, all) are skipped. Tap one for its full study.`));
+        `Picked by a fixed rule, not by hand: from the ${layerName(kw.layer)} of this chapter, words used at least ${MIN_HERE} times here and at least ${MIN_RATIO}× more often than in ${layerShort(kw.layer)} as a whole, ranked by how much this chapter leans on them. Names and the most common words (be, say, all) are skipped. The big number is how many times it's in this chapter. Tap one for its full study.`));
     } else {
       out.push(card(i++, 'key', 'Key words', `<p class="glc-empty">No word repeats here often enough to stand out.</p>`,
         `Counted from the ${layerName(kw.layer)} on screen.`));
@@ -412,7 +412,19 @@
       if (el) { el.classList.remove('glance-flash'); void el.offsetWidth; el.classList.add('glance-flash'); setTimeout(() => el.classList.remove('glance-flash'), 1600); }
     });
   }
-  function intro(book) { close(() => openBookIntro(book)); }
+  // The intro opens at the start of the book; a "Back to John 3" pill at the
+  // bottom of the reader brings you straight back to where you were.
+  function intro(book) {
+    close(() => {
+      if (typeof _rhemaMarkJumpOrigin === 'function') {
+        let before = null;
+        try { before = _rhemaReturnTo; } catch {}
+        _rhemaMarkJumpOrigin();
+        try { if (_rhemaReturnTo && _rhemaReturnTo !== before) _rhemaReturnTo.chapterOnly = true; } catch {}
+      }
+      openBookIntro(book);
+    });
+  }
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.getElementById('glanceOverlay')?.classList.contains('open')) close();
