@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.620";
+const APP_VERSION = "3.0.621";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.621 &mdash; Long words fit</div>
+<ul>
+  <li><strong>Long Greek and Hebrew words fit</strong> &mdash; A long word at the top of a word&rsquo;s sheet now shrinks a little so it never runs into the Copy and Save buttons or the close button.</li>
+</ul>
 <div class="un-version-label">v3.0.620 &mdash; Lexicons fixed, sharper bold words</div>
 <ul>
   <li><strong>Lexicon buttons work</strong> &mdash; Abbott-Smith, Moulton&ndash;Milligan, LSJ, Dodson and Strong&rsquo;s now switch when you tap them.</li>
@@ -51790,11 +51794,31 @@ function initRhemaPickerSwipeDown(overlayId) {
   }
 }
 
+// A long Greek or Hebrew word shrinks a little so it never runs into the
+// Copy / Save buttons or the close X (1.8rem down to 1.1rem at the most).
+function _rhemaFitSheetSurface(id = 'rhemaSheetSurface') {
+  const el = document.getElementById(id);
+  const row = el?.parentElement;
+  if (!el || !row || !row.offsetWidth) return;
+  el.style.fontSize = '';
+  const cs = getComputedStyle(row);
+  const gap = parseFloat(cs.columnGap || cs.gap) || 0;
+  const others = [...row.children].filter(c => c !== el && c.offsetParent && getComputedStyle(c).position !== 'absolute');
+  const avail = row.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+    - others.reduce((w, c) => w + c.offsetWidth, 0) - gap * others.length - 2;
+  let size = parseFloat(getComputedStyle(el).fontSize);
+  const min = 17.6;
+  for (let i = 0; i < 20 && el.scrollWidth > avail && size > min; i++) {
+    size = Math.max(min, size * 0.94);
+    el.style.fontSize = `${size}px`;
+  }
+}
 function showRhemaTab(tab, word) {
   _rhemaActiveTab = tab;
   word = word || _rhemaActiveWord;
   if (!word) return;
   _rhemaSyncSaveWordBtn();
+  requestAnimationFrame(() => _rhemaFitSheetSurface());
 
   const [surface, strongs, morph, lemma] = word;
   const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer();

@@ -40910,3 +40910,7 @@ html:has(#rhemaModal.open), body:has(#rhemaModal.open) { overflow: hidden; overs
 #rhemaTabContent { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 #ssWdContent { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 .glance-top { padding-top: 16px; }
+
+/* Long words fit the header: the word shrinks (JS) instead of pushing the buttons */
+.rhema-sheet-surface { white-space: nowrap; min-width: 0; flex-shrink: 1; }
+.rhema-sheet-top > :not(.rhema-sheet-surface) { flex-shrink: 0; }
