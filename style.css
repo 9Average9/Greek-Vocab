@@ -40773,3 +40773,18 @@ body.dark .xlv { --xl-a: color-mix(in srgb, var(--secondary-color, #2498df) 40%,
 @media (prefers-reduced-motion: reduce) {
   .glance-btn, .glb-look, .glb-lid, .glance-sheet.glance-in, .glance-overlay.closing .glance-sheet, .glc-card, .glc-intro, .glw-bar i { animation: none !important; }
 }
+
+/* ── One save button (word sheet header) ───────────────────────────────── */
+.rhema-copy-word-btn + .rhema-save-word-btn { margin-left: 4px; }
+.rhema-save-word-btn { align-self: center; display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 11px 0 8px; border-radius: 999px; border: 1.5px solid color-mix(in srgb, var(--secondary-color) 45%, var(--border-color)); background: transparent; color: var(--secondary-color); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .12s, background .15s, color .15s; flex-shrink: 0; }
+.rhema-save-word-btn .material-symbols-outlined { font-size: 19px; }
+.rhema-save-word-btn:active { transform: scale(.92); }
+.rhema-save-word-btn.on { background: var(--secondary-color); border-color: var(--secondary-color); color: var(--btn-text-color, #fff); }
+.rhema-save-word-btn.on .material-symbols-outlined { animation: rhSaveBounce .4s cubic-bezier(.3, 1.8, .5, 1); }
+@keyframes rhSaveBounce { 0% { transform: scale(.6); } 60% { transform: scale(1.25); } 100% { transform: none; } }
+/* Word Log rows: the meaning kept, and the verse it came from */
+.ss-word-meaning { margin: 2px 0 2px; font-size: .86rem; font-weight: 750; color: var(--font-color); }
+.ss-word-heb { direction: rtl; }
+.ss-word-from { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: .7rem; color: var(--muted-color); }
+.ss-word-verse { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--font-color); font: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.ss-word-verse .material-symbols-outlined { font-size: 14px; color: var(--secondary-color); }

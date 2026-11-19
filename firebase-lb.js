@@ -1009,10 +1009,15 @@ function studyListenWordLog(studyId, callback) {
   return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
     err => { console.warn("studyListenWordLog:", err); callback([]); });
 }
-async function studyLogWord(studyId, uid, displayName, { lemma, strongs, definition, surface, translit }) {
+// One doc per word. Greek (NT + LXX) keeps the plain Strong's id it always had;
+// Hebrew gets an "H" id so H430 and G430 never overwrite each other.
+async function studyLogWord(studyId, uid, displayName, { lemma, strongs, definition, surface, translit, layer, meaning, verse }) {
   try {
-    await setDoc(doc(db, "studies", studyId, "wordLog", String(strongs)), {
+    const id = layer === 'hebrew' && !String(strongs).startsWith('en:') ? 'H' + strongs : String(strongs);
+    await setDoc(doc(db, "studies", studyId, "wordLog", id), {
       lemma, strongs: String(strongs), definition: definition || '', surface, translit: translit || '',
+      layer: layer || (String(strongs).startsWith('en:') ? 'english' : 'nt-greek'),
+      meaning: meaning || '', verse: verse || '',
       loggedByUid: uid, loggedByName: displayName, loggedAt: serverTimestamp()
     }, { merge: true });
     return true;

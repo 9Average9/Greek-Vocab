@@ -9763,6 +9763,7 @@ function openWlWordDetail(strongs, formSurface) {
   _wlSavedQuery = document.getElementById('wlSearchInput')?.value || _wlSavedQuery || '';
   _wlOpenedDetail = true;
   _wlSelectedForm = formSurface || null;
+  window._rhemaWordCtx = null; // opened from the library, not from a verse
   const layer = _wlLibraryLayer || getCurrentOriginalLanguageLayer();
   const lex = getCurrentRhemaLexicon(layer)[strongs] || {};
   document.getElementById('rhemaWlBackBtn')?.classList.add('hidden');
@@ -9775,20 +9776,8 @@ function openWlWordDetail(strongs, formSurface) {
   document.getElementById('rhemaSheetSurface').textContent = _rhemaDisplaySurface(surface);
   document.getElementById('rhemaSheetStrongs').textContent = (layer === 'hebrew' ? 'H' : 'G') + strongs;
   document.getElementById('rhemaSheetLemma').textContent   = lex.lemma ? `${lex.lemma}  (${lex.translit || lex.pronounce || ''})` : '';
-  // Save-to-study is retired; offer "Add to Word Log" when inside a study.
+  // Save-to-study is retired; the header bookmark saves to the Word Log.
   document.getElementById('rhemaSaveToStudyBtn')?.classList.add('hidden');
-  const _wlAddBtn = document.getElementById('rhemaAddToWordLogBtn');
-  if (_wlAddBtn) {
-    if (_rhemaStudyId()) {
-      const _logged = _sandboxWordLogCache.some(w => String(w.strongs) === String(strongs));
-      _wlAddBtn.classList.remove('hidden');
-      _wlAddBtn.classList.toggle('logged', _logged);
-      _wlAddBtn.disabled = _logged;
-      _wlAddBtn.textContent = _logged ? '✓ In Word Log' : '+ Add to Word Log';
-    } else {
-      _wlAddBtn.classList.add('hidden');
-    }
-  }
   // Show definition tab
   showRhemaTab('definition', _rhemaActiveWord);
   _rhemaBackBtn('search', 'Back to search');
@@ -9956,26 +9945,37 @@ function jumpToRhemaFromStudy(book, chapter, verse) {
 
 // Word Log
 function _renderSandboxWordLog(words) {
+  _rhemaSyncSaveWordBtn();
+  // Old device-only saved meanings move into the reader's own Word Log.
+  if (!_studySandboxId && typeof _rhemaStudyId === 'function') _rhemaMoveSavedMeanings(_rhemaStudyId());
   const list = document.getElementById('ssWordlogList');
   if (!list) return;
   if (!words.length) {
-    list.innerHTML = '<p class="ss-hint">No words logged yet. Tap any word in Rhema then press "Add to Word Log."</p>';
+    list.innerHTML = '<p class="ss-hint">No words saved yet. Tap any word in Rhēma, then tap <b>Save</b> (the bookmark at the top of the word).</p>';
     return;
   }
   const uid = window.Auth?.getCurrentUser()?.uid;
+  const e = s => _escapeRhemaAttr(String(s ?? ''));
   list.innerHTML = words.map(w => {
     const canDel = w.loggedByUid === uid || _activeSandboxStudy?.creatorUid === uid;
+    const english = String(w.strongs).startsWith('en:');
+    const layer = english ? 'english' : (w.layer || 'nt-greek');
     const surface = w.surface || w.lemma;
     const lemma   = w.lemma && w.lemma !== surface ? w.lemma : '';
-    return `<div class="ss-word-item ss-word-tappable" onclick="openSandboxWordDetail('${w.strongs}','${w.layer || 'nt-greek'}')">
+    const num = english ? 'English' : `${layer === 'hebrew' ? 'H' : 'G'}${e(w.strongs)}`;
+    const vm = String(w.verse || '').match(/^(\S+) (\d+):(\d+)$/);
+    const verse = vm ? `<button type="button" class="ss-word-verse" onclick="event.stopPropagation();jumpToRhemaVerse('${e(vm[1])}','${e(vm[2])}','${e(vm[3])}','${e(w.strongs)}')"><span class="material-symbols-outlined">menu_book</span>${e(_rhemaBookName(vm[1]))} ${vm[2]}:${vm[3]}</button>` : '';
+    return `<div class="ss-word-item ss-word-tappable" onclick="openSandboxWordDetail('${e(w.strongs)}','${e(layer === 'english' ? 'nt-greek' : layer)}')">
       <div class="ss-word-main">
-        <span class="ss-word-surface">${surface}</span>
-        ${lemma ? `<span class="ss-word-lemma">${lemma}</span>` : ''}
-        <span class="ss-word-translit">${w.translit}</span>
-        <span class="ss-word-strongs">${w.layer === 'hebrew' ? 'H' : 'G'}${w.strongs}</span>
+        <span class="ss-word-surface${layer === 'hebrew' ? ' ss-word-heb' : ''}">${e(surface)}</span>
+        ${lemma ? `<span class="ss-word-lemma">${e(lemma)}</span>` : ''}
+        <span class="ss-word-translit">${e(w.translit)}</span>
+        <span class="ss-word-strongs">${num}</span>
       </div>
-      <p class="ss-word-def">${w.definition}</p>
-      ${canDel ? `<button class="ss-word-del" onclick="event.stopPropagation();deleteSandboxWord('${w.id}')"><span class="material-symbols-outlined">close</span></button>` : ''}
+      ${w.meaning ? `<p class="ss-word-meaning">${e(w.meaning)}</p>` : ''}
+      ${w.definition && w.definition !== w.meaning ? `<p class="ss-word-def">${e(w.definition)}</p>` : ''}
+      ${verse ? `<div class="ss-word-from"><span>Saved from</span>${verse}</div>` : ''}
+      ${canDel ? `<button class="ss-word-del" aria-label="Remove" onclick="event.stopPropagation();deleteSandboxWord('${e(w.id)}')"><span class="material-symbols-outlined">close</span></button>` : ''}
     </div>`;
   }).join('');
 }
@@ -9994,7 +9994,7 @@ function openSandboxWordDetail(strongs, layer = 'nt-greek') {
     if (word && typeof rhemaShowEnglishMeaning === 'function') rhemaShowEnglishMeaning(word);
     return;
   }
-  const w = _sandboxWordLogCache.find(x => String(x.strongs) === String(strongs) && (x.layer || 'nt-greek') === layer);
+  const w = _sandboxWordLogCache.find(x => String(x.strongs) === String(strongs) && _rhemaIsHebrewLayer(x.layer) === _rhemaIsHebrewLayer(layer));
   const lexicon = getCurrentRhemaLexicon(layer);
   if (!w && !lexicon?.[strongs]) return;
   _ssActiveWordStrongs = String(strongs);
@@ -10112,26 +10112,113 @@ async function saveCurrentVerseToStudy() {
   }, 1500);
 }
 
-async function addCurrentWordToLog() {
-  if (!_rhemaActiveWord) return;
-  const studyId = await _rhemaRequireStudy();
-  if (!studyId) return;
-  const [surface, strongs] = _rhemaActiveWord;
+// ── Saving a word: one button, one place ─────────────────────────────────────
+// The bookmark in the word sheet's header is the only save button. It puts the
+// word, the meaning it has in this verse and the verse itself in the Word Log
+// (Rhēma menu → Study tools → Word Log). Tap it again to take the word out.
+function _rhemaIsHebrewLayer(layer) { return layer === 'hebrew'; }
+function _rhemaLoggedWord(strongs, layer) {
+  const heb = _rhemaIsHebrewLayer(layer);
+  return _sandboxWordLogCache.find(w => String(w.strongs) === String(strongs)
+    && _rhemaIsHebrewLayer(w.layer) === heb) || null;
+}
+function _rhemaWordLogId(strongs, layer) {
+  return (_rhemaIsHebrewLayer(layer) && !String(strongs).startsWith('en:') ? 'H' : '') + String(strongs);
+}
+// What the open word sheet would save.
+function _rhemaSaveWordPayload() {
+  const word = _rhemaActiveWord;
+  if (!word) return null;
   const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer();
-  const uid = window.Auth?.getCurrentUser()?.uid;
-  const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
+  const strongs = String(word[1] ?? '');
+  if (!/^\d+[A-Za-z]?$/.test(strongs)) return null; // LXX-only words and bare prefixes have no entry
   const lex = getCurrentRhemaLexicon(layer)[strongs] || {};
-  await window.Studies?.logWord(studyId, uid, displayName, {
-    lemma: lex.lemma || surface, strongs,
-    layer,
-    definition: lex.def || lex.short_def || lex.brief || lex.quick_def || '',
-    surface, translit: lex.translit || lex.pronounce || ''
-  });
-  if (!_sandboxWordLogCache.some(w => String(w.strongs) === String(strongs))) {
-    _sandboxWordLogCache.push({ strongs: String(strongs), surface, lemma: lex.lemma || surface });
+  const ctx = window._rhemaWordCtx;
+  const verse = ctx && String(ctx.strongs) === strongs ? `${_rhemaBook} ${_rhemaChapter}:${_rhemaVerse}` : '';
+  // Greek: the meaning the word study shows for this verse (else its core meaning).
+  const here = layer !== 'hebrew' && typeof window.rhemaWordStudyHereMeaning === 'function'
+    ? window.rhemaWordStudyHereMeaning(strongs) : null;
+  return {
+    layer, strongs,
+    lemma: lex.lemma || word[0] || '',
+    surface: word[0] || lex.lemma || '',
+    translit: lex.translit || lex.pronounce || '',
+    meaning: here?.label || lex.brief || lex.quick_def || '',
+    definition: here?.definition || lex.short_def || lex.brief || lex.quick_def || lex.def || '',
+    verse
+  };
+}
+function _rhemaSyncSaveWordBtn() {
+  const btn = document.getElementById('rhemaSaveWordBtn');
+  if (!btn) return;
+  const p = _rhemaSaveWordPayload();
+  btn.classList.toggle('hidden', !p || !!window.RHEMA_MV_SLOT);
+  if (!p) return;
+  const on = !!_rhemaLoggedWord(p.strongs, p.layer);
+  btn.classList.toggle('on', on);
+  btn.setAttribute('aria-pressed', String(on));
+  btn.title = on ? 'Saved in your Word Log (tap to remove)' : 'Save this word to your Word Log';
+  btn.innerHTML = `<span class="material-symbols-outlined">${on ? 'bookmark_added' : 'bookmark_add'}</span><span class="rhema-save-word-l">${on ? 'Saved' : 'Save'}</span>`;
+}
+let _rhemaSaveWordBusy = false;
+async function rhemaToggleSaveWord() {
+  if (_rhemaSaveWordBusy) return;
+  const p = _rhemaSaveWordPayload();
+  if (!p) return;
+  _rhemaSaveWordBusy = true;
+  try {
+    const studyId = await _rhemaRequireStudy();
+    if (!studyId) return;
+    const had = _rhemaLoggedWord(p.strongs, p.layer);
+    const toast = (m) => typeof _showStudyToast === 'function' && _showStudyToast(m);
+    if (had) {
+      await window.Studies?.deleteWordLog?.(studyId, had.id || _rhemaWordLogId(p.strongs, p.layer));
+      _sandboxWordLogCache = _sandboxWordLogCache.filter(w => w !== had);
+      toast(`Removed “${p.lemma}” from your Word Log`);
+    } else {
+      const uid = window.Auth?.getCurrentUser()?.uid;
+      const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
+      await window.Studies?.logWord(studyId, uid, displayName, p);
+      if (!_rhemaLoggedWord(p.strongs, p.layer)) _sandboxWordLogCache.push({ ...p, id: _rhemaWordLogId(p.strongs, p.layer) });
+      toast(`Saved “${p.lemma}” to your Word Log`);
+    }
+    _rhemaSyncSaveWordBtn();
+  } finally {
+    _rhemaSaveWordBusy = false;
   }
-  const btn = document.getElementById('rhemaAddToWordLogBtn');
-  if (btn) { btn.disabled = true; btn.classList.add('logged'); btn.textContent = '✓ In Word Log'; }
+}
+// Old entry point (kept so stale markup can't throw).
+function addCurrentWordToLog() { return rhemaToggleSaveWord(); }
+
+// Meanings saved on this device before v3.0.614 move into the Word Log once,
+// the first time a signed-in reader's Word Log loads.
+let _rhemaSavedMeaningsMoving = false;
+async function _rhemaMoveSavedMeanings(studyId) {
+  if (_rhemaSavedMeaningsMoving || !studyId || _guestMode) return;
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem('rhemaSavedMeanings') || '[]'); } catch {}
+  if (!Array.isArray(list) || !list.length) return;
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!uid) return;
+  _rhemaSavedMeaningsMoving = true;
+  try {
+    const displayName = localStorage.getItem('authDisplayName') || localStorage.getItem('authUsername') || 'Anonymous';
+    const seen = new Set();
+    for (const x of list) {
+      const strongs = String(x.strongs || '');
+      if (!strongs || seen.has(strongs) || _rhemaLoggedWord(strongs, 'nt-greek')) continue;
+      seen.add(strongs);
+      const ok = await window.Studies?.logWord(studyId, uid, displayName, {
+        layer: 'nt-greek', strongs, lemma: x.lemma || '', surface: x.lemma || '', translit: x.translit || '',
+        meaning: x.label || '', definition: x.definition || '', verse: x.verse || ''
+      });
+      if (ok === false) return; // try again next time
+    }
+    localStorage.setItem('rhemaSavedMeaningsMoved', JSON.stringify(list));
+    localStorage.removeItem('rhemaSavedMeanings');
+  } finally {
+    _rhemaSavedMeaningsMoving = false;
+  }
 }
 
 // ── Community Study Board ─────────────────────────────────────────────────────
@@ -31329,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.613";
+const APP_VERSION = "3.0.614";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31352,6 +31439,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.614 &mdash; One way to save a word</div>
+<ul>
+  <li><strong>One Save button</strong> &mdash; Each word now has a single <em>Save</em> bookmark at the top of its sheet, next to Copy. One tap keeps the word, the meaning it has in that verse, and the verse itself in your <em>Word Log</em>. Tap it again to take the word out. The Save pills on every meaning, the separate &ldquo;Add to Word Log&rdquo; button and the extra bookmarks icon are gone.</li>
+  <li><strong>Saved meanings joined the Word Log</strong> &mdash; Meanings you saved before moved into the Word Log automatically, with their verse. Each saved word now shows the meaning you kept and a &ldquo;Saved from&rdquo; verse you can tap.</li>
+  <li><strong>Hebrew words save correctly</strong> &mdash; Saved Hebrew words were being stored as Greek (a G number, and the wrong dictionary entry when opened), and could overwrite a Greek word with the same number. They now keep their H number and open in Hebrew.</li>
+</ul>
 <div class="un-version-label">v3.0.613 &mdash; Four looks and At a glance</div>
 <ul>
   <li><strong>Four looks for Across translations</strong> &mdash; The chart of how your version translates a word (Greek and Hebrew) now comes in four looks: Ring, Bubbles, Stripes and Tree. Tap the little cycle button to switch; it&rsquo;s always the same data, just shown a different way, and the app remembers the one you like. The first time, the guide shows you the button.</li>
@@ -43062,7 +43155,7 @@ function _rhemaOpenWordPicker(mode = 'lookup') {
     if (refEl) refEl.textContent = _rhemaDisplayRefFromKey(refs[0]) || refs[0];
   }
   _rhemaWordPickMode = mode;
-  if (label) label.textContent = mode === 'log' ? "Tap a word to add it to the study's word log" : 'Tap a word to see its English meaning';
+  if (label) label.textContent = mode === 'log' ? 'Tap a word to save it to your Word Log' : 'Tap a word to see its English meaning';
   _rhemaWordPickSwitch(mode === 'english' && _rhemaLookupLinks.some(Boolean) ? 'Show the original words' : '', '_rhemaOpenLookup(true)');
   closeRhemaVerseSheet();
   document.getElementById('rhemaWordPickModal')?.classList.add('open');
@@ -44280,7 +44373,12 @@ async function rhemaShowEnglishMeaning(word) {
   const logBtn = document.getElementById('rhemaMeaningLogBtn');
   if (title) title.textContent = clean;
   if (body) body.innerHTML = `<div class="rhema-meaning-section"><h4>Loading</h4><p>Checking the English meaning...</p></div>`;
-  if (logBtn) logBtn.classList.toggle('hidden', !!_guestMode);
+  if (logBtn) {
+    const saved = _sandboxWordLogCache.some(w => String(w.strongs) === 'en:' + clean.toLowerCase());
+    logBtn.classList.toggle('hidden', !!_guestMode);
+    logBtn.disabled = saved;
+    logBtn.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">${saved ? 'bookmark_added' : 'bookmark_add'}</span><span>${saved ? 'Saved in your Word Log' : 'Save to Word Log'}</span>`;
+  }
   document.getElementById('rhemaEnglishMeaningModal')?.classList.add('open');
   // Names, places, and customs lead with the encyclopedic dictionary card —
   // for a proper noun the modern-English dictionary is usually noise. The
@@ -44566,10 +44664,13 @@ async function rhemaLogEnglishWord(word) {
     strongs: 'en:' + word.toLowerCase(),
     surface: word,
     definition: '',
-    translit: ''
+    translit: '',
+    layer: 'english',
+    verse: (typeof _rhemaMenuRef === 'string' && /^\S+ \d+:\d+$/.test(_rhemaMenuRef)) ? _rhemaMenuRef : ''
   });
   _rhemaClearVerseActionSelection();
-  if (typeof _showStudyToast === 'function') _showStudyToast(`“${word}” added to the word log`);
+  if (!_sandboxWordLogCache.some(w => String(w.strongs) === 'en:' + word.toLowerCase())) _sandboxWordLogCache.push({ strongs: 'en:' + word.toLowerCase(), surface: word, lemma: word, layer: 'english' });
+  if (typeof _showStudyToast === 'function') _showStudyToast(`Saved “${word}” to your Word Log`);
 }
 
 function _rhemaCuratedScriptureNotesForKey(key) {
@@ -46406,11 +46507,18 @@ function _rhemaFontControlsHtml() {
     <div class="rrp-section-label">Font</div>
     <div class="rrp-fontpicker" id="rrpFontPicker"></div>`;
 }
+// Saved words live in the Word Log now. A device that still holds meanings
+// saved the old way (a guest, before signing up) keeps a row to see them.
+function _rhemaOldSavedMeaningsRow() {
+  let n = 0;
+  try { const l = JSON.parse(localStorage.getItem('rhemaSavedMeanings') || '[]'); n = Array.isArray(l) ? l.length : 0; } catch {}
+  return n ? `<button class="rrp-row" onclick="showReaderPanelSection('meanings')"><span class="material-symbols-outlined rrp-row-icon">bookmarks</span><span class="rrp-row-label">Saved meanings</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>` : '';
+}
 function _rhemaReadPanelHtml() {
   return `<div class="rrp-list">
       <button class="rrp-row" onclick="showReaderPanelSection('highlights')"><span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span><span class="rrp-row-label">Highlights</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="showReaderPanelSection('notes')"><span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span><span class="rrp-row-label">Notes</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
-      <button class="rrp-row" onclick="showReaderPanelSection('meanings')"><span class="material-symbols-outlined rrp-row-icon">bookmarks</span><span class="rrp-row-label">Saved meanings</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      ${_rhemaOldSavedMeaningsRow()}
     </div>
     ${_rhemaFontControlsHtml()}`;
 }
@@ -46492,7 +46600,7 @@ function _rhemaStudyPanelHtml() {
     <div class="rrp-list">
       <button class="rrp-row" onclick="showReaderPanelSection('highlights')"><span class="material-symbols-outlined rrp-row-icon">ink_highlighter</span><span class="rrp-row-label">Highlights</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
       <button class="rrp-row" onclick="showReaderPanelSection('notes')"><span class="material-symbols-outlined rrp-row-icon">sticky_note_2</span><span class="rrp-row-label">Notes</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
-      <button class="rrp-row" onclick="showReaderPanelSection('meanings')"><span class="material-symbols-outlined rrp-row-icon">bookmarks</span><span class="rrp-row-label">Saved meanings</span><span class="material-symbols-outlined rrp-chev">chevron_right</span></button>
+      ${_rhemaOldSavedMeaningsRow()}
     </div>`;
 }
 function rhemaStudyTool(id, ev) {
@@ -49343,7 +49451,7 @@ const READING_COACH_STEPS = [
   { before: _coachMenuShow(_menuSectionAfter('display')), target: _menuSectionAfter('display'), pose: 'inspect', title: 'Reading helpers', body: 'Parts of Speech adds a row of word types: tap one, like Verb, to color every verb. Font opens the text size and every font you can read in. When Greek is selected, Greek Only hides the small English under each Greek word. A grayed-out tile tells you what to turn on first.' },
   { before: _coachMenuShow(_menuSectionAfter('text')), target: _menuSectionAfter('text'), pose: 'think', title: 'Chapter or verse', body: 'Chapter View shows the whole chapter; turn it off to read one verse at a time. Critical Text switches the Greek New Testament between its two main manuscript traditions.' },
   { before: _coachMenuShow(_menuSectionAfter('study')), target: _menuSectionAfter('study'), title: 'More tools', body: 'The Word Library to look up Greek words, and Copy verse to grab several verses at once. (Cross references are on each verse: tap a verse.)' },
-  { before: _coachMenuShow(_menuSectionAfter('marks')), target: _menuSectionAfter('marks'), pose: 'thumbs', title: 'Your saved stuff', body: 'Every highlight, note, and saved word meaning in one place. Tap one to jump to its verse.' },
+  { before: _coachMenuShow(_menuSectionAfter('marks')), target: _menuSectionAfter('marks'), pose: 'thumbs', title: 'Your saved stuff', body: 'Every highlight and note in one place. Tap one to jump to its verse. (Words you save are in the Word Log.)' },
   { before: _coachMenuShow(() => document.querySelector('#rhemaReaderPanel .rrp-guide.in')), target: () => _coachFirst(['#rhemaReaderPanel .rrp-guide.in', '#rhemaReaderMenuBtn']), title: 'That’s me!', body: 'I pop up somewhere new in this menu each time. Tap me whenever you want another tour.' }
 ];
 function startVerseCoach() { _startAppCoach(VERSE_COACH_STEPS, 'verseCoachSeenV3539', true); _appCoachOnEnd = () => { try { closeRhemaVerseSheetAndDeselect(); } catch (e) {} }; }
@@ -51286,16 +51394,6 @@ function openRhemaSheet(wordIdx, verse, ochapter) {
   // Study sandbox: show Save Verse and Add to Word Log buttons
   const saveBtn = document.getElementById('rhemaSaveToStudyBtn');
   if (saveBtn) saveBtn.classList.toggle('hidden', !_studySandboxId);
-  const logBtn = document.getElementById('rhemaAddToWordLogBtn');
-  if (logBtn) {
-    logBtn.classList.toggle('hidden', !_rhemaStudyId());
-    if (_rhemaStudyId()) {
-      const alreadyLogged = _sandboxWordLogCache.some(w => String(w.strongs) === String(strongs));
-      logBtn.disabled = alreadyLogged;
-      logBtn.classList.toggle('logged', alreadyLogged);
-      logBtn.textContent = alreadyLogged ? '✓ In Word Log' : '+ Add to Word Log';
-    }
-  }
 
   const sheet = document.getElementById('rhemaSheet');
   sheet?.classList.add('open');
@@ -51590,6 +51688,7 @@ function showRhemaTab(tab, word) {
   _rhemaActiveTab = tab;
   word = word || _rhemaActiveWord;
   if (!word) return;
+  _rhemaSyncSaveWordBtn();
 
   const [surface, strongs, morph, lemma] = word;
   const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer();
