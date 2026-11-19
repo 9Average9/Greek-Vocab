@@ -40892,3 +40892,16 @@ html:has(#rhemaModal.open), body:has(#rhemaModal.open) { overflow: hidden; overs
   #rhemaTabContent .ws-mx-card { padding: 12px 10px 10px 14px; }
   #rhemaTabContent .ws-xslot { padding: 0 4px 6px; }
 }
+
+/* The card buttons sit right under the cards (they don't float over them). */
+.ws-dots { position: static; margin-top: 10px; box-shadow: none; }
+/* Hebrew Definition: answer card + deck */
+.rhd-lemma { font-family: 'Ezra SIL', 'SBL Hebrew', 'Taamey Frank CLM', serif; font-size: 2rem; direction: rtl; }
+.rhd-hero .rhema-deep-answer { margin: 6px 0 0; padding: 0; border: 0; background: none; box-shadow: none; }
+.rhd-hero .rhema-deep-answer-head { margin-bottom: 4px; }
+.rhd-glance { margin-top: 8px; }
+.rhd .ws-card .rhema-def-section { padding: 0; }
+.rhd .ws-card .rhw-note:first-child { margin-top: 0; }
+.rhd .rhw-xl { margin-top: 2px; }
+.rhd .ws-card .rhw-sub { margin-top: 14px; }
+.rhd .ws-card .ws-card-h + .rhw-sub, .rhd .ws-card .ws-card-h + * .rhw-sub:first-child { margin-top: 0; }
