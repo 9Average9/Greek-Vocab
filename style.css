@@ -41057,3 +41057,43 @@ body.ch-open { overflow: hidden; }
 .ch-overlay.ch-accent-swap { --ch-ink: color-mix(in srgb, var(--ch-accent) 35%, var(--font-color)); --ch-line: color-mix(in srgb, var(--ch-accent) 28%, var(--border-color)); --ch-soft2: color-mix(in srgb, var(--ch-accent) 18%, var(--card-solid-color, #fff)); }
 .ch-overlay.ch-accent-swap .ch-btn, .ch-overlay.ch-accent-swap .ch-go, .ch-overlay.ch-accent-swap .ch-ask button, .ch-overlay.ch-accent-swap .ch-filter button.on { color: var(--card-solid-color, #111); }
 .ch-overlay.ch-accent-swap .ch-choice b { color: var(--font-color); }
+
+/* Challenge art v2: depth from the theme's own colors */
+.ch-art { width: 108px; height: 90px; overflow: visible; }
+.ch-overlay .s-acc { stop-color: var(--ch-accent); }
+.ch-overlay .s-accdk { stop-color: color-mix(in srgb, var(--ch-accent) 70%, #000); }
+.ch-overlay .s-acclt { stop-color: color-mix(in srgb, var(--ch-accent) 70%, #fff); }
+.ch-overlay .s-card { stop-color: var(--card-solid-color, #fff); }
+.ch-overlay .s-pgshade { stop-color: color-mix(in srgb, var(--ch-accent) 16%, var(--card-solid-color, #fff)); }
+.ch-overlay .s-soft { stop-color: color-mix(in srgb, var(--ch-accent) 10%, var(--card-solid-color, #fff)); }
+.ch-overlay .s-glow { stop-color: color-mix(in srgb, var(--ch-pop) 28%, transparent); }
+.ch-overlay .s-glow0 { stop-color: color-mix(in srgb, var(--ch-pop) 0%, transparent); }
+.ch-art .ch-shadow, .ch-foot .ch-shadow { fill: color-mix(in srgb, var(--ch-accent) 40%, #000); opacity: .14; }
+.ch-art .ch-stroke, .ch-foot .ch-stroke { stroke: color-mix(in srgb, var(--ch-accent) 80%, #000); stroke-width: 1.8; stroke-linejoin: round; }
+.ch-art .ch-edge, .ch-foot .ch-edge { fill: color-mix(in srgb, var(--ch-accent) 12%, var(--card-solid-color, #fff)); stroke: color-mix(in srgb, var(--ch-accent) 45%, transparent); stroke-width: 1; }
+.ch-art .ch-lines, .ch-foot .ch-lines { fill: none; stroke: color-mix(in srgb, var(--ch-accent) 35%, transparent); stroke-width: 2; stroke-linecap: round; }
+.ch-art .ch-mark { fill: none; stroke-width: 7; stroke-linecap: round; }
+.ch-art .ch-mark-sh { fill: none; stroke: color-mix(in srgb, var(--ch-accent) 40%, #000); opacity: .2; stroke-width: 7; stroke-linecap: round; }
+.ch-art .ch-mark-hi, .ch-foot .ch-mark-hi { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; opacity: .7; }
+.ch-art .ch-star, .ch-foot .ch-star { fill: var(--ch-pop); }
+.ch-art .ch-terrain { fill: color-mix(in srgb, var(--ch-accent) 18%, transparent); }
+.ch-art .ch-route { fill: none; stroke: var(--ch-accent); stroke-width: 2.6; stroke-dasharray: 5 5; stroke-linecap: round; }
+.ch-art .ch-start { fill: var(--ch-pop); stroke: var(--card-solid-color, #fff); stroke-width: 1.5; }
+.ch-art .ch-pin-hole { fill: var(--card-solid-color, #fff); }
+.ch-foot { overflow: visible; }
+.ch-foot .ch-rays { fill: none; stroke: var(--ch-pop); stroke-width: 3; stroke-linecap: round; opacity: .8; }
+.ch-foot .ch-leaf { opacity: .55; }
+.ch-foot .ch-leaf2 { opacity: .4; }
+.ch-foot .ch-vein { fill: none; stroke: var(--card-solid-color, #fff); stroke-width: 1.4; opacity: .5; }
+.ch-choice:hover .ch-art, .ch-choice:active .ch-art { transform: translateY(-2px) scale(1.04); }
+.ch-art { transition: transform .2s; }
+/* Topics for a group */
+.ch-topic-head { display: flex; align-items: center; gap: 14px; margin: 6px 2px 8px; }
+.ch-topic-img { width: 78px; height: 78px; flex-shrink: 0; }
+.ch-topic-h { font-size: 2rem; }
+.ch-topics { display: grid; gap: 8px; }
+.ch-topic { display: flex; align-items: center; gap: 10px; width: 100%; padding: 15px 16px; border-radius: 18px; border: 1px solid var(--ch-line); background: var(--card-solid-color, #fff); color: var(--ch-ink); font: inherit; font-weight: 800; font-size: 1rem; text-align: left; cursor: pointer; box-shadow: 0 4px 12px color-mix(in srgb, var(--ch-accent) 8%, transparent); }
+.ch-topic .material-symbols-outlined:last-child { margin-left: auto; color: var(--ch-accent); }
+.ch-topic:active { transform: scale(.98); }
+.ch-topic-any { border-style: dashed; border-width: 1.5px; color: var(--ch-accent); }
+.ch-topic-any .material-symbols-outlined:first-child { color: var(--ch-pop); }

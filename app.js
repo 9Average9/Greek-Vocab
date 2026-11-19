@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.623";
+const APP_VERSION = "3.0.624";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.624 &mdash; Pick a topic</div>
+<ul>
+  <li><strong>Pick a topic</strong> &mdash; Tapping a group now lets you choose what to be challenged on: Calvinist offers TULIP, election, predestination, limited atonement and more; Catholic offers papal authority, the Eucharist, Mary, purgatory&hellip; Or tap &ldquo;Surprise me&rdquo;.</li>
+  <li><strong>Just the claim</strong> &mdash; A challenge is now the claim, who got it, why, the passage and the sources, saved straight to the community. No notes or answers to fill in.</li>
+  <li><strong>Richer drawings</strong> &mdash; The Challenge My Theology and App Tours pictures and the open book at the bottom have depth, shading and a soft glow, still in your theme&rsquo;s colors. The image credits list and the extra button on the community page are gone.</li>
+</ul>
 <div class="un-version-label">v3.0.623 &mdash; Challenges in your colors</div>
 <ul>
   <li><strong>Your theme, everywhere</strong> &mdash; Challenge My Theology now follows your theme colors throughout: the background, cards, headings, icons, buttons and drawings, and even the stack of books takes your theme&rsquo;s color (gold trim kept). On dark themes it switches to your theme&rsquo;s brighter accent color so everything stays easy to read.</li>
