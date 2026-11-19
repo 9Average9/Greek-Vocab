@@ -306,7 +306,6 @@
         <span class="ws-lemma">${esc(lex.lemma || '')}</span>
         <span class="ws-translit">${esc(lex.translit || '')}</span>
         <span class="ws-g">${esc(typeof _rhemaGreekNumLabel === 'function' ? _rhemaGreekNumLabel(strongs) : `G${strongs}`)}</span>
-        <span class="ws-hero-save" id="${uid}-hsave"></span>
       </div>
       ${gloss ? `<div class="ws-answer"><span class="ws-answer-k">${where ? `In ${esc(where)}` : 'Core meaning'}</span><strong>${esc(gloss)}</strong>${form ? `<span class="ws-form">this form: ${esc(form)}</span>` : ''}</div>` : ''}
       <div class="ws-hsense" id="${uid}-hsense"></div>
@@ -351,14 +350,15 @@
       ? `<span class="ws-answer-k">Meaning here</span><button type="button" class="ws-hsense-b" onclick="rhemaWordStudyOpenSense('${uid}',${hereI})"><b>${esc(study.senses[hereI].label)}</b> — ${esc(study.senses[hereI].definition)}</button>${fgTag(study, `senses.${hereI}`)}`
       : '';
 
-    // Save from the answer card: the meaning used here, else the core one.
-    const hsave = document.getElementById(`${uid}-hsave`);
-    if (hsave) {
+    // What the word sheet's Save button keeps: the meaning used here, else
+    // the core one (the bookmark at the top of the sheet is the only save).
+    {
       const s = hereI >= 0 ? study.senses[hereI] : (study?.senses?.length === 1 ? study.senses[0] : null);
       const payload = s
-        ? { label: s.label, definition: s.definition, note: s.note || '', refs: s.refs || [] }
-        : (study?.summary || prose.def) ? { label: (st?.gloss || 'Core meaning'), definition: study?.summary || prose.def, note: '', refs: [] } : null;
-      hsave.innerHTML = payload ? saveButton(uid, 'hero', strongs, payload, ref) : '';
+        ? { label: s.label, definition: s.definition }
+        : (study?.summary || prose.def) ? { label: (st?.gloss || 'Core meaning'), definition: study?.summary || prose.def } : null;
+      if (payload) _wsHere.set(String(strongs), payload); else _wsHere.delete(String(strongs));
+      if (typeof window._rhemaSyncSaveWordBtn === 'function') window._rhemaSyncSaveWordBtn();
     }
 
     if (def) {
@@ -656,7 +656,7 @@
       const refs = s.refs || [];
       const example = _exampleHtml(refs[0], strongs);
       return `<article class="ws-mx-card${i === sel ? ' on' : ''}" data-i="${i}" style="--c:${senseColor(i)}">
-        <div class="ws-mx-top"><span class="ws-mx-count">${n > 1 ? `Meaning ${i + 1} of ${n}` : 'Its meaning'}</span>${fgTag(entry.study, `senses.${i}`)}${i === hereI ? '<span class="ws-mx-herebadge"><span class="material-symbols-outlined">my_location</span>this verse</span>' : ''}${saveButton(uid, `s${i}`, strongs, { label: s.label, definition: s.definition, note: s.note || '', refs }, ref)}</div>
+        <div class="ws-mx-top"><span class="ws-mx-count">${n > 1 ? `Meaning ${i + 1} of ${n}` : 'Its meaning'}</span>${fgTag(entry.study, `senses.${i}`)}${i === hereI ? '<span class="ws-mx-herebadge"><span class="material-symbols-outlined">my_location</span>this verse</span>' : ''}</div>
         <h4 class="ws-mx-label">${esc(s.label)}</h4>
         <p class="ws-mx-def">${esc(s.definition)}</p>
         ${s.note ? `<div class="ws-mx-why"><span class="material-symbols-outlined">psychology_alt</span><p><b>Why</b> ${esc(s.note)}</p></div>` : ''}
@@ -1169,6 +1169,9 @@
   // ── Saved meanings ──────────────────────────────────────────────────────
   // Kept on this device. Each saved meaning carries the word, the meaning,
   // why, its verses, and the verse it was saved from.
+  // The meaning each open word has in its verse (for the sheet's Save button).
+  const _wsHere = new Map();
+  window.rhemaWordStudyHereMeaning = (strongs) => _wsHere.get(String(strongs)) || null;
   const SAVE_KEY = 'rhemaSavedMeanings';
   const _wsSave = new Map(); // `${uid}:${key}` → item ready to save
   function _savedList() { try { const l = JSON.parse(_ls.get(SAVE_KEY, '[]')); return Array.isArray(l) ? l : []; } catch { return []; } }
@@ -1297,7 +1300,7 @@
     { sel: '.ws-hero', title: 'The answer first', text: 'Tap any Greek word and this is what you get: what it means right here, and how your Bible words it. Often that’s all you need!' },
     { sel: '.ws-depth', pose: 'think', title: 'How deep?', text: '<b>Quick</b> is just the answer. <b>Study</b> adds every meaning and how Bibles translate it. <b>Deep</b> adds its history, the dictionaries, and how we know.' },
     { sel: '.ws-dtabs', title: 'Swipe the cards', text: 'Swipe sideways (or tap a tab): <b>Meanings</b>, <b>This verse</b>, <b>Translations</b> and <b>Authors</b>, plus more cards in Deep.' },
-    { sel: '.ws-save', pose: 'thumbs', title: 'Keep a meaning', text: 'Tap <b>Save</b> on a meaning you want to remember. The bookmark up top (or Saved meanings in the menu) shows them all.' },
+    { sel: '#rhemaSaveWordBtn', global: true, pose: 'thumbs', title: 'Keep a word', text: 'Tap <b>Save</b> up here to keep this word, with its meaning in this verse, in your <b>Word Log</b> (Rhēma menu → Word Log).' },
     { sel: '#rhemaTabParsing', global: true, pose: 'inspect', title: 'Parsing', text: 'Breaks down this exact form of the word, like its tense, voice and mood, in plain words. Tap a tense, voice or mood to see an example.' },
     { sel: '#rhemaTabOcc', global: true, pose: 'inspect', title: 'Occurrences', text: 'Every place the word shows up, counted book by book. Tap a book to read those verses.' },
     { sel: '#rhemaAddToWordLogBtn', global: true, title: 'Word Log', text: 'Want to remember this word? Add it to your Word Log and find it later in the menu.' },
@@ -1393,7 +1396,6 @@
     if (_studies.size > 20) _studies.delete(_studies.keys().next().value);
 
     const isNT = layer === 'nt-greek' || !!(occ && occ.total);
-    const saved = _savedList().length;
     const loading = {
       range: `<section class="ws-card"><div class="ws-loading">Gathering every meaning across the New Testament…</div></section>`,
       here: ctx ? `<section class="ws-card"><div class="ws-loading">Lining up the translations…</div></section>` : '',
@@ -1404,7 +1406,6 @@
       ${heroHtml(strongs, lex, decision, ctxRaw, occ, uid)}
       <div class="ws-bar-row">
         ${depthHtml(uid)}
-        <button type="button" class="ws-icon-b" onclick="rhemaShowSavedMeanings()" title="Saved meanings" aria-label="Saved meanings"><span class="material-symbols-outlined">bookmarks</span><span class="ws-saved-n">${saved || ''}</span></button>
         <button type="button" class="ws-icon-b" onclick="rhemaWordStudyTour('${uid}',true)" title="How this works" aria-label="How this works"><span class="material-symbols-outlined">help</span></button>
       </div>
       <button type="button" class="ws-go-deeper" onclick="rhemaWordStudyDepth('${uid}','study')">See every meaning, the translations &amp; more<span class="material-symbols-outlined">arrow_forward</span></button>
