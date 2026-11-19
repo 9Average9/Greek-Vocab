@@ -31329,7 +31329,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.611";
+const APP_VERSION = "3.0.612";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31352,6 +31352,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.612 &mdash; Search the Greek and Hebrew</div>
+<ul>
+  <li><strong>Every form like this</strong> &mdash; Rhēma&rsquo;s search now finds words and grammar in the original text, exactly: try &ldquo;aorist imperatives in James&rdquo;, &ldquo;ἀγάπη in 1 John&rdquo;, &ldquo;H2617 in Psalms&rdquo; or &ldquo;Qal imperative in Genesis&rdquo;. Results show the verse with the word marked in your English, the Greek or Hebrew form and its parsing. Tap a chip&rsquo;s &times; to widen (any tense, any book), or a book to narrow.</li>
+  <li><strong>From any word</strong> &mdash; In a word&rsquo;s Parsing or Occurrences tab, <em>Find every form like this</em> lists every place that word appears in that exact form.</li>
+  <li><strong>Smarter smart search</strong> &mdash; Ask about a word (&ldquo;every place Paul talks about grace&rdquo;) and the search works out the Greek or Hebrew word, then counts it exactly from the text instead of guessing. Topic searches now show up to 8 passages.</li>
+</ul>
 <div class="un-version-label">v3.0.611 &mdash; Hebrew across translations, and going deeper</div>
 <ul>
   <li><strong>Old Testament words, every version</strong> &mdash; A Hebrew word&rsquo;s study now has <em>Across translations</em>, like Greek words: how the BSB/MSB, or the NIV, NKJV, NASB, KJV or your own version, translates it everywhere in the Old Testament, with a bar for each rendering and every verse behind it (tap one to read it). Forms like &ldquo;were created&rdquo; and &ldquo;hath created&rdquo; count as &ldquo;created&rdquo; so versions compare fairly, and the folded-in forms are listed under each bar.</li>
@@ -39753,6 +39759,7 @@ function _syncHomeRhemaSearchClear(query = '') {
 
 function rhemaSearchInputChanged(value) {
   ++_rhemaSearchRequestId;
+  window.RhemaGrammarSearch?.reset();
   const aiStatus = document.getElementById('rhemaSearchAiStatus');
   if (aiStatus) aiStatus.textContent = '';
   const query = String(value || '').trim();
@@ -39761,6 +39768,26 @@ function rhemaSearchInputChanged(value) {
   _renderHomeRhemaSearchResults([]);
 }
 
+// Example searches under the box (tap to run).
+function rhemaSearchExample(q) {
+  const input = document.getElementById('rhemaSearchInput');
+  if (!input) return;
+  input.value = q;
+  _syncHomeRhemaSearchClear(q);
+  submitRhemaSearch();
+}
+// Word sheet → every place this word appears in this exact form; drop a chip
+// to widen (all forms, any person…). Greek NT and Hebrew OT.
+function rhemaFindFormsLikeThis() {
+  const w = _rhemaActiveWord;
+  const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer();
+  if (!w || layer === 'lxx' || !window.RhemaGrammarSearch) return;
+  window.RhemaGrammarSearch.fromWord(w[0], w[1], w[2], layer);
+}
+function _rhemaFormsLikeThisBtn(layer) {
+  if (layer === 'lxx') return '';
+  return `<button type="button" class="rgs-from-word" onclick="rhemaFindFormsLikeThis()"><span class="material-symbols-outlined">manage_search</span>Find every form like this</button>`;
+}
 function clearHomeRhemaSearch() {
   _homeRhemaResults = [];
   ++_rhemaSearchRequestId;
@@ -39814,11 +39841,13 @@ function _getRhemaSearchSuggestions(query) {
     if (!window.BibleSearchAI?.search) throw new Error('Bible search service has not loaded');
     // Ask for every likely passage, not just the single best one (parallel
     // accounts, same wording elsewhere, closely related verses).
-    const ask = query.length <= 120 ? `${query} (list up to 5 likely passages, best first)` : query;
-    const results = ((await window.BibleSearchAI.search(ask)) || {}).results || [];
-    _rhemaAiSearchCache.set(key, results);
+    const ask = query.length <= 120 ? `${query} (list up to 8 likely passages, best first)` : query;
+    const data = (await window.BibleSearchAI.search(ask)) || {};
+    // { results, wordSearch } — wordSearch only from the newer search service.
+    const out = { results: data.results || [], wordSearch: data.wordSearch || null };
+    _rhemaAiSearchCache.set(key, out);
     if (_rhemaAiSearchCache.size > 30) _rhemaAiSearchCache.delete(_rhemaAiSearchCache.keys().next().value);
-    return results;
+    return out;
   })().finally(() => _rhemaAiSearchInFlight.delete(key));
   _rhemaAiSearchInFlight.set(key, pending);
   return pending;
@@ -39835,11 +39864,16 @@ async function submitRhemaSearch() {
     if (aiStatus) aiStatus.textContent = 'Enter at least two characters.';
     return;
   }
+  // A word or a grammatical form ("aorist imperatives in James", "λόγος",
+  // "H2617 in Ruth"): answered exactly from the parsed text.
+  const grammar = window.RhemaGrammarSearch?.parse(query);
+  if (grammar) { window.RhemaGrammarSearch.show(grammar); return; }
+  window.RhemaGrammarSearch?.reset();
   if (aiStatus) aiStatus.textContent = 'Finding the best matches…';
   const directRef = _homeRhemaDirectRef(query);
   // Start the remote lookup while the local index loads and ranks verses.
   const suggestionsPromise = directRef ? null : _getRhemaSearchSuggestions(query)
-    .then(results => ({ results }), error => ({ error }));
+    .then(data => ({ data }), error => ({ error }));
   let index;
   try { index = await _ensureHomeRhemaSearchIndex(); }
   catch { if (requestId === _rhemaSearchRequestId) { if (aiStatus) aiStatus.textContent = ''; _renderHomeRhemaSearchResults([], 'Bible text could not load. Check your connection.'); } return; }
@@ -39852,10 +39886,14 @@ async function submitRhemaSearch() {
     return;
   }
   try {
-    const outcome = await (suggestionsPromise || _getRhemaSearchSuggestions(query).then(results => ({ results }), error => ({ error })));
+    const outcome = await (suggestionsPromise || _getRhemaSearchSuggestions(query).then(data => ({ data }), error => ({ error })));
     if (outcome.error) throw outcome.error;
-    const suggestions = outcome.results;
+    const suggestions = outcome.data.results;
     if (requestId !== _rhemaSearchRequestId) return;
+    // A question about a word or a form ("every place Paul uses grace"): the
+    // smart search names the Greek/Hebrew word; the count is exact, from the text.
+    const wordSpec = window.RhemaGrammarSearch?.fromAi(outcome.data.wordSearch);
+    if (wordSpec) { window.RhemaGrammarSearch.show(wordSpec); return; }
     const byRef = new Map(index.map(entry => [`${entry.book}:${entry.chapter}:${entry.verse}`, entry]));
     const found = [];
     const seen = new Set();
@@ -39868,8 +39906,8 @@ async function submitRhemaSearch() {
       seen.add(key);
       found.push({ ...entry, reason: String(suggestion.reason || '').slice(0, 140) });
     });
-    // Up to five likely passages, best first.
-    _homeRhemaResults = found.length ? found.slice(0, 5) : local.slice(0, 5);
+    // Up to eight likely passages, best first.
+    _homeRhemaResults = found.length ? found.slice(0, 8) : local.slice(0, 5);
     if (aiStatus) aiStatus.textContent = found.length ? '' : 'Showing closest matches.';
     _renderHomeRhemaSearchResults(_homeRhemaResults, _homeRhemaResults.length ? '' : 'No matching passages found. Try different words.');
   } catch (err) {
@@ -51530,11 +51568,11 @@ function showRhemaTab(tab, word) {
   if (!content) return;
 
   if (tab === 'parsing') {
-    content.innerHTML = renderRhemaParsing(surface, strongs, morph, lemma, layer);
+    content.innerHTML = renderRhemaParsing(surface, strongs, morph, lemma, layer) + _rhemaFormsLikeThisBtn(layer);
   } else if (tab === 'definition') {
     content.innerHTML = renderRhemaDefinition(strongs, morph, layer);
   } else {
-    content.innerHTML = renderRhemaOccurrences(strongs, layer);
+    content.innerHTML = _rhemaFormsLikeThisBtn(layer) + renderRhemaOccurrences(strongs, layer);
   }
 }
 
