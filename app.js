@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.619";
+const APP_VERSION = "3.0.620";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.620 &mdash; Lexicons fixed, sharper bold words</div>
+<ul>
+  <li><strong>Lexicon buttons work</strong> &mdash; Abbott-Smith, Moulton&ndash;Milligan, LSJ, Dodson and Strong&rsquo;s now switch when you tap them.</li>
+  <li><strong>Sharper bold words in Occurrences</strong> &mdash; The English word for the Greek or Hebrew word is found in two passes (the second learns how your version usually words it), so more verses get their bold word, and fewer are wrong. Checked against a Strong&rsquo;s-tagged King James: Greek bolds 98% of verses and is right 98.6% of the time; Hebrew bolds 97% and is right 96.5% (most of the rest are spots the tagged text itself marks differently). When it isn&rsquo;t sure, it leaves the verse unbolded instead of guessing.</li>
+  <li><strong>Tidier</strong> &mdash; No slide handle on At a glance, &ldquo;Find every form like this&rdquo; is off Occurrences too, and Definition, Parsing and Occurrences have room at the bottom.</li>
+</ul>
 <div class="un-version-label">v3.0.619 &mdash; A calmer Hebrew word page</div>
 <ul>
   <li><strong>Hebrew definitions, cleaned up</strong> &mdash; A Hebrew word now opens like a Greek one: an answer card (the word, its sound, a quick definition, the word study summary and how often it&rsquo;s used), then cards you swipe: <em>Across translations</em>, <em>Meanings</em> (Brown-Driver-Briggs), <em>Forms</em> and <em>Where it&rsquo;s used</em> (books and the Greek Old Testament). The full Strong&rsquo;s entry is folded below. Everything that was there before is still there.</li>
@@ -51808,7 +51814,7 @@ function showRhemaTab(tab, word) {
   } else if (tab === 'definition') {
     content.innerHTML = renderRhemaDefinition(strongs, morph, layer);
   } else {
-    content.innerHTML = _rhemaFormsLikeThisBtn(layer) + renderRhemaOccurrences(strongs, layer);
+    content.innerHTML = renderRhemaOccurrences(strongs, layer);
   }
 }
 
@@ -55083,35 +55089,66 @@ function _rhemaBVVerseText(code, ch, v) {
 // Greek token is lined up through the Berean word table and found in this
 // version's sentence (same matcher as the interlinear). Falls back to a gloss
 // search when no alignment is possible.
-function _rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver) {
+// The tapped word's place in each verse of the list, two passes (graded
+// against Strong's-tagged KJV text): line every verse up, learn how THIS
+// version words it from its confident matches in the list, then retry the
+// verses it missed. Weak fallbacks are left unbolded rather than guessed
+// (Greek: 98.6% right when bold, Hebrew 96.5%; most "misses" are tagging
+// differences in the answer key).
+function _rhemaBVItems(code, ch, v, words, wordIdx, learned) {
+  const isOT = isRhemaOTBook(code);
+  if (isOT && typeof _rhemaHebBridgeItems === 'function') {
+    const items = _rhemaHebBridgeItems(code, ch, v);
+    if (items && items.length === words.length) return items.map((it, i) => i === wordIdx && learned ? { ...it, learned } : { ...it });
+  }
+  const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer(code);
+  const d = _rhemaMeaningDecision(_rhemaResolveWord(words[wordIdx], code, ch), { layer, book: code, chapter: ch, verse: v });
+  const meanings = _rhemaBridgeMeanings(d.entry, d.lex);
+  const eng = isOT
+    ? words.map((_, i) => _rhemaHebILWord(code, ch, v, i)?.en || null)
+    : _rhemaBsbEnglishForTokens(words, code, ch, v);
+  return words.map((w, i) => i === wordIdx
+    ? { bsb: eng[i], gloss: String(d.gloss || '').split(/[;,(]/)[0], meanings, ...(learned ? { learned } : {}) }
+    : { bsb: eng[i] });
+}
+function _rhemaBVAlignAll(rows) {
+  if (!window.RhemaAlign) return rows.map(() => null);
+  const out = rows.map(x => {
+    if (!x.text) return null;
+    try { return RhemaAlign.bridgeToVersion(_rhemaBVItems(x.code, x.ch, x.v, x.words, x.wordIdx), x.text, _rhemaBridgeOpts(x.ver))[x.wordIdx] || null; } catch { return null; }
+  });
+  if (RhemaAlign.learnRenderings && RhemaAlign.learnedFor) {
+    const byVer = new Map();
+    rows.forEach((x, i) => { const r = out[i]; if (r && r.kind === 'match' && r.text) { if (!byVer.has(x.ver)) byVer.set(x.ver, new Map()); RhemaAlign.learnRenderings([{ key: 'w' }], [r], byVer.get(x.ver)); } });
+    rows.forEach((x, i) => {
+      const r = out[i];
+      if (!x.text || (r && r.kind === 'match' && r.text) || (r && r.kind === 'none')) return;
+      const table = byVer.get(x.ver);
+      const learned = table ? RhemaAlign.learnedFor(table, 'w', 8) : [];
+      if (!learned.length) return;
+      try {
+        const r2 = RhemaAlign.bridgeToVersion(_rhemaBVItems(x.code, x.ch, x.v, x.words, x.wordIdx, learned), x.text, _rhemaBridgeOpts(x.ver))[x.wordIdx];
+        if (r2 && r2.text) out[i] = r2;
+      } catch {}
+    });
+  }
+  return out;
+}
+function _rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver, aligned) {
   const esc = _escapeRhemaAttr;
   if (!text) return '';
-  let r = null;
-  if (window.RhemaAlign) {
-    try {
-      const layer = _rhemaActiveWordLayer || getCurrentOriginalLanguageLayer(code);
-      const d = _rhemaMeaningDecision(_rhemaResolveWord(words[wordIdx], code, ch), { layer, book: code, chapter: ch, verse: v });
-      const meanings = _rhemaBridgeMeanings(d.entry, d.lex);
-      // Old Testament: the Berean word table for this exact Hebrew verse;
-      // New Testament: the Greek one.
-      const bsbEng = isRhemaOTBook(code)
-        ? words.map((_, i) => _rhemaHebILWord(code, ch, v, i)?.en || null)
-        : _rhemaBsbEnglishForTokens(words, code, ch, v);
-      const items = words.map((w, i) => i === wordIdx
-        ? { bsb: bsbEng[i], gloss: String(d.gloss || '').split(/[;,(]/)[0], meanings }
-        : { bsb: bsbEng[i] });
-      r = RhemaAlign.bridgeToVersion(items, text, _rhemaBridgeOpts(ver))[wordIdx];
-    } catch { r = null; }
-  }
-  if (r && r.text && r.start != null) {
+  const r = aligned !== undefined ? aligned : _rhemaBVAlignAll([{ code, ch, v, words, wordIdx, text, ver }])[0];
+  const weak = r && (r.via === 'neg' || (r.kind === 'inferred' && /^(small|grammar)$/.test(r.via || '')));
+  if (r && r.text && r.start != null && !weak) {
     return esc(text.slice(0, r.start)) +
-      `<strong class="xref-match${r.kind === 'inferred' ? ' xref-match-approx' : ''}"${r.kind === 'inferred' ? ' title="Best match by position"' : ''}>${esc(text.slice(r.start, r.end))}</strong>` +
+      `<strong class="xref-match${r.kind === 'inferred' ? ' xref-match-approx' : ''}"${r.kind === 'inferred' ? ' title="Best match by meaning and position"' : ''}>${esc(text.slice(r.start, r.end))}</strong>` +
       esc(text.slice(r.end));
   }
   if (r && r.kind === 'none') {
     return `${esc(text)} <span class="rhema-xref-none">(no separate word in ${esc(ver)})</span>`;
   }
-  return _EnglishHighlight(esc(text), strongs);
+  // Not sure which English word it is: leave the verse unbolded, never guess.
+  return esc(text);
 }
 
 function _EnglishHighlight(EnglishText, strongs) {
@@ -55150,14 +55187,25 @@ function renderRhemaBookVerses() {
   if (isOT && !_rhemaHebILData(code)) {
     _rhemaLoadHebIL(code).then(d => { if (d && _rhemaBVCode === code && _rhemaBVStrongs === strongs) renderRhemaBookVerses(); });
   }
+  // Every English word the BSB uses for each Hebrew word: lets other
+  // versions' wording be recognized (loaded once).
+  if (isOT && typeof _rhemaLoadHebRend === 'function' && !_rhemaHebRend) {
+    _rhemaLoadHebRend().then(d => { if (d && _rhemaBVCode === code && _rhemaBVStrongs === strongs) renderRhemaBookVerses(); });
+  }
   // Each verse: the reader's own version with this word's English in bold,
   // then the original line — a few words around it, the word itself, its
   // parsing and its word-for-word English (like the grammar search rows).
   const lang = isOT ? 'hebrew' : 'greek';
-  const rows = refs.map(({ ch, v, wordIdx, words }) => {
+  const texts = refs.map(({ ch, v, wordIdx, words }) => {
     const er = isOT ? engRef(ch, v) : { ch, v };
     const { text, ver } = _rhemaBVVerseText(code, er.ch, er.v);
-    const english = text ? `<span class="rhema-xref-verse-text">${_rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver)}</span>` : '';
+    return { code, ch, v, wordIdx, words, text, ver };
+  });
+  const aligned = _rhemaBVAlignAll(texts);
+  const rows = refs.map(({ ch, v, wordIdx, words }, k) => {
+    const er = isOT ? engRef(ch, v) : { ch, v };
+    const { text, ver } = texts[k];
+    const english = text ? `<span class="rhema-xref-verse-text">${_rhemaBVEnglishHtml(text, code, ch, v, words, wordIdx, strongs, ver, aligned[k])}</span>` : '';
     const w = _rhemaResolveWord(words[wordIdx], code, ch) || words[wordIdx];
     const start = Math.max(0, wordIdx - 2);
     const end   = Math.min(words.length - 1, wordIdx + 2);

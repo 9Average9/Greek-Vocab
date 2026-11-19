@@ -325,8 +325,7 @@
     ov.className = 'glance-overlay';
     ov.innerHTML = `<div class="glance-backdrop" onclick="RhemaGlance.close()"></div>` +
       `<div class="glance-sheet" role="dialog" aria-modal="true" aria-labelledby="glanceTitle">` +
-      `<div class="glance-grab"></div>` +
-      `<div class="glance-top">${EYE.replace('glb-eye', 'glb-eye gls-eye')}<div class="glance-titles"><h2 id="glanceTitle"></h2><p>Counted from the app’s own data — nothing written by AI.</p></div>` +
+            `<div class="glance-top">${EYE.replace('glb-eye', 'glb-eye gls-eye')}<div class="glance-titles"><h2 id="glanceTitle"></h2><p>Counted from the app’s own data — nothing written by AI.</p></div>` +
       `<button type="button" class="glance-x" onclick="RhemaGlance.close()" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>` +
       `<div class="glance-body" id="glanceBody"></div></div>`;
     document.body.appendChild(ov);
@@ -334,7 +333,6 @@
     const sheet = ov.querySelector('.glance-sheet');
     let y0 = null;
     ov.querySelector('.glance-top').addEventListener('touchstart', e => { y0 = e.touches[0].clientY; }, { passive: true });
-    ov.querySelector('.glance-grab').addEventListener('touchstart', e => { y0 = e.touches[0].clientY; }, { passive: true });
     sheet.addEventListener('touchend', e => {
       if (y0 != null && e.changedTouches[0].clientY - y0 > 70) close();
       y0 = null;

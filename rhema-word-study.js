@@ -886,7 +886,8 @@
       esc(tabs.length > 2 ? `${tabs[0][0]}, ${tabs[1][0]} +${tabs.length - 2}` : tabs.map(t => t[0]).join(', ')));
   }
   window.rhemaWordStudyTab = function (name, i, btn) {
-    const root = btn.closest('.ws-sec');
+    // The lexicon card is a <section class="ws-card" data-ws-sec="lexicons">.
+    const root = btn.closest('[data-ws-sec], .ws-card');
     if (!root) return;
     root.querySelectorAll('.ws-tab').forEach((b, k) => b.classList.toggle('on', k === i));
     root.querySelectorAll('.ws-pane').forEach(p => p.classList.toggle('on', p.dataset.wsPane === `${name}-${i}`));

@@ -40905,3 +40905,8 @@ html:has(#rhemaModal.open), body:has(#rhemaModal.open) { overflow: hidden; overs
 .rhd .rhw-xl { margin-top: 2px; }
 .rhd .ws-card .rhw-sub { margin-top: 14px; }
 .rhd .ws-card .ws-card-h + .rhw-sub, .rhd .ws-card .ws-card-h + * .rhw-sub:first-child { margin-top: 0; }
+
+/* Room to finish reading at the bottom of every word tab */
+#rhemaTabContent { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+#ssWdContent { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+.glance-top { padding-top: 16px; }
