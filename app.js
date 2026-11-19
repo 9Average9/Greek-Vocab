@@ -31187,6 +31187,8 @@ function _homeFitMeasure(home, grid, nav, cards) {
 }
 function fitHomeLayout() {
   if (_homeFitBusy) return;
+  // Typing in Home's search: the keyboard shrinks the view; don't refit to it.
+  if (document.documentElement.classList.contains('kb-open')) return;
   const home = document.getElementById('homeScreen');
   const grid = home?.querySelector('.home-actions-grid');
   const nav = document.getElementById('bottomNav');
@@ -31264,6 +31266,39 @@ function scheduleHomeFit() {
     done.then(() => requestAnimationFrame(fitHomeLayout));
   }, 60);
 }
+// ── Re-measure when the screen settles without a resize event ───────────────
+// Sizes measured in JS (Home's cards and tools, the reader's word tiles,
+// Multi-view, the iOS top strip) follow window "resize". An installed iPhone app
+// can settle without one: iOS fills in the safe areas (notch, home indicator)
+// a beat after a cold launch, and can hand back a different viewport when the
+// app returns from the background. Then the first measurement stuck until the
+// app was closed and reopened. A hidden probe sized by the viewport and the
+// safe-area insets notices those changes; returning to the app and a few
+// check-ins right after launch cover the rest. Each sends one (debounced)
+// resize so every measurer runs again.
+(function initViewportSettle() {
+  if (window.RHEMA_MV_SLOT) return;
+  let t = 0;
+  const kick = () => { clearTimeout(t); t = setTimeout(() => window.dispatchEvent(new Event('resize')), 90); };
+  const start = () => {
+    const probe = document.createElement('div');
+    probe.id = 'viewportProbe';
+    probe.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(probe);
+    if (window.ResizeObserver) {
+      let first = true;
+      new ResizeObserver(() => { if (first) { first = false; return; } kick(); }).observe(probe);
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) return;
+      kick(); setTimeout(kick, 450);
+    });
+    window.addEventListener('pageshow', (e) => { if (e.persisted) kick(); });
+    [450, 1300, 2800].forEach(ms => setTimeout(kick, ms));
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
 (function bindHomeFit() {
   const start = () => {
     const home = document.getElementById('homeScreen');
@@ -31294,7 +31329,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.609";
+const APP_VERSION = "3.0.610";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31317,6 +31352,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.610 &mdash; Right size from the start</div>
+<ul>
+  <li><strong>Fix</strong> &mdash; On iPhone the installed app sometimes opened with Home slightly mis-sized (tools tucked under the bottom bar) until you closed and reopened it. iOS reports the screen&rsquo;s notch and home-bar space a beat after launch without telling the app; the app now notices that, and coming back from the background, and re-measures on its own.</li>
+</ul>
 <div class="un-version-label">v3.0.609 &mdash; No more double plans</div>
 <ul>
   <li><strong>Fix</strong> &mdash; Tapping <em>Start plan</em> more than once while it was saving could make the plan (and its habit) twice. The button now shows <em>Starting&hellip;</em> and ignores extra taps, and a duplicate made this way is cleaned up automatically the next time you open the app (only if nothing on it was checked off).</li>
