@@ -40788,3 +40788,4 @@ body.dark .xlv { --xl-a: color-mix(in srgb, var(--secondary-color, #2498df) 40%,
 .ss-word-from { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: .7rem; color: var(--muted-color); }
 .ss-word-verse { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--font-color); font: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
 .ss-word-verse .material-symbols-outlined { font-size: 14px; color: var(--secondary-color); }
+.glw-n small { font-size: .62rem; font-weight: 700; margin-left: 2px; color: var(--muted-color); }

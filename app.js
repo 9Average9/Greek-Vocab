@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.614";
+const APP_VERSION = "3.0.615";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.615 &mdash; Back to your chapter</div>
+<ul>
+  <li><strong>Back to your chapter</strong> &mdash; Opening &ldquo;About the book&rdquo; from At a glance takes you to the book&rsquo;s start; a &ldquo;Back to John 3&rdquo; button at the bottom now brings you right back to the spot you were reading.</li>
+  <li><strong>Clearer key words</strong> &mdash; Each key word now says plainly that its big number is how many times it&rsquo;s in this chapter, next to its count in the whole Testament, and the card explains the fixed rule that picks them.</li>
+</ul>
 <div class="un-version-label">v3.0.614 &mdash; One way to save a word</div>
 <ul>
   <li><strong>One Save button</strong> &mdash; Each word now has a single <em>Save</em> bookmark at the top of its sheet, next to Copy. One tap keeps the word, the meaning it has in that verse, and the verse itself in your <em>Word Log</em>. Tap it again to take the word out. The Save pills on every meaning, the separate &ldquo;Add to Word Log&rdquo; button and the extra bookmarks icon are gone.</li>
@@ -40058,7 +40063,7 @@ function _rhemaMarkJumpOrigin() {
 }
 function _rhemaReturnLabel(r) {
   const name = r.book === 'PSA' && !r.intro ? 'Psalm' : _rhemaBookName(r.book);
-  return r.intro ? `${name} · Intro` : `${name} ${r.chapter}:${r.verse}`;
+  return r.intro ? `${name} · Intro` : r.chapterOnly ? `${name} ${r.chapter}` : `${name} ${r.chapter}:${r.verse}`;
 }
 function _rhemaSyncReturnPill() {
   const r = _rhemaReturnTo;
