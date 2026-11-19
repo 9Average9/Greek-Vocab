@@ -1,7 +1,7 @@
 # Per-word statistics for the Hebrew Word Study, from the Berean translation
 # tables (see scripts/extract-bsb-tables.py):
 #   - how the BSB translates the word across the Old Testament, with counts and
-#     a few example verses for each rendering
+#     every verse for each rendering (the Word Study's "Across translations")
 #   - which verb stems and forms it takes (Qal, Niphal… / perfect, imperfect…)
 #   - where it appears, by book
 # Output: data/hebrew-word-stats/s-<NNNN>.json, 100 Strong's numbers per file
@@ -85,7 +85,7 @@ with open(sys.argv[1], encoding='utf-8') as f:
         if not e: untranslated[s] += 1
         if e:
             renders[s][e] += 1
-            if len(examples[s][e]) < 4 and ref not in examples[s][e]: examples[s][e].append(ref)
+            if not examples[s][e] or examples[s][e][-1] != ref: examples[s][e].append(ref)
         for seg in (parse or '').split(' | '):
             vm = re.match(r'^V-([A-Za-z]+)-([A-Za-z]+)', seg)
             if vm:
@@ -97,10 +97,11 @@ for s, n in total.items():
     # Drop stray filler words (the BSB said "he" instead of repeating a name)
     # unless they're a real share of the renderings.
     r = [[e, c, examples[s][e]] for e, c in renders[s].most_common(14)
-         if e not in FILLER or c >= 0.1 * n][:8]
+         if e not in FILLER or c >= 0.1 * n][:14]
     out[(s - 1) // 100][str(s)] = {'n': n, 'u': untranslated[s], 'r': r, 'st': dict(stems[s].most_common()), 'fm': dict(forms[s].most_common()), 'b': dict(books[s].most_common())}
-os.makedirs(R + 'data/hebrew-word-stats', exist_ok=True)
+OUT = os.environ.get('OUT') or (R + 'data/hebrew-word-stats')
+os.makedirs(OUT, exist_ok=True)
 for shard, data in out.items():
-    with open(R + f'data/hebrew-word-stats/s-{shard * 100 + 1:04d}.json', 'w', encoding='utf-8') as f:
+    with open(f'{OUT}/s-{shard * 100 + 1:04d}.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
 print('words', len(total), 'shards', len(out), file=sys.stderr)

@@ -1082,6 +1082,13 @@
     }
     _wsRenderVersions(uid, st.strongs);
   };
+  // Every verse behind one rendering (the list starts with the first 40).
+  window.rhemaWordStudyAllRefs = function (uid, ver, text) {
+    const st = _studies.get(uid);
+    if (!st) return;
+    (st.allRefs = st.allRefs || new Set()).add(`${ver}|${text}`);
+    _wsRenderVersions(uid, st.strongs);
+  };
   window.rhemaWordStudyMeasure = function (uid, ver) {
     const st = _studies.get(uid);
     if (st) _wsMeasure(uid, st.strongs, ver);
@@ -1115,7 +1122,11 @@
         <div class="ws-vlist">${top.map(r => `<div class="ws-vrow">
             <div class="ws-sense-top"><b>${esc(r.text)}</b>${r.approx ? `<span class="ws-fine" title="Some matched by position">≈${r.approx}</span>` : ''}<span class="ws-count">${r.count}× · ${Math.round(100 * r.count / Math.max(1, covered))}%</span></div>
             <div class="ws-bar"><span style="width:${Math.max(2, Math.round(100 * r.count / max))}%"></span></div>
-            ${more(`${r.refs.length} verse${r.refs.length === 1 ? '' : 's'}`, `<div class="ws-refs">${r.refs.slice(0, 60).map(x => _refChipFromKey(x, strongs)).join('')}${r.refs.length > 60 ? `<span class="ws-fine">+${r.refs.length - 60} more</span>` : ''}</div>`)}
+            ${(() => {
+              const all = st.allRefs && st.allRefs.has(`${sel}|${r.text}`);
+              const shown = all ? r.refs : r.refs.slice(0, 40);
+              return more(`${r.refs.length} verse${r.refs.length === 1 ? '' : 's'}`, `<div class="ws-refs">${shown.map(x => _refChipFromKey(x, strongs)).join('')}${shown.length < r.refs.length ? `<button type="button" class="ws-ref-all" onclick="rhemaWordStudyAllRefs('${uid}','${esc(sel)}','${esc(r.text).replace(/'/g, '&#39;')}')">Show all ${r.refs.length}</button>` : ''}</div>`, all);
+            })()}
           </div>`).join('')}</div>
         ${stats.renderings.length > top.length ? `<p class="ws-fine">…and ${stats.renderings.length - top.length} rarer renderings.</p>` : ''}
         <p class="ws-fine">${[
