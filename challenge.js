@@ -74,57 +74,6 @@
       ['judaism', 'Judaism'], ['skeptic', 'Skeptic'],
     ],
   };
-  // Image credits (Wikipedia / Wikimedia Commons), shown under the pickers.
-  const CREDITS = {
-    "catholic": {
-      "label": "Catholic",
-      "credit": "Saint Peter's Basilica, Agostino Veneziano (Agostino dei Musi), 1517. The Metropolitan Museum of Art (public domain)"
-    },
-    "orthodox": {
-      "label": "Orthodox",
-      "credit": "Christ Pantocrator, Saint Catherine's Monastery, Sinai, 6th century. Wikimedia Commons (public domain)"
-    },
-    "calvinist": {
-      "label": "Calvinist",
-      "credit": "John Calvin (1509–1564), Sebastian Dadler, 1641. The Metropolitan Museum of Art (public domain)"
-    },
-    "arminian": {
-      "label": "Arminian",
-      "credit": "Jacobus Arminius, 17th-century portrait engraving. Wikimedia Commons (public domain)"
-    },
-    "lutheran": {
-      "label": "Lutheran",
-      "credit": "Martin Luther, Lucas Cranach the Elder, 1528 (Veste Coburg). Wikimedia Commons (public domain)"
-    },
-    "pentecostal": {
-      "label": "Pentecostal",
-      "credit": "The Pentecost, Salomon de Bray, early to mid-17th century. The Metropolitan Museum of Art (public domain)"
-    },
-    "lds": {
-      "label": "Mormon (LDS)",
-      "credit": "Joseph Smith, 1843 photograph. Wikimedia Commons (public domain)"
-    },
-    "jw": {
-      "label": "Jehovah's Witness",
-      "credit": "Charles Taze Russell, founder of the Bible Student movement. Wikimedia Commons (public domain)"
-    },
-    "islam": {
-      "label": "Islam",
-      "credit": "Qur'an Manuscript, dated 1268 AH/1851–52 CE. The Metropolitan Museum of Art (public domain)"
-    },
-    "judaism": {
-      "label": "Judaism",
-      "credit": "Torah crown (keter), Andrea Zambelli \"L'Honnesta\", ca. 1740–50. The Metropolitan Museum of Art (public domain)"
-    },
-    "skeptic": {
-      "label": "Skeptic",
-      "credit": "Bust of Voltaire, Paul-Louis Cyfflé, 1769–77. The Metropolitan Museum of Art (public domain)"
-    },
-    "trending": {
-      "label": "What's trending",
-      "credit": "St. Paul Preaching in Athens, Jean Achille Bellanger, 1749. The Metropolitan Museum of Art (public domain)"
-    }
-  };
 
   // ── State ───────────────────────────────────────────────────────────────
   let _view = 'chooser';     // chooser | picker | loading | claim | community
@@ -204,33 +153,67 @@
   const iconBtn = (icon, label, fn, cls = '') => `<button type="button" class="ch-ibtn ${cls}" onclick="${fn}" aria-label="${esc(label)}" title="${esc(label)}"><span class="material-symbols-outlined">${icon}</span></button>`;
 
   // ── 1. The guide's question: what would you like to do? ─────────────────
-  // Art in the theme's colors: lines in the main color, pages in the card
-  // color, little sparkles in the accent color (classes in style.css; CSS
-  // variables inside SVG attributes aren't safe on every Safari).
-  const ART_CHALLENGE = `<svg viewBox="0 0 96 80" aria-hidden="true" class="ch-art">
-      <path class="sf ln" d="M8 58 Q30 50 48 60 Q66 50 88 58 L88 70 Q66 62 48 72 Q30 62 8 70Z"/>
-      <path class="pg ln" d="M10 26 Q30 18 48 28 L48 62 Q30 52 10 60Z"/>
-      <path class="pg ln" d="M86 26 Q66 18 48 28 L48 62 Q66 52 86 60Z"/>
-      <path class="ln qm" d="M40 20 Q40 8 49 8 Q58 8 58 16 Q58 22 51 25 Q49 26 49 31"/>
-      <circle class="dot" cx="49" cy="40" r="3.4"/>
-      <g class="spk"><path d="M30 10 L34 15"/><path d="M68 10 L64 15"/><path d="M26 20 L31 22"/><path d="M72 20 L67 22"/></g>
+  // Art in the theme's colors, with depth: gradients built from the theme's
+  // main color, card color and accent (stop colors set by CSS classes, since
+  // CSS variables inside SVG attributes aren't safe on every Safari).
+  const ART_DEFS = `<defs>
+      <linearGradient id="chgCover" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-acc"/><stop offset="1" class="s-accdk"/></linearGradient>
+      <linearGradient id="chgPageL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" class="s-card"/><stop offset=".78" class="s-card"/><stop offset="1" class="s-pgshade"/></linearGradient>
+      <linearGradient id="chgPageR" x1="1" y1="0" x2="0" y2="0"><stop offset="0" class="s-card"/><stop offset=".78" class="s-card"/><stop offset="1" class="s-pgshade"/></linearGradient>
+      <linearGradient id="chgMark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s-acclt"/><stop offset="1" class="s-accdk"/></linearGradient>
+      <linearGradient id="chgFold1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" class="s-card"/><stop offset="1" class="s-pgshade"/></linearGradient>
+      <linearGradient id="chgFold2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" class="s-soft"/><stop offset="1" class="s-card"/></linearGradient>
+      <radialGradient id="chgGlow" cx=".5" cy=".55" r=".5"><stop offset="0" class="s-glow"/><stop offset="1" class="s-glow0"/></radialGradient>
+      <linearGradient id="chgLeaf" x1="0" y1="1" x2="1" y2="0"><stop offset="0" class="s-acc"/><stop offset="1" class="s-acclt"/></linearGradient>
+    </defs>`;
+  const SPARK = (x, y, r) => `<path class="ch-star" d="M${x} ${y - r} Q${x + r * 0.18} ${y - r * 0.18} ${x + r} ${y} Q${x + r * 0.18} ${y + r * 0.18} ${x} ${y + r} Q${x - r * 0.18} ${y + r * 0.18} ${x - r} ${y} Q${x - r * 0.18} ${y - r * 0.18} ${x} ${y - r}Z"/>`;
+  const ART_CHALLENGE = `<svg viewBox="0 0 120 100" aria-hidden="true" class="ch-art">${ART_DEFS}
+      <ellipse class="ch-shadow" cx="60" cy="90" rx="44" ry="6"/>
+      <path fill="url(#chgCover)" d="M10 70 Q36 60 60 72 Q84 60 110 70 L110 80 Q84 70 60 84 Q36 70 10 80Z"/>
+      <path class="ch-edge" d="M14 66 Q36 57 60 68 L60 76 Q36 64 14 74Z"/>
+      <path class="ch-edge" d="M106 66 Q84 57 60 68 L60 76 Q84 64 106 74Z"/>
+      <path fill="url(#chgPageL)" class="ch-stroke" d="M14 34 Q36 24 60 38 L60 72 Q36 58 14 68Z"/>
+      <path fill="url(#chgPageR)" class="ch-stroke" d="M106 34 Q84 24 60 38 L60 72 Q84 58 106 68Z"/>
+      <g class="ch-lines"><path d="M22 42 Q36 36 52 44"/><path d="M22 49 Q36 43 52 51"/><path d="M22 56 Q36 50 52 58"/><path d="M98 42 Q84 36 68 44"/><path d="M98 49 Q84 43 68 51"/><path d="M98 56 Q84 50 68 58"/></g>
+      <path class="ch-mark-sh" d="M48 25 Q48 9 61 9 Q74 9 74 21 Q74 29 65 33 Q62 35 62 41"/>
+      <path class="ch-mark" stroke="url(#chgMark)" d="M47 23 Q47 7 60 7 Q73 7 73 19 Q73 27 64 31 Q61 33 61 39"/>
+      <path class="ch-mark-hi" d="M52 15 Q55 10 61 10"/>
+      <circle cx="61" cy="47" r="4.6" fill="url(#chgMark)"/>
+      ${SPARK(28, 16, 6)}${SPARK(96, 14, 5)}${SPARK(102, 30, 3)}${SPARK(18, 30, 3)}
     </svg>`;
-  const ART_TOURS = `<svg viewBox="0 0 96 80" aria-hidden="true" class="ch-art">
-      <path class="pg ln" d="M10 26 L34 18 L60 26 L86 18 L86 64 L60 72 L34 64 L10 72Z"/>
-      <path class="ln thin" d="M34 18 L34 64 M60 26 L60 72"/>
-      <path class="ln dash" d="M20 58 Q32 44 44 52 T68 40"/>
-      <path class="dot" d="M72 8 C64 8 60 14 60 19 C60 27 72 38 72 38 C72 38 84 27 84 19 C84 14 80 8 72 8Z"/>
-      <circle class="pg" cx="72" cy="19" r="4"/>
+  const ART_TOURS = `<svg viewBox="0 0 120 100" aria-hidden="true" class="ch-art">${ART_DEFS}
+      <ellipse class="ch-shadow" cx="60" cy="90" rx="46" ry="6"/>
+      <path fill="url(#chgFold1)" class="ch-stroke" d="M12 34 L40 24 L40 78 L12 88Z"/>
+      <path fill="url(#chgFold2)" class="ch-stroke" d="M40 24 L72 34 L72 88 L40 78Z"/>
+      <path fill="url(#chgFold1)" class="ch-stroke" d="M72 34 L104 24 L104 78 L72 88Z"/>
+      <path class="ch-terrain" d="M18 72 Q26 62 34 70 Q38 74 40 70 L40 78 L18 85Z"/>
+      <path class="ch-terrain" d="M78 60 Q86 52 96 58 L98 70 Q88 66 80 72Z"/>
+      <path class="ch-route" d="M22 78 Q34 60 50 66 T80 52"/>
+      <circle class="ch-start" cx="22" cy="78" r="3.4"/>
+      <ellipse class="ch-shadow" cx="88" cy="56" rx="8" ry="2.6"/>
+      <path fill="url(#chgMark)" d="M88 6 C78 6 72 13 72 21 C72 32 88 50 88 50 C88 50 104 32 104 21 C104 13 98 6 88 6Z"/>
+      <circle class="ch-pin-hole" cx="88" cy="21" r="6"/>
+      <path class="ch-mark-hi" d="M78 16 Q80 10 86 9"/>
+      ${SPARK(24, 14, 5)}${SPARK(112, 40, 3.5)}
     </svg>`;
-  const ART_FOOT = `<svg class="ch-foot" viewBox="0 0 360 120" aria-hidden="true">
-      <g class="spk"><path d="M172 18 L170 4"/><path d="M150 24 L140 12"/><path d="M194 24 L204 12"/><path d="M132 36 L118 30"/><path d="M212 36 L226 30"/></g>
-      <path class="leaf" d="M30 104 Q10 70 34 52 Q40 78 58 92Z M44 100 Q30 60 62 46 Q60 78 74 96Z"/>
-      <path class="leaf" d="M330 104 Q350 70 326 52 Q320 78 302 92Z M316 100 Q330 60 298 46 Q300 78 286 96Z"/>
-      <path class="sf" d="M80 98 Q130 74 180 90 Q230 74 280 98 L280 110 Q230 90 180 106 Q130 90 80 110Z"/>
-      <path class="pg ln" d="M86 92 Q132 56 180 78 L180 100 Q132 80 86 104Z"/>
-      <path class="pg ln" d="M274 92 Q228 56 180 78 L180 100 Q228 80 274 104Z"/>
-      <g class="ln thin"><path d="M104 84 Q138 66 168 80"/><path d="M106 92 Q138 76 168 88"/><path d="M256 84 Q222 66 192 80"/><path d="M254 92 Q222 76 192 88"/></g>
-      <path class="dot" d="M184 98 L184 116 L190 110 L196 116 L196 96"/>
+  const ART_FOOT = `<svg class="ch-foot" viewBox="0 0 360 130" aria-hidden="true">${ART_DEFS}
+      <ellipse cx="180" cy="80" rx="150" ry="58" fill="url(#chgGlow)"/>
+      <g class="ch-rays"><path d="M180 20 L180 6"/><path d="M156 26 L146 14"/><path d="M204 26 L214 14"/><path d="M136 40 L122 32"/><path d="M224 40 L238 32"/></g>
+      <path fill="url(#chgLeaf)" class="ch-leaf" d="M58 112 Q20 86 36 46 Q60 70 70 104Z"/>
+      <path fill="url(#chgLeaf)" class="ch-leaf ch-leaf2" d="M74 112 Q58 70 92 50 Q96 84 84 110Z"/>
+      <path class="ch-vein" d="M40 54 Q54 80 66 106 M88 58 Q86 84 80 108"/>
+      <path fill="url(#chgLeaf)" class="ch-leaf" d="M302 112 Q340 86 324 46 Q300 70 290 104Z"/>
+      <path fill="url(#chgLeaf)" class="ch-leaf ch-leaf2" d="M286 112 Q302 70 268 50 Q264 84 276 110Z"/>
+      <path class="ch-vein" d="M320 54 Q306 80 294 106 M272 58 Q274 84 280 108"/>
+      <ellipse class="ch-shadow" cx="180" cy="122" rx="104" ry="7"/>
+      <path fill="url(#chgCover)" d="M78 108 Q128 88 180 102 Q232 88 282 108 L282 118 Q232 98 180 114 Q128 98 78 118Z"/>
+      <path class="ch-edge" d="M84 104 Q130 86 180 98 L180 106 Q130 92 84 112Z"/>
+      <path class="ch-edge" d="M276 104 Q230 86 180 98 L180 106 Q230 92 276 112Z"/>
+      <path fill="url(#chgPageL)" class="ch-stroke" d="M86 92 Q130 62 180 82 L180 104 Q130 86 86 106Z"/>
+      <path fill="url(#chgPageR)" class="ch-stroke" d="M274 92 Q230 62 180 82 L180 104 Q230 86 274 106Z"/>
+      <g class="ch-lines"><path d="M102 88 Q136 72 168 86"/><path d="M104 96 Q136 82 168 94"/><path d="M258 88 Q224 72 192 86"/><path d="M256 96 Q224 82 192 94"/></g>
+      <path fill="url(#chgMark)" d="M184 100 L184 126 L190 120 L196 126 L196 98Z"/>
+      ${SPARK(118, 30, 6)}${SPARK(244, 28, 5)}${SPARK(268, 52, 3.5)}${SPARK(96, 54, 3.5)}
     </svg>`;
   function chooser() {
     show(`${topBar(iconBtn('close', 'Close', 'RhemaChallenge.close()'))}
@@ -263,12 +246,11 @@
     const label = `${typeof _rhemaBookName === 'function' ? _rhemaBookName(_rhemaBook) : _rhemaBook} ${_rhemaChapter}:${_rhemaVerse}`;
     return { book: _rhemaBook, chapter: String(_rhemaChapter), verse: String(_rhemaVerse || 1), label };
   }
-  const tile = (key, label, sub) => `<button type="button" class="ch-tile" onclick="RhemaChallenge.start('${key}')">
+  const tile = (key, label, sub) => `<button type="button" class="ch-tile" onclick="RhemaChallenge.topics('${key}')">
       <span class="ch-tile-img"><img src="assets/challenge/${key}.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()"></span>
       <b>${esc(label)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</button>`;
   function picker() {
     const ref = readerRef();
-    const credits = Object.entries(CREDITS).map(([k, c]) => `${esc(c.label || k)}: ${esc(c.credit || '')}`).join(' · ');
     show(`${topBar(iconBtn('arrow_back', 'Back', 'RhemaChallenge.chooser()'), iconBtn('groups', 'Community challenges', 'RhemaChallenge.community()'))}
       <div class="ch-head">
         <img class="ch-head-guide" src="${GUIDE}" alt="" decoding="async">
@@ -286,8 +268,36 @@
       <div class="ch-sec">Christian traditions</div>
       <div class="ch-tiles">${TAGS.traditions.map(([k, l]) => tile(k, l)).join('')}</div>
       <div class="ch-sec">Other faiths &amp; views</div>
-      <div class="ch-tiles">${TAGS.others.map(([k, l]) => tile(k, l)).join('')}</div>
-      ${credits ? `<details class="ch-credits"><summary>Image credits</summary><p>${credits}</p></details>` : ''}`, 'picker');
+      <div class="ch-tiles">${TAGS.others.map(([k, l]) => tile(k, l)).join('')}</div>`, 'picker');
+  }
+
+  // Picking a group opens a few topics they're known for (or "surprise me").
+  const TOPICS = {
+    catholic: ['Papal authority', 'Scripture & Tradition', 'The Eucharist', 'Mary', 'Purgatory', 'Justification & works', 'Confession to a priest', 'Praying to saints'],
+    orthodox: ['Theosis', 'Icons', 'Holy Tradition & councils', 'The Filioque', 'Sacraments & salvation', 'Mary the Theotokos', 'The one true Church'],
+    calvinist: ['TULIP', 'Election', 'Predestination', 'Limited atonement', 'Irresistible grace', 'Total depravity', 'Perseverance of the saints', 'Sovereignty & free will'],
+    arminian: ['Free will', 'Prevenient grace', 'Conditional election', 'Losing salvation', 'Christ died for all', 'Resisting grace'],
+    lutheran: ['Baptismal regeneration', 'Real presence in the Supper', 'Law & Gospel', 'Infant baptism', 'Two kingdoms'],
+    pentecostal: ['Baptism in the Spirit', 'Speaking in tongues', 'Healing', 'Prophecy today', 'Tongues as initial evidence'],
+    lds: ['The nature of God', 'Exaltation', 'The Book of Mormon', 'The Great Apostasy', 'Temples & ordinances', 'Pre-mortal life'],
+    jw: ['Jesus & the Trinity', 'The 144,000', 'The holy spirit', 'Soul & hell', 'Blood transfusions', 'The name Jehovah'],
+    islam: ['Jesus as a prophet', 'The crucifixion', 'The Bible changed', 'The Trinity', 'Salvation & good deeds', 'Muhammad foretold'],
+    judaism: ['The Messiah', 'Isaiah 53', 'The Trinity', 'Keeping the Law', 'The resurrection of Jesus'],
+    skeptic: ['Bible contradictions', 'The resurrection', 'The problem of evil', 'Are the Gospels reliable?', 'Miracles', 'Hell'],
+  };
+  const TAG_NAMES = Object.fromEntries([...TAGS.traditions, ...TAGS.others]);
+  function topics(key) {
+    const list = TOPICS[key];
+    if (!list) { start(key); return; }
+    show(`${topBar(iconBtn('arrow_back', 'Back', 'RhemaChallenge.picker()'), iconBtn('groups', 'Community challenges', 'RhemaChallenge.community()'))}
+      <div class="ch-topic-head">
+        <span class="ch-tile-img ch-topic-img"><img src="assets/challenge/${key}.webp" alt="" decoding="async" onerror="this.remove()"></span>
+        <div><span class="ch-kicker">Challenge me on</span><h1 class="ch-h1 ch-h1-left ch-topic-h">${esc(TAG_NAMES[key] || key)}</h1></div>
+      </div>
+      <p class="ch-lead">Pick what you'd like to be challenged on.</p>
+      <div class="ch-topics">${list.map(t => `<button type="button" class="ch-topic" onclick="RhemaChallenge.start('${key}','${jsq(t)}')">${esc(t)}<span class="material-symbols-outlined">arrow_forward</span></button>`).join('')}
+        <button type="button" class="ch-topic ch-topic-any" onclick="RhemaChallenge.start('${key}','')"><span class="material-symbols-outlined">casino</span>Surprise me<span class="material-symbols-outlined">arrow_forward</span></button>
+      </div>`, 'topics');
   }
 
   // ── 3. The guide researches ───────────────────────────────────────────────
@@ -319,7 +329,7 @@
       items.forEach((li, k) => li.classList.toggle('on', k <= i));
     }, 9000);
   }
-  async function start(tag) {
+  async function start(tag, topic) {
     if (_busy) return;
     if (isGuest()) {
       if (typeof _showStudyToast === 'function') _showStudyToast('Create a free account to get challenges');
@@ -328,7 +338,7 @@
     }
     const prompt = (document.getElementById('chPrompt')?.value || '').trim();
     if (tag === 'free' && prompt.length < 3) { document.getElementById('chPrompt')?.focus(); return; }
-    const payload = { tag, prompt: tag === 'free' ? prompt : '' };
+    const payload = { tag, prompt: tag === 'free' ? prompt : String(topic || '') };
     if (tag === 'verse') {
       const ref = readerRef();
       if (!ref) return;
@@ -393,62 +403,12 @@
       <div class="ch-sec ch-sec-line">Explore the claim</div>
       ${c.passage ? `<button type="button" class="ch-row" onclick="RhemaChallenge.readPassage()"><span class="material-symbols-outlined">menu_book</span><span><b>Read the Passage</b><small>${esc(c.passage.label)}</small></span><span class="material-symbols-outlined ch-chev">chevron_right</span></button>` : ''}
       <button type="button" class="ch-row" onclick="RhemaChallenge.sources()"><span class="material-symbols-outlined">link</span><span><b>Sources &amp; References</b><small>In their own words, with links</small></span><span class="ch-count">${n}</span><span class="material-symbols-outlined ch-chev">chevron_right</span></button>
-      <div class="ch-sec ch-sec-line">Your study</div>
-      <div class="ch-notes">
-        <textarea id="chNote" rows="5" placeholder="Work through it here: what does the passage say in context? What other verses speak to it?" oninput="RhemaChallenge.noteChanged()"></textarea>
-        <label class="ch-share"><input type="checkbox" id="chShare" onchange="RhemaChallenge.noteChanged(true)"><span>Share my answer with the community</span></label>
-        <p class="ch-fine" id="chNoteState">Private to you unless you share it.</p>
-      </div>
-      <div class="ch-answers" id="chAnswers"></div>
       ${isActive
         ? `<button type="button" class="ch-btn ch-btn-ghost" onclick="RhemaChallenge.done()"><span class="material-symbols-outlined">task_alt</span>I'm done with this challenge</button>
-           <p class="ch-fine ch-center">While you're working on it, tapping the guide brings you right back here.</p>`
+           <p class="ch-fine ch-center">Saved in the community. While you're on it, tapping the guide brings you right back here.</p>`
         : `<button type="button" class="ch-btn" onclick="RhemaChallenge.take()"><span class="material-symbols-outlined">bolt</span>Take this challenge</button>
            <p class="ch-fine ch-center">The guide will keep it handy: tap him anytime to come back.</p>`}`, 'claim');
-    loadNote(c);
-    loadAnswers(c);
   }
-  async function loadNote(c) {
-    const u = user();
-    if (!u || !window.TheologyChallenge?.getNote) return;
-    try {
-      const n = await window.TheologyChallenge.getNote(u.uid, c.id);
-      if (!n || _current?.id !== c.id) return;
-      const ta = document.getElementById('chNote'), cb = document.getElementById('chShare');
-      if (ta && !ta.value) ta.value = n.text || '';
-      if (cb) cb.checked = !!n.shared;
-      setNoteState(n.shared ? 'Shared with the community.' : 'Saved. Private to you.');
-    } catch {}
-  }
-  function setNoteState(t) { const el = document.getElementById('chNoteState'); if (el) el.textContent = t; }
-  let _noteTimer = 0;
-  function noteChanged(now) {
-    clearTimeout(_noteTimer);
-    setNoteState('Saving…');
-    _noteTimer = setTimeout(saveNote, now ? 0 : 900);
-  }
-  async function saveNote() {
-    const u = user(), c = _current;
-    if (!u || !c || !window.TheologyChallenge?.saveNote) { setNoteState('Sign in to save your notes.'); return; }
-    const text = document.getElementById('chNote')?.value || '';
-    const shared = !!document.getElementById('chShare')?.checked;
-    try {
-      await window.TheologyChallenge.saveNote(u.uid, c.id, text, shared, myName());
-      setNoteState(shared ? (text.trim() ? 'Saved and shared with the community.' : 'Write something to share it.') : 'Saved. Private to you.');
-      if (shared) loadAnswers(c);
-    } catch { setNoteState("Couldn't save. Check your connection."); }
-  }
-  async function loadAnswers(c) {
-    const host = document.getElementById('chAnswers');
-    if (!host || !window.TheologyChallenge?.listAnswers) return;
-    try {
-      const list = (await window.TheologyChallenge.listAnswers(c.id)).filter(a => a.text && a.uid !== user()?.uid);
-      if (_current?.id !== c.id || !list.length) { host.innerHTML = ''; return; }
-      host.innerHTML = `<div class="ch-sec ch-sec-line">How others answered (${list.length})</div>` + list.map(a =>
-        `<div class="ch-answer"><b>${esc(a.name ? '@' + a.name : 'A Rhēma user')}</b><p>${esc(a.text)}</p></div>`).join('');
-    } catch { host.innerHTML = ''; }
-  }
-
   function sources() {
     const c = _current;
     if (!c) return;
@@ -462,7 +422,7 @@
     sh.innerHTML = `<div class="ch-sheet-bg" onclick="RhemaChallenge.closeSources()"></div>
       <div class="ch-sheet-card" role="dialog" aria-modal="true">
         <div class="ch-sheet-h"><b>Sources &amp; References</b>${iconBtn('close', 'Close', 'RhemaChallenge.closeSources()')}</div>
-        <p class="ch-fine">Each quote below was found word for word on the page it links to. Read them in context before you answer.</p>
+        <p class="ch-fine">Each quote below was found word for word on the page it links to. Read them in context.</p>
         ${(c.sources || []).map(s => `<a class="ch-src" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">
           <q>${esc(s.quote)}</q><span class="ch-src-t"><b>${esc(s.title || s.site)}</b><small>${esc(s.site)}</small></span><span class="material-symbols-outlined">open_in_new</span></a>`).join('')}
         <p class="ch-fine">Found by the guide's web research (AI-assisted) and checked against the pages. The claim is stated the way its own teachers put it; it isn't the app's view.</p>
@@ -517,7 +477,7 @@
   // ── 5. Community ──────────────────────────────────────────────────────────
   let _community = [];
   async function community(filter = 'all') {
-    show(`${topBar(iconBtn('arrow_back', 'Back', _current ? 'RhemaChallenge.backToCurrent()' : 'RhemaChallenge.picker()'), iconBtn('checklist', 'New challenge', 'RhemaChallenge.picker()'))}
+    show(`${topBar(iconBtn('arrow_back', 'Back', _current ? 'RhemaChallenge.backToCurrent()' : 'RhemaChallenge.picker()'))}
       <div class="ch-head"><img class="ch-head-guide" src="${GUIDE}" alt="" decoding="async">
         <div class="ch-head-t"><span class="ch-kicker">Everyone's challenges</span><h1 class="ch-h1 ch-h1-left">Community</h1><i class="ch-swash"></i></div></div>
       <div class="ch-filter"><button type="button" class="${filter === 'all' ? 'on' : ''}" onclick="RhemaChallenge.community('all')">Newest</button><button type="button" class="${filter === 'mine' ? 'on' : ''}" onclick="RhemaChallenge.community('mine')">Mine</button></div>
@@ -563,7 +523,7 @@
 
   window.RhemaChallenge = {
     guideTap, chooser, picker, start, community, openFromFeed, backToCurrent, openActive,
-    tours, close, sources, closeSources, readPassage, backFromPassage, take, done, noteChanged,
+    tours, close, sources, closeSources, readPassage, backFromPassage, take, done, topics,
     hasActive: () => !!active.get(),
   };
 })();

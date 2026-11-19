@@ -2608,7 +2608,9 @@ exports.challengeMyTheology = functions
     } else if (tag === "free") {
       request = `The person asked to be challenged on: "${prompt}". Find a major claim a real group or tradition makes about this.`;
     } else {
-      request = `Group: ${g.hint}. Find one of its major distinctive claims.${prompt ? ` The person adds: ${prompt}` : ""}`;
+      request = prompt
+        ? `Group: ${g.hint}. Find one of its major claims about this topic: ${prompt}.`
+        : `Group: ${g.hint}. Find one of its major distinctive claims.`;
     }
     await chSpend(uid);
     let result;
