@@ -127,30 +127,39 @@
     </div>`;
   }
 
-  function sel(key) { return states.get(key)?.sel ?? '0'; }
+  function sel(key) { return states.get(key)?.sel ?? ''; }
+  // Every rendering is a row that opens to its verses (one open at a time):
+  // the verse in the chosen version with the word in bold, tap to read it.
+  function markIn(text, phrase) {
+    const t = String(text || '');
+    const p = String(phrase || '').trim();
+    if (!t) return '';
+    const i = p ? t.toLowerCase().indexOf(p.toLowerCase()) : -1;
+    return i < 0 ? esc(t) : `${esc(t.slice(0, i))}<b>${esc(t.slice(i, i + p.length))}</b>${esc(t.slice(i + p.length))}`;
+  }
+  function verseRows(d, st, r) {
+    const all = st.all.has(r.text);
+    const shown = all ? r.refs : r.refs.slice(0, 25);
+    const rows = shown.map(x => {
+      const chip = d.refChip(x);
+      const text = typeof d.verseText === 'function' ? d.verseText(x) : '';
+      return text
+        ? `<div class="xlv-vrow" onclick="this.querySelector('.ws-ref,button')?.click()">${chip}<span class="xlv-vtext">${markIn(text, r.text)}</span></div>`
+        : `<div class="xlv-vrow xlv-vrow-chip">${chip}</div>`;
+    }).join('');
+    return `${r.forms && r.forms.length ? `<div class="xlv-forms">${r.forms.slice(0, 4).map(([f, c]) => `${esc(f)} ${c}`).join(' · ')}</div>` : ''}${rows}${shown.length < r.refs.length ? `<button type="button" class="xlv-all" onclick="RhemaXlViews.all('${jsq(d.key)}','${jsq(r.text)}')">Show all ${r.refs.length} verses</button>` : ''}`;
+  }
   function versesHtml(d, st) {
-    const s = String(st.sel ?? '0');
-    let rows;
-    let title;
-    if (s === 'other') {
-      const { rest } = topWithOther(d.renderings, s === 'other' && st.look === 'stripes' ? 3 : 4);
-      title = `Other words · ${rest.reduce((a, r) => a + r.count, 0)}×`;
-      rows = rest;
-    } else {
-      const r = d.renderings[Number(s)];
-      if (!r) return '';
-      title = `“${esc(r.text)}” · ${r.count}× · ${pct(r.count, d.covered)}%`;
-      rows = [r];
-    }
-    const chips = (r) => {
-      const all = st.all.has(r.text);
-      const shown = all ? r.refs : r.refs.slice(0, 30);
-      return `${shown.map(x => d.refChip(x)).join('')}${shown.length < r.refs.length ? `<button type="button" class="xlv-all" onclick="RhemaXlViews.all('${jsq(d.key)}','${jsq(r.text)}')">Show all ${r.refs.length}</button>` : ''}`;
-    };
-    return `<div class="xlv-verses">
-      <div class="xlv-vh">${title}</div>
-      ${rows.map(r => `${rows.length > 1 ? `<div class="xlv-vsub">“${esc(r.text)}” · ${r.count}×</div>` : ''}${r.forms && r.forms.length ? `<div class="xlv-forms">${r.forms.slice(0, 4).map(([f, c]) => `${esc(f)} ${c}`).join(' · ')}</div>` : ''}<div class="xlv-refs">${chips(r)}</div>`).join('')}
-    </div>`;
+    const open = String(st.sel ?? '');
+    const list = d.renderings.map((r, i) => {
+      const on = open === String(i);
+      return `<div class="xlv-acc-row${on ? ' open' : ''}">
+        <button type="button" class="xlv-acc-h" aria-expanded="${on}" onclick="RhemaXlViews.pick('${jsq(d.key)}','${on ? '' : i}')">
+          <i class="xlv-c${Math.min(i, 4)}"></i><b>“${esc(r.text)}”</b><span>${r.count}× · ${pct(r.count, d.covered)}%</span><span class="material-symbols-outlined">expand_more</span></button>
+        ${on ? `<div class="xlv-acc-b">${verseRows(d, st, r)}</div>` : ''}
+      </div>`;
+    }).join('');
+    return `<div class="xlv-verses"><div class="xlv-vh">Every verse, by how ${esc(d.ver || 'this version')} words it</div>${list}</div>`;
   }
 
   function chartHtml(d, lk) {
@@ -177,7 +186,7 @@
   function render(host, data) {
     if (!host || !data) return;
     const prev = states.get(data.key);
-    const st = { host, data, look: look(), sel: prev && prev.data.ver === data.ver ? prev.sel : '0', all: prev && prev.data.ver === data.ver ? prev.all : new Set() };
+    const st = { host, data, look: look(), sel: prev && prev.data.ver === data.ver ? prev.sel : '', all: prev && prev.data.ver === data.ver ? prev.all : new Set() };
     states.set(data.key, st);
     draw(data.key);
     watchForCoach(data.key, host);
@@ -229,9 +238,12 @@
   function pick(key, idx) {
     const st = states.get(key);
     if (!st) return;
-    st.sel = String(idx);
+    st.sel = String(idx) === 'other' ? String(Math.min(4, st.data.renderings.length - 1)) : String(idx);
     draw(key);
-    st.host.querySelector('.xlv-verses')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    // Scroll only the sheet's own content, never the page (on iPhone,
+    // scrollIntoView can slide the whole reader up and show the home screen).
+    const row = st.host.querySelector('.xlv-acc-row.open');
+    if (row && typeof window._wsScrollInto === 'function') window._wsScrollInto(row, 70);
   }
   function all(key, text) {
     const st = states.get(key);
