@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.622";
+const APP_VERSION = "3.0.623";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.623 &mdash; Challenges in your colors</div>
+<ul>
+  <li><strong>Your theme, everywhere</strong> &mdash; Challenge My Theology now follows your theme colors throughout: the background, cards, headings, icons, buttons and drawings, and even the stack of books takes your theme&rsquo;s color (gold trim kept). On dark themes it switches to your theme&rsquo;s brighter accent color so everything stays easy to read.</li>
+</ul>
 <div class="un-version-label">v3.0.622 &mdash; Challenge My Theology</div>
 <ul>
   <li><strong>Tap the guide</strong> &mdash; Wherever he is, tapping the guide now asks &ldquo;What would you like to do?&rdquo;: <em>Challenge My Theology</em> or <em>App Tours</em>.</li>
