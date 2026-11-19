@@ -40883,3 +40883,12 @@ html:has(#rhemaModal.open), body:has(#rhemaModal.open) { overflow: hidden; overs
 .xlv-vrow-chip { background: transparent; padding: 2px 0; }
 .xlv-all { align-self: flex-start; }
 .xlv-acc-h i { background: var(--c, var(--xl-c0)); }
+
+/* Wider cards in the word sheet on phones: less side margin around them. */
+@media (max-width: 959px), (pointer: coarse) {
+  #rhemaTabContent { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+  #rhemaTabContent .ws-hero { padding: 18px 16px 16px; }
+  #rhemaTabContent .ws-card { padding: 12px 10px 14px; }
+  #rhemaTabContent .ws-mx-card { padding: 12px 10px 10px 14px; }
+  #rhemaTabContent .ws-xslot { padding: 0 4px 6px; }
+}
