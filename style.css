@@ -40528,3 +40528,41 @@ body.dark .rp-reader-bar { background: #1f2937; }
 body.dark .rhw-xl { --ws-accent: color-mix(in srgb, var(--secondary-color, #2498df) 35%, #93c5fd); }
 .ws-ref-all { border: 0; background: none; color: var(--ws-accent); font: inherit; font-size: .78rem; font-weight: 800; padding: 6px 8px; cursor: pointer; }
 .rhw-xl-forms { font-size: .74rem; color: var(--muted-color); margin-top: 2px; }
+
+/* ── Grammar search ("Every form like this") ─────────────────────────────── */
+.rhema-search-examples { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 4px; }
+.rhema-search-examples button { min-height: 34px; padding: 0 12px; border-radius: 999px; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 30%, var(--border-color)); background: color-mix(in srgb, var(--secondary-color) 6%, var(--card-color)); color: var(--secondary-color); }
+.rhema-search-panel:has(.rgs) .rhema-search-help, .rhema-search-panel:has(.rgs) .rhema-search-examples,
+.rhema-search-panel:has(.home-rhema-result) .rhema-search-help, .rhema-search-panel:has(.home-rhema-result) .rhema-search-examples { display: none; }
+.rgs { display: flex; flex-direction: column; gap: 10px; }
+.rgs-head { display: flex; flex-direction: column; gap: 3px; padding: 4px 2px; }
+.rgs-kicker { display: inline-flex; align-items: center; gap: 5px; font-size: .7rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--secondary-color); }
+.rgs-kicker .material-symbols-outlined { font-size: 17px; }
+.rgs-head strong { font-size: 1.12rem; font-weight: 900; color: var(--font-color); line-height: 1.25; }
+.rgs-head small { font-size: .78rem; color: var(--muted-color); line-height: 1.4; }
+.rgs-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rgs-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 8px 0 12px; border-radius: 999px; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 800;
+  border: 1.5px solid var(--secondary-color); background: color-mix(in srgb, var(--secondary-color) 10%, var(--card-color)); color: var(--secondary-color); }
+.rgs-chip .material-symbols-outlined { font-size: 16px; opacity: .75; }
+.rgs-chip-word { flex-direction: row; gap: 6px; }
+.rgs-chip-word b { font-family: 'Gentium Plus', 'SBL Greek', 'Ezra SIL', Georgia, serif; font-size: 1.02rem; }
+.rgs-chip-word small { font-weight: 700; opacity: .8; }
+.rgs-books { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.rgs-books::-webkit-scrollbar { display: none; }
+.rgs-books button { flex: 0 0 auto; min-height: 32px; padding: 0 10px; border-radius: 10px; cursor: pointer; font: inherit; font-size: .78rem;
+  border: 1px solid var(--border-color); background: var(--card-color); color: var(--muted-color); }
+.rgs-books b { color: var(--font-color); }
+.rgs-list { display: flex; flex-direction: column; gap: 8px; }
+.rgs-row { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; padding: 12px 14px; border-radius: 16px; cursor: pointer; font: inherit;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 18%, var(--border-color)); background: var(--card-color); color: var(--font-color); }
+.rgs-row:active { transform: scale(.99); }
+.rgs-ref { font-weight: 900; color: var(--secondary-color); font-size: .86rem; }
+.rgs-text { font-size: .92rem; line-height: 1.45; }
+.rgs-text mark { background: color-mix(in srgb, var(--secondary-color) 18%, transparent); color: inherit; border-radius: 4px; padding: 0 2px; font-weight: 800; }
+.rgs-word { font-size: .76rem; color: var(--muted-color); }
+.rgs-word b { font-family: 'Gentium Plus', 'SBL Greek', 'Ezra SIL', Georgia, serif; font-size: .95rem; color: var(--font-color); font-weight: 700; }
+.rgs-more { min-height: 44px; border-radius: 14px; cursor: pointer; font: inherit; font-weight: 800; border: 1.5px dashed color-mix(in srgb, var(--secondary-color) 40%, transparent); background: transparent; color: var(--secondary-color); }
+.rgs-from-word { display: inline-flex; align-items: center; gap: 6px; margin: 12px 0 6px; min-height: 42px; padding: 0 16px; border-radius: 999px; cursor: pointer; font: inherit; font-size: .86rem; font-weight: 800;
+  border: 1.5px solid color-mix(in srgb, var(--secondary-color) 45%, transparent); background: color-mix(in srgb, var(--secondary-color) 8%, var(--card-color)); color: var(--secondary-color); }
+.rgs-from-word .material-symbols-outlined { font-size: 19px; }

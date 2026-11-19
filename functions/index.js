@@ -1441,9 +1441,24 @@ const BIBLE_SEARCH_SCHEMA = {
         },
         required: ["reference", "reason"]
       }
+    },
+    // When the question is about a WORD or a grammatical FORM ("every place
+    // Paul uses grace", "where does Jesus say 'truly'", "commands in James"),
+    // the app answers it exactly from its parsed Greek/Hebrew text: this says
+    // which original-language word(s) and form to count, and where.
+    wordSearch: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        language: { type: "string", enum: ["none", "greek", "hebrew"] },
+        strongs: { type: "array", items: { type: "integer" } },
+        grammar: { type: "string" },
+        books: { type: "array", items: { type: "string" } }
+      },
+      required: ["language", "strongs", "grammar", "books"]
     }
   },
-  required: ["results"]
+  required: ["results", "wordSearch"]
 };
 const BIBLE_SEARCH_CACHE = new Map();
 const BIBLE_SEARCH_IN_FLIGHT = new Map();
@@ -1453,14 +1468,20 @@ async function findBibleReferences(query) {
   bibleSearchClient ||= anthropicClient();
   const message = await bibleSearchClient.messages.create({
     model: "claude-haiku-5-5",
-    max_tokens: 700,
+    max_tokens: 900,
     system: [
       "Find real Bible references for the user's remembered words, topic, story, or question.",
-      "Return the 5 most probable passages, most likely first. Include every real candidate that could be what they mean:",
+      "Return up to 8 passages, most likely first. Include every real candidate that could be what they mean:",
       "parallel accounts in other Gospels or books, other verses with the same wording, and closely related verses on the same idea.",
       "Example: 'Paul said I do what I hate' → Romans 7:15, Romans 7:19, Romans 7:18, Galatians 5:17, Romans 7:24.",
       "Use standard book names and one chapter:verse per result. Give a relevant reason of 12 words or fewer.",
-      "Never invent a reference or quote verse text. Return fewer than 5 only when fewer real passages fit."
+      "Never invent a reference or quote verse text. Return fewer only when fewer real passages fit.",
+      "wordSearch: if the question asks where, how often, or in what forms a particular WORD is used (in English or the original), or asks for a grammatical form",
+      "(imperatives, commands, aorist, Qal…), set language to 'greek' for New Testament words or 'hebrew' for Old Testament words and give the Strong's number(s)",
+      "of the underlying original word(s) you are sure of (e.g. grace in Paul → greek [5485]; steadfast love/hesed → hebrew [2617]; truly/amen → greek [281]).",
+      "grammar: standard grammatical terms only if asked (e.g. 'aorist imperative', 'Qal perfect'), else ''. books: standard book names only if the question limits them",
+      "(Paul's letters → Romans, 1 Corinthians, 2 Corinthians, Galatians, Ephesians, Philippians, Colossians, 1 Thessalonians, 2 Thessalonians, 1 Timothy, 2 Timothy, Titus, Philemon), else [].",
+      "If the question is not about a word or form, or you are not sure of the Strong's number, set language 'none', strongs [], grammar '', books []."
     ].join(" "),
     output_config: { effort: "low", format: { type: "json_schema", schema: BIBLE_SEARCH_SCHEMA } },
     messages: [{ role: "user", content: query }]
@@ -1476,9 +1497,19 @@ async function findBibleReferences(query) {
     if (seen.has(key)) continue;
     seen.add(key);
     results.push({ reference, reason: String(item.reason || "").trim().slice(0, 140) });
-    if (results.length === 5) break;
+    if (results.length === 8) break;
   }
-  return { results };
+  const ws = parsed.wordSearch || {};
+  const language = ws.language === "greek" || ws.language === "hebrew" ? ws.language : "none";
+  const strongs = (Array.isArray(ws.strongs) ? ws.strongs : [])
+    .map(Number).filter(n => Number.isInteger(n) && n > 0 && n < (language === "hebrew" ? 9000 : 5700)).slice(0, 4);
+  const wordSearch = language !== "none" && strongs.length ? {
+    language,
+    strongs,
+    grammar: String(ws.grammar || "").replace(/[^A-Za-z ,'-]/g, "").trim().slice(0, 60),
+    books: (Array.isArray(ws.books) ? ws.books : []).map(b => String(b).replace(/[^A-Za-z0-9 ]/g, "").trim().slice(0, 30)).filter(Boolean).slice(0, 20)
+  } : null;
+  return { results, wordSearch };
 }
 
 exports.searchBibleReferences = functions
