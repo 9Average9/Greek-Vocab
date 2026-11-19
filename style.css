@@ -40503,3 +40503,28 @@ body.dark .rp-reader-bar { background: #1f2937; }
   padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   visibility: hidden; pointer-events: none; z-index: -1; contain: strict;
 }
+
+/* Book intro: Go deeper links */
+.bi-deeper-row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 12px; margin-top: 8px;
+  border-radius: 14px; border: 1.5px solid color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
+  background: color-mix(in srgb, var(--secondary-color) 5%, var(--card-color)); color: var(--font-color); text-decoration: none; }
+.bi-deeper-row:active { transform: scale(0.98); }
+.bi-deeper-ic { color: var(--secondary-color); font-size: 24px; flex-shrink: 0; }
+.bi-deeper-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bi-deeper-copy strong { font-size: 0.95rem; }
+.bi-deeper-copy small { color: var(--muted-color); font-size: 0.78rem; }
+.bi-deeper-row > .material-symbols-outlined:last-child { color: var(--muted-color); font-size: 20px; }
+.bi-deeper-note { margin: 8px 2px 0; color: var(--muted-color); font-size: 0.78rem; line-height: 1.4; }
+
+/* Hebrew word study: Across translations */
+.rhw-xl .ws-vchips { margin: 6px 0 10px; }
+.rhw-xl-refs { margin-top: 6px; }
+.rhw-xl-refs > summary { cursor: pointer; font-size: 0.78rem; font-weight: 800; color: var(--secondary-color); list-style: none; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; }
+.rhw-xl-refs > summary::-webkit-details-marker { display: none; }
+.rhw-xl-refs > summary::after { content: "expand_more"; font-family: 'Material Symbols Outlined'; font-size: 18px; transition: transform .2s; }
+.rhw-xl-refs[open] > summary::after { transform: rotate(180deg); }
+.rhw-ref-all { font-weight: 800; color: var(--secondary-color); }
+.rhw-xl { --ws-accent: var(--secondary-color, #2498df); --ws-line: color-mix(in srgb, var(--ws-accent) 18%, var(--border-color, rgba(120,120,120,.2))); }
+body.dark .rhw-xl { --ws-accent: color-mix(in srgb, var(--secondary-color, #2498df) 35%, #93c5fd); }
+.ws-ref-all { border: 0; background: none; color: var(--ws-accent); font: inherit; font-size: .78rem; font-weight: 800; padding: 6px 8px; cursor: pointer; }
+.rhw-xl-forms { font-size: .74rem; color: var(--muted-color); margin-top: 2px; }
