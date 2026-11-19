@@ -40916,9 +40916,8 @@ html:has(#rhemaModal.open), body:has(#rhemaModal.open) { overflow: hidden; overs
 .rhema-sheet-top > :not(.rhema-sheet-surface) { flex-shrink: 0; }
 
 /* ── Challenge My Theology (challenge.js) ──────────────────────────────── */
-.ch-overlay { --ch-accent: var(--secondary-color); --ch-ink: color-mix(in srgb, var(--secondary-color) 35%, #2a0b0b); --ch-soft: color-mix(in srgb, var(--secondary-color) 7%, var(--card-solid-color, #fff)); --ch-soft2: color-mix(in srgb, var(--secondary-color) 16%, #fff); --ch-line: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color));
-  position: fixed; inset: 0; z-index: 1500; display: none; background: linear-gradient(180deg, color-mix(in srgb, var(--secondary-color) 7%, var(--card-solid-color, #fff)), color-mix(in srgb, var(--secondary-color) 12%, var(--card-solid-color, #fff))); color: var(--font-color); }
-body.dark .ch-overlay { --ch-ink: var(--font-color); --ch-soft2: color-mix(in srgb, var(--secondary-color) 30%, #1f2937); }
+.ch-overlay { --ch-accent: var(--secondary-color); --ch-ink: color-mix(in srgb, var(--secondary-color) 45%, var(--font-color)); --ch-soft: color-mix(in srgb, var(--secondary-color) 7%, var(--card-solid-color, #fff)); --ch-soft2: color-mix(in srgb, var(--secondary-color) 16%, var(--card-solid-color, #fff)); --ch-line: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color)); --ch-pop: var(--accent-color, var(--secondary-color));
+  position: fixed; inset: 0; z-index: 1500; display: none; background: linear-gradient(180deg, color-mix(in srgb, var(--primary-light, var(--card-solid-color)) 75%, var(--card-solid-color, #fff)), var(--primary-color, var(--card-solid-color))); color: var(--font-color); }
 .ch-overlay.open { display: block; animation: chIn .35s cubic-bezier(.2,.9,.3,1); }
 @keyframes chIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
 body.ch-open { overflow: hidden; }
@@ -40934,7 +40933,7 @@ body.ch-open { overflow: hidden; }
 .ch-chooser { position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 8px; min-height: calc(100vh - 110px); min-height: calc(100dvh - 110px); }
 .ch-hello { width: 190px; height: auto; margin: 10px 0 -46px; position: relative; z-index: 2; filter: drop-shadow(0 10px 14px rgba(0,0,0,.12)); animation: chFloat 3.6s ease-in-out infinite; }
 @keyframes chFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-.ch-cloud { position: absolute; top: 118px; width: 96px; color: color-mix(in srgb, var(--ch-accent) 12%, #fff); pointer-events: none; animation: chDrift 9s ease-in-out infinite; }
+.ch-cloud { position: absolute; top: 118px; width: 96px; color: color-mix(in srgb, var(--ch-accent) 12%, var(--card-solid-color, #fff)); pointer-events: none; animation: chDrift 9s ease-in-out infinite; }
 .ch-cloud-l { left: -18px; } .ch-cloud-r { right: -18px; top: 156px; width: 80px; animation-delay: -4s; }
 @keyframes chDrift { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(10px); } }
 .ch-foot { width: 100%; max-width: 420px; margin-top: auto; padding-top: 18px; color: var(--ch-accent); }
@@ -41015,7 +41014,7 @@ body.ch-open { overflow: hidden; }
 .ch-sheet.open { pointer-events: auto; }
 .ch-sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.35); opacity: 0; transition: opacity .25s; }
 .ch-sheet.open .ch-sheet-bg { opacity: 1; }
-.ch-sheet-card { position: absolute; left: 0; right: 0; bottom: 0; max-height: 82vh; overflow-y: auto; padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; background: var(--card-solid-color, #fff); transform: translateY(100%); transition: transform .32s cubic-bezier(.2,.9,.3,1); max-width: 640px; margin: 0 auto; --ch-accent: var(--secondary-color); --ch-line: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color)); --ch-soft2: color-mix(in srgb, var(--secondary-color) 16%, #fff); }
+.ch-sheet-card { color: var(--font-color); position: absolute; left: 0; right: 0; bottom: 0; max-height: 82vh; overflow-y: auto; padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; background: var(--card-solid-color, #fff); transform: translateY(100%); transition: transform .32s cubic-bezier(.2,.9,.3,1); max-width: 640px; margin: 0 auto; --ch-accent: var(--secondary-color); --ch-line: color-mix(in srgb, var(--secondary-color) 22%, var(--border-color)); --ch-soft2: color-mix(in srgb, var(--secondary-color) 16%, var(--card-solid-color, #fff)); }
 .ch-sheet.open .ch-sheet-card { transform: none; }
 .ch-sheet-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .ch-sheet-h b { font-size: 1.1rem; }
@@ -41038,3 +41037,23 @@ body.ch-open { overflow: hidden; }
 /* Back from the passage */
 .ch-back-pill .ch-back-guide { width: 26px; height: 26px; object-fit: contain; }
 @media (prefers-reduced-motion: reduce) { .ch-cloud, .ch-hello, .ch-loading-guide, .ch-overlay.open, .ch-pop .ch-head-guide { animation: none !important; } }
+
+/* Challenge art, all from the theme */
+.ch-art, .ch-foot { color: var(--ch-accent); }
+.ch-art .ln, .ch-foot .ln { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.ch-art .pg, .ch-foot .pg { fill: var(--card-solid-color, #fff); }
+.ch-art .sf, .ch-foot .sf { fill: var(--ch-soft2); }
+.ch-art .pg.ln, .ch-foot .pg.ln { fill: var(--card-solid-color, #fff); }
+.ch-art .sf.ln { fill: var(--ch-soft2); }
+.ch-art .qm { stroke-width: 5; }
+.ch-art .thin, .ch-foot .thin { stroke-width: 1.6; opacity: .45; }
+.ch-art .dash { stroke-dasharray: 4 5; }
+.ch-art .dot, .ch-foot .dot { fill: currentColor; stroke: none; }
+.ch-art .spk, .ch-foot .spk { fill: none; stroke: var(--ch-pop); stroke-width: 2.8; stroke-linecap: round; }
+.ch-foot .leaf { fill: currentColor; opacity: .18; }
+.ch-ask input::placeholder { color: var(--muted-color); }
+
+/* Dim main color (dark themes): headings and ink follow the brighter accent */
+.ch-overlay.ch-accent-swap { --ch-ink: color-mix(in srgb, var(--ch-accent) 35%, var(--font-color)); --ch-line: color-mix(in srgb, var(--ch-accent) 28%, var(--border-color)); --ch-soft2: color-mix(in srgb, var(--ch-accent) 18%, var(--card-solid-color, #fff)); }
+.ch-overlay.ch-accent-swap .ch-btn, .ch-overlay.ch-accent-swap .ch-go, .ch-overlay.ch-accent-swap .ch-ask button, .ch-overlay.ch-accent-swap .ch-filter button.on { color: var(--card-solid-color, #111); }
+.ch-overlay.ch-accent-swap .ch-choice b { color: var(--font-color); }

@@ -14,7 +14,54 @@
   const jsq = s => String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const GUIDE = 'assets/mascot/guide-skeptic.webp';
-  const BOOKS = 'assets/icons/challenge-books.webp';
+  const BOOKS_SRC = 'assets/icons/challenge-books.webp';
+  let BOOKS = BOOKS_SRC;
+  // The red books take the theme's main color (the gold trim stays gold):
+  // red and red-brown pixels get the theme hue, keeping their light and shade.
+  let _booksFor = '';
+  function themeBooks() {
+    const color = getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim();
+    if (!color || color === _booksFor) return;
+    _booksFor = color;
+    const probe = document.createElement('canvas').getContext('2d');
+    probe.fillStyle = color;
+    const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(probe.fillStyle);
+    if (!m) return;
+    const [tr, tg, tb] = [1, 2, 3].map(i => parseInt(m[i], 16) / 255);
+    const tmax = Math.max(tr, tg, tb), tmin = Math.min(tr, tg, tb), td = tmax - tmin;
+    let th = 0;
+    if (td) th = tmax === tr ? ((tg - tb) / td) % 6 : tmax === tg ? (tb - tr) / td + 2 : (tr - tg) / td + 4;
+    th = (th * 60 + 360) % 360;
+    const ts = td ? td / (1 - Math.abs(tmax + tmin - 1) || 1) : 0;
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        const x = c.getContext('2d');
+        x.drawImage(img, 0, 0);
+        const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+        for (let i = 0; i < p.length; i += 4) {
+          if (p[i + 3] < 8) continue;
+          const r = p[i] / 255, g = p[i + 1] / 255, b = p[i + 2] / 255;
+          const mx = Math.max(r, g, b), mn = Math.min(r, g, b), dd = mx - mn, l = (mx + mn) / 2;
+          if (dd < 0.12) continue;                       // greys, outlines, page edges
+          let h = mx === r ? ((g - b) / dd) % 6 : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4;
+          h = (h * 60 + 360) % 360;
+          if (!(h < 22 || h > 335)) continue;            // only the reds (gold trim stays)
+          const s0 = dd / (1 - Math.abs(2 * l - 1) || 1);
+          const s1 = Math.min(1, ts ? (s0 * 0.55 + ts * 0.45) : s0 * 0.25);
+          const C = (1 - Math.abs(2 * l - 1)) * s1, X = C * (1 - Math.abs((th / 60) % 2 - 1)), M = l - C / 2;
+          const [a, bb, cc] = th < 60 ? [C, X, 0] : th < 120 ? [X, C, 0] : th < 180 ? [0, C, X] : th < 240 ? [0, X, C] : th < 300 ? [X, 0, C] : [C, 0, X];
+          p[i] = (a + M) * 255; p[i + 1] = (bb + M) * 255; p[i + 2] = (cc + M) * 255;
+        }
+        x.putImageData(d, 0, 0);
+        BOOKS = c.toDataURL('image/png');
+        document.querySelectorAll('img.ch-books-img').forEach(el => { el.src = BOOKS; });
+      } catch (e) { /* keep the original art */ }
+    };
+    img.src = BOOKS_SRC;
+  }
 
   // Quick picks: a few traditions and other faiths, kept short on purpose.
   const TAGS = {
@@ -105,8 +152,38 @@
     document.body.appendChild(el);
     return el;
   }
+  // On dark themes the main color can be a dim slate: when it doesn't stand
+  // out from the cards, the theme's accent color takes over for lines, art and
+  // buttons (still the user's own theme colors).
+  function rgbOf(color) {
+    const c = document.createElement('canvas').getContext('2d');
+    c.fillStyle = '#000'; c.fillStyle = color;
+    const v = c.fillStyle;
+    const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(v) || [];
+    if (m.length) return [1, 2, 3].map(i => parseInt(m[i], 16));
+    const r = /rgba?\(([^)]+)\)/.exec(v);
+    return r ? r[1].split(',').slice(0, 3).map(Number) : [0, 0, 0];
+  }
+  function lum([r, g, b]) {
+    const f = x => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  }
+  const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  function themeContrast(el) {
+    const cs = getComputedStyle(document.documentElement);
+    const sec = cs.getPropertyValue('--secondary-color').trim(), acc = cs.getPropertyValue('--accent-color').trim();
+    const card = cs.getPropertyValue('--card-solid-color').trim() || '#fff';
+    if (!sec) return;
+    const cardRgb = rgbOf(card);
+    const weak = contrast(rgbOf(sec), cardRgb) < 3;
+    if (weak && acc && contrast(rgbOf(acc), cardRgb) >= 3) el.style.setProperty('--ch-accent', acc);
+    else el.style.removeProperty('--ch-accent');
+    el.classList.toggle('ch-accent-swap', weak);
+  }
   function show(html, view) {
+    themeBooks();
     const el = shell();
+    themeContrast(el);
     _view = view;
     el.dataset.view = view;
     const sc = el.querySelector('#chScroll');
@@ -127,30 +204,33 @@
   const iconBtn = (icon, label, fn, cls = '') => `<button type="button" class="ch-ibtn ${cls}" onclick="${fn}" aria-label="${esc(label)}" title="${esc(label)}"><span class="material-symbols-outlined">${icon}</span></button>`;
 
   // ── 1. The guide's question: what would you like to do? ─────────────────
+  // Art in the theme's colors: lines in the main color, pages in the card
+  // color, little sparkles in the accent color (classes in style.css; CSS
+  // variables inside SVG attributes aren't safe on every Safari).
   const ART_CHALLENGE = `<svg viewBox="0 0 96 80" aria-hidden="true" class="ch-art">
-      <path d="M8 58 Q30 50 48 60 Q66 50 88 58 L88 70 Q66 62 48 72 Q30 62 8 70Z" fill="var(--ch-soft2)" stroke="var(--ch-accent)" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M10 26 Q30 18 48 28 L48 62 Q30 52 10 60Z" fill="#fff" stroke="var(--ch-accent)" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M86 26 Q66 18 48 28 L48 62 Q66 52 86 60Z" fill="#fff" stroke="var(--ch-accent)" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M40 20 Q40 8 49 8 Q58 8 58 16 Q58 22 51 25 Q49 26 49 31" fill="none" stroke="var(--ch-accent)" stroke-width="5" stroke-linecap="round"/>
-      <circle cx="49" cy="40" r="3.4" fill="var(--ch-accent)"/>
-      <g stroke="var(--ch-accent)" stroke-width="2.6" stroke-linecap="round"><path d="M30 10 L34 15"/><path d="M68 10 L64 15"/><path d="M26 20 L31 22"/><path d="M72 20 L67 22"/></g>
+      <path class="sf ln" d="M8 58 Q30 50 48 60 Q66 50 88 58 L88 70 Q66 62 48 72 Q30 62 8 70Z"/>
+      <path class="pg ln" d="M10 26 Q30 18 48 28 L48 62 Q30 52 10 60Z"/>
+      <path class="pg ln" d="M86 26 Q66 18 48 28 L48 62 Q66 52 86 60Z"/>
+      <path class="ln qm" d="M40 20 Q40 8 49 8 Q58 8 58 16 Q58 22 51 25 Q49 26 49 31"/>
+      <circle class="dot" cx="49" cy="40" r="3.4"/>
+      <g class="spk"><path d="M30 10 L34 15"/><path d="M68 10 L64 15"/><path d="M26 20 L31 22"/><path d="M72 20 L67 22"/></g>
     </svg>`;
   const ART_TOURS = `<svg viewBox="0 0 96 80" aria-hidden="true" class="ch-art">
-      <path d="M10 26 L34 18 L60 26 L86 18 L86 64 L60 72 L34 64 L10 72Z" fill="#fff" stroke="var(--ch-accent)" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M34 18 L34 64 M60 26 L60 72" stroke="var(--ch-accent)" stroke-width="2" opacity=".5"/>
-      <path d="M20 58 Q32 44 44 52 T68 40" fill="none" stroke="var(--ch-accent)" stroke-width="2.4" stroke-dasharray="4 5" stroke-linecap="round"/>
-      <path d="M72 8 C64 8 60 14 60 19 C60 27 72 38 72 38 C72 38 84 27 84 19 C84 14 80 8 72 8Z" fill="var(--ch-accent)"/>
-      <circle cx="72" cy="19" r="4" fill="#fff"/>
+      <path class="pg ln" d="M10 26 L34 18 L60 26 L86 18 L86 64 L60 72 L34 64 L10 72Z"/>
+      <path class="ln thin" d="M34 18 L34 64 M60 26 L60 72"/>
+      <path class="ln dash" d="M20 58 Q32 44 44 52 T68 40"/>
+      <path class="dot" d="M72 8 C64 8 60 14 60 19 C60 27 72 38 72 38 C72 38 84 27 84 19 C84 14 80 8 72 8Z"/>
+      <circle class="pg" cx="72" cy="19" r="4"/>
     </svg>`;
   const ART_FOOT = `<svg class="ch-foot" viewBox="0 0 360 120" aria-hidden="true">
-      <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".55"><path d="M172 18 L170 4"/><path d="M150 24 L140 12"/><path d="M194 24 L204 12"/><path d="M132 36 L118 30"/><path d="M212 36 L226 30"/></g>
-      <path d="M30 104 Q10 70 34 52 Q40 78 58 92Z M44 100 Q30 60 62 46 Q60 78 74 96Z" fill="currentColor" opacity=".18"/>
-      <path d="M330 104 Q350 70 326 52 Q320 78 302 92Z M316 100 Q330 60 298 46 Q300 78 286 96Z" fill="currentColor" opacity=".18"/>
-      <path d="M80 98 Q130 74 180 90 Q230 74 280 98 L280 110 Q230 90 180 106 Q130 90 80 110Z" fill="currentColor" opacity=".28"/>
-      <path d="M86 92 Q132 56 180 78 L180 100 Q132 80 86 104Z" fill="#fff" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" opacity=".95"/>
-      <path d="M274 92 Q228 56 180 78 L180 100 Q228 80 274 104Z" fill="#fff" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" opacity=".95"/>
-      <g fill="none" stroke="currentColor" stroke-width="1.6" opacity=".35"><path d="M104 84 Q138 66 168 80"/><path d="M106 92 Q138 76 168 88"/><path d="M256 84 Q222 66 192 80"/><path d="M254 92 Q222 76 192 88"/></g>
-      <path d="M184 98 L184 116 L190 110 L196 116 L196 96" fill="currentColor"/>
+      <g class="spk"><path d="M172 18 L170 4"/><path d="M150 24 L140 12"/><path d="M194 24 L204 12"/><path d="M132 36 L118 30"/><path d="M212 36 L226 30"/></g>
+      <path class="leaf" d="M30 104 Q10 70 34 52 Q40 78 58 92Z M44 100 Q30 60 62 46 Q60 78 74 96Z"/>
+      <path class="leaf" d="M330 104 Q350 70 326 52 Q320 78 302 92Z M316 100 Q330 60 298 46 Q300 78 286 96Z"/>
+      <path class="sf" d="M80 98 Q130 74 180 90 Q230 74 280 98 L280 110 Q230 90 180 106 Q130 90 80 110Z"/>
+      <path class="pg ln" d="M86 92 Q132 56 180 78 L180 100 Q132 80 86 104Z"/>
+      <path class="pg ln" d="M274 92 Q228 56 180 78 L180 100 Q228 80 274 104Z"/>
+      <g class="ln thin"><path d="M104 84 Q138 66 168 80"/><path d="M106 92 Q138 76 168 88"/><path d="M256 84 Q222 66 192 80"/><path d="M254 92 Q222 76 192 88"/></g>
+      <path class="dot" d="M184 98 L184 116 L190 110 L196 116 L196 96"/>
     </svg>`;
   function chooser() {
     show(`${topBar(iconBtn('close', 'Close', 'RhemaChallenge.close()'))}
@@ -200,7 +280,7 @@
         <button type="submit" aria-label="Challenge me"><span class="material-symbols-outlined">arrow_forward</span></button>
       </form>
       <div class="ch-quick">
-        ${ref ? `<button type="button" class="ch-pill" onclick="RhemaChallenge.start('verse')"><img src="${BOOKS}" alt="" decoding="async"><span><b>From ${esc(ref.label)}</b><small>A claim made from this verse</small></span></button>` : ''}
+        ${ref ? `<button type="button" class="ch-pill" onclick="RhemaChallenge.start('verse')"><img class="ch-books-img" src="${BOOKS}" alt="" decoding="async"><span><b>From ${esc(ref.label)}</b><small>A claim made from this verse</small></span></button>` : ''}
         <button type="button" class="ch-pill" onclick="RhemaChallenge.start('trending')"><img src="assets/challenge/trending.webp" alt="" decoding="async" onerror="this.remove()"><span><b>What's trending</b><small>A claim being debated right now</small></span></button>
       </div>
       <div class="ch-sec">Christian traditions</div>
@@ -306,7 +386,7 @@
       <blockquote class="ch-quote">
         <span class="ch-qmark" aria-hidden="true">“</span>
         <p>${esc(c.claim)}”</p>
-        <img class="ch-books" src="${BOOKS}" alt="" decoding="async">
+        <img class="ch-books ch-books-img" src="${BOOKS}" alt="" decoding="async">
       </blockquote>
       <div class="ch-meta"><span class="ch-group">${esc(c.group || c.tagName || '')}</span><span>${mine ? 'Your challenge' : `Challenge for ${esc(by(c))}`} · ${esc(timeAgo(c.createdAt))}</span></div>
       ${c.why ? `<div class="ch-why"><span class="material-symbols-outlined">info</span><div><b>Why this claim?</b><p>${esc(c.why)}</p></div></div>` : ''}
@@ -387,6 +467,7 @@
           <q>${esc(s.quote)}</q><span class="ch-src-t"><b>${esc(s.title || s.site)}</b><small>${esc(s.site)}</small></span><span class="material-symbols-outlined">open_in_new</span></a>`).join('')}
         <p class="ch-fine">Found by the guide's web research (AI-assisted) and checked against the pages. The claim is stated the way its own teachers put it; it isn't the app's view.</p>
       </div>`;
+    themeContrast(sh.querySelector('.ch-sheet-card'));
     requestAnimationFrame(() => sh.classList.add('open'));
   }
   function closeSources() { document.getElementById('chSources')?.classList.remove('open'); }
