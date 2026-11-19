@@ -54,6 +54,29 @@ service cloud.firestore {
         allow read, create, update, delete: if request.auth != null
           && request.auth.uid == uid;
       }
+
+      // Challenge My Theology: private study notes on a challenge.
+      match /challengeNotes/{challengeId} {
+        allow read, create, update, delete: if request.auth != null
+          && request.auth.uid == uid;
+      }
+    }
+
+    // Challenge My Theology: every challenge is posted by the server (with the
+    // username of who got it) for any signed-in user to open and study.
+    match /theologyChallenges/{challengeId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+      // Answers a user chose to share (one per user, only their own).
+      match /answers/{answerUid} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if request.auth != null
+          && request.auth.uid == answerUid
+          && (request.resource == null || request.resource.data.text is string && request.resource.data.text.size() <= 4000);
+      }
+    }
+    match /theologyChallengeUsage/{docId} {
+      allow read, write: if false;
     }
 
     // Leaderboards — anyone can read, only owner can write their own entry

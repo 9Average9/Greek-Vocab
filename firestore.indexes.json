@@ -4,40 +4,84 @@
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "reminder.enabled", "order": "ASCENDING" },
-        { "fieldPath": "reminder.nextSendAt", "order": "ASCENDING" }
+        {
+          "fieldPath": "reminder.enabled",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "reminder.nextSendAt",
+          "order": "ASCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "mercyReminder.enabled", "order": "ASCENDING" },
-        { "fieldPath": "mercyReminder.nextSendAt", "order": "ASCENDING" }
+        {
+          "fieldPath": "mercyReminder.enabled",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "mercyReminder.nextSendAt",
+          "order": "ASCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "mercyFriendReminder.enabled", "order": "ASCENDING" },
-        { "fieldPath": "mercyFriendReminder.nextSendAt", "order": "ASCENDING" }
+        {
+          "fieldPath": "mercyFriendReminder.enabled",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "mercyFriendReminder.nextSendAt",
+          "order": "ASCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "merciesPosts",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "audienceUids", "arrayConfig": "CONTAINS" },
-        { "fieldPath": "createdAtMs", "order": "DESCENDING" }
+        {
+          "fieldPath": "audienceUids",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "createdAtMs",
+          "order": "DESCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "habitReminderSlots",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
-        { "fieldPath": "enabled", "order": "ASCENDING" },
-        { "fieldPath": "nextSendAt", "order": "ASCENDING" }
+        {
+          "fieldPath": "enabled",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "nextSendAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "theologyChallenges",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "uid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
       ]
     }
   ],

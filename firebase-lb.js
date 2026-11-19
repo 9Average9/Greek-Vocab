@@ -2626,6 +2626,42 @@ window.BibleSearchAI = {
 
 // See interpretations: the first look-up of a passage takes about half a
 // minute on the server; after that it's a quick read from the shared save.
+// Challenge My Theology: the server researches one claim and posts it to the
+// community list; notes are private unless the person shares their answer.
+window.TheologyChallenge = {
+  async create(payload) {
+    const fn = httpsCallable(functionsApp, "challengeMyTheology", { timeout: 130000 });
+    const response = await fn(payload);
+    return response.data || {};
+  },
+  async get(id) {
+    const snap = await getDoc(doc(db, "theologyChallenges", id));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  },
+  async listCommunity(max = 40) {
+    const snap = await getDocs(query(collection(db, "theologyChallenges"), orderBy("createdAt", "desc"), limit(max)));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+  async listMine(uid, max = 40) {
+    const snap = await getDocs(query(collection(db, "theologyChallenges"), where("uid", "==", uid), orderBy("createdAt", "desc"), limit(max)));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+  async getNote(uid, id) {
+    const snap = await getDoc(doc(db, "users", uid, "challengeNotes", id));
+    return snap.exists() ? snap.data() : null;
+  },
+  async saveNote(uid, id, text, shared, name) {
+    await setDoc(doc(db, "users", uid, "challengeNotes", id), { text, shared: !!shared, updatedAt: serverTimestamp() }, { merge: true });
+    const answer = doc(db, "theologyChallenges", id, "answers", uid);
+    if (shared && text.trim()) await setDoc(answer, { text: text.slice(0, 4000), name: name || "", updatedAt: serverTimestamp() });
+    else await deleteDoc(answer).catch(() => {});
+  },
+  async listAnswers(id) {
+    const snap = await getDocs(query(collection(db, "theologyChallenges", id, "answers"), orderBy("updatedAt", "desc"), limit(50)));
+    return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+  }
+};
+
 window.PassageInterpretations = {
   async get(selection) {
     const fn = httpsCallable(functionsApp, "getPassageInterpretations", { timeout: 130000 });

@@ -2330,3 +2330,308 @@ exports.getPassageInterpretations = functions
       throw new functions.https.HttpsError("internal", "Couldn't find interpretations for this passage right now. Try again later.");
     }
   });
+
+// ── Challenge My Theology ────────────────────────────────────────────────────
+// The guide researches ONE major claim a group makes (Catholic, Reformed, LDS…,
+// a verse, a trending debate, or whatever the person typed) and presents it in
+// that group's own words, with the passage they use and real sources. It does
+// not argue back: the person studies it. Only quotes found word-for-word on a
+// page the search returned are shown; with none, nothing is posted.
+const CH_COLLECTION = "theologyChallenges";
+const CH_USAGE = "theologyChallengeUsage";
+const CH_USER_DAILY = 8;
+const CH_GLOBAL_DAILY = 300;
+const CH_DEADLINE_MS = 100 * 1000;
+const CH_MAX_SEARCHES = 3;
+const CH_GROUPS = {
+  catholic: { name: "Catholic", hint: "the Catholic Church (Catechism of the Catholic Church at vatican.va, catholic.com, papal documents)" },
+  orthodox: { name: "Eastern Orthodox", hint: "Eastern Orthodox Christianity (oca.org, goarch.org, antiochian.org, Orthodox theologians)" },
+  calvinist: { name: "Calvinist (Reformed)", hint: "Reformed / Calvinist theology (Westminster Confession, Ligonier, Monergism, The Gospel Coalition, Reformed confessions)" },
+  arminian: { name: "Arminian", hint: "Arminian theology (Society of Evangelical Arminians, Wesleyan and Methodist sources, Remonstrance)" },
+  lutheran: { name: "Lutheran", hint: "Lutheran theology (Book of Concord, LCMS lcms.org, WELS)" },
+  pentecostal: { name: "Pentecostal", hint: "Pentecostal / charismatic theology (Assemblies of God ag.org position papers, Foursquare)" },
+  lds: { name: "Latter-day Saints (Mormon)", hint: "The Church of Jesus Christ of Latter-day Saints (churchofjesuschrist.org, Gospel Topics essays)" },
+  jw: { name: "Jehovah's Witnesses", hint: "Jehovah's Witnesses (jw.org, wol.jw.org)" },
+  islam: { name: "Islam", hint: "Islam (the Qur'an at quran.com, mainstream Islamic scholars and sites)" },
+  judaism: { name: "Judaism", hint: "Judaism (Chabad.org, myjewishlearning.com, rabbinic sources)" },
+  skeptic: { name: "Skeptic / Atheist", hint: "skeptics and atheist critics of Christianity (published skeptic authors and organizations)" },
+  verse: { name: "From this passage", hint: "" },
+  trending: { name: "What's trending", hint: "" },
+  free: { name: "Your question", hint: "" }
+};
+const CH_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    group: { type: "string" },
+    claim: { type: "string" },
+    why: { type: "string" },
+    passage: { type: "string" },
+    quotes: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: { page: { type: "integer" }, text: { type: "string" } },
+        required: ["page", "text"]
+      }
+    }
+  },
+  required: ["group", "claim", "why", "passage", "quotes"]
+};
+
+// "2 Peter 1:16–21" → { book, chapter, verse, endVerse, label }
+function chParsePassage(s) {
+  const names = {};
+  for (const [code, name] of Object.entries(INTERP_BOOKS)) names[String(name).toLowerCase()] = code;
+  names.psalm = "PSA"; names["song of songs"] = "SNG"; names["song of solomon"] = "SNG";
+  const m = String(s || "").trim().match(/^([1-3]?\s?[A-Za-z][A-Za-z .]+?)\s+(\d{1,3}):(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?/);
+  if (!m) return null;
+  const code = names[m[1].toLowerCase().replace(/\s+/g, " ").replace(/\.$/, "").trim()];
+  if (!code) return null;
+  const chapter = +m[2], verse = +m[3], endVerse = m[4] ? Math.max(+m[4], verse) : verse;
+  if (!(chapter > 0 && verse > 0) || endVerse - verse > 40) return null;
+  const label = `${INTERP_BOOKS[code]} ${chapter}:${verse}${endVerse > verse ? `–${endVerse}` : ""}`;
+  return { book: code, chapter, verse, endVerse, label };
+}
+
+function chFindPrompt() {
+  return [
+    "You find published pages for a Bible study app's \"Challenge My Theology\" feature. You do not write the challenge; you only pick pages.",
+    "",
+    "Goal: ONE major, well-known claim that the named group (or, for a verse or trending request, a real group or teacher) makes and actually teaches, which a Bible-believing Protestant would need to study Scripture to answer.",
+    `1. Search the web, at most ${CH_MAX_SEARCHES} searches. Prefer the group's OWN official or representative sources (confessions, catechisms, official sites, well-known named teachers of that group). Skip forums, video, AI-written pages and pages that only criticize the group.`,
+    "2. Pick 1 to 4 pages that state the claim in the group's own words.",
+    "",
+    "Answer with these lines only, nothing else:",
+    "@GROUP <the group's name>",
+    "@TOPIC <3 to 8 keywords for the claim>",
+    "@PASSAGE <the main Bible passage the group uses for it, like 2 Peter 1:16-21>",
+    "@PAGE <exact URL from your search results>"
+  ].join("\n");
+}
+
+function chAssemblePrompt() {
+  return [
+    "You write one theological challenge for a Bible study app, using ONLY the page excerpts you are given.",
+    "",
+    "- group: the group's name, as it calls itself where possible.",
+    "- claim: ONE major claim the excerpts show this group teaches, stated fairly and in its strongest form, the way its own teachers would put it. One or two sentences, at most 55 words, starting like \"Catholics claim that…\" / \"Latter-day Saints teach that…\". Include the main Bible reference they use in parentheses if the excerpts give one.",
+    "- why: one or two plain sentences (at most 40 words) on why this group holds it or where it's taught (a council, catechism, confession, founder, key passage). Neutral: describe, never argue, never say whether it is right.",
+    "- passage: the main Bible passage the group uses for the claim, as \"Book chapter:verse-verse\" (one chapter only, at most 20 verses).",
+    "- quotes: 1 to 3 short quotes (8 to 50 words) COPIED EXACTLY, character for character, from one excerpt each, with that excerpt's number, that show the group teaches this claim.",
+    "- Never invent anything the excerpts don't support. Never mention AI, yourself, excerpts or pages."
+  ].join("\n");
+}
+
+// The paragraphs of a page that talk about the claim (keyword overlap).
+function chExcerpt(text, topic) {
+  const words = String(topic || "").toLowerCase().split(/[^a-z0-9']+/).filter(w => w.length > 3);
+  const paras = String(text || "").split(/\n{1,}|(?<=\.)\s{2,}/).map(p => p.trim()).filter(p => p.length > 60);
+  if (!words.length) return paras.slice(0, 12).join("\n").slice(0, 4000);
+  const scored = paras.map((p, i) => {
+    const l = p.toLowerCase();
+    return { p, i, s: words.reduce((n, w) => n + (l.includes(w) ? 1 : 0), 0) };
+  }).filter(x => x.s > 0).sort((a, b) => b.s - a.s || a.i - b.i).slice(0, 14).sort((a, b) => a.i - b.i);
+  return scored.map(x => x.p).join("\n").slice(0, 4500);
+}
+
+async function chFindPages(client, model, request, deadline, usage) {
+  const messages = [{ role: "user", content: request }];
+  const results = new Map();
+  const snippets = new Map();
+  let text = "";
+  for (let turn = 0; turn < 4; turn++) {
+    const remaining = deadline - Date.now();
+    if (remaining < 15000) throw new Error("ran out of time finding pages");
+    const msg = await client.messages.create({
+      model,
+      max_tokens: 2000,
+      system: chFindPrompt(),
+      output_config: { effort: "low" },
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: CH_MAX_SEARCHES, blocked_domains: INTERP_BLOCKED_DOMAINS }],
+      messages
+    }, { timeout: Math.min(remaining - 10000, 60000), maxRetries: 1 });
+    interpUsage(usage, msg);
+    for (const block of (msg.content || [])) {
+      if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
+        for (const r of block.content) {
+          const url = interpCleanUrl(r && r.url);
+          if (url && !results.has(url)) results.set(url, String(r.title || "").trim());
+        }
+      } else if (block.type === "text") {
+        text += block.text || "";
+        for (const c of (block.citations || [])) {
+          const url = interpCleanUrl(c && c.url);
+          if (url && c.cited_text) snippets.set(url, ((snippets.get(url) || "") + " " + interpText(c.cited_text)).trim());
+        }
+      }
+    }
+    if (msg.stop_reason === "refusal") { const e = new Error("declined"); e.declined = true; throw e; }
+    if (msg.stop_reason !== "pause_turn") break;
+    messages.push({ role: "assistant", content: msg.content });
+  }
+  const pick = (re) => ((text.match(re) || [])[1] || "").trim();
+  const pages = [];
+  const seen = new Set();
+  for (const m of text.matchAll(/@PAGE\s*(\S+)/gi)) {
+    const url = interpCleanUrl(m[1]);
+    const known = url && (results.has(url) ? url : [...results.keys()].find(k => k.replace(/^https?:\/\/(www\.)?/, "") === url.replace(/^https?:\/\/(www\.)?/, "")));
+    if (!known || seen.has(known)) continue;
+    seen.add(known);
+    pages.push({ url: known, title: results.get(known) || "" });
+    if (pages.length === 4) break;
+  }
+  return { group: pick(/@GROUP\s*(.+)/i), topic: pick(/@TOPIC\s*(.+)/i), passage: pick(/@PASSAGE\s*(.+)/i), pages, snippets };
+}
+
+async function chResearch(request) {
+  const client = anthropicClient();
+  const deadline = Date.now() + CH_DEADLINE_MS;
+  const usage = { model: INTERP_MODEL, input_tokens: 0, output_tokens: 0, searches: 0, pagesRead: 0 };
+  let found;
+  try {
+    found = await chFindPages(client, INTERP_MODEL, request, deadline, usage);
+  } catch (e) {
+    if (!(e && e.declined) && !isRetryableAnthropicError(e)) throw e;
+    usage.model = INTERP_BACKUP_MODEL;
+    found = await chFindPages(client, INTERP_BACKUP_MODEL, request, deadline, usage);
+  }
+  const read = await Promise.all(found.pages.map(async p => {
+    try {
+      const page = await interpFetchPage(p.url);
+      const excerpt = chExcerpt(page.text, `${found.topic} ${found.group}`);
+      if (excerpt.length < 200) throw new Error("too little text");
+      return { ...p, title: p.title || page.title, excerpt };
+    } catch (e) {
+      const cited = found.snippets.get(p.url);
+      return cited && cited.length > 80 ? { ...p, excerpt: cited } : null;
+    }
+  }));
+  const pages = read.filter(Boolean);
+  usage.pagesRead = pages.length;
+  if (!pages.length) throw new Error("no readable pages");
+  const pageText = pages.map((p, i) => `[${i + 1}] ${p.title || interpHost(p.url)} — ${interpHost(p.url)}\n${p.excerpt}`).join("\n\n");
+  const assemble = async model => {
+    const remaining = deadline - Date.now();
+    if (remaining < 8000) throw new Error("ran out of time assembling");
+    const msg = await client.messages.create({
+      model,
+      max_tokens: 2000,
+      system: chAssemblePrompt(),
+      output_config: { effort: "low", format: { type: "json_schema", schema: CH_SCHEMA } },
+      messages: [{ role: "user", content: `Request: ${request}\nGroup found: ${found.group}\nPassage they use: ${found.passage}\n\nExcerpts:\n\n${pageText}` }]
+    }, { timeout: remaining, maxRetries: 1 });
+    interpUsage(usage, msg);
+    if (msg.stop_reason === "refusal") { const e = new Error("declined"); e.declined = true; throw e; }
+    const block = (msg.content || []).find(b => b.type === "text");
+    return JSON.parse(block ? block.text : "{}");
+  };
+  let raw;
+  try {
+    raw = await assemble(INTERP_MODEL);
+  } catch (e) {
+    if (!(e && e.declined) && !(e instanceof SyntaxError) && !isRetryableAnthropicError(e)) throw e;
+    raw = await assemble(INTERP_BACKUP_MODEL);
+  }
+  // Keep only quotes really on the page.
+  const norm = pages.map(p => interpNorm(p.excerpt));
+  const sources = [];
+  const usedPages = new Set();
+  for (const q of (Array.isArray(raw.quotes) ? raw.quotes : [])) {
+    const i = (q && q.page) - 1;
+    const text = interpText(q && q.text).replace(/^["“”'\s]+|["“”'\s]+$/g, "");
+    if (!pages[i] || !text || text.length > 400 || usedPages.has(i)) continue;
+    if (!interpQuoteOnPage(text, norm[i])) continue;
+    usedPages.add(i);
+    sources.push({ url: pages[i].url, title: interpClip(pages[i].title || interpHost(pages[i].url), 110), site: interpHost(pages[i].url), quote: text });
+    if (sources.length === 3) break;
+  }
+  const claim = interpClip(interpText(raw.claim), 420);
+  if (!sources.length || !claim) throw new Error("no claim with real sources");
+  const passage = chParsePassage(raw.passage) || chParsePassage(found.passage);
+  console.log("challengeMyTheology", JSON.stringify(usage), "sources", sources.length);
+  return {
+    group: interpClip(interpText(raw.group) || found.group, 60),
+    claim,
+    why: interpClip(interpText(raw.why), 300),
+    passage,
+    sources
+  };
+}
+
+async function chSpend(uid) {
+  const day = interpDayKey();
+  const userRef = db.collection(CH_USAGE).doc(`${uid}_${day}`);
+  const allRef = db.collection(CH_USAGE).doc(`_all_${day}`);
+  await db.runTransaction(async tx => {
+    const [mine, all] = await Promise.all([tx.get(userRef), tx.get(allRef)]);
+    const m = mine.exists ? (mine.data().count || 0) : 0;
+    const a = all.exists ? (all.data().count || 0) : 0;
+    if (m >= CH_USER_DAILY) {
+      throw new functions.https.HttpsError("resource-exhausted",
+        "That's a lot of challenges for one day! Study these, and come back tomorrow for more. The community challenges are always open.");
+    }
+    if (a >= CH_GLOBAL_DAILY) {
+      throw new functions.https.HttpsError("resource-exhausted", "The guide is worn out for today. Try again tomorrow, or open a community challenge.");
+    }
+    tx.set(userRef, { uid, day, count: m + 1, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(allRef, { day, count: a + 1, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  });
+}
+
+exports.challengeMyTheology = functions
+  .runWith({ timeoutSeconds: 120, memory: "256MB", secrets: ["ANTHROPIC_API_KEY"] })
+  .https.onCall(async (data, context) => {
+    if (!context.auth || !context.auth.uid) {
+      throw new functions.https.HttpsError("unauthenticated", "Sign in to get a challenge.");
+    }
+    const uid = context.auth.uid;
+    const tag = CH_GROUPS[String((data && data.tag) || "")] ? String(data.tag) : "free";
+    const prompt = interpClip(interpText(data && data.prompt), 300);
+    const ref = data && data.ref && INTERP_BOOKS[String(data.ref.book || "").toUpperCase()]
+      ? { book: String(data.ref.book).toUpperCase(), chapter: parseInt(data.ref.chapter, 10) || 1, verse: parseInt(data.ref.verse, 10) || 1 }
+      : null;
+    const refText = interpClip(interpText(data && data.refText), 600);
+    if (tag === "free" && prompt.length < 3) {
+      throw new functions.https.HttpsError("invalid-argument", "Type what you'd like to be challenged on, or pick a topic.");
+    }
+    if (tag === "verse" && !ref) {
+      throw new functions.https.HttpsError("invalid-argument", "Open a verse in the reader first.");
+    }
+    const g = CH_GROUPS[tag];
+    let request;
+    if (tag === "verse") {
+      request = `Find a major claim a real Christian tradition or other group makes FROM this passage that differs from a plain Protestant reading: ${INTERP_BOOKS[ref.book]} ${ref.chapter}:${ref.verse}.${refText ? ` Text: "${refText}"` : ""}${prompt ? ` The person adds: ${prompt}` : ""}`;
+    } else if (tag === "trending") {
+      request = `Find a theological claim being debated right now (news, books or well-known teachers in the last few months) and the group or teacher making it.${prompt ? ` The person adds: ${prompt}` : ""}`;
+    } else if (tag === "free") {
+      request = `The person asked to be challenged on: "${prompt}". Find a major claim a real group or tradition makes about this.`;
+    } else {
+      request = `Group: ${g.hint}. Find one of its major distinctive claims.${prompt ? ` The person adds: ${prompt}` : ""}`;
+    }
+    await chSpend(uid);
+    let result;
+    try {
+      result = await chResearch(request);
+    } catch (e) {
+      console.error("challengeMyTheology error:", e && e.message);
+      throw new functions.https.HttpsError("unavailable",
+        "The guide couldn't find a claim with solid sources for that. Try different wording or another topic.");
+    }
+    let username = "", displayName = "";
+    try {
+      const u = await db.collection("users").doc(uid).get();
+      if (u.exists) { username = String(u.data().username || ""); displayName = String(u.data().displayName || ""); }
+    } catch (e) { /* name is optional */ }
+    const doc = {
+      uid, username, displayName,
+      tag, tagName: g.name, prompt,
+      ref: tag === "verse" ? ref : null,
+      group: result.group, claim: result.claim, why: result.why,
+      passage: result.passage, sources: result.sources,
+      createdAt: FieldValue.serverTimestamp()
+    };
+    const saved = await db.collection(CH_COLLECTION).add(doc);
+    return { id: saved.id, ...doc, createdAt: Date.now() };
+  });
