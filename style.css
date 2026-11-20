@@ -41504,3 +41504,37 @@ body.dark .rhema-wbw-tab.on, html.dark .rhema-wbw-tab.on { background: color-mix
 #journeysPage #jstMap.jst-map { position: absolute; inset: 0; width: 100%; height: 100%; }
 .jst-title b { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 1.12rem; line-height: 1.15; }
 .jst-card .jst-chips { margin-top: 8px; }
+
+/* ── Map pop-ups from the reader (journey + place), in the chosen map look ── */
+.jst.jst-peek { position: relative; inset: auto; width: 100%; max-width: 430px; max-height: 88dvh; overflow-y: auto; padding: 0; border-radius: 28px; background: var(--j-card); color: var(--j-ink); box-shadow: 0 24px 60px rgba(8,18,28,.45); }
+.jst[data-look="lantern"].jst-peek { background: #12163a; border: 1px solid rgba(255,213,107,.22); }
+.jst[data-look="toy"].jst-peek { box-shadow: 0 6px 0 #cbe9f5, 0 24px 60px rgba(8,18,28,.35); }
+.jst-peek-map { position: relative; height: 236px; overflow: hidden; background: var(--j-bg); }
+.jst-peek .jst-peek-host, .jst-peek .jst-peek-host.maplibregl-map { position: absolute; inset: 0; width: 100%; height: 100%; }
+.jst-peek .jst-peek-host .maplibregl-ctrl-attrib, .jst-peek .jst-peek-host .maplibregl-ctrl-logo { display: none !important; }
+.jst-peek .jst-sky { height: 64px; }
+.jst-peek .jst-stars { height: 60px; }
+.jst-peek-x { position: absolute; z-index: 6; top: 10px; right: 10px; width: 40px; height: 40px; }
+.jst-peek-body { padding: 14px 18px 18px; }
+.jst-peek .jst-place { font-size: 1.5rem; }
+.jst-peek .jst-what { font-size: .93rem; }
+.jst-peek .jst-guide img { width: 56px; }
+.jst-peek .jst-bubble { font-size: 16px; padding: 4px 9px; }
+.jst-peek .jst-flag { font-size: 13px; padding: 3px 9px; }
+.jst-peek .jst-mini { font-size: 10px; }
+.jst-peek-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px 10px 18px; }
+.jst-peek-ref { display: flex; align-items: center; gap: 5px; font-size: .78rem; font-weight: 800; letter-spacing: .04em; color: var(--j-muted); }
+.jst-peek-ref .material-symbols-outlined { font-size: 17px; color: var(--j-acc); }
+.jst-peek-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 0 14px 10px; scrollbar-width: none; }
+.jst-peek-tabs button { flex: 0 0 auto; padding: 7px 13px; border: 0; border-radius: 99px; background: var(--j-soft); color: var(--j-soft-ink); font: inherit; font-weight: 800; font-size: .84rem; cursor: pointer; }
+.jst-peek-tabs button.active { background: var(--j-acc); color: var(--j-acc-ink); }
+.jst-peek .jst-sheet-sub { margin-top: 12px; }
+.jst-peek .atlas-alts, .jst-peek .atlas-alt-list { color: var(--j-ink); }
+/* No connection / no 3D: a friendly note in place of a map */
+.jst-offline { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 24px; text-align: center; background: var(--j-bg); color: var(--j-ink); }
+.jst-offline img { width: 96px; height: auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,.25)); }
+.jst-offline b { font-family: var(--j-display); font-size: 1.15rem; }
+.jst-offline small { max-width: 260px; font-size: .85rem; line-height: 1.4; color: var(--j-muted); }
+#jstMap.is-fallback .jst-offline { padding-bottom: 300px; }
+.jst-peek-host.is-offline .jst-offline img { width: 64px; }
+.jst-peek-host.is-offline .jst-offline small { font-size: .78rem; }

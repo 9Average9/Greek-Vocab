@@ -191,7 +191,7 @@
     var L = LOOKS[st.look] || LOOKS.storybook;
     var pad = (st.opts.padding && st.opts.padding()) || { top: 140, bottom: 300 };
     var el = st.map.getContainer(), W = el.clientWidth || 390, H = el.clientHeight || 800;
-    var side = 100, top = pad.top + 34;                      // room for side labels and the guide's head
+    var side = st.opts.side || 100, top = pad.top + 34;      // room for side labels and the guide's head
     var aw = Math.max(80, W - side * 2), ah = Math.max(80, H - top - pad.bottom);
     var MAXZ = 12.5, GAP = 84;                               // px between neighboring stops
     var fit = function (pts) {
