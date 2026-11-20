@@ -41365,3 +41365,19 @@ body.dark .rhema-wbw-tab.on, html.dark .rhema-wbw-tab.on { background: color-mix
 #rhemaInterlinearModal .rhema-il-versionnote { gap: 6px; margin: 0 0 12px; font-size: inherit; color: inherit; }
 #rhemaInterlinearModal .rhema-il-versionnote .wbw-tip { margin: 2px 0 0; }
 #rhemaInterlinearModal .rhema-il-versionnote .wbw-info { margin: 0; align-self: stretch; }
+/* Verse sheet: "See the Greek / Hebrew" leads the tools */
+.rhema-vsheet-actions .rhema-vsheet-feature { grid-column: 1 / -1; min-height: 66px; gap: 12px; padding: 12px 14px;
+  border-color: color-mix(in srgb, var(--secondary-color, #2498df) 45%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--secondary-color, #2498df) 16%, var(--card-solid-color, #fff)), color-mix(in srgb, var(--secondary-color, #2498df) 6%, var(--card-solid-color, #fff)));
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--secondary-color, #2498df) 16%, transparent); }
+.rhema-vsheet-feature > .material-symbols-outlined:first-child { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 40px; border-radius: 12px; background: var(--secondary-color, #2498df); color: var(--btn-text-color, #fff); font-size: 24px; }
+.rhema-vsheet-feature-t { display: flex; flex-direction: column; align-items: flex-start; flex: 1; min-width: 0; text-align: left; line-height: 1.2; }
+.rhema-vsheet-feature-t b { font-size: 1.02rem; font-weight: 850; color: var(--font-color); }
+.rhema-vsheet-feature-t small { margin-top: 2px; font-size: .78rem; font-weight: 600; color: color-mix(in srgb, var(--font-color) 62%, transparent); }
+.rhema-vsheet-feature-go { color: var(--secondary-color, #2498df); opacity: .8; }
+.rhema-vsheet-actions .rhema-vsheet-feature { background: var(--secondary-color, #2498df); border-color: transparent; color: var(--btn-text-color, #fff); box-shadow: 0 8px 20px color-mix(in srgb, var(--secondary-color, #2498df) 30%, transparent); }
+.rhema-vsheet-feature > .material-symbols-outlined:first-child { background: color-mix(in srgb, var(--btn-text-color, #fff) 18%, transparent); color: var(--btn-text-color, #fff); }
+.rhema-vsheet-feature-t b { color: var(--btn-text-color, #fff); }
+.rhema-vsheet-feature-t small { color: color-mix(in srgb, var(--btn-text-color, #fff) 78%, transparent); }
+.rhema-vsheet-feature-go { color: var(--btn-text-color, #fff); opacity: .85; }
+#rhemaVerseSheet .rhema-vsheet-feature .rhema-vsheet-feature-go, #rhemaVerseSheet .rhema-vsheet-feature > .material-symbols-outlined:first-child { color: var(--btn-text-color, #fff); }
