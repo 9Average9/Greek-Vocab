@@ -1,0 +1,238 @@
+{
+  "_about": "Old Testament, part E (last).",
+  "samuel-mizpah-ebenezer": {
+    "set": { "note": "The ark had been at Kiriath-jearim twenty years (1 Samuel 7:2). Shen and Beth-car are unknown sites." },
+    "steps": [
+      { "label": "Gathered to pray", "ref": "1 Samuel 7:3-6", "copy": "“Gather all Israel to Mizpah, and I will pray to the LORD on your behalf.” They fast and confess their sin.", "miles": 8, "at": 1 },
+      { "label": "Crying to the Lord", "ref": "1 Samuel 7:7-9", "copy": "As the Philistines come up, Samuel offers a lamb and cries out, and the Lord answers him.", "at": 1 },
+      { "label": "Thunder from heaven", "ref": "1 Samuel 7:10-11", "copy": "The Lord thunders against the Philistines, and Israel chases them from Mizpah to below Beth-car.", "at": 1 },
+      { "label": "The Ebenezer stone", "ref": "1 Samuel 7:12", "copy": "Samuel sets up a stone between Mizpah and Shen: “Thus far the LORD has helped us.”", "at": 1 }
+    ]
+  },
+  "saul-amalek": {
+    "set": { "note": "Telaim and the city of Amalek are unknown sites and are placed approximately." },
+    "points": [
+      { "ancient": "Telaim", "modern": "northern Negev (site unknown)", "lat": 31.1, "lon": 34.9 },
+      { "ancient": "City of Amalek", "modern": "Negev toward Shur (site unknown)", "lat": 30.7, "lon": 34.4 },
+      { "ancient": "Carmel", "modern": "Khirbet el-Kirmil, south of Hebron", "lat": 31.43, "lon": 35.13 },
+      { "ancient": "Gilgal", "modern": "Jordan valley near Jericho (site debated)", "lat": 31.87, "lon": 35.5 }
+    ],
+    "steps": [
+      { "label": "Mustered at Telaim", "ref": "1 Samuel 15:1-4", "copy": "Samuel gives Saul the Lord's command against Amalek, and Saul counts his army at Telaim.", "at": 0 },
+      { "label": "Lying in wait", "ref": "1 Samuel 15:5-7", "copy": "He comes to the city of Amalek, waits in the valley, and strikes the Amalekites.", "miles": 40, "at": 1 },
+      { "label": "Sparing the best", "ref": "1 Samuel 15:8-9", "copy": "Saul spares King Agag and the best of the sheep and cattle.", "at": 1 },
+      { "label": "A monument at Carmel", "ref": "1 Samuel 15:10-12", "copy": "The Lord regrets making Saul king. Saul sets up a monument for himself at Carmel.", "miles": 65, "at": 2 },
+      { "label": "Obedience over sacrifice", "ref": "1 Samuel 15:12-23", "copy": "At Gilgal, Samuel confronts him: “Behold, obedience is better than sacrifice.”", "miles": 45, "at": 3 }
+    ]
+  },
+  "abigail-carmel": {
+    "set": { "note": "1 Samuel 25:1 says David went down to the Wilderness of Paran (the Greek Old Testament reads Maon). His men had been guarding Nabal's shepherds near Carmel (25:15-16)." },
+    "points": [
+      { "ancient": "David's camp", "modern": "wilderness near Maon", "lat": 31.4, "lon": 35.13 },
+      { "ancient": "Carmel of Judah", "modern": "Khirbet el-Kirmil", "lat": 31.43, "lon": 35.13 }
+    ],
+    "steps": [
+      { "label": "Nabal's insult", "ref": "1 Samuel 25:2-11", "copy": "David sends ten young men to Nabal, who is shearing his sheep at Carmel. Nabal insults them.", "at": 0 },
+      { "label": "David's anger", "ref": "1 Samuel 25:12-13", "copy": "“Strap on your swords!” About four hundred men follow David; two hundred stay with the supplies.", "at": 0 },
+      { "label": "Abigail's gift", "ref": "1 Samuel 25:18-31", "copy": "Abigail loads donkeys with bread, wine and food and meets David in a mountain ravine.", "at": 0 },
+      { "label": "Bloodshed averted", "ref": "1 Samuel 25:32-35", "copy": "David blesses her good sense for keeping him from avenging himself.", "at": 0 },
+      { "label": "Nabal dies", "ref": "1 Samuel 25:36-38", "copy": "When Nabal hears what happened, his heart fails, and ten days later the Lord strikes him.", "miles": 2, "at": 1 },
+      { "label": "Abigail marries David", "ref": "1 Samuel 25:39-42", "copy": "David sends for her, and she goes with his messengers and becomes his wife.", "miles": 2, "at": 0 }
+    ]
+  },
+  "saul-gilboa-death": {
+    "steps": [
+      { "label": "Defeat at Gilboa", "ref": "1 Samuel 31:1-2", "copy": "Israel flees and falls on Mount Gilboa, and Saul's sons, Jonathan among them, are killed.", "at": 0 },
+      { "label": "Saul's end", "ref": "1 Samuel 31:3-6", "copy": "Badly wounded by archers, Saul takes his own sword and falls on it.", "at": 0 },
+      { "label": "Hung at Beth-shan", "ref": "1 Samuel 31:8-10", "copy": "The Philistines fasten his body to the wall of Beth-shan.", "miles": 6, "at": 1 },
+      { "label": "A brave rescue", "ref": "1 Samuel 31:11-12", "copy": "The valiant men of Jabesh-gilead journey all night and take down the bodies.", "at": 1 },
+      { "label": "Buried at Jabesh", "ref": "1 Samuel 31:12-13", "copy": "They bury the bones under the tamarisk tree in Jabesh and fast seven days.", "miles": 10, "at": 2 }
+    ]
+  },
+  "ishbosheth-mahanaim": {
+    "set": { "note": "The text doesn't say where Abner brought Ish-bosheth from." },
+    "points": [
+      { "ancient": "Mahanaim", "modern": "Gilead, Jordan (site debated)", "lat": 32.2, "lon": 35.72 },
+      { "ancient": "Pool of Gibeon", "modern": "El-Jib, West Bank", "lat": 31.85, "lon": 35.18 }
+    ],
+    "steps": [
+      { "label": "Taken to Mahanaim", "ref": "2 Samuel 2:8", "copy": "Abner brings Saul's son Ish-bosheth over to Mahanaim.", "at": 0 },
+      { "label": "Crowned over Israel", "ref": "2 Samuel 2:9-10", "copy": "Abner makes him king over Gilead, Ephraim, Benjamin and all Israel; Judah follows David.", "at": 0 },
+      { "label": "Out to Gibeon", "ref": "2 Samuel 2:12-17", "copy": "Abner marches out to Gibeon. Joab's men meet them across the pool, and a fierce battle follows.", "miles": 45, "at": 1 },
+      { "label": "Asahel falls", "ref": "2 Samuel 2:18-23", "copy": "Swift Asahel chases Abner and will not turn aside, and Abner kills him.", "at": 1 },
+      { "label": "Back through the night", "ref": "2 Samuel 2:29", "copy": "All night Abner's men march through the Arabah, cross the Jordan and reach Mahanaim.", "miles": 45, "at": 0 }
+    ]
+  },
+  "david-rephaim": {
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Valley of Rephaim", "modern": "southwest of Jerusalem", "lat": 31.74, "lon": 35.18 },
+      { "ancient": "Baal-perazim", "modern": "near Jerusalem (site debated)", "lat": 31.73, "lon": 35.16 },
+      { "ancient": "Gezer", "modern": "Tel Gezer", "lat": 31.86, "lon": 34.92 }
+    ],
+    "steps": [
+      { "label": "The Philistines spread out", "ref": "2 Samuel 5:17-19", "copy": "Hearing David is king, the Philistines spread out in the Valley of Rephaim. David asks the Lord.", "miles": 4, "at": 1 },
+      { "label": "Burst of waters", "ref": "2 Samuel 5:20-21", "copy": "At Baal-perazim: “Like a bursting flood, the LORD has burst out against my enemies before me.”", "miles": 2, "at": 2 },
+      { "label": "Circle behind them", "ref": "2 Samuel 5:22-24", "copy": "When they come again, the Lord says to circle behind them and wait for the sound of marching in the balsam trees.", "miles": 2, "at": 1 },
+      { "label": "Gibeon to Gezer", "ref": "2 Samuel 5:25", "copy": "David does as the Lord commands and strikes the Philistines from Gibeon to Gezer.", "miles": 18, "at": 3 }
+    ]
+  },
+  "david-saul-bones": {
+    "points": [
+      { "ancient": "Jabesh-gilead", "modern": "Gilead, Jordan", "lat": 32.45, "lon": 35.65 },
+      { "ancient": "Zela", "modern": "land of Benjamin (site uncertain)", "lat": 31.83, "lon": 35.2 }
+    ],
+    "steps": [
+      { "label": "Bones from Jabesh", "ref": "2 Samuel 21:12", "copy": "David takes the bones of Saul and Jonathan from the men of Jabesh-gilead, who had taken them from Beth-shan.", "at": 0 },
+      { "label": "Brought up", "ref": "2 Samuel 21:13", "copy": "He brings them up, and the bones of the seven who were hanged are gathered too.", "miles": 55, "at": 1 },
+      { "label": "Buried at Zela", "ref": "2 Samuel 21:14", "copy": "They bury Saul and Jonathan in the tomb of Saul's father Kish.", "at": 1 },
+      { "label": "God answers", "ref": "2 Samuel 21:14", "copy": "After that, God answers their prayers for the land.", "at": 1 }
+    ]
+  },
+  "solomon-ophir-fleet": {
+    "set": { "note": "Ophir's location is unknown; suggestions include southern Arabia, East Africa and India. The trail only points down the Red Sea." },
+    "points": [
+      { "ancient": "Ezion-geber", "modern": "near Eilat / Aqaba (site debated)", "lat": 29.55, "lon": 34.95 },
+      { "ancient": "Toward Ophir", "modern": "down the Red Sea (Ophir unknown)", "lat": 26.5, "lon": 36 }
+    ],
+    "steps": [
+      { "label": "A fleet at Ezion-geber", "ref": "1 Kings 9:26", "copy": "Solomon builds a fleet at Ezion-geber, near Eloth in Edom, on the shore of the Red Sea.", "at": 0 },
+      { "label": "Hiram's sailors", "ref": "1 Kings 9:27", "copy": "Hiram sends sailors who know the sea to serve with Solomon's men.", "at": 0 },
+      { "label": "Gold from Ophir", "ref": "1 Kings 9:28", "copy": "They sail to Ophir and bring back 420 talents of gold.", "at": 1, "by": "sea" },
+      { "label": "Every three years", "ref": "1 Kings 10:22", "copy": "Once every three years the ships of Tarshish arrive with gold, silver, ivory, apes and peacocks.", "at": 0, "by": "sea" }
+    ]
+  },
+  "jeroboam-bethel-dan": {
+    "steps": [
+      { "label": "Two golden calves", "ref": "1 Kings 12:25-28", "copy": "“Here, O Israel, are your gods, who brought you up out of the land of Egypt.”", "at": 0 },
+      { "label": "One at Bethel", "ref": "1 Kings 12:29", "copy": "He sets up one calf at Bethel.", "miles": 20, "at": 1 },
+      { "label": "One at Dan", "ref": "1 Kings 12:29-30", "copy": "The other goes to Dan, and the people go as far as Dan to worship it. This becomes a sin.", "miles": 110, "at": 2 },
+      { "label": "A feast of his own", "ref": "1 Kings 12:32-33", "copy": "Jeroboam makes up a feast and offers sacrifices on the altar he built at Bethel.", "miles": 110, "at": 1 }
+    ]
+  },
+  "man-of-god-bethel": {
+    "set": { "note": "The man of God's town in Judah isn't named." },
+    "points": [
+      { "ancient": "Judah", "modern": "Judean hills (town not named)", "lat": 31.7, "lon": 35.1 },
+      { "ancient": "Bethel", "modern": "Beitin, West Bank", "lat": 31.93, "lon": 35.22 },
+      { "ancient": "On the road", "modern": "near Bethel (spot unknown)", "lat": 31.89, "lon": 35.2 }
+    ],
+    "steps": [
+      { "label": "Sent to Bethel", "ref": "1 Kings 13:1", "copy": "As Jeroboam stands by the altar, a man of God comes from Judah to Bethel by the word of the Lord.", "miles": 25, "at": 1 },
+      { "label": "Crying against the altar", "ref": "1 Kings 13:2-3", "copy": "“O altar, O altar … A son named Josiah will be born to the house of David.”", "at": 1 },
+      { "label": "The withered hand", "ref": "1 Kings 13:4-6", "copy": "Jeroboam's outstretched hand shrivels, the altar splits, and at the prophet's prayer the hand is restored.", "at": 1 },
+      { "label": "A lying invitation", "ref": "1 Kings 13:11-22", "copy": "An old prophet of Bethel deceives him into eating and drinking there, against the Lord's command.", "at": 1 },
+      { "label": "The lion on the road", "ref": "1 Kings 13:23-25", "copy": "As he goes on his way, a lion meets him and kills him; the donkey and the lion stand beside the body.", "miles": 3, "at": 2 }
+    ]
+  },
+  "elisha-moab-campaign": {
+    "steps": [
+      { "label": "By way of Edom", "ref": "2 Kings 3:6-9", "copy": "The kings of Israel, Judah and Edom take the long road through the Desert of Edom; after seven days they have no water.", "miles": 150, "at": 1 },
+      { "label": "Ditches in the valley", "ref": "2 Kings 3:11-19", "copy": "Elisha: “This is what the LORD says: ‘Dig this valley full of ditches.’”", "at": 1 },
+      { "label": "Water from Edom", "ref": "2 Kings 3:20-23", "copy": "In the morning water flows from the direction of Edom, and the Moabites see it red as blood.", "at": 1 },
+      { "label": "Siege of Kir-hareseth", "ref": "2 Kings 3:24-26", "copy": "Israel routs Moab, destroys its cities and surrounds Kir-hareseth.", "miles": 32, "at": 2 },
+      { "label": "Withdrawal", "ref": "2 Kings 3:27", "copy": "The king of Moab offers his firstborn son on the city wall. Great fury comes against Israel, and they go home.", "miles": 120, "at": 0 }
+    ]
+  },
+  "hazael-damascus": {
+    "points": [
+      { "ancient": "Israel", "modern": "Samaria region (Elisha's start not named)", "lat": 32.28, "lon": 35.19 },
+      { "ancient": "Damascus", "modern": "Damascus, Syria", "lat": 33.51, "lon": 36.29 }
+    ],
+    "steps": [
+      { "label": "Coming to Damascus", "ref": "2 Kings 8:7", "copy": "Elisha comes to Damascus while Ben-hadad king of Aram is sick.", "miles": 130, "at": 1 },
+      { "label": "Hazael's gift", "ref": "2 Kings 8:8-9", "copy": "Hazael brings forty camel loads of gifts to ask whether the king will recover.", "at": 1 },
+      { "label": "The prophet weeps", "ref": "2 Kings 8:10-12", "copy": "Elisha stares at him until Hazael is ashamed, then weeps over the harm he will do Israel.", "at": 1 },
+      { "label": "A king foretold", "ref": "2 Kings 8:13", "copy": "“The LORD has shown me that you will be king over Aram.”", "at": 1 },
+      { "label": "Hazael takes the throne", "ref": "2 Kings 8:14-15", "copy": "The next day Hazael smothers the king and reigns in his place.", "at": 1 }
+    ]
+  },
+  "ahaz-damascus": {
+    "steps": [
+      { "label": "Appeal to Assyria", "ref": "2 Kings 16:5-8", "copy": "“I am your servant and your son. Come up and save me.” Ahaz sends the temple silver and gold.", "at": 0 },
+      { "label": "Damascus falls", "ref": "2 Kings 16:9", "copy": "The king of Assyria captures Damascus and carries its people into exile.", "miles": 130, "at": 1 },
+      { "label": "A king's visit", "ref": "2 Kings 16:10", "copy": "Ahaz goes to meet Tiglath-pileser at Damascus and sees the altar there.", "at": 1 },
+      { "label": "A copied altar", "ref": "2 Kings 16:10-16", "copy": "He sends its design home, and Uriah the priest builds a copy for the temple in Jerusalem.", "miles": 130, "at": 0 }
+    ]
+  },
+  "israel-deported-assyria": {
+    "set": { "note": "Gozan on the Habor River is shown; Halah and the cities of the Medes lay farther east." },
+    "steps": [
+      { "label": "Three-year siege", "ref": "2 Kings 17:5", "copy": "The king of Assyria invades the land and besieges Samaria for three years.", "at": 0 },
+      { "label": "Carried to Assyria", "ref": "2 Kings 17:6", "copy": "Samaria falls, and Israel is settled in Halah, in Gozan by the Habor River, and in the cities of the Medes.", "miles": 500, "at": 1 },
+      { "label": "Why it happened", "ref": "2 Kings 17:7-23", "copy": "Israel had sinned against the Lord and would not listen to the prophets, so they were exiled from their land.", "at": 1 }
+    ]
+  },
+  "amos-tekoa-bethel": {
+    "set": { "note": "Amos was one of the shepherds of Tekoa (Amos 1:1)." },
+    "steps": [
+      { "label": "Accused at Bethel", "ref": "Amos 7:10-11", "copy": "Amaziah, priest of Bethel, sends word to King Jeroboam that Amos is conspiring against him.", "miles": 22, "at": 1 },
+      { "label": "“Flee to the land of Judah”", "ref": "Amos 7:12-13", "copy": "“Go away, you seer! Flee to the land of Judah; earn your bread there and do your prophesying there.”", "at": 1 },
+      { "label": "No prophet by trade", "ref": "Amos 7:14", "copy": "“I was a herdsman and a tender of sycamore-fig trees.”", "at": 1 },
+      { "label": "Sent by the Lord", "ref": "Amos 7:15", "copy": "“The LORD took me from following the flock and said to me, ‘Go, prophesy to My people Israel.’”", "at": 1 }
+    ]
+  },
+  "jeremiah-euphrates-belt": {
+    "set": { "note": "The Hebrew is Perath, normally the Euphrates, about 400 miles away. Some suggest a spring called Ein Prat (Wadi Farah), a few miles from Jeremiah's home town of Anathoth." },
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Perath", "modern": "the Euphrates (some suggest Ein Prat near Anathoth)", "lat": 35.95, "lon": 38.3 }
+    ],
+    "steps": [
+      { "label": "Hide it at Perath", "ref": "Jeremiah 13:1-4", "copy": "“Take the loincloth … go at once to Perath and hide it there in a crevice of the rocks.”", "at": 0 },
+      { "label": "Hidden as told", "ref": "Jeremiah 13:5", "copy": "Jeremiah goes and hides it at Perath.", "miles": 400, "at": 1 },
+      { "label": "Go back for it", "ref": "Jeremiah 13:6", "copy": "Many days later: “Arise, go to Perath, and get the loincloth.”", "miles": 400, "at": 0 },
+      { "label": "Ruined", "ref": "Jeremiah 13:7-9", "copy": "He digs it up, ruined and of no use. So the Lord will ruin the pride of Judah and Jerusalem.", "miles": 400, "at": 1 }
+    ]
+  },
+  "nehemiah-susa-jerusalem": {
+    "set": { "note": "The road isn't recorded; by the usual route up the Tigris and around the desert it was roughly 1,000 miles." },
+    "points": [
+      { "ancient": "Susa (Shushan)", "modern": "Shush, Iran", "lat": 32.19, "lon": 48.26 },
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 }
+    ],
+    "steps": [
+      { "label": "The sad cupbearer", "ref": "Nehemiah 2:1-4", "copy": "Nehemiah serves wine to King Artaxerxes with a sad face. He prays, then answers.", "at": 0 },
+      { "label": "A bold request", "ref": "Nehemiah 2:5-8", "copy": "“Send me to Judah, to the city where my fathers are buried, so that I may rebuild it.” The king grants it.", "at": 0 },
+      { "label": "Arrival in Jerusalem", "ref": "Nehemiah 2:9-11", "copy": "With army officers and horsemen, he delivers the king's letters beyond the Euphrates and reaches Jerusalem.", "miles": 1000, "at": 1 },
+      { "label": "Inspecting by night", "ref": "Nehemiah 2:12-18", "copy": "He rides out at night to inspect the broken walls, then tells the people: “Come, let us rebuild the wall of Jerusalem.”", "at": 1 }
+    ]
+  },
+  "david-census-circuit": {
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Aroer", "modern": "by the Arnon gorge, Jordan", "lat": 31.46, "lon": 35.83 },
+      { "ancient": "Gad and Jazer", "modern": "Gilead, Jordan", "lat": 32, "lon": 35.7 },
+      { "ancient": "Dan", "modern": "Tel Dan, Israel", "lat": 33.25, "lon": 35.65 },
+      { "ancient": "Sidon", "modern": "Saida, Lebanon", "lat": 33.56, "lon": 35.37 },
+      { "ancient": "Tyre", "modern": "Tyre, Lebanon", "lat": 33.27, "lon": 35.2 },
+      { "ancient": "Beersheba", "modern": "Beersheba, Israel", "lat": 31.25, "lon": 34.79 }
+    ],
+    "steps": [
+      { "label": "Number the people", "ref": "2 Samuel 24:1-4", "copy": "“Go now throughout the tribes of Israel from Dan to Beersheba and register the troops.” Joab objects but goes.", "at": 0 },
+      { "label": "Starting at Aroer", "ref": "2 Samuel 24:5", "copy": "They cross the Jordan and camp near Aroer, in the middle of the valley.", "miles": 55, "at": 1 },
+      { "label": "Gad, Jazer and Gilead", "ref": "2 Samuel 24:5-6", "copy": "They go on toward Gad and Jazer, then to Gilead.", "miles": 35, "at": 2 },
+      { "label": "On to Dan", "ref": "2 Samuel 24:6", "copy": "Through Gilead and the land of Tahtim-hodshi, on to Dan-jaan.", "miles": 90, "at": 3 },
+      { "label": "Around to Sidon", "ref": "2 Samuel 24:6", "copy": "They reach Sidon on the coast.", "miles": 35, "at": 4 },
+      { "label": "The fortress of Tyre", "ref": "2 Samuel 24:7", "copy": "They go toward the fortress of Tyre and all the cities of the Hivites and Canaanites.", "miles": 22, "at": 5 },
+      { "label": "Down to Beersheba", "ref": "2 Samuel 24:7", "copy": "Finally they go to the Negev of Judah, to Beersheba.", "miles": 150, "at": 6 },
+      { "label": "Back to Jerusalem", "ref": "2 Samuel 24:8-9", "copy": "After nine months and twenty days they return to Jerusalem with the count.", "miles": 50, "at": 0 }
+    ]
+  },
+  "jehoshaphat-beracah": {
+    "set": { "note": "The Ascent of Ziz and the Wilderness of Jeruel are unknown; they lay between En-gedi and Tekoa." },
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Wilderness of Tekoa", "modern": "Judean wilderness", "lat": 31.6, "lon": 35.3 },
+      { "ancient": "Valley of Beracah", "modern": "wadi near Tekoa", "lat": 31.62, "lon": 35.15 }
+    ],
+    "steps": [
+      { "label": "A vast army", "ref": "2 Chronicles 20:1-4", "copy": "Word comes that a vast army from beyond the Sea is already at En-gedi. Jehoshaphat proclaims a fast.", "at": 0 },
+      { "label": "Not your battle", "ref": "2 Chronicles 20:14-17", "copy": "“The battle does not belong to you, but to God.” Tomorrow they will see the enemy coming up the Ascent of Ziz.", "at": 0 },
+      { "label": "Singers go first", "ref": "2 Chronicles 20:20-21", "copy": "Early in the morning they leave for the Wilderness of Tekoa, with singers praising the Lord ahead of the army.", "miles": 12, "at": 1 },
+      { "label": "The enemy turns on itself", "ref": "2 Chronicles 20:22-24", "copy": "As they sing, the Lord sets ambushes, and the invaders destroy one another.", "at": 1 },
+      { "label": "The Valley of Blessing", "ref": "2 Chronicles 20:26", "copy": "On the fourth day they gather to bless the Lord, and the place is named the Valley of Beracah.", "miles": 5, "at": 2 },
+      { "label": "Home with joy", "ref": "2 Chronicles 20:27-28", "copy": "With Jehoshaphat at their head, they return joyfully to Jerusalem.", "miles": 12, "at": 0 }
+    ]
+  }
+}

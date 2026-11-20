@@ -1,0 +1,241 @@
+{
+  "_about": "Old Testament, part C.",
+  "jacob-bethel-return": {
+    "points": [
+      { "ancient": "Shechem", "modern": "near Nablus, West Bank", "lat": 32.21, "lon": 35.28 },
+      { "ancient": "Bethel", "modern": "Beitin, West Bank", "lat": 31.93, "lon": 35.22 },
+      { "ancient": "On the way to Ephrath", "modern": "Rachel's Tomb, near Bethlehem (traditional)", "lat": 31.72, "lon": 35.2 },
+      { "ancient": "Mamre (Hebron)", "modern": "Hebron, West Bank", "lat": 31.53, "lon": 35.1 }
+    ],
+    "steps": [
+      { "label": "Go up to Bethel", "ref": "Genesis 35:1-4", "copy": "God tells Jacob to go up to Bethel. His household gives up their foreign gods, and Jacob buries them under the oak near Shechem.", "at": 0 },
+      { "label": "The altar at Bethel", "ref": "Genesis 35:6-7", "copy": "He builds an altar where God had revealed himself when he fled from Esau.", "miles": 20, "at": 1 },
+      { "label": "Named Israel again", "ref": "Genesis 35:9-15", "copy": "God appears again, blesses him and confirms the name Israel and the promise of the land.", "at": 1 },
+      { "label": "Rachel dies", "ref": "Genesis 35:16-20", "copy": "Still some distance from Ephrath, Rachel dies giving birth to Benjamin and is buried on the way to Bethlehem.", "miles": 15, "at": 2 },
+      { "label": "Home to Isaac", "ref": "Genesis 35:27-29", "copy": "Jacob comes to his father at Mamre, near Hebron. Isaac dies, and Esau and Jacob bury him.", "miles": 14, "at": 3 }
+    ]
+  },
+  "jacob-funeral-canaan": {
+    "set": { "note": "'Beyond the Jordan' (Genesis 50:10) usually means east of the river, which would make this a long way round. The site of Atad's threshing floor is unknown." },
+    "points": [
+      { "ancient": "Egypt (Goshen)", "modern": "eastern Nile Delta", "lat": 30.8, "lon": 31.9 },
+      { "ancient": "Threshing floor of Atad", "modern": "beyond the Jordan (site unknown)", "lat": 31.85, "lon": 35.58 },
+      { "ancient": "Cave of Machpelah", "modern": "Hebron, West Bank", "lat": 31.524, "lon": 35.111 }
+    ],
+    "steps": [
+      { "label": "Up from Egypt", "ref": "Genesis 50:7-9", "copy": "Pharaoh's officials, Egypt's elders and Joseph's whole household go up with chariots and horsemen to bury Jacob.", "at": 0 },
+      { "label": "Mourning at Atad", "ref": "Genesis 50:10-11", "copy": "Beyond the Jordan they mourn seven days, and the Canaanites name the place Abel-mizraim.", "miles": 300, "at": 1 },
+      { "label": "Buried at Machpelah", "ref": "Genesis 50:12-13", "copy": "His sons carry him into Canaan and bury him in the cave Abraham bought, just as he commanded.", "miles": 45, "at": 2 },
+      { "label": "Back to Egypt", "ref": "Genesis 50:14", "copy": "Joseph returns to Egypt with his brothers and everyone who went up with him.", "miles": 220, "at": 0 }
+    ]
+  },
+  "marah-elim": {
+    "set": { "note": "Marah and Elim are debated sites; they are shown at the traditional locations on the Sinai coast." },
+    "points": [
+      { "ancient": "Wilderness of Shur", "modern": "northwest Sinai (a broad region)", "lat": 30.2, "lon": 32.85 },
+      { "ancient": "Marah", "modern": "Sinai coast (site debated)", "lat": 29.6, "lon": 33.1 },
+      { "ancient": "Elim", "modern": "Sinai oasis (site debated)", "lat": 29.2, "lon": 33 }
+    ],
+    "steps": [
+      { "label": "No water", "ref": "Exodus 15:22", "copy": "From the Red Sea, Moses leads Israel into the wilderness of Shur. For three days they find no water.", "at": 0 },
+      { "label": "Bitter Marah", "ref": "Exodus 15:23-24", "copy": "They reach Marah but cannot drink the water, for it is bitter, and the people grumble.", "miles": 45, "at": 1 },
+      { "label": "The log", "ref": "Exodus 15:25-26", "copy": "The Lord shows Moses a log that makes the water sweet. “I am the LORD who heals you.”", "at": 1 },
+      { "label": "Rest at Elim", "ref": "Exodus 15:27", "copy": "They camp at Elim by twelve springs of water and seventy palm trees.", "miles": 28, "at": 2 }
+    ]
+  },
+  "rephidim-amalek": {
+    "set": { "note": "Exodus places the rock 'at Horeb' while the camp is at Rephidim; both sites are debated." },
+    "at": [1, 1, 1, 1]
+  },
+  "sihon-og": {
+    "points": [
+      { "ancient": "Jahaz", "modern": "Moab plateau, Jordan", "lat": 31.6, "lon": 35.9 },
+      { "ancient": "Heshbon", "modern": "Hisban, Jordan", "lat": 31.8, "lon": 35.81 },
+      { "ancient": "Jazer", "modern": "Gilead, Jordan", "lat": 32, "lon": 35.7 },
+      { "ancient": "Edrei", "modern": "Daraa, Syria", "lat": 32.79, "lon": 36.27 }
+    ],
+    "steps": [
+      { "label": "Refused passage", "ref": "Numbers 21:21-23", "copy": "Sihon king of the Amorites refuses to let Israel pass and comes out to fight them at Jahaz.", "at": 0 },
+      { "label": "Heshbon taken", "ref": "Numbers 21:24-26", "copy": "Israel strikes Sihon, takes his land from the Arnon to the Jabbok and settles in Heshbon, his city.", "miles": 15, "at": 1 },
+      { "label": "Jazer taken", "ref": "Numbers 21:32", "copy": "Spies are sent to Jazer, and Israel captures its villages.", "miles": 15, "at": 2 },
+      { "label": "Og at Edrei", "ref": "Numbers 21:33-34", "copy": "They go up the road to Bashan. Og comes out to fight at Edrei, and the Lord says, “Do not fear him.”", "miles": 60, "at": 3 },
+      { "label": "Og defeated", "ref": "Numbers 21:35", "copy": "They strike him down with his sons and his people and take his land.", "at": 3 }
+    ]
+  },
+  "joshua-northern-campaign": {
+    "set": { "note": "Joshua 10:43 leaves Israel's camp at Gilgal before this campaign." },
+    "steps": [
+      { "label": "Kings gather at Merom", "ref": "Joshua 11:1-6", "copy": "Jabin king of Hazor calls the northern kings, and they camp together at the waters of Merom. The Lord tells Joshua not to be afraid.", "at": 0 },
+      { "label": "A sudden attack", "ref": "Joshua 11:7-8", "copy": "Joshua comes against them suddenly by the waters of Merom, and the Lord gives them into Israel's hand.", "miles": 80, "at": 1 },
+      { "label": "Hazor captured", "ref": "Joshua 11:10", "copy": "He turns back and takes Hazor, the head of all those kingdoms.", "miles": 8, "at": 2 },
+      { "label": "Hazor burned", "ref": "Joshua 11:11-13", "copy": "Of all the cities on their mounds, Hazor alone is burned.", "at": 2 }
+    ]
+  },
+  "ehud-eglon": {
+    "set": { "note": "Judges calls Eglon's base the City of Palms, a name used for Jericho (Deuteronomy 34:3). Seirah's site is unknown." },
+    "points": [
+      { "ancient": "City of Palms (Jericho)", "modern": "Jericho, West Bank", "lat": 31.87, "lon": 35.44 },
+      { "ancient": "Seirah", "modern": "hill country of Ephraim (site unknown)", "lat": 31.97, "lon": 35.27 },
+      { "ancient": "Fords of the Jordan", "modern": "Jordan crossing toward Moab", "lat": 31.84, "lon": 35.55 }
+    ],
+    "steps": [
+      { "label": "Bringing tribute", "ref": "Judges 3:12-18", "copy": "After eighteen years under Eglon of Moab, Israel cries out, and the Lord raises up Ehud, a left-handed man, who brings the tribute.", "at": 0 },
+      { "label": "The hidden sword", "ref": "Judges 3:19-23", "copy": "Ehud returns with a secret message for the king and drives his hidden sword into the very fat Eglon.", "at": 0 },
+      { "label": "Escape to Seirah", "ref": "Judges 3:24-26", "copy": "While the servants wait outside the locked doors, Ehud escapes past the idols to Seirah.", "miles": 15, "at": 1 },
+      { "label": "The trumpet in Ephraim", "ref": "Judges 3:27-28", "copy": "He blows the trumpet in the hill country of Ephraim, and Israel goes down after him.", "at": 1 },
+      { "label": "The fords seized", "ref": "Judges 3:28-30", "copy": "They seize the fords of the Jordan, strike ten thousand Moabites, and the land has rest eighty years.", "miles": 18, "at": 2 }
+    ]
+  },
+  "jephthah-ammon": {
+    "set": { "note": "Which Aroer is meant is uncertain. The Aroer by the Arnon is shown; another Aroer lay near Rabbah (Joshua 13:25)." },
+    "points": [
+      { "ancient": "Mizpah of Gilead", "modern": "Gilead, Jordan", "lat": 32.3, "lon": 35.75 },
+      { "ancient": "Aroer to Minnith", "modern": "Ammonite border, Jordan", "lat": 31.7, "lon": 35.84 }
+    ],
+    "steps": [
+      { "label": "Made head at Mizpah", "ref": "Judges 11:4-11", "copy": "The elders of Gilead bring Jephthah back to lead them, and he repeats all his terms before the Lord at Mizpah.", "at": 0 },
+      { "label": "The Spirit comes", "ref": "Judges 11:29-31", "copy": "The Spirit of the Lord comes on him. He passes through Gilead and Manasseh, and makes a vow.", "at": 0 },
+      { "label": "Twenty cities struck", "ref": "Judges 11:32-33", "copy": "The Lord gives the Ammonites into his hand, from Aroer to the area of Minnith.", "miles": 45, "at": 1 },
+      { "label": "Home to Mizpah", "ref": "Judges 11:34-35", "copy": "His only child, his daughter, comes out dancing with tambourines to meet him.", "miles": 45, "at": 0 }
+    ]
+  },
+  "danites-migrate-laish": {
+    "set": { "note": "Micah's house is somewhere in the hill country of Ephraim; the spot is unknown. Mahaneh-dan was west of Kiriath-jearim (Judges 18:12)." },
+    "points": [
+      { "ancient": "Zorah and Eshtaol", "modern": "Shephelah, Israel", "lat": 31.77, "lon": 34.99 },
+      { "ancient": "Micah's house", "modern": "hill country of Ephraim (spot unknown)", "lat": 32.05, "lon": 35.2 },
+      { "ancient": "Laish (Dan)", "modern": "Tel Dan, Israel", "lat": 33.25, "lon": 35.65 },
+      { "ancient": "Mahaneh-dan", "modern": "west of Kiriath-jearim", "lat": 31.8, "lon": 35.07 }
+    ],
+    "steps": [
+      { "label": "Spies sent out", "ref": "Judges 18:1-2", "copy": "With no land of its own yet, the tribe of Dan sends five men to explore.", "at": 0 },
+      { "label": "A priest at Micah's", "ref": "Judges 18:2-6", "copy": "They lodge at Micah's house and ask his Levite to inquire of God for them.", "miles": 25, "at": 1 },
+      { "label": "Quiet Laish", "ref": "Judges 18:7-10", "copy": "They find Laish living quiet and secure, far from any help, and report back.", "miles": 85, "at": 2 },
+      { "label": "Six hundred march", "ref": "Judges 18:11-12", "copy": "Six hundred armed men set out and camp at Kiriath-jearim, at the place called Mahaneh-dan.", "miles": 105, "at": 3 },
+      { "label": "Micah's idols taken", "ref": "Judges 18:13-26", "copy": "In Ephraim they carry off Micah's carved image and his priest.", "miles": 20, "at": 1 },
+      { "label": "Laish struck, renamed Dan", "ref": "Judges 18:27-29", "copy": "They strike the unsuspecting city, burn it, rebuild it and name it Dan.", "miles": 85, "at": 2 }
+    ]
+  },
+  "hannah-shiloh": {
+    "set": { "note": "Elkanah's town, Ramathaim-zophim (1 Samuel 1:1), is usually identified with Ramah." },
+    "steps": [
+      { "label": "Up to Shiloh", "ref": "1 Samuel 1:3-8", "copy": "Year after year Elkanah goes up to worship, and Hannah, who has no children, weeps and will not eat.", "miles": 14, "at": 1 },
+      { "label": "Hannah prays", "ref": "1 Samuel 1:9-18", "copy": "In deep distress she prays and vows: if the Lord gives her a son, she will give him to the Lord.", "at": 1 },
+      { "label": "Samuel is born", "ref": "1 Samuel 1:19-20", "copy": "Back home at Ramah, she bears a son and names him Samuel.", "miles": 14, "at": 0 },
+      { "label": "Given to the Lord", "ref": "1 Samuel 1:24-28", "copy": "Once he is weaned, she brings the boy to the house of the Lord at Shiloh.", "miles": 14, "at": 1 }
+    ]
+  },
+  "ark-returns-beth-shemesh": { "at": [0, 1, 1, 2] },
+  "saul-rescues-jabesh": {
+    "set": { "note": "Bezek is usually placed at Khirbet Ibziq, northeast of Shechem." },
+    "points": [
+      { "ancient": "Gibeah", "modern": "Tell el-Ful", "lat": 31.82, "lon": 35.23 },
+      { "ancient": "Bezek", "modern": "Khirbet Ibziq (likely)", "lat": 32.37, "lon": 35.38 },
+      { "ancient": "Jabesh-gilead", "modern": "Gilead, Jordan", "lat": 32.45, "lon": 35.65 },
+      { "ancient": "Gilgal", "modern": "Jordan valley near Jericho (site debated)", "lat": 31.87, "lon": 35.5 }
+    ],
+    "steps": [
+      { "label": "News at Gibeah", "ref": "1 Samuel 11:4-7", "copy": "The people weep at Nahash's threat to Jabesh. The Spirit of God comes on Saul as he comes in from the field.", "at": 0 },
+      { "label": "Mustered at Bezek", "ref": "1 Samuel 11:8-10", "copy": "Saul counts the army of Israel and Judah at Bezek.", "miles": 40, "at": 1 },
+      { "label": "The dawn attack", "ref": "1 Samuel 11:11", "copy": "In three companies they strike the Ammonites until the heat of the day.", "miles": 20, "at": 2 },
+      { "label": "The kingdom renewed", "ref": "1 Samuel 11:14-15", "copy": "All the people go to Gilgal and make Saul king before the Lord.", "miles": 45, "at": 3 }
+    ]
+  },
+  "jonathan-michmash": {
+    "steps": [
+      { "label": "The rocky pass", "ref": "1 Samuel 14:1-5", "copy": "Saul stays on the outskirts of Gibeah while Jonathan and his armor-bearer slip toward the Philistine outpost between two crags.", "miles": 4, "at": 1 },
+      { "label": "By many or by few", "ref": "1 Samuel 14:6", "copy": "Jonathan says nothing can keep the Lord from saving, whether by many or by few.", "at": 1 },
+      { "label": "The climb", "ref": "1 Samuel 14:13-15", "copy": "He climbs up on hands and feet, and the Philistines fall before him. The ground shakes.", "miles": 1, "at": 2 },
+      { "label": "The Lord saves Israel", "ref": "1 Samuel 14:20-23", "copy": "Saul's army joins in, and the Lord saves Israel that day.", "at": 2 }
+    ]
+  },
+  "samuel-anoints-david": {
+    "steps": [
+      { "label": "Sent to Bethlehem", "ref": "1 Samuel 16:1", "copy": "“Fill your horn with oil and go. I am sending you to Jesse of Bethlehem.”", "miles": 12, "at": 1 },
+      { "label": "The elders tremble", "ref": "1 Samuel 16:4-5", "copy": "The town elders come trembling, and Samuel says he has come in peace to sacrifice.", "at": 1 },
+      { "label": "The youngest son", "ref": "1 Samuel 16:6-12", "copy": "The Lord looks at the heart, not outward appearance. David, out tending the sheep, is sent for.", "at": 1 },
+      { "label": "Anointed with oil", "ref": "1 Samuel 16:13", "copy": "From that day on, the Spirit of the Lord rushes upon David.", "at": 1 },
+      { "label": "Back to Ramah", "ref": "1 Samuel 16:13", "copy": "Then Samuel sets out and goes home to Ramah.", "miles": 12, "at": 0 }
+    ]
+  },
+  "david-nob-gath": {
+    "steps": [
+      { "label": "Bread at Nob", "ref": "1 Samuel 21:1-6", "copy": "Ahimelech the priest gives David the consecrated bread.", "at": 0 },
+      { "label": "Goliath's sword", "ref": "1 Samuel 21:8-9", "copy": "David takes the sword of Goliath, wrapped in a cloth behind the ephod.", "at": 0 },
+      { "label": "Fleeing to Gath", "ref": "1 Samuel 21:10-12", "copy": "He flees to Achish king of Gath, where he is recognized and becomes afraid.", "miles": 25, "at": 1 },
+      { "label": "Feigning madness", "ref": "1 Samuel 21:13-15", "copy": "He scratches on the doors of the gate and lets saliva run down his beard.", "at": 1 }
+    ]
+  },
+  "david-adullam-moab": {
+    "set": { "note": "Mizpeh of Moab and the forest of Hereth are unknown sites; both are placed approximately." },
+    "points": [
+      { "ancient": "Cave of Adullam", "modern": "Shephelah, Israel", "lat": 31.65, "lon": 34.96 },
+      { "ancient": "Mizpeh of Moab", "modern": "Moab plateau, Jordan (site unknown)", "lat": 31.5, "lon": 35.7 },
+      { "ancient": "Forest of Hereth", "modern": "land of Judah (site unknown)", "lat": 31.6, "lon": 35.03 }
+    ],
+    "steps": [
+      { "label": "The cave of Adullam", "ref": "1 Samuel 22:1", "copy": "David escapes to the cave, and his brothers and father's household come down to him.", "at": 0 },
+      { "label": "Four hundred gather", "ref": "1 Samuel 22:2", "copy": "Everyone in distress, in debt or discontented gathers to him, and he becomes their leader.", "at": 0 },
+      { "label": "Parents to Moab", "ref": "1 Samuel 22:3-4", "copy": "He asks the king of Moab to let his father and mother stay there.", "miles": 45, "at": 1 },
+      { "label": "Into Judah", "ref": "1 Samuel 22:5", "copy": "The prophet Gad tells him to leave the stronghold, so he goes to the forest of Hereth.", "miles": 42, "at": 2 }
+    ]
+  },
+  "saul-endor": {
+    "points": [
+      { "ancient": "Mount Gilboa", "modern": "Mount Gilboa, Israel", "lat": 32.46, "lon": 35.42 },
+      { "ancient": "Endor", "modern": "Ein Dor area", "lat": 32.64, "lon": 35.4 }
+    ],
+    "steps": [
+      { "label": "Armies face off", "ref": "1 Samuel 28:4-6", "copy": "The Philistines camp at Shunem and Israel at Gilboa. Saul is terrified, and the Lord does not answer him.", "at": 0 },
+      { "label": "Seeking a medium", "ref": "1 Samuel 28:7", "copy": "Saul tells his servants to find him a woman who is a medium; there is one at Endor.", "at": 0 },
+      { "label": "By night, disguised", "ref": "1 Samuel 28:8-14", "copy": "In disguise and by night, he goes to her, and Samuel appears.", "miles": 12, "at": 1 },
+      { "label": "Samuel's word", "ref": "1 Samuel 28:15-19", "copy": "Samuel says the Lord has torn the kingdom from Saul; tomorrow he and his sons will be with him.", "at": 1 },
+      { "label": "Back in the night", "ref": "1 Samuel 28:20-25", "copy": "Saul collapses, eats what the woman prepares, and goes away that same night.", "miles": 12, "at": 0 }
+    ]
+  },
+  "david-king-hebron": { "at": [0, 1, 1, 1] },
+  "david-rabbah-ammon": {
+    "steps": [
+      { "label": "David stays behind", "ref": "2 Samuel 11:1", "copy": "In the spring, Joab and the army besiege Rabbah, but David stays in Jerusalem.", "at": 0 },
+      { "label": "Joab's message", "ref": "2 Samuel 12:26-28", "copy": "Joab captures the royal city and sends for David to come and take Rabbah himself.", "at": 0 },
+      { "label": "Rabbah captured", "ref": "2 Samuel 12:29-30", "copy": "David gathers the army, goes to Rabbah and takes it, and the king's crown is placed on his head.", "miles": 45, "at": 1 },
+      { "label": "Home to Jerusalem", "ref": "2 Samuel 12:31", "copy": "Then David and all the army return to Jerusalem.", "miles": 45, "at": 0 }
+    ]
+  },
+  "sheba-revolt": {
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Gibeon", "modern": "El-Jib, West Bank", "lat": 31.85, "lon": 35.18 },
+      { "ancient": "Abel-beth-maacah", "modern": "Tel Abel, northern Israel", "lat": 33.26, "lon": 35.58 }
+    ],
+    "steps": [
+      { "label": "Israel follows Sheba", "ref": "2 Samuel 20:1-3", "copy": "Sheba blows a trumpet and Israel deserts David, but Judah stays with its king all the way to Jerusalem.", "at": 0 },
+      { "label": "At the great stone", "ref": "2 Samuel 20:7-10", "copy": "Joab's men set out after Sheba. At the great stone in Gibeon, Joab kills Amasa.", "miles": 6, "at": 1 },
+      { "label": "Through all Israel", "ref": "2 Samuel 20:14-15", "copy": "Sheba passes through all the tribes to Abel-beth-maacah, and Joab builds a siege ramp against it.", "miles": 105, "at": 2 },
+      { "label": "A wise woman", "ref": "2 Samuel 20:16-22", "copy": "She persuades the city, and Sheba's head is thrown over the wall to Joab.", "at": 2 },
+      { "label": "Back to the king", "ref": "2 Samuel 20:22", "copy": "Joab blows the trumpet and returns to the king in Jerusalem.", "miles": 110, "at": 0 }
+    ]
+  },
+  "solomon-cedars-lebanon": {
+    "set": { "note": "1 Kings 5:9 says the logs were floated in rafts to the place Solomon would name; 2 Chronicles 2:16 names it as Joppa." },
+    "points": [
+      { "ancient": "Lebanon (Hiram of Tyre)", "modern": "Tyre, Lebanon", "lat": 33.27, "lon": 35.2 },
+      { "ancient": "Joppa", "modern": "Jaffa, Israel", "lat": 32.05, "lon": 34.75 },
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 }
+    ],
+    "steps": [
+      { "label": "Cedars of Lebanon", "ref": "1 Kings 5:1-6", "copy": "Solomon asks Hiram for cedar, for no one can cut timber like the Sidonians.", "at": 0 },
+      { "label": "Laborers in relays", "ref": "1 Kings 5:13-14", "copy": "Thirty thousand men go to Lebanon in shifts of ten thousand a month.", "at": 0 },
+      { "label": "Floated by sea", "ref": "1 Kings 5:8-9", "copy": "Hiram's men bring the logs down to the sea and float them in rafts.", "miles": 85, "at": 1, "by": "sea" },
+      { "label": "Stone and timber", "ref": "1 Kings 5:17-18", "copy": "The builders prepare the timber and great cut stones for the house of the Lord.", "miles": 35, "at": 2 }
+    ]
+  },
+  "elisha-shunem": {
+    "steps": [
+      { "label": "A room for the prophet", "ref": "2 Kings 4:8-10", "copy": "A woman of Shunem and her husband build a small upper room for Elisha.", "at": 0 },
+      { "label": "The child dies", "ref": "2 Kings 4:18-20", "copy": "The son promised to her sits on her lap until noon, and then he dies.", "at": 0 },
+      { "label": "Riding to Carmel", "ref": "2 Kings 4:24-28", "copy": "She saddles the donkey and rides to the man of God at Mount Carmel.", "miles": 18, "at": 1 },
+      { "label": "The boy raised", "ref": "2 Kings 4:32-37", "copy": "Back at the house, the child sneezes seven times and opens his eyes.", "miles": 18, "at": 0 }
+    ]
+  }
+}

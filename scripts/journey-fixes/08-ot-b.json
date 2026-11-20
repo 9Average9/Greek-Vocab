@@ -1,0 +1,210 @@
+{
+  "_about": "Old Testament, part B.",
+  "gideon-midian-pursuit": {
+    "points": [
+      { "ancient": "Spring of Harod", "modern": "Ain Jalut, Jezreel valley", "lat": 32.55, "lon": 35.36 },
+      { "ancient": "The Jordan", "modern": "Jordan crossing (spot unknown)", "lat": 32.25, "lon": 35.55 },
+      { "ancient": "Succoth", "modern": "Jordan valley, Jordan", "lat": 32.2, "lon": 35.57 },
+      { "ancient": "Penuel", "modern": "by the Jabbok, Jordan (site debated)", "lat": 32.1, "lon": 35.62 },
+      { "ancient": "Karkor", "modern": "eastern desert, Jordan", "lat": 32.1, "lon": 36.25 }
+    ],
+    "steps": [
+      { "label": "The 300 at the spring", "ref": "Judges 7:1-8", "copy": "God keeps only the three hundred men who lapped the water and sends the rest home.", "at": 0 },
+      { "label": "Torches and trumpets", "ref": "Judges 7:19-22", "copy": "At night the 300 blow trumpets and smash their jars, and the Midianite camp turns on itself and flees.", "at": 0 },
+      { "label": "Seizing the waters", "ref": "Judges 7:24-25", "copy": "The men of Ephraim take the waters as far as the Jordan and capture the commanders Oreb and Zeeb.", "miles": 30, "at": 1 },
+      { "label": "Faint yet pursuing", "ref": "Judges 8:4-7", "copy": "Gideon's 300 cross the Jordan, exhausted, but the officials of Succoth refuse them bread.", "miles": 5, "at": 2 },
+      { "label": "Penuel refuses too", "ref": "Judges 8:8-9", "copy": "The men of Penuel give the same answer.", "miles": 7, "at": 3 },
+      { "label": "Overtaking at Karkor", "ref": "Judges 8:10-12", "copy": "He surprises the camp and captures the two kings of Midian, Zebah and Zalmunna.", "miles": 40, "at": 4 }
+    ]
+  },
+  "david-goliath-elah": { "at": [1, 1, 2] },
+  "absalom-david-flight": {
+    "set": { "note": "The text names the Kidron, the Mount of Olives, Bahurim and the Jordan crossing but not where on the Jordan they crossed. Bahurim is usually placed at Ras et-Tmim, just east of the Mount of Olives." },
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Mount of Olives", "modern": "east of Jerusalem", "lat": 31.77, "lon": 35.25 },
+      { "ancient": "Bahurim", "modern": "Ras et-Tmim area (likely)", "lat": 31.79, "lon": 35.27 },
+      { "ancient": "The Jordan", "modern": "Jordan valley (crossing point unknown)", "lat": 31.95, "lon": 35.55 },
+      { "ancient": "Mahanaim", "modern": "Gilead, Jordan (site debated)", "lat": 32.2, "lon": 35.72 }
+    ],
+    "steps": [
+      { "label": "Across the Kidron", "ref": "2 Samuel 15:13-23", "copy": "Warned that Israel has turned to Absalom, David leaves the city, and the whole land weeps as the people cross the Kidron.", "at": 0 },
+      { "label": "Weeping up the Mount of Olives", "ref": "2 Samuel 15:30", "copy": "David goes up the Mount of Olives weeping, his head covered and his feet bare.", "miles": 1, "at": 1 },
+      { "label": "Shimei curses", "ref": "2 Samuel 16:5-13", "copy": "At Bahurim, Shimei curses David and throws stones, and David will not let his men silence him.", "miles": 2, "at": 2 },
+      { "label": "Across by night", "ref": "2 Samuel 17:21-22", "copy": "Warned to hurry, David's whole company crosses the Jordan; by daybreak no one is left behind.", "miles": 20, "at": 3 },
+      { "label": "Safe at Mahanaim", "ref": "2 Samuel 17:24-29", "copy": "David reaches Mahanaim, where friends bring beds, food and supplies for the weary people.", "miles": 20, "at": 4 }
+    ]
+  },
+  "abram-egypt-famine": {
+    "steps": [
+      { "label": "Down to Egypt", "ref": "Genesis 12:10", "copy": "A severe famine drives Abram down to Egypt to live there for a while.", "miles": 200, "at": 1 },
+      { "label": "Sarai taken", "ref": "Genesis 12:14-16", "copy": "Sarai is taken into Pharaoh's house, and Abram is treated well for her sake.", "at": 1 },
+      { "label": "Sent away", "ref": "Genesis 12:17-20", "copy": "After the Lord strikes Pharaoh's house with plagues, Pharaoh sends Abram away with all he has.", "at": 1 },
+      { "label": "Up into the Negev", "ref": "Genesis 13:1-2", "copy": "Abram goes up out of Egypt into the Negev, very rich in livestock, silver and gold.", "miles": 200, "at": 0 },
+      { "label": "Back to Bethel", "ref": "Genesis 13:3-4", "copy": "He returns to the place between Bethel and Ai where he first built an altar, and calls on the Lord.", "miles": 80, "at": 2 }
+    ]
+  },
+  "isaac-gerar": {
+    "points": [
+      { "ancient": "Gerar", "modern": "Tel Haror area, Israel", "lat": 31.4, "lon": 34.58 },
+      { "ancient": "Rehoboth", "modern": "western Negev wells (site debated)", "lat": 31.15, "lon": 34.5 },
+      { "ancient": "Beersheba", "modern": "Beersheba, Israel", "lat": 31.25, "lon": 34.79 }
+    ],
+    "steps": [
+      { "label": "Told to stay", "ref": "Genesis 26:1-6", "copy": "In a famine the Lord tells Isaac not to go down to Egypt but to stay in the land, so he settles in Gerar.", "at": 0 },
+      { "label": "A hundredfold harvest", "ref": "Genesis 26:12-14", "copy": "Isaac sows and reaps a hundredfold that year, and the Lord blesses him.", "at": 0 },
+      { "label": "Room at last", "ref": "Genesis 26:17-22", "copy": "After quarrels over two wells, he digs Rehoboth: “At last the LORD has made room for us.”", "miles": 16, "at": 1 },
+      { "label": "Up to Beersheba", "ref": "Genesis 26:23-25", "copy": "He goes up to Beersheba, where the Lord appears to him, and he builds an altar.", "miles": 20, "at": 2 }
+    ]
+  },
+  "jacob-peniel": {
+    "steps": [
+      { "label": "The camp of God", "ref": "Genesis 32:1-2", "copy": "The angels of God meet him. “This is the camp of God,” he says, and names the place Mahanaim.", "at": 0 },
+      { "label": "Wrestling till dawn", "ref": "Genesis 32:22-31", "copy": "By the Jabbok a man wrestles with Jacob until daybreak and renames him Israel.", "miles": 8, "at": 1 },
+      { "label": "Face to face with Esau", "ref": "Genesis 33:1-4", "copy": "Esau runs to meet him, embraces him, and they weep.", "at": 1 },
+      { "label": "Succoth", "ref": "Genesis 33:17", "copy": "Jacob builds a house for himself and shelters for his livestock.", "miles": 8, "at": 2 },
+      { "label": "On to Shechem", "ref": "Genesis 33:18-20", "copy": "He comes safely to the city of Shechem and sets up an altar.", "miles": 25, "at": 3 }
+    ]
+  },
+  "moses-return-egypt": {
+    "set": { "note": "Midian and the mountain of God are both debated; they are shown at their traditional places." },
+    "points": [
+      { "ancient": "Midian", "modern": "northwest Arabia", "lat": 28.4, "lon": 35.3 },
+      { "ancient": "The mountain of God", "modern": "traditionally Jebel Musa (site debated)", "lat": 28.54, "lon": 33.97 },
+      { "ancient": "Egypt", "modern": "eastern Nile Delta", "lat": 30.8, "lon": 31.9 }
+    ],
+    "steps": [
+      { "label": "Leave to go", "ref": "Exodus 4:18", "copy": "Jethro sends Moses off in peace to return to his people.", "at": 0 },
+      { "label": "The staff of God", "ref": "Exodus 4:20", "copy": "Moses sets out for Egypt with his wife and sons, the staff of God in his hand.", "at": 0 },
+      { "label": "Aaron at the mountain", "ref": "Exodus 4:27-28", "copy": "Sent by the Lord, Aaron meets him at the mountain of God and kisses him.", "miles": 90, "at": 1 },
+      { "label": "Before the elders", "ref": "Exodus 4:29-31", "copy": "They gather Israel's elders, who believe and bow down to worship.", "miles": 250, "at": 2 }
+    ]
+  },
+  "saul-donkeys-samuel": {
+    "set": { "note": "The text names the regions Saul searched and 'the land of Zuph' but not Samuel's city. Ramah, Samuel's home (1 Samuel 7:17), is the usual guess." },
+    "points": [
+      { "ancient": "Gibeah", "modern": "Tell el-Ful area", "lat": 31.82, "lon": 35.23 },
+      { "ancient": "Hill country of Ephraim", "modern": "central highlands", "lat": 32.1, "lon": 35.18 },
+      { "ancient": "Land of Zuph", "modern": "Er-Ram area, if Samuel's city was Ramah", "lat": 31.87, "lon": 35.2 }
+    ],
+    "steps": [
+      { "label": "The lost donkeys", "ref": "1 Samuel 9:3-4", "copy": "Saul and a servant pass through Ephraim, Shalishah, Shaalim and Benjamin but find nothing.", "miles": 20, "at": 1 },
+      { "label": "The man of God", "ref": "1 Samuel 9:5-10", "copy": "In the land of Zuph, the servant suggests they ask the seer in the town.", "miles": 15, "at": 2 },
+      { "label": "Samuel's welcome", "ref": "1 Samuel 9:15-24", "copy": "The Lord tells Samuel this is the man to lead Israel, and Samuel seats Saul at the head of the guests.", "at": 2 },
+      { "label": "The anointing", "ref": "1 Samuel 10:1", "copy": "Samuel pours oil on Saul's head and kisses him.", "at": 2 },
+      { "label": "Home to Gibeah", "ref": "1 Samuel 10:9-10, 26", "copy": "God gives him a new heart, and Saul goes home to Gibeah with men whose hearts God had touched.", "miles": 4, "at": 0 }
+    ]
+  },
+  "david-ziklag": {
+    "steps": [
+      { "label": "Ziklag in ashes", "ref": "1 Samuel 30:1-6", "copy": "Amalekites have burned the town and taken the families. David and his men weep until they have no strength left.", "at": 0 },
+      { "label": "Left at the brook", "ref": "1 Samuel 30:9-10", "copy": "Two hundred stay behind, too exhausted to cross the Besor.", "miles": 12, "at": 1 },
+      { "label": "All recovered", "ref": "1 Samuel 30:16-19", "copy": "David strikes the raiders and recovers everything; nothing is missing, small or great.", "miles": 20, "at": 2 },
+      { "label": "Shared alike", "ref": "1 Samuel 30:21-25", "copy": "Back at the brook, David rules that those who stayed with the supplies share equally with those who fought.", "miles": 20, "at": 1 },
+      { "label": "Gifts to Judah", "ref": "1 Samuel 30:26", "copy": "Back in Ziklag, he sends part of the plunder to the elders of Judah.", "miles": 12, "at": 0 }
+    ]
+  },
+  "solomon-gibeon": {
+    "steps": [
+      { "label": "To the high place", "ref": "1 Kings 3:4", "copy": "Solomon offers a thousand burnt offerings at Gibeon.", "miles": 6, "at": 1 },
+      { "label": "A dream at night", "ref": "1 Kings 3:5", "copy": "God says, “Ask, and I will give it to you!”", "at": 1 },
+      { "label": "A listening heart", "ref": "1 Kings 3:9", "copy": "Solomon asks for an understanding heart to judge the people and discern between good and evil.", "at": 1 },
+      { "label": "Back before the ark", "ref": "1 Kings 3:15", "copy": "He returns to Jerusalem and offers offerings before the ark.", "miles": 6, "at": 0 }
+    ]
+  },
+  "elijah-carmel-jezreel": {
+    "steps": [
+      { "label": "Praying for rain", "ref": "1 Kings 18:42", "copy": "Elijah crouches with his face between his knees.", "at": 0 },
+      { "label": "A cloud like a hand", "ref": "1 Kings 18:43-44", "copy": "The seventh time, his servant sees a cloud as small as a man's hand rising from the sea.", "at": 0 },
+      { "label": "The sky goes black", "ref": "1 Kings 18:45", "copy": "Heavy rain comes, and Ahab rides off to Jezreel.", "at": 0 },
+      { "label": "Outrunning the chariot", "ref": "1 Kings 18:46", "copy": "The hand of the Lord is on Elijah, and he runs ahead of Ahab all the way to Jezreel.", "miles": 17, "at": 1 }
+    ]
+  },
+  "rehoboam-shechem": {
+    "steps": [
+      { "label": "Up to Shechem", "ref": "1 Kings 12:1", "copy": "Rehoboam goes to Shechem, where all Israel has gathered to make him king.", "miles": 32, "at": 1 },
+      { "label": "Lighten the yoke", "ref": "1 Kings 12:3-5", "copy": "The people ask him to ease the heavy yoke Solomon put on them.", "at": 1 },
+      { "label": "A harsher answer", "ref": "1 Kings 12:12-14", "copy": "Ignoring the elders, he threatens to make their yoke heavier still.", "at": 1 },
+      { "label": "To your tents", "ref": "1 Kings 12:16", "copy": "“To your tents, O Israel!” Israel rejects the house of David.", "at": 1 },
+      { "label": "Fleeing home", "ref": "1 Kings 12:18-20", "copy": "Israel stones his officer Adoram, and Rehoboam escapes by chariot to Jerusalem.", "miles": 32, "at": 0 }
+    ]
+  },
+  "josiah-megiddo": {
+    "set": { "note": "2 Kings says Neco killed Josiah at Megiddo. 2 Chronicles 35:23-24 adds that archers wounded him there and he died after being brought to Jerusalem." },
+    "at": [1, 1, 0]
+  },
+  "ezra-return": {
+    "steps": [
+      { "label": "Out of Babylon", "ref": "Ezra 7:6-9", "copy": "On the first day of the first month, Ezra begins the journey up from Babylon.", "at": 0 },
+      { "label": "A fast at Ahava", "ref": "Ezra 8:15-23", "copy": "Camped by the Ahava canal, Ezra calls a fast to ask God for a safe journey, ashamed to ask the king for soldiers.", "miles": 60, "at": 1 },
+      { "label": "Protected on the road", "ref": "Ezra 8:31-32", "copy": "God's hand keeps them from enemies and ambushes along the way, and they reach Jerusalem and rest three days.", "miles": 900, "at": 2 },
+      { "label": "Treasure delivered", "ref": "Ezra 8:33-35", "copy": "The silver, gold and vessels are weighed out in the house of God, and the returned exiles offer burnt offerings.", "at": 2 }
+    ]
+  },
+  "red-sea-crossing": {
+    "set": { "note": "Every place on this route, and the crossing point itself, is debated. The stops follow the order Exodus gives." },
+    "points": [
+      { "ancient": "Rameses", "modern": "eastern Nile Delta (site debated)", "lat": 30.8, "lon": 31.9 },
+      { "ancient": "Succoth", "modern": "Wadi Tumilat, Egypt", "lat": 30.62, "lon": 32.1 },
+      { "ancient": "Etham", "modern": "edge of the wilderness", "lat": 30.45, "lon": 32.3 },
+      { "ancient": "Pi-hahiroth", "modern": "by the sea (site debated)", "lat": 30.05, "lon": 32.55 },
+      { "ancient": "Wilderness of Shur", "modern": "northwest Sinai", "lat": 30.2, "lon": 32.85 }
+    ],
+    "steps": [
+      { "label": "Out of Rameses", "ref": "Exodus 12:37-41", "copy": "About six hundred thousand men on foot, besides women and children, set out from Rameses for Succoth.", "miles": 25, "at": 1 },
+      { "label": "The long way round", "ref": "Exodus 13:17-18", "copy": "God leads them by the wilderness road toward the Red Sea, not the short road through Philistine country.", "at": 1 },
+      { "label": "Camp at Etham", "ref": "Exodus 13:20-22", "copy": "They camp at the edge of the wilderness, led by a pillar of cloud by day and fire by night.", "miles": 15, "at": 2 },
+      { "label": "Hemmed in", "ref": "Exodus 14:1-4", "copy": "God turns them back to camp by the sea at Pi-hahiroth, and Pharaoh thinks they are trapped.", "miles": 25, "at": 3 },
+      { "label": "Through the sea", "ref": "Exodus 14:21-22", "copy": "A strong east wind drives the sea back all night, and Israel walks through on dry ground.", "miles": 15, "at": 4 },
+      { "label": "The waters return", "ref": "Exodus 14:27-31", "copy": "The sea flows back over Pharaoh's chariots and horsemen, and the people fear the Lord and believe.", "at": 4 },
+      { "label": "Into the wilderness", "ref": "Exodus 15:1, 22", "copy": "Moses and Israel sing to the Lord, then go on three days into the wilderness of Shur without finding water.", "at": 4 }
+    ]
+  },
+  "moses-views-promised-land": {
+    "steps": [
+      { "label": "Up to the summit", "ref": "Deuteronomy 34:1", "copy": "Moses climbs from the plains of Moab to Mount Nebo, the top of Pisgah.", "miles": 6, "at": 1 },
+      { "label": "The whole land shown", "ref": "Deuteronomy 34:1-4", "copy": "“This is the land that I swore to give Abraham, Isaac, and Jacob,” the Lord says, “but you will not cross into it.”", "at": 1 },
+      { "label": "Moses dies in Moab", "ref": "Deuteronomy 34:5", "copy": "The servant of the Lord dies there, as the Lord had said.", "at": 1 },
+      { "label": "A hidden grave", "ref": "Deuteronomy 34:6", "copy": "He is buried in a valley in Moab, and no one knows the place to this day.", "at": 1 }
+    ]
+  },
+  "deborah-barak-tabor": {
+    "set": { "note": "Which Kedesh is meant is debated: Kedesh in upper Galilee (shown) or a Kedesh near the Sea of Galilee. Jael's tent was near Kedesh (Judges 4:11)." },
+    "steps": [
+      { "label": "Barak called", "ref": "Judges 4:4-9", "copy": "Deborah sends for Barak at Kedesh: take ten thousand men to Mount Tabor. He will go only if she goes too.", "at": 0 },
+      { "label": "Up Mount Tabor", "ref": "Judges 4:10-13", "copy": "Ten thousand from Zebulun and Naphtali go up with Barak, and Sisera gathers his 900 iron chariots.", "miles": 30, "at": 1 },
+      { "label": "Down from the mountain", "ref": "Judges 4:14-16", "copy": "“Arise,” Deborah tells him, and Barak charges down Tabor as the Lord throws Sisera's army into confusion.", "miles": 12, "at": 2 },
+      { "label": "The Kishon sweeps them", "ref": "Judges 5:21", "copy": "Deborah's song: the ancient river Kishon swept them away.", "at": 2 },
+      { "label": "Jael's tent", "ref": "Judges 4:17-22", "copy": "Sisera flees on foot to the tent of Jael, near Kedesh, and dies there by her hand.", "miles": 40, "at": 0 }
+    ]
+  },
+  "samson-gates-hebron": { "at": [0, 0, 1] },
+  "elisha-dothan-chariots": { "at": [0, 0, 0, 1] },
+  "david-wilderness-strongholds": { "at": [0, 1, 2, 3] },
+  "hagar-flees-sarai": {
+    "set": { "note": "Genesis 16 doesn't name Abram's camp; he had settled by the oaks of Mamre at Hebron (Genesis 13:18). The spring lies 'between Kadesh and Bered' (16:14); its exact site is lost." },
+    "points": [
+      { "ancient": "Mamre", "modern": "near Hebron, West Bank", "lat": 31.55, "lon": 35.1 },
+      { "ancient": "Beer-lahai-roi", "modern": "Negev, between Kadesh and Bered (site lost)", "lat": 30.6, "lon": 34.6 }
+    ],
+    "steps": [
+      { "label": "Fleeing Sarai", "ref": "Genesis 16:1-6", "copy": "Treated harshly by Sarai, Hagar runs away.", "at": 0 },
+      { "label": "The angel at the spring", "ref": "Genesis 16:7-12", "copy": "The angel of the Lord finds her by a spring on the way to Shur and tells her to return.", "miles": 70, "at": 1 },
+      { "label": "The God who sees", "ref": "Genesis 16:13", "copy": "She names the Lord: “You are the God who sees me.”", "at": 1 },
+      { "label": "The well named", "ref": "Genesis 16:14", "copy": "The well is called Beer-lahai-roi, between Kadesh and Bered.", "at": 1 }
+    ]
+  },
+  "abram-tours-canaan": {
+    "points": [
+      { "ancient": "Shechem", "modern": "near Nablus, West Bank", "lat": 32.21, "lon": 35.28 },
+      { "ancient": "Between Bethel and Ai", "modern": "central highlands, West Bank", "lat": 31.93, "lon": 35.23 },
+      { "ancient": "The Negev", "modern": "Negev, Israel", "lat": 30.9, "lon": 34.85 }
+    ],
+    "steps": [
+      { "label": "The oak of Moreh", "ref": "Genesis 12:6", "copy": "Abram passes through the land to the oak of Moreh at Shechem. The Canaanites are in the land.", "at": 0 },
+      { "label": "An altar at Shechem", "ref": "Genesis 12:7", "copy": "The Lord appears: “I will give this land to your offspring.” Abram builds an altar.", "at": 0 },
+      { "label": "Between Bethel and Ai", "ref": "Genesis 12:8", "copy": "He pitches his tent, builds an altar and calls on the name of the Lord.", "miles": 20, "at": 1 },
+      { "label": "On toward the Negev", "ref": "Genesis 12:9", "copy": "Abram journeys on by stages toward the Negev.", "miles": 80, "at": 2 }
+    ]
+  }
+}
