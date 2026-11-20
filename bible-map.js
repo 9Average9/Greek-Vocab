@@ -369,9 +369,16 @@
   }
 
   function _journeyCoords(journey) {
-    return (journey.points || [])
-      .filter(function (p) { return typeof p.lon === 'number' && typeof p.lat === 'number'; })
-      .map(function (p) { return [p.lon, p.lat]; });
+    var pts = journey.points || [];
+    var ok = function (p) { return p && typeof p.lon === 'number' && typeof p.lat === 'number'; };
+    var steps = journey.steps || [];
+    // Journeys whose steps say where they happen ("at") draw the route in
+    // story order, so return trips and revisits show.
+    if (steps.length && steps.every(function (s) { return Number.isInteger(s.at) && pts[s.at]; })) {
+      var order = [0].concat(steps.map(function (s) { return s.at; })).filter(function (v, i, a) { return i === 0 || v !== a[i - 1]; });
+      return order.map(function (i) { return pts[i]; }).filter(ok).map(function (p) { return [p.lon, p.lat]; });
+    }
+    return pts.filter(ok).map(function (p) { return [p.lon, p.lat]; });
   }
 
   function _bounds(coords) {

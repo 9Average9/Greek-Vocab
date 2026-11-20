@@ -10,7 +10,9 @@
 
    Public API (window.JourneyStory):
      mount(container, journey, opts) -> Promise
-       opts: { pmtilesUrl, terrain, look, names, stops:[{point, bubble}],
+       opts: { pmtilesUrl, terrain, look, names,
+               stops:[{point, bubble, by, overview}]  (story order; the trail
+               follows it, revisits included),
                padding: () => ({ top, bottom }) }
      go(i, { animate })       -> move to story stop i
      setLook(look) / setNames(names)
@@ -87,14 +89,15 @@
     return style;
   }
 
-  // Legs between consecutive points, marked done/ahead and by land or by sea
-  // (a point with by:'sea' is reached by ship).
+  // The trail follows the story: a leg each time the story moves to a new
+  // place (revisits and trips back included). A stop with by:'sea' was
+  // reached by ship.
   function legsGeoJSON() {
-    var pts = st.pts, cur = st.curPoint, out = [];
-    for (var i = 0; i < pts.length - 1; i++) {
-      var a = pts[i], b = pts[i + 1];
-      if (!hasLL(a) || !hasLL(b)) continue;
-      out.push({ type: 'Feature', properties: { done: i + 1 <= cur, sea: /sea|ship|boat/i.test(b.by || '') },
+    var stops = st.opts.stops, pts = st.pts, out = [];
+    for (var k = 1; k < stops.length; k++) {
+      var a = pts[stops[k - 1].point], b = pts[stops[k].point];
+      if (stops[k].point === stops[k - 1].point || !hasLL(a) || !hasLL(b)) continue;
+      out.push({ type: 'Feature', properties: { done: k <= st.i, sea: /sea|ship|boat/i.test(stops[k].by || '') },
         geometry: { type: 'LineString', coordinates: [ll(a), ll(b)] } });
     }
     return { type: 'FeatureCollection', features: out };
@@ -133,33 +136,39 @@
   }
   function div(cls, html) { var d = document.createElement('div'); d.className = cls; if (html != null) d.innerHTML = html; return d; }
 
-  // Dots for every stop, the three labels, little boats on sea legs.
+  // Dots for every place, the three labels, little boats on sea legs.
   function drawMarkers() {
     clearMarkers();
-    var pts = st.pts, cur = st.curPoint;
-    var stop = st.opts.stops[st.i] || {};
-    var nextStop = st.opts.stops.slice(st.i + 1).find(function (s) { return s.point > cur; });
+    var pts = st.pts, stops = st.opts.stops, cur = st.curPoint;
+    var stop = stops[st.i] || {};
+    var visited = {};
+    for (var v = 0; v <= st.i; v++) visited[stops[v].point] = true;
+    var nextStop = stops.slice(st.i + 1).find(function (s) { return s.point !== cur && !s.overview; });
     var next = nextStop ? nextStop.point : -1;
     pts.forEach(function (p, i) {
       if (!hasLL(p) || i === cur) return;
-      marker(div('jst-dot ' + (i < cur ? 'is-done' : 'is-ahead'), '<b>' + (i + 1) + '</b>'), ll(p));
+      marker(div('jst-dot ' + (visited[i] ? 'is-done' : 'is-ahead'), '<b>' + (i + 1) + '</b>'), ll(p));
     });
-    for (var i = 0; i < pts.length - 1; i++) {
-      var a = pts[i], b = pts[i + 1];
-      if (hasLL(a) && hasLL(b) && /sea|ship|boat/i.test(b.by || '')) {
+    for (var k = 1; k < stops.length; k++) {
+      var a = pts[stops[k - 1].point], b = pts[stops[k].point];
+      if (stops[k].point !== stops[k - 1].point && hasLL(a) && hasLL(b) && /sea|ship|boat/i.test(stops[k].by || '')) {
         marker(div('jst-boat', '⛵'), [(a.lon + b.lon) / 2, (a.lat + b.lat) / 2]);
       }
     }
-    if (next >= 0 && hasLL(pts[next])) marker(div('jst-mini', esc(label(pts[next])) + ' · <em>next</em>'), ll(pts[next]), 'bottom', [0, -12]);
-    if (cur !== 0 && hasLL(pts[0]) && next !== 0) marker(div('jst-mini', esc(label(pts[0])) + ' · <em>start</em>'), ll(pts[0]), 'top', [0, 12]);
+    var start = stops[0].point;
+    // Labels sit beside their dots (the guide stands above his stop and his
+    // name flag below it), on the side away from him.
+    var side = function (i) { return hasLL(pts[cur]) && pts[i].lon < pts[cur].lon ? ['right', [-12, 0]] : ['left', [12, 0]]; };
+    if (next >= 0 && hasLL(pts[next])) { var sn = side(next); marker(div('jst-mini', esc(label(pts[next])) + ' · <em>next</em>'), ll(pts[next]), sn[0], sn[1]); }
+    if (cur !== start && next !== start && hasLL(pts[start])) { var ss = side(start); marker(div('jst-mini', esc(label(pts[start])) + ' · <em>start</em>'), ll(pts[start]), ss[0], ss[1]); }
     var here = pts[cur];
     if (hasLL(here)) {
       marker(div('jst-flag', esc(label(here))), ll(here), 'top', [0, 10]);
       var L = LOOKS[st.look] || LOOKS.storybook;
-      var g = div('jst-guide' + (st.walking ? ' is-walking' : ''),
+      var g = div('jst-guide',
         '<div class="jst-bubble">' + esc(stop.bubble || label(here) + '!') + '</div>' +
         '<img src="assets/mascot/' + L.pose + '.webp" alt="" decoding="async">');
-      st.guide = marker(g, st.guideAt || ll(here), 'bottom', [0, 4]);
+      st.guide = marker(g, ll(here), 'bottom', [0, 4]);
     }
   }
 
@@ -196,17 +205,12 @@
     else st.map.jumpTo(target);
   }
 
-  // Walk the guide along the trail from one stop to the next.
-  function walk(from, to, done) {
-    var path = [];
-    for (var i = from; i <= to; i++) if (hasLL(st.pts[i])) path.push(ll(st.pts[i]));
-    if (path.length < 2 || reduced() || !st.guide) { done(); return; }
-    var lens = [], total = 0;
-    for (var k = 0; k < path.length - 1; k++) {
-      var d = Math.hypot(path[k + 1][0] - path[k][0], path[k + 1][1] - path[k][1]);
-      lens.push(d); total += d;
-    }
-    var dur = Math.min(2600, 900 + path.length * 380), t0 = performance.now();
+  // Walk the guide from the last place to this one.
+  function walk(fromPt, toPt, done) {
+    var A = st.pts[fromPt], B = st.pts[toPt];
+    if (!hasLL(A) || !hasLL(B) || reduced() || !st.guide) { done(); return; }
+    var a = ll(A), b = ll(B);
+    var dur = 1300, t0 = performance.now();
     var el = st.guide.getElement();
     el.classList.add('is-walking');
     var token = st.token;
@@ -214,11 +218,7 @@
       if (!st || st.token !== token) return;
       var f = Math.min(1, (now - t0) / dur);
       var e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
-      var dist = e * total, j = 0;
-      while (j < lens.length - 1 && dist > lens[j]) { dist -= lens[j]; j++; }
-      var t = lens[j] ? Math.min(1, dist / lens[j]) : 1;
-      var p = [path[j][0] + (path[j + 1][0] - path[j][0]) * t, path[j][1] + (path[j + 1][1] - path[j][1]) * t];
-      st.guide.setLngLat(p);
+      st.guide.setLngLat([a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e]);
       if (f < 1) requestAnimationFrame(frame);
       else { el.classList.remove('is-walking'); done(); }
     }
@@ -230,7 +230,7 @@
     o = o || {};
     var stops = st.opts.stops;
     i = Math.max(0, Math.min(stops.length - 1, i));
-    var prevPoint = st.curPoint;
+    var prevPoint = st.curPoint, prevI = st.i;
     st.i = i;
     st.curPoint = stops[i].point;
     st.animate = o.animate !== false;
@@ -247,13 +247,14 @@
     if (s.overview) framePoints(st.pts.map(function (_, k) { return k; }), true);
     else {
       // The leg just walked, plus the next stop so "next" stays on screen.
-      var from = i > 0 ? stops[i - 1].point : s.point, idxs = [];
-      for (var k = Math.min(from, s.point); k <= Math.max(from, s.point); k++) idxs.push(k);
-      var nx = stops.slice(i + 1).find(function (x) { return x.point > s.point; });
+      var idxs = [s.point];
+      var pv = stops.slice(0, i).reverse().find(function (x) { return x.point !== s.point; });
+      if (pv) idxs.push(pv.point);
+      var nx = stops.slice(i + 1).find(function (x) { return x.point !== s.point && !x.overview; });
       if (nx) idxs.push(nx.point);
       framePoints(idxs, false);
     }
-    if (st.animate && st.curPoint > prevPoint && st.guide) {
+    if (st.animate && i === prevI + 1 && st.curPoint !== prevPoint && st.guide) {
       // Keep the old picture while he walks, then redraw at the new stop.
       walk(prevPoint, st.curPoint, settle);
     } else settle();

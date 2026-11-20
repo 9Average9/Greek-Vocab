@@ -1,0 +1,135 @@
+{
+  "_about": "Paul's journeys rebuilt stop by stop from Acts. Places use the Bible Atlas coordinates. Steps happen 'at' a place in story order (return legs revisit places); 'by: sea' marks legs Acts describes as sailing.",
+  "paul-first-journey": {
+    "set": { "distance": 1300, "note": "Every city Acts 13-14 names is shown, including the return through the same churches. Roads and sea lanes between them are simplified." },
+    "points": [
+      { "ancient": "Antioch", "modern": "Antakya, Turkey", "lat": 36.2, "lon": 36.16 },
+      { "ancient": "Seleucia", "modern": "Samandağ, Turkey", "lat": 36.12, "lon": 35.93 },
+      { "ancient": "Salamis", "modern": "eastern Cyprus", "lat": 35.18, "lon": 33.9 },
+      { "ancient": "Paphos", "modern": "Kato Paphos, Cyprus", "lat": 34.76, "lon": 32.42 },
+      { "ancient": "Perga", "modern": "near Antalya, Turkey", "lat": 36.96, "lon": 30.85 },
+      { "ancient": "Pisidian Antioch", "modern": "Yalvaç, Turkey", "lat": 38.31, "lon": 31.19 },
+      { "ancient": "Iconium", "modern": "Konya, Turkey", "lat": 37.87, "lon": 32.49 },
+      { "ancient": "Lystra", "modern": "Hatunsaray, Turkey", "lat": 37.58, "lon": 32.45 },
+      { "ancient": "Derbe", "modern": "Kerti Hüyük, Turkey", "lat": 37.35, "lon": 33.27 },
+      { "ancient": "Attalia", "modern": "Antalya, Turkey", "lat": 36.88, "lon": 30.7 }
+    ],
+    "steps": [
+      { "label": "Sent off from Antioch", "ref": "Acts 13:1-3", "copy": "After fasting and prayer, the church sends off Barnabas and Saul, as the Holy Spirit directed.", "at": 0 },
+      { "label": "Down to the coast", "ref": "Acts 13:4", "copy": "They go down to Seleucia to sail for Cyprus.", "miles": 16, "at": 1 },
+      { "label": "Salamis", "ref": "Acts 13:5", "copy": "They proclaim the word of God in the Jewish synagogues, with John as their helper.", "miles": 125, "at": 2, "by": "sea" },
+      { "label": "Paphos", "ref": "Acts 13:6-12", "copy": "Across the island, the sorcerer Elymas is struck blind and the proconsul Sergius Paulus believes.", "miles": 90, "at": 3 },
+      { "label": "Perga", "ref": "Acts 13:13", "copy": "They sail to Perga in Pamphylia, where John leaves them and returns to Jerusalem.", "miles": 170, "at": 4, "by": "sea" },
+      { "label": "Pisidian Antioch", "ref": "Acts 13:14-52", "copy": "Paul preaches in the synagogue; many Gentiles believe, and opposition drives them out of the region.", "miles": 100, "at": 5 },
+      { "label": "Iconium", "ref": "Acts 14:1-6", "copy": "A great number believe, but when a plot to stone them forms, they flee.", "miles": 85, "at": 6 },
+      { "label": "Lystra", "ref": "Acts 14:8-20", "copy": "Paul heals a man who had never walked. The crowd calls them gods, then Paul is stoned and left for dead.", "miles": 20, "at": 7 },
+      { "label": "Derbe", "ref": "Acts 14:20-21", "copy": "They preach the gospel in Derbe and make many disciples.", "miles": 55, "at": 8 },
+      { "label": "Back to Lystra", "ref": "Acts 14:21-22", "copy": "They turn back to strengthen the disciples and urge them to remain in the faith.", "miles": 55, "at": 7 },
+      { "label": "Back through Iconium", "ref": "Acts 14:21-22", "copy": "They encourage the believers in Iconium again.", "miles": 20, "at": 6 },
+      { "label": "Elders for the churches", "ref": "Acts 14:21-23", "copy": "Back in Pisidian Antioch, they appoint elders in each church with prayer and fasting.", "miles": 85, "at": 5 },
+      { "label": "Preaching in Perga", "ref": "Acts 14:24-25", "copy": "They pass through Pisidia and Pamphylia and speak the word in Perga.", "miles": 100, "at": 4 },
+      { "label": "Attalia", "ref": "Acts 14:25", "copy": "They go down to the port of Attalia.", "miles": 10, "at": 9 },
+      { "label": "Home to Antioch", "ref": "Acts 14:26-28", "copy": "They sail back to Antioch and tell the church how God opened the door of faith to the Gentiles.", "miles": 330, "at": 0, "by": "sea" }
+    ]
+  },
+  "paul-second-journey": {
+    "set": { "distance": 2900, "note": "Every city Acts 15:36-18:22 names on the way is shown, from Antioch to Corinth and back by sea. Roads between them are simplified." },
+    "points": [
+      { "ancient": "Antioch", "modern": "Antakya, Turkey", "lat": 36.2, "lon": 36.16 },
+      { "ancient": "Derbe", "modern": "Kerti Hüyük, Turkey", "lat": 37.35, "lon": 33.27 },
+      { "ancient": "Lystra", "modern": "Hatunsaray, Turkey", "lat": 37.58, "lon": 32.45 },
+      { "ancient": "Troas", "modern": "Dalyan, Turkey", "lat": 39.75, "lon": 26.16 },
+      { "ancient": "Samothrace", "modern": "Samothraki, Greece", "lat": 40.48, "lon": 25.53 },
+      { "ancient": "Neapolis", "modern": "Kavala, Greece", "lat": 40.94, "lon": 24.41 },
+      { "ancient": "Philippi", "modern": "Philippi, Greece", "lat": 41.01, "lon": 24.29 },
+      { "ancient": "Thessalonica", "modern": "Thessaloniki, Greece", "lat": 40.64, "lon": 22.94 },
+      { "ancient": "Berea", "modern": "Veria, Greece", "lat": 40.52, "lon": 22.2 },
+      { "ancient": "Athens", "modern": "Athens, Greece", "lat": 37.98, "lon": 23.73 },
+      { "ancient": "Corinth", "modern": "Ancient Corinth, Greece", "lat": 37.91, "lon": 22.88 },
+      { "ancient": "Cenchreae", "modern": "Kechries, Greece", "lat": 37.88, "lon": 22.99 },
+      { "ancient": "Ephesus", "modern": "Selçuk, Turkey", "lat": 37.94, "lon": 27.34 },
+      { "ancient": "Caesarea", "modern": "Caesarea, Israel", "lat": 32.5, "lon": 34.89 }
+    ],
+    "steps": [
+      { "label": "Paul and Silas set out", "ref": "Acts 15:36-41", "copy": "After a sharp disagreement over John Mark, Barnabas sails for Cyprus, and Paul takes Silas through Syria and Cilicia, strengthening the churches.", "at": 0 },
+      { "label": "Derbe", "ref": "Acts 16:1", "copy": "Paul comes back to Derbe.", "miles": 250, "at": 1 },
+      { "label": "Lystra: Timothy joins", "ref": "Acts 16:1-5", "copy": "A disciple named Timothy joins them, and the churches grow stronger in the faith and larger every day.", "miles": 55, "at": 2 },
+      { "label": "Troas", "ref": "Acts 16:6-10", "copy": "Kept from speaking in Asia and from entering Bithynia, they reach Troas, where Paul sees a vision of a man of Macedonia calling for help.", "miles": 470, "at": 3 },
+      { "label": "Samothrace", "ref": "Acts 16:11", "copy": "They sail straight across to Samothrace.", "miles": 70, "at": 4, "by": "sea" },
+      { "label": "Neapolis", "ref": "Acts 16:11", "copy": "The next day they reach Neapolis, in Europe.", "miles": 60, "at": 5, "by": "sea" },
+      { "label": "Philippi", "ref": "Acts 16:12-40", "copy": "Lydia believes. Paul and Silas are beaten and jailed, sing hymns at midnight, and the jailer and his household are baptized.", "miles": 10, "at": 6 },
+      { "label": "Thessalonica", "ref": "Acts 17:1-9", "copy": "By way of Amphipolis and Apollonia, they reach Thessalonica. Paul reasons from the Scriptures for three Sabbaths; some believe, and a mob sets the city in an uproar.", "miles": 95, "at": 7 },
+      { "label": "Berea", "ref": "Acts 17:10-14", "copy": "The Bereans receive the word eagerly and examine the Scriptures every day.", "miles": 45, "at": 8 },
+      { "label": "Athens", "ref": "Acts 17:15-34", "copy": "Distressed by the city's idols, Paul speaks at the Areopagus about the unknown God.", "miles": 250, "at": 9 },
+      { "label": "Corinth", "ref": "Acts 18:1-17", "copy": "He makes tents with Aquila and Priscilla and stays a year and a half, teaching the word of God.", "miles": 50, "at": 10 },
+      { "label": "Cenchreae", "ref": "Acts 18:18", "copy": "Paul has his hair cut because of a vow and sets sail for Syria.", "miles": 6, "at": 11 },
+      { "label": "Ephesus", "ref": "Acts 18:19-21", "copy": "He reasons in the synagogue and promises to come back, if God wills.", "miles": 250, "at": 12, "by": "sea" },
+      { "label": "Caesarea", "ref": "Acts 18:22", "copy": "He lands at Caesarea and goes up to greet the church.", "miles": 620, "at": 13, "by": "sea" },
+      { "label": "Home to Antioch", "ref": "Acts 18:22", "copy": "Then he goes down to Antioch.", "miles": 300, "at": 0 }
+    ]
+  },
+  "paul-third-journey": {
+    "set": { "distance": 2900, "note": "Every place Acts 18:23-21:17 names on the way is shown. 'Macedonia' and 'Greece' are regions in the text; Greece is placed at Corinth, where Paul most likely stayed." },
+    "points": [
+      { "ancient": "Antioch", "modern": "Antakya, Turkey", "lat": 36.2, "lon": 36.16 },
+      { "ancient": "Ephesus", "modern": "Selçuk, Turkey", "lat": 37.94, "lon": 27.34 },
+      { "ancient": "Macedonia", "modern": "northern Greece", "lat": 40.8, "lon": 23.5 },
+      { "ancient": "Greece (Corinth)", "modern": "southern Greece", "lat": 37.91, "lon": 22.88 },
+      { "ancient": "Philippi", "modern": "Philippi, Greece", "lat": 41.01, "lon": 24.29 },
+      { "ancient": "Troas", "modern": "Dalyan, Turkey", "lat": 39.75, "lon": 26.16 },
+      { "ancient": "Assos", "modern": "Behramkale, Turkey", "lat": 39.49, "lon": 26.34 },
+      { "ancient": "Mitylene", "modern": "Lesbos, Greece", "lat": 39.11, "lon": 26.55 },
+      { "ancient": "Miletus", "modern": "western Turkey coast", "lat": 37.53, "lon": 27.28 },
+      { "ancient": "Patara", "modern": "Gelemiş, Turkey", "lat": 36.27, "lon": 29.31 },
+      { "ancient": "Tyre", "modern": "Tyre, Lebanon", "lat": 33.27, "lon": 35.2 },
+      { "ancient": "Ptolemais", "modern": "Acre (Akko), Israel", "lat": 32.92, "lon": 35.07 },
+      { "ancient": "Caesarea", "modern": "Caesarea, Israel", "lat": 32.5, "lon": 34.89 },
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 }
+    ],
+    "steps": [
+      { "label": "Setting out again", "ref": "Acts 18:23", "copy": "After some time in Antioch, Paul travels through Galatia and Phrygia, strengthening all the disciples.", "at": 0 },
+      { "label": "Ephesus", "ref": "Acts 19:1-20", "copy": "He teaches daily in the lecture hall of Tyrannus for two years, so that everyone in Asia hears the word of the Lord.", "miles": 700, "at": 1 },
+      { "label": "Riot in the theater", "ref": "Acts 19:23-41", "copy": "Silversmiths who make shrines of Artemis stir the city into a riot.", "at": 1 },
+      { "label": "Through Macedonia", "ref": "Acts 20:1-2", "copy": "After the uproar, Paul travels through Macedonia, encouraging the believers.", "miles": 350, "at": 2 },
+      { "label": "Three months in Greece", "ref": "Acts 20:2-3", "copy": "A plot against him makes him decide to go back through Macedonia.", "miles": 300, "at": 3 },
+      { "label": "Philippi", "ref": "Acts 20:3-6", "copy": "After the Feast of Unleavened Bread, they sail from Philippi.", "miles": 330, "at": 4 },
+      { "label": "Troas", "ref": "Acts 20:6-12", "copy": "Paul talks until midnight. Eutychus falls from a third-story window and is picked up dead; Paul embraces him, and he is taken home alive.", "miles": 150, "at": 5, "by": "sea" },
+      { "label": "Assos", "ref": "Acts 20:13-14", "copy": "Paul goes on foot while the others sail, and they meet him at Assos.", "miles": 30, "at": 6 },
+      { "label": "Mitylene", "ref": "Acts 20:14", "copy": "They take him on board and come to Mitylene.", "miles": 45, "at": 7, "by": "sea" },
+      { "label": "Farewell at Miletus", "ref": "Acts 20:15-38", "copy": "Past Chios and Samos, he calls the Ephesian elders and says a tearful goodbye.", "miles": 170, "at": 8, "by": "sea" },
+      { "label": "Patara", "ref": "Acts 21:1-2", "copy": "By way of Cos and Rhodes they reach Patara and find a ship crossing to Phoenicia.", "miles": 200, "at": 9, "by": "sea" },
+      { "label": "Tyre", "ref": "Acts 21:3-6", "copy": "Passing Cyprus, they land at Tyre, where the disciples urge Paul not to go up to Jerusalem.", "miles": 400, "at": 10, "by": "sea" },
+      { "label": "Ptolemais", "ref": "Acts 21:7", "copy": "They greet the brothers and stay with them for a day.", "miles": 25, "at": 11, "by": "sea" },
+      { "label": "Caesarea", "ref": "Acts 21:8-14", "copy": "They stay with Philip the evangelist. Agabus binds his own hands and feet with Paul's belt as a warning.", "miles": 35, "at": 12 },
+      { "label": "Jerusalem", "ref": "Acts 21:15-17", "copy": "The brothers welcome them warmly.", "miles": 65, "at": 13 }
+    ]
+  },
+  "paul-voyage-to-rome": {
+    "set": { "distance": 2050, "note": "Every port Acts 27-28 names is shown. The storm drift to Malta is drawn as a single line; ancient sailing depended on season and wind." },
+    "points": [
+      { "ancient": "Caesarea", "modern": "Caesarea, Israel", "lat": 32.5, "lon": 34.89 },
+      { "ancient": "Sidon", "modern": "Sidon, Lebanon", "lat": 33.56, "lon": 35.37 },
+      { "ancient": "Myra", "modern": "Demre, Turkey", "lat": 36.25, "lon": 29.98 },
+      { "ancient": "Cnidus", "modern": "Datça, Turkey", "lat": 36.69, "lon": 27.37 },
+      { "ancient": "Fair Havens", "modern": "south coast of Crete", "lat": 34.9, "lon": 24.8 },
+      { "ancient": "Malta", "modern": "Malta", "lat": 35.9, "lon": 14.4 },
+      { "ancient": "Syracuse", "modern": "Siracusa, Italy", "lat": 37.07, "lon": 15.29 },
+      { "ancient": "Rhegium", "modern": "Reggio Calabria, Italy", "lat": 38.11, "lon": 15.65 },
+      { "ancient": "Puteoli", "modern": "Pozzuoli, Italy", "lat": 40.82, "lon": 14.12 },
+      { "ancient": "Rome", "modern": "Rome, Italy", "lat": 41.9, "lon": 12.5 }
+    ],
+    "steps": [
+      { "label": "Setting sail", "ref": "Acts 27:1-2", "copy": "Paul, a prisoner in the care of the centurion Julius, boards a ship from Adramyttium.", "at": 0 },
+      { "label": "Sidon", "ref": "Acts 27:3", "copy": "Julius kindly lets Paul visit his friends.", "miles": 70, "at": 1, "by": "sea" },
+      { "label": "Myra", "ref": "Acts 27:4-6", "copy": "Sailing in the shelter of Cyprus, they reach Myra and change to a ship from Alexandria bound for Italy.", "miles": 450, "at": 2, "by": "sea" },
+      { "label": "Cnidus", "ref": "Acts 27:7", "copy": "They make slow headway against the wind.", "miles": 140, "at": 3, "by": "sea" },
+      { "label": "Fair Havens", "ref": "Acts 27:8-12", "copy": "Sailing under Crete, Paul warns that the voyage will end in disaster, but the centurion follows the pilot and the owner instead.", "miles": 200, "at": 4, "by": "sea" },
+      { "label": "Storm and shipwreck", "ref": "Acts 27:13-44", "copy": "A northeaster drives the ship for fourteen days until it runs aground, and all 276 people reach land safely.", "miles": 600, "at": 5, "by": "sea" },
+      { "label": "Malta", "ref": "Acts 28:1-10", "copy": "A viper bites Paul without harm, and he heals the father of Publius and many others on the island.", "at": 5 },
+      { "label": "Syracuse", "ref": "Acts 28:11-12", "copy": "After three months they sail on an Alexandrian ship with the Twin Brothers as its figurehead.", "miles": 90, "at": 6, "by": "sea" },
+      { "label": "Rhegium", "ref": "Acts 28:13", "copy": "They sail on to Rhegium.", "miles": 80, "at": 7, "by": "sea" },
+      { "label": "Puteoli", "ref": "Acts 28:13-14", "copy": "They find brothers there and stay with them seven days.", "miles": 200, "at": 8, "by": "sea" },
+      { "label": "Rome", "ref": "Acts 28:14-31", "copy": "Believers come out as far as the Forum of Appius and Three Taverns to meet him. In Rome he lives under guard and boldly proclaims the kingdom of God.", "miles": 140, "at": 9 }
+    ]
+  }
+}

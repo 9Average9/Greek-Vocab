@@ -11098,10 +11098,12 @@ function _bindHomeLaunchFeedback() {
 const BIBLE_JOURNEYS = [
   {
     id: 'abraham-ur-to-canaan',
-    title: "Abraham's Journey to Canaan",
+    title: 'Abraham\'s Journey to Canaan',
     subtitle: 'Ur to Haran to the land God promised',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 11, chTo: 13 }],
+    refs: [
+      { book: 'GEN', chFrom: 11, chTo: 13 }
+    ],
     distance: 1100,
     mode: 'Caravan pace',
     days: '70-95 travel days',
@@ -11113,11 +11115,11 @@ const BIBLE_JOURNEYS = [
       'Caravans followed the watered Fertile Crescent arc rather than crossing the Arabian desert directly, which is why the line bends north through Haran.'
     ],
     points: [
-      { ancient: 'Ur of the Chaldeans', modern: 'near Nasiriyah, Iraq', x: 82, y: 78, lat: 30.96, lon: 46.10 },
+      { ancient: 'Ur of the Chaldeans', modern: 'near Nasiriyah, Iraq', x: 82, y: 78, lat: 30.96, lon: 46.1 },
       { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 56, y: 25, lat: 36.87, lon: 39.03 },
       { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 39, y: 55, lat: 32.21, lon: 35.28 },
       { ancient: 'Bethel/Ai', modern: 'central highlands', x: 38, y: 60, lat: 31.93, lon: 35.22 },
-      { ancient: 'Egypt', modern: 'Nile Delta / Egypt', x: 22, y: 77, lat: 30.80, lon: 31.30 }
+      { ancient: 'Egypt', modern: 'Nile Delta / Egypt', x: 22, y: 77, lat: 30.8, lon: 31.3 }
     ],
     steps: [
       { label: 'Ur to Haran', ref: 'Genesis 11:31', copy: 'Terah takes Abram, Sarai, and Lot out from Ur toward Canaan, stopping in Haran.', miles: 600 },
@@ -11131,7 +11133,10 @@ const BIBLE_JOURNEYS = [
     title: 'The Exodus Route',
     subtitle: 'From slavery in Egypt toward Sinai and the wilderness',
     certainty: 'Highly debated',
-    refs: [{ book: 'EXO', chFrom: 12, chTo: 19 }, { book: 'NUM', chFrom: 10, chTo: 14 }],
+    refs: [
+      { book: 'EXO', chFrom: 12, chTo: 19 },
+      { book: 'NUM', chFrom: 10, chTo: 14 }
+    ],
     distance: 300,
     mode: 'Large mixed camp',
     days: 'Weeks of travel, then extended wilderness time',
@@ -11143,10 +11148,10 @@ const BIBLE_JOURNEYS = [
       'Rameses and Succoth are tied to eastern Delta sites (Qantir and Tell el-Maskhuta), but the wilderness stations between them are reconstructed from the itinerary in Numbers 33.'
     ],
     points: [
-      { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42, lat: 30.80, lon: 31.83 },
-      { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47, lat: 30.55, lon: 32.10 },
-      { ancient: 'Sea Crossing', modern: 'Red Sea / Reed Sea proposals', x: 39, y: 56, lat: 30.10, lon: 32.55 },
-      { ancient: 'Marah / Elim', modern: 'Sinai wilderness region', x: 51, y: 65, lat: 29.20, lon: 33.05 },
+      { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42, lat: 30.8, lon: 31.83 },
+      { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47, lat: 30.55, lon: 32.1 },
+      { ancient: 'Sea Crossing', modern: 'Red Sea / Reed Sea proposals', x: 39, y: 56, lat: 30.1, lon: 32.55 },
+      { ancient: 'Marah / Elim', modern: 'Sinai wilderness region', x: 51, y: 65, lat: 29.2, lon: 33.05 },
       { ancient: 'Sinai', modern: 'Sinai Peninsula region', x: 63, y: 76, lat: 28.54, lon: 33.97 }
     ],
     steps: [
@@ -11156,16 +11161,7 @@ const BIBLE_JOURNEYS = [
       { label: 'Wilderness to Sinai', ref: 'Exodus 15:22; 19:1-2', copy: 'The route moves through thirst, provision, and covenant preparation.', miles: 200 }
     ],
     alternates: [
-      {
-        label: 'Arabian Sinai view',
-        reason: 'Some place the sea crossing at the Gulf of Aqaba and Mount Sinai in Arabia (Galatians 4:25), giving an eastern route across the gulf. The traditional southern Sinai is kept as the main line.',
-        points: [
-          { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42, lat: 30.80, lon: 31.83 },
-          { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47, lat: 30.55, lon: 32.10 },
-          { ancient: 'Gulf of Aqaba crossing', modern: 'Gulf of Aqaba (debated)', x: 77, y: 71, lat: 28.90, lon: 34.65 },
-          { ancient: 'Mount Sinai in Arabia', modern: 'NW Saudi Arabia (debated)', x: 88, y: 74, lat: 28.65, lon: 35.30 }
-        ]
-      }
+      { label: 'Arabian Sinai view', reason: 'Some place the sea crossing at the Gulf of Aqaba and Mount Sinai in Arabia (Galatians 4:25), giving an eastern route across the gulf. The traditional southern Sinai is kept as the main line.', points: [{ ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42, lat: 30.8, lon: 31.83 }, { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47, lat: 30.55, lon: 32.1 }, { ancient: 'Gulf of Aqaba crossing', modern: 'Gulf of Aqaba (debated)', x: 77, y: 71, lat: 28.9, lon: 34.65 }, { ancient: 'Mount Sinai in Arabia', modern: 'NW Saudi Arabia (debated)', x: 88, y: 74, lat: 28.65, lon: 35.3 }] }
     ]
   },
   {
@@ -11173,7 +11169,9 @@ const BIBLE_JOURNEYS = [
     title: 'Ruth and Naomi Return',
     subtitle: 'From Moab back to Bethlehem',
     certainty: 'Approximate route',
-    refs: [{ book: 'RUT', chFrom: 1, chTo: 1 }],
+    refs: [
+      { book: 'RUT', chFrom: 1, chTo: 1 }
+    ],
     distance: 60,
     mode: 'Walking',
     days: '4-7 travel days',
@@ -11185,9 +11183,9 @@ const BIBLE_JOURNEYS = [
       'The arrival "at the beginning of barley harvest" (Ruth 1:22) points to spring, which fits a walkable few-day journey.'
     ],
     points: [
-      { ancient: 'Moab', modern: 'central Jordan', x: 70, y: 58, lat: 31.30, lon: 35.75 },
-      { ancient: 'Jordan crossing region', modern: 'Jordan Valley', x: 50, y: 55, lat: 31.85, lon: 35.50 },
-      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 36, y: 52, lat: 31.70, lon: 35.20 }
+      { ancient: 'Moab', modern: 'central Jordan', x: 70, y: 58, lat: 31.3, lon: 35.75 },
+      { ancient: 'Jordan crossing region', modern: 'Jordan Valley', x: 50, y: 55, lat: 31.85, lon: 35.5 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 36, y: 52, lat: 31.7, lon: 35.2 }
     ],
     steps: [
       { label: 'Leaving Moab', ref: 'Ruth 1:6-7', copy: 'Naomi begins the return after hearing the Lord has visited His people with food.', miles: 30 },
@@ -11200,7 +11198,9 @@ const BIBLE_JOURNEYS = [
     title: 'Mary and Joseph to Bethlehem',
     subtitle: 'Nazareth to Bethlehem before Jesus is born',
     certainty: 'Approximate route',
-    refs: [{ book: 'LUK', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'LUK', chFrom: 2, chTo: 2 }
+    ],
     distance: 90,
     mode: 'Walking / family travel',
     days: '5-8 travel days',
@@ -11212,28 +11212,18 @@ const BIBLE_JOURNEYS = [
       'Distance and timing assume an ordinary family walking pace; the Gospel gives no travel duration.'
     ],
     points: [
-      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24, lat: 32.70, lon: 35.30 },
-      { ancient: 'Samaria/Judea road region', modern: 'central highlands', x: 43, y: 45, lat: 32.10, lon: 35.28 },
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24, lat: 32.7, lon: 35.3 },
+      { ancient: 'Samaria/Judea road region', modern: 'central highlands', x: 43, y: 45, lat: 32.1, lon: 35.28 },
       { ancient: 'Jerusalem region', modern: 'Jerusalem area', x: 39, y: 62, lat: 31.78, lon: 35.23 },
-      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68, lat: 31.70, lon: 35.20 }
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68, lat: 31.7, lon: 35.2 }
     ],
     steps: [
       { label: 'Nazareth departure', ref: 'Luke 2:1-4', copy: 'Joseph goes up from Galilee to Judea because of the census.', miles: 70 },
-      { label: "Toward David's city", ref: 'Luke 2:4', copy: "Bethlehem matters because Joseph belongs to David's house and lineage.", miles: 15 },
+      { label: 'Toward David\'s city', ref: 'Luke 2:4', copy: 'Bethlehem matters because Joseph belongs to David\'s house and lineage.', miles: 15 },
       { label: 'Birth in Bethlehem', ref: 'Luke 2:6-7', copy: 'The travel setting frames the birth narrative.', miles: 5 }
     ],
     alternates: [
-      {
-        label: 'Jordan Valley route',
-        reason: 'A longer but flatter path down the Jordan Valley and up from Jericho, avoiding Samaria. Luke does not name the road taken, so both this and the hill-country route are possible.',
-        points: [
-          { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24, lat: 32.70, lon: 35.30 },
-          { ancient: 'Beth Shean', modern: 'Beit She’an, Jordan Valley', x: 58, y: 33, lat: 32.50, lon: 35.50 },
-          { ancient: 'Jericho', modern: 'Jericho', x: 52, y: 60, lat: 31.87, lon: 35.44 },
-          { ancient: 'Jerusalem', modern: 'Jerusalem', x: 39, y: 62, lat: 31.78, lon: 35.23 },
-          { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68, lat: 31.70, lon: 35.20 }
-        ]
-      }
+      { label: 'Jordan Valley route', reason: 'A longer but flatter path down the Jordan Valley and up from Jericho, avoiding Samaria. Luke does not name the road taken, so both this and the hill-country route are possible.', points: [{ ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24, lat: 32.7, lon: 35.3 }, { ancient: 'Beth Shean', modern: 'Beit She’an, Jordan Valley', x: 58, y: 33, lat: 32.5, lon: 35.5 }, { ancient: 'Jericho', modern: 'Jericho', x: 52, y: 60, lat: 31.87, lon: 35.44 }, { ancient: 'Jerusalem', modern: 'Jerusalem', x: 39, y: 62, lat: 31.78, lon: 35.23 }, { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68, lat: 31.7, lon: 35.2 }] }
     ]
   },
   {
@@ -11241,7 +11231,11 @@ const BIBLE_JOURNEYS = [
     title: 'Jesus Goes Up to Jerusalem',
     subtitle: 'From Galilee toward Jerusalem',
     certainty: 'Representative route',
-    refs: [{ book: 'LUK', chFrom: 9, chTo: 19 }, { book: 'MAT', chFrom: 19, chTo: 21 }, { book: 'MRK', chFrom: 10, chTo: 11 }],
+    refs: [
+      { book: 'LUK', chFrom: 9, chTo: 19 },
+      { book: 'MAT', chFrom: 19, chTo: 21 },
+      { book: 'MRK', chFrom: 10, chTo: 11 }
+    ],
     distance: 95,
     mode: 'Walking',
     days: '5-8 travel days plus ministry stops',
@@ -11253,8 +11247,8 @@ const BIBLE_JOURNEYS = [
       'Pilgrims heading to Jerusalem feasts often used the Jordan Valley road, which the Jericho stop reflects.'
     ],
     points: [
-      { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22, lat: 32.80, lon: 35.55 },
-      { ancient: 'Jordan Valley', modern: 'Jordan River valley', x: 55, y: 50, lat: 32.20, lon: 35.55 },
+      { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22, lat: 32.8, lon: 35.55 },
+      { ancient: 'Jordan Valley', modern: 'Jordan River valley', x: 55, y: 50, lat: 32.2, lon: 35.55 },
       { ancient: 'Jericho', modern: 'Jericho', x: 51, y: 65, lat: 31.87, lon: 35.44 },
       { ancient: 'Bethany', modern: 'al-Eizariya area', x: 41, y: 70, lat: 31.77, lon: 35.26 },
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 38, y: 68, lat: 31.78, lon: 35.23 }
@@ -11266,82 +11260,99 @@ const BIBLE_JOURNEYS = [
       { label: 'Arrival near Bethany', ref: 'Mark 11:1', copy: 'Bethphage/Bethany set the stage for the triumphal entry.', miles: 2 }
     ],
     alternates: [
-      {
-        label: 'Direct through Samaria',
-        reason: 'The shorter ridge road runs straight through Samaria (John 4:4). Many Galilean pilgrims instead took the Jordan Valley route shown as the main line to avoid Samaritan territory.',
-        points: [
-          { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22, lat: 32.80, lon: 35.55 },
-          { ancient: 'Samaria', modern: 'near Nablus, West Bank', x: 40, y: 48, lat: 32.21, lon: 35.28 },
-          { ancient: 'Bethel hills', modern: 'central highlands', x: 38, y: 61, lat: 31.93, lon: 35.22 },
-          { ancient: 'Jerusalem', modern: 'Jerusalem', x: 38, y: 68, lat: 31.78, lon: 35.23 }
-        ]
-      }
+      { label: 'Direct through Samaria', reason: 'The shorter ridge road runs straight through Samaria (John 4:4). Many Galilean pilgrims instead took the Jordan Valley route shown as the main line to avoid Samaritan territory.', points: [{ ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22, lat: 32.8, lon: 35.55 }, { ancient: 'Samaria', modern: 'near Nablus, West Bank', x: 40, y: 48, lat: 32.21, lon: 35.28 }, { ancient: 'Bethel hills', modern: 'central highlands', x: 38, y: 61, lat: 31.93, lon: 35.22 }, { ancient: 'Jerusalem', modern: 'Jerusalem', x: 38, y: 68, lat: 31.78, lon: 35.23 }] }
     ]
   },
   {
     id: 'paul-first-journey',
-    title: "Paul's First Missionary Journey",
+    title: 'Paul\'s First Missionary Journey',
     subtitle: 'Antioch to Cyprus and southern Galatia',
     certainty: 'Mostly known cities, simplified route',
-    refs: [{ book: 'ACT', chFrom: 13, chTo: 14 }],
-    distance: 1250,
+    refs: [
+      { book: 'ACT', chFrom: 13, chTo: 14 }
+    ],
+    distance: 1300,
     mode: 'Walking + sailing',
     days: 'Several months including ministry stays',
     modern: 'Syria/Turkey, Cyprus, and southern Turkey',
-    note: 'Major city locations are known, while exact roads, sea lanes, and stop durations are simplified.',
+    note: 'Every city Acts 13-14 names is shown, including the return through the same churches. Roads and sea lanes between them are simplified.',
     sources: [
       'Acts 13–14 names the cities directly, and most are archaeologically located (Pisidian Antioch at Yalvaç, Lystra and Derbe confirmed by inscriptions).',
       'The crossing from Seleucia to Salamis and the sail to Perga follow normal first-century shipping lanes; exact vessels and stop lengths are not recorded.',
       'The return leg retraces the outbound cities (Acts 14:21–26) rather than taking a new road, so the southern Galatia loop is doubled in the distance estimate.'
     ],
     points: [
-      { ancient: 'Antioch', modern: 'Antakya, Turkey region', x: 53, y: 36, lat: 36.20, lon: 36.16 },
-      { ancient: 'Seleucia', modern: 'Samandag coast region', x: 50, y: 42, lat: 36.12, lon: 35.93 },
-      { ancient: 'Salamis', modern: 'eastern Cyprus', x: 43, y: 58, lat: 35.18, lon: 33.90 },
-      { ancient: 'Paphos', modern: 'western Cyprus', x: 28, y: 64, lat: 34.76, lon: 32.42 },
-      { ancient: 'Perga', modern: 'near Antalya, Turkey', x: 49, y: 24, lat: 36.96, lon: 30.85 },
-      { ancient: 'Pisidian Antioch', modern: 'Yalvac region, Turkey', x: 56, y: 16, lat: 38.30, lon: 31.19 },
-      { ancient: 'Iconium / Lystra / Derbe', modern: 'Konya/Karaman region', x: 67, y: 20, lat: 37.87, lon: 32.49 }
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 57, lat: 36.2, lon: 36.16 },
+      { ancient: 'Seleucia', modern: 'Samandağ, Turkey', x: 82, y: 58, lat: 36.12, lon: 35.93 },
+      { ancient: 'Salamis', modern: 'eastern Cyprus', x: 56, y: 77, lat: 35.18, lon: 33.9 },
+      { ancient: 'Paphos', modern: 'Kato Paphos, Cyprus', x: 37, y: 85, lat: 34.76, lon: 32.42 },
+      { ancient: 'Perga', modern: 'near Antalya, Turkey', x: 17, y: 42, lat: 36.96, lon: 30.85 },
+      { ancient: 'Pisidian Antioch', modern: 'Yalvaç, Turkey', x: 21, y: 15, lat: 38.31, lon: 31.19 },
+      { ancient: 'Iconium', modern: 'Konya, Turkey', x: 38, y: 24, lat: 37.87, lon: 32.49 },
+      { ancient: 'Lystra', modern: 'Hatunsaray, Turkey', x: 37, y: 29, lat: 37.58, lon: 32.45 },
+      { ancient: 'Derbe', modern: 'Kerti Hüyük, Turkey', x: 48, y: 34, lat: 37.35, lon: 33.27 },
+      { ancient: 'Attalia', modern: 'Antalya, Turkey', x: 15, y: 43, lat: 36.88, lon: 30.7 }
     ],
     steps: [
-      { label: 'Sent from Antioch', ref: 'Acts 13:1-4', copy: "The church sends Barnabas and Saul by the Spirit's direction.", miles: 16 },
-      { label: 'Across Cyprus', ref: 'Acts 13:5-12', copy: 'They proclaim the word from Salamis to Paphos.', miles: 110 },
-      { label: 'Into Pamphylia', ref: 'Acts 13:13', copy: 'They sail north to Perga.', miles: 180 },
-      { label: 'Southern Galatia cities', ref: 'Acts 13:14; 14:1-21', copy: 'The route moves through Pisidian Antioch, Iconium, Lystra, and Derbe.', miles: 300 },
-      { label: 'Return strengthening disciples', ref: 'Acts 14:21-26', copy: 'They retrace much of the route before reporting back.', miles: 640 }
+      { label: 'Sent off from Antioch', ref: 'Acts 13:1-3', copy: 'After fasting and prayer, the church sends off Barnabas and Saul, as the Holy Spirit directed.', at: 0 },
+      { label: 'Down to the coast', ref: 'Acts 13:4', copy: 'They go down to Seleucia to sail for Cyprus.', miles: 16, at: 1 },
+      { label: 'Salamis', ref: 'Acts 13:5', copy: 'They proclaim the word of God in the Jewish synagogues, with John as their helper.', miles: 125, at: 2, by: 'sea' },
+      { label: 'Paphos', ref: 'Acts 13:6-12', copy: 'Across the island, the sorcerer Elymas is struck blind and the proconsul Sergius Paulus believes.', miles: 90, at: 3 },
+      { label: 'Perga', ref: 'Acts 13:13', copy: 'They sail to Perga in Pamphylia, where John leaves them and returns to Jerusalem.', miles: 170, at: 4, by: 'sea' },
+      { label: 'Pisidian Antioch', ref: 'Acts 13:14-52', copy: 'Paul preaches in the synagogue; many Gentiles believe, and opposition drives them out of the region.', miles: 100, at: 5 },
+      { label: 'Iconium', ref: 'Acts 14:1-6', copy: 'A great number believe, but when a plot to stone them forms, they flee.', miles: 85, at: 6 },
+      { label: 'Lystra', ref: 'Acts 14:8-20', copy: 'Paul heals a man who had never walked. The crowd calls them gods, then Paul is stoned and left for dead.', miles: 20, at: 7 },
+      { label: 'Derbe', ref: 'Acts 14:20-21', copy: 'They preach the gospel in Derbe and make many disciples.', miles: 55, at: 8 },
+      { label: 'Back to Lystra', ref: 'Acts 14:21-22', copy: 'They turn back to strengthen the disciples and urge them to remain in the faith.', miles: 55, at: 7 },
+      { label: 'Back through Iconium', ref: 'Acts 14:21-22', copy: 'They encourage the believers in Iconium again.', miles: 20, at: 6 },
+      { label: 'Elders for the churches', ref: 'Acts 14:21-23', copy: 'Back in Pisidian Antioch, they appoint elders in each church with prayer and fasting.', miles: 85, at: 5 },
+      { label: 'Preaching in Perga', ref: 'Acts 14:24-25', copy: 'They pass through Pisidia and Pamphylia and speak the word in Perga.', miles: 100, at: 4 },
+      { label: 'Attalia', ref: 'Acts 14:25', copy: 'They go down to the port of Attalia.', miles: 10, at: 9 },
+      { label: 'Home to Antioch', ref: 'Acts 14:26-28', copy: 'They sail back to Antioch and tell the church how God opened the door of faith to the Gentiles.', miles: 330, at: 0, by: 'sea' }
     ]
   },
   {
     id: 'paul-voyage-to-rome',
-    title: "Paul's Voyage to Rome",
+    title: 'Paul\'s Voyage to Rome',
     subtitle: 'From Caesarea toward Rome through storm and shipwreck',
     certainty: 'Known ports, weather route simplified',
-    refs: [{ book: 'ACT', chFrom: 27, chTo: 28 }],
-    distance: 2200,
+    refs: [
+      { book: 'ACT', chFrom: 27, chTo: 28 }
+    ],
+    distance: 2050,
     mode: 'Sea voyage + walking',
     days: 'Several months with delays',
     modern: 'Israel, Turkey, Greece/Crete, Malta, Italy',
-    note: 'Acts names many ports. The storm drift is represented simply; ancient sailing depended heavily on season and wind.',
+    note: 'Every port Acts 27-28 names is shown. The storm drift to Malta is drawn as a single line; ancient sailing depended on season and wind.',
     sources: [
       'Acts 27–28 is unusually detailed for an ancient voyage and names real ports (Sidon, Myra, Fair Havens, Malta, Puteoli, Rome).',
       'The fourteen-day storm drift (Acts 27:27) is famously analyzed in James Smith’s "The Voyage and Shipwreck of St Paul," which models the wind and distance toward Malta.',
       'St Paul’s Bay in northern Malta is the traditional landing site, though the exact wreck point is debated; the drift line here is schematic.'
     ],
     points: [
-      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 72, y: 68, lat: 32.50, lon: 34.89 },
-      { ancient: 'Sidon', modern: 'Sidon, Lebanon', x: 70, y: 55, lat: 33.56, lon: 35.37 },
-      { ancient: 'Myra', modern: 'Demre, Turkey', x: 54, y: 42, lat: 36.26, lon: 29.98 },
-      { ancient: 'Fair Havens', modern: 'Crete, Greece', x: 42, y: 62, lat: 34.91, lon: 24.80 },
-      { ancient: 'Malta', modern: 'Malta', x: 25, y: 66, lat: 35.90, lon: 14.40 },
-      { ancient: 'Puteoli', modern: 'Pozzuoli, Italy', x: 21, y: 32, lat: 40.82, lon: 14.12 },
-      { ancient: 'Rome', modern: 'Rome, Italy', x: 19, y: 24, lat: 41.90, lon: 12.50 }
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 84, y: 85, lat: 32.5, lon: 34.89 },
+      { ancient: 'Sidon', modern: 'Sidon, Lebanon', x: 85, y: 77, lat: 33.56, lon: 35.37 },
+      { ancient: 'Myra', modern: 'Demre, Turkey', x: 69, y: 57, lat: 36.25, lon: 29.98 },
+      { ancient: 'Cnidus', modern: 'Datça, Turkey', x: 61, y: 54, lat: 36.69, lon: 27.37 },
+      { ancient: 'Fair Havens', modern: 'south coast of Crete', x: 53, y: 67, lat: 34.9, lon: 24.8 },
+      { ancient: 'Malta', modern: 'Malta', x: 21, y: 60, lat: 35.9, lon: 14.4 },
+      { ancient: 'Syracuse', modern: 'Siracusa, Italy', x: 24, y: 51, lat: 37.07, lon: 15.29 },
+      { ancient: 'Rhegium', modern: 'Reggio Calabria, Italy', x: 25, y: 43, lat: 38.11, lon: 15.65 },
+      { ancient: 'Puteoli', modern: 'Pozzuoli, Italy', x: 20, y: 23, lat: 40.82, lon: 14.12 },
+      { ancient: 'Rome', modern: 'Rome, Italy', x: 15, y: 15, lat: 41.9, lon: 12.5 }
     ],
     steps: [
-      { label: 'Caesarea to Sidon', ref: 'Acts 27:1-3', copy: 'Paul begins the voyage as a prisoner under Roman guard.', miles: 70 },
-      { label: 'Along Asia Minor', ref: 'Acts 27:4-6', copy: 'The ship changes at Myra.', miles: 500 },
-      { label: 'Crete and warning', ref: 'Acts 27:7-12', copy: 'Fair Havens becomes the key decision point before the storm.', miles: 350 },
-      { label: 'Storm and Malta', ref: 'Acts 27:13-44; 28:1', copy: 'The storm drives the ship until the wreck at Malta.', miles: 600 },
-      { label: 'To Rome', ref: 'Acts 28:11-16', copy: 'Paul finally reaches Rome.', miles: 680 }
+      { label: 'Setting sail', ref: 'Acts 27:1-2', copy: 'Paul, a prisoner in the care of the centurion Julius, boards a ship from Adramyttium.', at: 0 },
+      { label: 'Sidon', ref: 'Acts 27:3', copy: 'Julius kindly lets Paul visit his friends.', miles: 70, at: 1, by: 'sea' },
+      { label: 'Myra', ref: 'Acts 27:4-6', copy: 'Sailing in the shelter of Cyprus, they reach Myra and change to a ship from Alexandria bound for Italy.', miles: 450, at: 2, by: 'sea' },
+      { label: 'Cnidus', ref: 'Acts 27:7', copy: 'They make slow headway against the wind.', miles: 140, at: 3, by: 'sea' },
+      { label: 'Fair Havens', ref: 'Acts 27:8-12', copy: 'Sailing under Crete, Paul warns that the voyage will end in disaster, but the centurion follows the pilot and the owner instead.', miles: 200, at: 4, by: 'sea' },
+      { label: 'Storm and shipwreck', ref: 'Acts 27:13-44', copy: 'A northeaster drives the ship for fourteen days until it runs aground, and all 276 people reach land safely.', miles: 600, at: 5, by: 'sea' },
+      { label: 'Malta', ref: 'Acts 28:1-10', copy: 'A viper bites Paul without harm, and he heals the father of Publius and many others on the island.', at: 5 },
+      { label: 'Syracuse', ref: 'Acts 28:11-12', copy: 'After three months they sail on an Alexandrian ship with the Twin Brothers as its figurehead.', miles: 90, at: 6, by: 'sea' },
+      { label: 'Rhegium', ref: 'Acts 28:13', copy: 'They sail on to Rhegium.', miles: 80, at: 7, by: 'sea' },
+      { label: 'Puteoli', ref: 'Acts 28:13-14', copy: 'They find brothers there and stay with them seven days.', miles: 200, at: 8, by: 'sea' },
+      { label: 'Rome', ref: 'Acts 28:14-31', copy: 'Believers come out as far as the Forum of Appius and Three Taverns to meet him. In Rome he lives under guard and boldly proclaims the kingdom of God.', miles: 140, at: 9 }
     ]
   },
   {
@@ -11349,7 +11360,10 @@ const BIBLE_JOURNEYS = [
     title: 'Return from Exile',
     subtitle: 'Babylon back to Jerusalem',
     certainty: 'Approximate imperial route',
-    refs: [{ book: 'EZR', chFrom: 1, chTo: 8 }, { book: 'NEH', chFrom: 1, chTo: 2 }],
+    refs: [
+      { book: 'EZR', chFrom: 1, chTo: 8 },
+      { book: 'NEH', chFrom: 1, chTo: 2 }
+    ],
     distance: 900,
     mode: 'Caravan pace',
     days: 'About 4 months in Ezra 7:8-9',
@@ -11362,23 +11376,25 @@ const BIBLE_JOURNEYS = [
     ],
     points: [
       { ancient: 'Babylon', modern: 'near Hillah, Iraq', x: 82, y: 71, lat: 32.54, lon: 44.42 },
-      { ancient: 'Euphrates route', modern: 'Iraq/Syria river corridor', x: 66, y: 42, lat: 35.00, lon: 40.50 },
+      { ancient: 'Euphrates route', modern: 'Iraq/Syria river corridor', x: 66, y: 42, lat: 35, lon: 40.5 },
       { ancient: 'Damascus region', modern: 'Syria', x: 49, y: 49, lat: 33.51, lon: 36.29 },
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 36, y: 65, lat: 31.78, lon: 35.23 }
     ],
     steps: [
       { label: 'Decree and return', ref: 'Ezra 1:1-4', copy: 'Cyrus permits return and rebuilding.', miles: 0 },
-      { label: 'Caravan route west', ref: 'Ezra 7:8-9', copy: "Ezra's journey is remembered as a months-long trip under God's hand.", miles: 750 },
+      { label: 'Caravan route west', ref: 'Ezra 7:8-9', copy: 'Ezra\'s journey is remembered as a months-long trip under God\'s hand.', miles: 750 },
       { label: 'Arrival at Jerusalem', ref: 'Ezra 8:31-32', copy: 'The group arrives and rests after the journey.', miles: 150 },
       { label: 'Nehemiah follows later', ref: 'Nehemiah 2:11', copy: 'Nehemiah arrives for wall rebuilding work.', miles: 900 }
     ]
   },
   {
     id: 'jacob-canaan-haran',
-    title: "Jacob's Journey to Haran and Back",
+    title: 'Jacob\'s Journey to Haran and Back',
     subtitle: 'Beersheba to Haran, then home to Shechem',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 28, chTo: 35 }],
+    refs: [
+      { book: 'GEN', chFrom: 28, chTo: 35 }
+    ],
     distance: 900,
     mode: 'Walking + flocks',
     days: 'Weeks each way; 20 years in Haran',
@@ -11406,10 +11422,12 @@ const BIBLE_JOURNEYS = [
   },
   {
     id: 'joseph-family-egypt',
-    title: "Jacob's Family Moves to Egypt",
+    title: 'Jacob\'s Family Moves to Egypt',
     subtitle: 'Hebron through the Negev down to Goshen',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 46, chTo: 47 }],
+    refs: [
+      { book: 'GEN', chFrom: 46, chTo: 47 }
+    ],
     distance: 270,
     mode: 'Pharaoh’s wagons + flocks',
     days: '1-2 weeks for the whole household',
@@ -11421,9 +11439,9 @@ const BIBLE_JOURNEYS = [
       'Pharaoh’s wagons (Genesis 45:21) imply a cart-worthy road, i.e. the coastal "Way to Shur" rather than open desert.'
     ],
     points: [
-      { ancient: 'Hebron', modern: 'Hebron, West Bank', x: 85, y: 50, lat: 31.53, lon: 35.10 },
+      { ancient: 'Hebron', modern: 'Hebron, West Bank', x: 85, y: 50, lat: 31.53, lon: 35.1 },
       { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 78, y: 62, lat: 31.25, lon: 34.79 },
-      { ancient: 'Goshen', modern: 'eastern Nile Delta, Egypt', x: 15, y: 80, lat: 30.80, lon: 31.85 }
+      { ancient: 'Goshen', modern: 'eastern Nile Delta, Egypt', x: 15, y: 80, lat: 30.8, lon: 31.85 }
     ],
     steps: [
       { label: 'Worship at Beersheba', ref: 'Genesis 46:1-4', copy: 'God reassures Jacob on the edge of the land.', miles: 25 },
@@ -11436,7 +11454,9 @@ const BIBLE_JOURNEYS = [
     title: 'Into the Promised Land',
     subtitle: 'Crossing the Jordan to Jericho, Ai, and Gibeon',
     certainty: 'Approximate; some sites debated',
-    refs: [{ book: 'JOS', chFrom: 3, chTo: 10 }],
+    refs: [
+      { book: 'JOS', chFrom: 3, chTo: 10 }
+    ],
     distance: 45,
     mode: 'Israel’s army + camp',
     days: 'A campaign of days, not one march',
@@ -11449,7 +11469,7 @@ const BIBLE_JOURNEYS = [
     ],
     points: [
       { ancient: 'Shittim', modern: 'Plains of Moab, Jordan', x: 85, y: 60, lat: 31.83, lon: 35.62 },
-      { ancient: 'Gilgal', modern: 'near Jericho', x: 66, y: 58, lat: 31.87, lon: 35.50 },
+      { ancient: 'Gilgal', modern: 'near Jericho', x: 66, y: 58, lat: 31.87, lon: 35.5 },
       { ancient: 'Jericho', modern: 'Jericho', x: 58, y: 56, lat: 31.87, lon: 35.44 },
       { ancient: 'Ai', modern: 'et-Tell area, West Bank', x: 30, y: 40, lat: 31.92, lon: 35.26 },
       { ancient: 'Gibeon', modern: 'el-Jib, West Bank', x: 15, y: 45, lat: 31.85, lon: 35.18 }
@@ -11464,10 +11484,12 @@ const BIBLE_JOURNEYS = [
   },
   {
     id: 'david-flight-saul',
-    title: "David's Flight from Saul",
+    title: 'David\'s Flight from Saul',
     subtitle: 'On the run through Judah and the wilderness',
     certainty: 'Representative route',
-    refs: [{ book: '1SA', chFrom: 19, chTo: 24 }],
+    refs: [
+      { book: '1SA', chFrom: 19, chTo: 24 }
+    ],
     distance: 120,
     mode: 'Fugitive, often by night',
     days: 'Months on the run',
@@ -11481,7 +11503,7 @@ const BIBLE_JOURNEYS = [
     points: [
       { ancient: 'Gibeah', modern: 'near Jerusalem', x: 64, y: 15, lat: 31.82, lon: 35.23 },
       { ancient: 'Nob', modern: 'near Jerusalem', x: 65, y: 21, lat: 31.79, lon: 35.24 },
-      { ancient: 'Gath', modern: 'Tell es-Safi, Israel', x: 15, y: 38, lat: 31.70, lon: 34.85 },
+      { ancient: 'Gath', modern: 'Tell es-Safi, Israel', x: 15, y: 38, lat: 31.7, lon: 34.85 },
       { ancient: 'Adullam', modern: 'Judean foothills', x: 32, y: 48, lat: 31.65, lon: 34.98 },
       { ancient: 'En Gedi', modern: 'En Gedi, Dead Sea', x: 85, y: 85, lat: 31.46, lon: 35.39 }
     ],
@@ -11495,10 +11517,12 @@ const BIBLE_JOURNEYS = [
   },
   {
     id: 'elijah-cherith-horeb',
-    title: "Elijah's Journey to Horeb",
+    title: 'Elijah\'s Journey to Horeb',
     subtitle: 'From Cherith and Carmel to the mountain of God',
     certainty: 'Approximate route; some sites uncertain',
-    refs: [{ book: '1KI', chFrom: 17, chTo: 19 }],
+    refs: [
+      { book: '1KI', chFrom: 17, chTo: 19 }
+    ],
     distance: 350,
     mode: 'On foot, sometimes in haste',
     days: 'Spread across the drought; 40 days to Horeb',
@@ -11510,8 +11534,8 @@ const BIBLE_JOURNEYS = [
       'The "forty days and forty nights" to Horeb (1 Kings 19:8) echoes Moses and is theological, not a measured travel log.'
     ],
     points: [
-      { ancient: 'Brook Cherith', modern: 'east of the Jordan', x: 85, y: 43, lat: 32.00, lon: 35.62 },
-      { ancient: 'Zarephath', modern: 'near Sidon, Lebanon', x: 71, y: 25, lat: 33.45, lon: 35.30 },
+      { ancient: 'Brook Cherith', modern: 'east of the Jordan', x: 85, y: 43, lat: 32, lon: 35.62 },
+      { ancient: 'Zarephath', modern: 'near Sidon, Lebanon', x: 71, y: 25, lat: 33.45, lon: 35.3 },
       { ancient: 'Mount Carmel', modern: 'Mount Carmel, Israel', x: 61, y: 34, lat: 32.73, lon: 35.05 },
       { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 50, y: 52, lat: 31.25, lon: 34.79 },
       { ancient: 'Horeb / Sinai', modern: 'Sinai Peninsula region', x: 15, y: 85, lat: 28.54, lon: 33.97 }
@@ -11526,10 +11550,13 @@ const BIBLE_JOURNEYS = [
   },
   {
     id: 'jesus-galilee-ministry',
-    title: "Jesus' Ministry Around Galilee",
+    title: 'Jesus\' Ministry Around Galilee',
     subtitle: 'Capernaum and the towns ringing the lake',
     certainty: 'Representative ministry area',
-    refs: [{ book: 'MRK', chFrom: 1, chTo: 6 }, { book: 'MAT', chFrom: 4, chTo: 9 }],
+    refs: [
+      { book: 'MRK', chFrom: 1, chTo: 6 },
+      { book: 'MAT', chFrom: 4, chTo: 9 }
+    ],
     distance: 40,
     mode: 'Walking + boat across the lake',
     days: 'Repeated circuits over many months',
@@ -11541,7 +11568,7 @@ const BIBLE_JOURNEYS = [
       'The region of the Gerasenes/Gadarenes on the east shore is debated; Kursi is a leading candidate.'
     ],
     points: [
-      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 15, y: 85, lat: 32.70, lon: 35.30 },
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 15, y: 85, lat: 32.7, lon: 35.3 },
       { ancient: 'Cana', modern: 'Kafr Kanna area', x: 23, y: 71, lat: 32.75, lon: 35.34 },
       { ancient: 'Capernaum', modern: 'Capernaum, north shore', x: 69, y: 34, lat: 32.88, lon: 35.57 },
       { ancient: 'Bethsaida', modern: 'northeast shore', x: 81, y: 25, lat: 32.91, lon: 35.63 },
@@ -11558,70 +11585,106 @@ const BIBLE_JOURNEYS = [
   },
   {
     id: 'paul-second-journey',
-    title: "Paul's Second Missionary Journey",
+    title: 'Paul\'s Second Missionary Journey',
     subtitle: 'Antioch and Galatia across to Greece',
     certainty: 'Known cities, route simplified',
-    refs: [{ book: 'ACT', chFrom: 15, chTo: 18 }],
-    distance: 2800,
+    refs: [
+      { book: 'ACT', chFrom: 15, chTo: 18 }
+    ],
+    distance: 2900,
     mode: 'Walking + sailing',
     days: 'About 2-3 years, including 18 months in Corinth',
     modern: 'Turkey, then northern and southern Greece',
-    note: 'Macedonian and Greek cities are well located; the Macedonian Call (Acts 16:9-10) marks the crossing from Asia into Europe.',
+    note: 'Every city Acts 15:36-18:22 names on the way is shown, from Antioch to Corinth and back by sea. Roads between them are simplified.',
     sources: [
       'Philippi, Thessalonica, Berea, Athens, and Corinth are securely identified; the Bema at Corinth where Paul stood before Gallio survives.',
       'The Gallio inscription from Delphi independently dates Paul’s Corinth stay to about AD 51-52.',
       'Acts 16:8-11 marks Troas as the turning point where the gospel crosses from Asia into Europe.'
     ],
     points: [
-      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 85, lat: 36.20, lon: 36.16 },
-      { ancient: 'Lystra & Derbe', modern: 'Konya/Karaman region', x: 69, y: 67, lat: 37.50, lon: 32.80 },
-      { ancient: 'Troas', modern: 'northwest Turkey coast', x: 35, y: 37, lat: 39.75, lon: 26.16 },
-      { ancient: 'Philippi', modern: 'Philippi, Greece', x: 25, y: 20, lat: 41.01, lon: 24.29 },
-      { ancient: 'Thessalonica', modern: 'Thessaloniki, Greece', x: 19, y: 25, lat: 40.64, lon: 22.94 },
-      { ancient: 'Berea', modern: 'Veria, Greece', x: 15, y: 27, lat: 40.52, lon: 22.20 },
-      { ancient: 'Athens', modern: 'Athens, Greece', x: 23, y: 61, lat: 37.98, lon: 23.73 },
-      { ancient: 'Corinth', modern: 'Corinth, Greece', x: 18, y: 62, lat: 37.91, lon: 22.88 }
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 55, lat: 36.2, lon: 36.16 },
+      { ancient: 'Derbe', modern: 'Kerti Hüyük, Turkey', x: 71, y: 45, lat: 37.35, lon: 33.27 },
+      { ancient: 'Lystra', modern: 'Hatunsaray, Turkey', x: 66, y: 43, lat: 37.58, lon: 32.45 },
+      { ancient: 'Troas', modern: 'Dalyan, Turkey', x: 35, y: 25, lat: 39.75, lon: 26.16 },
+      { ancient: 'Samothrace', modern: 'Samothraki, Greece', x: 32, y: 19, lat: 40.48, lon: 25.53 },
+      { ancient: 'Neapolis', modern: 'Kavala, Greece', x: 26, y: 16, lat: 40.94, lon: 24.41 },
+      { ancient: 'Philippi', modern: 'Philippi, Greece', x: 25, y: 15, lat: 41.01, lon: 24.29 },
+      { ancient: 'Thessalonica', modern: 'Thessaloniki, Greece', x: 19, y: 18, lat: 40.64, lon: 22.94 },
+      { ancient: 'Berea', modern: 'Veria, Greece', x: 15, y: 19, lat: 40.52, lon: 22.2 },
+      { ancient: 'Athens', modern: 'Athens, Greece', x: 23, y: 40, lat: 37.98, lon: 23.73 },
+      { ancient: 'Corinth', modern: 'Ancient Corinth, Greece', x: 18, y: 40, lat: 37.91, lon: 22.88 },
+      { ancient: 'Cenchreae', modern: 'Kechries, Greece', x: 19, y: 41, lat: 37.88, lon: 22.99 },
+      { ancient: 'Ephesus', modern: 'Selçuk, Turkey', x: 41, y: 40, lat: 37.94, lon: 27.34 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 79, y: 85, lat: 32.5, lon: 34.89 }
     ],
     steps: [
-      { label: 'Revisiting Galatia', ref: 'Acts 15:36-16:5', copy: 'Paul strengthens the churches from the first journey.', miles: 550 },
-      { label: 'The Macedonian call', ref: 'Acts 16:8-12', copy: 'A vision redirects the team to Europe.', miles: 350 },
-      { label: 'Philippi to Berea', ref: 'Acts 16:12-17:14', copy: 'Jail, riots, and new believers across Macedonia.', miles: 90 },
-      { label: 'On the Areopagus', ref: 'Acts 17:15-34', copy: 'Paul reasons with the philosophers of Athens.', miles: 220 },
-      { label: 'A year and a half in Corinth', ref: 'Acts 18:1-11', copy: 'A long, settled ministry before sailing home.', miles: 50 }
+      { label: 'Paul and Silas set out', ref: 'Acts 15:36-41', copy: 'After a sharp disagreement over John Mark, Barnabas sails for Cyprus, and Paul takes Silas through Syria and Cilicia, strengthening the churches.', at: 0 },
+      { label: 'Derbe', ref: 'Acts 16:1', copy: 'Paul comes back to Derbe.', miles: 250, at: 1 },
+      { label: 'Lystra: Timothy joins', ref: 'Acts 16:1-5', copy: 'A disciple named Timothy joins them, and the churches grow stronger in the faith and larger every day.', miles: 55, at: 2 },
+      { label: 'Troas', ref: 'Acts 16:6-10', copy: 'Kept from speaking in Asia and from entering Bithynia, they reach Troas, where Paul sees a vision of a man of Macedonia calling for help.', miles: 470, at: 3 },
+      { label: 'Samothrace', ref: 'Acts 16:11', copy: 'They sail straight across to Samothrace.', miles: 70, at: 4, by: 'sea' },
+      { label: 'Neapolis', ref: 'Acts 16:11', copy: 'The next day they reach Neapolis, in Europe.', miles: 60, at: 5, by: 'sea' },
+      { label: 'Philippi', ref: 'Acts 16:12-40', copy: 'Lydia believes. Paul and Silas are beaten and jailed, sing hymns at midnight, and the jailer and his household are baptized.', miles: 10, at: 6 },
+      { label: 'Thessalonica', ref: 'Acts 17:1-9', copy: 'By way of Amphipolis and Apollonia, they reach Thessalonica. Paul reasons from the Scriptures for three Sabbaths; some believe, and a mob sets the city in an uproar.', miles: 95, at: 7 },
+      { label: 'Berea', ref: 'Acts 17:10-14', copy: 'The Bereans receive the word eagerly and examine the Scriptures every day.', miles: 45, at: 8 },
+      { label: 'Athens', ref: 'Acts 17:15-34', copy: 'Distressed by the city\'s idols, Paul speaks at the Areopagus about the unknown God.', miles: 250, at: 9 },
+      { label: 'Corinth', ref: 'Acts 18:1-17', copy: 'He makes tents with Aquila and Priscilla and stays a year and a half, teaching the word of God.', miles: 50, at: 10 },
+      { label: 'Cenchreae', ref: 'Acts 18:18', copy: 'Paul has his hair cut because of a vow and sets sail for Syria.', miles: 6, at: 11 },
+      { label: 'Ephesus', ref: 'Acts 18:19-21', copy: 'He reasons in the synagogue and promises to come back, if God wills.', miles: 250, at: 12, by: 'sea' },
+      { label: 'Caesarea', ref: 'Acts 18:22', copy: 'He lands at Caesarea and goes up to greet the church.', miles: 620, at: 13, by: 'sea' },
+      { label: 'Home to Antioch', ref: 'Acts 18:22', copy: 'Then he goes down to Antioch.', miles: 300, at: 0 }
     ]
   },
   {
     id: 'paul-third-journey',
-    title: "Paul's Third Missionary Journey",
+    title: 'Paul\'s Third Missionary Journey',
     subtitle: 'Ephesus, Greece, and the road to Jerusalem',
     certainty: 'Known cities, route simplified',
-    refs: [{ book: 'ACT', chFrom: 19, chTo: 21 }],
-    distance: 2700,
+    refs: [
+      { book: 'ACT', chFrom: 19, chTo: 21 }
+    ],
+    distance: 2900,
     mode: 'Walking + sailing',
     days: 'About 3-4 years, including 3 years in Ephesus',
     modern: 'Turkey and Greece, ending in Israel',
-    note: 'Ephesus (about 3 years, Acts 20:31) anchors this journey; the return sail and Miletus farewell are well documented.',
+    note: 'Every place Acts 18:23-21:17 names on the way is shown. \'Macedonia\' and \'Greece\' are regions in the text; Greece is placed at Corinth, where Paul most likely stayed.',
     sources: [
       'Ephesus is extensively excavated; its great theater (Acts 19:29) seated around 25,000 and still stands.',
       'Paul’s farewell to the Ephesian elders at Miletus (Acts 20:17-38) and the named coastal stops give this leg a firm itinerary.',
       'The route deliberately heads to Jerusalem despite repeated warnings (Acts 21:10-14), framing it as a path of obedience.'
     ],
     points: [
-      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 54, lat: 36.20, lon: 36.16 },
-      { ancient: 'Ephesus', modern: 'Selcuk, Turkey', x: 39, y: 42, lat: 37.94, lon: 27.34 },
-      { ancient: 'Macedonia', modern: 'northern Greece', x: 22, y: 20, lat: 40.80, lon: 23.50 },
-      { ancient: 'Greece (Corinth)', modern: 'southern Greece', x: 15, y: 42, lat: 37.91, lon: 22.88 },
-      { ancient: 'Miletus', modern: 'western Turkey coast', x: 38, y: 44, lat: 37.53, lon: 27.28 },
-      { ancient: 'Tyre', modern: 'Tyre, Lebanon', x: 80, y: 74, lat: 33.27, lon: 35.20 },
-      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 78, y: 80, lat: 32.50, lon: 34.89 },
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 51, lat: 36.2, lon: 36.16 },
+      { ancient: 'Ephesus', modern: 'Selçuk, Turkey', x: 39, y: 38, lat: 37.94, lon: 27.34 },
+      { ancient: 'Macedonia', modern: 'northern Greece', x: 18, y: 17, lat: 40.8, lon: 23.5 },
+      { ancient: 'Greece (Corinth)', modern: 'southern Greece', x: 15, y: 39, lat: 37.91, lon: 22.88 },
+      { ancient: 'Philippi', modern: 'Philippi, Greece', x: 22, y: 15, lat: 41.01, lon: 24.29 },
+      { ancient: 'Troas', modern: 'Dalyan, Turkey', x: 32, y: 25, lat: 39.75, lon: 26.16 },
+      { ancient: 'Assos', modern: 'Behramkale, Turkey', x: 33, y: 27, lat: 39.49, lon: 26.34 },
+      { ancient: 'Mitylene', modern: 'Lesbos, Greece', x: 34, y: 29, lat: 39.11, lon: 26.55 },
+      { ancient: 'Miletus', modern: 'western Turkey coast', x: 38, y: 41, lat: 37.53, lon: 27.28 },
+      { ancient: 'Patara', modern: 'Gelemiş, Turkey', x: 49, y: 51, lat: 36.27, lon: 29.31 },
+      { ancient: 'Tyre', modern: 'Tyre, Lebanon', x: 80, y: 74, lat: 33.27, lon: 35.2 },
+      { ancient: 'Ptolemais', modern: 'Acre (Akko), Israel', x: 79, y: 76, lat: 32.92, lon: 35.07 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 78, y: 80, lat: 32.5, lon: 34.89 },
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 80, y: 85, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Three years in Ephesus', ref: 'Acts 19:1-20', copy: 'The word spreads through all of Asia.', miles: 850 },
-      { label: 'Through Macedonia and Greece', ref: 'Acts 20:1-3', copy: 'He encourages the churches once more.', miles: 700 },
-      { label: 'Farewell at Miletus', ref: 'Acts 20:17-38', copy: 'He warns the Ephesian elders he will not return.', miles: 350 },
-      { label: 'Set toward Jerusalem', ref: 'Acts 21:1-14', copy: 'He presses on despite the prophets’ warnings.', miles: 600 },
-      { label: 'Arrival in Jerusalem', ref: 'Acts 21:15-17', copy: 'The journey ends among the brothers there.', miles: 70 }
+      { label: 'Setting out again', ref: 'Acts 18:23', copy: 'After some time in Antioch, Paul travels through Galatia and Phrygia, strengthening all the disciples.', at: 0 },
+      { label: 'Ephesus', ref: 'Acts 19:1-20', copy: 'He teaches daily in the lecture hall of Tyrannus for two years, so that everyone in Asia hears the word of the Lord.', miles: 700, at: 1 },
+      { label: 'Riot in the theater', ref: 'Acts 19:23-41', copy: 'Silversmiths who make shrines of Artemis stir the city into a riot.', at: 1 },
+      { label: 'Through Macedonia', ref: 'Acts 20:1-2', copy: 'After the uproar, Paul travels through Macedonia, encouraging the believers.', miles: 350, at: 2 },
+      { label: 'Three months in Greece', ref: 'Acts 20:2-3', copy: 'A plot against him makes him decide to go back through Macedonia.', miles: 300, at: 3 },
+      { label: 'Philippi', ref: 'Acts 20:3-6', copy: 'After the Feast of Unleavened Bread, they sail from Philippi.', miles: 330, at: 4 },
+      { label: 'Troas', ref: 'Acts 20:6-12', copy: 'Paul talks until midnight. Eutychus falls from a third-story window and is picked up dead; Paul embraces him, and he is taken home alive.', miles: 150, at: 5, by: 'sea' },
+      { label: 'Assos', ref: 'Acts 20:13-14', copy: 'Paul goes on foot while the others sail, and they meet him at Assos.', miles: 30, at: 6 },
+      { label: 'Mitylene', ref: 'Acts 20:14', copy: 'They take him on board and come to Mitylene.', miles: 45, at: 7, by: 'sea' },
+      { label: 'Farewell at Miletus', ref: 'Acts 20:15-38', copy: 'Past Chios and Samos, he calls the Ephesian elders and says a tearful goodbye.', miles: 170, at: 8, by: 'sea' },
+      { label: 'Patara', ref: 'Acts 21:1-2', copy: 'By way of Cos and Rhodes they reach Patara and find a ship crossing to Phoenicia.', miles: 200, at: 9, by: 'sea' },
+      { label: 'Tyre', ref: 'Acts 21:3-6', copy: 'Passing Cyprus, they land at Tyre, where the disciples urge Paul not to go up to Jerusalem.', miles: 400, at: 10, by: 'sea' },
+      { label: 'Ptolemais', ref: 'Acts 21:7', copy: 'They greet the brothers and stay with them for a day.', miles: 25, at: 11, by: 'sea' },
+      { label: 'Caesarea', ref: 'Acts 21:8-14', copy: 'They stay with Philip the evangelist. Agabus binds his own hands and feet with Paul\'s belt as a warning.', miles: 35, at: 12 },
+      { label: 'Jerusalem', ref: 'Acts 21:15-17', copy: 'The brothers welcome them warmly.', miles: 65, at: 13 }
     ]
   },
   {
@@ -11629,7 +11692,9 @@ const BIBLE_JOURNEYS = [
     title: 'Abraham and Isaac to Moriah',
     subtitle: 'Beersheba up to the mountain of testing',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 22, chTo: 22 }],
+    refs: [
+      { book: 'GEN', chFrom: 22, chTo: 22 }
+    ],
     distance: 50,
     mode: 'Walking with a donkey',
     days: 'A three-day journey (Genesis 22:4)',
@@ -11656,7 +11721,9 @@ const BIBLE_JOURNEYS = [
     title: 'Rebekah\'s Journey to Isaac',
     subtitle: 'From Haran to the Negev to become Isaac’s wife',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 24, chTo: 24 }],
+    refs: [
+      { book: 'GEN', chFrom: 24, chTo: 24 }
+    ],
     distance: 550,
     mode: 'Camel caravan',
     days: 'Weeks of caravan travel',
@@ -11684,7 +11751,9 @@ const BIBLE_JOURNEYS = [
     title: 'Joseph Sold into Egypt',
     subtitle: 'From Hebron to Dothan to slavery in Egypt',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 37, chTo: 37 }],
+    refs: [
+      { book: 'GEN', chFrom: 37, chTo: 37 }
+    ],
     distance: 300,
     mode: 'On foot, then a slave caravan',
     days: 'About 2 weeks for the caravan',
@@ -11713,7 +11782,9 @@ const BIBLE_JOURNEYS = [
     title: 'Moses Flees to Midian',
     subtitle: 'From Egypt into the wilderness of Midian',
     certainty: 'Approximate route',
-    refs: [{ book: 'EXO', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'EXO', chFrom: 2, chTo: 2 }
+    ],
     distance: 250,
     mode: 'Fleeing on foot',
     days: 'Weeks across the wilderness',
@@ -11739,7 +11810,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Twelve Spies',
     subtitle: 'From Kadesh into Canaan and back',
     certainty: 'Approximate route',
-    refs: [{ book: 'NUM', chFrom: 13, chTo: 14 }],
+    refs: [
+      { book: 'NUM', chFrom: 13, chTo: 14 }
+    ],
     distance: 250,
     mode: 'Reconnaissance on foot',
     days: 'Forty days (Numbers 13:25)',
@@ -11768,7 +11841,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Ark Among the Philistines',
     subtitle: 'Captured at Ebenezer, returned to Israel',
     certainty: 'Known cities, simplified route',
-    refs: [{ book: '1SA', chFrom: 4, chTo: 6 }],
+    refs: [
+      { book: '1SA', chFrom: 4, chTo: 6 }
+    ],
     distance: 70,
     mode: 'Carried, then a new cart',
     days: 'Seven months in Philistia (1 Samuel 6:1)',
@@ -11798,7 +11873,9 @@ const BIBLE_JOURNEYS = [
     title: 'David Brings the Ark to Jerusalem',
     subtitle: 'From Kiriath-Jearim to the city of David',
     certainty: 'Approximate route',
-    refs: [{ book: '2SA', chFrom: 6, chTo: 6 }],
+    refs: [
+      { book: '2SA', chFrom: 6, chTo: 6 }
+    ],
     distance: 12,
     mode: 'Procession with cart, then carried',
     days: 'Two stages, three months apart',
@@ -11825,7 +11902,9 @@ const BIBLE_JOURNEYS = [
     title: 'Elijah Taken Up to Heaven',
     subtitle: 'A final walk from Gilgal to the Jordan',
     certainty: 'Approximate route',
-    refs: [{ book: '2KI', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: '2KI', chFrom: 2, chTo: 2 }
+    ],
     distance: 25,
     mode: 'Walking with Elisha',
     days: 'A single day',
@@ -11854,7 +11933,9 @@ const BIBLE_JOURNEYS = [
     title: 'Naaman Comes to Be Healed',
     subtitle: 'From Damascus to the Jordan and clean again',
     certainty: 'Known cities, simplified route',
-    refs: [{ book: '2KI', chFrom: 5, chTo: 5 }],
+    refs: [
+      { book: '2KI', chFrom: 5, chTo: 5 }
+    ],
     distance: 140,
     mode: 'Chariots and horses',
     days: 'Several travel days each way',
@@ -11881,7 +11962,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jonah Flees, Then Goes to Nineveh',
     subtitle: 'Joppa toward Tarshish, redirected to Nineveh',
     certainty: 'Known ports, Tarshish debated',
-    refs: [{ book: 'JON', chFrom: 1, chTo: 3 }],
+    refs: [
+      { book: 'JON', chFrom: 1, chTo: 3 }
+    ],
     distance: 600,
     mode: 'Ship, then overland',
     days: 'Weeks, with three days inside the fish',
@@ -11909,7 +11992,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Magi to Bethlehem',
     subtitle: 'From the East to Jerusalem and the child',
     certainty: 'Origin debated, cities known',
-    refs: [{ book: 'MAT', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'MAT', chFrom: 2, chTo: 2 }
+    ],
     distance: 900,
     mode: 'Long caravan from the East',
     days: 'Months of caravan travel',
@@ -11937,7 +12022,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Flight to Egypt',
     subtitle: 'Bethlehem to Egypt, then home to Nazareth',
     certainty: 'Representative route',
-    refs: [{ book: 'MAT', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'MAT', chFrom: 2, chTo: 2 }
+    ],
     distance: 350,
     mode: 'Family travel by night',
     days: 'Days of travel each way',
@@ -11964,7 +12051,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Boy Jesus at the Temple',
     subtitle: 'A Passover pilgrimage from Nazareth to Jerusalem',
     certainty: 'Representative pilgrim route',
-    refs: [{ book: 'LUK', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'LUK', chFrom: 2, chTo: 2 }
+    ],
     distance: 90,
     mode: 'Pilgrim caravan on foot',
     days: '4-5 travel days each way',
@@ -11992,7 +12081,9 @@ const BIBLE_JOURNEYS = [
     title: 'Saul on the Road to Damascus',
     subtitle: 'From Jerusalem toward Damascus, struck by light',
     certainty: 'Known cities, route simplified',
-    refs: [{ book: 'ACT', chFrom: 9, chTo: 9 }],
+    refs: [
+      { book: 'ACT', chFrom: 9, chTo: 9 }
+    ],
     distance: 150,
     mode: 'Mounted with companions',
     days: 'About a week of travel',
@@ -12020,7 +12111,9 @@ const BIBLE_JOURNEYS = [
     title: 'Philip and the Ethiopian',
     subtitle: 'On the desert road from Jerusalem to Gaza',
     certainty: 'Approximate route',
-    refs: [{ book: 'ACT', chFrom: 8, chTo: 8 }],
+    refs: [
+      { book: 'ACT', chFrom: 8, chTo: 8 }
+    ],
     distance: 60,
     mode: 'Chariot meeting on the road',
     days: 'A day’s journey',
@@ -12048,7 +12141,9 @@ const BIBLE_JOURNEYS = [
     title: 'Peter to Cornelius',
     subtitle: 'From Joppa up the coast to Caesarea',
     certainty: 'Known cities, simplified route',
-    refs: [{ book: 'ACT', chFrom: 10, chTo: 10 }],
+    refs: [
+      { book: 'ACT', chFrom: 10, chTo: 10 }
+    ],
     distance: 35,
     mode: 'Walking the coastal road',
     days: 'About two days (Acts 10:23-24)',
@@ -12075,7 +12170,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Road to Emmaus',
     subtitle: 'Two disciples meet the risen Jesus',
     certainty: 'Emmaus location debated',
-    refs: [{ book: 'LUK', chFrom: 24, chTo: 24 }],
+    refs: [
+      { book: 'LUK', chFrom: 24, chTo: 24 }
+    ],
     distance: 14,
     mode: 'Walking and back',
     days: 'A single afternoon and evening',
@@ -12102,7 +12199,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jesus Through Samaria',
     subtitle: 'Judea to Galilee by the well of Sychar',
     certainty: 'Representative route',
-    refs: [{ book: 'JHN', chFrom: 4, chTo: 4 }],
+    refs: [
+      { book: 'JHN', chFrom: 4, chTo: 4 }
+    ],
     distance: 70,
     mode: 'Walking the ridge road',
     days: '2-3 travel days',
@@ -12129,7 +12228,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jesus Withdraws to Tyre and Sidon',
     subtitle: 'North to the coast, back through the Decapolis',
     certainty: 'Representative route',
-    refs: [{ book: 'MRK', chFrom: 7, chTo: 7 }],
+    refs: [
+      { book: 'MRK', chFrom: 7, chTo: 7 }
+    ],
     distance: 120,
     mode: 'Walking with the disciples',
     days: 'Several days with ministry stops',
@@ -12157,7 +12258,9 @@ const BIBLE_JOURNEYS = [
     title: 'Paul’s Night March to Caesarea',
     subtitle: 'Escorted from Jerusalem to escape a plot',
     certainty: 'Known cities, route simplified',
-    refs: [{ book: 'ACT', chFrom: 23, chTo: 23 }],
+    refs: [
+      { book: 'ACT', chFrom: 23, chTo: 23 }
+    ],
     distance: 65,
     mode: 'Roman escort, by night then horse',
     days: 'Through the night and next day',
@@ -12184,7 +12287,9 @@ const BIBLE_JOURNEYS = [
     title: 'Lot Flees Sodom',
     subtitle: 'Out of the doomed city to the little town of Zoar',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 19, chTo: 19 }],
+    refs: [
+      { book: 'GEN', chFrom: 19, chTo: 19 }
+    ],
     distance: 12,
     mode: 'Fleeing on foot at dawn',
     days: 'A single morning',
@@ -12211,7 +12316,9 @@ const BIBLE_JOURNEYS = [
     title: 'Abraham Rescues Lot',
     subtitle: 'A night pursuit of four kings as far as Dan and beyond',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 14, chTo: 14 }],
+    refs: [
+      { book: 'GEN', chFrom: 14, chTo: 14 }
+    ],
     distance: 150,
     mode: 'Armed pursuit',
     days: 'Several days of pursuit and return',
@@ -12240,7 +12347,9 @@ const BIBLE_JOURNEYS = [
     title: 'Balaam Comes to Moab',
     subtitle: 'From Pethor on the Euphrates to bless or curse Israel',
     certainty: 'Approximate route',
-    refs: [{ book: 'NUM', chFrom: 22, chTo: 24 }],
+    refs: [
+      { book: 'NUM', chFrom: 22, chTo: 24 }
+    ],
     distance: 400,
     mode: 'Riding a donkey',
     days: 'Many days of travel',
@@ -12268,7 +12377,9 @@ const BIBLE_JOURNEYS = [
     title: 'Israel Skirts Edom',
     subtitle: 'From Kadesh around Edom to the plains of Moab',
     certainty: 'Approximate route',
-    refs: [{ book: 'NUM', chFrom: 20, chTo: 21 }],
+    refs: [
+      { book: 'NUM', chFrom: 20, chTo: 21 }
+    ],
     distance: 180,
     mode: 'Wilderness march',
     days: 'A long detour of many weeks',
@@ -12296,7 +12407,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Spies at Jericho',
     subtitle: 'From the camp at Shittim across to Jericho and back',
     certainty: 'Approximate route',
-    refs: [{ book: 'JOS', chFrom: 2, chTo: 3 }],
+    refs: [
+      { book: 'JOS', chFrom: 2, chTo: 3 }
+    ],
     distance: 14,
     mode: 'Secret scouting on foot',
     days: 'About three days',
@@ -12323,7 +12436,9 @@ const BIBLE_JOURNEYS = [
     title: 'Gideon Pursues Midian',
     subtitle: 'From the spring of Harod across the Jordan to Karkor',
     certainty: 'Approximate route',
-    refs: [{ book: 'JDG', chFrom: 7, chTo: 8 }],
+    refs: [
+      { book: 'JDG', chFrom: 7, chTo: 8 }
+    ],
     distance: 100,
     mode: 'Pursuit with 300 men',
     days: 'A relentless chase',
@@ -12351,7 +12466,9 @@ const BIBLE_JOURNEYS = [
     title: 'David and Goliath',
     subtitle: 'From Bethlehem to the Valley of Elah and on to Jerusalem',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 17, chTo: 17 }],
+    refs: [
+      { book: '1SA', chFrom: 17, chTo: 17 }
+    ],
     distance: 25,
     mode: 'Errand on foot',
     days: 'A day each way',
@@ -12378,7 +12495,9 @@ const BIBLE_JOURNEYS = [
     title: 'David Flees Absalom',
     subtitle: 'Out of Jerusalem across the Jordan to Mahanaim',
     certainty: 'Approximate route',
-    refs: [{ book: '2SA', chFrom: 15, chTo: 17 }],
+    refs: [
+      { book: '2SA', chFrom: 15, chTo: 17 }
+    ],
     distance: 60,
     mode: 'Fleeing on foot, weeping',
     days: 'A hurried flight over days',
@@ -12405,7 +12524,9 @@ const BIBLE_JOURNEYS = [
     title: 'Baptism and Temptation',
     subtitle: 'From Nazareth to the Jordan and into the wilderness',
     certainty: 'Approximate route',
-    refs: [{ book: 'MAT', chFrom: 3, chTo: 4 }],
+    refs: [
+      { book: 'MAT', chFrom: 3, chTo: 4 }
+    ],
     distance: 75,
     mode: 'Walking',
     days: 'Several days, then forty in the wilderness',
@@ -12432,7 +12553,9 @@ const BIBLE_JOURNEYS = [
     title: 'First Sign and Capernaum',
     subtitle: 'From Cana down to Capernaum on the lake',
     certainty: 'Approximate route',
-    refs: [{ book: 'JHN', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'JHN', chFrom: 2, chTo: 2 }
+    ],
     distance: 20,
     mode: 'Walking',
     days: 'A short journey',
@@ -12458,7 +12581,9 @@ const BIBLE_JOURNEYS = [
     title: 'Crossing to the Gerasenes',
     subtitle: 'Across the Sea of Galilee to the country of the Gerasenes',
     certainty: 'Approximate route',
-    refs: [{ book: 'MRK', chFrom: 4, chTo: 5 }],
+    refs: [
+      { book: 'MRK', chFrom: 4, chTo: 5 }
+    ],
     distance: 9,
     mode: 'Crossing by boat',
     days: 'An evening crossing',
@@ -12484,7 +12609,9 @@ const BIBLE_JOURNEYS = [
     title: 'Peter\'s Confession',
     subtitle: 'North to the villages of Caesarea Philippi',
     certainty: 'Approximate route',
-    refs: [{ book: 'MAT', chFrom: 16, chTo: 16 }],
+    refs: [
+      { book: 'MAT', chFrom: 16, chTo: 16 }
+    ],
     distance: 30,
     mode: 'Walking',
     days: 'A journey of a day or two',
@@ -12510,7 +12637,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Triumphal Entry',
     subtitle: 'Up from Jericho through Bethany into Jerusalem',
     certainty: 'Well attested',
-    refs: [{ book: 'LUK', chFrom: 19, chTo: 19 }],
+    refs: [
+      { book: 'LUK', chFrom: 19, chTo: 19 }
+    ],
     distance: 18,
     mode: 'Walking, then riding a colt',
     days: 'The final approach to Jerusalem',
@@ -12537,7 +12666,9 @@ const BIBLE_JOURNEYS = [
     title: 'Peter and John to Samaria',
     subtitle: 'From Jerusalem to confirm the new believers in Samaria',
     certainty: 'Approximate route',
-    refs: [{ book: 'ACT', chFrom: 8, chTo: 8 }],
+    refs: [
+      { book: 'ACT', chFrom: 8, chTo: 8 }
+    ],
     distance: 40,
     mode: 'Walking',
     days: 'A journey of two to three days',
@@ -12563,7 +12694,9 @@ const BIBLE_JOURNEYS = [
     title: 'Barnabas Brings Saul to Antioch',
     subtitle: 'From Tarsus to teach the new church at Antioch',
     certainty: 'Approximate route',
-    refs: [{ book: 'ACT', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: 'ACT', chFrom: 11, chTo: 11 }
+    ],
     distance: 90,
     mode: 'Walking the coastal road',
     days: 'Several days of travel',
@@ -12589,7 +12722,9 @@ const BIBLE_JOURNEYS = [
     title: 'Abram in Egypt',
     subtitle: 'Down to Egypt in a famine and back to Bethel',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 12, chTo: 13 }],
+    refs: [
+      { book: 'GEN', chFrom: 12, chTo: 13 }
+    ],
     distance: 480,
     mode: 'Caravan with flocks',
     days: 'A long sojourn',
@@ -12617,7 +12752,9 @@ const BIBLE_JOURNEYS = [
     title: 'Isaac in Gerar',
     subtitle: 'A famine sojourn among the Philistines and the wells of strife',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 26, chTo: 26 }],
+    refs: [
+      { book: 'GEN', chFrom: 26, chTo: 26 }
+    ],
     distance: 35,
     mode: 'Herding on foot',
     days: 'A season of sojourn',
@@ -12646,7 +12783,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jacob Wrestles at Peniel',
     subtitle: 'From Mahanaim across the Jabbok to meet Esau and on to Shechem',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 32, chTo: 33 }],
+    refs: [
+      { book: 'GEN', chFrom: 32, chTo: 33 }
+    ],
     distance: 45,
     mode: 'Traveling with family and flocks',
     days: 'A few tense days',
@@ -12675,7 +12814,9 @@ const BIBLE_JOURNEYS = [
     title: 'Moses Returns to Egypt',
     subtitle: 'From Midian back to Egypt to confront Pharaoh',
     certainty: 'Approximate route',
-    refs: [{ book: 'EXO', chFrom: 4, chTo: 4 }],
+    refs: [
+      { book: 'EXO', chFrom: 4, chTo: 4 }
+    ],
     distance: 280,
     mode: 'Traveling with family on a donkey',
     days: 'Many days across the wilderness',
@@ -12703,7 +12844,9 @@ const BIBLE_JOURNEYS = [
     title: 'Saul Seeks the Donkeys',
     subtitle: 'An errand through Ephraim that ends with an anointing',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 9, chTo: 10 }],
+    refs: [
+      { book: '1SA', chFrom: 9, chTo: 10 }
+    ],
     distance: 35,
     mode: 'Searching on foot',
     days: 'About three days',
@@ -12731,7 +12874,9 @@ const BIBLE_JOURNEYS = [
     title: 'David Recovers at Ziklag',
     subtitle: 'A raid pursued from Ziklag to the brook Besor',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 30, chTo: 30 }],
+    refs: [
+      { book: '1SA', chFrom: 30, chTo: 30 }
+    ],
     distance: 40,
     mode: 'Hard pursuit',
     days: 'A three-day chase',
@@ -12759,7 +12904,9 @@ const BIBLE_JOURNEYS = [
     title: 'Solomon Asks for Wisdom',
     subtitle: 'Up to the great high place at Gibeon and back',
     certainty: 'Well attested',
-    refs: [{ book: '1KI', chFrom: 3, chTo: 3 }],
+    refs: [
+      { book: '1KI', chFrom: 3, chTo: 3 }
+    ],
     distance: 12,
     mode: 'Royal procession',
     days: 'A short journey to sacrifice',
@@ -12786,7 +12933,9 @@ const BIBLE_JOURNEYS = [
     title: 'Elijah Outruns the Rain',
     subtitle: 'From the top of Carmel ahead of Ahab’s chariot to Jezreel',
     certainty: 'Approximate route',
-    refs: [{ book: '1KI', chFrom: 18, chTo: 18 }],
+    refs: [
+      { book: '1KI', chFrom: 18, chTo: 18 }
+    ],
     distance: 17,
     mode: 'Running on foot',
     days: 'A single afternoon',
@@ -12813,7 +12962,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Kingdom Divides',
     subtitle: 'Rehoboam goes up to Shechem and Israel breaks away',
     certainty: 'Well attested',
-    refs: [{ book: '1KI', chFrom: 12, chTo: 12 }],
+    refs: [
+      { book: '1KI', chFrom: 12, chTo: 12 }
+    ],
     distance: 30,
     mode: 'Royal journey',
     days: 'A few days',
@@ -12840,7 +12991,9 @@ const BIBLE_JOURNEYS = [
     title: 'Josiah at Megiddo',
     subtitle: 'Out to meet Pharaoh Neco at the pass of Megiddo',
     certainty: 'Approximate route',
-    refs: [{ book: '2KI', chFrom: 23, chTo: 23 }],
+    refs: [
+      { book: '2KI', chFrom: 23, chTo: 23 }
+    ],
     distance: 55,
     mode: 'Army on the march',
     days: 'A few days north',
@@ -12866,7 +13019,9 @@ const BIBLE_JOURNEYS = [
     title: 'Ezra Returns from Babylon',
     subtitle: 'Up from Babylon with the exiles to Jerusalem',
     certainty: 'Approximate route',
-    refs: [{ book: 'EZR', chFrom: 7, chTo: 8 }],
+    refs: [
+      { book: 'EZR', chFrom: 7, chTo: 8 }
+    ],
     distance: 900,
     mode: 'Caravan of returning exiles',
     days: 'About four months (Ezra 7:9)',
@@ -12894,7 +13049,9 @@ const BIBLE_JOURNEYS = [
     title: 'Rejected at Nazareth',
     subtitle: 'From his hometown synagogue down to Capernaum',
     certainty: 'Approximate route',
-    refs: [{ book: 'LUK', chFrom: 4, chTo: 4 }],
+    refs: [
+      { book: 'LUK', chFrom: 4, chTo: 4 }
+    ],
     distance: 20,
     mode: 'Walking',
     days: 'A short journey',
@@ -12921,7 +13078,9 @@ const BIBLE_JOURNEYS = [
     title: 'Feeding the Five Thousand',
     subtitle: 'Across the lake to a solitary place and back over the water',
     certainty: 'Approximate route',
-    refs: [{ book: 'MRK', chFrom: 6, chTo: 6 }],
+    refs: [
+      { book: 'MRK', chFrom: 6, chTo: 6 }
+    ],
     distance: 12,
     mode: 'By boat and on foot',
     days: 'A single long day and night',
@@ -12949,7 +13108,9 @@ const BIBLE_JOURNEYS = [
     title: 'Feeding the Four Thousand',
     subtitle: 'From Sidon through the Decapolis to the Sea of Galilee',
     certainty: 'Approximate route',
-    refs: [{ book: 'MRK', chFrom: 7, chTo: 8 }],
+    refs: [
+      { book: 'MRK', chFrom: 7, chTo: 8 }
+    ],
     distance: 70,
     mode: 'Walking',
     days: 'Several days, then three with the crowd',
@@ -12977,7 +13138,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Raising of Lazarus',
     subtitle: 'From beyond the Jordan back to Bethany near Jerusalem',
     certainty: 'Approximate route',
-    refs: [{ book: 'JHN', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: 'JHN', chFrom: 11, chTo: 11 }
+    ],
     distance: 20,
     mode: 'Walking',
     days: 'A few days’ delay, then the journey',
@@ -13004,7 +13167,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Call to Macedonia',
     subtitle: 'From Troas across the sea to Philippi',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 16, chTo: 16 }],
+    refs: [
+      { book: 'ACT', chFrom: 16, chTo: 16 }
+    ],
     distance: 150,
     mode: 'Sailing and walking',
     days: 'A few days by sea',
@@ -13033,7 +13198,9 @@ const BIBLE_JOURNEYS = [
     title: 'Paul at the Areopagus',
     subtitle: 'From Berea down to Athens and on to Corinth',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 17, chTo: 18 }],
+    refs: [
+      { book: 'ACT', chFrom: 17, chTo: 18 }
+    ],
     distance: 300,
     mode: 'Sailing and walking',
     days: 'Several days',
@@ -13061,7 +13228,9 @@ const BIBLE_JOURNEYS = [
     title: 'Saul Sent to Tarsus',
     subtitle: 'From Jerusalem down to Caesarea and home to Tarsus',
     certainty: 'Approximate route',
-    refs: [{ book: 'ACT', chFrom: 9, chTo: 9 }],
+    refs: [
+      { book: 'ACT', chFrom: 9, chTo: 9 }
+    ],
     distance: 520,
     mode: 'Walking and sailing',
     days: 'Many days',
@@ -13089,7 +13258,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Jerusalem Council',
     subtitle: 'From Antioch up to the council and back with the letter',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 15, chTo: 15 }],
+    refs: [
+      { book: 'ACT', chFrom: 15, chTo: 15 }
+    ],
     distance: 300,
     mode: 'Walking the coastal route',
     days: 'Many days each way',
@@ -13117,7 +13288,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Ascension',
     subtitle: 'Out to Bethany on the Mount of Olives and back to the city',
     certainty: 'Well attested',
-    refs: [{ book: 'LUK', chFrom: 24, chTo: 24 }],
+    refs: [
+      { book: 'LUK', chFrom: 24, chTo: 24 }
+    ],
     distance: 4,
     mode: 'Walking',
     days: 'A single day',
@@ -13144,7 +13317,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Road to Jericho',
     subtitle: 'The dangerous descent of the Good Samaritan parable',
     certainty: 'Well attested',
-    refs: [{ book: 'LUK', chFrom: 10, chTo: 10 }],
+    refs: [
+      { book: 'LUK', chFrom: 10, chTo: 10 }
+    ],
     distance: 18,
     mode: 'Walking the desert road',
     days: 'A day’s descent',
@@ -13172,7 +13347,9 @@ const BIBLE_JOURNEYS = [
     title: 'Crossing the Red Sea',
     subtitle: 'Out of Egypt through the sea on dry ground',
     certainty: 'Disputed location',
-    refs: [{ book: 'EXO', chFrom: 14, chTo: 15 }],
+    refs: [
+      { book: 'EXO', chFrom: 14, chTo: 15 }
+    ],
     distance: 90,
     mode: 'A nation on the move',
     days: 'The first days out of Egypt',
@@ -13202,7 +13379,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Seven Churches',
     subtitle: 'The circuit of the seven churches of Revelation',
     certainty: 'Well attested',
-    refs: [{ book: 'REV', chFrom: 1, chTo: 3 }],
+    refs: [
+      { book: 'REV', chFrom: 1, chTo: 3 }
+    ],
     distance: 320,
     mode: 'A messenger’s circuit',
     days: 'A week or more by road',
@@ -13238,7 +13417,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Transfiguration',
     subtitle: 'Up a high mountain and back to Galilee',
     certainty: 'Traditional site (debated)',
-    refs: [{ book: 'MAT', chFrom: 17, chTo: 17 }],
+    refs: [
+      { book: 'MAT', chFrom: 17, chTo: 17 }
+    ],
     distance: 40,
     mode: 'Walking',
     days: 'Six days after Caesarea Philippi',
@@ -13266,7 +13447,9 @@ const BIBLE_JOURNEYS = [
     title: 'Moses on Mount Nebo',
     subtitle: 'Up from the plains of Moab to see the land',
     certainty: 'Well attested',
-    refs: [{ book: 'DEU', chFrom: 34, chTo: 34 }],
+    refs: [
+      { book: 'DEU', chFrom: 34, chTo: 34 }
+    ],
     distance: 8,
     mode: 'A final ascent on foot',
     days: 'A single day',
@@ -13293,7 +13476,9 @@ const BIBLE_JOURNEYS = [
     title: 'Deborah and Barak',
     subtitle: 'Mustering at Mount Tabor against Sisera by the Kishon',
     certainty: 'Approximate route',
-    refs: [{ book: 'JDG', chFrom: 4, chTo: 5 }],
+    refs: [
+      { book: 'JDG', chFrom: 4, chTo: 5 }
+    ],
     distance: 55,
     mode: 'Army on the march',
     days: 'The day of battle',
@@ -13321,7 +13506,9 @@ const BIBLE_JOURNEYS = [
     title: 'Samson Carries the Gates',
     subtitle: 'From Gaza uphill toward Hebron with the city gates',
     certainty: 'Approximate route',
-    refs: [{ book: 'JDG', chFrom: 16, chTo: 16 }],
+    refs: [
+      { book: 'JDG', chFrom: 16, chTo: 16 }
+    ],
     distance: 40,
     mode: 'A feat of strength on foot',
     days: 'A single night',
@@ -13347,7 +13534,9 @@ const BIBLE_JOURNEYS = [
     title: 'Chariots of Fire at Dothan',
     subtitle: 'A blinded army led from Dothan into Samaria',
     certainty: 'Well attested',
-    refs: [{ book: '2KI', chFrom: 6, chTo: 6 }],
+    refs: [
+      { book: '2KI', chFrom: 6, chTo: 6 }
+    ],
     distance: 12,
     mode: 'Walking',
     days: 'A single day',
@@ -13374,7 +13563,9 @@ const BIBLE_JOURNEYS = [
     title: 'David in the Wilderness',
     subtitle: 'Hiding from Saul among the Judean strongholds',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 23, chTo: 24 }],
+    refs: [
+      { book: '1SA', chFrom: 23, chTo: 24 }
+    ],
     distance: 45,
     mode: 'Fugitive on foot',
     days: 'Many weeks of hiding',
@@ -13403,7 +13594,9 @@ const BIBLE_JOURNEYS = [
     title: 'Philip Preaches the Coast',
     subtitle: 'From Azotus up the seaboard to Caesarea',
     certainty: 'Approximate route',
-    refs: [{ book: 'ACT', chFrom: 8, chTo: 8 }],
+    refs: [
+      { book: 'ACT', chFrom: 8, chTo: 8 }
+    ],
     distance: 60,
     mode: 'Walking the coast road',
     days: 'Several days of preaching',
@@ -13430,7 +13623,9 @@ const BIBLE_JOURNEYS = [
     title: 'From Gethsemane to Golgotha',
     subtitle: 'The night and morning of the Passion across Jerusalem',
     certainty: 'Traditional sites',
-    refs: [{ book: 'JHN', chFrom: 18, chTo: 19 }],
+    refs: [
+      { book: 'JHN', chFrom: 18, chTo: 19 }
+    ],
     distance: 2,
     mode: 'Walking under arrest',
     days: 'A single night into morning',
@@ -13460,7 +13655,9 @@ const BIBLE_JOURNEYS = [
     title: 'Hagar in the Wilderness',
     subtitle: 'Fleeing Sarai toward Shur and the well of seeing',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 16, chTo: 16 }],
+    refs: [
+      { book: 'GEN', chFrom: 16, chTo: 16 }
+    ],
     distance: 60,
     mode: 'Fleeing on foot',
     days: 'A desperate flight',
@@ -13488,7 +13685,9 @@ const BIBLE_JOURNEYS = [
     title: 'Abram\'s First Tour of Canaan',
     subtitle: 'From Shechem to Bethel and on to the Negev',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 12, chTo: 12 }],
+    refs: [
+      { book: 'GEN', chFrom: 12, chTo: 12 }
+    ],
     distance: 90,
     mode: 'Caravan with flocks',
     days: 'A first survey of the land',
@@ -13516,7 +13715,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jacob Returns to Bethel',
     subtitle: 'From Shechem to Bethel, then to Ephrath and Hebron',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 35, chTo: 35 }],
+    refs: [
+      { book: 'GEN', chFrom: 35, chTo: 35 }
+    ],
     distance: 55,
     mode: 'Traveling with family and flocks',
     days: 'A journey of grief and worship',
@@ -13545,7 +13746,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jacob\'s Burial Procession',
     subtitle: 'Carrying Jacob from Egypt to the cave of Machpelah',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 50, chTo: 50 }],
+    refs: [
+      { book: 'GEN', chFrom: 50, chTo: 50 }
+    ],
     distance: 350,
     mode: 'A great funeral caravan',
     days: 'A long mourning journey',
@@ -13573,7 +13776,9 @@ const BIBLE_JOURNEYS = [
     title: 'Marah and Elim',
     subtitle: 'From the bitter water to the twelve springs',
     certainty: 'Approximate route',
-    refs: [{ book: 'EXO', chFrom: 15, chTo: 15 }],
+    refs: [
+      { book: 'EXO', chFrom: 15, chTo: 15 }
+    ],
     distance: 45,
     mode: 'A nation on the move',
     days: 'The first stops after the sea',
@@ -13601,7 +13806,9 @@ const BIBLE_JOURNEYS = [
     title: 'Water and War at Rephidim',
     subtitle: 'Water from the rock and the battle with Amalek',
     certainty: 'Approximate route',
-    refs: [{ book: 'EXO', chFrom: 17, chTo: 17 }],
+    refs: [
+      { book: 'EXO', chFrom: 17, chTo: 17 }
+    ],
     distance: 35,
     mode: 'Wilderness march',
     days: 'A halt on the way to Sinai',
@@ -13628,7 +13835,9 @@ const BIBLE_JOURNEYS = [
     title: 'Victory over Sihon and Og',
     subtitle: 'Battles east of the Jordan from Heshbon to Bashan',
     certainty: 'Approximate route',
-    refs: [{ book: 'NUM', chFrom: 21, chTo: 21 }],
+    refs: [
+      { book: 'NUM', chFrom: 21, chTo: 21 }
+    ],
     distance: 120,
     mode: 'Army on the march',
     days: 'The conquest of the east',
@@ -13656,7 +13865,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Northern Campaign',
     subtitle: 'From Gilgal to the waters of Merom and Hazor',
     certainty: 'Approximate route',
-    refs: [{ book: 'JOS', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: 'JOS', chFrom: 11, chTo: 11 }
+    ],
     distance: 90,
     mode: 'Army on the march',
     days: 'A swift northern strike',
@@ -13684,7 +13895,9 @@ const BIBLE_JOURNEYS = [
     title: 'Ehud and Eglon',
     subtitle: 'Tribute to Jericho and escape to the Ephraim hills',
     certainty: 'Approximate route',
-    refs: [{ book: 'JDG', chFrom: 3, chTo: 3 }],
+    refs: [
+      { book: 'JDG', chFrom: 3, chTo: 3 }
+    ],
     distance: 25,
     mode: 'Secret mission on foot',
     days: 'A daring deliverance',
@@ -13711,7 +13924,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jephthah Fights Ammon',
     subtitle: 'From Mizpah of Gilead against the Ammonites',
     certainty: 'Approximate route',
-    refs: [{ book: 'JDG', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: 'JDG', chFrom: 11, chTo: 11 }
+    ],
     distance: 60,
     mode: 'Army on the march',
     days: 'A campaign in Gilead',
@@ -13738,7 +13953,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Danites Migrate',
     subtitle: 'From Zorah and Eshtaol to far-northern Laish',
     certainty: 'Approximate route',
-    refs: [{ book: 'JDG', chFrom: 18, chTo: 18 }],
+    refs: [
+      { book: 'JDG', chFrom: 18, chTo: 18 }
+    ],
     distance: 100,
     mode: 'A tribe on the move',
     days: 'A migration north',
@@ -13766,7 +13983,9 @@ const BIBLE_JOURNEYS = [
     title: 'Hannah at Shiloh',
     subtitle: 'The yearly pilgrimage from Ramah to the tabernacle',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 1, chTo: 1 }],
+    refs: [
+      { book: '1SA', chFrom: 1, chTo: 1 }
+    ],
     distance: 18,
     mode: 'Family pilgrimage',
     days: 'A yearly journey',
@@ -13793,7 +14012,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Ark Comes Home',
     subtitle: 'From Ekron to Beth-shemesh and Kiriath-jearim',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 6, chTo: 7 }],
+    refs: [
+      { book: '1SA', chFrom: 6, chTo: 7 }
+    ],
     distance: 25,
     mode: 'Drawn by a new cart',
     days: 'A single day',
@@ -13821,7 +14042,9 @@ const BIBLE_JOURNEYS = [
     title: 'Saul Rescues Jabesh-Gilead',
     subtitle: 'Saul\'s first victory across the Jordan',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: '1SA', chFrom: 11, chTo: 11 }
+    ],
     distance: 50,
     mode: 'Army on the march',
     days: 'A night march to battle',
@@ -13849,7 +14072,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jonathan\'s Climb at Michmash',
     subtitle: 'A daring raid through the rocky pass',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 14, chTo: 14 }],
+    refs: [
+      { book: '1SA', chFrom: 14, chTo: 14 }
+    ],
     distance: 8,
     mode: 'Climbing the pass',
     days: 'A single bold day',
@@ -13877,7 +14102,9 @@ const BIBLE_JOURNEYS = [
     title: 'Samuel Anoints David',
     subtitle: 'From Ramah to Bethlehem to anoint a shepherd-king',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 16, chTo: 16 }],
+    refs: [
+      { book: '1SA', chFrom: 16, chTo: 16 }
+    ],
     distance: 20,
     mode: 'Walking',
     days: 'A single journey',
@@ -13904,7 +14131,9 @@ const BIBLE_JOURNEYS = [
     title: 'David Flees to Nob and Gath',
     subtitle: 'From the priests at Nob to the Philistine king',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 21, chTo: 21 }],
+    refs: [
+      { book: '1SA', chFrom: 21, chTo: 21 }
+    ],
     distance: 35,
     mode: 'Fugitive on foot',
     days: 'A frightened flight',
@@ -13931,7 +14160,9 @@ const BIBLE_JOURNEYS = [
     title: 'David at the Cave of Adullam',
     subtitle: 'Gathering a band, then sheltering his family in Moab',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 22, chTo: 22 }],
+    refs: [
+      { book: '1SA', chFrom: 22, chTo: 22 }
+    ],
     distance: 70,
     mode: 'Fugitive on foot',
     days: 'The outlaw years begin',
@@ -13959,7 +14190,9 @@ const BIBLE_JOURNEYS = [
     title: 'Saul and the Medium of Endor',
     subtitle: 'A desperate night journey before the last battle',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 28, chTo: 28 }],
+    refs: [
+      { book: '1SA', chFrom: 28, chTo: 28 }
+    ],
     distance: 10,
     mode: 'By night, in disguise',
     days: 'A fateful night',
@@ -13987,7 +14220,9 @@ const BIBLE_JOURNEYS = [
     title: 'David Becomes King at Hebron',
     subtitle: 'From Ziklag up to be anointed king of Judah',
     certainty: 'Approximate route',
-    refs: [{ book: '2SA', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: '2SA', chFrom: 2, chTo: 2 }
+    ],
     distance: 30,
     mode: 'Royal move with households',
     days: 'A new beginning',
@@ -14014,7 +14249,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Siege of Rabbah',
     subtitle: 'While Joab besieges Ammon\'s capital, David stays home',
     certainty: 'Approximate route',
-    refs: [{ book: '2SA', chFrom: 11, chTo: 12 }],
+    refs: [
+      { book: '2SA', chFrom: 11, chTo: 12 }
+    ],
     distance: 45,
     mode: 'Army on the march',
     days: 'A spring campaign',
@@ -14041,7 +14278,9 @@ const BIBLE_JOURNEYS = [
     title: 'Sheba\'s Revolt',
     subtitle: 'Joab pursues a rebel to Abel of Beth-maacah',
     certainty: 'Approximate route',
-    refs: [{ book: '2SA', chFrom: 20, chTo: 20 }],
+    refs: [
+      { book: '2SA', chFrom: 20, chTo: 20 }
+    ],
     distance: 110,
     mode: 'Army in pursuit',
     days: 'A pursuit to the far north',
@@ -14068,7 +14307,9 @@ const BIBLE_JOURNEYS = [
     title: 'Cedars for the Temple',
     subtitle: 'Hiram\'s timber floated from Lebanon to Jerusalem',
     certainty: 'Approximate route',
-    refs: [{ book: '1KI', chFrom: 5, chTo: 5 }],
+    refs: [
+      { book: '1KI', chFrom: 5, chTo: 5 }
+    ],
     distance: 120,
     mode: 'Rafts by sea, then overland',
     days: 'A great building effort',
@@ -14096,7 +14337,9 @@ const BIBLE_JOURNEYS = [
     title: 'Elisha and the Shunammite',
     subtitle: 'Between Shunem and Mount Carmel to raise a child',
     certainty: 'Approximate route',
-    refs: [{ book: '2KI', chFrom: 4, chTo: 4 }],
+    refs: [
+      { book: '2KI', chFrom: 4, chTo: 4 }
+    ],
     distance: 30,
     mode: 'Riding and walking',
     days: 'A day of grief and joy',
@@ -14123,7 +14366,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jehu\'s Furious Drive',
     subtitle: 'From Ramoth-gilead racing to Jezreel',
     certainty: 'Approximate route',
-    refs: [{ book: '2KI', chFrom: 9, chTo: 9 }],
+    refs: [
+      { book: '2KI', chFrom: 9, chTo: 9 }
+    ],
     distance: 45,
     mode: 'Charging by chariot',
     days: 'A single violent day',
@@ -14150,7 +14395,9 @@ const BIBLE_JOURNEYS = [
     title: 'Sennacherib Threatens Jerusalem',
     subtitle: 'The Assyrian army from Lachish to Hezekiah\'s walls',
     certainty: 'Well attested',
-    refs: [{ book: '2KI', chFrom: 18, chTo: 19 }],
+    refs: [
+      { book: '2KI', chFrom: 18, chTo: 19 }
+    ],
     distance: 30,
     mode: 'Assyrian army on the march',
     days: 'A siege crisis',
@@ -14177,7 +14424,9 @@ const BIBLE_JOURNEYS = [
     title: 'Zedekiah\'s Flight',
     subtitle: 'The last king flees Jerusalem and is caught near Jericho',
     certainty: 'Approximate route',
-    refs: [{ book: '2KI', chFrom: 25, chTo: 25 }],
+    refs: [
+      { book: '2KI', chFrom: 25, chTo: 25 }
+    ],
     distance: 230,
     mode: 'Fleeing by night, then captive',
     days: 'The fall of Jerusalem',
@@ -14205,7 +14454,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jeremiah Taken to Egypt',
     subtitle: 'The remnant flees to Tahpanhes against the word',
     certainty: 'Approximate route',
-    refs: [{ book: 'JER', chFrom: 43, chTo: 43 }],
+    refs: [
+      { book: 'JER', chFrom: 43, chTo: 43 }
+    ],
     distance: 280,
     mode: 'A fearful migration',
     days: 'A long flight south',
@@ -14232,7 +14483,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jonah Flees to Tarshish',
     subtitle: 'Down to Joppa and out to sea away from God',
     certainty: 'Approximate route',
-    refs: [{ book: 'JON', chFrom: 1, chTo: 1 }],
+    refs: [
+      { book: 'JON', chFrom: 1, chTo: 1 }
+    ],
     distance: 600,
     mode: 'By ship',
     days: 'A flight cut short by a storm',
@@ -14260,7 +14513,9 @@ const BIBLE_JOURNEYS = [
     title: 'Daniel Taken to Babylon',
     subtitle: 'From Jerusalem into exile in the land of Shinar',
     certainty: 'Approximate route',
-    refs: [{ book: 'DAN', chFrom: 1, chTo: 1 }],
+    refs: [
+      { book: 'DAN', chFrom: 1, chTo: 1 }
+    ],
     distance: 900,
     mode: 'Captives on the long road',
     days: 'The road of exile',
@@ -14288,7 +14543,9 @@ const BIBLE_JOURNEYS = [
     title: 'Mary Visits Elizabeth',
     subtitle: 'From Nazareth to the hill country of Judah',
     certainty: 'Approximate route',
-    refs: [{ book: 'LUK', chFrom: 1, chTo: 1 }],
+    refs: [
+      { book: 'LUK', chFrom: 1, chTo: 1 }
+    ],
     distance: 80,
     mode: 'Walking with haste',
     days: 'A journey of joy',
@@ -14315,7 +14572,9 @@ const BIBLE_JOURNEYS = [
     title: 'Presented at the Temple',
     subtitle: 'From Bethlehem to Jerusalem to meet Simeon and Anna',
     certainty: 'Well attested',
-    refs: [{ book: 'LUK', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'LUK', chFrom: 2, chTo: 2 }
+    ],
     distance: 6,
     mode: 'Walking',
     days: 'A short journey of devotion',
@@ -14342,7 +14601,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Widow of Nain',
     subtitle: 'Jesus comes to Nain and raises a widow’s only son',
     certainty: 'Approximate route',
-    refs: [{ book: 'LUK', chFrom: 7, chTo: 7 }],
+    refs: [
+      { book: 'LUK', chFrom: 7, chTo: 7 }
+    ],
     distance: 25,
     mode: 'Walking with a crowd',
     days: 'A day of compassion',
@@ -14369,7 +14630,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Ten Lepers',
     subtitle: 'Healed on the road between Samaria and Galilee',
     certainty: 'Approximate route',
-    refs: [{ book: 'LUK', chFrom: 17, chTo: 17 }],
+    refs: [
+      { book: 'LUK', chFrom: 17, chTo: 17 }
+    ],
     distance: 40,
     mode: 'Walking toward Jerusalem',
     days: 'On the road south',
@@ -14396,7 +14659,9 @@ const BIBLE_JOURNEYS = [
     title: 'Up to the Feast in Secret',
     subtitle: 'Jesus goes to Jerusalem for the Feast of Tabernacles',
     certainty: 'Approximate route',
-    refs: [{ book: 'JHN', chFrom: 7, chTo: 7 }],
+    refs: [
+      { book: 'JHN', chFrom: 7, chTo: 7 }
+    ],
     distance: 80,
     mode: 'Walking, privately',
     days: 'During the autumn feast',
@@ -14423,7 +14688,9 @@ const BIBLE_JOURNEYS = [
     title: 'Blind Bartimaeus',
     subtitle: 'Healed by the road as Jesus leaves Jericho',
     certainty: 'Approximate route',
-    refs: [{ book: 'MRK', chFrom: 10, chTo: 10 }],
+    refs: [
+      { book: 'MRK', chFrom: 10, chTo: 10 }
+    ],
     distance: 16,
     mode: 'Walking with a crowd',
     days: 'On the way up to Jerusalem',
@@ -14450,7 +14717,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Great Commission',
     subtitle: 'The eleven go to the mountain in Galilee',
     certainty: 'Approximate route',
-    refs: [{ book: 'MAT', chFrom: 28, chTo: 28 }],
+    refs: [
+      { book: 'MAT', chFrom: 28, chTo: 28 }
+    ],
     distance: 75,
     mode: 'Walking',
     days: 'After the resurrection',
@@ -14477,7 +14746,9 @@ const BIBLE_JOURNEYS = [
     title: 'Peter at Lydda and Joppa',
     subtitle: 'Healing Aeneas and raising Tabitha on the coastal plain',
     certainty: 'Approximate route',
-    refs: [{ book: 'ACT', chFrom: 9, chTo: 9 }],
+    refs: [
+      { book: 'ACT', chFrom: 9, chTo: 9 }
+    ],
     distance: 12,
     mode: 'Walking the plain',
     days: 'Two coastal miracles',
@@ -14504,7 +14775,9 @@ const BIBLE_JOURNEYS = [
     title: 'Herod\'s Death at Caesarea',
     subtitle: 'Herod Agrippa goes down from Judea to Caesarea',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 12, chTo: 12 }],
+    refs: [
+      { book: 'ACT', chFrom: 12, chTo: 12 }
+    ],
     distance: 65,
     mode: 'Royal journey',
     days: 'A king’s downfall',
@@ -14531,7 +14804,9 @@ const BIBLE_JOURNEYS = [
     title: 'Paul on Cyprus',
     subtitle: 'The first missionary leg from Antioch across Cyprus',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 13, chTo: 13 }],
+    refs: [
+      { book: 'ACT', chFrom: 13, chTo: 13 }
+    ],
     distance: 200,
     mode: 'Sailing and walking',
     days: 'The first journey begins',
@@ -14560,7 +14835,9 @@ const BIBLE_JOURNEYS = [
     title: 'Paul at Pisidian Antioch',
     subtitle: 'From Paphos to Perga and up to the highlands',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 13, chTo: 13 }],
+    refs: [
+      { book: 'ACT', chFrom: 13, chTo: 13 }
+    ],
     distance: 180,
     mode: 'Sailing and walking',
     days: 'Inland into Asia Minor',
@@ -14588,7 +14865,9 @@ const BIBLE_JOURNEYS = [
     title: 'Paul Stoned at Lystra',
     subtitle: 'From Iconium to Lystra and on to Derbe',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 14, chTo: 14 }],
+    refs: [
+      { book: 'ACT', chFrom: 14, chTo: 14 }
+    ],
     distance: 90,
     mode: 'Walking',
     days: 'Mid-journey trials',
@@ -14616,7 +14895,9 @@ const BIBLE_JOURNEYS = [
     title: 'Strengthening the Churches',
     subtitle: 'Retracing the first journey home to Antioch',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 14, chTo: 14 }],
+    refs: [
+      { book: 'ACT', chFrom: 14, chTo: 14 }
+    ],
     distance: 350,
     mode: 'Walking and sailing',
     days: 'The return leg',
@@ -14645,7 +14926,9 @@ const BIBLE_JOURNEYS = [
     title: 'Thessalonica and Berea',
     subtitle: 'From Philippi along the Egnatian Way',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 17, chTo: 17 }],
+    refs: [
+      { book: 'ACT', chFrom: 17, chTo: 17 }
+    ],
     distance: 120,
     mode: 'Walking the Roman road',
     days: 'Through Macedonia',
@@ -14673,7 +14956,9 @@ const BIBLE_JOURNEYS = [
     title: 'From Corinth to Antioch',
     subtitle: 'Closing the second journey by Ephesus and Caesarea',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 18, chTo: 18 }],
+    refs: [
+      { book: 'ACT', chFrom: 18, chTo: 18 }
+    ],
     distance: 900,
     mode: 'Sailing',
     days: 'The long voyage home',
@@ -14702,7 +14987,9 @@ const BIBLE_JOURNEYS = [
     title: 'Troas to Miletus',
     subtitle: 'Coastal sailing and the farewell to the Ephesian elders',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 20, chTo: 20 }],
+    refs: [
+      { book: 'ACT', chFrom: 20, chTo: 20 }
+    ],
     distance: 140,
     mode: 'Sailing the Aegean coast',
     days: 'The journey toward Jerusalem',
@@ -14731,7 +15018,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Voyage to Caesarea',
     subtitle: 'Sailing past Cyprus to Tyre, Ptolemais, and Caesarea',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 21, chTo: 21 }],
+    refs: [
+      { book: 'ACT', chFrom: 21, chTo: 21 }
+    ],
     distance: 400,
     mode: 'Sailing',
     days: 'The last leg before Jerusalem',
@@ -14760,7 +15049,9 @@ const BIBLE_JOURNEYS = [
     title: 'From Malta to Rome',
     subtitle: 'The final voyage into the imperial capital',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 28, chTo: 28 }],
+    refs: [
+      { book: 'ACT', chFrom: 28, chTo: 28 }
+    ],
     distance: 600,
     mode: 'Sailing and the Appian Way',
     days: 'The journey ends at Rome',
@@ -14791,7 +15082,9 @@ const BIBLE_JOURNEYS = [
     title: 'Through Macedonia to Greece',
     subtitle: 'Leaving Ephesus to encourage the churches',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 20, chTo: 20 }],
+    refs: [
+      { book: 'ACT', chFrom: 20, chTo: 20 }
+    ],
     distance: 700,
     mode: 'Walking and sailing',
     days: 'Three months in Greece',
@@ -14818,7 +15111,9 @@ const BIBLE_JOURNEYS = [
     title: 'Ahab\'s Last Battle',
     subtitle: 'From Samaria to Ramoth-gilead against the warning of Micaiah',
     certainty: 'Approximate route',
-    refs: [{ book: '1KI', chFrom: 22, chTo: 22 }],
+    refs: [
+      { book: '1KI', chFrom: 22, chTo: 22 }
+    ],
     distance: 45,
     mode: 'Army on the march',
     days: 'A single fatal battle',
@@ -14845,7 +15140,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Tower of Babel',
     subtitle: 'A migration east to the plain of Shinar',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: 'GEN', chFrom: 11, chTo: 11 }
+    ],
     distance: 600,
     mode: 'Migration on foot',
     days: 'After the flood',
@@ -14872,7 +15169,9 @@ const BIBLE_JOURNEYS = [
     title: 'Abraham at Gerar',
     subtitle: 'Sojourning in the Negev toward the Philistine country',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 20, chTo: 20 }],
+    refs: [
+      { book: 'GEN', chFrom: 20, chTo: 20 }
+    ],
     distance: 40,
     mode: 'Caravan with flocks',
     days: 'A season of sojourn',
@@ -14899,7 +15198,9 @@ const BIBLE_JOURNEYS = [
     title: 'Hagar and Ishmael Cast Out',
     subtitle: 'Wandering in the wilderness of Beersheba',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 21, chTo: 21 }],
+    refs: [
+      { book: 'GEN', chFrom: 21, chTo: 21 }
+    ],
     distance: 25,
     mode: 'Sent away on foot',
     days: 'A desperate wandering',
@@ -14926,7 +15227,9 @@ const BIBLE_JOURNEYS = [
     title: 'Esau Settles in Seir',
     subtitle: 'Moving away from Jacob into the hills of Edom',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 36, chTo: 36 }],
+    refs: [
+      { book: 'GEN', chFrom: 36, chTo: 36 }
+    ],
     distance: 90,
     mode: 'Migration with herds',
     days: 'A parting of brothers',
@@ -14953,7 +15256,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Brothers Buy Grain',
     subtitle: 'Jacob’s sons go down to Egypt in the famine',
     certainty: 'Approximate route',
-    refs: [{ book: 'GEN', chFrom: 42, chTo: 42 }],
+    refs: [
+      { book: 'GEN', chFrom: 42, chTo: 42 }
+    ],
     distance: 250,
     mode: 'Caravan of donkeys',
     days: 'A journey for survival',
@@ -14980,7 +15285,9 @@ const BIBLE_JOURNEYS = [
     title: 'Leaving Mount Sinai',
     subtitle: 'The cloud lifts and Israel sets out for Paran',
     certainty: 'Approximate route',
-    refs: [{ book: 'NUM', chFrom: 10, chTo: 10 }],
+    refs: [
+      { book: 'NUM', chFrom: 10, chTo: 10 }
+    ],
     distance: 120,
     mode: 'The camp on the march',
     days: 'A three-day march',
@@ -15007,7 +15314,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Graves of Craving',
     subtitle: 'From Kibroth-hattaavah to Hazeroth',
     certainty: 'Approximate route',
-    refs: [{ book: 'NUM', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: 'NUM', chFrom: 11, chTo: 11 }
+    ],
     distance: 30,
     mode: 'Wilderness march',
     days: 'A halt of complaint',
@@ -15034,7 +15343,9 @@ const BIBLE_JOURNEYS = [
     title: 'War against Midian',
     subtitle: 'Vengeance on Midian from the plains of Moab',
     certainty: 'Approximate route',
-    refs: [{ book: 'NUM', chFrom: 31, chTo: 31 }],
+    refs: [
+      { book: 'NUM', chFrom: 31, chTo: 31 }
+    ],
     distance: 80,
     mode: 'Army on the march',
     days: 'A campaign of judgment',
@@ -15060,7 +15371,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Tribes Settle Gilead',
     subtitle: 'Reuben and Gad claim the land east of the Jordan',
     certainty: 'Approximate route',
-    refs: [{ book: 'NUM', chFrom: 32, chTo: 32 }],
+    refs: [
+      { book: 'NUM', chFrom: 32, chTo: 32 }
+    ],
     distance: 70,
     mode: 'Resettlement with herds',
     days: 'Dividing the eastern land',
@@ -15088,7 +15401,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Gibeonite Deception',
     subtitle: 'A ruse that brings Gibeon to the camp at Gilgal',
     certainty: 'Approximate route',
-    refs: [{ book: 'JOS', chFrom: 9, chTo: 9 }],
+    refs: [
+      { book: 'JOS', chFrom: 9, chTo: 9 }
+    ],
     distance: 20,
     mode: 'A disguised embassy',
     days: 'A clever deception',
@@ -15115,7 +15430,9 @@ const BIBLE_JOURNEYS = [
     title: 'Caleb Claims Hebron',
     subtitle: 'The faithful spy takes his mountain at last',
     certainty: 'Approximate route',
-    refs: [{ book: 'JOS', chFrom: 14, chTo: 15 }],
+    refs: [
+      { book: 'JOS', chFrom: 14, chTo: 15 }
+    ],
     distance: 35,
     mode: 'Conquest on foot',
     days: 'Forty-five years after the spies',
@@ -15143,7 +15460,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Covenant at Shechem',
     subtitle: 'Joshua gathers Israel for a final charge',
     certainty: 'Approximate route',
-    refs: [{ book: 'JOS', chFrom: 24, chTo: 24 }],
+    refs: [
+      { book: 'JOS', chFrom: 24, chTo: 24 }
+    ],
     distance: 20,
     mode: 'National assembly',
     days: 'A solemn gathering',
@@ -15170,7 +15489,9 @@ const BIBLE_JOURNEYS = [
     title: 'Samson at Timnah',
     subtitle: 'Down to Timnah, where he tears a lion apart',
     certainty: 'Approximate route',
-    refs: [{ book: 'JDG', chFrom: 14, chTo: 14 }],
+    refs: [
+      { book: 'JDG', chFrom: 14, chTo: 14 }
+    ],
     distance: 8,
     mode: 'Walking',
     days: 'A wedding errand',
@@ -15197,7 +15518,9 @@ const BIBLE_JOURNEYS = [
     title: 'Abimelech at Thebez',
     subtitle: 'From ruined Shechem to his death at Thebez',
     certainty: 'Approximate route',
-    refs: [{ book: 'JDG', chFrom: 9, chTo: 9 }],
+    refs: [
+      { book: 'JDG', chFrom: 9, chTo: 9 }
+    ],
     distance: 12,
     mode: 'Siege warfare',
     days: 'A tyrant’s downfall',
@@ -15224,7 +15547,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Levite at Gibeah',
     subtitle: 'A grim journey from Bethlehem through Gibeah',
     certainty: 'Approximate route',
-    refs: [{ book: 'JDG', chFrom: 19, chTo: 19 }],
+    refs: [
+      { book: 'JDG', chFrom: 19, chTo: 19 }
+    ],
     distance: 20,
     mode: 'Walking with a donkey',
     days: 'A journey into outrage',
@@ -15252,7 +15577,9 @@ const BIBLE_JOURNEYS = [
     title: 'Victory at Mizpah',
     subtitle: 'Samuel gathers Israel and raises the Ebenezer stone',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 7, chTo: 7 }],
+    refs: [
+      { book: '1SA', chFrom: 7, chTo: 7 }
+    ],
     distance: 12,
     mode: 'National gathering',
     days: 'A day of repentance and rescue',
@@ -15279,7 +15606,9 @@ const BIBLE_JOURNEYS = [
     title: 'Saul Spares Agag',
     subtitle: 'A campaign against Amalek that costs Saul the throne',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 15, chTo: 15 }],
+    refs: [
+      { book: '1SA', chFrom: 15, chTo: 15 }
+    ],
     distance: 60,
     mode: 'Army on the march',
     days: 'A test of obedience',
@@ -15306,7 +15635,9 @@ const BIBLE_JOURNEYS = [
     title: 'Abigail Meets David',
     subtitle: 'A wise woman keeps David from bloodshed',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 25, chTo: 25 }],
+    refs: [
+      { book: '1SA', chFrom: 25, chTo: 25 }
+    ],
     distance: 10,
     mode: 'Riding a donkey',
     days: 'A day of swift mercy',
@@ -15333,7 +15664,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Death of Saul',
     subtitle: 'The last battle on Mount Gilboa',
     certainty: 'Approximate route',
-    refs: [{ book: '1SA', chFrom: 31, chTo: 31 }],
+    refs: [
+      { book: '1SA', chFrom: 31, chTo: 31 }
+    ],
     distance: 35,
     mode: 'Battle and rescue',
     days: 'Israel’s dark day',
@@ -15361,7 +15694,9 @@ const BIBLE_JOURNEYS = [
     title: 'Ish-bosheth at Mahanaim',
     subtitle: 'Abner crowns Saul’s son east of the Jordan',
     certainty: 'Approximate route',
-    refs: [{ book: '2SA', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: '2SA', chFrom: 2, chTo: 2 }
+    ],
     distance: 40,
     mode: 'Royal flight and crowning',
     days: 'A divided kingdom',
@@ -15388,7 +15723,9 @@ const BIBLE_JOURNEYS = [
     title: 'Battles in the Valley of Rephaim',
     subtitle: 'David twice routs the Philistines below Jerusalem',
     certainty: 'Approximate route',
-    refs: [{ book: '2SA', chFrom: 5, chTo: 5 }],
+    refs: [
+      { book: '2SA', chFrom: 5, chTo: 5 }
+    ],
     distance: 18,
     mode: 'Defensive war',
     days: 'Two swift victories',
@@ -15416,7 +15753,9 @@ const BIBLE_JOURNEYS = [
     title: 'Burying Saul’s Bones',
     subtitle: 'David brings Saul and Jonathan home to Zela',
     certainty: 'Approximate route',
-    refs: [{ book: '2SA', chFrom: 21, chTo: 21 }],
+    refs: [
+      { book: '2SA', chFrom: 21, chTo: 21 }
+    ],
     distance: 60,
     mode: 'A solemn recovery',
     days: 'An act of honor',
@@ -15443,7 +15782,9 @@ const BIBLE_JOURNEYS = [
     title: 'Solomon’s Fleet to Ophir',
     subtitle: 'Sailing the Red Sea for gold from Ophir',
     certainty: 'Approximate route',
-    refs: [{ book: '1KI', chFrom: 9, chTo: 10 }],
+    refs: [
+      { book: '1KI', chFrom: 9, chTo: 10 }
+    ],
     distance: 500,
     mode: 'Sailing the Red Sea',
     days: 'A long sea voyage',
@@ -15471,7 +15812,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Calves of Bethel and Dan',
     subtitle: 'Jeroboam sets up rival altars at the kingdom’s ends',
     certainty: 'Approximate route',
-    refs: [{ book: '1KI', chFrom: 12, chTo: 12 }],
+    refs: [
+      { book: '1KI', chFrom: 12, chTo: 12 }
+    ],
     distance: 120,
     mode: 'Royal decree',
     days: 'A new false worship',
@@ -15499,7 +15842,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Man of God at Bethel',
     subtitle: 'A prophet from Judah cries against Jeroboam’s altar',
     certainty: 'Approximate route',
-    refs: [{ book: '1KI', chFrom: 13, chTo: 13 }],
+    refs: [
+      { book: '1KI', chFrom: 13, chTo: 13 }
+    ],
     distance: 30,
     mode: 'Walking',
     days: 'A prophetic errand',
@@ -15526,7 +15871,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Campaign against Moab',
     subtitle: 'Three kings march through the wilderness of Edom',
     certainty: 'Approximate route',
-    refs: [{ book: '2KI', chFrom: 3, chTo: 3 }],
+    refs: [
+      { book: '2KI', chFrom: 3, chTo: 3 }
+    ],
     distance: 120,
     mode: 'Army on the march',
     days: 'A waterless march',
@@ -15554,7 +15901,9 @@ const BIBLE_JOURNEYS = [
     title: 'Elisha and Hazael',
     subtitle: 'The prophet travels to Damascus to foresee a king',
     certainty: 'Approximate route',
-    refs: [{ book: '2KI', chFrom: 8, chTo: 8 }],
+    refs: [
+      { book: '2KI', chFrom: 8, chTo: 8 }
+    ],
     distance: 140,
     mode: 'Walking',
     days: 'A prophetic errand north',
@@ -15581,7 +15930,9 @@ const BIBLE_JOURNEYS = [
     title: 'Ahaz Goes to Damascus',
     subtitle: 'A faithless king bows to Assyria’s power',
     certainty: 'Approximate route',
-    refs: [{ book: '2KI', chFrom: 16, chTo: 16 }],
+    refs: [
+      { book: '2KI', chFrom: 16, chTo: 16 }
+    ],
     distance: 140,
     mode: 'Royal journey',
     days: 'A journey of compromise',
@@ -15608,7 +15959,9 @@ const BIBLE_JOURNEYS = [
     title: 'Israel Exiled to Assyria',
     subtitle: 'The northern kingdom carried away from Samaria',
     certainty: 'Approximate route',
-    refs: [{ book: '2KI', chFrom: 17, chTo: 17 }],
+    refs: [
+      { book: '2KI', chFrom: 17, chTo: 17 }
+    ],
     distance: 500,
     mode: 'Captives on the road',
     days: 'The end of the northern kingdom',
@@ -15634,7 +15987,9 @@ const BIBLE_JOURNEYS = [
     title: 'Amos at Bethel',
     subtitle: 'A shepherd of Tekoa confronts the royal sanctuary',
     certainty: 'Approximate route',
-    refs: [{ book: 'AMO', chFrom: 7, chTo: 7 }],
+    refs: [
+      { book: 'AMO', chFrom: 7, chTo: 7 }
+    ],
     distance: 35,
     mode: 'Walking',
     days: 'A prophet sent north',
@@ -15661,7 +16016,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jeremiah’s Ruined Belt',
     subtitle: 'A long symbolic journey to the Euphrates and back',
     certainty: 'Approximate route',
-    refs: [{ book: 'JER', chFrom: 13, chTo: 13 }],
+    refs: [
+      { book: 'JER', chFrom: 13, chTo: 13 }
+    ],
     distance: 700,
     mode: 'A prophetic sign-act',
     days: 'Many days each way',
@@ -15688,7 +16045,9 @@ const BIBLE_JOURNEYS = [
     title: 'Nehemiah Returns',
     subtitle: 'From the citadel of Susa to rebuild Jerusalem’s wall',
     certainty: 'Approximate route',
-    refs: [{ book: 'NEH', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'NEH', chFrom: 2, chTo: 2 }
+    ],
     distance: 900,
     mode: 'Caravan with a royal escort',
     days: 'A long journey with the king’s letters',
@@ -15715,7 +16074,9 @@ const BIBLE_JOURNEYS = [
     title: 'Joab’s Census Circuit',
     subtitle: 'Numbering Israel from Aroer to Dan to Beersheba',
     certainty: 'Approximate route',
-    refs: [{ book: '2SA', chFrom: 24, chTo: 24 }],
+    refs: [
+      { book: '2SA', chFrom: 24, chTo: 24 }
+    ],
     distance: 400,
     mode: 'A nine-month circuit',
     days: 'Nine months and twenty days',
@@ -15744,7 +16105,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Battle Is the Lord’s',
     subtitle: 'Jehoshaphat marches to the wilderness of Tekoa',
     certainty: 'Approximate route',
-    refs: [{ book: '2CH', chFrom: 20, chTo: 20 }],
+    refs: [
+      { book: '2CH', chFrom: 20, chTo: 20 }
+    ],
     distance: 30,
     mode: 'Army that sings instead of fights',
     days: 'A day of deliverance',
@@ -15772,7 +16135,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Return from Egypt',
     subtitle: 'Joseph brings the child from Egypt to Nazareth',
     certainty: 'Approximate route',
-    refs: [{ book: 'MAT', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'MAT', chFrom: 2, chTo: 2 }
+    ],
     distance: 350,
     mode: 'Walking with a family',
     days: 'The journey home',
@@ -15800,7 +16165,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Shepherds at Bethlehem',
     subtitle: 'From the night fields to the manger',
     certainty: 'Well attested',
-    refs: [{ book: 'LUK', chFrom: 2, chTo: 2 }],
+    refs: [
+      { book: 'LUK', chFrom: 2, chTo: 2 }
+    ],
     distance: 2,
     mode: 'Walking by night',
     days: 'The night of the nativity',
@@ -15827,7 +16194,9 @@ const BIBLE_JOURNEYS = [
     title: 'John the Baptist Beheaded',
     subtitle: 'Imprisonment and death at the fortress of Machaerus',
     certainty: 'Traditional site',
-    refs: [{ book: 'MRK', chFrom: 6, chTo: 6 }],
+    refs: [
+      { book: 'MRK', chFrom: 6, chTo: 6 }
+    ],
     distance: 60,
     mode: 'News carried to Galilee',
     days: 'A grim banquet',
@@ -15854,7 +16223,9 @@ const BIBLE_JOURNEYS = [
     title: 'Barnabas and Mark Sail to Cyprus',
     subtitle: 'After a sharp parting, the gospel still goes out',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 15, chTo: 15 }],
+    refs: [
+      { book: 'ACT', chFrom: 15, chTo: 15 }
+    ],
     distance: 130,
     mode: 'Sailing',
     days: 'A new mission begins',
@@ -15880,7 +16251,9 @@ const BIBLE_JOURNEYS = [
     title: 'Famine Relief to Judea',
     subtitle: 'Carrying aid from Antioch up to Jerusalem',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: 'ACT', chFrom: 11, chTo: 11 }
+    ],
     distance: 300,
     mode: 'Overland with a gift',
     days: 'A journey of mercy',
@@ -15906,7 +16279,9 @@ const BIBLE_JOURNEYS = [
     title: 'Through Syria and Cilicia',
     subtitle: 'The second journey begins overland to Tarsus and Derbe',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 15, chTo: 16 }],
+    refs: [
+      { book: 'ACT', chFrom: 15, chTo: 16 }
+    ],
     distance: 230,
     mode: 'Walking',
     days: 'Strengthening the churches',
@@ -15933,7 +16308,9 @@ const BIBLE_JOURNEYS = [
     title: 'Timothy Joins Paul',
     subtitle: 'At Lystra a young disciple is added to the team',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 16, chTo: 16 }],
+    refs: [
+      { book: 'ACT', chFrom: 16, chTo: 16 }
+    ],
     distance: 60,
     mode: 'Walking',
     days: 'Building the team',
@@ -15961,7 +16338,9 @@ const BIBLE_JOURNEYS = [
     title: 'Led to Troas',
     subtitle: 'The Spirit redirects Paul to the edge of the Aegean',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 16, chTo: 16 }],
+    refs: [
+      { book: 'ACT', chFrom: 16, chTo: 16 }
+    ],
     distance: 400,
     mode: 'Walking',
     days: 'A Spirit-guided detour',
@@ -15988,7 +16367,9 @@ const BIBLE_JOURNEYS = [
     title: 'Paul Stays in Corinth',
     subtitle: 'From Athens to a year and a half in Corinth',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 18, chTo: 18 }],
+    refs: [
+      { book: 'ACT', chFrom: 18, chTo: 18 }
+    ],
     distance: 50,
     mode: 'Walking',
     days: 'A long, fruitful stay',
@@ -16015,7 +16396,9 @@ const BIBLE_JOURNEYS = [
     title: 'Sailing to Patara',
     subtitle: 'Island-hopping from Miletus toward Phoenicia',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 21, chTo: 21 }],
+    refs: [
+      { book: 'ACT', chFrom: 21, chTo: 21 }
+    ],
     distance: 170,
     mode: 'Sailing the Aegean',
     days: 'A few days at sea',
@@ -16043,7 +16426,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Voyage Toward Rome',
     subtitle: 'From Caesarea past Sidon and Myra to Fair Havens',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 27, chTo: 27 }],
+    refs: [
+      { book: 'ACT', chFrom: 27, chTo: 27 }
+    ],
     distance: 600,
     mode: 'Sailing under guard',
     days: 'A slow, difficult voyage',
@@ -16072,7 +16457,9 @@ const BIBLE_JOURNEYS = [
     title: 'Shipwreck at Malta',
     subtitle: 'The northeaster, the storm, and the wreck',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 27, chTo: 27 }],
+    refs: [
+      { book: 'ACT', chFrom: 27, chTo: 27 }
+    ],
     distance: 600,
     mode: 'Driven before the storm',
     days: 'Fourteen days adrift',
@@ -16100,7 +16487,9 @@ const BIBLE_JOURNEYS = [
     title: 'Jesus Withdraws to Ephraim',
     subtitle: 'After raising Lazarus, he retreats near the wilderness',
     certainty: 'Approximate route',
-    refs: [{ book: 'JHN', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: 'JHN', chFrom: 11, chTo: 11 }
+    ],
     distance: 15,
     mode: 'Walking',
     days: 'Before the final Passover',
@@ -16127,7 +16516,9 @@ const BIBLE_JOURNEYS = [
     title: 'The Fig Tree and the Temple',
     subtitle: 'Between Bethany and Jerusalem in the final week',
     certainty: 'Well attested',
-    refs: [{ book: 'MRK', chFrom: 11, chTo: 11 }],
+    refs: [
+      { book: 'MRK', chFrom: 11, chTo: 11 }
+    ],
     distance: 4,
     mode: 'Walking',
     days: 'Days before the cross',
@@ -16154,7 +16545,9 @@ const BIBLE_JOURNEYS = [
     title: 'Preaching through Galilee',
     subtitle: 'A tour of the towns from Capernaum outward',
     certainty: 'Approximate route',
-    refs: [{ book: 'MRK', chFrom: 1, chTo: 1 }],
+    refs: [
+      { book: 'MRK', chFrom: 1, chTo: 1 }
+    ],
     distance: 60,
     mode: 'Walking village to village',
     days: 'An early ministry circuit',
@@ -16180,7 +16573,9 @@ const BIBLE_JOURNEYS = [
     title: 'Paul at Iconium',
     subtitle: 'From Pisidian Antioch, shaking off the dust',
     certainty: 'Well attested',
-    refs: [{ book: 'ACT', chFrom: 13, chTo: 14 }],
+    refs: [
+      { book: 'ACT', chFrom: 13, chTo: 14 }
+    ],
     distance: 90,
     mode: 'Walking',
     days: 'Driven from city to city',
@@ -17847,6 +18242,16 @@ function _journeyPeekFactsHtml(journey, step) {
   </div>`;
 }
 
+// The places in the order the story visits them (steps carry "at"), so
+// return trips and revisits draw; otherwise the places in listed order.
+function _journeyRouteOrder(journey) {
+  const pts = journey.points || [];
+  const steps = journey.steps || [];
+  if (steps.length && steps.every(st => Number.isInteger(st.at) && pts[st.at])) {
+    return [0, ...steps.map(st => st.at)].filter((v, i, a) => i === 0 || v !== a[i - 1]).map(i => pts[i]);
+  }
+  return pts;
+}
 function _journeyPolyline(points) {
   return points.map(p => `${p.x},${p.y}`).join(' ');
 }
@@ -17884,8 +18289,8 @@ function _journeyRenderMap(journey) {
     ${terrain}
     ${alts}
     ${landmarkLabels}
-    <polyline class="journey-route-shadow" points="${_journeyPolyline(points)}" />
-    <polyline class="journey-route-line" points="${_journeyPolyline(points)}" />
+    <polyline class="journey-route-shadow" points="${_journeyPolyline(_journeyRouteOrder(journey))}" />
+    <polyline class="journey-route-line" points="${_journeyPolyline(_journeyRouteOrder(journey))}" />
     ${labels}
     <circle class="journey-traveler" id="journeyTraveler" cx="${points[0]?.x ?? 50}" cy="${points[0]?.y ?? 50}" r="2.7" />
   </svg>`;
@@ -17955,6 +18360,9 @@ function _jstStopsFor(journey) {
   const stops = [{ kind: 'start', point: 0, overview: true, bubble: 'Let’s go!' }];
   let prev = 0;
   steps.forEach((step, i) => {
+    // step.at: the place (index into points) where this step happens, in
+    // story order — revisits and trips back are fine. step.by: 'sea' when
+    // the move to it was by ship.
     let at = Number.isInteger(step.at) ? step.at : -1;
     if (at < 0) {
       const label = String(step.label || '').toLowerCase();
@@ -17965,11 +18373,11 @@ function _jstStopsFor(journey) {
       if (at < 0) at = Math.min(last, prev + Math.max(1, Math.round((last - prev) / Math.max(1, steps.length - i))));
     }
     if (i === steps.length - 1 && !Number.isInteger(step.at)) at = last;
-    at = Math.max(prev, Math.min(last, at));
-    stops.push({ kind: 'step', point: at, step, n: i + 1, bubble: `${_jstPointName(pts[at], 'ancient').split(/\s*[\/(,]\s*/)[0].slice(0, 20)}!` });
+    at = Number.isInteger(step.at) ? Math.max(0, Math.min(last, at)) : Math.max(prev, Math.min(last, at));
+    stops.push({ kind: 'step', point: at, by: step.by || '', step, n: i + 1, bubble: `${_jstPointName(pts[at], 'ancient').split(/\s*[\/(,]\s*/)[0].slice(0, 20)}!` });
     prev = at;
   });
-  stops.push({ kind: 'end', point: last, overview: true, bubble: 'We made it!' });
+  stops.push({ kind: 'end', point: stops[stops.length - 1].point, overview: true, bubble: 'We made it!' });
   return stops;
 }
 function _jstPadding() {
@@ -31572,7 +31980,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.631";
+const APP_VERSION = "3.0.632";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31595,6 +32003,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.632 — Paul's journeys, stop by stop</div>
+<ul>
+<li>All four of Paul's journeys were rebuilt from Acts: every city and port the text names now has its own stop (Iconium, Lystra and Derbe are no longer lumped together), sea legs show a little boat, and the trips home are drawn.</li>
+<li>Journey trails now follow the story, so return trips and revisits show on the map.</li>
+</ul>
 <div class="un-version-label">v3.0.631 — Journeys, reimagined</div>
 <ul>
 <li>Every Bible journey is now a simple story on a real 3D map: the guide stands at each stop, the trail fills in behind him, and one card tells you what happened there, with <strong>Read it</strong> and <strong>Next stop</strong>.</li>
