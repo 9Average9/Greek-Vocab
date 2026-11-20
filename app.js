@@ -16413,7 +16413,8 @@ function _ensureBibleMapLibs() {
       const need = [
         { id: 'maplibreJs', src: 'assets/maplibre/maplibre-gl.js?v=' + APP_VERSION, ready: () => typeof maplibregl !== 'undefined' },
         { id: 'pmtilesJs', src: 'assets/maplibre/pmtiles.js?v=' + APP_VERSION, ready: () => typeof pmtiles !== 'undefined' },
-        { id: 'bibleMapJs', src: 'bible-map.js?v=' + APP_VERSION, ready: () => !!window.BibleMap }
+        { id: 'bibleMapJs', src: 'bible-map.js?v=' + APP_VERSION, ready: () => !!window.BibleMap },
+        { id: 'journeyStoryJs', src: 'journey-story.js?v=' + APP_VERSION, ready: () => !!window.JourneyStory }
       ];
       let i = 0;
       const next = () => {
@@ -16849,8 +16850,6 @@ function openBibleJourneysPage(id = _journeySelectedId) {
   showScreen('journeysPage');
   hideBottomNav();
   renderBibleJourneysPage();
-  // Always open a freshly selected journey scrolled to the top.
-  document.querySelector('.journeys-scroll')?.scrollTo({ top: 0 });
   _journeyPlayAnim(document.getElementById('journeysPage'), 'screen-slide-in-right');
   setTimeout(_applyPendingAppUpdateReload, 50);
 }
@@ -16863,29 +16862,18 @@ function closeBibleJourneysPage() {
 
 function setBibleJourneyMode(mode) {
   _journeyMode = mode === 'modern' ? 'modern' : 'ancient';
-  if (_journeyGLActive && window.BibleMap) {
-    // Real map is mounted: swap its basemap theme + labels in place instead of
-    // tearing the whole page down (which would re-create the map).
-    _journeyStopPlay();
-    _journeySetPlayBtn('idle');
-    document.getElementById('journeyModeAncient')?.classList.toggle('active', _journeyMode === 'ancient');
-    document.getElementById('journeyModeModern')?.classList.toggle('active', _journeyMode === 'modern');
-    const mapTitle = document.getElementById('journeyMapTitle');
-    if (mapTitle) mapTitle.textContent = _journeyMode === 'modern' ? 'Modern comparison' : 'Bible-world route';
-    const journey = _journeyById(_journeySelectedId);
-    _journeyRenderStats(journey);
-    const geo = document.querySelector('#journeyMapShell .journey-geography-note');
-    if (geo) geo.outerHTML = _journeyGeographyFact(journey, _journeyMode);
-    window.BibleMap.setMode(_journeyMode);
-    return;
+  if (_jstGL && window.JourneyStory) window.JourneyStory.setNames(_journeyMode);
+  else if (document.getElementById('jstMap')?.classList.contains('is-fallback')) {
+    const j = _journeyById(_journeySelectedId);
+    if (j) document.getElementById('jstMap').innerHTML = _journeyRenderMap(j);
   }
-  renderBibleJourneysPage();
+  _jstRenderCard();
+  if (!document.getElementById('jstSheet')?.hidden) openJourneyLookSheet();
 }
 
 function selectBibleJourney(id) {
   _journeySelectedId = id;
   renderBibleJourneysPage();
-  document.querySelector('.journeys-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ── Bible Atlas (single-place pin lookup) ───────────────────────────────────
@@ -17082,7 +17070,14 @@ function selectAtlasJourney(id) {
 
 // Smart back for the journey detail page: return to the Atlas (Journeys tab,
 // same scroll) when we came from there, otherwise go home.
+function _jstReleaseSoon() {
+  setTimeout(() => {
+    if (!document.getElementById('journeysPage')?.classList.contains('active')) { try { window.JourneyStory?.destroy(); } catch {} _jstGL = false; }
+  }, 700);
+}
 function bibleJourneyBack() {
+  _jstReleaseSoon();
+  closeJourneySheet();
   if (typeof _journeyStopPlay === 'function') _journeyStopPlay();
   if (typeof closeBibleJourneyInfo === 'function') closeBibleJourneyInfo();
   // Opened from inside Rhema: Back returns straight to the reader.
@@ -17900,79 +17895,239 @@ function renderBibleJourneysPage() {
   const journey = _journeyById(_journeySelectedId);
   if (!journey) return;
   closeBibleJourneyInfo();
-  const list = document.getElementById('journeyList');
-  const shell = document.getElementById('journeyMapShell');
-  const stats = document.getElementById('journeyStats');
-  const steps = document.getElementById('journeySteps');
-  document.getElementById('journeyModeAncient')?.classList.toggle('active', _journeyMode === 'ancient');
-  document.getElementById('journeyModeModern')?.classList.toggle('active', _journeyMode === 'modern');
-  const heroTitle = document.getElementById('journeyHeroTitle');
-  const heroCopy = document.getElementById('journeyHeroCopy');
-  const mapTitle = document.getElementById('journeyMapTitle');
-  const mapKicker = document.getElementById('journeyMapKicker');
-  const cert = document.getElementById('journeyCertainty');
-  if (heroTitle) heroTitle.textContent = journey.title;
-  if (heroCopy) heroCopy.textContent = journey.subtitle;
-  if (mapTitle) mapTitle.textContent = _journeyMode === 'modern' ? 'Modern comparison' : 'Bible-world route';
-  if (mapKicker) mapKicker.textContent = journey.title;
-  if (cert) cert.textContent = journey.certainty || 'Approximate';
-  if (list) {
-    list.innerHTML = `<div class="journey-list-heading">
-      <span class="journey-kicker">Choose a route</span>
-      <strong>Pick the story you want to follow</strong>
-    </div>` + BIBLE_JOURNEYS.map(j => {
-      const miles = _journeyTotalMiles(j);
-      const stops = (j.steps || []).length;
-      const firstRef = (j.steps || [])[0]?.ref || '';
-      return `<button class="journey-list-card${j.id === journey.id ? ' active' : ''}" onclick="selectBibleJourney('${_journeyEsc(j.id)}')">
-      <span class="journey-list-orb"><span class="material-symbols-outlined">${j.id === journey.id ? 'near_me' : 'hiking'}</span></span>
-      <span class="journey-list-copy">
-        <strong>${_journeyEsc(j.title)}</strong>
-        <small>${_journeyEsc(j.subtitle)}</small>
-        <span class="journey-list-meta"><em>${miles.toLocaleString()} mi</em><em>${stops} stops</em>${firstRef ? `<em>${_journeyEsc(firstRef)}</em>` : ''}</span>
-      </span>
-      <span class="journey-list-state">${j.id === journey.id ? 'Open' : 'View'}</span>
-    </button>`;
-    }).join('');
-    const activeCard = list.querySelector('.journey-list-card.active');
-    if (activeCard) setTimeout(() => activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }), 40);
-  }
+  closeJourneySheet();
   _journeyStopPlay();
-  const altHtml = (journey.alternates && journey.alternates.length)
-    ? `<div class="journey-alt-block">
-        <div class="journey-alt-legend"><span class="journey-alt-key primary">Main route</span><span class="journey-alt-key alt">Possible route</span></div>
-        ${journey.alternates.map(a => `<div class="journey-alt-item"><strong>${_journeyEsc(a.label)}</strong><p>${_journeyEsc(a.reason)}</p></div>`).join('')}
-      </div>`
-    : '';
-  if (shell) shell.innerHTML =
-    `<div class="journey-map-viewport">` +
-      _journeyRenderMap(journey) +
-      _journeyCompassHtml() +
-    `</div>` +
-    `<button type="button" class="journey-play-btn" id="journeyPlayBtn" onclick="toggleJourneyPlay()"><span class="material-symbols-outlined">play_arrow</span><span>Play route</span></button>` +
-    `<div class="journey-facts">` +
-      `<div class="journey-fact journey-fact-route"><span class="journey-fact-icon"><span class="material-symbols-outlined">landscape</span></span><strong>${_journeyEsc(journey.certainty)}</strong><p>${_journeyEsc(journey.note)}</p></div>` +
-      _journeyGeographyFact(journey, _journeyMode) +
-    `</div>` +
-    altHtml;
-  _journeyRenderStats(journey);
-  if (steps) {
-    steps.innerHTML = `<div class="journey-section-head"><span class="journey-kicker">Story steps</span><strong>Follow the movement</strong></div>` +
-      (journey.steps || []).map((step, i) => `<article class="journey-step" data-step="${i}">
-        <span class="journey-step-num">${i + 1}</span>
-        <div><strong>${_journeyEsc(step.label)}</strong><small>${_journeyEsc(step.ref)}${step.miles ? ` · about ${Number(step.miles).toLocaleString()} mi` : ''}</small><p>${_journeyEsc(step.copy)}</p></div>
-      </article>`).join('');
+  const root = document.getElementById('jst');
+  if (root) root.dataset.look = _jstLook();
+  if (!document.getElementById('jstFonts')) {
+    const l = document.createElement('link');
+    l.id = 'jstFonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Caveat:wght@700&display=swap';
+    document.head.appendChild(l);
   }
-  const srcEl = document.getElementById('journeySources');
-  if (srcEl) {
-    const sources = journey.sources || [];
-    srcEl.style.display = sources.length ? '' : 'none';
-    srcEl.innerHTML = sources.length
-      ? `<div class="journey-section-head"><span class="journey-kicker">Sources &amp; notes</span><strong>Why the route is drawn this way</strong></div>` +
-        sources.map(s => `<div class="journey-source-item"><span class="material-symbols-outlined">menu_book</span><p>${_journeyEsc(s)}</p></div>`).join('')
-      : '';
+  const t = document.getElementById('jstTitle');
+  const r = document.getElementById('jstRefs');
+  if (t) t.textContent = journey.title;
+  if (r) r.textContent = _jstRefsLabel(journey);
+  _jstStops = _jstStopsFor(journey);
+  _jstStep = 0;
+  _jstRenderCard();
+  _jstMount(journey);
+}
+
+// ── Journey story view ─────────────────────────────────────────────────────
+// One map, the guide at the current stop, one card. The card walks through
+// the journey's story steps; each step stands at the stop it reaches (step.at
+// when the journey says so, otherwise the stop its words name).
+const JST_LOOKS = {
+  storybook: { name: 'Storybook', blurb: 'Warm parchment and a red dotted trail' },
+  lantern: { name: 'Lantern night', blurb: 'A dark map with a glowing gold trail' },
+  toy: { name: 'Toy world', blurb: 'Bright, chunky and extra-tall mountains' }
+};
+let _jstStops = [];
+let _jstStep = 0;
+let _jstGL = false;
+function _jstLook() {
+  try { const v = localStorage.getItem('journeyLook'); return JST_LOOKS[v] ? v : 'storybook'; } catch { return 'storybook'; }
+}
+function _jstPointName(p, mode = _journeyMode) {
+  if (!p) return '';
+  return String(mode === 'modern' ? (p.modern || p.ancient || '') : (p.ancient || p.modern || ''));
+}
+function _jstParseRef(ref) {
+  const m = String(ref || '').match(/^([1-3]?\s?[A-Za-z][A-Za-z ]*?)\s+(\d+)(?::(\d+))?/);
+  return m ? { book: m[1].trim(), code: _journeyBookCode(m[1].trim()), ch: Number(m[2]), v: m[3] ? Number(m[3]) : 1 } : null;
+}
+function _jstRefsLabel(journey) {
+  const refs = (journey.steps || []).map(st => _jstParseRef(st.ref)).filter(Boolean);
+  if (!refs.length) return '';
+  const book = refs[0].book;
+  const chs = refs.filter(r => r.book === book).map(r => r.ch);
+  const lo = Math.min(...chs), hi = Math.max(...chs);
+  return `${book} ${lo}${hi > lo ? '–' + hi : ''}`;
+}
+function _jstStopsFor(journey) {
+  const pts = journey.points || [];
+  const steps = journey.steps || [];
+  const last = Math.max(0, pts.length - 1);
+  const tokens = pts.map(p => String(p.ancient || '').split(/[\/,()]| or /).map(x => x.trim().toLowerCase()).filter(x => x.length >= 3));
+  const names = (text, i) => tokens[i].some(tk => text.includes(tk));
+  const stops = [{ kind: 'start', point: 0, overview: true, bubble: 'Let’s go!' }];
+  let prev = 0;
+  steps.forEach((step, i) => {
+    let at = Number.isInteger(step.at) ? step.at : -1;
+    if (at < 0) {
+      const label = String(step.label || '').toLowerCase();
+      const all = `${label} ${String(step.copy || '').toLowerCase()}`;
+      const after = (text) => { let best = -1; for (let k = prev + 1; k <= last; k++) if (names(text, k)) best = best < 0 ? k : best; return best; };
+      at = after(label);
+      if (at < 0) at = after(all);
+      if (at < 0) at = Math.min(last, prev + Math.max(1, Math.round((last - prev) / Math.max(1, steps.length - i))));
+    }
+    if (i === steps.length - 1 && !Number.isInteger(step.at)) at = last;
+    at = Math.max(prev, Math.min(last, at));
+    stops.push({ kind: 'step', point: at, step, n: i + 1, bubble: `${_jstPointName(pts[at], 'ancient').split(/\s*[\/(,]\s*/)[0].slice(0, 20)}!` });
+    prev = at;
+  });
+  stops.push({ kind: 'end', point: last, overview: true, bubble: 'We made it!' });
+  return stops;
+}
+function _jstPadding() {
+  const card = document.getElementById('jstCard');
+  const top = document.querySelector('#jst .jst-top');
+  const h = window.innerHeight || 800;
+  return {
+    top: top ? Math.round(top.getBoundingClientRect().bottom + 70) : 150,
+    bottom: card ? Math.round(h - card.getBoundingClientRect().top + 24) : 320
+  };
+}
+function _jstMount(journey) {
+  const host = document.getElementById('jstMap');
+  if (!host) return;
+  try { window.JourneyStory?.destroy(); } catch {}
+  _jstGL = false;
+  host.innerHTML = '';
+  host.classList.remove('is-fallback');
+  const fallback = () => {
+    if (_journeySelectedId !== journey.id) return;
+    host.classList.add('is-fallback');
+    host.innerHTML = _journeyRenderMap(journey);
+  };
+  if (!_bibleMapEnabled() || !(journey.points || []).some(p => typeof p.lat === 'number')) { fallback(); return; }
+  _ensureBibleMapLibs().then(() => {
+    if (_journeySelectedId !== journey.id) return null;
+    if (!window.JourneyStory) throw new Error('story module missing');
+    return window.JourneyStory.mount(host, journey, {
+      pmtilesUrl: _journeyResolvePmtiles(), terrain: BIBLE_TERRAIN_OPTIONS, look: _jstLook(),
+      names: _journeyMode, stops: _jstStops, padding: _jstPadding
+    }).then(() => {
+      if (_journeySelectedId !== journey.id) return;
+      _jstGL = true;
+      if (_jstStep) window.JourneyStory.go(_jstStep, { animate: false });
+    });
+  }).catch(e => { console.warn('journey map:', e); fallback(); });
+}
+function _jstRenderCard() {
+  const card = document.getElementById('jstCard');
+  const journey = _journeyById(_journeySelectedId);
+  const s = _jstStops[_jstStep];
+  if (!card || !journey || !s) return;
+  const esc = _journeyEsc;
+  const total = (journey.steps || []).length;
+  const done = s.kind === 'start' ? 0 : s.kind === 'end' ? total : s.n;
+  const icon = _jstLook() === 'toy' ? 'circle' : 'footprint';
+  const feet = total > 1 ? `<div class="jst-feet" aria-label="Stop ${done} of ${total}">${Array.from({ length: total }, (_, i) => `<span class="material-symbols-outlined${i < done ? '' : ' off'}">${icon}</span>`).join('')}</div>` : '';
+  const pts = journey.points || [];
+  const place = _jstPointName(pts[s.point]);
+  let html;
+  if (s.kind === 'start') {
+    const sub = String(journey.subtitle || '').trim();
+    html = `${feet}<span class="jst-kick">${esc(_jstRefsLabel(journey))} · ${total} stop${total === 1 ? '' : 's'}</span>
+      <h2 class="jst-place">${esc(journey.title)}</h2>
+      <p class="jst-what">${esc(sub)}${sub && !/[.!?]$/.test(sub) ? '.' : ''}${place ? ` It starts in ${esc(place)}.` : ''}</p>
+      <div class="jst-row"><button type="button" class="jst-btn jst-btn-p" onclick="journeyStoryGo(1)">Let’s go<span class="material-symbols-outlined">arrow_forward</span></button></div>`;
+  } else if (s.kind === 'end') {
+    const miles = _journeyTotalMiles(journey);
+    html = `${feet}<span class="jst-kick">Journey complete</span>
+      <h2 class="jst-place">You made it!</h2>
+      <p class="jst-what">${miles ? `About ${miles.toLocaleString()} miles in all.` : 'That’s the whole route.'}${place ? ` It ends in ${esc(place)}.` : ''}</p>
+      ${journey.days || journey.mode ? `<div class="jst-chips">${[journey.days, journey.mode].filter(Boolean).map(c => `<span class="jst-chip">${esc(c)}</span>`).join('')}</div>` : ''}
+      <div class="jst-row"><button type="button" class="jst-btn" onclick="journeyStoryJump(0)"><span class="material-symbols-outlined">replay</span>Start over</button><button type="button" class="jst-btn jst-btn-p" onclick="journeyStoryAllJourneys()"><span class="material-symbols-outlined">map</span>All journeys</button></div>`;
+  } else {
+    const st = s.step;
+    const lastStep = s.n === total;
+    html = `${feet}<span class="jst-kick">Stop ${s.n} of ${total} · ${esc(st.ref || '')}</span>
+      <h2 class="jst-place">${esc(st.label || place)}</h2>
+      ${place ? `<p class="jst-sub"><span class="material-symbols-outlined">location_on</span>${esc(place)}${st.miles ? ` · about ${Number(st.miles).toLocaleString()} mi` : ''}</p>` : ''}
+      <p class="jst-what">${esc(st.copy || '')}</p>
+      <div class="jst-row"><button type="button" class="jst-btn jst-btn-s" onclick="journeyStoryGo(-1)" aria-label="Back a stop"><span class="material-symbols-outlined">arrow_back</span></button>
+        <button type="button" class="jst-btn" onclick="journeyStoryRead()"><span class="material-symbols-outlined">menu_book</span>Read it</button>
+        <button type="button" class="jst-btn jst-btn-p" onclick="journeyStoryGo(1)">${lastStep ? 'Finish' : 'Next stop'}<span class="material-symbols-outlined">${lastStep ? 'flag' : 'arrow_forward'}</span></button></div>`;
   }
-  _journeyMountGL(journey);
+  card.innerHTML = html;
+  card.classList.remove('jst-pop');
+  void card.offsetWidth;
+  card.classList.add('jst-pop');
+}
+function journeyStoryGo(d) { journeyStoryJump(_jstStep + d); }
+function journeyStoryJump(i) {
+  i = Math.max(0, Math.min(_jstStops.length - 1, i));
+  _jstStep = i;
+  closeJourneySheet();
+  _jstRenderCard();
+  if (_jstGL && window.JourneyStory) window.JourneyStory.go(i);
+}
+function journeyStoryRead() {
+  const s = _jstStops[_jstStep];
+  const journey = _journeyById(_journeySelectedId);
+  const step = s?.step || (journey?.steps || [])[0];
+  const r = _jstParseRef(step?.ref);
+  if (!r || !r.code) return;
+  if (_rhemaMapsReturn) {
+    _rhemaReturnFromMaps();
+    jumpToRhemaVerse(r.code, r.ch, r.v);
+    return;
+  }
+  _rhemaJumpToVerse(r.code, r.ch, r.v, { noReturn: true });
+}
+function journeyStoryAllJourneys() {
+  closeJourneySheet();
+  if (_rhemaMapsReturn) { rhemaContinueToAtlasFromMaps(); return; }
+  _journeyFromAtlas = false;
+  openBibleAtlasPage();
+}
+function _jstSheet(html) {
+  const sh = document.getElementById('jstSheet');
+  const bg = document.getElementById('jstSheetBg');
+  if (!sh || !bg) return;
+  sh.innerHTML = `<div class="jst-grab"></div>` + html;
+  sh.hidden = false; bg.hidden = false;
+  requestAnimationFrame(() => { sh.classList.add('open'); bg.classList.add('open'); });
+}
+function closeJourneySheet() {
+  const sh = document.getElementById('jstSheet');
+  const bg = document.getElementById('jstSheetBg');
+  if (!sh || sh.hidden) return;
+  sh.classList.remove('open'); bg?.classList.remove('open');
+  setTimeout(() => { if (!sh.classList.contains('open')) { sh.hidden = true; if (bg) bg.hidden = true; } }, 260);
+}
+function openJourneyLookSheet() {
+  const look = _jstLook();
+  _jstSheet(`<div class="jst-sheet-h"><b>Map look</b><button type="button" class="jst-x" onclick="closeJourneySheet()" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+    <div class="jst-looks">${Object.entries(JST_LOOKS).map(([k, v]) => `<button type="button" class="jst-look${k === look ? ' on' : ''}" onclick="setJourneyLook('${k}')"><span class="jst-swatch jst-sw-${k}"></span><span><b>${v.name}</b><small>${v.blurb}</small></span><span class="material-symbols-outlined jst-check">${k === look ? 'check_circle' : 'radio_button_unchecked'}</span></button>`).join('')}</div>
+    <div class="jst-sheet-sub">Place names</div>
+    <div class="jst-seg"><button type="button" class="${_journeyMode !== 'modern' ? 'on' : ''}" onclick="setBibleJourneyMode('ancient')">Bible names</button><button type="button" class="${_journeyMode === 'modern' ? 'on' : ''}" onclick="setBibleJourneyMode('modern')">Today’s names</button></div>`);
+}
+function setJourneyLook(look) {
+  if (!JST_LOOKS[look]) return;
+  try { localStorage.setItem('journeyLook', look); } catch {}
+  const root = document.getElementById('jst');
+  if (root) root.dataset.look = look;
+  if (_jstGL && window.JourneyStory) window.JourneyStory.setLook(look);
+  _jstRenderCard();
+  openJourneyLookSheet();
+}
+function openJourneyInfoSheet() {
+  const j = _journeyById(_journeySelectedId);
+  if (!j) return;
+  const esc = _journeyEsc;
+  const miles = _journeyTotalMiles(j);
+  const chips = [miles ? `${miles.toLocaleString()} mi` : '', j.mode || '', j.days || ''].filter(Boolean)
+    .map(c => `<span class="jst-chip">${esc(c)}</span>`).join('');
+  const stops = _jstStops.map((s, i) => s.kind === 'step'
+    ? `<button type="button" class="jst-stopbtn${i === _jstStep ? ' on' : ''}" onclick="journeyStoryJump(${i})"><span class="jst-stopn">${s.n}</span><span><b>${esc(s.step.label)}</b><small>${esc(s.step.ref || '')} · ${esc(_jstPointName((j.points || [])[s.point]))}</small></span></button>` : '').join('');
+  const alts = (j.alternates || []).map(a => `<li><b>${esc(a.label)}</b> ${esc(a.reason || '')}</li>`).join('');
+  const srcs = (j.sources || []).map(x => `<li>${esc(x)}</li>`).join('');
+  _jstSheet(`<div class="jst-sheet-h"><b>${esc(j.title)}</b><button type="button" class="jst-x" onclick="closeJourneySheet()" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+    <p class="jst-info-sub">${esc(j.subtitle || '')}</p>
+    ${chips ? `<div class="jst-chips">${chips}</div>` : ''}
+    <div class="jst-sheet-sub">All stops</div><div class="jst-stops">${stops}</div>
+    ${j.certainty || j.note ? `<div class="jst-sheet-sub">How sure is the route?</div><p class="jst-info-p">${j.certainty ? `<b>${esc(j.certainty)}.</b> ` : ''}${esc(j.note || '')}</p>` : ''}
+    ${j.modern ? `<div class="jst-sheet-sub">Where it is today</div><p class="jst-info-p">${esc(j.modern)}</p>` : ''}
+    ${alts ? `<div class="jst-sheet-sub">Other possible routes</div><ul class="jst-info-list">${alts}</ul>` : ''}
+    ${srcs ? `<div class="jst-sheet-sub">Sources &amp; notes</div><ul class="jst-info-list">${srcs}</ul>` : ''}
+    <div class="jst-row jst-row-sheet"><button type="button" class="jst-btn" onclick="closeJourneySheet();showBibleJourneyVisionNote()"><span class="material-symbols-outlined">help</span>How the maps work</button><button type="button" class="jst-btn jst-btn-p" onclick="journeyStoryAllJourneys()"><span class="material-symbols-outlined">map</span>All journeys</button></div>
+    <p class="jst-credits">Map: OpenStreetMap · Protomaps · Mapterhorn terrain · MapLibre</p>`);
 }
 
 // Stats row (distance / timing / then-vs-now) — depends on the active mode, so
@@ -18145,6 +18300,7 @@ function _rhemaReturnFromMaps() {
   _rhemaSyncMapsContinue();
   if (typeof _atlasGLToken !== 'undefined') _atlasGLToken++;
   try { window.BibleMap?.destroy?.(); } catch {}
+  _jstReleaseSoon();
   if (r?.screen) showScreen(r.screen);
   document.getElementById('rhemaModal')?.classList.add('open');
 }
@@ -31416,7 +31572,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.630";
+const APP_VERSION = "3.0.631";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31595,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.631 — Journeys, reimagined</div>
+<ul>
+<li>Every Bible journey is now a simple story on a real 3D map: the guide stands at each stop, the trail fills in behind him, and one card tells you what happened there, with <strong>Read it</strong> and <strong>Next stop</strong>.</li>
+<li>Pick your look with the palette button: <strong>Storybook</strong>, <strong>Lantern night</strong> or <strong>Toy world</strong>. You can also switch between Bible names and today's names.</li>
+<li>Tap the journey's title for all its stops, how sure the route is, other possible routes and sources.</li>
+</ul>
 <div class="un-version-label">v3.0.630 — See the Greek (and Hebrew)</div>
 <ul>
 <li>Word by word has a new name: <strong>See the Greek</strong> in the New Testament and <strong>See the Hebrew</strong> in the Old.</li>

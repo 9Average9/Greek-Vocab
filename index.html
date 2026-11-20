@@ -387,9 +387,9 @@ antique: {
 <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
 <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
 <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.630" rel="stylesheet"/>
+<link href="style.css?v=3.0.631" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.630" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.631" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -685,15 +685,19 @@ Journey Maps</span>
 <span class="friends-home-badge hidden" id="friendsHomeBadge"></span>
 </section>
 <section class="screen" id="journeysPage">
-<div class="journeys-page">
-<header class="journeys-topbar">
-<button class="journey-icon-btn" onclick="bibleJourneyBack()" aria-label="Back"><span class="material-symbols-outlined">arrow_back</span></button>
-<div class="journeys-title-stack">
-<span>Follow Along Maps</span>
-<strong>Bible Journeys</strong>
-</div>
-<button class="journey-icon-btn journey-info-btn" onclick="showBibleJourneyVisionNote()" aria-label="About journey maps"><span class="material-symbols-outlined">info</span></button>
+<div class="jst" id="jst" data-look="storybook">
+<div class="jst-map" id="jstMap"></div>
+<div class="jst-sky" aria-hidden="true"></div>
+<div class="jst-stars" aria-hidden="true"></div>
+<header class="jst-top">
+<button class="jst-ibtn" onclick="bibleJourneyBack()" aria-label="Back"><span class="material-symbols-outlined">arrow_back</span></button>
+<button type="button" class="jst-title" onclick="openJourneyInfoSheet()" aria-label="About this journey"><b id="jstTitle">Bible Journeys</b><small id="jstRefs"></small></button>
+<button class="jst-ibtn" onclick="openJourneyLookSheet()" aria-label="Map look and names"><span class="material-symbols-outlined">palette</span></button>
 </header>
+<div class="jst-card" id="jstCard"></div>
+<div class="jst-sheet-bg" id="jstSheetBg" onclick="closeJourneySheet()" hidden></div>
+<div class="jst-sheet" id="jstSheet" role="dialog" aria-modal="true" hidden></div>
+</div>
 <div class="journey-info-modal" id="journeyInfoModal" onclick="closeBibleJourneyInfo(event)" aria-hidden="true">
 <div class="journey-info-card" onclick="event.stopPropagation()">
 <button class="journey-info-close" onclick="closeBibleJourneyInfo()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
@@ -709,31 +713,8 @@ Journey Maps</span>
 <p class="journey-info-attribution">Map geometry is drawn from self-hosted OpenStreetMap / Protomaps data, rendered with MapLibre. 3D elevation currently uses Mapterhorn terrain tiles as a replaceable DEM source. Route lines, stops, and Bible-world labels are curated inside the app for Bible study.</p>
 </div>
 </div>
-<div class="journeys-scroll">
-<div class="journey-layout">
-<aside class="journey-list" id="journeyList"></aside>
-<main class="journey-detail">
-<section class="journey-card">
-<div class="journey-card-head">
-<span class="journey-kicker">Ancient route + modern comparison</span>
-<h2 id="journeyHeroTitle">Walk the story, not just the sentence.</h2>
-<p id="journeyHeroCopy">Select a journey to see the likely Bible-world route, modern geography, distance, timing, and the Scripture steps tied to the path.</p>
-</div>
-<div class="journey-mode-toggle" role="tablist" aria-label="Map view">
-<button class="active" id="journeyModeAncient" onclick="setBibleJourneyMode('ancient')"><span class="material-symbols-outlined">map</span><span>Bible Map</span></button>
-<button id="journeyModeModern" onclick="setBibleJourneyMode('modern')"><span class="material-symbols-outlined">public</span><span>Modern</span></button>
-</div>
-<div class="journey-map-shell" id="journeyMapShell"></div>
-</section>
-<section class="journey-stats" id="journeyStats"></section>
-<section class="journey-steps" id="journeySteps"></section>
-<section class="journey-sources" id="journeySources" style="display:none"></section>
 <div class="rhema-maps-continue" id="journeyContinueAtlas" style="display:none">
 <button class="rhema-maps-continue-btn" onclick="rhemaContinueToAtlasFromMaps()"><span class="material-symbols-outlined">travel_explore</span><span>Continue to Bible Atlas</span></button>
-</div>
-</main>
-</div>
-</div>
 </div>
 </section>
 <section class="screen" id="atlasPage">
@@ -17373,24 +17354,24 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.630"></script>
-<script src="app.js?v=3.0.630"></script>
-<script src="rhema-word-study.js?v=3.0.630"></script>
-<script src="rhema-grammar-search.js?v=3.0.630"></script>
-<script src="rhema-xl-views.js?v=3.0.630"></script>
-<script src="rhema-glance.js?v=3.0.630"></script>
-<script src="challenge.js?v=3.0.630"></script>
-<script src="guide-news.js?v=3.0.630"></script>
+<script src="rhema-align.js?v=3.0.631"></script>
+<script src="app.js?v=3.0.631"></script>
+<script src="rhema-word-study.js?v=3.0.631"></script>
+<script src="rhema-grammar-search.js?v=3.0.631"></script>
+<script src="rhema-xl-views.js?v=3.0.631"></script>
+<script src="rhema-glance.js?v=3.0.631"></script>
+<script src="challenge.js?v=3.0.631"></script>
+<script src="guide-news.js?v=3.0.631"></script>
 <script src="bible-atlas.js?v=3.0.349"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.630"></script>
-<script src="verse-structure.js?v=3.0.630"></script>
-<script src="vs-structure.js?v=3.0.630"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.631"></script>
+<script src="verse-structure.js?v=3.0.631"></script>
+<script src="vs-structure.js?v=3.0.631"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.630"></script>
-<script src="bible-quiz.js?v=3.0.630"></script>
-<script src="firebase-lb.js?v=3.0.630" type="module"></script>
+<script src="sermon-notes.js?v=3.0.631"></script>
+<script src="bible-quiz.js?v=3.0.631"></script>
+<script src="firebase-lb.js?v=3.0.631" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

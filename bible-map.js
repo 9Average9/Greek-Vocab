@@ -140,8 +140,8 @@
       minzoom: Number(raw.minzoom == null ? 0 : raw.minzoom),
       maxzoom: Number(raw.maxzoom == null ? 14 : raw.maxzoom),
       bounds: Array.isArray(raw.bounds) ? raw.bounds : null,
-      exaggeration: _clamp(Number(raw.exaggeration || 1.42), 0.25, 2.2),
-      pitch: _clamp(Number(raw.pitch || 54), 0, 65),
+      exaggeration: _clamp(Number(raw.exaggeration || 1.42), 0.25, 4),
+      pitch: _clamp(Number(raw.pitch || 54), 0, 70),
       bearing: _clamp(Number(raw.bearing == null ? -16 : raw.bearing), -180, 180),
       hillshade: raw.hillshade !== false,
       attribution: raw.attribution || '',
@@ -1184,7 +1184,18 @@
     state.routeSegmentMap = [];
   }
 
+  // Shared setup for other map views (the journey story view): tiles
+  // protocol + base style, built with the same terrain sources.
+  function prepare() {
+    return _loadStyleLayers().then(function () { _registerProtocol(); });
+  }
+  function buildStyle(mode, pmtilesUrl, terrainOpts) {
+    return _buildStyle(mode === 'modern' ? 'modern' : 'ancient', pmtilesUrl, _normalizeTerrainOptions({ terrain: terrainOpts }));
+  }
+
   window.BibleMap = {
+    prepare: prepare,
+    buildStyle: buildStyle,
     supported: supported,
     render: render,
     setMode: setMode,
