@@ -1,0 +1,122 @@
+{
+  "_about": "Best-known Gospel and Old Testament journeys: each step tied to the place it happens; places the text never mentions removed; missing story moments added.",
+  "abraham-ur-to-canaan": {
+    "points": [
+      { "ancient": "Ur of the Chaldeans", "modern": "near Nasiriyah, Iraq", "x": 82, "y": 78, "lat": 30.96, "lon": 46.1 },
+      { "ancient": "Haran", "modern": "near Şanlıurfa, Turkey", "x": 56, "y": 25, "lat": 36.87, "lon": 39.03 },
+      { "ancient": "Shechem", "modern": "near Nablus, West Bank", "x": 39, "y": 55, "lat": 32.21, "lon": 35.28 },
+      { "ancient": "Between Bethel and Ai", "modern": "central highlands, West Bank", "x": 38, "y": 60, "lat": 31.93, "lon": 35.23 },
+      { "ancient": "Egypt", "modern": "Nile Delta, Egypt", "x": 22, "y": 77, "lat": 30.8, "lon": 31.3 }
+    ],
+    "at": [1, 2, 3, 4]
+  },
+  "exodus-egypt-to-sinai": {
+    "points": [
+      { "ancient": "Rameses", "modern": "eastern Nile Delta, Egypt", "lat": 30.8, "lon": 31.83 },
+      { "ancient": "Succoth", "modern": "eastern Delta region", "lat": 30.55, "lon": 32.1 },
+      { "ancient": "The sea crossing", "modern": "Red Sea / Reed Sea (site debated)", "lat": 30.1, "lon": 32.55 },
+      { "ancient": "Marah and Elim", "modern": "western Sinai (sites debated)", "lat": 29.2, "lon": 33.05 },
+      { "ancient": "Mount Sinai", "modern": "Jebel Musa (traditional site)", "lat": 28.54, "lon": 33.97 }
+    ],
+    "steps": [
+      { "label": "Rameses to Succoth", "ref": "Exodus 12:37", "copy": "Israel sets out from Rameses on foot, a great company leaving Egypt.", "miles": 30, "at": 1 },
+      { "label": "Toward the sea", "ref": "Exodus 14:1-2", "copy": "The Lord has them turn back and camp by the sea, where escape looks impossible.", "miles": 60, "at": 2 },
+      { "label": "Through the sea", "ref": "Exodus 14:21-31", "copy": "The waters part, Israel crosses on dry ground, and the sea returns over Pharaoh's army.", "at": 2 },
+      { "label": "Marah and Elim", "ref": "Exodus 15:22-27", "copy": "Bitter water at Marah is made sweet; at Elim there are twelve springs and seventy palm trees.", "miles": 70, "at": 3 },
+      { "label": "Mount Sinai", "ref": "Exodus 19:1-2", "copy": "In the third month they camp in front of the mountain in the Wilderness of Sinai.", "miles": 100, "at": 4 }
+    ]
+  },
+  "ruth-moab-to-bethlehem": {
+    "points": [
+      { "ancient": "Moab", "modern": "central Jordan", "lat": 31.3, "lon": 35.75 },
+      { "ancient": "On the road to Judah", "modern": "Jordan Valley crossing", "lat": 31.85, "lon": 35.5 },
+      { "ancient": "Bethlehem", "modern": "Bethlehem, West Bank", "lat": 31.7, "lon": 35.2 }
+    ],
+    "at": [0, 1, 2]
+  },
+  "mary-joseph-nazareth-bethlehem": {
+    "set": { "note": "Luke names only the start and the end; the road between Nazareth and Bethlehem is not recorded." },
+    "points": [
+      { "ancient": "Nazareth", "modern": "Nazareth, Israel", "lat": 32.7, "lon": 35.3 },
+      { "ancient": "Bethlehem", "modern": "Bethlehem, West Bank", "lat": 31.7, "lon": 35.2 }
+    ],
+    "at": [0, 1, 1]
+  },
+  "jesus-galilee-to-jerusalem": {
+    "points": [
+      { "ancient": "Galilee", "modern": "Galilee, northern Israel", "lat": 32.8, "lon": 35.55 },
+      { "ancient": "Beyond the Jordan", "modern": "Jordan Valley", "lat": 32.2, "lon": 35.55 },
+      { "ancient": "Jericho", "modern": "Jericho", "lat": 31.87, "lon": 35.44 },
+      { "ancient": "Bethany", "modern": "al-Eizariya", "lat": 31.77, "lon": 35.26 },
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 }
+    ],
+    "steps": [
+      { "label": "Face set toward Jerusalem", "ref": "Luke 9:51", "copy": "As the time of his being taken up draws near, Jesus resolutely sets out for Jerusalem.", "at": 0 },
+      { "label": "Beyond the Jordan", "ref": "Mark 10:1", "copy": "He goes into the region of Judea beyond the Jordan, and crowds gather to him again.", "miles": 70, "at": 1 },
+      { "label": "Jericho", "ref": "Luke 18:35-19:10", "copy": "At Jericho he gives sight to a blind man and stays at the house of Zacchaeus.", "miles": 25, "at": 2 },
+      { "label": "Arrival near Bethany", "ref": "Mark 11:1", "copy": "Climbing from Jericho, they come near Bethphage and Bethany at the Mount of Olives.", "miles": 15, "at": 3 },
+      { "label": "Into Jerusalem", "ref": "Mark 11:7-11", "copy": "Riding a colt as crowds spread cloaks and branches, he enters Jerusalem and goes into the temple.", "miles": 2, "at": 4 }
+    ]
+  },
+  "jesus-galilee-ministry": {
+    "points": [
+      { "ancient": "Nazareth", "modern": "Nazareth, Israel", "lat": 32.7, "lon": 35.3 },
+      { "ancient": "Cana", "modern": "Kafr Kanna area (site debated)", "lat": 32.75, "lon": 35.34 },
+      { "ancient": "Capernaum", "modern": "Kfar Nahum, north shore", "lat": 32.88, "lon": 35.57 },
+      { "ancient": "Bethsaida", "modern": "northeast shore (site debated)", "lat": 32.91, "lon": 35.63 },
+      { "ancient": "Region of the Gerasenes", "modern": "east shore (Kursi is one proposal)", "lat": 32.83, "lon": 35.65 }
+    ],
+    "steps": [
+      { "label": "Rejected at Nazareth", "ref": "Luke 4:16-30", "copy": "In his hometown synagogue the crowd turns on him and tries to throw him off a cliff.", "at": 0 },
+      { "label": "Water into wine", "ref": "John 2:1-11", "copy": "At a wedding in Cana, Jesus turns water into wine, the first of his signs.", "miles": 4, "at": 1 },
+      { "label": "Base at Capernaum", "ref": "Matthew 4:13-17", "copy": "He makes his home by the lake and begins to preach: repent, for the kingdom of heaven is near.", "miles": 16, "at": 2 },
+      { "label": "Calling the fishermen", "ref": "Mark 1:16-20", "copy": "Simon, Andrew, James and John leave their nets to follow him.", "at": 2 },
+      { "label": "Crossing to the other side", "ref": "Mark 4:35-5:20", "copy": "He stills a storm on the lake and frees a man possessed by many demons.", "miles": 8, "at": 4, "by": "sea" },
+      { "label": "Feeding the five thousand", "ref": "Luke 9:10-17", "copy": "Near Bethsaida, five loaves and two fish feed a great crowd, with twelve baskets left over.", "miles": 6, "at": 3 }
+    ]
+  },
+  "road-to-emmaus": {
+    "set": { "note": "Emmaus has several proposed sites. Luke 24:13 puts it about seven miles from Jerusalem, so the map uses el-Qubeibeh, one site at that distance." },
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "On the road", "modern": "Judean hills", "lat": 31.81, "lon": 35.18 },
+      { "ancient": "Emmaus", "modern": "el-Qubeibeh (one proposed site)", "lat": 31.84, "lon": 35.13 }
+    ],
+    "steps": [
+      { "label": "Walking and talking", "ref": "Luke 24:13-16", "copy": "Two disciples talk over everything that has happened as Jesus himself comes near, but they don't recognize him.", "miles": 3, "at": 1 },
+      { "label": "Opening the Scriptures", "ref": "Luke 24:25-27", "copy": "Beginning with Moses and all the Prophets, he explains what was written about himself.", "at": 1 },
+      { "label": "Known in the breaking of bread", "ref": "Luke 24:28-32", "copy": "At the table he breaks the bread; their eyes are opened, and he vanishes from their sight.", "miles": 4, "at": 2 },
+      { "label": "Back to Jerusalem", "ref": "Luke 24:33-35", "copy": "That same hour they return to Jerusalem and find the Eleven saying, “The Lord has indeed risen and has appeared to Simon!”", "miles": 7, "at": 0 }
+    ]
+  },
+  "jonah-nineveh": {
+    "set": { "note": "Joppa and Nineveh are known; where the storm struck and where Jonah was put ashore are not recorded." },
+    "points": [
+      { "ancient": "Joppa", "modern": "Jaffa, Tel Aviv", "lat": 32.05, "lon": 34.75 },
+      { "ancient": "Out at sea", "modern": "the Mediterranean (spot unknown)", "lat": 32.6, "lon": 33.3 },
+      { "ancient": "Nineveh", "modern": "near Mosul, Iraq", "lat": 36.36, "lon": 43.15 }
+    ],
+    "steps": [
+      { "label": "Sailing from Joppa", "ref": "Jonah 1:3", "copy": "Running from the Lord, Jonah pays the fare and boards a ship bound for Tarshish.", "at": 0 },
+      { "label": "The storm and the fish", "ref": "Jonah 1:4-17", "copy": "A great storm rises; Jonah is thrown overboard and swallowed by a great fish.", "miles": 100, "at": 1, "by": "sea" },
+      { "label": "Preaching in Nineveh", "ref": "Jonah 3:1-10", "copy": "Sent a second time, Jonah goes to Nineveh; the city believes God and turns from its evil.", "miles": 600, "at": 2 }
+    ]
+  },
+  "magi-to-bethlehem": {
+    "set": { "note": "Matthew says only that the Magi came 'from the east'; their homeland and road are not recorded." },
+    "points": [
+      { "ancient": "The East", "modern": "east of Judea (Persia and Babylon are common guesses)", "lat": 33, "lon": 45.5 },
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Bethlehem", "modern": "Bethlehem, West Bank", "lat": 31.7, "lon": 35.2 }
+    ],
+    "steps": [
+      { "label": "Following the star", "ref": "Matthew 2:1-2", "copy": "Magi from the east arrive in Jerusalem asking where the newborn king of the Jews is.", "miles": 850, "at": 1 },
+      { "label": "Sent to Bethlehem", "ref": "Matthew 2:3-9", "copy": "Herod sends them to Bethlehem and asks them to report back; the star goes ahead of them.", "miles": 6, "at": 2 },
+      { "label": "Worship and gifts", "ref": "Matthew 2:10-11", "copy": "They find the child with Mary, bow down to worship him, and offer gold, frankincense and myrrh.", "at": 2 },
+      { "label": "Home by another way", "ref": "Matthew 2:12", "copy": "Warned in a dream not to go back to Herod, they return to their country by another route.", "miles": 850, "at": 0 }
+    ]
+  },
+  "flight-to-egypt": {
+    "at": [1, 1, 2]
+  }
+}
