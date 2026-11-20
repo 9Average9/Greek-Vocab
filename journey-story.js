@@ -157,8 +157,10 @@
     }
     var start = stops[0].point;
     // Labels sit beside their dots (the guide stands above his stop and his
-    // name flag below it), on the side away from him.
-    var side = function (i) { return hasLL(pts[cur]) && pts[i].lon < pts[cur].lon ? ['right', [-12, 0]] : ['left', [12, 0]]; };
+    // name flag below it).
+    // Labels point toward the middle of the frame, so they never run off an edge.
+    var mid = st.frameCenter || (hasLL(pts[cur]) ? ll(pts[cur]) : [0, 0]);
+    var side = function (i) { return pts[i].lon > mid[0] ? ['right', [-12, 0]] : ['left', [12, 0]]; };
     if (next >= 0 && hasLL(pts[next])) { var sn = side(next); marker(div('jst-mini', esc(label(pts[next])) + ' · <em>next</em>'), ll(pts[next]), sn[0], sn[1]); }
     if (cur !== start && next !== start && hasLL(pts[start])) { var ss = side(start); marker(div('jst-mini', esc(label(pts[start])) + ' · <em>start</em>'), ll(pts[start]), ss[0], ss[1]); }
     var here = pts[cur];
@@ -189,17 +191,39 @@
     var L = LOOKS[st.look] || LOOKS.storybook;
     var pad = (st.opts.padding && st.opts.padding()) || { top: 140, bottom: 300 };
     var el = st.map.getContainer(), W = el.clientWidth || 390, H = el.clientHeight || 800;
-    var side = 58, top = pad.top + 34;                       // room for the guide's head
-    var ps = cs.map(merc);
-    var xs = ps.map(function (p) { return p[0]; }), ys = ps.map(function (p) { return p[1]; });
-    var minx = Math.min.apply(null, xs), maxx = Math.max.apply(null, xs), miny = Math.min.apply(null, ys), maxy = Math.max.apply(null, ys);
+    var side = 100, top = pad.top + 34;                      // room for side labels and the guide's head
     var aw = Math.max(80, W - side * 2), ah = Math.max(80, H - top - pad.bottom);
-    var zw = Math.log2(aw / Math.max(maxx - minx, 1e-7));
-    var zh = Math.log2(ah / Math.max(maxy - miny, 1e-7)) + (L.pitch > 30 ? 0.45 : 0);
-    var zoom = Math.min(zw, zh, overview ? 9 : 9.6) - 0.08;
-    if (cs.length === 1) zoom = Math.min(zoom, 8.6);
+    var MAXZ = 12.5, GAP = 84;                               // px between neighboring stops
+    var fit = function (pts) {
+      var xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+      var b = { minx: Math.min.apply(null, xs), maxx: Math.max.apply(null, xs), miny: Math.min.apply(null, ys), maxy: Math.max.apply(null, ys) };
+      var zw = Math.log2(aw / Math.max(b.maxx - b.minx, 1e-7));
+      var zh = Math.log2(ah / Math.max(b.maxy - b.miny, 1e-7)) + (L.pitch > 30 ? 0.45 : 0);
+      b.zoom = Math.min(zw, zh, MAXZ) - 0.08;
+      return b;
+    };
+    var ps = cs.map(merc);
+    var f = fit(ps);
+    // Places close together: if a neighbor would sit almost on top of the
+    // current stop, frame just the close ones so the space between them shows.
+    if (!overview && ps.length > 1) {
+      var here = ps[0];
+      var dpx = function (p, z) { return Math.hypot(p[0] - here[0], p[1] - here[1]) * Math.pow(2, z); };
+      var near = ps.slice(1).filter(function (p) { return dpx(p, f.zoom) < GAP; });
+      if (near.length && near.length < ps.length - 1) f = fit([here].concat(near));
+    }
+    var zoom = f.zoom;
+    if (cs.length === 1) zoom = Math.min(zoom, 9.5);
     zoom = Math.max(2.5, zoom);
-    var target = { center: unmerc([(minx + maxx) / 2, (miny + maxy) / 2]), zoom: zoom, pitch: L.pitch, bearing: L.bearing,
+    // Tall mountains read well from far away; up close they'd look like the
+    // Alps, so ease the exaggeration as the camera comes in.
+    try {
+      var ex = zoom > 9 ? Math.max(1.15, L.ex - (zoom - 9) * 0.45) : L.ex;
+      var t = st.map.getTerrain && st.map.getTerrain();
+      if (t && Math.abs((t.exaggeration || 0) - ex) > 0.05) st.map.setTerrain({ source: t.source, exaggeration: ex });
+    } catch (e) {}
+    st.frameCenter = unmerc([(f.minx + f.maxx) / 2, (f.miny + f.maxy) / 2]);
+    var target = { center: st.frameCenter, zoom: zoom, pitch: L.pitch, bearing: L.bearing,
       padding: { top: top, bottom: pad.bottom, left: side, right: side } };
     if (st.animate && !reduced()) st.map.flyTo(Object.assign(target, { duration: 1700, curve: 1.25, essential: true }));
     else st.map.jumpTo(target);
