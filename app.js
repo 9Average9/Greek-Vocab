@@ -12057,22 +12057,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Pilgrim caravan on foot',
     days: '4-5 travel days each way',
     modern: 'Nazareth down to Jerusalem and back',
-    note: 'Galilean pilgrims commonly used the Jordan Valley road to Jerusalem for the feasts; the line is simplified.',
+    note: 'Nazareth and Jerusalem are known; Luke says only that the family went a day\'s journey before missing him, so that spot is approximate.',
     sources: [
       'Jesus’ family went to Jerusalem every year for the Passover (Luke 2:41).',
       'At twelve he stayed behind; they found him after three days in the temple (Luke 2:46).',
       'Pilgrim companies traveled together, which is why he was missed only after a day’s journey (Luke 2:44).'
     ],
     points: [
-      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 45.9, y: 16, lat: 32.7, lon: 35.3 },
-      { ancient: 'Jordan Valley road', modern: 'Jordan Valley', x: 58.4, y: 60.3, lat: 32.1, lon: 35.5 },
-      { ancient: 'Jericho', modern: 'Jericho', x: 54.7, y: 77.3, lat: 31.87, lon: 35.44 },
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 41.6, y: 84, lat: 31.78, lon: 35.23 }
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 85, y: 15, lat: 32.7, lon: 35.3 },
+      { ancient: 'A day\'s journey out', modern: 'north of Jerusalem (spot unknown)', x: 55, y: 64, lat: 32.05, lon: 35.27 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 85, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Up for the Passover', ref: 'Luke 2:41-42', copy: 'The family travels to Jerusalem for the feast.', miles: 75 },
-      { label: 'Left behind', ref: 'Luke 2:43-45', copy: 'They travel a day before realizing he is missing.', miles: 15 },
-      { label: 'Found in the temple', ref: 'Luke 2:46-49', copy: 'He is among the teachers, "about my Father’s business."', miles: 0 }
+      { label: 'Up for the Passover', ref: 'Luke 2:41-42', copy: 'When Jesus is twelve, the family goes up to Jerusalem for the feast, as they do every year.', miles: 75, at: 2 },
+      { label: 'Left behind', ref: 'Luke 2:43-45', copy: 'Heading home, they travel a day before realizing he isn\'t with them, and they turn back to look for him.', miles: 20, at: 1 },
+      { label: 'Found in the temple', ref: 'Luke 2:46-50', copy: 'After three days they find him in the temple, sitting among the teachers, listening and asking questions.', miles: 20, at: 2 },
+      { label: 'Home to Nazareth', ref: 'Luke 2:51-52', copy: 'He goes down to Nazareth with them and is obedient to them, growing in wisdom and stature.', miles: 75, at: 0 }
     ]
   },
   {
@@ -12094,15 +12094,15 @@ const BIBLE_JOURNEYS = [
       'Blinded, he is led the rest of the way into Damascus to Straight Street (Acts 9:8-11).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 32.5, y: 84, lat: 31.78, lon: 35.23 },
-      { ancient: 'Northern road', modern: 'Galilee/Golan region', x: 48, y: 43.9, lat: 32.8, lon: 35.7 },
-      { ancient: 'Near Damascus', modern: 'approach to Damascus', x: 64.6, y: 18.4, lat: 33.45, lon: 36.2 },
-      { ancient: 'Damascus', modern: 'Damascus, Syria', x: 67.5, y: 16, lat: 33.51, lon: 36.29 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 85, lat: 31.78, lon: 35.23 },
+      { ancient: 'Near Damascus', modern: 'approach to Damascus', x: 79, y: 17, lat: 33.45, lon: 36.2 },
+      { ancient: 'Damascus', modern: 'Damascus, Syria', x: 85, y: 15, lat: 33.51, lon: 36.29 }
     ],
     steps: [
-      { label: 'Setting out to persecute', ref: 'Acts 9:1-2', copy: 'Saul heads for Damascus, breathing threats against the church.', miles: 120 },
-      { label: 'The light from heaven', ref: 'Acts 9:3-6', copy: '"Saul, Saul, why do you persecute me?"', miles: 25 },
-      { label: 'Led into the city', ref: 'Acts 9:8-9', copy: 'Blinded, he is led by the hand into Damascus.', miles: 5 }
+      { label: 'Setting out to persecute', ref: 'Acts 9:1-2', copy: 'Still breathing threats against the disciples, Saul gets letters to arrest believers in Damascus.', at: 0 },
+      { label: 'The light from heaven', ref: 'Acts 9:3-6', copy: 'As he nears Damascus a light from heaven flashes around him, and a voice asks, “Saul, Saul, why do you persecute Me?”', miles: 135, at: 1 },
+      { label: 'Led into the city', ref: 'Acts 9:8-9', copy: 'Blinded, he is led by the hand into Damascus, and for three days he neither eats nor drinks.', miles: 5, at: 2 },
+      { label: 'Ananias', ref: 'Acts 9:10-19', copy: 'Ananias lays his hands on him; something like scales falls from his eyes, and he is baptized.', at: 2 }
     ]
   },
   {
@@ -12117,22 +12117,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Chariot meeting on the road',
     days: 'A day’s journey',
     modern: 'Jerusalem southwest toward Gaza, then the coast',
-    note: 'The "desert road" to Gaza is named in Acts 8:26; Philip is then carried up the coast to Azotus and Caesarea.',
+    note: 'Luke places the meeting on the desert road that goes down from Jerusalem to Gaza; the exact spot is not recorded.',
     sources: [
       'An angel sends Philip to the road that goes down from Jerusalem to Gaza (Acts 8:26).',
       'He meets an Ethiopian official reading Isaiah and explains the gospel (Acts 8:27-35).',
       'After the baptism Philip is found at Azotus and preaches up to Caesarea (Acts 8:40).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 84, y: 36.3, lat: 31.78, lon: 35.23 },
-      { ancient: 'The desert road', modern: 'road toward Gaza', x: 50, y: 53.2, lat: 31.62, lon: 34.85 },
-      { ancient: 'Gaza', modern: 'Gaza', x: 16, y: 65.8, lat: 31.5, lon: 34.47 },
-      { ancient: 'Azotus', modern: 'Ashdod, Israel', x: 32.1, y: 34.2, lat: 31.8, lon: 34.65 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 85, y: 23, lat: 31.78, lon: 35.23 },
+      { ancient: 'The desert road', modern: 'road from Jerusalem toward Gaza', x: 39, y: 85, lat: 31.62, lon: 34.85 },
+      { ancient: 'Azotus', modern: 'Ashdod, Israel', x: 15, y: 15, lat: 31.8, lon: 34.65 }
     ],
     steps: [
-      { label: 'Sent to the Gaza road', ref: 'Acts 8:26', copy: 'Philip goes to the desert road as the angel directs.', miles: 25 },
-      { label: 'The chariot and Isaiah', ref: 'Acts 8:30-35', copy: 'He explains the suffering servant of Isaiah 53.', miles: 10 },
-      { label: 'Baptism and beyond', ref: 'Acts 8:38-40', copy: 'The eunuch is baptized; Philip preaches on to Azotus.', miles: 25 }
+      { label: 'Sent to the Gaza road', ref: 'Acts 8:26-29', copy: 'An angel sends Philip to the desert road, where an Ethiopian official sits in his chariot reading.', miles: 25, at: 1 },
+      { label: 'The chariot and Isaiah', ref: 'Acts 8:30-35', copy: 'He is reading Isaiah, and Philip tells him the good news about Jesus, beginning with that very passage.', at: 1 },
+      { label: 'Baptized by the road', ref: 'Acts 8:36-39', copy: 'They come to some water and the man is baptized; he goes on his way rejoicing.', at: 1 },
+      { label: 'Found at Azotus', ref: 'Acts 8:40', copy: 'Philip appears at Azotus and preaches the gospel in all the towns until he reaches Caesarea.', miles: 15, at: 2 }
     ]
   },
   {
@@ -12154,14 +12154,13 @@ const BIBLE_JOURNEYS = [
       'At Cornelius’ house the Spirit falls on the Gentiles (Acts 10:44-48).'
     ],
     points: [
-      { ancient: 'Joppa', modern: 'Jaffa, Tel Aviv', x: 41.1, y: 84, lat: 32.05, lon: 34.75 },
-      { ancient: 'Coastal road', modern: 'Sharon plain', x: 53.8, y: 46.2, lat: 32.3, lon: 34.85 },
-      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 58.9, y: 16, lat: 32.5, lon: 34.89 }
+      { ancient: 'Joppa', modern: 'Jaffa, Tel Aviv', x: 15, y: 85, lat: 32.05, lon: 34.75 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 85, y: 15, lat: 32.5, lon: 34.89 }
     ],
     steps: [
-      { label: 'The vision in Joppa', ref: 'Acts 10:9-16', copy: 'Peter sees the sheet of animals: "Do not call unclean."', miles: 0 },
-      { label: 'Going to Caesarea', ref: 'Acts 10:23-24', copy: 'He travels up the coast with the messengers.', miles: 30 },
-      { label: 'The Spirit on the Gentiles', ref: 'Acts 10:44-48', copy: 'Cornelius’ household believes and is baptized.', miles: 5 }
+      { label: 'The vision in Joppa', ref: 'Acts 10:9-16', copy: 'Peter sees the sheet of animals: "Do not call unclean."', miles: 0, at: 0 },
+      { label: 'Going to Caesarea', ref: 'Acts 10:23-24', copy: 'He travels up the coast with the messengers.', miles: 30, at: 1 },
+      { label: 'The Spirit on the Gentiles', ref: 'Acts 10:44-48', copy: 'Cornelius’ household believes and is baptized.', miles: 5, at: 1 }
     ]
   },
   {
@@ -12218,9 +12217,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Galilee', modern: 'Cana / Galilee', x: 53.3, y: 16, lat: 32.75, lon: 35.34 }
     ],
     steps: [
-      { label: 'Leaving Judea', ref: 'John 4:3-4', copy: 'He sets out for Galilee, passing through Samaria.', miles: 30 },
-      { label: 'The woman at the well', ref: 'John 4:7-14', copy: '"Whoever drinks the water I give will never thirst."', miles: 0 },
-      { label: 'Samaritans believe', ref: 'John 4:39-42', copy: 'The town confesses him as the Savior of the world.', miles: 40 }
+      { label: 'Leaving Judea', ref: 'John 4:3-4', copy: 'He leaves Judea for Galilee, and he has to pass through Samaria.', at: 0 },
+      { label: 'The woman at the well', ref: 'John 4:5-26', copy: 'Tired at Jacob\'s well near Sychar, Jesus offers a Samaritan woman living water.', miles: 35, at: 1 },
+      { label: 'Samaritans believe', ref: 'John 4:39-42', copy: 'He stays two days, and many more believe: “This man truly is the Christ, the Savior of the world.”', at: 1 },
+      { label: 'On to Galilee', ref: 'John 4:43-46', copy: 'After two days he goes on to Galilee and comes again to Cana.', miles: 35, at: 2 }
     ]
   },
   {
@@ -12248,9 +12248,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Decapolis', modern: 'east of the Sea of Galilee', x: 65.7, y: 84, lat: 32.69, lon: 35.68 }
     ],
     steps: [
-      { label: 'To the region of Tyre', ref: 'Mark 7:24', copy: 'He withdraws north and cannot be kept hidden.', miles: 35 },
-      { label: 'The Syrophoenician woman', ref: 'Mark 7:26-30', copy: 'Her faith wins healing for her daughter.', miles: 0 },
-      { label: 'Back through the Decapolis', ref: 'Mark 7:31', copy: 'He returns east of the lake to the Ten Cities.', miles: 85 }
+      { label: 'To the region of Tyre', ref: 'Mark 7:24', copy: 'He goes away to the region of Tyre and wants no one to know, but he cannot stay hidden.', miles: 35, at: 1 },
+      { label: 'The Syrophoenician woman', ref: 'Mark 7:25-30', copy: 'A Gentile woman begs him for her daughter; because of her answer, the demon leaves the girl.', at: 1 },
+      { label: 'Through Sidon', ref: 'Mark 7:31', copy: 'He goes on through Sidon.', miles: 25, at: 2 },
+      { label: 'Into the Decapolis', ref: 'Mark 7:31-37', copy: 'Back at the Sea of Galilee in the region of the Ten Cities, he heals a man who is deaf and can hardly speak.', miles: 70, at: 3 }
     ]
   },
   {
@@ -12277,9 +12278,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 36.4, y: 16, lat: 32.5, lon: 34.89 }
     ],
     steps: [
-      { label: 'The plot and the guard', ref: 'Acts 23:23-24', copy: 'Two hundred soldiers escort Paul out under cover of night.', miles: 0 },
-      { label: 'By night to Antipatris', ref: 'Acts 23:31', copy: 'The infantry bring him down to Antipatris.', miles: 35 },
-      { label: 'On to Caesarea', ref: 'Acts 23:32-33', copy: 'The horsemen deliver him and the letter to Felix.', miles: 30 }
+      { label: 'The plot and the guard', ref: 'Acts 23:23-24', copy: 'Two hundred soldiers escort Paul out under cover of night.', miles: 0, at: 0 },
+      { label: 'By night to Antipatris', ref: 'Acts 23:31', copy: 'The infantry bring him down to Antipatris.', miles: 35, at: 1 },
+      { label: 'On to Caesarea', ref: 'Acts 23:32-33', copy: 'The horsemen deliver him and the letter to Felix.', miles: 30, at: 2 }
     ]
   },
   {
@@ -12543,9 +12544,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Wilderness', modern: 'Judean desert', x: 48.4, y: 84, lat: 31.8, lon: 35.4 }
     ],
     steps: [
-      { label: 'Coming to the Jordan', ref: 'Matthew 3:13', copy: 'Jesus comes from Galilee to John to be baptized.', miles: 65 },
-      { label: 'The heavens opened', ref: 'Matthew 3:16-17', copy: 'The Spirit descends like a dove and a voice speaks from heaven.', miles: 0 },
-      { label: 'Into the wilderness', ref: 'Matthew 4:1', copy: 'He is led up to be tempted, fasting forty days and forty nights.', miles: 10 }
+      { label: 'Coming to the Jordan', ref: 'Matthew 3:13', copy: 'Jesus comes from Galilee to John to be baptized.', miles: 65, at: 1 },
+      { label: 'The heavens opened', ref: 'Matthew 3:16-17', copy: 'The Spirit descends like a dove and a voice speaks from heaven.', miles: 0, at: 1 },
+      { label: 'Into the wilderness', ref: 'Matthew 4:1', copy: 'He is led up to be tempted, fasting forty days and forty nights.', miles: 10, at: 2 }
     ]
   },
   {
@@ -12571,9 +12572,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 84, y: 37.9, lat: 32.88, lon: 35.575 }
     ],
     steps: [
-      { label: 'Water into wine', ref: 'John 2:7-9', copy: 'Jesus has the jars filled with water, and it becomes good wine.', miles: 0 },
-      { label: 'The first sign', ref: 'John 2:11', copy: 'This first of his signs manifests his glory, and his disciples believe.', miles: 0 },
-      { label: 'Down to Capernaum', ref: 'John 2:12', copy: 'He goes down to Capernaum and stays there a few days.', miles: 20 }
+      { label: 'Water into wine', ref: 'John 2:7-9', copy: 'Jesus has the jars filled with water, and it becomes good wine.', miles: 0, at: 0 },
+      { label: 'The first sign', ref: 'John 2:11', copy: 'This first of his signs manifests his glory, and his disciples believe.', miles: 0, at: 0 },
+      { label: 'Down to Capernaum', ref: 'John 2:12', copy: 'He goes down to Capernaum and stays there a few days.', miles: 20, at: 1 }
     ]
   },
   {
@@ -12595,13 +12596,14 @@ const BIBLE_JOURNEYS = [
       'They arrive at the country of the Gerasenes on the other side (Mark 5:1).'
     ],
     points: [
-      { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 16, y: 23, lat: 32.88, lon: 35.575 },
-      { ancient: 'Country of the Gerasenes', modern: 'Kursi, eastern shore', x: 84, y: 77, lat: 32.83, lon: 35.65 }
+      { ancient: 'Capernaum', modern: 'Kfar Nahum, Sea of Galilee', x: 15, y: 15, lat: 32.88, lon: 35.575 },
+      { ancient: 'Out on the lake', modern: 'Sea of Galilee', x: 48, y: 57, lat: 32.85, lon: 35.61 },
+      { ancient: 'Country of the Gerasenes', modern: 'east shore (Kursi is one proposal)', x: 85, y: 85, lat: 32.83, lon: 35.65 }
     ],
     steps: [
-      { label: 'Across to the other side', ref: 'Mark 4:35', copy: 'When evening comes, Jesus tells them to cross to the far shore.', miles: 0 },
-      { label: 'Peace, be still', ref: 'Mark 4:39', copy: 'He rebukes the wind and the sea, and there is a great calm.', miles: 7 },
-      { label: 'Among the tombs', ref: 'Mark 5:1-2', copy: 'On the eastern shore a man with an unclean spirit meets him.', miles: 2 }
+      { label: 'Across to the other side', ref: 'Mark 4:35-36', copy: 'When evening comes, Jesus says, “Let us cross to the other side,” and they set out in the boat.', at: 0 },
+      { label: 'Peace, be still', ref: 'Mark 4:37-41', copy: 'A furious storm rises; he rebukes the wind and the sea, and it becomes perfectly calm.', miles: 3, at: 1, by: 'sea' },
+      { label: 'Among the tombs', ref: 'Mark 5:1-20', copy: 'On the far shore a man with an unclean spirit runs to meet him, and Jesus sets him free.', miles: 3, at: 2, by: 'sea' }
     ]
   },
   {
@@ -12627,9 +12629,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Caesarea Philippi', modern: 'Banias, Golan', x: 55, y: 16, lat: 33.25, lon: 35.69 }
     ],
     steps: [
-      { label: 'Who do you say I am?', ref: 'Matthew 16:13-15', copy: 'On the way north Jesus asks the disciples who people say he is.', miles: 25 },
-      { label: 'Peter\'s confession', ref: 'Matthew 16:16', copy: 'Peter declares him the Christ, the Son of the living God.', miles: 0 },
-      { label: 'On this rock', ref: 'Matthew 16:18', copy: 'Jesus promises to build his church, and the gates of hell will not prevail.', miles: 5 }
+      { label: 'Who do you say I am?', ref: 'Matthew 16:13-15', copy: 'On the way north Jesus asks the disciples who people say he is.', miles: 25, at: 1 },
+      { label: 'Peter\'s confession', ref: 'Matthew 16:16', copy: 'Peter declares him the Christ, the Son of the living God.', miles: 0, at: 1 },
+      { label: 'On this rock', ref: 'Matthew 16:18', copy: 'Jesus promises to build his church, and the gates of hell will not prevail.', miles: 5, at: 1 }
     ]
   },
   {
@@ -12656,9 +12658,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 65.6, lat: 31.78, lon: 35.235 }
     ],
     steps: [
-      { label: 'Through Jericho', ref: 'Luke 19:1-5', copy: 'Zacchaeus climbs a sycamore, and Jesus calls him down to host him.', miles: 14 },
-      { label: 'The colt at Bethphage', ref: 'Luke 19:29-35', copy: 'Disciples bring a colt; they set Jesus on it for the descent.', miles: 3 },
-      { label: 'Down the Mount of Olives', ref: 'Luke 19:37-38', copy: 'The crowd praises God, crying, "Blessed is the King who comes!"', miles: 1 }
+      { label: 'Through Jericho', ref: 'Luke 19:1-5', copy: 'Zacchaeus climbs a sycamore, and Jesus calls him down to host him.', miles: 14, at: 0 },
+      { label: 'The colt at Bethphage', ref: 'Luke 19:29-35', copy: 'Disciples bring a colt; they set Jesus on it for the descent.', miles: 3, at: 1 },
+      { label: 'Down the Mount of Olives', ref: 'Luke 19:37-38', copy: 'The crowd praises God, crying, "Blessed is the King who comes!"', miles: 1, at: 2 }
     ]
   },
   {
@@ -12684,9 +12686,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Samaria', modern: 'Sebastia, West Bank', x: 47.7, y: 16, lat: 32.28, lon: 35.19 }
     ],
     steps: [
-      { label: 'Sent from Jerusalem', ref: 'Acts 8:14', copy: 'Hearing Samaria has received the word, the apostles send Peter and John.', miles: 35 },
-      { label: 'Prayer for the Spirit', ref: 'Acts 8:15-17', copy: 'They lay hands on the believers, who receive the Holy Spirit.', miles: 0 },
-      { label: 'Preaching on the way back', ref: 'Acts 8:25', copy: 'Returning, they preach in many Samaritan villages.', miles: 5 }
+      { label: 'Sent from Jerusalem', ref: 'Acts 8:14', copy: 'Hearing that Samaria has received the word of God, the apostles send Peter and John.', miles: 35, at: 1 },
+      { label: 'Prayer for the Spirit', ref: 'Acts 8:15-17', copy: 'They pray and lay hands on the believers, who receive the Holy Spirit.', at: 1 },
+      { label: 'Preaching on the way back', ref: 'Acts 8:25', copy: 'They return to Jerusalem, preaching the gospel in many Samaritan villages.', miles: 35, at: 0 }
     ]
   },
   {
@@ -12708,13 +12710,13 @@ const BIBLE_JOURNEYS = [
       'There the disciples are first called Christians (Acts 11:26).'
     ],
     points: [
-      { ancient: 'Tarsus', modern: 'Tarsus, Turkey', x: 16, y: 25.8, lat: 36.92, lon: 34.9 },
-      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 84, y: 74.2, lat: 36.2, lon: 36.16 }
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 85, lat: 36.2, lon: 36.16 },
+      { ancient: 'Tarsus', modern: 'Tarsus, Turkey', x: 15, y: 15, lat: 36.92, lon: 34.9 }
     ],
     steps: [
-      { label: 'Searching in Tarsus', ref: 'Acts 11:25', copy: 'Barnabas travels to Tarsus to find Saul.', miles: 80 },
-      { label: 'A year of teaching', ref: 'Acts 11:26', copy: 'They meet with the church and teach a great many people.', miles: 0 },
-      { label: 'Called Christians', ref: 'Acts 11:26', copy: 'In Antioch the disciples are first called Christians.', miles: 0 }
+      { label: 'Searching in Tarsus', ref: 'Acts 11:25', copy: 'Barnabas goes to Tarsus to look for Saul.', miles: 80, at: 1 },
+      { label: 'A year of teaching', ref: 'Acts 11:26', copy: 'He brings him back to Antioch, and for a whole year they meet with the church and teach many people.', miles: 80, at: 0 },
+      { label: 'Called Christians', ref: 'Acts 11:26', copy: 'In Antioch the disciples are first called Christians.', at: 0 }
     ]
   },
   {
@@ -13067,10 +13069,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 84, y: 23.5, lat: 32.88, lon: 35.575 }
     ],
     steps: [
-      { label: 'Reading the scroll', ref: 'Luke 4:16-19', copy: 'Jesus reads from Isaiah about good news to the poor.', miles: 0 },
-      { label: 'Fulfilled today', ref: 'Luke 4:21', copy: 'He says the Scripture is fulfilled in their hearing.', miles: 0 },
-      { label: 'Driven to the cliff', ref: 'Luke 4:29', copy: 'They take him to the brow of the hill to throw him down.', miles: 0 },
-      { label: 'Down to Capernaum', ref: 'Luke 4:31', copy: 'He goes down to Capernaum and teaches on the Sabbath.', miles: 20 }
+      { label: 'Reading the scroll', ref: 'Luke 4:16-19', copy: 'Jesus reads from Isaiah about good news to the poor.', miles: 0, at: 0 },
+      { label: 'Fulfilled today', ref: 'Luke 4:21', copy: 'He says the Scripture is fulfilled in their hearing.', miles: 0, at: 0 },
+      { label: 'Driven to the cliff', ref: 'Luke 4:29', copy: 'They take him to the brow of the hill to throw him down.', miles: 0, at: 0 },
+      { label: 'Down to Capernaum', ref: 'Luke 4:31', copy: 'He goes down to Capernaum and teaches on the Sabbath.', miles: 20, at: 1 }
     ]
   },
   {
@@ -13092,15 +13094,16 @@ const BIBLE_JOURNEYS = [
       'In the night Jesus walks on the sea and they land at Gennesaret (Mark 6:48, 53).'
     ],
     points: [
-      { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 50, y: 42.6, lat: 32.88, lon: 35.575 },
-      { ancient: 'Solitary place', modern: 'NE shore near Bethsaida', x: 84, y: 20.6, lat: 32.91, lon: 35.63 },
-      { ancient: 'Gennesaret', modern: 'Ginosar plain', x: 16, y: 79.4, lat: 32.83, lon: 35.52 }
+      { ancient: 'Capernaum', modern: 'Kfar Nahum, Sea of Galilee', x: 50, y: 41, lat: 32.88, lon: 35.575 },
+      { ancient: 'A solitary place', modern: 'northeast shore near Bethsaida', x: 85, y: 15, lat: 32.91, lon: 35.63 },
+      { ancient: 'Gennesaret', modern: 'Ginosar plain', x: 15, y: 85, lat: 32.83, lon: 35.52 },
+      { ancient: 'Out on the lake', modern: 'Sea of Galilee', x: 60, y: 59, lat: 32.86, lon: 35.59 }
     ],
     steps: [
-      { label: 'Away to rest', ref: 'Mark 6:31-32', copy: 'So many come and go that they leave by boat for a quiet place.', miles: 4 },
-      { label: 'Loaves and fish', ref: 'Mark 6:41-42', copy: 'He blesses five loaves and two fish, and all eat and are filled.', miles: 0 },
-      { label: 'Walking on the sea', ref: 'Mark 6:48', copy: 'In the fourth watch he comes to them walking on the water.', miles: 5 },
-      { label: 'Landing at Gennesaret', ref: 'Mark 6:53', copy: 'They cross over and moor at the shore of Gennesaret.', miles: 3 }
+      { label: 'Away to rest', ref: 'Mark 6:31-32', copy: 'So many are coming and going that they leave by boat for a quiet place.', miles: 4, at: 1, by: 'sea' },
+      { label: 'Loaves and fish', ref: 'Mark 6:41-44', copy: 'He blesses five loaves and two fish; all eat and are satisfied, and twelve baskets are left over.', at: 1 },
+      { label: 'Walking on the sea', ref: 'Mark 6:45-52', copy: 'In the fourth watch of the night he comes to them walking on the water, and the wind dies down.', miles: 3, at: 3, by: 'sea' },
+      { label: 'Landing at Gennesaret', ref: 'Mark 6:53-56', copy: 'They land at Gennesaret, and people bring the sick to him wherever he goes.', miles: 3, at: 2, by: 'sea' }
     ]
   },
   {
@@ -13127,10 +13130,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Dalmanutha', modern: 'Western Sea of Galilee', x: 44.7, y: 69.8, lat: 32.8, lon: 35.52 }
     ],
     steps: [
-      { label: 'Through the Decapolis', ref: 'Mark 7:31', copy: 'He travels from Tyre by way of Sidon to the Sea of Galilee.', miles: 45 },
-      { label: 'Ephphatha', ref: 'Mark 7:34-35', copy: 'He looks up, sighs, and says "Be opened," and the man hears.', miles: 0 },
-      { label: 'Seven loaves', ref: 'Mark 8:6-8', copy: 'Four thousand eat from seven loaves and a few fish.', miles: 20 },
-      { label: 'Over to Dalmanutha', ref: 'Mark 8:10', copy: 'He gets into the boat and goes to the district of Dalmanutha.', miles: 5 }
+      { label: 'Through the Decapolis', ref: 'Mark 7:31', copy: 'He travels from Tyre by way of Sidon to the Sea of Galilee.', miles: 45, at: 1 },
+      { label: 'Ephphatha', ref: 'Mark 7:34-35', copy: 'He looks up, sighs, and says "Be opened," and the man hears.', miles: 0, at: 1 },
+      { label: 'Seven loaves', ref: 'Mark 8:6-8', copy: 'Four thousand eat from seven loaves and a few fish.', miles: 20, at: 1 },
+      { label: 'Over to Dalmanutha', ref: 'Mark 8:10', copy: 'He gets into the boat and goes to the district of Dalmanutha.', miles: 5, at: 2, by: 'sea' }
     ]
   },
   {
@@ -13156,10 +13159,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Bethany', modern: 'Al-Eizariya, West Bank', x: 16, y: 59.7, lat: 31.77, lon: 35.26 }
     ],
     steps: [
-      { label: 'Beyond the Jordan', ref: 'John 10:40-42', copy: 'Many come to him there and believe.', miles: 0 },
-      { label: 'Back to Judea', ref: 'John 11:7', copy: 'He tells the disciples, "Let us go to Judea again."', miles: 18 },
-      { label: 'Four days in the tomb', ref: 'John 11:17', copy: 'He arrives to find Lazarus already buried four days.', miles: 0 },
-      { label: 'Lazarus, come out', ref: 'John 11:43-44', copy: 'He calls in a loud voice and the dead man comes out.', miles: 0 }
+      { label: 'Beyond the Jordan', ref: 'John 10:40-42', copy: 'Many come to him there and believe.', miles: 0, at: 0 },
+      { label: 'Back to Judea', ref: 'John 11:7', copy: 'He tells the disciples, "Let us go to Judea again."', miles: 18, at: 1 },
+      { label: 'Four days in the tomb', ref: 'John 11:17', copy: 'He arrives to find Lazarus already buried four days.', miles: 0, at: 1 },
+      { label: 'Lazarus, come out', ref: 'John 11:43-44', copy: 'He calls in a loud voice and the dead man comes out.', miles: 0, at: 1 }
     ]
   },
   {
@@ -13187,10 +13190,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Philippi', modern: 'Filippoi, Greece', x: 16, y: 19.9, lat: 41.01, lon: 24.29 }
     ],
     steps: [
-      { label: 'The Macedonian vision', ref: 'Acts 16:9', copy: 'A man pleads, "Come over to Macedonia and help us."', miles: 0 },
-      { label: 'Across to Neapolis', ref: 'Acts 16:11', copy: 'They make a straight run by Samothrace to Neapolis.', miles: 120 },
-      { label: 'On to Philippi', ref: 'Acts 16:12', copy: 'They reach Philippi and stay some days.', miles: 10 },
-      { label: 'Lydia believes', ref: 'Acts 16:14-15', copy: 'The Lord opens Lydia’s heart and her household is baptized.', miles: 0 }
+      { label: 'The Macedonian vision', ref: 'Acts 16:9-10', copy: 'In a night vision a man of Macedonia begs Paul, “Come over to Macedonia and help us.”', at: 0 },
+      { label: 'Samothrace', ref: 'Acts 16:11', copy: 'They sail straight across to Samothrace.', miles: 70, at: 1, by: 'sea' },
+      { label: 'Neapolis', ref: 'Acts 16:11', copy: 'The next day they reach Neapolis.', miles: 60, at: 2, by: 'sea' },
+      { label: 'On to Philippi', ref: 'Acts 16:12', copy: 'They go on to Philippi, a leading city of Macedonia, and stay there several days.', miles: 10, at: 3 },
+      { label: 'Lydia believes', ref: 'Acts 16:13-15', copy: 'By the river, the Lord opens Lydia\'s heart, and she and her household are baptized.', at: 3 }
     ]
   },
   {
@@ -13217,10 +13221,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Corinth', modern: 'Corinth, Greece', x: 49.3, y: 84, lat: 37.94, lon: 22.93 }
     ],
     steps: [
-      { label: 'Away by night', ref: 'Acts 17:10', copy: 'The believers send Paul and Silas off to Berea.', miles: 0 },
-      { label: 'Brought to Athens', ref: 'Acts 17:15', copy: 'His escorts conduct him all the way to Athens.', miles: 190 },
-      { label: 'On Mars Hill', ref: 'Acts 17:22-23', copy: 'He stands in the Areopagus and proclaims the unknown God.', miles: 0 },
-      { label: 'On to Corinth', ref: 'Acts 18:1', copy: 'After this he leaves Athens and goes to Corinth.', miles: 50 }
+      { label: 'Away by night', ref: 'Acts 17:10', copy: 'The believers send Paul and Silas off to Berea.', miles: 0, at: 0 },
+      { label: 'Brought to Athens', ref: 'Acts 17:15', copy: 'His escorts conduct him all the way to Athens.', miles: 190, at: 1 },
+      { label: 'On Mars Hill', ref: 'Acts 17:22-23', copy: 'He stands in the Areopagus and proclaims the unknown God.', miles: 0, at: 1 },
+      { label: 'On to Corinth', ref: 'Acts 18:1', copy: 'After this he leaves Athens and goes to Corinth.', miles: 50, at: 2 }
     ]
   },
   {
@@ -13247,10 +13251,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Tarsus', modern: 'Tarsus, Turkey', x: 48.3, y: 16, lat: 36.92, lon: 34.9 }
     ],
     steps: [
-      { label: 'Trying to join', ref: 'Acts 9:26', copy: 'The disciples are afraid of him, not believing he is a disciple.', miles: 0 },
-      { label: 'A plot to kill', ref: 'Acts 9:29', copy: 'He disputes with the Hellenists, who try to kill him.', miles: 60 },
-      { label: 'Down to Caesarea', ref: 'Acts 9:30', copy: 'The brothers bring him to the coast at Caesarea.', miles: 0 },
-      { label: 'Home to Tarsus', ref: 'Acts 9:30', copy: 'From there they send him off to his home city.', miles: 460 }
+      { label: 'Trying to join', ref: 'Acts 9:26-28', copy: 'The disciples are afraid of him until Barnabas brings him to the apostles.', at: 0 },
+      { label: 'A plot to kill', ref: 'Acts 9:29', copy: 'He debates with the Hellenists, and they try to kill him.', at: 0 },
+      { label: 'Down to Caesarea', ref: 'Acts 9:30', copy: 'The brothers take him down to Caesarea.', miles: 60, at: 1 },
+      { label: 'Home to Tarsus', ref: 'Acts 9:30', copy: 'From there they send him off to Tarsus, his home city.', miles: 300, at: 2 }
     ]
   },
   {
@@ -13277,10 +13281,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 44.1, y: 84, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Sent to Jerusalem', ref: 'Acts 15:2', copy: 'The church appoints Paul and Barnabas to take the question up.', miles: 0 },
-      { label: 'Through Phoenicia', ref: 'Acts 15:3', copy: 'They report the conversion of the Gentiles, bringing great joy.', miles: 200 },
-      { label: 'Peter speaks', ref: 'Acts 15:7-11', copy: 'Peter recalls how God gave the Spirit to the Gentiles.', miles: 100 },
-      { label: 'Back with the letter', ref: 'Acts 15:30-31', copy: 'They deliver the letter at Antioch, and the people rejoice.', miles: 0 }
+      { label: 'Sent to Jerusalem', ref: 'Acts 15:1-2', copy: 'After sharp debate over circumcision, the church sends Paul and Barnabas to the apostles and elders.', at: 0 },
+      { label: 'Through Phoenicia', ref: 'Acts 15:3', copy: 'Passing through Phoenicia and Samaria, they tell of the Gentiles\' conversion, bringing great joy.', miles: 200, at: 1 },
+      { label: 'Peter speaks', ref: 'Acts 15:4-21', copy: 'Peter recalls how God gave the Holy Spirit to the Gentiles; James proposes a letter to the churches.', miles: 100, at: 2 },
+      { label: 'Back with the letter', ref: 'Acts 15:22-31', copy: 'They carry the council\'s letter to Antioch, and the church rejoices at its encouragement.', miles: 300, at: 0 }
     ]
   },
   {
@@ -13306,10 +13310,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Bethany (Mount of Olives)', modern: 'Mount of Olives', x: 84, y: 63.3, lat: 31.77, lon: 35.26 }
     ],
     steps: [
-      { label: 'Led out to Bethany', ref: 'Luke 24:50', copy: 'He lifts his hands and blesses them.', miles: 2 },
-      { label: 'Carried up', ref: 'Luke 24:51', copy: 'While blessing them he parts from them and is taken to heaven.', miles: 0 },
-      { label: 'He will return', ref: 'Acts 1:11', copy: 'Two men say he will come back as they saw him go.', miles: 0 },
-      { label: 'Back with joy', ref: 'Luke 24:52-53', copy: 'They return to Jerusalem and bless God in the temple.', miles: 2 }
+      { label: 'Led out to Bethany', ref: 'Luke 24:50', copy: 'He lifts his hands and blesses them.', miles: 2, at: 1 },
+      { label: 'Carried up', ref: 'Luke 24:51', copy: 'While blessing them he parts from them and is taken to heaven.', miles: 0, at: 1 },
+      { label: 'He will return', ref: 'Acts 1:11', copy: 'Two men say he will come back as they saw him go.', miles: 0, at: 1 },
+      { label: 'Back with joy', ref: 'Luke 24:52-53', copy: 'They return to Jerusalem and bless God in the temple.', miles: 2, at: 0 }
     ]
   },
   {
@@ -13324,22 +13328,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Walking the desert road',
     days: 'A day’s descent',
     modern: 'Jerusalem dropping down to Jericho through the wilderness',
-    note: 'The Jerusalem–Jericho road is real and notoriously dangerous; the inn is a traditional site.',
+    note: 'This is a parable Jesus tells, set on the real road that drops from Jerusalem to Jericho. The inn is placed at the traditional Inn of the Good Samaritan site.',
     sources: [
       'Jesus sets the parable on the road "going down from Jerusalem to Jericho" (Luke 10:30).',
       'The road drops over 3,000 feet through bandit-prone wilderness in about 18 miles.',
       'The Samaritan brings the wounded man to an inn along the way (Luke 10:34).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 67.1, lat: 31.78, lon: 35.23 },
-      { ancient: 'The inn', modern: 'Maale Adummim area', x: 58.1, y: 55.7, lat: 31.81, lon: 35.36 },
-      { ancient: 'Jericho', modern: 'Jericho, West Bank', x: 84, y: 32.9, lat: 31.87, lon: 35.44 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 85, lat: 31.78, lon: 35.23 },
+      { ancient: 'On the road down', modern: 'Judean wilderness road', x: 53, y: 62, lat: 31.79, lon: 35.3 },
+      { ancient: 'The inn', modern: 'Inn of the Good Samaritan (traditional site)', x: 85, y: 15, lat: 31.81, lon: 35.36 }
     ],
     steps: [
-      { label: 'Going down', ref: 'Luke 10:30', copy: 'A man falls among robbers who strip and beat him, leaving him half dead.', miles: 8 },
-      { label: 'Passed by', ref: 'Luke 10:31-32', copy: 'A priest and a Levite both see him and pass by on the other side.', miles: 4 },
-      { label: 'The Samaritan’s mercy', ref: 'Luke 10:33-34', copy: 'A Samaritan binds his wounds and sets him on his own animal.', miles: 4 },
-      { label: 'Care at the inn', ref: 'Luke 10:35', copy: 'He pays the innkeeper and promises to repay any more.', miles: 2 }
+      { label: 'Going down', ref: 'Luke 10:30', copy: 'In Jesus\' story, a man going down to Jericho is attacked by robbers and left half dead.', miles: 5, at: 1 },
+      { label: 'Passed by', ref: 'Luke 10:31-32', copy: 'A priest and then a Levite see him and pass by on the other side.', at: 1 },
+      { label: 'The Samaritan’s mercy', ref: 'Luke 10:33-34', copy: 'A Samaritan has compassion, binds up his wounds and puts him on his own animal.', at: 1 },
+      { label: 'Care at the inn', ref: 'Luke 10:35-37', copy: 'He pays the innkeeper to look after him. “Go and do likewise,” Jesus says.', miles: 4, at: 2 }
     ]
   },
   {
@@ -13386,30 +13390,31 @@ const BIBLE_JOURNEYS = [
     mode: 'A messenger’s circuit',
     days: 'A week or more by road',
     modern: 'Western Turkey along the old Roman roads of Asia',
-    note: 'The letters are addressed in the natural order a courier would travel, looping north then inland and south.',
+    note: 'John receives the revelation on Patmos. The letters are addressed in the order of a circuit through the province of Asia, which is how the trail is drawn.',
     sources: [
       'John is told to write to the seven churches and name them (Revelation 1:11).',
       'The cities lie along a circular Roman road in the province of Asia.',
       'Each receives a letter tailored to its situation (Revelation 2–3).'
     ],
     points: [
-      { ancient: 'Ephesus', modern: 'Selçuk, Turkey', x: 22.9, y: 74, lat: 37.94, lon: 27.34 },
-      { ancient: 'Smyrna', modern: 'Izmir, Turkey', x: 16, y: 52.9, lat: 38.42, lon: 27.14 },
-      { ancient: 'Pergamum', modern: 'Bergama, Turkey', x: 17.4, y: 21.6, lat: 39.13, lon: 27.18 },
-      { ancient: 'Thyatira', modern: 'Akhisar, Turkey', x: 40.2, y: 30.8, lat: 38.92, lon: 27.84 },
-      { ancient: 'Sardis', modern: 'Sart, Turkey', x: 47.1, y: 49.8, lat: 38.49, lon: 28.04 },
-      { ancient: 'Philadelphia', modern: 'Alaşehir, Turkey', x: 63.6, y: 56, lat: 38.35, lon: 28.52 },
-      { ancient: 'Laodicea', modern: 'Denizli, Turkey', x: 84, y: 78.4, lat: 37.84, lon: 29.11 }
+      { ancient: 'Patmos', modern: 'Patmos, Greece', x: 15, y: 85, lat: 37.31, lon: 26.55 },
+      { ancient: 'Ephesus', modern: 'Selçuk, Turkey', x: 37, y: 61, lat: 37.94, lon: 27.34 },
+      { ancient: 'Smyrna', modern: 'İzmir, Turkey', x: 31, y: 42, lat: 38.42, lon: 27.14 },
+      { ancient: 'Pergamum', modern: 'Bergama, Turkey', x: 32, y: 15, lat: 39.13, lon: 27.18 },
+      { ancient: 'Thyatira', modern: 'Akhisar, Turkey', x: 50, y: 23, lat: 38.92, lon: 27.84 },
+      { ancient: 'Sardis', modern: 'Sart, Turkey', x: 56, y: 40, lat: 38.49, lon: 28.04 },
+      { ancient: 'Philadelphia', modern: 'Alaşehir, Turkey', x: 69, y: 45, lat: 38.35, lon: 28.52 },
+      { ancient: 'Laodicea', modern: 'near Denizli, Turkey', x: 85, y: 65, lat: 37.84, lon: 29.11 }
     ],
     steps: [
-      { label: 'Write the seven', ref: 'Revelation 1:11', copy: 'John is to send the scroll to the seven churches by name.', miles: 0 },
-      { label: 'Ephesus', ref: 'Revelation 2:1', copy: 'The church that left its first love.', miles: 35 },
-      { label: 'Smyrna', ref: 'Revelation 2:8', copy: 'Be faithful unto death, and receive the crown of life.', miles: 55 },
-      { label: 'Pergamum', ref: 'Revelation 2:12', copy: 'Holding fast his name where Satan’s throne is.', miles: 45 },
-      { label: 'Thyatira', ref: 'Revelation 2:18', copy: 'Commended for love and service, warned about Jezebel.', miles: 35 },
-      { label: 'Sardis', ref: 'Revelation 3:1', copy: 'A name for being alive, yet dead; wake up.', miles: 30 },
-      { label: 'Philadelphia', ref: 'Revelation 3:7', copy: 'An open door no one can shut.', miles: 45 },
-      { label: 'Laodicea', ref: 'Revelation 3:14', copy: 'Neither cold nor hot — the lukewarm church.', miles: 40 }
+      { label: 'Write to the seven', ref: 'Revelation 1:9-11', copy: 'On the island of Patmos, John is told to write what he sees and send it to the seven churches by name.', at: 0 },
+      { label: 'Ephesus', ref: 'Revelation 2:1-7', copy: 'A hardworking church that has abandoned the love it had at first.', miles: 60, at: 1, by: 'sea' },
+      { label: 'Smyrna', ref: 'Revelation 2:8-11', copy: 'Be faithful even to the point of death, and receive the crown of life.', miles: 35, at: 2 },
+      { label: 'Pergamum', ref: 'Revelation 2:12-17', copy: 'Holding fast to his name where Satan\'s throne is.', miles: 55, at: 3 },
+      { label: 'Thyatira', ref: 'Revelation 2:18-29', copy: 'Praised for love and service, warned about tolerating Jezebel.', miles: 45, at: 4 },
+      { label: 'Sardis', ref: 'Revelation 3:1-6', copy: 'A reputation for being alive, yet dead: wake up.', miles: 35, at: 5 },
+      { label: 'Philadelphia', ref: 'Revelation 3:7-13', copy: 'An open door that no one can shut.', miles: 30, at: 6 },
+      { label: 'Laodicea', ref: 'Revelation 3:14-22', copy: 'Neither cold nor hot: the lukewarm church.', miles: 45, at: 7 }
     ]
   },
   {
@@ -13424,22 +13429,23 @@ const BIBLE_JOURNEYS = [
     mode: 'Walking',
     days: 'Six days after Caesarea Philippi',
     modern: 'The far north of Israel down toward the Sea of Galilee',
-    note: 'Scripture says only "a high mountain"; tradition favors Mount Tabor, while many point to Mount Hermon near Caesarea Philippi.',
+    note: 'Matthew calls it only \'a high mountain.\' Mount Hermon, near Caesarea Philippi, is one traditional candidate (Mount Tabor is another).',
     sources: [
       'After six days Jesus leads Peter, James, and John up a high mountain (Matthew 17:1).',
       'He is transfigured, and Moses and Elijah appear (Matthew 17:2-3).',
       'Coming down, he tells them to keep the vision quiet until he is raised (Matthew 17:9).'
     ],
     points: [
-      { ancient: 'Caesarea Philippi', modern: 'Banias, Golan', x: 47.6, y: 37.4, lat: 33.25, lon: 35.69 },
-      { ancient: 'The high mountain', modern: 'Mount Hermon slopes', x: 64.5, y: 16, lat: 33.42, lon: 35.85 },
-      { ancient: 'Galilee', modern: 'Sea of Galilee region', x: 35.5, y: 84, lat: 32.88, lon: 35.575 }
+      { ancient: 'Caesarea Philippi', modern: 'Banias, Golan', x: 44, y: 37, lat: 33.25, lon: 35.69 },
+      { ancient: 'A high mountain', modern: 'Mount Hermon slopes (one proposal)', x: 85, y: 15, lat: 33.42, lon: 35.85 },
+      { ancient: 'Galilee', modern: 'Sea of Galilee region', x: 15, y: 85, lat: 32.88, lon: 35.575 }
     ],
     steps: [
-      { label: 'Up the mountain', ref: 'Matthew 17:1', copy: 'He takes the three disciples up a high mountain by themselves.', miles: 12 },
-      { label: 'Transfigured', ref: 'Matthew 17:2', copy: 'His face shines like the sun and his clothes become white as light.', miles: 0 },
-      { label: 'The voice in the cloud', ref: 'Matthew 17:5', copy: '"This is my beloved Son; listen to him."', miles: 0 },
-      { label: 'Down again', ref: 'Matthew 17:9', copy: 'He charges them to tell no one until the Son of Man is raised.', miles: 28 }
+      { label: 'Up the mountain', ref: 'Matthew 17:1', copy: 'Six days later he takes Peter, James and John up a high mountain by themselves.', miles: 12, at: 1 },
+      { label: 'Transfigured', ref: 'Matthew 17:2-3', copy: 'His face shines like the sun and his clothes become white as light; Moses and Elijah appear with him.', at: 1 },
+      { label: 'The voice from the cloud', ref: 'Matthew 17:5-8', copy: 'A bright cloud covers them, and a voice says: listen to My beloved Son.', at: 1 },
+      { label: 'Coming down', ref: 'Matthew 17:9-13', copy: 'On the way down he tells them to tell no one until the Son of Man is raised from the dead.', at: 1 },
+      { label: 'Back in Galilee', ref: 'Matthew 17:22-23', copy: 'Gathered in Galilee, he tells them again that he will be killed and raised on the third day.', miles: 40, at: 2 }
     ]
   },
   {
@@ -13608,14 +13614,14 @@ const BIBLE_JOURNEYS = [
       'He continues until he reaches Caesarea (Acts 8:40).'
     ],
     points: [
-      { ancient: 'Azotus', modern: 'Ashdod, Israel', x: 40.1, y: 84, lat: 31.8, lon: 34.65 },
-      { ancient: 'Lydda / Joppa coast', modern: 'Tel Aviv–Jaffa area', x: 49.2, y: 59.7, lat: 32.05, lon: 34.76 },
-      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 59.9, y: 16, lat: 32.5, lon: 34.89 }
+      { ancient: 'Azotus', modern: 'Ashdod, Israel', x: 15, y: 85, lat: 31.8, lon: 34.65 },
+      { ancient: 'Towns along the coast', modern: 'coastal plain', x: 47, y: 60, lat: 32.05, lon: 34.76 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 85, y: 15, lat: 32.5, lon: 34.89 }
     ],
     steps: [
-      { label: 'Found at Azotus', ref: 'Acts 8:40', copy: 'Philip is found at Azotus after the Spirit carries him away.', miles: 0 },
-      { label: 'Town by town', ref: 'Acts 8:40', copy: 'He preaches the gospel in every town along the coast.', miles: 35 },
-      { label: 'On to Caesarea', ref: 'Acts 8:40', copy: 'He keeps on until he comes to Caesarea, his home base.', miles: 25 }
+      { label: 'Found at Azotus', ref: 'Acts 8:40', copy: 'Philip is found at Azotus after the Spirit carries him away.', miles: 0, at: 0 },
+      { label: 'Town by town', ref: 'Acts 8:40', copy: 'He preaches the gospel in every town along the coast.', miles: 35, at: 1 },
+      { label: 'On to Caesarea', ref: 'Acts 8:40', copy: 'He keeps on until he comes to Caesarea, his home base.', miles: 25, at: 2 }
     ]
   },
   {
@@ -13630,7 +13636,7 @@ const BIBLE_JOURNEYS = [
     mode: 'Walking under arrest',
     days: 'A single night into morning',
     modern: 'The Old City of Jerusalem and just outside its walls',
-    note: 'The exact sites of the high priest’s house, the Praetorium, and Golgotha are debated; these follow the traditional locations, all within a mile or so.',
+    note: 'Gethsemane and Golgotha follow long tradition; the high priest\'s house and Pilate\'s headquarters are traditional sites, and both are debated.',
     sources: [
       'Jesus crosses the Kidron Valley to a garden (John 18:1).',
       'He is led to Annas and then to Caiaphas the high priest (John 18:13, 24).',
@@ -13643,11 +13649,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Golgotha', modern: 'Church of the Holy Sepulchre', x: 20.2, y: 33, lat: 31.7784, lon: 35.2298 }
     ],
     steps: [
-      { label: 'Across the Kidron', ref: 'John 18:1', copy: 'Jesus crosses the Kidron Valley with his disciples to a garden.', miles: 1 },
-      { label: 'Before the high priest', ref: 'John 18:13', copy: 'They bind him and lead him first to Annas, then to Caiaphas.', miles: 1 },
-      { label: 'To the Praetorium', ref: 'John 18:28', copy: 'Early in the morning they bring him to Pilate’s headquarters.', miles: 0 },
-      { label: 'Out to Golgotha', ref: 'John 19:16-17', copy: 'Carrying his own cross, he goes out to the Place of a Skull.', miles: 0 },
-      { label: 'There they crucified him', ref: 'John 19:18', copy: 'They crucify him there, and two others with him, one on either side.', miles: 0 }
+      { label: 'Across the Kidron', ref: 'John 18:1', copy: 'Jesus crosses the Kidron Valley with his disciples to a garden.', miles: 1, at: 0 },
+      { label: 'Before the high priest', ref: 'John 18:13', copy: 'They bind him and lead him first to Annas, then to Caiaphas.', miles: 1, at: 1 },
+      { label: 'To the Praetorium', ref: 'John 18:28', copy: 'Early in the morning they bring him to Pilate’s headquarters.', miles: 0, at: 2 },
+      { label: 'Out to Golgotha', ref: 'John 19:16-17', copy: 'Carrying his own cross, he goes out to the Place of a Skull.', miles: 0, at: 3 },
+      { label: 'There they crucified him', ref: 'John 19:18', copy: 'They crucify him there, and two others with him, one on either side.', miles: 0, at: 3 }
     ]
   },
   {
@@ -14561,10 +14567,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Hill country of Judah', modern: 'Ein Karem area', x: 45.7, y: 84, lat: 31.77, lon: 35.16 }
     ],
     steps: [
-      { label: 'Going with haste', ref: 'Luke 1:39', copy: 'Mary sets out quickly for the hill country of Judah.', miles: 70 },
-      { label: 'The baby leaps', ref: 'Luke 1:41', copy: 'At Mary’s greeting John leaps in Elizabeth’s womb.', miles: 0 },
-      { label: 'The Magnificat', ref: 'Luke 1:46', copy: '"My soul magnifies the Lord," Mary sings.', miles: 0 },
-      { label: 'Three months’ stay', ref: 'Luke 1:56', copy: 'Mary remains about three months, then returns home.', miles: 10 }
+      { label: 'Going with haste', ref: 'Luke 1:39-40', copy: 'Mary hurries to a town in the hill country of Judah and greets Elizabeth.', miles: 70, at: 1 },
+      { label: 'The baby leaps', ref: 'Luke 1:41-45', copy: 'At Mary\'s greeting the baby leaps in Elizabeth\'s womb, and Elizabeth is filled with the Holy Spirit.', at: 1 },
+      { label: 'Mary\'s song', ref: 'Luke 1:46-55', copy: 'Mary praises God: “My soul magnifies the Lord.”', at: 1 },
+      { label: 'Three months, then home', ref: 'Luke 1:56', copy: 'Mary stays about three months, then returns home.', miles: 70, at: 0 }
     ]
   },
   {
@@ -14590,10 +14596,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jerusalem (temple)', modern: 'Temple Mount', x: 62.7, y: 16, lat: 31.78, lon: 35.235 }
     ],
     steps: [
-      { label: 'Up to the temple', ref: 'Luke 2:22', copy: 'They bring the child to present him to the Lord.', miles: 6 },
-      { label: 'Simeon waiting', ref: 'Luke 2:25', copy: 'A righteous man awaits the consolation of Israel.', miles: 0 },
-      { label: 'Nunc Dimittis', ref: 'Luke 2:28', copy: 'Simeon takes him in his arms and blesses God.', miles: 0 },
-      { label: 'Anna gives thanks', ref: 'Luke 2:38', copy: 'The aged prophetess speaks of him to all who wait.', miles: 0 }
+      { label: 'Up to the temple', ref: 'Luke 2:22', copy: 'They bring the child to present him to the Lord.', miles: 6, at: 1 },
+      { label: 'Simeon waiting', ref: 'Luke 2:25', copy: 'A righteous man awaits the consolation of Israel.', miles: 0, at: 1 },
+      { label: 'Nunc Dimittis', ref: 'Luke 2:28', copy: 'Simeon takes him in his arms and blesses God.', miles: 0, at: 1 },
+      { label: 'Anna gives thanks', ref: 'Luke 2:38', copy: 'The aged prophetess speaks of him to all who wait.', miles: 0, at: 1 }
     ]
   },
   {
@@ -14619,10 +14625,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Nain', modern: 'Nein, Israel', x: 23.2, y: 84, lat: 32.64, lon: 35.35 }
     ],
     steps: [
-      { label: 'On the way to Nain', ref: 'Luke 7:11', copy: 'A great crowd goes with Jesus toward the town.', miles: 23 },
-      { label: 'A funeral at the gate', ref: 'Luke 7:12', copy: 'A dead man is carried out, his mother a widow.', miles: 0 },
-      { label: '"Young man, arise"', ref: 'Luke 7:14', copy: 'Jesus touches the bier and speaks, and the dead man sits up.', miles: 0 },
-      { label: 'Fear and praise', ref: 'Luke 7:16', copy: 'Fear seizes them all and they glorify God.', miles: 0 }
+      { label: 'On the way to Nain', ref: 'Luke 7:11', copy: 'A great crowd goes with Jesus toward the town.', miles: 23, at: 1 },
+      { label: 'A funeral at the gate', ref: 'Luke 7:12', copy: 'A dead man is carried out, his mother a widow.', miles: 0, at: 1 },
+      { label: '"Young man, arise"', ref: 'Luke 7:14', copy: 'Jesus touches the bier and speaks, and the dead man sits up.', miles: 0, at: 1 },
+      { label: 'Fear and praise', ref: 'Luke 7:16', copy: 'Fear seizes them all and they glorify God.', miles: 0, at: 1 }
     ]
   },
   {
@@ -14644,14 +14650,13 @@ const BIBLE_JOURNEYS = [
       'One, a Samaritan, returns to give thanks (Luke 17:16).'
     ],
     points: [
-      { ancient: 'Samaria–Galilee border', modern: 'N. West Bank hills', x: 52.9, y: 16, lat: 32.45, lon: 35.3 },
-      { ancient: 'Toward Jerusalem', modern: 'Central highlands', x: 47.1, y: 84, lat: 31.95, lon: 35.25 }
+      { ancient: 'A village between Samaria and Galilee', modern: 'northern West Bank hills (spot unknown)', x: 15, y: 85, lat: 32.45, lon: 35.3 }
     ],
     steps: [
-      { label: 'On the border road', ref: 'Luke 17:11', copy: 'Jesus passes along between Samaria and Galilee.', miles: 5 },
-      { label: 'Ten cry for mercy', ref: 'Luke 17:13', copy: 'Ten lepers stand at a distance and lift their voices.', miles: 0 },
-      { label: 'Cleansed as they go', ref: 'Luke 17:14', copy: '"Go, show yourselves to the priests," and they are cleansed.', miles: 0 },
-      { label: 'One returns', ref: 'Luke 17:16', copy: 'A Samaritan falls at his feet, giving thanks.', miles: 0 }
+      { label: 'On the border road', ref: 'Luke 17:11', copy: 'Jesus passes along between Samaria and Galilee.', miles: 5, at: 0 },
+      { label: 'Ten cry for mercy', ref: 'Luke 17:13', copy: 'Ten lepers stand at a distance and lift their voices.', miles: 0, at: 0 },
+      { label: 'Cleansed as they go', ref: 'Luke 17:14', copy: '"Go, show yourselves to the priests," and they are cleansed.', miles: 0, at: 0 },
+      { label: 'One returns', ref: 'Luke 17:16', copy: 'A Samaritan falls at his feet, giving thanks.', miles: 0, at: 0 }
     ]
   },
   {
@@ -14677,10 +14682,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 43.8, y: 84, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Going up in private', ref: 'John 7:10', copy: 'After his brothers go, Jesus also goes up, but quietly.', miles: 75 },
-      { label: 'Teaching at the feast', ref: 'John 7:14', copy: 'Midway through the feast he begins teaching in the temple.', miles: 0 },
-      { label: 'Rivers of living water', ref: 'John 7:37', copy: 'On the last day he cries out the invitation to come and drink.', miles: 0 },
-      { label: 'A division', ref: 'John 7:43', copy: 'The crowd is divided over who he is.', miles: 0 }
+      { label: 'Going up in private', ref: 'John 7:10', copy: 'After his brothers go, Jesus also goes up, but quietly.', miles: 75, at: 1 },
+      { label: 'Teaching at the feast', ref: 'John 7:14', copy: 'Midway through the feast he begins teaching in the temple.', miles: 0, at: 1 },
+      { label: 'Rivers of living water', ref: 'John 7:37', copy: 'On the last day he cries out the invitation to come and drink.', miles: 0, at: 1 },
+      { label: 'A division', ref: 'John 7:43', copy: 'The crowd is divided over who he is.', miles: 0, at: 1 }
     ]
   },
   {
@@ -14706,10 +14711,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Road to Jerusalem', modern: 'Judean ascent', x: 16, y: 73.3, lat: 31.8, lon: 35.32 }
     ],
     steps: [
-      { label: 'By the roadside', ref: 'Mark 10:46', copy: 'Blind Bartimaeus is begging beside the road out of Jericho.', miles: 1 },
-      { label: 'Son of David', ref: 'Mark 10:47', copy: 'He cries out all the more for mercy.', miles: 0 },
-      { label: '"What do you want?"', ref: 'Mark 10:51', copy: '"Rabbi, let me recover my sight."', miles: 0 },
-      { label: 'Following on the way', ref: 'Mark 10:52', copy: 'Immediately he sees and follows Jesus up the road.', miles: 14 }
+      { label: 'By the roadside', ref: 'Mark 10:46', copy: 'Blind Bartimaeus is begging beside the road out of Jericho.', miles: 1, at: 0 },
+      { label: 'Son of David', ref: 'Mark 10:47', copy: 'He cries out all the more for mercy.', miles: 0, at: 0 },
+      { label: '"What do you want?"', ref: 'Mark 10:51', copy: '"Rabbi, let me recover my sight."', miles: 0, at: 0 },
+      { label: 'Following on the way', ref: 'Mark 10:52', copy: 'Immediately he sees and follows Jesus up the road.', miles: 14, at: 1 }
     ]
   },
   {
@@ -14735,10 +14740,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Mountain in Galilee', modern: 'Galilee highlands', x: 57.6, y: 16, lat: 32.8, lon: 35.5 }
     ],
     steps: [
-      { label: 'Sent to Galilee', ref: 'Matthew 28:7', copy: 'The angel tells the women he goes before them to Galilee.', miles: 70 },
-      { label: 'On the mountain', ref: 'Matthew 28:16', copy: 'The eleven go to the mountain Jesus appointed.', miles: 0 },
-      { label: 'Worship and doubt', ref: 'Matthew 28:17', copy: 'They worship him, but some doubt.', miles: 0 },
-      { label: 'All authority', ref: 'Matthew 28:19', copy: '"Make disciples of all nations, baptizing them."', miles: 0 }
+      { label: 'Sent to Galilee', ref: 'Matthew 28:5-7', copy: 'At the empty tomb the angel tells the women that Jesus is going ahead of them to Galilee.', at: 0 },
+      { label: 'On the mountain', ref: 'Matthew 28:16', copy: 'The eleven disciples go to the mountain in Galilee where Jesus had told them to go.', miles: 70, at: 1 },
+      { label: 'Worship and doubt', ref: 'Matthew 28:17', copy: 'When they see him they worship him, but some doubt.', at: 1 },
+      { label: 'All authority', ref: 'Matthew 28:18-20', copy: '“Go and make disciples of all nations, baptizing them,” and he is with them always.', at: 1 }
     ]
   },
   {
@@ -14764,10 +14769,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Joppa', modern: 'Jaffa, Israel', x: 16, y: 21.4, lat: 32.05, lon: 34.75 }
     ],
     steps: [
-      { label: 'Aeneas healed', ref: 'Acts 9:34', copy: '"Jesus Christ heals you; rise and make your bed."', miles: 0 },
-      { label: 'Sent for from Joppa', ref: 'Acts 9:38', copy: 'The disciples urge Peter to come without delay.', miles: 11 },
-      { label: '"Tabitha, arise"', ref: 'Acts 9:40', copy: 'Peter prays, and the dead woman opens her eyes.', miles: 0 },
-      { label: 'Many believe', ref: 'Acts 9:42', copy: 'It becomes known and many believe in the Lord.', miles: 0 }
+      { label: 'Aeneas healed', ref: 'Acts 9:34', copy: '"Jesus Christ heals you; rise and make your bed."', miles: 0, at: 0 },
+      { label: 'Sent for from Joppa', ref: 'Acts 9:38', copy: 'The disciples urge Peter to come without delay.', miles: 11, at: 1 },
+      { label: '"Tabitha, arise"', ref: 'Acts 9:40', copy: 'Peter prays, and the dead woman opens her eyes.', miles: 0, at: 1 },
+      { label: 'Many believe', ref: 'Acts 9:42', copy: 'It becomes known and many believe in the Lord.', miles: 0, at: 1 }
     ]
   },
   {
@@ -14793,10 +14798,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 36.4, y: 16, lat: 32.5, lon: 34.89 }
     ],
     steps: [
-      { label: 'Down to Caesarea', ref: 'Acts 12:19', copy: 'Herod leaves Judea and stays at Caesarea.', miles: 65 },
-      { label: 'The royal address', ref: 'Acts 12:21', copy: 'In royal robes he delivers an oration to the people.', miles: 0 },
-      { label: '"The voice of a god"', ref: 'Acts 12:22', copy: 'The crowd shouts that it is a god, not a man.', miles: 0 },
-      { label: 'Struck by an angel', ref: 'Acts 12:23', copy: 'Because he does not give God glory, he is struck down.', miles: 0 }
+      { label: 'Down to Caesarea', ref: 'Acts 12:19', copy: 'Herod leaves Judea and stays at Caesarea.', miles: 65, at: 1 },
+      { label: 'The royal address', ref: 'Acts 12:21', copy: 'In royal robes he delivers an oration to the people.', miles: 0, at: 1 },
+      { label: '"The voice of a god"', ref: 'Acts 12:22', copy: 'The crowd shouts that it is a god, not a man.', miles: 0, at: 1 },
+      { label: 'Struck by an angel', ref: 'Acts 12:23', copy: 'Because he does not give God glory, he is struck down.', miles: 0, at: 1 }
     ]
   },
   {
@@ -14824,10 +14829,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Paphos', modern: 'Cyprus (west)', x: 16, y: 66.1, lat: 34.75, lon: 32.41 }
     ],
     steps: [
-      { label: 'Down to the sea', ref: 'Acts 13:4', copy: 'Sent by the Spirit, they sail from Seleucia to Cyprus.', miles: 130 },
-      { label: 'Salamis synagogues', ref: 'Acts 13:5', copy: 'They proclaim the word of God in the synagogues.', miles: 0 },
-      { label: 'Elymas at Paphos', ref: 'Acts 13:6', copy: 'They meet a magician who opposes them.', miles: 90 },
-      { label: 'The proconsul believes', ref: 'Acts 13:12', copy: 'Sergius Paulus believes, astonished at the teaching.', miles: 0 }
+      { label: 'Down to the sea', ref: 'Acts 13:4', copy: 'Sent out by the Holy Spirit, Barnabas and Saul go down to Seleucia to sail for Cyprus.', miles: 16, at: 1 },
+      { label: 'Salamis synagogues', ref: 'Acts 13:5', copy: 'At Salamis they proclaim the word of God in the Jewish synagogues.', miles: 125, at: 2, by: 'sea' },
+      { label: 'Elymas at Paphos', ref: 'Acts 13:6-11', copy: 'Across the island at Paphos, the sorcerer Elymas opposes them and is struck blind.', miles: 90, at: 3 },
+      { label: 'The proconsul believes', ref: 'Acts 13:12', copy: 'Sergius Paulus believes, astonished at the teaching about the Lord.', at: 3 }
     ]
   },
   {
@@ -14854,10 +14859,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Pisidian Antioch', modern: 'Yalvaç, Turkey', x: 43.2, y: 16, lat: 38.31, lon: 31.19 }
     ],
     steps: [
-      { label: 'John turns back', ref: 'Acts 13:13', copy: 'At Perga, John Mark leaves and returns to Jerusalem.', miles: 130 },
-      { label: 'Up to Antioch', ref: 'Acts 13:14', copy: 'They go on to Pisidian Antioch and enter the synagogue.', miles: 90 },
-      { label: 'Paul preaches', ref: 'Acts 13:16', copy: 'He stands and tells Israel’s story leading to Jesus.', miles: 0 },
-      { label: 'The Gentiles rejoice', ref: 'Acts 13:48', copy: 'The Gentiles are glad and glorify the word of the Lord.', miles: 0 }
+      { label: 'John turns back', ref: 'Acts 13:13', copy: 'At Perga, John Mark leaves and returns to Jerusalem.', miles: 130, at: 1, by: 'sea' },
+      { label: 'Up to Antioch', ref: 'Acts 13:14', copy: 'They go on to Pisidian Antioch and enter the synagogue.', miles: 90, at: 2 },
+      { label: 'Paul preaches', ref: 'Acts 13:16', copy: 'He stands and tells Israel’s story leading to Jesus.', miles: 0, at: 2 },
+      { label: 'The Gentiles rejoice', ref: 'Acts 13:48', copy: 'The Gentiles are glad and glorify the word of the Lord.', miles: 0, at: 2 }
     ]
   },
   {
@@ -14884,10 +14889,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Derbe', modern: 'Kerti Hüyük', x: 84, y: 77.2, lat: 37.35, lon: 33.27 }
     ],
     steps: [
-      { label: 'On to Lystra', ref: 'Acts 14:6', copy: 'They flee to Lystra and Derbe and keep preaching.', miles: 25 },
-      { label: 'Hailed as gods', ref: 'Acts 14:11', copy: 'After a healing the crowds call them Hermes and Zeus.', miles: 0 },
-      { label: 'Stoned and left', ref: 'Acts 14:19', copy: 'Paul is stoned and dragged out, supposed to be dead.', miles: 0 },
-      { label: 'Rising for Derbe', ref: 'Acts 14:20', copy: 'He gets up and the next day goes on to Derbe.', miles: 40 }
+      { label: 'On to Lystra', ref: 'Acts 14:6', copy: 'They flee to Lystra and Derbe and keep preaching.', miles: 25, at: 1 },
+      { label: 'Hailed as gods', ref: 'Acts 14:11', copy: 'After a healing the crowds call them Hermes and Zeus.', miles: 0, at: 1 },
+      { label: 'Stoned and left', ref: 'Acts 14:19', copy: 'Paul is stoned and dragged out, supposed to be dead.', miles: 0, at: 1 },
+      { label: 'Rising for Derbe', ref: 'Acts 14:20', copy: 'He gets up and the next day goes on to Derbe.', miles: 40, at: 2 }
     ]
   },
   {
@@ -14909,16 +14914,21 @@ const BIBLE_JOURNEYS = [
       'They sail back to Antioch, where they had been commended (Acts 14:26).'
     ],
     points: [
-      { ancient: 'Derbe', modern: 'Kerti Hüyük', x: 48, y: 48.5, lat: 37.35, lon: 33.27 },
-      { ancient: 'Pisidian Antioch', modern: 'Yalvaç, Turkey', x: 22.1, y: 33.5, lat: 38.31, lon: 31.19 },
-      { ancient: 'Attalia', modern: 'Antalya, Turkey', x: 16, y: 55.9, lat: 36.88, lon: 30.7 },
-      { ancient: 'Antioch (Syria)', modern: 'Antakya, Turkey', x: 84, y: 66.5, lat: 36.2, lon: 36.16 }
+      { ancient: 'Derbe', modern: 'Kerti Hüyük, Turkey', x: 48, y: 47, lat: 37.35, lon: 33.27 },
+      { ancient: 'Lystra', modern: 'Hatunsaray, Turkey', x: 37, y: 39, lat: 37.58, lon: 32.45 },
+      { ancient: 'Iconium', modern: 'Konya, Turkey', x: 38, y: 30, lat: 37.87, lon: 32.49 },
+      { ancient: 'Pisidian Antioch', modern: 'Yalvaç, Turkey', x: 21, y: 15, lat: 38.31, lon: 31.19 },
+      { ancient: 'Perga', modern: 'near Antalya, Turkey', x: 17, y: 60, lat: 36.96, lon: 30.85 },
+      { ancient: 'Attalia', modern: 'Antalya, Turkey', x: 15, y: 62, lat: 36.88, lon: 30.7 },
+      { ancient: 'Antioch (Syria)', modern: 'Antakya, Turkey', x: 85, y: 85, lat: 36.2, lon: 36.16 }
     ],
     steps: [
-      { label: 'Strengthening souls', ref: 'Acts 14:22', copy: '"Through many tribulations we must enter the kingdom of God."', miles: 120 },
-      { label: 'Elders appointed', ref: 'Acts 14:23', copy: 'They appoint elders in every church with prayer and fasting.', miles: 60 },
-      { label: 'Down to Attalia', ref: 'Acts 14:25', copy: 'They preach in Perga and go down to the port of Attalia.', miles: 80 },
-      { label: 'Home to Antioch', ref: 'Acts 14:26', copy: 'They sail back and report all that God has done.', miles: 90 }
+      { label: 'Strengthening souls', ref: 'Acts 14:21-22', copy: 'Back in Lystra they encourage the disciples: “We must endure many hardships to enter the kingdom of God.”', miles: 55, at: 1 },
+      { label: 'Back through Iconium', ref: 'Acts 14:21-22', copy: 'They strengthen the believers in Iconium as well.', miles: 20, at: 2 },
+      { label: 'Elders appointed', ref: 'Acts 14:21-23', copy: 'In Pisidian Antioch they appoint elders in each church with prayer and fasting.', miles: 85, at: 3 },
+      { label: 'Preaching in Perga', ref: 'Acts 14:24-25', copy: 'They pass through Pisidia and Pamphylia and speak the word in Perga.', miles: 100, at: 4 },
+      { label: 'Down to Attalia', ref: 'Acts 14:25', copy: 'They go down to the port of Attalia.', miles: 10, at: 5 },
+      { label: 'Home to Antioch', ref: 'Acts 14:26-28', copy: 'They sail back to Antioch and report all that God has done through them.', miles: 330, at: 6, by: 'sea' }
     ]
   },
   {
@@ -14945,10 +14955,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Berea', modern: 'Veria, Greece', x: 16, y: 60.5, lat: 40.52, lon: 22.2 }
     ],
     steps: [
-      { label: 'To Thessalonica', ref: 'Acts 17:1', copy: 'They travel the road to the city with a synagogue.', miles: 90 },
-      { label: 'Three Sabbaths', ref: 'Acts 17:2', copy: 'Paul reasons from the Scriptures that Jesus is the Christ.', miles: 0 },
-      { label: 'An uproar', ref: 'Acts 17:5', copy: 'A jealous mob sets the city in turmoil.', miles: 0 },
-      { label: 'Sent to Berea', ref: 'Acts 17:10', copy: 'The brothers send them on, and the Bereans search the word.', miles: 30 }
+      { label: 'To Thessalonica', ref: 'Acts 17:1', copy: 'They travel the road to the city with a synagogue.', miles: 90, at: 1 },
+      { label: 'Three Sabbaths', ref: 'Acts 17:2', copy: 'Paul reasons from the Scriptures that Jesus is the Christ.', miles: 0, at: 1 },
+      { label: 'An uproar', ref: 'Acts 17:5', copy: 'A jealous mob sets the city in turmoil.', miles: 0, at: 1 },
+      { label: 'Sent to Berea', ref: 'Acts 17:10', copy: 'The brothers send them on, and the Bereans search the word.', miles: 30, at: 2 }
     ]
   },
   {
@@ -14970,16 +14980,18 @@ const BIBLE_JOURNEYS = [
       'He lands at Caesarea and goes up to greet the church (Acts 18:22).'
     ],
     points: [
-      { ancient: 'Corinth', modern: 'Corinth, Greece', x: 16, y: 31.1, lat: 37.94, lon: 22.93 },
-      { ancient: 'Cenchreae', modern: 'Kechries, Greece', x: 16.3, y: 31.5, lat: 37.88, lon: 22.99 },
-      { ancient: 'Ephesus', modern: 'Selçuk, Turkey', x: 41.1, y: 31.1, lat: 37.94, lon: 27.34 },
-      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 84, y: 68.9, lat: 32.5, lon: 34.89 }
+      { ancient: 'Corinth', modern: 'Ancient Corinth, Greece', x: 15, y: 15, lat: 37.91, lon: 22.88 },
+      { ancient: 'Cenchreae', modern: 'Kechries, Greece', x: 16, y: 16, lat: 37.88, lon: 22.99 },
+      { ancient: 'Ephesus', modern: 'Selçuk, Turkey', x: 39, y: 15, lat: 37.94, lon: 27.34 },
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 78, y: 85, lat: 32.5, lon: 34.89 },
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 37, lat: 36.2, lon: 36.16 }
     ],
     steps: [
-      { label: 'A year and a half', ref: 'Acts 18:11', copy: 'Paul settles in Corinth, teaching the word of God.', miles: 0 },
-      { label: 'Sailing from Cenchreae', ref: 'Acts 18:18', copy: 'He cuts his hair for a vow and sets sail for Syria.', miles: 5 },
-      { label: 'A stop at Ephesus', ref: 'Acts 18:19', copy: 'He reasons with the Jews and promises to return.', miles: 250 },
-      { label: 'Up to greet the church', ref: 'Acts 18:22', copy: 'He lands at Caesarea and goes up before returning to Antioch.', miles: 600 }
+      { label: 'A year and a half', ref: 'Acts 18:11', copy: 'Paul stays in Corinth a year and a half, teaching the word of God.', at: 0 },
+      { label: 'Sailing from Cenchreae', ref: 'Acts 18:18', copy: 'He has his hair cut because of a vow and sets sail for Syria with Priscilla and Aquila.', miles: 6, at: 1 },
+      { label: 'A stop at Ephesus', ref: 'Acts 18:19-21', copy: 'He reasons with the Jews in the synagogue and promises to return, if God wills.', miles: 250, at: 2, by: 'sea' },
+      { label: 'Up to greet the church', ref: 'Acts 18:22', copy: 'He lands at Caesarea and goes up to greet the church.', miles: 620, at: 3, by: 'sea' },
+      { label: 'Down to Antioch', ref: 'Acts 18:22', copy: 'Then he goes down to Antioch.', miles: 300, at: 4 }
     ]
   },
   {
@@ -15007,10 +15019,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Miletus', modern: 'Balat, Turkey', x: 63.4, y: 84, lat: 37.53, lon: 27.28 }
     ],
     steps: [
-      { label: 'Eutychus raised', ref: 'Acts 20:10', copy: 'Paul takes the fallen young man in his arms; he lives.', miles: 0 },
-      { label: 'Walking to Assos', ref: 'Acts 20:13', copy: 'Paul goes by land and is taken aboard at Assos.', miles: 20 },
-      { label: 'Past Mitylene', ref: 'Acts 20:15', copy: 'They sail day by day down the coast to Miletus.', miles: 90 },
-      { label: 'The elders summoned', ref: 'Acts 20:17', copy: 'From Miletus he calls the elders of Ephesus to him.', miles: 0 }
+      { label: 'Eutychus raised', ref: 'Acts 20:7-12', copy: 'Eutychus falls from a window during Paul\'s long talk; Paul embraces him, and he is taken home alive.', at: 0 },
+      { label: 'Walking to Assos', ref: 'Acts 20:13-14', copy: 'Paul goes on foot while the others sail, and they take him aboard at Assos.', miles: 30, at: 1 },
+      { label: 'Mitylene', ref: 'Acts 20:14', copy: 'They sail on to Mitylene.', miles: 45, at: 2, by: 'sea' },
+      { label: 'The elders summoned', ref: 'Acts 20:15-17', copy: 'Past Chios and Samos they reach Miletus, and Paul sends for the elders of Ephesus.', miles: 130, at: 3, by: 'sea' }
     ]
   },
   {
@@ -15038,10 +15050,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 80.4, y: 76.4, lat: 32.5, lon: 34.89 }
     ],
     steps: [
-      { label: 'Past Cyprus to Tyre', ref: 'Acts 21:3', copy: 'They sail by Cyprus and land at Tyre to unload cargo.', miles: 300 },
-      { label: 'A warning at Tyre', ref: 'Acts 21:4', copy: 'The disciples urge Paul not to go up to Jerusalem.', miles: 0 },
-      { label: 'Staying with Philip', ref: 'Acts 21:8', copy: 'At Caesarea they lodge with Philip the evangelist.', miles: 60 },
-      { label: 'Agabus\'s belt', ref: 'Acts 21:11', copy: 'The prophet binds himself with Paul’s belt as a sign.', miles: 0 }
+      { label: 'Past Cyprus to Tyre', ref: 'Acts 21:3', copy: 'They sail past Cyprus and land at Tyre, where the ship unloads its cargo.', miles: 400, at: 1, by: 'sea' },
+      { label: 'A warning at Tyre', ref: 'Acts 21:4-6', copy: 'Through the Spirit the disciples urge Paul not to go up to Jerusalem.', at: 1 },
+      { label: 'Ptolemais', ref: 'Acts 21:7', copy: 'They greet the brothers at Ptolemais and stay a day.', miles: 25, at: 2, by: 'sea' },
+      { label: 'Staying with Philip', ref: 'Acts 21:8-9', copy: 'At Caesarea they stay with Philip the evangelist and his four daughters who prophesy.', miles: 35, at: 3 },
+      { label: 'Agabus’s belt', ref: 'Acts 21:10-14', copy: 'The prophet Agabus binds his own hands and feet with Paul\'s belt as a sign of what awaits him.', at: 3 }
     ]
   },
   {
@@ -15063,18 +15076,20 @@ const BIBLE_JOURNEYS = [
       'Brothers meet them, and they come to Rome (Acts 28:15-16).'
     ],
     points: [
-      { ancient: 'Malta', modern: 'Malta', x: 52.9, y: 84, lat: 35.9, lon: 14.4 },
-      { ancient: 'Syracuse', modern: 'Siracusa, Italy', x: 60.7, y: 70.7, lat: 37.07, lon: 15.29 },
-      { ancient: 'Rhegium', modern: 'Reggio Calabria', x: 63.9, y: 59, lat: 38.11, lon: 15.65 },
-      { ancient: 'Puteoli', modern: 'Pozzuoli, Italy', x: 50.4, y: 28.2, lat: 40.82, lon: 14.12 },
-      { ancient: 'Rome', modern: 'Rome, Italy', x: 36.1, y: 16, lat: 41.9, lon: 12.5 }
+      { ancient: 'Malta', modern: 'Malta', x: 57, y: 85, lat: 35.9, lon: 14.4 },
+      { ancient: 'Syracuse', modern: 'Siracusa, Italy', x: 77, y: 71, lat: 37.07, lon: 15.29 },
+      { ancient: 'Rhegium', modern: 'Reggio Calabria, Italy', x: 85, y: 59, lat: 38.11, lon: 15.65 },
+      { ancient: 'Puteoli', modern: 'Pozzuoli, Italy', x: 51, y: 28, lat: 40.82, lon: 14.12 },
+      { ancient: 'Forum of Appius', modern: 'Lazio, Italy', x: 26, y: 21, lat: 41.4, lon: 12.99 },
+      { ancient: 'Rome', modern: 'Rome, Italy', x: 15, y: 15, lat: 41.9, lon: 12.5 }
     ],
     steps: [
-      { label: 'Setting sail', ref: 'Acts 28:11', copy: 'After three months they leave Malta on an Alexandrian ship.', miles: 90 },
-      { label: 'By Syracuse', ref: 'Acts 28:12', copy: 'They put in at Syracuse and stay three days.', miles: 80 },
-      { label: 'On to Puteoli', ref: 'Acts 28:13', copy: 'By Rhegium they reach Puteoli and find brothers.', miles: 200 },
-      { label: 'Met on the road', ref: 'Acts 28:15', copy: 'Believers come to meet him; Paul thanks God and takes courage.', miles: 140 },
-      { label: 'Arrival at Rome', ref: 'Acts 28:16', copy: 'They come at last into Rome, where Paul is allowed to stay.', miles: 130 }
+      { label: 'Setting sail', ref: 'Acts 28:11', copy: 'After three months they leave Malta on an Alexandrian ship.', at: 0 },
+      { label: 'By Syracuse', ref: 'Acts 28:12', copy: 'They put in at Syracuse and stay three days.', miles: 90, at: 1, by: 'sea' },
+      { label: 'Rhegium', ref: 'Acts 28:13', copy: 'From there they sail on to Rhegium.', miles: 80, at: 2, by: 'sea' },
+      { label: 'Puteoli', ref: 'Acts 28:13-14', copy: 'With a south wind they reach Puteoli and find brothers there.', miles: 200, at: 3, by: 'sea' },
+      { label: 'Met on the road', ref: 'Acts 28:15', copy: 'Believers come out as far as the Forum of Appius and Three Taverns; Paul thanks God and takes courage.', miles: 105, at: 4 },
+      { label: 'Arrival at Rome', ref: 'Acts 28:16', copy: 'In Rome, Paul is allowed to live by himself, with a soldier to guard him.', miles: 40, at: 5 }
     ]
   },
   {
@@ -15101,9 +15116,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Greece (Corinth)', modern: 'Corinth, Greece', x: 16, y: 80.7, lat: 37.94, lon: 22.93 }
     ],
     steps: [
-      { label: 'Leaving Ephesus', ref: 'Acts 20:1', copy: 'After the riot Paul says farewell and sets out for Macedonia.', miles: 350 },
-      { label: 'Words of encouragement', ref: 'Acts 20:2', copy: 'He travels the region giving the believers much encouragement.', miles: 200 },
-      { label: 'Three months in Greece', ref: 'Acts 20:3', copy: 'He stays three months, then a plot turns him back north.', miles: 150 }
+      { label: 'Leaving Ephesus', ref: 'Acts 20:1', copy: 'After the riot Paul says farewell and sets out for Macedonia.', miles: 350, at: 1 },
+      { label: 'Words of encouragement', ref: 'Acts 20:2', copy: 'He travels the region giving the believers much encouragement.', miles: 200, at: 1 },
+      { label: 'Three months in Greece', ref: 'Acts 20:3', copy: 'He stays three months, then a plot turns him back north.', miles: 150, at: 2 }
     ]
   },
   {
@@ -16142,22 +16157,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Walking with a family',
     days: 'The journey home',
     modern: 'Egypt back across Sinai to Galilee',
-    note: 'Fearing Archelaus in Judea, the family settles in Nazareth of Galilee.',
+    note: 'Matthew says Joseph came into the land of Israel but, afraid of Archelaus in Judea, turned aside to Galilee. Where he crossed into the land is not recorded.',
     sources: [
       'An angel appears to Joseph in Egypt (Matthew 2:19).',
       'He takes the child to the land of Israel (Matthew 2:21).',
       'Afraid of Archelaus, he withdraws to Galilee (Matthew 2:22).'
     ],
     points: [
-      { ancient: 'Egypt', modern: 'Lower Egypt', x: 16, y: 70, lat: 30.8, lon: 31.5 },
-      { ancient: 'Judea', modern: 'Bethlehem area', x: 82.2, y: 51.1, lat: 31.7, lon: 35.2 },
-      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 84, y: 30, lat: 32.7, lon: 35.3 }
+      { ancient: 'Egypt', modern: 'Nile Delta, Egypt', x: 15, y: 85, lat: 30.8, lon: 31.5 },
+      { ancient: 'Into the land of Israel', modern: 'southern coastal road (spot unknown)', x: 69, y: 61, lat: 31.45, lon: 34.45 },
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 85, y: 15, lat: 32.7, lon: 35.3 }
     ],
     steps: [
-      { label: 'The angel’s word', ref: 'Matthew 2:19', copy: 'After Herod dies, an angel appears to Joseph in a dream.', miles: 0 },
-      { label: 'To the land of Israel', ref: 'Matthew 2:21', copy: 'He takes the child and his mother and returns.', miles: 250 },
-      { label: 'Turning to Galilee', ref: 'Matthew 2:22', copy: 'Warned in a dream, he withdraws from Judea to Galilee.', miles: 80 },
-      { label: 'A home in Nazareth', ref: 'Matthew 2:23', copy: 'He settles in Nazareth, fulfilling the prophets’ word.', miles: 20 }
+      { label: 'The angel’s word', ref: 'Matthew 2:19-20', copy: 'After Herod dies, an angel tells Joseph in a dream to take the child and his mother back to Israel.', at: 0 },
+      { label: 'To the land of Israel', ref: 'Matthew 2:21', copy: 'Joseph gets up and takes the child and his mother into the land of Israel.', miles: 200, at: 1 },
+      { label: 'Turning to Galilee', ref: 'Matthew 2:22', copy: 'Afraid of Archelaus, who reigns in Judea, and warned in a dream, he withdraws to Galilee.', miles: 105, at: 2 },
+      { label: 'A home in Nazareth', ref: 'Matthew 2:23', copy: 'He settles in a town called Nazareth, fulfilling what the prophets said.', at: 2 }
     ]
   },
   {
@@ -16183,10 +16198,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Bethlehem', modern: 'Bethlehem', x: 16, y: 50, lat: 31.7, lon: 35.2 }
     ],
     steps: [
-      { label: 'Watching the flocks', ref: 'Luke 2:8', copy: 'Shepherds are in the fields keeping watch by night.', miles: 0 },
-      { label: 'Good news of great joy', ref: 'Luke 2:11', copy: '"Unto you is born this day a Savior, Christ the Lord."', miles: 0 },
-      { label: '"Let us go and see"', ref: 'Luke 2:15', copy: 'They hurry to Bethlehem to see what has happened.', miles: 2 },
-      { label: 'Finding the manger', ref: 'Luke 2:16', copy: 'They find Mary, Joseph, and the baby in the manger.', miles: 0 }
+      { label: 'Watching the flocks', ref: 'Luke 2:8', copy: 'Shepherds are in the fields keeping watch by night.', miles: 0, at: 0 },
+      { label: 'Good news of great joy', ref: 'Luke 2:11', copy: '"Unto you is born this day a Savior, Christ the Lord."', miles: 0, at: 0 },
+      { label: '"Let us go and see"', ref: 'Luke 2:15', copy: 'They hurry to Bethlehem to see what has happened.', miles: 2, at: 1 },
+      { label: 'Finding the manger', ref: 'Luke 2:16', copy: 'They find Mary, Joseph, and the baby in the manger.', miles: 0, at: 1 }
     ]
   },
   {
@@ -16201,7 +16216,7 @@ const BIBLE_JOURNEYS = [
     mode: 'News carried to Galilee',
     days: 'A grim banquet',
     modern: 'The fortress east of the Dead Sea to Galilee',
-    note: 'Herod imprisoned John at Machaerus, where he was beheaded at a banquet.',
+    note: 'The Gospels don\'t name John\'s prison; the historian Josephus says it was the fortress of Machaerus, east of the Dead Sea.',
     sources: [
       'Herod gives a banquet on his birthday (Mark 6:21).',
       'The girl asks for John’s head on a platter (Mark 6:25).',
@@ -16212,10 +16227,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Galilee', modern: 'Sea of Galilee region', x: 47.2, y: 16, lat: 32.8, lon: 35.5 }
     ],
     steps: [
-      { label: 'Herod’s banquet', ref: 'Mark 6:21', copy: 'On his birthday Herod feasts his nobles and officers.', miles: 0 },
-      { label: 'A deadly request', ref: 'Mark 6:25', copy: '"Give me at once the head of John the Baptist on a platter."', miles: 0 },
-      { label: 'John beheaded', ref: 'Mark 6:27', copy: 'A guard is sent and beheads John in the prison.', miles: 0 },
-      { label: 'Told to Jesus', ref: 'Mark 6:29', copy: 'His disciples take the body and bring word to Jesus.', miles: 55 }
+      { label: 'Herod’s banquet', ref: 'Mark 6:21-22', copy: 'On his birthday Herod gives a banquet for his nobles and officers.', at: 0 },
+      { label: 'A deadly request', ref: 'Mark 6:23-26', copy: 'Prompted by her mother, the girl asks for the head of John the Baptist on a platter.', at: 0 },
+      { label: 'John beheaded', ref: 'Mark 6:27-28', copy: 'An executioner is sent and beheads John in the prison.', at: 0 },
+      { label: 'Told to Jesus', ref: 'Mark 6:29; Matthew 14:12', copy: 'John\'s disciples bury his body and go and tell Jesus.', miles: 55, at: 1 }
     ]
   },
   {
@@ -16237,13 +16252,13 @@ const BIBLE_JOURNEYS = [
       'Paul chooses Silas and goes through Syria (Acts 15:40).'
     ],
     points: [
-      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 84, y: 31.1, lat: 36.2, lon: 36.16 },
-      { ancient: 'Cyprus (Salamis)', modern: 'Cyprus', x: 16, y: 68.9, lat: 35.18, lon: 33.9 }
+      { ancient: 'Antioch', modern: 'Antakya, Turkey', x: 85, y: 15, lat: 36.2, lon: 36.16 },
+      { ancient: 'Cyprus', modern: 'Cyprus (Salamis port)', x: 15, y: 85, lat: 35.18, lon: 33.9 }
     ],
     steps: [
-      { label: 'Mark to come along', ref: 'Acts 15:37', copy: 'Barnabas is determined to take John called Mark.', miles: 0 },
-      { label: 'A sharp disagreement', ref: 'Acts 15:39', copy: 'They separate, and Barnabas sails with Mark to Cyprus.', miles: 130 },
-      { label: 'Paul takes Silas', ref: 'Acts 15:40', copy: 'Paul chooses Silas and is commended to the grace of God.', miles: 0 }
+      { label: 'Mark to come along', ref: 'Acts 15:36-38', copy: 'Barnabas wants to take John Mark; Paul does not, since Mark had deserted them in Pamphylia.', at: 0 },
+      { label: 'Paul takes Silas', ref: 'Acts 15:40', copy: 'After a sharp disagreement they part ways. Paul chooses Silas and is commended to the grace of the Lord.', at: 0 },
+      { label: 'Barnabas sails to Cyprus', ref: 'Acts 15:39', copy: 'Barnabas takes Mark and sails to Cyprus.', miles: 130, at: 1, by: 'sea' }
     ]
   },
   {
@@ -16269,9 +16284,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 44.1, y: 84, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'A famine foretold', ref: 'Acts 11:28', copy: 'Agabus predicts a great famine over all the world.', miles: 0 },
-      { label: 'Sending relief', ref: 'Acts 11:29', copy: 'Each disciple gives according to his ability.', miles: 0 },
-      { label: 'Carried to the elders', ref: 'Acts 11:30', copy: 'Barnabas and Saul bring the gift to Jerusalem.', miles: 300 }
+      { label: 'A famine foretold', ref: 'Acts 11:28', copy: 'Agabus predicts a great famine over all the world.', miles: 0, at: 0 },
+      { label: 'Sending relief', ref: 'Acts 11:29', copy: 'Each disciple gives according to his ability.', miles: 0, at: 0 },
+      { label: 'Carried to the elders', ref: 'Acts 11:30', copy: 'Barnabas and Saul bring the gift to Jerusalem.', miles: 300, at: 1 }
     ]
   },
   {
@@ -16298,9 +16313,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Derbe', modern: 'Kerti Hüyük', x: 16, y: 33.1, lat: 37.35, lon: 33.27 }
     ],
     steps: [
-      { label: 'Setting out with Silas', ref: 'Acts 15:40', copy: 'Paul and Silas leave, commended to the grace of the Lord.', miles: 0 },
-      { label: 'Strengthening churches', ref: 'Acts 15:41', copy: 'They travel through Syria and Cilicia building up the churches.', miles: 130 },
-      { label: 'On to Derbe', ref: 'Acts 16:1', copy: 'He comes to Derbe and then to Lystra.', miles: 100 }
+      { label: 'Setting out with Silas', ref: 'Acts 15:40', copy: 'Paul and Silas leave, commended to the grace of the Lord.', miles: 0, at: 0 },
+      { label: 'Strengthening churches', ref: 'Acts 15:41', copy: 'They travel through Syria and Cilicia building up the churches.', miles: 130, at: 1 },
+      { label: 'On to Derbe', ref: 'Acts 16:1', copy: 'He comes to Derbe and then to Lystra.', miles: 100, at: 2 }
     ]
   },
   {
@@ -16327,10 +16342,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Iconium', modern: 'Konya, Turkey', x: 19.3, y: 22.8, lat: 37.87, lon: 32.49 }
     ],
     steps: [
-      { label: 'A disciple at Lystra', ref: 'Acts 16:1', copy: 'Paul finds Timothy, son of a believing Jewish mother.', miles: 40 },
-      { label: 'Well spoken of', ref: 'Acts 16:2', copy: 'The brothers at Lystra and Iconium commend him.', miles: 0 },
-      { label: 'Joining the mission', ref: 'Acts 16:3', copy: 'Paul wants Timothy to go with him on the journey.', miles: 20 },
-      { label: 'Churches strengthened', ref: 'Acts 16:5', copy: 'The churches grow stronger and increase in number daily.', miles: 0 }
+      { label: 'A disciple at Lystra', ref: 'Acts 16:1', copy: 'At Lystra Paul finds Timothy, son of a believing Jewish woman and a Greek father.', miles: 55, at: 1 },
+      { label: 'Well spoken of', ref: 'Acts 16:2', copy: 'The brothers in Lystra and Iconium speak well of him.', at: 1 },
+      { label: 'Joining the mission', ref: 'Acts 16:3', copy: 'Paul wants Timothy to come along on the journey.', at: 1 },
+      { label: 'Churches strengthened', ref: 'Acts 16:4-5', copy: 'Town by town they deliver the council\'s decisions, and the churches grow stronger and larger every day.', miles: 20, at: 2 }
     ]
   },
   {
@@ -16357,9 +16372,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Troas', modern: 'Dalyan, Turkey', x: 16, y: 38.7, lat: 39.75, lon: 26.16 }
     ],
     steps: [
-      { label: 'Forbidden in Asia', ref: 'Acts 16:6', copy: 'They are kept by the Spirit from speaking in Asia.', miles: 250 },
-      { label: 'Bithynia closed', ref: 'Acts 16:7', copy: 'When they try Bithynia, the Spirit of Jesus does not allow it.', miles: 100 },
-      { label: 'Down to Troas', ref: 'Acts 16:8', copy: 'Passing by Mysia, they come down to the port of Troas.', miles: 50 }
+      { label: 'Forbidden in Asia', ref: 'Acts 16:6', copy: 'They are kept by the Spirit from speaking in Asia.', miles: 250, at: 0 },
+      { label: 'Bithynia closed', ref: 'Acts 16:7', copy: 'When they try Bithynia, the Spirit of Jesus does not allow it.', miles: 100, at: 1 },
+      { label: 'Down to Troas', ref: 'Acts 16:8', copy: 'Passing by Mysia, they come down to the port of Troas.', miles: 50, at: 2 }
     ]
   },
   {
@@ -16385,10 +16400,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Corinth', modern: 'Corinth, Greece', x: 16, y: 52.2, lat: 37.94, lon: 22.93 }
     ],
     steps: [
-      { label: 'On to Corinth', ref: 'Acts 18:1', copy: 'After Athens, Paul goes to Corinth.', miles: 50 },
-      { label: 'Tentmakers together', ref: 'Acts 18:3', copy: 'He stays and works with Aquila and Priscilla.', miles: 0 },
-      { label: '"Do not be afraid"', ref: 'Acts 18:9', copy: 'The Lord speaks in a vision: "Keep on speaking."', miles: 0 },
-      { label: 'A year and a half', ref: 'Acts 18:11', copy: 'He stays teaching the word of God among them.', miles: 0 }
+      { label: 'On to Corinth', ref: 'Acts 18:1', copy: 'After Athens, Paul goes to Corinth.', miles: 50, at: 1 },
+      { label: 'Tentmakers together', ref: 'Acts 18:3', copy: 'He stays and works with Aquila and Priscilla.', miles: 0, at: 1 },
+      { label: '"Do not be afraid"', ref: 'Acts 18:9', copy: 'The Lord speaks in a vision: "Keep on speaking."', miles: 0, at: 1 },
+      { label: 'A year and a half', ref: 'Acts 18:11', copy: 'He stays teaching the word of God among them.', miles: 0, at: 1 }
     ]
   },
   {
@@ -16410,15 +16425,17 @@ const BIBLE_JOURNEYS = [
       'They sight Cyprus and sail to Syria (Acts 21:3).'
     ],
     points: [
-      { ancient: 'Miletus', modern: 'Balat, Turkey', x: 16, y: 23.6, lat: 37.53, lon: 27.28 },
-      { ancient: 'Cos', modern: 'Kos, Greece', x: 16.3, y: 50.4, lat: 36.89, lon: 27.29 },
-      { ancient: 'Rhodes', modern: 'Rhodes, Greece', x: 47.5, y: 69.7, lat: 36.43, lon: 28.22 },
-      { ancient: 'Patara', modern: 'Gelemiş, Turkey', x: 84, y: 76.4, lat: 36.27, lon: 29.31 }
+      { ancient: 'Miletus', modern: 'Balat, Turkey', x: 15, y: 15, lat: 37.53, lon: 27.28 },
+      { ancient: 'Cos', modern: 'Kos, Greece', x: 15, y: 30, lat: 36.89, lon: 27.29 },
+      { ancient: 'Rhodes', modern: 'Rhodes, Greece', x: 27, y: 40, lat: 36.43, lon: 28.22 },
+      { ancient: 'Patara', modern: 'Gelemiş, Turkey', x: 40, y: 44, lat: 36.27, lon: 29.31 },
+      { ancient: 'South of Cyprus', modern: 'eastern Mediterranean', x: 85, y: 85, lat: 34.45, lon: 32.9 }
     ],
     steps: [
-      { label: 'Cos and Rhodes', ref: 'Acts 21:1', copy: 'They make a straight run by Cos and Rhodes to Patara.', miles: 130 },
-      { label: 'A ship for Phoenicia', ref: 'Acts 21:2', copy: 'Finding a ship bound for Phoenicia, they go aboard.', miles: 0 },
-      { label: 'Past Cyprus', ref: 'Acts 21:3', copy: 'They sight Cyprus, pass it, and sail on to Syria.', miles: 40 }
+      { label: 'Cos', ref: 'Acts 21:1', copy: 'Tearing themselves away from the Ephesian elders, they sail straight to Cos.', miles: 45, at: 1, by: 'sea' },
+      { label: 'Rhodes', ref: 'Acts 21:1', copy: 'The next day they reach Rhodes.', miles: 60, at: 2, by: 'sea' },
+      { label: 'A ship for Phoenicia', ref: 'Acts 21:1-2', copy: 'At Patara they find a ship crossing to Phoenicia and go aboard.', miles: 60, at: 3, by: 'sea' },
+      { label: 'Past Cyprus', ref: 'Acts 21:3', copy: 'They sight Cyprus, pass it on their left, and sail on to Syria.', miles: 230, at: 4, by: 'sea' }
     ]
   },
   {
@@ -16440,16 +16457,18 @@ const BIBLE_JOURNEYS = [
       'They reach Fair Havens near Lasea on Crete (Acts 27:8).'
     ],
     points: [
-      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 80.9, y: 64.6, lat: 32.5, lon: 34.89 },
-      { ancient: 'Sidon', modern: 'Saida, Lebanon', x: 84, y: 56.4, lat: 33.56, lon: 35.37 },
-      { ancient: 'Myra', modern: 'Demre, Turkey', x: 49.3, y: 35.4, lat: 36.25, lon: 29.98 },
-      { ancient: 'Fair Havens', modern: 'Crete (south)', x: 16, y: 45.9, lat: 34.9, lon: 24.8 }
+      { ancient: 'Caesarea', modern: 'Caesarea, Israel', x: 82, y: 85, lat: 32.5, lon: 34.89 },
+      { ancient: 'Sidon', modern: 'Sidon, Lebanon', x: 85, y: 67, lat: 33.56, lon: 35.37 },
+      { ancient: 'Myra', modern: 'Demre, Turkey', x: 49, y: 22, lat: 36.25, lon: 29.98 },
+      { ancient: 'Cnidus', modern: 'Datça, Turkey', x: 32, y: 15, lat: 36.69, lon: 27.37 },
+      { ancient: 'Fair Havens', modern: 'south coast of Crete', x: 15, y: 45, lat: 34.9, lon: 24.8 }
     ],
     steps: [
-      { label: 'Setting sail', ref: 'Acts 27:2', copy: 'They board a ship and put out to sea along the coast.', miles: 0 },
-      { label: 'Kindness at Sidon', ref: 'Acts 27:3', copy: 'Julius lets Paul visit friends to be cared for.', miles: 80 },
-      { label: 'Changing ships at Myra', ref: 'Acts 27:5', copy: 'They sail across to Myra in Lycia.', miles: 350 },
-      { label: 'Reaching Fair Havens', ref: 'Acts 27:8', copy: 'With difficulty they come to Fair Havens on Crete.', miles: 170 }
+      { label: 'Setting sail', ref: 'Acts 27:1-2', copy: 'Paul and other prisoners are handed to the centurion Julius and board a ship from Adramyttium.', at: 0 },
+      { label: 'Kindness at Sidon', ref: 'Acts 27:3', copy: 'Julius kindly lets Paul visit his friends to be cared for.', miles: 70, at: 1, by: 'sea' },
+      { label: 'Changing ships at Myra', ref: 'Acts 27:4-6', copy: 'Sheltered by Cyprus, they reach Myra and board an Alexandrian ship bound for Italy.', miles: 450, at: 2, by: 'sea' },
+      { label: 'Cnidus', ref: 'Acts 27:7', copy: 'They sail slowly for many days and barely reach Cnidus.', miles: 140, at: 3, by: 'sea' },
+      { label: 'Reaching Fair Havens', ref: 'Acts 27:7-8', copy: 'Sailing under the shelter of Crete, with difficulty they come to Fair Havens.', miles: 200, at: 4, by: 'sea' }
     ]
   },
   {
@@ -16476,10 +16495,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Malta', modern: 'Malta', x: 16, y: 45.8, lat: 35.9, lon: 14.4 }
     ],
     steps: [
-      { label: 'The northeaster', ref: 'Acts 27:14', copy: 'A violent wind called the northeaster rushes down.', miles: 0 },
-      { label: 'Under Cauda’s lee', ref: 'Acts 27:16', copy: 'They barely manage to secure the ship’s boat.', miles: 40 },
-      { label: 'Run aground', ref: 'Acts 27:41', copy: 'The ship strikes a reef and the stern is broken by the surf.', miles: 540 },
-      { label: 'All safe to land', ref: 'Acts 27:44', copy: 'On planks and debris, everyone reaches the shore alive.', miles: 0 }
+      { label: 'The northeaster', ref: 'Acts 27:14', copy: 'A violent wind called the northeaster rushes down.', miles: 0, at: 0 },
+      { label: 'Under Cauda’s lee', ref: 'Acts 27:16', copy: 'They barely manage to secure the ship’s boat.', miles: 40, at: 1, by: 'sea' },
+      { label: 'Run aground', ref: 'Acts 27:41', copy: 'The ship strikes a reef and the stern is broken by the surf.', miles: 540, at: 2, by: 'sea' },
+      { label: 'All safe to land', ref: 'Acts 27:44', copy: 'On planks and debris, everyone reaches the shore alive.', miles: 0, at: 2 }
     ]
   },
   {
@@ -16505,10 +16524,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Ephraim', modern: 'Et-Taiyibeh', x: 56.4, y: 16, lat: 31.95, lon: 35.3 }
     ],
     steps: [
-      { label: 'The plot to kill', ref: 'John 11:53', copy: 'From that day they make plans to put him to death.', miles: 0 },
-      { label: 'Retreat to Ephraim', ref: 'John 11:54', copy: 'He withdraws to a town called Ephraim near the wilderness.', miles: 14 },
-      { label: 'Passover near', ref: 'John 11:55', copy: 'The Passover is at hand, and many go up to purify themselves.', miles: 0 },
-      { label: 'Orders to arrest', ref: 'John 11:57', copy: 'The leaders order that anyone knowing where he is report it.', miles: 0 }
+      { label: 'The plot to kill', ref: 'John 11:53', copy: 'From that day they make plans to put him to death.', miles: 0, at: 0 },
+      { label: 'Retreat to Ephraim', ref: 'John 11:54', copy: 'He withdraws to a town called Ephraim near the wilderness.', miles: 14, at: 1 },
+      { label: 'Passover near', ref: 'John 11:55', copy: 'The Passover is at hand, and many go up to purify themselves.', miles: 0, at: 1 },
+      { label: 'Orders to arrest', ref: 'John 11:57', copy: 'The leaders order that anyone knowing where he is report it.', miles: 0, at: 1 }
     ]
   },
   {
@@ -16534,10 +16553,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jerusalem (temple)', modern: 'Temple Mount', x: 16, y: 34, lat: 31.78, lon: 35.235 }
     ],
     steps: [
-      { label: 'Hungry on the way', ref: 'Mark 11:12', copy: 'Leaving Bethany, Jesus is hungry and sees a fig tree.', miles: 1 },
-      { label: 'The barren tree', ref: 'Mark 11:14', copy: '"May no one ever eat fruit from you again."', miles: 0 },
-      { label: 'Cleansing the temple', ref: 'Mark 11:15', copy: 'He overturns the tables of the money-changers.', miles: 2 },
-      { label: 'The tree withered', ref: 'Mark 11:20', copy: 'In the morning the fig tree is withered to its roots.', miles: 1 }
+      { label: 'Hungry on the way', ref: 'Mark 11:12', copy: 'Leaving Bethany, Jesus is hungry and sees a fig tree.', miles: 1, at: 0 },
+      { label: 'The barren tree', ref: 'Mark 11:14', copy: '"May no one ever eat fruit from you again."', miles: 0, at: 0 },
+      { label: 'Cleansing the temple', ref: 'Mark 11:15', copy: 'He overturns the tables of the money-changers.', miles: 2, at: 1 },
+      { label: 'The tree withered', ref: 'Mark 11:20', copy: 'In the morning the fig tree is withered to its roots.', miles: 1, at: 0 }
     ]
   },
   {
@@ -16563,9 +16582,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Galilean towns', modern: 'Lower Galilee', x: 16, y: 68.5, lat: 32.8, lon: 35.4 }
     ],
     steps: [
-      { label: 'On to the next towns', ref: 'Mark 1:38', copy: '"That is why I came," he says, going out to preach.', miles: 20 },
-      { label: 'Throughout Galilee', ref: 'Mark 1:39', copy: 'He preaches in their synagogues and casts out demons.', miles: 30 },
-      { label: 'Fame spreads', ref: 'Mark 1:45', copy: 'The news spreads so widely he stays in lonely places.', miles: 10 }
+      { label: 'On to the next towns', ref: 'Mark 1:38', copy: '"That is why I came," he says, going out to preach.', miles: 20, at: 0 },
+      { label: 'Throughout Galilee', ref: 'Mark 1:39', copy: 'He preaches in their synagogues and casts out demons.', miles: 30, at: 1 },
+      { label: 'Fame spreads', ref: 'Mark 1:45', copy: 'The news spreads so widely he stays in lonely places.', miles: 10, at: 1 }
     ]
   },
   {
@@ -16587,13 +16606,14 @@ const BIBLE_JOURNEYS = [
       'Learning of a plot, they flee to Lystra and Derbe (Acts 14:6).'
     ],
     points: [
-      { ancient: 'Pisidian Antioch', modern: 'Yalvaç, Turkey', x: 16, y: 35.4, lat: 38.31, lon: 31.19 },
-      { ancient: 'Iconium', modern: 'Konya, Turkey', x: 84, y: 64.6, lat: 37.87, lon: 32.49 }
+      { ancient: 'Pisidian Antioch', modern: 'Yalvaç, Turkey', x: 15, y: 15, lat: 38.31, lon: 31.19 },
+      { ancient: 'Iconium', modern: 'Konya, Turkey', x: 85, y: 57, lat: 37.87, lon: 32.49 },
+      { ancient: 'Lystra', modern: 'Hatunsaray, Turkey', x: 83, y: 85, lat: 37.58, lon: 32.45 }
     ],
     steps: [
-      { label: 'Shaking off the dust', ref: 'Acts 13:51', copy: 'Driven out, they shake the dust from their feet and go on.', miles: 80 },
-      { label: 'Many believe', ref: 'Acts 14:1', copy: 'In the synagogue a great number of Jews and Greeks believe.', miles: 0 },
-      { label: 'Fleeing a plot', ref: 'Acts 14:6', copy: 'Learning of a plan to stone them, they flee to Lystra.', miles: 10 }
+      { label: 'Shaking off the dust', ref: 'Acts 13:50-51', copy: 'Driven out of Pisidian Antioch, they shake the dust off their feet and go on to Iconium.', miles: 85, at: 1 },
+      { label: 'Many believe', ref: 'Acts 14:1-3', copy: 'In the synagogue a great number of Jews and Greeks believe, and the Lord confirms the message with signs.', at: 1 },
+      { label: 'Fleeing a plot', ref: 'Acts 14:4-6', copy: 'Learning of a plan to stone them, they flee to Lystra.', miles: 20, at: 2 }
     ]
   }
 ];
@@ -31980,7 +32000,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.634";
+const APP_VERSION = "3.0.635";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32003,6 +32023,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.635 — Every New Testament journey, checked</div>
+<ul>
+<li>All 77 New Testament journeys (the Gospels, Acts and the seven churches of Revelation) were checked against the text: each step stands at its real place, sea and lake crossings show as boat trips, guessed waypoints were removed, and places the text names were added (like Perga, Cnidus, Ptolemais, the Forum of Appius and Patmos).</li>
+<li>Quotes in the journey cards match the Bible text, and places with uncertain locations say so.</li>
+</ul>
 <div class="un-version-label">v3.0.634 — Close places get room</div>
 <ul>
 <li>Journey maps now zoom right in when stops are close together (like Bethany and Jerusalem, two miles apart), so you can see the space between them instead of dots on top of each other.</li>
