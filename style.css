@@ -41287,3 +41287,69 @@ body.gn-open { overflow: hidden; }
 .gn-sig { display: block; text-align: right; font-family: 'Caveat', 'Comic Sans MS', cursive; font-weight: 700; font-size: 1.2rem; color: #8a5a00; }
 .gn-overlay .gn-note, .gn-overlay .gn-note p { color: #3a2a00; }
 .gn-overlay .gn-note .gn-sig { color: #8a5a00; }
+
+/* ── Word by word: clean interlinear (Your English) + phrase cards (original order) ── */
+.rhema-il-card { --wbw-acc: var(--secondary-color, #2f55d4); --wbw-ink: var(--font-color, #1d2433); --wbw-muted: color-mix(in srgb, var(--font-color, #1d2433) 58%, transparent); --wbw-soft: color-mix(in srgb, var(--secondary-color, #2f55d4) 9%, var(--card-color, #fff)); --wbw-line: color-mix(in srgb, var(--font-color, #1d2433) 12%, transparent); }
+.wbw-gk, .wbwa-o:not(.rhema-hebrew-text), .wbwd-o:not(.rhema-hebrew-text), .wbw-pk-o:not(.rhema-hebrew-text) { font-family: 'Gentium Book Plus', Georgia, 'Noto Serif', serif; }
+.wbw-tip { display: flex; align-items: center; gap: 6px; margin: 2px 0 12px; font-size: .84rem; color: var(--wbw-muted); }
+.wbw-tip .material-symbols-outlined { font-size: 18px; color: var(--wbw-acc); }
+.wbw-foot { margin: 14px 0 0; font-size: .76rem; line-height: 1.45; color: var(--wbw-muted); }
+.wbw-foot b { color: var(--wbw-ink); }
+.wbw-key-part { opacity: .55; font-weight: 700; color: var(--wbw-acc); }
+.wbw-key-none { font-weight: 700; color: var(--wbw-ink); }
+.wbw-link { display: block; margin: 10px 0 2px; padding: 8px 0; border: 0; background: none; color: var(--wbw-acc); font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; text-align: left; }
+/* A: words in reading order, original under each */
+.wbwa { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px 12px; }
+.wbwa-w { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: -4px -6px; padding: 4px 6px; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background .15s, box-shadow .15s; }
+.wbwa-en { font-size: 1.08rem; font-weight: 500; line-height: 1.2; color: var(--wbw-ink); }
+.wbwa-o { font-size: 1.06rem; line-height: 1.25; color: var(--wbw-acc); min-height: 1.25em; }
+.wbwa-o.rhema-hebrew-text { font-size: 1.2rem; }
+.wbwa-approx { font-style: normal; font-size: .7em; color: var(--wbw-muted); vertical-align: super; margin-right: 1px; font-family: inherit; }
+.wbwa-part .wbwa-o { opacity: .5; }
+.wbwa-none .wbwa-en { color: var(--wbw-muted); }
+.wbwa-w.on { background: var(--wbw-soft); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--wbw-acc) 35%, transparent); }
+.wbwa-w.on .wbwa-en { font-weight: 750; }
+/* The word card (both tabs) */
+.wbw-peek { position: sticky; bottom: 0; z-index: 3; margin: 14px -2px 0; padding: 14px 16px 12px; border-radius: 20px; background: var(--card-color, #fff); box-shadow: 0 10px 30px rgba(20, 30, 60, .18), 0 0 0 1px var(--wbw-line); animation: wbwPeek .22s ease; }
+.wbw-peek[hidden] { display: none; }
+@keyframes wbwPeek { from { opacity: 0; transform: translateY(12px); } }
+.wbw-pk + .wbw-pk { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--wbw-line); }
+.wbw-pk-x { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--wbw-muted); display: grid; place-items: center; cursor: pointer; }
+.wbw-pk-x .material-symbols-outlined { font-size: 20px; }
+.wbw-pk-top { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; padding-right: 30px; }
+.wbw-pk-o { font-size: 1.75rem; font-weight: 700; line-height: 1.15; color: var(--wbw-acc); }
+.wbw-pk-top i { color: var(--wbw-muted); font-size: .92rem; }
+.wbw-pk p { margin: 5px 0 0; font-size: .92rem; line-height: 1.45; color: var(--wbw-ink); }
+.wbw-pk .wbw-pk-gram { color: var(--wbw-muted); font-size: .82rem; }
+.wbw-pk-many { margin: 0 30px 8px 0; font-size: .82rem; font-weight: 700; color: var(--wbw-muted); }
+.wbw-pk-go { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; padding: 6px 0; border: 0; background: none; color: var(--wbw-acc); font: inherit; font-weight: 800; font-size: .9rem; cursor: pointer; }
+.wbw-pk-go .material-symbols-outlined { font-size: 18px; }
+/* D: phrase cards */
+.rhema-il-grid.wbwd-mode { display: block; }
+.wbwd-ph { position: relative; margin-bottom: 10px; padding: 11px 14px 12px; border-radius: 18px; background: var(--wbw-soft); }
+.wbwd-n { position: absolute; top: 9px; right: 12px; font-size: .66rem; font-weight: 900; letter-spacing: .1em; color: var(--wbw-muted); }
+.wbwd-oline { display: flex; flex-wrap: wrap; gap: 2px 8px; padding-right: 18px; }
+.wbwd-oline[dir="rtl"] { padding-right: 0; padding-left: 18px; }
+.wbwd-w { display: inline-flex; flex-direction: column; align-items: center; margin: 0 -3px; padding: 1px 3px; border: 0; border-radius: 7px; background: transparent; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.wbwd-o { font-size: 1.16rem; line-height: 1.45; color: var(--wbw-acc); }
+.wbwd-o.rhema-hebrew-text { font-size: 1.32rem; }
+.wbwd-mute .wbwd-o { opacity: .45; }
+.wbwd-eline { margin-top: 4px; font-size: 1rem; line-height: 1.5; color: var(--wbw-ink); }
+.wbwd-en { border-radius: 5px; padding: 0 1px; cursor: pointer; }
+.wbwd-en-none { color: var(--wbw-muted); cursor: default; }
+.wbwd .lit, .wbwd .wbwd-w.lit { background: #ffe58a; color: #3a2a00; box-shadow: 0 0 0 1.5px #f2c94c; }
+.wbwd .wbwd-w.lit .wbwd-o { color: #3a2a00; opacity: 1; }
+/* Word details on: each word as a little column (sound, English, lit., code) */
+.wbwd-details .wbwd-oline { gap: 10px 14px; }
+.wbwd-details .wbwd-w { align-items: flex-start; text-align: left; }
+.wbwd-details .wbwd-oline[dir="rtl"] .wbwd-w { align-items: flex-end; text-align: right; }
+.wbwd-details .wbwd-w .rhema-il-translit, .wbwd-details .wbwd-w .rhema-il-version, .wbwd-details .wbwd-w .rhema-il-gloss, .wbwd-details .wbwd-w .rhema-il-none { display: block; }
+.wbwd-details .wbwd-w .rhema-il-detail { display: flex; flex-direction: column; }
+.wbwd-details .wbwd-eline { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--wbw-line); }
+.wbwd-legend { display: block; font-size: .8rem; line-height: 1.45; color: var(--wbw-muted); }
+.wbwd-mute-key { opacity: .5; font-weight: 800; color: var(--wbw-acc); }
+#rhemaInterlinearModal .rhema-il-versionnote { margin: 0 0 12px; }
+.wbwd-rtl .wbwd-n { right: auto; left: 12px; }
+.wbwd-rtl .wbwd-oline { padding-left: 18px; padding-right: 0; }
+.wbw-peek { background: linear-gradient(var(--card-color, #fff), var(--card-color, #fff)), var(--primary-color, #fff); }
+body.dark .rhema-wbw-tab.on, html.dark .rhema-wbw-tab.on { background: color-mix(in srgb, var(--secondary-color, #93c5fd) 22%, var(--card-solid-color, #1f2937)); color: var(--font-color, #fff); }

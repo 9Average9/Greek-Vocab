@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.627";
+const APP_VERSION = "3.0.628";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.628 — A cleaner Word by word</div>
+<ul>
+<li><strong>Your English</strong> now reads like the verse: each word with its Greek or Hebrew right under it, no boxes. Tap a word for a small card (how it sounds, its dictionary form and meaning, its grammar), and tap again to study it.</li>
+<li><strong>Greek order / Hebrew order</strong> is now phrase by phrase: the original in its own order on top, your version underneath. Tap a word and its partner lights up in the other line.</li>
+<li>Every detail is still there: "Show each word's details" brings back how each word sounds, its English, literal meaning, Strong's number and parsing.</li>
+</ul>
 <div class="un-version-label">v3.0.627 — The guide has big news</div>
 <ul>
 <li>The guide puts on a quick show of what's new: rebuilt word sheets, At a glance, smarter cross references, searching the Greek and Hebrew, Multi-view and reading plans with friends.</li>
@@ -43311,8 +43317,8 @@ let _rhemaWbwTab = 'en';
 let _rhemaWbwRef = null;
 function _rhemaWbwTabsFor(book) {
   return isRhemaOTBook(book)
-    ? [['en', 'Your English'], ['hebrew', 'Hebrew'], ['lxx', 'Septuagint']]
-    : [['en', 'Your English'], ['greek', 'Greek']];
+    ? [['en', 'Your English'], ['hebrew', 'Hebrew order'], ['lxx', 'Septuagint']]
+    : [['en', 'Your English'], ['greek', 'Greek order']];
 }
 function _rhemaWbwOrigTab(book) { return isRhemaOTBook(book) ? (_rhemaOTLayer === 'lxx' ? 'lxx' : 'hebrew') : 'greek'; }
 // Tabs, arrows and which parts of the sheet show, for the current tab.
@@ -43333,6 +43339,15 @@ function _rhemaWbwChrome(p) {
   const refEl = document.getElementById('rhemaInterlinearRef');
   if (refEl) refEl.textContent = `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}`;
 }
+// A clear serif for the Greek and Septuagint lines (cached for offline by
+// the service worker; Georgia until it arrives).
+function _rhemaWbwFont() {
+  if (document.getElementById('wbwGreekFont')) return;
+  const l = document.createElement('link');
+  l.id = 'wbwGreekFont'; l.rel = 'stylesheet';
+  l.href = 'https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:wght@400;700&display=swap';
+  document.head.appendChild(l);
+}
 function rhemaOpenWordByWord() {
   const refs = _rhemaSel.size > 1 ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []);
   if (!refs.length) return;
@@ -43344,6 +43359,7 @@ async function rhemaWbwShow(ref, tab) {
   if (!p) return;
   if (tab) _rhemaWbwTab = tab;
   _rhemaWbwRef = ref;
+  _rhemaWbwFont();
   if (_rhemaWbwTab !== 'en') {
     // The original's own order: the interlinear (Hebrew / Septuagint / Greek).
     if (isRhemaOTBook(p.book)) { const layer = _rhemaWbwTab === 'lxx' ? 'lxx' : 'hebrew'; if (_rhemaOTLayer !== layer) setRhemaOTLayer(layer); }
@@ -43362,11 +43378,120 @@ async function rhemaWbwShow(ref, tab) {
   const lang = isRhemaOTBook(p.book) ? 'Hebrew' : 'Greek';
   if (!L) { en.innerHTML = `<p class="rhema-lk-foot">This verse’s words can’t be lined up with the ${lang} yet.</p>`; return; }
   const esc = _escapeRhemaAttr;
-  en.innerHTML = `<div class="rhema-wbw-hint">Tap a word to see the ${lang} behind it</div>` +
-    `<div class="rhema-word-chips rhema-lk-chips">${_rhemaLookupChipsHtml(L, 0)}</div>` +
-    (_rhemaBridgeOpts(L.ver).loose ? `<p class="rhema-lk-foot">The ${esc(L.ver)} says things in its own words, so fewer words line up one to one with the ${lang}. For word-for-word study, a more literal version (BSB, NASB, ESV, KJV) links more.</p>` : '') +
-    `<p class="rhema-lk-foot">${esc(L.ver)} in reading order · <b>≈</b> best match · <span class="rhema-lk-key-part">faded</span> part of the word beside it · <span class="rhema-lk-key-none">plain</span> no ${lang} word (tap for its English meaning)</p>` +
-    `<button type="button" class="rhema-lk-switch" onclick="rhemaWbwEnglishMeanings()">English meanings of every word</button>`;
+  _rhemaWbwSel = -1;
+  en.innerHTML = `<p class="wbw-tip"><span class="material-symbols-outlined">touch_app</span>Tap a word to see it in ${lang}</p>` +
+    _rhemaWbwEnHtml(L) +
+    (_rhemaBridgeOpts(L.ver).loose ? `<p class="wbw-foot">The ${esc(L.ver)} says things in its own words, so fewer words line up one to one with the ${lang}. For word-for-word study, a more literal version (BSB, NASB, ESV, KJV) links more.</p>` : '') +
+    `<p class="wbw-foot">${esc(L.ver)} in reading order · <b>≈</b> closest match · <span class="wbw-key-part">faded</span> part of the word beside it · <span class="wbw-key-none">no ${lang} under it</span>: added for English</p>` +
+    `<button type="button" class="wbw-link" onclick="rhemaWbwEnglishMeanings()">English meanings of every word</button>` +
+    `<div class="wbw-peek" id="rhemaWbwPeek" hidden></div>`;
+}
+
+// ── Word by word, Your English: the verse in reading order with the original
+// word under each piece (no boxes). Tap a word for a small card about it; tap
+// it again (or "Study this word") for its full study.
+let _rhemaWbwSel = -1;
+// A piece's English with the punctuation around it ("Son," / “Follow).
+function _rhemaWbwPunct(L, k) {
+  const pcs = L.pieces, pc = pcs[k];
+  const before = L.text.slice(k ? pcs[k - 1].end : 0, pc.start);
+  const after = L.text.slice(pc.end, k < pcs.length - 1 ? pcs[k + 1].start : L.text.length);
+  const lead = (before.match(/[“‘"(\[]+$/) || [''])[0];
+  let trail = (after.match(/^[^\s“‘(\[]*/) || [''])[0];
+  return { lead, trail };
+}
+function _rhemaWbwEnHtml(L) {
+  const esc = _escapeRhemaAttr, heb = L.layer === 'hebrew';
+  return `<div class="wbwa" dir="ltr">` + L.pieces.map((pc, k) => {
+    const { lead, trail } = _rhemaWbwPunct(L, k);
+    const en = `${esc(lead)}${esc(pc.text)}${esc(trail)}`;
+    if (!pc.orig.length) {
+      return `<button type="button" class="wbwa-w wbwa-none" data-k="${k}" onclick="rhemaWbwPick(${k})"><span class="wbwa-en">${en}</span><span class="wbwa-o">&nbsp;</span></button>`;
+    }
+    const orig = pc.orig.map(i => esc(_rhemaOrigSurface(L, i))).join(' ');
+    return `<button type="button" class="wbwa-w${pc.part ? ' wbwa-part' : ''}" data-k="${k}" onclick="rhemaWbwPick(${k})">` +
+      `<span class="wbwa-en">${en}</span>` +
+      `<span class="wbwa-o${heb ? ' rhema-hebrew-text' : ''}" dir="auto">${pc.kind === 'inferred' ? '<i class="wbwa-approx">≈</i>' : ''}${orig}</span></button>`;
+  }).join('') + `</div>`;
+}
+// What the card says about one original word: its sound, dictionary form,
+// meaning and grammar (the same sources the word study uses).
+function _rhemaWbwWordInfo(book, chapter, verse, layer, word, i, il) {
+  const info = { surface: '', translit: '', lemma: '', gloss: '', gram: '' };
+  if (!word) return info;
+  const heb = layer === 'hebrew';
+  info.surface = heb ? _rhemaDisplaySurface(word[0]) : (window.RhemaAlign ? RhemaAlign.cleanSurface(word[0]) : word[0]);
+  let resolved = word;
+  try { resolved = _rhemaResolveWord(word, book, chapter) || word; } catch {}
+  const strongs = String(resolved[1] || '');
+  const lex = (heb ? window.RhemaHebrewLexicon : window.RhemaLexicon || {})?.[strongs] || {};
+  try { info.gloss = String(_rhemaMeaningDecision(resolved, { layer, book, chapter, verse }).gloss || ''); } catch {}
+  if (!info.gloss) info.gloss = String(lex.gloss || lex.brief || '').split(/[;,(]/)[0];
+  info.lemma = lex.lemma || '';
+  if (!heb) {
+    // The dictionary sense ("to love"), not this verse's wording ("loved").
+    let m = String(lex.brief || '').split(/[;,(]/)[0].trim();
+    if (/^I /.test(m) && /^V/.test(String(resolved[2] || ''))) m = 'to ' + m.slice(2);
+    if (m) info.gloss = m;
+  }
+  if (heb) {
+    info.translit = il?.tr || lex.pronounce || '';
+    try {
+      const pc = il?.ps ? _rhemaParseHebCode(il.ps, resolved[2]) : null;
+      if (pc) {
+        const parts = [];
+        (pc.prefixes || []).forEach(x => { const t = x.say || x.name || x.label; if (t) parts.push(`“${t}” in front`); });
+        if (pc.core) parts.push(pc.core.label, ...(pc.core.rows || []).map(r => r.value));
+        (pc.suffixes || []).forEach(x => { if (x.say) parts.push(`ending “${x.say}”`); });
+        info.gram = parts.filter(Boolean).join(' · ');
+      }
+    } catch {}
+  } else {
+    info.translit = window.RhemaAlign ? RhemaAlign.translitGreek(info.surface) : (lex.translit || '');
+    try { info.gram = decodeMorph(resolved[2] || '').map(r => r.value).join(' · '); } catch {}
+  }
+  return info;
+}
+function _rhemaWbwCardHtml(info, opts) {
+  const esc = _escapeRhemaAttr;
+  const heb = opts.heb;
+  return `<div class="wbw-pk">` +
+    `<div class="wbw-pk-top"><span class="wbw-pk-o${heb ? ' rhema-hebrew-text' : ''}" dir="auto">${esc(info.surface)}</span>${info.translit ? `<i>${esc(info.translit)}</i>` : ''}</div>` +
+    `<p>${opts.here ? `<b>${esc(opts.here)}</b>` : ''}${info.lemma ? `${opts.here ? ' · ' : ''}from <span class="${heb ? 'rhema-hebrew-text' : 'wbw-gk'}" dir="auto">${esc(info.lemma)}</span>` : ''}${info.gloss ? `${opts.here || info.lemma ? ', ' : ''}<i>${esc(info.gloss)}</i>` : ''}</p>` +
+    (opts.part ? `<p class="wbw-pk-gram">“${esc(opts.here)}” is part of this ${heb ? 'Hebrew' : 'Greek'} word.</p>` : '') +
+    (info.gram ? `<p class="wbw-pk-gram">${esc(info.gram)}</p>` : '') +
+    `<button type="button" class="wbw-pk-go" onclick="${opts.study}">Study this word<span class="material-symbols-outlined">arrow_forward</span></button></div>`;
+}
+function _rhemaWbwShowPeek(id, html) {
+  const peek = document.getElementById(id);
+  if (!peek) return;
+  peek.innerHTML = `<button type="button" class="wbw-pk-x" onclick="this.parentNode.hidden=true;_rhemaWbwClearSel()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>` + html;
+  peek.hidden = false;
+}
+function _rhemaWbwClearSel() {
+  _rhemaWbwSel = -1;
+  document.querySelectorAll('.wbwa-w.on, .wbwd .lit').forEach(el => el.classList.remove('on', 'lit'));
+}
+function rhemaWbwPick(k) {
+  const L = _rhemaLookupLinks[0];
+  const pc = L?.pieces?.[k];
+  if (!pc) return;
+  const esc = _escapeRhemaAttr;
+  const lang = L.layer === 'hebrew' ? 'Hebrew' : 'Greek';
+  if (_rhemaWbwSel === k && pc.orig.length === 1) return rhemaLookupOpen(0, pc.orig[0]); // second tap: study it
+  _rhemaWbwSel = k;
+  document.querySelectorAll('#rhemaWbwEnglish .wbwa-w').forEach(b => b.classList.toggle('on', Number(b.dataset.k) === k));
+  if (!pc.orig.length) {
+    return _rhemaWbwShowPeek('rhemaWbwPeek', `<div class="wbw-pk"><p><b>${esc(pc.text)}</b></p>` +
+      `<p class="wbw-pk-gram">No ${lang} word sits under this one: the ${esc(L.ver)} adds it so the sentence reads well in English.</p>` +
+      `<button type="button" class="wbw-pk-go" onclick="rhemaShowEnglishMeaning(decodeURIComponent('${encodeURIComponent(pc.text)}'))">English meaning<span class="material-symbols-outlined">arrow_forward</span></button></div>`);
+  }
+  const html = pc.orig.slice(0, 3).map(i => {
+    const il = L.layer === 'hebrew' ? _rhemaHebILWord(L.p.book, L.oc, L.ov, i) : null;
+    const info = _rhemaWbwWordInfo(L.p.book, L.p.chapter, L.p.verse, L.layer, L.words[i], i, il);
+    return _rhemaWbwCardHtml(info, { heb: L.layer === 'hebrew', here: pc.text, part: pc.part, study: `rhemaLookupOpen(0,${i})` });
+  }).join('');
+  _rhemaWbwShowPeek('rhemaWbwPeek', (pc.orig.length > 1 ? `<p class="wbw-pk-many">“${esc(pc.text)}” is ${pc.orig.length} ${lang} words:</p>` : '') + html);
 }
 function rhemaWbwStep(d) {
   const p = _rhemaWbwRef ? _rhemaParseRef(_rhemaWbwRef) : null;
@@ -43803,8 +43928,8 @@ function _rhemaRenderInterlinear(ref) {
     const hv = _rhemaReaderVersion();
     foot.textContent = isHebrew
       ? (hv && hv !== 'BSB'
-        ? `Hebrew reads right to left. Under each Hebrew word: how it sounds, then the ${hv}’s English for it in this verse, found with the help of the Berean word-by-word tables. Tap any word to see what it means and how it’s built.`
-        : 'Hebrew reads right to left. Under each Hebrew word: how it sounds, then the Berean Standard Bible’s English for it in this verse, from the Berean word-by-word tables. Tap any word to see what it means and how it’s built.')
+        ? `Hebrew reads right to left. Tap a Hebrew word to light up its English (the ${hv}’s, found with the help of the Berean word-by-word tables) and see what it means; tap it again for its full study.`
+        : 'Hebrew reads right to left. Tap a Hebrew word to light up its English (the Berean Standard Bible’s, from the Berean word-by-word tables) and see what it means; tap it again for its full study.')
       : foot.dataset.greek;
   }
   const hebVer = hebIL ? _rhemaHebVersionWords(p.book, ilC, ilV) : null;
@@ -43824,34 +43949,187 @@ function _rhemaRenderInterlinear(ref) {
 
   const esc = _escapeRhemaAttr;
   const pfx = isHebrew ? 'H' : 'G';
-  gridEl.innerHTML = rows.map((r, i) => {
+  // Each word's English (your version), literal meaning, Strong's and parsing:
+  // shown under the word when "word details" is on.
+  const wordEnglish = (r, i) => {
     const v = renders[i] || { text: '', kind: '' };
-    let english;
-    if (v.text && (v.kind === 'exact' || v.kind === 'match')) {
-      english = `<span class="rhema-il-version">${esc(v.text)}</span>`;
-    } else if (v.text && v.kind === 'inferred') {
-      english = `<span class="rhema-il-version rhema-il-inferred" title="Best match by position">≈ ${esc(v.text)}</span>`;
-    } else if (v.kind === 'none') {
-      english = `<span class="rhema-il-none" title="${esc(versionLabel)} has no separate word for this">—</span>`;
-    } else if (v.text && v.kind === 'bsb') {
-      english = `<span class="rhema-il-gloss" title="The BSB’s word here (not found in ${esc(hebVer?.version || versionLabel)})">${esc(v.text)}</span>`;
-    } else {
-      english = r.gloss ? `<span class="rhema-il-gloss" title="Literal meaning (not found in ${esc(versionLabel)})">${esc(r.gloss)}</span>` : '';
-    }
-    // Details: the literal meaning (when it differs), Strong's and parsing.
+    if (v.text && (v.kind === 'exact' || v.kind === 'match')) return `<span class="rhema-il-version">${esc(v.text)}</span>`;
+    if (v.text && v.kind === 'inferred') return `<span class="rhema-il-version rhema-il-inferred" title="Best match by position">≈ ${esc(v.text)}</span>`;
+    if (v.kind === 'none') return `<span class="rhema-il-none" title="${esc(versionLabel)} has no separate word for this">—</span>`;
+    if (v.text && v.kind === 'bsb') return `<span class="rhema-il-gloss" title="The BSB’s word here (not found in ${esc(hebVer?.version || versionLabel)})">${esc(v.text)}</span>`;
+    return r.gloss ? `<span class="rhema-il-gloss" title="Literal meaning (not found in ${esc(versionLabel)})">${esc(r.gloss)}</span>` : '';
+  };
+  const wordDetails = (r, i) => {
+    const v = renders[i] || { text: '', kind: '' };
     const showLit = r.gloss && (v.kind === 'exact' || v.kind === 'match' || v.kind === 'inferred' || v.kind === 'none')
       && r.gloss.toLowerCase() !== String(v.text || '').toLowerCase();
-    const details = `<span class="rhema-il-detail">` +
-      (showLit ? `<span class="rhema-il-lit">lit. ${esc(r.gloss)}</span>` : '') +
-      `<span class="rhema-il-code">${r.strongs ? pfx + esc(r.strongs) : ''}${r.strongs && r.morph ? ' · ' : ''}${esc(r.morph)}</span>` +
-      `</span>`;
-    return `<button class="rhema-il-word rhema-il-k-${v.kind || 'gloss'}" onclick="_rhemaInterlinearOpenWord(${i})">` +
-      `<span class="rhema-il-orig${isHebrew ? ' rhema-hebrew-text' : ''}">${esc(r.orig)}</span>` +
-      (r.translit ? `<span class="rhema-il-translit">${esc(r.translit)}</span>` : '') +
-      english + details +
-      `</button>`;
-  }).join('');
-  _rhemaLinkInterlinear(ref, layer);
+    return (r.translit ? `<span class="rhema-il-translit">${esc(r.translit)}</span>` : '') + wordEnglish(r, i) +
+      `<span class="rhema-il-detail">` + (showLit ? `<span class="rhema-il-lit">lit. ${esc(r.gloss)}</span>` : '') +
+      `<span class="rhema-il-code">${r.strongs ? pfx + esc(r.strongs) : ''}${r.strongs && r.morph ? ' · ' : ''}${esc(r.morph)}</span></span>`;
+  };
+  // Phrase by phrase: the original in its own order on top, your version's
+  // English for that phrase underneath. Tap a word: its partner lights up.
+  const L = (layer === 'hebrew' || layer === 'nt-greek') ? _rhemaVerseLinks(ref) : null;
+  _rhemaIlLinks = L;
+  const phrases = _rhemaWbwPhrases(rows, L);
+  const linked = new Set();
+  if (L) L.pieces.forEach(pc => pc.orig.forEach(i => linked.add(i)));
+  const details = _rhemaIlDetails || !L;
+  _rhemaWbwdState = { ref, rows, renders, L, layer, isHebrew, versionLabel, il: hebIL, ilC, ilV };
+  _rhemaWbwSel = -1;
+  gridEl.classList.toggle('rhema-il-rtl', false);
+  gridEl.classList.toggle('rhema-il-details', details);
+  gridEl.classList.add('wbwd-mode');
+  gridEl.innerHTML = `<div class="wbwd${details ? ' wbwd-details' : ''}">` + phrases.map((ph, n) => {
+    const origLine = ph.idx.map(i => {
+      const r = rows[i];
+      const mute = L && !linked.has(i);
+      return `<button type="button" class="wbwd-w${mute ? ' wbwd-mute' : ''}" data-i="${i}" onclick="rhemaWbwdOrig(${i})">` +
+        `<span class="wbwd-o${isHebrew ? ' rhema-hebrew-text' : ''}">${esc(r.orig)}</span>` +
+        (details ? wordDetails(r, i) : '') + `</button>`;
+    }).join('');
+    let enLine = '';
+    if (L && ph.pieces.length) {
+      const pcs = L.pieces;
+      ph.pieces.forEach((k, j) => {
+        const pc = pcs[k];
+        if (j) {
+          const prev = ph.pieces[j - 1];
+          enLine += prev === k - 1 ? esc(L.text.slice(pcs[prev].end, pc.start)) : ' … ';
+        } else {
+          enLine += esc(_rhemaWbwPunct(L, k).lead);
+        }
+        enLine += pc.orig.length
+          ? `<span class="wbwd-en" data-k="${k}" onclick="rhemaWbwdEn(${k})">${esc(pc.text)}</span>`
+          : `<span class="wbwd-en wbwd-en-none" data-k="${k}">${esc(pc.text)}</span>`;
+      });
+      const lastK = ph.pieces[ph.pieces.length - 1];
+      enLine += esc(_rhemaWbwPunct(L, lastK).trail);
+    }
+    return `<div class="wbwd-ph${isHebrew ? ' wbwd-rtl' : ''}"><span class="wbwd-n">${n + 1}</span>` +
+      `<div class="wbwd-oline" dir="${isHebrew ? 'rtl' : 'ltr'}">${origLine}</div>` +
+      (enLine ? `<div class="wbwd-eline">${enLine}</div>` : '') + `</div>`;
+  }).join('') + `</div><div class="wbw-peek" id="rhemaWbwdPeek" hidden></div>`;
+  _rhemaSetInterlinearVersionNote(hebIL && hebVer ? hebVer.version : (hebIL ? 'BSB' : versionLabel), !!(hebIL && hebVer));
+  const engEl = document.getElementById('rhemaInterlinearEnglish');
+  if (engEl) {
+    // With phrase cards the English sits under each phrase; the Septuagint
+    // (not linked word by word) keeps the whole verse on top.
+    engEl.hidden = !!L;
+    if (!L) engEl.textContent = versionText;
+  }
+}
+// Split a verse into phrases for "Greek / Hebrew order": breaks come from your
+// version's punctuation, carried over to the original words it translates.
+// Words with no English of their own go with the next word (an article with
+// its noun). Without word links (Septuagint), break before "and" (καί).
+let _rhemaWbwdState = null;
+function _rhemaWbwPhrases(rows, L) {
+  const n = rows.length;
+  if (!n) return [];
+  if (!L) {
+    const out = [];
+    let cur = [];
+    rows.forEach((r, i) => {
+      const bare = String(r.orig || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+      if (cur.length >= 3 && (bare === 'και' || cur.length >= 8)) { out.push(cur); cur = []; }
+      cur.push(i);
+    });
+    if (cur.length) out.push(cur);
+    return out.map(idx => ({ idx, pieces: [] }));
+  }
+  const pcs = L.pieces;
+  const pPhr = [];
+  let e = 0;
+  pcs.forEach((pc, k) => {
+    pPhr[k] = e;
+    const gap = L.text.slice(pc.end, k < pcs.length - 1 ? pcs[k + 1].start : L.text.length);
+    if (/[,;:.!?—–]/.test(gap)) e++;
+  });
+  const oPhr = new Array(n).fill(null);
+  pcs.forEach((pc, k) => pc.orig.forEach(i => { if (i < n && oPhr[i] == null) oPhr[i] = pPhr[k]; }));
+  const known = oPhr.slice();
+  for (let i = 0; i < n; i++) {
+    if (oPhr[i] != null) continue;
+    let j = i + 1; while (j < n && known[j] == null) j++;
+    if (j < n) { oPhr[i] = known[j]; continue; }
+    let q = i - 1; while (q >= 0 && known[q] == null) q--;
+    oPhr[i] = q >= 0 ? known[q] : 0;
+  }
+  // Greek: also start a new card at a word that opens a clause ("so that",
+  // "in order that", "because"…) once a card already has a few words.
+  const CLAUSE = new Set(['ωστε', 'ινα', 'οτι', 'αλλ', 'αλλα', 'οπως', 'διοτι', 'οταν', 'εαν', 'και', 'καθως', 'επει']);
+  const greek = L.layer === 'nt-greek';
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const last = out[out.length - 1];
+    const bare = greek ? String(rows[i].orig || '').normalize('NFD').replace(/[\u0300-\u036f’']/g, '').toLowerCase() : '';
+    const clause = greek && last && last.idx.length >= 3 && CLAUSE.has(bare) && n - i >= 3;
+    if (last && last.ph === oPhr[i] && !clause) last.idx.push(i);
+    else out.push({ ph: oPhr[i], idx: [i], pieces: [] });
+  }
+  const runOf = new Array(n);
+  out.forEach((ph, r) => ph.idx.forEach(i => { runOf[i] = r; }));
+  // Each English piece goes under the phrase of its (first) original word; an
+  // English-only word goes with the piece before it.
+  let prevRun = 0;
+  const pieceRun = pcs.map(pc => {
+    const r = pc.orig.length ? runOf[Math.min(...pc.orig.filter(i => i < n))] : null;
+    if (r != null && !Number.isNaN(r)) { prevRun = r; return r; }
+    return null;
+  });
+  pcs.forEach((pc, k) => {
+    let r = pieceRun[k];
+    if (r == null) {
+      let j = k - 1; while (j >= 0 && pieceRun[j] == null) j--;
+      if (j >= 0) r = pieceRun[j];
+      else { j = k + 1; while (j < pcs.length && pieceRun[j] == null) j++; r = j < pcs.length ? pieceRun[j] : 0; }
+    }
+    (out[r] || out[0]).pieces.push(k);
+  });
+  out.forEach(ph => ph.pieces.sort((a, b) => a - b));
+  return out;
+}
+function _rhemaWbwdLight(idxs, ks) {
+  document.querySelectorAll('.wbwd .lit').forEach(el => el.classList.remove('lit'));
+  idxs.forEach(i => document.querySelector(`.wbwd .wbwd-w[data-i="${i}"]`)?.classList.add('lit'));
+  ks.forEach(k => document.querySelector(`.wbwd .wbwd-en[data-k="${k}"]`)?.classList.add('lit'));
+}
+function _rhemaWbwdCard(i) {
+  const st = _rhemaWbwdState;
+  if (!st) return '';
+  const p = _rhemaParseRef(st.ref);
+  const words = _rhemaOrigWords(p.book, p.chapter, p.verse);
+  const il = st.il ? st.il[i] : null;
+  const info = _rhemaWbwWordInfo(p.book, p.chapter, p.verse, st.layer, words[i], i, il);
+  const r = st.rows[i];
+  if (!info.surface) info.surface = r.orig;
+  if (!info.translit) info.translit = r.translit;
+  if (!info.gloss) info.gloss = r.gloss;
+  const v = st.renders[i] || {};
+  let here = '';
+  if (st.L) here = st.L.pieces.filter(pc => pc.orig.includes(i)).map(pc => pc.text).join(' … ');
+  if (!here && v.text && v.kind !== 'none') here = v.text;
+  return _rhemaWbwCardHtml(info, { heb: st.isHebrew, here, study: `_rhemaInterlinearOpenWord(${i})` }) +
+    (!here && st.L ? `<p class="wbw-pk-gram wbw-pk-note">The ${_escapeRhemaAttr(st.versionLabel || 'version')} has no separate word for this one.</p>` : '');
+}
+function rhemaWbwdOrig(i) {
+  const st = _rhemaWbwdState;
+  if (!st) return;
+  if (_rhemaWbwSel === 'o' + i) return _rhemaInterlinearOpenWord(i); // second tap: study it
+  _rhemaWbwSel = 'o' + i;
+  const ks = st.L ? st.L.pieces.map((pc, k) => pc.orig.includes(i) ? k : -1).filter(k => k >= 0) : [];
+  _rhemaWbwdLight([i], ks);
+  _rhemaWbwShowPeek('rhemaWbwdPeek', _rhemaWbwdCard(i));
+}
+function rhemaWbwdEn(k) {
+  const st = _rhemaWbwdState;
+  const pc = st?.L?.pieces?.[k];
+  if (!pc || !pc.orig.length) return;
+  if (_rhemaWbwSel === 'e' + k && pc.orig.length === 1) return _rhemaInterlinearOpenWord(pc.orig[0]);
+  _rhemaWbwSel = 'e' + k;
+  _rhemaWbwdLight(pc.orig, [k]);
+  _rhemaWbwShowPeek('rhemaWbwdPeek', pc.orig.slice(0, 3).map(_rhemaWbwdCard).join(''));
 }
 // Press and hold a tile to light up its English in the verse above; tap a word
 // of the verse to light up its tile(s). Same pairing as Look up a word.
@@ -43902,14 +44180,15 @@ function _rhemaSetInterlinearVersionNote(versionLabel, hebBridge) {
   if (!el) return;
   if (versionLabel) {
     const esc = _escapeRhemaAttr;
-    el.innerHTML = `<span class="rhema-il-legend">` +
-      `<span><span class="rhema-il-swatch rhema-il-sw-version">word</span> ${esc(versionLabel)}’s word</span>` +
-      `<span><span class="rhema-il-swatch rhema-il-sw-inferred">≈</span> best match by position</span>` +
-      `<span><span class="rhema-il-swatch rhema-il-sw-none">—</span> no separate word</span>` +
-      `<span><span class="rhema-il-swatch rhema-il-sw-gloss">gray</span> ${hebBridge ? 'the BSB’s word (not found)' : 'literal meaning'}</span>` +
+    const st = _rhemaWbwdState;
+    const linked = !!(st && st.L) || !st;
+    el.innerHTML = `<span class="wbwd-legend">` +
+      (linked ? `Each card is a phrase: the original on top, the ${esc(versionLabel)} under it. <span class="wbwd-mute-key">Faded</span> words aren’t translated on their own.`
+        : `Under each word: how it sounds, then the ${esc(versionLabel)}’s word for it.`) +
+      (_rhemaIlDetails || !linked ? ` <b>≈</b> closest match · <b>—</b> no separate word · gray: ${hebBridge ? 'the BSB’s word' : 'literal meaning'}.` : '') +
       `</span>` +
-      `<button type="button" class="rhema-il-detail-btn${_rhemaIlDetails ? ' on' : ''}" onclick="rhemaToggleInterlinearDetails()">` +
-      `<span class="material-symbols-outlined">${_rhemaIlDetails ? 'visibility_off' : 'visibility'}</span>${_rhemaIlDetails ? 'Hide' : 'Show'} literal &amp; parsing</button>`;
+      (linked ? `<button type="button" class="rhema-il-detail-btn${_rhemaIlDetails ? ' on' : ''}" onclick="rhemaToggleInterlinearDetails()">` +
+      `<span class="material-symbols-outlined">${_rhemaIlDetails ? 'visibility_off' : 'visibility'}</span>${_rhemaIlDetails ? 'Hide' : 'Show'} each word’s details</button>` : '');
     el.style.display = '';
   } else {
     el.textContent = '';
