@@ -17278,10 +17278,6 @@ function closeBibleJourneysPage() {
 function setBibleJourneyMode(mode) {
   _journeyMode = mode === 'modern' ? 'modern' : 'ancient';
   if (_jstGL && window.JourneyStory) window.JourneyStory.setNames(_journeyMode);
-  else if (document.getElementById('jstMap')?.classList.contains('is-fallback')) {
-    const j = _journeyById(_journeySelectedId);
-    if (j) document.getElementById('jstMap').innerHTML = _journeyRenderMap(j);
-  }
   _jstRenderCard();
   if (!document.getElementById('jstSheet')?.hidden) openJourneyLookSheet();
 }
@@ -17964,13 +17960,16 @@ function openAtlasPeek(book, chapter, verse) {
   document.getElementById('atlasPeekOverlay')?.remove();
   const refLabel = `${typeof _rhemaBookName === 'function' ? _rhemaBookName(book) : book} ${chapter}:${verse}`;
   const ov = document.createElement('div');
-  ov.className = 'journey-peek-overlay';
+  ov.className = 'journey-peek-overlay jst-peek-overlay';
   ov.id = 'atlasPeekOverlay';
   ov.onclick = (e) => { if (e.target === ov) closeAtlasPeek(); };
-  ov.innerHTML = `<div class="journey-peek-card atlas-peek-card">
-    <button class="journey-peek-x" onclick="closeAtlasPeek()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
-    <span class="journey-peek-ref"><span class="material-symbols-outlined">location_on</span>Place${places.length > 1 ? 's' : ''} named in ${_journeyEsc(refLabel)}</span>
-    ${places.length > 1 ? `<div class="atlas-peek-chips" id="atlasPeekChips">${places.map((p, i) => `<button class="${i === 0 ? 'active' : ''}" onclick="_atlasPeekSelect(${i})">${_journeyEsc(p.name)}</button>`).join('')}</div>` : ''}
+  _jstLoadFonts();
+  ov.innerHTML = `<div class="jst jst-peek journey-peek-card" data-look="${_jstLook()}" role="dialog" aria-label="Place map">
+    <div class="jst-peek-top">
+      <span class="jst-peek-ref"><span class="material-symbols-outlined">location_on</span>Place${places.length > 1 ? 's' : ''} in ${_journeyEsc(refLabel)}</span>
+      <button type="button" class="jst-x" onclick="closeAtlasPeek()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    ${places.length > 1 ? `<div class="jst-peek-tabs" id="atlasPeekChips">${places.map((p, i) => `<button type="button" class="${i === 0 ? 'active' : ''}" onclick="_atlasPeekSelect(${i})">${_journeyEsc(p.name)}</button>`).join('')}</div>` : ''}
     <div id="atlasPeekBody"></div>
   </div>`;
   document.body.appendChild(ov);
@@ -17985,24 +17984,25 @@ function _atlasPeekSelect(i) {
   document.querySelectorAll('#atlasPeekChips button').forEach((b, idx) => b.classList.toggle('active', idx === i));
   const body = document.getElementById('atlasPeekBody');
   if (!body) return;
+  const esc = _journeyEsc;
   const conf = _atlasConfidence(place);
   const kind = _atlasKindLabel(place.kind);
-  const refs = (place.refs || []).map(r => `<span>${_journeyEsc(r)}</span>`).join('');
-  const inTiles = _atlasInTiles(place);
-  body.innerHTML = `<span class="journey-peek-title">${_journeyEsc(place.name)}</span>
-    <div class="atlas-peek-sub"><span class="atlas-kind-tag">${_journeyEsc(kind)}</span><span class="atlas-conf-tag ${conf.cls}"><span class="material-symbols-outlined">${conf.icon}</span>${conf.label}</span></div>
-    <p class="atlas-peek-explain">The pin shows where this Bible place sits on a present-day map.</p>
-    ${inTiles ? `<div class="journey-peek-toggle atlas-peek-toggle" role="tablist" aria-label="Map view">
-      <button class="${_atlasPeekMode === 'ancient' ? 'active' : ''}" onclick="setAtlasPeekMode('ancient')">Bible Map</button>
-      <button class="${_atlasPeekMode === 'modern' ? 'active' : ''}" onclick="setAtlasPeekMode('modern')">Modern</button>
-    </div>` : ''}
-    <div class="atlas-peek-map" id="atlasPeekMap"></div>
-    <div class="atlas-modern"><span class="material-symbols-outlined">place</span><div><strong>${conf.tier === 'debated' ? 'Most-accepted location' : 'Where it is today'}</strong><span>${_journeyEsc(place.modern)}</span></div></div>
-    ${_atlasAltsHtml(place)}
-    ${place.note ? `<p class="atlas-note">${_journeyEsc(place.note)}</p>` : ''}
-    ${refs ? `<div class="atlas-refs"><strong>Where it appears in Scripture</strong><div class="atlas-ref-chips">${refs}</div></div>` : ''}
-    <button class="atlas-peek-full" onclick="_atlasJumpToFull('${place.name.replace(/'/g, "\\'")}')">Open in the full Atlas<span class="material-symbols-outlined">arrow_forward</span></button>`;
-  _atlasPeekMountGL(place);
+  const refs = (place.refs || []).map(r => `<span class="jst-chip">${esc(r)}</span>`).join('');
+  const inTiles = _atlasInTiles(place) && typeof place.lat === 'number';
+  body.innerHTML = `${inTiles ? `<div class="jst-peek-map"><div class="jst-peek-host" id="atlasPeekMapHost"></div><div class="jst-sky" aria-hidden="true"></div><div class="jst-stars" aria-hidden="true"></div></div>` : ''}
+    <div class="jst-peek-body">
+      <span class="jst-kick">${esc(kind)} · ${esc(conf.label)}</span>
+      <h2 class="jst-place">${esc(place.name)}</h2>
+      <p class="jst-sub"><span class="material-symbols-outlined">location_on</span>${conf.tier === 'debated' ? 'Most-accepted site: ' : 'Today: '}${esc(place.modern)}</p>
+      ${place.note ? `<p class="jst-what">${esc(place.note)}</p>` : ''}
+      ${_atlasAltsHtml(place)}
+      ${refs ? `<div class="jst-sheet-sub">In Scripture</div><div class="jst-chips">${refs}</div>` : ''}
+      <div class="jst-row"><button type="button" class="jst-btn jst-btn-p" onclick="_atlasJumpToFull('${place.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')"><span class="material-symbols-outlined">travel_explore</span>Open in the Atlas</button></div>
+    </div>`;
+  if (inTiles) {
+    const pseudo = { id: 'place:' + place.name, title: place.name, points: [{ ancient: place.name, modern: place.modern, lat: place.lat, lon: place.lon }], steps: [] };
+    setTimeout(() => _jstPeekMount('atlasPeekMapHost', pseudo, [{ kind: 'step', point: 0, bubble: `${place.name.split(/\s*[\/(,]\s*/)[0].slice(0, 20)}!` }], 0), 340);
+  }
 }
 
 function setAtlasPeekMode(mode) {
@@ -18077,6 +18077,7 @@ function closeAtlasPeek() {
   try { window.BibleMap?.destroy?.(); } catch (e) {}
   const ov = document.getElementById('atlasPeekOverlay');
   if (!ov) return;
+  _jstPeekRestorePage();
   ov.classList.remove('open');
   setTimeout(() => ov.remove(), 180);
 }
@@ -18324,20 +18325,46 @@ function renderBibleJourneysPage() {
   _journeyStopPlay();
   const root = document.getElementById('jst');
   if (root) root.dataset.look = _jstLook();
-  if (!document.getElementById('jstFonts')) {
-    const l = document.createElement('link');
-    l.id = 'jstFonts'; l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Caveat:wght@700&display=swap';
-    document.head.appendChild(l);
-  }
+  _jstLoadFonts();
   const t = document.getElementById('jstTitle');
   const r = document.getElementById('jstRefs');
   if (t) t.textContent = journey.title;
   if (r) r.textContent = _jstRefsLabel(journey);
   _jstStops = _jstStopsFor(journey);
-  _jstStep = 0;
+  _jstStep = Math.max(0, Math.min(_jstStops.length - 1, _jstStartAt || 0));
+  _jstStartAt = 0;
   _jstRenderCard();
   _jstMount(journey);
+}
+let _jstStartAt = 0;
+// No connection or no 3D support: a friendly note instead of a map.
+function _jstOfflineHtml(compact) {
+  return `<div class="jst-offline"><img src="assets/mascot/guide-think.webp" alt="" decoding="async">
+    <b>The map needs a connection</b>
+    <small>${compact ? 'Connect to the internet to see this on the 3D map.' : 'Connect to the internet to see the 3D map. The story still works: tap Next stop.'}</small></div>`;
+}
+// Mount the story map into a pop-up (journey or place peek). Only one story
+// map lives at a time, so the journey page's map comes back when it closes.
+function _jstPeekMount(hostId, journey, stops, at) {
+  const host = document.getElementById(hostId);
+  if (!host) return;
+  _jstGL = false;
+  const offline = () => { const h = document.getElementById(hostId); if (h) { h.classList.add('is-offline'); h.innerHTML = _jstOfflineHtml(true); } };
+  if (!_bibleMapEnabled() || !(journey.points || []).some(p => typeof p.lat === 'number')) { offline(); return; }
+  _ensureBibleMapLibs().then(() => {
+    if (!document.getElementById(hostId) || !window.JourneyStory) return null;
+    return window.JourneyStory.mount(host, journey, {
+      pmtilesUrl: _journeyResolvePmtiles(), terrain: BIBLE_TERRAIN_OPTIONS, look: _jstLook(),
+      names: _journeyMode, stops, side: 52, padding: () => ({ top: 34, bottom: 18 })
+    }).then(() => { if (at) window.JourneyStory.go(at, { animate: false }); });
+  }).catch(e => { console.warn('peek map:', e); offline(); });
+}
+function _jstPeekRestorePage() {
+  try { window.JourneyStory?.destroy(); } catch {}
+  if (document.getElementById('journeysPage')?.classList.contains('active')) {
+    const j = _journeyById(_journeySelectedId);
+    if (j) _jstMount(j);
+  }
 }
 
 // ── Journey story view ─────────────────────────────────────────────────────
@@ -18419,7 +18446,7 @@ function _jstMount(journey) {
   const fallback = () => {
     if (_journeySelectedId !== journey.id) return;
     host.classList.add('is-fallback');
-    host.innerHTML = _journeyRenderMap(journey);
+    host.innerHTML = _jstOfflineHtml(false);
   };
   if (!_bibleMapEnabled() || !(journey.points || []).some(p => typeof p.lat === 'number')) { fallback(); return; }
   _ensureBibleMapLibs().then(() => {
@@ -18844,43 +18871,49 @@ function openJourneyPeek(book, chapter, verse) {
   const journey = match.journey;
   _journeyPeekCurrentId = journey.id;
   _journeyPeekCurrentStepIndex = match.stepIdx;
-  _journeyPeekMode = 'ancient';
-  const step = (journey.steps || [])[match.stepIdx];
   document.getElementById('journeyPeekOverlay')?.remove();
   if (window.BibleMap) { try { window.BibleMap.destroy(); } catch (e) {} }
-  const refName = (typeof _rhemaBookName === 'function' ? _rhemaBookName(book) : book) + ' ' + chapter + ':' + verse;
+  const esc = _journeyEsc;
+  const stops = _jstStopsFor(journey);
+  const si = Math.max(0, Math.min(stops.length - 1, (match.stepIdx >= 0 ? match.stepIdx : 0) + 1));
+  const s = stops[si] || stops[0];
+  const step = s.step || (journey.steps || [])[0] || {};
+  const total = (journey.steps || []).length;
+  const place = _jstPointName((journey.points || [])[s.point]);
+  _jstLoadFonts();
   const ov = document.createElement('div');
   ov.id = 'journeyPeekOverlay';
-  ov.className = 'journey-peek-overlay';
+  ov.className = 'journey-peek-overlay jst-peek-overlay';
   ov.onclick = (e) => { if (e.target === ov) closeJourneyPeek(); };
-  ov.innerHTML = `<div class="journey-peek-card" role="dialog" aria-label="Journey map">
-    <button class="journey-peek-x" onclick="closeJourneyPeek()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
-    <span class="journey-kicker">Journey map</span>
-    <strong class="journey-peek-title">${_journeyEsc(journey.title)}</strong>
-    <small class="journey-peek-ref">${_journeyEsc(refName)} &middot; ${_journeyEsc(journey.certainty || 'Approximate')}</small>
-    <div class="journey-peek-toggle" role="tablist" aria-label="Map view">
-      <button class="${_journeyPeekMode === 'ancient' ? 'active' : ''}" id="journeyPeekAncient" onclick="setJourneyPeekMode('ancient')">Bible Map</button>
-      <button class="${_journeyPeekMode === 'modern' ? 'active' : ''}" id="journeyPeekModern" onclick="setJourneyPeekMode('modern')">Modern</button>
+  ov.innerHTML = `<div class="jst jst-peek journey-peek-card" data-look="${_jstLook()}" role="dialog" aria-label="Journey map">
+    <div class="jst-peek-map"><div class="jst-peek-host" id="jstPeekMap"></div><div class="jst-sky" aria-hidden="true"></div><div class="jst-stars" aria-hidden="true"></div>
+      <button type="button" class="jst-ibtn jst-peek-x" onclick="closeJourneyPeek()" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+    <div class="jst-peek-body">
+      <span class="jst-kick">${esc(journey.title)}</span>
+      <h2 class="jst-place">${esc(step.label || journey.title)}</h2>
+      <p class="jst-sub"><span class="material-symbols-outlined">location_on</span>${esc(place)}${step.ref ? ` · ${esc(step.ref)}` : ''}${total ? ` · stop ${s.n || 1} of ${total}` : ''}</p>
+      ${step.copy ? `<p class="jst-what">${esc(step.copy)}</p>` : ''}
+      <div class="jst-row"><button type="button" class="jst-btn jst-btn-p" onclick="openJourneyFromPeek('${esc(journey.id)}', ${si})"><span class="material-symbols-outlined">map</span>Open the journey</button></div>
     </div>
-    <div class="journey-peek-map" id="journeyPeekMap">
-      <div class="journey-peek-mapsvg" id="journeyPeekMapSvg">${_journeyRenderMapForMode(journey, _journeyPeekMode)}</div>
-      <div class="journey-peek-mapgl" id="journeyPeekMapGL"></div>
-    </div>
-    <div id="journeyPeekFacts">${_journeyPeekFactsHtml(journey, step)}</div>
-    <button class="journey-peek-open" onclick="openJourneyFromPeek('${_journeyEsc(journey.id)}')"><span class="material-symbols-outlined">explore</span>Open full journey</button>
   </div>`;
   document.body.appendChild(ov);
   requestAnimationFrame(() => {
     ov.classList.add('open');
-    // Mount the real map AFTER the card's open transition settles — MapLibre
-    // renders blank if it initializes while an ancestor is still being
-    // transformed/scaled in (the journeys page has no such transform).
-    const card = ov.querySelector('.journey-peek-card');
+    // Mount after the open transition (MapLibre renders blank inside a
+    // still-scaling ancestor).
+    const card = ov.querySelector('.jst-peek');
     let mounted = false;
-    const doMount = () => { if (mounted) return; mounted = true; _journeyPeekMountGL(journey, _journeyPeekMode); };
+    const doMount = () => { if (mounted) return; mounted = true; _jstPeekMount('jstPeekMap', journey, stops, si); };
     if (card) card.addEventListener('transitionend', doMount, { once: true });
-    setTimeout(doMount, 340);   // fallback if transitionend doesn't fire
+    setTimeout(doMount, 340);
   });
+}
+function _jstLoadFonts() {
+  if (document.getElementById('jstFonts')) return;
+  const l = document.createElement('link');
+  l.id = 'jstFonts'; l.rel = 'stylesheet';
+  l.href = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Caveat:wght@700&display=swap';
+  document.head.appendChild(l);
 }
 
 function _journeyPeekSetDiag(status) {
@@ -19016,13 +19049,15 @@ function closeJourneyPeek() {
   _journeyPeekCurrentId = '';
   _journeyPeekCurrentStepIndex = -1;
   if (window.BibleMap) { try { window.BibleMap.destroy(); } catch (e) {} }
+  if (document.getElementById('journeyPeekOverlay')) _jstPeekRestorePage();
   const o = document.getElementById('journeyPeekOverlay');
   if (!o) return;
   o.classList.remove('open');
   setTimeout(() => o.remove(), 200);
 }
 
-function openJourneyFromPeek(id) {
+function openJourneyFromPeek(id, at = 0) {
+  _jstStartAt = at || 0;
   closeJourneyPeek();
   closeRhemaVerseSheet?.();
   _rhemaStashForMaps();
@@ -32000,7 +32035,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.635";
+const APP_VERSION = "3.0.636";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32023,6 +32058,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.636 — Map pop-ups in your map look</div>
+<ul>
+<li>The little journey and place pop-ups you open from the reader now match your map look (Storybook, Lantern night or Toy world): a 3D map with the guide standing at the spot, then a short card. "Open the journey" starts right at that stop.</li>
+<li>The old flat offline diagram is gone. Without a connection you'll see a friendly note instead, and the journey story still works.</li>
+</ul>
 <div class="un-version-label">v3.0.635 — Every New Testament journey, checked</div>
 <ul>
 <li>All 77 New Testament journeys (the Gospels, Acts and the seven churches of Revelation) were checked against the text: each step stands at its real place, sea and lake crossings show as boat trips, guessed waypoints were removed, and places the text names were added (like Perga, Cnidus, Ptolemais, the Forum of Appius and Patmos).</li>
