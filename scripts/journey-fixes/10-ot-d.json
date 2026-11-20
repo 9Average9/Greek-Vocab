@@ -1,0 +1,226 @@
+{
+  "_about": "Old Testament, part D.",
+  "jehu-revolt": {
+    "steps": [
+      { "label": "Anointed in secret", "ref": "2 Kings 9:1-10", "copy": "At Ramoth-gilead, a young prophet sent by Elisha pours oil on Jehu's head in an inner room and runs off.", "at": 0 },
+      { "label": "Riding to Jezreel", "ref": "2 Kings 9:14-16", "copy": "Jehu mounts his chariot and rides to Jezreel, where King Joram is recovering from his wounds.", "miles": 40, "at": 1 },
+      { "label": "“Driving like a madman”", "ref": "2 Kings 9:17-20", "copy": "The watchman reports: “He is driving like a madman!”", "at": 1 },
+      { "label": "Joram struck down", "ref": "2 Kings 9:21-26", "copy": "They meet at Naboth's field. Jehu draws his bow and shoots Joram between the shoulders.", "at": 1 },
+      { "label": "Jezebel's end", "ref": "2 Kings 9:30-37", "copy": "Jezebel is thrown down from a window, as the Lord had spoken through Elijah.", "at": 1 }
+    ]
+  },
+  "sennacherib-jerusalem": {
+    "set": { "note": "Where the Assyrian camp was when it was struck isn't said. The king had moved on from Lachish to fight Libnah (2 Kings 19:8)." },
+    "steps": [
+      { "label": "Tribute to Lachish", "ref": "2 Kings 18:13-16", "copy": "Hezekiah sends silver and gold to the king of Assyria at Lachish.", "at": 0 },
+      { "label": "The army at the wall", "ref": "2 Kings 18:17-25", "copy": "A great force comes up from Lachish and stands by the conduit of the upper pool, mocking Judah's trust in the Lord.", "miles": 28, "at": 1 },
+      { "label": "The letter spread out", "ref": "2 Kings 19:14-19", "copy": "Hezekiah spreads the threatening letter before the Lord and prays.", "at": 1 },
+      { "label": "The camp struck", "ref": "2 Kings 19:35-36", "copy": "That night the angel of the Lord strikes the Assyrian camp, and Sennacherib goes home to Nineveh.", "at": 1 }
+    ]
+  },
+  "zedekiah-flight": { "at": [1, 1, 2, 2] },
+  "jeremiah-to-egypt": {
+    "points": [
+      { "ancient": "Mizpah", "modern": "Tell en-Nasbeh (likely)", "lat": 31.83, "lon": 35.18 },
+      { "ancient": "Geruth Chimham", "modern": "near Bethlehem (site unknown)", "lat": 31.7, "lon": 35.2 },
+      { "ancient": "Tahpanhes", "modern": "Tell Defenneh, Egypt", "lat": 30.85, "lon": 32.18 }
+    ],
+    "steps": [
+      { "label": "Toward Egypt", "ref": "Jeremiah 41:16-18", "copy": "After Gedaliah is murdered, Johanan leads the survivors from Mizpah to Geruth Chimham near Bethlehem, afraid of Babylon.", "miles": 10, "at": 1 },
+      { "label": "Ask the Lord", "ref": "Jeremiah 42:1-22", "copy": "They beg Jeremiah to pray. The answer: stay in the land, and do not go to Egypt.", "at": 1 },
+      { "label": "Refusing the word", "ref": "Jeremiah 43:1-7", "copy": "They call it a lie and take the whole remnant, Jeremiah and Baruch too, into Egypt as far as Tahpanhes.", "miles": 220, "at": 2 },
+      { "label": "Stones in the pavement", "ref": "Jeremiah 43:8-13", "copy": "Jeremiah buries large stones at Pharaoh's palace: Nebuchadnezzar will set his throne over them.", "at": 2 }
+    ]
+  },
+  "jonah-flees-tarshish": {
+    "set": { "note": "Tarshish lay far to the west, often linked with Tartessus in Spain; the ship never got there. Where the storm struck is not recorded." },
+    "points": [
+      { "ancient": "Joppa", "modern": "Jaffa, Israel", "lat": 32.05, "lon": 34.75 },
+      { "ancient": "Out at sea", "modern": "the Mediterranean (spot unknown)", "lat": 32.7, "lon": 33.6 }
+    ],
+    "steps": [
+      { "label": "Down to Joppa", "ref": "Jonah 1:1-3", "copy": "Told to go to Nineveh, Jonah runs the other way. At Joppa he pays the fare for a ship bound for Tarshish.", "at": 0 },
+      { "label": "The great storm", "ref": "Jonah 1:4-6", "copy": "The Lord hurls a great wind on the sea, and the ship is about to break apart. Jonah sleeps below.", "at": 1, "by": "sea" },
+      { "label": "The lot falls on Jonah", "ref": "Jonah 1:7-12", "copy": "The sailors cast lots, and Jonah tells them to throw him into the sea.", "at": 1 },
+      { "label": "Cast into the sea", "ref": "Jonah 1:15-16", "copy": "They throw him overboard and the sea grows calm.", "at": 1 },
+      { "label": "The great fish", "ref": "Jonah 1:17", "copy": "The Lord appoints a great fish to swallow Jonah, and he is inside it three days and three nights.", "at": 1 }
+    ]
+  },
+  "daniel-exile-babylon": {
+    "set": { "note": "Daniel doesn't record the road. Travelers usually went north around the desert, roughly 900 miles." },
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Babylon (Shinar)", "modern": "near Hillah, Iraq", "lat": 32.54, "lon": 44.42 }
+    ],
+    "steps": [
+      { "label": "Jerusalem besieged", "ref": "Daniel 1:1", "copy": "In the third year of Jehoiakim, Nebuchadnezzar comes against Jerusalem and besieges it.", "at": 0 },
+      { "label": "Vessels to Shinar", "ref": "Daniel 1:2", "copy": "The Lord gives Jehoiakim into his hand, and he carries temple vessels to the land of Shinar.", "miles": 900, "at": 1 },
+      { "label": "Chosen youths", "ref": "Daniel 1:3-5", "copy": "Young men of Israel's royal and noble families are chosen to learn the language and literature of the Chaldeans.", "at": 1 },
+      { "label": "Daniel among them", "ref": "Daniel 1:6-7", "copy": "Daniel, Hananiah, Mishael and Azariah are among them, and they are given new names.", "at": 1 }
+    ]
+  },
+  "ahab-ramoth-gilead": {
+    "steps": [
+      { "label": "A call to war", "ref": "1 Kings 22:2-4", "copy": "At Samaria, Ahab asks Jehoshaphat to go up with him to Ramoth-gilead.", "at": 0 },
+      { "label": "Micaiah's vision", "ref": "1 Kings 22:17", "copy": "“I saw all Israel scattered on the hills like sheep without a shepherd.”", "at": 0 },
+      { "label": "Up to battle", "ref": "1 Kings 22:29-30", "copy": "The two kings go up to Ramoth-gilead, Ahab in disguise.", "miles": 45, "at": 1 },
+      { "label": "A random arrow", "ref": "1 Kings 22:34-35", "copy": "A man draws his bow at random and hits the king between the joints of his armor. He dies that evening.", "at": 1 },
+      { "label": "Brought to Samaria", "ref": "1 Kings 22:37-38", "copy": "He is buried in Samaria, and dogs lick up his blood at the pool, as the Lord had said.", "miles": 45, "at": 0 }
+    ]
+  },
+  "babel-shinar": {
+    "set": { "note": "Genesis says people journeyed eastward and settled on a plain in Shinar (Babylonia). The city is called Babel." },
+    "points": [
+      { "ancient": "Babel, in Shinar", "modern": "Babylonia, southern Iraq", "lat": 32.54, "lon": 44.42 }
+    ],
+    "steps": [
+      { "label": "Settling in Shinar", "ref": "Genesis 11:1-2", "copy": "The whole world has one language. Journeying eastward, people find a plain in Shinar and settle there.", "at": 0 },
+      { "label": "A tower to the heavens", "ref": "Genesis 11:3-4", "copy": "“Let us build for ourselves a city with a tower that reaches to the heavens.”", "at": 0 },
+      { "label": "Languages confused", "ref": "Genesis 11:5-7", "copy": "The Lord comes down and confuses their language so they cannot understand one another.", "at": 0 },
+      { "label": "Scattered abroad", "ref": "Genesis 11:8-9", "copy": "The Lord scatters them over all the earth, and the city is called Babel.", "at": 0 }
+    ]
+  },
+  "abraham-gerar": {
+    "points": [
+      { "ancient": "Mamre", "modern": "near Hebron, West Bank", "lat": 31.55, "lon": 35.1 },
+      { "ancient": "Gerar", "modern": "Tel Haror area", "lat": 31.4, "lon": 34.58 }
+    ],
+    "steps": [
+      { "label": "Toward the Negev", "ref": "Genesis 20:1", "copy": "Abraham moves into the Negev, between Kadesh and Shur, and stays for a time in Gerar.", "miles": 32, "at": 1 },
+      { "label": "Sarah taken", "ref": "Genesis 20:2", "copy": "Abraham says of Sarah, “She is my sister,” and Abimelech king of Gerar has her brought to him.", "at": 1 },
+      { "label": "A dream of warning", "ref": "Genesis 20:3-7", "copy": "God comes to Abimelech in a dream: “You are as good as dead,” for she is a married woman.", "at": 1 },
+      { "label": "Healing through prayer", "ref": "Genesis 20:14-17", "copy": "Abimelech returns Sarah. Abraham prays, and God heals Abimelech and his household.", "at": 1 }
+    ]
+  },
+  "hagar-ishmael-cast-out": {
+    "points": [
+      { "ancient": "Beersheba", "modern": "Beersheba, Israel", "lat": 31.25, "lon": 34.79 },
+      { "ancient": "Wilderness of Beersheba", "modern": "Negev wilderness", "lat": 31.05, "lon": 34.72 },
+      { "ancient": "Wilderness of Paran", "modern": "central Sinai / Negev", "lat": 30.3, "lon": 34.3 }
+    ],
+    "steps": [
+      { "label": "Sent into the wild", "ref": "Genesis 21:14", "copy": "Abraham gives Hagar bread and a skin of water and sends her off with the boy. She wanders in the wilderness of Beersheba.", "miles": 15, "at": 1 },
+      { "label": "A mother's grief", "ref": "Genesis 21:15-16", "copy": "When the water is gone, she puts the boy under a bush and sits away from him, weeping.", "at": 1 },
+      { "label": "God hears the boy", "ref": "Genesis 21:17-18", "copy": "“Do not be afraid, for God has heard the voice of the boy where he lies.”", "at": 1 },
+      { "label": "A well revealed", "ref": "Genesis 21:19", "copy": "God opens her eyes, and she sees a well of water.", "at": 1 },
+      { "label": "Home in Paran", "ref": "Genesis 21:20-21", "copy": "God is with the boy. He becomes an archer and lives in the wilderness of Paran.", "miles": 55, "at": 2 }
+    ]
+  },
+  "esau-settles-seir": {
+    "points": [
+      { "ancient": "Canaan (Hebron)", "modern": "Hebron, West Bank", "lat": 31.53, "lon": 35.1 },
+      { "ancient": "Mount Seir (Edom)", "modern": "Edom highlands, Jordan", "lat": 30.5, "lon": 35.4 }
+    ],
+    "steps": [
+      { "label": "Leaving Jacob", "ref": "Genesis 36:6-7", "copy": "Esau takes his family and livestock to a land away from Jacob; the land cannot support them both.", "at": 0 },
+      { "label": "Dwelling in Seir", "ref": "Genesis 36:8", "copy": "Esau, that is Edom, settles in the hill country of Seir.", "miles": 75, "at": 1 },
+      { "label": "Father of Edom", "ref": "Genesis 36:9", "copy": "These are the generations of Esau, father of the Edomites.", "at": 1 },
+      { "label": "Chiefs of Edom", "ref": "Genesis 36:40-43", "copy": "The chiefs of Edom are listed by their places in the land they possess.", "at": 1 }
+    ]
+  },
+  "brothers-grain-egypt": { "at": [1, 1, 1, 0] },
+  "israel-leaves-sinai": {
+    "set": { "note": "The camps after Sinai (Taberah, Kibroth-hattaavah, Hazeroth) are unknown sites; the first stop is placed roughly three days on." },
+    "points": [
+      { "ancient": "Mount Sinai", "modern": "traditionally Jebel Musa (site debated)", "lat": 28.54, "lon": 33.97 },
+      { "ancient": "Three days' journey", "modern": "toward Hazeroth (spot unknown)", "lat": 28.8, "lon": 34.15 },
+      { "ancient": "Wilderness of Paran", "modern": "central Sinai / Negev", "lat": 30.3, "lon": 34.3 }
+    ],
+    "steps": [
+      { "label": "The cloud lifts", "ref": "Numbers 10:11-12", "copy": "In the second year the cloud rises from the tabernacle, and Israel sets out from the wilderness of Sinai.", "at": 0 },
+      { "label": "Tribe by tribe", "ref": "Numbers 10:13-28", "copy": "They march in order under their banners, Judah first.", "at": 0 },
+      { "label": "The ark leads", "ref": "Numbers 10:33-34", "copy": "The ark goes ahead of them three days to find a place to rest, the cloud over them by day.", "miles": 20, "at": 1 },
+      { "label": "“Rise up, O LORD!”", "ref": "Numbers 10:35-36", "copy": "Whenever the ark set out, Moses said, “Rise up, O LORD! May Your enemies be scattered.”", "at": 1 },
+      { "label": "Into Paran", "ref": "Numbers 12:16", "copy": "After Taberah, Kibroth-hattaavah and Hazeroth, they camp in the wilderness of Paran.", "miles": 110, "at": 2 }
+    ]
+  },
+  "kibroth-hattaavah": {
+    "set": { "note": "Kibroth-hattaavah is unknown. Hazeroth is traditionally placed at Ain Hudhera." },
+    "points": [
+      { "ancient": "Kibroth-hattaavah", "modern": "between Sinai and Hazeroth (site unknown)", "lat": 28.8, "lon": 34.15 },
+      { "ancient": "Hazeroth", "modern": "traditionally Ain Hudhera (site debated)", "lat": 28.93, "lon": 34.42 }
+    ],
+    "steps": [
+      { "label": "Craving meat", "ref": "Numbers 11:4-6", "copy": "The people weep again: “Who will feed us meat?” They remember the fish of Egypt.", "at": 0 },
+      { "label": "Quail from the sea", "ref": "Numbers 11:31-32", "copy": "A wind from the Lord drives quail in from the sea all around the camp.", "at": 0 },
+      { "label": "Graves of craving", "ref": "Numbers 11:33-34", "copy": "A plague strikes, and the place is named Kibroth-hattaavah, where they bury the people who craved.", "at": 0 },
+      { "label": "On to Hazeroth", "ref": "Numbers 11:35", "copy": "From there the people journey to Hazeroth and stay there.", "miles": 18, "at": 1 }
+    ]
+  },
+  "midianite-war": {
+    "set": { "note": "Numbers doesn't say where the battle was fought; the Midianites were then living alongside Moab (Numbers 22:4; 25:6)." },
+    "points": [
+      { "ancient": "Plains of Moab", "modern": "Jordan valley across from Jericho", "lat": 31.85, "lon": 35.6 },
+      { "ancient": "Midian's camps", "modern": "near Moab (spot unknown)", "lat": 31.4, "lon": 36.1 }
+    ],
+    "steps": [
+      { "label": "Called to war", "ref": "Numbers 31:1-6", "copy": "Moses says, “Arm some of your men for war,” a thousand from each tribe, with Phinehas the priest.", "at": 0 },
+      { "label": "Midian defeated", "ref": "Numbers 31:7-11", "copy": "They fight against Midian and kill its five kings and Balaam son of Beor.", "miles": 40, "at": 1 },
+      { "label": "Back to the camp", "ref": "Numbers 31:12-13", "copy": "They bring the captives and plunder to Moses and Eleazar at the camp on the plains of Moab.", "miles": 40, "at": 0 }
+    ]
+  },
+  "transjordan-settlement": {
+    "points": [
+      { "ancient": "Plains of Moab", "modern": "Jordan valley across from Jericho", "lat": 31.85, "lon": 35.6 },
+      { "ancient": "Dibon", "modern": "Dhiban, Jordan", "lat": 31.5, "lon": 35.78 },
+      { "ancient": "Gilead", "modern": "Gilead highlands, Jordan", "lat": 32.25, "lon": 35.75 }
+    ],
+    "steps": [
+      { "label": "Good land for cattle", "ref": "Numbers 32:1-4", "copy": "Reuben and Gad have huge herds and see that Jazer and Gilead are good for livestock.", "at": 0 },
+      { "label": "A bold request", "ref": "Numbers 32:5-15", "copy": "“Let this land be given to your servants as a possession. Do not make us cross the Jordan.” Moses warns them.", "at": 0 },
+      { "label": "Armed and ready", "ref": "Numbers 32:16-27", "copy": "They promise to cross over armed ahead of Israel until every tribe has its land.", "at": 0 },
+      { "label": "Granted", "ref": "Numbers 32:28-33", "copy": "Moses gives them, with half of Manasseh, the kingdoms of Sihon and Og.", "at": 0 },
+      { "label": "Building cities", "ref": "Numbers 32:34-38", "copy": "The Gadites build Dibon, Ataroth and Aroer; the Reubenites rebuild Heshbon and others.", "miles": 26, "at": 1 },
+      { "label": "Gilead taken", "ref": "Numbers 32:39-42", "copy": "The descendants of Machir son of Manasseh take Gilead and settle there.", "miles": 55, "at": 2 }
+    ]
+  },
+  "gibeonites-gilgal": {
+    "steps": [
+      { "label": "A cunning plan", "ref": "Joshua 9:3-5", "copy": "The Gibeonites load worn-out sacks, old patched wineskins and dry, moldy bread.", "at": 0 },
+      { "label": "Coming to Gilgal", "ref": "Joshua 9:6", "copy": "“We have come from a distant land; please make a treaty with us.”", "miles": 18, "at": 1 },
+      { "label": "Peace sworn", "ref": "Joshua 9:14-15", "copy": "Without asking the Lord, Joshua makes peace with them, and the leaders swear an oath.", "at": 1 },
+      { "label": "Neighbors after all", "ref": "Joshua 9:16-17", "copy": "Three days later Israel learns they are neighbors and reaches their cities on the third day.", "miles": 18, "at": 0 },
+      { "label": "Woodcutters and water carriers", "ref": "Joshua 9:18-27", "copy": "Bound by the oath, Israel spares them, and they serve the house of God.", "at": 0 }
+    ]
+  },
+  "caleb-hebron": {
+    "steps": [
+      { "label": "Coming to Joshua", "ref": "Joshua 14:6-11", "copy": "At Gilgal, Caleb reminds Joshua of the Lord's promise at Kadesh-barnea, forty-five years before.", "at": 0 },
+      { "label": "“Give me this hill country”", "ref": "Joshua 14:12", "copy": "At eighty-five he asks for the hill country where the Anakim live.", "at": 0 },
+      { "label": "Hebron granted", "ref": "Joshua 14:13-14", "copy": "Joshua blesses Caleb and gives him Hebron, because he followed the Lord fully.", "at": 0 },
+      { "label": "The Anakim driven out", "ref": "Joshua 15:13-14", "copy": "Caleb drives out the three sons of Anak from Hebron.", "miles": 40, "at": 1 },
+      { "label": "Debir taken", "ref": "Joshua 15:15-17", "copy": "Othniel captures Debir and wins Caleb's daughter Achsah as his wife.", "miles": 11, "at": 2 }
+    ]
+  },
+  "joshua-shechem-covenant": {
+    "points": [
+      { "ancient": "Shechem", "modern": "near Nablus, West Bank", "lat": 32.21, "lon": 35.28 },
+      { "ancient": "Timnath-serah", "modern": "Kifl Haris area, West Bank (likely)", "lat": 32.11, "lon": 35.13 }
+    ],
+    "steps": [
+      { "label": "Israel gathered", "ref": "Joshua 24:1-13", "copy": "Joshua gathers all the tribes at Shechem and retells all the Lord has done.", "at": 0 },
+      { "label": "“Choose this day”", "ref": "Joshua 24:14-15", "copy": "“As for me and my house, we will serve the LORD!”", "at": 0 },
+      { "label": "A covenant made", "ref": "Joshua 24:25", "copy": "Joshua makes a covenant for the people that day at Shechem.", "at": 0 },
+      { "label": "The witness stone", "ref": "Joshua 24:26-27", "copy": "He sets up a large stone under the oak near the sanctuary of the Lord.", "at": 0 },
+      { "label": "Joshua buried", "ref": "Joshua 24:29-30", "copy": "Joshua dies at 110 and is buried in his inheritance at Timnath-serah.", "miles": 12, "at": 1 },
+      { "label": "Joseph's bones", "ref": "Joshua 24:32", "copy": "The bones of Joseph, brought up from Egypt, are buried at Shechem on the land Jacob bought.", "miles": 12, "at": 0 }
+    ]
+  },
+  "samson-timnah": { "at": [1, 1, 1, 1] },
+  "abimelech-thebez": { "at": [0, 0, 1, 1] },
+  "levite-gibeah": {
+    "points": [
+      { "ancient": "Hill country of Ephraim", "modern": "a remote part (spot unknown)", "lat": 32.1, "lon": 35.2 },
+      { "ancient": "Bethlehem", "modern": "Bethlehem, West Bank", "lat": 31.7, "lon": 35.2 },
+      { "ancient": "Jebus", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Gibeah", "modern": "Tell el-Ful", "lat": 31.82, "lon": 35.23 }
+    ],
+    "steps": [
+      { "label": "Going to Bethlehem", "ref": "Judges 19:1-3", "copy": "In the days with no king, a Levite from Ephraim goes to Bethlehem to bring back his concubine.", "miles": 30, "at": 1 },
+      { "label": "Lingering", "ref": "Judges 19:4-10", "copy": "Her father keeps them for days; late on the fifth day they finally set out.", "at": 1 },
+      { "label": "Passing Jebus", "ref": "Judges 19:10-12", "copy": "They will not stop in Jebus, a city of foreigners.", "miles": 6, "at": 2 },
+      { "label": "Lodging at Gibeah", "ref": "Judges 19:14-21", "copy": "At sunset they reach Gibeah of Benjamin, and an old man takes them in.", "miles": 3, "at": 3 },
+      { "label": "Israel roused", "ref": "Judges 19:22-30", "copy": "After a night of violence there, the Levite sends word through all Israel: “Nothing like this has been seen or done.”", "miles": 25, "at": 0 }
+    ]
+  }
+}

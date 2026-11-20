@@ -11368,23 +11368,20 @@ const BIBLE_JOURNEYS = [
     mode: 'Caravan pace',
     days: 'About 4 months in Ezra 7:8-9',
     modern: 'Iraq through Syria/Jordan/Israel region',
-    note: 'Caravans usually followed safer river and trade routes rather than cutting straight across desert.',
+    note: 'Ezra names the start (Babylon, by the Ahava canal) and the end; the caravan road between is not recorded. Nehemiah\'s later journey from Susa is its own journey.',
     sources: [
       'Ezra 7:8–9 gives a roughly four-month travel window (first month to fifth month), which fits the long arc up the Euphrates rather than a direct desert crossing.',
       'Babylon is securely located near Hillah, Iraq; the intermediate "Euphrates corridor" and Damascus-region waypoints stand for the watered trade route, not named stops.',
       'Nehemiah’s separate journey (Nehemiah 2) came years later under Artaxerxes; it is shown only to mark the second return wave.'
     ],
     points: [
-      { ancient: 'Babylon', modern: 'near Hillah, Iraq', x: 82, y: 71, lat: 32.54, lon: 44.42 },
-      { ancient: 'Euphrates route', modern: 'Iraq/Syria river corridor', x: 66, y: 42, lat: 35, lon: 40.5 },
-      { ancient: 'Damascus region', modern: 'Syria', x: 49, y: 49, lat: 33.51, lon: 36.29 },
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 36, y: 65, lat: 31.78, lon: 35.23 }
+      { ancient: 'Babylon', modern: 'near Hillah, Iraq', x: 85, y: 15, lat: 32.54, lon: 44.42 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 85, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Decree and return', ref: 'Ezra 1:1-4', copy: 'Cyrus permits return and rebuilding.', miles: 0 },
-      { label: 'Caravan route west', ref: 'Ezra 7:8-9', copy: 'Ezra\'s journey is remembered as a months-long trip under God\'s hand.', miles: 750 },
-      { label: 'Arrival at Jerusalem', ref: 'Ezra 8:31-32', copy: 'The group arrives and rests after the journey.', miles: 150 },
-      { label: 'Nehemiah follows later', ref: 'Nehemiah 2:11', copy: 'Nehemiah arrives for wall rebuilding work.', miles: 900 }
+      { label: 'The decree', ref: 'Ezra 1:1-4', copy: 'Cyrus king of Persia lets the exiles go home to rebuild the house of the Lord in Jerusalem.', at: 0 },
+      { label: 'Ezra sets out', ref: 'Ezra 7:8-9; 8:15-23', copy: 'Ezra gathers the returning families by the Ahava canal, and they fast and pray for a safe journey.', at: 0 },
+      { label: 'Arrival at Jerusalem', ref: 'Ezra 7:9; 8:31-32', copy: 'About four months later, the gracious hand of God on them, they arrive and rest three days.', miles: 900, at: 1 }
     ]
   },
   {
@@ -11413,11 +11410,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 24, y: 72, lat: 32.21, lon: 35.28 }
     ],
     steps: [
-      { label: 'Fleeing toward Haran', ref: 'Genesis 28:10', copy: 'Jacob leaves Beersheba for Laban’s home.', miles: 60 },
-      { label: 'The dream at Bethel', ref: 'Genesis 28:11-19', copy: 'He sees the stairway to heaven and meets God.', miles: 0 },
-      { label: 'Twenty years with Laban', ref: 'Genesis 29-31', copy: 'He marries and grows wealthy in Haran.', miles: 390 },
-      { label: 'Wrestling at Peniel', ref: 'Genesis 32:22-31', copy: 'He is renamed Israel before meeting Esau.', miles: 400 },
-      { label: 'Safe arrival at Shechem', ref: 'Genesis 33:18-20', copy: 'He settles back in the land of promise.', miles: 25 }
+      { label: 'Fleeing toward Haran', ref: 'Genesis 28:10', copy: 'Jacob leaves Beersheba for Laban\'s home in Haran.', at: 0 },
+      { label: 'The dream at Bethel', ref: 'Genesis 28:11-19', copy: 'He dreams of a stairway reaching to heaven, and God renews the promise to him.', miles: 60, at: 1 },
+      { label: 'Twenty years with Laban', ref: 'Genesis 29-31', copy: 'He marries Leah and Rachel and grows wealthy in Haran.', miles: 450, at: 2 },
+      { label: 'Wrestling at Peniel', ref: 'Genesis 32:22-31', copy: 'By the Jabbok he wrestles until daybreak and is renamed Israel.', miles: 400, at: 3 },
+      { label: 'Safe arrival at Shechem', ref: 'Genesis 33:18-20', copy: 'He arrives safely at Shechem in Canaan and sets up an altar there.', miles: 25, at: 4 }
     ]
   },
   {
@@ -11444,9 +11441,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Goshen', modern: 'eastern Nile Delta, Egypt', x: 15, y: 80, lat: 30.8, lon: 31.85 }
     ],
     steps: [
-      { label: 'Worship at Beersheba', ref: 'Genesis 46:1-4', copy: 'God reassures Jacob on the edge of the land.', miles: 25 },
-      { label: 'The household goes down', ref: 'Genesis 46:5-7', copy: 'The whole family travels in Pharaoh’s wagons.', miles: 200 },
-      { label: 'Settling in Goshen', ref: 'Genesis 46:28-47:6', copy: 'Joseph meets them and they settle in the best land.', miles: 20 }
+      { label: 'Worship at Beersheba', ref: 'Genesis 46:1-4', copy: 'God reassures Jacob on the edge of the land.', miles: 25, at: 1 },
+      { label: 'The household goes down', ref: 'Genesis 46:5-7', copy: 'The whole family travels in Pharaoh’s wagons.', miles: 200, at: 2 },
+      { label: 'Settling in Goshen', ref: 'Genesis 46:28-47:6', copy: 'Joseph meets them and they settle in the best land.', miles: 20, at: 2 }
     ]
   },
   {
@@ -11475,11 +11472,12 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Gibeon', modern: 'el-Jib, West Bank', x: 15, y: 45, lat: 31.85, lon: 35.18 }
     ],
     steps: [
-      { label: 'Crossing the Jordan', ref: 'Joshua 3:14-17', copy: 'The river is cut off and Israel crosses on dry ground.', miles: 6 },
-      { label: 'Camp at Gilgal', ref: 'Joshua 4:19-20', copy: 'Twelve stones are set up as a memorial.', miles: 3 },
-      { label: 'Jericho falls', ref: 'Joshua 6:20', copy: 'The walls collapse after the silent march and shout.', miles: 2 },
-      { label: 'Ai taken on the second try', ref: 'Joshua 7-8', copy: 'Defeat over hidden sin, then victory in the hills.', miles: 12 },
-      { label: 'Defending Gibeon', ref: 'Joshua 10:6-14', copy: 'Israel marches by night to rescue its new allies.', miles: 10 }
+      { label: 'Crossing the Jordan', ref: 'Joshua 3:14-17', copy: 'The river is cut off upstream and Israel crosses on dry ground.', miles: 6, at: 1 },
+      { label: 'Camp at Gilgal', ref: 'Joshua 4:19-24', copy: 'Twelve stones from the riverbed are set up as a memorial.', at: 1 },
+      { label: 'Jericho falls', ref: 'Joshua 6:15-20', copy: 'On the seventh day they march around seven times, shout, and the wall collapses.', miles: 4, at: 2 },
+      { label: 'Ai taken on the second try', ref: 'Joshua 7-8', copy: 'Defeat because of hidden sin, then victory in the hills.', miles: 12, at: 3 },
+      { label: 'The Gibeonites\' treaty', ref: 'Joshua 9:3-15', copy: 'The Gibeonites come to the camp at Gilgal pretending to be from far away, and Israel makes a treaty with them.', miles: 14, at: 1 },
+      { label: 'Defending Gibeon', ref: 'Joshua 10:6-14', copy: 'Joshua marches all night from Gilgal to rescue Gibeon, and the sun stands still.', miles: 20, at: 4 }
     ]
   },
   {
@@ -11508,11 +11506,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'En Gedi', modern: 'En Gedi, Dead Sea', x: 85, y: 85, lat: 31.46, lon: 35.39 }
     ],
     steps: [
-      { label: 'Escaping Saul’s court', ref: '1 Samuel 19:11-18', copy: 'Michal lowers David through a window to flee Gibeah.', miles: 3 },
-      { label: 'Bread at Nob', ref: '1 Samuel 21:1-9', copy: 'The priest gives David the consecrated bread and Goliath’s sword.', miles: 5 },
-      { label: 'Among the Philistines', ref: '1 Samuel 21:10-15', copy: 'He feigns madness before the king of Gath.', miles: 25 },
-      { label: 'The cave of Adullam', ref: '1 Samuel 22:1-2', copy: 'Outcasts gather to him and he forms a band.', miles: 12 },
-      { label: 'Sparing Saul at En Gedi', ref: '1 Samuel 24:1-7', copy: 'David cuts Saul’s robe but refuses to kill him.', miles: 35 }
+      { label: 'Escaping Saul’s court', ref: '1 Samuel 19:11-18', copy: 'Michal lowers David through a window to flee Gibeah.', miles: 3, at: 0 },
+      { label: 'Bread at Nob', ref: '1 Samuel 21:1-9', copy: 'The priest gives David the consecrated bread and Goliath’s sword.', miles: 5, at: 1 },
+      { label: 'Among the Philistines', ref: '1 Samuel 21:10-15', copy: 'He feigns madness before the king of Gath.', miles: 25, at: 2 },
+      { label: 'The cave of Adullam', ref: '1 Samuel 22:1-2', copy: 'Outcasts gather to him and he forms a band.', miles: 12, at: 3 },
+      { label: 'Sparing Saul at En Gedi', ref: '1 Samuel 24:1-7', copy: 'David cuts Saul’s robe but refuses to kill him.', miles: 35, at: 4 }
     ]
   },
   {
@@ -11534,18 +11532,18 @@ const BIBLE_JOURNEYS = [
       'The "forty days and forty nights" to Horeb (1 Kings 19:8) echoes Moses and is theological, not a measured travel log.'
     ],
     points: [
-      { ancient: 'Brook Cherith', modern: 'east of the Jordan', x: 85, y: 43, lat: 32, lon: 35.62 },
-      { ancient: 'Zarephath', modern: 'near Sidon, Lebanon', x: 71, y: 25, lat: 33.45, lon: 35.3 },
-      { ancient: 'Mount Carmel', modern: 'Mount Carmel, Israel', x: 61, y: 34, lat: 32.73, lon: 35.05 },
-      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 50, y: 52, lat: 31.25, lon: 34.79 },
-      { ancient: 'Horeb / Sinai', modern: 'Sinai Peninsula region', x: 15, y: 85, lat: 28.54, lon: 33.97 }
+      { ancient: 'Brook Cherith', modern: 'east of the Jordan (site debated)', x: 85, y: 36, lat: 32, lon: 35.62 },
+      { ancient: 'Zarephath', modern: 'near Sidon, Lebanon', x: 71, y: 15, lat: 33.45, lon: 35.3 },
+      { ancient: 'Mount Carmel', modern: 'Mount Carmel, Israel', x: 61, y: 25, lat: 32.73, lon: 35.05 },
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 50, y: 46, lat: 31.25, lon: 34.79 },
+      { ancient: 'Mount Horeb', modern: 'traditionally Jebel Musa (site debated)', x: 15, y: 85, lat: 28.54, lon: 33.97 }
     ],
     steps: [
-      { label: 'Hidden by the brook', ref: '1 Kings 17:2-6', copy: 'Ravens feed Elijah during the drought at Cherith.', miles: 0 },
-      { label: 'Sent to Zarephath', ref: '1 Kings 17:8-9', copy: 'A widow in Sidon’s region sustains him.', miles: 90 },
-      { label: 'Showdown on Carmel', ref: '1 Kings 18:19-39', copy: 'Fire falls from heaven and the drought breaks.', miles: 60 },
-      { label: 'Fleeing to Beersheba', ref: '1 Kings 19:3', copy: 'Jezebel’s threat sends him running south.', miles: 95 },
-      { label: 'Forty days to Horeb', ref: '1 Kings 19:8-12', copy: 'He meets God in a gentle whisper.', miles: 170 }
+      { label: 'Hidden by the brook', ref: '1 Kings 17:2-6', copy: 'Ravens feed Elijah during the drought at Cherith.', miles: 0, at: 0 },
+      { label: 'Sent to Zarephath', ref: '1 Kings 17:8-9', copy: 'A widow in Sidon’s region sustains him.', miles: 90, at: 1 },
+      { label: 'Showdown on Carmel', ref: '1 Kings 18:19-39', copy: 'Fire falls from heaven and the drought breaks.', miles: 60, at: 2 },
+      { label: 'Fleeing to Beersheba', ref: '1 Kings 19:3', copy: 'Jezebel’s threat sends him running south.', miles: 95, at: 3 },
+      { label: 'Forty days to Horeb', ref: '1 Kings 19:8-12', copy: 'He meets God in a gentle whisper.', miles: 170, at: 4 }
     ]
   },
   {
@@ -11699,21 +11697,21 @@ const BIBLE_JOURNEYS = [
     mode: 'Walking with a donkey',
     days: 'A three-day journey (Genesis 22:4)',
     modern: 'Beersheba up to the Jerusalem area',
-    note: 'Moriah is linked with the temple mount in 2 Chronicles 3:1; the exact peak Abraham climbed is not pinpointed.',
+    note: '2 Chronicles 3:1 places Solomon\'s temple on Mount Moriah, so the mountain is shown at Jerusalem\'s Temple Mount, the traditional site.',
     sources: [
       'Beersheba is securely located in the northern Negev where Abraham settled (Genesis 22:19).',
       '2 Chronicles 3:1 identifies Mount Moriah with the temple mount in Jerusalem, which fixes the destination region.',
       'The "third day" (Genesis 22:4) fits the roughly 45–50 mile walk from Beersheba to the Jerusalem hills.'
     ],
     points: [
-      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 25.7, y: 84, lat: 31.25, lon: 34.79 },
-      { ancient: 'Land of Moriah', modern: 'Judean hills', x: 59.6, y: 26.3, lat: 31.7, lon: 35.1 },
-      { ancient: 'Mount Moriah', modern: 'Jerusalem (temple mount)', x: 74.3, y: 16, lat: 31.78, lon: 35.235 }
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 15, y: 85, lat: 31.25, lon: 34.79 },
+      { ancient: 'On the third day', modern: 'Judean hills (spot unknown)', x: 64, y: 26, lat: 31.7, lon: 35.1 },
+      { ancient: 'Mount Moriah', modern: 'Temple Mount, Jerusalem (traditional)', x: 85, y: 15, lat: 31.78, lon: 35.235 }
     ],
     steps: [
-      { label: 'Setting out from Beersheba', ref: 'Genesis 22:3', copy: 'Abraham rises early, splits the wood, and starts toward the place God showed him.', miles: 20 },
-      { label: 'The third day', ref: 'Genesis 22:4', copy: 'He lifts his eyes and sees the place far off.', miles: 25 },
-      { label: 'On the mountain', ref: 'Genesis 22:9-14', copy: 'God provides the ram; the place is named "The Lord will provide."', miles: 5 }
+      { label: 'Setting out from Beersheba', ref: 'Genesis 22:3', copy: 'Abraham rises early, splits the wood, and starts toward the place God showed him.', miles: 20, at: 0 },
+      { label: 'The third day', ref: 'Genesis 22:4', copy: 'He lifts his eyes and sees the place far off.', miles: 25, at: 1 },
+      { label: 'On the mountain', ref: 'Genesis 22:9-14', copy: 'God provides the ram; the place is named "The Lord will provide."', miles: 5, at: 2 }
     ]
   },
   {
@@ -11728,22 +11726,20 @@ const BIBLE_JOURNEYS = [
     mode: 'Camel caravan',
     days: 'Weeks of caravan travel',
     modern: 'Southeast Turkey down to Israel’s Negev',
-    note: 'The servant’s outbound and return route followed the watered Fertile Crescent arc; Beer-lahai-roi is approximate.',
+    note: 'The servant\'s road between Aram and the Negev is not recorded.',
     sources: [
       'Abraham’s servant travels to Nahor’s city in Aram-Naharaim (Genesis 24:10), the Haran region.',
       'Isaac was living in the Negev near Beer-lahai-roi when Rebekah arrived (Genesis 24:62).',
       'Camel caravans of the period followed the river-and-trade route, not a straight desert line.'
     ],
     points: [
-      { ancient: 'Haran (city of Nahor)', modern: 'near Sanliurfa, Turkey', x: 69.5, y: 16, lat: 36.87, lon: 39.03 },
-      { ancient: 'Fertile Crescent route', modern: 'Syria corridor', x: 55.4, y: 47.9, lat: 34, lon: 37.5 },
-      { ancient: 'Canaan', modern: 'central highlands', x: 34.2, y: 72.3, lat: 31.8, lon: 35.2 },
-      { ancient: 'Beer-lahai-roi (Negev)', modern: 'northern Negev', x: 30.5, y: 84, lat: 30.75, lon: 34.8 }
+      { ancient: 'The city of Nahor', modern: 'near Haran, Turkey', x: 85, y: 15, lat: 36.87, lon: 39.03 },
+      { ancient: 'Beer-lahai-roi', modern: 'northern Negev (site unknown)', x: 15, y: 85, lat: 30.75, lon: 34.8 }
     ],
     steps: [
-      { label: 'The servant reaches Nahor’s city', ref: 'Genesis 24:10-14', copy: 'He stops at the well and prays for a sign.', miles: 0 },
-      { label: 'Rebekah agrees to go', ref: 'Genesis 24:58', copy: '"I will go," she says, and sets out with the caravan.', miles: 450 },
-      { label: 'Meeting Isaac in the Negev', ref: 'Genesis 24:62-67', copy: 'Isaac is meditating in the field at evening when the camels arrive.', miles: 100 }
+      { label: 'The servant reaches Nahor’s city', ref: 'Genesis 24:10-14', copy: 'He stops at the well and prays for a sign.', miles: 0, at: 0 },
+      { label: 'Rebekah agrees to go', ref: 'Genesis 24:58', copy: '"I will go," she says, and sets out with the caravan.', miles: 450, at: 0 },
+      { label: 'Meeting Isaac in the Negev', ref: 'Genesis 24:62-67', copy: 'Isaac is meditating in the field at evening when the camels arrive.', miles: 100, at: 1 }
     ]
   },
   {
@@ -11771,10 +11767,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Egypt', modern: 'Nile Delta, Egypt', x: 16, y: 69.1, lat: 30.6, lon: 31.5 }
     ],
     steps: [
-      { label: 'Sent from Hebron', ref: 'Genesis 37:14', copy: 'Jacob sends Joseph to check on his brothers and the flocks.', miles: 50 },
-      { label: 'Found at Dothan', ref: 'Genesis 37:17', copy: 'A man tells him the brothers have moved on to Dothan.', miles: 15 },
-      { label: 'Sold to the traders', ref: 'Genesis 37:28', copy: 'He is sold for twenty pieces of silver to a caravan bound for Egypt.', miles: 0 },
-      { label: 'Down to Egypt', ref: 'Genesis 37:36', copy: 'The Midianites sell him to Potiphar in Egypt.', miles: 230 }
+      { label: 'Sent from Hebron', ref: 'Genesis 37:14', copy: 'Jacob sends Joseph to check on his brothers and the flocks.', miles: 50, at: 1 },
+      { label: 'Found at Dothan', ref: 'Genesis 37:17', copy: 'A man tells him the brothers have moved on to Dothan.', miles: 15, at: 2 },
+      { label: 'Sold to the traders', ref: 'Genesis 37:28', copy: 'He is sold for twenty pieces of silver to a caravan bound for Egypt.', miles: 0, at: 2 },
+      { label: 'Down to Egypt', ref: 'Genesis 37:36', copy: 'The Midianites sell him to Potiphar in Egypt.', miles: 230, at: 3 }
     ]
   },
   {
@@ -11789,20 +11785,19 @@ const BIBLE_JOURNEYS = [
     mode: 'Fleeing on foot',
     days: 'Weeks across the wilderness',
     modern: 'Egypt’s Delta across Sinai toward NW Arabia',
-    note: 'Midian is generally placed in northwest Arabia, east of the Gulf of Aqaba; the exact wells are unknown.',
+    note: 'Exodus names only Egypt and Midian; Moses\' road between them is not recorded.',
     sources: [
       'Moses flees Pharaoh and settles in the land of Midian (Exodus 2:15).',
       'Midian is usually located in northwest Arabia, which is why the route crosses the Sinai toward the Gulf of Aqaba.',
       'He meets Jethro’s daughters at a well (Exodus 2:16), a typical desert oasis stop.'
     ],
     points: [
-      { ancient: 'Egypt', modern: 'eastern Nile Delta', x: 16, y: 27.2, lat: 30.8, lon: 31.6 },
-      { ancient: 'Wilderness of Sinai', modern: 'Sinai Peninsula', x: 52.8, y: 59, lat: 29.3, lon: 33.6 },
-      { ancient: 'Midian', modern: 'NW Arabia (Gulf of Aqaba)', x: 84, y: 72.8, lat: 28.65, lon: 35.3 }
+      { ancient: 'Egypt', modern: 'eastern Nile Delta', x: 15, y: 15, lat: 30.8, lon: 31.6 },
+      { ancient: 'Midian', modern: 'northwest Arabia, by the Gulf of Aqaba', x: 85, y: 85, lat: 28.65, lon: 35.3 }
     ],
     steps: [
-      { label: 'Fleeing Pharaoh', ref: 'Exodus 2:15', copy: 'After killing the Egyptian, Moses runs from Pharaoh.', miles: 120 },
-      { label: 'At the well of Midian', ref: 'Exodus 2:16-21', copy: 'He helps Jethro’s daughters and is welcomed into the family.', miles: 130 }
+      { label: 'Fleeing Pharaoh', ref: 'Exodus 2:11-15', copy: 'After killing an Egyptian, Moses runs from Pharaoh.', at: 0 },
+      { label: 'At the well of Midian', ref: 'Exodus 2:15-21', copy: 'He helps the priest\'s daughters at the well and is welcomed into the family.', miles: 250, at: 1 }
     ]
   },
   {
@@ -11830,10 +11825,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Valley of Eshcol', modern: 'near Hebron', x: 70.7, y: 16, lat: 31.55, lon: 35.07 }
     ],
     steps: [
-      { label: 'Sent from Kadesh', ref: 'Numbers 13:17-20', copy: 'Moses sends one leader from each tribe to scout the land.', miles: 60 },
-      { label: 'Up to Hebron', ref: 'Numbers 13:22', copy: 'They pass through the Negev and come to Hebron.', miles: 25 },
-      { label: 'The cluster of Eshcol', ref: 'Numbers 13:23-24', copy: 'They carry back a single cluster of grapes on a pole.', miles: 5 },
-      { label: 'The bad report', ref: 'Numbers 13:31-33', copy: 'Ten spies spread fear; only Caleb and Joshua trust God.', miles: 90 }
+      { label: 'Sent from Kadesh', ref: 'Numbers 13:17-20', copy: 'Moses sends one leader from each tribe to scout the land.', miles: 60, at: 1 },
+      { label: 'Up to Hebron', ref: 'Numbers 13:22', copy: 'They pass through the Negev and come to Hebron.', miles: 25, at: 2 },
+      { label: 'The cluster of Eshcol', ref: 'Numbers 13:23-24', copy: 'They carry back a single cluster of grapes on a pole.', miles: 5, at: 3 },
+      { label: 'The bad report', ref: 'Numbers 13:31-33', copy: 'Ten spies spread fear; only Caleb and Joshua trust God.', miles: 90, at: 0 }
     ]
   },
   {
@@ -11855,17 +11850,18 @@ const BIBLE_JOURNEYS = [
       'Guided by cows, the cart returns the ark to Beth Shemesh in the Sorek valley (1 Samuel 6:12-14).'
     ],
     points: [
-      { ancient: 'Ebenezer / Aphek', modern: 'Rosh HaAyin area', x: 66.6, y: 16, lat: 32.1, lon: 34.93 },
-      { ancient: 'Ashdod', modern: 'Ashdod, Israel', x: 26.2, y: 67, lat: 31.8, lon: 34.65 },
-      { ancient: 'Gath', modern: 'Tell es-Safi', x: 55.1, y: 84, lat: 31.7, lon: 34.85 },
-      { ancient: 'Ekron', modern: 'Tel Miqne', x: 55.1, y: 70.4, lat: 31.78, lon: 34.85 },
-      { ancient: 'Beth Shemesh', modern: 'Beit Shemesh', x: 73.8, y: 75.5, lat: 31.75, lon: 34.98 }
+      { ancient: 'Ebenezer and Aphek', modern: 'Rosh HaAyin area (Ebenezer\'s site debated)', x: 74, y: 15, lat: 32.1, lon: 34.93 },
+      { ancient: 'Ashdod', modern: 'Ashdod, Israel', x: 15, y: 67, lat: 31.8, lon: 34.65 },
+      { ancient: 'Gath', modern: 'Tell es-Safi, Israel', x: 57, y: 85, lat: 31.7, lon: 34.85 },
+      { ancient: 'Ekron', modern: 'Tel Miqne, Israel', x: 57, y: 71, lat: 31.78, lon: 34.85 },
+      { ancient: 'Beth Shemesh', modern: 'Beit Shemesh, Israel', x: 85, y: 76, lat: 31.75, lon: 34.98 }
     ],
     steps: [
-      { label: 'The ark is captured', ref: '1 Samuel 4:10-11', copy: 'Israel is routed and the ark is taken at Ebenezer.', miles: 25 },
-      { label: 'Dagon falls in Ashdod', ref: '1 Samuel 5:1-4', copy: 'The idol of Dagon topples before the ark.', miles: 20 },
-      { label: 'Passed to Gath and Ekron', ref: '1 Samuel 5:8-10', copy: 'Plague follows the ark from city to city.', miles: 15 },
-      { label: 'Returned to Beth Shemesh', ref: '1 Samuel 6:12-14', copy: 'Two cows pull the cart straight back to Israel.', miles: 10 }
+      { label: 'The ark is captured', ref: '1 Samuel 4:10-11', copy: 'Israel is routed and the ark of God is taken.', at: 0 },
+      { label: 'Dagon falls in Ashdod', ref: '1 Samuel 5:1-7', copy: 'Twice the idol of Dagon is found fallen face down before the ark.', miles: 25, at: 1 },
+      { label: 'Moved to Gath', ref: '1 Samuel 5:8-9', copy: 'They move the ark to Gath, and the Lord\'s hand is against that city too.', miles: 15, at: 2 },
+      { label: 'Ekron cries out', ref: '1 Samuel 5:10-12', copy: 'When it reaches Ekron, the people cry out to send it back.', miles: 6, at: 3 },
+      { label: 'Returned to Beth Shemesh', ref: '1 Samuel 6:10-14', copy: 'Two cows pull the cart straight back to Israel, lowing as they go.', miles: 10, at: 4 }
     ]
   },
   {
@@ -11892,9 +11888,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'City of David', modern: 'Jerusalem', x: 84, y: 58.9, lat: 31.77, lon: 35.235 }
     ],
     steps: [
-      { label: 'Lifting the ark', ref: '2 Samuel 6:3-7', copy: 'The new cart sets out; Uzzah dies when he steadies the ark.', miles: 4 },
-      { label: 'Resting at Obed-Edom', ref: '2 Samuel 6:10-11', copy: 'The Lord blesses the household for three months.', miles: 3 },
-      { label: 'Dancing into Jerusalem', ref: '2 Samuel 6:14-15', copy: 'David dances before the Lord as the ark enters the city.', miles: 5 }
+      { label: 'Lifting the ark', ref: '2 Samuel 6:3-7', copy: 'The new cart sets out; Uzzah dies when he steadies the ark.', miles: 4, at: 0 },
+      { label: 'Resting at Obed-Edom', ref: '2 Samuel 6:10-11', copy: 'The Lord blesses the household for three months.', miles: 3, at: 1 },
+      { label: 'Dancing into Jerusalem', ref: '2 Samuel 6:14-15', copy: 'David dances before the Lord as the ark enters the city.', miles: 5, at: 2 }
     ]
   },
   {
@@ -11922,10 +11918,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'The Jordan', modern: 'Jordan River', x: 84, y: 72.7, lat: 31.85, lon: 35.52 }
     ],
     steps: [
-      { label: 'Down to Bethel', ref: '2 Kings 2:1-3', copy: 'Elisha refuses to leave his master’s side.', miles: 10 },
-      { label: 'On to Jericho', ref: '2 Kings 2:4-5', copy: 'The company of prophets watches them pass.', miles: 12 },
-      { label: 'Crossing the Jordan', ref: '2 Kings 2:8', copy: 'Elijah strikes the water and they cross on dry ground.', miles: 3 },
-      { label: 'Taken up', ref: '2 Kings 2:11-12', copy: 'A chariot of fire separates them and Elijah goes up.', miles: 0 }
+      { label: 'Down to Bethel', ref: '2 Kings 2:1-3', copy: 'Elisha refuses to leave his master’s side.', miles: 10, at: 1 },
+      { label: 'On to Jericho', ref: '2 Kings 2:4-5', copy: 'The company of prophets watches them pass.', miles: 12, at: 2 },
+      { label: 'Crossing the Jordan', ref: '2 Kings 2:8', copy: 'Elijah strikes the water and they cross on dry ground.', miles: 3, at: 3 },
+      { label: 'Taken up', ref: '2 Kings 2:11-12', copy: 'A chariot of fire separates them and Elijah goes up.', miles: 0, at: 3 }
     ]
   },
   {
@@ -11952,9 +11948,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'The Jordan', modern: 'Jordan River', x: 42.8, y: 84, lat: 32, lon: 35.55 }
     ],
     steps: [
-      { label: 'Leaving Damascus', ref: '2 Kings 5:5', copy: 'Naaman sets out with silver, gold, and a letter to the king.', miles: 90 },
-      { label: 'Sent to the Jordan', ref: '2 Kings 5:9-10', copy: 'Elisha tells him to wash in the Jordan seven times.', miles: 35 },
-      { label: 'Healed in the river', ref: '2 Kings 5:14', copy: 'His flesh is restored like a little child’s.', miles: 15 }
+      { label: 'Leaving Damascus', ref: '2 Kings 5:5-7', copy: 'Naaman sets out with silver, gold and a letter to the king of Israel.', miles: 90, at: 1 },
+      { label: 'Sent to the Jordan', ref: '2 Kings 5:9-12', copy: 'Elisha sends word: wash in the Jordan seven times. Naaman goes away angry.', at: 1 },
+      { label: 'Healed in the river', ref: '2 Kings 5:13-14', copy: 'He dips seven times, and his flesh is restored like a young child\'s.', miles: 30, at: 2 },
+      { label: 'Back to Elisha', ref: '2 Kings 5:15-19', copy: 'He returns to Elisha and says there is no God in all the earth except in Israel.', miles: 30, at: 1 }
     ]
   },
   {
@@ -12307,9 +12304,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'The hills', modern: 'Highlands east of the Dead Sea', x: 84, y: 40.1, lat: 31.1, lon: 35.6 }
     ],
     steps: [
-      { label: 'Seized by the hand', ref: 'Genesis 19:15-16', copy: 'The angels grab Lot, his wife, and daughters and rush them out of the city.', miles: 1 },
-      { label: 'Escape to Zoar', ref: 'Genesis 19:22-23', copy: 'Lot reaches the little town just as the sun rises over the land.', miles: 8 },
-      { label: 'Up to the hills', ref: 'Genesis 19:30', copy: 'Afraid to stay in Zoar, Lot goes up to live in a cave in the highlands.', miles: 3 }
+      { label: 'Seized by the hand', ref: 'Genesis 19:15-16', copy: 'The angels grab Lot, his wife, and daughters and rush them out of the city.', miles: 1, at: 0 },
+      { label: 'Escape to Zoar', ref: 'Genesis 19:22-23', copy: 'Lot reaches the little town just as the sun rises over the land.', miles: 8, at: 1 },
+      { label: 'Up to the hills', ref: 'Genesis 19:30', copy: 'Afraid to stay in Zoar, Lot goes up to live in a cave in the highlands.', miles: 3, at: 2 }
     ]
   },
   {
@@ -12337,10 +12334,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'King\'s Valley', modern: 'Near Jerusalem', x: 36.3, y: 76.1, lat: 31.77, lon: 35.23 }
     ],
     steps: [
-      { label: 'News at Mamre', ref: 'Genesis 14:13-14', copy: 'Abram arms 318 trained men born in his household and sets out.', miles: 0 },
-      { label: 'Pursuit to Dan', ref: 'Genesis 14:14-15', copy: 'He overtakes the kings, divides his forces by night, and routs them.', miles: 120 },
-      { label: 'Beyond Damascus', ref: 'Genesis 14:15', copy: 'He chases them to Hobah, north of Damascus, recovering all the people and goods.', miles: 30 },
-      { label: 'Met by Melchizedek', ref: 'Genesis 14:17-20', copy: 'Returning, he is blessed by Melchizedek in the King’s Valley.', miles: 0 }
+      { label: 'News at Mamre', ref: 'Genesis 14:13-14', copy: 'Abram arms 318 trained men born in his household and sets out.', miles: 0, at: 0 },
+      { label: 'Pursuit to Dan', ref: 'Genesis 14:14-15', copy: 'He overtakes the kings, divides his forces by night, and routs them.', miles: 120, at: 1 },
+      { label: 'Beyond Damascus', ref: 'Genesis 14:15', copy: 'He chases them to Hobah, north of Damascus, recovering all the people and goods.', miles: 30, at: 2 },
+      { label: 'Met by Melchizedek', ref: 'Genesis 14:17-20', copy: 'Returning, he is blessed by Melchizedek in the King’s Valley.', miles: 0, at: 3 }
     ]
   },
   {
@@ -12362,15 +12359,16 @@ const BIBLE_JOURNEYS = [
       'He meets Balak at the edge of his territory by the Arnon and goes up to the high places (Numbers 22:36-41).'
     ],
     points: [
-      { ancient: 'Pethor', modern: 'Upper Euphrates, Syria', x: 63.1, y: 16, lat: 36.5, lon: 38 },
-      { ancient: 'City of Moab (Arnon)', modern: 'Arnon gorge, Jordan', x: 36.9, y: 84, lat: 31.46, lon: 35.65 },
-      { ancient: 'Pisgah / Peor', modern: 'Heights of Moab', x: 37.6, y: 79.8, lat: 31.77, lon: 35.72 }
+      { ancient: 'Pethor', modern: 'upper Euphrates, Syria', x: 85, y: 15, lat: 36.5, lon: 38 },
+      { ancient: 'On the road', modern: 'on the way to Moab (spot unknown)', x: 28, y: 73, lat: 32.3, lon: 36.1 },
+      { ancient: 'City of Moab', modern: 'by the Arnon gorge, Jordan', x: 15, y: 85, lat: 31.46, lon: 35.65 },
+      { ancient: 'The heights of Moab', modern: 'Bamoth-baal, Pisgah and Peor', x: 17, y: 81, lat: 31.77, lon: 35.72 }
     ],
     steps: [
-      { label: 'Summoned from Pethor', ref: 'Numbers 22:5-6', copy: 'Balak sends for Balaam to curse the people camped before him.', miles: 0 },
-      { label: 'The donkey and the angel', ref: 'Numbers 22:21-31', copy: 'On the way the donkey sees the angel of the Lord and turns aside.', miles: 380 },
-      { label: 'Met at the border', ref: 'Numbers 22:36', copy: 'Balak goes out to meet him at the city of Moab on the Arnon.', miles: 15 },
-      { label: 'Blessing on the heights', ref: 'Numbers 23:11-12', copy: 'From the high places Balaam blesses Israel instead of cursing.', miles: 5 }
+      { label: 'Summoned from Pethor', ref: 'Numbers 22:5-6', copy: 'Balak sends for Balaam to curse the people camped before him.', miles: 0, at: 0 },
+      { label: 'The donkey and the angel', ref: 'Numbers 22:21-31', copy: 'On the way the donkey sees the angel of the Lord and turns aside.', miles: 380, at: 1 },
+      { label: 'Met at the border', ref: 'Numbers 22:36', copy: 'Balak goes out to meet him at the city of Moab on the Arnon.', miles: 15, at: 2 },
+      { label: 'Blessing on the heights', ref: 'Numbers 23:11-12', copy: 'From the high places Balaam blesses Israel instead of cursing.', miles: 5, at: 3 }
     ]
   },
   {
@@ -12392,15 +12390,16 @@ const BIBLE_JOURNEYS = [
       'They go around Edom by the Red Sea road and camp in the plains of Moab (Numbers 21:4; 22:1).'
     ],
     points: [
-      { ancient: 'Kadesh', modern: 'Wilderness of Zin', x: 29.3, y: 70.8, lat: 30.6, lon: 34.5 },
-      { ancient: 'Mount Hor', modern: 'Edom border highlands', x: 63.2, y: 84, lat: 30.3, lon: 35.4 },
-      { ancient: 'Plains of Moab', modern: 'Jordan valley by Jericho', x: 70.7, y: 16, lat: 31.85, lon: 35.6 }
+      { ancient: 'Kadesh', modern: 'Wilderness of Zin', x: 15, y: 71, lat: 30.6, lon: 34.5 },
+      { ancient: 'Mount Hor', modern: 'Edom border highlands', x: 57, y: 85, lat: 30.3, lon: 35.4 },
+      { ancient: 'Around Edom', modern: 'east of Edom (route approximate)', x: 85, y: 80, lat: 30.4, lon: 36 },
+      { ancient: 'Plains of Moab', modern: 'Jordan Valley across from Jericho', x: 66, y: 15, lat: 31.85, lon: 35.6 }
     ],
     steps: [
-      { label: 'Turned back at Edom', ref: 'Numbers 20:20-21', copy: 'Edom comes out with a strong army, and Israel turns aside.', miles: 40 },
-      { label: 'Aaron dies on Mount Hor', ref: 'Numbers 20:27-28', copy: 'Aaron is stripped of his garments; Eleazar takes his place.', miles: 30 },
-      { label: 'Around to Moab', ref: 'Numbers 21:4', copy: 'They set out by way of the Red Sea to go around the land of Edom.', miles: 90 },
-      { label: 'Camped by the Jordan', ref: 'Numbers 22:1', copy: 'Israel encamps in the plains of Moab beyond the Jordan at Jericho.', miles: 20 }
+      { label: 'Turned back at Edom', ref: 'Numbers 20:20-21', copy: 'Edom comes out with a strong army, and Israel turns aside.', miles: 40, at: 0 },
+      { label: 'Aaron dies on Mount Hor', ref: 'Numbers 20:27-28', copy: 'Aaron is stripped of his garments; Eleazar takes his place.', miles: 30, at: 1 },
+      { label: 'Around to Moab', ref: 'Numbers 21:4', copy: 'They set out by way of the Red Sea to go around the land of Edom.', miles: 90, at: 2 },
+      { label: 'Camped by the Jordan', ref: 'Numbers 22:1', copy: 'Israel encamps in the plains of Moab beyond the Jordan at Jericho.', miles: 20, at: 3 }
     ]
   },
   {
@@ -12422,14 +12421,16 @@ const BIBLE_JOURNEYS = [
       'Israel then crosses the Jordan from Shittim opposite Jericho (Joshua 3:1, 16).'
     ],
     points: [
-      { ancient: 'Shittim', modern: 'Plains of Moab', x: 84, y: 55.5, lat: 31.87, lon: 35.62 },
-      { ancient: 'Jericho', modern: 'Tell es-Sultan, Jericho', x: 28.4, y: 55.5, lat: 31.87, lon: 35.44 },
-      { ancient: 'The hills', modern: 'Judean wilderness ridge', x: 16, y: 44.5, lat: 31.9, lon: 35.4 }
+      { ancient: 'Shittim', modern: 'Plains of Moab', x: 85, y: 50, lat: 31.87, lon: 35.62 },
+      { ancient: 'Jericho', modern: 'Tell es-Sultan, Jericho', x: 28, y: 50, lat: 31.87, lon: 35.44 },
+      { ancient: 'The hills', modern: 'hills west of Jericho', x: 15, y: 15, lat: 31.9, lon: 35.4 },
+      { ancient: 'The Jordan', modern: 'Jordan River near Jericho', x: 63, y: 85, lat: 31.84, lon: 35.55 }
     ],
     steps: [
-      { label: 'Sent from Shittim', ref: 'Joshua 2:1', copy: 'Two spies enter Jericho and lodge at the house of Rahab.', miles: 6 },
-      { label: 'Let down the wall', ref: 'Joshua 2:15-16', copy: 'Rahab lowers them by a rope and tells them to hide in the hills.', miles: 5 },
-      { label: 'Crossing the Jordan', ref: 'Joshua 3:16-17', copy: 'The waters stand in a heap and Israel crosses over on dry ground.', miles: 3 }
+      { label: 'Rahab hides the spies', ref: 'Joshua 2:1-7', copy: 'Two spies from Shittim lodge at Rahab\'s house in Jericho, and she hides them on her roof.', miles: 10, at: 1 },
+      { label: 'Let down the wall', ref: 'Joshua 2:15-22', copy: 'She lowers them by a rope through her window, and they hide in the hills for three days.', miles: 3, at: 2 },
+      { label: 'Report to Joshua', ref: 'Joshua 2:23-24', copy: 'They cross back and tell Joshua the Lord has given the land into their hands.', miles: 12, at: 0 },
+      { label: 'Crossing the Jordan', ref: 'Joshua 3:14-17', copy: 'The waters stand up in a heap, and Israel crosses over on dry ground.', miles: 5, at: 3 }
     ]
   },
   {
@@ -12451,15 +12452,19 @@ const BIBLE_JOURNEYS = [
       'Gideon crosses the Jordan and overtakes the kings at Karkor (Judges 8:4-12).'
     ],
     points: [
-      { ancient: 'Spring of Harod', modern: 'Ain Jalut, Jezreel valley', x: 16, y: 29.7, lat: 32.55, lon: 35.36 },
-      { ancient: 'Jordan fords', modern: 'Jordan crossing', x: 32.8, y: 52.3, lat: 32.3, lon: 35.58 },
-      { ancient: 'Karkor', modern: 'Eastern desert, Jordan', x: 84, y: 70.3, lat: 32.1, lon: 36.25 }
+      { ancient: 'Spring of Harod', modern: 'Ain Jalut, Jezreel valley', x: 15, y: 15, lat: 32.55, lon: 35.36 },
+      { ancient: 'The Jordan', modern: 'Jordan crossing (spot unknown)', x: 30, y: 62, lat: 32.25, lon: 35.55 },
+      { ancient: 'Succoth', modern: 'Jordan valley, Jordan', x: 32, y: 69, lat: 32.2, lon: 35.57 },
+      { ancient: 'Penuel', modern: 'by the Jabbok, Jordan (site debated)', x: 35, y: 85, lat: 32.1, lon: 35.62 },
+      { ancient: 'Karkor', modern: 'eastern desert, Jordan', x: 85, y: 85, lat: 32.1, lon: 36.25 }
     ],
     steps: [
-      { label: 'The 300 at the spring', ref: 'Judges 7:7', copy: 'God keeps only the men who lapped the water, sending the rest home.', miles: 0 },
-      { label: 'Rout toward the Jordan', ref: 'Judges 7:22-24', copy: 'The host flees; the men of Ephraim seize the waters as far as Beth-barah.', miles: 20 },
-      { label: 'Crossing in pursuit', ref: 'Judges 8:4', copy: 'Gideon and his men cross the Jordan, faint yet pursuing.', miles: 30 },
-      { label: 'Overtaking at Karkor', ref: 'Judges 8:10-12', copy: 'He surprises the camp and captures the two kings of Midian.', miles: 40 }
+      { label: 'The 300 at the spring', ref: 'Judges 7:1-8', copy: 'God keeps only the three hundred men who lapped the water and sends the rest home.', at: 0 },
+      { label: 'Torches and trumpets', ref: 'Judges 7:19-22', copy: 'At night the 300 blow trumpets and smash their jars, and the Midianite camp turns on itself and flees.', at: 0 },
+      { label: 'Seizing the waters', ref: 'Judges 7:24-25', copy: 'The men of Ephraim take the waters as far as the Jordan and capture the commanders Oreb and Zeeb.', miles: 30, at: 1 },
+      { label: 'Faint yet pursuing', ref: 'Judges 8:4-7', copy: 'Gideon\'s 300 cross the Jordan, exhausted, but the officials of Succoth refuse them bread.', miles: 5, at: 2 },
+      { label: 'Penuel refuses too', ref: 'Judges 8:8-9', copy: 'The men of Penuel give the same answer.', miles: 7, at: 3 },
+      { label: 'Overtaking at Karkor', ref: 'Judges 8:10-12', copy: 'He surprises the camp and captures the two kings of Midian, Zebah and Zalmunna.', miles: 40, at: 4 }
     ]
   },
   {
@@ -12486,9 +12491,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 84, y: 36.7, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Sent with provisions', ref: '1 Samuel 17:17-18', copy: 'David carries bread and cheeses to his brothers and the commander.', miles: 12 },
-      { label: 'The stone and the sling', ref: '1 Samuel 17:48-49', copy: 'David runs to meet Goliath and strikes him down with a single stone.', miles: 0 },
-      { label: 'The head to Jerusalem', ref: '1 Samuel 17:54', copy: 'David takes the Philistine’s head and brings it to Jerusalem.', miles: 13 }
+      { label: 'Sent with provisions', ref: '1 Samuel 17:17-18', copy: 'David carries bread and cheeses to his brothers and the commander.', miles: 12, at: 1 },
+      { label: 'The stone and the sling', ref: '1 Samuel 17:48-49', copy: 'David runs to meet Goliath and strikes him down with a single stone.', miles: 0, at: 1 },
+      { label: 'The head to Jerusalem', ref: '1 Samuel 17:54', copy: 'David takes the Philistine’s head and brings it to Jerusalem.', miles: 13, at: 2 }
     ]
   },
   {
@@ -12503,21 +12508,25 @@ const BIBLE_JOURNEYS = [
     mode: 'Fleeing on foot, weeping',
     days: 'A hurried flight over days',
     modern: 'Jerusalem down the Kidron, across the Jordan into Gilead',
-    note: 'Mahanaim is located in Gilead east of the Jordan; the precise tell is debated.',
+    note: 'The text names the Kidron, the Mount of Olives, Bahurim and the Jordan crossing but not where on the Jordan they crossed. Bahurim is usually placed at Ras et-Tmim, just east of the Mount of Olives.',
     sources: [
       'David leaves Jerusalem, crossing the Kidron toward the wilderness (2 Samuel 15:23, 30).',
       'He is told to cross the Jordan quickly that night (2 Samuel 17:21-22).',
       'David comes to Mahanaim as Absalom crosses the Jordan after him (2 Samuel 17:24).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16.4, y: 84, lat: 31.78, lon: 35.23 },
-      { ancient: 'Jordan fords', modern: 'Jordan valley', x: 60.3, y: 56.5, lat: 31.95, lon: 35.55 },
-      { ancient: 'Mahanaim', modern: 'Gilead, Jordan', x: 83.6, y: 16, lat: 32.2, lon: 35.72 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 83, lat: 31.78, lon: 35.23 },
+      { ancient: 'Mount of Olives', modern: 'east of Jerusalem', x: 18, y: 85, lat: 31.77, lon: 35.25 },
+      { ancient: 'Bahurim', modern: 'Ras et-Tmim area (likely)', x: 21, y: 82, lat: 31.79, lon: 35.27 },
+      { ancient: 'The Jordan', modern: 'Jordan valley (crossing point unknown)', x: 61, y: 56, lat: 31.95, lon: 35.55 },
+      { ancient: 'Mahanaim', modern: 'Gilead, Jordan (site debated)', x: 85, y: 15, lat: 32.2, lon: 35.72 }
     ],
     steps: [
-      { label: 'Out by the Kidron', ref: '2 Samuel 15:30', copy: 'David goes up the Mount of Olives weeping, head covered and barefoot.', miles: 15 },
-      { label: 'Cross by night', ref: '2 Samuel 17:22', copy: 'By morning not one is left who has not crossed the Jordan.', miles: 25 },
-      { label: 'Safe at Mahanaim', ref: '2 Samuel 17:24', copy: 'David reaches Mahanaim while Absalom crosses the Jordan in pursuit.', miles: 20 }
+      { label: 'Across the Kidron', ref: '2 Samuel 15:13-23', copy: 'Warned that Israel has turned to Absalom, David leaves the city, and the whole land weeps as the people cross the Kidron.', at: 0 },
+      { label: 'Weeping up the Mount of Olives', ref: '2 Samuel 15:30', copy: 'David goes up the Mount of Olives weeping, his head covered and his feet bare.', miles: 1, at: 1 },
+      { label: 'Shimei curses', ref: '2 Samuel 16:5-13', copy: 'At Bahurim, Shimei curses David and throws stones, and David will not let his men silence him.', miles: 2, at: 2 },
+      { label: 'Across by night', ref: '2 Samuel 17:21-22', copy: 'Warned to hurry, David\'s whole company crosses the Jordan; by daybreak no one is left behind.', miles: 20, at: 3 },
+      { label: 'Safe at Mahanaim', ref: '2 Samuel 17:24-29', copy: 'David reaches Mahanaim, where friends bring beds, food and supplies for the weary people.', miles: 20, at: 4 }
     ]
   },
   {
@@ -12743,10 +12752,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 84, y: 31.5, lat: 31.93, lon: 35.22 }
     ],
     steps: [
-      { label: 'Down to Egypt', ref: 'Genesis 12:10', copy: 'A severe famine drives Abram to sojourn in Egypt.', miles: 200 },
-      { label: 'Sarai taken', ref: 'Genesis 12:14-16', copy: 'Sarai is taken into Pharaoh’s house and Abram is treated well for her sake.', miles: 0 },
-      { label: 'Sent away', ref: 'Genesis 12:20', copy: 'Pharaoh, plagued, sends Abram on his way with all he has.', miles: 200 },
-      { label: 'Back to Bethel', ref: 'Genesis 13:3-4', copy: 'He returns to the altar between Bethel and Ai and calls on the Lord.', miles: 80 }
+      { label: 'Down to Egypt', ref: 'Genesis 12:10', copy: 'A severe famine drives Abram down to Egypt to live there for a while.', miles: 200, at: 1 },
+      { label: 'Sarai taken', ref: 'Genesis 12:14-16', copy: 'Sarai is taken into Pharaoh\'s house, and Abram is treated well for her sake.', at: 1 },
+      { label: 'Sent away', ref: 'Genesis 12:17-20', copy: 'After the Lord strikes Pharaoh\'s house with plagues, Pharaoh sends Abram away with all he has.', at: 1 },
+      { label: 'Up into the Negev', ref: 'Genesis 13:1-2', copy: 'Abram goes up out of Egypt into the Negev, very rich in livestock, silver and gold.', miles: 200, at: 0 },
+      { label: 'Back to Bethel', ref: 'Genesis 13:3-4', copy: 'He returns to the place between Bethel and Ai where he first built an altar, and calls on the Lord.', miles: 80, at: 2 }
     ]
   },
   {
@@ -12768,16 +12778,15 @@ const BIBLE_JOURNEYS = [
       'After the wells of strife he digs Rehoboth and goes up to Beersheba (Genesis 26:22-23).'
     ],
     points: [
-      { ancient: 'Beersheba region', modern: 'Northern Negev', x: 68.6, y: 35, lat: 31.33, lon: 34.75 },
-      { ancient: 'Gerar', modern: 'Tel Haror area', x: 29.1, y: 16, lat: 31.4, lon: 34.58 },
-      { ancient: 'Rehoboth', modern: 'Western Negev wells', x: 22.1, y: 84, lat: 31.15, lon: 34.55 },
-      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 77.9, y: 56.8, lat: 31.25, lon: 34.79 }
+      { ancient: 'Gerar', modern: 'Tel Haror area, Israel', x: 34, y: 15, lat: 31.4, lon: 34.58 },
+      { ancient: 'Rehoboth', modern: 'western Negev wells (site debated)', x: 15, y: 85, lat: 31.15, lon: 34.5 },
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 85, y: 57, lat: 31.25, lon: 34.79 }
     ],
     steps: [
-      { label: 'Told to stay', ref: 'Genesis 26:2-3', copy: 'The Lord tells Isaac not to go to Egypt but to sojourn in the land.', miles: 12 },
-      { label: 'A hundredfold harvest', ref: 'Genesis 26:12', copy: 'Isaac reaps a hundredfold that year, and the Lord blesses him.', miles: 0 },
-      { label: 'Room at last', ref: 'Genesis 26:22', copy: 'He digs Rehoboth and says the Lord has made room for them.', miles: 14 },
-      { label: 'Up to Beersheba', ref: 'Genesis 26:23-25', copy: 'He goes up to Beersheba, where the Lord appears and he builds an altar.', miles: 9 }
+      { label: 'Told to stay', ref: 'Genesis 26:1-6', copy: 'In a famine the Lord tells Isaac not to go down to Egypt but to stay in the land, so he settles in Gerar.', at: 0 },
+      { label: 'A hundredfold harvest', ref: 'Genesis 26:12-14', copy: 'Isaac sows and reaps a hundredfold that year, and the Lord blesses him.', at: 0 },
+      { label: 'Room at last', ref: 'Genesis 26:17-22', copy: 'After quarrels over two wells, he digs Rehoboth: “At last the LORD has made room for us.”', miles: 16, at: 1 },
+      { label: 'Up to Beersheba', ref: 'Genesis 26:23-25', copy: 'He goes up to Beersheba, where the Lord appears to him, and he builds an altar.', miles: 20, at: 2 }
     ]
   },
   {
@@ -12805,10 +12814,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 16, y: 40, lat: 32.21, lon: 35.28 }
     ],
     steps: [
-      { label: 'Angels at Mahanaim', ref: 'Genesis 32:1-2', copy: 'The angels of God meet him and he names the place "two camps."', miles: 0 },
-      { label: 'Wrestling till dawn', ref: 'Genesis 32:24-28', copy: 'A man wrestles with Jacob and renames him Israel.', miles: 10 },
-      { label: 'Face to face with Esau', ref: 'Genesis 33:4', copy: 'Esau runs to meet him, embraces him, and they weep.', miles: 0 },
-      { label: 'On to Shechem', ref: 'Genesis 33:17-18', copy: 'He builds at Succoth, then comes safely to the city of Shechem.', miles: 35 }
+      { label: 'The camp of God', ref: 'Genesis 32:1-2', copy: 'The angels of God meet him. “This is the camp of God,” he says, and names the place Mahanaim.', at: 0 },
+      { label: 'Wrestling till dawn', ref: 'Genesis 32:22-31', copy: 'By the Jabbok a man wrestles with Jacob until daybreak and renames him Israel.', miles: 8, at: 1 },
+      { label: 'Face to face with Esau', ref: 'Genesis 33:1-4', copy: 'Esau runs to meet him, embraces him, and they weep.', at: 1 },
+      { label: 'Succoth', ref: 'Genesis 33:17', copy: 'Jacob builds a house for himself and shelters for his livestock.', miles: 8, at: 2 },
+      { label: 'On to Shechem', ref: 'Genesis 33:18-20', copy: 'He comes safely to the city of Shechem and sets up an altar.', miles: 25, at: 3 }
     ]
   },
   {
@@ -12823,22 +12833,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Traveling with family on a donkey',
     days: 'Many days across the wilderness',
     modern: 'Northwest Arabia across Sinai to the Nile Delta',
-    note: 'Midian lay east of the Gulf of Aqaba; the route crosses the Sinai wilderness to Goshen.',
+    note: 'Midian and the mountain of God are both debated; they are shown at their traditional places.',
     sources: [
       'Moses asks Jethro’s leave and returns to Egypt (Exodus 4:18).',
       'He sets his wife and sons on a donkey and carries the staff of God (Exodus 4:20).',
       'Aaron meets him at the mountain of God, and together they go to the elders (Exodus 4:27-29).'
     ],
     points: [
-      { ancient: 'Midian', modern: 'NW Arabia', x: 84, y: 77.6, lat: 28.4, lon: 35.3 },
-      { ancient: 'Mountain of God', modern: 'Sinai wilderness', x: 57.4, y: 74.4, lat: 28.54, lon: 33.97 },
-      { ancient: 'Egypt (Goshen)', modern: 'Eastern Nile Delta', x: 16, y: 22.4, lat: 30.8, lon: 31.9 }
+      { ancient: 'Midian', modern: 'northwest Arabia', x: 85, y: 85, lat: 28.4, lon: 35.3 },
+      { ancient: 'The mountain of God', modern: 'traditionally Jebel Musa (site debated)', x: 58, y: 81, lat: 28.54, lon: 33.97 },
+      { ancient: 'Egypt', modern: 'eastern Nile Delta', x: 15, y: 15, lat: 30.8, lon: 31.9 }
     ],
     steps: [
-      { label: 'Leave to go', ref: 'Exodus 4:18', copy: 'Jethro sends Moses off in peace to return to his people.', miles: 60 },
-      { label: 'The staff of God', ref: 'Exodus 4:20', copy: 'Moses takes his family and the staff of God in his hand.', miles: 120 },
-      { label: 'Aaron at the mountain', ref: 'Exodus 4:27', copy: 'Aaron meets him at the mountain of God and kisses him.', miles: 0 },
-      { label: 'Before the elders', ref: 'Exodus 4:29-31', copy: 'They gather the elders, who believe and bow in worship.', miles: 100 }
+      { label: 'Leave to go', ref: 'Exodus 4:18', copy: 'Jethro sends Moses off in peace to return to his people.', at: 0 },
+      { label: 'The staff of God', ref: 'Exodus 4:20', copy: 'Moses sets out for Egypt with his wife and sons, the staff of God in his hand.', at: 0 },
+      { label: 'Aaron at the mountain', ref: 'Exodus 4:27-28', copy: 'Sent by the Lord, Aaron meets him at the mountain of God and kisses him.', miles: 90, at: 1 },
+      { label: 'Before the elders', ref: 'Exodus 4:29-31', copy: 'They gather Israel\'s elders, who believe and bow down to worship.', miles: 250, at: 2 }
     ]
   },
   {
@@ -12853,22 +12863,23 @@ const BIBLE_JOURNEYS = [
     mode: 'Searching on foot',
     days: 'About three days',
     modern: 'The Benjamin plateau north into the hills of Ephraim',
-    note: 'The land of Zuph and Samuel’s town are placed near Ramah; the exact route wanders through several districts.',
+    note: 'The text names the regions Saul searched and \'the land of Zuph\' but not Samuel\'s city. Ramah, Samuel\'s home (1 Samuel 7:17), is the usual guess.',
     sources: [
       'Saul searches for his father’s lost donkeys through the hill country of Ephraim (1 Samuel 9:3-4).',
       'A servant suggests asking the man of God in the city (1 Samuel 9:6).',
       'Samuel meets Saul, hosts him, and the next day anoints him (1 Samuel 9:17-19; 10:1).'
     ],
     points: [
-      { ancient: 'Gibeah', modern: 'Tell el-Ful area', x: 55.2, y: 84, lat: 31.82, lon: 35.23 },
-      { ancient: 'Hill country of Ephraim', modern: 'Central highlands', x: 44.8, y: 16, lat: 32.1, lon: 35.18 },
-      { ancient: 'Land of Zuph (Ramah)', modern: 'Er-Ram area', x: 49, y: 71.9, lat: 31.87, lon: 35.2 }
+      { ancient: 'Gibeah', modern: 'Tell el-Ful area', x: 85, y: 85, lat: 31.82, lon: 35.23 },
+      { ancient: 'Hill country of Ephraim', modern: 'central highlands', x: 15, y: 15, lat: 32.1, lon: 35.18 },
+      { ancient: 'Land of Zuph', modern: 'Er-Ram area, if Samuel\'s city was Ramah', x: 43, y: 72, lat: 31.87, lon: 35.2 }
     ],
     steps: [
-      { label: 'The lost donkeys', ref: '1 Samuel 9:3-4', copy: 'Saul passes through Ephraim and other districts but finds nothing.', miles: 20 },
-      { label: 'The man of God', ref: '1 Samuel 9:6', copy: 'The servant proposes they ask the honored seer in the city.', miles: 12 },
-      { label: 'Samuel’s welcome', ref: '1 Samuel 9:17-19', copy: 'The Lord shows Samuel that this is the man to govern Israel.', miles: 0 },
-      { label: 'The anointing', ref: '1 Samuel 10:1', copy: 'Samuel pours oil on Saul’s head and kisses him as prince.', miles: 0 }
+      { label: 'The lost donkeys', ref: '1 Samuel 9:3-4', copy: 'Saul and a servant pass through Ephraim, Shalishah, Shaalim and Benjamin but find nothing.', miles: 20, at: 1 },
+      { label: 'The man of God', ref: '1 Samuel 9:5-10', copy: 'In the land of Zuph, the servant suggests they ask the seer in the town.', miles: 15, at: 2 },
+      { label: 'Samuel\'s welcome', ref: '1 Samuel 9:15-24', copy: 'The Lord tells Samuel this is the man to lead Israel, and Samuel seats Saul at the head of the guests.', at: 2 },
+      { label: 'The anointing', ref: '1 Samuel 10:1', copy: 'Samuel pours oil on Saul\'s head and kisses him.', at: 2 },
+      { label: 'Home to Gibeah', ref: '1 Samuel 10:9-10, 26', copy: 'God gives him a new heart, and Saul goes home to Gibeah with men whose hearts God had touched.', miles: 4, at: 0 }
     ]
   },
   {
@@ -12895,10 +12906,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Amalekite camp', modern: 'Negev toward Shur', x: 16, y: 81, lat: 31.05, lon: 34.3 }
     ],
     steps: [
-      { label: 'Ziklag in ashes', ref: '1 Samuel 30:3-4', copy: 'David and his men weep until they have no strength left.', miles: 0 },
-      { label: 'Left at the brook', ref: '1 Samuel 30:9-10', copy: 'Two hundred stay behind, too exhausted to cross the Besor.', miles: 15 },
-      { label: 'All recovered', ref: '1 Samuel 30:18-19', copy: 'David recovers everything; nothing is missing, small or great.', miles: 20 },
-      { label: 'Sharing the spoil', ref: '1 Samuel 30:26', copy: 'He sends gifts from the plunder to the elders of Judah.', miles: 5 }
+      { label: 'Ziklag in ashes', ref: '1 Samuel 30:1-6', copy: 'Amalekites have burned the town and taken the families. David and his men weep until they have no strength left.', at: 0 },
+      { label: 'Left at the brook', ref: '1 Samuel 30:9-10', copy: 'Two hundred stay behind, too exhausted to cross the Besor.', miles: 12, at: 1 },
+      { label: 'All recovered', ref: '1 Samuel 30:16-19', copy: 'David strikes the raiders and recovers everything; nothing is missing, small or great.', miles: 20, at: 2 },
+      { label: 'Shared alike', ref: '1 Samuel 30:21-25', copy: 'Back at the brook, David rules that those who stayed with the supplies share equally with those who fought.', miles: 20, at: 1 },
+      { label: 'Gifts to Judah', ref: '1 Samuel 30:26', copy: 'Back in Ziklag, he sends part of the plunder to the elders of Judah.', miles: 12, at: 0 }
     ]
   },
   {
@@ -12924,10 +12936,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Gibeon', modern: 'El-Jib, West Bank', x: 29.4, y: 16, lat: 31.85, lon: 35.18 }
     ],
     steps: [
-      { label: 'To the high place', ref: '1 Kings 3:4', copy: 'Solomon offers a thousand burnt offerings at Gibeon.', miles: 6 },
-      { label: 'A dream at night', ref: '1 Kings 3:5', copy: 'God says, "Ask what I shall give you."', miles: 0 },
-      { label: 'A listening heart', ref: '1 Kings 3:9', copy: 'Solomon asks for wisdom to govern and discern good from evil.', miles: 0 },
-      { label: 'Back before the ark', ref: '1 Kings 3:15', copy: 'He returns to Jerusalem and offers offerings before the ark.', miles: 6 }
+      { label: 'To the high place', ref: '1 Kings 3:4', copy: 'Solomon offers a thousand burnt offerings at Gibeon.', miles: 6, at: 1 },
+      { label: 'A dream at night', ref: '1 Kings 3:5', copy: 'God says, “Ask, and I will give it to you!”', at: 1 },
+      { label: 'A listening heart', ref: '1 Kings 3:9', copy: 'Solomon asks for an understanding heart to judge the people and discern between good and evil.', at: 1 },
+      { label: 'Back before the ark', ref: '1 Kings 3:15', copy: 'He returns to Jerusalem and offers offerings before the ark.', miles: 6, at: 0 }
     ]
   },
   {
@@ -12953,10 +12965,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jezreel', modern: 'Tel Yizre’el', x: 84, y: 74.5, lat: 32.56, lon: 35.33 }
     ],
     steps: [
-      { label: 'Praying for rain', ref: '1 Kings 18:42', copy: 'Elijah crouches with his face between his knees.', miles: 0 },
-      { label: 'A cloud like a hand', ref: '1 Kings 18:44', copy: 'His servant sees a small cloud rising from the sea.', miles: 0 },
-      { label: 'The sky goes black', ref: '1 Kings 18:45', copy: 'A great rain comes as Ahab rides for Jezreel.', miles: 8 },
-      { label: 'Outrunning the chariot', ref: '1 Kings 18:46', copy: 'Elijah runs ahead of Ahab all the way to Jezreel.', miles: 9 }
+      { label: 'Praying for rain', ref: '1 Kings 18:42', copy: 'Elijah crouches with his face between his knees.', at: 0 },
+      { label: 'A cloud like a hand', ref: '1 Kings 18:43-44', copy: 'The seventh time, his servant sees a cloud as small as a man\'s hand rising from the sea.', at: 0 },
+      { label: 'The sky goes black', ref: '1 Kings 18:45', copy: 'Heavy rain comes, and Ahab rides off to Jezreel.', at: 0 },
+      { label: 'Outrunning the chariot', ref: '1 Kings 18:46', copy: 'The hand of the Lord is on Elijah, and he runs ahead of Ahab all the way to Jezreel.', miles: 17, at: 1 }
     ]
   },
   {
@@ -12982,10 +12994,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 53.4, y: 16, lat: 32.21, lon: 35.28 }
     ],
     steps: [
-      { label: 'Up to Shechem', ref: '1 Kings 12:1', copy: 'Rehoboam goes to Shechem, where all Israel has gathered.', miles: 20 },
-      { label: 'Lighten the yoke', ref: '1 Kings 12:4', copy: 'The people ask him to ease the heavy service of Solomon.', miles: 0 },
-      { label: 'A harsher answer', ref: '1 Kings 12:14', copy: 'He threatens to make their yoke heavier still.', miles: 0 },
-      { label: 'To your tents', ref: '1 Kings 12:16', copy: 'Israel cries, "To your tents!" and rejects the house of David.', miles: 10 }
+      { label: 'Up to Shechem', ref: '1 Kings 12:1', copy: 'Rehoboam goes to Shechem, where all Israel has gathered to make him king.', miles: 32, at: 1 },
+      { label: 'Lighten the yoke', ref: '1 Kings 12:3-5', copy: 'The people ask him to ease the heavy yoke Solomon put on them.', at: 1 },
+      { label: 'A harsher answer', ref: '1 Kings 12:12-14', copy: 'Ignoring the elders, he threatens to make their yoke heavier still.', at: 1 },
+      { label: 'To your tents', ref: '1 Kings 12:16', copy: '“To your tents, O Israel!” Israel rejects the house of David.', at: 1 },
+      { label: 'Fleeing home', ref: '1 Kings 12:18-20', copy: 'Israel stones his officer Adoram, and Rehoboam escapes by chariot to Jerusalem.', miles: 32, at: 0 }
     ]
   },
   {
@@ -13000,7 +13013,7 @@ const BIBLE_JOURNEYS = [
     mode: 'Army on the march',
     days: 'A few days north',
     modern: 'Jerusalem up the central route to the Megiddo pass',
-    note: 'Megiddo guards a key pass on the international highway; Josiah dies there meeting Neco.',
+    note: '2 Kings says Neco killed Josiah at Megiddo. 2 Chronicles 35:23-24 adds that archers wounded him there and he died after being brought to Jerusalem.',
     sources: [
       'Pharaoh Neco marches up; Josiah goes out to meet him (2 Kings 23:29).',
       'Neco kills Josiah at Megiddo when they meet (2 Kings 23:29).',
@@ -13011,9 +13024,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Megiddo', modern: 'Tel Megiddo, Israel', x: 48.2, y: 16, lat: 32.58, lon: 35.18 }
     ],
     steps: [
-      { label: 'Out to meet Neco', ref: '2 Kings 23:29', copy: 'Josiah marches north to confront Pharaoh at Megiddo.', miles: 50 },
-      { label: 'Killed at the pass', ref: '2 Kings 23:29', copy: 'Neco kills him as soon as they meet at Megiddo.', miles: 0 },
-      { label: 'Carried home', ref: '2 Kings 23:30', copy: 'His servants bring his body in a chariot back to Jerusalem.', miles: 50 }
+      { label: 'Out to meet Neco', ref: '2 Kings 23:29', copy: 'Josiah marches north to confront Pharaoh at Megiddo.', miles: 50, at: 1 },
+      { label: 'Killed at the pass', ref: '2 Kings 23:29', copy: 'Neco kills him as soon as they meet at Megiddo.', miles: 0, at: 1 },
+      { label: 'Carried home', ref: '2 Kings 23:30', copy: 'His servants bring his body in a chariot back to Jerusalem.', miles: 50, at: 0 }
     ]
   },
   {
@@ -13040,10 +13053,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 55.8, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Out of Babylon', ref: 'Ezra 7:9', copy: 'On the first day of the first month the journey from Babylon begins.', miles: 60 },
-      { label: 'A fast at Ahava', ref: 'Ezra 8:21', copy: 'Ezra calls a fast to seek from God a safe road.', miles: 0 },
-      { label: 'Delivered on the way', ref: 'Ezra 8:31', copy: 'God’s hand protects them from enemies and ambush along the road.', miles: 800 },
-      { label: 'Arrival in Jerusalem', ref: 'Ezra 8:32', copy: 'They come to Jerusalem and rest three days.', miles: 40 }
+      { label: 'Out of Babylon', ref: 'Ezra 7:6-9', copy: 'On the first day of the first month, Ezra begins the journey up from Babylon.', at: 0 },
+      { label: 'A fast at Ahava', ref: 'Ezra 8:15-23', copy: 'Camped by the Ahava canal, Ezra calls a fast to ask God for a safe journey, ashamed to ask the king for soldiers.', miles: 60, at: 1 },
+      { label: 'Protected on the road', ref: 'Ezra 8:31-32', copy: 'God\'s hand keeps them from enemies and ambushes along the way, and they reach Jerusalem and rest three days.', miles: 900, at: 2 },
+      { label: 'Treasure delivered', ref: 'Ezra 8:33-35', copy: 'The silver, gold and vessels are weighed out in the house of God, and the returned exiles offer burnt offerings.', at: 2 }
     ]
   },
   {
@@ -13358,24 +13371,27 @@ const BIBLE_JOURNEYS = [
     mode: 'A nation on the move',
     days: 'The first days out of Egypt',
     modern: 'The eastern Nile Delta toward the Sinai wilderness',
-    note: 'The exact crossing point is debated; the camps and route here follow the traditional southern reconstruction.',
+    note: 'Every place on this route, and the crossing point itself, is debated. The stops follow the order Exodus gives.',
     sources: [
       'God leads the people by the wilderness road toward the Red Sea (Exodus 13:18).',
       'They camp before Pi-hahiroth, hemmed between Migdol and the sea (Exodus 14:2).',
       'The sea divides and Israel passes through on dry ground (Exodus 14:21-22).'
     ],
     points: [
-      { ancient: 'Rameses / Succoth', modern: 'Eastern Nile Delta', x: 17.6, y: 16, lat: 30.8, lon: 31.9 },
-      { ancient: 'Etham', modern: 'Edge of the wilderness', x: 42.3, y: 41.1, lat: 30.45, lon: 32.3 },
-      { ancient: 'Pi-hahiroth', modern: 'By the sea (debated)', x: 57.7, y: 69.7, lat: 30.05, lon: 32.55 },
-      { ancient: 'Wilderness of Shur', modern: 'NW Sinai', x: 82.4, y: 84, lat: 29.85, lon: 32.95 }
+      { ancient: 'Rameses', modern: 'eastern Nile Delta (site debated)', x: 15, y: 15, lat: 30.8, lon: 31.9 },
+      { ancient: 'Succoth', modern: 'Wadi Tumilat, Egypt', x: 30, y: 32, lat: 30.62, lon: 32.1 },
+      { ancient: 'Etham', modern: 'edge of the wilderness', x: 44, y: 48, lat: 30.45, lon: 32.3 },
+      { ancient: 'Pi-hahiroth', modern: 'by the sea (site debated)', x: 63, y: 85, lat: 30.05, lon: 32.55 },
+      { ancient: 'Wilderness of Shur', modern: 'northwest Sinai', x: 85, y: 71, lat: 30.2, lon: 32.85 }
     ],
     steps: [
-      { label: 'The long way round', ref: 'Exodus 13:18', copy: 'God leads them by the desert road toward the Red Sea, not the short coast road.', miles: 30 },
-      { label: 'Hemmed in', ref: 'Exodus 14:2-3', copy: 'They camp by the sea, and Pharaoh thinks they are trapped.', miles: 25 },
-      { label: 'Through the sea', ref: 'Exodus 14:21-22', copy: 'A strong east wind parts the waters and Israel walks across on dry ground.', miles: 5 },
-      { label: 'The waters return', ref: 'Exodus 14:27-28', copy: 'The sea sweeps back over Pharaoh’s chariots and horsemen.', miles: 0 },
-      { label: 'Into the wilderness', ref: 'Exodus 15:22', copy: 'Moses leads Israel on into the wilderness of Shur.', miles: 30 }
+      { label: 'Out of Rameses', ref: 'Exodus 12:37-41', copy: 'About six hundred thousand men on foot, besides women and children, set out from Rameses for Succoth.', miles: 25, at: 1 },
+      { label: 'The long way round', ref: 'Exodus 13:17-18', copy: 'God leads them by the wilderness road toward the Red Sea, not the short road through Philistine country.', at: 1 },
+      { label: 'Camp at Etham', ref: 'Exodus 13:20-22', copy: 'They camp at the edge of the wilderness, led by a pillar of cloud by day and fire by night.', miles: 15, at: 2 },
+      { label: 'Hemmed in', ref: 'Exodus 14:1-4', copy: 'God turns them back to camp by the sea at Pi-hahiroth, and Pharaoh thinks they are trapped.', miles: 25, at: 3 },
+      { label: 'Through the sea', ref: 'Exodus 14:21-22', copy: 'A strong east wind drives the sea back all night, and Israel walks through on dry ground.', miles: 15, at: 4 },
+      { label: 'The waters return', ref: 'Exodus 14:27-31', copy: 'The sea flows back over Pharaoh\'s chariots and horsemen, and the people fear the Lord and believe.', at: 4 },
+      { label: 'Into the wilderness', ref: 'Exodus 15:1, 22', copy: 'Moses and Israel sing to the Lord, then go on three days into the wilderness of Shur without finding water.', at: 4 }
     ]
   },
   {
@@ -13471,10 +13487,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Mount Nebo (Pisgah)', modern: 'Mount Nebo, Jordan', x: 84, y: 79.1, lat: 31.77, lon: 35.73 }
     ],
     steps: [
-      { label: 'Up to the summit', ref: 'Deuteronomy 34:1', copy: 'Moses climbs from the plains of Moab to the top of Pisgah.', miles: 6 },
-      { label: 'The whole land shown', ref: 'Deuteronomy 34:4', copy: 'The Lord says, "This is the land I swore to give your offspring."', miles: 0 },
-      { label: 'Moses dies in Moab', ref: 'Deuteronomy 34:5', copy: 'The servant of the Lord dies there, as the Lord had said.', miles: 0 },
-      { label: 'A hidden grave', ref: 'Deuteronomy 34:6', copy: 'He is buried in the valley, and no one knows the place to this day.', miles: 0 }
+      { label: 'Up to the summit', ref: 'Deuteronomy 34:1', copy: 'Moses climbs from the plains of Moab to Mount Nebo, the top of Pisgah.', miles: 6, at: 1 },
+      { label: 'The whole land shown', ref: 'Deuteronomy 34:1-4', copy: '“This is the land that I swore to give Abraham, Isaac, and Jacob,” the Lord says, “but you will not cross into it.”', at: 1 },
+      { label: 'Moses dies in Moab', ref: 'Deuteronomy 34:5', copy: 'The servant of the Lord dies there, as the Lord had said.', at: 1 },
+      { label: 'A hidden grave', ref: 'Deuteronomy 34:6', copy: 'He is buried in a valley in Moab, and no one knows the place to this day.', at: 1 }
     ]
   },
   {
@@ -13489,7 +13505,7 @@ const BIBLE_JOURNEYS = [
     mode: 'Army on the march',
     days: 'The day of battle',
     modern: 'Upper Galilee down to Mount Tabor and the Jezreel valley',
-    note: 'The battle is by the Kishon near Megiddo/Taanach; Jael’s tent is placed near Kedesh.',
+    note: 'Which Kedesh is meant is debated: Kedesh in upper Galilee (shown) or a Kedesh near the Sea of Galilee. Jael\'s tent was near Kedesh (Judges 4:11).',
     sources: [
       'Barak is summoned to gather ten thousand at Mount Tabor (Judges 4:6).',
       'He charges down from Tabor and the Lord routs Sisera (Judges 4:14-15).',
@@ -13501,10 +13517,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'River Kishon', modern: 'Jezreel valley', x: 33, y: 84, lat: 32.59, lon: 35.22 }
     ],
     steps: [
-      { label: 'Called to Tabor', ref: 'Judges 4:6', copy: 'Deborah sends for Barak to draw out ten thousand to Mount Tabor.', miles: 30 },
-      { label: 'Down from the mountain', ref: 'Judges 4:14', copy: 'Barak charges down Tabor with his ten thousand behind him.', miles: 12 },
-      { label: 'The Lord routs Sisera', ref: 'Judges 4:15', copy: 'Sisera’s whole army falls into panic before Barak.', miles: 8 },
-      { label: 'The Kishon sweeps them', ref: 'Judges 5:21', copy: 'The ancient river Kishon swept the enemy away.', miles: 5 }
+      { label: 'Barak called', ref: 'Judges 4:4-9', copy: 'Deborah sends for Barak at Kedesh: take ten thousand men to Mount Tabor. He will go only if she goes too.', at: 0 },
+      { label: 'Up Mount Tabor', ref: 'Judges 4:10-13', copy: 'Ten thousand from Zebulun and Naphtali go up with Barak, and Sisera gathers his 900 iron chariots.', miles: 30, at: 1 },
+      { label: 'Down from the mountain', ref: 'Judges 4:14-16', copy: '“Arise,” Deborah tells him, and Barak charges down Tabor as the Lord throws Sisera\'s army into confusion.', miles: 12, at: 2 },
+      { label: 'The Kishon sweeps them', ref: 'Judges 5:21', copy: 'Deborah\'s song: the ancient river Kishon swept them away.', at: 2 },
+      { label: 'Jael\'s tent', ref: 'Judges 4:17-22', copy: 'Sisera flees on foot to the tent of Jael, near Kedesh, and dies there by her hand.', miles: 40, at: 0 }
     ]
   },
   {
@@ -13530,9 +13547,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Hill before Hebron', modern: 'Judean hills near Hebron', x: 84, y: 48.1, lat: 31.53, lon: 35.1 }
     ],
     steps: [
-      { label: 'Trapped in Gaza', ref: 'Judges 16:1-2', copy: 'The Gazites surround the place and wait at the gate all night.', miles: 0 },
-      { label: 'Lifting the gates', ref: 'Judges 16:3', copy: 'At midnight Samson tears the gate doors loose, bar and all.', miles: 0 },
-      { label: 'Up toward Hebron', ref: 'Judges 16:3', copy: 'He carries them on his shoulders to the hill facing Hebron.', miles: 40 }
+      { label: 'Trapped in Gaza', ref: 'Judges 16:1-2', copy: 'The Gazites surround the place and wait at the gate all night.', miles: 0, at: 0 },
+      { label: 'Lifting the gates', ref: 'Judges 16:3', copy: 'At midnight Samson tears the gate doors loose, bar and all.', miles: 0, at: 0 },
+      { label: 'Up toward Hebron', ref: 'Judges 16:3', copy: 'He carries them on his shoulders to the hill facing Hebron.', miles: 40, at: 1 }
     ]
   },
   {
@@ -13558,10 +13575,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Samaria', modern: 'Sebastia, West Bank', x: 43.4, y: 84, lat: 32.28, lon: 35.19 }
     ],
     steps: [
-      { label: 'Surrounded at night', ref: '2 Kings 6:14', copy: 'A great army with horses and chariots encircles the city.', miles: 0 },
-      { label: 'More with us', ref: '2 Kings 6:16', copy: '"Those who are with us are more than those who are with them."', miles: 0 },
-      { label: 'Chariots of fire', ref: '2 Kings 6:17', copy: 'The servant’s eyes open to see the mountain full of fiery chariots.', miles: 0 },
-      { label: 'Led into Samaria', ref: '2 Kings 6:19-20', copy: 'Elisha leads the blinded army to Samaria, where their eyes are opened.', miles: 11 }
+      { label: 'Surrounded at night', ref: '2 Kings 6:14', copy: 'A great army with horses and chariots encircles the city.', miles: 0, at: 0 },
+      { label: 'More with us', ref: '2 Kings 6:16', copy: '"Those who are with us are more than those who are with them."', miles: 0, at: 0 },
+      { label: 'Chariots of fire', ref: '2 Kings 6:17', copy: 'The servant’s eyes open to see the mountain full of fiery chariots.', miles: 0, at: 0 },
+      { label: 'Led into Samaria', ref: '2 Kings 6:19-20', copy: 'Elisha leads the blinded army to Samaria, where their eyes are opened.', miles: 11, at: 1 }
     ]
   },
   {
@@ -13589,10 +13606,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'En Gedi', modern: 'Ein Gedi, Dead Sea', x: 84, y: 59.2, lat: 31.46, lon: 35.39 }
     ],
     steps: [
-      { label: 'Rescuing Keilah', ref: '1 Samuel 23:5', copy: 'David strikes the Philistines and saves the town.', miles: 0 },
-      { label: 'Hunted in Ziph', ref: '1 Samuel 23:14', copy: 'He stays in the hill country of Ziph as Saul seeks him daily.', miles: 15 },
-      { label: 'Escape at Maon', ref: '1 Samuel 23:26-27', copy: 'As Saul closes in, news of a Philistine raid pulls him away.', miles: 8 },
-      { label: 'Sparing Saul at En Gedi', ref: '1 Samuel 24:4', copy: 'In the cave David cuts Saul’s robe but refuses to harm him.', miles: 22 }
+      { label: 'Rescuing Keilah', ref: '1 Samuel 23:5', copy: 'David strikes the Philistines and saves the town.', miles: 0, at: 0 },
+      { label: 'Hunted in Ziph', ref: '1 Samuel 23:14', copy: 'He stays in the hill country of Ziph as Saul seeks him daily.', miles: 15, at: 1 },
+      { label: 'Escape at Maon', ref: '1 Samuel 23:26-27', copy: 'As Saul closes in, news of a Philistine raid pulls him away.', miles: 8, at: 2 },
+      { label: 'Sparing Saul at En Gedi', ref: '1 Samuel 24:4', copy: 'In the cave David cuts Saul’s robe but refuses to harm him.', miles: 22, at: 3 }
     ]
   },
   {
@@ -13668,22 +13685,21 @@ const BIBLE_JOURNEYS = [
     mode: 'Fleeing on foot',
     days: 'A desperate flight',
     modern: 'Hebron south into the Negev toward Egypt',
-    note: 'Shur is the wilderness toward Egypt; Beer-lahai-roi is in the Negev, exact site uncertain.',
+    note: 'Genesis 16 doesn\'t name Abram\'s camp; he had settled by the oaks of Mamre at Hebron (Genesis 13:18). The spring lies \'between Kadesh and Bered\' (16:14); its exact site is lost.',
     sources: [
       'Sarai deals harshly with Hagar, who flees (Genesis 16:6).',
       'The angel of the Lord finds her by a spring on the way to Shur (Genesis 16:7).',
       'She names the well Beer-lahai-roi (Genesis 16:14).'
     ],
     points: [
-      { ancient: 'Hebron (Mamre)', modern: 'Hebron, West Bank', x: 75.1, y: 16, lat: 31.53, lon: 35.1 },
-      { ancient: 'Way to Shur', modern: 'Negev wilderness', x: 24.9, y: 76.7, lat: 30.7, lon: 34.3 },
-      { ancient: 'Beer-lahai-roi', modern: 'Negev well', x: 43.7, y: 84, lat: 30.6, lon: 34.6 }
+      { ancient: 'Mamre', modern: 'near Hebron, West Bank', x: 85, y: 15, lat: 31.55, lon: 35.1 },
+      { ancient: 'Beer-lahai-roi', modern: 'Negev, between Kadesh and Bered (site lost)', x: 15, y: 85, lat: 30.6, lon: 34.6 }
     ],
     steps: [
-      { label: 'Fleeing Sarai', ref: 'Genesis 16:6', copy: 'Treated harshly, Hagar runs away into the wilderness.', miles: 35 },
-      { label: 'The angel at the spring', ref: 'Genesis 16:7', copy: 'The angel finds her by a spring on the way to Shur.', miles: 15 },
-      { label: 'The God who sees', ref: 'Genesis 16:13', copy: 'She calls him "You are the God who sees me."', miles: 0 },
-      { label: 'The well named', ref: 'Genesis 16:14', copy: 'The well is called Beer-lahai-roi.', miles: 10 }
+      { label: 'Fleeing Sarai', ref: 'Genesis 16:1-6', copy: 'Treated harshly by Sarai, Hagar runs away.', at: 0 },
+      { label: 'The angel at the spring', ref: 'Genesis 16:7-12', copy: 'The angel of the Lord finds her by a spring on the way to Shur and tells her to return.', miles: 70, at: 1 },
+      { label: 'The God who sees', ref: 'Genesis 16:13', copy: 'She names the Lord: “You are the God who sees me.”', at: 1 },
+      { label: 'The well named', ref: 'Genesis 16:14', copy: 'The well is called Beer-lahai-roi, between Kadesh and Bered.', at: 1 }
     ]
   },
   {
@@ -13705,15 +13721,15 @@ const BIBLE_JOURNEYS = [
       'He journeys on toward the Negev (Genesis 12:9).'
     ],
     points: [
-      { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 59.5, y: 16, lat: 32.21, lon: 35.28 },
-      { ancient: 'Bethel / Ai', modern: 'Beitin, West Bank', x: 56.9, y: 30.5, lat: 31.93, lon: 35.22 },
-      { ancient: 'The Negev', modern: 'Negev, Israel', x: 40.5, y: 84, lat: 30.9, lon: 34.85 }
+      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 85, y: 15, lat: 32.21, lon: 35.28 },
+      { ancient: 'Between Bethel and Ai', modern: 'central highlands, West Bank', x: 77, y: 30, lat: 31.93, lon: 35.23 },
+      { ancient: 'The Negev', modern: 'Negev, Israel', x: 15, y: 85, lat: 30.9, lon: 34.85 }
     ],
     steps: [
-      { label: 'The oak of Moreh', ref: 'Genesis 12:6', copy: 'Abram reaches Shechem, where Canaanites still live.', miles: 0 },
-      { label: 'An altar at Shechem', ref: 'Genesis 12:7', copy: 'The Lord appears: "To your offspring I will give this land."', miles: 20 },
-      { label: 'Between Bethel and Ai', ref: 'Genesis 12:8', copy: 'He pitches his tent and calls on the name of the Lord.', miles: 0 },
-      { label: 'On to the Negev', ref: 'Genesis 12:9', copy: 'Abram journeys by stages toward the south.', miles: 70 }
+      { label: 'The oak of Moreh', ref: 'Genesis 12:6', copy: 'Abram passes through the land to the oak of Moreh at Shechem. The Canaanites are in the land.', at: 0 },
+      { label: 'An altar at Shechem', ref: 'Genesis 12:7', copy: 'The Lord appears: “I will give this land to your offspring.” Abram builds an altar.', at: 0 },
+      { label: 'Between Bethel and Ai', ref: 'Genesis 12:8', copy: 'He pitches his tent, builds an altar and calls on the name of the Lord.', miles: 20, at: 1 },
+      { label: 'On toward the Negev', ref: 'Genesis 12:9', copy: 'Abram journeys on by stages toward the Negev.', miles: 80, at: 2 }
     ]
   },
   {
@@ -13735,16 +13751,17 @@ const BIBLE_JOURNEYS = [
       'Rachel dies on the way to Ephrath (Genesis 35:19).'
     ],
     points: [
-      { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 57.6, y: 16, lat: 32.21, lon: 35.28 },
-      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 52.5, y: 44, lat: 31.93, lon: 35.22 },
-      { ancient: 'Ephrath (Bethlehem)', modern: 'Bethlehem', x: 50.8, y: 67, lat: 31.7, lon: 35.2 },
-      { ancient: 'Hebron (Mamre)', modern: 'Hebron', x: 42.4, y: 84, lat: 31.53, lon: 35.1 }
+      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 85, y: 15, lat: 32.21, lon: 35.28 },
+      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 62, y: 44, lat: 31.93, lon: 35.22 },
+      { ancient: 'On the way to Ephrath', modern: 'Rachel\'s Tomb, near Bethlehem (traditional)', x: 54, y: 65, lat: 31.72, lon: 35.2 },
+      { ancient: 'Mamre (Hebron)', modern: 'Hebron, West Bank', x: 15, y: 85, lat: 31.53, lon: 35.1 }
     ],
     steps: [
-      { label: 'Go up to Bethel', ref: 'Genesis 35:1', copy: 'God calls Jacob back to the place of his vow.', miles: 18 },
-      { label: 'The altar at Bethel', ref: 'Genesis 35:7', copy: 'He builds an altar where God revealed himself.', miles: 0 },
-      { label: 'Rachel dies', ref: 'Genesis 35:19', copy: 'Rachel dies giving birth on the way to Ephrath.', miles: 25 },
-      { label: 'Home to Isaac', ref: 'Genesis 35:27', copy: 'Jacob comes at last to his father at Hebron.', miles: 12 }
+      { label: 'Go up to Bethel', ref: 'Genesis 35:1-4', copy: 'God tells Jacob to go up to Bethel. His household gives up their foreign gods, and Jacob buries them under the oak near Shechem.', at: 0 },
+      { label: 'The altar at Bethel', ref: 'Genesis 35:6-7', copy: 'He builds an altar where God had revealed himself when he fled from Esau.', miles: 20, at: 1 },
+      { label: 'Named Israel again', ref: 'Genesis 35:9-15', copy: 'God appears again, blesses him and confirms the name Israel and the promise of the land.', at: 1 },
+      { label: 'Rachel dies', ref: 'Genesis 35:16-20', copy: 'Still some distance from Ephrath, Rachel dies giving birth to Benjamin and is buried on the way to Bethlehem.', miles: 15, at: 2 },
+      { label: 'Home to Isaac', ref: 'Genesis 35:27-29', copy: 'Jacob comes to his father at Mamre, near Hebron. Isaac dies, and Esau and Jacob bury him.', miles: 14, at: 3 }
     ]
   },
   {
@@ -13759,22 +13776,22 @@ const BIBLE_JOURNEYS = [
     mode: 'A great funeral caravan',
     days: 'A long mourning journey',
     modern: 'Egypt up around the Dead Sea to Hebron',
-    note: 'The route went up by way of the Jordan; the threshing floor of Atad is debated.',
+    note: '\'Beyond the Jordan\' (Genesis 50:10) usually means east of the river, which would make this a long way round. The site of Atad\'s threshing floor is unknown.',
     sources: [
       'Joseph goes up to bury his father with a great company (Genesis 50:7).',
       'They mourn at the threshing floor of Atad beyond the Jordan (Genesis 50:10).',
       'He is buried in the cave of Machpelah near Mamre (Genesis 50:13).'
     ],
     points: [
-      { ancient: 'Egypt (Goshen)', modern: 'Eastern Nile Delta', x: 16, y: 61.4, lat: 30.8, lon: 31.9 },
-      { ancient: 'Atad', modern: 'Beyond the Jordan', x: 84, y: 38.6, lat: 31.85, lon: 35.55 },
-      { ancient: 'Machpelah (Hebron)', modern: 'Hebron', x: 75.6, y: 45.5, lat: 31.53, lon: 35.1 }
+      { ancient: 'Egypt (Goshen)', modern: 'eastern Nile Delta', x: 15, y: 85, lat: 30.8, lon: 31.9 },
+      { ancient: 'Threshing floor of Atad', modern: 'beyond the Jordan (site unknown)', x: 85, y: 15, lat: 31.85, lon: 35.58 },
+      { ancient: 'Cave of Machpelah', modern: 'Hebron, West Bank', x: 76, y: 37, lat: 31.524, lon: 35.111 }
     ],
     steps: [
-      { label: 'Up from Egypt', ref: 'Genesis 50:7', copy: 'A great company of Egypt and Israel goes up to bury Jacob.', miles: 300 },
-      { label: 'Mourning at Atad', ref: 'Genesis 50:10', copy: 'They lament seven days beyond the Jordan.', miles: 30 },
-      { label: 'Carried into Canaan', ref: 'Genesis 50:12', copy: 'His sons do for him just as he commanded.', miles: 0 },
-      { label: 'Buried at Machpelah', ref: 'Genesis 50:13', copy: 'They lay him in the cave Abraham bought as a burial place.', miles: 20 }
+      { label: 'Up from Egypt', ref: 'Genesis 50:7-9', copy: 'Pharaoh\'s officials, Egypt\'s elders and Joseph\'s whole household go up with chariots and horsemen to bury Jacob.', at: 0 },
+      { label: 'Mourning at Atad', ref: 'Genesis 50:10-11', copy: 'Beyond the Jordan they mourn seven days, and the Canaanites name the place Abel-mizraim.', miles: 300, at: 1 },
+      { label: 'Buried at Machpelah', ref: 'Genesis 50:12-13', copy: 'His sons carry him into Canaan and bury him in the cave Abraham bought, just as he commanded.', miles: 45, at: 2 },
+      { label: 'Back to Egypt', ref: 'Genesis 50:14', copy: 'Joseph returns to Egypt with his brothers and everyone who went up with him.', miles: 220, at: 0 }
     ]
   },
   {
@@ -13789,22 +13806,22 @@ const BIBLE_JOURNEYS = [
     mode: 'A nation on the move',
     days: 'The first stops after the sea',
     modern: 'The northwest Sinai wilderness',
-    note: 'Marah and Elim are placed along the Sinai coast; exact sites are uncertain.',
+    note: 'Marah and Elim are debated sites; they are shown at the traditional locations on the Sinai coast.',
     sources: [
       'Three days in the wilderness of Shur with no water (Exodus 15:22).',
       'The water of Marah is bitter (Exodus 15:23).',
       'At Elim are twelve springs and seventy palms (Exodus 15:27).'
     ],
     points: [
-      { ancient: 'Wilderness of Shur', modern: 'NW Sinai', x: 43.2, y: 16, lat: 29.85, lon: 32.95 },
-      { ancient: 'Marah', modern: 'Sinai coast', x: 56.8, y: 42.2, lat: 29.6, lon: 33.1 },
-      { ancient: 'Elim', modern: 'Sinai oasis', x: 47.7, y: 84, lat: 29.2, lon: 33 }
+      { ancient: 'Wilderness of Shur', modern: 'northwest Sinai (a broad region)', x: 15, y: 15, lat: 30.2, lon: 32.85 },
+      { ancient: 'Marah', modern: 'Sinai coast (site debated)', x: 85, y: 57, lat: 29.6, lon: 33.1 },
+      { ancient: 'Elim', modern: 'Sinai oasis (site debated)', x: 57, y: 85, lat: 29.2, lon: 33 }
     ],
     steps: [
-      { label: 'No water', ref: 'Exodus 15:22', copy: 'Three days into the wilderness they find no water.', miles: 25 },
-      { label: 'Bitter Marah', ref: 'Exodus 15:23', copy: 'They cannot drink the water, for it is bitter.', miles: 0 },
-      { label: 'The log', ref: 'Exodus 15:25', copy: 'The Lord shows Moses a log that makes the water sweet.', miles: 0 },
-      { label: 'Rest at Elim', ref: 'Exodus 15:27', copy: 'They camp by twelve springs and seventy palm trees.', miles: 20 }
+      { label: 'No water', ref: 'Exodus 15:22', copy: 'From the Red Sea, Moses leads Israel into the wilderness of Shur. For three days they find no water.', at: 0 },
+      { label: 'Bitter Marah', ref: 'Exodus 15:23-24', copy: 'They reach Marah but cannot drink the water, for it is bitter, and the people grumble.', miles: 45, at: 1 },
+      { label: 'The log', ref: 'Exodus 15:25-26', copy: 'The Lord shows Moses a log that makes the water sweet. “I am the LORD who heals you.”', at: 1 },
+      { label: 'Rest at Elim', ref: 'Exodus 15:27', copy: 'They camp at Elim by twelve springs of water and seventy palm trees.', miles: 28, at: 2 }
     ]
   },
   {
@@ -13819,7 +13836,7 @@ const BIBLE_JOURNEYS = [
     mode: 'Wilderness march',
     days: 'A halt on the way to Sinai',
     modern: 'The southern Sinai wilderness',
-    note: 'Rephidim is placed near Horeb; the exact site is debated.',
+    note: 'Exodus places the rock \'at Horeb\' while the camp is at Rephidim; both sites are debated.',
     sources: [
       'Israel camps at Rephidim and finds no water (Exodus 17:1).',
       'Water comes from the rock at Horeb (Exodus 17:6).',
@@ -13830,10 +13847,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Rephidim', modern: 'Near Horeb', x: 83.1, y: 84, lat: 28.72, lon: 33.6 }
     ],
     steps: [
-      { label: 'No water to drink', ref: 'Exodus 17:1', copy: 'The people quarrel with Moses at Rephidim.', miles: 25 },
-      { label: 'Water from the rock', ref: 'Exodus 17:6', copy: 'Moses strikes the rock at Horeb and water flows out.', miles: 0 },
-      { label: 'Hands lifted up', ref: 'Exodus 17:11', copy: 'When Moses raises his hands, Israel prevails.', miles: 0 },
-      { label: 'Amalek defeated', ref: 'Exodus 17:13', copy: 'Joshua overwhelms Amalek with the sword.', miles: 0 }
+      { label: 'No water to drink', ref: 'Exodus 17:1', copy: 'The people quarrel with Moses at Rephidim.', miles: 25, at: 1 },
+      { label: 'Water from the rock', ref: 'Exodus 17:6', copy: 'Moses strikes the rock at Horeb and water flows out.', miles: 0, at: 1 },
+      { label: 'Hands lifted up', ref: 'Exodus 17:11', copy: 'When Moses raises his hands, Israel prevails.', miles: 0, at: 1 },
+      { label: 'Amalek defeated', ref: 'Exodus 17:13', copy: 'Joshua overwhelms Amalek with the sword.', miles: 0, at: 1 }
     ]
   },
   {
@@ -13855,15 +13872,17 @@ const BIBLE_JOURNEYS = [
       'Og of Bashan comes out at Edrei and is defeated (Numbers 21:33-35).'
     ],
     points: [
-      { ancient: 'Heshbon', modern: 'Hisban, Jordan', x: 39.8, y: 84, lat: 31.8, lon: 35.81 },
-      { ancient: 'Jazer', modern: 'Gilead, Jordan', x: 33.5, y: 70.3, lat: 32, lon: 35.7 },
-      { ancient: 'Edrei (Bashan)', modern: 'Daraa, Syria', x: 66.5, y: 16, lat: 32.79, lon: 36.27 }
+      { ancient: 'Jahaz', modern: 'Moab plateau, Jordan', x: 40, y: 85, lat: 31.6, lon: 35.9 },
+      { ancient: 'Heshbon', modern: 'Hisban, Jordan', x: 29, y: 73, lat: 31.8, lon: 35.81 },
+      { ancient: 'Jazer', modern: 'Gilead, Jordan', x: 15, y: 61, lat: 32, lon: 35.7 },
+      { ancient: 'Edrei', modern: 'Daraa, Syria', x: 85, y: 15, lat: 32.79, lon: 36.27 }
     ],
     steps: [
-      { label: 'Refused passage', ref: 'Numbers 21:23', copy: 'Sihon gathers his army and fights Israel in the wilderness.', miles: 0 },
-      { label: 'Heshbon taken', ref: 'Numbers 21:24', copy: 'Israel strikes Sihon and seizes his land.', miles: 40 },
-      { label: 'Turning to Bashan', ref: 'Numbers 21:33', copy: 'They go up the road to Bashan, and Og comes out at Edrei.', miles: 70 },
-      { label: 'Og defeated', ref: 'Numbers 21:35', copy: 'They strike him down and possess his land.', miles: 10 }
+      { label: 'Refused passage', ref: 'Numbers 21:21-23', copy: 'Sihon king of the Amorites refuses to let Israel pass and comes out to fight them at Jahaz.', at: 0 },
+      { label: 'Heshbon taken', ref: 'Numbers 21:24-26', copy: 'Israel strikes Sihon, takes his land from the Arnon to the Jabbok and settles in Heshbon, his city.', miles: 15, at: 1 },
+      { label: 'Jazer taken', ref: 'Numbers 21:32', copy: 'Spies are sent to Jazer, and Israel captures its villages.', miles: 15, at: 2 },
+      { label: 'Og at Edrei', ref: 'Numbers 21:33-34', copy: 'They go up the road to Bashan. Og comes out to fight at Edrei, and the Lord says, “Do not fear him.”', miles: 60, at: 3 },
+      { label: 'Og defeated', ref: 'Numbers 21:35', copy: 'They strike him down with his sons and his people and take his land.', at: 3 }
     ]
   },
   {
@@ -13878,7 +13897,7 @@ const BIBLE_JOURNEYS = [
     mode: 'Army on the march',
     days: 'A swift northern strike',
     modern: 'The Jordan valley up to upper Galilee',
-    note: 'Hazor and the waters of Merom are in upper Galilee.',
+    note: 'Joshua 10:43 leaves Israel\'s camp at Gilgal before this campaign.',
     sources: [
       'Kings gather at the waters of Merom against Israel (Joshua 11:5).',
       'Joshua falls on them suddenly (Joshua 11:7).',
@@ -13890,10 +13909,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Hazor', modern: 'Tel Hazor', x: 53, y: 16, lat: 33.02, lon: 35.57 }
     ],
     steps: [
-      { label: 'Kings at Merom', ref: 'Joshua 11:5', copy: 'The northern kings camp together by the waters of Merom.', miles: 75 },
-      { label: 'A sudden attack', ref: 'Joshua 11:7', copy: 'Joshua comes against them suddenly and falls upon them.', miles: 0 },
-      { label: 'Hazor captured', ref: 'Joshua 11:10', copy: 'He takes Hazor and strikes its king with the sword.', miles: 15 },
-      { label: 'Hazor burned', ref: 'Joshua 11:11', copy: 'He burns Hazor, the head of all those kingdoms.', miles: 0 }
+      { label: 'Kings gather at Merom', ref: 'Joshua 11:1-6', copy: 'Jabin king of Hazor calls the northern kings, and they camp together at the waters of Merom. The Lord tells Joshua not to be afraid.', at: 0 },
+      { label: 'A sudden attack', ref: 'Joshua 11:7-8', copy: 'Joshua comes against them suddenly by the waters of Merom, and the Lord gives them into Israel\'s hand.', miles: 80, at: 1 },
+      { label: 'Hazor captured', ref: 'Joshua 11:10', copy: 'He turns back and takes Hazor, the head of all those kingdoms.', miles: 8, at: 2 },
+      { label: 'Hazor burned', ref: 'Joshua 11:11-13', copy: 'Of all the cities on their mounds, Hazor alone is burned.', at: 2 }
     ]
   },
   {
@@ -13908,21 +13927,23 @@ const BIBLE_JOURNEYS = [
     mode: 'Secret mission on foot',
     days: 'A daring deliverance',
     modern: 'Jericho up into the central highlands',
-    note: 'Eglon held the City of Palms (Jericho); Seirah is in the Ephraim hills.',
+    note: 'Judges calls Eglon\'s base the City of Palms, a name used for Jericho (Deuteronomy 34:3). Seirah\'s site is unknown.',
     sources: [
       'Ehud brings tribute to Eglon king of Moab (Judges 3:15-17).',
       'He kills Eglon with a hidden dagger (Judges 3:21).',
       'He escapes to Seirah and rallies Israel (Judges 3:26-27).'
     ],
     points: [
-      { ancient: 'Jericho', modern: 'Jericho, West Bank', x: 84, y: 66.9, lat: 31.87, lon: 35.44 },
-      { ancient: 'Seirah', modern: 'Ephraim hills', x: 16, y: 33.1, lat: 31.95, lon: 35.25 }
+      { ancient: 'City of Palms (Jericho)', modern: 'Jericho, West Bank', x: 57, y: 69, lat: 31.87, lon: 35.44 },
+      { ancient: 'Seirah', modern: 'hill country of Ephraim (site unknown)', x: 15, y: 15, lat: 31.97, lon: 35.27 },
+      { ancient: 'Fords of the Jordan', modern: 'Jordan crossing toward Moab', x: 85, y: 85, lat: 31.84, lon: 35.55 }
     ],
     steps: [
-      { label: 'Bringing tribute', ref: 'Judges 3:15', copy: 'Ehud, a left-handed man, brings tribute to Eglon.', miles: 0 },
-      { label: 'The hidden dagger', ref: 'Judges 3:21', copy: 'He thrusts the sword into the very fat king.', miles: 0 },
-      { label: 'Escape to Seirah', ref: 'Judges 3:26', copy: 'Ehud slips away while the servants wait.', miles: 18 },
-      { label: 'The trumpet of Ephraim', ref: 'Judges 3:27', copy: 'He sounds the trumpet and Israel goes down after him.', miles: 7 }
+      { label: 'Bringing tribute', ref: 'Judges 3:12-18', copy: 'After eighteen years under Eglon of Moab, Israel cries out, and the Lord raises up Ehud, a left-handed man, who brings the tribute.', at: 0 },
+      { label: 'The hidden sword', ref: 'Judges 3:19-23', copy: 'Ehud returns with a secret message for the king and drives his hidden sword into the very fat Eglon.', at: 0 },
+      { label: 'Escape to Seirah', ref: 'Judges 3:24-26', copy: 'While the servants wait outside the locked doors, Ehud escapes past the idols to Seirah.', miles: 15, at: 1 },
+      { label: 'The trumpet in Ephraim', ref: 'Judges 3:27-28', copy: 'He blows the trumpet in the hill country of Ephraim, and Israel goes down after him.', at: 1 },
+      { label: 'The fords seized', ref: 'Judges 3:28-30', copy: 'They seize the fords of the Jordan, strike ten thousand Moabites, and the land has rest eighty years.', miles: 18, at: 2 }
     ]
   },
   {
@@ -13937,21 +13958,21 @@ const BIBLE_JOURNEYS = [
     mode: 'Army on the march',
     days: 'A campaign in Gilead',
     modern: 'The Gilead highlands of Jordan',
-    note: 'Mizpah of Gilead and Aroer are east of the Jordan; sites are approximate.',
+    note: 'Which Aroer is meant is uncertain. The Aroer by the Arnon is shown; another Aroer lay near Rabbah (Joshua 13:25).',
     sources: [
       'The people make Jephthah head at Mizpah (Judges 11:11).',
       'The Spirit of the Lord comes on him (Judges 11:29).',
       'He strikes Ammon from Aroer to Minnith (Judges 11:32-33).'
     ],
     points: [
-      { ancient: 'Mizpah of Gilead', modern: 'Gilead, Jordan', x: 47.1, y: 16, lat: 32.3, lon: 35.75 },
-      { ancient: 'Aroer', modern: 'Near the Arnon, Jordan', x: 52.9, y: 84, lat: 31.5, lon: 35.83 }
+      { ancient: 'Mizpah of Gilead', modern: 'Gilead, Jordan', x: 15, y: 15, lat: 32.3, lon: 35.75 },
+      { ancient: 'Aroer to Minnith', modern: 'Ammonite border, Jordan', x: 85, y: 85, lat: 31.7, lon: 35.84 }
     ],
     steps: [
-      { label: 'Made head at Mizpah', ref: 'Judges 11:11', copy: 'Jephthah speaks all his words before the Lord at Mizpah.', miles: 0 },
-      { label: 'The Spirit comes', ref: 'Judges 11:29', copy: 'He passes through Gilead and Manasseh to meet Ammon.', miles: 40 },
-      { label: 'Crossing to battle', ref: 'Judges 11:32', copy: 'The Lord gives the Ammonites into his hand.', miles: 15 },
-      { label: 'Struck to Aroer', ref: 'Judges 11:33', copy: 'He defeats them from Aroer as far as Minnith.', miles: 5 }
+      { label: 'Made head at Mizpah', ref: 'Judges 11:4-11', copy: 'The elders of Gilead bring Jephthah back to lead them, and he repeats all his terms before the Lord at Mizpah.', at: 0 },
+      { label: 'The Spirit comes', ref: 'Judges 11:29-31', copy: 'The Spirit of the Lord comes on him. He passes through Gilead and Manasseh, and makes a vow.', at: 0 },
+      { label: 'Twenty cities struck', ref: 'Judges 11:32-33', copy: 'The Lord gives the Ammonites into his hand, from Aroer to the area of Minnith.', miles: 45, at: 1 },
+      { label: 'Home to Mizpah', ref: 'Judges 11:34-35', copy: 'His only child, his daughter, comes out dancing with tambourines to meet him.', miles: 45, at: 0 }
     ]
   },
   {
@@ -13966,22 +13987,25 @@ const BIBLE_JOURNEYS = [
     mode: 'A tribe on the move',
     days: 'A migration north',
     modern: 'The Shephelah all the way to the foot of Hermon',
-    note: 'Laish (renamed Dan) lay at the far north of the land near the Jordan springs.',
+    note: 'Micah\'s house is somewhere in the hill country of Ephraim; the spot is unknown. Mahaneh-dan was west of Kiriath-jearim (Judges 18:12).',
     sources: [
       'Five Danites are sent to spy out the land (Judges 18:2).',
       'Six hundred armed men set out from Zorah and Eshtaol (Judges 18:11).',
       'They strike Laish and rename it Dan (Judges 18:27-29).'
     ],
     points: [
-      { ancient: 'Zorah / Eshtaol', modern: 'Shephelah, Israel', x: 37, y: 84, lat: 31.77, lon: 34.98 },
-      { ancient: 'Kiriath-jearim', modern: 'Judean hills', x: 41.7, y: 82.2, lat: 31.81, lon: 35.1 },
-      { ancient: 'Laish (Dan)', modern: 'Tel Dan, Israel', x: 63, y: 16, lat: 33.25, lon: 35.65 }
+      { ancient: 'Zorah and Eshtaol', modern: 'Shephelah, Israel', x: 15, y: 85, lat: 31.77, lon: 34.99 },
+      { ancient: 'Micah\'s house', modern: 'hill country of Ephraim (spot unknown)', x: 37, y: 72, lat: 32.05, lon: 35.2 },
+      { ancient: 'Laish (Dan)', modern: 'Tel Dan, Israel', x: 85, y: 15, lat: 33.25, lon: 35.65 },
+      { ancient: 'Mahaneh-dan', modern: 'west of Kiriath-jearim', x: 23, y: 84, lat: 31.8, lon: 35.07 }
     ],
     steps: [
-      { label: 'Spies sent out', ref: 'Judges 18:2', copy: 'Five strong men are sent to explore the land.', miles: 0 },
-      { label: 'Six hundred march', ref: 'Judges 18:11', copy: 'Armed men of Dan set out from Zorah and Eshtaol.', miles: 15 },
-      { label: 'Laish struck', ref: 'Judges 18:27', copy: 'They fall on the quiet, unsuspecting city and burn it.', miles: 85 },
-      { label: 'Renamed Dan', ref: 'Judges 18:29', copy: 'They name the city Dan after their ancestor.', miles: 0 }
+      { label: 'Spies sent out', ref: 'Judges 18:1-2', copy: 'With no land of its own yet, the tribe of Dan sends five men to explore.', at: 0 },
+      { label: 'A priest at Micah\'s', ref: 'Judges 18:2-6', copy: 'They lodge at Micah\'s house and ask his Levite to inquire of God for them.', miles: 25, at: 1 },
+      { label: 'Quiet Laish', ref: 'Judges 18:7-10', copy: 'They find Laish living quiet and secure, far from any help, and report back.', miles: 85, at: 2 },
+      { label: 'Six hundred march', ref: 'Judges 18:11-12', copy: 'Six hundred armed men set out and camp at Kiriath-jearim, at the place called Mahaneh-dan.', miles: 105, at: 3 },
+      { label: 'Micah\'s idols taken', ref: 'Judges 18:13-26', copy: 'In Ephraim they carry off Micah\'s carved image and his priest.', miles: 20, at: 1 },
+      { label: 'Laish struck, renamed Dan', ref: 'Judges 18:27-29', copy: 'They strike the unsuspecting city, burn it, rebuild it and name it Dan.', miles: 85, at: 2 }
     ]
   },
   {
@@ -13996,7 +14020,7 @@ const BIBLE_JOURNEYS = [
     mode: 'Family pilgrimage',
     days: 'A yearly journey',
     modern: 'The Benjamin hills up to Shiloh',
-    note: 'Shiloh held the tabernacle in the central hill country.',
+    note: 'Elkanah\'s town, Ramathaim-zophim (1 Samuel 1:1), is usually identified with Ramah.',
     sources: [
       'Elkanah goes up yearly to worship at Shiloh (1 Samuel 1:3).',
       'Hannah prays in bitterness of soul for a son (1 Samuel 1:10).',
@@ -14007,10 +14031,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Shiloh', modern: 'Khirbet Seilun', x: 63.7, y: 16, lat: 32.06, lon: 35.29 }
     ],
     steps: [
-      { label: 'Up to Shiloh', ref: '1 Samuel 1:3', copy: 'Elkanah goes up year by year to worship and sacrifice.', miles: 14 },
-      { label: 'Hannah prays', ref: '1 Samuel 1:10', copy: 'Deeply distressed, she weeps and prays to the Lord.', miles: 0 },
-      { label: 'Samuel is born', ref: '1 Samuel 1:20', copy: 'She bears a son and names him Samuel.', miles: 0 },
-      { label: 'Given to the Lord', ref: '1 Samuel 1:24', copy: 'She brings the weaned child to the house of the Lord.', miles: 14 }
+      { label: 'Up to Shiloh', ref: '1 Samuel 1:3-8', copy: 'Year after year Elkanah goes up to worship, and Hannah, who has no children, weeps and will not eat.', miles: 14, at: 1 },
+      { label: 'Hannah prays', ref: '1 Samuel 1:9-18', copy: 'In deep distress she prays and vows: if the Lord gives her a son, she will give him to the Lord.', at: 1 },
+      { label: 'Samuel is born', ref: '1 Samuel 1:19-20', copy: 'Back home at Ramah, she bears a son and names him Samuel.', miles: 14, at: 0 },
+      { label: 'Given to the Lord', ref: '1 Samuel 1:24-28', copy: 'Once he is weaned, she brings the boy to the house of the Lord at Shiloh.', miles: 14, at: 1 }
     ]
   },
   {
@@ -14037,10 +14061,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Kiriath-jearim', modern: 'Judean hills', x: 84, y: 40.4, lat: 31.81, lon: 35.1 }
     ],
     steps: [
-      { label: 'Sent on a cart', ref: '1 Samuel 6:11', copy: 'The ark and the golden offerings are set on the cart.', miles: 0 },
-      { label: 'Straight to Beth-shemesh', ref: '1 Samuel 6:12', copy: 'The cows go straight up the road, lowing as they go.', miles: 8 },
-      { label: 'A holy fear', ref: '1 Samuel 6:19', copy: 'Some are struck for looking into the ark of the Lord.', miles: 0 },
-      { label: 'Up to Kiriath-jearim', ref: '1 Samuel 7:1', copy: 'They take the ark to the house of Abinadab on the hill.', miles: 10 }
+      { label: 'Sent on a cart', ref: '1 Samuel 6:11', copy: 'The ark and the golden offerings are set on the cart.', miles: 0, at: 0 },
+      { label: 'Straight to Beth-shemesh', ref: '1 Samuel 6:12', copy: 'The cows go straight up the road, lowing as they go.', miles: 8, at: 1 },
+      { label: 'A holy fear', ref: '1 Samuel 6:19', copy: 'Some are struck for looking into the ark of the Lord.', miles: 0, at: 1 },
+      { label: 'Up to Kiriath-jearim', ref: '1 Samuel 7:1', copy: 'They take the ark to the house of Abinadab on the hill.', miles: 10, at: 2 }
     ]
   },
   {
@@ -14055,22 +14079,23 @@ const BIBLE_JOURNEYS = [
     mode: 'Army on the march',
     days: 'A night march to battle',
     modern: 'Benjamin across the Jordan into Gilead',
-    note: 'Jabesh-gilead lay east of the Jordan; Saul musters Israel at Bezek.',
+    note: 'Bezek is usually placed at Khirbet Ibziq, northeast of Shechem.',
     sources: [
       'Messengers reach Gibeah and the people weep (1 Samuel 11:4).',
       'Saul musters Israel at Bezek (1 Samuel 11:8).',
       'He routs the Ammonites by the morning watch (1 Samuel 11:11).'
     ],
     points: [
-      { ancient: 'Gibeah', modern: 'Tell el-Ful', x: 30.8, y: 84, lat: 31.82, lon: 35.23 },
-      { ancient: 'Bezek', modern: 'Central hills', x: 46.3, y: 37.6, lat: 32.25, lon: 35.4 },
-      { ancient: 'Jabesh-gilead', modern: 'Gilead, Jordan', x: 69.2, y: 16, lat: 32.45, lon: 35.65 }
+      { ancient: 'Gibeah', modern: 'Tell el-Ful', x: 15, y: 85, lat: 31.82, lon: 35.23 },
+      { ancient: 'Bezek', modern: 'Khirbet Ibziq (likely)', x: 40, y: 24, lat: 32.37, lon: 35.38 },
+      { ancient: 'Jabesh-gilead', modern: 'Gilead, Jordan', x: 85, y: 15, lat: 32.45, lon: 35.65 },
+      { ancient: 'Gilgal', modern: 'Jordan valley near Jericho (site debated)', x: 60, y: 79, lat: 31.87, lon: 35.5 }
     ],
     steps: [
-      { label: 'News at Gibeah', ref: '1 Samuel 11:4', copy: 'The people of Gibeah weep at the threat to Jabesh.', miles: 0 },
-      { label: 'Mustered at Bezek', ref: '1 Samuel 11:8', copy: 'Saul numbers the army of Israel and Judah at Bezek.', miles: 30 },
-      { label: 'The dawn attack', ref: '1 Samuel 11:11', copy: 'He strikes the Ammonites until the heat of the day.', miles: 20 },
-      { label: 'The kingdom renewed', ref: '1 Samuel 11:15', copy: 'All the people make Saul king before the Lord at Gilgal.', miles: 0 }
+      { label: 'News at Gibeah', ref: '1 Samuel 11:4-7', copy: 'The people weep at Nahash\'s threat to Jabesh. The Spirit of God comes on Saul as he comes in from the field.', at: 0 },
+      { label: 'Mustered at Bezek', ref: '1 Samuel 11:8-10', copy: 'Saul counts the army of Israel and Judah at Bezek.', miles: 40, at: 1 },
+      { label: 'The dawn attack', ref: '1 Samuel 11:11', copy: 'In three companies they strike the Ammonites until the heat of the day.', miles: 20, at: 2 },
+      { label: 'The kingdom renewed', ref: '1 Samuel 11:14-15', copy: 'All the people go to Gilgal and make Saul king before the Lord.', miles: 45, at: 3 }
     ]
   },
   {
@@ -14097,10 +14122,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Michmash', modern: 'Mukhmas, West Bank', x: 84, y: 16.6, lat: 31.87, lon: 35.29 }
     ],
     steps: [
-      { label: 'The rocky pass', ref: '1 Samuel 14:4', copy: 'Sharp crags rise on either side of the pass.', miles: 5 },
-      { label: 'By many or by few', ref: '1 Samuel 14:6', copy: 'Jonathan says nothing can hinder the Lord from saving.', miles: 0 },
-      { label: 'The climb', ref: '1 Samuel 14:13', copy: 'He climbs up on hands and feet, and they fall before him.', miles: 2 },
-      { label: 'The Lord saves Israel', ref: '1 Samuel 14:23', copy: 'So the Lord saves Israel that day.', miles: 0 }
+      { label: 'The rocky pass', ref: '1 Samuel 14:1-5', copy: 'Saul stays on the outskirts of Gibeah while Jonathan and his armor-bearer slip toward the Philistine outpost between two crags.', miles: 4, at: 1 },
+      { label: 'By many or by few', ref: '1 Samuel 14:6', copy: 'Jonathan says nothing can keep the Lord from saving, whether by many or by few.', at: 1 },
+      { label: 'The climb', ref: '1 Samuel 14:13-15', copy: 'He climbs up on hands and feet, and the Philistines fall before him. The ground shakes.', miles: 1, at: 2 },
+      { label: 'The Lord saves Israel', ref: '1 Samuel 14:20-23', copy: 'Saul\'s army joins in, and the Lord saves Israel that day.', at: 2 }
     ]
   },
   {
@@ -14126,10 +14151,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Bethlehem', modern: 'Bethlehem', x: 50, y: 84, lat: 31.7, lon: 35.2 }
     ],
     steps: [
-      { label: 'Sent to Bethlehem', ref: '1 Samuel 16:1', copy: '"Fill your horn with oil; I have chosen a king from Jesse’s sons."', miles: 14 },
-      { label: 'The elders tremble', ref: '1 Samuel 16:4', copy: 'Samuel comes in peace to sacrifice at Bethlehem.', miles: 0 },
-      { label: 'The youngest son', ref: '1 Samuel 16:11', copy: 'David is out keeping the sheep and is sent for.', miles: 0 },
-      { label: 'Anointed with oil', ref: '1 Samuel 16:13', copy: 'The Spirit of the Lord rushes upon David from that day.', miles: 0 }
+      { label: 'Sent to Bethlehem', ref: '1 Samuel 16:1', copy: '“Fill your horn with oil and go. I am sending you to Jesse of Bethlehem.”', miles: 12, at: 1 },
+      { label: 'The elders tremble', ref: '1 Samuel 16:4-5', copy: 'The town elders come trembling, and Samuel says he has come in peace to sacrifice.', at: 1 },
+      { label: 'The youngest son', ref: '1 Samuel 16:6-12', copy: 'The Lord looks at the heart, not outward appearance. David, out tending the sheep, is sent for.', at: 1 },
+      { label: 'Anointed with oil', ref: '1 Samuel 16:13', copy: 'From that day on, the Spirit of the Lord rushes upon David.', at: 1 },
+      { label: 'Back to Ramah', ref: '1 Samuel 16:13', copy: 'Then Samuel sets out and goes home to Ramah.', miles: 12, at: 0 }
     ]
   },
   {
@@ -14155,10 +14181,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Gath', modern: 'Tell es-Safi', x: 16, y: 59.2, lat: 31.7, lon: 34.85 }
     ],
     steps: [
-      { label: 'Bread at Nob', ref: '1 Samuel 21:6', copy: 'Ahimelech gives David the holy bread to eat.', miles: 0 },
-      { label: 'Goliath\'s sword', ref: '1 Samuel 21:9', copy: 'David takes the sword of Goliath, wrapped behind the ephod.', miles: 0 },
-      { label: 'Fleeing to Gath', ref: '1 Samuel 21:10', copy: 'David rises and flees to Achish king of Gath.', miles: 30 },
-      { label: 'Feigning madness', ref: '1 Samuel 21:13', copy: 'He acts insane, scratching the gate and drooling.', miles: 0 }
+      { label: 'Bread at Nob', ref: '1 Samuel 21:1-6', copy: 'Ahimelech the priest gives David the consecrated bread.', at: 0 },
+      { label: 'Goliath\'s sword', ref: '1 Samuel 21:8-9', copy: 'David takes the sword of Goliath, wrapped in a cloth behind the ephod.', at: 0 },
+      { label: 'Fleeing to Gath', ref: '1 Samuel 21:10-12', copy: 'He flees to Achish king of Gath, where he is recognized and becomes afraid.', miles: 25, at: 1 },
+      { label: 'Feigning madness', ref: '1 Samuel 21:13-15', copy: 'He scratches on the doors of the gate and lets saliva run down his beard.', at: 1 }
     ]
   },
   {
@@ -14173,22 +14199,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Fugitive on foot',
     days: 'The outlaw years begin',
     modern: 'The Shephelah caves east to Moab',
-    note: 'Adullam and the forest of Hereth are in Judah; Mizpeh is in Moab.',
+    note: 'Mizpeh of Moab and the forest of Hereth are unknown sites; both are placed approximately.',
     sources: [
       'David escapes to the cave of Adullam (1 Samuel 22:1).',
       'Four hundred distressed men gather to him (1 Samuel 22:2).',
       'He brings his parents to the king of Moab (1 Samuel 22:3).'
     ],
     points: [
-      { ancient: 'Cave of Adullam', modern: 'Shephelah, Israel', x: 16, y: 41.9, lat: 31.65, lon: 34.96 },
-      { ancient: 'Mizpeh of Moab', modern: 'Moab plateau, Jordan', x: 84, y: 58.1, lat: 31.5, lon: 35.7 },
-      { ancient: 'Forest of Hereth', modern: 'Judean hills', x: 19.7, y: 47.3, lat: 31.6, lon: 35 }
+      { ancient: 'Cave of Adullam', modern: 'Shephelah, Israel', x: 15, y: 15, lat: 31.65, lon: 34.96 },
+      { ancient: 'Mizpeh of Moab', modern: 'Moab plateau, Jordan (site unknown)', x: 85, y: 85, lat: 31.5, lon: 35.7 },
+      { ancient: 'Forest of Hereth', modern: 'land of Judah (site unknown)', x: 22, y: 38, lat: 31.6, lon: 35.03 }
     ],
     steps: [
-      { label: 'The cave of Adullam', ref: '1 Samuel 22:1', copy: 'David escapes, and his family goes down to him.', miles: 0 },
-      { label: 'Four hundred gather', ref: '1 Samuel 22:2', copy: 'The distressed and indebted rally to him as captain.', miles: 0 },
-      { label: 'Parents to Moab', ref: '1 Samuel 22:3', copy: 'He asks the king of Moab to shelter his father and mother.', miles: 45 },
-      { label: 'Back to Hereth', ref: '1 Samuel 22:5', copy: 'The prophet Gad sends him to the forest of Hereth.', miles: 25 }
+      { label: 'The cave of Adullam', ref: '1 Samuel 22:1', copy: 'David escapes to the cave, and his brothers and father\'s household come down to him.', at: 0 },
+      { label: 'Four hundred gather', ref: '1 Samuel 22:2', copy: 'Everyone in distress, in debt or discontented gathers to him, and he becomes their leader.', at: 0 },
+      { label: 'Parents to Moab', ref: '1 Samuel 22:3-4', copy: 'He asks the king of Moab to let his father and mother stay there.', miles: 45, at: 1 },
+      { label: 'Into Judah', ref: '1 Samuel 22:5', copy: 'The prophet Gad tells him to leave the stronghold, so he goes to the forest of Hereth.', miles: 42, at: 2 }
     ]
   },
   {
@@ -14210,15 +14236,15 @@ const BIBLE_JOURNEYS = [
       'He goes by night in disguise (1 Samuel 28:8).'
     ],
     points: [
-      { ancient: 'Mount Gilboa', modern: 'Mount Gilboa, Israel', x: 62.7, y: 84, lat: 32.46, lon: 35.42 },
-      { ancient: 'Shunem', modern: 'Sulam, Israel', x: 37.3, y: 31.1, lat: 32.6, lon: 35.34 },
-      { ancient: 'Endor', modern: 'Ein Dor area', x: 56.4, y: 16, lat: 32.64, lon: 35.4 }
+      { ancient: 'Mount Gilboa', modern: 'Mount Gilboa, Israel', x: 85, y: 85, lat: 32.46, lon: 35.42 },
+      { ancient: 'Endor', modern: 'Ein Dor area', x: 15, y: 15, lat: 32.64, lon: 35.4 }
     ],
     steps: [
-      { label: 'Armies face off', ref: '1 Samuel 28:4', copy: 'The Philistines gather at Shunem; Saul trembles at Gilboa.', miles: 6 },
-      { label: 'Seeking a medium', ref: '1 Samuel 28:7', copy: 'Saul orders his servants to find a medium at Endor.', miles: 0 },
-      { label: 'By night, disguised', ref: '1 Samuel 28:8', copy: 'He goes in disguise under cover of darkness.', miles: 4 },
-      { label: 'Samuel appears', ref: '1 Samuel 28:14', copy: 'The old prophet rises and pronounces Saul’s doom.', miles: 0 }
+      { label: 'Armies face off', ref: '1 Samuel 28:4-6', copy: 'The Philistines camp at Shunem and Israel at Gilboa. Saul is terrified, and the Lord does not answer him.', at: 0 },
+      { label: 'Seeking a medium', ref: '1 Samuel 28:7', copy: 'Saul tells his servants to find him a woman who is a medium; there is one at Endor.', at: 0 },
+      { label: 'By night, disguised', ref: '1 Samuel 28:8-14', copy: 'In disguise and by night, he goes to her, and Samuel appears.', miles: 12, at: 1 },
+      { label: 'Samuel\'s word', ref: '1 Samuel 28:15-19', copy: 'Samuel says the Lord has torn the kingdom from Saul; tomorrow he and his sons will be with him.', at: 1 },
+      { label: 'Back in the night', ref: '1 Samuel 28:20-25', copy: 'Saul collapses, eats what the woman prepares, and goes away that same night.', miles: 12, at: 0 }
     ]
   },
   {
@@ -14244,10 +14270,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Hebron', modern: 'Hebron', x: 84, y: 30.9, lat: 31.53, lon: 35.1 }
     ],
     steps: [
-      { label: '"Go up to Hebron"', ref: '2 Samuel 2:1', copy: 'David inquires of the Lord and is sent to Hebron.', miles: 0 },
-      { label: 'Households resettle', ref: '2 Samuel 2:3', copy: 'He brings his men to live in the towns of Hebron.', miles: 30 },
-      { label: 'Anointed over Judah', ref: '2 Samuel 2:4', copy: 'The men of Judah anoint David king.', miles: 0 },
-      { label: 'Seven years at Hebron', ref: '2 Samuel 2:11', copy: 'He reigns over Judah there seven years and six months.', miles: 0 }
+      { label: '"Go up to Hebron"', ref: '2 Samuel 2:1', copy: 'David inquires of the Lord and is sent to Hebron.', miles: 0, at: 0 },
+      { label: 'Households resettle', ref: '2 Samuel 2:3', copy: 'He brings his men to live in the towns of Hebron.', miles: 30, at: 1 },
+      { label: 'Anointed over Judah', ref: '2 Samuel 2:4', copy: 'The men of Judah anoint David king.', miles: 0, at: 1 },
+      { label: 'Seven years at Hebron', ref: '2 Samuel 2:11', copy: 'He reigns over Judah there seven years and six months.', miles: 0, at: 1 }
     ]
   },
   {
@@ -14273,10 +14299,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Rabbah', modern: 'Amman, Jordan', x: 84, y: 40.3, lat: 31.95, lon: 35.93 }
     ],
     steps: [
-      { label: 'David stays behind', ref: '2 Samuel 11:1', copy: 'In the spring the army goes out, but David stays in Jerusalem.', miles: 0 },
-      { label: 'The city falls', ref: '2 Samuel 12:26', copy: 'Joab takes the royal citadel of Rabbah.', miles: 40 },
-      { label: 'David called up', ref: '2 Samuel 12:28', copy: 'Joab summons David to take the city himself.', miles: 0 },
-      { label: 'Rabbah captured', ref: '2 Samuel 12:29', copy: 'David gathers the army, goes to Rabbah, and takes it.', miles: 5 }
+      { label: 'David stays behind', ref: '2 Samuel 11:1', copy: 'In the spring, Joab and the army besiege Rabbah, but David stays in Jerusalem.', at: 0 },
+      { label: 'Joab\'s message', ref: '2 Samuel 12:26-28', copy: 'Joab captures the royal city and sends for David to come and take Rabbah himself.', at: 0 },
+      { label: 'Rabbah captured', ref: '2 Samuel 12:29-30', copy: 'David gathers the army, goes to Rabbah and takes it, and the king\'s crown is placed on his head.', miles: 45, at: 1 },
+      { label: 'Home to Jerusalem', ref: '2 Samuel 12:31', copy: 'Then David and all the army return to Jerusalem.', miles: 45, at: 0 }
     ]
   },
   {
@@ -14298,14 +14324,16 @@ const BIBLE_JOURNEYS = [
       'A wise woman ends the siege (2 Samuel 20:22).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 43.2, y: 84, lat: 31.78, lon: 35.23 },
-      { ancient: 'Abel-beth-maacah', modern: 'Tel Abel, N. Israel', x: 56.8, y: 16, lat: 33.26, lon: 35.58 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 24, y: 85, lat: 31.78, lon: 35.23 },
+      { ancient: 'Gibeon', modern: 'El-Jib, West Bank', x: 15, y: 82, lat: 31.85, lon: 35.18 },
+      { ancient: 'Abel-beth-maacah', modern: 'Tel Abel, northern Israel', x: 85, y: 15, lat: 33.26, lon: 35.58 }
     ],
     steps: [
-      { label: 'Israel follows Sheba', ref: '2 Samuel 20:2', copy: 'The men of Israel desert David to follow Sheba.', miles: 0 },
-      { label: 'Flight to the north', ref: '2 Samuel 20:14', copy: 'Sheba goes through all Israel to Abel of Beth-maacah.', miles: 100 },
-      { label: 'Joab lays siege', ref: '2 Samuel 20:15', copy: 'They build a siege ramp against the city wall.', miles: 10 },
-      { label: 'A wise woman', ref: '2 Samuel 20:22', copy: 'She persuades the city, and Sheba’s head is thrown out.', miles: 0 }
+      { label: 'Israel follows Sheba', ref: '2 Samuel 20:1-3', copy: 'Sheba blows a trumpet and Israel deserts David, but Judah stays with its king all the way to Jerusalem.', at: 0 },
+      { label: 'At the great stone', ref: '2 Samuel 20:7-10', copy: 'Joab\'s men set out after Sheba. At the great stone in Gibeon, Joab kills Amasa.', miles: 6, at: 1 },
+      { label: 'Through all Israel', ref: '2 Samuel 20:14-15', copy: 'Sheba passes through all the tribes to Abel-beth-maacah, and Joab builds a siege ramp against it.', miles: 105, at: 2 },
+      { label: 'A wise woman', ref: '2 Samuel 20:16-22', copy: 'She persuades the city, and Sheba\'s head is thrown over the wall to Joab.', at: 2 },
+      { label: 'Back to the king', ref: '2 Samuel 20:22', copy: 'Joab blows the trumpet and returns to the king in Jerusalem.', miles: 110, at: 0 }
     ]
   },
   {
@@ -14320,22 +14348,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Rafts by sea, then overland',
     days: 'A great building effort',
     modern: 'Lebanon down the coast to Jerusalem',
-    note: 'Logs were floated by sea to the coast, then carried up to Jerusalem.',
+    note: '1 Kings 5:9 says the logs were floated in rafts to the place Solomon would name; 2 Chronicles 2:16 names it as Joppa.',
     sources: [
       'Solomon asks Hiram for cedars of Lebanon (1 Kings 5:6).',
       'The logs are floated by sea to the appointed place (1 Kings 5:9).',
       'Thirty thousand laborers work in relays in Lebanon (1 Kings 5:13-14).'
     ],
     points: [
-      { ancient: 'Lebanon (Tyre)', modern: 'Tyre, Lebanon', x: 58.1, y: 16, lat: 33.27, lon: 35.2 },
-      { ancient: 'Joppa', modern: 'Jaffa, Israel', x: 40.8, y: 71.7, lat: 32.05, lon: 34.75 },
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 59.2, y: 84, lat: 31.78, lon: 35.23 }
+      { ancient: 'Lebanon (Hiram of Tyre)', modern: 'Tyre, Lebanon', x: 81, y: 15, lat: 33.27, lon: 35.2 },
+      { ancient: 'Joppa', modern: 'Jaffa, Israel', x: 15, y: 72, lat: 32.05, lon: 34.75 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 85, y: 85, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Cedars of Lebanon', ref: '1 Kings 5:6', copy: 'Solomon asks for cedar, for none can cut timber like the Sidonians.', miles: 0 },
-      { label: 'Floated by sea', ref: '1 Kings 5:9', copy: 'The logs are bound into rafts and floated down the coast.', miles: 80 },
-      { label: 'Laborers in relays', ref: '1 Kings 5:14', copy: 'Ten thousand a month go up to Lebanon in shifts.', miles: 0 },
-      { label: 'Stone and timber', ref: '1 Kings 5:18', copy: 'The builders prepare the timber and stone for the house.', miles: 40 }
+      { label: 'Cedars of Lebanon', ref: '1 Kings 5:1-6', copy: 'Solomon asks Hiram for cedar, for no one can cut timber like the Sidonians.', at: 0 },
+      { label: 'Laborers in relays', ref: '1 Kings 5:13-14', copy: 'Thirty thousand men go to Lebanon in shifts of ten thousand a month.', at: 0 },
+      { label: 'Floated by sea', ref: '1 Kings 5:8-9', copy: 'Hiram\'s men bring the logs down to the sea and float them in rafts.', miles: 85, at: 1, by: 'sea' },
+      { label: 'Stone and timber', ref: '1 Kings 5:17-18', copy: 'The builders prepare the timber and great cut stones for the house of the Lord.', miles: 35, at: 2 }
     ]
   },
   {
@@ -14361,10 +14389,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Mount Carmel', modern: 'Mount Carmel, Israel', x: 16, y: 31.9, lat: 32.73, lon: 35.05 }
     ],
     steps: [
-      { label: 'A room for the prophet', ref: '2 Kings 4:10', copy: 'She builds a small roof chamber for Elisha to stay in.', miles: 0 },
-      { label: 'The child dies', ref: '2 Kings 4:20', copy: 'The boy sits on her lap till noon, and then he dies.', miles: 0 },
-      { label: 'Riding to Carmel', ref: '2 Kings 4:25', copy: 'She saddles the donkey and rides to the man of God.', miles: 18 },
-      { label: 'The boy raised', ref: '2 Kings 4:35', copy: 'The child sneezes seven times and opens his eyes.', miles: 12 }
+      { label: 'A room for the prophet', ref: '2 Kings 4:8-10', copy: 'A woman of Shunem and her husband build a small upper room for Elisha.', at: 0 },
+      { label: 'The child dies', ref: '2 Kings 4:18-20', copy: 'The son promised to her sits on her lap until noon, and then he dies.', at: 0 },
+      { label: 'Riding to Carmel', ref: '2 Kings 4:24-28', copy: 'She saddles the donkey and rides to the man of God at Mount Carmel.', miles: 18, at: 1 },
+      { label: 'The boy raised', ref: '2 Kings 4:32-37', copy: 'Back at the house, the child sneezes seven times and opens his eyes.', miles: 18, at: 0 }
     ]
   },
   {
@@ -14390,10 +14418,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jezreel', modern: 'Tel Yizre’el', x: 16, y: 53.1, lat: 32.56, lon: 35.33 }
     ],
     steps: [
-      { label: 'Anointed in secret', ref: '2 Kings 9:6', copy: 'The young prophet pours oil on Jehu’s head.', miles: 0 },
-      { label: 'Riding to Jezreel', ref: '2 Kings 9:16', copy: 'Jehu mounts his chariot and drives to where Joram lies.', miles: 40 },
-      { label: '"He drives like a madman"', ref: '2 Kings 9:20', copy: 'The watchman knows the furious driving of Jehu.', miles: 0 },
-      { label: 'Joram struck down', ref: '2 Kings 9:24', copy: 'Jehu draws his bow and strikes Joram in the field.', miles: 5 }
+      { label: 'Anointed in secret', ref: '2 Kings 9:1-10', copy: 'At Ramoth-gilead, a young prophet sent by Elisha pours oil on Jehu\'s head in an inner room and runs off.', at: 0 },
+      { label: 'Riding to Jezreel', ref: '2 Kings 9:14-16', copy: 'Jehu mounts his chariot and rides to Jezreel, where King Joram is recovering from his wounds.', miles: 40, at: 1 },
+      { label: '“Driving like a madman”', ref: '2 Kings 9:17-20', copy: 'The watchman reports: “He is driving like a madman!”', at: 1 },
+      { label: 'Joram struck down', ref: '2 Kings 9:21-26', copy: 'They meet at Naboth\'s field. Jehu draws his bow and shoots Joram between the shoulders.', at: 1 },
+      { label: 'Jezebel\'s end', ref: '2 Kings 9:30-37', copy: 'Jezebel is thrown down from a window, as the Lord had spoken through Elijah.', at: 1 }
     ]
   },
   {
@@ -14408,7 +14437,7 @@ const BIBLE_JOURNEYS = [
     mode: 'Assyrian army on the march',
     days: 'A siege crisis',
     modern: 'The Shephelah up to Jerusalem',
-    note: 'Lachish was the Assyrian base; the angel of the Lord delivers Jerusalem.',
+    note: 'Where the Assyrian camp was when it was struck isn\'t said. The king had moved on from Lachish to fight Libnah (2 Kings 19:8).',
     sources: [
       'Hezekiah sends tribute to Sennacherib at Lachish (2 Kings 18:14).',
       'The Assyrians come up to Jerusalem (2 Kings 18:17).',
@@ -14419,10 +14448,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 84, y: 26.9, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Tribute from Lachish', ref: '2 Kings 18:14', copy: 'Hezekiah sends silver and gold to the Assyrian king.', miles: 0 },
-      { label: 'The army at the wall', ref: '2 Kings 18:17', copy: 'A great force comes up and stands by the conduit.', miles: 28 },
-      { label: 'The letter spread out', ref: '2 Kings 19:14', copy: 'Hezekiah lays the threatening letter before the Lord.', miles: 0 },
-      { label: 'The camp struck', ref: '2 Kings 19:35', copy: 'That night the angel of the Lord strikes the Assyrian host.', miles: 0 }
+      { label: 'Tribute to Lachish', ref: '2 Kings 18:13-16', copy: 'Hezekiah sends silver and gold to the king of Assyria at Lachish.', at: 0 },
+      { label: 'The army at the wall', ref: '2 Kings 18:17-25', copy: 'A great force comes up from Lachish and stands by the conduit of the upper pool, mocking Judah\'s trust in the Lord.', miles: 28, at: 1 },
+      { label: 'The letter spread out', ref: '2 Kings 19:14-19', copy: 'Hezekiah spreads the threatening letter before the Lord and prays.', at: 1 },
+      { label: 'The camp struck', ref: '2 Kings 19:35-36', copy: 'That night the angel of the Lord strikes the Assyrian camp, and Sennacherib goes home to Nineveh.', at: 1 }
     ]
   },
   {
@@ -14449,10 +14478,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Riblah', modern: 'Riblah, Syria', x: 64.1, y: 16, lat: 34.45, lon: 36.55 }
     ],
     steps: [
-      { label: 'Flight by night', ref: '2 Kings 25:4', copy: 'The soldiers slip out by the gate toward the Arabah.', miles: 18 },
-      { label: 'Caught near Jericho', ref: '2 Kings 25:5', copy: 'The Chaldean army overtakes the king in the plains of Jericho.', miles: 0 },
-      { label: 'Brought to Riblah', ref: '2 Kings 25:6', copy: 'He is taken to Nebuchadnezzar, who passes sentence on him.', miles: 210 },
-      { label: 'Blinded and bound', ref: '2 Kings 25:7', copy: 'His sons are killed, his eyes put out, and he is bound in chains.', miles: 0 }
+      { label: 'Flight by night', ref: '2 Kings 25:4', copy: 'The soldiers slip out by the gate toward the Arabah.', miles: 18, at: 1 },
+      { label: 'Caught near Jericho', ref: '2 Kings 25:5', copy: 'The Chaldean army overtakes the king in the plains of Jericho.', miles: 0, at: 1 },
+      { label: 'Brought to Riblah', ref: '2 Kings 25:6', copy: 'He is taken to Nebuchadnezzar, who passes sentence on him.', miles: 210, at: 2 },
+      { label: 'Blinded and bound', ref: '2 Kings 25:7', copy: 'His sons are killed, his eyes put out, and he is bound in chains.', miles: 0, at: 2 }
     ]
   },
   {
@@ -14474,14 +14503,15 @@ const BIBLE_JOURNEYS = [
       'They come to Tahpanhes (Jeremiah 43:7).'
     ],
     points: [
-      { ancient: 'Mizpah', modern: 'Tell en-Nasbeh', x: 84, y: 37, lat: 31.83, lon: 35.18 },
-      { ancient: 'Tahpanhes', modern: 'Eastern Nile Delta', x: 16, y: 63, lat: 30.85, lon: 32.18 }
+      { ancient: 'Mizpah', modern: 'Tell en-Nasbeh (likely)', x: 85, y: 15, lat: 31.83, lon: 35.18 },
+      { ancient: 'Geruth Chimham', modern: 'near Bethlehem (site unknown)', x: 85, y: 24, lat: 31.7, lon: 35.2 },
+      { ancient: 'Tahpanhes', modern: 'Tell Defenneh, Egypt', x: 15, y: 85, lat: 30.85, lon: 32.18 }
     ],
     steps: [
-      { label: 'Refusing the word', ref: 'Jeremiah 43:5', copy: 'The leaders take all the remnant of Judah toward Egypt.', miles: 0 },
-      { label: 'Jeremiah carried along', ref: 'Jeremiah 43:6', copy: 'They take the prophet and Baruch against their will.', miles: 240 },
-      { label: 'Arrival at Tahpanhes', ref: 'Jeremiah 43:7', copy: 'They enter the land of Egypt as far as Tahpanhes.', miles: 40 },
-      { label: 'Stones in the pavement', ref: 'Jeremiah 43:9', copy: 'Jeremiah hides stones as a sign of Babylon’s coming throne.', miles: 0 }
+      { label: 'Toward Egypt', ref: 'Jeremiah 41:16-18', copy: 'After Gedaliah is murdered, Johanan leads the survivors from Mizpah to Geruth Chimham near Bethlehem, afraid of Babylon.', miles: 10, at: 1 },
+      { label: 'Ask the Lord', ref: 'Jeremiah 42:1-22', copy: 'They beg Jeremiah to pray. The answer: stay in the land, and do not go to Egypt.', at: 1 },
+      { label: 'Refusing the word', ref: 'Jeremiah 43:1-7', copy: 'They call it a lie and take the whole remnant, Jeremiah and Baruch too, into Egypt as far as Tahpanhes.', miles: 220, at: 2 },
+      { label: 'Stones in the pavement', ref: 'Jeremiah 43:8-13', copy: 'Jeremiah buries large stones at Pharaoh\'s palace: Nebuchadnezzar will set his throne over them.', at: 2 }
     ]
   },
   {
@@ -14496,22 +14526,22 @@ const BIBLE_JOURNEYS = [
     mode: 'By ship',
     days: 'A flight cut short by a storm',
     modern: 'Joppa out into the open Mediterranean',
-    note: 'Tarshish lay far to the west; Jonah sails the opposite way from Nineveh.',
+    note: 'Tarshish lay far to the west, often linked with Tartessus in Spain; the ship never got there. Where the storm struck is not recorded.',
     sources: [
       'Jonah goes down to Joppa and boards a ship for Tarshish (Jonah 1:3).',
       'A great storm threatens the ship (Jonah 1:4).',
       'A great fish swallows him three days and nights (Jonah 1:17).'
     ],
     points: [
-      { ancient: 'Joppa', modern: 'Jaffa, Israel', x: 84, y: 56.8, lat: 32.05, lon: 34.75 },
-      { ancient: 'The Great Sea', modern: 'Open Mediterranean', x: 52.9, y: 48.8, lat: 33.5, lon: 28 },
-      { ancient: 'Toward Tarshish', modern: 'The far western sea', x: 16, y: 43.2, lat: 34.5, lon: 20 }
+      { ancient: 'Joppa', modern: 'Jaffa, Israel', x: 85, y: 85, lat: 32.05, lon: 34.75 },
+      { ancient: 'Out at sea', modern: 'the Mediterranean (spot unknown)', x: 15, y: 15, lat: 32.7, lon: 33.6 }
     ],
     steps: [
-      { label: 'Down to Joppa', ref: 'Jonah 1:3', copy: 'Jonah pays the fare and boards a ship to flee from the Lord.', miles: 0 },
-      { label: 'The great storm', ref: 'Jonah 1:4', copy: 'The Lord hurls a mighty wind, and the ship threatens to break.', miles: 300 },
-      { label: 'Cast into the sea', ref: 'Jonah 1:15', copy: 'They throw Jonah overboard and the sea grows calm.', miles: 0 },
-      { label: 'The great fish', ref: 'Jonah 1:17', copy: 'The Lord appoints a great fish to swallow him.', miles: 0 }
+      { label: 'Down to Joppa', ref: 'Jonah 1:1-3', copy: 'Told to go to Nineveh, Jonah runs the other way. At Joppa he pays the fare for a ship bound for Tarshish.', at: 0 },
+      { label: 'The great storm', ref: 'Jonah 1:4-6', copy: 'The Lord hurls a great wind on the sea, and the ship is about to break apart. Jonah sleeps below.', at: 1, by: 'sea' },
+      { label: 'The lot falls on Jonah', ref: 'Jonah 1:7-12', copy: 'The sailors cast lots, and Jonah tells them to throw him into the sea.', at: 1 },
+      { label: 'Cast into the sea', ref: 'Jonah 1:15-16', copy: 'They throw him overboard and the sea grows calm.', at: 1 },
+      { label: 'The great fish', ref: 'Jonah 1:17', copy: 'The Lord appoints a great fish to swallow Jonah, and he is inside it three days and three nights.', at: 1 }
     ]
   },
   {
@@ -14526,22 +14556,21 @@ const BIBLE_JOURNEYS = [
     mode: 'Captives on the long road',
     days: 'The road of exile',
     modern: 'Jerusalem up the Fertile Crescent to Iraq',
-    note: 'The captives followed the watered arc of the Fertile Crescent to Babylon.',
+    note: 'Daniel doesn\'t record the road. Travelers usually went north around the desert, roughly 900 miles.',
     sources: [
       'Nebuchadnezzar besieges Jerusalem (Daniel 1:1).',
       'He carries the vessels of God’s house to Shinar (Daniel 1:2).',
       'Daniel and his friends are chosen for the king’s service (Daniel 1:6).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 61.8, lat: 31.78, lon: 35.23 },
-      { ancient: 'Riblah / Hamath', modern: 'Orontes valley, Syria', x: 25.8, y: 38.2, lat: 34.45, lon: 36.55 },
-      { ancient: 'Babylon', modern: 'Hillah, Iraq', x: 84, y: 55.1, lat: 32.54, lon: 44.42 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 85, lat: 31.78, lon: 35.23 },
+      { ancient: 'Babylon (Shinar)', modern: 'near Hillah, Iraq', x: 85, y: 15, lat: 32.54, lon: 44.42 }
     ],
     steps: [
-      { label: 'Jerusalem besieged', ref: 'Daniel 1:1', copy: 'Nebuchadnezzar comes against Jerusalem and besieges it.', miles: 0 },
-      { label: 'Vessels to Shinar', ref: 'Daniel 1:2', copy: 'He carries off the temple vessels to the land of Shinar.', miles: 850 },
-      { label: 'Chosen youths', ref: 'Daniel 1:4', copy: 'The best young men are taken to learn the ways of Babylon.', miles: 50 },
-      { label: 'Daniel among them', ref: 'Daniel 1:6', copy: 'Daniel, Hananiah, Mishael, and Azariah are among the exiles.', miles: 0 }
+      { label: 'Jerusalem besieged', ref: 'Daniel 1:1', copy: 'In the third year of Jehoiakim, Nebuchadnezzar comes against Jerusalem and besieges it.', at: 0 },
+      { label: 'Vessels to Shinar', ref: 'Daniel 1:2', copy: 'The Lord gives Jehoiakim into his hand, and he carries temple vessels to the land of Shinar.', miles: 900, at: 1 },
+      { label: 'Chosen youths', ref: 'Daniel 1:3-5', copy: 'Young men of Israel\'s royal and noble families are chosen to learn the language and literature of the Chaldeans.', at: 1 },
+      { label: 'Daniel among them', ref: 'Daniel 1:6-7', copy: 'Daniel, Hananiah, Mishael and Azariah are among them, and they are given new names.', at: 1 }
     ]
   },
   {
@@ -15144,10 +15173,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Ramoth-gilead', modern: 'Gilead, Jordan', x: 84, y: 30.5, lat: 32.6, lon: 35.85 }
     ],
     steps: [
-      { label: 'A call to war', ref: '1 Kings 22:4', copy: 'Ahab asks Jehoshaphat to go up with him to Ramoth-gilead.', miles: 0 },
-      { label: 'Micaiah\'s vision', ref: '1 Kings 22:17', copy: '"I saw all Israel scattered, as sheep with no shepherd."', miles: 0 },
-      { label: 'Up to battle', ref: '1 Kings 22:29', copy: 'The two kings go up to Ramoth-gilead in disguise.', miles: 40 },
-      { label: 'A chance arrow', ref: '1 Kings 22:34', copy: 'A man draws his bow at random and strikes the king.', miles: 5 }
+      { label: 'A call to war', ref: '1 Kings 22:2-4', copy: 'At Samaria, Ahab asks Jehoshaphat to go up with him to Ramoth-gilead.', at: 0 },
+      { label: 'Micaiah\'s vision', ref: '1 Kings 22:17', copy: '“I saw all Israel scattered on the hills like sheep without a shepherd.”', at: 0 },
+      { label: 'Up to battle', ref: '1 Kings 22:29-30', copy: 'The two kings go up to Ramoth-gilead, Ahab in disguise.', miles: 45, at: 1 },
+      { label: 'A random arrow', ref: '1 Kings 22:34-35', copy: 'A man draws his bow at random and hits the king between the joints of his armor. He dies that evening.', at: 1 },
+      { label: 'Brought to Samaria', ref: '1 Kings 22:37-38', copy: 'He is buried in Samaria, and dogs lick up his blood at the pool, as the Lord had said.', miles: 45, at: 0 }
     ]
   },
   {
@@ -15162,21 +15192,20 @@ const BIBLE_JOURNEYS = [
     mode: 'Migration on foot',
     days: 'After the flood',
     modern: 'The Ararat highlands down to southern Iraq',
-    note: 'Shinar is the plain of Babylonia; the people settle there to build.',
+    note: 'Genesis says people journeyed eastward and settled on a plain in Shinar (Babylonia). The city is called Babel.',
     sources: [
       'They migrate from the east and settle in the plain of Shinar (Genesis 11:2).',
       'They build a city and a tower to make a name (Genesis 11:4).',
       'The Lord confuses their language and scatters them (Genesis 11:8-9).'
     ],
     points: [
-      { ancient: 'The eastern highlands', modern: 'Ararat region', x: 41.1, y: 16, lat: 37, lon: 43 },
-      { ancient: 'Plain of Shinar', modern: 'Babylonia, Iraq', x: 58.9, y: 84, lat: 32.54, lon: 44.42 }
+      { ancient: 'Babel, in Shinar', modern: 'Babylonia, southern Iraq', x: 15, y: 85, lat: 32.54, lon: 44.42 }
     ],
     steps: [
-      { label: 'Settling in Shinar', ref: 'Genesis 11:2', copy: 'They find a plain in Shinar and settle there.', miles: 550 },
-      { label: 'A tower to heaven', ref: 'Genesis 11:4', copy: '"Let us build a city and a tower with its top in the heavens."', miles: 0 },
-      { label: 'Languages confused', ref: 'Genesis 11:7', copy: 'The Lord confuses their language so they cannot understand.', miles: 0 },
-      { label: 'Scattered abroad', ref: 'Genesis 11:8', copy: 'The Lord disperses them over the face of all the earth.', miles: 0 }
+      { label: 'Settling in Shinar', ref: 'Genesis 11:1-2', copy: 'The whole world has one language. Journeying eastward, people find a plain in Shinar and settle there.', at: 0 },
+      { label: 'A tower to the heavens', ref: 'Genesis 11:3-4', copy: '“Let us build for ourselves a city with a tower that reaches to the heavens.”', at: 0 },
+      { label: 'Languages confused', ref: 'Genesis 11:5-7', copy: 'The Lord comes down and confuses their language so they cannot understand one another.', at: 0 },
+      { label: 'Scattered abroad', ref: 'Genesis 11:8-9', copy: 'The Lord scatters them over all the earth, and the city is called Babel.', at: 0 }
     ]
   },
   {
@@ -15198,14 +15227,14 @@ const BIBLE_JOURNEYS = [
       'Abraham prays and God heals Abimelech’s household (Genesis 20:17).'
     ],
     points: [
-      { ancient: 'Mamre (Hebron)', modern: 'Hebron', x: 84, y: 40, lat: 31.53, lon: 35.1 },
-      { ancient: 'Gerar', modern: 'Tel Haror area', x: 16, y: 60, lat: 31.4, lon: 34.58 }
+      { ancient: 'Mamre', modern: 'near Hebron, West Bank', x: 85, y: 15, lat: 31.55, lon: 35.1 },
+      { ancient: 'Gerar', modern: 'Tel Haror area', x: 15, y: 85, lat: 31.4, lon: 34.58 }
     ],
     steps: [
-      { label: 'Toward the Negev', ref: 'Genesis 20:1', copy: 'Abraham moves to the region of Kadesh and Shur, sojourning in Gerar.', miles: 35 },
-      { label: 'Sarah taken', ref: 'Genesis 20:2', copy: 'Abraham says, "She is my sister," and Abimelech takes her.', miles: 0 },
-      { label: 'A dream of warning', ref: 'Genesis 20:3', copy: 'God comes to Abimelech by night: "You are a dead man."', miles: 0 },
-      { label: 'Healing through prayer', ref: 'Genesis 20:17', copy: 'Abraham prays and God heals Abimelech and his house.', miles: 0 }
+      { label: 'Toward the Negev', ref: 'Genesis 20:1', copy: 'Abraham moves into the Negev, between Kadesh and Shur, and stays for a time in Gerar.', miles: 32, at: 1 },
+      { label: 'Sarah taken', ref: 'Genesis 20:2', copy: 'Abraham says of Sarah, “She is my sister,” and Abimelech king of Gerar has her brought to him.', at: 1 },
+      { label: 'A dream of warning', ref: 'Genesis 20:3-7', copy: 'God comes to Abimelech in a dream: “You are as good as dead,” for she is a married woman.', at: 1 },
+      { label: 'Healing through prayer', ref: 'Genesis 20:14-17', copy: 'Abimelech returns Sarah. Abraham prays, and God heals Abimelech and his household.', at: 1 }
     ]
   },
   {
@@ -15227,14 +15256,16 @@ const BIBLE_JOURNEYS = [
       'God opens her eyes to a well of water (Genesis 21:19).'
     ],
     points: [
-      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 56.6, y: 16, lat: 31.25, lon: 34.79 },
-      { ancient: 'Wilderness of Beersheba', modern: 'Negev wilderness', x: 43.4, y: 84, lat: 30.85, lon: 34.7 }
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 85, y: 15, lat: 31.25, lon: 34.79 },
+      { ancient: 'Wilderness of Beersheba', modern: 'Negev wilderness', x: 75, y: 30, lat: 31.05, lon: 34.72 },
+      { ancient: 'Wilderness of Paran', modern: 'central Sinai / Negev', x: 15, y: 85, lat: 30.3, lon: 34.3 }
     ],
     steps: [
-      { label: 'Sent into the wild', ref: 'Genesis 21:14', copy: 'Hagar departs and wanders in the wilderness of Beersheba.', miles: 18 },
-      { label: 'A mother’s grief', ref: 'Genesis 21:16', copy: 'She sets the boy under a bush, unable to watch him die.', miles: 0 },
-      { label: 'God hears the boy', ref: 'Genesis 21:17', copy: 'The angel of God calls, "God has heard the boy."', miles: 0 },
-      { label: 'A well revealed', ref: 'Genesis 21:19', copy: 'God opens her eyes and she sees a well of water.', miles: 7 }
+      { label: 'Sent into the wild', ref: 'Genesis 21:14', copy: 'Abraham gives Hagar bread and a skin of water and sends her off with the boy. She wanders in the wilderness of Beersheba.', miles: 15, at: 1 },
+      { label: 'A mother\'s grief', ref: 'Genesis 21:15-16', copy: 'When the water is gone, she puts the boy under a bush and sits away from him, weeping.', at: 1 },
+      { label: 'God hears the boy', ref: 'Genesis 21:17-18', copy: '“Do not be afraid, for God has heard the voice of the boy where he lies.”', at: 1 },
+      { label: 'A well revealed', ref: 'Genesis 21:19', copy: 'God opens her eyes, and she sees a well of water.', at: 1 },
+      { label: 'Home in Paran', ref: 'Genesis 21:20-21', copy: 'God is with the boy. He becomes an archer and lives in the wilderness of Paran.', miles: 55, at: 2 }
     ]
   },
   {
@@ -15256,14 +15287,14 @@ const BIBLE_JOURNEYS = [
       'He becomes the father of the Edomites in Seir (Genesis 36:9).'
     ],
     points: [
-      { ancient: 'Canaan (Hebron)', modern: 'Hebron', x: 40.6, y: 16, lat: 31.53, lon: 35.1 },
-      { ancient: 'Seir (Edom)', modern: 'Edom highlands, Jordan', x: 59.4, y: 84, lat: 30.6, lon: 35.4 }
+      { ancient: 'Canaan (Hebron)', modern: 'Hebron, West Bank', x: 15, y: 15, lat: 31.53, lon: 35.1 },
+      { ancient: 'Mount Seir (Edom)', modern: 'Edom highlands, Jordan', x: 85, y: 85, lat: 30.5, lon: 35.4 }
     ],
     steps: [
-      { label: 'Leaving Jacob', ref: 'Genesis 36:6', copy: 'Esau takes his wives, children, and livestock to another land.', miles: 70 },
-      { label: 'Dwelling in Seir', ref: 'Genesis 36:8', copy: 'Esau settles in the hill country of Seir.', miles: 20 },
-      { label: 'Father of Edom', ref: 'Genesis 36:9', copy: 'These are the generations of Esau, father of the Edomites.', miles: 0 },
-      { label: 'Chiefs of Edom', ref: 'Genesis 36:43', copy: 'Such are the chiefs of Edom in the land of their possession.', miles: 0 }
+      { label: 'Leaving Jacob', ref: 'Genesis 36:6-7', copy: 'Esau takes his family and livestock to a land away from Jacob; the land cannot support them both.', at: 0 },
+      { label: 'Dwelling in Seir', ref: 'Genesis 36:8', copy: 'Esau, that is Edom, settles in the hill country of Seir.', miles: 75, at: 1 },
+      { label: 'Father of Edom', ref: 'Genesis 36:9', copy: 'These are the generations of Esau, father of the Edomites.', at: 1 },
+      { label: 'Chiefs of Edom', ref: 'Genesis 36:40-43', copy: 'The chiefs of Edom are listed by their places in the land they possess.', at: 1 }
     ]
   },
   {
@@ -15289,10 +15320,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Egypt', modern: 'Lower Egypt', x: 16, y: 59.1, lat: 30.8, lon: 31.9 }
     ],
     steps: [
-      { label: 'Down to Egypt', ref: 'Genesis 42:3', copy: 'Ten of Joseph’s brothers go down to buy grain.', miles: 230 },
-      { label: 'Bowing before Joseph', ref: 'Genesis 42:6', copy: 'They bow with their faces to the ground before him.', miles: 0 },
-      { label: 'Joseph knows them', ref: 'Genesis 42:8', copy: 'Joseph recognizes his brothers, but they do not recognize him.', miles: 0 },
-      { label: 'Sent home with grain', ref: 'Genesis 42:25', copy: 'He fills their sacks and secretly returns their silver.', miles: 230 }
+      { label: 'Down to Egypt', ref: 'Genesis 42:3', copy: 'Ten of Joseph’s brothers go down to buy grain.', miles: 230, at: 1 },
+      { label: 'Bowing before Joseph', ref: 'Genesis 42:6', copy: 'They bow with their faces to the ground before him.', miles: 0, at: 1 },
+      { label: 'Joseph knows them', ref: 'Genesis 42:8', copy: 'Joseph recognizes his brothers, but they do not recognize him.', miles: 0, at: 1 },
+      { label: 'Sent home with grain', ref: 'Genesis 42:25', copy: 'He fills their sacks and secretly returns their silver.', miles: 230, at: 0 }
     ]
   },
   {
@@ -15307,21 +15338,23 @@ const BIBLE_JOURNEYS = [
     mode: 'The camp on the march',
     days: 'A three-day march',
     modern: 'The Sinai interior toward the Paran wilderness',
-    note: 'The ark of the covenant leads the way to find a resting place.',
+    note: 'The camps after Sinai (Taberah, Kibroth-hattaavah, Hazeroth) are unknown sites; the first stop is placed roughly three days on.',
     sources: [
       'The cloud lifts from the tabernacle (Numbers 10:11).',
       'Israel sets out from Sinai into the wilderness of Paran (Numbers 10:12).',
       'The ark goes before them to seek a resting place (Numbers 10:33).'
     ],
     points: [
-      { ancient: 'Mount Sinai', modern: 'Sinai Peninsula', x: 44.4, y: 84, lat: 28.54, lon: 33.97 },
-      { ancient: 'Wilderness of Paran', modern: 'Central Sinai / Negev', x: 55.6, y: 16, lat: 30.3, lon: 34.3 }
+      { ancient: 'Mount Sinai', modern: 'traditionally Jebel Musa (site debated)', x: 15, y: 85, lat: 28.54, lon: 33.97 },
+      { ancient: 'Three days\' journey', modern: 'toward Hazeroth (spot unknown)', x: 53, y: 75, lat: 28.8, lon: 34.15 },
+      { ancient: 'Wilderness of Paran', modern: 'central Sinai / Negev', x: 85, y: 15, lat: 30.3, lon: 34.3 }
     ],
     steps: [
-      { label: 'The cloud lifts', ref: 'Numbers 10:11', copy: 'In the second year the cloud rises from the tabernacle.', miles: 0 },
-      { label: 'Setting out', ref: 'Numbers 10:12', copy: 'Israel sets out by stages into the wilderness of Paran.', miles: 100 },
-      { label: 'The ark leads', ref: 'Numbers 10:33', copy: 'The ark goes three days’ journey ahead to find them rest.', miles: 20 },
-      { label: '"Arise, O Lord"', ref: 'Numbers 10:35', copy: 'Whenever the ark set out, Moses said, "Arise, O Lord!"', miles: 0 }
+      { label: 'The cloud lifts', ref: 'Numbers 10:11-12', copy: 'In the second year the cloud rises from the tabernacle, and Israel sets out from the wilderness of Sinai.', at: 0 },
+      { label: 'Tribe by tribe', ref: 'Numbers 10:13-28', copy: 'They march in order under their banners, Judah first.', at: 0 },
+      { label: 'The ark leads', ref: 'Numbers 10:33-34', copy: 'The ark goes ahead of them three days to find a place to rest, the cloud over them by day.', miles: 20, at: 1 },
+      { label: '“Rise up, O LORD!”', ref: 'Numbers 10:35-36', copy: 'Whenever the ark set out, Moses said, “Rise up, O LORD! May Your enemies be scattered.”', at: 1 },
+      { label: 'Into Paran', ref: 'Numbers 12:16', copy: 'After Taberah, Kibroth-hattaavah and Hazeroth, they camp in the wilderness of Paran.', miles: 110, at: 2 }
     ]
   },
   {
@@ -15336,21 +15369,21 @@ const BIBLE_JOURNEYS = [
     mode: 'Wilderness march',
     days: 'A halt of complaint',
     modern: 'The Paran wilderness of Sinai',
-    note: 'Quail and a plague at the place named "graves of craving."',
+    note: 'Kibroth-hattaavah is unknown. Hazeroth is traditionally placed at Ain Hudhera.',
     sources: [
       'The rabble craves meat and weeps (Numbers 11:4).',
       'A wind brings quail from the sea (Numbers 11:31).',
       'The place is named Kibroth-hattaavah, graves of craving (Numbers 11:34).'
     ],
     points: [
-      { ancient: 'Kibroth-hattaavah', modern: 'Paran wilderness', x: 20.4, y: 16, lat: 29.8, lon: 34.2 },
-      { ancient: 'Hazeroth', modern: 'Sinai wilderness', x: 79.6, y: 84, lat: 29.4, lon: 34.6 }
+      { ancient: 'Kibroth-hattaavah', modern: 'between Sinai and Hazeroth (site unknown)', x: 15, y: 85, lat: 28.8, lon: 34.15 },
+      { ancient: 'Hazeroth', modern: 'traditionally Ain Hudhera (site debated)', x: 85, y: 15, lat: 28.93, lon: 34.42 }
     ],
     steps: [
-      { label: 'Craving meat', ref: 'Numbers 11:4', copy: 'The people weep, "Who will give us meat to eat?"', miles: 0 },
-      { label: 'Quail from the sea', ref: 'Numbers 11:31', copy: 'A wind drives quail in from the sea all around the camp.', miles: 0 },
-      { label: 'Graves of craving', ref: 'Numbers 11:34', copy: 'They bury the people who craved at Kibroth-hattaavah.', miles: 0 },
-      { label: 'On to Hazeroth', ref: 'Numbers 11:35', copy: 'From there the people journey to Hazeroth.', miles: 25 }
+      { label: 'Craving meat', ref: 'Numbers 11:4-6', copy: 'The people weep again: “Who will feed us meat?” They remember the fish of Egypt.', at: 0 },
+      { label: 'Quail from the sea', ref: 'Numbers 11:31-32', copy: 'A wind from the Lord drives quail in from the sea all around the camp.', at: 0 },
+      { label: 'Graves of craving', ref: 'Numbers 11:33-34', copy: 'A plague strikes, and the place is named Kibroth-hattaavah, where they bury the people who craved.', at: 0 },
+      { label: 'On to Hazeroth', ref: 'Numbers 11:35', copy: 'From there the people journey to Hazeroth and stay there.', miles: 18, at: 1 }
     ]
   },
   {
@@ -15365,20 +15398,20 @@ const BIBLE_JOURNEYS = [
     mode: 'Army on the march',
     days: 'A campaign of judgment',
     modern: 'The Jordan valley east into the Moab and Midian deserts',
-    note: 'A thousand from each tribe go out against Midian.',
+    note: 'Numbers doesn\'t say where the battle was fought; the Midianites were then living alongside Moab (Numbers 22:4; 25:6).',
     sources: [
       'Arm men to execute the Lord’s vengeance on Midian (Numbers 31:3).',
       'They war against Midian as the Lord commanded (Numbers 31:7).',
       'They bring the captives and spoil to the camp on the plains of Moab (Numbers 31:12).'
     ],
     points: [
-      { ancient: 'Plains of Moab', modern: 'Jordan valley', x: 16, y: 18.6, lat: 31.85, lon: 35.6 },
-      { ancient: 'Midian territory', modern: 'Eastern desert, Jordan', x: 84, y: 81.4, lat: 31.3, lon: 36.3 }
+      { ancient: 'Plains of Moab', modern: 'Jordan valley across from Jericho', x: 15, y: 15, lat: 31.85, lon: 35.6 },
+      { ancient: 'Midian\'s camps', modern: 'near Moab (spot unknown)', x: 85, y: 85, lat: 31.4, lon: 36.1 }
     ],
     steps: [
-      { label: 'Called to war', ref: 'Numbers 31:3', copy: '"Arm men to carry out the Lord’s vengeance on Midian."', miles: 0 },
-      { label: 'Midian defeated', ref: 'Numbers 31:7', copy: 'They war against Midian and strike down every male.', miles: 60 },
-      { label: 'Spoil to the camp', ref: 'Numbers 31:12', copy: 'They bring captives and plunder back to the plains of Moab.', miles: 60 }
+      { label: 'Called to war', ref: 'Numbers 31:1-6', copy: 'Moses says, “Arm some of your men for war,” a thousand from each tribe, with Phinehas the priest.', at: 0 },
+      { label: 'Midian defeated', ref: 'Numbers 31:7-11', copy: 'They fight against Midian and kill its five kings and Balaam son of Beor.', miles: 40, at: 1 },
+      { label: 'Back to the camp', ref: 'Numbers 31:12-13', copy: 'They bring the captives and plunder to Moses and Eleazar at the camp on the plains of Moab.', miles: 40, at: 0 }
     ]
   },
   {
@@ -15400,15 +15433,17 @@ const BIBLE_JOURNEYS = [
       'Moses gives them Gilead and Bashan (Numbers 32:33).'
     ],
     points: [
-      { ancient: 'Plains of Moab', modern: 'Jordan valley', x: 37.9, y: 84, lat: 31.85, lon: 35.6 },
-      { ancient: 'Jazer (Gilead)', modern: 'Gilead, Jordan', x: 44, y: 73.3, lat: 32, lon: 35.7 },
-      { ancient: 'Bashan', modern: 'Bashan plateau', x: 62.1, y: 16, lat: 32.8, lon: 36 }
+      { ancient: 'Plains of Moab', modern: 'Jordan valley across from Jericho', x: 15, y: 52, lat: 31.85, lon: 35.6 },
+      { ancient: 'Dibon', modern: 'Dhiban, Jordan', x: 85, y: 85, lat: 31.5, lon: 35.78 },
+      { ancient: 'Gilead', modern: 'Gilead highlands, Jordan', x: 73, y: 15, lat: 32.25, lon: 35.75 }
     ],
     steps: [
-      { label: 'Good land for cattle', ref: 'Numbers 32:1', copy: 'Reuben and Gad have very many livestock and eye Gilead.', miles: 0 },
-      { label: 'A bold request', ref: 'Numbers 32:5', copy: '"Let this land be given to your servants as a possession."', miles: 0 },
-      { label: 'Gilead and Bashan', ref: 'Numbers 32:33', copy: 'Moses grants them the kingdoms of Sihon and Og.', miles: 50 },
-      { label: 'Building cities', ref: 'Numbers 32:34', copy: 'The Gadites build Dibon, Ataroth, and Aroer.', miles: 20 }
+      { label: 'Good land for cattle', ref: 'Numbers 32:1-4', copy: 'Reuben and Gad have huge herds and see that Jazer and Gilead are good for livestock.', at: 0 },
+      { label: 'A bold request', ref: 'Numbers 32:5-15', copy: '“Let this land be given to your servants as a possession. Do not make us cross the Jordan.” Moses warns them.', at: 0 },
+      { label: 'Armed and ready', ref: 'Numbers 32:16-27', copy: 'They promise to cross over armed ahead of Israel until every tribe has its land.', at: 0 },
+      { label: 'Granted', ref: 'Numbers 32:28-33', copy: 'Moses gives them, with half of Manasseh, the kingdoms of Sihon and Og.', at: 0 },
+      { label: 'Building cities', ref: 'Numbers 32:34-38', copy: 'The Gadites build Dibon, Ataroth and Aroer; the Reubenites rebuild Heshbon and others.', miles: 26, at: 1 },
+      { label: 'Gilead taken', ref: 'Numbers 32:39-42', copy: 'The descendants of Machir son of Manasseh take Gilead and settle there.', miles: 55, at: 2 }
     ]
   },
   {
@@ -15434,10 +15469,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Gilgal', modern: 'Jordan valley', x: 84, y: 47.5, lat: 31.87, lon: 35.5 }
     ],
     steps: [
-      { label: 'A cunning plan', ref: 'Joshua 9:4', copy: 'They take worn sacks and cracked wineskins to seem from afar.', miles: 0 },
-      { label: 'Coming to Gilgal', ref: 'Joshua 9:6', copy: '"We have come from a distant country; make a treaty with us."', miles: 18 },
-      { label: 'Peace sworn', ref: 'Joshua 9:15', copy: 'Joshua makes peace and the leaders swear an oath.', miles: 0 },
-      { label: 'The deceit found out', ref: 'Joshua 9:16', copy: 'After three days they learn the Gibeonites are neighbors.', miles: 0 }
+      { label: 'A cunning plan', ref: 'Joshua 9:3-5', copy: 'The Gibeonites load worn-out sacks, old patched wineskins and dry, moldy bread.', at: 0 },
+      { label: 'Coming to Gilgal', ref: 'Joshua 9:6', copy: '“We have come from a distant land; please make a treaty with us.”', miles: 18, at: 1 },
+      { label: 'Peace sworn', ref: 'Joshua 9:14-15', copy: 'Without asking the Lord, Joshua makes peace with them, and the leaders swear an oath.', at: 1 },
+      { label: 'Neighbors after all', ref: 'Joshua 9:16-17', copy: 'Three days later Israel learns they are neighbors and reaches their cities on the third day.', miles: 18, at: 0 },
+      { label: 'Woodcutters and water carriers', ref: 'Joshua 9:18-27', copy: 'Bound by the oath, Israel spares them, and they serve the house of God.', at: 0 }
     ]
   },
   {
@@ -15464,10 +15500,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Debir', modern: 'Khirbet Rabud', x: 16, y: 83.9, lat: 31.42, lon: 34.97 }
     ],
     steps: [
-      { label: 'Coming to Joshua', ref: 'Joshua 14:6', copy: 'Caleb reminds Joshua of the Lord’s promise at Kadesh.', miles: 25 },
-      { label: '"Give me this mountain"', ref: 'Joshua 14:12', copy: 'At eighty-five he asks for the hill country of the Anakim.', miles: 0 },
-      { label: 'Hebron granted', ref: 'Joshua 14:13', copy: 'Joshua blesses Caleb and gives him Hebron for an inheritance.', miles: 20 },
-      { label: 'Debir taken', ref: 'Joshua 15:17', copy: 'Othniel captures Debir and wins Caleb’s daughter.', miles: 12 }
+      { label: 'Coming to Joshua', ref: 'Joshua 14:6-11', copy: 'At Gilgal, Caleb reminds Joshua of the Lord\'s promise at Kadesh-barnea, forty-five years before.', at: 0 },
+      { label: '“Give me this hill country”', ref: 'Joshua 14:12', copy: 'At eighty-five he asks for the hill country where the Anakim live.', at: 0 },
+      { label: 'Hebron granted', ref: 'Joshua 14:13-14', copy: 'Joshua blesses Caleb and gives him Hebron, because he followed the Lord fully.', at: 0 },
+      { label: 'The Anakim driven out', ref: 'Joshua 15:13-14', copy: 'Caleb drives out the three sons of Anak from Hebron.', miles: 40, at: 1 },
+      { label: 'Debir taken', ref: 'Joshua 15:15-17', copy: 'Othniel captures Debir and wins Caleb\'s daughter Achsah as his wife.', miles: 11, at: 2 }
     ]
   },
   {
@@ -15489,14 +15526,16 @@ const BIBLE_JOURNEYS = [
       'He makes a covenant and sets up a great stone (Joshua 24:25-26).'
     ],
     points: [
-      { ancient: 'Shiloh', modern: 'Khirbet Seilun', x: 51.9, y: 84, lat: 32.06, lon: 35.29 },
-      { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 48.1, y: 16, lat: 32.21, lon: 35.28 }
+      { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 85, y: 15, lat: 32.21, lon: 35.28 },
+      { ancient: 'Timnath-serah', modern: 'Kifl Haris area, West Bank (likely)', x: 15, y: 85, lat: 32.11, lon: 35.13 }
     ],
     steps: [
-      { label: 'Israel gathered', ref: 'Joshua 24:1', copy: 'Joshua summons the tribes and their leaders to Shechem.', miles: 18 },
-      { label: '"Choose this day"', ref: 'Joshua 24:15', copy: '"As for me and my house, we will serve the Lord."', miles: 0 },
-      { label: 'A covenant made', ref: 'Joshua 24:25', copy: 'Joshua makes a covenant for the people that day.', miles: 0 },
-      { label: 'The witness stone', ref: 'Joshua 24:26', copy: 'He sets up a great stone under the oak as a witness.', miles: 0 }
+      { label: 'Israel gathered', ref: 'Joshua 24:1-13', copy: 'Joshua gathers all the tribes at Shechem and retells all the Lord has done.', at: 0 },
+      { label: '“Choose this day”', ref: 'Joshua 24:14-15', copy: '“As for me and my house, we will serve the LORD!”', at: 0 },
+      { label: 'A covenant made', ref: 'Joshua 24:25', copy: 'Joshua makes a covenant for the people that day at Shechem.', at: 0 },
+      { label: 'The witness stone', ref: 'Joshua 24:26-27', copy: 'He sets up a large stone under the oak near the sanctuary of the Lord.', at: 0 },
+      { label: 'Joshua buried', ref: 'Joshua 24:29-30', copy: 'Joshua dies at 110 and is buried in his inheritance at Timnath-serah.', miles: 12, at: 1 },
+      { label: 'Joseph\'s bones', ref: 'Joshua 24:32', copy: 'The bones of Joseph, brought up from Egypt, are buried at Shechem on the land Jacob bought.', miles: 12, at: 0 }
     ]
   },
   {
@@ -15522,10 +15561,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Timnah', modern: 'Tel Batash', x: 16, y: 38.6, lat: 31.79, lon: 34.91 }
     ],
     steps: [
-      { label: 'Down to Timnah', ref: 'Judges 14:1', copy: 'Samson sees a Philistine woman and wants her for his wife.', miles: 5 },
-      { label: 'The roaring lion', ref: 'Judges 14:5', copy: 'A young lion comes roaring toward him in the vineyards.', miles: 0 },
-      { label: 'Torn apart', ref: 'Judges 14:6', copy: 'The Spirit rushes on him; he tears the lion like a young goat.', miles: 0 },
-      { label: 'Honey in the carcass', ref: 'Judges 14:8', copy: 'Returning, he finds bees and honey in the lion’s body.', miles: 3 }
+      { label: 'Down to Timnah', ref: 'Judges 14:1', copy: 'Samson sees a Philistine woman and wants her for his wife.', miles: 5, at: 1 },
+      { label: 'The roaring lion', ref: 'Judges 14:5', copy: 'A young lion comes roaring toward him in the vineyards.', miles: 0, at: 1 },
+      { label: 'Torn apart', ref: 'Judges 14:6', copy: 'The Spirit rushes on him; he tears the lion like a young goat.', miles: 0, at: 1 },
+      { label: 'Honey in the carcass', ref: 'Judges 14:8', copy: 'Returning, he finds bees and honey in the lion’s body.', miles: 3, at: 1 }
     ]
   },
   {
@@ -15551,10 +15590,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Thebez', modern: 'Tubas, West Bank', x: 73.5, y: 16, lat: 32.32, lon: 35.37 }
     ],
     steps: [
-      { label: 'King at Shechem', ref: 'Judges 9:6', copy: 'The men of Shechem make Abimelech king by the oak.', miles: 0 },
-      { label: 'Shechem destroyed', ref: 'Judges 9:45', copy: 'He razes the city and sows it with salt.', miles: 0 },
-      { label: 'The tower of Thebez', ref: 'Judges 9:50', copy: 'He goes to Thebez and besieges its strong tower.', miles: 10 },
-      { label: 'The millstone', ref: 'Judges 9:53', copy: 'A woman drops a millstone and crushes his skull.', miles: 0 }
+      { label: 'King at Shechem', ref: 'Judges 9:6', copy: 'The men of Shechem make Abimelech king by the oak.', miles: 0, at: 0 },
+      { label: 'Shechem destroyed', ref: 'Judges 9:45', copy: 'He razes the city and sows it with salt.', miles: 0, at: 0 },
+      { label: 'The tower of Thebez', ref: 'Judges 9:50', copy: 'He goes to Thebez and besieges its strong tower.', miles: 10, at: 1 },
+      { label: 'The millstone', ref: 'Judges 9:53', copy: 'A woman drops a millstone and crushes his skull.', miles: 0, at: 1 }
     ]
   },
   {
@@ -15576,15 +15615,17 @@ const BIBLE_JOURNEYS = [
       'They turn aside to lodge at Gibeah (Judges 19:15).'
     ],
     points: [
-      { ancient: 'Bethlehem', modern: 'Bethlehem', x: 42.8, y: 84, lat: 31.7, lon: 35.2 },
-      { ancient: 'Jebus', modern: 'Jerusalem', x: 57.2, y: 38.7, lat: 31.78, lon: 35.23 },
-      { ancient: 'Gibeah', modern: 'Tell el-Ful', x: 57.2, y: 16, lat: 31.82, lon: 35.23 }
+      { ancient: 'Hill country of Ephraim', modern: 'a remote part (spot unknown)', x: 15, y: 15, lat: 32.1, lon: 35.2 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 15, y: 85, lat: 31.7, lon: 35.2 },
+      { ancient: 'Jebus', modern: 'Jerusalem', x: 85, y: 71, lat: 31.78, lon: 35.23 },
+      { ancient: 'Gibeah', modern: 'Tell el-Ful', x: 85, y: 64, lat: 31.82, lon: 35.23 }
     ],
     steps: [
-      { label: 'Going to Bethlehem', ref: 'Judges 19:1', copy: 'A Levite travels to bring back his concubine.', miles: 0 },
-      { label: 'Passing Jebus', ref: 'Judges 19:11', copy: 'They will not lodge in the foreign city of Jebus.', miles: 6 },
-      { label: 'Lodging at Gibeah', ref: 'Judges 19:15', copy: 'They turn aside to spend the night in the open square of Gibeah.', miles: 5 },
-      { label: 'Israel roused', ref: 'Judges 19:29', copy: 'The outrage there summons all Israel to act.', miles: 0 }
+      { label: 'Going to Bethlehem', ref: 'Judges 19:1-3', copy: 'In the days with no king, a Levite from Ephraim goes to Bethlehem to bring back his concubine.', miles: 30, at: 1 },
+      { label: 'Lingering', ref: 'Judges 19:4-10', copy: 'Her father keeps them for days; late on the fifth day they finally set out.', at: 1 },
+      { label: 'Passing Jebus', ref: 'Judges 19:10-12', copy: 'They will not stop in Jebus, a city of foreigners.', miles: 6, at: 2 },
+      { label: 'Lodging at Gibeah', ref: 'Judges 19:14-21', copy: 'At sunset they reach Gibeah of Benjamin, and an old man takes them in.', miles: 3, at: 3 },
+      { label: 'Israel roused', ref: 'Judges 19:22-30', copy: 'After a night of violence there, the Levite sends word through all Israel: “Nothing like this has been seen or done.”', miles: 25, at: 0 }
     ]
   },
   {
@@ -15599,7 +15640,7 @@ const BIBLE_JOURNEYS = [
     mode: 'National gathering',
     days: 'A day of repentance and rescue',
     modern: 'The Benjamin hills northwest of Jerusalem',
-    note: '"Thus far the Lord has helped us" — the stone of Ebenezer.',
+    note: 'The ark had been at Kiriath-jearim twenty years (1 Samuel 7:2). Shen and Beth-car are unknown sites.',
     sources: [
       'Samuel gathers Israel to Mizpah to pray (1 Samuel 7:5).',
       'The Lord thunders against the Philistines (1 Samuel 7:10).',
@@ -15610,10 +15651,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Mizpah', modern: 'Tell en-Nasbeh', x: 84, y: 40, lat: 31.83, lon: 35.18 }
     ],
     steps: [
-      { label: 'Gathered to pray', ref: '1 Samuel 7:5', copy: '"Gather all Israel to Mizpah, and I will pray for you."', miles: 8 },
-      { label: 'Crying to the Lord', ref: '1 Samuel 7:9', copy: 'Samuel offers a lamb and cries out, and the Lord answers.', miles: 0 },
-      { label: 'Thunder from heaven', ref: '1 Samuel 7:10', copy: 'The Lord thunders and throws the Philistines into confusion.', miles: 0 },
-      { label: 'The Ebenezer stone', ref: '1 Samuel 7:12', copy: '"Thus far the Lord has helped us."', miles: 4 }
+      { label: 'Gathered to pray', ref: '1 Samuel 7:3-6', copy: '“Gather all Israel to Mizpah, and I will pray to the LORD on your behalf.” They fast and confess their sin.', miles: 8, at: 1 },
+      { label: 'Crying to the Lord', ref: '1 Samuel 7:7-9', copy: 'As the Philistines come up, Samuel offers a lamb and cries out, and the Lord answers him.', at: 1 },
+      { label: 'Thunder from heaven', ref: '1 Samuel 7:10-11', copy: 'The Lord thunders against the Philistines, and Israel chases them from Mizpah to below Beth-car.', at: 1 },
+      { label: 'The Ebenezer stone', ref: '1 Samuel 7:12', copy: 'Samuel sets up a stone between Mizpah and Shen: “Thus far the LORD has helped us.”', at: 1 }
     ]
   },
   {
@@ -15628,21 +15669,24 @@ const BIBLE_JOURNEYS = [
     mode: 'Army on the march',
     days: 'A test of obedience',
     modern: 'The northern Negev toward the desert of Shur',
-    note: 'Saul keeps the best of the spoil and spares king Agag, against the command.',
+    note: 'Telaim and the city of Amalek are unknown sites and are placed approximately.',
     sources: [
       'Saul musters the people at Telaim (1 Samuel 15:4).',
       'He spares Agag and the best of the spoil (1 Samuel 15:9).',
       '"To obey is better than sacrifice" (1 Samuel 15:22).'
     ],
     points: [
-      { ancient: 'Telaim', modern: 'Northern Negev', x: 84, y: 18.3, lat: 31.1, lon: 34.9 },
-      { ancient: 'City of Amalek', modern: 'Negev toward Shur', x: 16, y: 81.7, lat: 30.7, lon: 34.4 }
+      { ancient: 'Telaim', modern: 'northern Negev (site unknown)', x: 47, y: 61, lat: 31.1, lon: 34.9 },
+      { ancient: 'City of Amalek', modern: 'Negev toward Shur (site unknown)', x: 15, y: 85, lat: 30.7, lon: 34.4 },
+      { ancient: 'Carmel', modern: 'Khirbet el-Kirmil, south of Hebron', x: 61, y: 41, lat: 31.43, lon: 35.13 },
+      { ancient: 'Gilgal', modern: 'Jordan valley near Jericho (site debated)', x: 85, y: 15, lat: 31.87, lon: 35.5 }
     ],
     steps: [
-      { label: 'Mustered at Telaim', ref: '1 Samuel 15:4', copy: 'Saul numbers the people for war against Amalek.', miles: 0 },
-      { label: 'Lying in wait', ref: '1 Samuel 15:5', copy: 'He comes to the city of Amalek and waits in the valley.', miles: 45 },
-      { label: 'Sparing the best', ref: '1 Samuel 15:9', copy: 'Saul spares Agag and the best of the flocks.', miles: 0 },
-      { label: 'Obedience over sacrifice', ref: '1 Samuel 15:22', copy: '"To obey is better than sacrifice."', miles: 0 }
+      { label: 'Mustered at Telaim', ref: '1 Samuel 15:1-4', copy: 'Samuel gives Saul the Lord\'s command against Amalek, and Saul counts his army at Telaim.', at: 0 },
+      { label: 'Lying in wait', ref: '1 Samuel 15:5-7', copy: 'He comes to the city of Amalek, waits in the valley, and strikes the Amalekites.', miles: 40, at: 1 },
+      { label: 'Sparing the best', ref: '1 Samuel 15:8-9', copy: 'Saul spares King Agag and the best of the sheep and cattle.', at: 1 },
+      { label: 'A monument at Carmel', ref: '1 Samuel 15:10-12', copy: 'The Lord regrets making Saul king. Saul sets up a monument for himself at Carmel.', miles: 65, at: 2 },
+      { label: 'Obedience over sacrifice', ref: '1 Samuel 15:12-23', copy: 'At Gilgal, Samuel confronts him: “Behold, obedience is better than sacrifice.”', miles: 45, at: 3 }
     ]
   },
   {
@@ -15657,21 +15701,23 @@ const BIBLE_JOURNEYS = [
     mode: 'Riding a donkey',
     days: 'A day of swift mercy',
     modern: 'The Judean hills around Maon and Carmel',
-    note: 'Nabal of Maon insults David; Abigail intervenes with provisions.',
+    note: '1 Samuel 25:1 says David went down to the Wilderness of Paran (the Greek Old Testament reads Maon). His men had been guarding Nabal\'s shepherds near Carmel (25:15-16).',
     sources: [
       'Nabal of Maon shears sheep at Carmel (1 Samuel 25:2).',
       'David sets out with four hundred men (1 Samuel 25:13).',
       'Abigail hurries to meet him with provisions (1 Samuel 25:18).'
     ],
     points: [
-      { ancient: 'Wilderness of Maon', modern: 'Tell Main area', x: 50, y: 84, lat: 31.4, lon: 35.13 },
-      { ancient: 'Carmel of Judah', modern: 'Khirbet el-Kirmil', x: 50, y: 16, lat: 31.43, lon: 35.13 }
+      { ancient: 'David\'s camp', modern: 'wilderness near Maon', x: 15, y: 85, lat: 31.4, lon: 35.13 },
+      { ancient: 'Carmel of Judah', modern: 'Khirbet el-Kirmil', x: 15, y: 15, lat: 31.43, lon: 35.13 }
     ],
     steps: [
-      { label: 'Nabal’s insult', ref: '1 Samuel 25:2', copy: 'A rich man of Maon shears his sheep at Carmel.', miles: 0 },
-      { label: 'David’s anger', ref: '1 Samuel 25:13', copy: 'David straps on his sword and rides out with his men.', miles: 5 },
-      { label: 'Abigail’s gift', ref: '1 Samuel 25:18', copy: 'She loads donkeys with bread, wine, and grain to meet him.', miles: 0 },
-      { label: 'Bloodshed averted', ref: '1 Samuel 25:32', copy: 'David blesses her for keeping him from avenging himself.', miles: 5 }
+      { label: 'Nabal\'s insult', ref: '1 Samuel 25:2-11', copy: 'David sends ten young men to Nabal, who is shearing his sheep at Carmel. Nabal insults them.', at: 0 },
+      { label: 'David\'s anger', ref: '1 Samuel 25:12-13', copy: '“Strap on your swords!” About four hundred men follow David; two hundred stay with the supplies.', at: 0 },
+      { label: 'Abigail\'s gift', ref: '1 Samuel 25:18-31', copy: 'Abigail loads donkeys with bread, wine and food and meets David in a mountain ravine.', at: 0 },
+      { label: 'Bloodshed averted', ref: '1 Samuel 25:32-35', copy: 'David blesses her good sense for keeping him from avenging himself.', at: 0 },
+      { label: 'Nabal dies', ref: '1 Samuel 25:36-38', copy: 'When Nabal hears what happened, his heart fails, and ten days later the Lord strikes him.', miles: 2, at: 1 },
+      { label: 'Abigail marries David', ref: '1 Samuel 25:39-42', copy: 'David sends for her, and she goes with his messengers and becomes his wife.', miles: 2, at: 0 }
     ]
   },
   {
@@ -15698,10 +15744,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jabesh-gilead', modern: 'Gilead, Jordan', x: 84, y: 58.8, lat: 32.45, lon: 35.65 }
     ],
     steps: [
-      { label: 'Defeat at Gilboa', ref: '1 Samuel 31:1', copy: 'The men of Israel flee and fall on Mount Gilboa.', miles: 0 },
-      { label: 'Saul’s end', ref: '1 Samuel 31:4', copy: 'Saul takes his own sword and falls upon it.', miles: 0 },
-      { label: 'Hung at Beth-shan', ref: '1 Samuel 31:10', copy: 'They fasten his body to the wall of Beth-shan.', miles: 8 },
-      { label: 'A brave rescue', ref: '1 Samuel 31:12', copy: 'The valiant men of Jabesh travel by night to take the bodies.', miles: 15 }
+      { label: 'Defeat at Gilboa', ref: '1 Samuel 31:1-2', copy: 'Israel flees and falls on Mount Gilboa, and Saul\'s sons, Jonathan among them, are killed.', at: 0 },
+      { label: 'Saul\'s end', ref: '1 Samuel 31:3-6', copy: 'Badly wounded by archers, Saul takes his own sword and falls on it.', at: 0 },
+      { label: 'Hung at Beth-shan', ref: '1 Samuel 31:8-10', copy: 'The Philistines fasten his body to the wall of Beth-shan.', miles: 6, at: 1 },
+      { label: 'A brave rescue', ref: '1 Samuel 31:11-12', copy: 'The valiant men of Jabesh-gilead journey all night and take down the bodies.', at: 1 },
+      { label: 'Buried at Jabesh', ref: '1 Samuel 31:12-13', copy: 'They bury the bones under the tamarisk tree in Jabesh and fast seven days.', miles: 10, at: 2 }
     ]
   },
   {
@@ -15716,21 +15763,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Royal flight and crowning',
     days: 'A divided kingdom',
     modern: 'The Jezreel area across to Gilead',
-    note: 'While David reigns in Hebron, Abner makes Ish-bosheth king at Mahanaim.',
+    note: 'The text doesn\'t say where Abner brought Ish-bosheth from.',
     sources: [
       'Abner takes Ish-bosheth to Mahanaim (2 Samuel 2:8).',
       'He makes him king over Israel (2 Samuel 2:9).',
       'Abner goes out from Mahanaim to Gibeon (2 Samuel 2:12).'
     ],
     points: [
-      { ancient: 'Mount Gilboa', modern: 'Mount Gilboa, Israel', x: 16.9, y: 16, lat: 32.46, lon: 35.42 },
-      { ancient: 'Mahanaim', modern: 'Gilead, Jordan', x: 83.1, y: 84, lat: 32.2, lon: 35.72 }
+      { ancient: 'Mahanaim', modern: 'Gilead, Jordan (site debated)', x: 85, y: 15, lat: 32.2, lon: 35.72 },
+      { ancient: 'Pool of Gibeon', modern: 'El-Jib, West Bank', x: 15, y: 85, lat: 31.85, lon: 35.18 }
     ],
     steps: [
-      { label: 'Taken to Mahanaim', ref: '2 Samuel 2:8', copy: 'Abner brings Saul’s son across the Jordan to Mahanaim.', miles: 30 },
-      { label: 'Crowned over Israel', ref: '2 Samuel 2:9', copy: 'Abner makes Ish-bosheth king over the northern tribes.', miles: 0 },
-      { label: 'Out to Gibeon', ref: '2 Samuel 2:12', copy: 'Abner’s men march out to meet David’s men at Gibeon.', miles: 0 },
-      { label: 'Back through the night', ref: '2 Samuel 2:29', copy: 'After the clash Abner returns to Mahanaim through the Arabah.', miles: 0 }
+      { label: 'Taken to Mahanaim', ref: '2 Samuel 2:8', copy: 'Abner brings Saul\'s son Ish-bosheth over to Mahanaim.', at: 0 },
+      { label: 'Crowned over Israel', ref: '2 Samuel 2:9-10', copy: 'Abner makes him king over Gilead, Ephraim, Benjamin and all Israel; Judah follows David.', at: 0 },
+      { label: 'Out to Gibeon', ref: '2 Samuel 2:12-17', copy: 'Abner marches out to Gibeon. Joab\'s men meet them across the pool, and a fierce battle follows.', miles: 45, at: 1 },
+      { label: 'Asahel falls', ref: '2 Samuel 2:18-23', copy: 'Swift Asahel chases Abner and will not turn aside, and Abner kills him.', at: 1 },
+      { label: 'Back through the night', ref: '2 Samuel 2:29', copy: 'All night Abner\'s men march through the Arabah, cross the Jordan and reach Mahanaim.', miles: 45, at: 0 }
     ]
   },
   {
@@ -15752,15 +15800,16 @@ const BIBLE_JOURNEYS = [
       'He strikes them from Geba to Gezer (2 Samuel 5:25).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 84, y: 21.4, lat: 31.78, lon: 35.23 },
-      { ancient: 'Valley of Rephaim', modern: 'SW of Jerusalem', x: 35.4, y: 67.1, lat: 31.74, lon: 35.18 },
-      { ancient: 'Baal-perazim', modern: 'Near Jerusalem', x: 16, y: 78.6, lat: 31.73, lon: 35.16 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 85, y: 58, lat: 31.78, lon: 35.23 },
+      { ancient: 'Valley of Rephaim', modern: 'southwest of Jerusalem', x: 74, y: 80, lat: 31.74, lon: 35.18 },
+      { ancient: 'Baal-perazim', modern: 'near Jerusalem (site debated)', x: 69, y: 85, lat: 31.73, lon: 35.16 },
+      { ancient: 'Gezer', modern: 'Tel Gezer', x: 15, y: 15, lat: 31.86, lon: 34.92 }
     ],
     steps: [
-      { label: 'The Philistines spread out', ref: '2 Samuel 5:18', copy: 'They come up and deploy in the Valley of Rephaim.', miles: 6 },
-      { label: 'Burst of waters', ref: '2 Samuel 5:20', copy: 'David breaks through them like a flood at Baal-perazim.', miles: 3 },
-      { label: 'Circle behind them', ref: '2 Samuel 5:23', copy: 'The Lord tells David to circle and come from behind the trees.', miles: 0 },
-      { label: 'Struck to Gezer', ref: '2 Samuel 5:25', copy: 'He strikes them all the way from Geba to Gezer.', miles: 9 }
+      { label: 'The Philistines spread out', ref: '2 Samuel 5:17-19', copy: 'Hearing David is king, the Philistines spread out in the Valley of Rephaim. David asks the Lord.', miles: 4, at: 1 },
+      { label: 'Burst of waters', ref: '2 Samuel 5:20-21', copy: 'At Baal-perazim: “Like a bursting flood, the LORD has burst out against my enemies before me.”', miles: 2, at: 2 },
+      { label: 'Circle behind them', ref: '2 Samuel 5:22-24', copy: 'When they come again, the Lord says to circle behind them and wait for the sound of marching in the balsam trees.', miles: 2, at: 1 },
+      { label: 'Gibeon to Gezer', ref: '2 Samuel 5:25', copy: 'David does as the Lord commands and strikes the Philistines from Gibeon to Gezer.', miles: 18, at: 3 }
     ]
   },
   {
@@ -15782,14 +15831,14 @@ const BIBLE_JOURNEYS = [
       'They bury them in the tomb of Kish at Zela (2 Samuel 21:14).'
     ],
     points: [
-      { ancient: 'Jabesh-gilead', modern: 'Gilead, Jordan', x: 70.9, y: 16, lat: 32.45, lon: 35.65 },
-      { ancient: 'Zela', modern: 'Benjamin hills', x: 29.1, y: 84, lat: 31.83, lon: 35.2 }
+      { ancient: 'Jabesh-gilead', modern: 'Gilead, Jordan', x: 85, y: 15, lat: 32.45, lon: 35.65 },
+      { ancient: 'Zela', modern: 'land of Benjamin (site uncertain)', x: 15, y: 85, lat: 31.83, lon: 35.2 }
     ],
     steps: [
-      { label: 'Bones from Jabesh', ref: '2 Samuel 21:12', copy: 'David takes the bones from the men of Jabesh-gilead.', miles: 0 },
-      { label: 'Brought up', ref: '2 Samuel 21:13', copy: 'He gathers the bones of Saul and his son Jonathan.', miles: 55 },
-      { label: 'Buried at Zela', ref: '2 Samuel 21:14', copy: 'They bury them in the tomb of Kish, Saul’s father.', miles: 5 },
-      { label: 'God hears the land', ref: '2 Samuel 21:14', copy: 'After that, God responds to the plea for the land.', miles: 0 }
+      { label: 'Bones from Jabesh', ref: '2 Samuel 21:12', copy: 'David takes the bones of Saul and Jonathan from the men of Jabesh-gilead, who had taken them from Beth-shan.', at: 0 },
+      { label: 'Brought up', ref: '2 Samuel 21:13', copy: 'He brings them up, and the bones of the seven who were hanged are gathered too.', miles: 55, at: 1 },
+      { label: 'Buried at Zela', ref: '2 Samuel 21:14', copy: 'They bury Saul and Jonathan in the tomb of Saul\'s father Kish.', at: 1 },
+      { label: 'God answers', ref: '2 Samuel 21:14', copy: 'After that, God answers their prayers for the land.', at: 1 }
     ]
   },
   {
@@ -15804,22 +15853,21 @@ const BIBLE_JOURNEYS = [
     mode: 'Sailing the Red Sea',
     days: 'A long sea voyage',
     modern: 'The Gulf of Aqaba south down the Red Sea',
-    note: 'Ophir’s exact location is debated; the fleet sailed from Ezion-geber.',
+    note: 'Ophir\'s location is unknown; suggestions include southern Arabia, East Africa and India. The trail only points down the Red Sea.',
     sources: [
       'Solomon builds a fleet at Ezion-geber on the Red Sea (1 Kings 9:26).',
       'Hiram sends experienced seamen (1 Kings 9:27).',
       'They go to Ophir and bring back gold (1 Kings 9:28).'
     ],
     points: [
-      { ancient: 'Ezion-geber', modern: 'Eilat / Aqaba', x: 37.7, y: 16, lat: 29.55, lon: 34.95 },
-      { ancient: 'Red Sea', modern: 'Red Sea', x: 44.3, y: 50.3, lat: 27, lon: 35.5 },
-      { ancient: 'Toward Ophir', modern: 'Southern sea route', x: 62.3, y: 84, lat: 24.5, lon: 37 }
+      { ancient: 'Ezion-geber', modern: 'near Eilat / Aqaba (site debated)', x: 15, y: 15, lat: 29.55, lon: 34.95 },
+      { ancient: 'Toward Ophir', modern: 'down the Red Sea (Ophir unknown)', x: 85, y: 85, lat: 26.5, lon: 36 }
     ],
     steps: [
-      { label: 'A fleet at Ezion-geber', ref: '1 Kings 9:26', copy: 'Solomon builds ships on the shore of the Red Sea.', miles: 0 },
-      { label: 'Hiram’s sailors', ref: '1 Kings 9:27', copy: 'Hiram sends seamen who know the sea.', miles: 200 },
-      { label: 'Gold from Ophir', ref: '1 Kings 9:28', copy: 'They bring back gold from Ophir to the king.', miles: 300 },
-      { label: 'Riches of the sea', ref: '1 Kings 10:22', copy: 'The fleet returns with gold, silver, ivory, apes, and peacocks.', miles: 0 }
+      { label: 'A fleet at Ezion-geber', ref: '1 Kings 9:26', copy: 'Solomon builds a fleet at Ezion-geber, near Eloth in Edom, on the shore of the Red Sea.', at: 0 },
+      { label: 'Hiram\'s sailors', ref: '1 Kings 9:27', copy: 'Hiram sends sailors who know the sea to serve with Solomon\'s men.', at: 0 },
+      { label: 'Gold from Ophir', ref: '1 Kings 9:28', copy: 'They sail to Ophir and bring back 420 talents of gold.', at: 1, by: 'sea' },
+      { label: 'Every three years', ref: '1 Kings 10:22', copy: 'Once every three years the ships of Tarshish arrive with gold, silver, ivory, apes and peacocks.', at: 0, by: 'sea' }
     ]
   },
   {
@@ -15846,10 +15894,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Dan', modern: 'Tel Dan, Israel', x: 59.3, y: 16, lat: 33.25, lon: 35.65 }
     ],
     steps: [
-      { label: 'Two golden calves', ref: '1 Kings 12:28', copy: '"Behold your gods, O Israel, who brought you up from Egypt."', miles: 0 },
-      { label: 'Bethel and Dan', ref: '1 Kings 12:29', copy: 'He sets one calf in Bethel and the other in Dan.', miles: 100 },
-      { label: 'A snare', ref: '1 Kings 12:30', copy: 'The people go even as far as Dan to worship.', miles: 0 },
-      { label: 'False feasts', ref: '1 Kings 12:33', copy: 'Jeroboam offers on the altar he built at Bethel.', miles: 20 }
+      { label: 'Two golden calves', ref: '1 Kings 12:25-28', copy: '“Here, O Israel, are your gods, who brought you up out of the land of Egypt.”', at: 0 },
+      { label: 'One at Bethel', ref: '1 Kings 12:29', copy: 'He sets up one calf at Bethel.', miles: 20, at: 1 },
+      { label: 'One at Dan', ref: '1 Kings 12:29-30', copy: 'The other goes to Dan, and the people go as far as Dan to worship it. This becomes a sin.', miles: 110, at: 2 },
+      { label: 'A feast of his own', ref: '1 Kings 12:32-33', copy: 'Jeroboam makes up a feast and offers sacrifices on the altar he built at Bethel.', miles: 110, at: 1 }
     ]
   },
   {
@@ -15864,21 +15912,23 @@ const BIBLE_JOURNEYS = [
     mode: 'Walking',
     days: 'A prophetic errand',
     modern: 'The Judean hills up to Bethel',
-    note: 'The prophet is later killed by a lion for disobeying the word he was given.',
+    note: 'The man of God\'s town in Judah isn\'t named.',
     sources: [
       'A man of God comes from Judah to Bethel (1 Kings 13:1).',
       'He cries against the altar (1 Kings 13:2).',
       'Jeroboam’s hand withers as he points (1 Kings 13:4).'
     ],
     points: [
-      { ancient: 'Judah', modern: 'Judean hills', x: 34.9, y: 84, lat: 31.7, lon: 35.1 },
-      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 65.1, y: 16, lat: 31.93, lon: 35.22 }
+      { ancient: 'Judah', modern: 'Judean hills (town not named)', x: 15, y: 85, lat: 31.7, lon: 35.1 },
+      { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 85, y: 15, lat: 31.93, lon: 35.22 },
+      { ancient: 'On the road', modern: 'near Bethel (spot unknown)', x: 73, y: 27, lat: 31.89, lon: 35.2 }
     ],
     steps: [
-      { label: 'Sent to Bethel', ref: '1 Kings 13:1', copy: 'A man of God comes by the word of the Lord to Bethel.', miles: 25 },
-      { label: 'Crying against the altar', ref: '1 Kings 13:2', copy: '"O altar, a child named Josiah will be born to the house of David."', miles: 0 },
-      { label: 'The withered hand', ref: '1 Kings 13:4', copy: 'Jeroboam’s hand dries up as he stretches it out.', miles: 0 },
-      { label: 'The lion on the road', ref: '1 Kings 13:24', copy: 'A lion meets the prophet on his way and kills him.', miles: 5 }
+      { label: 'Sent to Bethel', ref: '1 Kings 13:1', copy: 'As Jeroboam stands by the altar, a man of God comes from Judah to Bethel by the word of the Lord.', miles: 25, at: 1 },
+      { label: 'Crying against the altar', ref: '1 Kings 13:2-3', copy: '“O altar, O altar … A son named Josiah will be born to the house of David.”', at: 1 },
+      { label: 'The withered hand', ref: '1 Kings 13:4-6', copy: 'Jeroboam\'s outstretched hand shrivels, the altar splits, and at the prophet\'s prayer the hand is restored.', at: 1 },
+      { label: 'A lying invitation', ref: '1 Kings 13:11-22', copy: 'An old prophet of Bethel deceives him into eating and drinking there, against the Lord\'s command.', at: 1 },
+      { label: 'The lion on the road', ref: '1 Kings 13:23-25', copy: 'As he goes on his way, a lion meets him and kills him; the donkey and the lion stand beside the body.', miles: 3, at: 2 }
     ]
   },
   {
@@ -15905,10 +15955,11 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Kir-hareseth', modern: 'Kerak, Jordan', x: 61, y: 71.6, lat: 31.07, lon: 35.75 }
     ],
     steps: [
-      { label: 'By way of Edom', ref: '2 Kings 3:8', copy: 'The kings choose the long road through the wilderness of Edom.', miles: 90 },
-      { label: 'Pools in the desert', ref: '2 Kings 3:16', copy: '"Make this dry streambed full of pools."', miles: 0 },
-      { label: 'Water from Edom', ref: '2 Kings 3:20', copy: 'In the morning water flows from the direction of Edom.', miles: 0 },
-      { label: 'Siege of Kir-hareseth', ref: '2 Kings 3:25', copy: 'They tear down the cities and besiege the Moabite stronghold.', miles: 30 }
+      { label: 'By way of Edom', ref: '2 Kings 3:6-9', copy: 'The kings of Israel, Judah and Edom take the long road through the Desert of Edom; after seven days they have no water.', miles: 150, at: 1 },
+      { label: 'Ditches in the valley', ref: '2 Kings 3:11-19', copy: 'Elisha: “This is what the LORD says: ‘Dig this valley full of ditches.’”', at: 1 },
+      { label: 'Water from Edom', ref: '2 Kings 3:20-23', copy: 'In the morning water flows from the direction of Edom, and the Moabites see it red as blood.', at: 1 },
+      { label: 'Siege of Kir-hareseth', ref: '2 Kings 3:24-26', copy: 'Israel routs Moab, destroys its cities and surrounds Kir-hareseth.', miles: 32, at: 2 },
+      { label: 'Withdrawal', ref: '2 Kings 3:27', copy: 'The king of Moab offers his firstborn son on the city wall. Great fury comes against Israel, and they go home.', miles: 120, at: 0 }
     ]
   },
   {
@@ -15930,14 +15981,15 @@ const BIBLE_JOURNEYS = [
       'Elisha foresees Hazael becoming king (2 Kings 8:13).'
     ],
     points: [
-      { ancient: 'Israel', modern: 'Northern Israel', x: 24.5, y: 84, lat: 32.28, lon: 35.19 },
-      { ancient: 'Damascus', modern: 'Damascus, Syria', x: 75.5, y: 16, lat: 33.51, lon: 36.29 }
+      { ancient: 'Israel', modern: 'Samaria region (Elisha\'s start not named)', x: 15, y: 85, lat: 32.28, lon: 35.19 },
+      { ancient: 'Damascus', modern: 'Damascus, Syria', x: 85, y: 15, lat: 33.51, lon: 36.29 }
     ],
     steps: [
-      { label: 'Coming to Damascus', ref: '2 Kings 8:7', copy: 'Elisha arrives as Ben-hadad the king lies sick.', miles: 130 },
-      { label: 'Hazael’s gift', ref: '2 Kings 8:9', copy: 'Hazael brings forty camel-loads as a present.', miles: 0 },
-      { label: 'The prophet weeps', ref: '2 Kings 8:11', copy: 'Elisha stares and weeps over the evil to come.', miles: 0 },
-      { label: 'A king foretold', ref: '2 Kings 8:13', copy: '"The Lord has shown me that you will be king over Syria."', miles: 0 }
+      { label: 'Coming to Damascus', ref: '2 Kings 8:7', copy: 'Elisha comes to Damascus while Ben-hadad king of Aram is sick.', miles: 130, at: 1 },
+      { label: 'Hazael\'s gift', ref: '2 Kings 8:8-9', copy: 'Hazael brings forty camel loads of gifts to ask whether the king will recover.', at: 1 },
+      { label: 'The prophet weeps', ref: '2 Kings 8:10-12', copy: 'Elisha stares at him until Hazael is ashamed, then weeps over the harm he will do Israel.', at: 1 },
+      { label: 'A king foretold', ref: '2 Kings 8:13', copy: '“The LORD has shown me that you will be king over Aram.”', at: 1 },
+      { label: 'Hazael takes the throne', ref: '2 Kings 8:14-15', copy: 'The next day Hazael smothers the king and reigns in his place.', at: 1 }
     ]
   },
   {
@@ -15963,10 +16015,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Damascus', modern: 'Damascus, Syria', x: 67.5, y: 16, lat: 33.51, lon: 36.29 }
     ],
     steps: [
-      { label: 'Appeal to Assyria', ref: '2 Kings 16:7', copy: '"I am your servant; come up and save me."', miles: 0 },
-      { label: 'Damascus falls', ref: '2 Kings 16:9', copy: 'The king of Assyria captures Damascus and carries it away.', miles: 130 },
-      { label: 'A king’s visit', ref: '2 Kings 16:10', copy: 'Ahaz goes to meet Tiglath-pileser at Damascus.', miles: 0 },
-      { label: 'A copied altar', ref: '2 Kings 16:11', copy: 'He has a pagan altar built for the temple in Jerusalem.', miles: 130 }
+      { label: 'Appeal to Assyria', ref: '2 Kings 16:5-8', copy: '“I am your servant and your son. Come up and save me.” Ahaz sends the temple silver and gold.', at: 0 },
+      { label: 'Damascus falls', ref: '2 Kings 16:9', copy: 'The king of Assyria captures Damascus and carries its people into exile.', miles: 130, at: 1 },
+      { label: 'A king\'s visit', ref: '2 Kings 16:10', copy: 'Ahaz goes to meet Tiglath-pileser at Damascus and sees the altar there.', at: 1 },
+      { label: 'A copied altar', ref: '2 Kings 16:10-16', copy: 'He sends its design home, and Uriah the priest builds a copy for the temple in Jerusalem.', miles: 130, at: 0 }
     ]
   },
   {
@@ -15981,7 +16033,7 @@ const BIBLE_JOURNEYS = [
     mode: 'Captives on the road',
     days: 'The end of the northern kingdom',
     modern: 'Samaria up the Fertile Crescent to northern Syria',
-    note: 'Israel is settled in Halah and by the Habor, the river of Gozan.',
+    note: 'Gozan on the Habor River is shown; Halah and the cities of the Medes lay farther east.',
     sources: [
       'The king of Assyria besieges Samaria three years (2 Kings 17:5).',
       'He carries Israel away to Assyria (2 Kings 17:6).',
@@ -15992,9 +16044,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Gozan (Habor)', modern: 'NE Syria', x: 79.8, y: 16, lat: 36.8, lon: 40 }
     ],
     steps: [
-      { label: 'Three-year siege', ref: '2 Kings 17:5', copy: 'The Assyrians besiege Samaria for three years.', miles: 0 },
-      { label: 'Carried to Assyria', ref: '2 Kings 17:6', copy: 'They take Israel to Halah, the Habor, and the cities of the Medes.', miles: 480 },
-      { label: 'Exiled from the land', ref: '2 Kings 17:23', copy: 'So Israel is exiled from their own land to Assyria.', miles: 20 }
+      { label: 'Three-year siege', ref: '2 Kings 17:5', copy: 'The king of Assyria invades the land and besieges Samaria for three years.', at: 0 },
+      { label: 'Carried to Assyria', ref: '2 Kings 17:6', copy: 'Samaria falls, and Israel is settled in Halah, in Gozan by the Habor River, and in the cities of the Medes.', miles: 500, at: 1 },
+      { label: 'Why it happened', ref: '2 Kings 17:7-23', copy: 'Israel had sinned against the Lord and would not listen to the prophets, so they were exiled from their land.', at: 1 }
     ]
   },
   {
@@ -16009,7 +16061,7 @@ const BIBLE_JOURNEYS = [
     mode: 'Walking',
     days: 'A prophet sent north',
     modern: 'The Judean wilderness up to Bethel',
-    note: 'Amaziah the priest tries to drive Amos back to Judah.',
+    note: 'Amos was one of the shepherds of Tekoa (Amos 1:1).',
     sources: [
       'Amaziah the priest of Bethel accuses Amos (Amos 7:10).',
       '"O seer, flee to the land of Judah" (Amos 7:12).',
@@ -16020,10 +16072,10 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 51, y: 16, lat: 31.93, lon: 35.22 }
     ],
     steps: [
-      { label: 'Accused at Bethel', ref: 'Amos 7:10', copy: 'Amaziah sends word to the king that Amos conspires.', miles: 30 },
-      { label: '"Flee to Judah"', ref: 'Amos 7:12', copy: 'The priest tells Amos to go home and prophesy there.', miles: 0 },
-      { label: 'No prophet by trade', ref: 'Amos 7:14', copy: '"I am a herdsman and tender of sycamore figs."', miles: 0 },
-      { label: 'Sent by the Lord', ref: 'Amos 7:15', copy: '"The Lord took me and said, Go, prophesy to my people."', miles: 0 }
+      { label: 'Accused at Bethel', ref: 'Amos 7:10-11', copy: 'Amaziah, priest of Bethel, sends word to King Jeroboam that Amos is conspiring against him.', miles: 22, at: 1 },
+      { label: '“Flee to the land of Judah”', ref: 'Amos 7:12-13', copy: '“Go away, you seer! Flee to the land of Judah; earn your bread there and do your prophesying there.”', at: 1 },
+      { label: 'No prophet by trade', ref: 'Amos 7:14', copy: '“I was a herdsman and a tender of sycamore-fig trees.”', at: 1 },
+      { label: 'Sent by the Lord', ref: 'Amos 7:15', copy: '“The LORD took me from following the flock and said to me, ‘Go, prophesy to My people Israel.’”', at: 1 }
     ]
   },
   {
@@ -16038,21 +16090,21 @@ const BIBLE_JOURNEYS = [
     mode: 'A prophetic sign-act',
     days: 'Many days each way',
     modern: 'Jerusalem northeast toward the Euphrates',
-    note: 'Many read Perath as the Euphrates; the ruined belt pictures proud Judah.',
+    note: 'The Hebrew is Perath, normally the Euphrates, about 400 miles away. Some suggest a spring called Ein Prat (Wadi Farah), a few miles from Jeremiah\'s home town of Anathoth.',
     sources: [
       'Go to the Euphrates and hide the loincloth in a rock cleft (Jeremiah 13:4).',
       'Jeremiah hides it as commanded (Jeremiah 13:5).',
       'After many days he finds it ruined, good for nothing (Jeremiah 13:7).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 74.9, lat: 31.78, lon: 35.23 },
-      { ancient: 'The Euphrates (Perath)', modern: 'Upper Euphrates, Syria', x: 84, y: 25.1, lat: 35, lon: 40.5 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 85, lat: 31.78, lon: 35.23 },
+      { ancient: 'Perath', modern: 'the Euphrates (some suggest Ein Prat near Anathoth)', x: 85, y: 15, lat: 35.95, lon: 38.3 }
     ],
     steps: [
-      { label: 'Hide it by the river', ref: 'Jeremiah 13:4', copy: '"Go to the Euphrates and hide the loincloth in a cleft of the rock."', miles: 550 },
-      { label: 'Hidden as told', ref: 'Jeremiah 13:5', copy: 'Jeremiah goes and hides it by the Euphrates.', miles: 0 },
-      { label: 'Return for it', ref: 'Jeremiah 13:6', copy: '"Arise, go to the Euphrates and take the loincloth."', miles: 550 },
-      { label: 'Spoiled and useless', ref: 'Jeremiah 13:7', copy: 'The belt is ruined, a picture of Judah’s pride.', miles: 0 }
+      { label: 'Hide it at Perath', ref: 'Jeremiah 13:1-4', copy: '“Take the loincloth … go at once to Perath and hide it there in a crevice of the rocks.”', at: 0 },
+      { label: 'Hidden as told', ref: 'Jeremiah 13:5', copy: 'Jeremiah goes and hides it at Perath.', miles: 400, at: 1 },
+      { label: 'Go back for it', ref: 'Jeremiah 13:6', copy: 'Many days later: “Arise, go to Perath, and get the loincloth.”', miles: 400, at: 0 },
+      { label: 'Ruined', ref: 'Jeremiah 13:7-9', copy: 'He digs it up, ruined and of no use. So the Lord will ruin the pride of Judah and Jerusalem.', miles: 400, at: 1 }
     ]
   },
   {
@@ -16067,21 +16119,21 @@ const BIBLE_JOURNEYS = [
     mode: 'Caravan with a royal escort',
     days: 'A long journey with the king’s letters',
     modern: 'Southwest Iran up the Fertile Crescent to Jerusalem',
-    note: 'Nehemiah travels with letters from Artaxerxes to rebuild the walls.',
+    note: 'The road isn\'t recorded; by the usual route up the Tigris and around the desert it was roughly 1,000 miles.',
     sources: [
       'Nehemiah is cupbearer in Susa the citadel (Nehemiah 2:1).',
       'He asks to rebuild the city of his fathers’ tombs (Nehemiah 2:5).',
       'He comes to Jerusalem and inspects the walls by night (Nehemiah 2:11-13).'
     ],
     points: [
-      { ancient: 'Susa (Shushan)', modern: 'Shush, Iran', x: 84, y: 48.7, lat: 32.19, lon: 48 },
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16, y: 51.3, lat: 31.78, lon: 35.23 }
+      { ancient: 'Susa (Shushan)', modern: 'Shush, Iran', x: 85, y: 15, lat: 32.19, lon: 48.26 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 85, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'The sad cupbearer', ref: 'Nehemiah 2:1', copy: 'Nehemiah serves wine to the king with a heavy heart.', miles: 0 },
-      { label: 'A bold request', ref: 'Nehemiah 2:5', copy: '"Send me to Judah, to the city of my fathers’ tombs."', miles: 0 },
-      { label: 'Arrival in Jerusalem', ref: 'Nehemiah 2:11', copy: 'He comes to Jerusalem and rests three days.', miles: 850 },
-      { label: 'Inspecting by night', ref: 'Nehemiah 2:13', copy: 'He goes out by night to survey the broken walls.', miles: 0 }
+      { label: 'The sad cupbearer', ref: 'Nehemiah 2:1-4', copy: 'Nehemiah serves wine to King Artaxerxes with a sad face. He prays, then answers.', at: 0 },
+      { label: 'A bold request', ref: 'Nehemiah 2:5-8', copy: '“Send me to Judah, to the city where my fathers are buried, so that I may rebuild it.” The king grants it.', at: 0 },
+      { label: 'Arrival in Jerusalem', ref: 'Nehemiah 2:9-11', copy: 'With army officers and horsemen, he delivers the king\'s letters beyond the Euphrates and reaches Jerusalem.', miles: 1000, at: 1 },
+      { label: 'Inspecting by night', ref: 'Nehemiah 2:12-18', copy: 'He rides out at night to inspect the broken walls, then tells the people: “Come, let us rebuild the wall of Jerusalem.”', at: 1 }
     ]
   },
   {
@@ -16103,16 +16155,23 @@ const BIBLE_JOURNEYS = [
       'They come to Tyre and the cities, then return (2 Samuel 24:7-8).'
     ],
     points: [
-      { ancient: 'Aroer', modern: 'Arnon gorge, Jordan', x: 64.8, y: 76.9, lat: 31.46, lon: 35.83 },
-      { ancient: 'Dan', modern: 'Tel Dan, Israel', x: 59.7, y: 16.7, lat: 33.25, lon: 35.65 },
-      { ancient: 'Tyre', modern: 'Tyre, Lebanon', x: 46.9, y: 16, lat: 33.27, lon: 35.2 },
-      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 35.2, y: 84, lat: 31.25, lon: 34.79 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 45, y: 69, lat: 31.78, lon: 35.23 },
+      { ancient: 'Aroer', modern: 'by the Arnon gorge, Jordan', x: 85, y: 79, lat: 31.46, lon: 35.83 },
+      { ancient: 'Gad and Jazer', modern: 'Gilead, Jordan', x: 76, y: 62, lat: 32, lon: 35.7 },
+      { ancient: 'Dan', modern: 'Tel Dan, Israel', x: 73, y: 24, lat: 33.25, lon: 35.65 },
+      { ancient: 'Sidon', modern: 'Saida, Lebanon', x: 54, y: 15, lat: 33.56, lon: 35.37 },
+      { ancient: 'Tyre', modern: 'Tyre, Lebanon', x: 43, y: 24, lat: 33.27, lon: 35.2 },
+      { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 15, y: 85, lat: 31.25, lon: 34.79 }
     ],
     steps: [
-      { label: 'Number the people', ref: '2 Samuel 24:2', copy: '"Go through all Israel, from Dan to Beersheba, and count them."', miles: 0 },
-      { label: 'Beginning at Aroer', ref: '2 Samuel 24:5', copy: 'They cross the Jordan and start at Aroer by the river.', miles: 120 },
-      { label: 'On to Tyre', ref: '2 Samuel 24:7', copy: 'They reach the fortress of Tyre and the Canaanite cities.', miles: 160 },
-      { label: 'The long circuit ends', ref: '2 Samuel 24:8', copy: 'After nine months and twenty days they return to Jerusalem.', miles: 120 }
+      { label: 'Number the people', ref: '2 Samuel 24:1-4', copy: '“Go now throughout the tribes of Israel from Dan to Beersheba and register the troops.” Joab objects but goes.', at: 0 },
+      { label: 'Starting at Aroer', ref: '2 Samuel 24:5', copy: 'They cross the Jordan and camp near Aroer, in the middle of the valley.', miles: 55, at: 1 },
+      { label: 'Gad, Jazer and Gilead', ref: '2 Samuel 24:5-6', copy: 'They go on toward Gad and Jazer, then to Gilead.', miles: 35, at: 2 },
+      { label: 'On to Dan', ref: '2 Samuel 24:6', copy: 'Through Gilead and the land of Tahtim-hodshi, on to Dan-jaan.', miles: 90, at: 3 },
+      { label: 'Around to Sidon', ref: '2 Samuel 24:6', copy: 'They reach Sidon on the coast.', miles: 35, at: 4 },
+      { label: 'The fortress of Tyre', ref: '2 Samuel 24:7', copy: 'They go toward the fortress of Tyre and all the cities of the Hivites and Canaanites.', miles: 22, at: 5 },
+      { label: 'Down to Beersheba', ref: '2 Samuel 24:7', copy: 'Finally they go to the Negev of Judah, to Beersheba.', miles: 150, at: 6 },
+      { label: 'Back to Jerusalem', ref: '2 Samuel 24:8-9', copy: 'After nine months and twenty days they return to Jerusalem with the count.', miles: 50, at: 0 }
     ]
   },
   {
@@ -16127,22 +16186,24 @@ const BIBLE_JOURNEYS = [
     mode: 'Army that sings instead of fights',
     days: 'A day of deliverance',
     modern: 'Jerusalem down toward En-gedi and the Dead Sea',
-    note: 'Singers go out ahead; the enemies destroy one another.',
+    note: 'The Ascent of Ziz and the Wilderness of Jeruel are unknown; they lay between En-gedi and Tekoa.',
     sources: [
       'A great multitude comes from beyond the sea, from En-gedi (2 Chronicles 20:2).',
       'They will come up by the ascent of Ziz (2 Chronicles 20:16).',
       'They assemble in the Valley of Beracah to bless the Lord (2 Chronicles 20:26).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 51.6, y: 16, lat: 31.78, lon: 35.23 },
-      { ancient: 'Wilderness of Tekoa', modern: 'Judean wilderness', x: 74.1, y: 84, lat: 31.6, lon: 35.3 },
-      { ancient: 'Valley of Beracah', modern: 'Wadi near Tekoa', x: 25.9, y: 76.4, lat: 31.62, lon: 35.15 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 52, y: 15, lat: 31.78, lon: 35.23 },
+      { ancient: 'Wilderness of Tekoa', modern: 'Judean wilderness', x: 85, y: 85, lat: 31.6, lon: 35.3 },
+      { ancient: 'Valley of Beracah', modern: 'wadi near Tekoa', x: 15, y: 77, lat: 31.62, lon: 35.15 }
     ],
     steps: [
-      { label: 'A vast army', ref: '2 Chronicles 20:2', copy: 'A great host comes against Judah from beyond the Dead Sea.', miles: 0 },
-      { label: 'The ascent of Ziz', ref: '2 Chronicles 20:16', copy: '"They will come up by the ascent; you will meet them."', miles: 15 },
-      { label: 'Singers go first', ref: '2 Chronicles 20:21', copy: 'Jehoshaphat sends singers ahead, praising the Lord.', miles: 10 },
-      { label: 'The Valley of Blessing', ref: '2 Chronicles 20:26', copy: 'They gather to bless the Lord; the place is named Beracah.', miles: 5 }
+      { label: 'A vast army', ref: '2 Chronicles 20:1-4', copy: 'Word comes that a vast army from beyond the Sea is already at En-gedi. Jehoshaphat proclaims a fast.', at: 0 },
+      { label: 'Not your battle', ref: '2 Chronicles 20:14-17', copy: '“The battle does not belong to you, but to God.” Tomorrow they will see the enemy coming up the Ascent of Ziz.', at: 0 },
+      { label: 'Singers go first', ref: '2 Chronicles 20:20-21', copy: 'Early in the morning they leave for the Wilderness of Tekoa, with singers praising the Lord ahead of the army.', miles: 12, at: 1 },
+      { label: 'The enemy turns on itself', ref: '2 Chronicles 20:22-24', copy: 'As they sing, the Lord sets ambushes, and the invaders destroy one another.', at: 1 },
+      { label: 'The Valley of Blessing', ref: '2 Chronicles 20:26', copy: 'On the fourth day they gather to bless the Lord, and the place is named the Valley of Beracah.', miles: 5, at: 2 },
+      { label: 'Home with joy', ref: '2 Chronicles 20:27-28', copy: 'With Jehoshaphat at their head, they return joyfully to Jerusalem.', miles: 12, at: 0 }
     ]
   },
   {
@@ -32035,7 +32096,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.636";
+const APP_VERSION = "3.0.637";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32058,6 +32119,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.637 — Every Old Testament journey, checked</div>
+<ul>
+<li>All 105 Old Testament journeys were checked against the text. Each one now follows the story in order, including trips back, so Jacob returns to Bethel, Saul goes home to Gibeah, and Joab's census loops from Aroer up to Dan, Sidon and Tyre and back down to Beersheba.</li>
+<li>Places the Bible names are added (Bahurim, Succoth and Penuel, Gilgal, the Jordan fords and more), and guessed waypoints the text never mentions are gone.</li>
+<li>Every quote now matches the MSB word for word, and distances sit on the right leg of the trip.</li>
+<li>Uncertain places say so. Tap ⓘ for notes on sites like Perath in Jeremiah 13, Ophir, Mount Sinai and which Kedesh Barak came from.</li>
+</ul>
 <div class="un-version-label">v3.0.636 — Map pop-ups in your map look</div>
 <ul>
 <li>The little journey and place pop-ups you open from the reader now match your map look (Storybook, Lantern night or Toy world): a 3D map with the guide standing at the spot, then a short card. "Open the journey" starts right at that stop.</li>

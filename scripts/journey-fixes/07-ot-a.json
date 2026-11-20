@@ -1,0 +1,136 @@
+{
+  "_about": "Old Testament, part A.",
+  "exile-return": {
+    "set": { "note": "Ezra names the start (Babylon, by the Ahava canal) and the end; the caravan road between is not recorded. Nehemiah's later journey from Susa is its own journey." },
+    "points": [
+      { "ancient": "Babylon", "modern": "near Hillah, Iraq", "lat": 32.54, "lon": 44.42 },
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 }
+    ],
+    "steps": [
+      { "label": "The decree", "ref": "Ezra 1:1-4", "copy": "Cyrus king of Persia lets the exiles go home to rebuild the house of the Lord in Jerusalem.", "at": 0 },
+      { "label": "Ezra sets out", "ref": "Ezra 7:8-9; 8:15-23", "copy": "Ezra gathers the returning families by the Ahava canal, and they fast and pray for a safe journey.", "at": 0 },
+      { "label": "Arrival at Jerusalem", "ref": "Ezra 7:9; 8:31-32", "copy": "About four months later, the gracious hand of God on them, they arrive and rest three days.", "miles": 900, "at": 1 }
+    ]
+  },
+  "jacob-canaan-haran": {
+    "steps": [
+      { "label": "Fleeing toward Haran", "ref": "Genesis 28:10", "copy": "Jacob leaves Beersheba for Laban's home in Haran.", "at": 0 },
+      { "label": "The dream at Bethel", "ref": "Genesis 28:11-19", "copy": "He dreams of a stairway reaching to heaven, and God renews the promise to him.", "miles": 60, "at": 1 },
+      { "label": "Twenty years with Laban", "ref": "Genesis 29-31", "copy": "He marries Leah and Rachel and grows wealthy in Haran.", "miles": 450, "at": 2 },
+      { "label": "Wrestling at Peniel", "ref": "Genesis 32:22-31", "copy": "By the Jabbok he wrestles until daybreak and is renamed Israel.", "miles": 400, "at": 3 },
+      { "label": "Safe arrival at Shechem", "ref": "Genesis 33:18-20", "copy": "He arrives safely at Shechem in Canaan and sets up an altar there.", "miles": 25, "at": 4 }
+    ]
+  },
+  "joseph-family-egypt": { "at": [1, 2, 2] },
+  "conquest-jericho-gibeon": {
+    "steps": [
+      { "label": "Crossing the Jordan", "ref": "Joshua 3:14-17", "copy": "The river is cut off upstream and Israel crosses on dry ground.", "miles": 6, "at": 1 },
+      { "label": "Camp at Gilgal", "ref": "Joshua 4:19-24", "copy": "Twelve stones from the riverbed are set up as a memorial.", "at": 1 },
+      { "label": "Jericho falls", "ref": "Joshua 6:15-20", "copy": "On the seventh day they march around seven times, shout, and the wall collapses.", "miles": 4, "at": 2 },
+      { "label": "Ai taken on the second try", "ref": "Joshua 7-8", "copy": "Defeat because of hidden sin, then victory in the hills.", "miles": 12, "at": 3 },
+      { "label": "The Gibeonites' treaty", "ref": "Joshua 9:3-15", "copy": "The Gibeonites come to the camp at Gilgal pretending to be from far away, and Israel makes a treaty with them.", "miles": 14, "at": 1 },
+      { "label": "Defending Gibeon", "ref": "Joshua 10:6-14", "copy": "Joshua marches all night from Gilgal to rescue Gibeon, and the sun stands still.", "miles": 20, "at": 4 }
+    ]
+  },
+  "david-flight-saul": { "at": [0, 1, 2, 3, 4] },
+  "elijah-cherith-horeb": {
+    "points": [
+      { "ancient": "Brook Cherith", "modern": "east of the Jordan (site debated)", "lat": 32, "lon": 35.62 },
+      { "ancient": "Zarephath", "modern": "near Sidon, Lebanon", "lat": 33.45, "lon": 35.3 },
+      { "ancient": "Mount Carmel", "modern": "Mount Carmel, Israel", "lat": 32.73, "lon": 35.05 },
+      { "ancient": "Beersheba", "modern": "Beersheba, Israel", "lat": 31.25, "lon": 34.79 },
+      { "ancient": "Mount Horeb", "modern": "traditionally Jebel Musa (site debated)", "lat": 28.54, "lon": 33.97 }
+    ],
+    "at": [0, 1, 2, 3, 4]
+  },
+  "abraham-moriah": {
+    "set": { "note": "2 Chronicles 3:1 places Solomon's temple on Mount Moriah, so the mountain is shown at Jerusalem's Temple Mount, the traditional site." },
+    "points": [
+      { "ancient": "Beersheba", "modern": "Beersheba, Israel", "lat": 31.25, "lon": 34.79 },
+      { "ancient": "On the third day", "modern": "Judean hills (spot unknown)", "lat": 31.7, "lon": 35.1 },
+      { "ancient": "Mount Moriah", "modern": "Temple Mount, Jerusalem (traditional)", "lat": 31.78, "lon": 35.235 }
+    ],
+    "at": [0, 1, 2]
+  },
+  "rebekah-to-isaac": {
+    "set": { "note": "The servant's road between Aram and the Negev is not recorded." },
+    "points": [
+      { "ancient": "The city of Nahor", "modern": "near Haran, Turkey", "lat": 36.87, "lon": 39.03 },
+      { "ancient": "Beer-lahai-roi", "modern": "northern Negev (site unknown)", "lat": 30.75, "lon": 34.8 }
+    ],
+    "at": [0, 0, 1]
+  },
+  "joseph-sold-egypt": { "at": [1, 2, 2, 3] },
+  "moses-flees-midian": {
+    "set": { "note": "Exodus names only Egypt and Midian; Moses' road between them is not recorded." },
+    "points": [
+      { "ancient": "Egypt", "modern": "eastern Nile Delta", "lat": 30.8, "lon": 31.6 },
+      { "ancient": "Midian", "modern": "northwest Arabia, by the Gulf of Aqaba", "lat": 28.65, "lon": 35.3 }
+    ],
+    "steps": [
+      { "label": "Fleeing Pharaoh", "ref": "Exodus 2:11-15", "copy": "After killing an Egyptian, Moses runs from Pharaoh.", "at": 0 },
+      { "label": "At the well of Midian", "ref": "Exodus 2:15-21", "copy": "He helps the priest's daughters at the well and is welcomed into the family.", "miles": 250, "at": 1 }
+    ]
+  },
+  "twelve-spies": { "at": [1, 2, 3, 0] },
+  "ark-philistines": {
+    "points": [
+      { "ancient": "Ebenezer and Aphek", "modern": "Rosh HaAyin area (Ebenezer's site debated)", "lat": 32.1, "lon": 34.93 },
+      { "ancient": "Ashdod", "modern": "Ashdod, Israel", "lat": 31.8, "lon": 34.65 },
+      { "ancient": "Gath", "modern": "Tell es-Safi, Israel", "lat": 31.7, "lon": 34.85 },
+      { "ancient": "Ekron", "modern": "Tel Miqne, Israel", "lat": 31.78, "lon": 34.85 },
+      { "ancient": "Beth Shemesh", "modern": "Beit Shemesh, Israel", "lat": 31.75, "lon": 34.98 }
+    ],
+    "steps": [
+      { "label": "The ark is captured", "ref": "1 Samuel 4:10-11", "copy": "Israel is routed and the ark of God is taken.", "at": 0 },
+      { "label": "Dagon falls in Ashdod", "ref": "1 Samuel 5:1-7", "copy": "Twice the idol of Dagon is found fallen face down before the ark.", "miles": 25, "at": 1 },
+      { "label": "Moved to Gath", "ref": "1 Samuel 5:8-9", "copy": "They move the ark to Gath, and the Lord's hand is against that city too.", "miles": 15, "at": 2 },
+      { "label": "Ekron cries out", "ref": "1 Samuel 5:10-12", "copy": "When it reaches Ekron, the people cry out to send it back.", "miles": 6, "at": 3 },
+      { "label": "Returned to Beth Shemesh", "ref": "1 Samuel 6:10-14", "copy": "Two cows pull the cart straight back to Israel, lowing as they go.", "miles": 10, "at": 4 }
+    ]
+  },
+  "ark-to-jerusalem": { "at": [0, 1, 2] },
+  "elijah-taken-up": { "at": [1, 2, 3, 3] },
+  "naaman-healed": {
+    "steps": [
+      { "label": "Leaving Damascus", "ref": "2 Kings 5:5-7", "copy": "Naaman sets out with silver, gold and a letter to the king of Israel.", "miles": 90, "at": 1 },
+      { "label": "Sent to the Jordan", "ref": "2 Kings 5:9-12", "copy": "Elisha sends word: wash in the Jordan seven times. Naaman goes away angry.", "at": 1 },
+      { "label": "Healed in the river", "ref": "2 Kings 5:13-14", "copy": "He dips seven times, and his flesh is restored like a young child's.", "miles": 30, "at": 2 },
+      { "label": "Back to Elisha", "ref": "2 Kings 5:15-19", "copy": "He returns to Elisha and says there is no God in all the earth except in Israel.", "miles": 30, "at": 1 }
+    ]
+  },
+  "lot-flees-sodom": { "at": [0, 1, 2] },
+  "abraham-rescue-lot": { "at": [0, 1, 2, 3] },
+  "balaam-pethor-moab": {
+    "points": [
+      { "ancient": "Pethor", "modern": "upper Euphrates, Syria", "lat": 36.5, "lon": 38 },
+      { "ancient": "On the road", "modern": "on the way to Moab (spot unknown)", "lat": 32.3, "lon": 36.1 },
+      { "ancient": "City of Moab", "modern": "by the Arnon gorge, Jordan", "lat": 31.46, "lon": 35.65 },
+      { "ancient": "The heights of Moab", "modern": "Bamoth-baal, Pisgah and Peor", "lat": 31.77, "lon": 35.72 }
+    ],
+    "at": [0, 1, 2, 3]
+  },
+  "israel-edom-detour": {
+    "points": [
+      { "ancient": "Kadesh", "modern": "Wilderness of Zin", "lat": 30.6, "lon": 34.5 },
+      { "ancient": "Mount Hor", "modern": "Edom border highlands", "lat": 30.3, "lon": 35.4 },
+      { "ancient": "Around Edom", "modern": "east of Edom (route approximate)", "lat": 30.4, "lon": 36 },
+      { "ancient": "Plains of Moab", "modern": "Jordan Valley across from Jericho", "lat": 31.85, "lon": 35.6 }
+    ],
+    "at": [0, 1, 2, 3]
+  },
+  "joshua-spies-jericho": {
+    "points": [
+      { "ancient": "Shittim", "modern": "Plains of Moab", "lat": 31.87, "lon": 35.62 },
+      { "ancient": "Jericho", "modern": "Tell es-Sultan, Jericho", "lat": 31.87, "lon": 35.44 },
+      { "ancient": "The hills", "modern": "hills west of Jericho", "lat": 31.9, "lon": 35.4 },
+      { "ancient": "The Jordan", "modern": "Jordan River near Jericho", "lat": 31.84, "lon": 35.55 }
+    ],
+    "steps": [
+      { "label": "Rahab hides the spies", "ref": "Joshua 2:1-7", "copy": "Two spies from Shittim lodge at Rahab's house in Jericho, and she hides them on her roof.", "miles": 10, "at": 1 },
+      { "label": "Let down the wall", "ref": "Joshua 2:15-22", "copy": "She lowers them by a rope through her window, and they hide in the hills for three days.", "miles": 3, "at": 2 },
+      { "label": "Report to Joshua", "ref": "Joshua 2:23-24", "copy": "They cross back and tell Joshua the Lord has given the land into their hands.", "miles": 12, "at": 0 },
+      { "label": "Crossing the Jordan", "ref": "Joshua 3:14-17", "copy": "The waters stand up in a heap, and Israel crosses over on dry ground.", "miles": 5, "at": 3 }
+    ]
+  }
+}
