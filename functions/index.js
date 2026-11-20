@@ -2367,6 +2367,17 @@ const CH_SCHEMA = {
     claim: { type: "string" },
     why: { type: "string" },
     passage: { type: "string" },
+    explain: { type: "string" },
+    passageUse: { type: "string" },
+    keyWords: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: { words: { type: "string" }, reading: { type: "string" } },
+        required: ["words", "reading"]
+      }
+    },
     quotes: {
       type: "array",
       items: {
@@ -2377,7 +2388,7 @@ const CH_SCHEMA = {
       }
     }
   },
-  required: ["group", "claim", "why", "passage", "quotes"]
+  required: ["group", "claim", "why", "passage", "explain", "passageUse", "keyWords", "quotes"]
 };
 
 // "2 Peter 1:16–21" → { book, chapter, verse, endVerse, label }
@@ -2401,7 +2412,7 @@ function chFindPrompt() {
     "",
     "Goal: ONE major, well-known claim that the named group (or, for a verse or trending request, a real group or teacher) makes and actually teaches, which a Bible-believing Protestant would need to study Scripture to answer.",
     `1. Search the web, at most ${CH_MAX_SEARCHES} searches. Prefer the group's OWN official or representative sources (confessions, catechisms, official sites, well-known named teachers of that group). Skip forums, video, AI-written pages and pages that only criticize the group.`,
-    "2. Pick 1 to 4 pages that state the claim in the group's own words.",
+    "2. Pick 1 to 4 pages that state the claim in the group's own words, preferring pages that also explain how they read the Bible passage for it.",
     "",
     "Answer with these lines only, nothing else:",
     "@GROUP <the group's name>",
@@ -2419,6 +2430,9 @@ function chAssemblePrompt() {
     "- claim: ONE major claim the excerpts show this group teaches, stated fairly and in its strongest form, the way its own teachers would put it. One or two sentences, at most 55 words, starting like \"Catholics claim that…\" / \"Latter-day Saints teach that…\". Include the main Bible reference they use in parentheses if the excerpts give one.",
     "- why: one or two plain sentences (at most 40 words) on why this group holds it or where it's taught (a council, catechism, confession, founder, key passage). Neutral: describe, never argue, never say whether it is right.",
     "- passage: the main Bible passage the group uses for the claim, as \"Book chapter:verse-verse\" (one chapter only, at most 20 verses).",
+    "- explain: \"What they mean\", 2 to 4 plain sentences (at most 90 words) a new believer could follow: what the claim actually says, what it would mean in practice, and any term the group uses in its own sense (say what the group means by it). Describe, never argue.",
+    "- passageUse: \"How they use the passage\", 2 to 4 plain sentences (at most 90 words): what in the passage the group points to and the step from those words to the claim, as the excerpts present it (e.g. \"They read 'this rock' as Peter himself, so the church is built on Peter and the bishops of Rome after him.\"). Only what the excerpts support; if they barely discuss the passage, say simply which words they cite it for. Never judge whether the reading is right.",
+    "- keyWords: 1 to 3 exact words or short phrases FROM THE PASSAGE (as an English Bible renders them, 1 to 5 words, no reference) that the claim rests on, each with reading: one sentence (at most 30 words) on how the group understands those words. Empty array if the excerpts give none.",
     "- quotes: 1 to 3 short quotes (8 to 50 words) COPIED EXACTLY, character for character, from one excerpt each, with that excerpt's number, that show the group teaches this claim.",
     "- Never invent anything the excerpts don't support. Never mention AI, yourself, excerpts or pages."
   ].join("\n");
@@ -2500,7 +2514,7 @@ async function chResearch(request) {
   const read = await Promise.all(found.pages.map(async p => {
     try {
       const page = await interpFetchPage(p.url);
-      const excerpt = chExcerpt(page.text, `${found.topic} ${found.group}`);
+      const excerpt = chExcerpt(page.text, `${found.topic} ${found.group} ${found.passage}`);
       if (excerpt.length < 200) throw new Error("too little text");
       return { ...p, title: p.title || page.title, excerpt };
     } catch (e) {
@@ -2555,6 +2569,11 @@ async function chResearch(request) {
     group: interpClip(interpText(raw.group) || found.group, 60),
     claim,
     why: interpClip(interpText(raw.why), 300),
+    explain: interpClip(interpText(raw.explain), 700),
+    passageUse: passage ? interpClip(interpText(raw.passageUse), 700) : "",
+    keyWords: passage ? (Array.isArray(raw.keyWords) ? raw.keyWords : [])
+      .map(k => ({ words: interpClip(interpText(k && k.words).replace(/^["“”'‘’\s]+|["“”'‘’\s]+$/g, ""), 60), reading: interpClip(interpText(k && k.reading), 240) }))
+      .filter(k => k.words && k.reading && k.words.split(/\s+/).length <= 6).slice(0, 3) : [],
     passage,
     sources
   };
@@ -2631,6 +2650,7 @@ exports.challengeMyTheology = functions
       tag, tagName: g.name, prompt,
       ref: tag === "verse" ? ref : null,
       group: result.group, claim: result.claim, why: result.why,
+      explain: result.explain, passageUse: result.passageUse, keyWords: result.keyWords,
       passage: result.passage, sources: result.sources,
       createdAt: FieldValue.serverTimestamp()
     };

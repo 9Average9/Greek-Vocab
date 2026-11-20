@@ -400,15 +400,106 @@
         <img class="ch-books ch-books-img" src="${BOOKS}" alt="" decoding="async">
       </blockquote>
       <div class="ch-meta"><span class="ch-group">${esc(c.group || c.tagName || '')}</span><span>${mine ? 'Your challenge' : `Challenge for ${esc(by(c))}`} · ${esc(timeAgo(c.createdAt))}</span></div>
-      ${c.why ? `<div class="ch-why"><span class="material-symbols-outlined">info</span><div><b>Why this claim?</b><p>${esc(c.why)}</p></div></div>` : ''}
+      ${c.explain ? `<div class="ch-why"><span class="material-symbols-outlined">lightbulb</span><div><b>What they mean</b><p>${esc(c.explain)}</p></div></div>` : ''}
+      ${c.why ? `<div class="ch-why"><span class="material-symbols-outlined">info</span><div><b>Why they hold it</b><p>${esc(c.why)}</p></div></div>` : ''}
+      ${c.passage ? passageCard(c) : ''}
       <div class="ch-sec ch-sec-line">Explore the claim</div>
-      ${c.passage ? `<button type="button" class="ch-row" onclick="RhemaChallenge.readPassage()"><span class="material-symbols-outlined">menu_book</span><span><b>Read the Passage</b><small>${esc(c.passage.label)}</small></span><span class="material-symbols-outlined ch-chev">chevron_right</span></button>` : ''}
+      ${c.passage ? `<button type="button" class="ch-row" onclick="RhemaChallenge.readPassage()"><span class="material-symbols-outlined">menu_book</span><span><b>Read it in context</b><small>${esc(c.passage.label)} in the reader</small></span><span class="material-symbols-outlined ch-chev">chevron_right</span></button>` : ''}
       <button type="button" class="ch-row" onclick="RhemaChallenge.sources()"><span class="material-symbols-outlined">link</span><span><b>Sources &amp; References</b><small>In their own words, with links</small></span><span class="ch-count">${n}</span><span class="material-symbols-outlined ch-chev">chevron_right</span></button>
       ${isActive
         ? `<button type="button" class="ch-btn ch-btn-ghost" onclick="RhemaChallenge.done()"><span class="material-symbols-outlined">task_alt</span>I'm done with this challenge</button>
            <p class="ch-fine ch-center">Saved in the community. While you're on it, tapping the guide brings you right back here.</p>`
         : `<button type="button" class="ch-btn" onclick="RhemaChallenge.take()"><span class="material-symbols-outlined">bolt</span>Take this challenge</button>
            <p class="ch-fine ch-center">The guide will keep it handy: tap him anytime to come back.</p>`}`, 'claim');
+  }
+  // The passage they use: its words (reader version), the words the claim
+  // rests on marked, and how the group reads them.
+  function passageCard(c) {
+    const p = c.passage;
+    const kw = Array.isArray(c.keyWords) ? c.keyWords.filter(k => k && k.words) : [];
+    setTimeout(() => fillPassage(c), 0);
+    return `<section class="ch-pass">
+        <div class="ch-pass-h"><span class="material-symbols-outlined">auto_stories</span><b>The passage they use</b><span class="ch-pass-ref">${esc(p.label)}</span></div>
+        <div class="ch-pass-text" id="chPassText"><span class="ch-fine">Loading the passage…</span></div>
+        ${c.passageUse ? `<div class="ch-pass-use"><b>How they read it</b><p>${esc(c.passageUse)}</p></div>` : ''}
+        ${kw.length ? `<div class="ch-kws"><b>The words it rests on</b>${kw.map(k => `<div class="ch-kw-row"><mark class="ch-kw">${esc(k.words)}</mark><p>${esc(k.reading)}</p></div>`).join('')}</div>` : ''}
+      </section>`;
+  }
+  const _passCache = new Map();
+  async function passageVerses(p) {
+    const tryVer = async (ver) => {
+      if (ver === 'MSB' || ver === 'BSB') {
+        if (typeof _rhemaLoadDataFile === 'function') await _rhemaLoadDataFile(ver === 'BSB' ? 'rhema-bsb.js' : 'rhema-msb.js').catch(() => {});
+        const out = [];
+        for (let v = p.verse; v <= (p.endVerse || p.verse); v++) {
+          const t = typeof _rhemaEnglishText === 'function' ? _rhemaEnglishText(p.book, p.chapter, v, ver) : '';
+          if (t) out.push([v, t]);
+        }
+        return out;
+      }
+      if (typeof _vsBookInScope === 'function' && !_vsBookInScope(ver, p.book)) return [];
+      let chap = typeof _vsChapterFromMemory === 'function' ? _vsChapterFromMemory(ver, p.book, String(p.chapter)) : null;
+      if (!chap && typeof _vsEnsureChapter === 'function') {
+        try { await _vsEnsureChapter(ver, p.book, String(p.chapter)); } catch {}
+        chap = typeof _vsChapterFromMemory === 'function' ? _vsChapterFromMemory(ver, p.book, String(p.chapter)) : null;
+      }
+      const out = [];
+      if (chap) for (let v = p.verse; v <= (p.endVerse || p.verse); v++) { const t = chap[String(v)]; if (t) out.push([v, String(t)]); }
+      return out;
+    };
+    const reader = typeof _rhemaReaderVersion === 'function' ? _rhemaReaderVersion() : 'BSB';
+    const key = `${reader}|${p.book}|${p.chapter}|${p.verse}|${p.endVerse}`;
+    if (_passCache.has(key)) return _passCache.get(key);
+    let ver = reader, verses = [];
+    for (const v of [reader, 'BSB', 'MSB'].filter((x, i, a) => a.indexOf(x) === i)) {
+      try { verses = await tryVer(v); } catch { verses = []; }
+      if (verses.length) { ver = v; break; }
+    }
+    const res = { ver, verses };
+    if (verses.length) _passCache.set(key, res);
+    return res;
+  }
+  // Escape text and wrap the key phrases (any case, loose punctuation).
+  function markWords(text, kws) {
+    const ranges = [];
+    for (const k of kws) {
+      const parts = String(k.words || '').toLowerCase().replace(/[“”"‘’.,;:!?]/g, ' ').split(/\s+/).filter(Boolean);
+      if (!parts.length) continue;
+      const re = new RegExp(`(^|[^\\p{L}])(${parts.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/'/g, "['’]")).join("[\\s,;:.!?’'”“—–-]+")})(?=$|[^\\p{L}])`, 'giu');
+      let m;
+      while ((m = re.exec(text))) {
+        const a = m.index + m[1].length, b = a + m[2].length;
+        if (!ranges.some(r => a < r[1] && b > r[0])) ranges.push([a, b]);
+        if (re.lastIndex === m.index) re.lastIndex++;
+      }
+    }
+    ranges.sort((x, y) => x[0] - y[0]);
+    let out = '', at = 0;
+    for (const [a, b] of ranges) { out += esc(text.slice(at, a)) + `<mark class="ch-kw">${esc(text.slice(a, b))}</mark>`; at = b; }
+    return out + esc(text.slice(at));
+  }
+  async function fillPassage(c) {
+    const el = document.getElementById('chPassText');
+    if (!el || !c.passage) return;
+    const { ver, verses } = await passageVerses(c.passage);
+    if (_current !== c || !el.isConnected) return;
+    if (!verses.length) { el.innerHTML = `<span class="ch-fine">Tap “Read it in context” below to open ${esc(c.passage.label)}.</span>`; return; }
+    const kws = Array.isArray(c.keyWords) ? c.keyWords : [];
+    const rows = verses.map(([v, t]) => { const h = markWords(t, kws); return { v, h, hit: h.includes('<mark') }; });
+    const body = rows.map(r => `<sup>${r.v}</sup>${r.h}`).join(' ');
+    const long = rows.length > 4 || body.length > 900;
+    const hits = rows.filter(r => r.hit);
+    // A long passage opens on the verses the claim rests on.
+    const short = long && hits.length && hits.length < rows.length
+      ? rows.map((r, i) => r.hit ? `<sup>${r.v}</sup>${r.h}` : (i && rows[i - 1].hit === false ? '' : '<span class="ch-gap">…</span>')).filter(Boolean).join(' ')
+      : '';
+    el.innerHTML = short
+      ? `<p class="ch-pass-verses">${short}</p><p class="ch-pass-verses" hidden>${body}</p>
+         <button type="button" class="ch-more" onclick="const p=this.parentNode.querySelectorAll('.ch-pass-verses');p[0].remove();p[1].hidden=false;this.remove()">Show the whole passage</button>
+         <span class="ch-pass-ver">${esc(ver)}</span>`
+      : `<p class="ch-pass-verses${long ? ' ch-clamp' : ''}">${body}</p>
+         ${long ? `<button type="button" class="ch-more" onclick="this.previousElementSibling.classList.remove('ch-clamp');this.remove()">Show the whole passage</button>` : ''}
+         <span class="ch-pass-ver">${esc(ver)}</span>`;
   }
   function sources() {
     const c = _current;

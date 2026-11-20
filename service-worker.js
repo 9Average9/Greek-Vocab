@@ -55,7 +55,7 @@ self.addEventListener("notificationclick", (event) => {
 // Before this split, every release renamed the one cache and `activate`
 // deleted the old one, so each update re-downloaded all of the Bible data, and
 // stale-while-revalidate re-fetched multi-megabyte files on every open.
-const APP_SW_VERSION = "3.0.625";
+const APP_SW_VERSION = "3.0.626";
 const SHELL_CACHE = "disciple-builder-v" + APP_SW_VERSION;
 const DATA_CACHE = "disciple-builder-data-v1";
 const KEEP_CACHES = new Set([SHELL_CACHE, DATA_CACHE]);
@@ -74,15 +74,15 @@ const SHELL_NETWORK_TIMEOUT_MS = 3000;
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.625",
+  "./style.css?v=3.0.626",
   "./vocab.js?v=3.0.8",
-  "./rhema-align.js?v=3.0.625",
-  "./app.js?v=3.0.625",
-  "./rhema-word-study.js?v=3.0.625",
-  "./rhema-grammar-search.js?v=3.0.625",
-  "./rhema-xl-views.js?v=3.0.625",
-  "./rhema-glance.js?v=3.0.625",
-  "./challenge.js?v=3.0.625",
+  "./rhema-align.js?v=3.0.626",
+  "./app.js?v=3.0.626",
+  "./rhema-word-study.js?v=3.0.626",
+  "./rhema-grammar-search.js?v=3.0.626",
+  "./rhema-xl-views.js?v=3.0.626",
+  "./rhema-glance.js?v=3.0.626",
+  "./challenge.js?v=3.0.626",
   "./assets/mascot/guide-skeptic.webp",
   "./assets/icons/challenge-books.webp",
   "./bible-threads.js?v=3.0.402",
@@ -92,9 +92,9 @@ const FILES_TO_CACHE = [
   "./bible-atlas.js?v=3.0.349",
   "./bible-genealogy.js?v=3.0.476",
   "./bible-regions.js?v=3.0.472",
-  "./verse-structure.js?v=3.0.625",
-  "./vs-structure.js?v=3.0.625",
-  "./sermon-notes.js?v=3.0.625",
+  "./verse-structure.js?v=3.0.626",
+  "./vs-structure.js?v=3.0.626",
+  "./sermon-notes.js?v=3.0.626",
   "./sermon-notes.css?v=3.0.460",
   // Self-hosted fonts (icons + skin fonts) — pinned, they effectively never change
   "./assets/fonts/fonts.css?v=3.0.415",
@@ -141,11 +141,11 @@ const FILES_TO_CACHE = [
   "./rhema-scripture-notes.js?v=3.0.160",
   "./rhema-bsb-align.js?v=3.0.2",
   "./rhema-bible-dictionary.js?v=3.0.385",
-  "./rhema-crossrefs-ui.js?v=3.0.625",
+  "./rhema-crossrefs-ui.js?v=3.0.626",
   "./greek-verbs.js?v=3.0.152",
-  "./bible-quiz.js?v=3.0.625",
-  "./bible-quiz.css?v=3.0.625",
-  "./firebase-lb.js?v=3.0.625",
+  "./bible-quiz.js?v=3.0.626",
+  "./bible-quiz.css?v=3.0.626",
+  "./firebase-lb.js?v=3.0.626",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",
