@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.628";
+const APP_VERSION = "3.0.629";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.629 — Tidier Word by word notes</div>
+<ul>
+<li>The notes about your version, matches and symbols now sit behind a small ⓘ next to the tap hint, so the verse gets the room. Tap ⓘ to read them.</li>
+</ul>
 <div class="un-version-label">v3.0.628 — A cleaner Word by word</div>
 <ul>
 <li><strong>Your English</strong> now reads like the verse: each word with its Greek or Hebrew right under it, no boxes. Tap a word for a small card (how it sounds, its dictionary form and meaning, its grammar), and tap again to study it.</li>
@@ -43379,10 +43383,11 @@ async function rhemaWbwShow(ref, tab) {
   if (!L) { en.innerHTML = `<p class="rhema-lk-foot">This verse’s words can’t be lined up with the ${lang} yet.</p>`; return; }
   const esc = _escapeRhemaAttr;
   _rhemaWbwSel = -1;
-  en.innerHTML = `<p class="wbw-tip"><span class="material-symbols-outlined">touch_app</span>Tap a word to see it in ${lang}</p>` +
+  en.innerHTML = _rhemaWbwTip(`Tap a word to see it in ${lang}`,
+      `<p>${esc(L.ver)} in reading order, with the ${lang} word under each part.</p>` +
+      `<p><b>≈</b> closest match · <span class="wbw-key-part">faded</span> part of the word beside it · a word with nothing under it is added for English (tap it for its English meaning).</p>` +
+      (_rhemaBridgeOpts(L.ver).loose ? `<p>The ${esc(L.ver)} says things in its own words, so fewer words line up one to one with the ${lang}. For word-for-word study, a more literal version (BSB, NASB, ESV, KJV) links more.</p>` : '')) +
     _rhemaWbwEnHtml(L) +
-    (_rhemaBridgeOpts(L.ver).loose ? `<p class="wbw-foot">The ${esc(L.ver)} says things in its own words, so fewer words line up one to one with the ${lang}. For word-for-word study, a more literal version (BSB, NASB, ESV, KJV) links more.</p>` : '') +
-    `<p class="wbw-foot">${esc(L.ver)} in reading order · <b>≈</b> closest match · <span class="wbw-key-part">faded</span> part of the word beside it · <span class="wbw-key-none">no ${lang} under it</span>: added for English</p>` +
     `<button type="button" class="wbw-link" onclick="rhemaWbwEnglishMeanings()">English meanings of every word</button>` +
     `<div class="wbw-peek" id="rhemaWbwPeek" hidden></div>`;
 }
@@ -43391,6 +43396,19 @@ async function rhemaWbwShow(ref, tab) {
 // word under each piece (no boxes). Tap a word for a small card about it; tap
 // it again (or "Study this word") for its full study.
 let _rhemaWbwSel = -1;
+// The one-line hint with a small ⓘ that opens the longer explanation.
+function _rhemaWbwTip(text, info) {
+  return `<p class="wbw-tip"><span class="material-symbols-outlined">touch_app</span><span>${text}</span>` +
+    (info ? `<button type="button" class="wbw-info-btn" onclick="rhemaWbwInfo(this)" aria-label="More about this view" aria-expanded="false"><span class="material-symbols-outlined">info</span></button>` : '') +
+    `</p>` + (info ? `<div class="wbw-info" hidden>${info}</div>` : '');
+}
+function rhemaWbwInfo(btn) {
+  const box = btn.closest('.wbw-tip')?.nextElementSibling;
+  if (!box || !box.classList.contains('wbw-info')) return;
+  box.hidden = !box.hidden;
+  btn.classList.toggle('on', !box.hidden);
+  btn.setAttribute('aria-expanded', String(!box.hidden));
+}
 // A piece's English with the punctuation around it ("Son," / “Follow).
 function _rhemaWbwPunct(L, k) {
   const pcs = L.pieces, pc = pcs[k];
@@ -44178,15 +44196,20 @@ function rhemaIlLightFromEnglish(k) {
 function _rhemaSetInterlinearVersionNote(versionLabel, hebBridge) {
   const el = document.getElementById('rhemaInterlinearVersionNote');
   if (!el) return;
+  const foot = document.getElementById('rhemaInterlinearFoot');
   if (versionLabel) {
     const esc = _escapeRhemaAttr;
     const st = _rhemaWbwdState;
     const linked = !!(st && st.L) || !st;
-    el.innerHTML = `<span class="wbwd-legend">` +
-      (linked ? `Each card is a phrase: the original on top, the ${esc(versionLabel)} under it. <span class="wbwd-mute-key">Faded</span> words aren’t translated on their own.`
-        : `Under each word: how it sounds, then the ${esc(versionLabel)}’s word for it.`) +
-      (_rhemaIlDetails || !linked ? ` <b>≈</b> closest match · <b>—</b> no separate word · gray: ${hebBridge ? 'the BSB’s word' : 'literal meaning'}.` : '') +
-      `</span>` +
+    const lang = st?.isHebrew ? 'Hebrew' : 'Greek';
+    // The longer explanation (and the footnote) sit behind the ⓘ.
+    const info = (linked
+        ? `<p>Each card is a phrase: the ${lang} in its own order on top, the ${esc(versionLabel)} under it. <span class="wbw-key-part">Faded</span> words aren’t translated on their own.</p>`
+        : `<p>Under each word: how it sounds, then the ${esc(versionLabel)}’s word for it.</p>`) +
+      (_rhemaIlDetails || !linked ? `<p><b>≈</b> closest match · <b>—</b> no separate word · gray: ${hebBridge ? 'the BSB’s word (not found)' : 'literal meaning'}.</p>` : '') +
+      (foot && foot.textContent ? `<p>${esc(foot.textContent)}</p>` : '');
+    if (foot) foot.hidden = true;
+    el.innerHTML = _rhemaWbwTip(linked ? 'Tap a word to light up its partner' : 'Tap a word to study it', info) +
       (linked ? `<button type="button" class="rhema-il-detail-btn${_rhemaIlDetails ? ' on' : ''}" onclick="rhemaToggleInterlinearDetails()">` +
       `<span class="material-symbols-outlined">${_rhemaIlDetails ? 'visibility_off' : 'visibility'}</span>${_rhemaIlDetails ? 'Hide' : 'Show'} each word’s details</button>` : '');
     el.style.display = '';
