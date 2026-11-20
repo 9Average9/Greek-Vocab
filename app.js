@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.629";
+const APP_VERSION = "3.0.630";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.630 — See the Greek (and Hebrew)</div>
+<ul>
+<li>Word by word has a new name: <strong>See the Greek</strong> in the New Testament and <strong>See the Hebrew</strong> in the Old.</li>
+<li>It now leads the verse menu as a big button in your theme color, right under the highlight colors, so it's always one tap away.</li>
+</ul>
 <div class="un-version-label">v3.0.629 — Tidier Word by word notes</div>
 <ul>
 <li>The notes about your version, matches and symbols now sit behind a small ⓘ next to the tap hint, so the verse gets the room. Tap ⓘ to read them.</li>
@@ -41755,7 +41760,14 @@ function _rhemaRenderVerseSheet() {
   const wordBtn = document.getElementById('rhemaVerseSheetWordBtn');
   // Word by word: always offered (several selected verses start at the first;
   // its arrows step through the chapter).
-  if (wordBtn) wordBtn.style.display = '';
+  if (wordBtn) {
+    wordBtn.style.display = '';
+    const lang = (() => { const p = _rhemaParseRef(ref); return p && isRhemaOTBook(p.book) ? 'Hebrew' : 'Greek'; })();
+    const lbl = document.getElementById('rhemaVerseSheetWordLabel');
+    const sub = document.getElementById('rhemaVerseSheetWordSub');
+    if (lbl) lbl.textContent = `See the ${lang}`;
+    if (sub) sub.textContent = multi ? `The ${lang} under every word, verse by verse` : `The ${lang} under every word of this verse`;
+  }
   // Cross references for the (first) selected verse: a count, muted when none.
   if (typeof rxSheetSync === 'function') rxSheetSync(ref);
   const journeyBtn = document.getElementById('rhemaVerseSheetJourneyBtn');
@@ -43342,6 +43354,8 @@ function _rhemaWbwChrome(p) {
   if (next) next.disabled = at < 0 || at >= list.length - 1;
   const refEl = document.getElementById('rhemaInterlinearRef');
   if (refEl) refEl.textContent = `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}`;
+  const kick = document.getElementById('rhemaWbwKicker');
+  if (kick) kick.textContent = `See the ${isRhemaOTBook(p.book) ? 'Hebrew' : 'Greek'}`;
 }
 // A clear serif for the Greek and Septuagint lines (cached for offline by
 // the service worker; Georgia until it arrives).
@@ -49876,7 +49890,7 @@ const VERSE_COACH_STEPS = [
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Cross references/.test(t)), title: 'Cross references', body: 'How many verses link to this one. Tap to see the best of them right here, with why each is linked; tap one to start a trail through Scripture.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^See interpretations/.test(t)), pose: 'inspect', title: 'See interpretations', body: 'How different traditions read this passage, Free Grace first. Each view gets a short summary, real quotes from its teachers, and links to read more.' },
   { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Copy verse/.test(t)), pose: 'thumbs', title: 'Copy', body: 'Copies the verse with its reference, ready to paste anywhere.' },
-  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^Word by word/.test(t)), pose: 'inspect', title: 'Word by word', body: 'Your Bible’s words with the Greek or Hebrew under each one, or the original word by word in its own order. Tap any word to study it.' },
+  { before: _coachOpenVerseMenu, target: _coachVsheetBtn(t => /^See the (Greek|Hebrew)/.test(t)), pose: 'inspect', title: 'See the Greek', body: 'Your Bible’s words with the Greek (or Hebrew) under each one, or the original phrase by phrase in its own order. Tap any word to see what it means, and tap again to study it.' },
   { before: _coachOpenVerseMenu, target: () => _coachFirst([() => document.querySelector(`#rhemaEnglishDisplay .rhema-chapter-block[data-verse="${_rhemaSelectedVersesSorted?.()[0] || _rhemaVerse}"]`), '#rhemaVerseSheetRef', '#rhemaVerseSheet .rhema-vsheet']), pose: 'thumbs', title: 'Grab a few verses', body: 'While this menu is open, tap more verses to select them too, then highlight, note, copy or compare them all at once. Some verses also show “Follow this journey” to see that trip on a map.' }
 ];
 // The menu's reading helpers. Scrolls the menu so each spotlighted part is on screen.
