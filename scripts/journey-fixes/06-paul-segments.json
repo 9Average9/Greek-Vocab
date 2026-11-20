@@ -1,0 +1,140 @@
+{
+  "_about": "Short Paul segments: places Acts names but the routes skipped are added (Perga, Iconium, Cnidus, Ptolemais, Rhegium, Forum of Appius); sea legs marked; quotes match the MSB text.",
+  "paul-cyprus": {
+    "steps": [
+      { "label": "Down to the sea", "ref": "Acts 13:4", "copy": "Sent out by the Holy Spirit, Barnabas and Saul go down to Seleucia to sail for Cyprus.", "miles": 16, "at": 1 },
+      { "label": "Salamis synagogues", "ref": "Acts 13:5", "copy": "At Salamis they proclaim the word of God in the Jewish synagogues.", "miles": 125, "at": 2, "by": "sea" },
+      { "label": "Elymas at Paphos", "ref": "Acts 13:6-11", "copy": "Across the island at Paphos, the sorcerer Elymas opposes them and is struck blind.", "miles": 90, "at": 3 },
+      { "label": "The proconsul believes", "ref": "Acts 13:12", "copy": "Sergius Paulus believes, astonished at the teaching about the Lord.", "at": 3 }
+    ]
+  },
+  "paul-pisidian-antioch": { "at": [1, 2, 2, 2], "by": { "0": "sea" } },
+  "paul-lystra-stoned": { "at": [1, 1, 1, 2] },
+  "paul-first-return": {
+    "points": [
+      { "ancient": "Derbe", "modern": "Kerti Hüyük, Turkey", "lat": 37.35, "lon": 33.27 },
+      { "ancient": "Lystra", "modern": "Hatunsaray, Turkey", "lat": 37.58, "lon": 32.45 },
+      { "ancient": "Iconium", "modern": "Konya, Turkey", "lat": 37.87, "lon": 32.49 },
+      { "ancient": "Pisidian Antioch", "modern": "Yalvaç, Turkey", "lat": 38.31, "lon": 31.19 },
+      { "ancient": "Perga", "modern": "near Antalya, Turkey", "lat": 36.96, "lon": 30.85 },
+      { "ancient": "Attalia", "modern": "Antalya, Turkey", "lat": 36.88, "lon": 30.7 },
+      { "ancient": "Antioch (Syria)", "modern": "Antakya, Turkey", "lat": 36.2, "lon": 36.16 }
+    ],
+    "steps": [
+      { "label": "Strengthening souls", "ref": "Acts 14:21-22", "copy": "Back in Lystra they encourage the disciples: “We must endure many hardships to enter the kingdom of God.”", "miles": 55, "at": 1 },
+      { "label": "Back through Iconium", "ref": "Acts 14:21-22", "copy": "They strengthen the believers in Iconium as well.", "miles": 20, "at": 2 },
+      { "label": "Elders appointed", "ref": "Acts 14:21-23", "copy": "In Pisidian Antioch they appoint elders in each church with prayer and fasting.", "miles": 85, "at": 3 },
+      { "label": "Preaching in Perga", "ref": "Acts 14:24-25", "copy": "They pass through Pisidia and Pamphylia and speak the word in Perga.", "miles": 100, "at": 4 },
+      { "label": "Down to Attalia", "ref": "Acts 14:25", "copy": "They go down to the port of Attalia.", "miles": 10, "at": 5 },
+      { "label": "Home to Antioch", "ref": "Acts 14:26-28", "copy": "They sail back to Antioch and report all that God has done through them.", "miles": 330, "at": 6, "by": "sea" }
+    ]
+  },
+  "paul-thessalonica-berea": { "at": [1, 1, 1, 2] },
+  "paul-corinth-cenchreae": {
+    "points": [
+      { "ancient": "Corinth", "modern": "Ancient Corinth, Greece", "lat": 37.91, "lon": 22.88 },
+      { "ancient": "Cenchreae", "modern": "Kechries, Greece", "lat": 37.88, "lon": 22.99 },
+      { "ancient": "Ephesus", "modern": "Selçuk, Turkey", "lat": 37.94, "lon": 27.34 },
+      { "ancient": "Caesarea", "modern": "Caesarea, Israel", "lat": 32.5, "lon": 34.89 },
+      { "ancient": "Antioch", "modern": "Antakya, Turkey", "lat": 36.2, "lon": 36.16 }
+    ],
+    "steps": [
+      { "label": "A year and a half", "ref": "Acts 18:11", "copy": "Paul stays in Corinth a year and a half, teaching the word of God.", "at": 0 },
+      { "label": "Sailing from Cenchreae", "ref": "Acts 18:18", "copy": "He has his hair cut because of a vow and sets sail for Syria with Priscilla and Aquila.", "miles": 6, "at": 1 },
+      { "label": "A stop at Ephesus", "ref": "Acts 18:19-21", "copy": "He reasons with the Jews in the synagogue and promises to return, if God wills.", "miles": 250, "at": 2, "by": "sea" },
+      { "label": "Up to greet the church", "ref": "Acts 18:22", "copy": "He lands at Caesarea and goes up to greet the church.", "miles": 620, "at": 3, "by": "sea" },
+      { "label": "Down to Antioch", "ref": "Acts 18:22", "copy": "Then he goes down to Antioch.", "miles": 300, "at": 4 }
+    ]
+  },
+  "paul-troas-miletus": {
+    "steps": [
+      { "label": "Eutychus raised", "ref": "Acts 20:7-12", "copy": "Eutychus falls from a window during Paul's long talk; Paul embraces him, and he is taken home alive.", "at": 0 },
+      { "label": "Walking to Assos", "ref": "Acts 20:13-14", "copy": "Paul goes on foot while the others sail, and they take him aboard at Assos.", "miles": 30, "at": 1 },
+      { "label": "Mitylene", "ref": "Acts 20:14", "copy": "They sail on to Mitylene.", "miles": 45, "at": 2, "by": "sea" },
+      { "label": "The elders summoned", "ref": "Acts 20:15-17", "copy": "Past Chios and Samos they reach Miletus, and Paul sends for the elders of Ephesus.", "miles": 130, "at": 3, "by": "sea" }
+    ]
+  },
+  "paul-tyre-caesarea": {
+    "steps": [
+      { "label": "Past Cyprus to Tyre", "ref": "Acts 21:3", "copy": "They sail past Cyprus and land at Tyre, where the ship unloads its cargo.", "miles": 400, "at": 1, "by": "sea" },
+      { "label": "A warning at Tyre", "ref": "Acts 21:4-6", "copy": "Through the Spirit the disciples urge Paul not to go up to Jerusalem.", "at": 1 },
+      { "label": "Ptolemais", "ref": "Acts 21:7", "copy": "They greet the brothers at Ptolemais and stay a day.", "miles": 25, "at": 2, "by": "sea" },
+      { "label": "Staying with Philip", "ref": "Acts 21:8-9", "copy": "At Caesarea they stay with Philip the evangelist and his four daughters who prophesy.", "miles": 35, "at": 3 },
+      { "label": "Agabus’s belt", "ref": "Acts 21:10-14", "copy": "The prophet Agabus binds his own hands and feet with Paul's belt as a sign of what awaits him.", "at": 3 }
+    ]
+  },
+  "paul-malta-rome": {
+    "points": [
+      { "ancient": "Malta", "modern": "Malta", "lat": 35.9, "lon": 14.4 },
+      { "ancient": "Syracuse", "modern": "Siracusa, Italy", "lat": 37.07, "lon": 15.29 },
+      { "ancient": "Rhegium", "modern": "Reggio Calabria, Italy", "lat": 38.11, "lon": 15.65 },
+      { "ancient": "Puteoli", "modern": "Pozzuoli, Italy", "lat": 40.82, "lon": 14.12 },
+      { "ancient": "Forum of Appius", "modern": "Lazio, Italy", "lat": 41.4, "lon": 12.99 },
+      { "ancient": "Rome", "modern": "Rome, Italy", "lat": 41.9, "lon": 12.5 }
+    ],
+    "steps": [
+      { "label": "Setting sail", "ref": "Acts 28:11", "copy": "After three months they leave Malta on an Alexandrian ship.", "at": 0 },
+      { "label": "By Syracuse", "ref": "Acts 28:12", "copy": "They put in at Syracuse and stay three days.", "miles": 90, "at": 1, "by": "sea" },
+      { "label": "Rhegium", "ref": "Acts 28:13", "copy": "From there they sail on to Rhegium.", "miles": 80, "at": 2, "by": "sea" },
+      { "label": "Puteoli", "ref": "Acts 28:13-14", "copy": "With a south wind they reach Puteoli and find brothers there.", "miles": 200, "at": 3, "by": "sea" },
+      { "label": "Met on the road", "ref": "Acts 28:15", "copy": "Believers come out as far as the Forum of Appius and Three Taverns; Paul thanks God and takes courage.", "miles": 105, "at": 4 },
+      { "label": "Arrival at Rome", "ref": "Acts 28:16", "copy": "In Rome, Paul is allowed to live by himself, with a soldier to guard him.", "miles": 40, "at": 5 }
+    ]
+  },
+  "paul-macedonia-greece": { "at": [1, 1, 2] },
+  "paul-syria-cilicia": { "at": [0, 1, 2] },
+  "paul-derbe-lystra-timothy": {
+    "steps": [
+      { "label": "A disciple at Lystra", "ref": "Acts 16:1", "copy": "At Lystra Paul finds Timothy, son of a believing Jewish woman and a Greek father.", "miles": 55, "at": 1 },
+      { "label": "Well spoken of", "ref": "Acts 16:2", "copy": "The brothers in Lystra and Iconium speak well of him.", "at": 1 },
+      { "label": "Joining the mission", "ref": "Acts 16:3", "copy": "Paul wants Timothy to come along on the journey.", "at": 1 },
+      { "label": "Churches strengthened", "ref": "Acts 16:4-5", "copy": "Town by town they deliver the council's decisions, and the churches grow stronger and larger every day.", "miles": 20, "at": 2 }
+    ]
+  },
+  "paul-phrygia-troas": { "at": [0, 1, 2] },
+  "paul-corinth-stay": { "at": [1, 1, 1, 1] },
+  "paul-cos-rhodes-patara": {
+    "points": [
+      { "ancient": "Miletus", "modern": "Balat, Turkey", "lat": 37.53, "lon": 27.28 },
+      { "ancient": "Cos", "modern": "Kos, Greece", "lat": 36.89, "lon": 27.29 },
+      { "ancient": "Rhodes", "modern": "Rhodes, Greece", "lat": 36.43, "lon": 28.22 },
+      { "ancient": "Patara", "modern": "Gelemiş, Turkey", "lat": 36.27, "lon": 29.31 },
+      { "ancient": "South of Cyprus", "modern": "eastern Mediterranean", "lat": 34.45, "lon": 32.9 }
+    ],
+    "steps": [
+      { "label": "Cos", "ref": "Acts 21:1", "copy": "Tearing themselves away from the Ephesian elders, they sail straight to Cos.", "miles": 45, "at": 1, "by": "sea" },
+      { "label": "Rhodes", "ref": "Acts 21:1", "copy": "The next day they reach Rhodes.", "miles": 60, "at": 2, "by": "sea" },
+      { "label": "A ship for Phoenicia", "ref": "Acts 21:1-2", "copy": "At Patara they find a ship crossing to Phoenicia and go aboard.", "miles": 60, "at": 3, "by": "sea" },
+      { "label": "Past Cyprus", "ref": "Acts 21:3", "copy": "They sight Cyprus, pass it on their left, and sail on to Syria.", "miles": 230, "at": 4, "by": "sea" }
+    ]
+  },
+  "paul-caesarea-to-crete": {
+    "points": [
+      { "ancient": "Caesarea", "modern": "Caesarea, Israel", "lat": 32.5, "lon": 34.89 },
+      { "ancient": "Sidon", "modern": "Sidon, Lebanon", "lat": 33.56, "lon": 35.37 },
+      { "ancient": "Myra", "modern": "Demre, Turkey", "lat": 36.25, "lon": 29.98 },
+      { "ancient": "Cnidus", "modern": "Datça, Turkey", "lat": 36.69, "lon": 27.37 },
+      { "ancient": "Fair Havens", "modern": "south coast of Crete", "lat": 34.9, "lon": 24.8 }
+    ],
+    "steps": [
+      { "label": "Setting sail", "ref": "Acts 27:1-2", "copy": "Paul and other prisoners are handed to the centurion Julius and board a ship from Adramyttium.", "at": 0 },
+      { "label": "Kindness at Sidon", "ref": "Acts 27:3", "copy": "Julius kindly lets Paul visit his friends to be cared for.", "miles": 70, "at": 1, "by": "sea" },
+      { "label": "Changing ships at Myra", "ref": "Acts 27:4-6", "copy": "Sheltered by Cyprus, they reach Myra and board an Alexandrian ship bound for Italy.", "miles": 450, "at": 2, "by": "sea" },
+      { "label": "Cnidus", "ref": "Acts 27:7", "copy": "They sail slowly for many days and barely reach Cnidus.", "miles": 140, "at": 3, "by": "sea" },
+      { "label": "Reaching Fair Havens", "ref": "Acts 27:7-8", "copy": "Sailing under the shelter of Crete, with difficulty they come to Fair Havens.", "miles": 200, "at": 4, "by": "sea" }
+    ]
+  },
+  "paul-shipwreck-malta": { "at": [0, 1, 2, 2], "by": { "1": "sea", "2": "sea" } },
+  "paul-iconium": {
+    "points": [
+      { "ancient": "Pisidian Antioch", "modern": "Yalvaç, Turkey", "lat": 38.31, "lon": 31.19 },
+      { "ancient": "Iconium", "modern": "Konya, Turkey", "lat": 37.87, "lon": 32.49 },
+      { "ancient": "Lystra", "modern": "Hatunsaray, Turkey", "lat": 37.58, "lon": 32.45 }
+    ],
+    "steps": [
+      { "label": "Shaking off the dust", "ref": "Acts 13:50-51", "copy": "Driven out of Pisidian Antioch, they shake the dust off their feet and go on to Iconium.", "miles": 85, "at": 1 },
+      { "label": "Many believe", "ref": "Acts 14:1-3", "copy": "In the synagogue a great number of Jews and Greeks believe, and the Lord confirms the message with signs.", "at": 1 },
+      { "label": "Fleeing a plot", "ref": "Acts 14:4-6", "copy": "Learning of a plan to stone them, they flee to Lystra.", "miles": 20, "at": 2 }
+    ]
+  }
+}

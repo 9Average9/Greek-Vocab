@@ -1,0 +1,117 @@
+{
+  "_about": "Gospels and Acts, part A: each step tied to its place; road waypoints the text never mentions removed; lake crossings marked as boat trips; missing moments added.",
+  "boy-jesus-temple": {
+    "set": { "note": "Nazareth and Jerusalem are known; Luke says only that the family went a day's journey before missing him, so that spot is approximate." },
+    "points": [
+      { "ancient": "Nazareth", "modern": "Nazareth, Israel", "lat": 32.7, "lon": 35.3 },
+      { "ancient": "A day's journey out", "modern": "north of Jerusalem (spot unknown)", "lat": 32.05, "lon": 35.27 },
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 }
+    ],
+    "steps": [
+      { "label": "Up for the Passover", "ref": "Luke 2:41-42", "copy": "When Jesus is twelve, the family goes up to Jerusalem for the feast, as they do every year.", "miles": 75, "at": 2 },
+      { "label": "Left behind", "ref": "Luke 2:43-45", "copy": "Heading home, they travel a day before realizing he isn't with them, and they turn back to look for him.", "miles": 20, "at": 1 },
+      { "label": "Found in the temple", "ref": "Luke 2:46-50", "copy": "After three days they find him in the temple, sitting among the teachers, listening and asking questions.", "miles": 20, "at": 2 },
+      { "label": "Home to Nazareth", "ref": "Luke 2:51-52", "copy": "He goes down to Nazareth with them and is obedient to them, growing in wisdom and stature.", "miles": 75, "at": 0 }
+    ]
+  },
+  "road-to-damascus": {
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "Near Damascus", "modern": "approach to Damascus", "lat": 33.45, "lon": 36.2 },
+      { "ancient": "Damascus", "modern": "Damascus, Syria", "lat": 33.51, "lon": 36.29 }
+    ],
+    "steps": [
+      { "label": "Setting out to persecute", "ref": "Acts 9:1-2", "copy": "Still breathing threats against the disciples, Saul gets letters to arrest believers in Damascus.", "at": 0 },
+      { "label": "The light from heaven", "ref": "Acts 9:3-6", "copy": "As he nears Damascus a light from heaven flashes around him, and a voice asks, “Saul, Saul, why do you persecute Me?”", "miles": 135, "at": 1 },
+      { "label": "Led into the city", "ref": "Acts 9:8-9", "copy": "Blinded, he is led by the hand into Damascus, and for three days he neither eats nor drinks.", "miles": 5, "at": 2 },
+      { "label": "Ananias", "ref": "Acts 9:10-19", "copy": "Ananias lays his hands on him; something like scales falls from his eyes, and he is baptized.", "at": 2 }
+    ]
+  },
+  "philip-ethiopian": {
+    "set": { "note": "Luke places the meeting on the desert road that goes down from Jerusalem to Gaza; the exact spot is not recorded." },
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "The desert road", "modern": "road from Jerusalem toward Gaza", "lat": 31.62, "lon": 34.85 },
+      { "ancient": "Azotus", "modern": "Ashdod, Israel", "lat": 31.8, "lon": 34.65 }
+    ],
+    "steps": [
+      { "label": "Sent to the Gaza road", "ref": "Acts 8:26-29", "copy": "An angel sends Philip to the desert road, where an Ethiopian official sits in his chariot reading.", "miles": 25, "at": 1 },
+      { "label": "The chariot and Isaiah", "ref": "Acts 8:30-35", "copy": "He is reading Isaiah, and Philip tells him the good news about Jesus, beginning with that very passage.", "at": 1 },
+      { "label": "Baptized by the road", "ref": "Acts 8:36-39", "copy": "They come to some water and the man is baptized; he goes on his way rejoicing.", "at": 1 },
+      { "label": "Found at Azotus", "ref": "Acts 8:40", "copy": "Philip appears at Azotus and preaches the gospel in all the towns until he reaches Caesarea.", "miles": 15, "at": 2 }
+    ]
+  },
+  "peter-cornelius": {
+    "points": [
+      { "ancient": "Joppa", "modern": "Jaffa, Tel Aviv", "lat": 32.05, "lon": 34.75 },
+      { "ancient": "Caesarea", "modern": "Caesarea, Israel", "lat": 32.5, "lon": 34.89 }
+    ],
+    "at": [0, 1, 1]
+  },
+  "jesus-through-samaria": {
+    "steps": [
+      { "label": "Leaving Judea", "ref": "John 4:3-4", "copy": "He leaves Judea for Galilee, and he has to pass through Samaria.", "at": 0 },
+      { "label": "The woman at the well", "ref": "John 4:5-26", "copy": "Tired at Jacob's well near Sychar, Jesus offers a Samaritan woman living water.", "miles": 35, "at": 1 },
+      { "label": "Samaritans believe", "ref": "John 4:39-42", "copy": "He stays two days, and many more believe: “This man truly is the Christ, the Savior of the world.”", "at": 1 },
+      { "label": "On to Galilee", "ref": "John 4:43-46", "copy": "After two days he goes on to Galilee and comes again to Cana.", "miles": 35, "at": 2 }
+    ]
+  },
+  "jesus-tyre-sidon": {
+    "steps": [
+      { "label": "To the region of Tyre", "ref": "Mark 7:24", "copy": "He goes away to the region of Tyre and wants no one to know, but he cannot stay hidden.", "miles": 35, "at": 1 },
+      { "label": "The Syrophoenician woman", "ref": "Mark 7:25-30", "copy": "A Gentile woman begs him for her daughter; because of her answer, the demon leaves the girl.", "at": 1 },
+      { "label": "Through Sidon", "ref": "Mark 7:31", "copy": "He goes on through Sidon.", "miles": 25, "at": 2 },
+      { "label": "Into the Decapolis", "ref": "Mark 7:31-37", "copy": "Back at the Sea of Galilee in the region of the Ten Cities, he heals a man who is deaf and can hardly speak.", "miles": 70, "at": 3 }
+    ]
+  },
+  "paul-night-caesarea": { "at": [0, 1, 2] },
+  "jesus-baptism-jordan": { "at": [1, 1, 2] },
+  "jesus-cana-capernaum": { "at": [0, 0, 1] },
+  "jesus-gerasenes": {
+    "points": [
+      { "ancient": "Capernaum", "modern": "Kfar Nahum, Sea of Galilee", "lat": 32.88, "lon": 35.575 },
+      { "ancient": "Out on the lake", "modern": "Sea of Galilee", "lat": 32.85, "lon": 35.61 },
+      { "ancient": "Country of the Gerasenes", "modern": "east shore (Kursi is one proposal)", "lat": 32.83, "lon": 35.65 }
+    ],
+    "steps": [
+      { "label": "Across to the other side", "ref": "Mark 4:35-36", "copy": "When evening comes, Jesus says, “Let us cross to the other side,” and they set out in the boat.", "at": 0 },
+      { "label": "Peace, be still", "ref": "Mark 4:37-41", "copy": "A furious storm rises; he rebukes the wind and the sea, and it becomes perfectly calm.", "miles": 3, "at": 1, "by": "sea" },
+      { "label": "Among the tombs", "ref": "Mark 5:1-20", "copy": "On the far shore a man with an unclean spirit runs to meet him, and Jesus sets him free.", "miles": 3, "at": 2, "by": "sea" }
+    ]
+  },
+  "jesus-caesarea-philippi": { "at": [1, 1, 1] },
+  "jesus-triumphal-entry": { "at": [0, 1, 2] },
+  "peter-john-samaria": {
+    "steps": [
+      { "label": "Sent from Jerusalem", "ref": "Acts 8:14", "copy": "Hearing that Samaria has received the word of God, the apostles send Peter and John.", "miles": 35, "at": 1 },
+      { "label": "Prayer for the Spirit", "ref": "Acts 8:15-17", "copy": "They pray and lay hands on the believers, who receive the Holy Spirit.", "at": 1 },
+      { "label": "Preaching on the way back", "ref": "Acts 8:25", "copy": "They return to Jerusalem, preaching the gospel in many Samaritan villages.", "miles": 35, "at": 0 }
+    ]
+  },
+  "barnabas-saul-antioch": {
+    "points": [
+      { "ancient": "Antioch", "modern": "Antakya, Turkey", "lat": 36.2, "lon": 36.16 },
+      { "ancient": "Tarsus", "modern": "Tarsus, Turkey", "lat": 36.92, "lon": 34.9 }
+    ],
+    "steps": [
+      { "label": "Searching in Tarsus", "ref": "Acts 11:25", "copy": "Barnabas goes to Tarsus to look for Saul.", "miles": 80, "at": 1 },
+      { "label": "A year of teaching", "ref": "Acts 11:26", "copy": "He brings him back to Antioch, and for a whole year they meet with the church and teach many people.", "miles": 80, "at": 0 },
+      { "label": "Called Christians", "ref": "Acts 11:26", "copy": "In Antioch the disciples are first called Christians.", "at": 0 }
+    ]
+  },
+  "jesus-nazareth-rejected": { "at": [0, 0, 0, 1] },
+  "jesus-feeding-5000": {
+    "points": [
+      { "ancient": "Capernaum", "modern": "Kfar Nahum, Sea of Galilee", "lat": 32.88, "lon": 35.575 },
+      { "ancient": "A solitary place", "modern": "northeast shore near Bethsaida", "lat": 32.91, "lon": 35.63 },
+      { "ancient": "Gennesaret", "modern": "Ginosar plain", "lat": 32.83, "lon": 35.52 },
+      { "ancient": "Out on the lake", "modern": "Sea of Galilee", "lat": 32.86, "lon": 35.59 }
+    ],
+    "steps": [
+      { "label": "Away to rest", "ref": "Mark 6:31-32", "copy": "So many are coming and going that they leave by boat for a quiet place.", "miles": 4, "at": 1, "by": "sea" },
+      { "label": "Loaves and fish", "ref": "Mark 6:41-44", "copy": "He blesses five loaves and two fish; all eat and are satisfied, and twelve baskets are left over.", "at": 1 },
+      { "label": "Walking on the sea", "ref": "Mark 6:45-52", "copy": "In the fourth watch of the night he comes to them walking on the water, and the wind dies down.", "miles": 3, "at": 3, "by": "sea" },
+      { "label": "Landing at Gennesaret", "ref": "Mark 6:53-56", "copy": "They land at Gennesaret, and people bring the sick to him wherever he goes.", "miles": 3, "at": 2, "by": "sea" }
+    ]
+  }
+}

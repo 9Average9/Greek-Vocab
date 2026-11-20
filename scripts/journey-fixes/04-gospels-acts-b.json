@@ -1,0 +1,113 @@
+{
+  "_about": "Gospels and Acts, part B.",
+  "jesus-decapolis-4000": { "at": [1, 1, 1, 2], "by": { "3": "sea" } },
+  "jesus-bethany-lazarus": { "at": [0, 1, 1, 1] },
+  "paul-macedonian-call": {
+    "steps": [
+      { "label": "The Macedonian vision", "ref": "Acts 16:9-10", "copy": "In a night vision a man of Macedonia begs Paul, “Come over to Macedonia and help us.”", "at": 0 },
+      { "label": "Samothrace", "ref": "Acts 16:11", "copy": "They sail straight across to Samothrace.", "miles": 70, "at": 1, "by": "sea" },
+      { "label": "Neapolis", "ref": "Acts 16:11", "copy": "The next day they reach Neapolis.", "miles": 60, "at": 2, "by": "sea" },
+      { "label": "On to Philippi", "ref": "Acts 16:12", "copy": "They go on to Philippi, a leading city of Macedonia, and stay there several days.", "miles": 10, "at": 3 },
+      { "label": "Lydia believes", "ref": "Acts 16:13-15", "copy": "By the river, the Lord opens Lydia's heart, and she and her household are baptized.", "at": 3 }
+    ]
+  },
+  "paul-athens-areopagus": { "at": [0, 1, 1, 2] },
+  "saul-jerusalem-to-tarsus": {
+    "steps": [
+      { "label": "Trying to join", "ref": "Acts 9:26-28", "copy": "The disciples are afraid of him until Barnabas brings him to the apostles.", "at": 0 },
+      { "label": "A plot to kill", "ref": "Acts 9:29", "copy": "He debates with the Hellenists, and they try to kill him.", "at": 0 },
+      { "label": "Down to Caesarea", "ref": "Acts 9:30", "copy": "The brothers take him down to Caesarea.", "miles": 60, "at": 1 },
+      { "label": "Home to Tarsus", "ref": "Acts 9:30", "copy": "From there they send him off to Tarsus, his home city.", "miles": 300, "at": 2 }
+    ]
+  },
+  "paul-jerusalem-council": {
+    "steps": [
+      { "label": "Sent to Jerusalem", "ref": "Acts 15:1-2", "copy": "After sharp debate over circumcision, the church sends Paul and Barnabas to the apostles and elders.", "at": 0 },
+      { "label": "Through Phoenicia", "ref": "Acts 15:3", "copy": "Passing through Phoenicia and Samaria, they tell of the Gentiles' conversion, bringing great joy.", "miles": 200, "at": 1 },
+      { "label": "Peter speaks", "ref": "Acts 15:4-21", "copy": "Peter recalls how God gave the Holy Spirit to the Gentiles; James proposes a letter to the churches.", "miles": 100, "at": 2 },
+      { "label": "Back with the letter", "ref": "Acts 15:22-31", "copy": "They carry the council's letter to Antioch, and the church rejoices at its encouragement.", "miles": 300, "at": 0 }
+    ]
+  },
+  "ascension-from-bethany": { "at": [1, 1, 1, 0] },
+  "good-samaritan-road": {
+    "set": { "note": "This is a parable Jesus tells, set on the real road that drops from Jerusalem to Jericho. The inn is placed at the traditional Inn of the Good Samaritan site." },
+    "points": [
+      { "ancient": "Jerusalem", "modern": "Jerusalem", "lat": 31.78, "lon": 35.23 },
+      { "ancient": "On the road down", "modern": "Judean wilderness road", "lat": 31.79, "lon": 35.3 },
+      { "ancient": "The inn", "modern": "Inn of the Good Samaritan (traditional site)", "lat": 31.81, "lon": 35.36 }
+    ],
+    "steps": [
+      { "label": "Going down", "ref": "Luke 10:30", "copy": "In Jesus' story, a man going down to Jericho is attacked by robbers and left half dead.", "miles": 5, "at": 1 },
+      { "label": "Passed by", "ref": "Luke 10:31-32", "copy": "A priest and then a Levite see him and pass by on the other side.", "at": 1 },
+      { "label": "The Samaritan’s mercy", "ref": "Luke 10:33-34", "copy": "A Samaritan has compassion, binds up his wounds and puts him on his own animal.", "at": 1 },
+      { "label": "Care at the inn", "ref": "Luke 10:35-37", "copy": "He pays the innkeeper to look after him. “Go and do likewise,” Jesus says.", "miles": 4, "at": 2 }
+    ]
+  },
+  "seven-churches-revelation": {
+    "set": { "note": "John receives the revelation on Patmos. The letters are addressed in the order of a circuit through the province of Asia, which is how the trail is drawn." },
+    "points": [
+      { "ancient": "Patmos", "modern": "Patmos, Greece", "lat": 37.31, "lon": 26.55 },
+      { "ancient": "Ephesus", "modern": "Selçuk, Turkey", "lat": 37.94, "lon": 27.34 },
+      { "ancient": "Smyrna", "modern": "İzmir, Turkey", "lat": 38.42, "lon": 27.14 },
+      { "ancient": "Pergamum", "modern": "Bergama, Turkey", "lat": 39.13, "lon": 27.18 },
+      { "ancient": "Thyatira", "modern": "Akhisar, Turkey", "lat": 38.92, "lon": 27.84 },
+      { "ancient": "Sardis", "modern": "Sart, Turkey", "lat": 38.49, "lon": 28.04 },
+      { "ancient": "Philadelphia", "modern": "Alaşehir, Turkey", "lat": 38.35, "lon": 28.52 },
+      { "ancient": "Laodicea", "modern": "near Denizli, Turkey", "lat": 37.84, "lon": 29.11 }
+    ],
+    "steps": [
+      { "label": "Write to the seven", "ref": "Revelation 1:9-11", "copy": "On the island of Patmos, John is told to write what he sees and send it to the seven churches by name.", "at": 0 },
+      { "label": "Ephesus", "ref": "Revelation 2:1-7", "copy": "A hardworking church that has abandoned the love it had at first.", "miles": 60, "at": 1, "by": "sea" },
+      { "label": "Smyrna", "ref": "Revelation 2:8-11", "copy": "Be faithful even to the point of death, and receive the crown of life.", "miles": 35, "at": 2 },
+      { "label": "Pergamum", "ref": "Revelation 2:12-17", "copy": "Holding fast to his name where Satan's throne is.", "miles": 55, "at": 3 },
+      { "label": "Thyatira", "ref": "Revelation 2:18-29", "copy": "Praised for love and service, warned about tolerating Jezebel.", "miles": 45, "at": 4 },
+      { "label": "Sardis", "ref": "Revelation 3:1-6", "copy": "A reputation for being alive, yet dead: wake up.", "miles": 35, "at": 5 },
+      { "label": "Philadelphia", "ref": "Revelation 3:7-13", "copy": "An open door that no one can shut.", "miles": 30, "at": 6 },
+      { "label": "Laodicea", "ref": "Revelation 3:14-22", "copy": "Neither cold nor hot: the lukewarm church.", "miles": 45, "at": 7 }
+    ]
+  },
+  "jesus-transfiguration": {
+    "set": { "note": "Matthew calls it only 'a high mountain.' Mount Hermon, near Caesarea Philippi, is one traditional candidate (Mount Tabor is another)." },
+    "points": [
+      { "ancient": "Caesarea Philippi", "modern": "Banias, Golan", "lat": 33.25, "lon": 35.69 },
+      { "ancient": "A high mountain", "modern": "Mount Hermon slopes (one proposal)", "lat": 33.42, "lon": 35.85 },
+      { "ancient": "Galilee", "modern": "Sea of Galilee region", "lat": 32.88, "lon": 35.575 }
+    ],
+    "steps": [
+      { "label": "Up the mountain", "ref": "Matthew 17:1", "copy": "Six days later he takes Peter, James and John up a high mountain by themselves.", "miles": 12, "at": 1 },
+      { "label": "Transfigured", "ref": "Matthew 17:2-3", "copy": "His face shines like the sun and his clothes become white as light; Moses and Elijah appear with him.", "at": 1 },
+      { "label": "The voice from the cloud", "ref": "Matthew 17:5-8", "copy": "A bright cloud covers them, and a voice says: listen to My beloved Son.", "at": 1 },
+      { "label": "Coming down", "ref": "Matthew 17:9-13", "copy": "On the way down he tells them to tell no one until the Son of Man is raised from the dead.", "at": 1 },
+      { "label": "Back in Galilee", "ref": "Matthew 17:22-23", "copy": "Gathered in Galilee, he tells them again that he will be killed and raised on the third day.", "miles": 40, "at": 2 }
+    ]
+  },
+  "philip-azotus-caesarea": {
+    "points": [
+      { "ancient": "Azotus", "modern": "Ashdod, Israel", "lat": 31.8, "lon": 34.65 },
+      { "ancient": "Towns along the coast", "modern": "coastal plain", "lat": 32.05, "lon": 34.76 },
+      { "ancient": "Caesarea", "modern": "Caesarea, Israel", "lat": 32.5, "lon": 34.89 }
+    ],
+    "at": [0, 1, 2]
+  },
+  "jesus-trial-to-golgotha": {
+    "set": { "note": "Gethsemane and Golgotha follow long tradition; the high priest's house and Pilate's headquarters are traditional sites, and both are debated." },
+    "at": [0, 1, 2, 3, 3]
+  },
+  "mary-visits-elizabeth": {
+    "steps": [
+      { "label": "Going with haste", "ref": "Luke 1:39-40", "copy": "Mary hurries to a town in the hill country of Judah and greets Elizabeth.", "miles": 70, "at": 1 },
+      { "label": "The baby leaps", "ref": "Luke 1:41-45", "copy": "At Mary's greeting the baby leaps in Elizabeth's womb, and Elizabeth is filled with the Holy Spirit.", "at": 1 },
+      { "label": "Mary's song", "ref": "Luke 1:46-55", "copy": "Mary praises God: “My soul magnifies the Lord.”", "at": 1 },
+      { "label": "Three months, then home", "ref": "Luke 1:56", "copy": "Mary stays about three months, then returns home.", "miles": 70, "at": 0 }
+    ]
+  },
+  "presentation-temple": { "at": [1, 1, 1, 1] },
+  "widow-of-nain": { "at": [1, 1, 1, 1] },
+  "ten-lepers": {
+    "points": [
+      { "ancient": "A village between Samaria and Galilee", "modern": "northern West Bank hills (spot unknown)", "lat": 32.45, "lon": 35.3 }
+    ],
+    "at": [0, 0, 0, 0]
+  },
+  "jesus-feast-tabernacles": { "at": [1, 1, 1, 1] }
+}

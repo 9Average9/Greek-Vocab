@@ -1,0 +1,53 @@
+{
+  "_about": "Gospels and Acts, part C.",
+  "blind-bartimaeus-jericho": { "at": [0, 0, 0, 1] },
+  "great-commission-galilee": {
+    "steps": [
+      { "label": "Sent to Galilee", "ref": "Matthew 28:5-7", "copy": "At the empty tomb the angel tells the women that Jesus is going ahead of them to Galilee.", "at": 0 },
+      { "label": "On the mountain", "ref": "Matthew 28:16", "copy": "The eleven disciples go to the mountain in Galilee where Jesus had told them to go.", "miles": 70, "at": 1 },
+      { "label": "Worship and doubt", "ref": "Matthew 28:17", "copy": "When they see him they worship him, but some doubt.", "at": 1 },
+      { "label": "All authority", "ref": "Matthew 28:18-20", "copy": "“Go and make disciples of all nations, baptizing them,” and he is with them always.", "at": 1 }
+    ]
+  },
+  "peter-lydda-joppa": { "at": [0, 1, 1, 1] },
+  "herod-agrippa-caesarea": { "at": [1, 1, 1, 1] },
+  "return-from-egypt-nazareth": {
+    "set": { "note": "Matthew says Joseph came into the land of Israel but, afraid of Archelaus in Judea, turned aside to Galilee. Where he crossed into the land is not recorded." },
+    "points": [
+      { "ancient": "Egypt", "modern": "Nile Delta, Egypt", "lat": 30.8, "lon": 31.5 },
+      { "ancient": "Into the land of Israel", "modern": "southern coastal road (spot unknown)", "lat": 31.45, "lon": 34.45 },
+      { "ancient": "Nazareth", "modern": "Nazareth, Israel", "lat": 32.7, "lon": 35.3 }
+    ],
+    "steps": [
+      { "label": "The angel’s word", "ref": "Matthew 2:19-20", "copy": "After Herod dies, an angel tells Joseph in a dream to take the child and his mother back to Israel.", "at": 0 },
+      { "label": "To the land of Israel", "ref": "Matthew 2:21", "copy": "Joseph gets up and takes the child and his mother into the land of Israel.", "miles": 200, "at": 1 },
+      { "label": "Turning to Galilee", "ref": "Matthew 2:22", "copy": "Afraid of Archelaus, who reigns in Judea, and warned in a dream, he withdraws to Galilee.", "miles": 105, "at": 2 },
+      { "label": "A home in Nazareth", "ref": "Matthew 2:23", "copy": "He settles in a town called Nazareth, fulfilling what the prophets said.", "at": 2 }
+    ]
+  },
+  "shepherds-bethlehem": { "at": [0, 0, 1, 1] },
+  "john-baptist-machaerus": {
+    "set": { "note": "The Gospels don't name John's prison; the historian Josephus says it was the fortress of Machaerus, east of the Dead Sea." },
+    "steps": [
+      { "label": "Herod’s banquet", "ref": "Mark 6:21-22", "copy": "On his birthday Herod gives a banquet for his nobles and officers.", "at": 0 },
+      { "label": "A deadly request", "ref": "Mark 6:23-26", "copy": "Prompted by her mother, the girl asks for the head of John the Baptist on a platter.", "at": 0 },
+      { "label": "John beheaded", "ref": "Mark 6:27-28", "copy": "An executioner is sent and beheads John in the prison.", "at": 0 },
+      { "label": "Told to Jesus", "ref": "Mark 6:29; Matthew 14:12", "copy": "John's disciples bury his body and go and tell Jesus.", "miles": 55, "at": 1 }
+    ]
+  },
+  "barnabas-mark-cyprus": {
+    "points": [
+      { "ancient": "Antioch", "modern": "Antakya, Turkey", "lat": 36.2, "lon": 36.16 },
+      { "ancient": "Cyprus", "modern": "Cyprus (Salamis port)", "lat": 35.18, "lon": 33.9 }
+    ],
+    "steps": [
+      { "label": "Mark to come along", "ref": "Acts 15:36-38", "copy": "Barnabas wants to take John Mark; Paul does not, since Mark had deserted them in Pamphylia.", "at": 0 },
+      { "label": "Paul takes Silas", "ref": "Acts 15:40", "copy": "After a sharp disagreement they part ways. Paul chooses Silas and is commended to the grace of the Lord.", "at": 0 },
+      { "label": "Barnabas sails to Cyprus", "ref": "Acts 15:39", "copy": "Barnabas takes Mark and sails to Cyprus.", "miles": 130, "at": 1, "by": "sea" }
+    ]
+  },
+  "agabus-famine-relief": { "at": [0, 0, 1] },
+  "jesus-ephraim-withdraws": { "at": [0, 1, 1, 1] },
+  "jesus-fig-tree-bethany": { "at": [0, 0, 1, 0] },
+  "jesus-galilee-preaching-tour": { "at": [0, 1, 1] }
+}
