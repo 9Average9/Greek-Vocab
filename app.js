@@ -31980,7 +31980,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.633";
+const APP_VERSION = "3.0.634";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32003,6 +32003,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.634 — Close places get room</div>
+<ul>
+<li>Journey maps now zoom right in when stops are close together (like Bethany and Jerusalem, two miles apart), so you can see the space between them instead of dots on top of each other.</li>
+<li>Up close the mountains are toned down so the hills look natural, and place labels always point toward the middle of the screen so they never get cut off.</li>
+</ul>
 <div class="un-version-label">v3.0.633 — More journeys, checked against the text</div>
 <ul>
 <li>Abraham, the Exodus, Ruth, Mary and Joseph, the Magi, the flight to Egypt, Jesus around Galilee, Jesus going up to Jerusalem, the Road to Emmaus and Jonah were checked against Scripture: every step now stands at its real place, guessed waypoints were removed, and missing moments were added (Cana's wedding, the Magi going home another way, the two disciples hurrying back from Emmaus).</li>
