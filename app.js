@@ -11116,16 +11116,16 @@ const BIBLE_JOURNEYS = [
     ],
     points: [
       { ancient: 'Ur of the Chaldeans', modern: 'near Nasiriyah, Iraq', x: 82, y: 78, lat: 30.96, lon: 46.1 },
-      { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 56, y: 25, lat: 36.87, lon: 39.03 },
+      { ancient: 'Haran', modern: 'near Şanlıurfa, Turkey', x: 56, y: 25, lat: 36.87, lon: 39.03 },
       { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 39, y: 55, lat: 32.21, lon: 35.28 },
-      { ancient: 'Bethel/Ai', modern: 'central highlands', x: 38, y: 60, lat: 31.93, lon: 35.22 },
-      { ancient: 'Egypt', modern: 'Nile Delta / Egypt', x: 22, y: 77, lat: 30.8, lon: 31.3 }
+      { ancient: 'Between Bethel and Ai', modern: 'central highlands, West Bank', x: 38, y: 60, lat: 31.93, lon: 35.23 },
+      { ancient: 'Egypt', modern: 'Nile Delta, Egypt', x: 22, y: 77, lat: 30.8, lon: 31.3 }
     ],
     steps: [
-      { label: 'Ur to Haran', ref: 'Genesis 11:31', copy: 'Terah takes Abram, Sarai, and Lot out from Ur toward Canaan, stopping in Haran.', miles: 600 },
-      { label: 'Haran to Canaan', ref: 'Genesis 12:1-6', copy: 'Abram obeys the call and enters Canaan, reaching Shechem.', miles: 430 },
-      { label: 'South through the land', ref: 'Genesis 12:8-9', copy: 'Abram moves toward Bethel/Ai and then the Negev.', miles: 70 },
-      { label: 'Down to Egypt', ref: 'Genesis 12:10', copy: 'Famine drives Abram temporarily toward Egypt.', miles: 250 }
+      { label: 'Ur to Haran', ref: 'Genesis 11:31', copy: 'Terah takes Abram, Sarai, and Lot out from Ur toward Canaan, stopping in Haran.', miles: 600, at: 1 },
+      { label: 'Haran to Canaan', ref: 'Genesis 12:1-6', copy: 'Abram obeys the call and enters Canaan, reaching Shechem.', miles: 430, at: 2 },
+      { label: 'South through the land', ref: 'Genesis 12:8-9', copy: 'Abram moves toward Bethel/Ai and then the Negev.', miles: 70, at: 3 },
+      { label: 'Down to Egypt', ref: 'Genesis 12:10', copy: 'Famine drives Abram temporarily toward Egypt.', miles: 250, at: 4 }
     ]
   },
   {
@@ -11148,17 +11148,18 @@ const BIBLE_JOURNEYS = [
       'Rameses and Succoth are tied to eastern Delta sites (Qantir and Tell el-Maskhuta), but the wilderness stations between them are reconstructed from the itinerary in Numbers 33.'
     ],
     points: [
-      { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42, lat: 30.8, lon: 31.83 },
-      { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47, lat: 30.55, lon: 32.1 },
-      { ancient: 'Sea Crossing', modern: 'Red Sea / Reed Sea proposals', x: 39, y: 56, lat: 30.1, lon: 32.55 },
-      { ancient: 'Marah / Elim', modern: 'Sinai wilderness region', x: 51, y: 65, lat: 29.2, lon: 33.05 },
-      { ancient: 'Sinai', modern: 'Sinai Peninsula region', x: 63, y: 76, lat: 28.54, lon: 33.97 }
+      { ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 15, y: 15, lat: 30.8, lon: 31.83 },
+      { ancient: 'Succoth', modern: 'eastern Delta region', x: 24, y: 23, lat: 30.55, lon: 32.1 },
+      { ancient: 'The sea crossing', modern: 'Red Sea / Reed Sea (site debated)', x: 39, y: 37, lat: 30.1, lon: 32.55 },
+      { ancient: 'Marah and Elim', modern: 'western Sinai (sites debated)', x: 55, y: 65, lat: 29.2, lon: 33.05 },
+      { ancient: 'Mount Sinai', modern: 'Jebel Musa (traditional site)', x: 85, y: 85, lat: 28.54, lon: 33.97 }
     ],
     steps: [
-      { label: 'Rameses to Succoth', ref: 'Exodus 12:37', copy: 'Israel leaves Egypt as a large company.', miles: 30 },
-      { label: 'Toward the sea', ref: 'Exodus 14:1-2', copy: 'The people are led to a place where escape looks impossible.', miles: 60 },
-      { label: 'Through the sea', ref: 'Exodus 14:21-31', copy: 'The crossing becomes the defining rescue moment.', miles: 8 },
-      { label: 'Wilderness to Sinai', ref: 'Exodus 15:22; 19:1-2', copy: 'The route moves through thirst, provision, and covenant preparation.', miles: 200 }
+      { label: 'Rameses to Succoth', ref: 'Exodus 12:37', copy: 'Israel sets out from Rameses on foot, a great company leaving Egypt.', miles: 30, at: 1 },
+      { label: 'Toward the sea', ref: 'Exodus 14:1-2', copy: 'The Lord has them turn back and camp by the sea, where escape looks impossible.', miles: 60, at: 2 },
+      { label: 'Through the sea', ref: 'Exodus 14:21-31', copy: 'The waters part, Israel crosses on dry ground, and the sea returns over Pharaoh\'s army.', at: 2 },
+      { label: 'Marah and Elim', ref: 'Exodus 15:22-27', copy: 'Bitter water at Marah is made sweet; at Elim there are twelve springs and seventy palm trees.', miles: 70, at: 3 },
+      { label: 'Mount Sinai', ref: 'Exodus 19:1-2', copy: 'In the third month they camp in front of the mountain in the Wilderness of Sinai.', miles: 100, at: 4 }
     ],
     alternates: [
       { label: 'Arabian Sinai view', reason: 'Some place the sea crossing at the Gulf of Aqaba and Mount Sinai in Arabia (Galatians 4:25), giving an eastern route across the gulf. The traditional southern Sinai is kept as the main line.', points: [{ ancient: 'Rameses', modern: 'eastern Nile Delta, Egypt', x: 20, y: 42, lat: 30.8, lon: 31.83 }, { ancient: 'Succoth', modern: 'eastern Delta region', x: 28, y: 47, lat: 30.55, lon: 32.1 }, { ancient: 'Gulf of Aqaba crossing', modern: 'Gulf of Aqaba (debated)', x: 77, y: 71, lat: 28.9, lon: 34.65 }, { ancient: 'Mount Sinai in Arabia', modern: 'NW Saudi Arabia (debated)', x: 88, y: 74, lat: 28.65, lon: 35.3 }] }
@@ -11183,14 +11184,14 @@ const BIBLE_JOURNEYS = [
       'The arrival "at the beginning of barley harvest" (Ruth 1:22) points to spring, which fits a walkable few-day journey.'
     ],
     points: [
-      { ancient: 'Moab', modern: 'central Jordan', x: 70, y: 58, lat: 31.3, lon: 35.75 },
-      { ancient: 'Jordan crossing region', modern: 'Jordan Valley', x: 50, y: 55, lat: 31.85, lon: 35.5 },
-      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 36, y: 52, lat: 31.7, lon: 35.2 }
+      { ancient: 'Moab', modern: 'central Jordan', x: 85, y: 85, lat: 31.3, lon: 35.75 },
+      { ancient: 'On the road to Judah', modern: 'Jordan Valley crossing', x: 53, y: 15, lat: 31.85, lon: 35.5 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 15, y: 34, lat: 31.7, lon: 35.2 }
     ],
     steps: [
-      { label: 'Leaving Moab', ref: 'Ruth 1:6-7', copy: 'Naomi begins the return after hearing the Lord has visited His people with food.', miles: 30 },
-      { label: 'Ruth clings to Naomi', ref: 'Ruth 1:14-18', copy: 'The journey becomes a covenant loyalty moment.', miles: 0 },
-      { label: 'Arrival in Bethlehem', ref: 'Ruth 1:19-22', copy: 'They arrive at the beginning of barley harvest.', miles: 30 }
+      { label: 'Leaving Moab', ref: 'Ruth 1:6-7', copy: 'Naomi begins the return after hearing the Lord has visited His people with food.', miles: 30, at: 0 },
+      { label: 'Ruth clings to Naomi', ref: 'Ruth 1:14-18', copy: 'The journey becomes a covenant loyalty moment.', miles: 0, at: 1 },
+      { label: 'Arrival in Bethlehem', ref: 'Ruth 1:19-22', copy: 'They arrive at the beginning of barley harvest.', miles: 30, at: 2 }
     ]
   },
   {
@@ -11205,22 +11206,20 @@ const BIBLE_JOURNEYS = [
     mode: 'Walking / family travel',
     days: '5-8 travel days',
     modern: 'Northern Israel to the Bethlehem area',
-    note: 'The direct hill-country route and Jordan Valley route are both discussed. This simplified path shows the story movement.',
+    note: 'Luke names only the start and the end; the road between Nazareth and Bethlehem is not recorded.',
     sources: [
       'Luke 2 names Nazareth and Bethlehem but not the road taken; travelers commonly chose either the central ridge route through Samaria or the longer but flatter Jordan Valley route to avoid Samaritan territory.',
       'Bethlehem is singled out because it is the ancestral town of David’s line (Luke 2:4; Micah 5:2), not because of a preserved itinerary.',
       'Distance and timing assume an ordinary family walking pace; the Gospel gives no travel duration.'
     ],
     points: [
-      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24, lat: 32.7, lon: 35.3 },
-      { ancient: 'Samaria/Judea road region', modern: 'central highlands', x: 43, y: 45, lat: 32.1, lon: 35.28 },
-      { ancient: 'Jerusalem region', modern: 'Jerusalem area', x: 39, y: 62, lat: 31.78, lon: 35.23 },
-      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68, lat: 31.7, lon: 35.2 }
+      { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 85, y: 15, lat: 32.7, lon: 35.3 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 15, y: 85, lat: 31.7, lon: 35.2 }
     ],
     steps: [
-      { label: 'Nazareth departure', ref: 'Luke 2:1-4', copy: 'Joseph goes up from Galilee to Judea because of the census.', miles: 70 },
-      { label: 'Toward David\'s city', ref: 'Luke 2:4', copy: 'Bethlehem matters because Joseph belongs to David\'s house and lineage.', miles: 15 },
-      { label: 'Birth in Bethlehem', ref: 'Luke 2:6-7', copy: 'The travel setting frames the birth narrative.', miles: 5 }
+      { label: 'Nazareth departure', ref: 'Luke 2:1-4', copy: 'Joseph goes up from Galilee to Judea because of the census.', miles: 70, at: 0 },
+      { label: 'Toward David\'s city', ref: 'Luke 2:4', copy: 'Bethlehem matters because Joseph belongs to David\'s house and lineage.', miles: 15, at: 1 },
+      { label: 'Birth in Bethlehem', ref: 'Luke 2:6-7', copy: 'The travel setting frames the birth narrative.', miles: 5, at: 1 }
     ],
     alternates: [
       { label: 'Jordan Valley route', reason: 'A longer but flatter path down the Jordan Valley and up from Jericho, avoiding Samaria. Luke does not name the road taken, so both this and the hill-country route are possible.', points: [{ ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 43, y: 24, lat: 32.7, lon: 35.3 }, { ancient: 'Beth Shean', modern: 'Beit She’an, Jordan Valley', x: 58, y: 33, lat: 32.5, lon: 35.5 }, { ancient: 'Jericho', modern: 'Jericho', x: 52, y: 60, lat: 31.87, lon: 35.44 }, { ancient: 'Jerusalem', modern: 'Jerusalem', x: 39, y: 62, lat: 31.78, lon: 35.23 }, { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 37, y: 68, lat: 31.7, lon: 35.2 }] }
@@ -11247,17 +11246,18 @@ const BIBLE_JOURNEYS = [
       'Pilgrims heading to Jerusalem feasts often used the Jordan Valley road, which the Jericho stop reflects.'
     ],
     points: [
-      { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22, lat: 32.8, lon: 35.55 },
-      { ancient: 'Jordan Valley', modern: 'Jordan River valley', x: 55, y: 50, lat: 32.2, lon: 35.55 },
-      { ancient: 'Jericho', modern: 'Jericho', x: 51, y: 65, lat: 31.87, lon: 35.44 },
-      { ancient: 'Bethany', modern: 'al-Eizariya area', x: 41, y: 70, lat: 31.77, lon: 35.26 },
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 38, y: 68, lat: 31.78, lon: 35.23 }
+      { ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 85, y: 15, lat: 32.8, lon: 35.55 },
+      { ancient: 'Beyond the Jordan', modern: 'Jordan Valley', x: 85, y: 56, lat: 32.2, lon: 35.55 },
+      { ancient: 'Jericho', modern: 'Jericho', x: 61, y: 78, lat: 31.87, lon: 35.44 },
+      { ancient: 'Bethany', modern: 'al-Eizariya', x: 22, y: 85, lat: 31.77, lon: 35.26 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 84, lat: 31.78, lon: 35.23 }
     ],
     steps: [
-      { label: 'Face set toward Jerusalem', ref: 'Luke 9:51', copy: 'Luke frames the journey as purposeful movement toward Jerusalem.', miles: 0 },
-      { label: 'Teaching on the way', ref: 'Luke 10-18', copy: 'Much of the journey is filled with discipleship teaching.', miles: 70 },
-      { label: 'Jericho to Jerusalem', ref: 'Luke 18:35; 19:28', copy: 'The route climbs from Jericho toward Jerusalem.', miles: 17 },
-      { label: 'Arrival near Bethany', ref: 'Mark 11:1', copy: 'Bethphage/Bethany set the stage for the triumphal entry.', miles: 2 }
+      { label: 'Face set toward Jerusalem', ref: 'Luke 9:51', copy: 'As the time of his being taken up draws near, Jesus resolutely sets out for Jerusalem.', at: 0 },
+      { label: 'Beyond the Jordan', ref: 'Mark 10:1', copy: 'He goes into the region of Judea beyond the Jordan, and crowds gather to him again.', miles: 70, at: 1 },
+      { label: 'Jericho', ref: 'Luke 18:35-19:10', copy: 'At Jericho he gives sight to a blind man and stays at the house of Zacchaeus.', miles: 25, at: 2 },
+      { label: 'Arrival near Bethany', ref: 'Mark 11:1', copy: 'Climbing from Jericho, they come near Bethphage and Bethany at the Mount of Olives.', miles: 15, at: 3 },
+      { label: 'Into Jerusalem', ref: 'Mark 11:7-11', copy: 'Riding a colt as crowds spread cloaks and branches, he enters Jerusalem and goes into the temple.', miles: 2, at: 4 }
     ],
     alternates: [
       { label: 'Direct through Samaria', reason: 'The shorter ridge road runs straight through Samaria (John 4:4). Many Galilean pilgrims instead took the Jordan Valley route shown as the main line to avoid Samaritan territory.', points: [{ ancient: 'Galilee', modern: 'Galilee, northern Israel', x: 45, y: 22, lat: 32.8, lon: 35.55 }, { ancient: 'Samaria', modern: 'near Nablus, West Bank', x: 40, y: 48, lat: 32.21, lon: 35.28 }, { ancient: 'Bethel hills', modern: 'central highlands', x: 38, y: 61, lat: 31.93, lon: 35.22 }, { ancient: 'Jerusalem', modern: 'Jerusalem', x: 38, y: 68, lat: 31.78, lon: 35.23 }] }
@@ -11569,18 +11569,18 @@ const BIBLE_JOURNEYS = [
     ],
     points: [
       { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 15, y: 85, lat: 32.7, lon: 35.3 },
-      { ancient: 'Cana', modern: 'Kafr Kanna area', x: 23, y: 71, lat: 32.75, lon: 35.34 },
-      { ancient: 'Capernaum', modern: 'Capernaum, north shore', x: 69, y: 34, lat: 32.88, lon: 35.57 },
-      { ancient: 'Bethsaida', modern: 'northeast shore', x: 81, y: 25, lat: 32.91, lon: 35.63 },
-      { ancient: 'Region of the Gerasenes', modern: 'east shore (Kursi?)', x: 85, y: 48, lat: 32.83, lon: 35.65 },
-      { ancient: 'Magdala', modern: 'west shore', x: 59, y: 48, lat: 32.83, lon: 35.52 }
+      { ancient: 'Cana', modern: 'Kafr Kanna area (site debated)', x: 23, y: 68, lat: 32.75, lon: 35.34 },
+      { ancient: 'Capernaum', modern: 'Kfar Nahum, north shore', x: 69, y: 25, lat: 32.88, lon: 35.57 },
+      { ancient: 'Bethsaida', modern: 'northeast shore (site debated)', x: 81, y: 15, lat: 32.91, lon: 35.63 },
+      { ancient: 'Region of the Gerasenes', modern: 'east shore (Kursi is one proposal)', x: 85, y: 42, lat: 32.83, lon: 35.65 }
     ],
     steps: [
-      { label: 'Rejected at Nazareth', ref: 'Luke 4:16-30', copy: 'His hometown turns on him in the synagogue.', miles: 0 },
-      { label: 'Base at Capernaum', ref: 'Matthew 4:13-17', copy: 'He settles by the lake and begins to preach.', miles: 20 },
-      { label: 'Calling the fishermen', ref: 'Mark 1:16-20', copy: 'Peter, Andrew, James, and John leave their nets.', miles: 0 },
-      { label: 'Crossing to the other side', ref: 'Mark 4:35-5:20', copy: 'The storm is stilled; the Gerasene man is freed.', miles: 8 },
-      { label: 'Feeding the five thousand', ref: 'Luke 9:10-17', copy: 'A great crowd is fed near Bethsaida.', miles: 6 }
+      { label: 'Rejected at Nazareth', ref: 'Luke 4:16-30', copy: 'In his hometown synagogue the crowd turns on him and tries to throw him off a cliff.', at: 0 },
+      { label: 'Water into wine', ref: 'John 2:1-11', copy: 'At a wedding in Cana, Jesus turns water into wine, the first of his signs.', miles: 4, at: 1 },
+      { label: 'Base at Capernaum', ref: 'Matthew 4:13-17', copy: 'He makes his home by the lake and begins to preach: repent, for the kingdom of heaven is near.', miles: 16, at: 2 },
+      { label: 'Calling the fishermen', ref: 'Mark 1:16-20', copy: 'Simon, Andrew, James and John leave their nets to follow him.', at: 2 },
+      { label: 'Crossing to the other side', ref: 'Mark 4:35-5:20', copy: 'He stills a storm on the lake and frees a man possessed by many demons.', miles: 8, at: 4, by: 'sea' },
+      { label: 'Feeding the five thousand', ref: 'Luke 9:10-17', copy: 'Near Bethsaida, five loaves and two fish feed a great crowd, with twelve baskets left over.', miles: 6, at: 3 }
     ]
   },
   {
@@ -11969,22 +11969,21 @@ const BIBLE_JOURNEYS = [
     mode: 'Ship, then overland',
     days: 'Weeks, with three days inside the fish',
     modern: 'Israel’s coast, the sea, then northern Iraq',
-    note: 'Tarshish is debated (often Spain); the map shows the westward flight, the storm, and the eastward call to Nineveh.',
+    note: 'Joppa and Nineveh are known; where the storm struck and where Jonah was put ashore are not recorded.',
     sources: [
       'Jonah goes down to Joppa to sail for Tarshish, away from the Lord (Jonah 1:3).',
       'Tarshish is usually identified with the far western Mediterranean (Spain), the opposite direction from Nineveh.',
       'Nineveh, the great Assyrian city, is securely located across the Tigris from modern Mosul (Jonah 3:3).'
     ],
     points: [
-      { ancient: 'Joppa', modern: 'Jaffa, Tel Aviv', x: 46.3, y: 61.7, lat: 32.05, lon: 34.75 },
-      { ancient: 'Toward Tarshish', modern: 'open Mediterranean', x: 16, y: 54.4, lat: 33.4, lon: 28 },
-      { ancient: 'Cast into the sea', modern: 'Mediterranean Sea', x: 27.2, y: 56.5, lat: 33, lon: 30.5 },
-      { ancient: 'Nineveh', modern: 'near Mosul, Iraq', x: 84, y: 38.3, lat: 36.36, lon: 43.15 }
+      { ancient: 'Joppa', modern: 'Jaffa, Tel Aviv', x: 25, y: 85, lat: 32.05, lon: 34.75 },
+      { ancient: 'Out at sea', modern: 'the Mediterranean (spot unknown)', x: 15, y: 76, lat: 32.6, lon: 33.3 },
+      { ancient: 'Nineveh', modern: 'near Mosul, Iraq', x: 85, y: 15, lat: 36.36, lon: 43.15 }
     ],
     steps: [
-      { label: 'Sailing from Joppa', ref: 'Jonah 1:3', copy: 'Jonah pays the fare and boards a ship heading the wrong way.', miles: 200 },
-      { label: 'The storm and the sea', ref: 'Jonah 1:15-17', copy: 'He is thrown overboard and swallowed by a great fish.', miles: 0 },
-      { label: 'Preaching in Nineveh', ref: 'Jonah 3:3-4', copy: 'He finally crosses to Nineveh and the city repents.', miles: 600 }
+      { label: 'Sailing from Joppa', ref: 'Jonah 1:3', copy: 'Running from the Lord, Jonah pays the fare and boards a ship bound for Tarshish.', at: 0 },
+      { label: 'The storm and the fish', ref: 'Jonah 1:4-17', copy: 'A great storm rises; Jonah is thrown overboard and swallowed by a great fish.', miles: 100, at: 1, by: 'sea' },
+      { label: 'Preaching in Nineveh', ref: 'Jonah 3:1-10', copy: 'Sent a second time, Jonah goes to Nineveh; the city believes God and turns from its evil.', miles: 600, at: 2 }
     ]
   },
   {
@@ -11999,22 +11998,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Long caravan from the East',
     days: 'Months of caravan travel',
     modern: 'From the region of Iraq/Iran to the Bethlehem area',
-    note: 'The Magi’s homeland "in the East" is unnamed (often Babylon or Persia); only Jerusalem and Bethlehem are fixed.',
+    note: 'Matthew says only that the Magi came \'from the east\'; their homeland and road are not recorded.',
     sources: [
       'The Magi come "from the East" to Jerusalem following a star (Matthew 2:1-2); their exact country is not named.',
       'Herod’s scribes point them to Bethlehem from Micah 5:2 (Matthew 2:5-6).',
       'Bethlehem lies about six miles south of Jerusalem, a short final leg.'
     ],
     points: [
-      { ancient: 'The East', modern: 'Babylon/Persia region', x: 84, y: 45.7, lat: 33, lon: 45.5 },
-      { ancient: 'Desert caravan route', modern: 'Syrian desert corridor', x: 44.4, y: 44.1, lat: 33.2, lon: 39.5 },
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 16.2, y: 55.2, lat: 31.78, lon: 35.23 },
-      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 16, y: 55.9, lat: 31.7, lon: 35.2 }
+      { ancient: 'The East', modern: 'east of Judea (Persia and Babylon are common guesses)', x: 85, y: 15, lat: 33, lon: 45.5 },
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 15, y: 81, lat: 31.78, lon: 35.23 },
+      { ancient: 'Bethlehem', modern: 'Bethlehem, West Bank', x: 15, y: 85, lat: 31.7, lon: 35.2 }
     ],
     steps: [
-      { label: 'Following the star', ref: 'Matthew 2:1-2', copy: 'Wise men arrive in Jerusalem asking for the newborn king.', miles: 850 },
-      { label: 'Sent to Bethlehem', ref: 'Matthew 2:8', copy: 'Herod directs them to Bethlehem and asks for a report.', miles: 6 },
-      { label: 'Worship and warning', ref: 'Matthew 2:11-12', copy: 'They worship the child and return home another way.', miles: 0 }
+      { label: 'Following the star', ref: 'Matthew 2:1-2', copy: 'Magi from the east arrive in Jerusalem asking where the newborn king of the Jews is.', miles: 850, at: 1 },
+      { label: 'Sent to Bethlehem', ref: 'Matthew 2:3-9', copy: 'Herod sends them to Bethlehem and asks them to report back; the star goes ahead of them.', miles: 6, at: 2 },
+      { label: 'Worship and gifts', ref: 'Matthew 2:10-11', copy: 'They find the child with Mary, bow down to worship him, and offer gold, frankincense and myrrh.', at: 2 },
+      { label: 'Home by another way', ref: 'Matthew 2:12', copy: 'Warned in a dream not to go back to Herod, they return to their country by another route.', miles: 850, at: 0 }
     ]
   },
   {
@@ -12041,9 +12040,9 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Nazareth', modern: 'Nazareth, Israel', x: 84, y: 28.5, lat: 32.7, lon: 35.3 }
     ],
     steps: [
-      { label: 'Fleeing by night', ref: 'Matthew 2:14', copy: 'Joseph takes the child and his mother and leaves for Egypt.', miles: 200 },
-      { label: 'Safe until Herod dies', ref: 'Matthew 2:15', copy: 'They remain in Egypt until it is safe to return.', miles: 0 },
-      { label: 'Home to Nazareth', ref: 'Matthew 2:22-23', copy: 'They settle in Galilee, in the town of Nazareth.', miles: 150 }
+      { label: 'Fleeing by night', ref: 'Matthew 2:14', copy: 'Joseph takes the child and his mother and leaves for Egypt.', miles: 200, at: 1 },
+      { label: 'Safe until Herod dies', ref: 'Matthew 2:15', copy: 'They remain in Egypt until it is safe to return.', miles: 0, at: 1 },
+      { label: 'Home to Nazareth', ref: 'Matthew 2:22-23', copy: 'They settle in Galilee, in the town of Nazareth.', miles: 150, at: 2 }
     ]
   },
   {
@@ -12177,21 +12176,22 @@ const BIBLE_JOURNEYS = [
     mode: 'Walking and back',
     days: 'A single afternoon and evening',
     modern: 'Jerusalem out to a nearby village and back',
-    note: 'Emmaus is "about seven miles" from Jerusalem (Luke 24:13); several sites are proposed for it.',
+    note: 'Emmaus has several proposed sites. Luke 24:13 puts it about seven miles from Jerusalem, so the map uses el-Qubeibeh, one site at that distance.',
     sources: [
       'Two disciples walk to Emmaus, about sixty stadia (seven miles) from Jerusalem (Luke 24:13).',
       'The risen Jesus joins them unrecognized and opens the Scriptures (Luke 24:27).',
       'They recognize him in the breaking of bread and hurry back to Jerusalem (Luke 24:31-33).'
     ],
     points: [
-      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 84, y: 60, lat: 31.78, lon: 35.23 },
-      { ancient: 'On the way', modern: 'Judean hills', x: 52.8, y: 46.7, lat: 31.82, lon: 35.12 },
-      { ancient: 'Emmaus', modern: 'Emmaus-Nicopolis (debated)', x: 16, y: 40, lat: 31.84, lon: 34.99 }
+      { ancient: 'Jerusalem', modern: 'Jerusalem', x: 85, y: 85, lat: 31.78, lon: 35.23 },
+      { ancient: 'On the road', modern: 'Judean hills', x: 50, y: 50, lat: 31.81, lon: 35.18 },
+      { ancient: 'Emmaus', modern: 'el-Qubeibeh (one proposed site)', x: 15, y: 15, lat: 31.84, lon: 35.13 }
     ],
     steps: [
-      { label: 'Walking and talking', ref: 'Luke 24:13-16', copy: 'They discuss the crucifixion as a stranger draws near.', miles: 5 },
-      { label: 'Opening the Scriptures', ref: 'Luke 24:27', copy: 'He explains all that was written about himself.', miles: 2 },
-      { label: 'Known in the bread', ref: 'Luke 24:30-33', copy: 'Their eyes are opened; they rush back to Jerusalem.', miles: 7 }
+      { label: 'Walking and talking', ref: 'Luke 24:13-16', copy: 'Two disciples talk over everything that has happened as Jesus himself comes near, but they don\'t recognize him.', miles: 3, at: 1 },
+      { label: 'Opening the Scriptures', ref: 'Luke 24:25-27', copy: 'Beginning with Moses and all the Prophets, he explains what was written about himself.', at: 1 },
+      { label: 'Known in the breaking of bread', ref: 'Luke 24:28-32', copy: 'At the table he breaks the bread; their eyes are opened, and he vanishes from their sight.', miles: 4, at: 2 },
+      { label: 'Back to Jerusalem', ref: 'Luke 24:33-35', copy: 'That same hour they return to Jerusalem and find the Eleven saying, “The Lord has indeed risen and has appeared to Simon!”', miles: 7, at: 0 }
     ]
   },
   {
@@ -31980,7 +31980,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.632";
+const APP_VERSION = "3.0.633";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32003,6 +32003,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.633 — More journeys, checked against the text</div>
+<ul>
+<li>Abraham, the Exodus, Ruth, Mary and Joseph, the Magi, the flight to Egypt, Jesus around Galilee, Jesus going up to Jerusalem, the Road to Emmaus and Jonah were checked against Scripture: every step now stands at its real place, guessed waypoints were removed, and missing moments were added (Cana's wedding, the Magi going home another way, the two disciples hurrying back from Emmaus).</li>
+<li>Emmaus now sits about seven miles from Jerusalem, as Luke 24:13 says.</li>
+</ul>
 <div class="un-version-label">v3.0.632 — Paul's journeys, stop by stop</div>
 <ul>
 <li>All four of Paul's journeys were rebuilt from Acts: every city and port the text names now has its own stop (Iconium, Lystra and Derbe are no longer lumped together), sea legs show a little boat, and the trips home are drawn.</li>
