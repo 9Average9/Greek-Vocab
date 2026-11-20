@@ -1,0 +1,84 @@
+{
+ "_about": "Miles after the Atlas sync.",
+ "jacob-peniel": {
+  "steps": [
+   {
+    "label": "The camp of God",
+    "ref": "Genesis 32:1-2",
+    "copy": "The angels of God meet him. “This is the camp of God,” he says, and names the place Mahanaim.",
+    "at": 0
+   },
+   {
+    "label": "Wrestling till dawn",
+    "ref": "Genesis 32:22-31",
+    "copy": "By the Jabbok a man wrestles with Jacob until daybreak and renames him Israel.",
+    "miles": 2,
+    "at": 1
+   },
+   {
+    "label": "Face to face with Esau",
+    "ref": "Genesis 33:1-4",
+    "copy": "Esau runs to meet him, embraces him, and they weep.",
+    "at": 1
+   },
+   {
+    "label": "Succoth",
+    "ref": "Genesis 33:17",
+    "copy": "Jacob builds a house for himself and shelters for his livestock.",
+    "miles": 4,
+    "at": 2
+   },
+   {
+    "label": "On to Shechem",
+    "ref": "Genesis 33:18-20",
+    "copy": "He comes safely to the city of Shechem and sets up an altar.",
+    "miles": 25,
+    "at": 3
+   }
+  ]
+ },
+ "gideon-midian-pursuit": {
+  "steps": [
+   {
+    "label": "The 300 at the spring",
+    "ref": "Judges 7:1-8",
+    "copy": "God keeps only the three hundred men who lapped the water and sends the rest home.",
+    "at": 0
+   },
+   {
+    "label": "Torches and trumpets",
+    "ref": "Judges 7:19-22",
+    "copy": "At night the 300 blow trumpets and smash their jars, and the Midianite camp turns on itself and flees.",
+    "at": 0
+   },
+   {
+    "label": "Seizing the waters",
+    "ref": "Judges 7:24-25",
+    "copy": "The men of Ephraim take the waters as far as the Jordan and capture the commanders Oreb and Zeeb.",
+    "miles": 30,
+    "at": 1
+   },
+   {
+    "label": "Faint yet pursuing",
+    "ref": "Judges 8:4-7",
+    "copy": "Gideon's 300 cross the Jordan, exhausted, but the officials of Succoth refuse them bread.",
+    "miles": 5,
+    "at": 2
+   },
+   {
+    "label": "Penuel refuses too",
+    "ref": "Judges 8:8-9",
+    "copy": "The men of Penuel give the same answer.",
+    "miles": 4,
+    "at": 3
+   },
+   {
+    "label": "Overtaking at Karkor",
+    "ref": "Judges 8:10-12",
+    "copy": "He surprises the camp and captures the two kings of Midian, Zebah and Zalmunna.",
+    "miles": 40,
+    "at": 4
+   }
+  ]
+ }
+}

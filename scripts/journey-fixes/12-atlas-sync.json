@@ -1,0 +1,467 @@
+{
+ "_about": "Sync journey points with the Atlas audit.",
+ "lot-flees-sodom": {
+  "points": [
+   {
+    "ancient": "Sodom",
+    "modern": "Southern Dead Sea plain",
+    "x": 16,
+    "y": 59.9,
+    "lat": 31.05,
+    "lon": 35.4
+   },
+   {
+    "ancient": "Zoar",
+    "modern": "Ghor es-Safi area, Jordan",
+    "lat": 31.05,
+    "lon": 35.47
+   },
+   {
+    "ancient": "The hills",
+    "modern": "Highlands east of the Dead Sea",
+    "x": 84,
+    "y": 40.1,
+    "lat": 31.1,
+    "lon": 35.6
+   }
+  ]
+ },
+ "balaam-pethor-moab": {
+  "points": [
+   {
+    "ancient": "Pethor",
+    "modern": "upper Euphrates, Syria",
+    "lat": 36.67,
+    "lon": 38.12
+   },
+   {
+    "ancient": "On the road",
+    "modern": "on the way to Moab (spot unknown)",
+    "x": 28,
+    "y": 73,
+    "lat": 32.3,
+    "lon": 36.1
+   },
+   {
+    "ancient": "City of Moab",
+    "modern": "by the Arnon gorge, Jordan",
+    "x": 15,
+    "y": 85,
+    "lat": 31.46,
+    "lon": 35.65
+   },
+   {
+    "ancient": "The heights of Moab",
+    "modern": "Bamoth-baal, Pisgah and Peor",
+    "x": 17,
+    "y": 81,
+    "lat": 31.77,
+    "lon": 35.72
+   }
+  ]
+ },
+ "gideon-midian-pursuit": {
+  "points": [
+   {
+    "ancient": "Spring of Harod",
+    "modern": "Ain Jalut, Jezreel valley",
+    "x": 15,
+    "y": 15,
+    "lat": 32.55,
+    "lon": 35.36
+   },
+   {
+    "ancient": "The Jordan",
+    "modern": "Jordan crossing (spot unknown)",
+    "x": 30,
+    "y": 62,
+    "lat": 32.25,
+    "lon": 35.55
+   },
+   {
+    "ancient": "Succoth",
+    "modern": "Tell Deir Alla, Jordan valley",
+    "lat": 32.2,
+    "lon": 35.62
+   },
+   {
+    "ancient": "Penuel",
+    "modern": "Tulul edh-Dhahab, on the Jabbok (likely)",
+    "lat": 32.18,
+    "lon": 35.68
+   },
+   {
+    "ancient": "Karkor",
+    "modern": "eastern desert, Jordan",
+    "x": 85,
+    "y": 85,
+    "lat": 32.1,
+    "lon": 36.25
+   }
+  ]
+ },
+ "absalom-david-flight": {
+  "points": [
+   {
+    "ancient": "Jerusalem",
+    "modern": "Jerusalem",
+    "x": 15,
+    "y": 83,
+    "lat": 31.78,
+    "lon": 35.23
+   },
+   {
+    "ancient": "Mount of Olives",
+    "modern": "east of Jerusalem",
+    "x": 18,
+    "y": 85,
+    "lat": 31.77,
+    "lon": 35.25
+   },
+   {
+    "ancient": "Bahurim",
+    "modern": "Ras et-Tmim area (likely)",
+    "x": 21,
+    "y": 82,
+    "lat": 31.79,
+    "lon": 35.27
+   },
+   {
+    "ancient": "The Jordan",
+    "modern": "Jordan valley (crossing point unknown)",
+    "x": 61,
+    "y": 56,
+    "lat": 31.95,
+    "lon": 35.55
+   },
+   {
+    "ancient": "Mahanaim",
+    "modern": "Gilead, Jordan (site debated)",
+    "lat": 32.19,
+    "lon": 35.66
+   }
+  ]
+ },
+ "jesus-cana-capernaum": {
+  "points": [
+   {
+    "ancient": "Cana",
+    "modern": "Khirbet Qana, Galilee (Kafr Kanna is the other candidate)",
+    "lat": 32.82,
+    "lon": 35.28
+   },
+   {
+    "ancient": "Capernaum",
+    "modern": "Capernaum, Sea of Galilee",
+    "x": 84,
+    "y": 37.9,
+    "lat": 32.88,
+    "lon": 35.575
+   }
+  ]
+ },
+ "jacob-peniel": {
+  "points": [
+   {
+    "ancient": "Mahanaim",
+    "modern": "Gilead, Jordan",
+    "lat": 32.19,
+    "lon": 35.66
+   },
+   {
+    "ancient": "Peniel (Jabbok)",
+    "modern": "Tulul edh-Dhahab, on the Jabbok (likely)",
+    "lat": 32.18,
+    "lon": 35.68
+   },
+   {
+    "ancient": "Succoth",
+    "modern": "Tell Deir Alla, Jordan valley",
+    "lat": 32.2,
+    "lon": 35.62
+   },
+   {
+    "ancient": "Shechem",
+    "modern": "Nablus, West Bank",
+    "x": 16,
+    "y": 40,
+    "lat": 32.21,
+    "lon": 35.28
+   }
+  ]
+ },
+ "red-sea-crossing": {
+  "points": [
+   {
+    "ancient": "Rameses",
+    "modern": "eastern Nile Delta (site debated)",
+    "lat": 30.8,
+    "lon": 31.83
+   },
+   {
+    "ancient": "Succoth",
+    "modern": "Wadi Tumilat, Egypt",
+    "x": 30,
+    "y": 32,
+    "lat": 30.62,
+    "lon": 32.1
+   },
+   {
+    "ancient": "Etham",
+    "modern": "edge of the wilderness",
+    "x": 44,
+    "y": 48,
+    "lat": 30.45,
+    "lon": 32.3
+   },
+   {
+    "ancient": "Pi-hahiroth",
+    "modern": "by the sea (site debated)",
+    "x": 63,
+    "y": 85,
+    "lat": 30.05,
+    "lon": 32.55
+   },
+   {
+    "ancient": "Wilderness of Shur",
+    "modern": "northwest Sinai",
+    "x": 85,
+    "y": 71,
+    "lat": 30.2,
+    "lon": 32.85
+   }
+  ]
+ },
+ "sihon-og": {
+  "points": [
+   {
+    "ancient": "Jahaz",
+    "modern": "Moab plateau, Jordan",
+    "x": 40,
+    "y": 85,
+    "lat": 31.6,
+    "lon": 35.9
+   },
+   {
+    "ancient": "Heshbon",
+    "modern": "Hisban, Jordan",
+    "x": 29,
+    "y": 73,
+    "lat": 31.8,
+    "lon": 35.81
+   },
+   {
+    "ancient": "Jazer",
+    "modern": "Gilead, Jordan",
+    "x": 15,
+    "y": 61,
+    "lat": 32,
+    "lon": 35.7
+   },
+   {
+    "ancient": "Edrei",
+    "modern": "Daraa, Syria",
+    "lat": 32.62,
+    "lon": 36.1
+   }
+  ]
+ },
+ "jehu-revolt": {
+  "points": [
+   {
+    "ancient": "Ramoth-gilead",
+    "modern": "Tell er-Rumeith, near Ramtha (one proposal)",
+    "lat": 32.53,
+    "lon": 36
+   },
+   {
+    "ancient": "Jezreel",
+    "modern": "Tel Yizre’el",
+    "x": 16,
+    "y": 53.1,
+    "lat": 32.56,
+    "lon": 35.33
+   }
+  ]
+ },
+ "ahab-ramoth-gilead": {
+  "points": [
+   {
+    "ancient": "Samaria",
+    "modern": "Sebastia, West Bank",
+    "x": 16,
+    "y": 69.5,
+    "lat": 32.28,
+    "lon": 35.19
+   },
+   {
+    "ancient": "Ramoth-gilead",
+    "modern": "Tell er-Rumeith, near Ramtha (one proposal)",
+    "lat": 32.53,
+    "lon": 36
+   }
+  ]
+ },
+ "joshua-shechem-covenant": {
+  "points": [
+   {
+    "ancient": "Shechem",
+    "modern": "near Nablus, West Bank",
+    "x": 85,
+    "y": 15,
+    "lat": 32.21,
+    "lon": 35.28
+   },
+   {
+    "ancient": "Timnath-serah",
+    "modern": "Khirbet Tibnah (likely)",
+    "lat": 32.01,
+    "lon": 35.11
+   }
+  ]
+ },
+ "ishbosheth-mahanaim": {
+  "points": [
+   {
+    "ancient": "Mahanaim",
+    "modern": "Gilead, Jordan (site debated)",
+    "lat": 32.19,
+    "lon": 35.66
+   },
+   {
+    "ancient": "Pool of Gibeon",
+    "modern": "El-Jib, West Bank",
+    "x": 15,
+    "y": 85,
+    "lat": 31.85,
+    "lon": 35.18
+   }
+  ]
+ },
+ "elisha-moab-campaign": {
+  "points": [
+   {
+    "ancient": "Samaria",
+    "modern": "Sebastia, West Bank",
+    "x": 39,
+    "y": 16,
+    "lat": 32.28,
+    "lon": 35.19
+   },
+   {
+    "ancient": "Wilderness of Edom",
+    "modern": "South of the Dead Sea",
+    "x": 43.3,
+    "y": 84,
+    "lat": 30.8,
+    "lon": 35.3
+   },
+   {
+    "ancient": "Kir-hareseth",
+    "modern": "Kerak, Jordan",
+    "lat": 31.18,
+    "lon": 35.7
+   }
+  ]
+ },
+ "david-census-circuit": {
+  "points": [
+   {
+    "ancient": "Jerusalem",
+    "modern": "Jerusalem",
+    "x": 45,
+    "y": 69,
+    "lat": 31.78,
+    "lon": 35.23
+   },
+   {
+    "ancient": "Aroer",
+    "modern": "by the Arnon gorge, Jordan",
+    "lat": 31.47,
+    "lon": 35.81
+   },
+   {
+    "ancient": "Gad and Jazer",
+    "modern": "Gilead, Jordan",
+    "x": 76,
+    "y": 62,
+    "lat": 32,
+    "lon": 35.7
+   },
+   {
+    "ancient": "Dan",
+    "modern": "Tel Dan, Israel",
+    "x": 73,
+    "y": 24,
+    "lat": 33.25,
+    "lon": 35.65
+   },
+   {
+    "ancient": "Sidon",
+    "modern": "Saida, Lebanon",
+    "x": 54,
+    "y": 15,
+    "lat": 33.56,
+    "lon": 35.37
+   },
+   {
+    "ancient": "Tyre",
+    "modern": "Tyre, Lebanon",
+    "x": 43,
+    "y": 24,
+    "lat": 33.27,
+    "lon": 35.2
+   },
+   {
+    "ancient": "Beersheba",
+    "modern": "Beersheba, Israel",
+    "x": 15,
+    "y": 85,
+    "lat": 31.25,
+    "lon": 34.79
+   }
+  ]
+ },
+ "jacob-canaan-haran": {
+  "points": [
+   {
+    "ancient": "Beersheba",
+    "modern": "Beersheba, Israel",
+    "x": 15,
+    "y": 85,
+    "lat": 31.25,
+    "lon": 34.79
+   },
+   {
+    "ancient": "Bethel",
+    "modern": "Beitin, West Bank",
+    "x": 22,
+    "y": 77,
+    "lat": 31.93,
+    "lon": 35.22
+   },
+   {
+    "ancient": "Haran",
+    "modern": "near Sanliurfa, Turkey",
+    "x": 85,
+    "y": 15,
+    "lat": 36.87,
+    "lon": 39.03
+   },
+   {
+    "ancient": "Peniel",
+    "modern": "Tulul edh-Dhahab, on the Jabbok (likely)",
+    "lat": 32.18,
+    "lon": 35.68
+   },
+   {
+    "ancient": "Shechem",
+    "modern": "near Nablus, West Bank",
+    "x": 24,
+    "y": 72,
+    "lat": 32.21,
+    "lon": 35.28
+   }
+  ]
+ }
+}

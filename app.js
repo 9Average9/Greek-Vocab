@@ -11406,7 +11406,7 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Beersheba', modern: 'Beersheba, Israel', x: 15, y: 85, lat: 31.25, lon: 34.79 },
       { ancient: 'Bethel', modern: 'Beitin, West Bank', x: 22, y: 77, lat: 31.93, lon: 35.22 },
       { ancient: 'Haran', modern: 'near Sanliurfa, Turkey', x: 85, y: 15, lat: 36.87, lon: 39.03 },
-      { ancient: 'Peniel', modern: 'Jabbok River, Jordan', x: 32, y: 73, lat: 32.18, lon: 35.62 },
+      { ancient: 'Peniel', modern: 'Tulul edh-Dhahab, on the Jabbok (likely)', x: 30, y: 73, lat: 32.18, lon: 35.68 },
       { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 24, y: 72, lat: 32.21, lon: 35.28 }
     ],
     steps: [
@@ -12300,7 +12300,7 @@ const BIBLE_JOURNEYS = [
     ],
     points: [
       { ancient: 'Sodom', modern: 'Southern Dead Sea plain', x: 16, y: 59.9, lat: 31.05, lon: 35.4 },
-      { ancient: 'Zoar', modern: 'Ghor es-Safi area, Jordan', x: 50, y: 59.9, lat: 31.05, lon: 35.5 },
+      { ancient: 'Zoar', modern: 'Ghor es-Safi area, Jordan', x: 40, y: 60, lat: 31.05, lon: 35.47 },
       { ancient: 'The hills', modern: 'Highlands east of the Dead Sea', x: 84, y: 40.1, lat: 31.1, lon: 35.6 }
     ],
     steps: [
@@ -12359,7 +12359,7 @@ const BIBLE_JOURNEYS = [
       'He meets Balak at the edge of his territory by the Arnon and goes up to the high places (Numbers 22:36-41).'
     ],
     points: [
-      { ancient: 'Pethor', modern: 'upper Euphrates, Syria', x: 85, y: 15, lat: 36.5, lon: 38 },
+      { ancient: 'Pethor', modern: 'upper Euphrates, Syria', x: 86, y: 10, lat: 36.67, lon: 38.12 },
       { ancient: 'On the road', modern: 'on the way to Moab (spot unknown)', x: 28, y: 73, lat: 32.3, lon: 36.1 },
       { ancient: 'City of Moab', modern: 'by the Arnon gorge, Jordan', x: 15, y: 85, lat: 31.46, lon: 35.65 },
       { ancient: 'The heights of Moab', modern: 'Bamoth-baal, Pisgah and Peor', x: 17, y: 81, lat: 31.77, lon: 35.72 }
@@ -12454,8 +12454,8 @@ const BIBLE_JOURNEYS = [
     points: [
       { ancient: 'Spring of Harod', modern: 'Ain Jalut, Jezreel valley', x: 15, y: 15, lat: 32.55, lon: 35.36 },
       { ancient: 'The Jordan', modern: 'Jordan crossing (spot unknown)', x: 30, y: 62, lat: 32.25, lon: 35.55 },
-      { ancient: 'Succoth', modern: 'Jordan valley, Jordan', x: 32, y: 69, lat: 32.2, lon: 35.57 },
-      { ancient: 'Penuel', modern: 'by the Jabbok, Jordan (site debated)', x: 35, y: 85, lat: 32.1, lon: 35.62 },
+      { ancient: 'Succoth', modern: 'Tell Deir Alla, Jordan valley', x: 35, y: 70, lat: 32.2, lon: 35.62 },
+      { ancient: 'Penuel', modern: 'Tulul edh-Dhahab, on the Jabbok (likely)', x: 40, y: 73, lat: 32.18, lon: 35.68 },
       { ancient: 'Karkor', modern: 'eastern desert, Jordan', x: 85, y: 85, lat: 32.1, lon: 36.25 }
     ],
     steps: [
@@ -12463,7 +12463,7 @@ const BIBLE_JOURNEYS = [
       { label: 'Torches and trumpets', ref: 'Judges 7:19-22', copy: 'At night the 300 blow trumpets and smash their jars, and the Midianite camp turns on itself and flees.', at: 0 },
       { label: 'Seizing the waters', ref: 'Judges 7:24-25', copy: 'The men of Ephraim take the waters as far as the Jordan and capture the commanders Oreb and Zeeb.', miles: 30, at: 1 },
       { label: 'Faint yet pursuing', ref: 'Judges 8:4-7', copy: 'Gideon\'s 300 cross the Jordan, exhausted, but the officials of Succoth refuse them bread.', miles: 5, at: 2 },
-      { label: 'Penuel refuses too', ref: 'Judges 8:8-9', copy: 'The men of Penuel give the same answer.', miles: 7, at: 3 },
+      { label: 'Penuel refuses too', ref: 'Judges 8:8-9', copy: 'The men of Penuel give the same answer.', miles: 4, at: 3 },
       { label: 'Overtaking at Karkor', ref: 'Judges 8:10-12', copy: 'He surprises the camp and captures the two kings of Midian, Zebah and Zalmunna.', miles: 40, at: 4 }
     ]
   },
@@ -12519,7 +12519,7 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Mount of Olives', modern: 'east of Jerusalem', x: 18, y: 85, lat: 31.77, lon: 35.25 },
       { ancient: 'Bahurim', modern: 'Ras et-Tmim area (likely)', x: 21, y: 82, lat: 31.79, lon: 35.27 },
       { ancient: 'The Jordan', modern: 'Jordan valley (crossing point unknown)', x: 61, y: 56, lat: 31.95, lon: 35.55 },
-      { ancient: 'Mahanaim', modern: 'Gilead, Jordan (site debated)', x: 85, y: 15, lat: 32.2, lon: 35.72 }
+      { ancient: 'Mahanaim', modern: 'Gilead, Jordan (site debated)', x: 77, y: 17, lat: 32.19, lon: 35.66 }
     ],
     steps: [
       { label: 'Across the Kidron', ref: '2 Samuel 15:13-23', copy: 'Warned that Israel has turned to Absalom, David leaves the city, and the whole land weeps as the people cross the Kidron.', at: 0 },
@@ -12577,7 +12577,7 @@ const BIBLE_JOURNEYS = [
       'Capernaum becomes his base by the sea (Matthew 4:13).'
     ],
     points: [
-      { ancient: 'Cana', modern: 'Khirbet Qana, Galilee', x: 16, y: 62.1, lat: 32.81, lon: 35.34 },
+      { ancient: 'Cana', modern: 'Khirbet Qana, Galilee (Kafr Kanna is the other candidate)', x: 15, y: 85, lat: 32.82, lon: 35.28 },
       { ancient: 'Capernaum', modern: 'Capernaum, Sea of Galilee', x: 84, y: 37.9, lat: 32.88, lon: 35.575 }
     ],
     steps: [
@@ -12808,16 +12808,16 @@ const BIBLE_JOURNEYS = [
       'After meeting Esau he moves to Succoth and then to Shechem (Genesis 33:17-18).'
     ],
     points: [
-      { ancient: 'Mahanaim', modern: 'Gilead, Jordan', x: 84, y: 41.8, lat: 32.2, lon: 35.72 },
-      { ancient: 'Peniel (Jabbok)', modern: 'Jabbok river, Jordan', x: 68.5, y: 60, lat: 32.1, lon: 35.62 },
-      { ancient: 'Succoth', modern: 'Jordan valley, Jordan', x: 60.8, y: 41.8, lat: 32.2, lon: 35.57 },
+      { ancient: 'Mahanaim', modern: 'Gilead, Jordan', x: 81, y: 62, lat: 32.19, lon: 35.66 },
+      { ancient: 'Peniel (Jabbok)', modern: 'Tulul edh-Dhahab, on the Jabbok (likely)', x: 85, y: 85, lat: 32.18, lon: 35.68 },
+      { ancient: 'Succoth', modern: 'Tell Deir Alla, Jordan valley', x: 74, y: 38, lat: 32.2, lon: 35.62 },
       { ancient: 'Shechem', modern: 'Nablus, West Bank', x: 16, y: 40, lat: 32.21, lon: 35.28 }
     ],
     steps: [
       { label: 'The camp of God', ref: 'Genesis 32:1-2', copy: 'The angels of God meet him. “This is the camp of God,” he says, and names the place Mahanaim.', at: 0 },
-      { label: 'Wrestling till dawn', ref: 'Genesis 32:22-31', copy: 'By the Jabbok a man wrestles with Jacob until daybreak and renames him Israel.', miles: 8, at: 1 },
+      { label: 'Wrestling till dawn', ref: 'Genesis 32:22-31', copy: 'By the Jabbok a man wrestles with Jacob until daybreak and renames him Israel.', miles: 2, at: 1 },
       { label: 'Face to face with Esau', ref: 'Genesis 33:1-4', copy: 'Esau runs to meet him, embraces him, and they weep.', at: 1 },
-      { label: 'Succoth', ref: 'Genesis 33:17', copy: 'Jacob builds a house for himself and shelters for his livestock.', miles: 8, at: 2 },
+      { label: 'Succoth', ref: 'Genesis 33:17', copy: 'Jacob builds a house for himself and shelters for his livestock.', miles: 4, at: 2 },
       { label: 'On to Shechem', ref: 'Genesis 33:18-20', copy: 'He comes safely to the city of Shechem and sets up an altar.', miles: 25, at: 3 }
     ]
   },
@@ -13378,7 +13378,7 @@ const BIBLE_JOURNEYS = [
       'The sea divides and Israel passes through on dry ground (Exodus 14:21-22).'
     ],
     points: [
-      { ancient: 'Rameses', modern: 'eastern Nile Delta (site debated)', x: 15, y: 15, lat: 30.8, lon: 31.9 },
+      { ancient: 'Rameses', modern: 'eastern Nile Delta (site debated)', x: 10, y: 15, lat: 30.8, lon: 31.83 },
       { ancient: 'Succoth', modern: 'Wadi Tumilat, Egypt', x: 30, y: 32, lat: 30.62, lon: 32.1 },
       { ancient: 'Etham', modern: 'edge of the wilderness', x: 44, y: 48, lat: 30.45, lon: 32.3 },
       { ancient: 'Pi-hahiroth', modern: 'by the sea (site debated)', x: 63, y: 85, lat: 30.05, lon: 32.55 },
@@ -13875,7 +13875,7 @@ const BIBLE_JOURNEYS = [
       { ancient: 'Jahaz', modern: 'Moab plateau, Jordan', x: 40, y: 85, lat: 31.6, lon: 35.9 },
       { ancient: 'Heshbon', modern: 'Hisban, Jordan', x: 29, y: 73, lat: 31.8, lon: 35.81 },
       { ancient: 'Jazer', modern: 'Gilead, Jordan', x: 15, y: 61, lat: 32, lon: 35.7 },
-      { ancient: 'Edrei', modern: 'Daraa, Syria', x: 85, y: 15, lat: 32.79, lon: 36.27 }
+      { ancient: 'Edrei', modern: 'Daraa, Syria', x: 65, y: 24, lat: 32.62, lon: 36.1 }
     ],
     steps: [
       { label: 'Refused passage', ref: 'Numbers 21:21-23', copy: 'Sihon king of the Amorites refuses to let Israel pass and comes out to fight them at Jahaz.', at: 0 },
@@ -14414,7 +14414,7 @@ const BIBLE_JOURNEYS = [
       'He is recognized by his mad driving (2 Kings 9:20).'
     ],
     points: [
-      { ancient: 'Ramoth-gilead', modern: 'Gilead, Jordan', x: 84, y: 46.9, lat: 32.6, lon: 35.85 },
+      { ancient: 'Ramoth-gilead', modern: 'Tell er-Rumeith, near Ramtha (one proposal)', x: 85, y: 85, lat: 32.53, lon: 36 },
       { ancient: 'Jezreel', modern: 'Tel Yizre’el', x: 16, y: 53.1, lat: 32.56, lon: 35.33 }
     ],
     steps: [
@@ -15170,7 +15170,7 @@ const BIBLE_JOURNEYS = [
     ],
     points: [
       { ancient: 'Samaria', modern: 'Sebastia, West Bank', x: 16, y: 69.5, lat: 32.28, lon: 35.19 },
-      { ancient: 'Ramoth-gilead', modern: 'Gilead, Jordan', x: 84, y: 30.5, lat: 32.6, lon: 35.85 }
+      { ancient: 'Ramoth-gilead', modern: 'Tell er-Rumeith, near Ramtha (one proposal)', x: 85, y: 15, lat: 32.53, lon: 36 }
     ],
     steps: [
       { label: 'A call to war', ref: '1 Kings 22:2-4', copy: 'At Samaria, Ahab asks Jehoshaphat to go up with him to Ramoth-gilead.', at: 0 },
@@ -15527,7 +15527,7 @@ const BIBLE_JOURNEYS = [
     ],
     points: [
       { ancient: 'Shechem', modern: 'near Nablus, West Bank', x: 85, y: 15, lat: 32.21, lon: 35.28 },
-      { ancient: 'Timnath-serah', modern: 'Kifl Haris area, West Bank (likely)', x: 15, y: 85, lat: 32.11, lon: 35.13 }
+      { ancient: 'Timnath-serah', modern: 'Khirbet Tibnah (likely)', x: 15, y: 85, lat: 32.01, lon: 35.11 }
     ],
     steps: [
       { label: 'Israel gathered', ref: 'Joshua 24:1-13', copy: 'Joshua gathers all the tribes at Shechem and retells all the Lord has done.', at: 0 },
@@ -15770,7 +15770,7 @@ const BIBLE_JOURNEYS = [
       'Abner goes out from Mahanaim to Gibeon (2 Samuel 2:12).'
     ],
     points: [
-      { ancient: 'Mahanaim', modern: 'Gilead, Jordan (site debated)', x: 85, y: 15, lat: 32.2, lon: 35.72 },
+      { ancient: 'Mahanaim', modern: 'Gilead, Jordan (site debated)', x: 85, y: 15, lat: 32.19, lon: 35.66 },
       { ancient: 'Pool of Gibeon', modern: 'El-Jib, West Bank', x: 15, y: 85, lat: 31.85, lon: 35.18 }
     ],
     steps: [
@@ -15952,7 +15952,7 @@ const BIBLE_JOURNEYS = [
     points: [
       { ancient: 'Samaria', modern: 'Sebastia, West Bank', x: 39, y: 16, lat: 32.28, lon: 35.19 },
       { ancient: 'Wilderness of Edom', modern: 'South of the Dead Sea', x: 43.3, y: 84, lat: 30.8, lon: 35.3 },
-      { ancient: 'Kir-hareseth', modern: 'Kerak, Jordan', x: 61, y: 71.6, lat: 31.07, lon: 35.75 }
+      { ancient: 'Kir-hareseth', modern: 'Kerak, Jordan', x: 59, y: 67, lat: 31.18, lon: 35.7 }
     ],
     steps: [
       { label: 'By way of Edom', ref: '2 Kings 3:6-9', copy: 'The kings of Israel, Judah and Edom take the long road through the Desert of Edom; after seven days they have no water.', miles: 150, at: 1 },
@@ -16156,7 +16156,7 @@ const BIBLE_JOURNEYS = [
     ],
     points: [
       { ancient: 'Jerusalem', modern: 'Jerusalem', x: 45, y: 69, lat: 31.78, lon: 35.23 },
-      { ancient: 'Aroer', modern: 'by the Arnon gorge, Jordan', x: 85, y: 79, lat: 31.46, lon: 35.83 },
+      { ancient: 'Aroer', modern: 'by the Arnon gorge, Jordan', x: 84, y: 78, lat: 31.47, lon: 35.81 },
       { ancient: 'Gad and Jazer', modern: 'Gilead, Jordan', x: 76, y: 62, lat: 32, lon: 35.7 },
       { ancient: 'Dan', modern: 'Tel Dan, Israel', x: 73, y: 24, lat: 33.25, lon: 35.65 },
       { ancient: 'Sidon', modern: 'Saida, Lebanon', x: 54, y: 15, lat: 33.56, lon: 35.37 },
@@ -17957,6 +17957,8 @@ function _atlasBuildNameMatcher() {
     if (base) terms.add(base);
     const noParen = base.replace(/\s*\(.*?\)\s*$/, '').trim();
     if (noParen && noParen !== base) terms.add(noParen);
+    // Other spellings the Bible text uses for the same place (Peniel, Chinnereth…).
+    (place.aka || []).forEach(a => { if (a) terms.add(String(a).trim()); });
     terms.forEach(t => {
       // Skip short/ambiguous terms ("No", "On", "Ai", "Dan", …) — too noisy.
       if (t.length <= 3 || _ATLAS_NAME_BLOCK.has(t)) return;
@@ -32096,7 +32098,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.637";
+const APP_VERSION = "3.0.638";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32119,6 +32121,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.638 — Atlas places, checked</div>
+<ul>
+<li>All 516 Atlas places were checked. Pins that were off now sit on their identified sites: Kir-hareseth at Kerak, Edrei at Daraa, Succoth at Tell Deir Alla, Penuel on the Jabbok, Hazeroth at its traditional oasis, and Cana at Khirbet Qana.</li>
+<li>No more doubled pins: about 30 copies of the same place (like "Penuel," "Penuel ford" and "Penuel tower") are now one entry, with all their verses kept.</li>
+<li>Pins also show up for other spellings the Bible uses, like Peniel and Chinnereth.</li>
+<li>Places nobody can pin down are now marked debated, and the Jerusalem sites are spread out so you can tell them apart when you zoom in.</li>
+</ul>
 <div class="un-version-label">v3.0.637 — Every Old Testament journey, checked</div>
 <ul>
 <li>All 105 Old Testament journeys were checked against the text. Each one now follows the story in order, including trips back, so Jacob returns to Bethel, Saul goes home to Gibeah, and Joab's census loops from Aroer up to Dan, Sidon and Tyre and back down to Beersheba.</li>
