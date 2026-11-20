@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.625";
+const APP_VERSION = "3.0.626";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.626 — Clearer theology challenges</div>
+<ul>
+<li>Each challenge now explains what the group means by its claim, in plain words.</li>
+<li>A new "The passage they use" card shows the verses in your version, highlights the words the claim rests on, and explains how the group reads them.</li>
+<li>The books under the claim no longer cover its words.</li>
+</ul>
 <div class="un-version-label">v3.0.625 &mdash; More topics</div>
 <ul>
   <li><strong>Salvation for everyone</strong> &mdash; Every group&rsquo;s topics now start with Salvation, with more added (baptism, assurance, losing salvation, Jesus as Michael, atonement without sacrifice and more). &ldquo;What&rsquo;s trending&rdquo; has topics too: salvation, the gospel, end times, the church &amp; culture, the Holy Spirit today and more.</li>

@@ -40984,10 +40984,30 @@ body.ch-open { overflow: hidden; }
 .ch-steps li.on { opacity: 1; }
 .ch-steps .material-symbols-outlined { color: var(--ch-accent); }
 /* Claim */
-.ch-quote { position: relative; margin: 0 0 12px; padding: 22px 20px 52px 20px; border-radius: 26px; background: color-mix(in srgb, var(--card-solid-color, #fff) 92%, var(--ch-accent)); border: 1px solid var(--ch-line); box-shadow: 0 10px 26px color-mix(in srgb, var(--ch-accent) 10%, transparent); }
+.ch-quote { position: relative; margin: 0 0 12px; padding: 22px 20px 0 20px; border-radius: 26px; background: color-mix(in srgb, var(--card-solid-color, #fff) 92%, var(--ch-accent)); border: 1px solid var(--ch-line); box-shadow: 0 10px 26px color-mix(in srgb, var(--ch-accent) 10%, transparent); }
 .ch-qmark { position: absolute; left: 14px; top: 2px; font-family: Georgia, serif; font-size: 4rem; font-weight: 900; color: var(--ch-accent); line-height: 1; }
 .ch-quote p { margin: 0 0 0 26px; font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: 1.32rem; line-height: 1.38; color: var(--ch-ink); }
-.ch-books { position: absolute; right: -8px; bottom: -14px; width: 132px; height: auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,.18)); }
+/* The books sit under the claim (in the flow) so they never cover its words. */
+.ch-books { position: relative; display: block; margin: 6px -8px -14px auto; width: 112px; height: auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,.18)); }
+.ch-why + .ch-why { margin-top: 10px; }
+.ch-pass { margin-top: 12px; padding: 16px; border-radius: 22px; border: 1px solid var(--ch-line); background: var(--card-solid-color, #fff); }
+.ch-pass-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ch-pass-h > .material-symbols-outlined { color: var(--ch-accent); font-size: 28px; }
+.ch-pass-h b { font-size: 1.05rem; color: var(--ch-ink); flex: 1; min-width: 0; }
+.ch-pass-ref { padding: 3px 10px; border-radius: 999px; background: var(--ch-soft2); color: var(--ch-ink); font-weight: 850; font-size: .76rem; }
+.ch-pass-text { position: relative; margin: 12px 0 0; padding: 12px 14px 10px; border-radius: 16px; background: color-mix(in srgb, var(--card-solid-color, #fff) 90%, var(--ch-accent)); border-left: 4px solid var(--ch-accent); }
+.ch-pass-verses { margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: 1.02rem; line-height: 1.6; color: var(--font-color); overflow-wrap: anywhere; }
+.ch-pass-verses sup { font-family: inherit; font-size: .62em; font-weight: 800; color: var(--ch-accent); margin: 0 3px 0 2px; }
+.ch-pass-verses.ch-clamp { display: -webkit-box; -webkit-line-clamp: 7; -webkit-box-orient: vertical; overflow: hidden; }
+.ch-more { display: block; margin: 8px 0 0; padding: 0; border: 0; background: none; color: var(--ch-accent); font: inherit; font-weight: 800; font-size: .86rem; cursor: pointer; }
+.ch-pass-ver { display: block; margin-top: 6px; text-align: right; font-size: .7rem; font-weight: 800; letter-spacing: .08em; color: color-mix(in srgb, var(--font-color) 55%, transparent); }
+mark.ch-kw { background: color-mix(in srgb, var(--ch-accent) 22%, transparent); color: var(--ch-ink); font-weight: 800; padding: 0 3px; border-radius: 5px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.ch-pass-use, .ch-kws { margin-top: 14px; }
+.ch-pass-use b, .ch-kws > b { display: block; font-size: .78rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: var(--ch-ink); }
+.ch-pass-use p { margin: 6px 0 0; font-size: .93rem; line-height: 1.5; }
+.ch-kw-row { margin-top: 10px; }
+.ch-kw-row mark.ch-kw { font-family: 'Fraunces', Georgia, serif; font-size: .98rem; }
+.ch-kw-row p { margin: 4px 0 0; font-size: .9rem; line-height: 1.45; }
 .ch-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 18px 4px 12px; font-size: .78rem; color: color-mix(in srgb, var(--font-color) 70%, transparent); }
 .ch-group { padding: 3px 10px; border-radius: 999px; background: var(--ch-soft2); color: var(--ch-ink); font-weight: 850; font-size: .74rem; }
 .ch-why { display: flex; gap: 12px; padding: 16px; border-radius: 22px; border: 1px solid var(--ch-line); background: var(--card-solid-color, #fff); }
@@ -41097,3 +41117,4 @@ body.ch-open { overflow: hidden; }
 .ch-topic:active { transform: scale(.98); }
 .ch-topic-any { border-style: dashed; border-width: 1.5px; color: var(--ch-accent); }
 .ch-topic-any .material-symbols-outlined:first-child { color: var(--ch-pop); }
+.ch-gap { color: var(--ch-accent); font-weight: 900; margin: 0 4px; }
