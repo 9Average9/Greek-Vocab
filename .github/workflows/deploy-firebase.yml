@@ -1,0 +1,74 @@
+# Deploys the Cloud Functions and Firestore rules/indexes whenever they change
+# on main (or when run by hand from the Actions tab). Needs the FIREBASE_TOKEN
+# repository secret (made once with `firebase login:ci`); without it the run
+# is skipped with a warning.
+#
+# Safety: only functions that exist in functions/index.js are deployed, so
+# nothing in the project is ever deleted, and Firestore indexes not in
+# firestore.indexes.json are kept. The Google Calendar functions read
+# GCAL_CLIENT_SECRET from functions/.env (not in git), so they are skipped
+# unless a GCAL_CLIENT_SECRET repository secret is added too.
+name: Deploy Firebase
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'functions/**'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'firebase.json'
+      - '.github/workflows/deploy-firebase.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: firebase-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      GCAL_CLIENT_SECRET: ${{ secrets.GCAL_CLIENT_SECRET }}
+      FIREBASE_CLI: firebase-tools@15.37.0
+      PROJECT: greek-vocab-leaderboard
+    steps:
+      - name: No deploy key yet
+        if: env.FIREBASE_TOKEN == ''
+        run: echo "::warning::Add the FIREBASE_TOKEN repository secret to turn on auto-deploy."
+
+      - uses: actions/checkout@v4
+        if: env.FIREBASE_TOKEN != ''
+
+      - uses: actions/setup-node@v4
+        if: env.FIREBASE_TOKEN != ''
+        with:
+          node-version: 22
+
+      - name: Install function dependencies
+        if: env.FIREBASE_TOKEN != ''
+        working-directory: functions
+        run: npm ci
+
+      - name: Deploy functions
+        if: env.FIREBASE_TOKEN != ''
+        run: |
+          NAMES=$(grep -oP '^exports\.\K[A-Za-z0-9_]+' functions/index.js)
+          if [ -n "$GCAL_CLIENT_SECRET" ]; then
+            printf 'GCAL_CLIENT_SECRET=%s\n' "$GCAL_CLIENT_SECRET" > functions/.env
+          else
+            echo "::notice::Skipping the Google Calendar functions (no GCAL_CLIENT_SECRET secret)."
+            NAMES=$(echo "$NAMES" | grep -v Calendar)
+          fi
+          FNS=$(echo "$NAMES" | sed 's/^/functions:/' | paste -sd, -)
+          echo "Deploying: $FNS"
+          npx --yes "$FIREBASE_CLI" deploy --only "$FNS" --project "$PROJECT" --non-interactive --force
+
+      - name: Deploy Firestore rules and indexes
+        if: env.FIREBASE_TOKEN != ''
+        run: npx --yes "$FIREBASE_CLI" deploy --only firestore:rules,firestore:indexes --project "$PROJECT" --non-interactive
