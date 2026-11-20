@@ -31416,7 +31416,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.626";
+const APP_VERSION = "3.0.627";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -31439,6 +31439,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.627 — The guide has big news</div>
+<ul>
+<li>The guide puts on a quick show of what's new: rebuilt word sheets, At a glance, smarter cross references, searching the Greek and Hebrew, Multi-view and reading plans with friends.</li>
+<li>Then a drum roll for the biggest one: Challenge My Theology. Get a real claim another group makes from the Bible, open the passage, and see why you believe what you do.</li>
+</ul>
 <div class="un-version-label">v3.0.626 — Clearer theology challenges</div>
 <ul>
 <li>Each challenge now explains what the group means by its claim, in plain words.</li>
