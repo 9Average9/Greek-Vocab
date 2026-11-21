@@ -20124,7 +20124,8 @@ function _rpPlanFlat(plan) {
 // Plans saved before progress tracking get an anchor at their start date and
 // are assumed to be on pace up to today (they had no way to mark days read).
 function _rpNormalizePlan(p) {
-  if (!p || p.anchor) return p;
+  if (!p) return p;
+  if (p.anchor) { _rpFixFutureLog(p); return p; }
   const today = _rpTodayKeyLocal();
   const P = Math.max(1, p.perDay || 1);
   const start = p.startDate && p.startDate <= today ? p.startDate : today;
@@ -20165,6 +20166,7 @@ function _rpPlanStatus(plan) {
 // Re-pace what's left from today so it finishes by endKey (or, if that date has
 // passed, keep the pace and move the finish date out).
 function _rpReanchor(plan, endKey) {
+  if (plan.anchor) _rpBackfillHistory(plan);
   const total = _rpPlanFlat(plan).length;
   const today = _rpTodayKeyLocal();
   const read = Math.min(plan.read || 0, total);
@@ -20180,12 +20182,110 @@ function _rpReanchor(plan, endKey) {
 }
 function _rpScheduleRows(plan, st) {
   st = st || _rpPlanStatus(plan);
+  // Days already read, as they were read (a day you read ahead shows
+  // everything you read that day), then the schedule from the anchor on.
+  const hist = (Array.isArray(plan.history) ? plan.history : [])
+    .filter(h => h.end > h.start && h.start < st.total)
+    .map(h => ({ date: h.date, start: h.start, end: Math.min(st.total, h.end), reading: rpFmtReading(st.flat.slice(h.start, Math.min(st.total, h.end))), done: true }));
+  const covered = i => hist.some(h => i >= h.start && i < h.end);
+  const histDates = new Set(hist.map(h => h.date));
   const rows = [];
   for (let start = plan.anchor.idx, j = 0; start < st.total; start += st.P, j++) {
     const end = Math.min(st.total, start + st.P);
-    rows.push({ date: _rpAddDays(plan.anchor.date, j), start, end, reading: rpFmtReading(st.flat.slice(start, end)), done: end <= st.read });
+    const date = _rpAddDays(plan.anchor.date, j);
+    const done = end <= st.read;
+    if (done && (histDates.has(date) || covered(start))) continue;
+    rows.push({ date, start, end, reading: rpFmtReading(st.flat.slice(start, end)), done });
   }
-  return rows;
+  return [...hist, ...rows].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.start - b.start));
+}
+// Record what was read on a day (a second reading the same day extends it).
+function _rpLogDay(plan, date, start, end) {
+  const h = plan.history = Array.isArray(plan.history) ? plan.history : [];
+  const cur = h.find(x => x.date === date);
+  if (cur) { cur.start = Math.min(cur.start, start); cur.end = Math.max(cur.end, end); }
+  else h.push({ date, start, end });
+  h.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.start - b.start));
+  if (h.length > 800) h.splice(0, h.length - 800);
+  plan.log = { ...(plan.log || {}), [date]: true };
+}
+function _rpTodayHistory(plan) {
+  const today = _rpTodayKeyLocal();
+  return (plan.history || []).find(h => h.date === today) || null;
+}
+// Reading ahead counts as today: today keeps today's date and lists all you
+// read, and the rest of the plan starts again tomorrow at the same pace, so
+// every later day moves up and the plan finishes sooner.
+// Before re-pacing, keep the days already read in the schedule's history.
+function _rpBackfillHistory(plan) {
+  const today = _rpTodayKeyLocal();
+  try {
+    _rpScheduleRows(plan).filter(r => r.done && r.date < today).forEach(r => {
+      if (!(plan.history || []).some(h => h.date === r.date)) _rpLogDay(plan, r.date, r.start, r.end);
+    });
+  } catch {}
+}
+function _rpPullForward(plan) {
+  _rpBackfillHistory(plan);
+  const today = _rpTodayKeyLocal(), tomorrow = _rpAddDays(today, 1);
+  const total = _rpPlanFlat(plan).length;
+  const read = Math.min(plan.read || 0, total);
+  const P = Math.max(1, plan.anchor?.perDay || plan.perDay || 1);
+  const left = Math.max(0, total - read);
+  plan.anchor = { date: tomorrow, idx: read, perDay: P };
+  plan.perDay = P;
+  plan.days = Math.max(1, Math.ceil(left / P));
+  plan.endDate = left ? _rpAddDays(tomorrow, Math.ceil(left / P) - 1) : today;
+  plan.session = null;
+}
+// Plans read ahead before this worked that way have days marked done on
+// future dates. Fold them into today, pull the schedule forward, and fix the
+// habit calendar (those future days go back to open).
+function _rpFixFutureLog(plan) {
+  const today = _rpTodayKeyLocal();
+  const future = Object.keys(plan.log || {}).filter(d => d > today && plan.log[d]).sort();
+  if (!future.length) { if (plan.habitFix?.length) setTimeout(() => _rpSyncAheadHabit(plan.id), 0); return; }
+  const last = future[future.length - 1];
+  const rows = _rpScheduleRows(plan).filter(r => r.done && r.date >= today && r.date <= last);
+  if (rows.length) _rpLogDay(plan, today, Math.min(...rows.map(r => r.start)), Math.max(...rows.map(r => r.end)));
+  future.forEach(d => { delete plan.log[d]; });
+  plan.log[today] = true;
+  if (Array.isArray(plan.history)) plan.history = plan.history.filter(h => h.date <= today);
+  _rpPullForward(plan);
+  plan.habitFix = [...new Set([...(plan.habitFix || []), ...future])];
+  _rpWritePlan(plan);
+  setTimeout(() => _rpSyncAheadHabit(plan.id), 0);
+}
+// Habit Builder after reading ahead: today checked with everything read
+// today; future days that had been checked go back to open; the calendar
+// notes for the coming days follow the new schedule.
+let _rpAheadSyncing = false;
+async function _rpSyncAheadHabit(planId) {
+  if (_rpAheadSyncing) return;
+  const plan = rpGetPlan(planId);
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!plan || !plan.habitId || !uid || !window.Habits?.setEntry) return;
+  _rpAheadSyncing = true;
+  try {
+    const today = _rpTodayKeyLocal();
+    const h = _rpTodayHistory(plan);
+    if (h) {
+      const note = `📖 ${rpFmtReading(_rpPlanFlat(plan).slice(h.start, h.end))}`;
+      await window.Habits.setEntry(uid, plan.habitId, { date: today, status: "success", comment: note, source: "reading-plan", notify: false });
+      const habit = _habitItems.find(x => x.id === plan.habitId);
+      if (habit) habit.entries = { ...(habit.entries || {}), [today]: { ...(habit.entries?.[today] || {}), date: today, status: "success", comment: note } };
+    }
+    for (const d of plan.habitFix || []) {
+      if (d <= today) continue;
+      await window.Habits.setEntry(uid, plan.habitId, { date: d, status: "open", comment: "", source: "reading-plan", notify: false });
+      const habit = _habitItems.find(x => x.id === plan.habitId);
+      if (habit?.entries?.[d]) habit.entries[d] = { ...habit.entries[d], status: "open" };
+    }
+    await _rpSeedHabitCalendar(plan, uid, plan.habitId);
+    const fresh = rpGetPlan(planId);
+    if (fresh) { delete fresh.habitFix; fresh.calendarSeeded = true; _rpWritePlan(fresh); }
+  } catch (e) { console.warn("read-ahead habit sync failed", e); }
+  finally { _rpAheadSyncing = false; }
 }
 // Today onward into the habit's note calendar (days already done keep their check).
 async function _rpSeedHabitCalendar(plan, uid, habitId) {
@@ -20234,6 +20334,7 @@ async function rpStartReading(planId) {
   let ch = parts[part].first;
   if (saved && saved.ch >= parts[part].first && saved.ch <= parts[part].last) ch = saved.ch;
   _rpSession = { planId: plan.id, start: st.next.start, end: st.next.end, date: st.next.date, parts, part, done: false };
+  if (st.next.date > st.today) _rpSession.aheadOf = st.next.date;
   closeRpPlanView();
   await _rpOpenChapter(parts[part].book, ch, { show: true });
 }
@@ -20301,7 +20402,7 @@ function _rpSyncReader() {
   const part = s.parts[s.part];
   const of = s.parts.length > 1 ? ` · ${s.part + 1} of ${s.parts.length}` : "";
   const away = idx < 0;
-  const label = s.done ? `${_rpCap(_rpDayName(s.date))} is done` : away ? `Back to ${_rpPartLabel(part)}` : `${_rpPartLabel(part)}${of}`;
+  const label = s.done ? (s.ahead ? "Read ahead ✓ Counted for today" : `${_rpCap(_rpDayName(s.date))} is done`) : away ? `Back to ${_rpPartLabel(part)}` : `${s.aheadOf ? "Reading ahead · " : ""}${_rpPartLabel(part)}${of}`;
   const icon = s.done ? "task_alt" : away ? "undo" : "auto_stories";
   bar.innerHTML = `<button type="button" class="rp-rb-go" onclick="rpReaderBarTap()"${away ? "" : ' tabindex="-1"'}><span class="material-symbols-outlined" aria-hidden="true">${icon}</span><span class="rp-rb-label">${_rpEsc(label)}</span></button>` +
     `<button type="button" class="rp-rb-x" onclick="rpEndSession()" aria-label="Stop reading the plan"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>`;
@@ -20320,14 +20421,16 @@ function _rpFootHtml(s, idx, ch) {
     const st = plan ? _rpPlanStatus(_rpNormalizePlan(plan)) : null;
     const more = st && st.next && st.next.date <= st.today;
     const msg = st?.done ? "You finished the whole plan! 🎉"
+      : s.ahead ? `Counted for today. The rest of your plan moved up and now finishes ${rpFmtDate(st.finish)}.`
       : more ? `Next up: ${_rpDayName(st.next.date)}, ${_rpEsc(rpFmtReading(st.next.chapters))}.`
       : "Nice work. See you tomorrow.";
+    const keepAhead = s.ahead && st && !st.done;
     return `<div class="rp-rf-card rp-rf-done">
       <span class="material-symbols-outlined rp-rf-check" aria-hidden="true">task_alt</span>
-      <strong>${_rpCap(dayName)} is done</strong>
+      <strong>${s.ahead ? "Read ahead ✓" : `${_rpCap(dayName)} is done`}</strong>
       <p>${msg}</p>
       <div class="rp-rf-actions">
-        ${more ? `<button type="button" class="rp-rf-primary" onclick="rpStartReading()">Keep going<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>` : ""}
+        ${more || keepAhead ? `<button type="button" class="rp-rf-primary" onclick="rpStartReading()">${keepAhead ? "Keep reading ahead" : "Keep going"}<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></button>` : ""}
         <button type="button" class="rp-rf-ghost" onclick="rpBackToPlan()">Back to plan</button>
       </div>
     </div>`;
@@ -20349,6 +20452,12 @@ function _rpFootHtml(s, idx, ch) {
         <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
       </button>
     </div>`;
+  }
+  if (s.aheadOf) {
+    return `<div class="rp-rf-card">${steps}
+    <span class="rp-rf-kicker">That's all of ${dayName}, read ahead</span>
+    <button type="button" class="rp-rf-primary rp-rf-finish" onclick="rpMarkDone()"><span class="material-symbols-outlined" aria-hidden="true">check_circle</span>Mark done · counts for today</button>
+  </div>`;
   }
   return `<div class="rp-rf-card">${steps}
     <span class="rp-rf-kicker">That's all of ${dayName}</span>
@@ -20393,27 +20502,39 @@ async function rpMarkDone() {
   const plan = plans.find(p => p.id === s.planId);
   if (!plan) return;
   const flat = _rpPlanFlat(plan);
+  const today = _rpTodayKeyLocal();
+  const ahead = s.date > today;
+  const dayKey = ahead ? today : s.date;
   plan.read = Math.max(plan.read || 0, s.end);
-  plan.log = { ...(plan.log || {}), [s.date]: true };
+  _rpLogDay(plan, dayKey, s.start, s.end);
+  if (ahead) _rpPullForward(plan);
   plan.session = null;
   rpPersistPlans(plans);
   s.done = true;
+  s.ahead = ahead;
+  s.date = dayKey;
   _rpSyncReader();
   _rpRefreshSurfaces();
-  const note = `📖 ${rpFmtReading(flat.slice(s.start, s.end))}`;
-  await _rpCompleteHabitDay(plan, s.date, note);
+  // The habit's note for the day lists everything read that day.
+  const h = plan.history.find(x => x.date === dayKey);
+  const note = `📖 ${rpFmtReading(flat.slice(h ? h.start : s.start, h ? h.end : s.end))}`;
+  await _rpCompleteHabitDay(plan, dayKey, note, { quiet: ahead, quizNote: `📖 ${rpFmtReading(flat.slice(s.start, s.end))}`, quizName: ahead ? "Read ahead" : "" });
+  if (ahead) {
+    const uid = window.Auth?.getCurrentUser?.()?.uid;
+    if (uid && plan.habitId) _rpSeedHabitCalendar(plan, uid, plan.habitId).then(() => _rpWritePlan(plan));
+  }
 }
 // Mark the day done on the plan's habit (streak, friends, partner notification
 // for today) the way Habit Builder's own Complete button does, then offer the
 // Bible quiz for exactly what was read.
-async function _rpCompleteHabitDay(plan, dateKey, note) {
+async function _rpCompleteHabitDay(plan, dateKey, note, opts = {}) {
   const today = _rpTodayKeyLocal();
   const uid = window.Auth?.getCurrentUser?.()?.uid;
   if (uid && plan.habitId && window.Habits?.setEntry) {
     const habit = _habitItems.find(h => h.id === plan.habitId);
     const before = new Set(habit?.awardedMilestones || []);
     const ok = await window.Habits.setEntry(uid, plan.habitId, {
-      date: dateKey, status: "success", comment: note, source: "reading-plan", notify: dateKey <= today
+      date: dateKey, status: "success", comment: note, source: "reading-plan", notify: dateKey <= today && !opts.quiet
     });
     if (!ok) _showStudyToast("Saved here, but your habit couldn't be updated");
     else if (habit) {
@@ -20428,7 +20549,7 @@ async function _rpCompleteHabitDay(plan, dateKey, note) {
     }
   }
   // habitName heads the offer ("… complete"): name the day, not the whole plan.
-  window.BibleQuiz?.maybeOfferHabitQuiz?.({ habitId: plan.habitId || `rp-${plan.id}`, habitName: _rpCap(_rpDayName(dateKey)), dateKey, note });
+  window.BibleQuiz?.maybeOfferHabitQuiz?.({ habitId: plan.habitId || `rp-${plan.id}`, habitName: opts.quizName || _rpCap(_rpDayName(dateKey)), dateKey, note: opts.quizNote || note });
 }
 // Completing the plan's habit in Habit Builder counts as reading that day.
 function _rpOnHabitCompleted(habitId, dateKey) {
@@ -20561,11 +20682,13 @@ function rpRenderToday() {
     const state = sess && i < (sess.part || 0) ? "done" : sess && i === (sess.part || 0) ? "on" : "";
     return `<li class="${state}"><span class="material-symbols-outlined">${state === "done" ? "check_circle" : state === "on" ? "play_circle" : "radio_button_unchecked"}</span>${_rpEsc(_rpPartLabel(p))}</li>`;
   }).join("");
+  const th = _rpTodayHistory(plan);
   const card = isAhead
     ? `<div class="rp-today-card rp-today-ok">
         <span class="material-symbols-outlined rp-today-check">task_alt</span>
         <strong>${title}</strong>
-        <p>Want to keep going? ${_rpCap(_rpDayName(n.date))}: ${_rpEsc(rpFmtReading(n.chapters))}.</p>
+        ${th ? `<p class="rp-today-read">Read today: ${_rpEsc(rpFmtReading(st.flat.slice(th.start, th.end)))}</p>` : ""}
+        <p>Want to keep going? ${_rpCap(_rpDayName(n.date))}: ${_rpEsc(rpFmtReading(n.chapters))}. Reading ahead counts for today and moves the rest of your plan up.</p>
         <button class="rp-btn rp-btn-ghost" onclick="rpStartReading()"><span class="material-symbols-outlined">fast_forward</span>Read ahead</button>
       </div>`
     : `<div class="rp-today-card">
@@ -32098,7 +32221,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.639";
+const APP_VERSION = "3.0.640";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32121,6 +32244,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.640 — Reading ahead counts for today</div>
+<ul>
+<li><strong>Read ahead, stay on today</strong> &mdash; Read ahead in your reading plan and it now counts for today: today keeps today&rsquo;s date and lists everything you read (like &ldquo;Matthew 7&ndash;18&rdquo;), and the rest of the plan moves up a day for each day you read ahead, so it finishes sooner. The plan no longer thinks you&rsquo;re on a future day.</li>
+<li><strong>Already ahead?</strong> &mdash; If you read ahead before this update, your plan is fixed the next time you open it: those days fold into today, your Habit Builder calendar updates, and the new finish date shows.</li>
+<li><strong>Your history stays</strong> &mdash; The full schedule keeps every day you&rsquo;ve read, even after the plan re-paces (Read ahead or Spread it out).</li>
+</ul>
 <div class="un-version-label">v3.0.639 — The Septuagint in See the Hebrew</div>
 <ul>
 <li><strong>Hebrew ⇄ Greek with one tap</strong> &mdash; In the Old Testament, the new button above the tabs switches See the Hebrew to the Septuagint, the Greek Old Testament the New Testament writers often quote. It works just like the New Testament: <em>Your English</em> with the Greek word under each part, and <em>Greek order</em> phrase cards. The old, confusing Septuagint tab is gone, and your reader setting stays as it was.</li>
