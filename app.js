@@ -32098,7 +32098,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.638";
+const APP_VERSION = "3.0.639";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32121,6 +32121,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.639 — The Septuagint in See the Hebrew</div>
+<ul>
+<li><strong>Hebrew ⇄ Greek with one tap</strong> &mdash; In the Old Testament, the new button above the tabs switches See the Hebrew to the Septuagint, the Greek Old Testament the New Testament writers often quote. It works just like the New Testament: <em>Your English</em> with the Greek word under each part, and <em>Greek order</em> phrase cards. The old, confusing Septuagint tab is gone, and your reader setting stays as it was.</li>
+<li><strong>Lined up through the Hebrew</strong> &mdash; Your English is translated from the Hebrew, so each Greek word is matched through the Hebrew word behind it (MACULA Hebrew&rsquo;s word-by-word alignment), never guessed from the English. Close matches show &asymp;, and Greek that says things its own way is dotted, like ἐν γαστρὶ ἕξει (&ldquo;will have in the womb&rdquo;) in Isaiah 7:14. Tap ⓘ for the details.</li>
+<li><strong>Sharper links in the New Testament and Hebrew</strong> &mdash; An English &ldquo;the&rdquo; now sits over the right Greek article (&ldquo;the world&rdquo; = τὸν κόσμον in John 3:16), and Hebrew names written as two words (עִמָּנוּ אֵל, Immanuel) show both.</li>
+</ul>
 <div class="un-version-label">v3.0.638 — Atlas places, checked</div>
 <ul>
 <li>All 516 Atlas places were checked. Pins that were off now sit on their identified sites: Kir-hareseth at Kerak, Edrei at Daraa, Succoth at Tell Deir Alla, Penuel on the Jabbok, Hazeroth at its traditional oasis, and Cana at Khirbet Qana.</li>
@@ -44058,16 +44064,32 @@ function _rhemaOpenWordPicker(mode = 'lookup') {
 // ‹ › step through the chapter's verses.
 let _rhemaWbwTab = 'en';
 let _rhemaWbwRef = null;
-function _rhemaWbwTabsFor(book) {
-  return isRhemaOTBook(book)
-    ? [['en', 'Your English'], ['hebrew', 'Hebrew order'], ['lxx', 'Septuagint']]
-    : [['en', 'Your English'], ['greek', 'Greek order']];
+// Old Testament: the sheet shows the Hebrew or the Septuagint (the Greek Old
+// Testament), switched with the ⇄ button above the tabs. This is the sheet's
+// own choice; the reader's Hebrew/Septuagint setting is left alone.
+let _rhemaWbwOT = 'hebrew';
+function _rhemaWbwOTMode() { return _rhemaWbwOT === 'lxx' ? 'lxx' : 'hebrew'; }
+// Run fn with the Old Testament layer set to `layer` (the text, numbering and
+// word lookups all read it), then put the reader's setting back.
+function _rhemaAsOTLayer(layer, fn) {
+  const prev = _rhemaOTLayer;
+  _rhemaOTLayer = layer === 'lxx' ? 'lxx' : 'hebrew';
+  try { return fn(); } finally { _rhemaOTLayer = prev; }
 }
-function _rhemaWbwOrigTab(book) { return isRhemaOTBook(book) ? (_rhemaOTLayer === 'lxx' ? 'lxx' : 'hebrew') : 'greek'; }
+function _rhemaWbwTabsFor(book) {
+  if (!isRhemaOTBook(book)) return [['en', 'Your English'], ['greek', 'Greek order']];
+  return _rhemaWbwOTMode() === 'lxx' ? [['en', 'Your English'], ['lxx', 'Greek order']] : [['en', 'Your English'], ['hebrew', 'Hebrew order']];
+}
+function _rhemaWbwOrigTab(book) { return isRhemaOTBook(book) ? _rhemaWbwOTMode() : 'greek'; }
+function rhemaWbwSwap() {
+  if (!_rhemaWbwRef) return;
+  _rhemaWbwOT = _rhemaWbwOTMode() === 'lxx' ? 'hebrew' : 'lxx';
+  rhemaWbwShow(_rhemaWbwRef, _rhemaWbwTab === 'en' ? 'en' : _rhemaWbwOT);
+}
 // Tabs, arrows and which parts of the sheet show, for the current tab.
 function _rhemaWbwChrome(p) {
   const tabs = _rhemaWbwTabsFor(p.book);
-  if (!tabs.some(t => t[0] === _rhemaWbwTab)) _rhemaWbwTab = 'en';
+  if (!tabs.some(t => t[0] === _rhemaWbwTab)) _rhemaWbwTab = _rhemaWbwTab === 'en' ? 'en' : tabs[1][0];
   const bar = document.getElementById('rhemaWbwTabs');
   if (bar) bar.innerHTML = tabs.map(([k, l]) => `<button type="button" role="tab" class="rhema-wbw-tab${k === _rhemaWbwTab ? ' on' : ''}" aria-selected="${k === _rhemaWbwTab}" onclick="rhemaWbwShow(_rhemaWbwRef,'${k}')">${l}</button>`).join('');
   const isEn = _rhemaWbwTab === 'en';
@@ -44081,8 +44103,16 @@ function _rhemaWbwChrome(p) {
   if (next) next.disabled = at < 0 || at >= list.length - 1;
   const refEl = document.getElementById('rhemaInterlinearRef');
   if (refEl) refEl.textContent = `${_rhemaBookName(p.book)} ${p.chapter}:${p.verse}`;
+  const ot = isRhemaOTBook(p.book), lxx = ot && _rhemaWbwOTMode() === 'lxx';
   const kick = document.getElementById('rhemaWbwKicker');
-  if (kick) kick.textContent = `See the ${isRhemaOTBook(p.book) ? 'Hebrew' : 'Greek'}`;
+  if (kick) kick.innerHTML = lxx ? 'See the Greek <small>Septuagint</small>' : `See the ${ot ? 'Hebrew' : 'Greek'}`;
+  const swap = document.getElementById('rhemaWbwSwap');
+  if (swap) {
+    swap.hidden = !ot;
+    const lbl = document.getElementById('rhemaWbwSwapLabel');
+    if (lbl) lbl.innerHTML = lxx ? 'Back to the Hebrew' : 'Septuagint Greek <small>LXX</small>';
+    swap.setAttribute('aria-label', lxx ? 'Show the Hebrew' : 'Show the Septuagint, the Greek Old Testament');
+  }
 }
 // A clear serif for the Greek and Septuagint lines (cached for offline by
 // the service worker; Georgia until it arrives).
@@ -44097,6 +44127,7 @@ function rhemaOpenWordByWord() {
   const refs = _rhemaSel.size > 1 ? _rhemaSelectedRefs() : (_rhemaMenuRef ? [_rhemaMenuRef] : []);
   if (!refs.length) return;
   closeRhemaVerseSheet();
+  _rhemaWbwOT = 'hebrew'; // "See the Hebrew" opens on the Hebrew; ⇄ switches
   rhemaWbwShow(refs[0], 'en');
 }
 async function rhemaWbwShow(ref, tab) {
@@ -44107,7 +44138,7 @@ async function rhemaWbwShow(ref, tab) {
   _rhemaWbwFont();
   if (_rhemaWbwTab !== 'en') {
     // The original's own order: the interlinear (Hebrew / Septuagint / Greek).
-    if (isRhemaOTBook(p.book)) { const layer = _rhemaWbwTab === 'lxx' ? 'lxx' : 'hebrew'; if (_rhemaOTLayer !== layer) setRhemaOTLayer(layer); }
+    if (isRhemaOTBook(p.book)) _rhemaWbwOT = _rhemaWbwTab === 'lxx' ? 'lxx' : 'hebrew';
     return rhemaOpenInterlinear(ref);
   }
   _rhemaInterlinearRef = ref;
@@ -44116,17 +44147,21 @@ async function rhemaWbwShow(ref, tab) {
   const en = document.getElementById('rhemaWbwEnglish');
   if (!en) return;
   en.innerHTML = '<div class="rhema-lk-loading">Lining up the words…</div>';
-  try { await _rhemaEnsureLinkData(p.book); } catch {}
-  if (_rhemaWbwRef !== ref || _rhemaWbwTab !== 'en') return;
-  const L = _rhemaVerseLinks(ref);
+  const lxx = isRhemaOTBook(p.book) && _rhemaWbwOTMode() === 'lxx';
+  try { await _rhemaEnsureLinkData(p.book); if (lxx) await _rhemaEnsureLxxLinkData(p.book); } catch {}
+  if (_rhemaWbwRef !== ref || _rhemaWbwTab !== 'en' || (isRhemaOTBook(p.book) && (_rhemaWbwOTMode() === 'lxx') !== lxx)) return;
+  const L = lxx ? _rhemaLxxVerseLinks(ref) : _rhemaVerseLinks(ref);
   _rhemaLookupLinks = [L]; _rhemaLookupRefs = [ref];
-  const lang = isRhemaOTBook(p.book) ? 'Hebrew' : 'Greek';
-  if (!L) { en.innerHTML = `<p class="rhema-lk-foot">This verse’s words can’t be lined up with the ${lang} yet.</p>`; return; }
+  const lang = lxx ? 'Greek' : isRhemaOTBook(p.book) ? 'Hebrew' : 'Greek';
+  if (!L) { en.innerHTML = `<p class="rhema-lk-foot">This verse’s words can’t be lined up with the ${lxx ? 'Septuagint' : lang} yet.</p>`; return; }
   const esc = _escapeRhemaAttr;
   _rhemaWbwSel = -1;
   en.innerHTML = _rhemaWbwTip(`Tap a word to see it in ${lang}`,
-      `<p>${esc(L.ver)} in reading order, with the ${lang} word under each part.</p>` +
-      `<p><b>≈</b> closest match · <span class="wbw-key-part">faded</span> part of the word beside it · a word with nothing under it is added for English (tap it for its English meaning).</p>` +
+      (lxx ? _rhemaLxxAboutHtml() : '') +
+      `<p>${esc(L.ver)} in reading order, with the ${lxx ? 'Septuagint' : lang} word under each part.</p>` +
+      `<p><b>≈</b> closest match · <span class="wbw-key-part">faded</span> part of the word beside it · ` +
+      (lxx ? 'a word with nothing under it has no word-for-word partner in the Septuagint (tap it to see why).</p>'
+        : 'a word with nothing under it is added for English (tap it for its English meaning).</p>') +
       (_rhemaBridgeOpts(L.ver).loose ? `<p>The ${esc(L.ver)} says things in its own words, so fewer words line up one to one with the ${lang}. For word-for-word study, a more literal version (BSB, NASB, ESV, KJV) links more.</p>` : '')) +
     _rhemaWbwEnHtml(L) +
     `<button type="button" class="wbw-link" onclick="rhemaWbwEnglishMeanings()">English meanings of every word</button>` +
@@ -44211,6 +44246,20 @@ function _rhemaWbwWordInfo(book, chapter, verse, layer, word, i, il) {
   }
   return info;
 }
+function _rhemaWbwInfoFor(L, i, il) {
+  if (L.layer !== 'lxx') return _rhemaWbwWordInfo(L.p.book, L.p.chapter, L.p.verse, L.layer, L.words[i], i, il);
+  return _rhemaLxxWordInfo(L.p.book, L.p.chapter, L.p.verse, L.oc, L.ov, L.words[i], i);
+}
+// A Septuagint word's card: Strong's-numbered words from the Greek
+// dictionary; the rest (names, words the NT never uses) from the LXX word data.
+function _rhemaLxxWordInfo(book, chapter, verse, oc, ov, word, i) {
+  const info = _rhemaAsOTLayer('lxx', () => _rhemaWbwWordInfo(book, chapter, verse, 'lxx', word, i, null));
+  if (!word?.[1]) {
+    const e = _rhemaLxxWordSync(book, oc, ov, i);
+    if (e) { info.lemma = e.lemma || info.lemma; info.gloss = String(e.gloss || '').split(/\s*;\s*/)[0] || info.gloss; }
+  }
+  return info;
+}
 function _rhemaWbwCardHtml(info, opts) {
   const esc = _escapeRhemaAttr;
   const heb = opts.heb;
@@ -44241,13 +44290,18 @@ function rhemaWbwPick(k) {
   _rhemaWbwSel = k;
   document.querySelectorAll('#rhemaWbwEnglish .wbwa-w').forEach(b => b.classList.toggle('on', Number(b.dataset.k) === k));
   if (!pc.orig.length) {
+    const why = L.layer === 'lxx' && pc.noGreek
+      ? `The Hebrew behind this word has no word-for-word partner in the Septuagint here: the Greek says it its own way or leaves it out.`
+      : L.layer === 'lxx'
+        ? `No Septuagint word sits under this one: the ${esc(L.ver)} adds it so the sentence reads well in English.`
+        : `No ${lang} word sits under this one: the ${esc(L.ver)} adds it so the sentence reads well in English.`;
     return _rhemaWbwShowPeek('rhemaWbwPeek', `<div class="wbw-pk"><p><b>${esc(pc.text)}</b></p>` +
-      `<p class="wbw-pk-gram">No ${lang} word sits under this one: the ${esc(L.ver)} adds it so the sentence reads well in English.</p>` +
+      `<p class="wbw-pk-gram">${why}</p>` +
       `<button type="button" class="wbw-pk-go" onclick="rhemaShowEnglishMeaning(decodeURIComponent('${encodeURIComponent(pc.text)}'))">English meaning<span class="material-symbols-outlined">arrow_forward</span></button></div>`);
   }
   const html = pc.orig.slice(0, 3).map(i => {
     const il = L.layer === 'hebrew' ? _rhemaHebILWord(L.p.book, L.oc, L.ov, i) : null;
-    const info = _rhemaWbwWordInfo(L.p.book, L.p.chapter, L.p.verse, L.layer, L.words[i], i, il);
+    const info = _rhemaWbwInfoFor(L, i, il);
     return _rhemaWbwCardHtml(info, { heb: L.layer === 'hebrew', here: pc.text, part: pc.part, study: `rhemaLookupOpen(0,${i})` });
   }).join('');
   _rhemaWbwShowPeek('rhemaWbwPeek', (pc.orig.length > 1 ? `<p class="wbw-pk-many">“${esc(pc.text)}” is ${pc.orig.length} ${lang} words:</p>` : '') + html);
@@ -44332,11 +44386,42 @@ function _rhemaVerseLinks(ref) {
     const kinds = owners[k].map(i => out[i].kind);
     pieces.push({ key, start: t.start, end: t.end, endTok: k, text: t.raw, orig: owners[k], kind: !owners[k].length ? '' : kinds.every(x => x === 'match' || x === 'exact') ? 'match' : 'inferred' });
   });
+  // Greek: English "the" / "a" takes the article right in front of the Greek
+  // word its next English word goes with ("the world" = τὸν κόσμον, not the ὁ
+  // of ὁ θεός), allowing one adjective or name between (ἡ Ἰουδαία χώρα). If
+  // there's none and its current article belongs to another phrase, it shows
+  // no Greek rather than a wrong one.
+  if (layer === 'nt-greek') {
+    const ART = /^(the|a|an)$/i;
+    const isArt = j => /^T-/.test(String(words[j]?.[2] || ''));
+    const taken = new Set();
+    pieces.forEach(pc => { if (!ART.test(pc.text)) pc.orig.forEach(i => taken.add(i)); });
+    pieces.forEach((pc, k) => {
+      if (!ART.test(pc.text)) return;
+      const next = pieces[k + 1];
+      if (!next || !next.orig.length || ART.test(next.text)) return;
+      const lo = Math.min(...next.orig);
+      let cand = -1;
+      if (isArt(lo - 1) && !taken.has(lo - 1)) cand = lo - 1;
+      else if (isArt(lo - 2) && !taken.has(lo - 2) && /^(N-|A-)/.test(String(words[lo - 1]?.[2] || ''))) cand = lo - 2;
+      if (cand >= 0) { pc.orig = [cand]; pc.kind = 'match'; taken.add(cand); return; }
+      if (pc.orig.length && pc.orig.every(i => isArt(i)) && pc.orig.some(i => i < lo - 3 || i >= lo)) { pc.orig = []; pc.kind = ''; }
+      else pc.orig.forEach(i => taken.add(i));
+    });
+  }
   // Hebrew packs pronouns and "and" into its words: "he refreshes" is one verb
   // (its ending says "he"), "his name" is one noun with a "his" ending, "and"
   // is the וְ on the front of the next word. A pronoun or "and" left over goes
   // with the neighboring word whose grammar (Berean parsing) shows exactly it.
   if (layer === 'hebrew') {
+    // A name written as two Hebrew words (עִמָּנוּ אֵל, "Immanuel"): the word
+    // data marks the first with "+". Both go under the English name.
+    words.forEach((w, i) => {
+      if (!/\+$/.test(String(w?.[3] || '')) || i + 1 >= words.length) return;
+      const a = pieces.find(pc => pc.orig.includes(i)), b = pieces.find(pc => pc.orig.includes(i + 1));
+      if (b && !a) b.orig = [i, ...b.orig].sort((x, y) => x - y);
+      else if (a && !b) a.orig = [...a.orig, i + 1].sort((x, y) => x - y);
+    });
     const PGN = { he: ['3ms'], him: ['3ms'], his: ['3ms'], himself: ['3ms'], she: ['3fs'], her: ['3fs'], herself: ['3fs'], it: ['3ms', '3fs'], its: ['3ms', '3fs'],
       they: ['3mp', '3fp', '3cp'], them: ['3mp', '3fp', '3cp'], their: ['3mp', '3fp', '3cp'], themselves: ['3mp', '3fp', '3cp'],
       i: ['1cs'], me: ['1cs'], my: ['1cs'], mine: ['1cs'], myself: ['1cs'], we: ['1cp'], us: ['1cp'], our: ['1cp'],
@@ -44373,6 +44458,107 @@ function _rhemaVerseLinks(ref) {
     });
   }
   return { ref, p, text, ver, layer, oc, ov, words, out, pieces };
+}
+// ── Septuagint word links ──────────────────────────────────────────────────
+// Your English is translated from the Hebrew, so the Septuagint's words are
+// lined up with it through the Hebrew word behind each English word: MACULA
+// Hebrew's word-by-word alignment of the Hebrew with the Greek says which
+// Septuagint word stands for each part of each Hebrew word (its prefix, the
+// word itself, its suffix). data/lxx-links/<BOOK>.json, built by
+// scripts/build-lxx-links.py. A Greek word the alignment doesn't pair is left
+// unlinked, never guessed.
+const RHEMA_LXX_LINKS_VERSION = '3.0.639';
+const _rhemaLxxLinksData = new Map();
+const _rhemaLxxLinksLoading = new Map();
+function _rhemaLoadLxxLinks(book) {
+  if (_rhemaLxxLinksData.has(book)) return Promise.resolve(_rhemaLxxLinksData.get(book));
+  let p = _rhemaLxxLinksLoading.get(book);
+  if (!p) {
+    p = fetch(`data/lxx-links/${encodeURIComponent(book)}.json?v=${RHEMA_LXX_LINKS_VERSION}`)
+      .then(r => (r.ok ? r.json() : null)).catch(() => null)
+      .then(d => { _rhemaLxxLinksLoading.delete(book); if (d) _rhemaLxxLinksData.set(book, d); return d; });
+    _rhemaLxxLinksLoading.set(book, p);
+  }
+  return p;
+}
+async function _rhemaEnsureLxxLinkData(book) {
+  await _rhemaEnsureLinkData(book);
+  await Promise.all([_rhemaLoadDataFile('rhema-lxx.js'), _rhemaLoadLxxLinks(book), _rhemaLoadLxxWords(book)]);
+}
+function _rhemaLxxAboutHtml() {
+  return `<p>The Septuagint is the Greek translation of the Old Testament, made in the centuries before Jesus. The New Testament writers often quote it.</p>` +
+    `<p>Your English is translated from the Hebrew, so each Greek word is matched through the Hebrew word behind it (MACULA Hebrew’s word-by-word alignment of the Hebrew with the Greek).</p>`;
+}
+const _RHEMA_GREEK_AND = new Set(['και', 'δε', 'τε']);
+function _rhemaLxxVerseLinks(ref) {
+  const p = ref ? _rhemaParseRef(ref) : null;
+  if (!p || !isRhemaOTBook(p.book) || !window.RhemaLXX) return null;
+  const d = _rhemaLxxLinksData.get(p.book);
+  if (!d) return null;
+  const H = _rhemaAsOTLayer('hebrew', () => _rhemaVerseLinks(ref));
+  if (!H) return null;
+  const [lc, lv] = _rhemaOrigRef(p.book, p.chapter, p.verse, 'lxx');
+  const words = window.RhemaLXX.text?.[p.book]?.[lc]?.[lv] || [];
+  if (!words.length) return null;
+  // Hebrew word → { p: prefix, m: the word, s: suffix } → Septuagint word
+  // indexes. x: the word's Greek found by gap filling (between its neighbors'
+  // Greek), shown as a closest match (≈).
+  const map = {};
+  const gapFilled = new Set();
+  String(d.v?.[`${Number(p.chapter)}:${Number(p.verse)}`] || '').split(' ').forEach(t => {
+    const m = t.match(/^(\d+)([pmsx])(\d+)$/);
+    if (!m || Number(m[3]) >= words.length) return;
+    if (m[2] === 'x') gapFilled.add(Number(m[3]));
+    ((map[m[1]] = map[m[1]] || { p: [], m: [], s: [] })[m[2] === 'x' ? 'm' : m[2]]).push(Number(m[3]));
+  });
+  const bare = i => String(words[i]?.[0] || '').normalize('NFD').replace(/[̀-ͯ’'᾿]/g, '').toLowerCase();
+  // "his", "them"… (a Hebrew suffix) and "and" (a Hebrew prefix) take only that
+  // part's Greek; the word they were split from keeps the rest.
+  const claimed = new Set();
+  const partGreek = (pc) => {
+    const low = pc.text.toLowerCase();
+    const out = [];
+    pc.orig.forEach(h => {
+      const e = map[h]; if (!e) return;
+      if (low === 'and') e.p.filter(i => _RHEMA_GREEK_AND.has(bare(i))).forEach(i => out.push(i));
+      else e.s.forEach(i => out.push(i));
+    });
+    out.forEach(i => claimed.add(i));
+    return out;
+  };
+  // An English pronoun matched to a whole Hebrew word ("Him" for שְׁמוֹ, "his
+  // name") is the word's suffix: take only the suffix's Greek (αὐτοῦ).
+  const PRON = /^(he|him|his|himself|she|her|herself|it|its|they|them|their|themselves|i|me|my|mine|myself|we|us|our|you|your|yourself|yourselves|thou|thee|thy|thine|ye)$/i;
+  const pronounOnly = pc => !pc.part && PRON.test(pc.text) && pc.orig.some(h => map[h]?.s.length);
+  const partOut = H.pieces.map(pc => (pc.part || pronounOnly(pc) ? partGreek(pc) : null));
+  // Does this Hebrew word have a main part (not just "and"/"the"/"in" in
+  // front or a "his"/"my" ending)? Same split as the link builder.
+  const hasMain = h => {
+    const segs = String(H.words[h]?.[2] || '').replace(/^[HA]/, '').split('/');
+    let main = false;
+    for (const sg of segs) { if (/^S/.test(sg)) continue; if (!main && /^(C|R|Td|Ti|Tr)/.test(sg)) continue; main = true; }
+    return main;
+  };
+  const pieces = H.pieces.map((pc, k) => {
+    let orig;
+    if (partOut[k]) orig = partOut[k];
+    else {
+      orig = [];
+      pc.orig.forEach(h => {
+        const e = map[h]; if (!e) return;
+        const gk = [...e.p, ...e.m, ...e.s].filter(i => !claimed.has(i));
+        // The word's own Greek wasn't found and only small attached words are
+        // left ("in", "the", "his"): they'd misstate it, so show nothing.
+        if (!e.m.length && hasMain(h) && gk.every(i => /^(T-|PREP|CONJ|PRT|PRON)/.test(String(words[i]?.[2] || '')))) return;
+        gk.forEach(i => orig.push(i));
+      });
+    }
+    orig = [...new Set(orig)].sort((a, b) => a - b);
+    const noGreek = !orig.length && pc.orig.length > 0;
+    const kind = !orig.length ? '' : orig.some(i => gapFilled.has(i)) ? 'inferred' : pc.kind;
+    return { ...pc, orig, noGreek, kind, part: orig.length ? pc.part : false };
+  });
+  return { ...H, layer: 'lxx', words, oc: lc, ov: lv, out: [], pieces, heb: H };
 }
 function _rhemaOrigSurface(L, i) {
   const w = L.words[i];
@@ -44459,9 +44645,10 @@ function rhemaLookupOpen(li, i) {
   if (!L) return;
   closeRhemaWordPick();
   if (document.getElementById('rhemaInterlinearModal')?.classList.contains('open')) closeRhemaInterlinear();
-  // The Hebrew word's sheet reads the Hebrew text: switch the Old Testament
-  // pane from the Septuagint if that's what's showing.
+  // The word's sheet reads the reader's Old Testament text: switch it to the
+  // Hebrew or the Septuagint to match the word being studied.
   if (L.layer === 'hebrew' && _rhemaOTLayer === 'lxx') setRhemaOTLayer('hebrew');
+  if (L.layer === 'lxx' && _rhemaOTLayer !== 'lxx') setRhemaOTLayer('lxx');
   if (L.p.book !== _rhemaBook) return;
   openRhemaSheet(i, L.ov, L.oc);
 }
@@ -44525,7 +44712,12 @@ async function rhemaOpenInterlinear(ref) {
     if (_rhemaInterlinearRef !== ref) return; // user moved on while loading
   }
   if (p && isRhemaOTBook(p.book)) {
-    try { await _rhemaLoadDataFile(_rhemaOTLayer === 'lxx' ? 'rhema-lxx.js' : 'rhema-ot-hebrew.js'); }
+    // Both modes line up through the Hebrew; the Septuagint also needs its
+    // text, word links and word data.
+    try {
+      await _rhemaEnsureLinkData(p.book).catch(() => _rhemaLoadDataFile('rhema-ot-hebrew.js'));
+      if (_rhemaWbwOTMode() === 'lxx') await _rhemaEnsureLxxLinkData(p.book).catch(() => _rhemaLoadDataFile('rhema-lxx.js'));
+    }
     catch { if (gridEl) gridEl.innerHTML = '<div class="rhema-il-loading">Could not load the original-language text. Check your connection.</div>'; return; }
     if (_rhemaInterlinearRef !== ref) return;
   }
@@ -44631,6 +44823,11 @@ function rhemaToggleInterlinearDetails() {
 }
 
 function _rhemaRenderInterlinear(ref) {
+  const p = _rhemaParseRef(ref);
+  if (p && isRhemaOTBook(p.book)) return _rhemaAsOTLayer(_rhemaWbwOTMode(), () => _rhemaRenderInterlinearNow(ref));
+  return _rhemaRenderInterlinearNow(ref);
+}
+function _rhemaRenderInterlinearNow(ref) {
   const gridEl = document.getElementById('rhemaInterlinearGrid');
   if (!gridEl) return;
   const p = _rhemaParseRef(ref);
@@ -44685,7 +44882,9 @@ function _rhemaRenderInterlinear(ref) {
   if (foot) {
     if (!foot.dataset.greek) foot.dataset.greek = foot.textContent;
     const hv = _rhemaReaderVersion();
-    foot.textContent = isHebrew
+    foot.textContent = layer === 'lxx'
+      ? 'Tap a Greek word to light up its English and see what it means; tap it again for its full study.'
+      : isHebrew
       ? (hv && hv !== 'BSB'
         ? `Hebrew reads right to left. Tap a Hebrew word to light up its English (the ${hv}’s, found with the help of the Berean word-by-word tables) and see what it means; tap it again for its full study.`
         : 'Hebrew reads right to left. Tap a Hebrew word to light up its English (the Berean Standard Bible’s, from the Berean word-by-word tables) and see what it means; tap it again for its full study.')
@@ -44701,6 +44900,10 @@ function _rhemaRenderInterlinear(ref) {
     // The Berean table is the BSB's own word-by-word English: exact, not guessed.
     renders = hebIL.map(il => il?.en ? { text: il.en, kind: 'exact' } : { text: '', kind: il ? 'none' : '' });
     _rhemaSetInterlinearVersionNote('BSB');
+  } else if (layer === 'lxx') {
+    // Filled in from the word links below (through the Hebrew), never guessed
+    // from the English: your English was translated from the Hebrew.
+    renders = words.map(() => ({ text: '', kind: '' }));
   } else {
     renders = _rhemaVersionRenderingsForVerse(p, words, rows.map(r => r.decision), versionText, readerVer === 'BSB' ? 'BSB' : versionLabel);
     _rhemaSetInterlinearVersionNote(versionLabel);
@@ -44728,13 +44931,30 @@ function _rhemaRenderInterlinear(ref) {
   };
   // Phrase by phrase: the original in its own order on top, your version's
   // English for that phrase underneath. Tap a word: its partner lights up.
-  const L = (layer === 'hebrew' || layer === 'nt-greek') ? _rhemaVerseLinks(ref) : null;
+  let L = null;
+  if (layer === 'hebrew' || layer === 'nt-greek') L = _rhemaVerseLinks(ref);
+  else if (layer === 'lxx') {
+    L = _rhemaLxxVerseLinks(ref);
+    if (!L && !_rhemaLxxLinksData.has(p.book)) _rhemaEnsureLxxLinkData(p.book).then(() => { if (_rhemaInterlinearRef === ref) _rhemaRenderInterlinear(ref); }).catch(() => {});
+    if (L) L.pieces.forEach(pc => pc.orig.forEach(i => { if (renders[i] && !renders[i].text) renders[i] = { text: pc.text, kind: pc.kind === 'inferred' ? 'inferred' : 'match' }; else if (renders[i]) renders[i] = { ...renders[i], text: `${renders[i].text} … ${pc.text}` }; }));
+    _rhemaSetInterlinearVersionNote(versionLabel);
+  }
   _rhemaIlLinks = L;
   const phrases = _rhemaWbwPhrases(rows, L);
   const linked = new Set();
   if (L) L.pieces.forEach(pc => pc.orig.forEach(i => linked.add(i)));
+  // Septuagint: Greek words with no partner in your English that aren't just
+  // "the"/"and" — the Greek adding something or saying it its own way.
+  const greekOwn = new Set();
+  if (L && layer === 'lxx') rows.forEach((r, i) => {
+    if (linked.has(i)) return;
+    const m = String(words[i]?.[2] || '');
+    const b = String(r.orig || '').normalize('NFD').replace(/[\u0300-\u036f’'᾿]/g, '').toLowerCase();
+    if (/^(T-|CONJ|PRT|INJ)/.test(m) || _RHEMA_GREEK_AND.has(b) || ['γαρ', 'ουν', 'μεν'].includes(b)) return;
+    greekOwn.add(i);
+  });
   const details = _rhemaIlDetails || !L;
-  _rhemaWbwdState = { ref, rows, renders, L, layer, isHebrew, versionLabel, il: hebIL, ilC, ilV };
+  _rhemaWbwdState = { ref, rows, renders, L, layer, isHebrew, versionLabel, il: hebIL, ilC, ilV, words };
   _rhemaWbwSel = -1;
   gridEl.classList.toggle('rhema-il-rtl', false);
   gridEl.classList.toggle('rhema-il-details', details);
@@ -44742,8 +44962,9 @@ function _rhemaRenderInterlinear(ref) {
   gridEl.innerHTML = `<div class="wbwd${details ? ' wbwd-details' : ''}">` + phrases.map((ph, n) => {
     const origLine = ph.idx.map(i => {
       const r = rows[i];
-      const mute = L && !linked.has(i);
-      return `<button type="button" class="wbwd-w${mute ? ' wbwd-mute' : ''}" data-i="${i}" onclick="rhemaWbwdOrig(${i})">` +
+      const own = greekOwn.has(i);
+      const mute = L && !linked.has(i) && !own;
+      return `<button type="button" class="wbwd-w${mute ? ' wbwd-mute' : ''}${own ? ' wbwd-own' : ''}" data-i="${i}" onclick="rhemaWbwdOrig(${i})">` +
         `<span class="wbwd-o${isHebrew ? ' rhema-hebrew-text' : ''}">${esc(r.orig)}</span>` +
         (details ? wordDetails(r, i) : '') + `</button>`;
     }).join('');
@@ -44765,9 +44986,12 @@ function _rhemaRenderInterlinear(ref) {
       const lastK = ph.pieces[ph.pieces.length - 1];
       enLine += esc(_rhemaWbwPunct(L, lastK).trail);
     }
+    const ownIdx = ph.idx.filter(i => greekOwn.has(i));
+    const ownLine = ownIdx.length
+      ? `<div class="wbwd-own-n">No word-for-word partner in your English: <span class="wbw-gk">${ownIdx.map(i => esc(rows[i].orig)).join(' ')}</span></div>` : '';
     return `<div class="wbwd-ph${isHebrew ? ' wbwd-rtl' : ''}"><span class="wbwd-n">${n + 1}</span>` +
       `<div class="wbwd-oline" dir="${isHebrew ? 'rtl' : 'ltr'}">${origLine}</div>` +
-      (enLine ? `<div class="wbwd-eline">${enLine}</div>` : '') + `</div>`;
+      (enLine ? `<div class="wbwd-eline">${enLine}</div>` : '') + ownLine + `</div>`;
   }).join('') + `</div><div class="wbw-peek" id="rhemaWbwdPeek" hidden></div>`;
   _rhemaSetInterlinearVersionNote(hebIL && hebVer ? hebVer.version : (hebIL ? 'BSB' : versionLabel), !!(hebIL && hebVer));
   const engEl = document.getElementById('rhemaInterlinearEnglish');
@@ -44818,7 +45042,7 @@ function _rhemaWbwPhrases(rows, L) {
   // Greek: also start a new card at a word that opens a clause ("so that",
   // "in order that", "because"…) once a card already has a few words.
   const CLAUSE = new Set(['ωστε', 'ινα', 'οτι', 'αλλ', 'αλλα', 'οπως', 'διοτι', 'οταν', 'εαν', 'και', 'καθως', 'επει']);
-  const greek = L.layer === 'nt-greek';
+  const greek = L.layer === 'nt-greek' || L.layer === 'lxx';
   const out = [];
   for (let i = 0; i < n; i++) {
     const last = out[out.length - 1];
@@ -44858,9 +45082,11 @@ function _rhemaWbwdCard(i) {
   const st = _rhemaWbwdState;
   if (!st) return '';
   const p = _rhemaParseRef(st.ref);
-  const words = _rhemaOrigWords(p.book, p.chapter, p.verse);
+  const words = st.words || _rhemaOrigWords(p.book, p.chapter, p.verse);
   const il = st.il ? st.il[i] : null;
-  const info = _rhemaWbwWordInfo(p.book, p.chapter, p.verse, st.layer, words[i], i, il);
+  const info = st.layer === 'lxx' && st.L ? _rhemaWbwInfoFor(st.L, i, null)
+    : st.layer === 'lxx' ? _rhemaLxxWordInfo(p.book, p.chapter, p.verse, ...(_rhemaOrigRef(p.book, p.chapter, p.verse, 'lxx')), words[i], i)
+    : _rhemaWbwWordInfo(p.book, p.chapter, p.verse, st.layer, words[i], i, il);
   const r = st.rows[i];
   if (!info.surface) info.surface = r.orig;
   if (!info.translit) info.translit = r.translit;
@@ -44870,7 +45096,9 @@ function _rhemaWbwdCard(i) {
   if (st.L) here = st.L.pieces.filter(pc => pc.orig.includes(i)).map(pc => pc.text).join(' … ');
   if (!here && v.text && v.kind !== 'none') here = v.text;
   return _rhemaWbwCardHtml(info, { heb: st.isHebrew, here, study: `_rhemaInterlinearOpenWord(${i})` }) +
-    (!here && st.L ? `<p class="wbw-pk-gram wbw-pk-note">The ${_escapeRhemaAttr(st.versionLabel || 'version')} has no separate word for this one.</p>` : '');
+    (!here && st.L ? `<p class="wbw-pk-gram wbw-pk-note">${st.layer === 'lxx'
+      ? `No word-for-word partner in the ${_escapeRhemaAttr(st.versionLabel || 'English')}: the Greek adds it or says it its own way.`
+      : `The ${_escapeRhemaAttr(st.versionLabel || 'version')} has no separate word for this one.`}</p>` : '');
 }
 function rhemaWbwdOrig(i) {
   const st = _rhemaWbwdState;
@@ -44944,8 +45172,10 @@ function _rhemaSetInterlinearVersionNote(versionLabel, hebBridge) {
     const linked = !!(st && st.L) || !st;
     const lang = st?.isHebrew ? 'Hebrew' : 'Greek';
     // The longer explanation (and the footnote) sit behind the ⓘ.
-    const info = (linked
-        ? `<p>Each card is a phrase: the ${lang} in its own order on top, the ${esc(versionLabel)} under it. <span class="wbw-key-part">Faded</span> words aren’t translated on their own.</p>`
+    const lxx = st?.layer === 'lxx';
+    const info = (lxx ? _rhemaLxxAboutHtml() : '') + (linked
+        ? `<p>Each card is a phrase: the ${lxx ? 'Septuagint' : lang} in its own order on top, the ${esc(versionLabel)} under it. <span class="wbw-key-part">Faded</span> words aren’t translated on their own.` +
+          (lxx ? ` <span class="wbw-key-own">Dotted</span> words have no word-for-word partner in your English: the Greek adds them or says it its own way.` : '') + `</p>`
         : `<p>Under each word: how it sounds, then the ${esc(versionLabel)}’s word for it.</p>`) +
       (_rhemaIlDetails || !linked ? `<p><b>≈</b> closest match · <b>—</b> no separate word · gray: ${hebBridge ? 'the BSB’s word (not found)' : 'literal meaning'}.</p>` : '') +
       (foot && foot.textContent ? `<p>${esc(foot.textContent)}</p>` : '');
@@ -45005,6 +45235,9 @@ function _rhemaInterlinearOpenWord(idx) {
   const p = ref ? _rhemaParseRef(ref) : null;
   if (!p) return;
   closeRhemaInterlinear();
+  // The word study reads the reader's Old Testament text (Hebrew or
+  // Septuagint): match it to what the sheet was showing.
+  if (isRhemaOTBook(p.book) && _rhemaOTLayer !== _rhemaWbwOTMode()) setRhemaOTLayer(_rhemaWbwOTMode());
   // Point the reader at this verse so the word study reads the right token.
   _rhemaBook = p.book; _rhemaChapter = p.chapter;
   openRhemaSheet(idx, p.verse);
