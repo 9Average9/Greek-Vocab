@@ -41538,3 +41538,25 @@ body.dark .rhema-wbw-tab.on, html.dark .rhema-wbw-tab.on { background: color-mix
 #jstMap.is-fallback .jst-offline { padding-bottom: 300px; }
 .jst-peek-host.is-offline .jst-offline img { width: 64px; }
 .jst-peek-host.is-offline .jst-offline small { font-size: .78rem; }
+
+/* ── Word by word: Hebrew ⇄ Septuagint swap (Old Testament) ─────────────── */
+.rhema-il-kicker small { font-size: .9em; letter-spacing: .08em; font-weight: 800; opacity: .7; margin-left: 4px; }
+.wbw-swap {
+  display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;
+  padding: 5px 12px 5px 6px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid color-mix(in srgb, var(--wbw-acc) 35%, transparent);
+  background: var(--card-color, #fff); color: var(--wbw-acc);
+  font: inherit; font-size: .8rem; font-weight: 800; line-height: 1.2;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--wbw-acc) 12%, transparent);
+  -webkit-tap-highlight-color: transparent;
+}
+.wbw-swap[hidden] { display: none; }
+.wbw-swap .material-symbols-outlined { font-size: 16px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--wbw-acc); color: #fff; }
+.wbw-swap small { color: var(--wbw-muted); font-weight: 700; margin-left: 2px; }
+.wbw-swap:active { transform: scale(.97); }
+.rhema-il-title:has(.wbw-swap:not([hidden])) .rhema-wbw-refrow { flex-basis: 100%; }
+/* Septuagint Greek with no word-for-word partner in your English. */
+.wbwd-own .wbwd-o { text-decoration: underline dotted color-mix(in srgb, #d97706 75%, transparent); text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.wbwd-own-n { margin-top: 6px; font-size: .78rem; line-height: 1.35; color: var(--wbw-muted); }
+.wbwd-own-n .wbw-gk { font-family: 'Gentium Book Plus', Georgia, serif; font-size: 1.05em; color: var(--wbw-ink); }
+.wbw-key-own { font-weight: 700; text-decoration: underline dotted #d97706; text-decoration-thickness: 2px; text-underline-offset: 3px; }
