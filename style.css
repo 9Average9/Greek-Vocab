@@ -41560,3 +41560,4 @@ body.dark .rhema-wbw-tab.on, html.dark .rhema-wbw-tab.on { background: color-mix
 .wbwd-own-n { margin-top: 6px; font-size: .78rem; line-height: 1.35; color: var(--wbw-muted); }
 .wbwd-own-n .wbw-gk { font-family: 'Gentium Book Plus', Georgia, serif; font-size: 1.05em; color: var(--wbw-ink); }
 .wbw-key-own { font-weight: 700; text-decoration: underline dotted #d97706; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.rp-today-ok p.rp-today-read { color: var(--font-color); font-weight: 700; }
