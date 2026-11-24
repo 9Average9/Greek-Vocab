@@ -1,3 +1,45 @@
+// Page state as classes on <html> (scr-<screen id>, rhema-open, app-launching…),
+// set by watching just the screens and a few panels. The stylesheet reads
+// these instead of :has() rules on <html>/<body>, which made the browser
+// re-check every style on the page whenever any element toggled .active,
+// .hidden or .open (each guide-tour step cost up to a second on a phone).
+(function syncPageStateClasses() {
+  const root = document.documentElement;
+  const LESSONS = { newLearnMenu: '.learn-lesson.active', advancedLearnMenu: '.adv-learn-lesson.active', basicVerbsLearnMenu: '.basic-verb-lesson.active', advVerbsLearnMenu: '.adv-verb-lesson.active' };
+  const OURS = /^(scr-|les-)|^(app-launching|rhema-open|rcoach-on)$/;
+  const sync = () => {
+    const want = new Set();
+    document.querySelectorAll('.screen.active').forEach(s => { if (s.id) want.add('scr-' + s.id); });
+    if (document.querySelector('.screen.active .nav-bar')) want.add('scr-navbar');
+    const home = document.getElementById('homeScreen');
+    if (home && /(^|\s)home-backdrop-(?!none(\s|$))/.test(home.className)) want.add('scr-home-bd');
+    for (const [id, sel] of Object.entries(LESSONS)) {
+      const m = document.getElementById(id);
+      if (m && m.classList.contains('active') && m.querySelector(sel)) want.add('les-' + id);
+    }
+    const launch = document.getElementById('appLaunchScreen');
+    if (launch && !launch.classList.contains('hidden')) want.add('app-launching');
+    if (document.getElementById('rhemaModal')?.classList.contains('open')) want.add('rhema-open');
+    const rc = document.getElementById('rhemaCoachOverlay');
+    if (rc && !rc.classList.contains('hidden')) want.add('rcoach-on');
+    [...root.classList].forEach(c => { if (OURS.test(c) && !want.has(c)) root.classList.remove(c); });
+    want.forEach(c => { if (!root.classList.contains(c)) root.classList.add(c); });
+  };
+  const watched = new WeakSet();
+  const mo = new MutationObserver(sync);
+  const watch = () => {
+    const els = [...document.querySelectorAll('.screen'), ...['appLaunchScreen', 'rhemaModal', 'rhemaCoachOverlay'].map(id => document.getElementById(id))];
+    els.forEach(el => { if (el && !watched.has(el)) { watched.add(el); mo.observe(el, { attributes: true, attributeFilter: ['class'] }); } });
+    // Lesson menus: their lessons switch inside them.
+    Object.keys(LESSONS).forEach(id => { const m = document.getElementById(id); if (m && !watched.has(m.firstElementChild || m)) { watched.add(m.firstElementChild || m); mo.observe(m, { attributes: true, attributeFilter: ['class'], subtree: true }); } });
+    sync();
+  };
+  watch();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch, { once: true });
+  window.addEventListener('load', watch, { once: true });
+  window.syncPageStateClasses = watch;
+})();
+
 let learnWords = [];
 let learnIndex = 0;
 let testWords = [];
@@ -20017,6 +20059,121 @@ function _rpStartCloudSync() {
     try { _rpMergeCloud(cloud); } catch (e) { console.warn("reading plan sync", e); }
   });
 }
+// ── Device backup ───────────────────────────────────────────────────────────
+// Most progress already syncs to the account. These would otherwise live only
+// on this phone: where you were reading and the reader's settings, which tours
+// and notes you've already seen, saved sermons and sermon notes, memorization
+// passages, Bible quiz history. They're copied to the account
+// (users/{uid}/deviceBackup), so a fresh install (adding the app to the Home
+// Screen again) gets them back right after sign-in. A restore only fills in
+// what this install doesn't have yet; it never overwrites anything.
+const DEVICE_BACKUP_KEYS = new Set([
+  // Reader
+  'rhemaLastPos', 'rhemaReaderTypography', 'rhemaEnglishVersion', 'rhemaReaderVersion', 'rhemaTextMode',
+  'rhemaOTLayer', 'rhemaRefHistory', 'rhemaCompareExtras', 'rhemaOccEnglish', 'rhemaIlDetails',
+  'rhemaChapterSnap', 'rhemaWsDepth', 'rhemaXlLook', 'rhemaMultiView', 'journeyLook', 'journeyCardCollapsed',
+  // Look and reminders
+  'primaryColor', 'secondaryColor', 'fontColor', 'reminderEnabled', 'reminderTime', 'reminderFrequency',
+  // Your own things
+  'savedSermons', 'rhemaSermonNotes.v1', 'sermonWorkshopDraft', 'memorizationSavedPassages',
+  'memorizationLastPassage', 'discipleBibleQuiz.v1', 'rhemaActiveChallenge', 'rhemaSavedMeanings', 'testScores',
+  // Seen once
+  'installPromptDismissed', 'calSyncPromptSeen', 'rhemaWsTourDone', 'rhemaSavedMeaningsMoved'
+]);
+const DEVICE_BACKUP_READER = new Set(['rhemaLastPos', 'rhemaEnglishVersion', 'rhemaReaderVersion', 'rhemaTextMode', 'rhemaOTLayer', 'rhemaChapterSnap', 'rhemaRefHistory']);
+const DEVICE_BACKUP_PREFIXES = ['memorizationXPAwarded:', 'vs_struct_', 'openedUnlocked_', 'quizHint_', 'verbQuizHint_'];
+// Tours, intros and one-time notes already seen ("…CoachSeenV3537", "guideBigNewsV3627", "hasSeen…").
+const DEVICE_BACKUP_FLAG = /^(?:[A-Za-z]+SeenV\d+|guide[A-Z][A-Za-z]*V\d+|hasSeen[A-Za-z]+|hasOpened[A-Za-z]+|[A-Za-z]+PromptDismissed|praiseRemindersRetiredV\d+)$/;
+const DEVICE_BACKUP_MAX = 700 * 1024;   // per value (an account doc holds up to 1 MB)
+function _deviceBackupWanted(k) {
+  return DEVICE_BACKUP_KEYS.has(k) || DEVICE_BACKUP_FLAG.test(k) || DEVICE_BACKUP_PREFIXES.some(p => k.startsWith(p));
+}
+let _devBackupUid = null, _devBackupTimer = null, _devBackupInterval = null;
+const _devBackupSent = new Map();   // key -> value the account already has
+async function _deviceBackupStart() {
+  if (window.RHEMA_MV_SLOT) return;
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!uid || !window.Auth?.loadDeviceBackup) return;
+  if (_devBackupUid === uid) return;
+  _devBackupUid = null;
+  _devBackupSent.clear();
+  let cloud;
+  // The guide's one-time screens wait for this, so a restored "already seen" counts.
+  window.__devBackupLoading = true;
+  try { cloud = await window.Auth.loadDeviceBackup(uid); } catch (e) { console.warn('device backup', e); return; }
+  finally { window.__devBackupLoading = false; }
+  if (window.Auth?.getCurrentUser?.()?.uid !== uid) return;
+  const restored = [];
+  // A brand-new install writes its own defaults on launch (Genesis 1, MSB);
+  // the first time it signs in, the reading spot and version from the account win.
+  let firstHere = false;
+  try { firstHere = localStorage.getItem('rhemaInstallEra') === 'fresh' && !localStorage.getItem('devBackupRestoredV1'); } catch {}
+  for (const [k, v] of Object.entries(cloud || {})) {
+    if (!_deviceBackupWanted(k) || typeof v !== 'string') continue;
+    _devBackupSent.set(k, v);
+    let mine = null;
+    try { mine = localStorage.getItem(k); } catch {}
+    if (mine === null || (firstHere && DEVICE_BACKUP_READER.has(k) && mine !== v)) {
+      try { localStorage.setItem(k, v); restored.push(k); } catch {}
+    }
+  }
+  try { localStorage.setItem('devBackupRestoredV1', '1'); } catch {}
+  _devBackupUid = uid;
+  if (restored.length) _deviceBackupApply(restored);
+  _deviceBackupSoon(2000);
+  clearInterval(_devBackupInterval);
+  _devBackupInterval = setInterval(() => _deviceBackupSoon(0), 3 * 60 * 1000);
+}
+// Restored values that were already read at startup: read them again.
+function _deviceBackupApply(keys) {
+  const has = k => keys.includes(k);
+  try {
+    if (has('rhemaSermonNotes.v1')) window._sermonNotesReload?.();
+    if (has('discipleBibleQuiz.v1')) window._bibleQuizReload?.();
+    if (has('savedSermons') && typeof _loadSavedSermons === 'function') _loadSavedSermons();
+    if (has('rhemaTextMode')) _rhemaTextMode = localStorage.getItem('rhemaTextMode') === 'critical' ? 'critical' : 'majority';
+    if (has('rhemaEnglishVersion')) _rhemaEnglishMode = localStorage.getItem('rhemaEnglishVersion') === 'BSB' ? 'BSB' : 'MSB';
+    if (has('rhemaLastPos')) {
+      // Back to where they were reading: the reader if it's open, Home's card either way.
+      if (document.getElementById('rhemaModal')?.classList.contains('open')) resumeRhema();
+      if (typeof populateHomeScreen === 'function') populateHomeScreen();
+    }
+  } catch (e) { console.warn('device backup apply', e); }
+}
+function _deviceBackupSoon(ms = 1500) {
+  clearTimeout(_devBackupTimer);
+  _devBackupTimer = setTimeout(() => { _deviceBackupFlush(); }, ms);
+}
+// Sends whatever changed since the account last heard. Resolves true when the
+// account is up to date.
+async function _deviceBackupFlush() {
+  const uid = _devBackupUid;
+  if (!uid || window.Auth?.getCurrentUser?.()?.uid !== uid || !window.Auth?.saveDeviceBackup) return false;
+  const now = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !_deviceBackupWanted(k)) continue;
+      const v = localStorage.getItem(k);
+      if (v != null && v.length <= DEVICE_BACKUP_MAX) now[k] = v;
+    }
+  } catch { return false; }
+  const changes = {};
+  for (const [k, v] of Object.entries(now)) if (_devBackupSent.get(k) !== v) changes[k] = v;
+  // Removed here (a deleted sermon list, a cleared challenge): remove there too.
+  for (const k of _devBackupSent.keys()) if (!(k in now) && DEVICE_BACKUP_KEYS.has(k)) {
+    let gone = false;
+    try { gone = localStorage.getItem(k) === null; } catch {}
+    if (gone) changes[k] = null;
+  }
+  if (!Object.keys(changes).length) return true;
+  const ok = await window.Auth.saveDeviceBackup(uid, changes);
+  if (ok) for (const [k, v] of Object.entries(changes)) v == null ? _devBackupSent.delete(k) : _devBackupSent.set(k, v);
+  return ok;
+}
+window.rhemaDeviceBackupNow = _deviceBackupFlush;
+document.addEventListener('visibilitychange', () => { if (document.hidden && _devBackupUid) _deviceBackupFlush(); });
+
 function _rpMergeCloud(cloud) {
   let local = [];
   try { local = JSON.parse(localStorage.getItem(RP_PLANS_KEY) || "[]"); } catch {}
@@ -32342,7 +32499,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.643";
+const APP_VERSION = "3.0.644";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32365,6 +32522,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.644 — Smoother tours, and moving to the new app</div>
+<ul>
+<li><strong>Smoother tours</strong> &mdash; The guide&rsquo;s tours no longer stutter between steps. When a step opens a different screen, the card fades and lands once in its new spot instead of jumping twice, and a first-time tour no longer cuts into one you already started.</li>
+<li><strong>Add the app again for the new look</strong> &mdash; Your phone keeps the old name and icon until you add Rhēma to your Home Screen again. The guide shows the link to copy and the steps. You&rsquo;ll sign in again, so remember your password.</li>
+<li><strong>Everything comes with you</strong> &mdash; Your reading spot, reader settings, sermon notes, saved sermons, memorization passages, Bible quiz history, and the tours you&rsquo;ve seen now save to your account too, so a fresh install picks up right where you left off after you sign in.</li>
+</ul>
 <div class="un-version-label">v3.0.643 — Reading plans sync to your account</div>
 <ul>
 <li><strong>Your plans on every device</strong> &mdash; Reading plans now save to your account, along with your progress and which plan is current. Sign in on another phone, or after reinstalling the app, and they&rsquo;re there.</li>
@@ -36214,6 +36377,9 @@ window.__onAuthStateReady = async (user) => {
   if (user) {
     setAppLaunchText('Syncing your study space');
     await restoreUserFromFirestore(user);
+    // And the settings and notes that otherwise live only on this phone
+    // (a fresh install gets them back here).
+    _deviceBackupStart();
     syncUserData();
     hideAuthModal();
     _exitGuestMode(); // signed in — the full app (Home, nav, studies) unlocks
@@ -47856,8 +48022,8 @@ function openRhemaReaderPanel() {
   _rhemaNapAway();
   ov.classList.add('open');
   requestAnimationFrame(() => requestAnimationFrame(_rrpPlaceGuide));
-  if (_rhemaStudyId() && !_localFlagSet('studyToolsCoachSeenV3537') && document.getElementById('appCoachOverlay')?.classList.contains('hidden') !== false) {
-    setTimeout(() => { if (ov.classList.contains('open')) startStudyRhemaCoach(); }, 650);
+  if (_rhemaStudyId() && !_localFlagSet('studyToolsCoachSeenV3537') && !_anyCoachRunning()) {
+    setTimeout(() => { if (ov.classList.contains('open') && !_anyCoachRunning()) startStudyRhemaCoach(); }, 650);
   }
   // Two frames so the from-state (off-screen) paints before the slide-in.
   requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add('in')));
@@ -48104,6 +48270,11 @@ function _rhemaToursHtml() {
     <div class="rrp-tours">${rows}</div>`;
 }
 function rhemaStartTour(id) {
+  // Picking a tour puts away any tour already on screen (say the first-time
+  // basics tour), so two never run on top of each other.
+  if (!document.getElementById('rhemaCoachOverlay')?.classList.contains('hidden')) _endRhemaCoach();
+  if (_appCoachSteps.length && !_appCoachFinishing) _endAppCoach();
+  window.rhemaWordStudyTourClose?.();
   closeRhemaReaderPanel();
   const go = fn => setTimeout(fn, 380);
   if (id === 'rhema') go(() => startRhemaCoach(true));
@@ -51086,7 +51257,6 @@ let _appCoachReplayMode = false;
 
 const APP_WELCOME_COACH_STEPS = [
   { title: 'Welcome to Rhēma', body: 'Rhēma (ῥῆμα, “a word spoken”) helps you study Scripture closely in the words it was written in, Hebrew and Greek, word by word, and grow together in the knowledge of God with friends. Lessons, vocab, Praises, studies, notes, habits and community features all serve that goal.' },
-  { before: () => showNavPage('home'), target: () => _coachFirst(['.bn-item[data-page="rhema"]']), title: 'Start here: Rhēma', body: 'The book button opens the Bible right where you left off. Tap any word to see the Hebrew or Greek behind it, what it means, and everywhere else it appears.' },
   { before: () => showNavPage('lessons'), target: () => _coachFirst(['.lesson-progress-badge', '.learn-path-grid']), title: 'Lessons are the foundation', body: 'Start here when you want guided structure. The basic and advanced tracks teach foundations and verbs in order, and checks keep you from just scrolling past the material.' },
   { before: () => { showNavPage('community'); showLbTab('posts'); }, target: () => _coachFirst(['.community-post-add', '#lbPanePosts', '.comm-tabs']), title: 'Community posts', body: 'Posts are the main community feed: share verses, questions, links, prayer notes, and encouragements with friends. Attach MSB or BSB verses, react to one another, optionally alert your friends, and keep the board fresh as posts clear after 7 days.' },
   { before: () => { showNavPage('community'); showLbTab('xp'); }, target: () => _coachFirst(['button[data-tab="xp"]', '#lbPaneXP']), title: 'XP leaderboard', body: 'XP rewards steady work: lessons, tests, vocab, translation, and study habits. It is not the goal, but it helps your progress feel visible.' },
@@ -51154,10 +51324,10 @@ function startReadingToolsCoach() { _startAppCoach(READING_COACH_STEPS, 'reading
 const STUDY_RHEMA_COACH_STEPS = [
   { before: () => { if (document.getElementById('studySandbox')?.classList.contains('tool-host')) closeStudyToolHost(); openRhemaReaderPanel(); return _coachPause(460); }, target: () => _coachFirst(['#rrpMainBody .rrp-study-grid', '#rrpMainBody']), title: 'Your study', body: 'Phrasing, Word Log, Trails and Workspace live right here. Anything you add saves to your account by itself.' },
   { before: () => { closeRhemaReaderPanel(); return _coachPause(400); }, target: () => _coachVisibleVerse(), demo: 'longpress', pose: 'think', title: 'Jot a thought', body: 'Press and hold any verse to save a thought about it to your Workspace: observe, interpret, apply or ask.' },
-  { before: () => Promise.resolve(openStudyTool('phrasing')).then(() => _coachPause(240)), target: () => _coachFirst(['#ssPaneVerses .ss-structured-add', '#ssPaneVerses']), title: 'Phrasing', body: 'Tap + and pick a passage. Its words land on a canvas: hold a word to split it off, then drag the pieces around to see how the thought flows.' },
-  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(240)), target: () => _coachFirst(['#ssWordlogList .ss-word-item', '#ssPaneWordlog > .ss-hint', '#ssWordlogList']), pose: 'inspect', title: 'Word Log', body: 'Words you want to remember. Tap a Greek word and press “Add to Word Log”, then tap it here anytime for its meaning, parsing and where it shows up.' },
-  { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(240)), target: () => _coachFirst(['#ssTrailsList .ss-trail-item', '#ssTrailsList .ss-hint', '#ssPaneTrails > .ss-hint', '#ssTrailsList']), title: 'Trails', body: 'Cross-reference paths you saved. Tap one to pick up right where you left off.' },
-  { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(240)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), pose: 'think', title: 'Workspace', body: 'Your thoughts, sorted into Observe, Interpret, Apply and Question. Tap a note’s verse to jump back to it.' },
+  { before: () => Promise.resolve(openStudyTool('phrasing')).then(() => _coachPause(100)), target: () => _coachFirst(['#ssPaneVerses .ss-structured-add', '#ssPaneVerses']), title: 'Phrasing', body: 'Tap + and pick a passage. Its words land on a canvas: hold a word to split it off, then drag the pieces around to see how the thought flows.' },
+  { before: () => Promise.resolve(openStudyTool('wordlog')).then(() => _coachPause(100)), target: () => _coachFirst(['#ssWordlogList .ss-word-item', '#ssPaneWordlog > .ss-hint', '#ssWordlogList']), pose: 'inspect', title: 'Word Log', body: 'Words you want to remember. Tap a Greek word and press “Add to Word Log”, then tap it here anytime for its meaning, parsing and where it shows up.' },
+  { before: () => Promise.resolve(openStudyTool('trails')).then(() => _coachPause(100)), target: () => _coachFirst(['#ssTrailsList .ss-trail-item', '#ssTrailsList .ss-hint', '#ssPaneTrails > .ss-hint', '#ssTrailsList']), title: 'Trails', body: 'Cross-reference paths you saved. Tap one to pick up right where you left off.' },
+  { before: () => Promise.resolve(openStudyTool('workspace')).then(() => _coachPause(100)), target: () => _coachFirst(['#ssPaneNotes .ws-tab-bar', '#ssPaneNotes']), pose: 'think', title: 'Workspace', body: 'Your thoughts, sorted into Observe, Interpret, Apply and Question. Tap a note’s verse to jump back to it.' },
   { target: () => _coachFirst(['#wsKbdToggleBtn', '.ss-compose']), title: 'Type Greek too', body: 'The α button opens a Greek keyboard for your notes. That’s the tour. Happy studying!' }
 ];
 
@@ -51234,8 +51404,16 @@ function startAppWelcomeCoach(force = false) {
   _endAppCoach();
 }
 
+// True while any guided tour is on screen or between its steps, so a
+// first-time tour never cuts into one the reader already started.
+function _anyCoachRunning() {
+  if (_appCoachSteps.length && !_appCoachFinishing) return true;
+  const r = document.getElementById('rhemaCoachOverlay');
+  return !!(r && !r.classList.contains('hidden'));
+}
 function startStudyRhemaCoach(force = false) {
   if (_coachHasSeen('studyToolsCoachSeenV3537', force)) return;
+  if (!force && _anyCoachRunning()) return;
   if (!document.getElementById('rhemaModal')?.classList.contains('open')) return;
   _startAppCoach(STUDY_RHEMA_COACH_STEPS, 'studyToolsCoachSeenV3537', force);
 }
@@ -51373,11 +51551,23 @@ function _showAppCoachStep() {
   const entering = overlay.classList.contains('hidden');
   if (!entering) overlay.classList.add('coach-moving');
   const token = (_showAppCoachStep._token = (_showAppCoachStep._token || 0) + 1);
+  const stale = () => token !== _showAppCoachStep._token || _appCoachFinishing || _appCoachSteps[_appCoachIdx] !== step;
+  // A step that changes the screen (opens a tool, closes the menu) swaps the
+  // card: it fades out, then fades in at its new spot, instead of sliding
+  // across a screen that is changing underneath it.
+  let swap = false;
   const afterBefore = () => setTimeout(() => {
+    if (stale()) return;
+    // Place the card once, after the target has stopped moving (a tool still
+    // sliding in), instead of placing it and then jumping after it.
+    _coachWhenStill(() => (typeof step.target === 'function' ? step.target() : null), swap ? 650 : 400).then(reveal);
+  }, swap ? 0 : 40);
+  const reveal = () => {
     // Superseded (another Next/Back/Done since) or the tour ended: do nothing.
-    if (token !== _showAppCoachStep._token || _appCoachFinishing || _appCoachSteps[_appCoachIdx] !== step) return;
+    if (stale()) return;
     overlay.classList.remove('hidden');
-    if (entering) { card.classList.add('coach-no-anim'); spotlight.classList.add('coach-no-anim'); }
+    if (entering || swap) { card.classList.add('coach-no-anim'); }
+    if (entering) spotlight.classList.add('coach-no-anim');
     document.getElementById('appCoachStep').textContent = `${_appCoachIdx + 1} of ${_appCoachSteps.length}`;
     document.getElementById('appCoachTitle').textContent = step.title;
     document.getElementById('appCoachBody').innerHTML = _coachBodyHtml(step);
@@ -51386,12 +51576,14 @@ function _showAppCoachStep() {
     _placeAppCoachCard(typeof step.target === 'function' ? step.target() : null, card, spotlight, step.position || 'below');
     if (_appCoachHasGuide()) coachGuideShow(overlay, card, { last: _appCoachIdx === _appCoachSteps.length - 1, pose: coachPoseFor(step, _appCoachIdx, _appCoachSteps.length) });
     else { coachGuideHide(overlay); card.classList.remove('coach-bubble'); }
+    void card.offsetWidth;   // the new spot applies with no slide
+    card.classList.remove('coach-no-anim');
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      overlay.classList.remove('coach-moving');
-      card.classList.remove('coach-no-anim'); spotlight.classList.remove('coach-no-anim');
+      overlay.classList.remove('coach-moving', 'coach-swap');
+      spotlight.classList.remove('coach-no-anim');
     }));
-    // Some targets finish animating in just after we measure (a button that
-    // pops in): look again shortly and follow it if it moved.
+    // Rarely a target still shifts after it held still (a late image): look
+    // again shortly and follow it if it moved.
     const idx = _appCoachIdx, tgt = typeof step.target === 'function' ? step.target() : null;
     const r0 = tgt && tgt.getBoundingClientRect();
     if (tgt) setTimeout(() => {
@@ -51402,14 +51594,35 @@ function _showAppCoachStep() {
         if (_appCoachHasGuide()) coachGuideShow(overlay, card, { last: _appCoachIdx === _appCoachSteps.length - 1, pose: coachPoseFor(step, _appCoachIdx, _appCoachSteps.length) });
       }
     }, 480);
-  }, 40);
+  };
   if (typeof step.before === 'function') {
     const result = step.before();
-    if (result && typeof result.then === 'function') result.then(afterBefore).catch(afterBefore);
+    if (result && typeof result.then === 'function') {
+      if (!entering) { swap = true; overlay.classList.add('coach-swap'); }
+      result.then(afterBefore).catch(afterBefore);
+    }
     else afterBefore();
   } else {
     afterBefore();
   }
+}
+
+// Resolves once the element holds the same spot for a few frames (or after
+// maxMs, for something that never stops, like a pulsing button).
+function _coachWhenStill(getEl, maxMs = 400) {
+  return new Promise(res => {
+    const t0 = performance.now();
+    let last = null, still = 0;
+    const tick = () => {
+      let k = 'none';
+      try { const el = getEl(); const r = el?.getBoundingClientRect?.(); if (r) k = `${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)},${Math.round(r.height)}`; } catch (e) {}
+      still = k === last ? still + 1 : 0;
+      last = k;
+      if (still >= 2 || performance.now() - t0 > maxMs) res();
+      else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
 }
 
 function _coachBodyHtml(step) {

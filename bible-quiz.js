@@ -88,6 +88,8 @@
     };
   }
   let store = loadStore();
+  // Restored from the account on a fresh install (app.js device backup).
+  window._bibleQuizReload = () => { store = loadStore(); };
   let saveTimer = null;
   function persist(now) {
     clearTimeout(saveTimer);

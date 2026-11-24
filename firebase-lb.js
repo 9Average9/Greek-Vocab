@@ -418,6 +418,38 @@ async function saveReadingPlanDoc(uid, id, data) {
   }
 }
 
+// Things that otherwise live only on one phone (reader settings, seen tours,
+// sermon notes…): users/{uid}/deviceBackup/{key} = { k, v }, so a fresh
+// install gets them back after sign-in. One doc per storage key.
+const _devBackupId = k => encodeURIComponent(k).replace(/\./g, '%2E').slice(0, 1400);
+async function loadDeviceBackup(uid) {
+  if (!uid) return {};
+  const snap = await getDocs(collection(db, "users", uid, "deviceBackup"));
+  const out = {};
+  snap.docs.forEach(d => { const x = d.data() || {}; if (typeof x.k === "string" && typeof x.v === "string") out[x.k] = x.v; });
+  return out;
+}
+// entries: { key: string value, or null to delete }
+async function saveDeviceBackup(uid, entries) {
+  if (!uid) return false;
+  const keys = Object.keys(entries || {});
+  try {
+    for (let i = 0; i < keys.length; i += 400) {
+      const b = writeBatch(db);
+      keys.slice(i, i + 400).forEach(k => {
+        const ref = doc(db, "users", uid, "deviceBackup", _devBackupId(k));
+        if (entries[k] == null) b.delete(ref);
+        else b.set(ref, { k, v: entries[k], updatedAtMs: Date.now() });
+      });
+      await b.commit();
+    }
+    return true;
+  } catch (e) {
+    console.warn("saveDeviceBackup:", e);
+    return false;
+  }
+}
+
 // Saved verse comparisons ("trails"): users/{uid}/rhemaTrails/{trailId}.
 function listenRhemaTrails(uid, callback) {
   return onSnapshot(
@@ -2487,6 +2519,8 @@ window.Auth = {
   deleteRhemaMark,
   listenReadingPlans,
   saveReadingPlanDoc,
+  loadDeviceBackup,
+  saveDeviceBackup,
   listenRhemaTrails,
   saveRhemaTrail,
   deleteRhemaTrail,

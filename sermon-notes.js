@@ -26,6 +26,9 @@
     return { sermons: [], templates: [] };
   }
   let store = loadStore();
+  // A fresh install gets its notes back from the account after sign-in (app.js
+  // device backup): pick up the restored copy instead of keeping an empty one.
+  window._sermonNotesReload = () => { store = loadStore(); };
   let saveTimer = null;
   function persist(immediate) {
     clearTimeout(saveTimer);
