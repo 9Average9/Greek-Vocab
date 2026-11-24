@@ -395,6 +395,29 @@ async function deleteRhemaMark(uid, ref, scope) {
   await deleteDoc(doc(db, "users", uid, "rhemaMarks", _rhemaMarkId((scope || "home") + "__" + ref)));
 }
 
+// Reading plans: users/{uid}/readingPlans/{planId} holds one plan as JSON
+// text with a revision number (the newer revision wins when two devices
+// differ); a deleted plan leaves { deleted: true, rev } so it doesn't come
+// back from another device. The "_active" doc holds which plan is current.
+function listenReadingPlans(uid, callback) {
+  return onSnapshot(collection(db, "users", uid, "readingPlans"), snap => {
+    const out = {};
+    snap.docs.forEach(d => { out[d.id] = d.data() || {}; });
+    callback(out);
+  }, err => console.warn("listenReadingPlans:", err));
+}
+
+async function saveReadingPlanDoc(uid, id, data) {
+  if (!uid || !id) return false;
+  try {
+    await setDoc(doc(db, "users", uid, "readingPlans", id), { ...data, updatedAtMs: Date.now() });
+    return true;
+  } catch (e) {
+    console.warn("saveReadingPlanDoc:", e);
+    return false;
+  }
+}
+
 // Saved verse comparisons ("trails"): users/{uid}/rhemaTrails/{trailId}.
 function listenRhemaTrails(uid, callback) {
   return onSnapshot(
@@ -2462,6 +2485,8 @@ window.Auth = {
   listenRhemaMarks,
   saveRhemaMark,
   deleteRhemaMark,
+  listenReadingPlans,
+  saveReadingPlanDoc,
   listenRhemaTrails,
   saveRhemaTrail,
   deleteRhemaTrail,

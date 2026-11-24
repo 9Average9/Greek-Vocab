@@ -39,6 +39,11 @@ service cloud.firestore {
       }
 
       // Rhema verse highlights/notes — private to the owner.
+      match /readingPlans/{planId} {
+        allow read, create, update, delete: if request.auth != null
+          && request.auth.uid == uid;
+      }
+
       match /rhemaMarks/{markId} {
         allow read, create, update, delete: if request.auth != null
           && request.auth.uid == uid;
