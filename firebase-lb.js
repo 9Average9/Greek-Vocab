@@ -219,6 +219,22 @@ async function connectEmail(newEmail, currentPassword) {
   return email;
 }
 
+// Checks a password against the signed-in account without signing out
+// (the "ready to move" check before adding the app again). true / false;
+// throws only for something other than a wrong password (offline, too many tries).
+async function verifyPassword(password) {
+  const user = auth.currentUser;
+  if (!user || !password) return false;
+  try {
+    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
+    return true;
+  } catch (e) {
+    const code = e?.code || "";
+    if (/wrong-password|invalid-credential|invalid-login-credentials|user-mismatch/.test(code)) return false;
+    throw e;
+  }
+}
+
 // Send a Firebase password-reset email. Only delivers to accounts whose login email is
 // the given address (i.e. users who have connected a real email).
 async function sendPasswordReset(email) {
@@ -2505,6 +2521,7 @@ window.Auth = {
   deleteAccount,
   connectEmail,
   sendPasswordReset,
+  verifyPassword,
   getAuthEmailInfo,
   onAuthChange,
   getCurrentUser,
