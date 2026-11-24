@@ -32221,7 +32221,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.640";
+const APP_VERSION = "3.0.641";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32244,6 +32244,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.641 — Disciple Builder is now Rhēma</div>
+<ul>
+<li><strong>A new name and icon</strong> &mdash; The app is now called Rhēma (ῥῆμα, &ldquo;a word spoken&rdquo;), named for what it does best: reading Scripture closely, word by word, with the Hebrew and Greek behind every word. Everything you use is still here, just as it was.</li>
+<li><strong>A fresh welcome</strong> &mdash; The welcome screen and the guided tour now start with Rhēma.</li>
+<li><strong>Home Screen</strong> &mdash; If you added the app to your Home Screen, remove it and add it again to get the new name and icon.</li>
+</ul>
 <div class="un-version-label">v3.0.640 — Reading ahead counts for today</div>
 <ul>
 <li><strong>Read ahead, stay on today</strong> &mdash; Read ahead in your reading plan and it now counts for today: today keeps today&rsquo;s date and lists everything you read (like &ldquo;Matthew 7&ndash;18&rdquo;), and the rest of the plan moves up a day for each day you read ahead, so it finishes sooner. The plan no longer thinks you&rsquo;re on a future day.</li>
@@ -37688,7 +37694,7 @@ function initFCMForeground() {
       return;
     }
     if (Notification.permission !== "granted") return;
-    const opts = { body, icon: "./assets/icons/disciple-builder-icon-192.png", data };
+    const opts = { body, icon: "./assets/icons/rhema-icon-192.png?v=3.0.641", data };
     // Use service-worker showNotification so it works on iOS PWA; fall back to
     // Notification constructor on desktop browsers without a SW registration.
     if (navigator.serviceWorker?.controller) {
