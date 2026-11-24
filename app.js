@@ -32221,7 +32221,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.641";
+const APP_VERSION = "3.0.642";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32244,6 +32244,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.642 — Loading bar around the icon</div>
+<ul>
+<li>The loading bar now traces the rounded square around the new Rhēma icon instead of a circle, and it shows in the icon&rsquo;s blue in dark mode.</li>
+</ul>
 <div class="un-version-label">v3.0.641 — Disciple Builder is now Rhēma</div>
 <ul>
 <li><strong>A new name and icon</strong> &mdash; The app is now called Rhēma (ῥῆμα, &ldquo;a word spoken&rdquo;), named for what it does best: reading Scripture closely, word by word, with the Hebrew and Greek behind every word. Everything you use is still here, just as it was.</li>
@@ -35098,8 +35102,8 @@ function _launchTick() {
 function initLaunchRing() {
   const ring = document.getElementById('appLaunchRing');
   if (!ring) return;
-  const r = ring.r?.baseVal?.value || 64;
-  _launchRingC = 2 * Math.PI * r;
+  // The bar traces the rounded square around the icon, starting at the top middle.
+  _launchRingC = typeof ring.getTotalLength === 'function' ? ring.getTotalLength() : 2 * Math.PI * (ring.r?.baseVal?.value || 64);
   ring.setAttribute('stroke-dasharray', _launchRingC.toFixed(2));
   _launchProg = 0; _launchFinishing = false;
   _setLaunchRing(0);
