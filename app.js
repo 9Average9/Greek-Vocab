@@ -32499,7 +32499,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.644";
+const APP_VERSION = "3.0.645";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32522,6 +32522,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.645 — A safety check before you move</div>
+<ul>
+<li><strong>1-minute safety check</strong> &mdash; Before adding the app again, the guide walks you through four quick checks: the exact name you&rsquo;ll sign in with (your email, if you connected one), a test that your password really works (with a reset link if you forgot it), saving this phone&rsquo;s things to your account, and keeping the old icon until you&rsquo;re signed in on the new one.</li>
+</ul>
 <div class="un-version-label">v3.0.644 — Smoother tours, and moving to the new app</div>
 <ul>
 <li><strong>Smoother tours</strong> &mdash; The guide&rsquo;s tours no longer stutter between steps. When a step opens a different screen, the card fades and lands once in its new spot instead of jumping twice, and a first-time tour no longer cuts into one you already started.</li>
