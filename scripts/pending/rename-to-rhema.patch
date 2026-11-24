@@ -1,0 +1,254 @@
+diff --git a/app.js b/app.js
+index 7ac9917..6b23b2e 100644
+--- a/app.js
++++ b/app.js
+@@ -10555,7 +10555,7 @@ function _mergeStudyNotificationMessages(msgs = []) {
+   msgs.filter(m => m.type === 'eventReminder' && !m._read).forEach(m => {
+     upsert('evtremind_' + m.id, {
+       id: 'evtremind_' + m.id, type: 'event_reminder',
+-      fromName: m.fromName || 'Disciple Builder',
++      fromName: m.fromName || 'Rhēma',
+       eventId: m.eventId, eventTitle: m.eventTitle || 'an event',
+       date: m.date, time: m.time, reminderKey: m.reminderKey, msgId: m.id, read: false
+     });
+@@ -22841,12 +22841,12 @@ function _updateAppHeaderForScreen(id) {
+   const subtitle = header.querySelector("p");
+   const hint = header.querySelector(".header-info-hint");
+   if (_isLessonScreenId(id)) {
+-    if (title) title.textContent = "Disciple Builder";
++    if (title) title.textContent = "Rhēma";
+     if (subtitle) subtitle.textContent = _nextLessonHeaderFact();
+     if (hint) hint.innerHTML = `<span class="material-symbols-outlined">auto_awesome</span> Tiny Greek fact`;
+     header.classList.add("lesson-header-mode");
+   } else {
+-    if (title) title.textContent = "Disciple Builder";
++    if (title) title.textContent = "Rhēma";
+     if (subtitle) subtitle.textContent = "Study deeper. Encourage others. Grow together.";
+     if (hint) hint.innerHTML = `<span class="material-symbols-outlined">info</span> About this app`;
+     header.classList.remove("lesson-header-mode");
+@@ -35176,7 +35176,7 @@ function _applyPendingAppUpdateReload() {
+   clearInterval(_appUpdateReloadTimer);
+   clearTimeout(_appUpdateReloadTimer);
+   document.removeEventListener("visibilitychange", _applyPendingAppUpdateReload);
+-  showAppLaunchScreen('Updating Disciple Builder');
++  showAppLaunchScreen('Updating Rhēma');
+   setTimeout(() => window.location.reload(), 260);
+ }
+ 
+@@ -37438,7 +37438,7 @@ function downloadEventICS(eventId) {
+   const end = new Date(start.getTime() + 60 * 60 * 1000);
+   const dtS = `${start.getFullYear()}${p(start.getMonth()+1)}${p(start.getDate())}T${p(start.getHours())}${p(start.getMinutes())}00`;
+   const dtE = `${end.getFullYear()}${p(end.getMonth()+1)}${p(end.getDate())}T${p(end.getHours())}${p(end.getMinutes())}00`;
+-  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Disciple Builder//EN','BEGIN:VEVENT',
++  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Rhēma//EN','BEGIN:VEVENT',
+     `DTSTART:${dtS}`,`DTEND:${dtE}`,`SUMMARY:${ev.title}`,
+     `DESCRIPTION:${(ev.description||'').replace(/\n/g,'\\n')}`,
+     `LOCATION:${ev.location||''}`,
+@@ -37666,7 +37666,7 @@ async function _checkEventReminders() {
+           { eventId: ev.id, eventTitle: ev.title, date: ev.date, time: ev.time, reminderKey: key },
+           `evtremind_${ev.id}_${key}_${inv.uid}`);
+       }
+-      await window.Events?.sendNotification?.(uid, 'eventReminder', 'Disciple Builder', uid,
++      await window.Events?.sendNotification?.(uid, 'eventReminder', 'Rhēma', uid,
+         { eventId: ev.id, eventTitle: ev.title, date: ev.date, time: ev.time, reminderKey: key },
+         `evtremind_${ev.id}_${key}_${uid}`);
+       await window.Events?.markReminderSent?.(ev.id, key);
+@@ -37678,7 +37678,7 @@ async function _checkEventReminders() {
+ 
+ function initFCMForeground() {
+   window.FCM?.listenForeground(payload => {
+-    const title = payload.notification?.title || "Disciple Builder";
++    const title = payload.notification?.title || "Rhēma";
+     const body  = payload.notification?.body  || "Time to grow together.";
+     const data  = payload.data || {};
+     if (data.open === "interp") {
+@@ -50946,7 +50946,7 @@ let _appCoachFinishing = false;
+ let _appCoachReplayMode = false;
+ 
+ const APP_WELCOME_COACH_STEPS = [
+-  { title: 'Welcome to Disciple Builder', body: 'This app helps believers study Scripture carefully, build steady habits, encourage one another, and grow together in the knowledge of God. Greek tools, Rhema, Praises, studies, notes, progress, and community features all serve that bigger discipleship goal.' },
++  { title: 'Welcome to Rhēma', body: 'Rhēma (ῥῆμα, “a word spoken”) helps you study Scripture closely in the words it was written in, Hebrew and Greek, word by word, and grow together in the knowledge of God with friends. Lessons, vocab, Praises, studies, notes, habits and community features all serve that goal.' },
+   { before: () => showNavPage('lessons'), target: () => _coachFirst(['.lesson-progress-badge', '.learn-path-grid']), title: 'Lessons are the foundation', body: 'Start here when you want guided structure. The basic and advanced tracks teach foundations and verbs in order, and checks keep you from just scrolling past the material.' },
+   { before: () => { showNavPage('community'); showLbTab('posts'); }, target: () => _coachFirst(['.community-post-add', '#lbPanePosts', '.comm-tabs']), title: 'Community posts', body: 'Posts are the main community feed: share verses, questions, links, prayer notes, and encouragements with friends. Attach MSB or BSB verses, react to one another, optionally alert your friends, and keep the board fresh as posts clear after 7 days.' },
+   { before: () => { showNavPage('community'); showLbTab('xp'); }, target: () => _coachFirst(['button[data-tab="xp"]', '#lbPaneXP']), title: 'XP leaderboard', body: 'XP rewards steady work: lessons, tests, vocab, translation, and study habits. It is not the goal, but it helps your progress feel visible.' },
+diff --git a/functions/index.js b/functions/index.js
+index a762136..26fb7f6 100644
+--- a/functions/index.js
++++ b/functions/index.js
+@@ -1110,7 +1110,7 @@ exports.sendEventReminders = functions.pubsub
+         const accepted = (ev.invitees || []).filter(inv => inv && inv.uid && inv.status === "accepted");
+         const recipients = [...new Set([ev.creatorUid, ...accepted.map(inv => inv.uid)].filter(Boolean))];
+         for (const uid of recipients) {
+-          await writeEventMessage(uid, "eventReminder", ev.creatorName || "Disciple Builder", ev.creatorUid || uid, {
++          await writeEventMessage(uid, "eventReminder", ev.creatorName || "Rhēma", ev.creatorUid || uid, {
+             eventId: eventDoc.id,
+             eventTitle: ev.title || "an event",
+             date: ev.date || "",
+diff --git a/index.html b/index.html
+index cda16e3..af718be 100644
+--- a/index.html
++++ b/index.html
+@@ -45,7 +45,7 @@ try {
+   }
+ } catch (e) {}
+ </script>
+-<title>Disciple Builder</title>
++<title>Rhēma</title>
+ <!-- PWA / Home Screen App Support -->
+ <link href="manifest.json" rel="manifest"/>
+ <!-- theme-color drives the tint iOS paints behind the status bar in an installed
+@@ -383,7 +383,7 @@ antique: {
+ <meta content="yes" name="mobile-web-app-capable"/>
+ <meta content="yes" name="apple-mobile-web-app-capable"/>
+ <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+-<meta content="Disciple Builder" name="apple-mobile-web-app-title"/>
++<meta content="Rhēma" name="apple-mobile-web-app-title"/>
+ <link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
+ <link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
+ <link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
+@@ -399,9 +399,9 @@ antique: {
+ <div id="rotateLock" aria-hidden="true">
+ <span class="material-symbols-outlined">screen_rotation</span>
+ <strong>Please rotate to portrait</strong>
+-<p>Disciple Builder is designed for portrait mode. Turn your device upright to continue.</p>
++<p>Rhēma is designed for portrait mode. Turn your device upright to continue.</p>
+ </div>
+-<div class="app-launch-screen" id="appLaunchScreen" aria-live="polite" aria-label="Loading Disciple Builder">
++<div class="app-launch-screen" id="appLaunchScreen" aria-live="polite" aria-label="Loading Rhēma">
+ <div class="app-launch-emblem" aria-hidden="true">
+ <svg class="app-launch-ring-svg" viewBox="0 0 600 600">
+ <defs>
+@@ -420,7 +420,7 @@ antique: {
+ <main class="app">
+ <div id="statusBarBg"></div>
+ <header class="header app-header" onclick="showInfoModal()" role="button" tabindex="0">
+-<h1>Disciple Builder</h1>
++<h1>Rhēma</h1>
+ <p>Study deeper. Encourage others. Grow together.</p>
+ <small class="header-info-hint"><span class="material-symbols-outlined">info</span> About this app</small>
+ </header>
+@@ -428,7 +428,7 @@ antique: {
+ <div class="desktop-brand">
+ <span class="material-symbols-outlined">auto_stories</span>
+ <div class="desktop-brand-text">
+-<strong>Disciple Builder</strong>
++<strong>Rhēma</strong>
+ <small>Rhema Study Desk</small>
+ </div>
+ </div>
+@@ -9847,37 +9847,32 @@ Verb Endings
+ <div class="welcome-icon">
+ <span class="material-symbols-outlined">auto_stories</span>
+ </div>
+-<h2>Welcome to Disciple Builder</h2>
++<h2>Welcome to Rhēma</h2>
+ <p class="welcome-lead">
+-      Disciple Builder exists to edify believers: helping you study Scripture carefully, encourage friends, stay accountable, and grow in the knowledge of God together.
++      Rhēma (ῥῆμα) means a word spoken. It is here to help you read Scripture closely, in the words it was written in, and grow in the knowledge of God together with friends.
+     </p>
+ <div class="welcome-route">
+-<div>
+-<strong>Lessons — Build Your Foundation</strong>
+-<span>The lessons are designed for the layman — no prior knowledge required. They walk through the Greek alphabet, how nouns and cases work, what verbs do, and how to read a Greek sentence with a repeatable strategy. Two tracks cover the same ground at different depths: Track 1 gets you moving fast, Track 2 goes significantly deeper. Neither replaces a Greek class or seminary course — they give you a solid footing so the language stops being foreign.</span>
+-</div>
+ <div class="welcome-route-feature">
+-<strong>Rhēma — Greek Word Study</strong>
+-<span>Rhēma (ῥῆμα) means the specific word spoken — and that is what this feature is about. Open any verse across all 66 books (the complete Septuagint OT and all 27 NT books) and tap any Greek word to instantly see:</span>
+-<span style="margin-top:6px;display:block">Full grammatical parsing · Root word &amp; transliteration · Two lexicons (Strong's &amp; Dodson) · Etymology · Every verse where that word appears — with cross-reference jumping and a navigation trail.</span>
+-<span style="margin-top:8px;display:block">Tools like <strong>Bible Hub</strong> and <strong>Blue Letter Bible</strong> are excellent and worth using alongside this — they have broader commentary, maps, and cross-Bible comparisons. The key difference: Rhēma is built into this app, works completely offline after the first load, and covers the Greek text in two traditions — the <strong>Byzantine Majority Text</strong> paired with the MSB for NT study, and the <strong>SBL Critical Text</strong> paired with the BSB when you switch modes. The Old Testament uses the Septuagint (Rahlfs 1935 critical text) in both modes. Neither NT tradition is wrong — they are different manuscript streams, and it matters to know which one you are working from.</span>
++<strong>Read the Bible word by word</strong>
++<span>Open any chapter of all 66 books and tap a word to see the Hebrew or Greek behind it: what it means, its grammar, how translations render it, and every place it appears. See the Hebrew (or Greek) lines your English up with the original, and cross references and Journey Maps follow the text. It works offline after the first load.</span>
++<span style="margin-top:8px;display:block">New Testament: the <strong>Byzantine Majority Text</strong> with the MSB, or the <strong>SBL Critical Text</strong> with the BSB. Old Testament: the Hebrew text, with the Greek <strong>Septuagint</strong> one tap away. Neither New Testament tradition is wrong; they are different manuscript streams, and it helps to know which one you are reading.</span>
+ </div>
+ <div>
+-<strong>What Makes Rhema Special</strong>
+-<span>Rhema is one feature inside Disciple Builder. It will not replace major Bible software, lexicons, commentaries, or careful study. What sets it apart is flow: word data, syntax help, cross references, word library, saved trails, and study notes live beside the text so you can observe first and keep your thoughts attached to the passage.</span>
++<strong>What makes Rhēma different</strong>
++<span>It will not replace commentaries, major Bible software or careful study, and tools like Bible Hub and Blue Letter Bible are great alongside it. What sets it apart is flow: word data, grammar help, cross references and your notes sit beside the text, so you observe first and keep your thoughts with the passage.</span>
+ </div>
+ <div>
+-<strong>Vocab — 300 Words, 80% of the NT</strong>
+-<span>The 300 most frequent Greek words cover over 80% of the text. Learn them here and you will recognize the vast majority of what you encounter when you open a Greek NT or use Rhēma.</span>
++<strong>Learn Greek step by step</strong>
++<span>Lessons start from the alphabet with no prior knowledge needed: nouns and cases, verbs, and a repeatable way to read a Greek sentence, in a quick track and a deeper one. Vocab drills the 300 words that cover over 80% of the New Testament.</span>
+ </div>
+ <div>
+-<strong>Friends &amp; Leaderboard</strong>
+-<span>Study alongside your church community, share praises, encourage one another, and keep each other accountable to steady growth.</span>
++<strong>Grow together</strong>
++<span>Follow a reading plan, build steady habits with friends who keep you accountable, share praises, and encourage one another.</span>
+ </div>
+ </div>
+ <p class="welcome-destination">
+ <span class="material-symbols-outlined">travel_explore</span>
+-<span>Disciple Builder brings Greek tools, Scripture study, community encouragement, praises, reminders, and shared studies into one place for believers who want to grow faithfully together.</span>
++<span>Rhēma brings close Scripture study, Greek and Hebrew tools, reading plans and encouragement from friends into one place for believers who want to grow faithfully together.</span>
+ </p>
+ <button class="main-btn welcome-start-btn" onclick="hideInfoModal()">
+       Start Exploring
+@@ -10350,7 +10345,7 @@ Verb Endings
+ <button class="auth-guest-close" onclick="continueAsGuest()" type="button" aria-label="Close and keep reading as a guest"><span class="material-symbols-outlined">close</span></button>
+ <div class="auth-logo">
+ <span class="material-symbols-outlined auth-logo-icon">menu_book</span>
+-<h2 class="auth-logo-title">Disciple Builder</h2>
++<h2 class="auth-logo-title">Rhēma</h2>
+ <p class="auth-logo-sub">Study deeper. Encourage others. Grow together.</p>
+ </div>
+ <div class="auth-tabs">
+@@ -17426,7 +17421,7 @@ Verb Endings
+ <!-- Install App Modal -->
+ <div class="modal-overlay" id="installAppModal" onclick="closeInstallAppModal(event)">
+ <div class="modal-card install-modal-card">
+-<h2>Add the Disciple Builder app</h2>
++<h2>Add the Rhēma app</h2>
+ <p>
+       Follow the steps to add the app to your phone or press "maybe later" to continue using the browser
+     </p>
+@@ -17448,7 +17443,7 @@ Verb Endings
+ <li>Tap the <strong>Share</strong> button.</li>
+ <li>Scroll and tap <strong>Add to Home Screen</strong>.</li>
+ <li>Tap <strong>Add</strong>.</li>
+-<li>Open Disciple Builder from your Home Screen.</li>
++<li>Open Rhēma from your Home Screen.</li>
+ </ol>
+ </div>
+ <button class="main-btn" onclick="triggerAndroidInstall()">
+diff --git a/manifest.json b/manifest.json
+index 40fd114..4a2cf79 100644
+--- a/manifest.json
++++ b/manifest.json
+@@ -1,6 +1,6 @@
+ {
+-  "name": "Disciple Builder",
+-  "short_name": "Disciple Builder",
++  "name": "Rhēma",
++  "short_name": "Rhēma",
+   "description": "Study deeper, encourage others, and grow together in the knowledge of God.",
+   "start_url": "./index.html",
+   "scope": "./",
+diff --git a/scripts/package.json b/scripts/package.json
+index 595ab75..864c624 100644
+--- a/scripts/package.json
++++ b/scripts/package.json
+@@ -1,7 +1,7 @@
+ {
+   "name": "greek-vocab-build-scripts",
+   "private": true,
+-  "description": "Build-time scripts for Disciple Builder. Only the build-*-prose.js and build-word-study.js generators need the dependency below; the other scripts are dependency-free.",
++  "description": "Build-time scripts for Rhēma. Only the build-*-prose.js and build-word-study.js generators need the dependency below; the other scripts are dependency-free.",
+   "scripts": {
+     "build:rhema-critical-fallbacks": "node build-rhema-critical-fallbacks.js",
+     "audit:rhema": "node audit-rhema-quality.js",
+diff --git a/style.css b/style.css
+index d7e6a56..74374c7 100644
+--- a/style.css
++++ b/style.css
+@@ -29489,7 +29489,7 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
+ }
+ 
+ /* ── Vocab / Translate / Test: full-bleed premium tools (match Journey Maps) ──
+-   Edge-to-edge with no Disciple Builder app-header; the tool's own nav-bar sits
++   Edge-to-edge with no app header; the tool's own nav-bar sits
+    at the very top, and the whole screen scrolls (always reset to top on open). */
+ body .app:has(#learnMenu.screen.active),
+ body .app:has(#learnScreen.screen.active),
