@@ -1,7 +1,7 @@
 {
-  "name": "Disciple Builder",
-  "short_name": "Disciple Builder",
-  "description": "Study deeper, encourage others, and grow together in the knowledge of God.",
+  "name": "Rhēma",
+  "short_name": "Rhēma",
+  "description": "Read Scripture word by word, with the Hebrew and Greek behind every word, and grow together in the knowledge of God.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

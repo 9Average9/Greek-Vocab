@@ -10555,7 +10555,7 @@ function _mergeStudyNotificationMessages(msgs = []) {
   msgs.filter(m => m.type === 'eventReminder' && !m._read).forEach(m => {
     upsert('evtremind_' + m.id, {
       id: 'evtremind_' + m.id, type: 'event_reminder',
-      fromName: m.fromName || 'Disciple Builder',
+      fromName: m.fromName || 'Rhēma',
       eventId: m.eventId, eventTitle: m.eventTitle || 'an event',
       date: m.date, time: m.time, reminderKey: m.reminderKey, msgId: m.id, read: false
     });
@@ -22841,13 +22841,13 @@ function _updateAppHeaderForScreen(id) {
   const subtitle = header.querySelector("p");
   const hint = header.querySelector(".header-info-hint");
   if (_isLessonScreenId(id)) {
-    if (title) title.textContent = "Disciple Builder";
+    if (title) title.textContent = "Rhēma";
     if (subtitle) subtitle.textContent = _nextLessonHeaderFact();
     if (hint) hint.innerHTML = `<span class="material-symbols-outlined">auto_awesome</span> Tiny Greek fact`;
     header.classList.add("lesson-header-mode");
   } else {
-    if (title) title.textContent = "Disciple Builder";
-    if (subtitle) subtitle.textContent = "Study deeper. Encourage others. Grow together.";
+    if (title) title.textContent = "Rhēma";
+    if (subtitle) subtitle.textContent = "Scripture, word by word. Grow together.";
     if (hint) hint.innerHTML = `<span class="material-symbols-outlined">info</span> About this app`;
     header.classList.remove("lesson-header-mode");
   }
@@ -35122,7 +35122,7 @@ function setAppLaunchText(text) {
   if (el && text) el.textContent = text;
 }
 
-function showAppLaunchScreen(text = 'Preparing your discipleship tools') {
+function showAppLaunchScreen(text = 'Opening the Word') {
   const splash = document.getElementById('appLaunchScreen');
   if (!splash) return;
   if (_appLaunchReleased) return;
@@ -35176,7 +35176,7 @@ function _applyPendingAppUpdateReload() {
   clearInterval(_appUpdateReloadTimer);
   clearTimeout(_appUpdateReloadTimer);
   document.removeEventListener("visibilitychange", _applyPendingAppUpdateReload);
-  showAppLaunchScreen('Updating Disciple Builder');
+  showAppLaunchScreen('Updating Rhēma');
   setTimeout(() => window.location.reload(), 260);
 }
 
@@ -36264,7 +36264,7 @@ if (window.__pendingAuthResolved) {
 
 document.addEventListener("DOMContentLoaded", () => {
   _appLaunchStartedAt = Date.now();
-  setAppLaunchText('Preparing your discipleship tools');
+  setAppLaunchText('Opening the Word');
   initLaunchRing();
   setTimeout(() => hideAppLaunchScreen('timeout'), 2800);
   registerServiceWorker();
@@ -37438,7 +37438,7 @@ function downloadEventICS(eventId) {
   const end = new Date(start.getTime() + 60 * 60 * 1000);
   const dtS = `${start.getFullYear()}${p(start.getMonth()+1)}${p(start.getDate())}T${p(start.getHours())}${p(start.getMinutes())}00`;
   const dtE = `${end.getFullYear()}${p(end.getMonth()+1)}${p(end.getDate())}T${p(end.getHours())}${p(end.getMinutes())}00`;
-  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Disciple Builder//EN','BEGIN:VEVENT',
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Rhēma//EN','BEGIN:VEVENT',
     `DTSTART:${dtS}`,`DTEND:${dtE}`,`SUMMARY:${ev.title}`,
     `DESCRIPTION:${(ev.description||'').replace(/\n/g,'\\n')}`,
     `LOCATION:${ev.location||''}`,
@@ -37666,7 +37666,7 @@ async function _checkEventReminders() {
           { eventId: ev.id, eventTitle: ev.title, date: ev.date, time: ev.time, reminderKey: key },
           `evtremind_${ev.id}_${key}_${inv.uid}`);
       }
-      await window.Events?.sendNotification?.(uid, 'eventReminder', 'Disciple Builder', uid,
+      await window.Events?.sendNotification?.(uid, 'eventReminder', 'Rhēma', uid,
         { eventId: ev.id, eventTitle: ev.title, date: ev.date, time: ev.time, reminderKey: key },
         `evtremind_${ev.id}_${key}_${uid}`);
       await window.Events?.markReminderSent?.(ev.id, key);
@@ -37678,7 +37678,7 @@ async function _checkEventReminders() {
 
 function initFCMForeground() {
   window.FCM?.listenForeground(payload => {
-    const title = payload.notification?.title || "Disciple Builder";
+    const title = payload.notification?.title || "Rhēma";
     const body  = payload.notification?.body  || "Time to grow together.";
     const data  = payload.data || {};
     if (data.open === "interp") {
@@ -50946,7 +50946,8 @@ let _appCoachFinishing = false;
 let _appCoachReplayMode = false;
 
 const APP_WELCOME_COACH_STEPS = [
-  { title: 'Welcome to Disciple Builder', body: 'This app helps believers study Scripture carefully, build steady habits, encourage one another, and grow together in the knowledge of God. Greek tools, Rhema, Praises, studies, notes, progress, and community features all serve that bigger discipleship goal.' },
+  { title: 'Welcome to Rhēma', body: 'Rhēma (ῥῆμα, “a word spoken”) helps you study Scripture closely in the words it was written in, Hebrew and Greek, word by word, and grow together in the knowledge of God with friends. Lessons, vocab, Praises, studies, notes, habits and community features all serve that goal.' },
+  { before: () => showNavPage('home'), target: () => _coachFirst(['.bn-item[data-page="rhema"]']), title: 'Start here: Rhēma', body: 'The book button opens the Bible right where you left off. Tap any word to see the Hebrew or Greek behind it, what it means, and everywhere else it appears.' },
   { before: () => showNavPage('lessons'), target: () => _coachFirst(['.lesson-progress-badge', '.learn-path-grid']), title: 'Lessons are the foundation', body: 'Start here when you want guided structure. The basic and advanced tracks teach foundations and verbs in order, and checks keep you from just scrolling past the material.' },
   { before: () => { showNavPage('community'); showLbTab('posts'); }, target: () => _coachFirst(['.community-post-add', '#lbPanePosts', '.comm-tabs']), title: 'Community posts', body: 'Posts are the main community feed: share verses, questions, links, prayer notes, and encouragements with friends. Attach MSB or BSB verses, react to one another, optionally alert your friends, and keep the board fresh as posts clear after 7 days.' },
   { before: () => { showNavPage('community'); showLbTab('xp'); }, target: () => _coachFirst(['button[data-tab="xp"]', '#lbPaneXP']), title: 'XP leaderboard', body: 'XP rewards steady work: lessons, tests, vocab, translation, and study habits. It is not the goal, but it helps your progress feel visible.' },

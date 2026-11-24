@@ -1,7 +1,7 @@
 {
   "name": "greek-vocab-build-scripts",
   "private": true,
-  "description": "Build-time scripts for Disciple Builder. Only the build-*-prose.js and build-word-study.js generators need the dependency below; the other scripts are dependency-free.",
+  "description": "Build-time scripts for Rhēma. Only the build-*-prose.js and build-word-study.js generators need the dependency below; the other scripts are dependency-free.",
   "scripts": {
     "build:rhema-critical-fallbacks": "node build-rhema-critical-fallbacks.js",
     "audit:rhema": "node audit-rhema-quality.js",
