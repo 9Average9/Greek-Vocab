@@ -45,7 +45,7 @@ try {
   }
 } catch (e) {}
 </script>
-<title>Disciple Builder</title>
+<title>Rhēma</title>
 <!-- PWA / Home Screen App Support -->
 <link href="manifest.json" rel="manifest"/>
 <!-- theme-color drives the tint iOS paints behind the status bar in an installed
@@ -383,13 +383,13 @@ antique: {
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
-<meta content="Disciple Builder" name="apple-mobile-web-app-title"/>
-<link href="assets/icons/disciple-builder-icon-180.png?v=3.0.255" rel="apple-touch-icon"/>
-<link href="assets/icons/disciple-builder-icon-192.png?v=3.0.255" rel="icon" sizes="192x192" type="image/png"/>
-<link href="assets/icons/disciple-builder-icon-512.png?v=3.0.255" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.640" rel="stylesheet"/>
+<meta content="Rhēma" name="apple-mobile-web-app-title"/>
+<link href="assets/icons/rhema-icon-180.png?v=3.0.641" rel="apple-touch-icon"/>
+<link href="assets/icons/rhema-icon-192.png?v=3.0.641" rel="icon" sizes="192x192" type="image/png"/>
+<link href="assets/icons/rhema-icon-512.png?v=3.0.641" rel="icon" sizes="512x512" type="image/png"/>
+<link href="style.css?v=3.0.641" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.640" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.641" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -399,9 +399,9 @@ antique: {
 <div id="rotateLock" aria-hidden="true">
 <span class="material-symbols-outlined">screen_rotation</span>
 <strong>Please rotate to portrait</strong>
-<p>Disciple Builder is designed for portrait mode. Turn your device upright to continue.</p>
+<p>Rhēma is designed for portrait mode. Turn your device upright to continue.</p>
 </div>
-<div class="app-launch-screen" id="appLaunchScreen" aria-live="polite" aria-label="Loading Disciple Builder">
+<div class="app-launch-screen" id="appLaunchScreen" aria-live="polite" aria-label="Loading Rhēma">
 <div class="app-launch-emblem" aria-hidden="true">
 <svg class="app-launch-ring-svg" viewBox="0 0 600 600">
 <defs>
@@ -411,24 +411,24 @@ antique: {
 <circle cx="300.5" cy="286.7" r="164.5" fill="none" stroke="#0a1a2e" stroke-opacity="0.10" stroke-width="17.3"/>
 <circle id="appLaunchRing" cx="300.5" cy="286.7" r="164.5" fill="none" stroke="url(#dbRingGrad)" stroke-width="17.3" stroke-linecap="round" stroke-dasharray="1033.6" stroke-dashoffset="1033.6" transform="rotate(-90 300.5 286.7)" filter="url(#dbRingShadow)"/>
 </svg>
-<img class="app-launch-emblem-art" src="assets/icons/disciple-builder-splash.png?v=3.0.257" alt=""/>
+<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.641" alt=""/>
 </div>
 <div class="app-launch-status">
-<span id="appLaunchText">Preparing your discipleship tools</span>
+<span id="appLaunchText">Opening the Word</span>
 </div>
 </div>
 <main class="app">
 <div id="statusBarBg"></div>
 <header class="header app-header" onclick="showInfoModal()" role="button" tabindex="0">
-<h1>Disciple Builder</h1>
-<p>Study deeper. Encourage others. Grow together.</p>
+<h1>Rhēma</h1>
+<p>Scripture, word by word. Grow together.</p>
 <small class="header-info-hint"><span class="material-symbols-outlined">info</span> About this app</small>
 </header>
 <aside class="desktop-shell-nav" id="desktopShellNav" aria-label="Desktop navigation">
 <div class="desktop-brand">
 <span class="material-symbols-outlined">auto_stories</span>
 <div class="desktop-brand-text">
-<strong>Disciple Builder</strong>
+<strong>Rhēma</strong>
 <small>Rhema Study Desk</small>
 </div>
 </div>
@@ -9847,37 +9847,32 @@ Verb Endings
 <div class="welcome-icon">
 <span class="material-symbols-outlined">auto_stories</span>
 </div>
-<h2>Welcome to Disciple Builder</h2>
+<h2>Welcome to Rhēma</h2>
 <p class="welcome-lead">
-      Disciple Builder exists to edify believers: helping you study Scripture carefully, encourage friends, stay accountable, and grow in the knowledge of God together.
+      Rhēma (ῥῆμα) means a word spoken. It is here to help you read Scripture closely, in the words it was written in, and grow in the knowledge of God together with friends.
     </p>
 <div class="welcome-route">
-<div>
-<strong>Lessons — Build Your Foundation</strong>
-<span>The lessons are designed for the layman — no prior knowledge required. They walk through the Greek alphabet, how nouns and cases work, what verbs do, and how to read a Greek sentence with a repeatable strategy. Two tracks cover the same ground at different depths: Track 1 gets you moving fast, Track 2 goes significantly deeper. Neither replaces a Greek class or seminary course — they give you a solid footing so the language stops being foreign.</span>
-</div>
 <div class="welcome-route-feature">
-<strong>Rhēma — Greek Word Study</strong>
-<span>Rhēma (ῥῆμα) means the specific word spoken — and that is what this feature is about. Open any verse across all 66 books (the complete Septuagint OT and all 27 NT books) and tap any Greek word to instantly see:</span>
-<span style="margin-top:6px;display:block">Full grammatical parsing · Root word &amp; transliteration · Two lexicons (Strong's &amp; Dodson) · Etymology · Every verse where that word appears — with cross-reference jumping and a navigation trail.</span>
-<span style="margin-top:8px;display:block">Tools like <strong>Bible Hub</strong> and <strong>Blue Letter Bible</strong> are excellent and worth using alongside this — they have broader commentary, maps, and cross-Bible comparisons. The key difference: Rhēma is built into this app, works completely offline after the first load, and covers the Greek text in two traditions — the <strong>Byzantine Majority Text</strong> paired with the MSB for NT study, and the <strong>SBL Critical Text</strong> paired with the BSB when you switch modes. The Old Testament uses the Septuagint (Rahlfs 1935 critical text) in both modes. Neither NT tradition is wrong — they are different manuscript streams, and it matters to know which one you are working from.</span>
+<strong>Read the Bible word by word</strong>
+<span>Open any chapter of all 66 books and tap a word to see the Hebrew or Greek behind it: what it means, its grammar, how translations render it, and every place it appears. See the Hebrew (or Greek) lines your English up with the original, and cross references and Journey Maps follow the text. It works offline after the first load.</span>
+<span style="margin-top:8px;display:block">New Testament: the Byzantine Majority Text with the MSB, or the SBL Critical Text with the BSB. Old Testament: the Hebrew text, with the Greek Septuagint one tap away. Neither New Testament tradition is wrong; they are different manuscript streams, and it helps to know which one you are reading.</span>
 </div>
 <div>
-<strong>What Makes Rhema Special</strong>
-<span>Rhema is one feature inside Disciple Builder. It will not replace major Bible software, lexicons, commentaries, or careful study. What sets it apart is flow: word data, syntax help, cross references, word library, saved trails, and study notes live beside the text so you can observe first and keep your thoughts attached to the passage.</span>
+<strong>What makes Rhēma different</strong>
+<span>It will not replace commentaries, major Bible software or careful study, and tools like Bible Hub and Blue Letter Bible are great alongside it. What sets it apart is flow: word data, grammar help, cross references and your notes sit beside the text, so you observe first and keep your thoughts with the passage.</span>
 </div>
 <div>
-<strong>Vocab — 300 Words, 80% of the NT</strong>
-<span>The 300 most frequent Greek words cover over 80% of the text. Learn them here and you will recognize the vast majority of what you encounter when you open a Greek NT or use Rhēma.</span>
+<strong>Learn Greek step by step</strong>
+<span>Lessons start from the alphabet with no prior knowledge needed: nouns and cases, verbs, and a repeatable way to read a Greek sentence, in a quick track and a deeper one. Vocab drills the 300 words that cover over 80% of the New Testament.</span>
 </div>
 <div>
-<strong>Friends &amp; Leaderboard</strong>
-<span>Study alongside your church community, share praises, encourage one another, and keep each other accountable to steady growth.</span>
+<strong>Grow together</strong>
+<span>Follow a reading plan, build steady habits with friends who keep you accountable, share praises, and encourage one another.</span>
 </div>
 </div>
 <p class="welcome-destination">
 <span class="material-symbols-outlined">travel_explore</span>
-<span>Disciple Builder brings Greek tools, Scripture study, community encouragement, praises, reminders, and shared studies into one place for believers who want to grow faithfully together.</span>
+<span>Rhēma brings close Scripture study, Greek and Hebrew tools, reading plans and encouragement from friends into one place for believers who want to grow faithfully together.</span>
 </p>
 <button class="main-btn welcome-start-btn" onclick="hideInfoModal()">
       Start Exploring
@@ -10350,8 +10345,8 @@ Verb Endings
 <button class="auth-guest-close" onclick="continueAsGuest()" type="button" aria-label="Close and keep reading as a guest"><span class="material-symbols-outlined">close</span></button>
 <div class="auth-logo">
 <span class="material-symbols-outlined auth-logo-icon">menu_book</span>
-<h2 class="auth-logo-title">Disciple Builder</h2>
-<p class="auth-logo-sub">Study deeper. Encourage others. Grow together.</p>
+<h2 class="auth-logo-title">Rhēma</h2>
+<p class="auth-logo-sub">Scripture, word by word. Grow together.</p>
 </div>
 <div class="auth-tabs">
 <button class="auth-tab active" id="authTabCreate" onclick="switchAuthTab('create')">Create Account</button>
@@ -17355,24 +17350,24 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.640"></script>
-<script src="app.js?v=3.0.640"></script>
-<script src="rhema-word-study.js?v=3.0.640"></script>
-<script src="rhema-grammar-search.js?v=3.0.640"></script>
-<script src="rhema-xl-views.js?v=3.0.640"></script>
-<script src="rhema-glance.js?v=3.0.640"></script>
-<script src="challenge.js?v=3.0.640"></script>
-<script src="guide-news.js?v=3.0.640"></script>
-<script src="bible-atlas.js?v=3.0.640"></script>
+<script src="rhema-align.js?v=3.0.641"></script>
+<script src="app.js?v=3.0.641"></script>
+<script src="rhema-word-study.js?v=3.0.641"></script>
+<script src="rhema-grammar-search.js?v=3.0.641"></script>
+<script src="rhema-xl-views.js?v=3.0.641"></script>
+<script src="rhema-glance.js?v=3.0.641"></script>
+<script src="challenge.js?v=3.0.641"></script>
+<script src="guide-news.js?v=3.0.641"></script>
+<script src="bible-atlas.js?v=3.0.641"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.640"></script>
-<script src="verse-structure.js?v=3.0.640"></script>
-<script src="vs-structure.js?v=3.0.640"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.641"></script>
+<script src="verse-structure.js?v=3.0.641"></script>
+<script src="vs-structure.js?v=3.0.641"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.640"></script>
-<script src="bible-quiz.js?v=3.0.640"></script>
-<script src="firebase-lb.js?v=3.0.640" type="module"></script>
+<script src="sermon-notes.js?v=3.0.641"></script>
+<script src="bible-quiz.js?v=3.0.641"></script>
+<script src="firebase-lb.js?v=3.0.641" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -17426,7 +17421,7 @@ Verb Endings
 <!-- Install App Modal -->
 <div class="modal-overlay" id="installAppModal" onclick="closeInstallAppModal(event)">
 <div class="modal-card install-modal-card">
-<h2>Add the Disciple Builder app</h2>
+<h2>Add the Rhēma app</h2>
 <p>
       Follow the steps to add the app to your phone or press "maybe later" to continue using the browser
     </p>
@@ -17448,7 +17443,7 @@ Verb Endings
 <li>Tap the <strong>Share</strong> button.</li>
 <li>Scroll and tap <strong>Add to Home Screen</strong>.</li>
 <li>Tap <strong>Add</strong>.</li>
-<li>Open Disciple Builder from your Home Screen.</li>
+<li>Open Rhēma from your Home Screen.</li>
 </ol>
 </div>
 <button class="main-btn" onclick="triggerAndroidInstall()">

@@ -1110,7 +1110,7 @@ exports.sendEventReminders = functions.pubsub
         const accepted = (ev.invitees || []).filter(inv => inv && inv.uid && inv.status === "accepted");
         const recipients = [...new Set([ev.creatorUid, ...accepted.map(inv => inv.uid)].filter(Boolean))];
         for (const uid of recipients) {
-          await writeEventMessage(uid, "eventReminder", ev.creatorName || "Disciple Builder", ev.creatorUid || uid, {
+          await writeEventMessage(uid, "eventReminder", ev.creatorName || "Rhēma", ev.creatorUid || uid, {
             eventId: eventDoc.id,
             eventTitle: ev.title || "an event",
             date: ev.date || "",
