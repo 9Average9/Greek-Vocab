@@ -19940,8 +19940,128 @@ async function rpRegisterReminder(uid, habitId, plan) {
 function rpLoadPlans() {
   try { return JSON.parse(localStorage.getItem(RP_PLANS_KEY) || "[]"); } catch { return []; }
 }
+// Saving stamps each changed plan with a new revision (_rev) and remembers
+// deleted plans, so the cloud copy can follow (see _rpCloudFlush).
 function rpPersistPlans(plans) {
+  let prev = [];
+  try { prev = JSON.parse(localStorage.getItem(RP_PLANS_KEY) || "[]"); } catch {}
+  const prevById = new Map(prev.map(p => [p.id, p]));
+  const bare = x => { const { _rev, ...rest } = x || {}; return JSON.stringify(rest); };
+  const now = Date.now();
+  const dirty = new Set();
+  plans.forEach(p => {
+    const old = prevById.get(p.id);
+    if (!old || bare(old) !== bare(p)) { p._rev = Math.max(now, (old?._rev || 0) + 1); dirty.add(p.id); }
+    else if (!p._rev && old._rev) p._rev = old._rev;
+  });
+  const ids = new Set(plans.map(p => p.id));
+  const dead = _rpTombstones();
+  prev.forEach(p => { if (!ids.has(p.id)) { dead[p.id] = now; dirty.add(p.id); } });
+  if (dirty.size) _rpSaveTombstones(dead);
   try { localStorage.setItem(RP_PLANS_KEY, JSON.stringify(plans)); } catch {}
+  if (dirty.size) _rpCloudQueue(dirty);
+}
+
+/* Cloud sync for reading plans: the same plans (and progress) on every device
+   you sign in on. Each plan is one doc in users/{uid}/readingPlans; the
+   newer revision wins, deleted plans stay deleted, and plans made before
+   signing in are uploaded once you do. */
+const RP_DEAD_KEY = "rp_deleted_v1";
+const RP_ACTIVE_REV_KEY = "rp_active_rev_v1";
+function _rpTombstones() { try { return JSON.parse(localStorage.getItem(RP_DEAD_KEY) || "{}") || {}; } catch { return {}; } }
+function _rpSaveTombstones(t) { try { localStorage.setItem(RP_DEAD_KEY, JSON.stringify(t)); } catch {} }
+function _rpActiveRev() { try { return Number(localStorage.getItem(RP_ACTIVE_REV_KEY) || 0); } catch { return 0; } }
+let _rpCloudTimer = 0;
+const _rpCloudDirty = new Set();
+function _rpCloudQueue(ids) {
+  ids.forEach(i => _rpCloudDirty.add(i));
+  clearTimeout(_rpCloudTimer);
+  _rpCloudTimer = setTimeout(_rpCloudFlush, 1200);
+}
+async function _rpCloudFlush() {
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!uid || !window.Auth?.saveReadingPlanDoc) return; // stays dirty; the next sign-in sync uploads it
+  const ids = [..._rpCloudDirty];
+  _rpCloudDirty.clear();
+  const plans = rpLoadPlans();
+  const dead = _rpTombstones();
+  for (const id of ids) {
+    let ok = true;
+    if (id === "_active") ok = await window.Auth.saveReadingPlanDoc(uid, "_active", { activeId: _rpActiveId(), rev: _rpActiveRev() || Date.now() });
+    else {
+      const p = plans.find(x => x.id === id);
+      if (p) ok = await window.Auth.saveReadingPlanDoc(uid, id, { data: JSON.stringify(p), rev: p._rev || p.updatedAt || 1 });
+      else if (dead[id]) ok = await window.Auth.saveReadingPlanDoc(uid, id, { deleted: true, rev: dead[id] });
+    }
+    if (!ok) _rpCloudDirty.add(id);
+  }
+}
+let _rpCloudUnsub = null;
+function _rpStartCloudSync() {
+  _rpCloudUnsub?.(); _rpCloudUnsub = null;
+  if (window.RHEMA_MV_SLOT) return;
+  const uid = window.Auth?.getCurrentUser?.()?.uid;
+  if (!uid || !window.Auth?.listenReadingPlans) return;
+  // Plans on this device that belong to a different account stay with that
+  // account (they're already in its cloud); plans made while signed out are
+  // adopted by whoever signs in.
+  try {
+    const owner = localStorage.getItem("rp_sync_uid");
+    if (owner && owner !== uid) {
+      [RP_PLANS_KEY, RP_ACTIVE_KEY, RP_DEAD_KEY, RP_ACTIVE_REV_KEY].forEach(k => localStorage.removeItem(k));
+      _rpCloudDirty.clear();
+    }
+    localStorage.setItem("rp_sync_uid", uid);
+  } catch {}
+  _rpCloudUnsub = window.Auth.listenReadingPlans(uid, cloud => {
+    try { _rpMergeCloud(cloud); } catch (e) { console.warn("reading plan sync", e); }
+  });
+}
+function _rpMergeCloud(cloud) {
+  let local = [];
+  try { local = JSON.parse(localStorage.getItem(RP_PLANS_KEY) || "[]"); } catch {}
+  const byId = new Map(local.map(p => [p.id, p]));
+  const dead = _rpTombstones();
+  const rev = p => p?._rev || p?.updatedAt || 1;
+  const push = new Set();
+  let changed = false;
+  for (const [id, c] of Object.entries(cloud || {})) {
+    if (id === "_active") continue;
+    const mine = byId.get(id);
+    const crev = Number(c.rev || 0);
+    if (c.deleted) {
+      if (mine && rev(mine) <= crev) { byId.delete(id); changed = true; }
+      else if (mine) push.add(id);
+      if (!(dead[id] >= crev)) dead[id] = crev;
+      continue;
+    }
+    let cp = null;
+    try { cp = JSON.parse(c.data || "null"); } catch {}
+    if (!cp || !cp.id) continue;
+    if (dead[id] && dead[id] >= crev) { push.add(id); continue; } // deleted here after that version
+    if (!mine || crev > rev(mine)) { cp._rev = crev; byId.set(id, cp); changed = true; }
+    else if (rev(mine) > crev) push.add(id);
+  }
+  // Plans and deletions the cloud hasn't seen yet (e.g. made before signing in).
+  for (const p of byId.values()) if (!cloud?.[p.id]) push.add(p.id);
+  for (const id of Object.keys(dead)) if (!cloud?.[id] && !byId.has(id)) push.add(id);
+  if (changed) { try { localStorage.setItem(RP_PLANS_KEY, JSON.stringify([...byId.values()])); } catch {} }
+  _rpSaveTombstones(dead);
+  const ca = cloud?._active;
+  if (ca && Number(ca.rev || 0) > _rpActiveRev()) {
+    if (!ca.activeId || byId.has(ca.activeId)) {
+      try {
+        ca.activeId ? localStorage.setItem(RP_ACTIVE_KEY, ca.activeId) : localStorage.removeItem(RP_ACTIVE_KEY);
+        localStorage.setItem(RP_ACTIVE_REV_KEY, String(ca.rev));
+      } catch {}
+      changed = true;
+    }
+  } else if (_rpActiveId() && _rpActiveRev() >= Number(ca?.rev || 0) && (!ca || ca.activeId !== _rpActiveId())) {
+    if (!_rpActiveRev()) { try { localStorage.setItem(RP_ACTIVE_REV_KEY, String(Date.now())); } catch {} }
+    push.add("_active");
+  }
+  if (changed) _rpRefreshSurfaces();
+  if (push.size) _rpCloudQueue(push);
 }
 function rpRenderSaved() {
   const host = document.getElementById('rpSavedView');
@@ -20091,7 +20211,8 @@ function rpActivePlan() {
   return p ? _rpNormalizePlan(p) : null;
 }
 function rpSetActivePlan(id, silent) {
-  try { id ? localStorage.setItem(RP_ACTIVE_KEY, id) : localStorage.removeItem(RP_ACTIVE_KEY); } catch {}
+  try { id ? localStorage.setItem(RP_ACTIVE_KEY, id) : localStorage.removeItem(RP_ACTIVE_KEY); localStorage.setItem(RP_ACTIVE_REV_KEY, String(Date.now())); } catch {}
+  _rpCloudQueue(["_active"]);
   if (silent) return;
   rpRenderSaved();
   setReadingPlanTab('today');
@@ -32221,7 +32342,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.642";
+const APP_VERSION = "3.0.643";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32244,6 +32365,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.643 — Reading plans sync to your account</div>
+<ul>
+<li><strong>Your plans on every device</strong> &mdash; Reading plans now save to your account, along with your progress and which plan is current. Sign in on another phone, or after reinstalling the app, and they&rsquo;re there.</li>
+<li><strong>Plans made before signing in</strong> are added to your account the next time you sign in.</li>
+<li><strong>Deleting a plan</strong> deletes it everywhere, and if two devices disagree, the most recent change wins.</li>
+</ul>
 <div class="un-version-label">v3.0.642 — Loading bar around the icon</div>
 <ul>
 <li>The loading bar now traces the rounded square around the new Rhēma icon instead of a circle, and it shows in the icon&rsquo;s blue in dark mode.</li>
@@ -36135,6 +36262,8 @@ window.__onAuthStateReady = async (user) => {
 
     // Sync the user's Rhema highlights/notes from the cloud.
     _rhemaStartMarksSync();
+    // And their reading plans, so they follow them to any device.
+    try { _rpStartCloudSync(); } catch (e) { console.warn(e); }
     // Signing in with the reader open: switch its study tools on right away.
     if (document.getElementById('rhemaModal')?.classList.contains('open')) _rhemaAttachHomeStudy();
 

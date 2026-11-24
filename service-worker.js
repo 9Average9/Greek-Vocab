@@ -55,7 +55,7 @@ self.addEventListener("notificationclick", (event) => {
 // Before this split, every release renamed the one cache and `activate`
 // deleted the old one, so each update re-downloaded all of the Bible data, and
 // stale-while-revalidate re-fetched multi-megabyte files on every open.
-const APP_SW_VERSION = "3.0.642";
+const APP_SW_VERSION = "3.0.643";
 const SHELL_CACHE = "disciple-builder-v" + APP_SW_VERSION;
 const DATA_CACHE = "disciple-builder-data-v1";
 const KEEP_CACHES = new Set([SHELL_CACHE, DATA_CACHE]);
@@ -74,28 +74,28 @@ const SHELL_NETWORK_TIMEOUT_MS = 3000;
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.642",
+  "./style.css?v=3.0.643",
   "./vocab.js?v=3.0.8",
-  "./rhema-align.js?v=3.0.642",
-  "./app.js?v=3.0.642",
-  "./rhema-word-study.js?v=3.0.642",
-  "./rhema-grammar-search.js?v=3.0.642",
-  "./rhema-xl-views.js?v=3.0.642",
-  "./rhema-glance.js?v=3.0.642",
-  "./challenge.js?v=3.0.642",
-  "./guide-news.js?v=3.0.642",
+  "./rhema-align.js?v=3.0.643",
+  "./app.js?v=3.0.643",
+  "./rhema-word-study.js?v=3.0.643",
+  "./rhema-grammar-search.js?v=3.0.643",
+  "./rhema-xl-views.js?v=3.0.643",
+  "./rhema-glance.js?v=3.0.643",
+  "./challenge.js?v=3.0.643",
+  "./guide-news.js?v=3.0.643",
   "./assets/mascot/guide-skeptic.webp",
   "./assets/icons/challenge-books.webp",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.584",
   "./rhema-english-dictionary.js?v=3.0.417",
   "./assets/vendor/wink-nlp-en.js?v=3.0.104",
-  "./bible-atlas.js?v=3.0.642",
+  "./bible-atlas.js?v=3.0.643",
   "./bible-genealogy.js?v=3.0.476",
   "./bible-regions.js?v=3.0.472",
-  "./verse-structure.js?v=3.0.642",
-  "./vs-structure.js?v=3.0.642",
-  "./sermon-notes.js?v=3.0.642",
+  "./verse-structure.js?v=3.0.643",
+  "./vs-structure.js?v=3.0.643",
+  "./sermon-notes.js?v=3.0.643",
   "./sermon-notes.css?v=3.0.460",
   // Self-hosted fonts (icons + skin fonts) — pinned, they effectively never change
   "./assets/fonts/fonts.css?v=3.0.415",
@@ -142,11 +142,11 @@ const FILES_TO_CACHE = [
   "./rhema-scripture-notes.js?v=3.0.160",
   "./rhema-bsb-align.js?v=3.0.2",
   "./rhema-bible-dictionary.js?v=3.0.385",
-  "./rhema-crossrefs-ui.js?v=3.0.642",
+  "./rhema-crossrefs-ui.js?v=3.0.643",
   "./greek-verbs.js?v=3.0.152",
-  "./bible-quiz.js?v=3.0.642",
-  "./bible-quiz.css?v=3.0.642",
-  "./firebase-lb.js?v=3.0.642",
+  "./bible-quiz.js?v=3.0.643",
+  "./bible-quiz.css?v=3.0.643",
+  "./firebase-lb.js?v=3.0.643",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",
@@ -191,10 +191,10 @@ const FILES_TO_CACHE = [
   "./assets/home-backgrounds/waves-thumb.jpg",
   "./manifest.json",
   "./PWAicon.png",
-  "./assets/icons/rhema-icon-180.png?v=3.0.642",
-  "./assets/icons/rhema-icon-192.png?v=3.0.642",
-  "./assets/icons/rhema-icon-512.png?v=3.0.642",
-  "./assets/icons/rhema-splash.png?v=3.0.642"
+  "./assets/icons/rhema-icon-180.png?v=3.0.643",
+  "./assets/icons/rhema-icon-192.png?v=3.0.643",
+  "./assets/icons/rhema-icon-512.png?v=3.0.643",
+  "./assets/icons/rhema-splash.png?v=3.0.643"
 ];
 
 // Multi-megabyte datasets. On a brand-new install these are NOT fetched during
