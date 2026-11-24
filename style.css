@@ -9850,12 +9850,12 @@ body {
 /* ===== TRUE WIDE LESSON DROPDOWNS ===== */
 
 @media (max-width: 760px) {
-  body .app:has(#newLearnMenu.screen.active .learn-lesson.active) {
+  html.les-newLearnMenu:not(#_p):not(._p):not(._p):not(._p) body .app {
     padding-left: 8px !important;
     padding-right: 8px !important;
   }
 
-  body #newLearnMenu.screen.active:has(.learn-lesson.active) {
+  html.les-newLearnMenu:not(._p) body #newLearnMenu.screen.active {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -12653,12 +12653,12 @@ body.dark .adv-cs-table td {
 
 /* Shrink .app side padding when an advanced lesson is active */
 @media (max-width: 760px) {
-  body .app:has(#advancedLearnMenu.screen.active .adv-learn-lesson.active) {
+  html.les-advancedLearnMenu:not(#_p):not(._p):not(._p):not(._p) body .app {
     padding-left: 8px !important;
     padding-right: 8px !important;
   }
 
-  body #advancedLearnMenu.screen.active:has(.adv-learn-lesson.active) {
+  html.les-advancedLearnMenu:not(._p) body #advancedLearnMenu.screen.active {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -12694,7 +12694,7 @@ body.dark .adv-cs-table td {
 
 /* 1. Nav-bar: add side padding when in lesson view so buttons don't hug edges */
 @media (max-width: 760px) {
-  body #advancedLearnMenu.screen.active:has(.adv-learn-lesson.active) .nav-bar {
+  html.les-advancedLearnMenu:not(._p) body #advancedLearnMenu.screen.active .nav-bar {
     padding: 0 10px;
   }
 }
@@ -19277,11 +19277,11 @@ body.sepia .rhema-sheet { background: #fffcf2; }
 /* ══ Home / Profile / Community — app padding fix + app-header visibility ════ */
 
 /* Remove all .app padding when nav screens are active so they fill edge-to-edge */
-body .app:has(#homeScreen.screen.active),
-body .app:has(#profilePage.screen.active),
-body .app:has(#communityPage.screen.active),
-body .app:has(#merciesPage.screen.active),
-body .app:has(#habitsPage.screen.active) {
+html.scr-homeScreen:not(#_p):not(._p) body .app,
+html.scr-profilePage:not(#_p):not(._p) body .app,
+html.scr-communityPage:not(#_p):not(._p) body .app,
+html.scr-merciesPage:not(#_p):not(._p) body .app,
+html.scr-habitsPage:not(#_p):not(._p) body .app {
   padding: 0 !important;
   overflow: hidden;
   height: 100vh;
@@ -19289,20 +19289,20 @@ body .app:has(#habitsPage.screen.active) {
 }
 
 /* Hide the app-header on nav screens (each screen has its own header) */
-body .app:has(#homeScreen.screen.active) .app-header,
-body .app:has(#profilePage.screen.active) .app-header,
-body .app:has(#communityPage.screen.active) .app-header,
-body .app:has(#merciesPage.screen.active) .app-header,
-body .app:has(#habitsPage.screen.active) .app-header {
+html.scr-homeScreen:not(#_p):not(._p) body .app .app-header,
+html.scr-profilePage:not(#_p):not(._p) body .app .app-header,
+html.scr-communityPage:not(#_p):not(._p) body .app .app-header,
+html.scr-merciesPage:not(#_p):not(._p) body .app .app-header,
+html.scr-habitsPage:not(#_p):not(._p) body .app .app-header {
   display: none !important;
 }
 
 /* Remove stale margin-top overrides */
-body .app:has(#homeScreen.screen.active) #homeScreen,
-body .app:has(#profilePage.screen.active) #profilePage,
-body .app:has(#communityPage.screen.active) #communityPage,
-body .app:has(#merciesPage.screen.active) #merciesPage,
-body .app:has(#habitsPage.screen.active) #habitsPage {
+html.scr-homeScreen:not(#_p):not(._p) body .app #homeScreen,
+html.scr-profilePage:not(#_p):not(._p) body .app #profilePage,
+html.scr-communityPage:not(#_p):not(._p) body .app #communityPage,
+html.scr-merciesPage:not(#_p):not(._p) body .app #merciesPage,
+html.scr-habitsPage:not(#_p):not(._p) body .app #habitsPage {
   margin-top: 0 !important;
 }
 
@@ -19341,7 +19341,7 @@ body .app:has(#habitsPage.screen.active) #habitsPage {
 }
 
 /* Remove app padding when settings is active */
-body .app:has(#settingsScreen.screen.active) {
+html.scr-settingsScreen:not(#_p):not(._p) body .app {
   padding-left: 0 !important;
   padding-right: 0 !important;
   padding-top: 0 !important;
@@ -19985,7 +19985,7 @@ body.dark .theme-wheel-tile {
 /* While the launch splash is still up (even mid fade-out), keep the bottom nav
    fully hidden so it never flashes in/out before the app has finished loading.
    Once the splash gets .hidden, the nav fades into its normal state. */
-body:has(#appLaunchScreen:not(.hidden)) .bottom-nav {
+html.app-launching:not(#_p) body .bottom-nav {
   opacity: 0 !important;
   pointer-events: none !important;
   transform: translate(-50%, calc(100% + 24px + 0px)) !important;
@@ -19993,8 +19993,8 @@ body:has(#appLaunchScreen:not(.hidden)) .bottom-nav {
 /* While the splash is up, match the page background to the splash colour so the
    themed page colour can never show as a strip in the bottom safe area while the
    app is loading. (Matches the splash gradient's outer tone / manifest bg.) */
-html:has(#appLaunchScreen:not(.hidden)),
-body:has(#appLaunchScreen:not(.hidden)) {
+html.app-launching:not(#_p),
+html.app-launching:not(#_p) body {
   background: linear-gradient(180deg, var(--primary-color), var(--primary-light)) !important;
 }
 .bottom-nav.mercies-collapsed {
@@ -23383,14 +23383,14 @@ body.dark .quiz-answer-correct { color: #a5d6a7; }
 
 /* Mobile full-width verb lessons */
 @media (max-width: 760px) {
-  body .app:has(#basicVerbsLearnMenu.screen.active .basic-verb-lesson.active),
-  body .app:has(#advVerbsLearnMenu.screen.active .adv-verb-lesson.active) {
+  html.les-basicVerbsLearnMenu:not(#_p):not(._p):not(._p):not(._p) body .app,
+  html.les-advVerbsLearnMenu:not(#_p):not(._p):not(._p):not(._p) body .app {
     padding-left: 8px !important;
     padding-right: 8px !important;
   }
 
-  body #basicVerbsLearnMenu.screen.active:has(.basic-verb-lesson.active),
-  body #advVerbsLearnMenu.screen.active:has(.adv-verb-lesson.active) {
+  html.les-basicVerbsLearnMenu:not(._p) body #basicVerbsLearnMenu.screen.active,
+  html.les-advVerbsLearnMenu:not(._p) body #advVerbsLearnMenu.screen.active {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -23419,8 +23419,8 @@ body.dark .quiz-answer-correct { color: #a5d6a7; }
     box-sizing: border-box;
   }
 
-  body #basicVerbsLearnMenu.screen.active:has(.basic-verb-lesson.active) .nav-bar,
-  body #advVerbsLearnMenu.screen.active:has(.adv-verb-lesson.active) .nav-bar {
+  html.les-basicVerbsLearnMenu:not(._p) body #basicVerbsLearnMenu.screen.active .nav-bar,
+  html.les-advVerbsLearnMenu:not(._p) body #advVerbsLearnMenu.screen.active .nav-bar {
     padding: 0 10px;
   }
 }
@@ -27272,7 +27272,7 @@ body.dark .bottom-nav::before {
   }
 }
 
-body .app:has(#homeScreen.screen.active) #statusBarBg {
+html.scr-homeScreen:not(#_p):not(._p) body .app #statusBarBg {
   display: none !important;
 }
 #homeScreen::before,
@@ -27343,7 +27343,7 @@ body[class*="page-home-backdrop-"]:not(.page-home-backdrop-none) #statusBarBg {
   background: transparent !important;
 }
 
-body[class*="page-home-backdrop-"]:not(.page-home-backdrop-none) .app:has(#homeScreen.screen.active),
+html.scr-homeScreen:not(#_p):not(._p) body[class*="page-home-backdrop-"]:not(.page-home-backdrop-none) .app,
 body[class*="page-home-backdrop-"]:not(.page-home-backdrop-none) #homeScreen.screen.active {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)),
@@ -27351,51 +27351,51 @@ body[class*="page-home-backdrop-"]:not(.page-home-backdrop-none) #homeScreen.scr
     var(--primary-color) !important;
 }
 
-body:has(#homeScreen.screen.active) #homeScreen .home-scroll::-webkit-scrollbar {
+html.scr-homeScreen:not(#_p):not(._p) body #homeScreen .home-scroll::-webkit-scrollbar {
   display: none;
 }
 
-body:has(#homeScreen.screen.active) #homeScreen .home-scroll > div:last-child[style] {
+html.scr-homeScreen:not(#_p):not(._p) body #homeScreen .home-scroll > div:last-child[style] {
   height: 0 !important;
 }
 
-html:has(> body #homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-none)),
-body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-none)) {
+html.scr-homeScreen.scr-home-bd:not(#_p):not(._p):not(._p):not(_p),
+html.scr-homeScreen.scr-home-bd:not(#_p):not(._p):not(._p) body {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)),
     var(--home-backdrop-image) center / cover fixed no-repeat,
     var(--primary-color) !important;
 }
 
-html:not(:has(> body #homeScreen.screen.active)),
-body:not(:has(#homeScreen.screen.active)) {
+html:not(.scr-homeScreen):not(#_p):not(._p):not(_p),
+html:not(.scr-homeScreen):not(#_p):not(._p) body {
   /* Solid flat color (not a gradient), matched to the screen colour, so a sliver
      of body showing past a screen on the right edge can't read as a "band". */
   background: var(--primary-color) !important;
 }
 
-body:has(#homeScreen.screen.active) #statusBarBg {
+html.scr-homeScreen:not(#_p):not(._p) body #statusBarBg {
   display: none !important;
   background: transparent !important;
 }
 
-body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-none)) .app,
-body:has(#homeScreen.screen.active[class*="home-backdrop-"]:not(.home-backdrop-none)) #homeScreen.screen.active {
+html.scr-homeScreen.scr-home-bd:not(#_p):not(._p):not(._p) body .app,
+html.scr-homeScreen.scr-home-bd:not(#_p):not(._p):not(._p) body #homeScreen.screen.active {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)),
     var(--home-backdrop-image) center / cover no-repeat,
     var(--primary-color) !important;
 }
 
-body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
+html.scr-homeScreen:not(#_p):not(._p) body #homeScreen .home-scroll {
   padding-bottom: 66px !important;
 }
 
-body:has(#homeScreen.screen.active) #homeScreen .home-scroll {
+html.scr-homeScreen:not(#_p):not(._p) body #homeScreen .home-scroll {
   padding-bottom: 66px !important;
 }
 
-body:has(#homeScreen.screen.active) #homeScreen.screen.active {
+html.scr-homeScreen:not(#_p):not(._p) body #homeScreen.screen.active {
   padding-bottom: 0 !important;
 }
 
@@ -29428,11 +29428,11 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
 }
 
 /* Add learn menus + settings to the no-padding app container rule */
-body .app:has(#settingsScreen.screen.active),
-body .app:has(#newLearnMenu.screen.active),
-body .app:has(#advancedLearnMenu.screen.active),
-body .app:has(#basicVerbsLearnMenu.screen.active),
-body .app:has(#advVerbsLearnMenu.screen.active) {
+html.scr-settingsScreen:not(#_p):not(._p) body .app,
+html.scr-newLearnMenu:not(#_p):not(._p) body .app,
+html.scr-advancedLearnMenu:not(#_p):not(._p) body .app,
+html.scr-basicVerbsLearnMenu:not(#_p):not(._p) body .app,
+html.scr-advVerbsLearnMenu:not(#_p):not(._p) body .app {
   padding: 0 !important;
   overflow: hidden;
   height: 100vh;
@@ -29445,10 +29445,10 @@ body .app:has(#advVerbsLearnMenu.screen.active) {
 }
 
 /* Let the lesson header reach the very top — drop the dark status-bar strip. */
-body:has(#newLearnMenu.screen.active) #statusBarBg,
-body:has(#advancedLearnMenu.screen.active) #statusBarBg,
-body:has(#basicVerbsLearnMenu.screen.active) #statusBarBg,
-body:has(#advVerbsLearnMenu.screen.active) #statusBarBg {
+html.scr-newLearnMenu:not(#_p):not(._p) body #statusBarBg,
+html.scr-advancedLearnMenu:not(#_p):not(._p) body #statusBarBg,
+html.scr-basicVerbsLearnMenu:not(#_p):not(._p) body #statusBarBg,
+html.scr-advVerbsLearnMenu:not(#_p):not(._p) body #statusBarBg {
   display: none !important;
 }
 
@@ -29470,12 +29470,12 @@ body:has(#advVerbsLearnMenu.screen.active) #statusBarBg {
   display: inline-flex !important;
 }
 
-body .app:has(#settingsScreen.screen.active) .app-header,
-body .app:has(#progressScreen.screen.active) .app-header,
-body .app:has(#newLearnMenu.screen.active) .app-header,
-body .app:has(#advancedLearnMenu.screen.active) .app-header,
-body .app:has(#basicVerbsLearnMenu.screen.active) .app-header,
-body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
+html.scr-settingsScreen:not(#_p):not(._p) body .app .app-header,
+html.scr-progressScreen:not(#_p):not(._p) body .app .app-header,
+html.scr-newLearnMenu:not(#_p):not(._p) body .app .app-header,
+html.scr-advancedLearnMenu:not(#_p):not(._p) body .app .app-header,
+html.scr-basicVerbsLearnMenu:not(#_p):not(._p) body .app .app-header,
+html.scr-advVerbsLearnMenu:not(#_p):not(._p) body .app .app-header {
   display: none !important;
 }
 
@@ -29491,12 +29491,12 @@ body .app:has(#advVerbsLearnMenu.screen.active) .app-header {
 /* ── Vocab / Translate / Test: full-bleed premium tools (match Journey Maps) ──
    Edge-to-edge with no app header; the tool's own nav-bar sits
    at the very top, and the whole screen scrolls (always reset to top on open). */
-body .app:has(#learnMenu.screen.active),
-body .app:has(#learnScreen.screen.active),
-body .app:has(#translateMenu.screen.active),
-body .app:has(#translateScreen.screen.active),
-body .app:has(#testMenu.screen.active),
-body .app:has(#testScreen.screen.active) {
+html.scr-learnMenu:not(#_p):not(._p) body .app,
+html.scr-learnScreen:not(#_p):not(._p) body .app,
+html.scr-translateMenu:not(#_p):not(._p) body .app,
+html.scr-translateScreen:not(#_p):not(._p) body .app,
+html.scr-testMenu:not(#_p):not(._p) body .app,
+html.scr-testScreen:not(#_p):not(._p) body .app {
   padding: 0 !important;
   overflow: hidden;
   height: 100vh;
@@ -29504,21 +29504,21 @@ body .app:has(#testScreen.screen.active) {
   min-height: 0 !important;
 }
 
-body .app:has(#learnMenu.screen.active) .app-header,
-body .app:has(#learnScreen.screen.active) .app-header,
-body .app:has(#translateMenu.screen.active) .app-header,
-body .app:has(#translateScreen.screen.active) .app-header,
-body .app:has(#testMenu.screen.active) .app-header,
-body .app:has(#testScreen.screen.active) .app-header {
+html.scr-learnMenu:not(#_p):not(._p) body .app .app-header,
+html.scr-learnScreen:not(#_p):not(._p) body .app .app-header,
+html.scr-translateMenu:not(#_p):not(._p) body .app .app-header,
+html.scr-translateScreen:not(#_p):not(._p) body .app .app-header,
+html.scr-testMenu:not(#_p):not(._p) body .app .app-header,
+html.scr-testScreen:not(#_p):not(._p) body .app .app-header {
   display: none !important;
 }
 
-body:has(#learnMenu.screen.active) #statusBarBg,
-body:has(#learnScreen.screen.active) #statusBarBg,
-body:has(#translateMenu.screen.active) #statusBarBg,
-body:has(#translateScreen.screen.active) #statusBarBg,
-body:has(#testMenu.screen.active) #statusBarBg,
-body:has(#testScreen.screen.active) #statusBarBg {
+html.scr-learnMenu:not(#_p):not(._p) body #statusBarBg,
+html.scr-learnScreen:not(#_p):not(._p) body #statusBarBg,
+html.scr-translateMenu:not(#_p):not(._p) body #statusBarBg,
+html.scr-translateScreen:not(#_p):not(._p) body #statusBarBg,
+html.scr-testMenu:not(#_p):not(._p) body #statusBarBg,
+html.scr-testScreen:not(#_p):not(._p) body #statusBarBg {
   display: none !important;
 }
 
@@ -29586,24 +29586,24 @@ body:has(#testScreen.screen.active) #statusBarBg {
 /* Settings + Progress: the fixed status-bar backer must match the light header so
    the Dynamic Island / notch area isn't a colored strip — it reads as one
    continuous header up to the very top of the screen. */
-body:has(#progressScreen.screen.active) #statusBarBg {
+html.scr-progressScreen:not(#_p):not(._p) body #statusBarBg {
   background: var(--primary-light) !important;
 }
 /* Settings: drop the separate safe-area/status bar entirely — it read as a weird
    floating strip and clipped during the open slide. The settings header handles
    its own safe-area padding. */
-body:has(#settingsScreen.screen.active) #statusBarBg {
+html.scr-settingsScreen:not(#_p):not(._p) body #statusBarBg {
   display: none !important;
 }
 
 /* Praises page: the safe-area / Dynamic Island bar matches the light Praises
    background (the top of its gradient) so the page reads continuously to the top
    instead of showing the app's primary colour as a separate bar. */
-body:has(#merciesPage.screen.active) #statusBarBg {
+html.scr-merciesPage:not(#_p):not(._p) body #statusBarBg {
   background: color-mix(in srgb, var(--primary-light) 92%, white) !important;
 }
 
-body:has(.screen.active .nav-bar) #statusBarBg {
+html.scr-navbar:not(._p):not(._p) body #statusBarBg {
   display: none !important;
 }
 
@@ -36561,16 +36561,16 @@ body.app-launch-motion .bottom-nav {
    out-rank the ID-strength flat body paints at ~25972 / ~26017; the <html>
    backer covers slivers the body doesn't reach. */
 :root[data-skin] body,
-:root[data-skin] body:not(:has(#homeScreen.screen.active)),
+:root[data-skin]:not(.scr-homeScreen):not(#_p):not(._p) body,
 :root[data-skin] body.page-home-backdrop-none,
 :root[data-skin] body.dark,
-:root[data-skin] body.dark:not(:has(#homeScreen.screen.active)),
+:root[data-skin]:not(.scr-homeScreen):not(#_p):not(._p) body.dark,
 :root[data-skin] body.dark.page-home-backdrop-none {
   background-color: var(--skin-page-bg) !important;
   background-image: var(--skin-page-texture) !important;
 }
 html[data-skin],
-html[data-skin]:not(:has(> body #homeScreen.screen.active)) {
+html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   background: var(--skin-page-bg) !important;
 }
 
@@ -38367,8 +38367,8 @@ body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz .hat-icon,
    still run edge-to-edge) painted in the page colour: blurring a flat colour
    returns the same flat colour, so the system's glass has nothing to smear and
    the band disappears. */
-html body.page-home-backdrop-none:has(#homeScreen.screen.active) #statusBarBg,
-html body:not([class*="page-home-backdrop-"]):has(#homeScreen.screen.active) #statusBarBg {
+html.scr-homeScreen:not(#_p):not(._p) body.page-home-backdrop-none #statusBarBg,
+html.scr-homeScreen:not(#_p):not(._p) body:not([class*="page-home-backdrop-"]) #statusBarBg {
   display: block !important;
   background: var(--primary-color) !important;
   /* Never blur here — a blurred strip at the top is the very bug this fixes. */
@@ -38376,8 +38376,8 @@ html body:not([class*="page-home-backdrop-"]):has(#homeScreen.screen.active) #st
   -webkit-backdrop-filter: none !important;
 }
 
-html body.dark.page-home-backdrop-none:has(#homeScreen.screen.active) #statusBarBg,
-html body.dark:not([class*="page-home-backdrop-"]):has(#homeScreen.screen.active) #statusBarBg {
+html.scr-homeScreen:not(#_p):not(._p) body.dark.page-home-backdrop-none #statusBarBg,
+html.scr-homeScreen:not(#_p):not(._p) body.dark:not([class*="page-home-backdrop-"]) #statusBarBg {
   background: #111827 !important;
 }
 
@@ -39251,7 +39251,10 @@ html.dark .ws-tour-tip.coach-bubble, body.dark .ws-tour-tip.coach-bubble { backg
 }
 .app-coach-overlay.coach-moving .app-coach-card,
 .app-coach-overlay.coach-moving > .coach-guide { opacity: .5; }
-.app-coach-overlay.coach-moving .app-coach-spotlight { opacity: .6; }
+/* A step that changes the screen: the card and guide fade out quickly and
+   come back at the new spot (the dimming stays put, so nothing flashes). */
+.app-coach-overlay.coach-swap .app-coach-card,
+.app-coach-overlay.coach-swap > .coach-guide { opacity: 0; transition-duration: .16s; }
 .coach-no-anim, .coach-no-anim * { transition: none !important; }
 .ws-tour-spot { transition: opacity .2s, top .34s cubic-bezier(.4,0,.2,1), left .34s cubic-bezier(.4,0,.2,1), width .34s cubic-bezier(.4,0,.2,1), height .34s cubic-bezier(.4,0,.2,1); }
 .ws-tour-tip { transition: opacity .2s, top .34s cubic-bezier(.4,0,.2,1); }
@@ -39965,7 +39968,7 @@ html.pwa-standalone *::after {
 /* An older rule zeroes the height of Home's last child when it carries an inline
    style (meant for a leftover spacer). The Tools row is that last child; never
    let it collapse. */
-body:has(#homeScreen.screen.active) #homeScreen .home-scroll > div.home-actions-grid:last-child[style] { height: auto !important; }
+html.scr-homeScreen:not(#_p):not(._p) body #homeScreen .home-scroll > div.home-actions-grid:last-child[style] { height: auto !important; }
 
 /* ── Reader word grid: a word never splits across lines ───────────────────────
    Greek and Hebrew words stay whole in their tile; the few too wide for it are
@@ -40053,7 +40056,7 @@ html.dark .ws-debate.ws-ck-myth > summary, body.dark .ws-debate.ws-ck-myth > sum
   78% { translate: -1px 0; rotate: 0deg; }
 }
 #rhemaModal.rhema-search-open .rhema-nap-guide,
-body:has(#rhemaCoachOverlay:not(.hidden)) .rhema-nap-guide { opacity: 0 !important; }
+html.rcoach-on:not(#_p) body .rhema-nap-guide { opacity: 0 !important; }
 @media (prefers-reduced-motion: reduce) {
   .rhema-nap-guide .rng-l > i, .rhema-nap-guide .rng-fig { animation: none !important; }
   .rhema-header.rng-shake { animation: none; }
@@ -40809,7 +40812,7 @@ body.dark .xlv { --xl-a: color-mix(in srgb, var(--secondary-color, #2498df) 40%,
 /* ── Word study: cleaner Definition page (v3.0.616) ────────────────────── */
 /* Nothing behind the reader can scroll while it's open (on iPhone a jump
    inside a sheet could slide the whole reader up and show the home screen). */
-html:has(#rhemaModal.open), body:has(#rhemaModal.open) { overflow: hidden; overscroll-behavior: none; }
+html.rhema-open:not(#_p), html.rhema-open:not(#_p) body { overflow: hidden; overscroll-behavior: none; }
 /* A slightly bigger answer card */
 .ws-hero { padding: 18px 18px 16px; border-radius: 20px; }
 .ws-lemma { font-size: 1.8rem; }
@@ -41221,11 +41224,14 @@ body.gn-open { overflow: hidden; }
 .gn-rim, .gn-rimtop { fill: #d9d9e0; } .gn-rimtop { fill: none; stroke: #c9c9d2; stroke-width: 4; }
 .gn-head { fill: #f6f1e6; animation: gnHead .07s linear infinite alternate; transform-origin: 100px 86px; }
 @keyframes gnHead { to { transform: scale(1.02, .9); } }
-.gn-stick rect, .gn-stick circle { fill: #e8c48c; stroke: #8a6235; stroke-width: 1.5; }
-.gn-stick-l { transform-origin: 24px 86px; animation: gnStickL .14s ease-in-out infinite alternate; }
-.gn-stick-r { transform-origin: 176px 86px; animation: gnStickR .14s ease-in-out infinite alternate .07s; }
-@keyframes gnStickL { from { transform: rotate(-10deg); } to { transform: rotate(14deg); } }
-@keyframes gnStickR { from { transform: rotate(10deg); } to { transform: rotate(-14deg); } }
+.gn-stick line { stroke: #e8c48c; stroke-width: 7; stroke-linecap: round; }
+.gn-stick circle { fill: #f1d4a4; stroke: #8a6235; stroke-width: 1.2; }
+.gn-stick { filter: drop-shadow(0 1.5px 0 #8a6235); }
+/* Each stick pivots at its grip; the down stroke ends with the tip on the head. */
+.gn-stick-l { transform-origin: 12px 18px; animation: gnStickL .14s ease-in infinite alternate; }
+.gn-stick-r { transform-origin: 188px 18px; animation: gnStickR .14s ease-in infinite alternate .07s; }
+@keyframes gnStickL { from { transform: rotate(-16deg); } to { transform: rotate(0deg); } }
+@keyframes gnStickR { from { transform: rotate(16deg); } to { transform: rotate(0deg); } }
 .gn-drr { margin-top: 6px; font-weight: 900; font-size: 1.3rem; letter-spacing: .08em; color: rgba(255,255,255,.85); animation: gnDrr 2.6s ease-in forwards; }
 @keyframes gnDrr { from { transform: scale(.7); letter-spacing: 0; } to { transform: scale(1.35); letter-spacing: .3em; color: var(--gn-gold); } }
 .gn-shake1 .gn-stage { animation: gnShake .12s linear infinite; --s: 1.5px; }
@@ -41287,6 +41293,36 @@ body.gn-open { overflow: hidden; }
 .gn-sig { display: block; text-align: right; font-family: 'Caveat', 'Comic Sans MS', cursive; font-weight: 700; font-size: 1.2rem; color: #8a5a00; }
 .gn-overlay .gn-note, .gn-overlay .gn-note p { color: #3a2a00; }
 .gn-overlay .gn-note .gn-sig { color: #8a5a00; }
+/* The note about adding the app again (new name and icon) */
+.gn-re .gn-stage { justify-content: flex-start; gap: 8px; padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+.gn-re .gn-guide { width: 84px; }
+.gn-re .gn-shadow { width: 54px; height: 8px; }
+.gn-re .gn-card { padding: 14px 14px 12px; }
+.gn-re .gn-title { margin: 8px 0 4px; font-size: 1.3rem; }
+.gn-re .gn-body { font-size: .92rem; }
+.gn-re-steps { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; text-align: left; font-size: .9rem; line-height: 1.35; }
+.gn-re-steps li { display: flex; gap: 9px; align-items: flex-start; padding: 8px 10px; border-radius: 14px;
+  background: color-mix(in srgb, var(--gn-acc) 8%, var(--card-solid-color, #fff)); border: 1px solid color-mix(in srgb, var(--gn-acc) 20%, transparent);
+  animation: gnChip .45s cubic-bezier(.3,1.6,.5,1) both; animation-delay: calc(.5s + var(--k) * .12s); }
+.gn-re-steps li > div { flex: 1; min-width: 0; }
+.gn-re-n { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--gn-acc); color: var(--btn-text-color, #fff); font-weight: 900; font-size: .76rem; }
+.gn-re-link { display: flex; gap: 6px; align-items: stretch; margin-top: 6px; }
+.gn-re-url { flex: 1; min-width: 0; padding: 7px 9px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--gn-acc) 30%, transparent);
+  background: var(--card-solid-color, #fff); color: var(--font-color, #222); font-size: .8rem; font-weight: 750; line-height: 1.3;
+  overflow-wrap: anywhere; -webkit-user-select: all; user-select: all; }
+.gn-re-copy { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 0 12px; min-height: 40px; border: 0; border-radius: 10px;
+  background: var(--gn-acc); color: var(--btn-text-color, #fff); font: inherit; font-weight: 850; font-size: .85rem; cursor: pointer; }
+.gn-re-copy .material-symbols-outlined { font-size: 18px; }
+.gn-re-copy.ok { background: #2e9d57; }
+.gn-re .gn-note { margin-top: 14px; padding: 10px 12px 8px; }
+.gn-re .gn-note p { font-size: 1.12rem; }
+.gn-re-warn { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 9px 11px; border-radius: 14px; text-align: left; font-size: .84rem; line-height: 1.35;
+  background: color-mix(in srgb, #e0a100 14%, var(--card-solid-color, #fff)); border: 1px solid color-mix(in srgb, #e0a100 45%, transparent); }
+.gn-re-warn .material-symbols-outlined { color: #c98a00; font-size: 20px; }
+.gn-re-email { margin-top: 8px; min-height: 40px; padding: 0 16px; border: 0; border-radius: 99px; background: var(--gn-acc); color: var(--btn-text-color, #fff); font: inherit; font-weight: 850; font-size: .9rem; cursor: pointer; }
+.gn-re-after { margin: 10px 0 0; font-size: .82rem; line-height: 1.36; color: color-mix(in srgb, var(--font-color, #222) 72%, transparent); }
+.gn-re .gn-actions { gap: 4px; animation-delay: .9s; }
+.gn-re .gn-go { min-height: 50px; }
 
 /* ── Word by word: clean interlinear (Your English) + phrase cards (original order) ── */
 .rhema-il-card { --wbw-acc: var(--secondary-color, #2f55d4); --wbw-ink: var(--font-color, #1d2433); --wbw-muted: color-mix(in srgb, var(--font-color, #1d2433) 58%, transparent); --wbw-soft: color-mix(in srgb, var(--secondary-color, #2f55d4) 9%, var(--card-color, #fff)); --wbw-line: color-mix(in srgb, var(--font-color, #1d2433) 12%, transparent); }
@@ -41564,3 +41600,8 @@ body.dark .rhema-wbw-tab.on, html.dark .rhema-wbw-tab.on { background: color-mix
 /* Launch bar in dark mode: the icon's blue, so it shows against the dark sky. */
 html.dark #appLaunchRing, body.dark #appLaunchRing { stroke: #6cb8f5; }
 html.dark .app-launch-ring-track, body.dark .app-launch-ring-track { stroke: #ffffff; stroke-opacity: .12; }
+/* Dark mode forces paragraph and span text light (body.dark p { color: var(--font-color) !important }):
+   on the yellow sticky note and the light-blue buttons, keep dark ink. */
+.gn-overlay .gn-note { --font-color: #3a2a00; }
+body.dark .gn-overlay :is(.gn-kicker, .gn-re-copy, .gn-re-n, .gn-re-email) { --font-color: #0b1730; color: #0b1730; }
+.gn-overlay .gn-note > .material-symbols-outlined { --font-color: #d64545; }

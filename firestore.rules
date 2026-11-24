@@ -44,6 +44,13 @@ service cloud.firestore {
           && request.auth.uid == uid;
       }
 
+      // Settings and notes that otherwise live only on one phone, so a fresh
+      // install gets them back after sign-in — private to the owner.
+      match /deviceBackup/{key} {
+        allow read, create, update, delete: if request.auth != null
+          && request.auth.uid == uid;
+      }
+
       match /rhemaMarks/{markId} {
         allow read, create, update, delete: if request.auth != null
           && request.auth.uid == uid;
