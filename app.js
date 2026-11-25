@@ -26494,15 +26494,11 @@ html += `</div>`;
   showScreen("progressScreen");
 }
 
+// Settings live on the You screen now (sections that open sheets); the old
+// entry points open You and scroll to them.
 function showSettings() {
-  const previousScreen = document.querySelector('.screen.active');
-  const fromId = previousScreen?.id;
-  hideBottomNav();
-  showScreen("settingsScreen");
-  if (fromId === 'profilePage') _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-left');
-  requestAnimationFrame(() => {
-    document.querySelector("#settingsScreen .sett-scroll")?.scrollTo?.(0, 0);
-  });
+  showNavPage('profile');
+  requestAnimationFrame(() => document.getElementById('youSettingsTop')?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
   updateLessonModeSettingsUI();
   updateHighContrastSettingsUI();
   updateMatchHomeThemeSettingsUI();
@@ -31327,7 +31323,7 @@ function getProfileTitle() {
 function updateProfileUI() {
   _applyProfileAvatar();
 
-  const displayName = profileData.displayName || "Greek Student";
+  const displayName = profileData.displayName || "Friend";
   const username = localStorage.getItem("authUsername") || "";
 
   document.getElementById("profileDisplayName").textContent = displayName;
@@ -31416,7 +31412,237 @@ function updateProfileUI() {
   updateProfileAttention();
   updateReminderButtonUI();
   applyJourneyCardState();
+  youRefresh();
 }
+
+// ── You (profile + settings on one screen) ───────────────────────────────────
+// Your profile on top, then Settings as sections that each open a bottom sheet
+// (the same way Rhēma's verse menu works). Every control is the app's existing
+// one (same ids, same functions), so nothing about how settings save changed.
+const YOU_STYLES = {
+  classic: ['Classic', 'Your colors, clean cards'],
+  notebook: ['Notebook', 'Ruled paper and ink'],
+  blueprint: ['Blueprint', 'Graph paper and drafting'],
+  scroll: ['Scroll', 'Aged parchment and sepia'],
+  chalkboard: ['Chalkboard', 'Slate and chalk'],
+  terminal: ['Terminal', 'Glowing console'],
+  candy: ['Candy', 'Pinks and sky blues'],
+  fire: ['Fire', 'Reds, oranges and golds'],
+  nature: ['Nature', 'Greens and earthy browns'],
+};
+// A short set of colors to pick from. Whatever color someone already uses
+// stays: if it isn't in this set it's shown first as "Your color".
+const YOU_COLORS = ['royal', 'ocean', 'sky_pop', 'teal', 'emerald', 'forest', 'parchment', 'coffee', 'orange', 'crimson', 'pink', 'violet', 'slate', 'midnight'];
+const YOU_COLOR_NAMES = {"royal": "Royal Blue", "ocean": "Ocean Study", "glacier": "Glacier Blue", "blueprint": "Blueprint Ink", "sapphire": "Sapphire Bright", "sky_pop": "Sky Pop Cyan", "cyan_glow": "Cyan Glow", "emerald": "Emerald Scroll", "teal": "Teal Sea", "forest": "Forest Scroll", "moss": "Moss Study", "lime_burst": "Lime Burst", "spring": "Spring Green", "jade_night": "Jade Night", "crimson": "Crimson Ink", "volcanic": "Volcanic Fire", "coral_deep": "Coral Ink", "ruby": "Ruby Bright", "scarlet": "Scarlet Flame", "cherry": "Cherry Night", "violet": "Byzantine Violet", "neon_night": "Neon Night", "pink": "Rose Pink", "magenta_pop": "Magenta Pop", "orchid": "Orchid Glow", "candy": "Candy Pop", "parchment": "Classic Parchment", "gold_noir": "Gold Noir", "lemon": "Lemon Ink", "sunburst": "Sunburst Gold", "canary": "Canary Yellow", "amber_glow": "Amber Glow", "tangerine": "Tangerine Bright", "orange": "Orange Flame", "midnight": "Midnight Study", "slate": "Clean Slate", "charcoal": "Charcoal Night", "polar": "Polar White", "antique": "Antique Pages"};
+const YOU_COLOR_SHORT = { royal: 'Royal', ocean: 'Ocean', sky_pop: 'Sky', teal: 'Teal', emerald: 'Emerald', forest: 'Forest', parchment: 'Parchment', coffee: 'Coffee', orange: 'Orange', crimson: 'Crimson', pink: 'Rose', violet: 'Violet', slate: 'Slate', midnight: 'Midnight' };
+function _youThemeName(id) {
+  return YOU_COLOR_SHORT[id] || YOU_COLOR_NAMES[id] || String(id).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+function _youThemeGradient(id) {
+  const t = APP_THEMES[id];
+  return t ? `linear-gradient(135deg, ${t.light} 0 30%, ${t.secondary} 30% 72%, ${t.accent} 72%)` : '#888';
+}
+function _youCurrentTheme() { return localStorage.getItem('appTheme') || 'royal'; }
+function _youCurrentSkin() { return localStorage.getItem('appSkin') || 'classic'; }
+
+let _youSheet = '';
+function openYouSheet(name) {
+  const sh = document.getElementById('youSheet' + name);
+  if (!sh) return;
+  if (_youSheet && _youSheet !== name) document.getElementById('youSheet' + _youSheet)?.setAttribute('hidden', '');
+  _youSheet = name;
+  youRefresh();
+  const scrim = document.getElementById('youScrim');
+  scrim.hidden = false; sh.hidden = false;
+  document.body.classList.add('you-sheet-open');
+  sh.querySelector('.you-sheet-body').scrollTop = 0;
+  requestAnimationFrame(() => requestAnimationFrame(() => { scrim.classList.add('in'); sh.classList.add('in'); }));
+  _youBindSheetDrag(sh);
+}
+function closeYouSheet() {
+  const name = _youSheet;
+  _youSheet = '';
+  youHideStylePop(true);
+  document.body.classList.remove('you-sheet-open');
+  const sh = name && document.getElementById('youSheet' + name);
+  const scrim = document.getElementById('youScrim');
+  scrim?.classList.remove('in');
+  if (sh) { sh.classList.remove('in'); sh.style.transform = ''; }
+  clearTimeout(closeYouSheet._t);
+  closeYouSheet._t = setTimeout(() => {
+    if (sh && !sh.classList.contains('in')) sh.hidden = true;
+    if (scrim && !scrim.classList.contains('in')) scrim.hidden = true;
+  }, 300);
+}
+// Drag the sheet down by its handle or header to close it.
+function _youBindSheetDrag(sh) {
+  if (sh._dragBound) return;
+  sh._dragBound = true;
+  let y0 = null, dy = 0;
+  const start = e => { if (!e.target.closest('.you-sheet-grab, .you-sheet-head')) return; y0 = e.touches ? e.touches[0].clientY : e.clientY; dy = 0; sh.style.transition = 'none'; };
+  const move = e => { if (y0 == null) return; dy = Math.max(0, (e.touches ? e.touches[0].clientY : e.clientY) - y0); sh.style.transform = `translateY(${dy}px)`; };
+  const end = () => { if (y0 == null) return; y0 = null; sh.style.transition = ''; if (dy > 90) closeYouSheet(); else sh.style.transform = ''; };
+  sh.addEventListener('touchstart', start, { passive: true });
+  sh.addEventListener('touchmove', move, { passive: true });
+  sh.addEventListener('touchend', end);
+  sh.addEventListener('mousedown', start);
+  window.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+}
+
+function youSetDark(on) {
+  const t = document.getElementById('darkModeToggle');
+  if (!t) return;
+  t.checked = !!on;
+  toggleDarkMode();
+  youRefresh();
+}
+function youPickColor(id) {
+  setAppTheme(id);
+  youRefresh();
+}
+let _youStylePrev = null;
+function youPickStyle(skin) {
+  const cur = _youCurrentSkin();
+  if (skin === cur) { if (skin !== 'classic') youShowStylePop(skin); return; }
+  _youStylePrev = cur;
+  setAppSkin(skin);
+  youRefresh();
+  if (skin !== 'classic') youShowStylePop(skin); else youHideStylePop(true);
+}
+// A different style than Classic pops up a preview above the sheet: how Home
+// and the reader look in it, with Keep it / Go back.
+function youShowStylePop(skin) {
+  const pop = document.getElementById('youStylePop');
+  if (!pop) return;
+  const [name, desc] = YOU_STYLES[skin] || [skin, ''];
+  document.getElementById('youPopHome').src = `assets/style-previews/${skin}-home.webp`;
+  document.getElementById('youPopRead').src = `assets/style-previews/${skin}-read.webp`;
+  document.getElementById('youPopName').textContent = name;
+  document.getElementById('youPopDesc').textContent = desc;
+  pop.querySelector('.you-pop-undo').hidden = !_youStylePrev || _youStylePrev === skin;
+  pop.hidden = false;
+  pop.classList.remove('in');
+  document.body.classList.add('you-pop-open');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    pop.classList.add('in');
+    document.querySelector('#youSheetLook .you-styles .you-style.on')?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    document.getElementById('youStyles')?.scrollIntoView({ block: 'nearest' });
+  }));
+}
+function youHideStylePop(now) {
+  const pop = document.getElementById('youStylePop');
+  if (!pop || pop.hidden) return;
+  pop.classList.remove('in');
+  document.body.classList.remove('you-pop-open');
+  setTimeout(() => { if (!pop.classList.contains('in')) pop.hidden = true; }, now ? 0 : 260);
+}
+function youStyleKeep() { _youStylePrev = null; youHideStylePop(); }
+function youStyleUndo() {
+  const back = _youStylePrev || 'classic';
+  _youStylePrev = null;
+  setAppSkin(back);
+  youRefresh();
+  youHideStylePop();
+}
+function youTextSize(dir) {
+  rhemaReaderFontStep(dir);
+  youRefresh();
+}
+function youOpenVersion() {
+  closeYouSheet();
+  setTimeout(() => Promise.resolve(showRhema()).then(() => setTimeout(() => { try { openRhemaVersionPicker(); } catch (e) {} }, 380)), 240);
+}
+function youOpenMarks(section) {
+  Promise.resolve(showRhema()).then(() => setTimeout(() => { try { openRhemaReaderPanel(); setTimeout(() => showReaderPanelSection(section), 60); } catch (e) {} }, 380));
+}
+function youOpenStudyTool(tool) {
+  Promise.resolve(showRhema()).then(() => setTimeout(async () => { try { if (await _rhemaRequireStudy()) openStudyTool(tool); } catch (e) {} }, 380));
+}
+
+function _youCounts() {
+  let hi = 0, notes = 0;
+  try {
+    const raw = JSON.parse(localStorage.getItem('rhemaMarks') || '{}') || {};
+    const looksFlat = Object.values(raw).some(v => v && (v.color || v.note));
+    const home = (looksFlat ? raw : raw.home) || {};
+    Object.values(home).forEach(m => { if (m?.color) hi++; if (m?.note) notes++; });
+  } catch {}
+  const words = typeof _sandboxWordLogCache !== 'undefined' ? _sandboxWordLogCache.length : 0;
+  const trails = typeof _sandboxTrailsCache !== 'undefined' ? _sandboxTrailsCache.length : 0;
+  return { hi, notes, words, trails };
+}
+function _youRenderPlan() {
+  const wrap = document.getElementById('youPlanWrap');
+  if (!wrap) return;
+  const plan = (!_guestMode && typeof rpActivePlan === 'function') ? rpActivePlan() : null;
+  if (!plan) {
+    wrap.innerHTML = `<button class="you-card you-plan you-plan-empty" onclick="openReadingPlanPage('today')" type="button"><span class="you-ic"><span class="material-symbols-outlined">event_note</span></span><span class="you-rt"><b>Start a reading plan</b><small>Read through the Bible at your pace</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>`;
+    return;
+  }
+  let st = null;
+  try { st = _rpPlanStatus(plan); } catch {}
+  const pct = st && st.total ? Math.round(st.read / st.total * 100) : 0;
+  let line = plan.name;
+  if (st) {
+    if (st.done) line = 'Plan complete!';
+    else if (st.next.date > st.today) line = `Today's reading done · next: ${rpFmtReading(st.next.chapters)}`;
+    else if (st.next.date < st.today) line = `${rpFmtReading(st.next.chapters)} · ${st.behindDays} day${st.behindDays > 1 ? 's' : ''} behind`;
+    else line = `Today: ${rpFmtReading(st.next.chapters)}`;
+  }
+  const esc = t => String(t || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  wrap.innerHTML = `<button class="you-card you-plan" onclick="openReadingPlanPage('today')" type="button"><span class="you-ic"><span class="material-symbols-outlined">event_note</span></span><span class="you-rt"><b>${esc(plan.name)}</b><small>${esc(line)}</small><span class="you-planbar"><i style="width:${pct}%"></i></span></span><span class="you-plan-pct">${pct}%</span></button>`;
+}
+function youRefresh() {
+  if (!document.getElementById('profilePage')) return;
+  const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  const c = _youCounts();
+  set('youStatHighlights', c.hi); set('youStatNotes', c.notes); set('youStatWords', c.words); set('youStatTrails', c.trails);
+  document.getElementById('youStreakPill')?.classList.toggle('hidden', !(getStreakDays?.() > 0));
+  _youRenderPlan();
+  // Section summaries say what's set right now.
+  const dark = localStorage.getItem('darkMode') === 'true';
+  const skin = _youCurrentSkin(), theme = _youCurrentTheme();
+  set('youSubLook', `${dark ? 'Dark' : 'Light'} · ${(YOU_STYLES[skin] || [skin])[0]}${skin === 'classic' ? ' · ' + _youThemeName(theme) : ''}`);
+  const info = window.Auth?.getAuthEmailInfo?.() || {};
+  set('youSubAccount', info.signedIn ? (info.isAutoGenerated ? 'No email connected yet' : 'Email connected') : 'Picture, email, password');
+  let size = 4, font = 'default';
+  try { ({ size, font } = _rhemaReaderFontPrefs()); } catch {}
+  const pct = Math.round((RHEMA_READER_FONT_STEPS?.[size] || 1) * 100);
+  const fontName = (typeof RHEMA_READER_FONTS !== 'undefined' && RHEMA_READER_FONTS.find(f => f.id === font)?.label) || 'Default';
+  const ver = localStorage.getItem('rhemaReaderVersion') || localStorage.getItem('rhemaEnglishVersion') || 'MSB';
+  set('youSubReading', `${ver} · ${fontName === 'Default' ? 'Default font' : fontName} · ${pct}%`);
+  set('youTextSizeLabel', `${pct}%`); set('youFontLabel', fontName === 'Default' ? 'Default font' : fontName); set('youVersionLabel', ver);
+  const remOn = localStorage.getItem('reminderEnabled') === 'true';
+  set('youSubNotify', remOn ? `Reminder at ${localStorage.getItem('reminderTime') || 'your set time'}` : 'Reminders, Google Calendar');
+  set('youReminderLabel', remOn ? `On · ${localStorage.getItem('reminderTime') || ''}` : 'Off');
+  set('youSubLessons', getLessonMode?.() === 'advanced' ? 'Advanced path' : 'Basic path');
+  set('youVersionNote', `Rhēma version ${APP_VERSION}`);
+  // Look sheet: mode, styles, colors.
+  document.querySelectorAll('#youModeSeg button').forEach(b => b.classList.toggle('on', (b.dataset.mode === 'dark') === dark));
+  const dm = document.getElementById('darkModeToggle'); if (dm) dm.checked = dark;
+  const styles = document.getElementById('youStyles');
+  if (styles) styles.innerHTML = Object.entries(YOU_STYLES).map(([id, [name, desc]]) =>
+    `<button type="button" class="you-style ${id === skin ? 'on' : ''}" onclick="youPickStyle('${id}')" aria-pressed="${id === skin}"><img src="assets/style-previews/${id}-home.webp" alt="" loading="lazy" decoding="async"><b>${name}</b><small>${desc}</small>${id === skin ? '<span class="material-symbols-outlined you-check">check_circle</span>' : ''}</button>`).join('');
+  // Keep whatever color they had, even if it's not in the short set.
+  let kept = '';
+  try { kept = localStorage.getItem('appThemeKept') || ''; } catch {}
+  if (!YOU_COLORS.includes(theme) && APP_THEMES[theme] && kept !== theme) { kept = theme; try { localStorage.setItem('appThemeKept', theme); } catch {} }
+  const list = (kept && !YOU_COLORS.includes(kept) && APP_THEMES[kept] ? [kept] : []).concat(YOU_COLORS.filter(id => APP_THEMES[id]));
+  const sw = document.getElementById('youSwatches');
+  if (sw) sw.innerHTML = list.map(id => `<button type="button" class="you-sw ${id === theme ? 'on' : ''}" onclick="youPickColor('${id}')" aria-label="${_youThemeName(id)}" aria-pressed="${id === theme}"><i style="background:${_youThemeGradient(id)}"></i><small>${id === kept ? 'Your color' : _youThemeName(id)}</small></button>`).join('');
+  set('youColorsNote', skin === 'classic' ? 'your accent color' : `used by Classic (${(YOU_STYLES[skin] || [skin])[0]} has its own)`);
+  updateHighContrastSettingsUI?.();
+  updateToolsMatchThemeSettingsUI?.();
+  updateConnectEmailSettingsRow?.();
+}
+// Sheets sit at the top of the page so the bottom bar and screen animations
+// never cover or clip them.
+(function _youLiftSheets() {
+  const lift = () => document.querySelectorAll('#profilePage > .you-sheet, #profilePage > #youScrim, #profilePage > #youStylePop').forEach(el => document.body.appendChild(el));
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', lift); else lift();
+})();
+Object.assign(window, { openYouSheet, closeYouSheet, youSetDark, youPickColor, youPickStyle, youStyleKeep, youStyleUndo, youTextSize, youOpenVersion, youOpenMarks, youOpenStudyTool, youRefresh });
 
 function resetAllAppData() {
   const modal = document.getElementById("deleteAccountModal");
@@ -31458,11 +31684,7 @@ function signOutAccount() {
     location.reload();
   });
 }
-function openSettingsFromProfile() {
-  // Don't call hideProfileMenu (which navigates home) — just show settings screen
-  hideBottomNav();
-  showSettings();
-}
+function openSettingsFromProfile() { showSettings(); }
 
 function updateProfileAttention() {
   const profileBtn = document.getElementById("profileButton");
@@ -32499,7 +32721,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.650";
+const APP_VERSION = "3.0.651";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32522,6 +32744,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.651 — Meet “You”</div>
+<ul>
+<li><strong>Profile is now You</strong> &mdash; Your picture and name, your streak, your highlights, notes, saved words and trails, your reading plan, and your Greek lessons, all on one screen.</li>
+<li><strong>Settings, simpler</strong> &mdash; Right below, in tidy sections: Account, Look, Reading, Reminders &amp; calendar, and Lessons. Each opens a sheet from the bottom, like Rhēma&rsquo;s verse menu, and each row tells you what&rsquo;s set right now.</li>
+<li><strong>Look</strong> &mdash; Light or Dark, the app style, and your color in one place. Styles show real pictures of Rhēma, and choosing one pops up a preview with Keep it or Go back. Colors are now a short, easy set, and the color you already use stays, marked &ldquo;Your color&rdquo;.</li>
+<li><strong>Rhēma Nerd Page</strong> &mdash; Updated with every text, lexicon and data source Rhēma uses today.</li>
+</ul>
 <div class="un-version-label">v3.0.650 — Connecting your email, fixed</div>
 <ul>
 <li><strong>Your username still works</strong> &mdash; After you connect an email, you can sign in with your email or your username. Before, the username stopped working once the email was confirmed.</li>
@@ -36845,12 +37074,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-function closeSettingsMenu() {
-  // Settings is opened from the profile screen, so back should return there.
-  const settings = document.getElementById('settingsScreen');
-  showNavPage('profile');
-  _appAnimateActiveWithPrevious(settings, 'app-slide-in-right');
-}
+function closeSettingsMenu() { closeYouSheet(); showNavPage('profile'); }
 function openNewsFromProfile() {
   const modal = document.getElementById("updateModal");
   const title = document.getElementById("updateModalTitle");
