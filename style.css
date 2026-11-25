@@ -41992,7 +41992,7 @@ body.you-sheet-open .you-hero-guide { opacity: 0; transition: opacity .2s; }
 :root[data-skin="candy"] .hat-icon { border: 3px solid #fff !important; box-shadow: 0 4px 0 color-mix(in srgb, var(--qa-title, var(--secondary-color)) 35%, transparent), 0 6px 14px rgba(0, 0, 0, .12) !important; rotate: -4deg; }
 :root[data-skin="candy"] .home-action-tile:nth-child(even) .hat-icon { rotate: 4deg; }
 :root[data-skin="candy"].is-dark .hat-icon { border-color: rgba(255, 255, 255, .75) !important; }
-:root[data-skin="candy"] .home-section-label, :root[data-skin="candy"] .you-lbl { width: fit-content; padding: 4px 14px; border-radius: 999px; background: color-mix(in srgb, var(--secondary-color) 14%, transparent); color: var(--secondary-color) !important; box-shadow: 0 3px 0 color-mix(in srgb, var(--secondary-color) 22%, transparent); }
+:root[data-skin="candy"] .home-section-label, :root[data-skin="candy"] .you-lbl { width: fit-content; padding: 4px 14px; border-radius: 999px; background: color-mix(in srgb, var(--secondary-color) 14%, transparent); color: color-mix(in srgb, var(--secondary-color) 80%, #000) !important; box-shadow: 0 3px 0 color-mix(in srgb, var(--secondary-color) 22%, transparent); }
 :root[data-skin="candy"].is-dark .home-section-label, :root[data-skin="candy"].is-dark .you-lbl { color: color-mix(in srgb, var(--secondary-color) 55%, #fff) !important; }
 :root[data-skin="candy"] .home-greeting-name, :root[data-skin="candy"] .you-title { text-shadow: 0 3px 0 color-mix(in srgb, var(--accent-color, var(--secondary-color)) 28%, transparent); }
 :root[data-skin="candy"] .hpw-go, :root[data-skin="candy"] .you-pop-keep, :root[data-skin="candy"] .install-go, :root[data-skin="candy"] .mem-primary-btn { animation: cdHop 3.6s ease-in-out infinite; }
