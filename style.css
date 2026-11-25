@@ -41630,3 +41630,4 @@ body.dark #installAppModal .install-go .material-symbols-outlined { color: #0b17
   .ch-overlay[data-view="chooser"] .ch-art { width: 84px; height: 70px; }
   .ch-overlay[data-view="chooser"] .ch-foot { max-height: 120px; }
 }
+.auth-error.auth-note-ok { color: #2e9d57; }

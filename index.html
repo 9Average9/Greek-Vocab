@@ -11,7 +11,7 @@ window.__rhemaInstallEvent = null;
 window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__rhemaInstallEvent = e; try { window.dispatchEvent(new Event('rhema:installable')); } catch (x) {} });
 </script>
 <script>
-/* Was this copy of the app in use before the Rhēma rename (v3.0.649)? A fresh
+/* Was this copy of the app in use before the Rhēma rename (v3.0.650)? A fresh
    install starts with empty storage. Lets the guide ask people still on an old
    Home Screen copy to add the app again for the new name and icon. */
 try { if (!/[?&]mv=/.test(location.search) && !localStorage.getItem('rhemaInstallEra')) localStorage.setItem('rhemaInstallEra', localStorage.length ? 'pre' : 'fresh'); } catch (e) {}
@@ -397,12 +397,12 @@ antique: {
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Rhēma" name="apple-mobile-web-app-title"/>
-<link href="assets/icons/rhema-icon-180.png?v=3.0.649" rel="apple-touch-icon"/>
-<link href="assets/icons/rhema-icon-192.png?v=3.0.649" rel="icon" sizes="192x192" type="image/png"/>
-<link href="assets/icons/rhema-icon-512.png?v=3.0.649" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.649" rel="stylesheet"/>
+<link href="assets/icons/rhema-icon-180.png?v=3.0.650" rel="apple-touch-icon"/>
+<link href="assets/icons/rhema-icon-192.png?v=3.0.650" rel="icon" sizes="192x192" type="image/png"/>
+<link href="assets/icons/rhema-icon-512.png?v=3.0.650" rel="icon" sizes="512x512" type="image/png"/>
+<link href="style.css?v=3.0.650" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.649" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.650" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -424,7 +424,7 @@ antique: {
 <path class="app-launch-ring-track" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="#0a1a2e" stroke-opacity="0.10" stroke-width="12"/>
 <path id="appLaunchRing" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="url(#dbRingGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="980" stroke-dashoffset="980" filter="url(#dbRingShadow)"/>
 </svg>
-<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.649" alt=""/>
+<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.650" alt=""/>
 </div>
 <div class="app-launch-status">
 <span id="appLaunchText">Opening the Word</span>
@@ -10444,7 +10444,7 @@ Verb Endings
 <div id="connectEmailSuccess" style="display:none;text-align:center">
 <span class="material-symbols-outlined" style="font-size:48px;color:#43a047">mark_email_read</span>
 <h3 style="margin:8px 0 4px">Check your inbox</h3>
-<p style="margin:0 0 14px;color:var(--muted-color);font-size:14px;line-height:1.5">We sent a verification link to <strong id="connectEmailSentAddr"></strong>. Click it to finish connecting your email.<br><br>📩 <strong>Don't see it?</strong> Check your spam or junk folder — and mark it "not spam" so future emails arrive in your inbox.<br><br><strong>Important:</strong> after you confirm, sign in using your <strong>email</strong> (not your username) from now on.</p>
+<p style="margin:0 0 14px;color:var(--muted-color);font-size:14px;line-height:1.5">We sent a verification link to <strong id="connectEmailSentAddr"></strong>. Click it to finish connecting your email.<br><br>📩 <strong>Don't see it?</strong> Check your spam or junk folder — and mark it "not spam" so future emails arrive in your inbox.<br><br>After you confirm, you'll sign in once more. From then on you can sign in with your <strong>email or your username</strong>.</p>
 <button class="auth-submit-btn" onclick="closeConnectEmailModal()">Done</button>
 </div>
 </div>
@@ -17405,24 +17405,24 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.649"></script>
-<script src="app.js?v=3.0.649"></script>
-<script src="rhema-word-study.js?v=3.0.649"></script>
-<script src="rhema-grammar-search.js?v=3.0.649"></script>
-<script src="rhema-xl-views.js?v=3.0.649"></script>
-<script src="rhema-glance.js?v=3.0.649"></script>
-<script src="challenge.js?v=3.0.649"></script>
-<script src="guide-news.js?v=3.0.649"></script>
-<script src="bible-atlas.js?v=3.0.649"></script>
+<script src="rhema-align.js?v=3.0.650"></script>
+<script src="app.js?v=3.0.650"></script>
+<script src="rhema-word-study.js?v=3.0.650"></script>
+<script src="rhema-grammar-search.js?v=3.0.650"></script>
+<script src="rhema-xl-views.js?v=3.0.650"></script>
+<script src="rhema-glance.js?v=3.0.650"></script>
+<script src="challenge.js?v=3.0.650"></script>
+<script src="guide-news.js?v=3.0.650"></script>
+<script src="bible-atlas.js?v=3.0.650"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.649"></script>
-<script src="verse-structure.js?v=3.0.649"></script>
-<script src="vs-structure.js?v=3.0.649"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.650"></script>
+<script src="verse-structure.js?v=3.0.650"></script>
+<script src="vs-structure.js?v=3.0.650"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.649"></script>
-<script src="bible-quiz.js?v=3.0.649"></script>
-<script src="firebase-lb.js?v=3.0.649" type="module"></script>
+<script src="sermon-notes.js?v=3.0.650"></script>
+<script src="bible-quiz.js?v=3.0.650"></script>
+<script src="firebase-lb.js?v=3.0.650" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
