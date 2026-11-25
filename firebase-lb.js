@@ -190,9 +190,32 @@ async function createAccount(username, password, displayName, migrationData = {}
 // address (accounts that have connected one — their Firebase login email is the real address).
 async function login(identifier, password) {
   const id = (identifier || "").trim();
-  const email = id.includes("@") ? id.toLowerCase() : toEmail(id);
-  const cred = await signInWithEmailAndPassword(auth, email, password);
-  return cred.user;
+  if (id.includes("@")) return (await signInWithEmailAndPassword(auth, id.toLowerCase(), password)).user;
+  try {
+    return (await signInWithEmailAndPassword(auth, toEmail(id), password)).user;
+  } catch (e) {
+    if (!/invalid-credential|invalid-login-credentials|user-not-found|wrong-password/.test(e?.code || "")) throw e;
+    // A username whose account has since connected a real email: the server
+    // finds that email (only if this password is right for it) and we sign in
+    // with it, so the username keeps working.
+    let email = null;
+    try {
+      email = (await httpsCallable(functionsApp, "resolveSignInEmail")({ username: id, password })).data?.email || null;
+    } catch (e2) {
+      if (/resource-exhausted/.test(e2?.code || "")) throw Object.assign(new Error(e2.message), { code: "auth/too-many-requests" });
+    }
+    if (!email) throw e;
+    return (await signInWithEmailAndPassword(auth, email, password)).user;
+  }
+}
+
+// After the email link is opened: picks up the account's new email on this
+// device. Returns { email } or throws (e.g. when the change ended this sign-in).
+async function refreshAuthEmail() {
+  const user = auth.currentUser;
+  if (!user) return { email: null };
+  await user.reload();
+  return { email: auth.currentUser?.email || null };
 }
 
 async function logout() {
@@ -213,7 +236,14 @@ async function connectEmail(newEmail, currentPassword) {
 
   const credential = EmailAuthProvider.credential(user.email, currentPassword);
   await reauthenticateWithCredential(user, credential);
-  await verifyBeforeUpdateEmail(user, email);
+  // The email's link leads back to Rhēma once it's confirmed. If Firebase won't
+  // accept that return address, send the plain link instead.
+  try {
+    await verifyBeforeUpdateEmail(user, email, { url: "https://9average9.github.io/Greek-Vocab/?emailConnected=1" });
+  } catch (e) {
+    if (!/continue-uri|unauthorized-domain|invalid-dynamic-link/.test(e?.code || "")) throw e;
+    await verifyBeforeUpdateEmail(user, email);
+  }
 
   try { localStorage.setItem("pendingConnectEmail", email); } catch {}
   return email;
@@ -2537,6 +2567,7 @@ window.Auth = {
   logout,
   deleteAccount,
   connectEmail,
+  refreshAuthEmail,
   sendPasswordReset,
   verifyPassword,
   setNewPassword,

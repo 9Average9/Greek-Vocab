@@ -596,6 +596,48 @@ exports.setAccountPassword = functions.https.onCall(async (data, context) => {
   return { ok: true };
 });
 
+// Signing in with a username after the account connected a real email. The
+// app turns a username into its old <username>@greek-vocab.app address, which
+// stops existing once the email is connected, so the username stopped working.
+// This finds the account's email for that username, but hands it back only
+// after checking the password against it (so it never reveals anyone's email),
+// and the app then signs in with it. Limited per username.
+const WEB_API_KEY = "AIzaSyDVWKRCtjg7ppR-D8ZNs-TfSwPlWdXXQ5Q";   // the app's public web key
+const SIGN_IN_LOOKUPS_PER_15MIN = 10;
+exports.resolveSignInEmail = functions.https.onCall(async (data) => {
+  const username = String(data?.username || "").trim().toLowerCase();
+  const password = typeof data?.password === "string" ? data.password : "";
+  if (!username || username.includes("@") || username.length > 64 || !password || password.length > 256) return { email: null };
+  const rl = db.collection("signInLookups").doc(crypto.createHash("sha256").update(username).digest("hex"));
+  const now = Date.now();
+  const allowed = await db.runTransaction(async tx => {
+    const snap = await tx.get(rl);
+    const recent = ((snap.exists && snap.data().at) || []).filter(t => now - t < 15 * 60 * 1000);
+    if (recent.length >= SIGN_IN_LOOKUPS_PER_15MIN) return false;
+    tx.set(rl, { at: [...recent, now] });
+    return true;
+  });
+  if (!allowed) throw new functions.https.HttpsError("resource-exhausted", "Too many tries. Wait a few minutes, then try again.");
+  const nameSnap = await db.collection("usernames").doc(username).get();
+  const uid = nameSnap.exists ? nameSnap.data()?.uid : null;
+  if (!uid) return { email: null };
+  let email = null;
+  try { email = (await getAuth().getUser(uid)).email || null; } catch (e) { return { email: null }; }
+  if (!email || email.endsWith("@greek-vocab.app")) return { email: null };
+  try {
+    const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${WEB_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Referer: "https://9average9.github.io/" },
+      body: JSON.stringify({ email, password, returnSecureToken: false })
+    });
+    if (!r.ok) return { email: null };
+  } catch (e) {
+    console.error("resolveSignInEmail check", e?.message);
+    throw new functions.https.HttpsError("unavailable", "Couldn't sign in right now. Try again in a moment.");
+  }
+  return { email };
+});
+
 exports.cleanupDeletedAuthUser = functions.auth.user().onDelete(async user => {
   await cleanupDeletedUserData(user.uid);
   await db.collection("accountSecurity").doc(user.uid).delete().catch(() => {});
