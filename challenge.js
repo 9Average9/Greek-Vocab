@@ -517,7 +517,7 @@
         <p class="ch-fine">Each quote below was found word for word on the page it links to. Read them in context.</p>
         ${(c.sources || []).map(s => `<a class="ch-src" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">
           <q>${esc(s.quote)}</q><span class="ch-src-t"><b>${esc(s.title || s.site)}</b><small>${esc(s.site)}</small></span><span class="material-symbols-outlined">open_in_new</span></a>`).join('')}
-        <p class="ch-fine">Found by the guide's web research (AI-assisted) and checked against the pages. The claim is stated the way its own teachers put it; it isn't the app's view.</p>
+        <p class="ch-fine">Found by the guide's web research and checked against the pages. The claim is stated the way its own teachers put it; it isn't the app's view.</p>
       </div>`;
     themeContrast(sh.querySelector('.ch-sheet-card'));
     requestAnimationFrame(() => sh.classList.add('open'));
