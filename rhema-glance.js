@@ -1,5 +1,5 @@
 // "At a glance": a chapter summary that opens only when the reader taps the
-// eye button by the chapter title. Nothing here is written by AI. Every line
+// eye button by the chapter title. Every line
 // is counted from data the app already has, and each card says where it came from:
 //   • Key words: counted from the Greek / Hebrew text on screen.
 //   • Old Testament quotes (or "Quoted in the New Testament"): the
@@ -325,7 +325,7 @@
     ov.className = 'glance-overlay';
     ov.innerHTML = `<div class="glance-backdrop" onclick="RhemaGlance.close()"></div>` +
       `<div class="glance-sheet" role="dialog" aria-modal="true" aria-labelledby="glanceTitle">` +
-            `<div class="glance-top">${EYE.replace('glb-eye', 'glb-eye gls-eye')}<div class="glance-titles"><h2 id="glanceTitle"></h2><p>Counted from the app’s own data — nothing written by AI.</p></div>` +
+            `<div class="glance-top">${EYE.replace('glb-eye', 'glb-eye gls-eye')}<div class="glance-titles"><h2 id="glanceTitle"></h2><p>Counted from the app’s own data.</p></div>` +
       `<button type="button" class="glance-x" onclick="RhemaGlance.close()" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>` +
       `<div class="glance-body" id="glanceBody"></div></div>`;
     document.body.appendChild(ov);

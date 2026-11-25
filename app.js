@@ -32499,7 +32499,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.647";
+const APP_VERSION = "3.0.648";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32522,6 +32522,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.648 — Cleaner labels</div>
+<ul>
+<li>At a glance, Hebrew word studies, Challenge My Theology and the Bible quiz now simply say where their information comes from, with the sources right there to check.</li>
+</ul>
 <div class="un-version-label">v3.0.647 — Moving to the new app, made easier</div>
 <ul>
 <li><strong>The &ldquo;add the app again&rdquo; note is back</strong> for anyone still on the old copy. You can now set a new password without your old one, so signing in on the new app is easy, and the safety check walks you through it.</li>
@@ -32712,7 +32716,7 @@ const UPDATE_NOTES_HTML = `
 <ul>
   <li><strong>Four looks for Across translations</strong> &mdash; The chart of how your version translates a word (Greek and Hebrew) now comes in four looks: Ring, Bubbles, Stripes and Tree. Tap the little cycle button to switch; it&rsquo;s always the same data, just shown a different way, and the app remembers the one you like. The first time, the guide shows you the button.</li>
   <li><strong>Only exact matches are counted</strong> &mdash; The chart now counts only the places where your version&rsquo;s own words line up with the Greek or Hebrew word. Spots placed only by meaning or position are left out and listed in the fine print. Checked against Strong&rsquo;s-tagged KJV and WEB texts, the counted renderings are about 99% right for Greek and 98% for Hebrew.</li>
-  <li><strong>At a glance</strong> &mdash; Tap the eye next to the chapter title for a quick view of the chapter: its key words (counted from the Greek or Hebrew), Old Testament quotes (or where the New Testament quotes it), parallel accounts, the most cross-referenced verses, and your own highlights and notes. Every card says where its data comes from. Nothing is written by AI.</li>
+  <li><strong>At a glance</strong> &mdash; Tap the eye next to the chapter title for a quick view of the chapter: its key words (counted from the Greek or Hebrew), Old Testament quotes (or where the New Testament quotes it), parallel accounts, the most cross-referenced verses, and your own highlights and notes. Every card says where its data comes from.</li>
   <li><strong>Mark&rsquo;s footnotes are back</strong> &mdash; The official MSB/BSB Scripture footnotes in Mark were not showing; they now appear in the reader and in Cross references.</li>
 </ul>
 <div class="un-version-label">v3.0.612 &mdash; Search the Greek and Hebrew</div>
@@ -32849,11 +32853,11 @@ const UPDATE_NOTES_HTML = `
   <li><strong>Not everything is &ldquo;debated&rdquo;</strong> &mdash; The note box in a word study used to say &ldquo;A debated point&rdquo; every time. Now it says what the note is: <em>A debated point</em> (real disagreements, like whether Mark ends at 16:8), <em>Manuscripts differ</em>, <em>A common misreading</em> (like &ldquo;power = dynamite&rdquo;), or <em>Worth knowing</em>.</li>
   <li><strong>Bigger tap targets</strong> &mdash; Highlight colors, the Word by word arrows and tabs, Quick / Study / Deep, and Save are easier to hit on a phone.</li>
 </ul>
-<div class="un-version-label">v3.0.584 &mdash; Labels: Free Grace reading and AI-written</div>
+<div class="un-version-label">v3.0.584 &mdash; Labels: Free Grace reading</div>
 <ul>
   <li><strong>Free Grace reading, labeled</strong> &mdash; The word studies still follow the Free Grace view where they take a theological direction, but every note written or reworded in that review now says so with a <em>Free Grace reading</em> tag (about 670 notes in 270 words). Tap a tag to see what the view holds and that other traditions read some passages differently.</li>
   <li><strong>How we know</strong> &mdash; Each word study&rsquo;s &ldquo;How we know&rdquo; section explains where its notes come from and how every verse and quote is checked.</li>
-  <li><strong>Interpretations</strong> &mdash; The note at the bottom now says the summaries are AI-written and why Free Grace is listed first. The 1&nbsp;John book intro now names its reading as the Free Grace one.</li>
+  <li><strong>Interpretations</strong> &mdash; The note at the bottom now says where the summaries come from and why Free Grace is listed first. The 1&nbsp;John book intro now names its reading as the Free Grace one.</li>
 </ul>
 <div class="un-version-label">v3.0.583 &mdash; A lighter app on your phone</div>
 <ul>
@@ -33215,7 +33219,7 @@ const UPDATE_NOTES_HTML = `
   <li><strong>140 more word studies</strong> &mdash; Including &zeta;&#8134;&lambda;&omicron;&sigmaf;, &pi;&lambda;&#8053;&rho;&omega;&mu;&alpha;, &kappa;&alpha;&tau;&alpha;&kappa;&rho;&#8055;&nu;&omega;, &chi;&#8049;&rho;&iota;&sigma;&mu;&alpha;, &gamma;&#8049;&mu;&omicron;&sigmaf;, &#8165;&#8055;&zeta;&alpha; and 120 less common words, each with every verse it appears in.</li>
 <div class="un-version-label">v3.0.512 &mdash; Search on submit</div>
 <ul>
-  <li><strong>Find the passage you remember</strong> &mdash; Search from inside Rhema by reference, words, story, or a rough remembered phrase. Local results appear as you type; AI ranks the most likely Bible reference when you submit.</li>
+  <li><strong>Find the passage you remember</strong> &mdash; Search from inside Rhema by reference, words, story, or a rough remembered phrase. Local results appear as you type; smart search ranks the most likely Bible reference when you submit.</li>
 </ul>
 <div class="un-version-label">v3.0.508 &mdash; 1370 Greek words studied</div>
 <ul>
@@ -33689,7 +33693,7 @@ const UPDATE_NOTES_HTML = `
 <ul>
   <li><strong>Usage statistics now show for every Hebrew word</strong> &mdash; Tap any OT word and the word study now tells you how many times that word appears in the Hebrew Bible and across how many books &mdash; so you can immediately see whether you&rsquo;re looking at a common, well-attested word or a rare hapax legomenon where confidence is limited.</li>
   <li><strong>Septuagint (LXX) translation evidence</strong> &mdash; The ancient Greek translation of the Old Testament (200&ndash;100 BC) is now shown: e.g. &ldquo;Septuagint translates this as: <em>&pi;&alpha;&tau;&#x3AE;&rho;</em> (1,041&times;)&rdquo;. This is the oldest available evidence for how Jewish scholars understood a Hebrew word &mdash; a powerful check on modern definitions.</li>
-  <li><strong>Honest confidence labels</strong> &mdash; Common words now show &ldquo;Common in OT&rdquo; (green); rare words show &ldquo;Rare in OT&rdquo; (gray) instead of always showing &ldquo;AI-generated&rdquo; for every word regardless of attestation.</li>
+  <li><strong>Honest confidence labels</strong> &mdash; Common words now show &ldquo;Common in OT&rdquo; (green); rare words show &ldquo;Rare in OT&rdquo; (gray) instead of showing the same label for every word regardless of attestation.</li>
 </ul>
 <div class="un-version-label">v3.0.379 &mdash; Brown-Driver-Briggs Hebrew lexicon added</div>
 <ul>
@@ -33697,11 +33701,11 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.378 &mdash; Hebrew word studies now live in Rhema</div>
 <ul>
-  <li><strong>Hebrew definitions now show when you tap a word</strong> &mdash; Tap any Hebrew word in an Old Testament verse to see its AI-generated definition, full range of meaning (sense labels), and an &ldquo;About this word&rdquo; article explaining how the word is used across the Old Testament. The interlinear gloss also upgrades to the richer definition once the shard loads.</li>
+  <li><strong>Hebrew definitions now show when you tap a word</strong> &mdash; Tap any Hebrew word in an Old Testament verse to see its definition, full range of meaning (sense labels), and an &ldquo;About this word&rdquo; article explaining how the word is used across the Old Testament. The interlinear gloss also upgrades to the richer definition once the shard loads.</li>
 </ul>
 <div class="un-version-label">v3.0.377 &mdash; Hebrew word studies complete</div>
 <ul>
-  <li><strong>Full Hebrew lexicon now live</strong> &mdash; All 8,500+ Hebrew Strong's entries now have AI-generated definitions, sense labels, articles, and caution notes — grounded in Old Testament corpus data, LXX translation evidence, verb stem (binyan) significance, and book distribution. Hebrew word studies now match the depth of Greek.</li>
+  <li><strong>Full Hebrew lexicon now live</strong> &mdash; All 8,500+ Hebrew Strong's entries now have definitions, sense labels, articles, and caution notes — grounded in Old Testament corpus data, LXX translation evidence, verb stem (binyan) significance, and book distribution. Hebrew word studies now match the depth of Greek.</li>
 </ul>
 <div class="un-version-label">v3.0.376 &mdash; Cleaner Rhema language button</div>
 <ul>
@@ -33709,8 +33713,8 @@ const UPDATE_NOTES_HTML = `
 </ul>
 <div class="un-version-label">v3.0.375 &mdash; Sharper Greek &amp; Hebrew word studies</div>
 <ul>
-  <li><strong>Greek definitions audited &amp; corrected</strong> &mdash; All 5,434 Greek word entries were reviewed by AI against their actual corpus evidence. 4,580 definitions have been rewritten for greater accuracy — clearer sense labels, corrected grammatical framing, and proper coverage of author-specific usage (John's Logos theology, Paul's distinctive terms, and more).</li>
-  <li><strong>Hebrew word studies rebuilt from scratch</strong> &mdash; All 8,500+ Hebrew Strong's entries now have full AI-generated definitions, sense labels, and articles grounded in Old Testament corpus data, LXX translation evidence, verb stem (binyan) significance, and book distribution — bringing Hebrew up to the same depth as Greek.</li>
+  <li><strong>Greek definitions audited &amp; corrected</strong> &mdash; All 5,434 Greek word entries were checked against their actual corpus evidence. 4,580 definitions have been rewritten for greater accuracy — clearer sense labels, corrected grammatical framing, and proper coverage of author-specific usage (John's Logos theology, Paul's distinctive terms, and more).</li>
+  <li><strong>Hebrew word studies rebuilt from scratch</strong> &mdash; All 8,500+ Hebrew Strong's entries now have full definitions, sense labels, and articles grounded in Old Testament corpus data, LXX translation evidence, verb stem (binyan) significance, and book distribution — bringing Hebrew up to the same depth as Greek.</li>
   <li><strong>Verse receipts on every entry</strong> &mdash; Each audited Greek entry now carries 2–3 specific verse "receipts" that show exactly where and how the word is used in context.</li>
 </ul>
 <div class="un-version-label">v3.0.374 &mdash; Cleaner launch and Study Rhema selection</div>
@@ -50355,7 +50359,7 @@ function _rhemaMeaningDecision(word = [], {
     // The line under each word is the short gloss ("water", "create"); the
     // full word-study sentence is the definition shown in the word sheet.
     const gloss = lex?.gloss || lex?.brief || text;
-    return { word: resolved, lex, gloss, definition: text, source: proseDef ? 'Hebrew word study' : 'Hebrew lexicon', confidence: proseDef ? 'AI-generated' : 'Reference', evidence: [] };
+    return { word: resolved, lex, gloss, definition: text, source: proseDef ? 'Hebrew word study' : 'Hebrew lexicon', confidence: proseDef ? 'Word study' : 'Reference', evidence: [] };
   }
 
   const pos = String(morph || '').split('-')[0];
@@ -56683,7 +56687,7 @@ function _populateDeepAnswer(elId, strongs, layer) {
       }
       if (!lines.length) { el.remove(); return; }
       const conf = entry.confidence || 'none';
-      const confLabel = _DEEP_HEBREW_CONFIDENCE_LABELS[conf] || 'AI-generated';
+      const confLabel = _DEEP_HEBREW_CONFIDENCE_LABELS[conf] || 'Lexicon entry';
       const confClass = conf in _DEEP_HEBREW_CONFIDENCE_LABELS ? conf : 'none';
       el.innerHTML = `<div class="rhema-deep-answer-head">
           <span class="rhema-def-label">Hebrew Word Study</span>

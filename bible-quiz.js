@@ -262,7 +262,7 @@
     };
 
     // Hero — one line of copy, the rest behind the ⓘ button.
-    const heroInfo = infoHelp('Point the AI at any passage — or several — and it writes a real test of what the text says, with hints, verses, and explanations. Score high to earn XP.');
+    const heroInfo = infoHelp('Pick any passage — or several — and the quiz writes a real test of what the text says, with hints, verses, and explanations. Score high to earn XP.');
     kids.push(staggered(el('div', { class: 'bq-hero' }, [
       el('div', { class: 'bq-hero-badge' }, [icon('quiz')]),
       el('div', { class: 'bq-hero-title' }, [el('h1', { text: 'Bible Quiz' }), heroInfo.btn]),
@@ -746,7 +746,7 @@
     page.appendChild(el('div', { class: 'bq-loading' }, [
       el('div', { class: 'bq-orb' }, [icon('auto_awesome')]),
       el('h2', { text: 'Writing your first questions…' }),
-      el('p', { text: 'The AI is reading ' + (form.reference || 'the passage') + '. You’ll start in seconds — the rest is written while you play.' }),
+      el('p', { text: 'Reading ' + (form.reference || 'the passage') + '. You’ll start in seconds — the rest is written while you play.' }),
       el('div', { class: 'bq-dots' }, [el('span'), el('span'), el('span')])
     ]));
   }
