@@ -255,12 +255,14 @@
   // Shown once, in the installed app, to signed-in people whose copy was in use
   // before the rename (index.html marks rhemaInstallEra). The fresh copy they
   // add starts with empty storage, so it never shows this again.
-  const RE_KEY = 'guideReinstallV3644';
+  // Sent again (v3.0.647) to everyone still on an old copy, "Got it" or not:
+  // there's now a way to set a new password without the old one.
+  const RE_KEY = 'guideReinstallV3647';
   const APP_URL = 'https://9average9.github.io/Greek-Vocab/';
   const esc = (t) => String(t || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const installed = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch { return false; } };
   const signedIn = () => !!window.Auth?.getCurrentUser?.();
-  const RE_LATER_KEY = 'guideReinstallLaterUntil';
+  const RE_LATER_KEY = 'guideReinstallLaterUntilV3647';
   let reLater = false;
   const snoozed = () => reLater || Date.now() < Number(get(RE_LATER_KEY) || 0);
   function needReinstall() {
@@ -321,7 +323,8 @@
     stage.innerHTML = `
         <div class="gn-guide-wrap"><img class="gn-guide" src="${M}${ready ? 'guide-thumbs' : 'guide-wow'}.webp" alt="" decoding="async"><i class="gn-shadow"></i></div>
         <div class="gn-card">
-          <span class="gn-kicker">One more thing!</span>
+          <span class="gn-kicker">Sent again!</span>
+          <div class="gn-re-again"><span class="material-symbols-outlined">campaign</span><span>I’m sending this again because there’s now a way to <b>set a new password without remembering your old one</b>. That makes signing in on the new app easy. The safety check below walks you through it.</span></div>
           <h2 class="gn-title">Add me again for the new look</h2>
           <p class="gn-body">Your phone keeps the old name and icon until you add the app again.</p>
           ${ready
@@ -334,7 +337,7 @@
             <li style="--k:2"><span class="gn-re-n">3</span><div>Open the new Rhēma and <b>sign in again</b>${who.name ? ` with <b>${esc(who.name)}</b>` : ''}.</div></li>
           </ol>
           <div class="gn-note"><span class="material-symbols-outlined">key</span><p>You’ll need your password to sign in, so make sure you remember it!</p></div>
-          <p class="gn-re-after">Your progress, notes and settings come along once you sign in. Keep this old icon until you’re in and see your things; then you can delete it.${hasSermonAudio() ? ' Sermon audio recordings stay in this old copy.' : ''}</p>
+          <p class="gn-re-after">Your highlights, notes, saved words, font, text size and progress come along once you sign in. Keep this old icon until you’re in and see your things; then you can delete it.${hasSermonAudio() ? ' Sermon audio recordings stay in this old copy.' : ''}</p>
         </div>
         <div class="gn-actions gn-re-actions">
           <button type="button" class="gn-go" onclick="RhemaGuideNews.reinstallDone(true)"><span class="material-symbols-outlined">thumb_up</span>Got it!</button>
@@ -467,9 +470,10 @@
       out.innerHTML = `<p class="gn-re-good"><span class="material-symbols-outlined">cloud_done</span><span><b>Saved to your account.</b></span></p>
         <ul class="gn-re-saved">
           <li><span class="material-symbols-outlined">check</span>Lessons, XP, streak and known words</li>
-          <li><span class="material-symbols-outlined">check</span>Highlights, notes and reading plans</li>
-          <li><span class="material-symbols-outlined">check</span>Word Log, Workspace and Trails</li>
-          <li><span class="material-symbols-outlined">check</span>Your reading spot, settings, sermon notes and quiz history</li>
+          <li><span class="material-symbols-outlined">check</span>Highlights, verse notes and reading plans</li>
+          <li><span class="material-symbols-outlined">check</span>Saved words (Word Log), Workspace and Trails</li>
+          <li><span class="material-symbols-outlined">check</span>Your font, text size, theme and reading spot</li>
+          <li><span class="material-symbols-outlined">check</span>Sermon notes, memorization and quiz history</li>
         </ul>`;
       if (next) next.disabled = false;
     } else {
