@@ -260,8 +260,11 @@
   const esc = (t) => String(t || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const installed = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch { return false; } };
   const signedIn = () => !!window.Auth?.getCurrentUser?.();
+  const RE_LATER_KEY = 'guideReinstallLaterUntil';
+  let reLater = false;
+  const snoozed = () => reLater || Date.now() < Number(get(RE_LATER_KEY) || 0);
   function needReinstall() {
-    if (get(RE_KEY) === '1' || get('rhemaInstallEra') !== 'pre') return false;
+    if (get(RE_KEY) === '1' || get('rhemaInstallEra') !== 'pre' || snoozed()) return false;
     return installed() && signedIn();
   }
   function platform() {
@@ -498,6 +501,8 @@
   // seen: true marks it done for good; false shows it again next time.
   function reinstallDone(seen) {
     if (seen) { try { localStorage.setItem(RE_KEY, '1'); } catch {} }
+    // "Remind me next time": not again during this visit, and not for 12 hours.
+    else { reLater = true; try { localStorage.setItem(RE_LATER_KEY, String(Date.now() + 12 * 60 * 60 * 1000)); } catch {} }
     if (!el) return;
     const node = el;
     node.classList.add('gn-closing');
@@ -528,7 +533,7 @@
   let tries = 0, ready = 0, ticking = false;
   function tick() {
     ticking = false;
-    const wantNews = !seen(), wantRe = get(RE_KEY) !== '1' && get('rhemaInstallEra') === 'pre' && installed();
+    const wantNews = !seen(), wantRe = get(RE_KEY) !== '1' && get('rhemaInstallEra') === 'pre' && installed() && !snoozed();
     if (!wantNews && !wantRe) return;
     if (!el && clearToShow() && !document.querySelector('.ch-overlay, .modal-overlay.open, .modal.open')) {
       if (++ready >= 3) {

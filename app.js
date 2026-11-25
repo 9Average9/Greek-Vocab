@@ -32525,6 +32525,7 @@ const UPDATE_NOTES_HTML = `
 <div class="un-version-label">v3.0.646 — Set a new password, and the email prompt over Rhēma</div>
 <ul>
 <li><strong>Forgot your password?</strong> &mdash; While you&rsquo;re signed in, you can set a new one without the old one: Settings &rarr; Account &rarr; Change Password, or tap &ldquo;Don&rsquo;t remember it?&rdquo; when connecting your email or in the guide&rsquo;s safety check. Other devices you&rsquo;re signed in on will ask for the new password.</li>
+<li><strong>&ldquo;Remind me next time&rdquo;</strong> on the add-the-app-again note now really waits: it won&rsquo;t pop back up during this visit or for the next 12 hours.</li>
 <li><strong>Connect your email</strong> now opens on top of Rhēma (and over the guide&rsquo;s safety check) instead of behind it on Home.</li>
 <li><strong>Notifications</strong> &mdash; &ldquo;Studying Now&rdquo; alerts are retired along with separate studies. Every other reminder and alert is unchanged, and each kind of reminder now goes out on its own, so a problem with one can&rsquo;t hold up the others.</li>
 </ul>
