@@ -10486,99 +10486,6 @@ body.dark .modal-close {
   }
 }
 
-button[onclick="triggerAndroidInstall()"] {
-  position: relative;
-  overflow: hidden;
-
-  min-height: 68px !important;
-  border-radius: 22px !important;
-
-  background: linear-gradient(
-    135deg,
-    #34a853 0%,
-    #2ea043 55%,
-    #24913a 100%
-  ) !important;
-
-  border: none !important;
-
-  color: white !important;
-  font-weight: 900 !important;
-  font-size: 1.08rem !important;
-  letter-spacing: -0.01em;
-
-  box-shadow:
-    0 14px 34px rgba(52, 168, 83, 0.34),
-    inset 0 1px 0 rgba(255,255,255,0.18);
-
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    filter 0.18s ease;
-
-  animation: androidInstallPulse 2.8s infinite;
-}
-
-/* Android icon */
-button[onclick="triggerAndroidInstall()"] .material-symbols-outlined {
-  font-size: 30px !important;
-  color: white !important;
-}
-
-/* Hover / tap */
-button[onclick="triggerAndroidInstall()"]:hover,
-button[onclick="triggerAndroidInstall()"]:active {
-  transform: translateY(-2px) scale(1.015);
-
-  box-shadow:
-    0 18px 40px rgba(52, 168, 83, 0.42),
-    inset 0 1px 0 rgba(255,255,255,0.22);
-
-  filter: brightness(1.03);
-}
-
-/* Moving shine */
-button[onclick="triggerAndroidInstall()"]::after {
-  content: "";
-
-  position: absolute;
-  inset: 0;
-
-  background:
-    linear-gradient(
-      120deg,
-      transparent 0%,
-      rgba(255,255,255,0.16) 42%,
-      transparent 82%
-    );
-
-  transform: translateX(-120%);
-  animation: androidInstallShine 3.8s infinite;
- 
-}
-
-/* Subtle pulse */
-@keyframes androidInstallPulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.015);
-  }
-}
-
-@keyframes androidInstallShine {
-  0% {
-    transform: translateX(-120%);
-  }
-
-  45%,
-  100% {
-    transform: translateX(120%);
-  }
-}
 
 button[onclick="showInstallSteps('iphone')"] {
   position: relative;
@@ -41659,3 +41566,67 @@ html body #connectEmailModal.open.over-guide { z-index: 2147483000; }
   background: color-mix(in srgb, var(--gn-gold) 22%, var(--card-solid-color, #fff)); border: 1px solid color-mix(in srgb, var(--gn-gold) 70%, transparent);
   animation: gnChip .45s cubic-bezier(.3,1.6,.5,1) both .3s; }
 .gn-re-again .material-symbols-outlined { color: #c98a00; --font-color: #c98a00; font-size: 22px; }
+
+/* ── "Get the Rhēma app" prompt (guide on top, app icon, one big button) ── */
+#installAppModal.open { display: flex; align-items: center; justify-content: center; padding: 96px 18px 18px; }
+#installAppModal .install-card { position: relative; width: min(380px, 100%); box-sizing: border-box; max-height: calc(100svh - 90px); overflow-y: auto; overscroll-behavior: contain;
+  padding: 58px 20px 14px; border-radius: 30px; text-align: center; color: var(--font-color, #1d2433);
+  background: linear-gradient(170deg, color-mix(in srgb, var(--secondary-color, #2f55d4) 10%, var(--card-solid-color, #fff)), var(--card-solid-color, #fff) 55%);
+  border: 1px solid color-mix(in srgb, var(--secondary-color, #2f55d4) 26%, transparent);
+  box-shadow: 0 24px 60px rgba(8, 14, 26, .32); animation: installIn .45s cubic-bezier(.3,1.4,.5,1) both; overflow-x: hidden; }
+@keyframes installIn { from { opacity: 0; transform: translateY(26px) scale(.96); } }
+#installAppModal .install-wrap { position: relative; width: min(380px, 100%); animation: installIn .45s cubic-bezier(.3,1.4,.5,1) both; }
+#installAppModal .install-wrap .install-card { width: 100%; animation: none; }
+/* The guide sits on the card's top edge, outside its scroll area so he's never cut off. */
+#installAppModal .install-guide { position: absolute; z-index: 2; left: 50%; top: -88px; width: 124px; margin-left: -62px; pointer-events: none; }
+#installAppModal .install-guide img { display: block; width: 100%; height: auto; filter: drop-shadow(0 8px 12px rgba(0,0,0,.28)); animation: installGuide 2.6s ease-in-out infinite .5s; }
+@keyframes installGuide { 50% { transform: translateY(-6px) rotate(-3deg); } }
+#installAppModal .install-app-icon { position: absolute; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.18); }
+#installAppModal .install-app-icon img { width: 100%; height: 100%; display: block; }
+#installAppModal h2 { margin: 0 0 6px; font-family: 'Fraunces', Georgia, serif; font-size: 1.55rem; font-weight: 800; line-height: 1.15; color: color-mix(in srgb, var(--secondary-color, #2f55d4) 55%, var(--font-color, #1d2433)); }
+#installAppModal .install-sub { margin: 0 0 16px; font-size: .95rem; line-height: 1.42; color: color-mix(in srgb, var(--font-color, #1d2433) 72%, transparent); }
+#installAppModal .install-go { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--secondary-color, #2f55d4); color: #fff; font: inherit; font-size: 1.08rem; font-weight: 850;
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--secondary-color, #2f55d4) 62%, #000), 0 12px 22px color-mix(in srgb, var(--secondary-color, #2f55d4) 35%, transparent); transition: transform .12s, box-shadow .12s; }
+#installAppModal .install-go:active { transform: translateY(5px); box-shadow: 0 1px 0 color-mix(in srgb, var(--secondary-color, #2f55d4) 62%, #000); }
+#installAppModal .install-go[disabled] { opacity: .7; }
+#installAppModal .install-go .material-symbols-outlined { font-size: 26px; }
+#installAppModal .install-steplist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; text-align: left; font-size: .93rem; line-height: 1.38; }
+#installAppModal .install-steplist li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 16px;
+  background: color-mix(in srgb, var(--secondary-color, #2f55d4) 8%, var(--card-solid-color, #fff)); border: 1px solid color-mix(in srgb, var(--secondary-color, #2f55d4) 18%, transparent); }
+#installAppModal .install-n { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--secondary-color, #2f55d4); color: #fff; font-weight: 900; font-size: .78rem; }
+#installAppModal .install-key { display: inline-grid; place-items: center; width: 26px; height: 24px; margin: 0 2px; vertical-align: -6px; border-radius: 7px;
+  background: var(--card-solid-color, #fff); border: 1px solid color-mix(in srgb, var(--font-color, #1d2433) 18%, transparent); }
+#installAppModal .install-key .material-symbols-outlined { font-size: 18px; color: var(--secondary-color, #2f55d4); }
+#installAppModal .install-help { margin-top: 12px; }
+#installAppModal .install-help-lead { margin: 0 0 8px; font-size: .88rem; text-align: left; color: color-mix(in srgb, var(--font-color, #1d2433) 75%, transparent); }
+#installAppModal .install-done { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; padding: 12px; border-radius: 16px; text-align: left; font-size: .92rem; line-height: 1.38;
+  background: color-mix(in srgb, #2e9d57 12%, var(--card-solid-color, #fff)); border: 1px solid color-mix(in srgb, #2e9d57 40%, transparent); }
+#installAppModal .install-done .material-symbols-outlined { color: #2e9d57; font-size: 24px; }
+#installAppModal .install-done.hidden, #installAppModal .install-help.hidden, #installAppModal .install-pane.hidden, #installAppModal .install-video-wrap.hidden, #installAppModal .install-go.hidden { display: none; }
+#installAppModal .install-video-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 8px 14px; border: 0; border-radius: 999px; cursor: pointer;
+  background: color-mix(in srgb, var(--secondary-color, #2f55d4) 12%, transparent); color: var(--secondary-color, #2f55d4); font: inherit; font-weight: 800; font-size: .88rem; }
+#installAppModal .install-video-wrap { margin-top: 10px; border-radius: 18px; overflow: hidden; }
+#installAppModal .install-video { width: 100%; display: block; }
+#installAppModal .install-switch { display: block; margin: 14px auto 0; padding: 6px 10px; border: 0; background: none; cursor: pointer; font: inherit; font-size: .86rem; font-weight: 700;
+  color: var(--secondary-color, #2f55d4); text-decoration: underline; text-underline-offset: 3px; }
+#installAppModal .install-later { display: block; margin: 2px auto 0; padding: 8px 12px; border: 0; background: none; cursor: pointer; font: inherit; font-size: .9rem; font-weight: 700;
+  color: color-mix(in srgb, var(--font-color, #1d2433) 60%, transparent); }
+/* Dark mode: the theme blue is light there, so buttons take dark ink. */
+body.dark #installAppModal :is(.install-go, .install-n) { color: #0b1730; --font-color: #0b1730; }
+body.dark #installAppModal .install-go .material-symbols-outlined { color: #0b1730; }
+/* Challenge screens stay one solid page: nothing slides sideways (the drifting
+   clouds poke past the edge), and the home screen fits the phone exactly; the
+   open book at the bottom shrinks to the room left instead of adding a scroll. */
+.ch-scroll { overflow-x: hidden; touch-action: pan-y; }
+.ch-overlay { overflow: hidden; overscroll-behavior: none; }
+.ch-overlay[data-view="chooser"] .ch-scroll { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+.ch-overlay[data-view="chooser"] .ch-chooser { overflow-x: clip;
+  min-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - 12px - env(safe-area-inset-bottom) - 52px); }
+.ch-overlay[data-view="chooser"] .ch-foot { flex: 1 1 0; min-height: 0; max-height: 190px; height: auto; padding-top: 10px; }
+@media (max-height: 700px) {
+  .ch-overlay[data-view="chooser"] .ch-h1 { font-size: 1.7rem; }
+  .ch-overlay[data-view="chooser"] .ch-hello { width: 140px; margin-bottom: -34px; }
+  .ch-overlay[data-view="chooser"] .ch-art { width: 84px; height: 70px; }
+  .ch-overlay[data-view="chooser"] .ch-foot { max-height: 120px; }
+}
