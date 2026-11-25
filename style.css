@@ -24389,8 +24389,8 @@ body #basicVerbsLearnMenu.screen.active .learn-path-grid button .lesson-est-time
   --qa-card-border: rgba(130, 92, 226, 0.16);
   --qa-card-shadow: rgba(111, 72, 214, 0.13);
   --qa-image-shadow: rgba(124, 81, 220, 0.17);
-  --qa-title: #6554d9;
-  --qa-subtitle: #6756bf;
+  --qa-title: #5240c2;
+  --qa-subtitle: #55449f;
 }
 
 #homeScreen .quick-action-reading {
@@ -36567,7 +36567,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --memorization-page-color: #fffdf6 !important;
   --border-color: #a9b8d4 !important;
   --font-color: #2b3350 !important;
-  --muted-color: #6b7390 !important;
+  --muted-color: #555d7c!important;
   --btn-text-color: #fffdf6 !important;
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
@@ -36588,7 +36588,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --skin-card-border: 1.5px solid rgba(47, 74, 124, 0.55);
   --skin-card-shadow: 3px 3px 0 rgba(47, 74, 124, 0.14);
 }
-:root[data-skin="notebook"]:has(body.dark) {
+:root[data-skin="notebook"].is-dark {
   --primary-color: #232836 !important;
   --primary-light: #2a3040 !important;
   --secondary-color: #8fb4e8 !important;
@@ -36649,7 +36649,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --skin-card-border: 1.5px solid rgba(20, 80, 140, 0.55);
   --skin-card-shadow: 2px 2px 0 rgba(20, 80, 140, 0.18);
 }
-:root[data-skin="blueprint"]:has(body.dark) {
+:root[data-skin="blueprint"].is-dark {
   --primary-color: #102a4a !important;
   --primary-light: #143155 !important;
   --secondary-color: #7fb3e8 !important;
@@ -36689,7 +36689,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --memorization-page-color: #f6edd6 !important;
   --border-color: #c8ac74 !important;
   --font-color: #43331d !important;
-  --muted-color: #7d6b4c !important;
+  --muted-color: #65553a!important;
   --btn-text-color: #f9f2df !important;
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
@@ -36712,7 +36712,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --skin-card-border: 1.5px solid rgba(107, 74, 31, 0.45);
   --skin-card-shadow: 0 3px 10px rgba(90, 65, 25, 0.18);
 }
-:root[data-skin="scroll"]:has(body.dark) {
+:root[data-skin="scroll"].is-dark {
   --primary-color: #322917 !important;
   --primary-light: #3a3020 !important;
   --secondary-color: #d3b578 !important;
@@ -36745,14 +36745,14 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
 :root[data-skin="chalkboard"] {
   --primary-color: #3a5f54 !important;
   --primary-light: #40685c !important;
-  --secondary-color: #e8c96a !important;
+  --secondary-color: #f3dc92!important;
   --accent-color: #f2a3a3 !important;
   --card-color: rgba(64, 104, 92, 0.94) !important;
   --card-solid-color: #40685c !important;
   --memorization-page-color: #40685c !important;
   --border-color: rgba(242, 246, 240, 0.35) !important;
   --font-color: #f2f6f0 !important;
-  --muted-color: #b8cbc2 !important;
+  --muted-color: #d6e3dc!important;
   --btn-text-color: #24352f !important;
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
@@ -36773,7 +36773,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --skin-card-border: 1.5px dashed rgba(242, 246, 240, 0.45);
   --skin-card-shadow: none;
 }
-:root[data-skin="chalkboard"]:has(body.dark) {
+:root[data-skin="chalkboard"].is-dark {
   --primary-color: #26332f !important;
   --primary-light: #2a3835 !important;
   --secondary-color: #e8c96a !important;
@@ -36829,7 +36829,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --skin-card-border: 1px solid rgba(34, 197, 94, 0.4);
   --skin-card-shadow: 0 0 12px rgba(34, 197, 94, 0.08);
 }
-:root[data-skin="terminal"]:has(body.dark) {
+:root[data-skin="terminal"].is-dark {
   --primary-color: #0a0e12 !important;
   --primary-light: #0d1319 !important;
   --secondary-color: #22c55e !important;
@@ -36869,14 +36869,14 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
 :root[data-skin="candy"] {
   --primary-color: #fdeef5 !important;
   --primary-light: #fff5fa !important;
-  --secondary-color: #e0568f !important;
+  --secondary-color: #c4386f!important;
   --accent-color: #38a8dd !important;
   --card-color: rgba(255, 248, 252, 0.94) !important;
   --card-solid-color: #fff8fc !important;
   --memorization-page-color: #fff5fa !important;
   --border-color: #f2b9d2 !important;
   --font-color: #4e2c3c !important;
-  --muted-color: #97707f !important;
+  --muted-color: #77525f!important;
   --btn-text-color: #fff8fc !important;
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
@@ -36897,7 +36897,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --skin-card-border: 2px solid rgba(224, 86, 143, 0.4);
   --skin-card-shadow: 0 3px 10px rgba(224, 86, 143, 0.16);
 }
-:root[data-skin="candy"]:has(body.dark) {
+:root[data-skin="candy"].is-dark {
   --primary-color: #2e1b27 !important;
   --primary-light: #362130 !important;
   --secondary-color: #f08ab8 !important;
@@ -36934,14 +36934,14 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
 :root[data-skin="fire"] {
   --primary-color: #fdf0e2 !important;
   --primary-light: #fff8ee !important;
-  --secondary-color: #d43d0f !important;
+  --secondary-color: #bd360c !important;
   --accent-color: #f0b429 !important;
   --card-color: rgba(255, 250, 242, 0.94) !important;
   --card-solid-color: #fffaf2 !important;
   --memorization-page-color: #fff8ee !important;
   --border-color: #f0c39a !important;
   --font-color: #4c2413 !important;
-  --muted-color: #9b6a4d !important;
+  --muted-color: #7d4f33!important;
   --btn-text-color: #fff8ee !important;
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
@@ -36963,7 +36963,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --skin-card-border: 1.5px solid rgba(212, 61, 15, 0.4);
   --skin-card-shadow: 0 3px 12px rgba(212, 61, 15, 0.16);
 }
-:root[data-skin="fire"]:has(body.dark) {
+:root[data-skin="fire"].is-dark {
   --primary-color: #241310 !important;
   --primary-light: #2c1813 !important;
   --secondary-color: #ff7a45 !important;
@@ -37001,7 +37001,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --memorization-page-color: #f7faf0 !important;
   --border-color: #b6c99b !important;
   --font-color: #2c3a24 !important;
-  --muted-color: #6f7f60 !important;
+  --muted-color: #566449!important;
   --btn-text-color: #f7faf0 !important;
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
@@ -37024,7 +37024,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --skin-card-border: 1.5px solid rgba(62, 107, 58, 0.4);
   --skin-card-shadow: 0 3px 10px rgba(62, 107, 58, 0.14);
 }
-:root[data-skin="nature"]:has(body.dark) {
+:root[data-skin="nature"].is-dark {
   --primary-color: #1c2618 !important;
   --primary-light: #222e1d !important;
   --secondary-color: #9cc48e !important;
@@ -37362,8 +37362,8 @@ body.home-theme-match #homeScreen .home-action-tile.quick-action-sermon,
   --qa-card-border: rgba(219, 39, 119, 0.18);
   --qa-card-shadow: rgba(190, 24, 93, 0.14);
   --qa-image-shadow: rgba(190, 24, 93, 0.18);
-  --qa-title: #db2777;
-  --qa-subtitle: #be185d;
+  --qa-title: #b8175f;
+  --qa-subtitle: #9d174d;
 }
 /* The Sermon Notes artwork ships as a purple badge (it has its own baked
    rounded-square background, unlike its transparent-illustration siblings), so
@@ -41772,3 +41772,133 @@ body.you-sheet-open .you-hero-guide { opacity: 0; transition: opacity .2s; }
 #profilePage .you-hero-text .profile-badge-row:empty { display: none; }
 .you-color-grid { justify-content: flex-start !important; align-items: center; }
 .you-color-grid .color-dot { width: 30px; height: 30px; }
+
+/* ══ Style identities ══════════════════════════════════════════════════════════
+   Beyond colors and paper: every style has its own shapes (cards, buttons,
+   icon tiles, sheets), its own amount of decoration, and its own motion (how
+   cards arrive on a screen and how a tap feels). Classic is untouched. Each
+   style only sets --skin-* tokens; the shared rules below read them. */
+:root[data-skin] {
+  --skin-r-card: 18px; --skin-r-btn: 14px; --skin-r-icon: 12px; --skin-r-sheet: 26px;
+  --skin-enter: none; --skin-enter-dur: .5s; --skin-ease: cubic-bezier(.2,.8,.3,1);
+  --skin-press: scale(.97);
+  --skin-label-spacing: .09em; --skin-label-transform: uppercase;
+}
+/* Shapes */
+:root[data-skin] :is(.home-habit-widget, .home-journey-widget, .home-action-tile, .you-card, .you-stat, .you-style, .sett-card, .modal-card, .rrp-tour, .ch-choice, .gn-card, .install-card) { border-radius: var(--skin-r-card) !important; }
+:root[data-skin] :is(.main-btn, .you-seg button, .you-pop-btns button, .install-go, .hpw-go, .ch-btn, .danger-btn, .you-stepper button, .gn-go, .gn-next, .auth-submit-btn) { border-radius: var(--skin-r-btn) !important; }
+:root[data-skin] :is(.you-ic, .ht-btn, .you-ib, .rhema-header .icon-btn, .rrp-row-icon, .install-n, .gn-re-n) { border-radius: var(--skin-r-icon) !important; }
+:root[data-skin] .you-sheet { border-radius: var(--skin-r-sheet) var(--skin-r-sheet) 0 0 !important; }
+:root[data-skin] :is(.you-lbl, .home-section-label, .hhw-kicker) { letter-spacing: var(--skin-label-spacing) !important; text-transform: var(--skin-label-transform) !important; }
+/* Motion: how cards arrive (replays each time a screen opens) and how a tap feels */
+:root[data-skin] :is(.screen.active .home-habit-widget, .screen.active .home-swipe, .screen.active .home-action-tile, #profilePage.active .you-card, #profilePage.active .you-stat, .you-sheet.in .you-card, .you-sheet.in .you-style) {
+  animation: var(--skin-enter) var(--skin-enter-dur) var(--skin-ease) both;
+}
+:root[data-skin] .screen.active .home-action-tile:nth-child(2), :root[data-skin] #profilePage.active .you-stat:nth-child(2) { animation-delay: .04s; }
+:root[data-skin] .screen.active .home-action-tile:nth-child(3), :root[data-skin] #profilePage.active .you-stat:nth-child(3) { animation-delay: .08s; }
+:root[data-skin] .screen.active .home-action-tile:nth-child(4), :root[data-skin] #profilePage.active .you-stat:nth-child(4) { animation-delay: .12s; }
+:root[data-skin] .screen.active .home-action-tile:nth-child(n+5) { animation-delay: .16s; }
+:root[data-skin] :is(.home-action-tile, .main-btn, .you-row, .you-stat, .you-style, .you-seg button, .hpw-go, .ht-btn, .you-sw, .rrp-row, .rrp-tour) { transition: transform .14s ease; }
+:root[data-skin] :is(.home-action-tile, .main-btn, .you-row, .you-stat, .you-style, .you-seg button, .hpw-go, .ht-btn, .you-sw, .rrp-row, .rrp-tour):active { transform: var(--skin-press) !important; }
+@media (prefers-reduced-motion: reduce) {
+  :root[data-skin] * { animation-duration: .01s !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; }
+}
+
+/* NOTEBOOK: square paper corners, pencil-thin lines, a hand-placed tilt; cards settle onto the page. */
+:root[data-skin="notebook"] { --skin-r-card: 4px; --skin-r-btn: 3px; --skin-r-icon: 4px; --skin-r-sheet: 8px;
+  --skin-enter: skinPaper; --skin-enter-dur: .45s; --skin-press: rotate(-1.2deg) scale(.98); --skin-label-spacing: .02em; --skin-label-transform: none; }
+:root[data-skin="notebook"] .home-action-tile:nth-child(odd) { rotate: -.7deg; }
+:root[data-skin="notebook"] .home-action-tile:nth-child(even) { rotate: .6deg; }
+:root[data-skin="notebook"] :is(.home-habit-widget, .home-journey-widget) { rotate: -.4deg; }
+:root[data-skin="notebook"] :is(.main-btn, .hpw-go, .you-pop-keep) { box-shadow: 2px 2px 0 rgba(47, 74, 124, .35) !important; }
+:root[data-skin="notebook"] :is(.you-title, .home-greeting-name) { text-decoration: underline wavy color-mix(in srgb, var(--accent-color) 70%, transparent); text-underline-offset: 6px; text-decoration-thickness: 1.5px; }
+@keyframes skinPaper { from { opacity: 0; transform: translateY(10px) rotate(-1.6deg); } }
+
+/* BLUEPRINT: square corners, dashed drafting lines, wide-spaced labels; cards draw in from the left. */
+:root[data-skin="blueprint"] { --skin-r-card: 0; --skin-r-btn: 0; --skin-r-icon: 0; --skin-r-sheet: 0;
+  --skin-card-border: 1.5px dashed rgba(20, 80, 140, .6); --skin-enter: skinDraft; --skin-enter-dur: .55s; --skin-ease: cubic-bezier(.6,0,.2,1);
+  --skin-press: translate(2px, 2px); --skin-label-spacing: .18em; }
+:root[data-skin="blueprint"].is-dark { --skin-card-border: 1.5px dashed rgba(127, 179, 232, .55); }
+:root[data-skin="blueprint"] :is(.you-card, .you-stat, .home-action-tile, .home-habit-widget, .home-journey-widget) { border: var(--skin-card-border) !important; }
+:root[data-skin="blueprint"] :is(.you-ic, .ht-btn, .you-ib) { outline: 1px solid color-mix(in srgb, var(--secondary-color) 45%, transparent); outline-offset: 2px; }
+@keyframes skinDraft { from { opacity: .2; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
+
+/* SCROLL: double-ruled borders, soft parchment corners; cards unroll from the top. */
+:root[data-skin="scroll"] { --skin-r-card: 16px; --skin-r-btn: 10px; --skin-r-icon: 50%; --skin-r-sheet: 22px;
+  --skin-card-border: 4px double rgba(120, 82, 30, .5); --skin-enter: skinUnroll; --skin-enter-dur: .6s; --skin-press: scale(.985); --skin-label-spacing: .14em; }
+:root[data-skin="scroll"].is-dark { --skin-card-border: 4px double rgba(226, 190, 128, .42); }
+:root[data-skin="scroll"] :is(.you-card, .you-stat, .home-action-tile, .home-habit-widget, .home-journey-widget) { border: var(--skin-card-border) !important; }
+:root[data-skin="scroll"] :is(.you-lbl, .home-section-label)::before { content: "❦ "; opacity: .7; }
+@keyframes skinUnroll { from { opacity: 0; transform: scaleY(.88); transform-origin: top; } to { transform-origin: top; } }
+
+/* CHALKBOARD: hand-drawn uneven corners, chalky edges; cards fade in like fresh chalk. */
+:root[data-skin="chalkboard"] { --skin-r-card: 14px 18px 12px 20px; --skin-r-btn: 12px 16px 10px 14px; --skin-r-icon: 10px 13px 9px 12px; --skin-r-sheet: 20px;
+  --skin-card-border: 2px solid rgba(255, 255, 255, .5); --skin-enter: skinChalk; --skin-enter-dur: .6s; --skin-press: rotate(1deg) scale(.98); --skin-label-transform: none; --skin-label-spacing: .03em; }
+:root[data-skin="chalkboard"] :is(.you-card, .you-stat, .home-action-tile, .home-habit-widget, .home-journey-widget) { border: var(--skin-card-border) !important; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), inset 0 0 14px rgba(255, 255, 255, .06) !important; }
+@keyframes skinChalk { from { opacity: 0; filter: blur(3px); } }
+
+/* TERMINAL: no rounding, no shadows, a blinking cursor; cards flicker on like a console booting. */
+:root[data-skin="terminal"] { --skin-r-card: 0; --skin-r-btn: 0; --skin-r-icon: 0; --skin-r-sheet: 0;
+  --skin-card-shadow: none; --skin-enter: skinBoot; --skin-enter-dur: .42s; --skin-ease: steps(1, end); --skin-press: none; --skin-label-spacing: .2em; }
+:root[data-skin="terminal"] :is(.you-card, .you-stat, .home-action-tile, .home-habit-widget, .home-journey-widget, .main-btn) { box-shadow: none !important; }
+:root[data-skin="terminal"] :is(.home-action-tile, .main-btn, .you-row, .you-stat, .you-style, .you-seg button, .hpw-go):active { filter: invert(1) hue-rotate(180deg); }
+:root[data-skin="terminal"] :is(.main-btn, .hpw-go, .you-pop-btns button, .install-go) { text-transform: uppercase; letter-spacing: .08em; }
+:root[data-skin="terminal"] :is(.you-title, .home-greeting-name)::after { content: "_"; margin-left: 2px; animation: skinCursor 1.05s steps(1, end) infinite; }
+@keyframes skinBoot { 0% { opacity: 0; } 30% { opacity: .7; } 45% { opacity: .15; } 70% { opacity: 1; } }
+@keyframes skinCursor { 50% { opacity: 0; } }
+
+/* CANDY: fully round, thick bubbly borders with a sticker shadow; cards pop in with a bounce. */
+:root[data-skin="candy"] { --skin-r-card: 28px; --skin-r-btn: 999px; --skin-r-icon: 50%; --skin-r-sheet: 34px;
+  --skin-enter: skinPop; --skin-enter-dur: .55s; --skin-ease: cubic-bezier(.3,1.6,.5,1); --skin-press: scale(.92); --skin-label-transform: none; --skin-label-spacing: .02em; }
+:root[data-skin="candy"] :is(.you-card, .you-stat, .home-action-tile, .home-habit-widget, .home-journey-widget) { border-width: 2.5px !important; box-shadow: 0 5px 0 color-mix(in srgb, var(--secondary-color) 30%, transparent) !important; }
+:root[data-skin="candy"] :is(.main-btn, .hpw-go, .you-pop-keep, .install-go) { box-shadow: 0 5px 0 color-mix(in srgb, var(--secondary-color) 55%, #000) !important; }
+@keyframes skinPop { 0% { opacity: 0; transform: scale(.86); } 70% { opacity: 1; transform: scale(1.03); } 100% { transform: none; } }
+
+/* FIRE: cut corners on buttons and tiles, a warm glow on the main button; cards rise in. */
+:root[data-skin="fire"] { --skin-r-card: 4px; --skin-r-btn: 0; --skin-r-icon: 0; --skin-r-sheet: 6px;
+  --skin-enter: skinRise; --skin-enter-dur: .5s; --skin-press: scale(.95); --skin-label-spacing: .16em; }
+:root[data-skin="fire"] :is(.main-btn, .hpw-go, .you-pop-btns button, .install-go, .you-ic, .ht-btn, .you-ib, .home-action-tile, .you-seg button) {
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+:root[data-skin="fire"] :is(.you-ic, .ht-btn, .you-ib) { clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); }
+:root[data-skin="fire"] :is(.hpw-go, .you-pop-keep, .install-go) { animation: skinEmber 2.6s ease-in-out infinite; }
+@keyframes skinRise { from { opacity: 0; transform: translateY(16px); } }
+@keyframes skinEmber { 50% { filter: drop-shadow(0 0 7px color-mix(in srgb, var(--accent-color) 80%, transparent)); } }
+
+/* NATURE: leaf-shaped corners, soft shadows; cards grow up with a gentle sway. */
+:root[data-skin="nature"] { --skin-r-card: 28px 6px 28px 6px; --skin-r-btn: 18px 4px 18px 4px; --skin-r-icon: 14px 3px 14px 3px; --skin-r-sheet: 30px;
+  --skin-enter: skinGrow; --skin-enter-dur: .65s; --skin-press: rotate(-1.5deg) scale(.97); --skin-label-transform: none; --skin-label-spacing: .03em; }
+:root[data-skin="nature"] :is(.you-card, .you-stat, .home-action-tile, .home-habit-widget, .home-journey-widget) { box-shadow: 0 8px 22px color-mix(in srgb, var(--secondary-color) 16%, transparent) !important; }
+:root[data-skin="nature"] :is(.you-lbl, .home-section-label)::before { content: "🌿 "; }
+@keyframes skinGrow { 0% { opacity: 0; transform: translateY(12px) rotate(1.5deg) scale(.96); } 70% { transform: rotate(-.5deg); } 100% { transform: none; } }
+
+/* ── Dark mode: Home tools ───────────────────────────────────────────────────
+   The tool tiles are light pastel cards by design; in dark mode they become
+   dark surfaces tinted with each tool's own color (its --qa-title), with light
+   titles, so they don't glare and every label stays readable. */
+html.is-dark:not(#_x) #homeScreen .home-action-tile[class*="quick-action-"] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--qa-title, #64748b) 24%, #171c27), color-mix(in srgb, var(--qa-title, #64748b) 11%, #11151d)) !important;
+  border-color: color-mix(in srgb, var(--qa-title, #64748b) 42%, transparent) !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .35) !important;
+}
+html.is-dark:not(#_x) #homeScreen .home-action-tile[class*="quick-action-"] .hat-icon {
+  background: radial-gradient(120% 90% at 50% 8%, color-mix(in srgb, var(--qa-title, #64748b) 30%, #2a3140), color-mix(in srgb, var(--qa-title, #64748b) 14%, #1b2029)) !important;
+  border-color: color-mix(in srgb, var(--qa-title, #64748b) 35%, transparent) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 8px 16px rgba(0, 0, 0, .3) !important;
+}
+html.is-dark:not(#_x) #homeScreen .home-action-tile[class*="quick-action-"] .hat-text strong { color: color-mix(in srgb, var(--qa-title, #cbd5e1) 35%, #f8fafc) !important; }
+html.is-dark:not(#_x) #homeScreen .home-action-tile[class*="quick-action-"] .hat-text small { color: color-mix(in srgb, var(--qa-subtitle, #94a3b8) 30%, #cbd5e1) !important; }
+html.is-dark:not(#_x) #homeScreen .home-action-tile[class*="quick-action-"] .hat-chev { color: color-mix(in srgb, var(--qa-title, #cbd5e1) 30%, #e2e8f0) !important; }
+
+/* Styles whose surfaces are dark even in light mode: keep red warnings readable. */
+:root[data-skin="terminal"] :is(.you-row-danger b, .you-danger b, .you-row-danger .you-ic, .you-danger .you-ic, .you-lbl-danger),
+:root[data-skin="chalkboard"] :is(.you-row-danger b, .you-danger b, .you-row-danger .you-ic, .you-danger .you-ic, .you-lbl-danger) { color: #ffe0dc !important; }
+.you-note { color: color-mix(in srgb, var(--font-color, #172033) 62%, var(--muted-color, #475569)); }
+
+/* Chalkboard and Terminal have dark surfaces even in light mode: the reader's
+   book and version buttons, the Home card text and red warnings follow that. */
+:root[data-skin="chalkboard"]:not(.is-dark) .rhema-pill, :root[data-skin="terminal"]:not(.is-dark) .rhema-pill {
+  background: color-mix(in srgb, var(--card-solid-color) 88%, #000) !important; color: var(--font-color) !important; border-color: var(--border-color) !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .rhema-pill *, :root[data-skin="terminal"]:not(.is-dark) .rhema-pill * { color: var(--font-color) !important; }
+:root[data-skin="chalkboard"] :is(.hhw-sub, .hjw-sub) { color: #eef4f0 !important; }
+:root[data-skin="chalkboard"] :is(.hhw-kicker, .hjw-kicker) { color: #ffe9a8 !important; }
+:root[data-skin="chalkboard"] :is(.you-row-danger b, .you-danger b, .you-lbl-danger), :root[data-skin="terminal"] :is(.you-row-danger b, .you-danger b, .you-lbl-danger) { color: #ffe0dc !important; }
