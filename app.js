@@ -32499,7 +32499,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.648";
+const APP_VERSION = "3.0.649";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32522,6 +32522,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.649 — One-tap install on Android, steadier Challenge screens</div>
+<ul>
+<li><strong>Get the Rhēma app</strong> &mdash; A fresh look with the guide. On Android, one tap on <strong>Install Rhēma</strong> brings up the install box right away; if your browser can&rsquo;t do that, it shows the two menu steps instead. iPhone shows the three Share-menu steps, with the video if you want it.</li>
+<li><strong>Challenge My Theology</strong> &mdash; Screens no longer slide sideways or bounce, and the first screen fits your phone without scrolling.</li>
+</ul>
 <div class="un-version-label">v3.0.648 — Cleaner labels</div>
 <ul>
 <li>At a glance, Hebrew word studies, Challenge My Theology and the Bible quiz now simply say where their information comes from, with the sources right there to check.</li>
@@ -35644,60 +35649,55 @@ function closeInstallAppModal(event) {
   // This prevents the modal from closing when someone accidentally taps outside it.
 }
 
+function _installPlatform() {
+  const ua = navigator.userAgent || '';
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'iphone';
+  return 'android';
+}
+let _installShown = 'android';
+function _showInstallPane(which) {
+  _installShown = which;
+  document.getElementById('installPaneAndroid')?.classList.toggle('hidden', which !== 'android');
+  document.getElementById('installPaneIphone')?.classList.toggle('hidden', which !== 'iphone');
+  const sw = document.getElementById('installSwitchBtn');
+  if (sw) sw.textContent = which === 'android' ? 'On an iPhone instead?' : 'On an Android phone instead?';
+}
+function switchInstallPlatform() { _showInstallPane(_installShown === 'android' ? 'iphone' : 'android'); }
+function toggleInstallVideo() {
+  const wrap = document.getElementById('installVideoWrap');
+  if (!wrap) return;
+  const show = wrap.classList.contains('hidden');
+  wrap.classList.toggle('hidden', !show);
+  // The 3 MB how-to video downloads only when it's asked for.
+  const vid = wrap.querySelector('video');
+  if (vid) { try { if (show) { vid.preload = 'auto'; const p = vid.play(); if (p && p.catch) p.catch(() => {}); } else vid.pause(); } catch (e) {} }
+}
+
 function showInstallAppModal() {
   const modal = document.getElementById("installAppModal");
   if (!modal) return;
-
   backToInstallChoices();
+  _showInstallPane(_installPlatform());
   modal.classList.add("open");
 }
 
 function hideInstallAppModal() {
   const modal = document.getElementById("installAppModal");
   if (!modal) return;
-
   modal.classList.remove("open");
+  modal.querySelector('video')?.pause?.();
 }
 
-
-function showInstallSteps(device) {
-  const choiceView = document.getElementById("installChoiceView");
-  const iphoneSteps = document.getElementById("iphoneInstallSteps");
-  const androidSteps = document.getElementById("androidInstallSteps");
-
-  if (!choiceView || !iphoneSteps || !androidSteps) return;
-
-  choiceView.classList.add("hidden");
-  iphoneSteps.classList.add("hidden");
-  androidSteps.classList.add("hidden");
-
-  if (device === "iphone") {
-    iphoneSteps.classList.remove("hidden");
-    // The 3 MB how-to video downloads only when these steps are opened.
-    const vid = iphoneSteps.querySelector("video");
-    if (vid) { try { vid.preload = "auto"; const p = vid.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
-  }
-
-  if (device === "android") {
-    androidSteps.classList.remove("hidden");
-
-    const installBtn = document.getElementById("androidInstallBtn");
-    if (installBtn && deferredInstallPrompt) {
-      installBtn.classList.remove("hidden");
-    }
-  }
-}
-
+// Older entry points.
+function showInstallSteps(device) { _showInstallPane(device === 'iphone' ? 'iphone' : 'android'); }
 function backToInstallChoices() {
-  const choiceView = document.getElementById("installChoiceView");
-  const iphoneSteps = document.getElementById("iphoneInstallSteps");
-  const androidSteps = document.getElementById("androidInstallSteps");
-  const installBtn = document.getElementById("androidInstallBtn");
-
-  if (choiceView) choiceView.classList.remove("hidden");
-  if (iphoneSteps) iphoneSteps.classList.add("hidden");
-  if (androidSteps) androidSteps.classList.add("hidden");
-  if (installBtn) installBtn.classList.add("hidden");
+  document.getElementById('androidInstallSteps')?.classList.add('hidden');
+  document.getElementById('androidInstallDone')?.classList.add('hidden');
+  document.getElementById('installVideoWrap')?.classList.add('hidden');
+  const btn = document.getElementById('androidInstallBtn');
+  if (btn) { btn.classList.remove('hidden'); btn.disabled = false; }
+  const label = document.getElementById('androidInstallLabel');
+  if (label) label.textContent = 'Install Rhēma';
 }
 
 function dismissInstallModalForever() {
@@ -35705,25 +35705,62 @@ function dismissInstallModalForever() {
   hideInstallAppModal();
 }
 
-window.addEventListener("beforeinstallprompt", (event) => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
+// Chrome's one-tap install offer (caught first thing in index.html).
+deferredInstallPrompt = window.__rhemaInstallEvent || null;
+window.addEventListener('rhema:installable', () => { deferredInstallPrompt = window.__rhemaInstallEvent; });
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  try { localStorage.setItem('installPromptDismissed', 'true'); } catch (e) {}
+  document.getElementById('androidInstallBtn')?.classList.add('hidden');
+  document.getElementById('androidInstallSteps')?.classList.add('hidden');
+  document.getElementById('androidInstallDone')?.classList.remove('hidden');
 });
 
 async function triggerAndroidInstall() {
-  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    alert("Must be an Android device to use this feature.");
+  if (_installPlatform() === 'iphone') { _showInstallPane('iphone'); return; }
+  const btn = document.getElementById('androidInstallBtn');
+  const label = document.getElementById('androidInstallLabel');
+  // The offer can arrive a moment after the page loads: wait briefly for it.
+  if (!deferredInstallPrompt) {
+    if (btn) btn.disabled = true;
+    if (label) label.textContent = 'Getting it ready…';
+    await new Promise(res => {
+      const t = setTimeout(res, 1800);
+      window.addEventListener('rhema:installable', () => { clearTimeout(t); res(); }, { once: true });
+    });
+    deferredInstallPrompt = deferredInstallPrompt || window.__rhemaInstallEvent;
+    if (btn) btn.disabled = false;
+    if (label) label.textContent = 'Install Rhēma';
+  }
+  if (!deferredInstallPrompt) {
+    // No one-tap offer here (another browser, or Rhēma is already installed):
+    // show the browser's own two steps instead.
+    const lead = document.getElementById('androidInstallLead');
+    if (lead) lead.textContent = /SamsungBrowser/.test(navigator.userAgent)
+      ? 'Samsung Internet adds apps from its menu (☰ at the bottom):'
+      : 'Your browser adds apps from its menu. Already installed? Open Rhēma from your Home Screen.';
+    document.getElementById('androidInstallSteps')?.classList.remove('hidden');
+    btn?.classList.add('hidden');
     return;
   }
-
-  if (!deferredInstallPrompt) return;
-
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-
-  deferredInstallPrompt = null;
-  dismissInstallModalForever();
+  const offer = deferredInstallPrompt;
+  deferredInstallPrompt = null;   // each offer can be used once
+  window.__rhemaInstallEvent = null;
+  try {
+    offer.prompt();
+    const choice = await offer.userChoice;
+    if (choice && choice.outcome === 'accepted') {
+      try { localStorage.setItem('installPromptDismissed', 'true'); } catch (e) {}
+      btn?.classList.add('hidden');
+      document.getElementById('androidInstallDone')?.classList.remove('hidden');
+      setTimeout(hideInstallAppModal, 4500);
+    }
+  } catch (e) {
+    document.getElementById('androidInstallSteps')?.classList.remove('hidden');
+    btn?.classList.add('hidden');
+  }
 }
+Object.assign(window, { switchInstallPlatform, toggleInstallVideo, triggerAndroidInstall, showInstallAppModal, hideInstallAppModal, dismissInstallModalForever });
 
 function checkForAppUpdateModal() {
   const lastSeenVersion = localStorage.getItem("lastSeenAppVersion");

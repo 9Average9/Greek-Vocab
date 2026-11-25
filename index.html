@@ -4,7 +4,14 @@
 <head>
 <meta charset="utf-8"/>
 <script>
-/* Was this copy of the app in use before the Rhēma rename (v3.0.648)? A fresh
+/* Android/Chrome offers one-tap install with a "beforeinstallprompt" event,
+   often right as the page loads: catch it here, first thing, so the
+   "Install Rhēma" button can use it. */
+window.__rhemaInstallEvent = null;
+window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__rhemaInstallEvent = e; try { window.dispatchEvent(new Event('rhema:installable')); } catch (x) {} });
+</script>
+<script>
+/* Was this copy of the app in use before the Rhēma rename (v3.0.649)? A fresh
    install starts with empty storage. Lets the guide ask people still on an old
    Home Screen copy to add the app again for the new name and icon. */
 try { if (!/[?&]mv=/.test(location.search) && !localStorage.getItem('rhemaInstallEra')) localStorage.setItem('rhemaInstallEra', localStorage.length ? 'pre' : 'fresh'); } catch (e) {}
@@ -390,12 +397,12 @@ antique: {
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Rhēma" name="apple-mobile-web-app-title"/>
-<link href="assets/icons/rhema-icon-180.png?v=3.0.648" rel="apple-touch-icon"/>
-<link href="assets/icons/rhema-icon-192.png?v=3.0.648" rel="icon" sizes="192x192" type="image/png"/>
-<link href="assets/icons/rhema-icon-512.png?v=3.0.648" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.648" rel="stylesheet"/>
+<link href="assets/icons/rhema-icon-180.png?v=3.0.649" rel="apple-touch-icon"/>
+<link href="assets/icons/rhema-icon-192.png?v=3.0.649" rel="icon" sizes="192x192" type="image/png"/>
+<link href="assets/icons/rhema-icon-512.png?v=3.0.649" rel="icon" sizes="512x512" type="image/png"/>
+<link href="style.css?v=3.0.649" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.648" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.649" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -417,7 +424,7 @@ antique: {
 <path class="app-launch-ring-track" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="#0a1a2e" stroke-opacity="0.10" stroke-width="12"/>
 <path id="appLaunchRing" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="url(#dbRingGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="980" stroke-dashoffset="980" filter="url(#dbRingShadow)"/>
 </svg>
-<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.648" alt=""/>
+<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.649" alt=""/>
 </div>
 <div class="app-launch-status">
 <span id="appLaunchText">Opening the Word</span>
@@ -17398,24 +17405,24 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.648"></script>
-<script src="app.js?v=3.0.648"></script>
-<script src="rhema-word-study.js?v=3.0.648"></script>
-<script src="rhema-grammar-search.js?v=3.0.648"></script>
-<script src="rhema-xl-views.js?v=3.0.648"></script>
-<script src="rhema-glance.js?v=3.0.648"></script>
-<script src="challenge.js?v=3.0.648"></script>
-<script src="guide-news.js?v=3.0.648"></script>
-<script src="bible-atlas.js?v=3.0.648"></script>
+<script src="rhema-align.js?v=3.0.649"></script>
+<script src="app.js?v=3.0.649"></script>
+<script src="rhema-word-study.js?v=3.0.649"></script>
+<script src="rhema-grammar-search.js?v=3.0.649"></script>
+<script src="rhema-xl-views.js?v=3.0.649"></script>
+<script src="rhema-glance.js?v=3.0.649"></script>
+<script src="challenge.js?v=3.0.649"></script>
+<script src="guide-news.js?v=3.0.649"></script>
+<script src="bible-atlas.js?v=3.0.649"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.648"></script>
-<script src="verse-structure.js?v=3.0.648"></script>
-<script src="vs-structure.js?v=3.0.648"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.649"></script>
+<script src="verse-structure.js?v=3.0.649"></script>
+<script src="vs-structure.js?v=3.0.649"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.648"></script>
-<script src="bible-quiz.js?v=3.0.648"></script>
-<script src="firebase-lb.js?v=3.0.648" type="module"></script>
+<script src="sermon-notes.js?v=3.0.649"></script>
+<script src="bible-quiz.js?v=3.0.649"></script>
+<script src="firebase-lb.js?v=3.0.649" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -17468,41 +17475,40 @@ Verb Endings
 </div>
 <!-- Install App Modal -->
 <div class="modal-overlay" id="installAppModal" onclick="closeInstallAppModal(event)">
-<div class="modal-card install-modal-card">
-<h2>Add the Rhēma app</h2>
-<p>
-      Follow the steps to add the app to your phone or press "maybe later" to continue using the browser
-    </p>
-<div id="installChoiceView">
-<button class="main-btn" onclick="showInstallSteps('iphone')">
-<span class="material-symbols-outlined">phone_iphone</span>
-<span>iPhone</span>
-</button>
+<div class="install-wrap">
+<div class="install-guide" aria-hidden="true"><img src="assets/mascot/guide-wow.webp" alt="" decoding="async"/></div>
+<div class="install-card" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+<div class="install-app-icon" aria-hidden="true"><img src="assets/icons/rhema-icon-192.png?v=3.0.641" alt=""/></div>
+<h2 id="installTitle">Get the Rhēma app</h2>
+<p class="install-sub">It opens full screen from your Home Screen, keeps you signed in, and reads offline.</p>
+<div class="install-pane" id="installPaneAndroid">
+<button class="install-go" id="androidInstallBtn" onclick="triggerAndroidInstall()" type="button"><span class="material-symbols-outlined">download</span><span id="androidInstallLabel">Install Rhēma</span></button>
+<div class="install-help hidden" id="androidInstallSteps">
+<p class="install-help-lead" id="androidInstallLead">Your browser adds apps from its menu:</p>
+<ol class="install-steplist">
+<li><span class="install-n">1</span><span>Tap <span class="install-key"><span class="material-symbols-outlined">more_vert</span></span> at the top right.</span></li>
+<li><span class="install-n">2</span><span>Tap <b>Install app</b> (or <b>Add to Home screen</b>).</span></li>
+<li><span class="install-n">3</span><span>Tap <b>Install</b>, then open Rhēma from your Home Screen.</span></li>
+</ol>
 </div>
-<div class="install-steps hidden" id="iphoneInstallSteps">
-<h3>Install on iPhone</h3>
-<div class="install-video-wrap">
+<div class="install-done hidden" id="androidInstallDone"><span class="material-symbols-outlined">check_circle</span><span><b>Installing!</b> Rhēma will be on your Home Screen in a moment. Open it from there.</span></div>
+</div>
+<div class="install-pane hidden" id="installPaneIphone">
+<ol class="install-steplist" id="iphoneInstallSteps">
+<li><span class="install-n">1</span><span>Tap the <b>Share</b> button <span class="install-key"><span class="material-symbols-outlined">ios_share</span></span> in Safari.</span></li>
+<li><span class="install-n">2</span><span>Scroll down and tap <b>Add to Home Screen</b> <span class="install-key"><span class="material-symbols-outlined">add_box</span></span>.</span></li>
+<li><span class="install-n">3</span><span>Tap <b>Add</b>, then open Rhēma from your Home Screen.</span></li>
+</ol>
+<button class="install-video-btn" onclick="toggleInstallVideo()" type="button"><span class="material-symbols-outlined">play_circle</span><span>Show me how</span></button>
+<div class="install-video-wrap hidden" id="installVideoWrap">
 <video class="install-video" loop="" muted="" playsinline="" preload="none">
 <source src="./iphone-install.mp4" type="video/mp4"/>
 </video>
 </div>
-<ol>
-<li>Open this page in Safari.</li>
-<li>Tap the <strong>Share</strong> button.</li>
-<li>Scroll and tap <strong>Add to Home Screen</strong>.</li>
-<li>Tap <strong>Add</strong>.</li>
-<li>Open Rhēma from your Home Screen.</li>
-</ol>
 </div>
-<button class="main-btn" onclick="triggerAndroidInstall()">
-<span class="material-symbols-outlined">android</span>
-<span>Android</span>
-</button>
-<div class="install-steps hidden" id="androidInstallSteps">
+<button class="install-switch" id="installSwitchBtn" onclick="switchInstallPlatform()" type="button">On an iPhone instead?</button>
+<button class="install-later" onclick="dismissInstallModalForever()" type="button">Maybe later</button>
 </div>
-<button class="text-btn" onclick="dismissInstallModalForever()">
-  Maybe later
-</button>
 </div>
 </div>
 <!-- What’s New Modal -->

@@ -196,7 +196,7 @@
       <path class="ch-mark-hi" d="M78 16 Q80 10 86 9"/>
       ${SPARK(24, 14, 5)}${SPARK(112, 40, 3.5)}
     </svg>`;
-  const ART_FOOT = `<svg class="ch-foot" viewBox="0 0 360 130" aria-hidden="true">${ART_DEFS}
+  const ART_FOOT = `<svg class="ch-foot" viewBox="0 0 360 130" preserveAspectRatio="xMidYMax meet" aria-hidden="true">${ART_DEFS}
       <ellipse cx="180" cy="80" rx="150" ry="58" fill="url(#chgGlow)"/>
       <g class="ch-rays"><path d="M180 20 L180 6"/><path d="M156 26 L146 14"/><path d="M204 26 L214 14"/><path d="M136 40 L122 32"/><path d="M224 40 L238 32"/></g>
       <path fill="url(#chgLeaf)" class="ch-leaf" d="M58 112 Q20 86 36 46 Q60 70 70 104Z"/>
