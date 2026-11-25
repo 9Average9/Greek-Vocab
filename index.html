@@ -11,7 +11,7 @@ window.__rhemaInstallEvent = null;
 window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__rhemaInstallEvent = e; try { window.dispatchEvent(new Event('rhema:installable')); } catch (x) {} });
 </script>
 <script>
-/* Was this copy of the app in use before the Rhēma rename (v3.0.650)? A fresh
+/* Was this copy of the app in use before the Rhēma rename (v3.0.651)? A fresh
    install starts with empty storage. Lets the guide ask people still on an old
    Home Screen copy to add the app again for the new name and icon. */
 try { if (!/[?&]mv=/.test(location.search) && !localStorage.getItem('rhemaInstallEra')) localStorage.setItem('rhemaInstallEra', localStorage.length ? 'pre' : 'fresh'); } catch (e) {}
@@ -397,12 +397,12 @@ antique: {
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Rhēma" name="apple-mobile-web-app-title"/>
-<link href="assets/icons/rhema-icon-180.png?v=3.0.650" rel="apple-touch-icon"/>
-<link href="assets/icons/rhema-icon-192.png?v=3.0.650" rel="icon" sizes="192x192" type="image/png"/>
-<link href="assets/icons/rhema-icon-512.png?v=3.0.650" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.650" rel="stylesheet"/>
+<link href="assets/icons/rhema-icon-180.png?v=3.0.651" rel="apple-touch-icon"/>
+<link href="assets/icons/rhema-icon-192.png?v=3.0.651" rel="icon" sizes="192x192" type="image/png"/>
+<link href="assets/icons/rhema-icon-512.png?v=3.0.651" rel="icon" sizes="512x512" type="image/png"/>
+<link href="style.css?v=3.0.651" rel="stylesheet"/>
 <link href="sermon-notes.css?v=3.0.460" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.650" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.651" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -424,7 +424,7 @@ antique: {
 <path class="app-launch-ring-track" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="#0a1a2e" stroke-opacity="0.10" stroke-width="12"/>
 <path id="appLaunchRing" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="url(#dbRingGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="980" stroke-dashoffset="980" filter="url(#dbRingShadow)"/>
 </svg>
-<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.650" alt=""/>
+<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.651" alt=""/>
 </div>
 <div class="app-launch-status">
 <span id="appLaunchText">Opening the Word</span>
@@ -463,7 +463,7 @@ antique: {
 </button>
 <button class="desktop-nav-btn" onclick="showNavPage('profile')" data-nav="profile">
 <span class="material-symbols-outlined">person</span>
-<span class="dnb-label">Profile</span>
+<span class="dnb-label">You</span>
 </button>
 </aside>
 <section class="screen active" id="homeScreen">
@@ -9020,394 +9020,114 @@ Verb Endings
 </div>
 <div id="progressStats"></div>
 </section>
-<section class="screen" id="settingsScreen">
-<div class="nav-bar">
-<button class="icon-btn" onclick="closeSettingsMenu()">
-<span class="material-symbols-outlined">arrow_back</span>
-</button>
-<div class="nav-title">Settings</div>
-<div></div>
+<section class="screen" id="profilePage">
+<div class="you-scroll profile-page-scroll" id="youScroll">
+<div class="you-bar"><button class="you-ib" onclick="showNavPage('home')" aria-label="Home" type="button"><span class="material-symbols-outlined">home</span></button><h1 class="you-title">You</h1><span class="you-ib-gap"></span></div>
+<div class="you-card you-hero">
+<img class="you-hero-guide" src="assets/mascot/guide-wow.webp" alt="" decoding="async">
+<div class="profile-avatar-wrap you-av-wrap">
+<div class="profile-avatar" id="profileAvatar"><span class="material-symbols-outlined">school</span></div>
+<button class="profile-avatar-edit" onclick="openAvatarPicker()" title="Change picture" type="button"><span class="material-symbols-outlined">edit</span></button>
 </div>
-<div class="sett-scroll">
-<!-- APPEARANCE -->
-<div class="sett-section-label">Appearance</div>
-<div class="sett-card">
-<div class="sett-row">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">dark_mode</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Dark Mode</span>
-<span class="sett-row-sub">Use a dark color scheme</span>
-</span>
-<label class="switch">
-<input id="darkModeToggle" onchange="toggleDarkMode()" type="checkbox"/>
-<span class="slider"></span>
+<div class="you-hero-text">
+<h2 id="profileDisplayName">Friend</h2>
+<p class="profile-username-label" id="profileUsername"></p>
+<div class="you-hero-pills"><span class="you-pill you-pill-streak" id="youStreakPill"><span class="material-symbols-outlined">local_fire_department</span><span id="profileStreakStat">0</span>-day streak</span><span class="you-pill" id="youSincePill"><span class="material-symbols-outlined">calendar_today</span>Since <span id="profileJoinStat">—</span></span></div>
+<div class="profile-badge-row" id="profileBadgeRow"></div>
+</div>
+</div>
+<div class="you-stats">
+<button class="you-stat" onclick="youOpenMarks('highlights')" type="button"><span class="material-symbols-outlined">ink_highlighter</span><b id="youStatHighlights">0</b><small>Highlights</small></button>
+<button class="you-stat" onclick="youOpenMarks('notes')" type="button"><span class="material-symbols-outlined">sticky_note_2</span><b id="youStatNotes">0</b><small>Notes</small></button>
+<button class="you-stat" onclick="youOpenStudyTool('wordlog')" type="button"><span class="material-symbols-outlined">bookmark</span><b id="youStatWords">0</b><small>Saved words</small></button>
+<button class="you-stat" onclick="youOpenStudyTool('trails')" type="button"><span class="material-symbols-outlined">hub</span><b id="youStatTrails">0</b><small>Trails</small></button>
+</div>
+<div id="youPlanWrap"></div>
+<div class="you-card profile-journey-card collapsed" id="profileJourneySection">
+<button class="journey-header journey-toggle you-row" id="journeyToggleBtn" onclick="toggleJourneyCard()" aria-expanded="false" type="button">
+<span class="you-ic"><span class="material-symbols-outlined">school</span></span>
+<span class="you-rt"><b>Greek lessons</b><small><span id="profileTitleText">Beginner</span> · <span id="profileXPText">0 XP</span> · <span class="profile-mode-badge" id="profileModeBadge">Basic Track</span></small></span>
+<span class="material-symbols-outlined journey-chev you-chev">expand_less</span>
+</button>
+<div class="journey-collapse" id="journeyCollapse">
+<div class="you-xp"><span class="material-symbols-outlined profile-rank-icon" id="profileRankIcon">shield</span><div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div><button class="rank-info-btn" onclick="showRanksModal()" title="View ranks" type="button"><span class="material-symbols-outlined">military_tech</span></button></div>
+<div class="journey-stats-grid">
+<button class="journey-stat clickable-stat" onclick="showLessonsBreakdownModal(getLessonMode(), false)" type="button"><strong id="profileLessonsStat">0 / 6</strong><span>Lessons <span class="stat-tap-hint">tap for details</span></span></button>
+<div class="journey-stat"><strong id="profileVocabStat">0</strong><span>Vocab chapters</span></div>
+<div class="journey-stat"><strong id="profileTranslationsStat">0</strong><span>Translations</span></div>
+<div class="journey-stat"><strong id="profileTestsStat">0</strong><span>Tests</span></div>
+<div class="journey-stat"><strong id="profileKnownWordsStat">0</strong><span>Known words</span></div>
+<div class="journey-stat"><strong id="profileTimeStat">0m</strong><span>Time studied</span></div>
+</div>
+</div>
+</div>
+<div class="you-lbl" id="youSettingsTop">Settings</div>
+<div class="you-card you-rows">
+<button class="you-row " onclick="openYouSheet('Account')" type="button"><span class="you-ic"><span class="material-symbols-outlined">person</span></span><span class="you-rt"><b>Account</b><small id="youSubAccount">Picture, email, password</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " onclick="openYouSheet('Look')" type="button"><span class="you-ic"><span class="material-symbols-outlined">palette</span></span><span class="you-rt"><b>Look</b><small id="youSubLook">Mode, style, colors</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " onclick="openYouSheet('Reading')" type="button"><span class="you-ic"><span class="material-symbols-outlined">menu_book</span></span><span class="you-rt"><b>Reading</b><small id="youSubReading">Text size, font, version</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " onclick="openYouSheet('Notify')" type="button"><span class="you-ic"><span class="material-symbols-outlined">notifications</span></span><span class="you-rt"><b>Reminders &amp; calendar</b><small id="youSubNotify">Reminders, Google Calendar</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " onclick="openYouSheet('Lessons')" type="button"><span class="you-ic"><span class="material-symbols-outlined">school</span></span><span class="you-rt"><b>Lessons</b><small id="youSubLessons">Lesson path, progress</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+</div>
+<div class="you-lbl">More</div>
+<div class="you-card you-rows">
+<button class="you-row " onclick="openYouSheet('About')" type="button"><span class="you-ic"><span class="material-symbols-outlined">info</span></span><span class="you-rt"><b>About Rhēma</b><small>What's new, tours, get the app</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " id="profileSavedPicsBtn" onclick="openSavedPicturesModal()" type="button"><span class="you-ic"><span class="material-symbols-outlined">photo_library</span></span><span class="you-rt"><b>Saved pictures</b><small>Photos from your Praises, kept on this phone</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " id="profileNerdBtn" onclick="openRhemaNerdModal()" type="button"><span class="you-ic"><span class="material-symbols-outlined">science</span></span><span class="you-rt"><b>Rhēma Nerd Page</b><small>Where every text and tool comes from</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row you-row-danger" onclick="openYouSheet('Reset')" type="button"><span class="you-ic"><span class="material-symbols-outlined">restart_alt</span></span><span class="you-rt"><b>Reset &amp; data</b><small>Start lessons, tests or translations over</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+</div>
+<div class="you-foot"></div>
+</div>
+<div class="you-scrim" id="youScrim" onclick="closeYouSheet()" hidden></div>
+<div class="you-sheet" id="youSheetAccount" role="dialog" aria-modal="true" aria-labelledby="youSheetAccountTitle" hidden>
+<img class="you-sheet-guide" src="assets/mascot/guide-thumbs.webp" alt="" decoding="async" loading="lazy">
+<div class="you-sheet-grab" aria-hidden="true"></div>
+<div class="you-sheet-head"><h3 id="youSheetAccountTitle">Account</h3><button class="you-sheet-x" onclick="closeYouSheet()" type="button" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+<div class="you-sheet-body"><div class="you-card you-rows">
+<button class="you-row " onclick="openAvatarPicker()" type="button"><span class="you-ic"><span class="material-symbols-outlined">add_a_photo</span></span><span class="you-rt"><b>Profile picture</b><small>Change your picture</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<div class="you-row you-row-col"><span class="you-ic"><span class="material-symbols-outlined">format_color_fill</span></span><span class="you-rt"><b>Profile color</b><small>Shows on your picture and in Community</small>
+<span class="profile-color-grid you-color-grid">
+<button class="color-dot blue" data-color="#4f8cff" onclick="setProfileColor('#4f8cff')" title="Blue" type="button"></button>
+<button class="color-dot green" data-color="#22c55e" onclick="setProfileColor('#22c55e')" title="Green" type="button"></button>
+<button class="color-dot purple" data-color="#8b5cf6" onclick="setProfileColor('#8b5cf6')" title="Purple" type="button"></button>
+<button class="color-dot gold" data-color="#d6a700" onclick="setProfileColor('#d6a700')" title="Gold" type="button"></button>
+<button class="color-dot red" data-color="#ef4444" onclick="setProfileColor('#ef4444')" title="Red" type="button"></button>
+<button class="color-dot orange" data-color="#f97316" onclick="setProfileColor('#f97316')" title="Orange" type="button"></button>
+<button class="color-dot pink" data-color="#ec4899" onclick="setProfileColor('#ec4899')" title="Pink" type="button"></button>
+<label class="color-dot custom-color-dot" id="customColorDot" onclick="var i=this.querySelector('input');if(i)i.value=(profileData&amp;&amp;profileData.color)||'#4f8cff'" title="Custom color">
+<input class="hidden-color-input" id="customProfileColorInput" onchange="setProfileColor(this.value)" type="color"/>
 </label>
+</span></span></div>
 </div>
-<div class="sett-sep"></div>
-<div class="sett-row">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">palette</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Tools Match Theme Color</span>
-<span class="sett-row-sub">Use your selected theme across Home tool buttons</span>
-</span>
-<label class="switch">
-<input id="toolsMatchThemeToggle" onchange="toggleToolsMatchThemeColor()" type="checkbox"/>
-<span class="slider"></span>
-</label>
+<div class="you-lbl">Sign-in</div>
+<div class="you-card you-rows">
+<button class="you-row " id="connectEmailSettingsRow" onclick="openConnectEmailModal()" type="button"><span class="you-ic"><span class="material-symbols-outlined">mail_lock</span></span><span class="you-rt"><b>Email &amp; account recovery</b><small id="connectEmailSettingsSub">Connect an email to recover your account</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " id="setPasswordSettingsRow" onclick="openSetPasswordModal()" type="button"><span class="you-ic"><span class="material-symbols-outlined">password</span></span><span class="you-rt"><b>Change password</b><small>Set a new one, no old password needed</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " onclick="signOutAccount()" type="button"><span class="you-ic"><span class="material-symbols-outlined">logout</span></span><span class="you-rt"><b>Sign out</b><small>You can sign back in anytime</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
 </div>
+<div class="you-lbl you-lbl-danger">Careful</div>
+<div class="you-card you-rows you-danger">
+<button class="you-row " id="profileResetBtn" onclick="resetAllAppData()" type="button"><span class="you-ic"><span class="material-symbols-outlined">person_off</span></span><span class="you-rt"><b>Delete account</b><small>Removes your account and everything in it</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+</div></div>
 </div>
-<!-- APP STYLE (skin) -->
-<div class="sett-section-label">App Style</div>
-<p class="sett-section-desc">Restyle the whole app &mdash; paper, type, and icons. Each style brings its own colors, so the theme presets below apply to Classic.</p>
-<div class="sett-card">
-<div class="skin-preset-row">
-<button class="skin-preset skin-classic" data-skin="classic" onclick="setAppSkin('classic')">
-<span class="skin-preview"></span>
-<strong>Classic</strong>
-<small>Theme colors</small>
-<span class="material-symbols-outlined skin-check">check_circle</span>
-</button>
-<button class="skin-preset skin-notebook" data-skin="notebook" onclick="setAppSkin('notebook')">
-<span class="skin-preview"></span>
-<strong>Notebook</strong>
-<small>Ruled paper &amp; ink</small>
-<span class="material-symbols-outlined skin-check">check_circle</span>
-</button>
-<button class="skin-preset skin-blueprint" data-skin="blueprint" onclick="setAppSkin('blueprint')">
-<span class="skin-preview"></span>
-<strong>Blueprint</strong>
-<small>Graph paper &amp; drafting</small>
-<span class="material-symbols-outlined skin-check">check_circle</span>
-</button>
-<button class="skin-preset skin-scroll" data-skin="scroll" onclick="setAppSkin('scroll')">
-<span class="skin-preview"></span>
-<strong>Scroll</strong>
-<small>Aged parchment &amp; sepia</small>
-<span class="material-symbols-outlined skin-check">check_circle</span>
-</button>
-<button class="skin-preset skin-chalkboard" data-skin="chalkboard" onclick="setAppSkin('chalkboard')">
-<span class="skin-preview"></span>
-<strong>Chalkboard</strong>
-<small>Slate &amp; chalk</small>
-<span class="material-symbols-outlined skin-check">check_circle</span>
-</button>
-<button class="skin-preset skin-terminal" data-skin="terminal" onclick="setAppSkin('terminal')">
-<span class="skin-preview"></span>
-<strong>Terminal</strong>
-<small>Phosphor console</small>
-<span class="material-symbols-outlined skin-check">check_circle</span>
-</button>
-<button class="skin-preset skin-candy" data-skin="candy" onclick="setAppSkin('candy')">
-<span class="skin-preview"></span>
-<strong>Candy</strong>
-<small>Pinks &amp; sky blues</small>
-<span class="material-symbols-outlined skin-check">check_circle</span>
-</button>
-<button class="skin-preset skin-fire" data-skin="fire" onclick="setAppSkin('fire')">
-<span class="skin-preview"></span>
-<strong>Fire</strong>
-<small>Reds, oranges &amp; golds</small>
-<span class="material-symbols-outlined skin-check">check_circle</span>
-</button>
-<button class="skin-preset skin-nature" data-skin="nature" onclick="setAppSkin('nature')">
-<span class="skin-preview"></span>
-<strong>Nature</strong>
-<small>Greens &amp; earthy browns</small>
-<span class="material-symbols-outlined skin-check">check_circle</span>
-</button>
+
+<div class="you-sheet" id="youSheetLook" role="dialog" aria-modal="true" aria-labelledby="youSheetLookTitle" hidden>
+<img class="you-sheet-guide" src="assets/mascot/guide-inspect.webp" alt="" decoding="async" loading="lazy">
+<div class="you-sheet-grab" aria-hidden="true"></div>
+<div class="you-sheet-head"><h3 id="youSheetLookTitle">Look</h3><button class="you-sheet-x" onclick="closeYouSheet()" type="button" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+<div class="you-sheet-body"><div class="you-lbl">Mode</div>
+<div class="you-seg" id="youModeSeg"><button type="button" data-mode="light" onclick="youSetDark(false)"><span class="material-symbols-outlined">light_mode</span>Light</button><button type="button" data-mode="dark" onclick="youSetDark(true)"><span class="material-symbols-outlined">dark_mode</span>Dark</button></div>
+<input id="darkModeToggle" type="checkbox" hidden onchange="toggleDarkMode()"/>
+<div class="you-lbl">Style <span class="you-lbl-note">how the whole app looks</span></div>
+<div class="you-styles" id="youStyles"></div>
+<div class="you-lbl">Colors <span class="you-lbl-note" id="youColorsNote"></span></div>
+<div class="you-card you-swatches" id="youSwatches"></div>
+<div class="you-card you-rows">
+<div class="you-row"><span class="you-ic"><span class="material-symbols-outlined">contrast</span></span><span class="you-rt"><b>High contrast</b><small>Make your colors stronger</small></span><label class="switch"><input id="highContrastToggle" onchange="toggleHighContrastMode()" type="checkbox"/><span class="slider"></span></label></div>
+<div class="you-row"><span class="you-ic"><span class="material-symbols-outlined">palette</span></span><span class="you-rt"><b>Color the Home tools</b><small>Use your color on Home's tool buttons</small></span><label class="switch"><input id="toolsMatchThemeToggle" onchange="toggleToolsMatchThemeColor()" type="checkbox"/><span class="slider"></span></label></div>
 </div>
-</div>
-<!-- APP THEME -->
-<div class="sett-section-label">App Theme</div>
-<p class="sett-section-desc">Choose a polished preset theme.</p>
-<div class="sett-card sett-theme-card">
-<div class="sett-row">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">contrast</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">High Contrast Theme</span>
-<span class="sett-row-sub">Make the current theme more vibrant</span>
-</span>
-<label class="switch">
-<input id="highContrastToggle" onchange="toggleHighContrastMode()" type="checkbox"/>
-<span class="slider"></span>
-</label>
-</div>
-<div class="sett-sep"></div>
-<div class="theme-wheel-stack">
-<section class="theme-wheel-group theme-wheel-blues">
-<div class="theme-wheel-head"><span class="theme-wheel-orb"></span><strong>Blues</strong></div>
-<div class="theme-wheel-tiles">
-<button class="theme-preset theme-wheel-tile royal" onclick="setAppTheme('royal')" style="--tile-gradient:linear-gradient(135deg,#dbeafe,#1d4ed8,#f59e0b)"><span></span><strong>Royal</strong><small>Blue</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile ocean" onclick="setAppTheme('ocean')" style="--tile-gradient:linear-gradient(135deg,#dff4fb,#0369a1,#38bdf8)"><span></span><strong>Ocean</strong><small>Study</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile glacier" onclick="setAppTheme('glacier')" style="--tile-gradient:linear-gradient(135deg,#e3f3ff,#2563eb,#7dd3fc)"><span></span><strong>Glacier</strong><small>Blue</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile blueprint" onclick="setAppTheme('blueprint')" style="--tile-gradient:linear-gradient(135deg,#f8f9ff,#003bdb,#3b82f6)"><span></span><strong>Blueprint</strong><small>Ink</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile sapphire" onclick="setAppTheme('sapphire')" style="--tile-gradient:linear-gradient(135deg,#e8f1ff,#0047ff,#00a3ff)"><span></span><strong>Sapphire</strong><small>Bright</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile sky_pop" onclick="setAppTheme('sky_pop')" style="--tile-gradient:linear-gradient(135deg,#e7fbff,#00a7e8,#38d6ff)"><span></span><strong>Sky Pop</strong><small>Cyan</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile cyan_glow" onclick="setAppTheme('cyan_glow')" style="--tile-gradient:linear-gradient(135deg,#041018,#00e5ff,#63ffda)"><span></span><strong>Cyan</strong><small>Glow</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-</div>
-</section>
-<section class="theme-wheel-group theme-wheel-greens">
-<div class="theme-wheel-head"><span class="theme-wheel-orb"></span><strong>Greens</strong></div>
-<div class="theme-wheel-tiles">
-<button class="theme-preset theme-wheel-tile emerald" onclick="setAppTheme('emerald')" style="--tile-gradient:linear-gradient(135deg,#dff7ec,#047857,#d97706)"><span></span><strong>Emerald</strong><small>Scroll</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile teal" onclick="setAppTheme('teal')" style="--tile-gradient:linear-gradient(135deg,#ecfeff,#0f766e,#2dd4bf)"><span></span><strong>Teal</strong><small>Sea</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile forest" onclick="setAppTheme('forest')" style="--tile-gradient:linear-gradient(135deg,#d9f0e2,#14532d,#34d399)"><span></span><strong>Forest</strong><small>Scroll</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile moss" onclick="setAppTheme('moss')" style="--tile-gradient:linear-gradient(135deg,#ddebd7,#355e3b,#e3b341)"><span></span><strong>Moss</strong><small>Study</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile lime_burst" onclick="setAppTheme('lime_burst')" style="--tile-gradient:linear-gradient(135deg,#f1ffe7,#36b300,#a3e635)"><span></span><strong>Lime</strong><small>Burst</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile spring" onclick="setAppTheme('spring')" style="--tile-gradient:linear-gradient(135deg,#ebfff4,#00a85a,#00d47e)"><span></span><strong>Spring</strong><small>Green</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile jade_night" onclick="setAppTheme('jade_night')" style="--tile-gradient:linear-gradient(135deg,#030c05,#00d97e,#34d399)"><span></span><strong>Jade</strong><small>Night</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-</div>
-</section>
-<section class="theme-wheel-group theme-wheel-reds">
-<div class="theme-wheel-head"><span class="theme-wheel-orb"></span><strong>Reds</strong></div>
-<div class="theme-wheel-tiles">
-<button class="theme-preset theme-wheel-tile crimson" onclick="setAppTheme('crimson')" style="--tile-gradient:linear-gradient(135deg,#fff1f2,#9f1239,#f59e0b)"><span></span><strong>Crimson</strong><small>Ink</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile volcanic" onclick="setAppTheme('volcanic')" style="--tile-gradient:linear-gradient(135deg,#100807,#e83010,#ff6b35)"><span></span><strong>Volcanic</strong><small>Fire</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile coral_deep" onclick="setAppTheme('coral_deep')" style="--tile-gradient:linear-gradient(135deg,#fff4f1,#c0001e,#ff4d5a)"><span></span><strong>Coral</strong><small>Ink</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile ruby" onclick="setAppTheme('ruby')" style="--tile-gradient:linear-gradient(135deg,#fff0f3,#e0002a,#ff335c)"><span></span><strong>Ruby</strong><small>Bright</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile scarlet" onclick="setAppTheme('scarlet')" style="--tile-gradient:linear-gradient(135deg,#fff1ec,#ff2a00,#ff8a00)"><span></span><strong>Scarlet</strong><small>Flame</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile cherry" onclick="setAppTheme('cherry')" style="--tile-gradient:linear-gradient(135deg,#160308,#ff1744,#ff5f7d)"><span></span><strong>Cherry</strong><small>Night</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-</div>
-</section>
-<section class="theme-wheel-group theme-wheel-violets">
-<div class="theme-wheel-head"><span class="theme-wheel-orb"></span><strong>Violets</strong></div>
-<div class="theme-wheel-tiles">
-<button class="theme-preset theme-wheel-tile violet" onclick="setAppTheme('violet')" style="--tile-gradient:linear-gradient(135deg,#f3e8ff,#6d28d9,#d6a700)"><span></span><strong>Byzantine</strong><small>Violet</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile neon_night" onclick="setAppTheme('neon_night')" style="--tile-gradient:linear-gradient(135deg,#080714,#8b00ff,#d946ef)"><span></span><strong>Neon</strong><small>Night</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile pink" onclick="setAppTheme('pink')" style="--tile-gradient:linear-gradient(135deg,#fff1f7,#db2777,#f472b6)"><span></span><strong>Rose</strong><small>Pink</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile magenta_pop" onclick="setAppTheme('magenta_pop')" style="--tile-gradient:linear-gradient(135deg,#fff0fd,#d900ff,#ff4fd8)"><span></span><strong>Magenta</strong><small>Pop</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile orchid" onclick="setAppTheme('orchid')" style="--tile-gradient:linear-gradient(135deg,#f7edff,#9d00ff,#d946ef)"><span></span><strong>Orchid</strong><small>Glow</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile candy" onclick="setAppTheme('candy')" style="--tile-gradient:linear-gradient(135deg,#fff0f6,#ff2da8,#00c2ff)"><span></span><strong>Candy</strong><small>Pop</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-</div>
-</section>
-<section class="theme-wheel-group theme-wheel-golds">
-<div class="theme-wheel-head"><span class="theme-wheel-orb"></span><strong>Golds</strong></div>
-<div class="theme-wheel-tiles">
-<button class="theme-preset theme-wheel-tile parchment" onclick="setAppTheme('parchment')" style="--tile-gradient:linear-gradient(135deg,#efe4c8,#243447,#c8a24a)"><span></span><strong>Classic</strong><small>Parchment</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile gold_noir" onclick="setAppTheme('gold_noir')" style="--tile-gradient:linear-gradient(135deg,#fdfbf5,#111009,#d4a011)"><span></span><strong>Gold</strong><small>Noir</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile lemon" onclick="setAppTheme('lemon')" style="--tile-gradient:linear-gradient(135deg,#fffde7,#1a0050,#7c3aed)"><span></span><strong>Lemon</strong><small>Ink</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile sunburst" onclick="setAppTheme('sunburst')" style="--tile-gradient:linear-gradient(135deg,#fff7d6,#ffb300,#ff5c00)"><span></span><strong>Sunburst</strong><small>Gold</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile canary" onclick="setAppTheme('canary')" style="--tile-gradient:linear-gradient(135deg,#fffde1,#f5d400,#111827)"><span></span><strong>Canary</strong><small>Yellow</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile amber_glow" onclick="setAppTheme('amber_glow')" style="--tile-gradient:linear-gradient(135deg,#fff3df,#f59e0b,#ef4444)"><span></span><strong>Amber</strong><small>Glow</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile tangerine" onclick="setAppTheme('tangerine')" style="--tile-gradient:linear-gradient(135deg,#fff0e5,#ff6a00,#ffd000)"><span></span><strong>Tangerine</strong><small>Bright</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile orange" onclick="setAppTheme('orange')" style="--tile-gradient:linear-gradient(135deg,#fff1e7,#ea580c,#fb923c)"><span></span><strong>Orange</strong><small>Flame</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-</div>
-</section>
-<section class="theme-wheel-group theme-wheel-neutrals">
-<div class="theme-wheel-head"><span class="theme-wheel-orb"></span><strong>Neutrals</strong></div>
-<div class="theme-wheel-tiles">
-<button class="theme-preset theme-wheel-tile midnight" onclick="setAppTheme('midnight')" style="--tile-gradient:linear-gradient(135deg,#111827,#334155,#93c5fd)"><span></span><strong>Midnight</strong><small>Study</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile slate" onclick="setAppTheme('slate')" style="--tile-gradient:linear-gradient(135deg,#e2e8f0,#334155,#0ea5e9)"><span></span><strong>Clean</strong><small>Slate</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile charcoal" onclick="setAppTheme('charcoal')" style="--tile-gradient:linear-gradient(135deg,#23272f,#111827,#f97316)"><span></span><strong>Charcoal</strong><small>Night</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile polar" onclick="setAppTheme('polar')" style="--tile-gradient:linear-gradient(135deg,#f0f8ff,#0a0a0a,#2563eb)"><span></span><strong>Polar</strong><small>White</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-<button class="theme-preset theme-wheel-tile antique" onclick="setAppTheme('antique')" style="--tile-gradient:linear-gradient(135deg,#f4e7cf,#8b5e34,#d97706)"><span></span><strong>Antique</strong><small>Pages</small><span class="material-symbols-outlined theme-wheel-check">check</span></button>
-</div>
-</section>
-</div>
-<div class="theme-legacy-list" hidden>
-<button class="theme-preset sett-theme-row parchment" onclick="setAppTheme('parchment')">
-<span class="sett-theme-swatch" style="background:#efe4c8;border-color:#d6c49a"></span>
-<span class="sett-row-name">Classic Parchment</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row midnight" onclick="setAppTheme('midnight')">
-<span class="sett-theme-swatch" style="background:#111827;border-color:#374151"></span>
-<span class="sett-row-name">Midnight Study</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row royal" onclick="setAppTheme('royal')">
-<span class="sett-theme-swatch" style="background:#1d4ed8;border-color:#1e40af"></span>
-<span class="sett-row-name">Royal Blue</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row emerald" onclick="setAppTheme('emerald')">
-<span class="sett-theme-swatch" style="background:#047857;border-color:#065f46"></span>
-<span class="sett-row-name">Emerald Scroll</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row crimson" onclick="setAppTheme('crimson')">
-<span class="sett-theme-swatch" style="background:#9f1239;border-color:#881337"></span>
-<span class="sett-row-name">Crimson Ink</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row violet" onclick="setAppTheme('violet')">
-<span class="sett-theme-swatch" style="background:#6d28d9;border-color:#5b21b6"></span>
-<span class="sett-row-name">Byzantine Violet</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row slate" onclick="setAppTheme('slate')">
-<span class="sett-theme-swatch" style="background:#334155;border-color:#1e293b"></span>
-<span class="sett-row-name">Clean Slate</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row olive" onclick="setAppTheme('olive')">
-<span class="sett-theme-swatch" style="background:#4d5d2f;border-color:#3a4522"></span>
-<span class="sett-row-name">Olive Grove</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row orange" onclick="setAppTheme('orange')">
-<span class="sett-theme-swatch" style="background:#ea580c;border-color:#c2410c"></span>
-<span class="sett-row-name">Orange Flame</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row pink" onclick="setAppTheme('pink')">
-<span class="sett-theme-swatch" style="background:#db2777;border-color:#be185d"></span>
-<span class="sett-row-name">Rose Pink</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row teal" onclick="setAppTheme('teal')">
-<span class="sett-theme-swatch" style="background:#0f766e;border-color:#0d5c56"></span>
-<span class="sett-row-name">Teal Sea</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row sand" onclick="setAppTheme('sand')">
-<span class="sett-theme-swatch" style="background:#92400e;border-color:#78350f"></span>
-<span class="sett-row-name">Desert Sand</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row moss" onclick="setAppTheme('moss')">
-<span class="sett-theme-swatch" style="background:#355e3b;border-color:#264a2b"></span>
-<span class="sett-row-name">Moss Study</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row storm" onclick="setAppTheme('storm')">
-<span class="sett-theme-swatch" style="background:#60a5fa;border-color:#3b82f6"></span>
-<span class="sett-row-name">Storm Gray</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row coffee" onclick="setAppTheme('coffee')">
-<span class="sett-theme-swatch" style="background:#7b4b2a;border-color:#6b3a1f"></span>
-<span class="sett-row-name">Coffee House</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row forest" onclick="setAppTheme('forest')">
-<span class="sett-theme-swatch" style="background:#14532d;border-color:#0d3d21"></span>
-<span class="sett-row-name">Forest Scroll</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row obsidian" onclick="setAppTheme('obsidian')">
-<span class="sett-theme-swatch" style="background:#facc15;border-color:#eab308"></span>
-<span class="sett-row-name">Obsidian Gold</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row wine" onclick="setAppTheme('wine')">
-<span class="sett-theme-swatch" style="background:#881337;border-color:#6f0f2d"></span>
-<span class="sett-row-name">Vintage Wine</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row ocean" onclick="setAppTheme('ocean')">
-<span class="sett-theme-swatch" style="background:#0369a1;border-color:#0c5a8a"></span>
-<span class="sett-row-name">Ocean Study</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row charcoal" onclick="setAppTheme('charcoal')">
-<span class="sett-theme-swatch" style="background:#4b5563;border-color:#374151"></span>
-<span class="sett-row-name">Charcoal Night</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row antique" onclick="setAppTheme('antique')">
-<span class="sett-theme-swatch" style="background:#8b5e34;border-color:#7a4f28"></span>
-<span class="sett-row-name">Antique Pages</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row glacier" onclick="setAppTheme('glacier')">
-<span class="sett-theme-swatch" style="background:#2563eb;border-color:#1d4ed8"></span>
-<span class="sett-row-name">Glacier Blue</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row polar" onclick="setAppTheme('polar')">
-<span class="sett-theme-swatch" style="background:#0a0a0a;border-color:#1a1a1a"></span>
-<span class="sett-row-name">Polar White</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row volcanic" onclick="setAppTheme('volcanic')">
-<span class="sett-theme-swatch" style="background:#e83010;border-color:#c52808"></span>
-<span class="sett-row-name">Volcanic</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row lemon" onclick="setAppTheme('lemon')">
-<span class="sett-theme-swatch" style="background:#1a0050;border-color:#0d0035"></span>
-<span class="sett-row-name">Lemon Ink</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row blueprint" onclick="setAppTheme('blueprint')">
-<span class="sett-theme-swatch" style="background:#003bdb;border-color:#0028c0"></span>
-<span class="sett-row-name">Blueprint</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row jade_night" onclick="setAppTheme('jade_night')">
-<span class="sett-theme-swatch" style="background:#00d97e;border-color:#00b868"></span>
-<span class="sett-row-name">Jade Night</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row deep_sunset" onclick="setAppTheme('deep_sunset')">
-<span class="sett-theme-swatch" style="background:#4d0015;border-color:#3a000f"></span>
-<span class="sett-row-name">Deep Sunset</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row arctic" onclick="setAppTheme('arctic')">
-<span class="sett-theme-swatch" style="background:#001730;border-color:#001020"></span>
-<span class="sett-row-name">Arctic</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row neon_night" onclick="setAppTheme('neon_night')">
-<span class="sett-theme-swatch" style="background:#8b00ff;border-color:#7000d0"></span>
-<span class="sett-row-name">Neon Night</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row gold_noir" onclick="setAppTheme('gold_noir')">
-<span class="sett-theme-swatch" style="background:#111009;border-color:#0a0805"></span>
-<span class="sett-row-name">Gold Noir</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-<div class="sett-sep"></div>
-<button class="theme-preset sett-theme-row coral_deep" onclick="setAppTheme('coral_deep')">
-<span class="sett-theme-swatch" style="background:#c0001e;border-color:#a00018"></span>
-<span class="sett-row-name">Coral &amp; Ink</span>
-<span class="material-symbols-outlined sett-theme-check">check</span>
-</button>
-</div>
-</div>
-<!-- HOME BACKGROUND -->
-<div class="sett-section-label">Change Home Background</div>
-<p class="sett-section-desc">Choose a calm ambient art layer for Home. This does not change your theme, colors, cards, buttons, or navbar.</p>
-<div class="sett-card home-backdrop-card">
+<div class="you-lbl">Home background</div>
+<div class="you-card home-backdrop-card you-backdrops">
 <button class="home-backdrop-option home-backdrop-none selected" onclick="setHomeBackdrop('none')">
 <span class="home-backdrop-preview"></span><span>None</span><span class="material-symbols-outlined home-backdrop-check">check</span>
 </button>
@@ -9453,278 +9173,78 @@ Verb Endings
 <button class="home-backdrop-option home-backdrop-sunrise" onclick="setHomeBackdrop('sunrise')">
 <span class="home-backdrop-preview"></span><span>Sunrise</span><span class="material-symbols-outlined home-backdrop-check">check</span>
 </button>
+</div></div>
 </div>
-<!-- LESSON MODE -->
-<div class="sett-section-label">Lesson Mode</div>
-<p class="sett-section-desc">Choose how you want to study through the lessons.</p>
-<div class="sett-card">
-<button class="sett-row" onclick="showLessonModeModal()">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">menu_book</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name" id="currentLessonModeLabel">Basic Lessons</span>
-</span>
-<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
-</button>
+
+<div class="you-sheet" id="youSheetReading" role="dialog" aria-modal="true" aria-labelledby="youSheetReadingTitle" hidden>
+<img class="you-sheet-guide" src="assets/mascot/guide-think.webp" alt="" decoding="async" loading="lazy">
+<div class="you-sheet-grab" aria-hidden="true"></div>
+<div class="you-sheet-head"><h3 id="youSheetReadingTitle">Reading</h3><button class="you-sheet-x" onclick="closeYouSheet()" type="button" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+<div class="you-sheet-body"><div class="you-card you-rows">
+<div class="you-row"><span class="you-ic"><span class="material-symbols-outlined">format_size</span></span><span class="you-rt"><b>Text size</b><small id="youTextSizeLabel">100%</small></span>
+<span class="you-stepper"><button type="button" onclick="youTextSize(-1)" aria-label="Smaller text">A</button><button type="button" onclick="youTextSize(1)" aria-label="Larger text" class="big">A</button></span></div>
+<button class="you-row " onclick="closeYouSheet(); setTimeout(openRhemaFontSheet, 240)" type="button"><span class="you-ic"><span class="material-symbols-outlined">font_download</span></span><span class="you-rt"><b>Font</b><small id="youFontLabel">Default</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " onclick="youOpenVersion()" type="button"><span class="you-ic"><span class="material-symbols-outlined">translate</span></span><span class="you-rt"><b>Bible version</b><small id="youVersionLabel">MSB</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+</div>
+<p class="you-note">These are the same settings as in Rhēma's menu. Change them in either place.</p></div>
+</div>
+
+<div class="you-sheet" id="youSheetNotify" role="dialog" aria-modal="true" aria-labelledby="youSheetNotifyTitle" hidden>
+<img class="you-sheet-guide" src="assets/mascot/guide-wow.webp" alt="" decoding="async" loading="lazy">
+<div class="you-sheet-grab" aria-hidden="true"></div>
+<div class="you-sheet-head"><h3 id="youSheetNotifyTitle">Reminders &amp; calendar</h3><button class="you-sheet-x" onclick="closeYouSheet()" type="button" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+<div class="you-sheet-body"><div class="you-card you-rows">
+<button class="you-row " onclick="closeYouSheet(); setTimeout(openReminderModal, 240)" type="button"><span class="you-ic"><span class="material-symbols-outlined">notifications</span></span><span class="you-rt"><b>Reminders</b><small id="youReminderLabel">Daily study reminders</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " id="settingsCalendarRow" onclick="closeYouSheet(); setTimeout(openCalendarSyncModal, 240)" type="button"><span class="you-ic"><span class="material-symbols-outlined">calendar_month</span></span><span class="you-rt"><b>Google Calendar</b><small>Add your events to Google Calendar</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+</div>
+<p class="you-note">Reading plan reminders are set on each plan, in Reading Plan.</p></div>
+</div>
+
+<div class="you-sheet" id="youSheetLessons" role="dialog" aria-modal="true" aria-labelledby="youSheetLessonsTitle" hidden>
+<img class="you-sheet-guide" src="assets/mascot/guide-cheer.webp" alt="" decoding="async" loading="lazy">
+<div class="you-sheet-grab" aria-hidden="true"></div>
+<div class="you-sheet-head"><h3 id="youSheetLessonsTitle">Lessons</h3><button class="you-sheet-x" onclick="closeYouSheet()" type="button" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+<div class="you-sheet-body"><div class="you-card you-rows">
+<button class="you-row" onclick="closeYouSheet(); setTimeout(showLessonModeModal, 240)" type="button"><span class="you-ic"><span class="material-symbols-outlined">menu_book</span></span><span class="you-rt"><b>Lesson path</b><small id="currentLessonModeLabel">Basic Lessons</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
 <div id="lessonModeResetRow" style="display:none"></div>
+<button class="you-row " onclick="closeYouSheet(); setTimeout(showProgress, 240)" type="button"><span class="you-ic"><span class="material-symbols-outlined">trending_up</span></span><span class="you-rt"><b>Full progress</b><small>Tests, translations and known words</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " onclick="closeYouSheet(); setTimeout(showAchievementsModal, 240)" type="button"><span class="you-ic"><span class="material-symbols-outlined">emoji_events</span></span><span class="you-rt"><b>Achievements</b><small>Your milestones</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+</div></div>
 </div>
-<!-- DATA & PROGRESS -->
-<div class="sett-section-label">Data &amp; Progress</div>
-<div class="sett-card">
-<button class="sett-row" onclick="toggleResetSection()">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">restart_alt</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Reset Test Data</span>
-</span>
-<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
-</button>
-<div class="sett-collapse-content" id="resetContent">
-<p>This will permanently delete your saved test scores, progress stats, and weak-word tracking. Your vocabulary list will not be affected.</p>
-<button class="danger-btn" onclick="resetTestData()">Confirm Reset</button>
+
+<div class="you-sheet" id="youSheetReset" role="dialog" aria-modal="true" aria-labelledby="youSheetResetTitle" hidden>
+<img class="you-sheet-guide" src="assets/mascot/guide-think.webp" alt="" decoding="async" loading="lazy">
+<div class="you-sheet-grab" aria-hidden="true"></div>
+<div class="you-sheet-head"><h3 id="youSheetResetTitle">Reset &amp; data</h3><button class="you-sheet-x" onclick="closeYouSheet()" type="button" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+<div class="you-sheet-body"><p class="you-note you-note-top">Each of these starts something over for good. Your highlights, notes, saved words and reading plans aren't touched.</p>
+<div class="you-card you-rows you-danger">
+<button class="you-row" onclick="toggleResetSection()" type="button"><span class="you-ic"><span class="material-symbols-outlined">restart_alt</span></span><span class="you-rt"><b>Reset test data</b></span><span class="material-symbols-outlined you-chev">expand_more</span></button>
+<div class="sett-collapse-content you-reset-box" id="resetContent"><p>This permanently deletes your saved test scores, progress stats and weak-word tracking. Your vocabulary list is not affected.</p><button class="danger-btn" onclick="resetTestData()" type="button">Yes, reset test data</button></div>
+<button class="you-row" onclick="toggleTranslationResetSection()" type="button"><span class="you-ic"><span class="material-symbols-outlined">language</span></span><span class="you-rt"><b>Reset translation data</b></span><span class="material-symbols-outlined you-chev">expand_more</span></button>
+<div class="sett-collapse-content you-reset-box" id="translationResetContent"><p>This permanently deletes your saved translation progress, including every "got it", "almost" and "missed it".</p><button class="danger-btn" onclick="resetTranslationData()" type="button">Yes, reset translations</button></div>
+<button class="you-row" onclick="toggleLessonResetSection()" type="button"><span class="you-ic"><span class="material-symbols-outlined">refresh</span></span><span class="you-rt"><b>Start lessons over</b></span><span class="material-symbols-outlined you-chev">expand_more</span></button>
+<div class="sett-collapse-content you-reset-box" id="lessonResetContent"><p>This resets completed lessons and opened lesson sections. Vocab, tests and translation progress are not affected.</p><button class="danger-btn" onclick="resetLessonData()" type="button">Yes, start lessons over</button></div>
+<button class="you-row" onclick="this.nextElementSibling.classList.toggle('open')" type="button"><span class="you-ic"><span class="material-symbols-outlined">functions</span></span><span class="you-rt"><b>Reset Greek verbs progress</b></span><span class="material-symbols-outlined you-chev">expand_more</span></button>
+<div class="sett-collapse-content you-reset-box"><p>This resets Greek verb lesson completion, quiz scores and opened sections. Vocab and other lesson progress are not affected.</p><button class="danger-btn" onclick="if(typeof resetVerbLessonData==='function') resetVerbLessonData()" type="button">Yes, reset verbs</button></div>
+</div></div>
 </div>
-<div class="sett-sep"></div>
-<button class="sett-row" onclick="toggleTranslationResetSection()">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">language</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Reset Translation Data</span>
-</span>
-<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
-</button>
-<div class="sett-collapse-content" id="translationResetContent">
-<p>This will permanently delete your saved translation progress, including all "got it", "almost", and "missed it" data.</p>
-<button class="danger-btn" onclick="resetTranslationData()">Confirm Reset</button>
+
+<div class="you-sheet" id="youSheetAbout" role="dialog" aria-modal="true" aria-labelledby="youSheetAboutTitle" hidden>
+<img class="you-sheet-guide" src="assets/mascot/guide-wow.webp" alt="" decoding="async" loading="lazy">
+<div class="you-sheet-grab" aria-hidden="true"></div>
+<div class="you-sheet-head"><h3 id="youSheetAboutTitle">About Rhēma</h3><button class="you-sheet-x" onclick="closeYouSheet()" type="button" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div>
+<div class="you-sheet-body"><div class="you-card you-rows">
+<button class="you-row" id="profileNewsBtn" onclick="closeYouSheet(); setTimeout(openNewsFromProfile, 240)" type="button"><span class="you-ic prof-news-icon-wrap"><span class="material-symbols-outlined">campaign</span><span class="prof-news-badge hidden" id="profileNewsBadge"></span></span><span class="you-rt"><b>What's new</b><small>Every update, newest first</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " id="profileCoachBtn" onclick="closeYouSheet(); setTimeout(openCoachReplayModal, 240)" type="button"><span class="you-ic"><span class="material-symbols-outlined">tour</span></span><span class="you-rt"><b>Tours</b><small>Let the guide walk you through Rhēma</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
+<button class="you-row " id="tryAppVersionBtn" onclick="closeYouSheet(); setTimeout(openInstallModalFromProfile, 240)" type="button"><span class="you-ic"><span class="material-symbols-outlined">install_mobile</span></span><span class="you-rt"><b>Get the Rhēma app</b><small>Add Rhēma to your Home Screen</small></span><span class="material-symbols-outlined you-chev">chevron_right</span></button>
 </div>
-<div class="sett-sep"></div>
-<button class="sett-row" onclick="toggleLessonResetSection()">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">refresh</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Start Lessons Over</span>
-</span>
-<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
-</button>
-<div class="sett-collapse-content" id="lessonResetContent">
-<p>This will reset completed lessons and opened lesson sections. Vocab, tests, and translation progress will not be affected.</p>
-<button class="danger-btn" onclick="resetLessonData()">Confirm Start Over</button>
+<p class="you-note you-version" id="youVersionNote"></p></div>
 </div>
-<div class="sett-sep"></div>
-<button class="sett-row" onclick="this.nextElementSibling.classList.toggle('open')">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">functions</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Reset Greek Verbs Progress</span>
-</span>
-<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
-</button>
-<div class="sett-collapse-content">
-<p>This will reset all Greek Verb lesson completion, quiz scores, and opened sections. Vocab and other lesson progress will not be affected.</p>
-<button class="danger-btn" onclick="if(typeof resetVerbLessonData==='function') resetVerbLessonData()">Confirm Reset</button>
-</div>
-</div>
-<!-- ACCOUNT -->
-<div class="sett-section-label">Account</div>
-<div class="sett-card">
-<button class="sett-row" id="connectEmailSettingsRow" onclick="openConnectEmailModal()">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">mail_lock</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Email &amp; Account Recovery</span>
-<span class="sett-row-sub" id="connectEmailSettingsSub">Connect an email to recover your account</span>
-</span>
-<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
-</button>
-<div class="sett-sep"></div>
-<button class="sett-row" id="setPasswordSettingsRow" onclick="openSetPasswordModal()">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">password</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Change Password</span>
-<span class="sett-row-sub">Set a new one, no old password needed</span>
-</span>
-<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
-</button>
-<div class="sett-sep"></div>
-<button class="sett-row" id="settingsCalendarRow" onclick="openCalendarSyncModal()">
-<span class="sett-row-icon-wrap">
-<span class="material-symbols-outlined">calendar_month</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name">Sync Google Calendar</span>
-<span class="sett-row-sub">Add study reminders to your calendar</span>
-</span>
-<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
-</button>
-<div class="sett-sep"></div>
-<button class="sett-row sett-row-danger" id="profileResetBtn" onclick="resetAllAppData()">
-<span class="sett-row-icon-wrap sett-icon-danger">
-<span class="material-symbols-outlined">person_off</span>
-</span>
-<span class="sett-row-text">
-<span class="sett-row-name sett-name-danger">Delete Account</span>
-</span>
-<span class="material-symbols-outlined sett-row-chev">chevron_right</span>
-</button>
-</div>
-</div>
-</section>
-<section class="screen" id="profilePage">
-<div class="nav-bar">
-<div><button class="prof-nav-icon" onclick="openSettingsFromProfile()" aria-label="Settings"><span class="material-symbols-outlined">settings</span></button></div>
-<div class="nav-title">Profile</div>
-<div><button class="prof-nav-icon" onclick="showNavPage('home')" aria-label="Home"><span class="material-symbols-outlined">home</span></button></div>
-</div>
-<div class="profile-page-scroll">
-<div class="profile-header">
-<div class="profile-avatar-wrap">
-<div class="profile-avatar" id="profileAvatar">
-<span class="material-symbols-outlined">school</span>
-</div>
-<button class="profile-avatar-edit" onclick="openAvatarPicker()" title="Change avatar">
-<span class="material-symbols-outlined">edit</span>
-</button>
-</div>
-<h2 id="profileDisplayName">Greek Student</h2>
-<p class="profile-username-label" id="profileUsername"></p>
-<div class="profile-badge-row" id="profileBadgeRow"></div>
-<div class="profile-title-row">
-<div class="profile-title" id="profileTitle">
-<span class="material-symbols-outlined profile-rank-icon" id="profileRankIcon">shield</span>
-<span id="profileTitleText">Beginner</span>
-</div>
-<button class="rank-info-btn" onclick="showRanksModal()" title="View ranks">
-<span class="material-symbols-outlined">military_tech</span>
-</button>
-</div>
-<div class="profile-mode-badge" id="profileModeBadge">Basic Track</div>
-</div>
-<div class="xp-section">
-<div class="xp-top-row">
-<span>XP</span>
-<span id="profileXPText">0 XP</span>
-</div>
-<div class="xp-bar">
-<div class="xp-fill" id="xpFill"></div>
-</div>
-</div>
-<div class="profile-journey-card collapsed" id="profileJourneySection">
-<button class="journey-header journey-toggle" id="journeyToggleBtn" onclick="toggleJourneyCard()" aria-expanded="false">
-<span class="material-symbols-outlined">map</span>
-<strong>Your Greek Journey</strong>
-<span class="material-symbols-outlined journey-chev">expand_less</span>
-</button>
-<div class="journey-collapse" id="journeyCollapse">
-<div class="journey-stats-grid">
-<button class="journey-stat clickable-stat" onclick="showLessonsBreakdownModal(getLessonMode(), false)">
-<strong id="profileLessonsStat">0 / 6</strong>
-<span>Lessons <span class="stat-tap-hint">tap for details</span></span>
-</button>
-<div class="journey-stat">
-<strong id="profileStreakStat">0</strong>
-<span>App Open Streak</span>
-</div>
-<div class="journey-stat">
-<strong id="profileVocabStat">0</strong>
-<span>Vocab Chapters</span>
-</div>
-<div class="journey-stat">
-<strong id="profileTranslationsStat">0</strong>
-<span>Translations</span>
-</div>
-<div class="journey-stat">
-<strong id="profileTestsStat">0</strong>
-<span>Tests</span>
-</div>
-<div class="journey-stat">
-<strong id="profileKnownWordsStat">0</strong>
-<span>Known Words</span>
-</div>
-<div class="journey-stat">
-<strong id="profileTimeStat">0m</strong>
-<span>Time Studied</span>
-</div>
-<div class="journey-stat">
-<strong id="profileJoinStat">—</strong>
-<span>Member Since</span>
-</div>
-</div>
-<div class="profile-action-row">
-<button class="profile-action-card" onclick="showProgress()">
-<span class="material-symbols-outlined">trending_up</span>
-<div>
-<strong>Full Progress</strong>
-<small>View detailed stats</small>
-</div>
-</button>
-<button class="profile-action-card" onclick="showAchievementsModal()">
-<span class="material-symbols-outlined">emoji_events</span>
-<div>
-<strong>Achievements</strong>
-<small>View milestones</small>
-</div>
-</button>
-</div>
-</div>
-</div>
-<label class="label">Profile Color</label>
-<div class="profile-color-grid">
-<button class="color-dot blue" data-color="#4f8cff" onclick="setProfileColor('#4f8cff')" title="Blue"></button>
-<button class="color-dot green" data-color="#22c55e" onclick="setProfileColor('#22c55e')" title="Green"></button>
-<button class="color-dot purple" data-color="#8b5cf6" onclick="setProfileColor('#8b5cf6')" title="Purple"></button>
-<button class="color-dot gold" data-color="#d6a700" onclick="setProfileColor('#d6a700')" title="Gold"></button>
-<button class="color-dot red" data-color="#ef4444" onclick="setProfileColor('#ef4444')" title="Red"></button>
-<button class="color-dot orange" data-color="#f97316" onclick="setProfileColor('#f97316')" title="Orange"></button>
-<button class="color-dot pink" data-color="#ec4899" onclick="setProfileColor('#ec4899')" title="Pink"></button>
-<label class="color-dot custom-color-dot" id="customColorDot" onclick="var i=this.querySelector('input');if(i)i.value=(profileData&amp;&amp;profileData.color)||'#4f8cff'" title="Custom color">
-<input class="hidden-color-input" id="customProfileColorInput" onchange="setProfileColor(this.value)" type="color"/>
-</label>
-</div>
-<div class="prof-menu-card">
-<button class="prof-menu-row" id="profileNewsBtn" onclick="openNewsFromProfile()">
-<span class="prof-menu-icon-wrap prof-news-icon-wrap">
-<span class="material-symbols-outlined">campaign</span>
-<span class="prof-news-badge hidden" id="profileNewsBadge"></span>
-</span>
-<span class="prof-menu-name">What's New</span>
-<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
-</button>
-<div class="prof-menu-sep"></div>
-<button class="prof-menu-row" id="profileCoachBtn" onclick="openCoachReplayModal()">
-<span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">psychology_alt</span></span>
-<span class="prof-menu-name">Coach Tours</span>
-<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
-</button>
-<div class="prof-menu-sep"></div>
-<button class="prof-menu-row" id="profileSavedPicsBtn" onclick="openSavedPicturesModal()">
-<span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">photo_library</span></span>
-<span class="prof-menu-name">Saved Pictures</span>
-<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
-</button>
-<div class="prof-menu-sep"></div>
-<button class="prof-menu-row" id="profileNerdBtn" onclick="openRhemaNerdModal()">
-<span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">science</span></span>
-<span class="prof-menu-name">Rhema Nerd Page</span>
-<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
-</button>
-<div class="prof-menu-sep"></div>
-<button class="prof-menu-row" onclick="signOutAccount()">
-<span class="prof-menu-icon-wrap"><span class="material-symbols-outlined">logout</span></span>
-<span class="prof-menu-name">Sign Out</span>
-<span class="material-symbols-outlined prof-menu-chev">chevron_right</span>
-</button>
-</div>
-<button class="main-btn try-app-btn" id="tryAppVersionBtn" onclick="openInstallModalFromProfile()">
-<span class="material-symbols-outlined">install_mobile</span>
-<span>Try the App Version!</span>
-</button>
+
+<div class="you-style-pop" id="youStylePop" role="dialog" aria-live="polite" hidden>
+<div class="you-pop-shots"><img id="youPopHome" alt="Home in this style"><img id="youPopRead" alt="Rhēma in this style"></div>
+<div class="you-pop-text"><b id="youPopName">Notebook</b><small id="youPopDesc">Ruled paper and ink</small></div>
+<div class="you-pop-btns"><button type="button" class="you-pop-undo" onclick="youStyleUndo()">Go back</button><button type="button" class="you-pop-keep" onclick="youStyleKeep()">Keep it</button></div>
 </div>
 </section>
 <!-- Saved Pictures (from your Praises Journal) — view & save to your device -->
@@ -11164,7 +10684,7 @@ Verb Endings
 </div>
 </div>
 <nav class="bottom-nav" id="bottomNav">
-<button class="bn-item" data-page="profile" onclick="showNavPage('profile')">
+<button class="bn-item" data-page="profile" onclick="showNavPage('profile')" aria-label="You">
 <span class="material-symbols-outlined">person</span>
 <span class="bn-dot"></span>
 </button>
@@ -17405,24 +16925,24 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.650"></script>
-<script src="app.js?v=3.0.650"></script>
-<script src="rhema-word-study.js?v=3.0.650"></script>
-<script src="rhema-grammar-search.js?v=3.0.650"></script>
-<script src="rhema-xl-views.js?v=3.0.650"></script>
-<script src="rhema-glance.js?v=3.0.650"></script>
-<script src="challenge.js?v=3.0.650"></script>
-<script src="guide-news.js?v=3.0.650"></script>
-<script src="bible-atlas.js?v=3.0.650"></script>
+<script src="rhema-align.js?v=3.0.651"></script>
+<script src="app.js?v=3.0.651"></script>
+<script src="rhema-word-study.js?v=3.0.651"></script>
+<script src="rhema-grammar-search.js?v=3.0.651"></script>
+<script src="rhema-xl-views.js?v=3.0.651"></script>
+<script src="rhema-glance.js?v=3.0.651"></script>
+<script src="challenge.js?v=3.0.651"></script>
+<script src="guide-news.js?v=3.0.651"></script>
+<script src="bible-atlas.js?v=3.0.651"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.650"></script>
-<script src="verse-structure.js?v=3.0.650"></script>
-<script src="vs-structure.js?v=3.0.650"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.651"></script>
+<script src="verse-structure.js?v=3.0.651"></script>
+<script src="vs-structure.js?v=3.0.651"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.650"></script>
-<script src="bible-quiz.js?v=3.0.650"></script>
-<script src="firebase-lb.js?v=3.0.650" type="module"></script>
+<script src="sermon-notes.js?v=3.0.651"></script>
+<script src="bible-quiz.js?v=3.0.651"></script>
+<script src="firebase-lb.js?v=3.0.651" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
@@ -18501,72 +18021,75 @@ Save
 <div class="modal-card rhema-nerd-card" onclick="event.stopPropagation()">
 <button class="modal-close" onclick="closeRhemaNerdModal()">&times;</button>
 <div class="nerd-kicker"><span class="material-symbols-outlined">science</span> Source Notes</div>
-<h2>Rhema Nerd Page</h2>
-<p class="nerd-lead">Rhema is a Bible study tool first. Open a passage and everything you need to understand it sits right beside the text — and when you want to go deeper, the original Greek and Hebrew are one tap away. This page is the transparent, behind-the-scenes look for the curious: where the texts, lexicons, grammar, and cross references come from.</p>
+<h2>Rhēma Nerd Page</h2>
+<p class="nerd-lead">Rhēma is a Bible study tool first. Open a passage and everything you need to understand it sits right beside the text, and when you want to go deeper, the original Greek and Hebrew are one tap away. This page is the behind-the-scenes look for the curious: where every text, lexicon and tool comes from.</p>
 
 <div class="nerd-section nerd-hero-note">
-<strong>Study first — language depth when you want it</strong>
-<p>Rhema is built to feel calm and intuitive for <em>any</em> reader. You don't need to know a word of Greek or Hebrew to benefit: read the passage, tap anything you're curious about, and Rhema explains it in plain English. The original languages are there as an extra layer to go deeper — never a wall you have to get past first. Whether you've never seen a Greek letter or you study the languages every day, the same screen meets you where you are.</p>
-<p>It also keeps the Greek text and its matching English translation in one flow instead of forcing a single manuscript tradition on you. Majority Text Greek pairs naturally with the MSB (Majority Standard Bible); Critical Text Greek pairs naturally with the BSB (Berean Standard Bible). The English follows the Greek mode you're studying, so you can compare the two traditions without ever leaving the passage or breaking your study flow.</p>
+<strong>Study first, language depth when you want it</strong>
+<p>You don't need to know a word of Greek or Hebrew to benefit: read the passage, tap anything you're curious about, and Rhēma explains it in plain English. The original languages are an extra layer to go deeper, never a wall you have to get past first.</p>
+<p>The Greek New Testament comes in two texts you can switch between in the reader's menu: the Majority (Byzantine) text and the Critical text. Your English Bible is chosen on its own: the MSB and BSB are built in, and many more versions can be read a chapter at a time.</p>
 </div>
 
 <div class="nerd-section">
-<h3>How the word sheets work</h3>
-<p>When you tap a word, Rhema reads its Strong's number, lemma, surface form, and morphology code from the bundled text data. It leads with plain-English grammar and a clear gloss so the meaning lands first, then pulls matching lexicon entries, related forms, and occurrences, and keeps the fuller definitions visible so you can see the whole range of meaning when you want it. Simple on top, deep underneath.</p>
+<h3>How the word pages work</h3>
+<p>Tap a word and Rhēma reads its Strong's number, dictionary form and grammar from the text data. It shows what the word means in this verse first, then cards: how your English versions render it across the whole New Testament (counted on your phone from each version's own text), every meaning with its verses, this verse, and the authors who use it, with history, the lexicons and "How we know" below. Every verse cited for a meaning is checked to really contain the word.</p>
 </div>
 
 <div class="nerd-source-grid">
 <div class="nerd-source-item">
 <span class="material-symbols-outlined">menu_book</span>
 <strong>Greek New Testament</strong>
-<p>Bundled local Greek NT data includes Majority Text and Critical Text views with word-level forms, lemmas, Strong's numbers, morphology, and variant markers where the two streams differ.</p>
+<p>Majority text: the Robinson–Pierpont Byzantine Text (2018), with Strong's numbers and parsing for every word. Critical text: the SBL Greek New Testament (CC BY 4.0) with MorphGNT parsing (CC BY-SA).</p>
 </div>
 <div class="nerd-source-item">
 <span class="material-symbols-outlined">translate</span>
-<strong>BSB / MSB Bible</strong>
-<p>Public-domain BSB (Berean Standard Bible) and MSB (Majority Standard Bible) text is bundled locally for English verse display, Cross References, Study Rhema, and offline reading support. MSB is the default partner for Majority Text; BSB is the partner for Critical Text.</p>
+<strong>English Bibles</strong>
+<p>The Majority Standard Bible and Berean Standard Bible are public domain and built in, so they work offline. The Berean word-by-word tables line their English up with the Greek and Hebrew. Other versions (NIV, ESV, NKJV, NASB, KJV, NLT, CSB and more) are fetched a chapter at a time from their publishers' services.</p>
 </div>
 <div class="nerd-source-item">
 <span class="material-symbols-outlined">auto_stories</span>
-<strong>Old Testament (Hebrew &amp; Greek)</strong>
-<p>Local Hebrew Old Testament data and a Septuagint (LXX) Greek text power OT study, with a Hebrew lexicon for word-level help — so you can go just as deep in the Old Testament as the New, in either language.</p>
+<strong>Old Testament</strong>
+<p>Hebrew: the Westminster Leningrad Codex with Open Scriptures morphology (CC BY 4.0). Greek: Rahlfs' Septuagint (1935), from CenterBLC (MIT). Which Septuagint word stands for each Hebrew word comes from MACULA Hebrew (Clear Bible and the Groves Center, CC BY 4.0).</p>
 </div>
 <div class="nerd-source-item">
 <span class="material-symbols-outlined">dictionary</span>
 <strong>Lexicons</strong>
-<p>Rhema combines Strong's-style gloss data, Dodson glosses, Abbott-Smith, and Moulton &amp; Milligan so users can compare quick direction with fuller lexical range.</p>
+<p>Greek: Abbott-Smith, Moulton &amp; Milligan, Liddell–Scott–Jones, Dodson and Strong's. Hebrew: Brown-Driver-Briggs (Open Scriptures, CC BY 4.0) and Strong's Hebrew dictionary.</p>
 </div>
 <div class="nerd-source-item">
 <span class="material-symbols-outlined">account_tree</span>
 <strong>Syntax</strong>
-<p>The syntax view uses local clause/phrase data where available and Rhema's own helper logic to explain grammar roles in accessible language.</p>
+<p>Sentence diagrams use MACULA Greek (Clear Bible, CC BY 4.0): who does what, to whom, in each clause, explained in plain words.</p>
 </div>
 <div class="nerd-source-item">
 <span class="material-symbols-outlined">hub</span>
-<strong>Cross References</strong>
-<p>Cross Reference trails are stored locally and shaped from public cross-reference resources such as OpenBible.info-style links and Treasury of Scripture Knowledge-style connections.</p>
+<strong>Cross references</strong>
+<p>About 345,000 links from OpenBible.info (CC BY), ranked by how many readers confirmed them. Rhēma marks quotes, fulfillments, echoes and parallel accounts by comparing the original-language words themselves.</p>
 </div>
+<div class="nerd-source-item">
+<span class="material-symbols-outlined">forum</span>
+<strong>Interpretations &amp; challenges</strong>
+<p>Each view is summarized from published sources linked right under it, and every quote is checked word for word against its page. Views are described the way their own teachers explain them.</p>
 </div>
-
-<div class="nerd-section">
-<h3>Credits and source families</h3>
-<p><strong>Lexical credit:</strong> James Strong's numbering system (Greek and Hebrew), John Jeffrey Dodson's Greek-English gloss work, G. Abbott-Smith's manual Greek lexicon, and J. H. Moulton with George Milligan's vocabulary work are used as source families for Rhema's definitions and usage notes, alongside public-domain Hebrew lexical data for Old Testament study.</p>
-<p><strong>Bible and reference credit:</strong> The BSB and MSB are public-domain English Bible texts. MSB is used with the Majority Text stream, and BSB is used with the Critical Text stream, so Rhema can keep Greek and English aligned while still letting the user compare traditions. Cross-reference data is built from public-domain and open cross-reference traditions, including OpenBible.info Cross References and Treasury of Scripture Knowledge-style datasets. Syntax work follows the kind of clause and phrase analysis used by open Greek NT projects such as Macula/Clear Bible data where available.</p>
+<div class="nerd-source-item">
+<span class="material-symbols-outlined">map</span>
+<strong>Journeys &amp; places</strong>
+<p>Every step of a journey follows the verses it cites. Places whose location is debated show the main options instead of picking one.</p>
+</div>
 </div>
 
 <div class="nerd-section nerd-flow">
-<h3>What happens when Rhema loads?</h3>
+<h3>What happens when Rhēma opens?</h3>
 <ol>
-<li>It loads local datasets for Majority Text Greek, Critical Text Greek, the Hebrew Old Testament, the Septuagint, MSB, BSB, word forms, Greek and Hebrew lexicons, syntax, and cross references.</li>
-<li>It indexes verse and word data in the browser so taps feel fast and much of the experience can work offline after caching.</li>
-<li>It keeps the paired English version in sync with the active Greek text: MSB with Majority Text by default, BSB with Critical Text when you switch.</li>
-<li>It saves personal material separately: notes, trails, progress, studies, reminders, and profile data belong to the user, not the public source datasets.</li>
+<li>It loads only what the chapter you're reading needs, so it opens fast.</li>
+<li>In the background it saves the rest to your phone, so reading, word pages and cross references keep working offline.</li>
+<li>Your own things (highlights, notes, saved words, Workspace, trails, reading plans and settings) are saved to your account, separately from the public texts.</li>
 </ol>
 </div>
 
 <div class="nerd-section nerd-honesty">
 <h3>A helpful limit</h3>
-<p>Rhema is a study tool, not a commentary pretending to be neutral. It gives structured data, lexical range, grammar helps, and comparison trails so the user can make careful observations. Cross references and grammar labels are aids, so they should be weighed with the text itself and other serious resources.</p>
+<p>Rhēma is a study tool, not a commentary. It gives you the text, the range of meaning, grammar helps and connections so you can observe carefully for yourself. Cross references and grammar labels are aids: weigh them with the text itself and other trusted resources.</p>
 </div>
 </div>
 </div>
