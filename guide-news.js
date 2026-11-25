@@ -372,7 +372,7 @@
          <div class="gn-re-link gn-re-name"><span class="gn-re-url">${esc(who.name || 'your username')}</span>${who.name ? copyBtn(who.name) : ''}</div>
          ${who.isEmail ? `<p class="gn-re-tip"><span class="material-symbols-outlined">info</span><span>Use this <b>email</b>, not your username. Your account signs in with its email.</span></p>` : ''}
          <p class="gn-re-tip"><span class="material-symbols-outlined">photo_camera</span><span>Take a screenshot or write it down so it’s handy.</span></p>
-         ${who.noEmail ? `<p class="gn-re-warn"><span class="material-symbols-outlined">warning</span><span>Your account has no email yet, so a forgotten password can’t be reset. Connecting one is a good safety net.</span></p>
+         ${who.noEmail ? `<p class="gn-re-warn"><span class="material-symbols-outlined">warning</span><span>Your account has no email yet, so a forgotten password can’t be reset by email later. Connecting one is a good safety net.</span></p>
          <button type="button" class="gn-re-email" onclick="RhemaGuideNews.connectEmail()">Connect an email</button>` : ''}`,
         `<button type="button" class="gn-go" onclick="RhemaGuideNews.readyCheck(1)">I’ve got it<span class="material-symbols-outlined">arrow_forward</span></button>${backLink}`);
     } else if (i === 1) {
@@ -425,12 +425,23 @@
     } else if (ok === 'offline' || ok === 'many') {
       out.innerHTML = `<p class="gn-re-bad"><span class="material-symbols-outlined">wifi_off</span><span>${ok === 'many' ? 'Too many tries for now. Wait a few minutes, then test it again.' : 'Couldn’t check right now. Make sure you’re online, then test it again.'}</span></p>`;
     } else {
-      out.innerHTML = `<p class="gn-re-bad"><span class="material-symbols-outlined">error</span><span><b>That’s not it.</b> Try again.</span></p>` + (who.isEmail
-        ? `<p class="gn-re-tip"><span class="material-symbols-outlined">mail</span><span>Forgot it? Get a link to set a new one at <b>${esc(who.name)}</b>, then come back and test the new password here.</span></p>
-           <button type="button" class="gn-re-email" onclick="RhemaGuideNews.sendReset(this)">Email me a reset link</button>`
-        : `<p class="gn-re-tip"><span class="material-symbols-outlined">warning</span><span>Your account has no email, so a forgotten password can’t be reset. Keep using this copy of the app and don’t delete it until you remember it.</span></p>`);
+      out.innerHTML = `<p class="gn-re-bad"><span class="material-symbols-outlined">error</span><span><b>That’s not it.</b> Try again.</span></p>
+        <p class="gn-re-tip"><span class="material-symbols-outlined">key</span><span>Don’t remember it? Since you’re signed in here, you can set a new one. You don’t need the old one.</span></p>
+        <button type="button" class="gn-re-email" onclick="RhemaGuideNews.newPassword()">Set a new password</button>`;
     }
   }
+  // Opens the app's "Set a new password" dialog over this screen; once it's
+  // saved (the app signs back in with it, so it's proven to work) this step passes.
+  function newPassword() {
+    if (typeof window.openSetPasswordModal !== 'function') return;
+    window.openSetPasswordModal('safety');
+  }
+  window.addEventListener('rhema:password-set', () => {
+    if (!el || reStep !== 1) return;
+    const out = document.getElementById('gnReResult'), next = document.getElementById('gnReNext');
+    if (out) out.innerHTML = `<p class="gn-re-good"><span class="material-symbols-outlined">check_circle</span><span><b>New password saved.</b> It works, and it’s the one you’ll sign in with on the new app.</span></p>`;
+    if (next) next.disabled = false;
+  });
   async function sendReset(btn) {
     const who = signInName();
     if (!who.isEmail || !btn) return;
@@ -493,9 +504,11 @@
     el = null;
     setTimeout(() => { node.remove(); document.body.classList.remove('gn-open'); }, reduced() ? 50 : 420);
   }
+  // Opens "Connect your email" on top of this screen, so they come straight
+  // back to the safety check when it's closed.
   function connectEmail() {
-    reinstallDone(false);
-    setTimeout(() => { try { window.openConnectEmailModal?.(); } catch {} }, reduced() ? 60 : 440);
+    try { window.openConnectEmailModal?.(); } catch {}
+    document.getElementById('connectEmailModal')?.classList.add('over-guide');
   }
 
   // ── When to show it ──────────────────────────────────────────────────────
@@ -532,7 +545,7 @@
   }
 
   window.RhemaGuideNews = { next, finish, show, reinstall, copyLink, reinstallDone, connectEmail,
-    readyCheck, readyBack, readyDone, testPassword, sendReset,
+    readyCheck, readyBack, readyDone, testPassword, sendReset, newPassword,
     _reset: () => { try { localStorage.removeItem(KEY); localStorage.removeItem(RE_KEY); } catch {} } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

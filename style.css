@@ -41647,3 +41647,11 @@ body.dark .gn-overlay .gn-re-test { color: #0b1730; }
 .gn-re .gn-go[disabled] { opacity: .45; }
 .gn-re .gn-go .material-symbols-outlined:last-child:not(:first-child) { margin-left: 2px; }
 .gn-re-back .gn-guide { animation-name: gnHop, gnBob; animation-duration: .6s, 2.4s; }
+/* Account dialogs open over Rhēma too (it shares their layer and sits later in
+   the page, so it used to cover them and they showed only on Home). */
+html.rhema-open :is(#authModal, #connectEmailModal, #forgotPasswordModal, #setPasswordModal, #displayNameInfoModal, #deleteAccountModal, #notifPromptModal).open { z-index: 1320; }
+#setPasswordModal.open { z-index: 1320; }
+.set-pw-show { display: flex; align-items: center; gap: 8px; margin: -2px 0 10px; font-size: 13px; color: var(--muted-color); cursor: pointer; }
+.set-pw-link { display: block; margin-top: 6px; padding: 0; background: none; border: 0; color: var(--secondary-color); font-size: 13px; font-weight: 650; text-decoration: underline; cursor: pointer; }
+html body #setPasswordModal.open.over-guide { z-index: 2147483000; }
+html body #connectEmailModal.open.over-guide { z-index: 2147483000; }
