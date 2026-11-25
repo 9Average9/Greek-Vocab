@@ -32499,7 +32499,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.645";
+const APP_VERSION = "3.0.646";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32522,6 +32522,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.646 — Set a new password, and the email prompt over Rhēma</div>
+<ul>
+<li><strong>Forgot your password?</strong> &mdash; While you&rsquo;re signed in, you can set a new one without the old one: Settings &rarr; Account &rarr; Change Password, or tap &ldquo;Don&rsquo;t remember it?&rdquo; when connecting your email or in the guide&rsquo;s safety check. Other devices you&rsquo;re signed in on will ask for the new password.</li>
+<li><strong>&ldquo;Remind me next time&rdquo;</strong> on the add-the-app-again note now really waits: it won&rsquo;t pop back up during this visit or for the next 12 hours.</li>
+<li><strong>Connect your email</strong> now opens on top of Rhēma (and over the guide&rsquo;s safety check) instead of behind it on Home.</li>
+<li><strong>Notifications</strong> &mdash; &ldquo;Studying Now&rdquo; alerts are retired along with separate studies. Every other reminder and alert is unchanged, and each kind of reminder now goes out on its own, so a problem with one can&rsquo;t hold up the others.</li>
+</ul>
 <div class="un-version-label">v3.0.645 — A safety check before you move</div>
 <ul>
 <li><strong>1-minute safety check</strong> &mdash; Before adding the app again, the guide walks you through four quick checks: the exact name you&rsquo;ll sign in with (your email, if you connected one), a test that your password really works (with a reset link if you forgot it), saving this phone&rsquo;s things to your account, and keeping the old icon until you&rsquo;re signed in on the new one.</li>
@@ -36280,13 +36287,13 @@ function openConnectEmailModal() {
 
 function closeConnectEmailModal(e) {
   if (e && e.target !== document.getElementById("connectEmailModal")) return;
-  document.getElementById("connectEmailModal")?.classList.remove("open");
+  document.getElementById("connectEmailModal")?.classList.remove("open", "over-guide");
 }
 
 // "Maybe later" — hide for now and re-prompt in a later session.
 function dismissConnectEmailPrompt() {
   _snoozeConnectEmailPrompt();
-  document.getElementById("connectEmailModal")?.classList.remove("open");
+  document.getElementById("connectEmailModal")?.classList.remove("open", "over-guide");
 }
 
 async function submitConnectEmail() {
@@ -36336,6 +36343,68 @@ function maybeShowConnectEmailPrompt() {
     openConnectEmailModal();
   }, 4500);
 }
+
+// ── Set a new password while signed in (no current password needed) ────────
+let _setPasswordFrom = '';
+function openSetPasswordModal(from = '') {
+  if (!window.Auth?.getCurrentUser?.()) { showAuthModal(); return; }
+  _setPasswordFrom = from;
+  const ce = document.getElementById('connectEmailModal');
+  if (from === 'connectEmail') ce?.classList.remove('open');
+  // Opened over the guide's safety check: stay above it too.
+  document.getElementById('setPasswordModal')?.classList.toggle('over-guide', from === 'safety' || (from === 'connectEmail' && !!ce?.classList.contains('over-guide')));
+  document.getElementById('setPasswordForm').style.display = '';
+  document.getElementById('setPasswordSuccess').style.display = 'none';
+  ['setPasswordNew', 'setPasswordConfirm'].forEach(id => { const i = document.getElementById(id); if (i) { i.value = ''; i.type = 'password'; } });
+  const show = document.querySelector('#setPasswordModal .set-pw-show input'); if (show) show.checked = false;
+  document.getElementById('setPasswordError').textContent = '';
+  document.getElementById('setPasswordModal')?.classList.add('open');
+  setTimeout(() => document.getElementById('setPasswordNew')?.focus(), 120);
+}
+function closeSetPasswordModal(e) {
+  if (e && e.target !== document.getElementById('setPasswordModal')) return;
+  document.getElementById('setPasswordModal')?.classList.remove('open', 'over-guide');
+  if (_setPasswordFrom === 'connectEmail') document.getElementById('connectEmailModal')?.classList.add('open');
+  _setPasswordFrom = '';
+}
+let _setPasswordJust = '';
+async function submitSetPassword() {
+  const pw = document.getElementById('setPasswordNew').value;
+  const again = document.getElementById('setPasswordConfirm').value;
+  const err = document.getElementById('setPasswordError');
+  const btn = document.getElementById('setPasswordBtn');
+  err.textContent = '';
+  if (pw.length < 6) { err.textContent = 'Use at least 6 characters.'; return; }
+  if (pw !== again) { err.textContent = "Those don't match. Type the same password twice."; return; }
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    await window.Auth.setNewPassword(pw);
+    const info = window.Auth?.getAuthEmailInfo?.() || {};
+    const name = info.email && !info.isAutoGenerated ? info.email : (String(info.email || '').split('@')[0] || localStorage.getItem('authUsername') || 'your username');
+    document.getElementById('setPasswordSignInName').textContent = name;
+    document.getElementById('setPasswordForm').style.display = 'none';
+    document.getElementById('setPasswordSuccess').style.display = '';
+    _setPasswordJust = pw;
+    document.getElementById('setPasswordDoneBtn').textContent = _setPasswordFrom === 'connectEmail' ? 'Back to connecting my email' : 'Done';
+  } catch (e) {
+    err.textContent = e?.message || "Couldn't change your password right now. Try again.";
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save New Password';
+  }
+}
+function finishSetPassword() {
+  const from = _setPasswordFrom, pw = _setPasswordJust;
+  _setPasswordJust = '';
+  _setPasswordFrom = '';
+  document.getElementById('setPasswordModal')?.classList.remove('open', 'over-guide');
+  // Back where they came from, with the new password already filled in.
+  if (from === 'connectEmail') {
+    document.getElementById('connectEmailModal')?.classList.add('open');
+    const f = document.getElementById('connectEmailPassword'); if (f && pw) f.value = pw;
+  }
+  window.dispatchEvent(new CustomEvent('rhema:password-set'));
+}
+Object.assign(window, { openSetPasswordModal, closeSetPasswordModal, submitSetPassword, finishSetPassword });
 
 function openForgotPasswordModal() {
   document.getElementById("forgotPasswordError").textContent = "";

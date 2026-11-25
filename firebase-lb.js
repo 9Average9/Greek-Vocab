@@ -219,6 +219,29 @@ async function connectEmail(newEmail, currentPassword) {
   return email;
 }
 
+// Sets a new password for the signed-in account without the old one (the
+// server does it; see setAccountPassword in functions/index.js). A new
+// password ends existing sign-ins, so this device signs straight back in with
+// it, which also proves it works. That quiet re-sign-in isn't a new session
+// for the app (no reload of everything).
+let _quietReauthUid = null;
+async function setNewPassword(password) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Sign in first.");
+  const email = user.email;
+  try {
+    await httpsCallable(functionsApp, "setAccountPassword")({ password });
+  } catch (e) {
+    const msg = String(e?.message || "").replace(/^Firebase:\s*/, "");
+    throw new Error(/internal|network|unavailable|deadline/i.test(e?.code || "") || !msg ? "Couldn't change your password right now. Make sure you're online and try again." : msg);
+  }
+  _quietReauthUid = user.uid;
+  setTimeout(() => { _quietReauthUid = null; }, 8000);
+  try { await signInWithEmailAndPassword(auth, email, password); }
+  catch (e) { console.warn("setNewPassword re-sign-in:", e?.code); }
+  return true;
+}
+
 // Checks a password against the signed-in account without signing out
 // (the "ready to move" check before adding the app again). true / false;
 // throws only for something other than a wrong password (offline, too many tries).
@@ -941,15 +964,9 @@ async function studyOpenSession(uid, studyId, { displayName, friendsList }) {
     if (!snap.exists()) return;
     const data = snap.data();
     const alreadyDone = (data.lastSessionDates || {})[uid] === today;
-    if (!alreadyDone) {
-      await updateDoc(ref, { [`lastSessionDates.${uid}`]: today });
-      if (data.shareSession && friendsList?.length) {
-        const notifyUids = friendsList.filter(fuid => !data.collaboratorUids.includes(fuid));
-        for (const fuid of notifyUids) {
-          fcmSendPushNotification(fuid, "studySession", displayName, uid, { studyName: data.name });
-        }
-      }
-    }
+    // (Friends used to get a "Studying Now" push here; it was retired with
+    // the separate studies.)
+    if (!alreadyDone) await updateDoc(ref, { [`lastSessionDates.${uid}`]: today });
     return { alreadyDone };
   } catch (e) { console.warn("studyOpenSession:", e); }
 }
@@ -2522,6 +2539,7 @@ window.Auth = {
   connectEmail,
   sendPasswordReset,
   verifyPassword,
+  setNewPassword,
   getAuthEmailInfo,
   onAuthChange,
   getCurrentUser,
@@ -2766,6 +2784,8 @@ window.Events = {
 // Notify app.js when Firebase auth state is resolved
 onAuthStateChanged(auth, user => {
   if (!_authResolvedOnce) { _authResolvedOnce = true; _authReadyResolve(user); }
+  // Signing back in after setting a new password: same person, nothing to redo.
+  if (user && _quietReauthUid && user.uid === _quietReauthUid) { _quietReauthUid = null; return; }
   if (typeof window.__onAuthStateReady === "function") {
     window.__onAuthStateReady(user);
   } else {

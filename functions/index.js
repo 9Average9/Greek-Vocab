@@ -5,6 +5,7 @@ const { initializeApp } = require("firebase-admin/app");
 const { FieldValue, getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
 const { getStorage } = require("firebase-admin/storage");
+const { getAuth } = require("firebase-admin/auth");
 
 initializeApp();
 const db = getFirestore();
@@ -562,8 +563,42 @@ async function cleanupDeletedUserData(uid) {
   }
 }
 
+// Set a new password for the signed-in account without the old one. Many
+// people stay signed in for months and no longer remember their password,
+// which they need to connect an email or sign in on a new install. Firebase
+// only lets a client change it right after signing in, so the server does it
+// for the signed-in user. A few changes a day at most.
+const PASSWORD_CHANGES_PER_DAY = 5;
+exports.setAccountPassword = functions.https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  if (!uid) throw new functions.https.HttpsError("unauthenticated", "Sign in first.");
+  const password = typeof data?.password === "string" ? data.password : "";
+  if (password.length < 6) throw new functions.https.HttpsError("invalid-argument", "Use at least 6 characters.");
+  if (password.length > 128) throw new functions.https.HttpsError("invalid-argument", "That password is too long.");
+  const ref = db.collection("accountSecurity").doc(uid);
+  const now = Date.now();
+  const allowed = await db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    const recent = ((snap.exists && snap.data().passwordSetAtMs) || []).filter(t => now - t < 24 * 60 * 60 * 1000);
+    if (recent.length >= PASSWORD_CHANGES_PER_DAY) return false;
+    tx.set(ref, { passwordSetAtMs: [...recent, now] }, { merge: true });
+    return true;
+  });
+  if (!allowed) throw new functions.https.HttpsError("resource-exhausted", "You've changed your password a few times today. Try again tomorrow.");
+  try {
+    await getAuth().updateUser(uid, { password });
+  } catch (e) {
+    console.error("setAccountPassword", uid, e?.code, e?.message);
+    if (e?.code === "auth/invalid-password") throw new functions.https.HttpsError("invalid-argument", "Use at least 6 characters.");
+    throw new functions.https.HttpsError("internal", "Couldn't change your password right now. Try again in a moment.");
+  }
+  console.log(`setAccountPassword ${uid}`);
+  return { ok: true };
+});
+
 exports.cleanupDeletedAuthUser = functions.auth.user().onDelete(async user => {
   await cleanupDeletedUserData(user.uid);
+  await db.collection("accountSecurity").doc(user.uid).delete().catch(() => {});
   return null;
 });
 
@@ -774,9 +809,11 @@ exports.sendScheduledReminders = functions.pubsub
   .schedule("every 1 minutes")
   .onRun(async () => {
     const now = new Date();
-    await backfillReminderNextSendAt(now);
-    await backfillMercyReminderNextSendAt(now);
-
+    // Each kind of reminder runs on its own, side by side: one failing (a bad
+    // document, a timeout) never holds back the others.
+    const sections = {
+      backfill: async () => { await backfillReminderNextSendAt(now); await backfillMercyReminderNextSendAt(now); },
+      study: async () => {
     const snap = await db.collection("users")
       .where("reminder.enabled", "==", true)
       .where("reminder.nextSendAt", "<=", now)
@@ -814,7 +851,8 @@ exports.sendScheduledReminders = functions.pubsub
       }, `study reminder ${userDoc.id}`);
       console.log(`${userDoc.id}: ${result.successCount} sent, ${result.failureCount} failed`);
     }
-
+      },
+      praise: async () => {
     const mercyDailySnap = await db.collection("users")
       .where("mercyReminder.enabled", "==", true)
       .where("mercyReminder.nextSendAt", "<=", now)
@@ -835,7 +873,8 @@ exports.sendScheduledReminders = functions.pubsub
         webpush: { fcmOptions: { link: "/Greek-Vocab/?open=mercies" }, notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } }
       }, `mercy reminder ${userDoc.id}`);
     }
-
+      },
+      praiseFriend: async () => {
     const mercyFriendSnap = await db.collection("users")
       .where("mercyFriendReminder.enabled", "==", true)
       .where("mercyFriendReminder.nextSendAt", "<=", now)
@@ -872,7 +911,8 @@ exports.sendScheduledReminders = functions.pubsub
         webpush: { fcmOptions: { link: `/Greek-Vocab/?open=mercies&friend=${encodeURIComponent(friendUid)}` }, notification: { icon: "/Greek-Vocab/icon-192.png", vibrate: [200, 100, 200] } }
       }, `mercy friend reminder ${userDoc.id}`);
     }
-
+      },
+      habits: async () => {
     // ── Habit reminder slots ─────────────────────────────────────────────────
     const habitSlotSnap = await db.collectionGroup("habitReminderSlots")
       .where("enabled", "==", true)
@@ -990,7 +1030,12 @@ exports.sendScheduledReminders = functions.pubsub
       }
       await Promise.all(slotUpdates);
     }
-
+      }
+    };
+    const results = await Promise.allSettled(Object.values(sections).map(run => run()));
+    results.forEach((r, i) => {
+      if (r.status === "rejected") console.error(`sendScheduledReminders ${Object.keys(sections)[i]} failed:`, r.reason?.message || r.reason);
+    });
     return null;
   });
 
@@ -1144,9 +1189,10 @@ exports.onEncouragementCreated = functions.firestore
       body = `${fromName} accepted your friend request.`;
       await shareRecentCommunityPostsBetweenFriends(targetUid, snap.data().fromUid);
     } else if (type === "studySession") {
-      const studyName = snap.data().studyName || "Greek";
-      title = "Studying Now 📖";
-      body = `${fromName} is studying ${studyName} right now!`;
+      // Retired with the separate studies: "Studying Now" is no longer sent,
+      // even from an older copy of the app that still asks for it.
+      await snap.ref.update({ processed: true });
+      return null;
     } else if (type === "studyCollabRequest") {
       const studyName = snap.data().studyName || "a study";
       title = "Study Join Request";
