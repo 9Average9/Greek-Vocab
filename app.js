@@ -32499,7 +32499,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.646";
+const APP_VERSION = "3.0.647";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32522,6 +32522,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.647 — Moving to the new app, made easier</div>
+<ul>
+<li><strong>The &ldquo;add the app again&rdquo; note is back</strong> for anyone still on the old copy. You can now set a new password without your old one, so signing in on the new app is easy, and the safety check walks you through it.</li>
+<li><strong>Highlights and notes</strong> that were only on this phone (made before they synced, or while offline) are now sent to your account once, so they show up on the new app too. Your font, text size, saved words and everything else already come along.</li>
+</ul>
 <div class="un-version-label">v3.0.646 — Set a new password, and the email prompt over Rhēma</div>
 <ul>
 <li><strong>Forgot your password?</strong> &mdash; While you&rsquo;re signed in, you can set a new one without the old one: Settings &rarr; Account &rarr; Change Password, or tap &ldquo;Don&rsquo;t remember it?&rdquo; when connecting your email or in the guide&rsquo;s safety check. Other devices you&rsquo;re signed in on will ask for the new password.</li>
@@ -42663,7 +42668,9 @@ function _rhemaStartMarksSync() {
   const uid = window.Auth?.getCurrentUser?.()?.uid;
   _rhemaMarksUnsub?.(); _rhemaMarksUnsub = null;
   if (!uid || !window.Auth?.listenRhemaMarks) return;
+  let first = true;
   _rhemaMarksUnsub = window.Auth.listenRhemaMarks(uid, (cloud) => {
+    if (first) { first = false; _rhemaCatchUpMarks(uid, cloud); }
     // cloud is a flat map keyed by ref, each carrying its own scope.
     Object.values(cloud).forEach(m => {
       const s = m.scope || 'home';
@@ -42671,6 +42678,27 @@ function _rhemaStartMarksSync() {
     });
     _rhemaPersistLocalMarks();
     if (document.getElementById('rhemaModal')?.classList.contains('open')) renderRhemaVerse();
+  });
+}
+// Once per account on each device: highlights and notes that only this phone
+// has (made before marks synced, or saved while offline and never sent) go up
+// to the account, so they follow the user to a new install. Only the missing
+// ones are written, so it costs a handful of writes at most, once.
+function _rhemaCatchUpMarks(uid, cloud) {
+  const flag = 'rhemaMarksCaughtUp:' + uid;
+  try { if (localStorage.getItem(flag)) return; } catch { return; }
+  if (!window.Auth?.saveRhemaMark) return;
+  const have = new Set(Object.values(cloud || {}).map(m => (m.scope || 'home') + '|' + m.ref));
+  const sends = [];
+  for (const [scope, bucket] of Object.entries(_rhemaScopedMarks || {})) {
+    for (const [ref, mark] of Object.entries(bucket || {})) {
+      if (!mark || !(mark.color || mark.note) || have.has(scope + '|' + ref)) continue;
+      sends.push(window.Auth.saveRhemaMark(uid, ref, scope, mark));
+    }
+  }
+  Promise.allSettled(sends).then(r => {
+    if (r.every(x => x.status === 'fulfilled')) { try { localStorage.setItem(flag, '1'); } catch {} }
+    if (sends.length) console.log(`Highlights/notes caught up: ${r.filter(x => x.status === 'fulfilled').length}/${sends.length}`);
   });
 }
 // Push this device's reader marks to the signed-in account (used when a guest
