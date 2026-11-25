@@ -27273,6 +27273,20 @@ function applyAppTheme(themeName) {
   const darkModeOn = localStorage.getItem("darkMode") === "true";
   if (darkModeOn) theme = darkenTheme(theme);
   const darkSurfaces = darkModeOn || _hexLuminance(baseTheme.light) < 0.22;
+  // On a light page, a bright accent (Sky, Orange, Rose…) used as text or as a
+  // button behind white text is too faint: deepen it just enough to read well.
+  if (!darkSurfaces) {
+    const contrast = (a, b) => { const x = _hexLuminance(a), y = _hexLuminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    let sec = theme.secondary, steps = 0;
+    while (steps < 8 && Math.min(contrast(sec, theme.light), contrast(sec, "#ffffff")) < 4.5) { sec = _mixHex(sec, "#000000", 0.08); steps++; }
+    if (sec !== theme.secondary) theme = { ...theme, secondary: sec, buttonText: getReadableButtonTextColor(sec) };
+  }
+  // On dark surfaces a very dark accent (Midnight, Charcoal, Obsidian…) would
+  // put dark text and icons on a dark background: lift it so it stays readable.
+  if (darkSurfaces && _hexLuminance(theme.secondary) < 0.25) {
+    const lifted = _mixHex(theme.secondary, "#ffffff", 0.58);
+    theme = { ...theme, secondary: lifted, buttonText: getReadableButtonTextColor(lifted) };
+  }
   const solidThemeColor = value => {
     const match = String(value || "").match(/rgba?\(([^)]+)\)/i);
     if (!match) return value;
@@ -27292,6 +27306,7 @@ function applyAppTheme(themeName) {
   document.documentElement.style.setProperty("--btn-text-color", theme.buttonText);
 
   document.body.classList.toggle("dark", darkSurfaces);
+  document.documentElement.classList.toggle("is-dark", darkSurfaces);   // styles read this (cheaper than :has(body.dark))
   document.body.classList.toggle("high-contrast-theme", getHighContrastMode());
   applyMatchHomeThemeMode();
 
@@ -27493,9 +27508,13 @@ function getReadableButtonTextColor(buttonColor) {
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
 
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-
-  return brightness > 150 ? "#1f2933" : "#ffffff";
+  // Pick whichever of white or dark ink has more contrast on this color
+  // (a plain brightness cutoff chose white on mid-light blues).
+  const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  const vsWhite = 1.05 / (L + 0.05);
+  const vsInk = (L + 0.05) / (0.0262 + 0.05);   // #1f2933
+  return vsInk > vsWhite ? "#1f2933" : "#ffffff";
 }
 
 
@@ -31516,8 +31535,8 @@ function youShowStylePop(skin) {
   const pop = document.getElementById('youStylePop');
   if (!pop) return;
   const [name, desc] = YOU_STYLES[skin] || [skin, ''];
-  document.getElementById('youPopHome').src = `assets/style-previews/${skin}-home.webp`;
-  document.getElementById('youPopRead').src = `assets/style-previews/${skin}-read.webp`;
+  document.getElementById('youPopHome').src = `assets/style-previews/${skin}-home.webp?v=${APP_VERSION}`;
+  document.getElementById('youPopRead').src = `assets/style-previews/${skin}-read.webp?v=${APP_VERSION}`;
   document.getElementById('youPopName').textContent = name;
   document.getElementById('youPopDesc').textContent = desc;
   pop.querySelector('.you-pop-undo').hidden = !_youStylePrev || _youStylePrev === skin;
@@ -31623,7 +31642,7 @@ function youRefresh() {
   const dm = document.getElementById('darkModeToggle'); if (dm) dm.checked = dark;
   const styles = document.getElementById('youStyles');
   if (styles) styles.innerHTML = Object.entries(YOU_STYLES).map(([id, [name, desc]]) =>
-    `<button type="button" class="you-style ${id === skin ? 'on' : ''}" onclick="youPickStyle('${id}')" aria-pressed="${id === skin}"><img src="assets/style-previews/${id}-home.webp" alt="" loading="lazy" decoding="async"><b>${name}</b><small>${desc}</small>${id === skin ? '<span class="material-symbols-outlined you-check">check_circle</span>' : ''}</button>`).join('');
+    `<button type="button" class="you-style ${id === skin ? 'on' : ''}" onclick="youPickStyle('${id}')" aria-pressed="${id === skin}"><img src="assets/style-previews/${id}-home.webp?v=${APP_VERSION}" alt="" loading="lazy" decoding="async"><b>${name}</b><small>${desc}</small>${id === skin ? '<span class="material-symbols-outlined you-check">check_circle</span>' : ''}</button>`).join('');
   // Keep whatever color they had, even if it's not in the short set.
   let kept = '';
   try { kept = localStorage.getItem('appThemeKept') || ''; } catch {}
@@ -32721,7 +32740,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.651";
+const APP_VERSION = "3.0.652";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32744,6 +32763,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.652 — Every style its own, and easier reading in every color</div>
+<ul>
+<li><strong>Styles feel different now</strong> &mdash; Each one has its own shapes and motion: Notebook&rsquo;s square paper and tilted tiles, Blueprint&rsquo;s dashed drafting lines, Scroll&rsquo;s double borders that unroll, Chalkboard&rsquo;s hand-drawn corners, Terminal&rsquo;s blinking cursor and flicker, Candy&rsquo;s bubbly pop, Fire&rsquo;s cut corners and glow, and Nature&rsquo;s leaf shapes that grow in. Classic stays the same.</li>
+<li><strong>Dark mode, checked color by color</strong> &mdash; Every color and style was measured for readable text in light and dark. Home&rsquo;s tool tiles are now dark in dark mode instead of bright, very dark colors like Midnight get a lighter accent so buttons and labels stay readable, and button text always picks the color that reads best.</li>
+<li><strong>Clearer text in light mode too</strong> &mdash; Faint gray text in a few styles is darker, and bright colors like Sky, Orange and Rose are deepened slightly where they&rsquo;re used for text.</li>
+</ul>
 <div class="un-version-label">v3.0.651 — Meet “You”</div>
 <ul>
 <li><strong>Profile is now You</strong> &mdash; Your picture and name, your streak, your highlights, notes, saved words and trails, your reading plan, and your Greek lessons, all on one screen.</li>
