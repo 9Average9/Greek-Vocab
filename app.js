@@ -32740,7 +32740,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.652";
+const APP_VERSION = "3.0.653";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32763,6 +32763,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.653 — Bolder styles, and a cleaner Memorize picture</div>
+<ul>
+<li><strong>Notebook is a real notebook</strong> &mdash; Cards are outlined in pen like they were drawn by hand, some are held on with tape, labels are highlighted with a marker, your name gets a scribbled underline and a doodled star, and little doodles fill the page margins.</li>
+<li><strong>Every style goes further</strong> &mdash; Blueprint has drafting corner marks and measuring lines, Scroll has curled corner flourishes and torn paper edges, Chalkboard has chalk outlines, chalk doodles and a wooden chalk tray, Terminal has screen scanlines, typed-out labels and [ bracket ] buttons, Candy has glossy shine, sprinkles and bouncy buttons, Fire has rising embers and glowing heat lines, and Nature has swaying leaf sprigs and leaves drifting down Home.</li>
+<li><strong>Memorize picture fixed</strong> &mdash; The Memorize tile&rsquo;s picture had jagged holes that showed dark patches, most of all in dark mode. It&rsquo;s clean now.</li>
+<li><strong>Easier-to-read bottom bar</strong> &mdash; In Chalkboard and Terminal with light mode on, the bottom bar&rsquo;s icons were faint. The bar now matches the style so they stand out.</li>
+</ul>
 <div class="un-version-label">v3.0.652 — Every style its own, and easier reading in every color</div>
 <ul>
 <li><strong>Styles feel different now</strong> &mdash; Each one has its own shapes and motion: Notebook&rsquo;s square paper and tilted tiles, Blueprint&rsquo;s dashed drafting lines, Scroll&rsquo;s double borders that unroll, Chalkboard&rsquo;s hand-drawn corners, Terminal&rsquo;s blinking cursor and flicker, Candy&rsquo;s bubbly pop, Fire&rsquo;s cut corners and glow, and Nature&rsquo;s leaf shapes that grow in. Classic stays the same.</li>
