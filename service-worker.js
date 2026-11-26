@@ -167,7 +167,7 @@ const FILES_TO_CACHE = [
   "./assets/icons/quick-reading-plan.png?v=3.0.439",
   "./assets/icons/quick-threads.png?v=3.0.439",
   "./assets/icons/ChatGPT Image Jun 23, 2026, 10_26_34 PM.png",
-  "./assets/icons/habit-builder-art.png",
+  "./assets/icons/habit-builder-cut.webp?v=3.0.654",
   "./assets/icons/reading-plan-art.webp",
   "./assets/icons/studies-bookshelf.png?v=3.0.238",
   "./assets/icons/study-book-cover.png?v=3.0.241",

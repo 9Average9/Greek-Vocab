@@ -42065,3 +42065,50 @@ html.is-dark:not(#_x) #homeScreen .home-action-tile[class*="quick-action-"] .hat
 :root[data-skin="chalkboard"] :is(.hhw-sub, .hjw-sub) { color: #eef4f0 !important; }
 :root[data-skin="chalkboard"] :is(.hhw-kicker, .hjw-kicker) { color: #ffe9a8 !important; }
 :root[data-skin="chalkboard"] :is(.you-row-danger b, .you-danger b, .you-lbl-danger), :root[data-skin="terminal"] :is(.you-row-danger b, .you-danger b, .you-lbl-danger) { color: #ffe0dc !important; }
+
+/* ── Habit Builder art: a cut-out picture that sits on the card ──────────────
+   The calendar art used to be a rectangle with its own light background, so it
+   showed as a block (most of all in dark mode) and was cropped at the top. It is
+   now a transparent cut-out shown whole, with a soft shadow, and in dark mode a
+   soft glow instead of a box. The theme tint is masked to the picture's shape. */
+html body .hhw-art {
+  right: 8px; top: 10px; bottom: 10px; width: min(46vw, 184px);
+  border-radius: 0; overflow: visible; background: none; box-shadow: none;
+}
+html body .habits-hero-art {
+  left: auto; right: 10px; bottom: auto;
+  top: calc(max(env(safe-area-inset-top, 0px), 18px) + 6px);
+  width: min(46vw, 196px); height: 150px;
+  overflow: visible; background: none; box-shadow: none;
+}
+html body.dark .hhw-art,
+html body.dark .habits-hero-art {
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--secondary-color) 24%, transparent), transparent);
+}
+html body .hhw-art::after,
+html body .habits-hero-art::after { display: none; }
+html body .hhw-art img,
+html body .habits-hero-art img {
+  object-fit: contain; object-position: center; opacity: 1;
+  filter: drop-shadow(0 8px 12px color-mix(in srgb, var(--secondary-color) 22%, transparent));
+}
+html body.dark .hhw-art img,
+html body.dark .habits-hero-art img {
+  opacity: 1; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .45)) brightness(.97);
+}
+html body .hhw-art-tint,
+html body .habits-hero-tint {
+  -webkit-mask: url("assets/icons/habit-builder-cut.webp?v=3.0.654") center / contain no-repeat;
+  mask: url("assets/icons/habit-builder-cut.webp?v=3.0.654") center / contain no-repeat;
+}
+html body .habits-hero { min-height: 196px; }
+html body .hhw-art { width: min(40vw, 150px); z-index: 2; }
+html body .home-habit-widget::after { display: none; }
+html body .habits-hero-art { width: min(40vw, 160px); height: 124px; top: calc(max(env(safe-area-inset-top, 0px), 18px) + 14px); }
+html body .hhw-art { width: min(36vw, 138px); right: 6px; }
+html body .habits-hero-text { padding-right: min(42vw, 172px); }
+
+/* Dark-mode touch-ups found by the contrast audit (small accent-colored text). */
+html.is-dark .rrp-tile em { color: color-mix(in srgb, var(--secondary-color) 68%, #fff); }
+html.is-dark .rp-chip.active { color: color-mix(in srgb, var(--secondary-color) 68%, #fff); }
+:root[data-skin="scroll"].is-dark :is(.mem-hub-tabs, .mem-source-tabs) button:not(.active) { color: #d2c3a0 !important; }
