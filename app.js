@@ -24308,6 +24308,21 @@ function selectHabitNoteStatus(status) {
   });
 }
 
+// The note box grows with what's written (no length limit); past about a third of
+// the screen it scrolls inside, so Save always stays in view.
+function _habitNoteAutoGrow(el) {
+  if (!el) return;
+  // Grow only into the room left on the card, so Save always stays in view.
+  let cap = Math.round(window.innerHeight * 0.45);
+  const card = el.closest(".modal-card");
+  if (card) {
+    const cardMax = parseFloat(getComputedStyle(card).maxHeight) || window.innerHeight * 0.85;
+    const others = card.scrollHeight - el.offsetHeight;
+    cap = Math.max(110, Math.min(cap, Math.floor(cardMax - others - 6)));
+  }
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight + 2, cap) + "px";
+}
 function openHabitNoteModal(habitId, dateKey = _habitTodayKey()) {
   const habit = _habitItems.find(h => h.id === habitId);
   if (!habit) return;
@@ -24327,6 +24342,7 @@ function openHabitNoteModal(habitId, dateKey = _habitTodayKey()) {
     btn.classList.toggle("selected", btn.dataset.status === currentStatus);
   });
   document.getElementById("habitNoteModal")?.classList.add("open");
+  requestAnimationFrame(() => _habitNoteAutoGrow(input));
 }
 
 function closeHabitNoteModal(event) {
@@ -32740,7 +32756,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.654";
+const APP_VERSION = "3.0.655";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32763,6 +32779,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.655 — Habit notes with no limit</div>
+<ul>
+<li><strong>Write as much as you want</strong> &mdash; Habit Builder&rsquo;s daily notes and each habit&rsquo;s description no longer stop at a set number of characters. The note box grows as you write and scrolls when it&rsquo;s long, and Save always stays in view.</li>
+<li><strong>Reminders stay tidy</strong> &mdash; A Reading Plan reminder shows just the day&rsquo;s reading, even if that day&rsquo;s note is long.</li>
+</ul>
 <div class="un-version-label">v3.0.654 — A cleaner Habit Builder, and dark mode touch-ups</div>
 <ul>
 <li><strong>Habit Builder picture</strong> &mdash; The calendar picture on Home and at the top of Habits is now cut out cleanly, so it sits right on the card instead of in a box. It&rsquo;s no longer cut off at the top, it doesn&rsquo;t cover the title or description on Habits, and in dark mode it has a soft glow instead of a bright block. It also loads faster.</li>

@@ -42126,3 +42126,7 @@ html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) .ha
 :root[data-skin="chalkboard"]:not(.is-dark) :is(.you-pill, #profileJoinStat) { color: #fff6d8 !important; }
 :root[data-skin="chalkboard"]:not(.is-dark) .rrp-tile em, :root[data-skin="terminal"]:not(.is-dark) .rrp-tile em { color: color-mix(in srgb, var(--secondary-color) 55%, #fff); }
 :root[data-skin="chalkboard"]:not(.is-dark) .rrp-tile em { background: rgba(0, 0, 0, .28); }
+/* Habit notes have no length limit: the note box grows as you write, then scrolls. */
+#habitNoteInput { min-height: 110px; max-height: 45vh; overflow-y: auto; resize: none; line-height: 1.45; }
+#habitDescInput, #habitDetailDescInput { min-height: 72px; resize: vertical; }
+#habitNoteModal .habit-note-card { max-height: calc(100dvh - 32px); overflow-y: auto; }
