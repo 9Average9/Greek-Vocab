@@ -36756,7 +36756,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --memorization-page-color: #40685c !important;
   --border-color: rgba(242, 246, 240, 0.35) !important;
   --font-color: #f2f6f0 !important;
-  --muted-color: #d6e3dc!important;
+  --muted-color: #ecf3ee!important;
   --btn-text-color: #24352f !important;
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
@@ -42117,3 +42117,7 @@ html.is-dark .rp-chip.active { color: color-mix(in srgb, var(--secondary-color) 
 html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) :is(.rp-chip.active, .habits-kicker, .mem-secondary-btn) { color: color-mix(in srgb, var(--secondary-color) 78%, #000); }
 html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) .habits-hero p { color: color-mix(in srgb, var(--muted-color) 85%, #000); }
 :root[data-skin="candy"]:not(.is-dark) .mem-primary-btn { color: #fff !important; }
+/* Light Chalkboard: its board is a lighter green, so chalk-yellow labels and the
+   picked chips get a brighter yellow or a darker chip to stay readable. */
+:root[data-skin="chalkboard"]:not(.is-dark) :is(.habits-kicker, .mem-secondary-btn, .mem-secondary-btn .material-symbols-outlined) { color: #fff1bd !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .rp-chip.active { background: color-mix(in srgb, var(--secondary-color) 14%, #2a453c) !important; }
