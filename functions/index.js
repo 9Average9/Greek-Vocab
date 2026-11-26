@@ -1054,7 +1054,9 @@ exports.sendScheduledReminders = functions.pubsub
             try {
               pretty = new Intl.DateTimeFormat("en-US", { timeZone: tz, month: "long", day: "numeric", year: "numeric" }).format(now);
             } catch (e) { pretty = mercyDateKey(now.getTime(), tz); }
-            const ref = String(info.comment || "").replace(/^📖\s*/, "").trim();
+            // Only the reference line: the day's note can be any length, and a push
+            // body must stay small.
+            const ref = String(info.comment || "").replace(/^📖\s*/, "").split("\n")[0].trim().slice(0, 160);
             title = "Reading Plan";
             body = ref ? `It's ${pretty}, time to read ${ref}.` : `It's ${pretty}, time to read today's passage.`;
             link = "/Greek-Vocab/?open=reading-plan";
