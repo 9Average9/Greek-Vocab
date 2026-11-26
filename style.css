@@ -32903,6 +32903,10 @@ body.reading-plan-active #statusBarBg {
 .rp-calc-meta .material-symbols-outlined { font-size: 1.05rem; color: var(--secondary-color); opacity: 0.85; }
 .rp-calc-good { color: #15803d; font-weight: 800; }
 .rp-calc-good .material-symbols-outlined { color: #16a34a !important; }
+body.dark .rp-calc-good, :root[data-skin="chalkboard"] .rp-calc-good, :root[data-skin="terminal"] .rp-calc-good { color: #4ade80; }
+body.dark .rp-calc-good .material-symbols-outlined, :root[data-skin="chalkboard"] .rp-calc-good .material-symbols-outlined, :root[data-skin="terminal"] .rp-calc-good .material-symbols-outlined { color: #4ade80 !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .rp-calc-good, :root[data-skin="chalkboard"]:not(.is-dark) .rp-calc-good .material-symbols-outlined { color: #c6f6d5 !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .mem-primary-btn, :root[data-skin="chalkboard"]:not(.is-dark) .mem-primary-btn .material-symbols-outlined { color: #1f2933 !important; }
 .rp-preview {
   margin-top: 14px; padding-top: 12px;
   border-top: 1px solid var(--border-color);
@@ -36752,7 +36756,7 @@ html[data-skin]:not(.scr-homeScreen):not(#_p):not(._p):not(_p) {
   --memorization-page-color: #40685c !important;
   --border-color: rgba(242, 246, 240, 0.35) !important;
   --font-color: #f2f6f0 !important;
-  --muted-color: #d6e3dc!important;
+  --muted-color: #ecf3ee!important;
   --btn-text-color: #24352f !important;
   --primary: var(--primary-color) !important;
   --secondary: var(--secondary-color) !important;
@@ -42061,3 +42065,64 @@ html.is-dark:not(#_x) #homeScreen .home-action-tile[class*="quick-action-"] .hat
 :root[data-skin="chalkboard"] :is(.hhw-sub, .hjw-sub) { color: #eef4f0 !important; }
 :root[data-skin="chalkboard"] :is(.hhw-kicker, .hjw-kicker) { color: #ffe9a8 !important; }
 :root[data-skin="chalkboard"] :is(.you-row-danger b, .you-danger b, .you-lbl-danger), :root[data-skin="terminal"] :is(.you-row-danger b, .you-danger b, .you-lbl-danger) { color: #ffe0dc !important; }
+
+/* ── Habit Builder art: a cut-out picture that sits on the card ──────────────
+   The calendar art used to be a rectangle with its own light background, so it
+   showed as a block (most of all in dark mode) and was cropped at the top. It is
+   now a transparent cut-out shown whole, with a soft shadow, and in dark mode a
+   soft glow instead of a box. The theme tint is masked to the picture's shape. */
+html body .hhw-art {
+  right: 8px; top: 10px; bottom: 10px; width: min(46vw, 184px);
+  border-radius: 0; overflow: visible; background: none; box-shadow: none;
+}
+html body .habits-hero-art {
+  left: auto; right: 10px; bottom: auto;
+  top: calc(max(env(safe-area-inset-top, 0px), 18px) + 6px);
+  width: min(46vw, 196px); height: 150px;
+  overflow: visible; background: none; box-shadow: none;
+}
+html body.dark .hhw-art,
+html body.dark .habits-hero-art {
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--secondary-color) 24%, transparent), transparent);
+}
+html body .hhw-art::after,
+html body .habits-hero-art::after { display: none; }
+html body .hhw-art img,
+html body .habits-hero-art img {
+  object-fit: contain; object-position: center; opacity: 1;
+  filter: drop-shadow(0 8px 12px color-mix(in srgb, var(--secondary-color) 22%, transparent));
+}
+html body.dark .hhw-art img,
+html body.dark .habits-hero-art img {
+  opacity: 1; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .45)) brightness(.97);
+}
+html body .hhw-art-tint,
+html body .habits-hero-tint {
+  -webkit-mask: url("assets/icons/habit-builder-cut.webp?v=3.0.654") center / contain no-repeat;
+  mask: url("assets/icons/habit-builder-cut.webp?v=3.0.654") center / contain no-repeat;
+}
+html body .habits-hero { min-height: 196px; }
+html body .hhw-art { width: min(40vw, 150px); z-index: 2; }
+html body .home-habit-widget::after { display: none; }
+html body .habits-hero-art { width: min(40vw, 160px); height: 124px; top: calc(max(env(safe-area-inset-top, 0px), 18px) + 14px); }
+html body .hhw-art { width: min(36vw, 138px); right: 6px; }
+html body .habits-hero-text { padding-right: min(42vw, 172px); }
+
+/* Dark-mode touch-ups found by the contrast audit (small accent-colored text). */
+html.is-dark .rrp-tile em { color: color-mix(in srgb, var(--secondary-color) 68%, #fff); }
+html.is-dark .rp-chip.active { color: color-mix(in srgb, var(--secondary-color) 68%, #fff); }
+:root[data-skin="scroll"].is-dark :is(.mem-hub-tabs, .mem-source-tabs) button:not(.active) { color: #d2c3a0 !important; }
+/* Light mode: small accent-colored text on tinted backgrounds, deepened a little.
+   Chalkboard and Terminal keep their light accents (their surfaces are dark). */
+html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) :is(.rp-chip.active, .habits-kicker, .mem-secondary-btn) { color: color-mix(in srgb, var(--secondary-color) 78%, #000); }
+html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) .habits-hero p { color: color-mix(in srgb, var(--muted-color) 85%, #000); }
+:root[data-skin="candy"]:not(.is-dark) .mem-primary-btn { color: #fff !important; }
+/* Light Chalkboard: its board is a lighter green, so chalk-yellow labels and the
+   picked chips get a brighter yellow or a darker chip to stay readable. */
+:root[data-skin="chalkboard"]:not(.is-dark) :is(.habits-kicker, .mem-secondary-btn, .mem-secondary-btn .material-symbols-outlined) { color: #fff1bd !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .rp-chip.active { background: color-mix(in srgb, var(--secondary-color) 14%, #2a453c) !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) :is(.home-habit-widget, .home-journey-widget) {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--secondary-color) 6%, #2f4d43), #2c483f 72%) !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) :is(.you-pill, #profileJoinStat) { color: #fff6d8 !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .rrp-tile em, :root[data-skin="terminal"]:not(.is-dark) .rrp-tile em { color: color-mix(in srgb, var(--secondary-color) 55%, #fff); }
+:root[data-skin="chalkboard"]:not(.is-dark) .rrp-tile em { background: rgba(0, 0, 0, .28); }
