@@ -836,3 +836,9 @@ body.dark .sn-lib-hero,
 body.dark .sn-lib-hero p,
 :root[data-skin="chalkboard"] .sn-lib-hero p,
 :root[data-skin="terminal"] .sn-lib-hero p { opacity: .92; }
+:root[data-skin="chalkboard"] .sn-lib-hero {
+  background: linear-gradient(150deg, color-mix(in srgb, var(--sn-accent) 42%, #000), color-mix(in srgb, var(--sn-accent) 28%, #000));
+}
+body.dark .sn-lib-new.sn-ghost,
+:root[data-skin="chalkboard"] .sn-lib-new.sn-ghost,
+:root[data-skin="terminal"] .sn-lib-new.sn-ghost { background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); }

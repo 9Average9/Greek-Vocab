@@ -32905,6 +32905,8 @@ body.reading-plan-active #statusBarBg {
 .rp-calc-good .material-symbols-outlined { color: #16a34a !important; }
 body.dark .rp-calc-good, :root[data-skin="chalkboard"] .rp-calc-good, :root[data-skin="terminal"] .rp-calc-good { color: #4ade80; }
 body.dark .rp-calc-good .material-symbols-outlined, :root[data-skin="chalkboard"] .rp-calc-good .material-symbols-outlined, :root[data-skin="terminal"] .rp-calc-good .material-symbols-outlined { color: #4ade80 !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .rp-calc-good, :root[data-skin="chalkboard"]:not(.is-dark) .rp-calc-good .material-symbols-outlined { color: #c6f6d5 !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .mem-primary-btn, :root[data-skin="chalkboard"]:not(.is-dark) .mem-primary-btn .material-symbols-outlined { color: #1f2933 !important; }
 .rp-preview {
   margin-top: 14px; padding-top: 12px;
   border-top: 1px solid var(--border-color);
