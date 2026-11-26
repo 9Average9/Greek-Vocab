@@ -42121,3 +42121,8 @@ html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) .ha
    picked chips get a brighter yellow or a darker chip to stay readable. */
 :root[data-skin="chalkboard"]:not(.is-dark) :is(.habits-kicker, .mem-secondary-btn, .mem-secondary-btn .material-symbols-outlined) { color: #fff1bd !important; }
 :root[data-skin="chalkboard"]:not(.is-dark) .rp-chip.active { background: color-mix(in srgb, var(--secondary-color) 14%, #2a453c) !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) :is(.home-habit-widget, .home-journey-widget) {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--secondary-color) 6%, #2f4d43), #2c483f 72%) !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) :is(.you-pill, #profileJoinStat) { color: #fff6d8 !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .rrp-tile em, :root[data-skin="terminal"]:not(.is-dark) .rrp-tile em { color: color-mix(in srgb, var(--secondary-color) 55%, #fff); }
+:root[data-skin="chalkboard"]:not(.is-dark) .rrp-tile em { background: rgba(0, 0, 0, .28); }
