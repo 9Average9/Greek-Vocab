@@ -824,3 +824,15 @@ body.dark .sn-scan-btn { color: color-mix(in srgb, var(--sn-accent) 60%, #fff); 
   background: var(--sn-accent-soft); border: 1px solid color-mix(in srgb, var(--sn-accent) 30%, transparent);
 }
 .sn-vp-conf-label { font-size: 1rem; font-weight: 850; color: var(--sn-accent-deep); }
+
+/* Dark surfaces: the app lifts the accent color in dark mode (and Chalkboard and
+   Terminal use a light accent), so the banner deepens it to keep its white text
+   readable. */
+body.dark .sn-lib-hero,
+:root[data-skin="chalkboard"] .sn-lib-hero,
+:root[data-skin="terminal"] .sn-lib-hero {
+  background: linear-gradient(150deg, color-mix(in srgb, var(--sn-accent) 52%, #000), color-mix(in srgb, var(--sn-accent) 34%, #000));
+}
+body.dark .sn-lib-hero p,
+:root[data-skin="chalkboard"] .sn-lib-hero p,
+:root[data-skin="terminal"] .sn-lib-hero p { opacity: .92; }

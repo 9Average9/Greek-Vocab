@@ -32740,7 +32740,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.653";
+const APP_VERSION = "3.0.654";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32763,6 +32763,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.654 — Dark mode touch-ups</div>
+<ul>
+<li><strong>Sermon Notes</strong> &mdash; The banner at the top was too light behind its white text in dark mode (and in Chalkboard and Terminal). It&rsquo;s deeper now, so the title, description and Templates button are easy to read.</li>
+<li><strong>Reading Plan</strong> &mdash; The green &ldquo;At this pace you&rsquo;d finish&rdquo; line is brighter in dark mode.</li>
+</ul>
 <div class="un-version-label">v3.0.653 — Bolder styles, and a cleaner Memorize picture</div>
 <ul>
 <li><strong>Notebook is a real notebook</strong> &mdash; Cards are outlined in pen like they were drawn by hand, some are held on with tape, labels are highlighted with a marker, your name gets a scribbled underline and a doodled star, and little doodles fill the page margins.</li>
