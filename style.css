@@ -42112,3 +42112,8 @@ html body .habits-hero-text { padding-right: min(42vw, 172px); }
 html.is-dark .rrp-tile em { color: color-mix(in srgb, var(--secondary-color) 68%, #fff); }
 html.is-dark .rp-chip.active { color: color-mix(in srgb, var(--secondary-color) 68%, #fff); }
 :root[data-skin="scroll"].is-dark :is(.mem-hub-tabs, .mem-source-tabs) button:not(.active) { color: #d2c3a0 !important; }
+/* Light mode: small accent-colored text on tinted backgrounds, deepened a little.
+   Chalkboard and Terminal keep their light accents (their surfaces are dark). */
+html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) :is(.rp-chip.active, .habits-kicker, .mem-secondary-btn) { color: color-mix(in srgb, var(--secondary-color) 78%, #000); }
+html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) .habits-hero p { color: color-mix(in srgb, var(--muted-color) 85%, #000); }
+:root[data-skin="candy"]:not(.is-dark) .mem-primary-btn { color: #fff !important; }

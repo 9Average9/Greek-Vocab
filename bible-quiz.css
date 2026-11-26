@@ -263,7 +263,7 @@ body.dark #bibleQuizPage {
   background:
     linear-gradient(135deg,
       var(--bq-primary),
-      color-mix(in srgb, var(--bq-primary) 70%, var(--bq-accent)));
+      color-mix(in srgb, var(--bq-primary) 80%, #000));
   color: var(--bq-primary-ink);
   font-size: 1.05rem;
   font-weight: 800;
