@@ -8140,7 +8140,7 @@ let currentSentence = null;
 
 
 const screens = [
-  "homeScreen", "profilePage", "habitsPage", "journeysPage", "atlasPage", "memorizationPage", "readingPlanPage", "threadsPage", "merciesPage", "communityPage", "csDetailPage",
+  "homeScreen", "allToolsPage", "profilePage", "habitsPage", "journeysPage", "atlasPage", "memorizationPage", "readingPlanPage", "threadsPage", "merciesPage", "communityPage", "csDetailPage",
   "sermonsPage", "newLearnMenu", "advancedLearnMenu",
   "basicVerbsLearnMenu", "advVerbsLearnMenu",
   "learnMenu", "learnScreen", "translateMenu", "translateScreen",
@@ -10715,20 +10715,104 @@ function setNavActive(page) {
   window._bnBubbleSync?.();
 }
 
-// ── Home tools: "View All" shows the tools past the first six ───────────────
-function toggleHomeTools(force) {
-  const grid = document.getElementById('homeToolsGrid');
-  const btn = document.getElementById('homeToolsAllBtn');
-  if (!grid) return;
-  const open = typeof force === 'boolean' ? force : !grid.classList.contains('show-all');
-  grid.classList.toggle('show-all', open);
-  btn?.setAttribute('aria-expanded', String(open));
-  btn?.classList.toggle('open', open);
-  const t = document.getElementById('homeToolsAllText');
-  if (t) t.textContent = open ? 'Show Less' : 'View All';
-  if (open) requestAnimationFrame(() => grid.querySelector('.home-action-tile:nth-child(7)')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
-  if (typeof scheduleHomeFit === 'function') scheduleHomeFit();
+// ── All Tools page ("View All" on Home) ────────────────────────────────────
+// Every tool, grouped like the reference: Study, Build, Explore, Track. Each
+// card opens the same thing its Home button (or Home card) opens.
+const AT_V = '3.0.661';
+const AT_CATS = [
+  { id: 'study', name: 'Study', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.6C10.2 5.2 7.6 4.6 3.6 4.8v13c4-.2 6.6.4 8.4 1.8 1.8-1.4 4.4-2 8.4-1.8v-13c-4-.2-6.6.4-8.4 1.8zM12 6.6v13"/></svg>' },
+  { id: 'build', name: 'Build', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6 21 8.2l-9 4.6-9-4.6zM3 12.2l9 4.6 9-4.6M3 16.2l9 4.6 9-4.6"/></svg>' },
+  { id: 'explore', name: 'Explore', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="at-fill" d="M2.5 20.5 9.4 9.8l3.1 4.4 2.3-3 6.7 9.3z"/><path d="M14.2 9.6V3.4l4.6 1.6-4.6 1.7"/></svg>' },
+  { id: 'track', name: 'Track', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect class="at-fill" x="3.5" y="13" width="4.2" height="7.5" rx="1.2"/><rect class="at-fill" x="9.9" y="8.5" width="4.2" height="12" rx="1.2"/><rect class="at-fill" x="16.3" y="3.5" width="4.2" height="17" rx="1.2"/></svg>' }
+];
+const AT_TOOLS = [
+  { id: 'quiz', name: 'Bible Quiz', cat: 'study', img: `assets/icons/quick-quiz-blue.png?v=${AT_V}`, tone: '#1d4ed8', open: el => window.openBibleQuiz?.(el) },
+  { id: 'sermon', name: 'Sermon Notes', cat: 'study', img: `assets/icons/quick-sermon-podium.png?v=3.0.660`, tone: '#b45309', open: el => window.openSermonNotes?.(el) },
+  { id: 'vocab', name: 'Vocab', cat: 'study', img: 'assets/icons/quick-vocab.png?v=3.0.439', tone: '#d97706', lock: 'vocab', open: el => openHomeToolFromElement(el, 'vocab') },
+  { id: 'translate', name: 'Translate', cat: 'study', img: 'assets/icons/quick-translate.png?v=3.0.439', tone: '#0f8a4b', lock: 'translate', open: el => openHomeToolFromElement(el, 'translate') },
+  { id: 'habits', name: 'Habit Builder', cat: 'build', img: `assets/icons/habit-builder-cut.webp?v=3.0.654`, tone: '#e11d48', tint: true, wide: true, open: el => openHabitBuilderFromWidget(el) },
+  { id: 'reading', name: 'Reading Plan', cat: 'build', img: 'assets/icons/quick-reading-plan.png?v=3.0.439', tone: '#0d9488', open: el => openHomeToolFromElement(el, 'reading') },
+  { id: 'memorize', name: 'Memorize', cat: 'build', img: 'assets/icons/quick-memorize.png?v=3.0.659', tone: '#5240c2', open: el => openHomeToolFromElement(el, 'memorization') },
+  { id: 'journeys', name: 'Journey Maps', cat: 'explore', img: `assets/icons/quick-journeys-globe.png?v=${AT_V}`, tone: '#2563eb', open: () => openBibleAtlasPage() },
+  { id: 'threads', name: 'Theological Threads', cat: 'explore', img: 'assets/icons/quick-threads.png?v=3.0.439', tone: '#a8821c', open: el => openHomeToolFromElement(el, 'threads') },
+  { id: 'genealogy', name: 'Family Tree', cat: 'explore', img: 'assets/icons/quick-genealogy.png?v=3.0.576', tone: '#2f7d50', open: () => window.openGenealogyMap?.() },
+  { id: 'test', name: 'Test', cat: 'track', img: 'assets/icons/quick-test.png?v=3.0.439', tone: '#be123c', lock: 'test', open: el => openHomeToolFromElement(el, 'test') }
+];
+let _atFilter = 'all';
+function _atEsc(t) { return String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function renderAllTools() {
+  const host = document.getElementById('atSections');
+  if (!host) return;
+  const q = (document.getElementById('atSearch')?.value || '').trim().toLowerCase();
+  const order = ['study', 'build', 'explore', 'track'];
+  let shown = 0;
+  host.innerHTML = order.map(cid => {
+    if (_atFilter !== 'all' && _atFilter !== cid) return '';
+    const cat = AT_CATS.find(c => c.id === cid);
+    const tools = AT_TOOLS.filter(t => t.cat === cid && (!q || t.name.toLowerCase().includes(q)));
+    if (!tools.length) return '';
+    shown += tools.length;
+    const all = AT_TOOLS.filter(t => t.cat === cid).length;
+    const cols = tools.length >= 4 ? 4 : 3;
+    const cards = tools.map(t => {
+      const locked = t.lock && typeof isFeatureUnlocked === 'function' && !isFeatureUnlocked(t.lock);
+      return `<button type="button" class="at-tool${t.wide ? ' at-wide' : ''}${locked ? ' at-locked' : ''}" data-tool="${t.id}" style="--at-tone:${t.tone}" onclick="openAllToolsTool('${t.id}', this)">
+        <span class="at-pic"><img src="${t.img}" alt="" loading="lazy" decoding="async">${t.tint ? `<span class="at-tint" style="-webkit-mask-image:url('${t.img}');mask-image:url('${t.img}')"></span>` : ''}</span>
+        <strong>${_atEsc(t.name)}</strong>${locked ? '<span class="at-lock" aria-label="Locked"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.4"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span>' : ''}
+      </button>`;
+    }).join('');
+    return `<section class="at-section" data-cat="${cid}">
+      <div class="at-sec-head"><span class="at-sec-ic">${cat.icon}</span><h2>${cat.name}</h2>
+        <button type="button" class="at-sec-count" onclick="setAllToolsFilter('${cid}')">${all} tool${all === 1 ? '' : 's'}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></div>
+      <div class="at-grid" style="--at-cols:${cols}">${cards}</div>
+    </section>`;
+  }).join('');
+  const empty = document.getElementById('atEmpty');
+  if (empty) empty.hidden = shown > 0;
 }
+function setAllToolsFilter(cat) {
+  _atFilter = cat || 'all';
+  document.querySelectorAll('#atChips .at-chip').forEach(c => {
+    const on = c.dataset.cat === _atFilter;
+    c.classList.toggle('active', on);
+    c.setAttribute('aria-selected', String(on));
+  });
+  renderAllTools();
+  document.querySelector('#allToolsPage .at-page')?.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function toggleAllToolsSearch(force) {
+  const wrap = document.getElementById('atSearchWrap');
+  const input = document.getElementById('atSearch');
+  if (!wrap || !input) return;
+  const open = typeof force === 'boolean' ? force : wrap.hidden;
+  wrap.hidden = !open;
+  document.getElementById('atSearchBtn')?.classList.toggle('on', open);
+  if (open) setTimeout(() => input.focus(), 30);
+  else { input.value = ''; renderAllTools(); }
+}
+function openAllToolsTool(id, el) {
+  const t = AT_TOOLS.find(x => x.id === id);
+  if (!t) return;
+  if (t.lock && typeof isFeatureUnlocked === 'function' && !isFeatureUnlocked(t.lock)) {
+    el?.classList.remove('lock-shake'); void el?.offsetWidth; el?.classList.add('lock-shake');
+    if (typeof showLockedFeatureModal === 'function') showLockedFeatureModal();
+    return;
+  }
+  t.open(el);
+}
+function openAllTools() {
+  const prev = document.querySelector('.screen.active');
+  if (typeof closeHomeSearch === 'function') closeHomeSearch();
+  _atFilter = 'all';
+  toggleAllToolsSearch(false);
+  setAllToolsFilter('all');
+  setNavActive('tools');
+  hideBottomNav();
+  showScreen('allToolsPage');
+  hideBottomNav();
+  if (prev?.id === 'homeScreen' && typeof _appAnimateActiveWithPrevious === 'function') _appAnimateActiveWithPrevious(prev, 'app-slide-in-right');
+}
+function closeAllTools() { showNavPage('home'); }
 
 // ── Bottom bar bubble ───────────────────────────────────────────────────────
 // A glassy bubble sits behind the open tab and slides to the one you tap. You
@@ -11203,6 +11287,8 @@ function showScreen(id) {
   document.documentElement?.classList.toggle('memorization-active', id === 'memorizationPage');
   document.body?.classList.toggle('reading-plan-active', id === 'readingPlanPage');
   document.documentElement?.classList.toggle('reading-plan-active', id === 'readingPlanPage');
+  document.body?.classList.toggle('all-tools-active', id === 'allToolsPage');
+  document.documentElement?.classList.toggle('all-tools-active', id === 'allToolsPage');
   document.body?.classList.toggle('journeys-active', id === 'journeysPage' || id === 'atlasPage');
   document.documentElement?.classList.toggle('journeys-active', id === 'journeysPage' || id === 'atlasPage');
   _updateAppHeaderForScreen(id);
@@ -17312,6 +17398,7 @@ function _appSlideHomeFromCurrent() {
   if (_appHomeSlideBypass) return false;
   const active = document.querySelector('.screen.active');
   const slideHomeScreens = new Set([
+    'allToolsPage',
     'profilePage',
     'habitsPage',
     'merciesPage',

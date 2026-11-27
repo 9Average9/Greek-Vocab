@@ -627,11 +627,11 @@ Journey Maps</span>
 <button type="button" aria-label="Journey Maps" onclick="homeSwipeTo(1)"></button>
 </div>
 </div>
-<div class="home-tools-head"><div class="home-section-label">Tools</div><button type="button" class="home-tools-all" id="homeToolsAllBtn" onclick="toggleHomeTools()" aria-expanded="false"><span id="homeToolsAllText">View All</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+<div class="home-tools-head"><div class="home-section-label">Tools</div><button type="button" class="home-tools-all" id="homeToolsAllBtn" onclick="openAllTools()"><span id="homeToolsAllText">View All</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 <div class="home-actions-grid tools-grid" id="homeToolsGrid">
 <button class="home-action-tile quick-action-quiz" id="bibleQuizHomeBtn" onclick="openBibleQuiz(this)">
 <div class="hat-icon hat-icon-quiz">
-<img class="qa-img" src="assets/icons/93e0a332-e620-43eb-931e-5f238f039ace.png?v=3.0.439" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-quiz-blue.png?v=3.0.661" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Bible Quiz</strong><small>Test what you read</small></div>
 <span class="hat-chev">&rarr;</span>
@@ -696,6 +696,25 @@ Journey Maps</span>
 </div>
 <!-- Hidden badge kept for backward compatibility -->
 <span class="friends-home-badge hidden" id="friendsHomeBadge"></span>
+</section>
+<section class="screen" id="allToolsPage" aria-label="All Tools">
+<div class="at-page">
+<header class="at-top">
+<button type="button" class="at-icon-btn" onclick="closeAllTools()" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+<h1 class="at-title">All Tools</h1>
+<button type="button" class="at-icon-btn" id="atSearchBtn" onclick="toggleAllToolsSearch()" aria-label="Search tools"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+</header>
+<div class="at-search" id="atSearchWrap" hidden><input id="atSearch" type="search" placeholder="Search tools" autocomplete="off" oninput="renderAllTools()"/></div>
+<div class="at-chips" id="atChips" role="tablist" aria-label="Tool groups">
+<button type="button" class="at-chip active" data-cat="all" onclick="setAllToolsFilter('all')">All</button>
+<button type="button" class="at-chip" data-cat="study" onclick="setAllToolsFilter('study')">Study</button>
+<button type="button" class="at-chip" data-cat="build" onclick="setAllToolsFilter('build')">Build</button>
+<button type="button" class="at-chip" data-cat="track" onclick="setAllToolsFilter('track')">Track</button>
+<button type="button" class="at-chip" data-cat="explore" onclick="setAllToolsFilter('explore')">Explore</button>
+</div>
+<div class="at-sections" id="atSections"></div>
+<p class="at-empty" id="atEmpty" hidden>No tools match that search.</p>
+</div>
 </section>
 <section class="screen" id="journeysPage">
 <div class="jst" id="jst" data-look="storybook">
