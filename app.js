@@ -32958,7 +32958,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.660";
+const APP_VERSION = "3.0.661";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32981,6 +32981,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.661 — All Tools</div>
+<ul>
+<li><strong>All Tools</strong> &mdash; <strong>View All</strong> on Home now opens a page with every tool, grouped into Study, Build, Explore and Track. Tap a group at the top (or its &ldquo;tools&rdquo; count) to see just that group, or tap the search button to find a tool by name. Habit Builder and Journey Maps are there too.</li>
+<li><strong>Cleaner Home tools</strong> &mdash; Each tool now shows just its picture and name.</li>
+<li><strong>Bible Quiz in color</strong> &mdash; Bible Quiz has a blue card and picture instead of plain white.</li>
+</ul>
 <div class="un-version-label">v3.0.660 — A new Home and bottom bar</div>
 <ul>
 <li><strong>Tools at a glance</strong> &mdash; Home&rsquo;s tools are now a neat grid of cards: Bible Quiz, Sermon Notes, Memorize, Reading Plan, Theological Threads and Family Tree. Tap <strong>View All</strong> for Vocab, Translate and Test.</li>

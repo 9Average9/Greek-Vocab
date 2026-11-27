@@ -42383,3 +42383,5 @@ body.all-tools-active .app-header, body.all-tools-active .desktop-shell-nav, bod
 #allToolsPage .at-tool strong { overflow-wrap: normal; word-break: normal; hyphens: none; }
 #allToolsPage .at-chips { gap: 7px; }
 #allToolsPage .at-chip { flex: 1 0 auto; padding: 9px 12px; font-size: .92rem; }
+#allToolsPage .at-sec-count { color: color-mix(in srgb, var(--font-color) 86%, transparent); }
+html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) .hhw-sub { color: color-mix(in srgb, var(--muted-color) 82%, #000) !important; }
