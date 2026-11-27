@@ -55,7 +55,7 @@ self.addEventListener("notificationclick", (event) => {
 // Before this split, every release renamed the one cache and `activate`
 // deleted the old one, so each update re-downloaded all of the Bible data, and
 // stale-while-revalidate re-fetched multi-megabyte files on every open.
-const APP_SW_VERSION = "3.0.664";
+const APP_SW_VERSION = "3.0.665";
 const SHELL_CACHE = "disciple-builder-v" + APP_SW_VERSION;
 const DATA_CACHE = "disciple-builder-data-v1";
 const KEEP_CACHES = new Set([SHELL_CACHE, DATA_CACHE]);
@@ -74,29 +74,29 @@ const SHELL_NETWORK_TIMEOUT_MS = 3000;
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css?v=3.0.664",
-  "./vocab.js?v=3.0.664",
-  "./rhema-align.js?v=3.0.664",
-  "./app.js?v=3.0.664",
-  "./rhema-word-study.js?v=3.0.664",
-  "./rhema-grammar-search.js?v=3.0.664",
-  "./rhema-xl-views.js?v=3.0.664",
-  "./rhema-glance.js?v=3.0.664",
-  "./challenge.js?v=3.0.664",
-  "./guide-news.js?v=3.0.664",
+  "./style.css?v=3.0.665",
+  "./vocab.js?v=3.0.665",
+  "./rhema-align.js?v=3.0.665",
+  "./app.js?v=3.0.665",
+  "./rhema-word-study.js?v=3.0.665",
+  "./rhema-grammar-search.js?v=3.0.665",
+  "./rhema-xl-views.js?v=3.0.665",
+  "./rhema-glance.js?v=3.0.665",
+  "./challenge.js?v=3.0.665",
+  "./guide-news.js?v=3.0.665",
   "./assets/mascot/guide-skeptic.webp",
   "./assets/icons/challenge-books.webp",
   "./bible-threads.js?v=3.0.402",
   "./bible-intros.js?v=3.0.584",
   "./rhema-english-dictionary.js?v=3.0.417",
   "./assets/vendor/wink-nlp-en.js?v=3.0.104",
-  "./bible-atlas.js?v=3.0.664",
+  "./bible-atlas.js?v=3.0.665",
   "./bible-genealogy.js?v=3.0.476",
   "./bible-regions.js?v=3.0.472",
-  "./verse-structure.js?v=3.0.664",
-  "./vs-structure.js?v=3.0.664",
-  "./sermon-notes.js?v=3.0.664",
-  "./sermon-notes.css?v=3.0.664",
+  "./verse-structure.js?v=3.0.665",
+  "./vs-structure.js?v=3.0.665",
+  "./sermon-notes.js?v=3.0.665",
+  "./sermon-notes.css?v=3.0.665",
   // Self-hosted fonts (icons + skin fonts) — pinned, they effectively never change
   "./assets/fonts/fonts.css?v=3.0.415",
   "./assets/fonts/ms-outlined-0.woff2",
@@ -142,11 +142,13 @@ const FILES_TO_CACHE = [
   "./rhema-scripture-notes.js?v=3.0.160",
   "./rhema-bsb-align.js?v=3.0.2",
   "./rhema-bible-dictionary.js?v=3.0.385",
-  "./rhema-crossrefs-ui.js?v=3.0.664",
-  "./greek-verbs.js?v=3.0.664",
-  "./bible-quiz.js?v=3.0.664",
-  "./bible-quiz.css?v=3.0.664",
-  "./firebase-lb.js?v=3.0.664",
+  "./rhema-crossrefs-ui.js?v=3.0.665",
+  "./greek-verbs.js?v=3.0.665",
+  "./greek-classes.js?v=3.0.665",
+  "./greek-classes.css?v=3.0.665",
+  "./bible-quiz.js?v=3.0.665",
+  "./bible-quiz.css?v=3.0.665",
+  "./firebase-lb.js?v=3.0.665",
   "./assets/home-backgrounds/abstract.jpg",
   "./assets/home-backgrounds/ancient-scroll.jpg",
   "./assets/home-backgrounds/city.jpg",
@@ -158,7 +160,7 @@ const FILES_TO_CACHE = [
   "./assets/home-backgrounds/leaves.jpg",
   "./assets/home-backgrounds/mountains.jpg",
   "./assets/icons/quick-study-library.png?v=3.0.439",
-  "./assets/icons/quick-memorize.png?v=3.0.664",
+  "./assets/icons/quick-memorize.png?v=3.0.665",
   "./assets/icons/quick-sermon-podium.png?v=3.0.661",
   "./assets/icons/quick-quiz-blue.png?v=3.0.661",
   "./assets/icons/quick-journeys-globe.png?v=3.0.661",
@@ -171,7 +173,7 @@ const FILES_TO_CACHE = [
   "./assets/icons/quick-reading-plan.png?v=3.0.439",
   "./assets/icons/quick-threads.png?v=3.0.439",
   "./assets/icons/ChatGPT Image Jun 23, 2026, 10_26_34 PM.png",
-  "./assets/icons/habit-builder-cut.webp?v=3.0.664",
+  "./assets/icons/habit-builder-cut.webp?v=3.0.665",
   "./assets/icons/reading-plan-art.webp",
   "./assets/icons/studies-bookshelf.png?v=3.0.238",
   "./assets/icons/study-book-cover.png?v=3.0.241",
@@ -195,10 +197,10 @@ const FILES_TO_CACHE = [
   "./assets/home-backgrounds/waves-thumb.jpg",
   "./manifest.json",
   "./PWAicon.png",
-  "./assets/icons/rhema-icon-180.png?v=3.0.664",
-  "./assets/icons/rhema-icon-192.png?v=3.0.664",
-  "./assets/icons/rhema-icon-512.png?v=3.0.664",
-  "./assets/icons/rhema-splash.png?v=3.0.664"
+  "./assets/icons/rhema-icon-180.png?v=3.0.665",
+  "./assets/icons/rhema-icon-192.png?v=3.0.665",
+  "./assets/icons/rhema-icon-512.png?v=3.0.665",
+  "./assets/icons/rhema-splash.png?v=3.0.665"
 ];
 
 // Multi-megabyte datasets. On a brand-new install these are NOT fetched during

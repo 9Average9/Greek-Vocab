@@ -33008,7 +33008,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.664";
+const APP_VERSION = "3.0.665";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -33031,6 +33031,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.665 — Greek Classes</div>
+<ul>
+<li><strong>Four classes</strong> &mdash; The Lessons tab is now Greek Classes: Basics, Advanced, Basic Verbs and Advanced Verbs, each with its progress. Tap a class to see its lessons, with a Continue marker on the next one.</li>
+<li><strong>One page at a time</strong> &mdash; Lessons now open as pages you move through with Next, or by swiping. Knowledge checks sit right on the page they cover, and the last page completes the lesson or starts its quiz.</li>
+<li><strong>Your colors</strong> &mdash; The new look follows the color, style and dark mode you picked. Your progress, checks and quiz scores carry over as they were.</li>
+</ul>
 <div class="un-version-label">v3.0.664 — Greek lessons, checked line by line</div>
 <ul>
 <li><strong>134 corrections</strong> &mdash; Every Greek lesson, knowledge check and quiz was fact-checked. Accents, breathing marks, verse citations, paradigm tables and explanations were corrected where they were wrong.</li>
@@ -52041,7 +52047,7 @@ let _appCoachReplayMode = false;
 
 const APP_WELCOME_COACH_STEPS = [
   { title: 'Welcome to Rhēma', body: 'Rhēma (ῥῆμα, “a word spoken”) helps you study Scripture closely in the words it was written in, Hebrew and Greek, word by word, and grow together in the knowledge of God with friends. Lessons, vocab, Praises, studies, notes, habits and community features all serve that goal.' },
-  { before: () => showNavPage('lessons'), target: () => _coachFirst(['.lesson-progress-badge', '.learn-path-grid']), title: 'Lessons are the foundation', body: 'Start here when you want guided structure. The basic and advanced tracks teach foundations and verbs in order, and checks keep you from just scrolling past the material.' },
+  { before: () => showNavPage('lessons'), target: () => _coachFirst(['#greekClassesPage .gc-class-list', '.lesson-progress-badge', '.learn-path-grid']), title: 'Lessons are the foundation', body: 'Start here when you want guided structure. Greek is taught in four classes, from the alphabet up to reading real NT verbs, one page at a time, with checks along the way.' },
   { before: () => { showNavPage('community'); showLbTab('posts'); }, target: () => _coachFirst(['.community-post-add', '#lbPanePosts', '.comm-tabs']), title: 'Community posts', body: 'Posts are the main community feed: share verses, questions, links, prayer notes, and encouragements with friends. Attach MSB or BSB verses, react to one another, optionally alert your friends, and keep the board fresh as posts clear after 7 days.' },
   { before: () => { showNavPage('community'); showLbTab('xp'); }, target: () => _coachFirst(['button[data-tab="xp"]', '#lbPaneXP']), title: 'XP leaderboard', body: 'XP rewards steady work: lessons, tests, vocab, translation, and study habits. It is not the goal, but it helps your progress feel visible.' },
   { before: () => { showNavPage('community'); showLbTab('scholar'); }, target: () => _coachFirst(['button[data-tab="scholar"]', '#lbPaneScholar']), title: 'Scholar board', body: 'The Scholar board highlights careful practice quality, not just activity. It gives deeper testing and review work its own place.' },
@@ -52127,10 +52133,10 @@ const XREF_COACH_STEPS = [
 APP_WELCOME_COACH_STEPS[0].body = 'This app helps you learn enough Greek to observe the New Testament carefully, then keeps lessons, practice, Rhema, notes, cross references, Praises, progress, and community study in one place. Tiny tour, big map. Let’s get you oriented.';
 APP_WELCOME_COACH_STEPS[1] = {
   before: () => showNavPage('lessons'),
-  target: () => _coachFirst(['#lessonModeModal .lm-card', '.lesson-progress-badge', '.learn-path-grid']),
+  target: () => _coachFirst(['#greekClassesPage .gc-class-list', '#lessonModeModal .lm-card', '.lesson-progress-badge', '.learn-path-grid']),
   position: 'bottom',
   title: 'Lessons are the foundation',
-  body: 'This lesson-path picker helps you choose how to begin: foundations first, verbs first, basic pace, or deeper track. You can switch later, so this is not a scary covenant document. The point is simply to give your study an order.'
+  body: 'Greek is taught in four classes: Basics, Advanced, Basic Verbs and Advanced Verbs. Pick any class to start, and switch whenever you like. Each lesson goes one page at a time, with knowledge checks along the way.'
 };
 APP_WELCOME_COACH_STEPS[2].before = () => {
   if (typeof hideLessonModeModal === 'function') hideLessonModeModal();
