@@ -499,7 +499,7 @@ function answerVerbKC(checkId, el) {
   container.classList.add("answered");
   container.querySelectorAll(".kc-opt").forEach((btn, i) => {
     btn.disabled = true;
-    if (kcData[i].correct) btn.classList.add("kc-correct");
+    if (kcData[parseInt(btn.dataset.opt, 10)]?.correct) btn.classList.add("kc-correct");
   });
   if (!isCorrect) el.classList.add("kc-wrong");
 
