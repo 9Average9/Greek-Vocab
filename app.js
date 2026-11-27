@@ -32756,7 +32756,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.655";
+const APP_VERSION = "3.0.656";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32779,6 +32779,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.656 — A cleaner bottom bar</div>
+<ul>
+<li><strong>No more dark band</strong> &mdash; The bottom bar&rsquo;s big shadow spread up behind it like a band of color and over the bottoms of Home&rsquo;s tools. It&rsquo;s now a small, soft shadow, and the tool cards&rsquo; own shadows fade out cleanly instead of stopping in a straight line.</li>
+<li><strong>Look sheet</strong> &mdash; The X button is gone. Swipe the sheet down or tap outside it to close.</li>
+</ul>
 <div class="un-version-label">v3.0.655 — Habit notes with no limit</div>
 <ul>
 <li><strong>Write as much as you want</strong> &mdash; Habit Builder&rsquo;s daily notes and each habit&rsquo;s description no longer stop at a set number of characters. The note box grows as you write and scrolls when it&rsquo;s long, and Save always stays in view.</li>

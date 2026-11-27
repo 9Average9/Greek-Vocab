@@ -41966,7 +41966,7 @@ body.you-sheet-open .you-hero-guide { opacity: 0; transition: opacity .2s; }
 :root[data-skin="chalkboard"] .home-section-label, :root[data-skin="chalkboard"] .you-lbl { width: fit-content; padding-bottom: 7px; background: var(--ck-yellow) left bottom / 100% 8px no-repeat; animation: ckWrite .7s .2s steps(8, end) both; }
 :root[data-skin="chalkboard"] .home-greeting-name, :root[data-skin="chalkboard"] .you-title { width: fit-content; padding: 0 10px 8px 4px; background: var(--ck-line) left bottom / 100% 9px no-repeat, radial-gradient(60% 70% at 50% 55%, rgba(255, 255, 255, .07), transparent 70%); }
 :root[data-skin="chalkboard"] h1, :root[data-skin="chalkboard"] h2, :root[data-skin="chalkboard"] .home-greeting-block, :root[data-skin="chalkboard"] .you-title, :root[data-skin="chalkboard"] .hat-text strong { text-shadow: 0 0 1px rgba(255, 255, 255, .45), 1px 1px 0 rgba(255, 255, 255, .06); }
-:root[data-skin="chalkboard"] .bottom-nav { border-top: 5px solid #7a5232 !important; box-shadow: 0 -2px 0 #5b3b22, 0 10px 24px rgba(0,0,0,.35) !important; }
+:root[data-skin="chalkboard"] .bottom-nav { border-top: 5px solid #7a5232 !important; box-shadow: 0 -2px 0 #5b3b22, 0 4px 12px rgba(0,0,0,.28) !important; }
 :root[data-skin="chalkboard"]:not(.is-dark) .bottom-nav, :root[data-skin="terminal"]:not(.is-dark) .bottom-nav { background: linear-gradient(180deg, color-mix(in srgb, var(--card-solid-color) 90%, #fff), var(--card-solid-color)) !important;
   border-left-color: color-mix(in srgb, var(--secondary-color) 30%, transparent) !important; border-right-color: color-mix(in srgb, var(--secondary-color) 30%, transparent) !important; border-bottom-color: color-mix(in srgb, var(--secondary-color) 30%, transparent) !important; }
 :root[data-skin="terminal"]:not(.is-dark) .bottom-nav { border-top-color: color-mix(in srgb, var(--secondary-color) 30%, transparent) !important; }
@@ -42130,3 +42130,12 @@ html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) .ha
 #habitNoteInput { min-height: 110px; max-height: 45vh; overflow-y: auto; resize: none; line-height: 1.45; }
 #habitDescInput, #habitDetailDescInput { min-height: 72px; resize: vertical; }
 #habitNoteModal .habit-note-card { max-height: calc(100dvh - 32px); overflow-y: auto; }
+
+/* Bottom bar: a small, soft shadow only. The old large drop shadow spread up
+   behind the bar as a darker band and over the bottoms of Home's tool tiles. */
+html body .bottom-nav { box-shadow: 0 4px 14px rgba(15, 23, 42, .10), inset 0 1px 0 rgba(255, 255, 255, .8) !important; }
+html body.dark .bottom-nav { box-shadow: 0 4px 14px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .12) !important; }
+/* Home's tool row scrolls sideways, which clips anything below it: give the
+   tiles' shadows room to fade out instead of stopping in a hard line (the row's
+   bottom margin shrinks by the same amount, so nothing moves). */
+#homeScreen .home-actions-grid { padding-bottom: 26px !important; margin-bottom: 10px !important; }
