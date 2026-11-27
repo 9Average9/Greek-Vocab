@@ -40,7 +40,7 @@ const VOCAB = [
   { id: 37, greek: "ἁμαρτία", chapter: 7, frequency: 173, meaning: "sin" },
   { id: 38, greek: "ἀρχή", chapter: 7, frequency: 55, meaning: "beginning, ruler" },
   { id: 39, greek: "γάρ", chapter: 7, frequency: 1041, meaning: "for, then" },
-  { id: 40, greek: "εἶπεν", chapter: 7, frequency: 708, meaning: "he said, she said, it said" },
+  { id: 40, greek: "εἶπεν", chapter: 7, frequency: 613, meaning: "he said, she said, it said" },
   { id: 41, greek: "εἰς", chapter: 7, frequency: 1767, meaning: "into, in, among" },
   { id: 42, greek: "ἐξουσία", chapter: 7, frequency: 102, meaning: "authority, power" },
   { id: 43, greek: "εὐαγγέλιον", chapter: 7, frequency: 76, meaning: "good news, Gospel" },
@@ -93,7 +93,7 @@ const VOCAB = [
 
   { id: 89, greek: "ἅγιος", chapter: 10, frequency: 233, meaning: "holy, saints" },
   { id: 90, greek: "εἰ", chapter: 10, frequency: 502, meaning: "if" },
-  { id: 91, greek: "εἰ μή", chapter: 10, frequency: 0, meaning: "except, if not" },
+  { id: 91, greek: "εἰ μή", chapter: 10, frequency: 86, meaning: "except, if not" },
   { id: 92, greek: "εἷς", chapter: 10, frequency: 345, meaning: "one" },
   { id: 93, greek: "ἤδη", chapter: 10, frequency: 62, meaning: "now, already" },
   { id: 94, greek: "ὄνομα", chapter: 10, frequency: 231, meaning: "name, reputation" },

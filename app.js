@@ -29372,7 +29372,7 @@ const ADV_KC_DATA = {
   kc_adv_pronunciation_4: [
     { feedback: "Persistent accent (staying on the same syllable as the dictionary form) is the rule for nouns, not verbs. Finite verbs follow the opposite principle — they recede." },
     { correct: true, feedback: "Correct! Greek finite verbs follow the recessive accent rule — the accent moves as far back toward the beginning of the word as the rules allow. If the ultima is short, the accent lands on the antepenult; if the ultima is long, it's forced to the penult." },
-    { feedback: "Accenting the ultima is not a standard verb rule. Some specific verb forms (like the aorist imperative active 2nd singular) have accent on the ultima, but as a general rule verbs are recessive — the accent moves back as far as possible." },
+    { feedback: "Accenting the ultima is not a standard verb rule. Some specific verb forms (like the second aorist imperatives εἰπέ, ἐλθέ, εὑρέ, ἰδέ, λαβέ) have accent on the ultima, but as a general rule verbs are recessive — the accent moves back as far as possible." },
     { feedback: "Verbs don't always use the circumflex. The recessive rule determines the syllable; whether that syllable gets an acute or circumflex depends on the length of the vowel and the rules for each accent type." }
   ],
   kc_adv_pronunciation_5: [
@@ -29445,7 +29445,7 @@ const ADV_KC_DATA = {
     { feedback: "ἀγαθός is the masculine form — it follows the 2nd declension (-ος ending)." },
     { correct: true, feedback: "Correct! ἀγαθή is the feminine form — it follows the 1st declension pattern, just like ἀρχή or ἀγάπη. The stem ἀγαθ- stays the same; only the ending changes to mark feminine gender." },
     { feedback: "ἀγαθόν is the neuter form — also 2nd declension, with the characteristic -ον ending." },
-    { feedback: "ἀγαθᾶς is a genitive singular feminine form (like ἀγάπης pattern) — not the nominative. The nominative feminine is ἀγαθή." }
+    { feedback: "ἀγαθᾶς is not a real form of ἀγαθός (the feminine genitive singular is ἀγαθῆς, like ἀγάπης) — and it is not the nominative. The nominative feminine is ἀγαθή." }
   ],
   kc_adv_adjectives_2: [
     { feedback: "ὁ ἀγαθὸς λόγος is the first attributive position — article, adjective, noun. Both are attributive, but this is the first pattern." },
@@ -33008,7 +33008,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.663";
+const APP_VERSION = "3.0.664";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -33031,6 +33031,12 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.664 — Greek lessons, checked line by line</div>
+<ul>
+<li><strong>134 corrections</strong> &mdash; Every Greek lesson, knowledge check and quiz was fact-checked. Accents, breathing marks, verse citations, paradigm tables and explanations were corrected where they were wrong.</li>
+<li><strong>Clearer rules</strong> &mdash; Liquid futures (κρινῶ) are now explained as εσ contracting, the imperfect table shows ἔλυον with its accent, and γράφω's perfect γέγραφα is shown as a second perfect with no κ.</li>
+<li><strong>Answers that match</strong> &mdash; A few knowledge checks marked the wrong choice as correct or gave feedback for a different option. They now line up.</li>
+</ul>
 <div class="un-version-label">v3.0.663 — The full view</div>
 <ul>
 <li><strong>Bigger header picture</strong> &mdash; The sunrise picture now runs edge to edge across the top of Home with the open Bible on the rock in full view, fading softly into the page along the bottom.</li>
