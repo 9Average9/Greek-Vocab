@@ -10712,7 +10712,108 @@ function setNavActive(page) {
     b.classList.toggle('active', b.dataset.page === page));
   document.querySelectorAll('.desktop-nav-btn[data-nav]').forEach(b =>
     b.classList.toggle('active', b.dataset.nav === page));
+  window._bnBubbleSync?.();
 }
+
+// ── Home tools: "View All" shows the tools past the first six ───────────────
+function toggleHomeTools(force) {
+  const grid = document.getElementById('homeToolsGrid');
+  const btn = document.getElementById('homeToolsAllBtn');
+  if (!grid) return;
+  const open = typeof force === 'boolean' ? force : !grid.classList.contains('show-all');
+  grid.classList.toggle('show-all', open);
+  btn?.setAttribute('aria-expanded', String(open));
+  btn?.classList.toggle('open', open);
+  const t = document.getElementById('homeToolsAllText');
+  if (t) t.textContent = open ? 'Show Less' : 'View All';
+  if (open) requestAnimationFrame(() => grid.querySelector('.home-action-tile:nth-child(7)')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+  if (typeof scheduleHomeFit === 'function') scheduleHomeFit();
+}
+
+// ── Bottom bar bubble ───────────────────────────────────────────────────────
+// A glassy bubble sits behind the open tab and slides to the one you tap. You
+// can also press and drag across the bar: the bubble follows your finger and
+// opening happens when you let go (Liquid Glass-style). Hidden while the bar is
+// collapsed to the single Home button.
+(function initNavBubble() {
+  const nav = document.getElementById('bottomNav');
+  const bubble = document.getElementById('bnBubble');
+  if (!nav || !bubble) return;
+  const items = () => [...nav.querySelectorAll('.bn-item')];
+  const collapsed = () => /(?:^|\s)(?:mercies|habits|home)-collapsed(?:\s|$)/.test(nav.className);
+  let pid = null, startX = 0, dragging = false, dragEndAt = 0;
+  function place(x, w, scale, instant) {
+    if (instant) bubble.style.transition = 'none';
+    bubble.style.width = `${w}px`;
+    bubble.style.transform = `translateX(${x}px) scale(${scale || 1})`;
+    if (instant) { void bubble.offsetWidth; bubble.style.transition = ''; }
+  }
+  function rectOf(el) {
+    const nr = nav.getBoundingClientRect(), r = el.getBoundingClientRect();
+    return { x: r.left - nr.left - nav.clientLeft, w: r.width };
+  }
+  let lastActive = null;
+  function sync(instant) {
+    if (dragging) return;
+    const act = nav.querySelector('.bn-item.active');
+    if (collapsed() || !act || !nav.getBoundingClientRect().width) { bubble.style.opacity = '0'; lastActive = null; return; }
+    const { x, w } = rectOf(act);
+    const first = lastActive === null || bubble.style.opacity !== '1';
+    bubble.style.opacity = '1';
+    place(x, w, 1, instant || first);
+    lastActive = act;
+  }
+  window._bnBubbleSync = sync;
+  function nearest(clientX) {
+    let best = null, bd = Infinity;
+    for (const it of items()) { const r = it.getBoundingClientRect(); const d = Math.abs(clientX - (r.left + r.width / 2)); if (d < bd) { bd = d; best = it; } }
+    return best;
+  }
+  function endDrag() {
+    dragging = false; pid = null;
+    nav.classList.remove('bn-dragging');
+    items().forEach(i => i.classList.remove('bn-hover'));
+  }
+  nav.addEventListener('pointerdown', e => {
+    if (collapsed() || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    pid = e.pointerId; startX = e.clientX; dragging = false;
+  });
+  nav.addEventListener('pointermove', e => {
+    if (e.pointerId !== pid) return;
+    if (!dragging) {
+      if (Math.abs(e.clientX - startX) < 10) return;
+      dragging = true;
+      nav.classList.add('bn-dragging');
+      try { nav.setPointerCapture(pid); } catch (err) {}
+      bubble.style.opacity = '1';
+    }
+    const nr = nav.getBoundingClientRect();
+    const w = items()[0].getBoundingClientRect().width;
+    const x = Math.max(2, Math.min(nr.width - w - 2, e.clientX - nr.left - w / 2));
+    place(x, w, 1.07, true);
+    const hover = nearest(e.clientX);
+    items().forEach(i => i.classList.toggle('bn-hover', i === hover));
+  });
+  const finish = e => {
+    if (e.pointerId !== pid) return;
+    if (!dragging) { pid = null; return; }
+    const target = nearest(e.clientX);
+    endDrag();
+    dragEndAt = Date.now();
+    if (target && !target.classList.contains('active')) target.click();
+    else sync();
+  };
+  nav.addEventListener('pointerup', finish);
+  nav.addEventListener('pointercancel', e => { if (e.pointerId === pid) { endDrag(); sync(); } });
+  // The browser's own click after a drag would hit wherever the finger started.
+  nav.addEventListener('click', e => {
+    if (e.isTrusted && Date.now() - dragEndAt < 450) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+  new MutationObserver(() => sync(true)).observe(nav, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', () => sync(true));
+  requestAnimationFrame(() => sync(true));
+  setTimeout(() => sync(true), 1200);
+})();
 
 function setMerciesNavCollapsed(collapsed) {
   const nav = document.getElementById('bottomNav');
@@ -10982,7 +11083,8 @@ function showNavPage(page) {
     showScreen('profilePage');
     hideBottomNav();
     updateProfileUI();
-    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-left');
+    // You sits at the right end of the bar, so it slides in from the right.
+    if (fromId === 'homeScreen' && !_appSuppressNextSlideIn) _appAnimateActiveWithPrevious(previousScreen, 'app-slide-in-right');
   } else if (page === 'habits') {
     showScreen('habitsPage');
     startHabitsPage();
@@ -17240,9 +17342,8 @@ function _appSlideHomeFromCurrent() {
     // Reverse of opening: fold the screen back into the button it grew from.
     _appCollapseToLauncher(active, expandRect);
   } else {
-    // Back gesture: slide the leaving screen off, mirroring its entry direction
-    // (Profile entered from the left, so it leaves left; everything else right).
-    const leaveClass = active.id === 'profilePage' ? 'app-slide-out-left' : 'app-slide-out-right';
+    // Back gesture: slide the leaving screen off the way it came in (right).
+    const leaveClass = 'app-slide-out-right';
     _appAnimateLeaving(active, leaveClass);
   }
   return true;
@@ -32608,7 +32709,9 @@ function _homeLayoutTop(el) {
   return y;
 }
 function _homeFitMeasure(home, grid, nav, cards) {
-  const tile = grid.querySelector('.home-action-tile');
+  // Grid layout: the gap is under the last visible row, not the first tile.
+  const shown = [...grid.querySelectorAll('.home-action-tile')].filter(t => t.offsetParent !== null);
+  const tile = grid.classList.contains('tools-grid') ? shown[shown.length - 1] : grid.querySelector('.home-action-tile');
   const navTop = nav.offsetTop || (window.innerHeight - nav.offsetHeight - (parseFloat(getComputedStyle(nav).bottom) || 0));
   return { tile, tileH: tile.offsetHeight, tileW: tile.offsetWidth, gap: navTop - (_homeLayoutTop(tile) + tile.offsetHeight) };
 }
@@ -32631,7 +32734,7 @@ function fitHomeLayout() {
     // not the row: an older rule zeroes the height of Home's last child when it
     // has an inline style.)
     grid.classList.remove('ht-fit');
-    ['--ht-col', '--ht-h', '--ht-icon', '--ht-art', '--ht-title', '--ht-sub'].forEach(k => home.style.removeProperty(k));
+    ['--ht-col', '--ht-h', '--ht-icon', '--ht-art', '--ht-title', '--ht-sub', '--tg-img'].forEach(k => home.style.removeProperty(k));
     cards.forEach(c => { c.style.removeProperty('min-height'); c.classList.remove('hw-fit'); });
     const m = _homeFitMeasure(home, grid, nav, cards);
     if (!m.tile || !m.tileH) return;
@@ -32647,6 +32750,18 @@ function fitHomeLayout() {
         } else { c.style.minHeight = `${c.offsetHeight + perCard}px`; c.classList.add('hw-fit'); }
       });
       toolsGrow = extra - perCard * cards.length;
+    }
+    // The tools grid keeps its natural tile size (only the cards above grow);
+    // when space is short, its pictures shrink a little (never below 42px) so
+    // both rows can sit above the bar.
+    if (grid.classList.contains('tools-grid')) {
+      if (extra < 0) {
+        const img = m.tile.querySelector('.qa-img');
+        const cur = img ? img.offsetHeight : 56;
+        const rows = Math.max(1, Math.ceil([...grid.children].filter(t => t.offsetParent !== null).length / 3));
+        home.style.setProperty('--tg-img', `${Math.max(42, Math.round(cur + extra / rows))}px`);
+      }
+      return;
     }
     const sH = Math.max(0.82, Math.min(1.5, (m.tileH + toolsGrow) / m.tileH));
     const sW = sH >= 1 ? 1 + (sH - 1) * 0.55 : sH;

@@ -627,20 +627,20 @@ Journey Maps</span>
 <button type="button" aria-label="Journey Maps" onclick="homeSwipeTo(1)"></button>
 </div>
 </div>
-<div class="home-section-label">Tools</div>
-<div class="home-actions-grid">
+<div class="home-tools-head"><div class="home-section-label">Tools</div><button type="button" class="home-tools-all" id="homeToolsAllBtn" onclick="toggleHomeTools()" aria-expanded="false"><span id="homeToolsAllText">View All</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+<div class="home-actions-grid tools-grid" id="homeToolsGrid">
 <button class="home-action-tile quick-action-quiz" id="bibleQuizHomeBtn" onclick="openBibleQuiz(this)">
 <div class="hat-icon hat-icon-quiz">
 <img class="qa-img" src="assets/icons/93e0a332-e620-43eb-931e-5f238f039ace.png?v=3.0.439" alt="" loading="lazy"/>
 </div>
-<div class="hat-text"><strong>Bible<br/>Quiz</strong><small>Test what you read</small></div>
+<div class="hat-text"><strong>Bible Quiz</strong><small>Test what you read</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile quick-action-sermon" id="sermonNotesHomeBtn" onclick="openSermonNotes(this)">
 <div class="hat-icon hat-icon-sermon">
-<img class="qa-img" src="assets/icons/quick-sermon-notes.png?v=3.0.428" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-sermon-podium.png?v=3.0.660" alt="" loading="lazy"/>
 </div>
-<div class="hat-text"><strong>Sermon<br/>Notes</strong><small>Capture every message</small></div>
+<div class="hat-text"><strong>Sermon Notes</strong><small>Capture every message</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile quick-action-memorize" id="memorizationHomeBtn" onclick="openHomeToolFromElement(this, 'memorization')">
@@ -654,7 +654,7 @@ Journey Maps</span>
 <div class="hat-icon hat-icon-reading">
 <img class="qa-img" src="assets/icons/quick-reading-plan.png?v=3.0.439" alt="" loading="lazy"/>
 </div>
-<div class="hat-text"><strong>Reading<br/>Plan</strong><small>Set scripture goals</small></div>
+<div class="hat-text"><strong>Reading Plan</strong><small>Set scripture goals</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile quick-action-threads" id="threadsHomeBtn" onclick="openHomeToolFromElement(this, 'threads')">
@@ -668,7 +668,7 @@ Journey Maps</span>
 <div class="hat-icon hat-icon-genealogy">
 <img class="qa-img" src="assets/icons/quick-genealogy.png?v=3.0.576" alt="" loading="lazy"/>
 </div>
-<div class="hat-text"><strong>Family<br/>Tree</strong><small>Who’s who from Adam to Jesus</small></div>
+<div class="hat-text"><strong>Family Tree</strong><small>Who’s who from Adam to Jesus</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile locked-feature-btn quick-action-vocab" id="vocabHomeBtn" onclick="openHomeToolFromElement(this, 'vocab')">
@@ -10683,22 +10683,12 @@ Verb Endings
 </div>
 </div>
 </div>
-<nav class="bottom-nav" id="bottomNav">
-<button class="bn-item" data-page="profile" onclick="showNavPage('profile')" aria-label="You">
-<span class="material-symbols-outlined">person</span>
-<span class="bn-dot"></span>
-</button>
-<button class="bn-item bn-home active" data-page="home" onclick="showNavPage('home')">
-<span class="material-symbols-outlined">home</span>
-<span class="bn-dot"></span>
-</button>
-<button class="bn-item" data-page="rhema" onclick="openRhemaLaunchMenu(event)" aria-label="Rhema">
-<span class="material-symbols-outlined">menu_book</span>
-<span class="bn-dot"></span>
-</button>
-<button class="bn-item" data-page="lessons" onclick="showNavPage('lessons')">
-<span class="material-symbols-outlined">local_library</span>
-</button>
+<nav class="bottom-nav bn-glass" id="bottomNav">
+<span class="bn-bubble" id="bnBubble" aria-hidden="true"></span>
+<button class="bn-item bn-home active" data-page="home" onclick="showNavPage('home')" aria-label="Home"><svg class="bn-ic" viewBox="0 0 24 24" aria-hidden="true"><path class="bn-ic-fill" d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H14.6v-5.2a1.4 1.4 0 0 0-1.4-1.4h-2.4a1.4 1.4 0 0 0-1.4 1.4v5.2H5.6A1.6 1.6 0 0 1 4 19z"/></svg><span class="bn-label">Home</span><span class="bn-dot"></span></button>
+<button class="bn-item" data-page="rhema" onclick="openRhemaLaunchMenu(event)" aria-label="Read"><svg class="bn-ic" viewBox="0 0 24 24" aria-hidden="true"><path class="bn-ic-fill" d="M12 6.6C10.2 5.2 7.6 4.6 3.6 4.8v13c4-.2 6.6.4 8.4 1.8 1.8-1.4 4.4-2 8.4-1.8v-13c-4-.2-6.6.4-8.4 1.8z"/><path d="M12 6.6v13" fill="none"/></svg><span class="bn-label">Read</span><span class="bn-dot"></span></button>
+<button class="bn-item" data-page="lessons" onclick="showNavPage('lessons')" aria-label="Lessons"><svg class="bn-ic" viewBox="0 0 24 24" aria-hidden="true"><path class="bn-ic-fill" d="M12 3.6 21 8.2l-9 4.6-9-4.6z"/><path d="M3 12.2l9 4.6 9-4.6M3 16.2l9 4.6 9-4.6" fill="none"/></svg><span class="bn-label">Lessons</span></button>
+<button class="bn-item" data-page="profile" onclick="showNavPage('profile')" aria-label="You"><svg class="bn-ic" viewBox="0 0 24 24" aria-hidden="true"><circle class="bn-ic-fill" cx="12" cy="8.2" r="3.9"/><path class="bn-ic-fill" d="M4.6 20.2c.6-3.9 3.6-6.2 7.4-6.2s6.8 2.3 7.4 6.2z"/></svg><span class="bn-label">You</span><span class="bn-dot"></span></button>
 </nav>
 <!-- Rhema launch chooser: Read vs Study -->
 <div class="rhema-launch-menu" id="rhemaLaunchMenu" onclick="if(event.target===this)closeRhemaLaunchMenu()">
