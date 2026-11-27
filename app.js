@@ -33044,7 +33044,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.666";
+const APP_VERSION = "3.0.667";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -33067,6 +33067,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.667 — Back to Lessons</div>
+<ul>
+<li><strong>Close the reader, stay in Lessons</strong> &mdash; Open Read from Lessons and tap the home button to close it, and you land back in Lessons with Lessons lit up in the bottom bar, instead of jumping to Home.</li>
+</ul>
 <div class="un-version-label">v3.0.666 — Knowledge Check</div>
 <ul>
 <li><strong>2,400 practice questions</strong> &mdash; Every Greek lesson now has 30 fresh practice questions in the new Knowledge Check tab, next to Classes. A lesson's practice opens once you finish that lesson. Every question was written from the lesson itself and then checked by a separate fact-check pass.</li>
@@ -49570,11 +49574,20 @@ function closeRhema(keepSandbox = false) {
     // Restore nav — determine active page from which screen is visible. Only
     // restore the bottom nav if not staying inside a sandbox session.
     if (!_studySandboxId) {
+      // Lessons (Classes, a class, a lesson, practice) stays Lessons: the reader
+      // was opened on top of it, so closing goes back there, not Home.
+      const LESSON_SCREENS = ['greekClassesPage', 'greekClassPage', 'greekPracticePage', 'greekQuizPage',
+        'newLearnMenu', 'advancedLearnMenu', 'basicVerbsLearnMenu', 'advVerbsLearnMenu'];
+      const activeId = document.querySelector('.screen.active')?.id || '';
+      const inLessons = LESSON_SCREENS.includes(activeId);
       const activePage =
         document.getElementById('profilePage')?.classList.contains('active') ? 'profile' :
-        document.getElementById('communityPage')?.classList.contains('active') ? 'community' : 'home';
+        document.getElementById('communityPage')?.classList.contains('active') ? 'community' :
+        inLessons ? 'lessons' : 'home';
       setNavActive(activePage);
-      showBottomNav();
+      // The bar shows on the Classes page; a class, a lesson or a practice
+      // round is full screen and keeps it hidden.
+      if (!inLessons || activeId === 'greekClassesPage') showBottomNav();
       _updateHomeContinueCard();
     }
   };
