@@ -32756,7 +32756,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.658";
+const APP_VERSION = "3.0.659";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32779,6 +32779,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.659 — Same arrows for everyone</div>
+<ul>
+<li><strong>Home tool arrows</strong> &mdash; The little arrows on Home&rsquo;s tools were typed characters, so each phone drew them with whatever font it had, and on many phones (or while a font was still loading) they came out thin. They&rsquo;re now drawn the same bold way on every phone and in every style.</li>
+<li><strong>Easier to see in dark mode</strong> &mdash; The arrow&rsquo;s circle is now dark in dark mode, so the arrow stands out instead of being light gray on white.</li>
+</ul>
 <div class="un-version-label">v3.0.658 — Cleaner Home tools</div>
 <ul>
 <li><strong>No more glowing boxes</strong> &mdash; The soft glows under each Home tool&rsquo;s picture could show up on iPhone as glowing boxes with sharp corners. The tools now have clean edges with no glow, and the pictures keep their colors.</li>
