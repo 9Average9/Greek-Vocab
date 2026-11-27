@@ -42139,3 +42139,8 @@ html body.dark .bottom-nav { box-shadow: 0 4px 14px rgba(0, 0, 0, .28), inset 0 
    tiles' shadows room to fade out instead of stopping in a hard line (the row's
    bottom margin shrinks by the same amount, so nothing moves). */
 #homeScreen .home-actions-grid { padding-bottom: 26px !important; margin-bottom: 10px !important; }
+/* You sheets: the close X sits in the sheet's top-right corner; the guide
+   mascot peeking over the top edge moves left so the two never overlap. */
+.you-sheet-head { padding-right: 14px; }
+.you-sheet-x { margin-right: 0; }
+.you-sheet-guide { right: 64px; }
