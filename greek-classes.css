@@ -1,0 +1,268 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   GREEK CLASSES — Classes hub, class lesson list and page-by-page player.
+   Every color comes from the user's theme (and the skin tokens when a skin
+   is on), so it follows their pick in light and dark.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --gc-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --gc-ink: color-mix(in srgb, var(--secondary-color, #1d4ed8) 58%, var(--font-color, #172033));
+  --gc-gold: var(--accent-color, #f59e0b);
+  --gc-card: var(--skin-card-bg, color-mix(in srgb, var(--card-solid-color, #fff) 90%, transparent));
+  --gc-line: color-mix(in srgb, var(--border-color, #93c5fd) 48%, transparent);
+  --gc-base: var(--skin-card-bg, var(--card-solid-color, #fff));
+  --gc-muted: color-mix(in srgb, var(--muted-color, #475569) 72%, var(--font-color, #172033));
+  --gc-tint: color-mix(in srgb, var(--secondary-color, #1d4ed8) 11%, var(--gc-base));
+  --gc-tint-2: color-mix(in srgb, var(--secondary-color, #1d4ed8) 20%, var(--gc-base));
+  --gc-shadow: 0 6px 20px color-mix(in srgb, var(--secondary-color, #1d4ed8) 10%, transparent);
+  --gc-good: #15803d;
+}
+html.is-dark {
+  --gc-ink: color-mix(in srgb, var(--secondary-color, #60a5fa) 35%, var(--font-color, #f1f5f9));
+  --gc-card: var(--skin-card-bg, color-mix(in srgb, var(--card-solid-color, #1e2430) 92%, transparent));
+  --gc-base: var(--skin-card-bg, var(--card-solid-color, #1e2430));
+  --gc-tint: color-mix(in srgb, var(--secondary-color, #60a5fa) 18%, var(--gc-base));
+  --gc-tint-2: color-mix(in srgb, var(--secondary-color, #60a5fa) 30%, var(--gc-base));
+  --gc-shadow: 0 6px 20px rgba(0, 0, 0, .28);
+  --gc-good: #4ade80;
+}
+
+:root[data-skin="chalkboard"] { --gc-ink: var(--font-color, #f2f6f0); }
+
+/* ── Full-screen setup ─────────────────────────────────────────────────── */
+#greekClassesPage.screen.active,
+#greekClassPage.screen.active,
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on.active {
+  display: block; position: fixed; inset: 0; height: 100vh; height: 100dvh; height: var(--app-vh, 100dvh);
+  overflow: hidden; margin: 0 !important; padding: 0 !important; border: none !important; border-radius: 0 !important;
+  box-shadow: none !important; max-width: none !important; isolation: isolate;
+  background: linear-gradient(180deg, var(--skin-page-bg, var(--primary-light, #eff6ff)), var(--skin-page-bg, var(--primary-color, #dbeafe))) !important;
+  color: var(--font-color);
+}
+#greekClassesPage.screen.active { z-index: 880; }
+#greekClassPage.screen.active, :is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on.active { z-index: 930; }
+html.gc-hub-on, html.gc-full-on { background: var(--primary-light) !important; }
+body.gc-hub-on .app-header, body.gc-full-on .app-header,
+body.gc-hub-on .desktop-shell-nav, body.gc-full-on .desktop-shell-nav,
+body.gc-full-on #bottomNav, body.gc-hub-on #studyTabBar, body.gc-full-on #studyTabBar { display: none !important; }
+
+.gc-page {
+  position: relative; z-index: 1; height: 100%; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px calc(env(safe-area-inset-bottom, 0px) + 28px);
+}
+.gc-hub-page { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 118px); }
+.gc-page > *, .gc-player-head > * { max-width: 560px; margin-left: auto; margin-right: auto; }
+
+/* Faint Greek words in the background */
+.gc-deco { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.gc-deco span { position: absolute; font-family: var(--gc-serif); line-height: 1; color: var(--secondary-color); opacity: .07; white-space: nowrap; }
+html.is-dark .gc-deco span { opacity: .09; }
+
+/* ── Brand row: temple + "Greek" + Greek key ──────────────────────────── */
+.gc-brand-row { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; }
+.gc-brand-solo { grid-template-columns: 1fr; padding-top: 6px; }
+.gc-brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0; min-width: 0;
+  font-family: var(--skin-font, var(--gc-serif)); font-size: 2rem; font-weight: 700; letter-spacing: .005em; color: var(--gc-ink); line-height: 1.1; }
+.gc-brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gc-brand-sm { font-size: 1.55rem; gap: 8px; }
+.gc-temple { flex: none; width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.gc-icon-btn { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; cursor: pointer; padding: 0;
+  border: 1px solid var(--gc-line); background: var(--gc-card); color: var(--font-color); -webkit-tap-highlight-color: transparent; }
+.gc-icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+.gc-icon-btn:active { transform: scale(.94); }
+.gc-icon-spacer { width: 44px; height: 44px; }
+.gc-key {
+  height: 10px; width: min(180px, 52%); margin: 6px auto 12px !important; opacity: .85;
+  background: var(--gc-gold);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10' viewBox='0 0 20 10'%3E%3Cpath d='M0 9.3H13V.7H3V6.2h6.6V3.6H6.4M13 9.3H20' fill='none' stroke='%23000' stroke-width='1.35'/%3E%3C/svg%3E") 0 0 / 20px 10px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10' viewBox='0 0 20 10'%3E%3Cpath d='M0 9.3H13V.7H3V6.2h6.6V3.6H6.4M13 9.3H20' fill='none' stroke='%23000' stroke-width='1.35'/%3E%3C/svg%3E") 0 0 / 20px 10px repeat-x;
+}
+.gc-section-label { margin: 6px 4px 12px !important; font-size: .82rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--gc-muted); }
+.gc-sub { margin: 0 0 10px !important; text-align: center; font-size: .95rem; font-weight: 600; color: var(--gc-muted); }
+
+/* Progress bars */
+.gc-bar { position: relative; display: block; height: 6px; border-radius: 99px; overflow: hidden; background: var(--gc-tint-2); }
+.gc-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: var(--secondary-color); transition: width .35s ease; }
+.gc-bar-wide { width: 62%; margin: 0 auto 18px !important; }
+
+/* ── Classes hub ───────────────────────────────────────────────────────── */
+.gc-class-list { display: grid; gap: 12px; }
+.gc-class-card {
+  display: grid; grid-template-columns: 62px 1fr; gap: 14px; align-items: center; width: 100%; text-align: left; cursor: pointer;
+  padding: 16px 16px 15px; border-radius: 22px; border: 1px solid var(--gc-line); background: var(--gc-card);
+  box-shadow: var(--gc-shadow); color: var(--font-color); font: inherit; -webkit-tap-highlight-color: transparent;
+  animation: gcRise .32s ease both;
+}
+.gc-class-card:nth-child(2) { animation-delay: .04s; } .gc-class-card:nth-child(3) { animation-delay: .08s; } .gc-class-card:nth-child(4) { animation-delay: .12s; }
+.gc-class-card:active { transform: scale(.985); }
+.gc-class-card.gc-current { border: 2px solid color-mix(in srgb, var(--secondary-color) 55%, transparent); background: color-mix(in srgb, var(--gc-tint) 70%, var(--gc-card)); padding: 15px 15px 14px; }
+.gc-emblem {
+  width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; align-self: center;
+  font-family: var(--gc-serif); font-size: 1.55rem; font-weight: 700; color: var(--gc-ink);
+  background: radial-gradient(circle at 35% 30%, var(--gc-base), var(--gc-tint));
+  border: 1px solid var(--gc-line); box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--gc-gold) 22%, transparent);
+}
+.gc-emblem-word { font-size: 1.12rem; }
+.gc-class-text { display: grid; gap: 3px; min-width: 0; }
+.gc-class-text small { font-size: .8rem; font-weight: 700; color: var(--gc-muted); letter-spacing: .01em; }
+.gc-class-text strong { font-family: var(--skin-font, var(--gc-serif)); font-size: 1.32rem; font-weight: 700; color: var(--gc-ink); line-height: 1.2; }
+.gc-class-desc { font-size: .9rem; line-height: 1.4; color: var(--gc-muted); }
+.gc-bar-row { display: flex; align-items: center; gap: 10px; margin-top: 7px; }
+.gc-bar-row .gc-bar { flex: 1; }
+.gc-bar-row b { font-size: .8rem; font-weight: 800; color: var(--gc-ink); min-width: 34px; text-align: right; }
+html.is-dark .gc-bar-row b { color: var(--gc-ink); }
+
+/* ── Inside a class ────────────────────────────────────────────────────── */
+.gc-lesson-list { display: grid; gap: 10px; }
+.gc-lesson-row {
+  display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: left; cursor: pointer;
+  padding: 13px 14px; border-radius: 18px; border: 1px solid var(--gc-line); background: var(--gc-card); color: var(--font-color);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--secondary-color) 6%, transparent); font: inherit; -webkit-tap-highlight-color: transparent;
+}
+.gc-lesson-row:active { transform: scale(.985); }
+.gc-num { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .98rem;
+  color: var(--gc-ink); background: var(--gc-tint); }
+.gc-num svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.gc-done .gc-num { background: var(--gc-good); }
+html.is-dark .gc-done .gc-num svg { stroke: #0b1f12; }
+.gc-next { border: 2px solid color-mix(in srgb, var(--secondary-color) 60%, transparent); padding: 12px 13px; background: color-mix(in srgb, var(--gc-tint) 55%, var(--gc-card)); }
+.gc-next .gc-num { background: var(--secondary-color); color: var(--btn-text-color, #fff); }
+.gc-lesson-text { display: grid; gap: 2px; min-width: 0; }
+.gc-lesson-text strong { font-size: 1.02rem; font-weight: 750; color: var(--font-color); line-height: 1.25; }
+.gc-lesson-text small { font-size: .84rem; color: var(--gc-muted); line-height: 1.3; }
+.gc-time { font-size: .8rem; font-weight: 700; color: var(--gc-muted); white-space: nowrap; }
+.gc-pill { padding: 5px 10px; border-radius: 99px; font-size: .78rem; font-weight: 800; color: var(--font-color); background: var(--gc-tint); white-space: nowrap; }
+
+@keyframes gcRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ── Lesson player ─────────────────────────────────────────────────────── */
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on.active { display: flex !important; flex-direction: column; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on > :not(.gc-player-head):not(.gc-player-foot):not(.gc-deco):not(.active) { display: none !important; }
+:is(#newLearnMenu, #advancedLearnMenu, #basicVerbsLearnMenu, #advVerbsLearnMenu):not(.gc-player-on) > .gc-player-head, :is(#newLearnMenu, #advancedLearnMenu, #basicVerbsLearnMenu, #advVerbsLearnMenu):not(.gc-player-on) > .gc-player-foot, :is(#newLearnMenu, #advancedLearnMenu, #basicVerbsLearnMenu, #advVerbsLearnMenu):not(.gc-player-on) > .gc-deco { display: none !important; }
+.gc-player-head { position: relative; z-index: 2; flex: none; padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 6px; }
+.gc-player-head .gc-sub { margin: 4px auto 8px !important; }
+.gc-bar-player { width: 62%; }
+
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on > .active {
+  display: block !important; position: relative; z-index: 1; flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; margin: 0 !important; padding: 10px 18px 24px !important; box-sizing: border-box;
+  background: transparent !important; border: 0 !important; box-shadow: none !important; animation: none;
+}
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on > .active > * { max-width: 560px; margin-left: auto !important; margin-right: auto !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-module { display: block !important; background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; margin: 0 auto !important; border-radius: 0 !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .gc-pg-hide.gc-pg-hide, :is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .gc-pg-hide-always.gc-pg-hide-always { display: none !important; }
+.gc-turn-next .lesson-module { animation: gcTurnNext .26s ease both; }
+.gc-turn-prev .lesson-module { animation: gcTurnPrev .26s ease both; }
+@keyframes gcTurnNext { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: none; } }
+@keyframes gcTurnPrev { from { opacity: 0; transform: translateX(-22px); } to { opacity: 1; transform: none; } }
+
+/* Page titles */
+.gc-cover-title,
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block > .lesson-block-header,
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .gc-page-title {
+  display: block !important; margin: 4px 2px 14px !important; padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important;
+  font-family: var(--skin-font, var(--gc-serif)) !important; font-size: 1.72rem !important; font-weight: 700 !important; line-height: 1.18 !important;
+  letter-spacing: 0 !important; color: var(--gc-ink) !important; text-align: left !important; pointer-events: none; min-height: 0 !important; grid-column: auto !important;
+}
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block > .lesson-block-header::before,
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block > .lesson-block-header::after { content: none !important; display: none !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block > .lesson-block-header > :not(strong):not(em):not(b) { display: none !important; }
+
+.gc-cover { text-align: center; }
+.gc-cover-title { text-align: center !important; font-size: 1.95rem !important; margin-top: 8px !important; }
+.gc-cover-art { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 2px 0 14px; }
+.gc-cover-glyph { width: 92px; height: 92px; border-radius: 26px; display: grid; place-items: center; font-family: var(--gc-serif); font-size: 2.3rem; font-weight: 700;
+  color: var(--gc-ink); background: radial-gradient(circle at 35% 30%, var(--gc-base), var(--gc-tint)); border: 1px solid var(--gc-line); box-shadow: var(--gc-shadow); }
+.gc-laurel { width: 44px; height: 82px; flex: none; }
+.gc-laurel ellipse { fill: var(--gc-gold); opacity: .88; }
+.gc-laurel .gc-laurel-stem { fill: none; stroke: color-mix(in srgb, var(--gc-gold) 80%, var(--font-color)); stroke-width: 2; stroke-linecap: round; }
+.gc-flip { transform: scaleX(-1); }
+.gc-cover-meta { display: flex; justify-content: center; gap: 14px; margin: 4px 0 0; font-size: .88rem; font-weight: 700; color: var(--gc-muted); }
+.gc-cover-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.gc-cover-meta svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Content cards */
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block {
+  display: block !important; background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important;
+  margin: 0 0 16px !important; border-radius: 0 !important; overflow: visible !important; cursor: default !important; grid-template-columns: none !important;
+}
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block > .lesson-block-content,
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-lead {
+  display: block !important; max-height: none !important; opacity: 1 !important; overflow: visible !important; visibility: visible !important;
+  padding: 18px 18px !important; margin: 0 0 14px !important; border-radius: 20px !important;
+  background: var(--gc-card) !important; border: 1px solid var(--gc-line) !important; box-shadow: var(--gc-shadow) !important;
+  font-size: 1.02rem; line-height: 1.62; color: var(--font-color) !important; text-align: left;
+  background-image: var(--skin-card-texture, none) !important;
+}
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-lead::before, :is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-lead::after { content: none !important; display: none !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content > :first-child { margin-top: 0; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content > :last-child { margin-bottom: 0; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content .highlight,
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-module > .highlight {
+  border-radius: 14px; padding: 12px 14px; margin: 14px 0 0;
+  background: color-mix(in srgb, var(--gc-gold) 13%, var(--card-solid-color, #fff)) !important;
+  border: 1px solid color-mix(in srgb, var(--gc-gold) 38%, transparent) !important; color: var(--font-color) !important;
+}
+html.is-dark :is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content .highlight,
+html.is-dark :is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-module > .highlight { background: color-mix(in srgb, var(--gc-gold) 14%, var(--card-solid-color, #1e2430)) !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-collapse: collapse; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content :is(th, td) { word-break: normal !important; overflow-wrap: normal !important; hyphens: none !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content .vpt-form { white-space: nowrap; }
+
+/* Knowledge checks ("Try it") */
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .knowledge-check {
+  margin: 4px 0 16px !important; border-radius: 20px !important; padding: 16px !important;
+  background: color-mix(in srgb, var(--gc-tint) 80%, var(--gc-card)) !important;
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 30%, transparent) !important; box-shadow: var(--gc-shadow) !important;
+}
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .knowledge-check .kc-header { font-family: var(--skin-font, var(--gc-serif)); font-size: 1.12rem; font-weight: 700; color: var(--gc-ink) !important; }
+
+/* Checks page and quiz page titles */
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on [data-gc-kind="checks"] .gc-container::before,
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on [data-gc-kind="quiz"] .gc-container::before {
+  display: block; margin: 4px 2px 14px; font-family: var(--skin-font, var(--gc-serif)); font-size: 1.72rem; font-weight: 700; line-height: 1.18; color: var(--gc-ink);
+}
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on [data-gc-kind="checks"] .gc-container::before { content: "Check your understanding"; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on [data-gc-kind="quiz"] .gc-container::before { content: "Lesson quiz"; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .adv-quiz-start-area {
+  display: block; text-align: left; padding: 18px !important; margin: 0 !important; border-radius: 20px; background: var(--gc-card) !important;
+  border: 1px solid var(--gc-line) !important; box-shadow: var(--gc-shadow) !important;
+}
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .adv-quiz-start-area::before {
+  content: "Finish the lesson with a short quiz. Pass it to complete this lesson. You can retake it any time.";
+  display: block; font-size: 1rem; line-height: 1.55; color: var(--font-color);
+}
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .adv-quiz-start-area .adv-start-quiz-btn,
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .adv-quiz-start-area .quiz-unlock-hint { display: none !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .adv-quiz-start-area .lesson-score-badge { margin-top: 12px; }
+
+/* Footer: back + next */
+.gc-player-foot { position: relative; z-index: 2; flex: none; padding: 8px 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  background: linear-gradient(180deg, transparent, var(--skin-page-bg, var(--primary-color)) 42%); }
+.gc-foot-row { display: flex; gap: 12px; max-width: 560px; margin: 0 auto; }
+.gc-foot-hint { max-width: 560px; margin: 0 auto 8px; text-align: center; font-size: .86rem; font-weight: 600; color: var(--gc-muted); }
+.gc-prev, .gc-next-btn { height: 56px; border-radius: 18px; cursor: pointer; font: inherit; -webkit-tap-highlight-color: transparent; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.gc-prev { width: 60px; flex: none; border: 1px solid var(--gc-line); background: var(--gc-card); color: var(--gc-ink); }
+.gc-prev:disabled { opacity: .45; }
+.gc-next-btn { flex: 1; border: 0; font-size: 1.08rem; font-weight: 800; color: var(--btn-text-color, #fff);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--secondary-color) 80%, #000), color-mix(in srgb, var(--secondary-color) 66%, #000));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--secondary-color) 32%, transparent); }
+.gc-next-btn:disabled { opacity: .5; box-shadow: none; }
+.gc-next-btn.gc-finish { background: linear-gradient(180deg, #22a559, #15803d); color: #fff; box-shadow: 0 8px 20px rgba(21, 128, 61, .3); }
+.gc-prev svg, .gc-next-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.gc-prev:active:not(:disabled), .gc-next-btn:active:not(:disabled) { transform: scale(.97); }
+
+/* Lesson tables and tags read in every style */
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content :is(td, th) { color: var(--font-color) !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content :is(th, .vpt-parse) { color: var(--font-color) !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content .small-btn { color: var(--font-color) !important; background: var(--gc-tint) !important; border: 1px solid var(--gc-line) !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content :is(.vpt-trans) { color: color-mix(in srgb, var(--font-color) 82%, transparent) !important; }
+:is(#newLearnMenu#newLearnMenu#newLearnMenu, #advancedLearnMenu#advancedLearnMenu#advancedLearnMenu, #basicVerbsLearnMenu#basicVerbsLearnMenu#basicVerbsLearnMenu, #advVerbsLearnMenu#advVerbsLearnMenu#advVerbsLearnMenu).gc-player-on .lesson-block-content .aug-piece { color: var(--gc-ink) !important; background: var(--gc-tint-2) !important; }
+/* Dark surfaces: keep white text on a deep enough button */
+html.is-dark .gc-next-btn:not(.gc-finish) { color: #fff; background: linear-gradient(180deg, color-mix(in srgb, var(--secondary-color) 44%, #0b1220), color-mix(in srgb, var(--secondary-color) 34%, #0b1220)); }
+html.is-dark .gc-next-btn:not(.gc-finish) { color: #fff !important; }
+:root[data-skin="chalkboard"]:not(.is-dark) .gc-next-btn:not(.gc-finish) { background: var(--secondary-color); color: var(--btn-text-color); }
+html.is-dark .gc-next-btn.gc-finish { background: linear-gradient(180deg, #17803f, #11642f); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gc-class-card, .gc-turn-next .lesson-module, .gc-turn-prev .lesson-module { animation: none !important; }
+}
