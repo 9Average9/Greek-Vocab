@@ -11,7 +11,7 @@ window.__rhemaInstallEvent = null;
 window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__rhemaInstallEvent = e; try { window.dispatchEvent(new Event('rhema:installable')); } catch (x) {} });
 </script>
 <script>
-/* Was this copy of the app in use before the Rhēma rename (v3.0.661)? A fresh
+/* Was this copy of the app in use before the Rhēma rename (v3.0.662)? A fresh
    install starts with empty storage. Lets the guide ask people still on an old
    Home Screen copy to add the app again for the new name and icon. */
 try { if (!/[?&]mv=/.test(location.search) && !localStorage.getItem('rhemaInstallEra')) localStorage.setItem('rhemaInstallEra', localStorage.length ? 'pre' : 'fresh'); } catch (e) {}
@@ -397,12 +397,12 @@ antique: {
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Rhēma" name="apple-mobile-web-app-title"/>
-<link href="assets/icons/rhema-icon-180.png?v=3.0.661" rel="apple-touch-icon"/>
-<link href="assets/icons/rhema-icon-192.png?v=3.0.661" rel="icon" sizes="192x192" type="image/png"/>
-<link href="assets/icons/rhema-icon-512.png?v=3.0.661" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.661" rel="stylesheet"/>
-<link href="sermon-notes.css?v=3.0.661" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.661" rel="stylesheet"/>
+<link href="assets/icons/rhema-icon-180.png?v=3.0.662" rel="apple-touch-icon"/>
+<link href="assets/icons/rhema-icon-192.png?v=3.0.662" rel="icon" sizes="192x192" type="image/png"/>
+<link href="assets/icons/rhema-icon-512.png?v=3.0.662" rel="icon" sizes="512x512" type="image/png"/>
+<link href="style.css?v=3.0.662" rel="stylesheet"/>
+<link href="sermon-notes.css?v=3.0.662" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.662" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -424,7 +424,7 @@ antique: {
 <path class="app-launch-ring-track" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="#0a1a2e" stroke-opacity="0.10" stroke-width="12"/>
 <path id="appLaunchRing" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="url(#dbRingGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="980" stroke-dashoffset="980" filter="url(#dbRingShadow)"/>
 </svg>
-<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.661" alt=""/>
+<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.662" alt=""/>
 </div>
 <div class="app-launch-status">
 <span id="appLaunchText">Opening the Word</span>
@@ -467,6 +467,7 @@ antique: {
 </button>
 </aside>
 <section class="screen active" id="homeScreen">
+<div class="home-hero-bg" id="homeHeroBg" aria-hidden="true"></div>
 <div class="home-scroll" id="homeScroll">
 <div class="desktop-home-shell">
 <section class="desktop-study-hero">
@@ -553,6 +554,22 @@ Open Your Study
 </section>
 </div>
 <div class="home-top-row">
+<div class="home-brand"><img src="assets/icons/rhema-icon-192.png" alt="" width="40" height="40"/><b>Rhēma</b>
+<div class="home-top-actions">
+<button class="ht-btn home-bell-btn" id="notifBtn" onclick="openNotifications()" aria-label="Notifications">
+<span class="material-symbols-outlined">notifications</span>
+<span class="notif-badge hidden" id="notifBadge"></span>
+</button>
+<button class="ht-btn home-friends-btn" id="homeFriendsBtn" onclick="showFriendsModal()" aria-label="Friends">
+<span class="material-symbols-outlined">group</span>
+<span class="notif-badge hidden" id="homeFriendsBadge"></span>
+</button>
+<button class="ht-btn home-calendar-btn" id="calendarBtn" onclick="openCalendarModal()" aria-label="Group Calendar">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="notif-badge hidden" id="calEventBadge"></span>
+</button>
+</div>
+</div>
 <div class="home-greeting-wrap">
 <h1 class="home-greeting-block">
 <span class="home-greeting-good">Good</span>
@@ -562,42 +579,30 @@ Open Your Study
 <p class="home-greeting-name" id="homeGreetingName">Friend</p>
 </div>
 </div>
-<div class="home-top-actions">
-<button class="ht-btn home-calendar-btn" id="calendarBtn" onclick="openCalendarModal()" aria-label="Group Calendar">
-<span class="material-symbols-outlined">calendar_month</span>
-<span class="notif-badge hidden" id="calEventBadge"></span>
-</button>
-<button class="ht-btn home-friends-btn" id="homeFriendsBtn" onclick="showFriendsModal()" aria-label="Friends">
-<span class="material-symbols-outlined">group</span>
-<span class="notif-badge hidden" id="homeFriendsBadge"></span>
-</button>
-<button class="ht-btn home-bell-btn" id="notifBtn" onclick="openNotifications()" aria-label="Notifications">
-<span class="material-symbols-outlined">notifications</span>
-<span class="notif-badge hidden" id="notifBadge"></span>
-</button>
-</div>
 </div>
 <!-- Habit Builder widget -->
 <div class="home-habit-widget" id="homeHabitWidget" onclick="openHabitBuilderFromWidget(this)" role="button" tabindex="0">
+<svg class="hcard-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
 <div class="hhw-main">
-<span class="hhw-kicker">
+<span class="hhw-kicker hcard-title">
 <svg class="hhw-sprout" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20.5V13" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M12 13c-3.9-.4-6.6-2.8-7.8-7.1 4.4.1 7.2 2.4 7.8 7.1Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 13c.7-4.2 3.4-6.8 7.9-7.8-1 4.6-3.7 7.2-7.9 7.8Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.2 20.5h9.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
 Habit Builder</span>
 <h3 class="hhw-headline" id="hhwHeadline">Build habits that stick</h3>
-<p class="hhw-sub" id="hhwSub">Track what matters daily, celebrate streaks, and invite friends to cheer you on.</p>
+<p class="hhw-sub" id="hhwSub"></p>
 <div class="hhw-progress hidden" id="hhwProgress">
 <div class="hhw-bar"><span id="hhwBarFill" style="width:0%"></span></div>
 <strong class="hhw-count" id="hhwCount"></strong>
 </div>
 </div>
-<div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-cut.webp?v=3.0.661" alt="" width="260" height="155"/><span class="hhw-art-tint"></span></div>
+<div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-cut.webp?v=3.0.662" alt="" width="260" height="155"/><span class="hhw-art-tint"></span></div>
 </div>
 <div class="home-swipe" id="homeSwipe">
 <div class="home-swipe-track" id="homeSwipeTrack">
 <!-- Reading Plan widget (shown when a plan is selected; swipes with Journey Maps) -->
 <div class="home-journey-widget home-plan-widget home-swipe-slide hidden" id="homePlanWidget" onclick="openReadingPlanFromWidget(event)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openReadingPlanFromWidget(event)}">
+<svg class="hcard-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
 <div class="hjw-main">
-<span class="hhw-kicker hjw-kicker">
+<span class="hhw-kicker hjw-kicker hcard-title">
 <span class="material-symbols-outlined">auto_stories</span>
 Reading Plan</span>
 <h3 class="hhw-headline hjw-headline" id="hpwHeadline">Today&rsquo;s reading</h3>
@@ -612,12 +617,12 @@ Reading Plan</span>
 </div>
 <!-- Journey Maps widget -->
 <div class="home-journey-widget home-swipe-slide" id="homeJourneyWidget" onclick="openJourneysFromWidget()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openJourneysFromWidget()}">
+<svg class="hcard-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
 <div class="hjw-main">
-<span class="hhw-kicker hjw-kicker">
+<span class="hhw-kicker hjw-kicker hcard-title">
 <span class="material-symbols-outlined">location_on</span>
 Journey Maps</span>
 <h3 class="hhw-headline hjw-headline">Follow the story</h3>
-<p class="hhw-sub hjw-sub">Trace Bible routes with ancient and modern maps, distances, and Scripture steps.</p>
 </div>
 <div class="hjw-art" aria-hidden="true"><img src="assets/icons/ChatGPT Image Jun 23, 2026, 10_26_34 PM.png" alt="" width="260" height="163"/><span class="hjw-art-tint"></span></div>
 </div>
@@ -631,21 +636,21 @@ Journey Maps</span>
 <div class="home-actions-grid tools-grid" id="homeToolsGrid">
 <button class="home-action-tile quick-action-quiz" id="bibleQuizHomeBtn" onclick="openBibleQuiz(this)">
 <div class="hat-icon hat-icon-quiz">
-<img class="qa-img" src="assets/icons/quick-quiz-blue.png?v=3.0.661" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-quiz-blue.png?v=3.0.662" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Bible Quiz</strong><small>Test what you read</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile quick-action-sermon" id="sermonNotesHomeBtn" onclick="openSermonNotes(this)">
 <div class="hat-icon hat-icon-sermon">
-<img class="qa-img" src="assets/icons/quick-sermon-podium.png?v=3.0.661" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-sermon-podium.png?v=3.0.662" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Sermon Notes</strong><small>Capture every message</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile quick-action-memorize" id="memorizationHomeBtn" onclick="openHomeToolFromElement(this, 'memorization')">
 <div class="hat-icon hat-icon-memorization">
-<img class="qa-img" src="assets/icons/quick-memorize.png?v=3.0.661" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-memorize.png?v=3.0.662" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Memorize</strong><small>Train your memory</small></div>
 <span class="hat-chev">&rarr;</span>
@@ -1000,7 +1005,7 @@ Journey Maps</span>
 <p>Track what matters daily. Celebrate streaks, and invite friends to cheer you on.</p>
 </div>
 <div class="habits-hero-art" aria-hidden="true">
-<img src="assets/icons/habit-builder-cut.webp?v=3.0.661" alt="" width="320" height="191"/>
+<img src="assets/icons/habit-builder-cut.webp?v=3.0.662" alt="" width="320" height="191"/>
 <span class="habits-hero-tint"></span>
 </div>
 </div>
@@ -16934,24 +16939,24 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.661"></script>
-<script src="app.js?v=3.0.661"></script>
-<script src="rhema-word-study.js?v=3.0.661"></script>
-<script src="rhema-grammar-search.js?v=3.0.661"></script>
-<script src="rhema-xl-views.js?v=3.0.661"></script>
-<script src="rhema-glance.js?v=3.0.661"></script>
-<script src="challenge.js?v=3.0.661"></script>
-<script src="guide-news.js?v=3.0.661"></script>
-<script src="bible-atlas.js?v=3.0.661"></script>
+<script src="rhema-align.js?v=3.0.662"></script>
+<script src="app.js?v=3.0.662"></script>
+<script src="rhema-word-study.js?v=3.0.662"></script>
+<script src="rhema-grammar-search.js?v=3.0.662"></script>
+<script src="rhema-xl-views.js?v=3.0.662"></script>
+<script src="rhema-glance.js?v=3.0.662"></script>
+<script src="challenge.js?v=3.0.662"></script>
+<script src="guide-news.js?v=3.0.662"></script>
+<script src="bible-atlas.js?v=3.0.662"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.661"></script>
-<script src="verse-structure.js?v=3.0.661"></script>
-<script src="vs-structure.js?v=3.0.661"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.662"></script>
+<script src="verse-structure.js?v=3.0.662"></script>
+<script src="vs-structure.js?v=3.0.662"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.661"></script>
-<script src="bible-quiz.js?v=3.0.661"></script>
-<script src="firebase-lb.js?v=3.0.661" type="module"></script>
+<script src="sermon-notes.js?v=3.0.662"></script>
+<script src="bible-quiz.js?v=3.0.662"></script>
+<script src="firebase-lb.js?v=3.0.662" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

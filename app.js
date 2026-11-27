@@ -23940,7 +23940,7 @@ function _renderHomeHabitWidget() {
   const habits = _habitsLoaded ? (_habitItems || []) : null;
   if (!habits || !habits.length) {
     headline.textContent = 'Build habits that stick';
-    if (sub) sub.textContent = 'Track what matters daily, celebrate streaks, and invite friends to cheer you on.';
+    if (sub) sub.textContent = '';
     progress?.classList.add('hidden');
     return;
   }
@@ -27651,12 +27651,23 @@ function applyHomeBackdrop(backdropName = "none") {
   if (home) {
     home.classList.remove(...backdropClasses);
     home.classList.add(`home-backdrop-${safeName}`);
+    // The Rhēma header picture shows only when no background picture is chosen.
+    home.classList.toggle("home-hero-on", safeName === "none");
     home.style.setProperty("--home-backdrop-image", imageUrl);
   }
   document.querySelectorAll(".home-backdrop-option").forEach(btn => {
     btn.classList.toggle("selected", btn.classList.contains(`home-backdrop-${safeName}`));
   });
 }
+
+(function bindHomeHeroScroll() {
+  const go = () => {
+    const scroll = document.getElementById('homeScroll'), bg = document.getElementById('homeHeroBg');
+    if (!scroll || !bg) return;
+    scroll.addEventListener('scroll', () => { bg.style.transform = `translateY(${-Math.min(scroll.scrollTop, 400)}px)`; }, { passive: true });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();
 
 function _clearPageHomeBackdrop() {
   const pageBackdropClasses = HOME_BACKDROPS.map(name => `page-home-backdrop-${name}`);
@@ -32786,7 +32797,7 @@ function applyJourneyCardState() {
 // Journey Maps cards grow taller first (up to 40px each), the Tools tiles take
 // the rest (mostly taller, a little wider, so the next tile still peeks in).
 const HOME_FIT_GAP = 28;       // px between the Tools row and the nav bar
-const HOME_FIT_CARD_MAX = 40;  // most each card grows
+const HOME_FIT_CARD_MAX = 56;  // most each card grows
 let _homeFitBusy = false;
 // Where an element sits with no animation transforms applied (Home's entrance
 // animations slide and scale things; measuring mid-animation gave fake gaps).
@@ -32795,6 +32806,7 @@ function _homeLayoutTop(el) {
   for (let e = el; e; e = e.offsetParent) y += e.offsetTop - (e !== el && e.scrollTop ? e.scrollTop : 0);
   return y;
 }
+function navTop0(nav) { return nav.offsetTop || (window.innerHeight - nav.offsetHeight - (parseFloat(getComputedStyle(nav).bottom) || 0)); }
 function _homeFitMeasure(home, grid, nav, cards) {
   // Grid layout: the gap is under the last visible row, not the first tile.
   const shown = [...grid.querySelectorAll('.home-action-tile')].filter(t => t.offsetParent !== null);
@@ -32820,7 +32832,7 @@ function fitHomeLayout() {
     // Back to the natural layout to measure it. (The sizes live on #homeScreen,
     // not the row: an older rule zeroes the height of Home's last child when it
     // has an inline style.)
-    grid.classList.remove('ht-fit');
+    grid.classList.remove('ht-fit', 'tg-one-row');
     ['--ht-col', '--ht-h', '--ht-icon', '--ht-art', '--ht-title', '--ht-sub', '--tg-img'].forEach(k => home.style.removeProperty(k));
     cards.forEach(c => { c.style.removeProperty('min-height'); c.classList.remove('hw-fit'); });
     const m = _homeFitMeasure(home, grid, nav, cards);
@@ -32829,7 +32841,7 @@ function fitHomeLayout() {
     if (Math.abs(extra) < 4) return;
     let toolsGrow = extra;
     if (extra > 0 && cards.length) {
-      const perCard = Math.min(HOME_FIT_CARD_MAX, Math.round(extra * 0.65 / cards.length));
+      const perCard = Math.min(HOME_FIT_CARD_MAX, Math.round(extra * (grid.classList.contains('tools-grid') ? 0.8 : 0.65) / cards.length));
       cards.forEach(c => {
         if (c === swipe) {
           const h = Math.max(...slides.filter(x => !x.classList.contains('hidden')).map(x => x.offsetHeight), 0);
@@ -32846,7 +32858,22 @@ function fitHomeLayout() {
         const img = m.tile.querySelector('.qa-img');
         const cur = img ? img.offsetHeight : 56;
         const rows = Math.max(1, Math.ceil([...grid.children].filter(t => t.offsetParent !== null).length / 3));
-        home.style.setProperty('--tg-img', `${Math.max(42, Math.round(cur + extra / rows))}px`);
+        const want = Math.round(cur + extra / rows);
+        // Smaller phones: rather than squeezing the pictures, show one row of
+        // three (the rest are a tap away in View All).
+        if (want < 46) {
+          grid.classList.add('tg-one-row');
+          // Still short with one row: shrink its pictures a little (min 40px).
+          const one = [...grid.querySelectorAll('.home-action-tile')].filter(t => t.offsetParent !== null).pop();
+          const over = navTop0(nav) - (_homeLayoutTop(one) + one.offsetHeight) - HOME_FIT_GAP;
+          if (over < 0) home.style.setProperty('--tg-img', `${Math.max(40, Math.round(cur + over))}px`);
+        }
+        else home.style.setProperty('--tg-img', `${want}px`);
+      } else if (toolsGrow > 6) {
+        // Room to spare: let the pictures grow a little (up to 72px).
+        const img = m.tile.querySelector('.qa-img');
+        const cur = img ? img.offsetHeight : 56;
+        home.style.setProperty('--tg-img', `${Math.min(72, Math.round(cur + toolsGrow / 2))}px`);
       }
       return;
     }
@@ -32958,7 +32985,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.661";
+const APP_VERSION = "3.0.662";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32981,6 +33008,13 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.662 — A new top for Home</div>
+<ul>
+<li><strong>Morning on the mountain</strong> &mdash; The top of Home now has a sunrise-over-the-mountains picture with an open Bible, the Rhēma name, and your greeting. Pick a Home background picture of your own and it steps aside.</li>
+<li><strong>Quick buttons</strong> &mdash; Notifications, Friends and Calendar sit together at the top right.</li>
+<li><strong>Cleaner cards</strong> &mdash; Habit Builder, Reading Plan and Journey Maps each show their name like a small header with an arrow, and fewer extra words.</li>
+<li><strong>Small phones</strong> &mdash; On smaller screens Home shows one row of tools so everything fits; the rest are in View All.</li>
+</ul>
 <div class="un-version-label">v3.0.661 — All Tools</div>
 <ul>
 <li><strong>All Tools</strong> &mdash; <strong>View All</strong> on Home now opens a page with every tool, grouped into Study, Build, Explore and Track. Tap a group at the top (or its &ldquo;tools&rdquo; count) to see just that group, or tap the search button to find a tool by name. Habit Builder and Journey Maps are there too.</li>

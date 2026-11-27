@@ -42385,3 +42385,59 @@ body.all-tools-active .app-header, body.all-tools-active .desktop-shell-nav, bod
 #allToolsPage .at-chip { flex: 1 0 auto; padding: 9px 12px; font-size: .92rem; }
 #allToolsPage .at-sec-count { color: color-mix(in srgb, var(--font-color) 86%, transparent); }
 html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) .hhw-sub { color: color-mix(in srgb, var(--muted-color) 82%, #000) !important; }
+
+/* ══ Home header (Rhēma picture, brand row, greeting) ═════════════════════════
+   The mountain-and-Bible picture sits behind the top of Home and fades into the
+   page. It shows only when no Home background picture is chosen
+   (#homeScreen.home-hero-on); with a background picture the text keeps its
+   normal colors. */
+#homeScreen { --hh-fade: var(--primary-color); }
+:root[data-skin] #homeScreen { --hh-fade: var(--skin-page-bg, var(--primary-color)); }
+#homeScreen > .home-hero-bg { display: none; }
+#homeScreen.home-hero-on > .home-hero-bg {
+  display: block; position: absolute; left: 0; right: 0; top: 0; height: 250px; z-index: 0; pointer-events: none;
+  background: url("assets/home-backgrounds/rhema-header.webp?v=3.0.662") 100% 62% / auto 250px no-repeat; will-change: transform;
+}
+#homeScreen.home-hero-on > .home-hero-bg::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(12, 18, 40, .38) 0%, rgba(12, 18, 40, .12) 55%, transparent 75%),
+    linear-gradient(180deg, rgba(12, 18, 40, .40) 0%, rgba(12, 18, 40, .08) 40%, transparent 62%, color-mix(in srgb, var(--hh-fade) 70%, transparent) 86%, var(--hh-fade) 100%); }
+#homeScreen.home-hero-on > .home-scroll { position: relative; z-index: 1; }
+html body #homeScreen .home-top-row { position: relative; z-index: 2; display: block !important; margin-top: -6px !important; margin-bottom: 8px !important; }
+#homeScreen .home-brand { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
+#homeScreen .home-brand > img { width: 40px; height: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); border: 1px solid rgba(255, 255, 255, .35); }
+#homeScreen .home-brand > b { flex: 1; color: var(--font-color); font-weight: 800; font-size: 1.25rem; letter-spacing: .01em; }
+html body #homeScreen .home-brand .home-top-actions { display: flex !important; gap: 8px; position: static !important; margin: 0 !important; transform: none !important; }
+html body #homeScreen .home-brand .ht-btn { width: 40px !important; height: 40px !important; border-radius: 50% !important; }
+html body #homeScreen .home-brand .ht-btn .material-symbols-outlined { font-size: 21px !important; }
+html body #homeScreen .home-greeting-wrap, html body #homeScreen .home-greeting-block, html body #homeScreen .home-greeting-name-row { margin: 0 !important; }
+html body #homeScreen .home-greeting-good, html body #homeScreen .home-greeting-time { display: inline !important; font-size: 2.05rem !important; }
+html body #homeScreen .home-greeting-time { text-transform: capitalize; }
+html body #homeScreen .home-greeting-name { font-family: 'Playfair Display', Georgia, serif !important; font-size: 2.05rem !important; font-weight: 700 !important; margin: 0 !important; line-height: 1.1; }
+#homeScreen.home-hero-on .home-brand > b { color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, .35); }
+html body #homeScreen.home-hero-on .home-brand .ht-btn { background: rgba(255, 255, 255, .16) !important; border: 1px solid rgba(255, 255, 255, .5) !important; box-shadow: none !important; }
+html body #homeScreen.home-hero-on .home-brand .ht-btn .material-symbols-outlined { color: #fff !important; }
+html body #homeScreen.home-hero-on .home-greeting-good, html body #homeScreen.home-hero-on .home-greeting-time { color: #fff !important; text-shadow: 0 2px 10px rgba(0, 0, 0, .35); }
+html body #homeScreen.home-hero-on .home-greeting-name { color: color-mix(in srgb, var(--secondary-color) 14%, #fff) !important; text-shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 2px 14px rgba(0, 0, 0, .5); }
+html body #homeScreen.home-hero-on .home-greeting-name::after { display: none; }
+
+/* Card title rows: the card's name with its arrow, like a small header. */
+html body #homeScreen .hhw-kicker.hcard-title {
+  display: flex !important; align-items: center; gap: 7px; width: auto; margin-bottom: 4px;
+  font-size: 1.02rem !important; font-weight: 800 !important; letter-spacing: -.005em !important; text-transform: none !important;
+}
+html body #homeScreen .hcard-title .material-symbols-outlined, html body #homeScreen .hcard-title .hhw-sprout { font-size: 1.15rem !important; width: 1.15rem; height: 1.15rem; }
+#homeScreen .hcard-chev { position: absolute; top: 11px; right: 11px; z-index: 4; width: 28px; height: 28px; padding: 6px; box-sizing: border-box; border-radius: 50%; background: color-mix(in srgb, var(--card-solid-color, #fff) 88%, transparent); box-shadow: 0 1px 4px rgba(15, 23, 42, .14); fill: none; stroke: var(--font-color); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+#homeScreen .home-habit-widget, #homeScreen .home-journey-widget { position: relative; }
+#homeScreen .hhw-sub:empty { display: none; }
+/* Smaller phones: one row of three tools (the rest are in View All). */
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid.tg-one-row > .home-action-tile:nth-child(n+4):not(#_t2):not(#_t3) { display: none !important; }
+/* With a Reading Plan, the swipe pair needs room for the plan card's title row,
+   reading, line and progress (Journey Maps sets the pair's height). */
+#homeScreen #homeSwipe.has-plan .home-journey-widget:not(.home-plan-widget) { min-height: 128px; }
+#homeScreen .home-plan-widget .hjw-main { justify-content: flex-start !important; }
+#homeScreen .home-plan-widget .hjw-headline { -webkit-line-clamp: 1 !important; margin-bottom: 1px; }
+@media (max-height: 720px) {
+  #homeScreen #hhwSub { display: none; }
+  html body #homeScreen .home-top-row { margin-bottom: 4px !important; }
+  html body #homeScreen .home-greeting-good, html body #homeScreen .home-greeting-time, html body #homeScreen .home-greeting-name { font-size: 1.8rem !important; }
+}
