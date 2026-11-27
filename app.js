@@ -27653,6 +27653,7 @@ function applyHomeBackdrop(backdropName = "none") {
     home.classList.add(`home-backdrop-${safeName}`);
     // The Rhēma header picture shows only when no background picture is chosen.
     home.classList.toggle("home-hero-on", safeName === "none");
+    if (typeof _applyHomeFitSnapshot === "function") _applyHomeFitSnapshot();
     home.style.setProperty("--home-backdrop-image", imageUrl);
   }
   document.querySelectorAll(".home-backdrop-option").forEach(btn => {
@@ -30138,7 +30139,7 @@ function answerKC(checkId, el) {
 
   container.querySelectorAll(".kc-opt").forEach((btn, i) => {
     btn.disabled = true;
-    if (kcData[i].correct) btn.classList.add("kc-correct");
+    if (kcData[parseInt(btn.dataset.opt, 10)]?.correct) btn.classList.add("kc-correct");
   });
 
   if (!isCorrect) el.classList.add("kc-wrong");
@@ -32931,10 +32932,45 @@ function fitHomeLayout() {
     }
   } finally {
     _homeFitBusy = false;
+    _saveHomeFitSnapshot();
   }
+}
+
+// Remember Home's fitted sizes so the next visit (or the next launch) starts at
+// them, instead of showing the tools at full size and then shrinking them.
+const HOME_FIT_VARS = ['--ht-col', '--ht-h', '--ht-icon', '--ht-art', '--ht-title', '--ht-sub', '--tg-img', '--hh-space'];
+function _homeFitKey() {
+  const home = document.getElementById('homeScreen');
+  return `${window.innerWidth}x${window.innerHeight}|${home?.classList.contains('home-hero-on') ? 1 : 0}`;
+}
+function _saveHomeFitSnapshot() {
+  try {
+    const home = document.getElementById('homeScreen');
+    const grid = home?.querySelector('.home-actions-grid');
+    if (!home || !grid || !home.classList.contains('active')) return;
+    _homeFitSnapshotUsed = true; // a real fit has run; it owns the sizes now
+    const vars = {};
+    HOME_FIT_VARS.forEach(k => { const v = home.style.getPropertyValue(k); if (v) vars[k] = v; });
+    const cls = ['ht-fit', 'tg-one-row'].filter(c => grid.classList.contains(c));
+    localStorage.setItem('homeFitSnapshotV1', JSON.stringify({ key: _homeFitKey(), vars, cls }));
+  } catch {}
+}
+let _homeFitSnapshotUsed = false;
+function _applyHomeFitSnapshot() {
+  if (_homeFitSnapshotUsed) return;
+  try {
+    const snap = JSON.parse(localStorage.getItem('homeFitSnapshotV1') || 'null');
+    const home = document.getElementById('homeScreen');
+    const grid = home?.querySelector('.home-actions-grid');
+    if (!snap || !home || !grid || snap.key !== _homeFitKey()) return;
+    Object.entries(snap.vars || {}).forEach(([k, v]) => home.style.setProperty(k, v));
+    (snap.cls || []).forEach(c => grid.classList.add(c));
+    _homeFitSnapshotUsed = true;
+  } catch {}
 }
 let _homeFitTimer = 0;
 function scheduleHomeFit() {
+  _applyHomeFitSnapshot();
   clearTimeout(_homeFitTimer);
   _homeFitTimer = setTimeout(() => {
     // Let entrance animations (Home, nav bar) finish first.
@@ -33008,7 +33044,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.665";
+const APP_VERSION = "3.0.666";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -33031,6 +33067,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.666 — Knowledge Check</div>
+<ul>
+<li><strong>2,400 practice questions</strong> &mdash; Every Greek lesson now has 30 fresh practice questions in the new Knowledge Check tab, next to Classes. A lesson's practice opens once you finish that lesson. Every question was written from the lesson itself and then checked by a separate fact-check pass.</li>
+<li><strong>Rounds that keep you sharp</strong> &mdash; Practice ten at a time, from one lesson, a whole class, or the Daily Mix, which leans toward the ones you missed. Watch your streak, your mastered count and your stars grow.</li>
+<li><strong>Livelier lesson checks</strong> &mdash; The checks inside lessons have a fresh look, a little celebration when you get one right, and the right answer is now always the one highlighted.</li>
+<li><strong>Smoother Home buttons</strong> &mdash; Tapping a tool on Home gives a gentle press instead of a jump that got clipped.</li>
+<li><strong>Lesson corrections</strong> &mdash; A few lesson details were corrected, including the count of prepositions in Romans 5:1–2 and an accent in John 11:27.</li>
+</ul>
 <div class="un-version-label">v3.0.665 — Greek Classes</div>
 <ul>
 <li><strong>Four classes</strong> &mdash; The Lessons tab is now Greek Classes: Basics, Advanced, Basic Verbs and Advanced Verbs, each with its progress. Tap a class to see its lessons, with a Continue marker on the next one.</li>
@@ -36494,6 +36538,7 @@ async function restoreUserFromFirestore(user) {
   if (data.mercyLastPostDate) localStorage.setItem("mercyLastPostDate", data.mercyLastPostDate);
   updatePraiseStreakUI();
   if (data.answeredKCs) localStorage.setItem("answeredKCs", JSON.stringify(data.answeredKCs));
+  if (data.greekPractice && typeof window.mergeGreekPracticeFromCloud === "function") window.mergeGreekPracticeFromCloud(data.greekPractice);
   if (data.openedLessonBlocks) {
     openedLessonBlocks = mergeOpenedBlockMaps(
       JSON.parse(localStorage.getItem("openedLessonBlocks") || "{}"),
@@ -36581,7 +36626,8 @@ async function syncUserData() {
     greekVocabStats: (() => { try { return JSON.parse(localStorage.getItem("greekVocabStats") || "null"); } catch { return null; } })(),
     greekParadigmStats: (() => { try { return JSON.parse(localStorage.getItem("greekParadigmStats") || "null"); } catch { return null; } })(),
     testsCompleted: parseInt(localStorage.getItem("testsCompleted") || "0"),
-    ...(typeof getVerbSyncData === "function" ? getVerbSyncData() : {})
+    ...(typeof getVerbSyncData === "function" ? getVerbSyncData() : {}),
+    ...(typeof window.getGreekPracticeSyncData === "function" ? window.getGreekPracticeSyncData() : {})
   };
 
   await window.Auth.syncUserData(user.uid, data);

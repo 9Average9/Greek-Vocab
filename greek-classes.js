@@ -120,14 +120,10 @@
   }
 
   /* ── Classes hub (Lessons tab) ───────────────────────────────────────── */
-  function renderHub() {
-    const el = ensureScreen('greekClassesPage', 'Greek Classes');
+  let _hubTab = (() => { try { return localStorage.getItem('gcHubTab') === 'kc' ? 'kc' : 'classes'; } catch { return 'classes'; } })();
+  function classesHTML() {
     const cur = currentClassKey();
-    el.innerHTML = `${decoHTML()}<div class="gc-page gc-hub-page">
-      <header class="gc-brand-row gc-brand-solo"><h1 class="gc-brand">${ART.temple}<span>Greek</span></h1></header>
-      <div class="gc-key" aria-hidden="true"></div>
-      <h2 class="gc-section-label">Classes</h2>
-      <div class="gc-class-list">${CLASSES.map(cls => {
+    return `<div class="gc-class-list">${CLASSES.map(cls => {
         const total = lessonsFor(cls).length;
         const done = doneCount(cls);
         const pct = total ? Math.round(done / total * 100) : 0;
@@ -140,11 +136,39 @@
             <span class="gc-bar-row"><span class="gc-bar"><i style="width:${pct}%"></i></span><b>${done}/${total}</b></span>
           </span>
         </button>`;
-      }).join('')}</div>
+      }).join('')}</div>`;
+  }
+  function renderHub() {
+    const el = ensureScreen('greekClassesPage', 'Greek Classes');
+    const kc = _hubTab === 'kc';
+    el.innerHTML = `${decoHTML()}<div class="gc-page gc-hub-page">
+      <header class="gc-brand-row gc-brand-solo"><h1 class="gc-brand">${ART.temple}<span>Greek</span></h1></header>
+      <div class="gc-key" aria-hidden="true"></div>
+      <div class="gc-tabs${kc ? ' gc-tab-kc' : ''}" role="tablist">
+        <button type="button" role="tab" aria-selected="${!kc}" class="${kc ? '' : 'on'}" onclick="gcHubTab('classes')">${ART.book}<span>Classes</span></button>
+        <button type="button" role="tab" aria-selected="${kc}" class="${kc ? 'on' : ''}" onclick="gcHubTab('kc')">${ART.quiz}<span>Knowledge Check</span></button>
+        <i aria-hidden="true"></i>
+      </div>
+      <div class="gc-tab-body" id="gcTabBody">${kc ? (window.gcPracticeHubHTML ? window.gcPracticeHubHTML() : '') : classesHTML()}</div>
     </div>`;
+    if (kc) window.gcPracticeAfterRender?.(el);
+  }
+  function setHubTab(t) {
+    _hubTab = t === 'kc' ? 'kc' : 'classes';
+    try { localStorage.setItem('gcHubTab', _hubTab); } catch {}
+    const el = document.getElementById('greekClassesPage');
+    const tabs = el?.querySelector('.gc-tabs');
+    const body = el?.querySelector('#gcTabBody');
+    if (!tabs || !body) { renderHub(); return; }
+    tabs.classList.toggle('gc-tab-kc', _hubTab === 'kc');
+    tabs.querySelectorAll('button').forEach((b, i) => { const on = (i === 1) === (_hubTab === 'kc'); b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+    body.innerHTML = _hubTab === 'kc' ? (window.gcPracticeHubHTML ? window.gcPracticeHubHTML() : '') : classesHTML();
+    body.classList.remove('gc-tab-swap'); void body.offsetWidth; body.classList.add('gc-tab-swap');
+    if (_hubTab === 'kc') window.gcPracticeAfterRender?.(el);
   }
 
-  function openHub() {
+  function openHub(tab) {
+    if (tab) { _hubTab = tab === 'kc' ? 'kc' : 'classes'; try { localStorage.setItem('gcHubTab', _hubTab); } catch {} }
     renderHub();
     if (typeof showScreen === 'function') showScreen('greekClassesPage');
     setFull('hub');
@@ -252,6 +276,7 @@
       if (b.hasAttribute('onclick')) { b.dataset.gcOnclick = b.getAttribute('onclick'); b.removeAttribute('onclick'); }
       b.classList.add('open');
     });
+    decorateChecks(section);
     // Cover title + laurel art, added once.
     const container = section.querySelector('.lesson-block')?.parentElement;
     container?.classList.add('gc-container');
@@ -269,6 +294,84 @@
       meta.innerHTML = `<span>${ART.book}${parts} part${parts === 1 ? '' : 's'}</span>${lesson.time ? `<span>${ART.clock}${esc(lesson.time)}</span>` : ''}${checks ? `<span>${ART.target}${checks} check${checks === 1 ? '' : 's'}</span>` : ''}`;
       const lead = container.querySelector(':scope > .lesson-lead');
       if (lead) lead.after(meta); else cover.appendChild(meta);
+    }
+  }
+
+
+  /* ── In-lesson checks ("Try it") ─────────────────────────────────────── */
+  const TRY_IC = `<span class="gc-kc-ic">${ART.target}</span>`;
+  function kcData(id) {
+    try { if (typeof ADV_KC_DATA !== 'undefined' && ADV_KC_DATA[id]) return ADV_KC_DATA[id]; } catch {}
+    try { if (typeof VERB_ADV_KC_DATA !== 'undefined' && VERB_ADV_KC_DATA[id]) return VERB_ADV_KC_DATA[id]; } catch {}
+    return null;
+  }
+  function markAnswered(kc) {
+    if (!kc.classList.contains('answered')) return;
+    const data = kcData(kc.id);
+    if (!data) return;
+    kc.querySelectorAll('.kc-opt').forEach(btn => {
+      const d = data[parseInt(btn.dataset.opt, 10)];
+      if (d && d.correct) btn.classList.add('kc-correct');
+    });
+  }
+  function decorateChecks(section) {
+    section.querySelectorAll('.knowledge-check').forEach(kc => {
+      const head = kc.querySelector('.kc-header');
+      if (head && !head.dataset.gc) { head.dataset.gc = '1'; head.innerHTML = `${TRY_IC}<span>Try it</span>`; }
+      markAnswered(kc);
+    });
+    section.querySelectorAll('.lesson-interactive').forEach(box => {
+      if (box.dataset.gc) return;
+      box.dataset.gc = '1';
+      const first = box.firstElementChild;
+      const txt = (first?.textContent || '').trim();
+      const isLabel = first && first.tagName === 'P' && (first.classList.contains('check-title') ||
+        (/^[^.?!]{2,30}:?$/.test(txt) && first.querySelector('strong') && first.querySelector('strong').textContent.trim().length >= txt.replace(/:$/, '').length - 1));
+      const label = isLabel ? txt.replace(/:\s*$/, '') : 'Try it';
+      const el = document.createElement('p');
+      el.className = 'gc-try-label';
+      el.innerHTML = `${TRY_IC}<span>${esc(/knowledge check/i.test(label) ? 'Try it' : label)}</span>`;
+      if (isLabel) first.replaceWith(el); else box.insertBefore(el, box.firstChild);
+    });
+  }
+  function celebrate(host, fromEl) {
+    if (!host) return;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    const hr = host.getBoundingClientRect(), r = (fromEl || host).getBoundingClientRect();
+    const burst = document.createElement('span');
+    burst.className = 'gc-burst';
+    burst.style.left = `${r.left - hr.left + r.width * 0.5}px`;
+    burst.style.top = `${r.top - hr.top + r.height * 0.5}px`;
+    const cols = ['#22c55e', '#fbbf24', 'var(--secondary-color)', '#f472b6', '#38bdf8'];
+    let html = '';
+    for (let i = 0; i < 16; i++) {
+      const a = (Math.PI * 2 * i) / 16 + Math.random() * 0.4, d = 46 + Math.random() * 46;
+      html += `<i style="--c:${cols[i % cols.length]};--x:${Math.cos(a) * d}px;--y:${Math.sin(a) * d - 18}px;--r:${Math.round(Math.random() * 360)}deg;--d:${(Math.random() * 0.06).toFixed(2)}s"></i>`;
+    }
+    burst.innerHTML = html;
+    host.appendChild(burst);
+    const plus = document.createElement('span');
+    plus.className = 'gc-plus';
+    plus.textContent = 'Nice!';
+    host.appendChild(plus);
+    setTimeout(() => { burst.remove(); plus.remove(); }, 1100);
+  }
+  function onCheckClick(e) {
+    if (!P.cls) return;
+    const opt = e.target.closest?.('.kc-opt');
+    if (opt) {
+      const kc = opt.closest('.knowledge-check');
+      if (!kc || !kc.classList.contains('answered') || kc.dataset.gcDone) return;
+      kc.dataset.gcDone = '1';
+      kc.classList.add('gc-just');
+      if (opt.classList.contains('kc-correct')) { opt.classList.add('gc-hit'); celebrate(kc, opt); }
+      else opt.classList.add('gc-miss');
+      return;
+    }
+    const rev = e.target.closest?.('.lesson-interactive .small-btn, .lesson-interactive .reveal-btn');
+    if (rev) {
+      const row = rev.closest('.answer-row, .check-card') || rev.parentElement;
+      if (row && !row.classList.contains('gc-shown')) { row.classList.add('gc-shown'); celebrate(rev.closest('.lesson-interactive'), rev); }
     }
   }
 
@@ -321,6 +424,7 @@
     ensureChrome(screenEl);
     P.cls = cls; P.id = id; P.section = section; P.screen = screenEl;
     P.pages = buildPages(section);
+    section.querySelectorAll('.knowledge-check.answered').forEach(markAnswered);
     let saved = 0;
     try { saved = parseInt(localStorage.getItem(pageKey(cls, id)) || '0', 10) || 0; } catch {}
     if (isDone(cls, id)) saved = 0;
@@ -490,6 +594,7 @@
       return r;
     });
 
+    document.addEventListener('click', onCheckClick);
     // Keep the footer button in step with checks, quizzes and completion.
     document.addEventListener('click', () => { if (P.cls) setTimeout(refreshChrome, 80); }, true);
     ['completeLesson', 'completeAdvancedLesson', 'completeVerbBasicLesson', 'completeVerbAdvancedLesson'].forEach(n => {
@@ -516,6 +621,8 @@
   }
 
   window.gcOpenHub = openHub;
+  window.gcHubTab = setHubTab;
+  window.gcShared = { ART, laurel, decoHTML, esc, setFull, ensureScreen, CLASSES, lessonsFor, isDone, byKey, openHub, openClass: (k) => openClass(k) };
   window.gcOpenClass = openClass;
   window.gcOpenLesson = openLesson;
   window.gcNextPage = nextPage;

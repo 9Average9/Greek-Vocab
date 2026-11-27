@@ -11,7 +11,7 @@ window.__rhemaInstallEvent = null;
 window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__rhemaInstallEvent = e; try { window.dispatchEvent(new Event('rhema:installable')); } catch (x) {} });
 </script>
 <script>
-/* Was this copy of the app in use before the Rhēma rename (v3.0.665)? A fresh
+/* Was this copy of the app in use before the Rhēma rename (v3.0.666)? A fresh
    install starts with empty storage. Lets the guide ask people still on an old
    Home Screen copy to add the app again for the new name and icon. */
 try { if (!/[?&]mv=/.test(location.search) && !localStorage.getItem('rhemaInstallEra')) localStorage.setItem('rhemaInstallEra', localStorage.length ? 'pre' : 'fresh'); } catch (e) {}
@@ -397,13 +397,13 @@ antique: {
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Rhēma" name="apple-mobile-web-app-title"/>
-<link href="assets/icons/rhema-icon-180.png?v=3.0.665" rel="apple-touch-icon"/>
-<link href="assets/icons/rhema-icon-192.png?v=3.0.665" rel="icon" sizes="192x192" type="image/png"/>
-<link href="assets/icons/rhema-icon-512.png?v=3.0.665" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.665" rel="stylesheet"/>
-<link href="sermon-notes.css?v=3.0.665" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.665" rel="stylesheet"/>
-<link href="greek-classes.css?v=3.0.665" rel="stylesheet"/>
+<link href="assets/icons/rhema-icon-180.png?v=3.0.666" rel="apple-touch-icon"/>
+<link href="assets/icons/rhema-icon-192.png?v=3.0.666" rel="icon" sizes="192x192" type="image/png"/>
+<link href="assets/icons/rhema-icon-512.png?v=3.0.666" rel="icon" sizes="512x512" type="image/png"/>
+<link href="style.css?v=3.0.666" rel="stylesheet"/>
+<link href="sermon-notes.css?v=3.0.666" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.666" rel="stylesheet"/>
+<link href="greek-classes.css?v=3.0.666" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -425,7 +425,7 @@ antique: {
 <path class="app-launch-ring-track" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="#0a1a2e" stroke-opacity="0.10" stroke-width="12"/>
 <path id="appLaunchRing" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="url(#dbRingGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="980" stroke-dashoffset="980" filter="url(#dbRingShadow)"/>
 </svg>
-<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.665" alt=""/>
+<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.666" alt=""/>
 </div>
 <div class="app-launch-status">
 <span id="appLaunchText">Opening the Word</span>
@@ -595,7 +595,7 @@ Habit Builder</span>
 <strong class="hhw-count" id="hhwCount"></strong>
 </div>
 </div>
-<div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-cut.webp?v=3.0.665" alt="" width="260" height="155"/><span class="hhw-art-tint"></span></div>
+<div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-cut.webp?v=3.0.666" alt="" width="260" height="155"/><span class="hhw-art-tint"></span></div>
 </div>
 <div class="home-swipe" id="homeSwipe">
 <div class="home-swipe-track" id="homeSwipeTrack">
@@ -651,7 +651,7 @@ Journey Maps</span>
 </button>
 <button class="home-action-tile quick-action-memorize" id="memorizationHomeBtn" onclick="openHomeToolFromElement(this, 'memorization')">
 <div class="hat-icon hat-icon-memorization">
-<img class="qa-img" src="assets/icons/quick-memorize.png?v=3.0.665" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-memorize.png?v=3.0.666" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Memorize</strong><small>Train your memory</small></div>
 <span class="hat-chev">&rarr;</span>
@@ -1006,7 +1006,7 @@ Journey Maps</span>
 <p>Track what matters daily. Celebrate streaks, and invite friends to cheer you on.</p>
 </div>
 <div class="habits-hero-art" aria-hidden="true">
-<img src="assets/icons/habit-builder-cut.webp?v=3.0.665" alt="" width="320" height="191"/>
+<img src="assets/icons/habit-builder-cut.webp?v=3.0.666" alt="" width="320" height="191"/>
 <span class="habits-hero-tint"></span>
 </div>
 </div>
@@ -4576,7 +4576,7 @@ Journey Maps</span>
 <p>Personal pronouns appear constantly in NT letters and the words of Jesus:</p>
 <div class="takeaway-box">
 <div class="takeaway-step"><strong>ἐγώ</strong><span>I — "ἐγώ εἰμι" = I am (the great "I AM" statements in John)</span></div>
-<div class="takeaway-step"><strong>σύ</strong><span>you (singular) — "σύ εἶ ὁ Χριστός" = you are the Christ</span></div>
+<div class="takeaway-step"><strong>σύ</strong><span>you (singular) — "σὺ εἶ ὁ Χριστός" = you are the Christ</span></div>
 <div class="takeaway-step"><strong>ἡμεῖς</strong><span>we — common in Paul's letters</span></div>
 <div class="takeaway-step"><strong>ὑμεῖς</strong><span>you all — Jesus addressing his disciples</span></div>
 <div class="takeaway-step"><strong>μου / σου</strong><span>of me/my — of you/your (short genitive forms)</span></div>
@@ -6398,9 +6398,9 @@ Journey Maps</span>
 <p><strong>Erasmian pronunciation</strong> (named after the Renaissance scholar Erasmus, c. 1466–1536) attempts to reconstruct the distinct sounds of ancient Greek. Key features:</p>
 <ul>
 <li>η (eta) ≠ ι (iota) — they are different sounds ("ey" vs. "ee")</li>
-<li>η, ι, υ, and οι are all pronounced differently (ει and η are both a long "ay")</li>
+<li>η, ι, υ, and οι are each pronounced differently (ει and η come close: ει as in "eight," η as in "obey")</li>
 <li>β is "b," not "v"</li>
-<li>Every letter retains a distinct sound</li>
+<li>Letters and diphthongs are kept apart rather than merged into one sound</li>
 </ul>
 <p><strong>Modern Greek pronunciation</strong> (how Greeks speak today) has undergone centuries of sound mergers:</p>
 <ul>
@@ -7211,7 +7211,7 @@ Journey Maps</span>
 <li><strong>κατά + genitive</strong> — against: καθ᾽ ἡμῶν (against us)</li>
 <li><strong>κατά + accusative</strong> — according to, throughout: κατὰ σάρκα (according to flesh); κατὰ πόλιν (city by city, in every city)</li>
 </ul>
-<p>The pattern: with the <strong>genitive</strong>, these prepositions tend to express closer relationship or means. With the <strong>accusative</strong>, they express result, cause, or sequence.</p>
+<p>The pattern: the same preposition means different things with different cases, so check the case of the noun that follows before you translate.</p>
 <div class="knowledge-check" id="kc_adv_prepositions_2">
 <p class="kc-question">διά + accusative — what does the phrase διὰ τοῦτο mean?</p>
 <div class="kc-options">
@@ -8082,7 +8082,7 @@ Journey Maps</span>
 <ul>
 <li>John 3:16: οὕτως γὰρ ἠγάπησεν ὁ θεὸς τὸν κόσμον, <strong>ὥστε</strong>... — here it's ὥστε (result), not ὅτι. But nearby:</li>
 <li>John 3:18: ὅτι μὴ πεπίστευκεν εἰς τὸ ὄνομα — "because he has not believed in the name" — causal ὅτι explaining the judgment.</li>
-<li>John 11:27: πεπίστευκα <strong>ὅτι</strong> σύ εἶ ὁ Χριστός — "I have believed <em>that</em> you are the Christ" — indirect statement after πεπίστευκα (I have believed).</li>
+<li>John 11:27: πεπίστευκα <strong>ὅτι</strong> σὺ εἶ ὁ Χριστός — "I have believed <em>that</em> you are the Christ" — indirect statement after πεπίστευκα (I have believed).</li>
 <li>1 John 4:8: ὁ μὴ ἀγαπῶν οὐκ ἔγνω τὸν θεόν, <strong>ὅτι</strong> ὁ θεὸς ἀγάπη ἐστίν — "...because God is love" — causal, explaining the previous statement.</li>
 </ul>
 </div>
@@ -8278,7 +8278,7 @@ Journey Maps</span>
 <ul>
 <li><strong>λύει</strong> = present active indicative 3rd singular = "he/she looses / is loosing." The ending -ει encodes person (3rd), number (singular), tense (present), voice (active), and mood (indicative) all at once.</li>
 <li><strong>ἠγάπησεν</strong> = aorist active indicative 3rd singular = "he loved." A completed act, stated as fact. The verb in John 3:16 you have already read.</li>
-<li><strong>ἀπόληται</strong> (in ἵνα μὴ ἀπόληται) = aorist subjunctive 3rd singular. The ἵνα you already know forced the subjunctive — and now you know exactly what "subjunctive" means in the verb system.</li>
+<li><strong>ἀπόληται</strong> (in ἵνα μὴ ἀπόληται) = aorist middle subjunctive 3rd singular. The ἵνα you already know forced the subjunctive — and now you know exactly what "subjunctive" means in the verb system.</li>
 </ul>
 <p>Notice how Greek tense is about <strong>kind of action</strong>, not just time. The aorist (ἠγάπησεν, "he loved") treats the action as a single completed event. The perfect says: "this happened and the result still stands" — ἐγήγερται, "he has been raised [and remains raised]." That distinction matters for resurrection passages.</p>
 <p class="highlight">You are ready for verbs. The conjunction work you just completed is the natural foundation — and mood, which is the most linguistically complex category in the verb system, is the one you already understand best.</p>
@@ -8599,7 +8599,7 @@ Journey Maps</span>
 </ul>
 <hr/>
 <h4>Step 7: Prepositions (This lesson)</h4>
-<p>Count the prepositional phrases packed into these two verses: ἐκ πίστεως (out of/from faith), πρὸς τὸν θεόν (toward/with God), διὰ τοῦ κυρίου (through the Lord), εἰς τὴν χάριν (into grace), ἐν ᾗ (in which). Five prepositions. Five different relational jobs. You can parse every one of them.</p>
+<p>Count the prepositional phrases packed into these two verses: ἐκ πίστεως (out of/from faith), πρὸς τὸν θεόν (toward/with God), διὰ τοῦ κυρίου (through the Lord), δι᾽ οὗ (through whom), εἰς τὴν χάριν (into grace), ἐν ᾗ (in which), ἐπ᾽ ἐλπίδι (in hope). Seven prepositional phrases. Each one has a relational job. You can parse every one of them.</p>
 <hr/>
 <h4>What remains (Step 8)</h4>
 <p>The verbs — ἔχομεν (we have), ἐσχήκαμεν (we have obtained), ἑστήκαμεν (we stand) — carry the action. Look these up for now. But without knowing a single verb form, you already know: <em>who</em> is acting (we), <em>what</em> we have (peace, access), <em>through whom</em> (our Lord Christ), <em>by what means</em> (faith), and <em>into what</em> (grace in which we stand). The noun system, adjectives, pronouns, and conjunctions hand you the theological substance of the verse before you touch the verbs.</p>
@@ -8634,7 +8634,7 @@ Journey Maps</span>
 <ul>
 <li><strong>Use δέ and καί</strong> to follow transitions and additions</li>
 <li><strong>Identify γάρ</strong> as backward-pointing (this sentence explains what came before)</li>
-<li><strong>Identify οὖν</strong> as forward-drawing (this sentence concludes from what came before — and it will always be second, not first)</li>
+<li><strong>Identify οὖν</strong> as inferential (this sentence draws a conclusion from what came before — and it stands second in its clause, not first)</li>
 <li><strong>Spot ἵνα</strong> introducing a purpose clause and ὅτι introducing indirect statement or reason</li>
 <li><strong>Use μέν...δέ</strong> to navigate structured contrasts</li>
 </ul>
@@ -15178,7 +15178,7 @@ Verb Endings
           <span class="vb-result">γέγραφα</span>
         </div>
         <p><strong>γράφω</strong> forms a second perfect: no κ.</p>
-        <p>Reduplication communicates <strong>completed action with ongoing result</strong> — the stative aspect of the perfect. The doubled consonant is not decorative; it encodes a theological and grammatical statement about the action's completed-yet-continuing nature.</p>
+        <p>Reduplication communicates <strong>completed action with ongoing result</strong> — the stative aspect of the perfect. The doubled consonant is not decorative; it is the grammatical marker of the perfect, which presents an action as completed with a continuing result.</p>
         <p class="highlight">Reduplication = perfect. Doubled initial consonant + ε at the front of the word.</p>
       </div>
     </div>
@@ -15748,10 +15748,10 @@ Verb Endings
       <div class="lesson-block-content">
         <p>Present imperatives frequently appear in contexts that call for habitual or continuous activity:</p>
         <ul>
-          <li>Matthew 6:11 — δὸς ἡμῖν σήμερον... is aorist (give us today), but τὸν ἄρτον ἡμῶν τὸν ἐπιούσιον suggests an ongoing pattern of petition</li>
-          <li>1 Thessalonians 5:16-18 — πάντοτε χαίρετε (present: "rejoice always"), ἀδιαλείπτως προσεύχεσθε (present: "pray without ceasing")</li>
+          <li>Matthew 7:7 — αἰτεῖτε... ζητεῖτε... κρούετε (present: "Ask... seek... knock")</li>
+          <li>1 Thessalonians 5:16-18 — πάντοτε χαίρετε (present: "Rejoice at all times"), ἀδιαλείπτως προσεύχεσθε (present: "Pray without ceasing")</li>
         </ul>
-        <p>The present aspect fits here because the commands describe ongoing, habitual Christian practices, not isolated single acts.</p>
+        <p>The present aspect presents these commands as ongoing or repeated activity rather than as a single act.</p>
       </div>
     </div>
 
@@ -16938,26 +16938,27 @@ Verb Endings
 </section>
 
 </main>
-<script src="vocab.js?v=3.0.665"></script>
-<script src="rhema-align.js?v=3.0.665"></script>
-<script src="app.js?v=3.0.665"></script>
-<script src="rhema-word-study.js?v=3.0.665"></script>
-<script src="rhema-grammar-search.js?v=3.0.665"></script>
-<script src="rhema-xl-views.js?v=3.0.665"></script>
-<script src="rhema-glance.js?v=3.0.665"></script>
-<script src="challenge.js?v=3.0.665"></script>
-<script src="guide-news.js?v=3.0.665"></script>
-<script src="bible-atlas.js?v=3.0.665"></script>
+<script src="vocab.js?v=3.0.666"></script>
+<script src="rhema-align.js?v=3.0.666"></script>
+<script src="app.js?v=3.0.666"></script>
+<script src="rhema-word-study.js?v=3.0.666"></script>
+<script src="rhema-grammar-search.js?v=3.0.666"></script>
+<script src="rhema-xl-views.js?v=3.0.666"></script>
+<script src="rhema-glance.js?v=3.0.666"></script>
+<script src="challenge.js?v=3.0.666"></script>
+<script src="guide-news.js?v=3.0.666"></script>
+<script src="bible-atlas.js?v=3.0.666"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.665"></script>
-<script src="verse-structure.js?v=3.0.665"></script>
-<script src="vs-structure.js?v=3.0.665"></script>
-<script src="greek-verbs.js?v=3.0.665"></script>
-<script src="greek-classes.js?v=3.0.665"></script>
-<script src="sermon-notes.js?v=3.0.665"></script>
-<script src="bible-quiz.js?v=3.0.665"></script>
-<script src="firebase-lb.js?v=3.0.665" type="module"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.666"></script>
+<script src="verse-structure.js?v=3.0.666"></script>
+<script src="vs-structure.js?v=3.0.666"></script>
+<script src="greek-verbs.js?v=3.0.666"></script>
+<script src="greek-classes.js?v=3.0.666"></script>
+<script src="greek-practice-ui.js?v=3.0.666"></script>
+<script src="sermon-notes.js?v=3.0.666"></script>
+<script src="bible-quiz.js?v=3.0.666"></script>
+<script src="firebase-lb.js?v=3.0.666" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">
