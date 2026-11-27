@@ -11,7 +11,7 @@ window.__rhemaInstallEvent = null;
 window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__rhemaInstallEvent = e; try { window.dispatchEvent(new Event('rhema:installable')); } catch (x) {} });
 </script>
 <script>
-/* Was this copy of the app in use before the Rhēma rename (v3.0.660)? A fresh
+/* Was this copy of the app in use before the Rhēma rename (v3.0.661)? A fresh
    install starts with empty storage. Lets the guide ask people still on an old
    Home Screen copy to add the app again for the new name and icon. */
 try { if (!/[?&]mv=/.test(location.search) && !localStorage.getItem('rhemaInstallEra')) localStorage.setItem('rhemaInstallEra', localStorage.length ? 'pre' : 'fresh'); } catch (e) {}
@@ -397,12 +397,12 @@ antique: {
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Rhēma" name="apple-mobile-web-app-title"/>
-<link href="assets/icons/rhema-icon-180.png?v=3.0.660" rel="apple-touch-icon"/>
-<link href="assets/icons/rhema-icon-192.png?v=3.0.660" rel="icon" sizes="192x192" type="image/png"/>
-<link href="assets/icons/rhema-icon-512.png?v=3.0.660" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.660" rel="stylesheet"/>
-<link href="sermon-notes.css?v=3.0.660" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.660" rel="stylesheet"/>
+<link href="assets/icons/rhema-icon-180.png?v=3.0.661" rel="apple-touch-icon"/>
+<link href="assets/icons/rhema-icon-192.png?v=3.0.661" rel="icon" sizes="192x192" type="image/png"/>
+<link href="assets/icons/rhema-icon-512.png?v=3.0.661" rel="icon" sizes="512x512" type="image/png"/>
+<link href="style.css?v=3.0.661" rel="stylesheet"/>
+<link href="sermon-notes.css?v=3.0.661" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.661" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -424,7 +424,7 @@ antique: {
 <path class="app-launch-ring-track" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="#0a1a2e" stroke-opacity="0.10" stroke-width="12"/>
 <path id="appLaunchRing" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="url(#dbRingGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="980" stroke-dashoffset="980" filter="url(#dbRingShadow)"/>
 </svg>
-<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.660" alt=""/>
+<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.661" alt=""/>
 </div>
 <div class="app-launch-status">
 <span id="appLaunchText">Opening the Word</span>
@@ -590,7 +590,7 @@ Habit Builder</span>
 <strong class="hhw-count" id="hhwCount"></strong>
 </div>
 </div>
-<div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-cut.webp?v=3.0.660" alt="" width="260" height="155"/><span class="hhw-art-tint"></span></div>
+<div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-cut.webp?v=3.0.661" alt="" width="260" height="155"/><span class="hhw-art-tint"></span></div>
 </div>
 <div class="home-swipe" id="homeSwipe">
 <div class="home-swipe-track" id="homeSwipeTrack">
@@ -627,25 +627,25 @@ Journey Maps</span>
 <button type="button" aria-label="Journey Maps" onclick="homeSwipeTo(1)"></button>
 </div>
 </div>
-<div class="home-tools-head"><div class="home-section-label">Tools</div><button type="button" class="home-tools-all" id="homeToolsAllBtn" onclick="toggleHomeTools()" aria-expanded="false"><span id="homeToolsAllText">View All</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+<div class="home-tools-head"><div class="home-section-label">Tools</div><button type="button" class="home-tools-all" id="homeToolsAllBtn" onclick="openAllTools()"><span id="homeToolsAllText">View All</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
 <div class="home-actions-grid tools-grid" id="homeToolsGrid">
 <button class="home-action-tile quick-action-quiz" id="bibleQuizHomeBtn" onclick="openBibleQuiz(this)">
 <div class="hat-icon hat-icon-quiz">
-<img class="qa-img" src="assets/icons/93e0a332-e620-43eb-931e-5f238f039ace.png?v=3.0.439" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-quiz-blue.png?v=3.0.661" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Bible Quiz</strong><small>Test what you read</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile quick-action-sermon" id="sermonNotesHomeBtn" onclick="openSermonNotes(this)">
 <div class="hat-icon hat-icon-sermon">
-<img class="qa-img" src="assets/icons/quick-sermon-podium.png?v=3.0.660" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-sermon-podium.png?v=3.0.661" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Sermon Notes</strong><small>Capture every message</small></div>
 <span class="hat-chev">&rarr;</span>
 </button>
 <button class="home-action-tile quick-action-memorize" id="memorizationHomeBtn" onclick="openHomeToolFromElement(this, 'memorization')">
 <div class="hat-icon hat-icon-memorization">
-<img class="qa-img" src="assets/icons/quick-memorize.png?v=3.0.660" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-memorize.png?v=3.0.661" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Memorize</strong><small>Train your memory</small></div>
 <span class="hat-chev">&rarr;</span>
@@ -696,6 +696,25 @@ Journey Maps</span>
 </div>
 <!-- Hidden badge kept for backward compatibility -->
 <span class="friends-home-badge hidden" id="friendsHomeBadge"></span>
+</section>
+<section class="screen" id="allToolsPage" aria-label="All Tools">
+<div class="at-page">
+<header class="at-top">
+<button type="button" class="at-icon-btn" onclick="closeAllTools()" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+<h1 class="at-title">All Tools</h1>
+<button type="button" class="at-icon-btn" id="atSearchBtn" onclick="toggleAllToolsSearch()" aria-label="Search tools"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+</header>
+<div class="at-search" id="atSearchWrap" hidden><input id="atSearch" type="search" placeholder="Search tools" autocomplete="off" oninput="renderAllTools()"/></div>
+<div class="at-chips" id="atChips" role="tablist" aria-label="Tool groups">
+<button type="button" class="at-chip active" data-cat="all" onclick="setAllToolsFilter('all')">All</button>
+<button type="button" class="at-chip" data-cat="study" onclick="setAllToolsFilter('study')">Study</button>
+<button type="button" class="at-chip" data-cat="build" onclick="setAllToolsFilter('build')">Build</button>
+<button type="button" class="at-chip" data-cat="track" onclick="setAllToolsFilter('track')">Track</button>
+<button type="button" class="at-chip" data-cat="explore" onclick="setAllToolsFilter('explore')">Explore</button>
+</div>
+<div class="at-sections" id="atSections"></div>
+<p class="at-empty" id="atEmpty" hidden>No tools match that search.</p>
+</div>
 </section>
 <section class="screen" id="journeysPage">
 <div class="jst" id="jst" data-look="storybook">
@@ -981,7 +1000,7 @@ Journey Maps</span>
 <p>Track what matters daily. Celebrate streaks, and invite friends to cheer you on.</p>
 </div>
 <div class="habits-hero-art" aria-hidden="true">
-<img src="assets/icons/habit-builder-cut.webp?v=3.0.660" alt="" width="320" height="191"/>
+<img src="assets/icons/habit-builder-cut.webp?v=3.0.661" alt="" width="320" height="191"/>
 <span class="habits-hero-tint"></span>
 </div>
 </div>
@@ -16915,24 +16934,24 @@ Verb Endings
 
 </main>
 <script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.660"></script>
-<script src="app.js?v=3.0.660"></script>
-<script src="rhema-word-study.js?v=3.0.660"></script>
-<script src="rhema-grammar-search.js?v=3.0.660"></script>
-<script src="rhema-xl-views.js?v=3.0.660"></script>
-<script src="rhema-glance.js?v=3.0.660"></script>
-<script src="challenge.js?v=3.0.660"></script>
-<script src="guide-news.js?v=3.0.660"></script>
-<script src="bible-atlas.js?v=3.0.660"></script>
+<script src="rhema-align.js?v=3.0.661"></script>
+<script src="app.js?v=3.0.661"></script>
+<script src="rhema-word-study.js?v=3.0.661"></script>
+<script src="rhema-grammar-search.js?v=3.0.661"></script>
+<script src="rhema-xl-views.js?v=3.0.661"></script>
+<script src="rhema-glance.js?v=3.0.661"></script>
+<script src="challenge.js?v=3.0.661"></script>
+<script src="guide-news.js?v=3.0.661"></script>
+<script src="bible-atlas.js?v=3.0.661"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.660"></script>
-<script src="verse-structure.js?v=3.0.660"></script>
-<script src="vs-structure.js?v=3.0.660"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.661"></script>
+<script src="verse-structure.js?v=3.0.661"></script>
+<script src="vs-structure.js?v=3.0.661"></script>
 <script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.660"></script>
-<script src="bible-quiz.js?v=3.0.660"></script>
-<script src="firebase-lb.js?v=3.0.660" type="module"></script>
+<script src="sermon-notes.js?v=3.0.661"></script>
+<script src="bible-quiz.js?v=3.0.661"></script>
+<script src="firebase-lb.js?v=3.0.661" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

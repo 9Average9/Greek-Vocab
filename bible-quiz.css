@@ -1,17 +1,15 @@
 /* ── Home tile launcher (global, NOT namespaced) ──────────────────────────────
    The "Bible Quiz" button in the home Tools grid. Uses the same tile shell as
-   the other tools, but keeps a white/silver identity around its 3D quiz art. */
+   the other tools, with a blue identity around its blue 3D quiz art. */
 #homeScreen .quick-action-quiz,
 body.tools-theme-match #homeScreen .home-action-tile.quick-action-quiz,
 body.home-theme-match #homeScreen .home-action-tile.quick-action-quiz {
-  --qa-card-bg:
-    radial-gradient(circle at 24% 0%, rgba(255, 255, 255, 0.99), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(233, 238, 246, 0.95)) !important;
-  --qa-card-border: rgba(148, 163, 184, 0.5) !important;
-  --qa-card-shadow: rgba(71, 85, 105, 0.18) !important;
-  --qa-image-shadow: rgba(51, 65, 85, 0.24) !important;
-  --qa-title: #2f3b4d !important;
-  --qa-subtitle: #5c6a7d !important;
+  --qa-card-bg: linear-gradient(180deg, rgba(219, 234, 254, 0.98), rgba(237, 244, 255, 0.92)) !important;
+  --qa-card-border: rgba(37, 99, 235, 0.20) !important;
+  --qa-card-shadow: rgba(30, 64, 175, 0.14) !important;
+  --qa-image-shadow: rgba(30, 64, 175, 0.18) !important;
+  --qa-title: #1d4ed8 !important;
+  --qa-subtitle: #1e40af !important;
 }
 #homeScreen .home-action-tile.quick-action-quiz .hat-icon .material-symbols-outlined {
   font-size: clamp(52px, 14vw, 66px) !important;
