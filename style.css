@@ -42176,3 +42176,22 @@ html:not(#_g1)[data-skin="nature"] body #homeScreen .home-actions-grid .home-act
   box-shadow: 0 1px 3px rgba(0, 0, 0, .22) !important;
 }
 #homeScreen .home-action-tile:active { filter: none !important; }
+
+/* Home tool arrows: drawn, not typed. The arrow used to be a "→" character, so
+   each phone drew it with whatever font it had (Arial where present, a stand-in
+   elsewhere, the style's own font in Notebook/Terminal/etc., or a backup font
+   while a web font was still loading) — often thin. It's now a fixed shape in
+   the arrow's color, identical on every device and style. */
+html body #homeScreen .home-action-tile .hat-chev { font-size: 0 !important; line-height: 0 !important; display: flex !important; align-items: center; justify-content: center; }
+html body #homeScreen .home-action-tile .hat-chev::before {
+  content: "";
+  display: block;
+  width: clamp(14px, 4vw, 17px); height: clamp(14px, 4vw, 17px);
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12h14.5M13 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12h14.5M13 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+html.is-dark:not(#_x) body #homeScreen .home-action-tile[class*="quick-action-"] .hat-chev {
+  background: color-mix(in srgb, var(--qa-title, #64748b) 30%, #1c2230) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1) !important;
+}
