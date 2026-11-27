@@ -37362,21 +37362,18 @@ body.tools-theme-match #homeScreen .home-action-tile.quick-action-sermon,
 body.home-theme-match #homeScreen .home-action-tile.quick-action-sermon,
 :root[data-skin] #homeScreen .home-action-tile.quick-action-sermon,
 :root[data-skin] .home-action-tile.quick-action-sermon {
-  --qa-card-bg: linear-gradient(180deg, rgba(255, 224, 238, 0.98), rgba(255, 238, 246, 0.9));
-  --qa-card-border: rgba(219, 39, 119, 0.18);
-  --qa-card-shadow: rgba(190, 24, 93, 0.14);
-  --qa-image-shadow: rgba(190, 24, 93, 0.18);
-  --qa-title: #b8175f;
-  --qa-subtitle: #9d174d;
+  --qa-card-bg: linear-gradient(180deg, rgba(253, 232, 210, 0.98), rgba(255, 244, 232, 0.92));
+  --qa-card-border: rgba(180, 110, 50, 0.20);
+  --qa-card-shadow: rgba(150, 90, 40, 0.14);
+  --qa-image-shadow: rgba(150, 90, 40, 0.18);
+  --qa-title: #8a4513;
+  --qa-subtitle: #8f5226;
 }
-/* The Sermon Notes artwork ships as a purple badge (it has its own baked
-   rounded-square background, unlike its transparent-illustration siblings), so
-   it shows as a clean badge with normal blend and is hue-rotated purple → pink
-   to match the tile. */
+/* The Sermon Notes artwork is a warm wooden-podium badge with its own rounded
+   tile, shown as-is (normal blend, no color shift) on a matching peach card. */
 #homeScreen .home-action-tile.quick-action-sermon .qa-img {
   mix-blend-mode: normal !important;
-  filter: hue-rotate(65deg) saturate(1.35) contrast(1.02)
-          drop-shadow(0 10px 15px var(--qa-image-shadow)) !important;
+  filter: none !important;
 }
 
 #homeScreen .home-action-tile.quick-action-quiz,
@@ -42157,7 +42154,7 @@ html:not(#_g1) body #homeScreen .home-actions-grid .home-action-tile .qa-img:not
   filter: saturate(1.08) contrast(1.04) !important;
 }
 html:not(#_g1) body #homeScreen .home-actions-grid .home-action-tile.quick-action-sermon .qa-img:not(#_g2) {
-  filter: hue-rotate(65deg) saturate(1.35) contrast(1.02) !important;
+  filter: none !important;
 }
 html:not(#_g1) body #homeScreen .home-actions-grid .home-action-tile .hat-icon:not(#_g2) {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8) !important;
@@ -42195,3 +42192,122 @@ html.is-dark:not(#_x) body #homeScreen .home-action-tile[class*="quick-action-"]
   background: color-mix(in srgb, var(--qa-title, #64748b) 30%, #1c2230) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1) !important;
 }
+
+/* ══ Home tools grid (reference layout) ═══════════════════════════════════════
+   The first six tools in a 3-column grid: picture, bold name, short line, no
+   arrow. "View All" shows the rest. The :not(#_t) parts only lift these rules
+   above the many older per-tool, per-style and dark-mode tile rules. */
+html body #homeScreen .home-tools-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 6px 0 10px; }
+/* The swipe card above reaches invisibly into this row (and its dots sit in the
+   middle of it): the row sits above it, but only its label and button take taps. */
+html body #homeScreen .home-tools-head { position: relative; z-index: 3; pointer-events: none; }
+html body #homeScreen .home-tools-head > * { pointer-events: auto; }
+html:not(#_t1) body #homeScreen .home-tools-head .home-section-label:not(#_t2) { margin-bottom: 0 !important; opacity: 1 !important; }
+html:not([data-skin]):not(#_t1) body #homeScreen .home-tools-head .home-section-label:not(#_t2):not(#_t3) {
+  font-size: 1.4rem !important; font-weight: 850 !important; letter-spacing: -0.01em !important; text-transform: none !important; color: var(--font-color) !important;
+}
+html body #homeScreen .home-tools-all {
+  display: inline-flex; align-items: center; gap: 1px; padding: 6px 2px 6px 8px; border: 0; background: none; cursor: pointer;
+  color: var(--font-color); font: inherit; font-size: .95rem; font-weight: 600; -webkit-tap-highlight-color: transparent;
+}
+html body #homeScreen .home-tools-all svg { width: 19px; height: 19px; transition: transform .25s ease; }
+html body #homeScreen .home-tools-all.open svg { transform: rotate(90deg); }
+html body #homeScreen .home-actions-grid.tools-grid {
+  display: grid !important; grid-auto-flow: row !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-auto-columns: auto !important; gap: clamp(9px, 2.6vw, 12px) !important;
+  margin: 0 0 20px !important; padding: 2px 0 8px !important;
+  overflow: visible !important; scroll-snap-type: none !important; touch-action: auto !important;
+}
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid:not(.show-all) > .home-action-tile:nth-child(n+7):not(#_t2):not(#_t3) { display: none !important; }
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid > .home-action-tile:not(#_t2) {
+  min-height: 0 !important; min-width: 0 !important; padding: 10px 6px 10px !important;
+  display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important;
+  gap: 5px !important; scroll-snap-align: none !important;
+}
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid .home-action-tile .hat-icon:not(#_t2) {
+  width: auto !important; height: auto !important; padding: 0 !important; margin: 0 !important;
+  background: none !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important; display: block !important;
+}
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid .home-action-tile .qa-img:not(#_t2) {
+  width: var(--tg-img, clamp(50px, 14.5vw, 60px)) !important; height: var(--tg-img, clamp(50px, 14.5vw, 60px)) !important;
+  max-width: none !important; max-height: none !important; display: block !important;
+}
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid .home-action-tile .hat-text:not(#_t2) {
+  display: grid !important; gap: 2px !important; width: 100% !important; text-align: center !important; justify-items: center;
+}
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid .home-action-tile .hat-text strong:not(#_t2) {
+  font-size: clamp(.8rem, 3.6vw, .95rem) !important; font-weight: 800 !important; line-height: 1.15 !important; letter-spacing: -0.005em;
+}
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid .home-action-tile .hat-text strong br:not(#_t2) { display: none; }
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid .home-action-tile .hat-text small:not(#_t2) {
+  font-size: clamp(.66rem, 2.9vw, .76rem) !important; font-weight: 500 !important; line-height: 1.25 !important; margin: 0 !important;
+  display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+html:not(.is-dark):not(#_t1) body #homeScreen .home-actions-grid.tools-grid .home-action-tile .hat-text strong:not(#_t2) { color: color-mix(in srgb, var(--qa-title, #1f2937) 30%, #111827) !important; }
+html:not(.is-dark):not(#_t1) body #homeScreen .home-actions-grid.tools-grid .home-action-tile .hat-text small:not(#_t2) { color: color-mix(in srgb, var(--qa-subtitle, #4b5563) 35%, #3f4652) !important; }
+html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid .home-action-tile .hat-chev:not(#_t2) { display: none !important; }
+
+/* ══ Bottom bar (reference layout) ════════════════════════════════════════════
+   Home · Read · Lessons · You, each an icon over a label, with a glassy bubble
+   behind the open tab that slides (and follows a finger drag, see app.js). */
+html body #bottomNav.bn-glass:not(.mercies-collapsed):not(.habits-collapsed) {
+  height: 66px !important; padding: 5px !important; align-items: stretch !important;
+}
+html body #bottomNav.bn-glass { touch-action: pan-y; }
+html body #bottomNav.bn-glass .bn-item {
+  flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  padding: 4px 2px !important; z-index: 1; background: none !important;
+  color: color-mix(in srgb, var(--font-color, #1f2937) 70%, transparent);
+  transition: color .2s ease, transform .2s ease;
+}
+html body #bottomNav.bn-glass .bn-item::before,
+html body #bottomNav.bn-glass .bn-item::after,
+html body #bottomNav.bn-glass .bn-dot { display: none !important; }
+html body #bottomNav.bn-glass .bn-ic { width: 25px; height: 25px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s cubic-bezier(.3, 1.4, .5, 1); }
+html body #bottomNav.bn-glass .bn-ic .bn-ic-fill { fill: transparent; transition: fill .2s ease; }
+html body #bottomNav.bn-glass .bn-label { font-size: .72rem; font-weight: 600; line-height: 1; letter-spacing: .01em; white-space: nowrap; }
+html body #bottomNav.bn-glass .bn-item.active { color: var(--secondary-color) !important; }
+html body #bottomNav.bn-glass .bn-item.active .bn-label { font-weight: 800; }
+html body #bottomNav.bn-glass .bn-item.active .bn-ic .bn-ic-fill { fill: color-mix(in srgb, currentColor 22%, transparent); }
+html body #bottomNav.bn-glass .bn-item.bn-home.active .bn-ic .bn-ic-fill { fill: currentColor; }
+html body #bottomNav.bn-glass .bn-item.active .bn-ic { transform: translateY(-1px) scale(1.04); }
+html body #bottomNav.bn-glass.bn-dragging .bn-item.bn-hover { color: var(--secondary-color) !important; }
+html body #bottomNav.bn-glass.bn-dragging .bn-item.bn-hover .bn-ic { transform: scale(1.12); }
+html body #bottomNav.bn-glass .bn-item:active { transform: none; }
+html body #bottomNav .bn-bubble {
+  position: absolute; top: 5px; bottom: 5px; left: 0; width: 0; z-index: 0; pointer-events: none; opacity: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--secondary-color) 8%, rgba(255, 255, 255, .92)), color-mix(in srgb, var(--secondary-color) 15%, rgba(255, 255, 255, .62)));
+  border: 1px solid color-mix(in srgb, var(--secondary-color) 16%, rgba(255, 255, 255, .8));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 color-mix(in srgb, var(--secondary-color) 12%, transparent), 0 2px 8px color-mix(in srgb, var(--secondary-color) 14%, transparent);
+  transition: transform .45s cubic-bezier(.3, 1.3, .45, 1), width .45s cubic-bezier(.3, 1.3, .45, 1), opacity .2s ease;
+  will-change: transform;
+}
+html body #bottomNav.bn-dragging .bn-bubble {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1px color-mix(in srgb, var(--secondary-color) 20%, transparent), 0 6px 18px color-mix(in srgb, var(--secondary-color) 22%, transparent);
+}
+html body.dark #bottomNav .bn-bubble,
+html[data-skin="chalkboard"] body #bottomNav .bn-bubble,
+html[data-skin="terminal"] body #bottomNav .bn-bubble {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .16), color-mix(in srgb, var(--secondary-color) 20%, rgba(255, 255, 255, .04)));
+  border-color: rgba(255, 255, 255, .16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 2px 10px rgba(0, 0, 0, .25);
+}
+/* Collapsed to the single floating Home button (Praises, Habits): icon only. */
+html body #bottomNav:is(.mercies-collapsed, .habits-collapsed, .home-collapsed) .bn-label,
+html body #bottomNav:is(.mercies-collapsed, .habits-collapsed, .home-collapsed) .bn-bubble { display: none !important; }
+html body #bottomNav:is(.mercies-collapsed, .habits-collapsed, .home-collapsed) .bn-ic { width: 30px; height: 30px; }
+@media (prefers-reduced-motion: reduce) { html body #bottomNav .bn-bubble { transition: opacity .2s ease; } }
+
+/* Readability touch-ups (light mode): small accent labels on tinted cards. */
+html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) :is(.hhw-kicker, .rrp-tile em) { color: color-mix(in srgb, var(--secondary-color) 74%, #000) !important; }
+html[data-skin="blueprint"]:not(.is-dark) :is(.hhw-sub, .rrp-seg-btn:not(.on)) { color: color-mix(in srgb, var(--muted-color) 78%, #000) !important; }
+/* Bars with dark surfaces (dark mode, Chalkboard, Terminal): brighter labels,
+   and a softer bubble so the open tab's label stays readable on it. */
+html.is-dark body #bottomNav.bn-glass .bn-item,
+html[data-skin="chalkboard"] body #bottomNav.bn-glass .bn-item,
+html[data-skin="terminal"] body #bottomNav.bn-glass .bn-item { color: color-mix(in srgb, var(--font-color, #f1f5f9) 88%, transparent); }
+html[data-skin="chalkboard"] body #bottomNav .bn-bubble,
+html[data-skin="terminal"] body #bottomNav .bn-bubble { background: rgba(255, 255, 255, .09); }
+html[data-skin="chalkboard"]:not(.is-dark) body #bottomNav.bn-glass { background: linear-gradient(180deg, color-mix(in srgb, var(--card-solid-color) 78%, #000), color-mix(in srgb, var(--card-solid-color) 68%, #000)) !important; }
+html[data-skin="chalkboard"]:not(.is-dark) body #bottomNav.bn-glass .bn-item.active { color: #fff1bd !important; }
