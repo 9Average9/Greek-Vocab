@@ -42144,3 +42144,35 @@ html body.dark .bottom-nav { box-shadow: 0 4px 14px rgba(0, 0, 0, .28), inset 0 
 .you-sheet-head { padding-right: 14px; }
 .you-sheet-x { margin-right: 0; }
 .you-sheet-guide { right: 64px; }
+
+/* ── Home tools: no blurred glows ─────────────────────────────────────────────
+   Each tool button had soft drop-shadow glows under its picture and under the
+   box behind it. On iPhone, Safari clips those glows at the element's square
+   bounds (most of all while the tiles animate or scroll), which showed up as
+   glowing sharp-cornered boxes. The row also scrolls sideways, which clipped
+   the cards' own large shadow in a straight line. Keep the colors and the
+   inner highlights; drop the blurred outer glows. (The :not(#_) parts only lift
+   these rules above the many per-tool and per-style variants.) */
+html:not(#_g1) body #homeScreen .home-actions-grid .home-action-tile .qa-img:not(#_g2) {
+  filter: saturate(1.08) contrast(1.04) !important;
+}
+html:not(#_g1) body #homeScreen .home-actions-grid .home-action-tile.quick-action-sermon .qa-img:not(#_g2) {
+  filter: hue-rotate(65deg) saturate(1.35) contrast(1.02) !important;
+}
+html:not(#_g1) body #homeScreen .home-actions-grid .home-action-tile .hat-icon:not(#_g2) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8) !important;
+}
+html.is-dark:not(#_g1) body #homeScreen .home-actions-grid .home-action-tile .hat-icon:not(#_g2) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+html:not(#_g1)[data-skin="candy"] body #homeScreen .home-actions-grid .home-action-tile .hat-icon:not(#_g2) {
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--qa-title, var(--secondary-color)) 32%, transparent) !important;
+}
+html:not(#_g1)[data-skin="notebook"] body #homeScreen .home-actions-grid .home-action-tile .hat-icon:not(#_g2) {
+  box-shadow: 2px 3px 0 color-mix(in srgb, var(--secondary-color) 16%, transparent) !important;
+}
+html.is-dark:not(#_g1) body #homeScreen .home-actions-grid .home-action-tile:not(#_g2),
+html:not(#_g1)[data-skin="nature"] body #homeScreen .home-actions-grid .home-action-tile:not(#_g2) {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .22) !important;
+}
+#homeScreen .home-action-tile:active { filter: none !important; }

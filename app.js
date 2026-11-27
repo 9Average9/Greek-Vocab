@@ -32756,7 +32756,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.657";
+const APP_VERSION = "3.0.658";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32779,6 +32779,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.658 — Cleaner Home tools</div>
+<ul>
+<li><strong>No more glowing boxes</strong> &mdash; The soft glows under each Home tool&rsquo;s picture could show up on iPhone as glowing boxes with sharp corners. The tools now have clean edges with no glow, and the pictures keep their colors.</li>
+</ul>
 <div class="un-version-label">v3.0.657 — Close buttons where you expect them</div>
 <ul>
 <li><strong>You page sheets</strong> &mdash; The X that closes Account, Look, Reading, Reminders and Lessons now sits in the top-right corner of each sheet, and the guide peeks in just beside it. You can still swipe a sheet down or tap outside it to close.</li>
