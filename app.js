@@ -32871,7 +32871,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.659";
+const APP_VERSION = "3.0.660";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -32894,6 +32894,14 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.660 — A new Home and bottom bar</div>
+<ul>
+<li><strong>Tools at a glance</strong> &mdash; Home&rsquo;s tools are now a neat grid of cards: Bible Quiz, Sermon Notes, Memorize, Reading Plan, Theological Threads and Family Tree. Tap <strong>View All</strong> for Vocab, Translate and Test.</li>
+<li><strong>Sermon Notes</strong> &mdash; A new wooden-podium picture on a warm card.</li>
+<li><strong>New bottom bar</strong> &mdash; Home, Read, Lessons and You, each with its name under the icon, in your color and style. You is now on the right.</li>
+<li><strong>Slide to switch</strong> &mdash; A glassy bubble marks where you are. Tap a tab, or press and slide your finger across the bar: the bubble follows, and the tab opens when you let go.</li>
+<li><strong>Easier reading</strong> &mdash; A few small labels on Home and in Rhēma&rsquo;s menu are a little darker or brighter so they stand out in every color.</li>
+</ul>
 <div class="un-version-label">v3.0.659 — Same arrows for everyone</div>
 <ul>
 <li><strong>Home tool arrows</strong> &mdash; The little arrows on Home&rsquo;s tools were typed characters, so each phone drew them with whatever font it had, and on many phones (or while a font was still loading) they came out thin. They&rsquo;re now drawn the same bold way on every phone and in every style.</li>

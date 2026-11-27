@@ -42298,3 +42298,16 @@ html body #bottomNav:is(.mercies-collapsed, .habits-collapsed, .home-collapsed) 
 html body #bottomNav:is(.mercies-collapsed, .habits-collapsed, .home-collapsed) .bn-bubble { display: none !important; }
 html body #bottomNav:is(.mercies-collapsed, .habits-collapsed, .home-collapsed) .bn-ic { width: 30px; height: 30px; }
 @media (prefers-reduced-motion: reduce) { html body #bottomNav .bn-bubble { transition: opacity .2s ease; } }
+
+/* Readability touch-ups (light mode): small accent labels on tinted cards. */
+html:not(.is-dark):not([data-skin="chalkboard"]):not([data-skin="terminal"]) :is(.hhw-kicker, .rrp-tile em) { color: color-mix(in srgb, var(--secondary-color) 74%, #000) !important; }
+html[data-skin="blueprint"]:not(.is-dark) :is(.hhw-sub, .rrp-seg-btn:not(.on)) { color: color-mix(in srgb, var(--muted-color) 78%, #000) !important; }
+/* Bars with dark surfaces (dark mode, Chalkboard, Terminal): brighter labels,
+   and a softer bubble so the open tab's label stays readable on it. */
+html.is-dark body #bottomNav.bn-glass .bn-item,
+html[data-skin="chalkboard"] body #bottomNav.bn-glass .bn-item,
+html[data-skin="terminal"] body #bottomNav.bn-glass .bn-item { color: color-mix(in srgb, var(--font-color, #f1f5f9) 88%, transparent); }
+html[data-skin="chalkboard"] body #bottomNav .bn-bubble,
+html[data-skin="terminal"] body #bottomNav .bn-bubble { background: rgba(255, 255, 255, .09); }
+html[data-skin="chalkboard"]:not(.is-dark) body #bottomNav.bn-glass { background: linear-gradient(180deg, color-mix(in srgb, var(--card-solid-color) 78%, #000), color-mix(in srgb, var(--card-solid-color) 68%, #000)) !important; }
+html[data-skin="chalkboard"]:not(.is-dark) body #bottomNav.bn-glass .bn-item.active { color: #fff1bd !important; }
