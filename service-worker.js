@@ -159,7 +159,7 @@ const FILES_TO_CACHE = [
   "./assets/home-backgrounds/mountains.jpg",
   "./assets/icons/quick-study-library.png?v=3.0.439",
   "./assets/icons/quick-memorize.png?v=3.0.661",
-  "./assets/icons/quick-sermon-podium.png?v=3.0.660",
+  "./assets/icons/quick-sermon-podium.png?v=3.0.661",
   "./assets/icons/quick-quiz-blue.png?v=3.0.661",
   "./assets/icons/quick-journeys-globe.png?v=3.0.661",
   "./assets/icons/quick-genealogy.png?v=3.0.576",

@@ -10727,7 +10727,7 @@ const AT_CATS = [
 ];
 const AT_TOOLS = [
   { id: 'quiz', name: 'Bible Quiz', cat: 'study', img: `assets/icons/quick-quiz-blue.png?v=${AT_V}`, tone: '#1d4ed8', open: el => window.openBibleQuiz?.(el) },
-  { id: 'sermon', name: 'Sermon Notes', cat: 'study', img: `assets/icons/quick-sermon-podium.png?v=3.0.660`, tone: '#b45309', open: el => window.openSermonNotes?.(el) },
+  { id: 'sermon', name: 'Sermon Notes', cat: 'study', img: `assets/icons/quick-sermon-podium.png?v=${AT_V}`, tone: '#b45309', open: el => window.openSermonNotes?.(el) },
   { id: 'vocab', name: 'Vocab', cat: 'study', img: 'assets/icons/quick-vocab.png?v=3.0.439', tone: '#d97706', lock: 'vocab', open: el => openHomeToolFromElement(el, 'vocab') },
   { id: 'translate', name: 'Translate', cat: 'study', img: 'assets/icons/quick-translate.png?v=3.0.439', tone: '#0f8a4b', lock: 'translate', open: el => openHomeToolFromElement(el, 'translate') },
   { id: 'habits', name: 'Habit Builder', cat: 'build', img: `assets/icons/habit-builder-cut.webp?v=3.0.654`, tone: '#e11d48', tint: true, wide: true, open: el => openHabitBuilderFromWidget(el) },
