@@ -11,7 +11,7 @@ window.__rhemaInstallEvent = null;
 window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__rhemaInstallEvent = e; try { window.dispatchEvent(new Event('rhema:installable')); } catch (x) {} });
 </script>
 <script>
-/* Was this copy of the app in use before the Rhēma rename (v3.0.663)? A fresh
+/* Was this copy of the app in use before the Rhēma rename (v3.0.664)? A fresh
    install starts with empty storage. Lets the guide ask people still on an old
    Home Screen copy to add the app again for the new name and icon. */
 try { if (!/[?&]mv=/.test(location.search) && !localStorage.getItem('rhemaInstallEra')) localStorage.setItem('rhemaInstallEra', localStorage.length ? 'pre' : 'fresh'); } catch (e) {}
@@ -397,12 +397,12 @@ antique: {
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Rhēma" name="apple-mobile-web-app-title"/>
-<link href="assets/icons/rhema-icon-180.png?v=3.0.663" rel="apple-touch-icon"/>
-<link href="assets/icons/rhema-icon-192.png?v=3.0.663" rel="icon" sizes="192x192" type="image/png"/>
-<link href="assets/icons/rhema-icon-512.png?v=3.0.663" rel="icon" sizes="512x512" type="image/png"/>
-<link href="style.css?v=3.0.663" rel="stylesheet"/>
-<link href="sermon-notes.css?v=3.0.663" rel="stylesheet"/>
-<link href="bible-quiz.css?v=3.0.663" rel="stylesheet"/>
+<link href="assets/icons/rhema-icon-180.png?v=3.0.664" rel="apple-touch-icon"/>
+<link href="assets/icons/rhema-icon-192.png?v=3.0.664" rel="icon" sizes="192x192" type="image/png"/>
+<link href="assets/icons/rhema-icon-512.png?v=3.0.664" rel="icon" sizes="512x512" type="image/png"/>
+<link href="style.css?v=3.0.664" rel="stylesheet"/>
+<link href="sermon-notes.css?v=3.0.664" rel="stylesheet"/>
+<link href="bible-quiz.css?v=3.0.664" rel="stylesheet"/>
 <!-- Self-hosted fonts (icons + skin fonts): cached by the service worker so the
      app looks identical offline — Google-hosted fonts never made it into the cache. -->
 <link href="assets/fonts/fonts.css?v=3.0.415" rel="stylesheet"/>
@@ -424,7 +424,7 @@ antique: {
 <path class="app-launch-ring-track" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="#0a1a2e" stroke-opacity="0.10" stroke-width="12"/>
 <path id="appLaunchRing" d="M300,156 H358 A73,73 0 0 1 431,229 V345 A73,73 0 0 1 358,418 H242 A73,73 0 0 1 169,345 V229 A73,73 0 0 1 242,156 Z" fill="none" stroke="url(#dbRingGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="980" stroke-dashoffset="980" filter="url(#dbRingShadow)"/>
 </svg>
-<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.663" alt=""/>
+<img class="app-launch-emblem-art" src="assets/icons/rhema-splash.png?v=3.0.664" alt=""/>
 </div>
 <div class="app-launch-status">
 <span id="appLaunchText">Opening the Word</span>
@@ -594,7 +594,7 @@ Habit Builder</span>
 <strong class="hhw-count" id="hhwCount"></strong>
 </div>
 </div>
-<div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-cut.webp?v=3.0.663" alt="" width="260" height="155"/><span class="hhw-art-tint"></span></div>
+<div class="hhw-art" aria-hidden="true"><img src="assets/icons/habit-builder-cut.webp?v=3.0.664" alt="" width="260" height="155"/><span class="hhw-art-tint"></span></div>
 </div>
 <div class="home-swipe" id="homeSwipe">
 <div class="home-swipe-track" id="homeSwipeTrack">
@@ -650,7 +650,7 @@ Journey Maps</span>
 </button>
 <button class="home-action-tile quick-action-memorize" id="memorizationHomeBtn" onclick="openHomeToolFromElement(this, 'memorization')">
 <div class="hat-icon hat-icon-memorization">
-<img class="qa-img" src="assets/icons/quick-memorize.png?v=3.0.663" alt="" loading="lazy"/>
+<img class="qa-img" src="assets/icons/quick-memorize.png?v=3.0.664" alt="" loading="lazy"/>
 </div>
 <div class="hat-text"><strong>Memorize</strong><small>Train your memory</small></div>
 <span class="hat-chev">&rarr;</span>
@@ -1005,7 +1005,7 @@ Journey Maps</span>
 <p>Track what matters daily. Celebrate streaks, and invite friends to cheer you on.</p>
 </div>
 <div class="habits-hero-art" aria-hidden="true">
-<img src="assets/icons/habit-builder-cut.webp?v=3.0.663" alt="" width="320" height="191"/>
+<img src="assets/icons/habit-builder-cut.webp?v=3.0.664" alt="" width="320" height="191"/>
 <span class="habits-hero-tint"></span>
 </div>
 </div>
@@ -1402,7 +1402,7 @@ Journey Maps</span>
   That means the direction of reading will feel natural. You are not learning a completely foreign reading system.
 </p>
 <p class="highlight">
-  Greek is closer to a familiar, Western-style language than something like Latin or a right-to-left language.
+  Greek is closer to a familiar, Western-style language than a right-to-left language like Hebrew or Arabic.
 </p>
 <p>
       That means readers had to recognize words by familiarity, context, and repeated exposure.
@@ -2002,7 +2002,7 @@ Journey Maps</span>
 <div class="mark-card"><strong class="greek-text">ηυ</strong><span>ēu</span><small>rare; blended ē + u</small></div>
 </div>
 <p>
-      You'll recognize <strong>ου</strong> immediately once you start reading — it's in almost every Greek word (κόσμον, λόγου, θεοῦ). It always sounds like “oo.” Lock that one in first.
+      You'll recognize <strong>ου</strong> immediately once you start reading — it's in almost every Greek word (κόσμου, λόγου, θεοῦ). It always sounds like “oo.” Lock that one in first.
     </p>
 <p class="highlight">
       One rule to remember: when a word starts with a diphthong, the breathing mark sits over the <em>second</em> vowel. More on breathing marks in a moment.
@@ -2050,7 +2050,7 @@ Journey Maps</span>
 <hr/>
 <h4> Breathing marks</h4>
 <p>
-  Breathing marks affect <strong>pronunciation only</strong>. They do not change the meaning of the word.
+  Breathing marks mainly affect <strong>pronunciation</strong>, though occasionally they are the only thing that distinguishes two words (e.g. <span class="greek-text">ἐν</span> "in" vs. <span class="greek-text">ἕν</span> "one").
 </p>
 <p>
   They appear on words that begin with a <strong>vowel</strong> or <strong>rho</strong> (<span class="greek-text">ρ</span>).
@@ -2227,7 +2227,7 @@ Journey Maps</span>
           A <strong>lexicon</strong> is simply a Greek dictionary. The most common one used in New Testament studies is <em>BDAG (A Greek-English Lexicon of the New Testament)</em>. When you look up any Greek word — in a lexicon, an interlinear Bible, or a study tool like Logos or Bible Gateway — you look it up by its lexical form.
         </p>
 <p>
-          For nouns, the lexical form is the <strong>nominative singular</strong> — the bare, base form of the noun before any case endings are added. For example:
+          For nouns, the lexical form is the <strong>nominative singular</strong> — the form listed in the dictionary (it already includes the nominative singular ending, e.g., λόγ + ος). For example:
         </p>
 <ul>
 <li><strong>λόγος</strong> — the lexical form meaning "word" (you might see it as λόγου, λόγῳ, λόγον in the text — all forms of the same word)</li>
@@ -2924,7 +2924,7 @@ Journey Maps</span>
 <strong>Genitive</strong>
 <span>Often shows possession, source, or relationship.</span>
 <small>Often translated with: <strong>of</strong></small>
-<small class="nt-hook">NT anchor: <span class="greek-text">χάριτι θεοῦ</span> in Eph 2:8 — "grace <em>of</em> God"</small>
+<small class="nt-hook">NT anchor: <span class="greek-text">θεοῦ τὸ δῶρον</span> in Eph 2:8 — "the gift <em>of</em> God"</small>
 </div>
 <div>
 <strong>Dative</strong>
@@ -3194,7 +3194,7 @@ Journey Maps</span>
 <div class="shortcut-box" style="margin: 12px 0 4px;">
 <p><strong>Dative shortcut — spot the tiny mark</strong></p>
 <p>See that tiny mark sitting <em>under</em> the ω in λόγῳ? That is called an <strong>iota subscript</strong>. It appears on every singular dative ending in the 1st and 2nd declension: <span class="ending-piece">ῳ</span> (masculine/neuter dative) and <span class="ending-piece">ῃ</span> (feminine dative).</p>
-<p class="highlight">Spot the subscript = you're looking at a dative. Every time, no exceptions.</p>
+<p class="highlight">Spot the subscript on a 1st/2nd declension noun ending = you're looking at a dative singular (ῳ, ῃ, or ᾳ).</p>
 </div>
 <div class="case-visual-box">
 <div class="case-row">
@@ -3712,7 +3712,7 @@ Journey Maps</span>
 <div class="shortcut-box">
 <p class="greek-text">-ων</p>
 <p>
-        This ending is <strong>always genitive plural</strong>.
+        In 1st and 2nd declension nouns (and the article), this ending is <strong>always genitive plural</strong>.
       </p>
 </div>
 <p>
@@ -3731,7 +3731,7 @@ Journey Maps</span>
 <small>“of works”</small>
 </div>
 <p class="highlight">
-      You don’t have to guess — it is genitive plural every time.
+      For these nouns you don’t have to guess — it is genitive plural every time.
     </p>
 <hr/>
 <h4> How to handle identical forms</h4>
@@ -4221,7 +4221,7 @@ Journey Maps</span>
 <div class="ending-cell">they are</div>
 </div>
 </div>
-<p class="mini-example"><span class="greek-text">ὁ θεὸς ἐστιν ἀγάπη</span> — God is love.</p>
+<p class="mini-example"><span class="greek-text">ὁ θεός ἐστιν ἀγάπη</span> — God is love.</p>
 <p class="mini-example"><span class="greek-text">ἐγώ εἰμι ὁ ποιμὴν ὁ καλός</span> — I am the good shepherd.</p>
 <p>
       Because the verb ending already tells you the subject, an explicit pronoun like <span class="greek-text">ἐγώ</span> often adds emphasis: <em>I myself am</em>.
@@ -4250,7 +4250,7 @@ Journey Maps</span>
 <div class="lesson-block-content">
 <p>Some of the richest theological language in the NT is built on prepositions. The meaning changes completely depending on the case:</p>
 <p class="mini-example">ἐν Χριστῷ — "in Christ" (sphere, belonging)</p>
-<p class="mini-example">εἰς χριστόν — "into Christ" (direction, used in baptism texts)</p>
+<p class="mini-example">εἰς Χριστόν — "into Christ" (direction, used in baptism texts)</p>
 <p class="mini-example">ἐκ πίστεως — "out of / from faith" (source of righteousness, Romans 1:17)</p>
 <p>When translators debate whether a phrase means "through" or "because of," they're often looking at exactly this: which case follows the preposition?</p>
 <div class="lesson-interactive">
@@ -4548,7 +4548,7 @@ Journey Maps</span>
 <p>In John 3:16, αὐτόν is accusative masculine. Which noun earlier in the verse does it point back to?</p>
 <div class="answer-row">
 <button class="small-btn" onclick="revealAnswer(event, this)" type="button">Show Answer</button>
-<span class="answer-text">τὸν υἱόν — "the Son." αὐτόν (masculine accusative) matches υἱόν (masculine accusative). The pronoun's gender resolves the reference — it can't be κόσμον (world) because world is the object of "loved," not the referent of belief.</span>
+<span class="answer-text">τὸν υἱόν — "the Son." αὐτόν (masculine accusative) matches υἱόν (masculine accusative), but both υἱόν and κόσμον are masculine singular, so gender alone can't decide here; context shows αὐτόν is the one people believe in, the Son.</span>
 </div>
 </div>
 </div>
@@ -4563,7 +4563,7 @@ Journey Maps</span>
 <div class="takeaway-step"><strong>τοῦτο</strong><span>this (neuter)</span></div>
 </div>
 <p class="greek-example">οὗτός ἐστιν ὁ υἱός μου ὁ ἀγαπητός.</p>
-<p>"This is my beloved Son." (Matthew 3:17) — the heavenly voice uses οὗτος to point directly to Jesus. The spotlight is unmistakable.</p>
+<p>"This is My beloved Son." (Matthew 3:17) — the heavenly voice uses οὗτος to point directly to Jesus. The spotlight is unmistakable.</p>
 <p class="highlight">
         When you see οὗτος, the author is putting a spotlight on something specific. Ask: what was just said or done that this is pointing to? 
 </p>
@@ -4642,7 +4642,7 @@ Journey Maps</span>
 <div class="takeaway-step"><strong>ἐκεῖνος / ἐκείνη / ἐκεῖνο</strong><span>that one — points farther away or back to a known person/thing.</span></div>
 <div class="takeaway-step"><strong>οὗτος / αὕτη / τοῦτο</strong><span>this one — points nearby, forward, or to something just mentioned.</span></div>
 </div>
-<p class="mini-example"><span class="greek-text">ὁ πιστεύων εἰς αὐτόν</span> — the one who believes in him.</p>
+<p class="mini-example"><span class="greek-text">ὁ λόγος ὃν ἀκούετε</span> — the word that you hear (John 14:24).</p>
 <p class="mini-example"><span class="greek-text">ἐκεῖνος μαρτυρήσει</span> — that one / he will testify.</p>
 <p class="highlight">
       Relative pronouns connect clauses. Demonstratives point. In both cases, gender and number help you trace the reference.
@@ -4654,7 +4654,7 @@ Journey Maps</span>
 <div class="lesson-block-content">
 <p>The practical skill: when you see a pronoun, work backward through the sentence to find what it points to. The pronoun's gender and number tell you which noun it came from.</p>
 <p class="greek-example">ὁ θεὸς ἠγάπησεν τὸν κόσμον... εἰς αὐτόν</p>
-<p>"God loved the world... into him." But wait — αὐτόν is masculine accusative. Does it point to τὸν κόσμον (world)? No — world is the direct object of "loved." αὐτόν points back to τὸν υἱόν (the Son) mentioned just before. Gender and number resolve it.</p>
+<p>"God loved the world... into him." But wait — αὐτόν is masculine accusative. Does it point to τὸν κόσμον (world)? No — world is the direct object of "loved." αὐτόν points back to τὸν υἱόν (the Son) mentioned just before. Here gender and number fit both nouns, so context settles it.</p>
 <p class="highlight">
         Pronoun tracking is one of the most practical reading skills you can have. It turns ambiguous "he" and "him" references into clear, specific identifications. 
 </p>
@@ -4728,7 +4728,7 @@ Journey Maps</span>
 <div class="lesson-block" onclick="toggleLessonBlock(this)">
 <div class="lesson-block-header">καί and δέ — adding and transitioning<small class="block-time">~ 1 min</small></div>
 <div class="lesson-block-content">
-<p><strong>καί</strong> = "and / also / even" — the single most common word in the entire NT.</p>
+<p><strong>καί</strong> = "and / also / even" — the second most common word in the NT (after the article ὁ).</p>
 <p class="mini-example">καὶ ὁ λόγος ἦν πρὸς τὸν θεόν — "and the Word was with God" (John 1:1)</p>
 <p><strong>δέ</strong> = "but / and / now" — marks a soft transition or mild contrast. One key quirk: <strong>δέ always comes second in its clause</strong>, never first. Watch for it tucked behind the first word.</p>
 <p class="mini-example">ὁ δὲ Ἰησοῦς — "but Jesus" or "now Jesus" — δέ goes after ὁ, the first word</p>
@@ -4746,7 +4746,7 @@ Journey Maps</span>
 <div class="lesson-block-header">ἀλλά and γάρ — contrast and explanation<small class="block-time">~ 1 min</small></div>
 <div class="lesson-block-content">
 <p><strong>ἀλλά</strong> = "but" — strong contrast. Where δέ is a gentle turn, ἀλλά is a hard pivot. It often follows "οὐ/not..." to form the pattern: "not X, but rather Y."</p>
-<p class="mini-example">οὐκ ἦλθον καταλῦσαι ἀλλὰ πληρῶσαι — "I came not to abolish but to fulfill" (Matt 5:17)</p>
+<p class="mini-example">οὐκ ἦλθον καταλῦσαι ἀλλὰ πληρῶσαι — "I have not come to abolish them, but to fulfill them" (Matt 5:17)</p>
 <p><strong>γάρ</strong> = "for / because / since" — gives the reason for what was just said. Like δέ, it always comes second in its clause.</p>
 <p class="mini-example">Οὕτως γὰρ ἠγάπησεν ὁ θεός — "For God so loved..." (John 3:16) — γάρ explains WHY God did what was described before.</p>
 <div class="lesson-interactive">
@@ -4875,7 +4875,7 @@ Journey Maps</span>
       A good first step is to look for the verb — the action word or the word making the statement.
     </p>
 <p class="greek-example">
-      ὁ θεὸς ἐστιν ἀγάπη.
+      ὁ θεός ἐστιν ἀγάπη.
     </p>
 <p>
       The verb is:
@@ -4892,7 +4892,7 @@ Journey Maps</span>
 <div class="lesson-interactive">
 <p><strong>Knowledge check:</strong></p>
 <p>In this sentence, what is the verb?</p>
-<p class="greek-example">ὁ λόγος ἐστιν ἀληθής.</p>
+<p class="greek-example">ὁ λόγος ἐστὶν ἀληθής.</p>
 <div class="answer-row">
 <button class="small-btn" onclick="revealAnswer(event, this)" type="button">
           Show Answer
@@ -4911,7 +4911,7 @@ Journey Maps</span>
       The subject is the person, place, thing, or idea the sentence is mainly talking about.
     </p>
 <p class="greek-example">
-      ὁ θεὸς ἐστιν ἀγάπη.
+      ὁ θεός ἐστιν ἀγάπη.
     </p>
 <p>
       The subject is:
@@ -4934,7 +4934,7 @@ Journey Maps</span>
 <div class="lesson-interactive">
 <p><strong>Knowledge check:</strong></p>
 <p>What is the subject?</p>
-<p class="greek-example">ὁ λόγος ἐστιν ἐν τῷ κόσμῳ.</p>
+<p class="greek-example">ὁ λόγος ἐστὶν ἐν τῷ κόσμῳ.</p>
 <div class="answer-row">
 <button class="small-btn" onclick="revealAnswer(event, this)" type="button">
           Show Answer
@@ -5441,9 +5441,9 @@ Journey Maps</span>
 <p>Jesus and his disciples spoke <strong>Aramaic</strong> as their daily language. The Jewish scriptures were written in <strong>Hebrew</strong> (with some Aramaic sections in Daniel and Ezra). The OT was the authoritative Word of God. So why not write the NT in Hebrew or Aramaic?</p>
 <hr/>
 <h4>The Mission Demanded a Universal Language</h4>
-<p>Jesus's commission was clear: <em>"Go therefore and make disciples of all nations"</em> (Matthew 28:19). <em>"You will be my witnesses in Jerusalem and in all Judea and Samaria, and to the end of the earth"</em> (Acts 1:8).</p>
+<p>Jesus's commission was clear: <em>"Therefore go and make disciples of all nations"</em> (Matthew 28:19). <em>"You will be witnesses to Me in Jerusalem, and in all Judea and Samaria, and to the ends of the earth"</em> (Acts 1:8).</p>
 <p>A gospel message written in Hebrew would have reached Jewish readers well — but no one else. A message in Aramaic would have been understood in parts of the Near East. But a message in Greek could reach <em>every literate person in the Roman Empire</em>.</p>
-<p class="highlight">Mounce puts it this way: the spread of Greek across the ancient world was part of God's providential preparation for the gospel. The "fullness of time" in which Christ came (Galatians 4:4) included not just a political moment but a linguistic one.</p>
+<p class="highlight">Mounce puts it this way: the spread of Greek across the ancient world was part of God's providential preparation for the gospel. The time that "had fully come" when Christ came (Galatians 4:4) included not just a political moment but a linguistic one.</p>
 <hr/>
 <h4>The Relationship Between Greek and the OT</h4>
 <p>There is another dimension: by the first century, the majority of Jewish communities outside Palestine — the Diaspora — used the Greek Old Testament (the Septuagint) as their Scripture. When NT authors cite the OT, they almost always quote the <strong>Greek Septuagint</strong>, not the Hebrew text.</p>
@@ -5466,7 +5466,7 @@ Journey Maps</span>
 <hr/>
 <h4>Why It Matters for NT Study</h4>
 <ul>
-<li>When Matthew writes <em>"Behold, the virgin shall conceive"</em> (Matthew 1:23), he quotes <strong>Isaiah 7:14 from the LXX</strong>.</li>
+<li>When Matthew writes <em>"Behold, the virgin will be with child"</em> (Matthew 1:23), he quotes <strong>Isaiah 7:14 from the LXX</strong>.</li>
 <li>When Paul quotes Psalm 51, Habakkuk 2, or Genesis 15, he is typically quoting the <strong>LXX</strong>.</li>
 <li>The early church read, quoted, and preached from the LXX. To understand NT quotations of the OT, you need to know the LXX.</li>
 <li>Many NT theological terms — like <em>δικαιοσύνη</em> (righteousness), <em>χάρις</em> (grace), and <em>πίστις</em> (faith) — carry meaning shaped by how the LXX used them to translate Hebrew concepts.</li>
@@ -5616,7 +5616,7 @@ Journey Maps</span>
 <p>In 1 John 3:9, John writes that the one born of God <em>does not practice sin</em> (present tense — ongoing habitual sin) vs. a single act. This nuance is almost always lost in translation. In Greek, you see it immediately.</p>
 <hr/>
 <h4>The John 21 Example</h4>
-<p>One of Mounce's favorite examples: In John 21:15–17, Jesus asks Peter three times, "Do you love me?" English translations often use two different words — "love" (ἀγαπάω) and "love" (φιλέω) — but they look identical in English.</p>
+<p>One of Mounce's favorite examples: In John 21:15–17, Jesus asks Peter three times, "Do you love me?" The Greek uses two different words — ἀγαπάω and φιλέω — but English translations usually render both as "love," so they look identical in English.</p>
 <p>In Greek: Jesus asks with <strong>ἀγαπάω</strong> (the word for deep, sacrificial love). Peter responds with <strong>φιλέω</strong> (the word for friendship-love). The third time, Jesus asks with <em>Peter's word</em> — φιλέω. Something is happening in that exchange that English completely flattens.</p>
 <p>(Note: scholars debate whether John intended a significant distinction here, but the point stands: you can't even see the question in English.)</p>
 <hr/>
@@ -5913,7 +5913,7 @@ Journey Maps</span>
 </ul>
 <p>This is not optional or stylistic. Writing σ at the end of a word is an error, full stop. Fortunately, ς has such a visually distinctive shape that it quickly becomes automatic. Think of it as a built-in word-boundary marker: wherever you see ς, a word ends there.</p>
 <p>Example: <strong>κόσμος</strong> (kosmos, world). The sigma in the middle (-σμ-) uses the standard σ. The sigma at the very end uses ς. Both forms in a single 6-letter word.</p>
-<p>Example: <strong>Ἰησοῦς</strong> — the name of Jesus in Greek. Look at it carefully: Ι-η-σ-ο-ῦ-ς. One σ in the middle, ς at the end. That is how the name "Jesus" appears every single time it occurs in the NT.</p>
+<p>Example: <strong>Ἰησοῦς</strong> — the name of Jesus in Greek. Look at it carefully: Ι-η-σ-ο-ῦ-ς. One σ in the middle, ς at the end. That is how the name "Jesus" appears whenever it is the subject (nominative); other cases use Ἰησοῦ and Ἰησοῦν.</p>
 <p class="highlight">Once you recognize ς automatically, it becomes a visual anchor. In manuscripts where word spacing is inconsistent, the final sigma tells your eye where one word stops and another begins.</p>
 <hr/>
 <h4>The Three Double Consonants: ζ, ξ, ψ</h4>
@@ -5956,13 +5956,13 @@ Journey Maps</span>
 <h4>1. Breathing Marks</h4>
 <p>Here is the rule: <strong>every Greek word that begins with a vowel carries exactly one breathing mark over that first vowel.</strong> No exceptions. Every single time.</p>
 <p>There are two breathing marks:</p>
-<p><strong>Smooth Breathing ( ᾿ )</strong> — a small mark that curves open toward the right, like a turned comma or a tiny reversed "c."<br/>
+<p><strong>Smooth Breathing ( ᾿ )</strong> — a small mark shaped like an apostrophe or comma ( ᾿ ), curving open toward the left, like a tiny reversed "c."<br/>
         Meaning: <em>no "h" sound.</em> The vowel starts cleanly.<br/>
         Example: <strong>ἀγάπη</strong> (agapē, love) — the ᾿ over the α means you start directly on the "ah" sound. Nothing extra.</p>
-<p><strong>Rough Breathing ( ῾ )</strong> — a small mark that curves open toward the left, like a regular comma or a tiny "c."<br/>
+<p><strong>Rough Breathing ( ῾ )</strong> — a small mark shaped like a reversed comma ( ῾ ), curving open toward the right, like a tiny "c."<br/>
         Meaning: <em>add an "h" sound before the vowel.</em><br/>
         Example: <strong>ἁμαρτία</strong> (hamartia, sin) — the ῾ over the α means it's "H-amartia." That's exactly where the English word "hamartiological" (the theological study of sin) originates.</p>
-<p class="highlight">Memory tip: Rough breathing looks like a regular comma — it gives the word something <em>extra</em> (the "h"). Smooth breathing is the reversed version — take it away, leave nothing extra. Rough = more; smooth = less.</p>
+<p class="highlight">Memory tip: Smooth breathing looks like a regular comma/apostrophe ( ᾿ ) — nothing extra. Rough breathing is the reversed version ( ῾, like a little "c") — it adds the "h." Rough = more; smooth = less.</p>
 <p><strong>Special rules:</strong></p>
 <ul>
 <li>Rho (ρ) at the beginning of a word <em>always</em> takes a rough breathing: <strong>ῥ</strong>. This is why Greek-derived English words beginning with "rh" exist — rhetoric, rhythm, rhapsody, rhema. The "h" comes from the rough breathing on the initial rho.</li>
@@ -5977,7 +5977,7 @@ Journey Maps</span>
         Example: <strong>θεός</strong> (God) — acute on the final syllable. <strong>ἄνθρωπος</strong> (man/human) — acute on the third-to-last syllable.</p>
 <p><strong>Grave ( ` )</strong> — a stroke slanting down to the right. <em>Only</em> appears on the final syllable, and <em>only</em> when another word follows immediately in the sentence — never at the end of a clause or sentence.<br/>
         A word that normally ends in an acute accent will switch to a grave when placed mid-sentence before another word.<br/>
-        Example: <strong>θεός</strong> becomes <strong>θεὸς</strong> in "θεὸς ἠγάπησεν τὸν κόσμον" (John 3:16 — God loved the world). The accent flattens in the flow of speech.</p>
+        Example: <strong>θεός</strong> becomes <strong>θεὸς</strong> in "ἠγάπησεν ὁ θεὸς τὸν κόσμον" (John 3:16 — God loved the world). The accent flattens in the flow of speech.</p>
 <p><strong>Circumflex ( ῀ / ˜ )</strong> — a mark that curves up and then back down, like a small caret or hat. The most restricted accent: can only appear on one of the last <em>two</em> syllables, and only on a <em>long</em> vowel or diphthong (because a pitch-rise-and-fall needs time — a short vowel is too brief).<br/>
         Example: <strong>ἡμῶν</strong> (of us / our) — circumflex on the long ω.</p>
 <p class="highlight">For now: use accents as <strong>stress guides</strong>. The syllable carrying the accent is where you put vocal emphasis when reading aloud. The full rule system governing accent placement is complex and will become natural through vocabulary exposure — don't attempt to memorize accent rules before you know words.</p>
@@ -6025,7 +6025,7 @@ Journey Maps</span>
 <h4>The Three Major Traps</h4>
 <p><strong>Η η — Looks like English "H" — Sounds like long "E" (as in "they")</strong></p>
 <p>This is the #1 trap, without question. Capital Η is a perfect match for English capital H — same shape, same proportions. But it is a <em>vowel</em>, not a consonant. It makes the long "e" sound.</p>
-<p>Example: <strong>Ἡρῴδης</strong> (Herod). The opening Η is not an "H" consonant — it's the long "e" vowel. The word sounds like "Heh-ROH-dees" — and the "H" aspiration at the start comes only from the rough breathing mark (῾), not from the letter shape itself.</p>
+<p>Example: <strong>Ἡρῴδης</strong> (Herod). The opening Η is not an "H" consonant — it's the long "e" vowel. The word sounds like "Hay-ROH-days" — and the "H" aspiration at the start comes only from the rough breathing mark (῾), not from the letter shape itself.</p>
 <p>Example: <strong>ἡμέρα</strong> (hēmera, day). The "h" comes from the rough breathing; the η itself is a long "e." This word lives on in English as "ephemeral" (from ἐφ' ἡμέρᾳ, "for a day").</p>
 <p>The correction: whenever you see Η or η, override your instinct. It is never an "h" consonant. It is always a vowel that sounds like the "e" in "they."</p>
 <hr/>
@@ -6063,7 +6063,7 @@ Journey Maps</span>
 </tbody>
 </table>
 </div>
-<p>That's nine safe letters — more than a third of the alphabet. Add them to the four dangerous ones you now know to watch for, and you have the whole alphabet mapped.</p>
+<p>That's nine safe letters — more than a third of the alphabet. Add them to the five trap letters you now know to watch for (Η, Ρ, Χ, Ν, Υ), and you have most of the alphabet mapped.</p>
 </div>
 </div>
 <!-- Block 8 -->
@@ -6100,7 +6100,7 @@ Journey Maps</span>
 <tbody>
 <tr><td>θεός</td><td>the-OS</td><td>God</td><td>theology, theocracy, atheist</td></tr>
 <tr><td>χάρις</td><td>KHA-ris</td><td>grace</td><td>charisma, Eucharist</td></tr>
-<tr><td>πίστις</td><td>PIS-tis</td><td>faith, trust</td><td>epistemology (related root)</td></tr>
+<tr><td>πίστις</td><td>PIS-tis</td><td>faith, trust</td><td>pistic, Pistis (direct borrowings); not related to "epistemology"</td></tr>
 <tr><td>ἀγάπη</td><td>a-GA-pay</td><td>love</td><td>"agape" used directly in English</td></tr>
 <tr><td>εὐαγγέλιον</td><td>eu-ang-GEL-i-on</td><td>gospel, good news</td><td>evangelical, evangelize, evangelist</td></tr>
 <tr><td>ἐκκλησία</td><td>ek-klay-SEE-a</td><td>church, assembly</td><td>ecclesiastical, ecclesiastes</td></tr>
@@ -6153,7 +6153,7 @@ Journey Maps</span>
 <p style="text-align:center; font-style:italic; margin:14px 0; line-height: 1.8;">ἐγώ εἰμι τὸ Ἄλφα καὶ τὸ Ὦ<br/>"I am the Alpha and the Omega"</p>
 <p>(Revelation 1:8; 21:6; 22:13)</p>
 <p>Alpha (Α) — first letter. Omega (Ω) — last letter. Christ declares himself to be the beginning and the end, the full scope of existence, by naming the first and last letters of the very alphabet you've spent this lesson learning.</p>
-<p>In Revelation 22:13, the declaration is expanded: <em>"the Alpha and the Omega, the first and the last, the beginning and the end."</em> Three parallel pairs — and the outermost one reaches for the alphabet itself. Not by accident. The Greek text John wrote, the readers who first received it, and the alphabet it's written in — all of it points in the same direction.</p>
+<p>In Revelation 22:13, the declaration is expanded: <em>"the Alpha and the Omega, the First and the Last, the Beginning and the End."</em> Three parallel pairs — and the outermost one reaches for the alphabet itself. Not by accident. The Greek text John wrote, the readers who first received it, and the alphabet it's written in — all of it points in the same direction.</p>
 </div>
 </div>
 <!-- Block 10 -->
@@ -6244,7 +6244,7 @@ Journey Maps</span>
 <p><strong>Rule 2 — Two consonants between vowels:</strong> Usually split between them.<br/>
         ἄν-θρω-πος  |  ἔμ-προ-σθεν (before)</p>
 <p><strong>Rule 3 — Consonant clusters that can begin a word:</strong> Stay together with the next syllable.<br/>
-        Greek allows words to begin with στ, πν, γν, πρ, etc. So if a cluster could start a word, it starts a syllable instead of splitting: ε-στίν (he is).</p>
+        Greek allows words to begin with στ, πν, γν, πρ, etc. So if a cluster could start a word, it starts a syllable instead of splitting: ἐ-στίν (he is).</p>
 <p><strong>Rule 4 — Compound words:</strong> Split at the seam between the original parts.<br/>
         ἐκ-κλησία (church — from ἐκ + καλέω) shows the prefix boundary.</p>
 <p><strong>Double letters</strong> (like γγ, ττ) always split: ἐγ-γύς (near).</p>
@@ -6266,7 +6266,7 @@ Journey Maps</span>
 </tbody>
 </table>
 </div>
-<p>Every Greek word of more than one syllable carries exactly one accent. One-syllable words (called <em>enclitics</em> or <em>proclitics</em>) sometimes carry no accent because they lean on adjacent words.</p>
+<p>Almost every Greek word carries one accent. A few short words — proclitics (e.g., ἐν, εἰς, ὁ) and enclitics (e.g., μου, ἐστιν) — usually have no accent of their own because they lean on a neighboring word.</p>
 <p>The names in Greek are descriptive: <em>ὀξεῖα</em> means "sharp" (a sharp rise in pitch), <em>βαρεῖα</em> means "heavy" (the pitch falls), and <em>περισπωμένη</em> means "circumflexed" (pitch rises then falls on a single long syllable).</p>
 </div>
 </div>
@@ -6299,8 +6299,8 @@ Journey Maps</span>
 <div class="lesson-block-content">
 <p>The <strong>acute accent (´)</strong> is the most common accent in Greek. It can appear on any of the last three syllables of a word — the antepenult, penult, or ultima — but with one important restriction:</p>
 <p><strong>If the ultima (last syllable) is long, the acute can only appear on the penult or ultima — not the antepenult.</strong></p>
-<p>This is why accent positions shift when endings change. Take λόγος (word, nominative): the acute sits on the antepenult (λό-γος). But in the genitive form λόγου, the ending -ου is a long diphthong. Now the antepenult is off-limits, so the accent moves to the penult: λόγου (though in practice this particular word keeps the accent on the same syllable — the rule matters more with 3-syllable forms).</p>
-<p><strong>Acute → Grave shift:</strong> When an acute sits on the ultima and another word immediately follows (with no punctuation between them), the acute becomes a grave: λόγον τοῦτον. This is purely phonological — the pitch lowers before flowing into the next word. It does not change the word's meaning or grammatical function.</p>
+<p>This is why accent positions shift when endings change. Take ἄνθρωπος (man, nominative): the acute sits on the antepenult (ἄν-θρω-πος). But in the genitive form ἀνθρώπου, the ending -ου is a long diphthong. Now the antepenult is off-limits, so the accent moves to the penult: ἀνθρώπου.</p>
+<p><strong>Acute → Grave shift:</strong> When an acute sits on the ultima and another word immediately follows (with no punctuation between them), the acute becomes a grave: θεός → θεὸς ἦν ὁ λόγος. This is purely phonological — the pitch lowers before flowing into the next word. It does not change the word's meaning or grammatical function.</p>
 <p>The practical rule most students use: <em>the acute can sit on any of the last three syllables, but is forced closer to the end when the ultima is long</em>.</p>
 </div>
 </div>
@@ -6314,7 +6314,7 @@ Journey Maps</span>
 <li><strong>It can only appear on a long vowel or long diphthong.</strong> Because the circumflex represents a rise-then-fall of pitch, it physically requires a long syllable to play out on. Short syllables cannot carry a circumflex.</li>
 </ol>
 <p>On the <strong>penult</strong>: the circumflex appears when the penult is long AND the ultima is short. If the ultima is long, the acute is used instead (even on a long penult).</p>
-<p>On the <strong>ultima</strong>: the circumflex appears on many contracted forms and certain noun/verb endings. The genitive plural ending -ων always carries a circumflex (e.g., λόγων — of words).</p>
+<p>On the <strong>ultima</strong>: the circumflex appears on many contracted forms and certain noun/verb endings. The genitive plural ending -ων carries a circumflex when the accent falls on the ultima (e.g., θεῶν — of gods); first-declension nouns always have -ῶν (e.g., ἡμερῶν). Nouns like λόγος keep their accent where it was (λόγων — of words).</p>
 <p>Watch for circumflexes as signals: a circumflex on the ultima often marks the genitive plural. A circumflex on a contracted verb form (like ποιεῖ — he does) signals that two vowels were compressed into one long sound.</p>
 </div>
 </div>
@@ -6366,11 +6366,11 @@ Journey Maps</span>
 <table class="adv-ref-table">
 <thead><tr><th>Form</th><th>Case</th><th>Note</th></tr></thead>
 <tbody>
-<tr><td>λόγος</td><td>Nominative sg.</td><td>Accent on penult (antepenult blocked by long ultima -ος? No — -ος is short here)</td></tr>
+<tr><td>λόγος</td><td>Nominative sg.</td><td>Accent on penult (lexical form; -ος is short)</td></tr>
 <tr><td>λόγου</td><td>Genitive sg.</td><td>-ου is a long diphthong; accent stays on penult</td></tr>
 <tr><td>λόγῳ</td><td>Dative sg.</td><td>-ῳ is long; accent stays on penult</td></tr>
 <tr><td>λόγον</td><td>Accusative sg.</td><td>-ον is short; accent on penult still</td></tr>
-<tr><td>λόγων</td><td>Genitive pl.</td><td>-ων forces circumflex on penult (long syllable + short ultima rule → circumflex)</td></tr>
+<tr><td>λόγων</td><td>Genitive pl.</td><td>-ων is long, and the penult ο is short; accent stays as an acute on the penult (λόγων)</td></tr>
 </tbody>
 </table>
 </div>
@@ -6397,7 +6397,7 @@ Journey Maps</span>
 <p><strong>Erasmian pronunciation</strong> (named after the Renaissance scholar Erasmus, c. 1466–1536) attempts to reconstruct the distinct sounds of ancient Greek. Key features:</p>
 <ul>
 <li>η (eta) ≠ ι (iota) — they are different sounds ("ey" vs. "ee")</li>
-<li>ει, η, ι, υ, οι are all pronounced differently</li>
+<li>η, ι, υ, and οι are all pronounced differently (ει and η are both a long "ay")</li>
 <li>β is "b," not "v"</li>
 <li>Every letter retains a distinct sound</li>
 </ul>
@@ -6504,7 +6504,7 @@ Journey Maps</span>
 <p><strong>Direct address</strong> is when you call out to someone or something directly in speech or writing. In English we just use the name or title, sometimes preceded by "O."</p>
 <ul>
 <li>"<strong>Father</strong>, hear my prayer." — addressing God directly</li>
-<li>"<strong>Lord</strong>, if you are willing..." — Matt 8:2</li>
+<li><li>"<strong>Lord</strong>, if You are willing..." — Matt 8:2</li></li>
 <li>"O <strong>Jerusalem</strong>, Jerusalem..." — Matt 23:37</li>
 </ul>
 <p>Greek has a dedicated case for this — the <em>vocative</em> — with its own ending. In English, the word doesn't change. In Greek, it does.</p>
@@ -6546,7 +6546,7 @@ Journey Maps</span>
 </tbody>
 </table>
 </div>
-<p><strong>The English-speaker struggle is real.</strong> English speakers have been assigning gender based on meaning their entire lives — and that instinct will fight you constantly in Greek. When you see πνεῦμα (Spirit) described with neuter pronouns in John 14–16, your brain may protest that calling the Holy Spirit "it" must mean something theological. It doesn't. That is the grammar class of the word, not a statement about personhood. (Note: John actually uses a masculine pronoun ἐκεῖνος in John 14:26 to refer to the Spirit — overriding the grammatical gender of the noun itself. That is a deliberate author choice that communicates personhood precisely because it bends the grammatical rule.)</p>
+<p><strong>The English-speaker struggle is real.</strong> English speakers have been assigning gender based on meaning their entire lives — and that instinct will fight you constantly in Greek. When you see πνεῦμα (Spirit) described with neuter pronouns in John 14–16, your brain may protest that calling the Holy Spirit "it" must mean something theological. It doesn't. That is the grammar class of the word, not a statement about personhood. (Note: (Note: in John 14:26 the masculine ἐκεῖνος refers back to ὁ παράκλητος, a masculine noun, so it follows normal agreement rather than overriding the neuter πνεῦμα.) That is a deliberate author choice that communicates personhood precisely because it bends the grammatical rule.)</p>
 <p><strong>Why gender matters practically:</strong> because <strong>articles and adjectives must agree with their noun in gender</strong>. You cannot use a masculine article (ὁ) with a feminine noun. This agreement system is how you identify which words in a sentence belong together — and once you internalize it, it becomes one of your most powerful parsing tools.</p>
 <div class="adv-table-wrap">
 <table class="adv-ref-table">
@@ -6591,7 +6591,7 @@ Journey Maps</span>
 </table>
 </div>
 <p>Notice that English barely marks case anymore — we rely on word order and prepositions ("of," "to," "by") to express what Greek does with a single ending. When Greek says <em>τοῦ λόγου</em>, the -ου ending alone tells you "of the word" — no extra word needed.</p>
-<p>A technical note: Classical Greek had eight cases. Some grammarians (including Wallace) still recognize instrumental (by means of) and locative (location/sphere) functions — but in Koine they collapsed into the dative, sharing the same form. Mounce uses the five-case system for simplicity.</p>
+<p>A technical note: Proto-Indo-European (Greek's ancestor) had eight cases. Some grammarians (e.g., Robertson) still use an eight-case system, and others (including Wallace) recognize instrumental (by means of) and locative (location/sphere) functions — but in Greek those cases had merged into the dative well before the Koine period, sharing the same form. Mounce uses the five-case system for simplicity.</p>
 </div>
 </div>
 <!-- Block 4: Nominative and Accusative -->
@@ -6639,16 +6639,16 @@ Journey Maps</span>
 <li><strong>Objective genitive:</strong> ἡ ἀγάπη τοῦ Χριστοῦ — "the love <em>of Christ</em>" → we love Christ (he is the object of love)</li>
 </ul>
 <p>Notice that <em>ἡ ἀγάπη τοῦ Χριστοῦ</em> can be either subjective or objective genitive — the Greek form is identical. Context and theology determine the meaning. This is one of the most significant exegetical debates in Pauline studies (especially in Galatians and Romans).</p>
-<p><strong>With prepositions:</strong> The genitive often follows prepositions like ἐκ (out of), ἀπό (from), διά (through/because of). ἐκ τοῦ κόσμου — "out of the world."</p>
+<p><strong>With prepositions:</strong> The genitive often follows prepositions like ἐκ (out of), ἀπό (from), διά (through). ἐκ τοῦ κόσμου — "out of the world."</p>
 <p><strong>Genitive absolute:</strong> A participle + noun both in the genitive, forming a clause grammatically independent from the main sentence. Common in Luke and Acts.</p>
-<p>One quick recognition signal: a circumflex on the ultima (-ων) almost always indicates a <strong>genitive plural</strong> ending. λόγων = "of words."</p>
+<p>One quick recognition signal: the ending -ων almost always indicates a <strong>genitive plural</strong>. λόγων = "of words."</p>
 </div>
 </div>
 <!-- Block 6: Dative Case -->
 <div class="lesson-block" onclick="toggleLessonBlock(this)">
 <div class="lesson-block-header">6 · The Dative — Indirect Object, Location &amp; Means<small class="block-time">~ 1.5 min</small></div>
 <div class="lesson-block-content">
-<p>The <strong>dative case</strong> is the most versatile of the five cases because it absorbed three older cases (dative, locative, and instrumental) in the Koine period. What looks like a single form can carry three distinct meanings — and context tells you which.</p>
+<p>The <strong>dative case</strong> is the most versatile of the five cases because it absorbed the functions of three older cases (dative, locative, and instrumental) long before the Koine period. What looks like a single form can carry three distinct meanings — and context tells you which.</p>
 <p><strong>Dative proper — indirect object:</strong> The one <em>to whom</em> or <em>for whom</em> something is done.</p>
 <ul>
 <li>ἔδωκεν αὐτοῖς ἐξουσίαν — "He gave authority <em>to them</em>" (John 1:12)</li>
@@ -6665,7 +6665,7 @@ Journey Maps</span>
 </ul>
 <p><strong>Dative of association:</strong> Expressing accompaniment or personal relationship.</p>
 <ul>
-<li>εἰρήνη ὑμῖν — "Peace <em>to/with</em> you" (standard Greek greeting)</li>
+<li><li>ἐκολλήθη ἑνὶ τῶν πολιτῶν — "he hired himself out to a citizen" (Luke 15:15)</li></li>
 </ul>
 <p>The dative is where you will find the richest theological debates about prepositions and case function. "Saved by grace through faith" — every preposition in that phrase governs a specific case, and the case tells you something about the relationship between the concepts.</p>
 </div>
@@ -6705,7 +6705,7 @@ Journey Maps</span>
 <p>Notice: masculine and neuter share the same genitive and dative forms. Neuter nominative and accusative are always identical. The genitive plural τῶν is the same for all three genders — context or the noun ending resolves the ambiguity.</p>
 <p><strong>Special uses of the Greek article:</strong></p>
 <ul>
-<li><strong>Granville Sharp Rule:</strong> When two nouns are joined by καί and share one article, they refer to the same person. "Our God and Savior Jesus Christ" — one article means one person (Titus 2:13).</li>
+<li><strong>Granville Sharp Rule:</strong> When two singular, personal, non-proper nouns are joined by καί and share one article, they refer to the same person. "Our God and Savior Jesus Christ" — one article means one person (Titus 2:13).</li>
 <li><strong>Articular infinitive:</strong> An article + infinitive turns the infinitive into a noun phrase.</li>
 <li><strong>Absence of article (anarthrous):</strong> Can foreground the quality or nature of a noun rather than its identity. θεὸς ἦν ὁ λόγος (John 1:1c) — θεός without the article focuses on what the Word <em>is</em> in nature, while ὁ θεός earlier in the verse refers to the Father specifically. This is a grammatical observation, not a theological conclusion — interpreters differ on what it implies beyond that.</li>
 </ul>
@@ -6773,7 +6773,7 @@ Journey Maps</span>
 </table>
 </div>
 <p><strong>Important exception — neuter plural subjects take singular verbs.</strong> This surprises students: τὰ τέκνα ἔρχεται (the children comes). Greek grammar treats a neuter plural subject as a collective, using a singular verb. You will encounter this constantly in the NT.</p>
-<p>Agreement also applies to pronouns: αὐτός (he/him/it) must agree with the noun it refers to in gender and number — even when that creates a mismatch with biological sex. When the NT refers back to πνεῦμα with a masculine pronoun ἐκεῖνος (John 16:13), it is making a grammatical choice to override the neuter gender — a theologically significant move.</p>
+<p>Agreement also applies to pronouns: αὐτός (he/him/it) must agree with the noun it refers to in gender and number — even when that creates a mismatch with biological sex. In John 16:13 the masculine ἐκεῖνος refers back to ὁ παράκλητος (16:7), a masculine noun, with τὸ πνεῦμα τῆς ἀληθείας in apposition, so it follows normal agreement with its antecedent.</p>
 </div>
 </div>
 <!-- Block 10: Parsing Nouns -->
@@ -6844,7 +6844,7 @@ Journey Maps</span>
 <p>Greek signals all of this through <strong>endings</strong> — the final letters attached to the noun stem. The stem is the core meaning (λόγ- = word, ἀγάπ- = love). The ending is the grammatical signal. Together, stem + ending = a complete Greek noun, carrying both meaning and function in a single word.</p>
 <p>The three declensions — 1st, 2nd, 3rd — are simply three different families of endings. Each family has its own set of patterns. But the <em>functions</em> are the same across all three: genitive always means possession in all three declensions; dative always signals the indirect object. The ending changes depending on the declension family; the meaning of the case never does.</p>
 <p>Here is the goal for this lesson: by the end, you should be able to look at a Greek noun ending and say with confidence, "that's genitive singular" or "that's dative plural" — without hesitation. The endings are the vocabulary of the grammar system. Learn them and the system opens.</p>
-<p class="highlight">Strategy: Don't try to memorize all endings at once. Start by learning to recognize the most frequent ones — particularly the iota subscript (dative), the -ου ending (2nd declension genitive), and the circumflex -ων (genitive plural). These three signals appear constantly and give you an enormous head start.</p>
+<p class="highlight">Strategy: Don't try to memorize all endings at once. Start by learning to recognize the most frequent ones — particularly the iota subscript (dative), the -ου ending (2nd declension genitive), and the -ων ending (genitive plural). These three signals appear constantly and give you an enormous head start.</p>
 </div>
 </div>
 <!-- Block 2: 2nd Declension Masculine -->
@@ -6868,7 +6868,7 @@ Journey Maps</span>
 <ul>
 <li><strong>The nominative (-ος) and the accusative (-ον)</strong> differ by only one letter — sigma vs. nu. Context (and the article) will help you keep them straight.</li>
 <li><strong>The dative (-ῳ) has an iota subscript.</strong> This tiny mark is the single most reliable dative signal in all of Greek. See an iota subscript? Think dative.</li>
-<li><strong>The genitive plural (-ων) has a circumflex</strong> on the ultima. This distinguishes it from the nominative plural (-οι) and the dative plural (-οις).</li>
+<li><strong>The genitive plural ends in -ων</strong> (λόγων). This ending sets it apart from the nominative plural (-οι) and the dative plural (-οις).</li>
 <li><strong>The vocative plural = the nominative plural (-οι).</strong> Context tells them apart.</li>
 </ul>
 <p>This pattern governs hundreds of NT words: ἄνθρωπος (human), νόμος (law), κύριος (Lord), ἀδελφός (brother), θεός (God). Every one of them follows exactly this paradigm.</p>
@@ -6913,7 +6913,7 @@ Journey Maps</span>
 <p>Key observations:</p>
 <ul>
 <li><strong>The dative singular -ῃ has an iota subscript</strong> — consistent with the same signal you saw in the 2nd declension dative (-ῳ). Iota subscript always = dative singular.</li>
-<li><strong>The genitive plural is -ῶν</strong> (circumflex on ultima), same pattern as the 2nd declension genitive plural -ων. Any genitive plural ending in -ων with a circumflex, regardless of declension.</li>
+<li><strong>The genitive plural is -ῶν</strong> (circumflex on ultima), same -ων ending as the 2nd declension genitive plural (λόγων). In the 1st declension the genitive plural always carries a circumflex (-ῶν); elsewhere the accent may sit earlier.</li>
 <li><strong>The nominative singular -η vs. genitive singular -ης:</strong> One letter difference — the sigma. The genitive always has the sigma.</li>
 </ul>
 <p>High-frequency 1st declension η-stem words: ἀγάπη (love), ἀλήθεια (truth — slightly different pattern, next block), γραφή (scripture), ἐκκλησία (church — alpha variant), ζωή (life), εἰρήνη (peace). These are among the most theologically important words in the NT.</p>
@@ -6985,7 +6985,7 @@ Journey Maps</span>
 <table class="adv-ref-table">
 <thead><tr><th>Article</th><th>Case</th><th>Gender</th><th>Number</th><th>Clue to remember</th></tr></thead>
 <tbody>
-<tr><td><strong>ὁ</strong></td><td>Nom.</td><td>Masc.</td><td>Sg.</td><td>Starts with smooth breathing only</td></tr>
+<tr><td><strong>ὁ</strong></td><td>Nom.</td><td>Masc.</td><td>Sg.</td><td>Rough breathing, no τ (like ἡ, οἱ, αἱ)</td></tr>
 <tr><td><strong>ἡ</strong></td><td>Nom.</td><td>Fem.</td><td>Sg.</td><td>Rough breathing on η</td></tr>
 <tr><td><strong>τό</strong></td><td>Nom./Acc.</td><td>Neut.</td><td>Sg.</td><td>Ends in omicron</td></tr>
 <tr><td><strong>τοῦ</strong></td><td>Gen.</td><td>Masc./Neut.</td><td>Sg.</td><td>-ου = 2nd decl. gen. sg.</td></tr>
@@ -6995,7 +6995,7 @@ Journey Maps</span>
 <tr><td><strong>τόν</strong></td><td>Acc.</td><td>Masc.</td><td>Sg.</td><td>Ends in -ν</td></tr>
 <tr><td><strong>τήν</strong></td><td>Acc.</td><td>Fem.</td><td>Sg.</td><td>Ends in -ν (long η)</td></tr>
 <tr><td><strong>τῶν</strong></td><td>Gen.</td><td>Any</td><td>Pl.</td><td>Circumflex + -ων = gen. pl.</td></tr>
-<tr><td><strong>τοῖς / ταῖς</strong></td><td>Dat.</td><td>Masc./Neut. · Fem.</td><td>Pl.</td><td>Iota subscript = dative</td></tr>
+<tr><td>-ις ending (full iota) = dative plural</td></tr>
 </tbody>
 </table>
 </div>
@@ -7037,7 +7037,7 @@ Journey Maps</span>
 <tr><td><strong>-ην</strong></td><td>Accusative singular feminine (η-stem)</td><td>1st</td></tr>
 <tr><td>-α / -ια</td><td>Nominative singular feminine (α-stem)</td><td>1st</td></tr>
 <tr><td>-ᾳ</td><td>Dative singular feminine (α-stem)</td><td>1st</td></tr>
-<tr><td><strong>-ῶν</strong></td><td>Genitive plural (all genders, 1st &amp; 2nd decl.)</td><td>1st/2nd</td></tr>
+<tr><td><strong>-ων</strong></td><td>Genitive plural (all genders, 1st &amp; 2nd decl.; always -ῶν in 1st decl.)</td><td>1st/2nd</td></tr>
 <tr><td>-αι</td><td>Nominative plural feminine</td><td>1st</td></tr>
 <tr><td>-ας</td><td>Accusative plural feminine; also genitive sg α-stem</td><td>1st</td></tr>
 <tr><td>-αις</td><td>Dative plural feminine</td><td>1st</td></tr>
@@ -7045,7 +7045,7 @@ Journey Maps</span>
 </table>
 </div>
 <p>The single most high-value ending to lock in: <strong>any iota subscript (ῳ, ῃ, ᾳ) = dative singular, every time</strong>. If you remember nothing else from this lesson, remember that.</p>
-<p>The second most high-value signal: <strong>circumflex + -ων on the ultima = genitive plural</strong>. This applies across 1st and 2nd declension and lets you identify the genitive plural instantly without even knowing the declension of the word.</p>
+<p>The second most high-value signal: <strong>-ων at the end of a noun = genitive plural</strong> (circumflexed -ῶν in the 1st declension). This applies across 1st and 2nd declension and lets you identify the genitive plural instantly without even knowing the declension of the word.</p>
 </div>
 </div>
 <!-- KC 3 -->
@@ -7120,10 +7120,10 @@ Journey Maps</span>
 <p><strong>The critical rule for 3rd declension:</strong> The nominative singular form is often irregular and does NOT reliably show you the stem. To find the stem, take the <em>genitive singular</em> form and drop the ending -ος. Whatever remains is the stem that all other case endings attach to.</p>
 <p style="text-align:center; background: rgba(201,162,39,0.08); border-radius: 8px; padding: 10px 16px; margin: 12px 0;">
           σαρκ<strong>ός</strong> → drop -ος → stem is <strong>σαρκ-</strong><br/>
-          πνευματ<strong>ός</strong> → drop -ος → stem is <strong>πνευματ-</strong>
+          πνεύματ<strong>ος</strong> → drop -ος → stem is <strong>πνευματ-</strong>
 </p>
 <p>This is why Greek dictionaries always list two forms for every noun: the nominative and the genitive. The genitive form is essential for identifying the stem, especially in the 3rd declension. When you look up a word like σάρξ, the entry shows <em>σάρξ, σαρκός, ἡ</em> — nominative, genitive, article — precisely so you can find the stem.</p>
-<p>The 3rd declension will be covered in detail in Lesson 6. For now, commit the stem rule to memory: <strong>genitive singular minus -ος = the stem</strong>. That rule is non-negotiable for the 3rd declension.</p>
+<p>The 3rd declension will be covered in detail in a later lesson. For now, commit the stem rule to memory: <strong>genitive singular minus -ος = the stem</strong>. That rule is non-negotiable for the 3rd declension.</p>
 </div>
 </div>
 <!-- KC 5 -->
@@ -7208,7 +7208,7 @@ Journey Maps</span>
 <li><strong>μετά + genitive</strong> — with (accompaniment): μετὰ τῶν μαθητῶν (with the disciples)</li>
 <li><strong>μετά + accusative</strong> — after (time or sequence): μετὰ ταῦτα (after these things)</li>
 <li><strong>κατά + genitive</strong> — against: καθ᾽ ἡμῶν (against us)</li>
-<li><strong>κατά + accusative</strong> — according to, throughout: κατὰ σάρκα (according to flesh); κατὰ πόλιν (throughout the city)</li>
+<li><strong>κατά + accusative</strong> — according to, throughout: κατὰ σάρκα (according to flesh); κατὰ πόλιν (city by city, in every city)</li>
 </ul>
 <p>The pattern: with the <strong>genitive</strong>, these prepositions tend to express closer relationship or means. With the <strong>accusative</strong>, they express result, cause, or sequence.</p>
 <div class="knowledge-check" id="kc_adv_prepositions_2">
@@ -7352,7 +7352,7 @@ Journey Maps</span>
 </table>
 </div>
 <p>Look familiar? The masculine column is identical to 2nd declension nouns like λόγος. The feminine column is identical to 1st declension nouns like ἀγάπη. The neuter column is identical to 2nd declension neuter nouns like ἔργον. You already know these endings — the adjective just uses all three patterns at once depending on the noun's gender.</p>
-<p>Other common 2-1-2 adjectives: ἅγιος (holy), δίκαιος (righteous), μόνος (only/alone), πρῶτος (first), νεκρός (dead), πιστός (faithful), μακάριος (blessed). They all follow the same ἀγαθός pattern.</p>
+<p>Other common 2-1-2 adjectives: They all follow the ἀγαθός pattern, except that stems ending in ε, ι, or ρ use α instead of η in the feminine singular (ἁγία, δικαία, νεκρά, μακαρία).</p>
 </div>
 </div>
 <!-- Block 3 -->
@@ -7378,7 +7378,7 @@ Journey Maps</span>
 </table>
 </div>
 <p>The last example — τοῖς ἁγίοις — shows something important: the adjective can stand alone with the article and no noun. That's a substantive adjective, which you'll learn in Block 6.</p>
-<p class="highlight">The article and the adjective always tell the same story. If the article says accusative feminine plural, the adjective says accusative feminine plural. They are locked together. When they don't match, something else is going on — often a predicate or substantive construction, which you'll learn shortly.</p>
+<p class="highlight">The article and the adjective always tell the same story. If the article says accusative feminine plural, the adjective says accusative feminine plural. They are locked together. When they don't match, the adjective belongs to a different noun in the sentence.</p>
 </div>
 </div>
 <!-- KC 1 -->
@@ -7432,11 +7432,11 @@ Journey Maps</span>
 <p>NT examples:</p>
 <ul>
 <li><strong>πιστὸς ὁ θεός</strong> — "God is faithful" (1 Cor 1:9). ὁ θεός has the article; πιστός does not. Predicate position.</li>
-<li><strong>δίκαιός ἐστιν ὁ κύριος</strong> — "The Lord is righteous" (2 Thess 1:6). δίκαιος is the predicate, ὁ κύριος the subject.</li>
+<li><strong>ἐκεῖνος δίκαιός ἐστιν</strong> — "Christ is righteous" (1 John 3:7). δίκαιος is the predicate adjective, ἐκεῖνος ("that one," i.e., Christ) the subject.</li>
 <li><strong>μακάριοι οἱ πτωχοί</strong> (Matthew 5:3) — "Blessed are the poor." μακάριοι has no article; it's the predicate adjective. οἱ πτωχοί is the subject. No verb written — εἰσίν (they are) is implied.</li>
 </ul>
 <p>The Beatitudes use predicate position throughout — each one is [predicate adjective] [subject noun/adjective]. Understanding this makes the Beatitudes immediately readable.</p>
-<p class="highlight">The test: is there an article directly before the adjective? Yes → attributive ("the good word"). No → predicate ("the word is good"). One article placement changes the entire meaning.</p>
+<p class="highlight">The test (when the noun has the article): is there an article directly before the adjective? Yes → attributive ("the good word"). No → predicate ("the word is good"). One article placement changes the entire meaning.</p>
 </div>
 </div>
 <!-- KC 2 -->
@@ -7474,7 +7474,7 @@ Journey Maps</span>
 <li><strong>οἱ πτωχοί</strong> — "the poor ones / the poor" (Matthew 5:3). The article οἱ is nominative masculine plural; πτωχοί is the adjective. No noun — they are the subject as a group.</li>
 <li><strong>τοῖς ἁγίοις</strong> — "to the saints / to the holy ones" (Ephesians 1:1). Dative plural — the saints as the indirect object/recipient of the letter.</li>
 <li><strong>πᾶς ὁ πιστεύων</strong> — "everyone who believes" (John 3:16). ὁ πιστεύων is a participle used substantively — the same pattern. "The believing one."</li>
-<li><strong>τὸ ἀγαθόν</strong> — "the good / the good thing" — appears frequently in Paul's letters when discussing what is good or beneficial (Romans 7:18, 13:4).</li>
+<li><strong>τὸ ἀγαθόν</strong> — "the good / the good thing" — appears frequently in Paul's letters when discussing what is good or beneficial (Romans 7:13, 13:3–4).</li>
 </ul>
 <p>Understanding substantive adjectives is essential for the Beatitudes, the epistles, and practically every NT passage that discusses groups of people ("the righteous," "the faithful," "the dead," "the poor").</p>
 </div>
@@ -7586,7 +7586,7 @@ Journey Maps</span>
 <ul>
 <li>Yes, and there's a noun → <strong>Attributive</strong> (describing the noun: "the good word")</li>
 <li>Yes, but no noun alongside → <strong>Substantive</strong> (the adjective is the noun: "the good one")</li>
-<li>No article before the adjective → <strong>Predicate</strong> (statement about the noun: "the word is good")</li>
+<li>No article before the adjective, but the noun has one → <strong>Predicate</strong> ("the word is good"). If neither has an article, decide from context (usually attributive: πνεῦμα ἅγιον, "Holy Spirit")</li>
 </ul>
 </li>
 <li><strong>What noun does it agree with?</strong> — find the matching gender/case/number</li>
@@ -7684,7 +7684,7 @@ Journey Maps</span>
 <div class="lesson-block" onclick="toggleLessonBlock(this)">
 <div class="lesson-block-header">3 · The 3rd Person Pronoun — αὐτός, αὐτή, αὐτό<small class="block-time">~ 2 min</small></div>
 <div class="lesson-block-content">
-<p>αὐτός is the workhorse of the Greek pronoun system. It declines exactly like the 2-1-2 adjective ἀγαθός — which means you already know all its forms.</p>
+<p>αὐτός is the workhorse of the Greek pronoun system. It declines like the 2-1-2 adjective ἀγαθός, except that the neuter nominative/accusative singular is αὐτό (no -ν).</p>
 <div class="adv-table-wrap">
 <table class="adv-ref-table">
 <thead><tr><th>Case</th><th>Masc. (he)</th><th>Fem. (she)</th><th>Neut. (it)</th></tr></thead>
@@ -7746,7 +7746,7 @@ Journey Maps</span>
 <div class="lesson-block-header">5 · Demonstrative Pronouns — οὗτος and ἐκεῖνος<small class="block-time">~ 2 min</small></div>
 <div class="lesson-block-content">
 <p>Demonstrative pronouns point. <strong>οὗτος</strong> points near — "this" (what's here, what was just mentioned). <strong>ἐκεῖνος</strong> points far — "that" (what's over there, what was mentioned earlier or is more distant in thought).</p>
-<p>ἐκεῖνος declines exactly like ἀγαθός (2-1-2, fully regular). οὗτος is trickier — it has some irregular forms. The key ones to recognize:</p>
+<p>ἐκεῖνος declines like ἀγαθός (2-1-2), except that the neuter nominative/accusative singular is ἐκεῖνο (no -ν). οὗτος is trickier — it has some irregular forms. The key ones to recognize:</p>
 <div class="adv-table-wrap">
 <table class="adv-ref-table">
 <thead><tr><th>Case</th><th>Masc.</th><th>Fem.</th><th>Neut.</th></tr></thead>
@@ -7762,7 +7762,7 @@ Journey Maps</span>
 </tbody>
 </table>
 </div>
-<p>Pattern tip: nominative singular and plural begin with οὑ-/αὑ- (rough breathing + vowel). Most other forms begin with τ- (like the article). Once you spot that pattern, the forms become recognizable quickly.</p>
+<p>Pattern tip: the masculine and feminine nominative singular and plural begin with οὑ-/αὑ- (rough breathing + vowel). All other forms, including neuter τοῦτο/ταῦτα, begin with τ- (like the article). Once you spot that pattern, the forms become recognizable quickly.</p>
 <p>High-frequency NT phrases built on οὗτος:</p>
 <ul>
 <li><strong>διὰ τοῦτο</strong> — "because of this / for this reason" — Paul's favorite transitional phrase (Romans, Ephesians, Colossians)</li>
@@ -7823,10 +7823,10 @@ Journey Maps</span>
 </tbody>
 </table>
 </div>
-<p>The relative pronoun looks very similar to the article — but with <strong>rough breathing marks</strong> on most forms. Compare: the article ὁ, ἡ, τό vs. the relative pronoun ὅς, ἥ, ὅ. The rough breathing (the mark over ὅ that looks like a backwards comma) is the distinguishing mark.</p>
+<p>The relative pronoun looks very similar to the article — and every form has <strong>rough breathing</strong>. Compare the article ὁ, ἡ, οἱ, αἱ (no accent) with the relative ὅ, ἥ, οἵ, αἵ (accented). The accent is the distinguishing mark, and the relative never begins with τ (contrast τό, τοῦ, τόν with ὅ, οὗ, ὅν).</p>
 <p>NT examples:</p>
 <ul>
-<li>Romans 8:11: τοῦ ἐγείραντος Ἰησοῦν... <strong>ὅς</strong> καὶ ζῳοποιήσει — "the one who raised Jesus... who will also give life." ὅς is masculine sg. (antecedent = God, masc.) and nominative (subject of ζῳοποιήσει).</li>
+<li>Romans 8:32: <strong>ὅς</strong> γε τοῦ ἰδίου υἱοῦ οὐκ ἐφείσατο — "He who did not spare His own Son." ὅς is masculine sg. (antecedent = ὁ θεός in 8:31, masc.) and nominative (subject of ἐφείσατο).</li>
 <li>Ephesians 1:14: <strong>ὅ</strong> ἐστιν ἀρραβὼν τῆς κληρονομίας ἡμῶν — "which is the pledge of our inheritance." ὅ is neuter sg. (antecedent = τὸ πνεῦμα, neut.) and nominative (subject of ἐστιν).</li>
 <li>John 1:33: ἐφ' <strong>ὅν</strong> ἂν ἴδῃς τὸ πνεῦμα — "upon whom you see the Spirit descending." ὅν is masculine sg. accusative (object of ἐπί).</li>
 </ul>
@@ -7868,8 +7868,8 @@ Journey Maps</span>
 </div>
 <p>NT examples:</p>
 <ul>
-<li><strong>τίς ἐστιν οὗτος;</strong> — "Who is this?" (Luke 7:49) — interrogative, asking for identification</li>
-<li><strong>τί ποιήσω;</strong> — "What shall I do?" (Luke 10:25; 16:3) — interrogative, neuter</li>
+<li><strong>τίς ἐστιν οὗτος;</strong> — "Who is this?" (Luke 5:21) — interrogative, asking for identification</li>
+<li><strong>τί ποιήσω;</strong> — "What shall I do?" (Luke 12:17; 16:3) — interrogative, neuter</li>
 <li><strong>ἄνθρωπός τις</strong> — "a certain man" (Luke 10:30) — indefinite, introducing a parable character</li>
 <li><strong>εἴ τις</strong> — "if anyone" (very common in Paul's letters — 1 Cor 3:12, 14, 17, etc.)</li>
 </ul>
@@ -7887,7 +7887,7 @@ Journey Maps</span>
 <ul>
 <li><strong>ὁ παράκλητος</strong> — nominative masculine singular, the subject: "the Counselor"</li>
 <li><strong>τὸ πνεῦμα τὸ ἅγιον</strong> — in apposition, nominative neuter: "the Holy Spirit"</li>
-<li><strong>ὃ πέμψει</strong> — relative pronoun ὅ, neuter (tracking πνεῦμα) nominative, subject of πέμψει: "which the Father will send"</li>
+<li><strong>ὃ πέμψει</strong> — relative pronoun ὅ, neuter (tracking πνεῦμα) accusative, direct object of πέμψει (ὁ πατήρ is the subject): "which the Father will send"</li>
 <li><strong>ἐκεῖνος</strong> — masculine (tracking παράκλητος), nominative, resumptive subject: "that one will teach you everything"</li>
 </ul>
 <p>Notice: the relative pronoun ὅ takes neuter from πνεῦμα; the resumptive pronoun ἐκεῖνος takes masculine from παράκλητος. Both are tracking different antecedents from the same appositive phrase. This is Greek pronoun agreement at its most nuanced.</p>
@@ -7999,16 +7999,16 @@ Journey Maps</span>
 <div class="lesson-block" onclick="toggleLessonBlock(this)">
 <div class="lesson-block-header">2 · καί and δέ — Addition and Transition<small class="block-time">~ 1.5 min</small></div>
 <div class="lesson-block-content">
-<p><strong>καί</strong> is the most common word in the Greek NT — it appears over 9,000 times. It has two main uses:</p>
+<p><strong>καί</strong> is the second most common word in the Greek NT (after the article) — it appears about 9,000 times. It has two main uses:</p>
 <ul>
 <li><strong>Connective</strong> — "and." Joins words, phrases, or clauses: ὁ θεὸς καὶ πατήρ (God and Father); ἐν λόγῳ καὶ ἔργῳ (in word and deed).</li>
 <li><strong>Adverbial</strong> — "also, even." Adds emphasis to the word that follows: καὶ ὑμεῖς = "you also"; καὶ αὐτός = "even he himself."</li>
 </ul>
-<p>John's Gospel is famous for its καί-heavy style — clauses strung together with καί in a way that echoes Hebrew narrative. John 1:1–5 uses καί five times in five verses.</p>
+<p>John's Gospel is famous for its καί-heavy style — clauses strung together with καί in a way that echoes Hebrew narrative. John 1:1–5 uses καί six times in five verses.</p>
 <p><strong>δέ</strong> is milder and more versatile. It signals that something new is developing — either a continuation of the same thought or a gentle contrast. It is always <strong>postpositive</strong> — it never appears first in its clause. It latches onto the second position.</p>
 <ul>
 <li>Transitional: ὁ δὲ λόγος — "and the Word..." / "now the Word..."</li>
-<li>Contrastive (mild): ἐγὼ μὲν βαπτίζω ὕδατι, <strong>αὐτὸς δὲ</strong> βαπτίσει — "I baptize with water, <em>but he</em> will baptize..." (Matthew 3:11)</li>
+<li>Contrastive (mild): ἐγὼ ἐβάπτισα ὑμᾶς ὕδατι, <strong>αὐτὸς δὲ</strong> βαπτίσει ὑμᾶς ἐν πνεύματι ἁγίῳ — "I indeed baptize you with water, <em>but He</em> will baptize you with the Holy Spirit" (Mark 1:8)</li>
 <li>Narrative switch: ὁ δέ at the start of a new clause introduces a new subject or new episode</li>
 </ul>
 <p class="highlight">When you see ὁ δέ or αὐτὸς δέ, it almost always means a new person is now acting or speaking. This is one of the most common narrative devices in the Gospels.</p>
@@ -8099,7 +8099,7 @@ Journey Maps</span>
 <p>The signal: ἵνα → look for subjunctive verb forms. If you see ἵνα followed by a verb with subjunctive endings, you're in a purpose/result clause.</p>
 <p><strong>ὥστε</strong> introduces result clauses — "so that, with the result that." Unlike ἵνα, it often takes the <strong>indicative</strong> (actual result) or an <strong>infinitive</strong>:</p>
 <ul>
-<li>Matthew 12:22: ὥστε τὸν τυφλὸν καὶ κωφὸν λαλεῖν καὶ βλέπειν — "so that the blind and mute man spoke and saw" (infinitive)</li>
+<li>Matthew 12:22: ὥστε τὸν τυφλὸν καὶ κωφὸν καὶ λαλεῖν καὶ βλέπειν — "so that the blind and mute man could both speak and see" (infinitive)</li>
 <li>John 3:16: ὥστε τὸν υἱὸν τὸν μονογενῆ ἔδωκεν — "so that he gave his one-of-a-kind Son" (indicative)</li>
 </ul>
 <p><strong>Conditional conjunctions</strong> — εἰ and ἐάν:</p>
@@ -8113,7 +8113,7 @@ Journey Maps</span>
 <!-- KC 2 -->
 <div class="knowledge-check" id="kc_adv_conjunctions_2">
 <div class="kc-header"><span class="material-symbols-outlined">quiz</span> Knowledge Check</div>
-<p class="kc-question">ἵνα always introduces what kind of clause, and always takes what mood?</p>
+<p class="kc-question">ἵνα most often introduces what kind of clause, and what mood follows it? (and change option 1 to: A purpose or result clause — subjunctive mood)</p>
 <div class="kc-options">
 <button class="kc-opt" data-opt="0" onclick="answerKC('kc_adv_conjunctions_2', this)">A statement of completed fact — indicative mood</button>
 <button class="kc-opt" data-opt="1" onclick="answerKC('kc_adv_conjunctions_2', this)">A purpose or result clause — subjunctive mood always</button>
@@ -8129,8 +8129,8 @@ Journey Maps</span>
 <p>Greek particles are small words that don't translate directly but signal logical, emphatic, or structural relationships. The most important ones to recognize:</p>
 <p><strong>The μέν...δέ construction</strong> — "on the one hand...on the other hand." μέν anticipates a contrast; δέ delivers it. Together they create a balanced comparison:</p>
 <ul>
-<li>Matthew 3:11: ἐγὼ <strong>μὲν</strong> ὑμᾶς βαπτίζω ἐν ὕδατι... αὐτὸς <strong>δὲ</strong> βαπτίσει ὑμᾶς ἐν πνεύματι ἁγίῳ — "I baptize you with water... but he will baptize you with the Holy Spirit."</li>
-<li>1 Corinthians 15:42–44: σπείρεται ἐν φθορᾷ... ἐγείρεται ἐν ἀφθαρσίᾳ — the μέν/δέ contrast drives the resurrection body argument.</li>
+<li>Matthew 3:11: ἐγὼ <strong>μὲν</strong> ὑμᾶς βαπτίζω ἐν ὕδατι εἰς μετάνοιαν, ὁ <strong>δὲ</strong> ὀπίσω μου ἐρχόμενος ἰσχυρότερός μού ἐστιν — "I baptize you with water for repentance, but after me will come One more powerful than I."</li>
+<li>1 Corinthians 15:40: ἑτέρα <strong>μὲν</strong> ἡ τῶν ἐπουρανίων δόξα, ἑτέρα <strong>δὲ</strong> ἡ τῶν ἐπιγείων — "the splendor of the heavenly bodies is of one degree, and the splendor of the earthly bodies is of another."</li>
 </ul>
 <p>Note: μέν is often left untranslated in English — only δέ gets the "but." In Greek, whenever you see μέν, expect a δέ soon to complete the contrast.</p>
 <p><strong>Other particles worth knowing:</strong></p>
@@ -8354,7 +8354,7 @@ Journey Maps</span>
 <tr><td><strong>λέγει</strong></td><td>he/she says</td><td>Present tense dialogue; also λέγω (I say)</td></tr>
 <tr><td><strong>ἐγένετο</strong></td><td>it happened / it came to pass</td><td>Extremely common in Luke: "καὶ ἐγένετο..."</td></tr>
 <tr><td><strong>ἔχει / ἔχω</strong></td><td>he has / I have</td><td>Common in epistles and John</td></tr>
-<tr><td><strong>γέγραπται</strong></td><td>it stands written</td><td>Every OT quotation formula in the NT</td></tr>
+<tr><td><strong>γέγραπται</strong></td><td>it stands written</td><td>Standard formula for introducing OT quotations (e.g., καθὼς γέγραπται, "just as it is written")</td></tr>
 <tr><td><strong>ἠγάπησεν</strong></td><td>he loved</td><td>John 3:16 — already parsed in Lesson 5</td></tr>
 <tr><td><strong>ἔδωκεν</strong></td><td>he gave</td><td>John 3:16: "he gave his Son"</td></tr>
 <tr><td><strong>ἠγέρθη</strong></td><td>he was raised</td><td>Resurrection passages throughout NT</td></tr>
@@ -8483,7 +8483,7 @@ Journey Maps</span>
 <p style="text-align:center; font-size:1.1rem; letter-spacing:0.04em; margin: 12px 0"><strong>Ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν, καὶ θεὸς ἦν ὁ λόγος.</strong></p>
 <hr/>
 <h4>Step 1–2: Scan for articles, parse them</h4>
-<p>Articles in this verse: <strong>ὁ</strong> (×3 — nominative masculine singular), <strong>τόν</strong> (×1 — accusative masculine singular). Already you can see: the nominative subjects are masculine singular, and there's one accusative direct object.</p>
+<p>Articles in this verse: <strong>ὁ</strong> (×3 — nominative masculine singular), <strong>τόν</strong> (×1 — accusative masculine singular). Already you can see: the nominative subjects are masculine singular, and there's one accusative, the object of the preposition πρός.</p>
 <hr/>
 <h4>Clause 1: Ἐν ἀρχῇ ἦν ὁ λόγος</h4>
 <ul>
@@ -8538,7 +8538,7 @@ Journey Maps</span>
 <hr/>
 <h4>Key noun phrases parsed</h4>
 <ul>
-<li><strong>τὸν υἱὸν τὸν μονογενῆ</strong> — both words accusative masculine singular (confirmed by the repeated τόν). "His one-of-a-kind Son." The repeated article is Greek's way of linking an adjective emphatically to its noun when they're separated.</li>
+<li><strong>τὸν υἱὸν τὸν μονογενῆ</strong> — both words accusative masculine singular (confirmed by the repeated τόν). "His one-of-a-kind Son." The repeated article marks second attributive position (article–noun–article–adjective): the adjective describes the noun, with somewhat more emphasis on the adjective.</li>
 <li><strong>εἰς αὐτόν</strong> — εἰς + accusative: "into/toward him." The direction of trust/belief. εἰς signals direction and purpose, not just location.</li>
 <li><strong>ζωὴν αἰώνιον</strong> — accusative feminine singular (ζωήν from ζωή) + accusative adjective agreeing: "eternal life." Both accusative because this is the direct object of the verb "have."</li>
 </ul>
@@ -8548,7 +8548,7 @@ Journey Maps</span>
 <ul>
 <li><strong>Οὕτως γὰρ</strong> — γάρ is backward-pointing (Lesson 8): this verse gives the reason for what John just said in 3:14–15 about the Son of Man being lifted up. γάρ appears in second position — the postpositive rule in action. It tells you before you read a word: <em>this verse is an explanation.</em></li>
 <li><strong>ὥστε</strong> — "so that / with the result that." Introduces a result clause: God's love was so great that it resulted in the gift of his Son.</li>
-<li><strong>ἵνα</strong> — "in order that." Introduces the purpose clause: the goal of the giving. Two ἵνα clauses appear, nesting purpose inside purpose — "so that every believing one might not perish, but might have eternal life."</li>
+<li><strong>ἵνα</strong> — "in order that." Introduces the purpose clause: the goal of the giving. One ἵνα clause, with two subjunctives joined by ἀλλά — "so that every believing one might not perish, but might have eternal life."</li>
 <li><strong>αὐτόν</strong> in εἰς αὐτόν — accusative masculine singular of αὐτός (Lesson 7). It refers back to τὸν υἱόν — "into/toward him," the Son. The pronoun links belief to the specific person already named.</li>
 <li><strong>ἀλλ'</strong> — ἀλλά (strong contrast, Lesson 8). The contrast is built into the purpose: "not that he might perish, but (ἀλλά) that he might have eternal life." Every tool from Lessons 7 and 8 shows up in one verse.</li>
 </ul>
@@ -8708,7 +8708,7 @@ Journey Maps</span>
 <p>Voice tells you how the subject relates to the action:</p>
 <ul>
 <li><strong>Active</strong> — subject does the action: ὁ θεὸς ἠγάπησεν — "God loved" (John 3:16). God is acting.</li>
-<li><strong>Passive</strong> — subject receives the action: ἐσώθητε — "you were saved" (Ephesians 2:8). You are the recipient. The famous "divine passive" construction in the NT often leaves the agent unstated (God does it, but it's implied, not said).</li>
+<li><strong>Passive</strong> — subject receives the action: ἐσώθημεν — "we were saved" (Romans 8:24). We are the recipients. The famous "divine passive" construction in the NT often leaves the agent unstated (God does it, but it's implied, not said).</li>
 <li><strong>Middle</strong> — subject acts for itself or its own benefit. This is unfamiliar to English speakers because we have no equivalent. Greek uses it for reflexive or self-involving action — baptizing, praying, seeing (in the sense of perceiving for oneself). It looks identical to the passive in some forms, which is one of the challenges of the verb system.</li>
 </ul>
 <h4>Mood — You Already Know This</h4>
@@ -12041,7 +12041,7 @@ Verb Endings
       <div class="lesson-block-content">
         <p>Here is every form of λύω broken into its building blocks:</p>
         <div class="stem-build-box">
-          <div class="stem-row"><span class="stem-piece">λύ</span><span class="plus-sign">+</span><span class="ending-piece">ω</span><span style="margin-left:8px;color:#555;font-style:italic">λύω — I loose (ending fuses with stem)</span></div>
+          <div class="stem-row"><span class="stem-piece">λύ</span><span class="plus-sign">+</span><span class="ending-piece">ω</span><span style="margin-left:8px;color:#555;font-style:italic">λύω — I loose (no personal ending; the connecting vowel ο lengthens to ω)</span></div>
           <div class="stem-row"><span class="stem-piece">λύ</span><span class="plus-sign">+</span><span class="cv-piece">ε</span><span class="plus-sign">+</span><span class="ending-piece">ις</span><span style="margin-left:8px;color:#555;font-style:italic">λύεις — you loose</span></div>
           <div class="stem-row"><span class="stem-piece">λύ</span><span class="plus-sign">+</span><span class="cv-piece">ε</span><span class="plus-sign">+</span><span class="ending-piece">ι</span><span style="margin-left:8px;color:#555;font-style:italic">λύει — he/she/it looses</span></div>
           <div class="stem-row"><span class="stem-piece">λύ</span><span class="plus-sign">+</span><span class="cv-piece">ο</span><span class="plus-sign">+</span><span class="ending-piece">μεν</span><span style="margin-left:8px;color:#555;font-style:italic">λύομεν — we loose</span></div>
@@ -12102,7 +12102,7 @@ Verb Endings
           <strong>ο</strong> before μ and ν endings<br>
           <strong>ε</strong> before all other endings
         </div>
-        <p>Here is the rule in action across all six forms:</p>
+        <p>Here is the rule in action across the forms (1st singular λύω has no ending; its connecting vowel ο lengthens to ω):</p>
         <table class="verb-paradigm-table">
           <thead><tr><th>Form</th><th>Connecting Vowel</th><th>Rule</th></tr></thead>
           <tbody>
@@ -12110,7 +12110,7 @@ Verb Endings
             <tr><td class="vpt-form">λύ<span class="cv-piece">ε</span>ι</td><td>ε</td><td class="vpt-trans">before -ι</td></tr>
             <tr><td class="vpt-form">λύ<span class="cv-piece">ο</span>μεν</td><td>ο</td><td class="vpt-trans">before -μεν (μ)</td></tr>
             <tr><td class="vpt-form">λύ<span class="cv-piece">ε</span>τε</td><td>ε</td><td class="vpt-trans">before -τε</td></tr>
-            <tr><td class="vpt-form">λύ<span class="cv-piece">ου</span>σι</td><td>ου</td><td class="vpt-trans">contracted form</td></tr>
+            <tr><td class="vpt-form">λύ<span class="cv-piece">ου</span>σι</td><td>ο → ου</td><td class="vpt-trans">before -νσι (ν); ν drops out and ο lengthens to ου</td></tr>
           </tbody>
         </table>
         <p class="highlight">Once you know this rule, six forms become one pattern.</p>
@@ -12412,7 +12412,7 @@ Verb Endings
     <div class="lesson-block" onclick="toggleVerbLessonBlock(this, 'basic')">
       <div class="lesson-block-header">Middle voice: subject involvement<small class="block-time">~ 2 min</small></div>
       <div class="lesson-block-content">
-        <p>The middle voice is unique to Greek and does not have a direct English equivalent.</p>
+        <p><p>The middle voice does not have a direct English equivalent.</p></p>
         <p>In general terms, the middle voice indicates that the subject is <strong>involved in or connected to the action</strong> in a special way.</p>
         <ul>
           <li>Sometimes this means the subject acts on or for themselves.</li>
@@ -12604,15 +12604,15 @@ Verb Endings
         <table class="verb-paradigm-table">
           <thead><tr><th>Person/Number</th><th>Greek Form</th><th>Translation</th></tr></thead>
           <tbody>
-            <tr><td class="vpt-parse">1st Singular</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λυον</td><td class="vpt-trans">I was loosing</td></tr>
-            <tr><td class="vpt-parse">2nd Singular</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λυες</td><td class="vpt-trans">you were loosing</td></tr>
-            <tr><td class="vpt-parse">3rd Singular</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λυε(ν)</td><td class="vpt-trans">he/she/it was loosing</td></tr>
+            <tr><td class="vpt-parse">1st Singular</td><td class="vpt-form"><span class="aug-piece">ἔ</span>λυον</td><td class="vpt-trans">I was loosing</td></tr>
+            <tr><td class="vpt-parse">2nd Singular</td><td class="vpt-form"><span class="aug-piece">ἔ</span>λυες</td><td class="vpt-trans">you were loosing</td></tr>
+            <tr><td class="vpt-parse">3rd Singular</td><td class="vpt-form"><span class="aug-piece">ἔ</span>λυε(ν)</td><td class="vpt-trans">he/she/it was loosing</td></tr>
             <tr><td class="vpt-parse">1st Plural</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λύομεν</td><td class="vpt-trans">we were loosing</td></tr>
             <tr><td class="vpt-parse">2nd Plural</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λύετε</td><td class="vpt-trans">you all were loosing</td></tr>
-            <tr><td class="vpt-parse">3rd Plural</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λυον</td><td class="vpt-trans">they were loosing</td></tr>
+            <tr><td class="vpt-parse">3rd Plural</td><td class="vpt-form"><span class="aug-piece">ἔ</span>λυον</td><td class="vpt-trans">they were loosing</td></tr>
           </tbody>
         </table>
-        <p class="highlight">Spot the <span class="aug-piece">ε-</span> at the front — that is the augment. Every imperfect (and aorist) form carries it.</p>
+        <p class="highlight">Spot the <span class="aug-piece">ε-</span> at the front — that is the augment. Every imperfect and aorist indicative form carries an augment.</p>
       </div>
     </div>
 
@@ -12659,12 +12659,12 @@ Verb Endings
         <table class="verb-paradigm-table">
           <thead><tr><th>Person/Number</th><th>Imperfect Form</th><th>Translation</th></tr></thead>
           <tbody>
-            <tr><td class="vpt-parse">1st Singular</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λυον</td><td class="vpt-trans">I was loosing</td></tr>
-            <tr><td class="vpt-parse">2nd Singular</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λυες</td><td class="vpt-trans">you were loosing</td></tr>
-            <tr><td class="vpt-parse">3rd Singular</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λυε(ν)</td><td class="vpt-trans">he/she/it was loosing</td></tr>
+            <tr><td class="vpt-parse">1st Singular</td><td class="vpt-form"><span class="aug-piece">ἔ</span>λυον</td><td class="vpt-trans">I was loosing</td></tr>
+            <tr><td class="vpt-parse">2nd Singular</td><td class="vpt-form"><span class="aug-piece">ἔ</span>λυες</td><td class="vpt-trans">you were loosing</td></tr>
+            <tr><td class="vpt-parse">3rd Singular</td><td class="vpt-form"><span class="aug-piece">ἔ</span>λυε(ν)</td><td class="vpt-trans">he/she/it was loosing</td></tr>
             <tr><td class="vpt-parse">1st Plural</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λύομεν</td><td class="vpt-trans">we were loosing</td></tr>
             <tr><td class="vpt-parse">2nd Plural</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λύετε</td><td class="vpt-trans">you all were loosing</td></tr>
-            <tr><td class="vpt-parse">3rd Plural</td><td class="vpt-form"><span class="aug-piece">ἐ</span>λυον</td><td class="vpt-trans">they were loosing</td></tr>
+            <tr><td class="vpt-parse">3rd Plural</td><td class="vpt-form"><span class="aug-piece">ἔ</span>λυον</td><td class="vpt-trans">they were loosing</td></tr>
           </tbody>
         </table>
         <p>Same stem (λυ-). Added augment (ἐ-). Different endings (secondary, not primary). That is the imperfect.</p>
@@ -12866,14 +12866,14 @@ Verb Endings
       <div class="lesson-block-header">What makes a second aorist different<small class="block-time">~ 2 min</small></div>
       <div class="lesson-block-content">
         <p>First aorists use a recognizable suffix pattern to mark the aorist (typically -σα- inserted between the stem and ending).</p>
-        <p>Second aorists do not follow that pattern. Instead, they use a <strong>completely different stem</strong> from the present tense form.</p>
+        <p>Second aorists do not follow that pattern. Instead, they use a <strong>different stem</strong> from the present tense form (sometimes only slightly altered, sometimes completely different).</p>
         <p>Some examples of common second aorist verbs:</p>
         <ul>
           <li>Present: <strong>λέγω</strong> (I say) → Aorist: <strong>εἶπον</strong> (I said)</li>
           <li>Present: <strong>ἔρχομαι</strong> (I come) → Aorist: <strong>ἦλθον</strong> (I came)</li>
           <li>Present: <strong>ὁράω</strong> (I see) → Aorist: <strong>εἶδον</strong> (I saw)</li>
         </ul>
-        <p class="highlight">The stem changes completely. Recognition requires familiarity with the most common second aorist forms.</p>
+        <p class="highlight">The stem changes, sometimes completely. Recognition requires familiarity with the most common second aorist forms.</p>
       </div>
     </div>
 
@@ -13477,7 +13477,7 @@ Verb Endings
           <li>What is happening (action)</li>
           <li>Who is doing it (person/number through the ending)</li>
           <li>When or how the action is viewed (tense)</li>
-          <li>The speaker's relationship to the action (voice)</li>
+          <li>The subject's relationship to the action (voice)</li>
           <li>The type of communication (mood)</li>
         </ul>
         <p class="highlight">Find the verb first. Everything else in the sentence relates to it.</p>
@@ -14071,7 +14071,7 @@ Verb Endings
           <li><strong>Contrast</strong> — setting one person against another: <em>you</em> do this, but <em>I</em> do that</li>
           <li><strong>Clarification</strong> — disambiguating when a third-person form could refer to multiple antecedents</li>
         </ul>
-        <p>A well-known example is in the Sermon on the Mount: ἐγὼ δὲ λέγω ὑμῖν — "But <em>I</em> say to you." The ἐγώ is not needed for grammar. It is needed for emphasis and contrast with what was just said.</p>
+        <p>A well-known example is in the Sermon on the Mount: ἐγὼ δὲ λέγω ὑμῖν — "But <em>I</em> tell you." The ἐγώ is not needed for grammar. It is needed for emphasis and contrast with what was just said.</p>
       </div>
     </div>
 
@@ -14096,7 +14096,7 @@ Verb Endings
         <ul>
           <li>John 1:20 — ἐγὼ οὐκ εἰμὶ ὁ Χριστός: emphatic denial — "<em>I</em> am not the Christ"</li>
           <li>John 14:6 — ἐγώ εἰμι ἡ ὁδός: "<em>I</em> am the way" — identity emphasis</li>
-          <li>Galatians 2:20 — ζῶ δὲ οὐκέτι ἐγώ: "it is no longer <em>I</em> who live" — contrastive</li>
+          <li>Galatians 2:20 — ζῶ δὲ οὐκέτι ἐγώ: "<em>I</em> no longer live" — contrastive</li>
         </ul>
         <p>In each case, removing the pronoun leaves grammatically valid Greek. Adding it changes the communicative force entirely.</p>
       </div>
@@ -14307,7 +14307,7 @@ Verb Endings
           <thead><tr><th>Uncontracted</th><th>Contracted</th><th>Rule Applied</th></tr></thead>
           <tbody>
             <tr><td>ἀγαπά + ω</td><td class="vpt-form">ἀγαπῶ</td><td class="vpt-trans">α + ω → ω</td></tr>
-            <tr><td>ἀγαπά + εις</td><td class="vpt-form">ἀγαπᾷς</td><td class="vpt-trans">α + ε → ᾳ</td></tr>
+            <tr><td>ἀγαπά + εις</td><td class="vpt-form">ἀγαπᾷς</td><td class="vpt-trans">α + ει → ᾳ</td></tr>
             <tr><td>ἀγαπά + ομεν</td><td class="vpt-form">ἀγαπῶμεν</td><td class="vpt-trans">α + ο → ω</td></tr>
           </tbody>
         </table>
@@ -14316,7 +14316,7 @@ Verb Endings
           <thead><tr><th>Uncontracted</th><th>Contracted</th><th>Rule Applied</th></tr></thead>
           <tbody>
             <tr><td>πληρό + ω</td><td class="vpt-form">πληρῶ</td><td class="vpt-trans">ο + ω → ω</td></tr>
-            <tr><td>πληρό + εις</td><td class="vpt-form">πληροῖς</td><td class="vpt-trans">ο + ε → οι</td></tr>
+            <tr><td>πληρό + εις</td><td class="vpt-form">πληροῖς</td><td class="vpt-trans">ο + ει → οι</td></tr>
             <tr><td>πληρό + ομεν</td><td class="vpt-form">πληροῦμεν</td><td class="vpt-trans">ο + ο → ου</td></tr>
           </tbody>
         </table>
@@ -14433,7 +14433,7 @@ Verb Endings
       <div class="lesson-block-content">
         <p>Mark's Gospel is the most prolific user of historical presents in the NT. Verbs like λέγει (he says) and ἔρχεται (he comes) appear in clearly past narrative contexts. This is not a grammatical error — it is a narrative technique.</p>
         <p>The historical present often marks transitions or moments of prominence in the narrative. Recognizing it prevents the translator from incorrectly placing events in the present when the narrative is clearly past.</p>
-        <p>Example: Mark 1:12 — καὶ εὐθὺς τὸ πνεῦμα αὐτὸν ἐκβάλλει εἰς τὴν ἔρημον. "And immediately the Spirit drives him out into the wilderness." — Past event, present tense, vividness effect.</p>
+        <p>Example: Mark 1:12 — καὶ εὐθὺς τὸ πνεῦμα αὐτὸν ἐκβάλλει εἰς τὴν ἔρημον. lit. "And immediately the Spirit drives him out into the wilderness" (MSB: "At once the Spirit drove Jesus into the wilderness") — Past event, present tense, vividness effect.</p>
       </div>
     </div>
 
@@ -14585,7 +14585,7 @@ Verb Endings
         <ul>
           <li><strong>Expectation</strong> — what the speaker anticipates will happen: "you will find a colt"</li>
           <li><strong>Prediction</strong> — a confident assertion about the future: "the Son of Man will be betrayed"</li>
-          <li><strong>Promise</strong> — a pledge from speaker to listener: "I will be with you always"</li>
+          <li><strong>Promise</strong> — a pledge from speaker to listener: "I will make you fishers of men" (ποιήσω, Matt 4:19)</li>
           <li><strong>Warning</strong> — a caution about future consequences: "you will not escape judgment"</li>
         </ul>
         <p class="highlight">The form is the same; the communicative force is shaped by context, speaker, and relationship.</p>
@@ -14597,7 +14597,7 @@ Verb Endings
       <div class="lesson-block-content">
         <p>A distinctive use of the future indicative is in commands and prohibitions. In the LXX (and occasionally NT), future indicatives function as imperatives — especially in legal or moral contexts.</p>
         <p>The Ten Commandments provide the clearest examples: οὐ φονεύσεις — "you shall not murder." Grammatically this is a future indicative, but it functions as a prohibition. This usage has deep roots in Hebrew-influenced Greek.</p>
-        <p>NT examples include Matthew 5:48: ἔσεσθε οὖν ὑμεῖς τέλειοι — "You shall therefore be perfect." Future indicative, imperatival force.</p>
+        <p>NT examples include Matthew 5:48: ἔσεσθε οὖν ὑμεῖς τέλειοι — lit. "you will therefore be perfect" (MSB: "Be perfect, therefore, as your Father in heaven is perfect.") Future indicative, imperatival force.</p>
       </div>
     </div>
 
@@ -14646,8 +14646,8 @@ Verb Endings
       <p class="kc-question">What is the most important factor in interpreting a future verb?</p>
       <div class="kc-options">
         <button class="kc-opt" data-opt="0" onclick="answerVerbKC('kc_va_05_2', this)">The verb's person and number</button>
-        <button class="kc-opt" data-opt="1" onclick="answerVerbKC('kc_va_05_2', this)">Whether the verb has augment</button>
-        <button class="kc-opt" data-opt="2" onclick="answerVerbKC('kc_va_05_2', this)">Context — who is speaking, to whom, and in what situation</button>
+        <button class="kc-opt" data-opt="1" onclick="answerVerbKC('kc_va_05_2', this)">Context — who is speaking, to whom, and in what situation</button>
+        <button class="kc-opt" data-opt="2" onclick="answerVerbKC('kc_va_05_2', this)">Whether the verb has augment</button>
         <button class="kc-opt" data-opt="3" onclick="answerVerbKC('kc_va_05_2', this)">The position of the verb in the sentence</button>
       </div>
       <div class="kc-feedback" id="kc_va_05_2_fb"></div>
@@ -14887,8 +14887,8 @@ Verb Endings
       <p class="kc-question">What does a culminative use of the aorist emphasize?</p>
       <div class="kc-options">
         <button class="kc-opt" data-opt="0" onclick="answerVerbKC('kc_va_08_1', this)">The beginning of an action</button>
-        <button class="kc-opt" data-opt="1" onclick="answerVerbKC('kc_va_08_1', this)">The whole event without focus</button>
-        <button class="kc-opt" data-opt="2" onclick="answerVerbKC('kc_va_08_1', this)">The completion or end result</button>
+        <button class="kc-opt" data-opt="1" onclick="answerVerbKC('kc_va_08_1', this)">The completion or end result</button>
+        <button class="kc-opt" data-opt="2" onclick="answerVerbKC('kc_va_08_1', this)">A midpoint of the action</button>
         <button class="kc-opt" data-opt="3" onclick="answerVerbKC('kc_va_08_1', this)">Repeated action over time</button>
       </div>
       <div class="kc-feedback" id="kc_va_08_1_fb"></div>
@@ -15042,22 +15042,22 @@ Verb Endings
         </div>
         <p>The aorist active also uses <strong class="tf-piece">σ</strong>, but combined with the augment and secondary (not primary) endings:</p>
         <div class="stem-build-box">
-          <div class="stem-row"><span class="aug-piece">ἐ</span><span class="plus-sign">+</span><span class="stem-piece">λύ</span><span class="plus-sign">+</span><span class="tf-piece">σ</span><span class="plus-sign">+</span><span class="cv-piece">α</span><span class="plus-sign">+</span><span class="ending-piece">μεν</span><span style="margin-left:8px;color:#555;font-style:italic">ἐλύσαμεν — AORIST (aug + σ + secondary endings)</span></div>
+          <div class="stem-row"><span class="aug-piece">ἐ</span><span class="plus-sign">+</span><span class="stem-piece">λύ</span><span class="plus-sign">+</span><span class="tf-piece">σα</span><span class="plus-sign">+</span><span class="ending-piece">μεν</span><span style="margin-left:8px;color:#555;font-style:italic">ἐλύσαμεν — AORIST (aug + σ + secondary endings)</span></div>
         </div>
         <p class="highlight">σ = future or aorist. The augment narrows it to aorist.</p>
       </div>
     </div>
 
     <div class="lesson-block" onclick="toggleVerbLessonBlock(this, 'adv')">
-      <div class="lesson-block-header">Stem changes: liquid verbs and compensatory lengthening<small class="block-time">~ 2 min</small></div>
+      <div class="lesson-block-header">Stem changes: liquid verbs (futures in -εσ-)<small class="block-time">~ 2 min</small></div>
       <div class="lesson-block-content">
-        <p>Some verbs resist the standard σ future. Verbs whose stems end in a <strong>liquid consonant</strong> (λ, μ, ν, ρ) cannot attach σ directly — the phonological combination is unworkable in Greek. Instead, the σ drops and the stem vowel lengthens to compensate.</p>
+        <p>Some verbs resist the standard σ future. Verbs whose stems end in a <strong>liquid consonant</strong> (λ, μ, ν, ρ) cannot attach σ directly — the phonological combination is unworkable in Greek. Instead, the future uses εσ; the σ drops out and the ε contracts with the connecting vowel, so liquid futures look like ε-contract forms.</p>
         <p>Example: <strong>κρίνω</strong> (I judge; stem κριν-)</p>
         <ul>
-          <li>Expected future: κριν + σ → (σ drops) → κρινω → <strong>κρινῶ</strong> (with vowel lengthening)</li>
+          <li>Future: κριν + εσ + ω → (σ drops) → κρινέω → <strong>κρινῶ</strong> (ε contracts with the connecting vowel)</li>
         </ul>
-        <p>This is called <strong>compensatory lengthening</strong>: when a sound drops, the adjacent vowel lengthens to preserve the syllable structure. It is a systematic phonological rule, not an irregularity.</p>
-        <p class="highlight">Liquid futures lack σ but follow a predictable compensatory lengthening pattern.</p>
+        <p>The dropped σ leaves the ε of εσ next to the connecting vowel, and the two contract. It is a systematic phonological rule, not an irregularity. (Compensatory lengthening is what happens in the liquid aorist: μένω → ἔμεινα.)</p>
+        <p class="highlight">Liquid futures lack σ but contract like ε-contract verbs (κρινῶ, μενῶ).</p>
       </div>
     </div>
 
@@ -15091,7 +15091,7 @@ Verb Endings
           <p class="kc-question">Why do liquid verbs (like κρίνω) form futures without the standard -σ-?</p>
           <div class="kc-options">
             <button class="kc-opt" data-opt="0" onclick="answerVerbKC('kc_va_31_3', this)">Liquid verbs never form futures in Greek</button>
-            <button class="kc-opt" data-opt="1" onclick="answerVerbKC('kc_va_31_3', this)">σ drops after liquid consonants, and the stem vowel lengthens to compensate</button>
+            <button class="kc-opt" data-opt="1" onclick="answerVerbKC('kc_va_31_3', this)">The future uses εσ; σ drops after the liquid and the ε contracts with the connecting vowel (κρινῶ)</button>
             <button class="kc-opt" data-opt="2" onclick="answerVerbKC('kc_va_31_3', this)">Liquid verbs default to aorist forms for the future</button>
             <button class="kc-opt" data-opt="3" onclick="answerVerbKC('kc_va_31_3', this)">Liquid verbs only occur in the passive voice</button>
           </div>
@@ -15137,12 +15137,12 @@ Verb Endings
             <tr>
               <td><strong>Syllabic Augment</strong></td>
               <td>Add <span class="aug-piece">ε-</span> before consonant-initial stems</td>
-              <td class="vpt-form"><span class="aug-piece">ἐ</span>λυον (from λύω)</td>
+              <td class="vpt-form"><span class="aug-piece">ἔ</span>λυον (from λύω) (from λύω)</td>
             </tr>
             <tr>
               <td><strong>Temporal Augment</strong></td>
               <td>Lengthen the initial vowel of vowel-initial stems</td>
-              <td class="vpt-form"><span class="aug-piece">η</span>κουον (from ἀκούω: α→η)</td>
+              <td class="vpt-form"><span class="aug-piece">ἤ</span>κουον (from ἀκούω: α→η)</td>
             </tr>
           </tbody>
         </table>
@@ -15172,12 +15172,11 @@ Verb Endings
           <span class="vb-plus">+</span>
           <span class="stem-piece">γραφ</span>
           <span class="vb-plus">+</span>
-          <span class="tf-piece">κ</span>
-          <span class="vb-plus">+</span>
           <span class="ending-piece">α</span>
           <span class="vb-equals">=</span>
           <span class="vb-result">γέγραφα</span>
         </div>
+        <p><strong>γράφω</strong> forms a second perfect: no κ.</p>
         <p>Reduplication communicates <strong>completed action with ongoing result</strong> — the stative aspect of the perfect. The doubled consonant is not decorative; it encodes a theological and grammatical statement about the action's completed-yet-continuing nature.</p>
         <p class="highlight">Reduplication = perfect. Doubled initial consonant + ε at the front of the word.</p>
       </div>
@@ -15190,7 +15189,7 @@ Verb Endings
         <ul>
           <li><strong>Aspirated stems</strong>: reduplication uses the unaspirated consonant. φ-initial stems reduplicate with π-: πε- (e.g., πεφίλημαι)</li>
           <li><strong>Compound verbs</strong>: the augment goes on the <em>verbal element</em>, not the preposition prefix. ἐκ-βάλλω → ἐξ-έβαλλον (augment after the prefix)</li>
-          <li><strong>Double consonant initial</strong>: stems beginning with two consonants typically use ε- prefix: γράφω → ἔγραφον</li>
+          <li><strong>Double consonant initial</strong>: in the perfect, stems beginning with two consonants (or ζ, ξ, ψ) usually take only ε- instead of full reduplication (e.g., στέλλω → ἔσταλκα), but a stop + liquid still reduplicates (γράφω → γέγραφα)</li>
         </ul>
         <p>Recognition strategy for unfamiliar forms: strip the initial syllable and ask whether it could be an augment or reduplication prefix. Then identify the stem, tense formative, and ending.</p>
         <p class="highlight">Compound verbs and aspirated stems follow consistent rules — they are not exceptions. They are the rule applied to a different context.</p>
@@ -15561,9 +15560,9 @@ Verb Endings
         <p>A recognized convention in Jewish and early Christian writing (rooted in Hebrew background) is the use of passive voice to imply divine agency without directly naming God. This convention — sometimes called the "divine passive" or <em>passivum divinum</em> — allows writers to avoid using God's name while still asserting divine action.</p>
         <p>Classic NT examples:</p>
         <ul>
-          <li>Matthew 5:4 — "they shall be comforted" — by God, implied</li>
-          <li>Matthew 5:7 — "they shall obtain mercy" — from God, implied</li>
-          <li>Luke 6:38 — "it shall be given to you" — by God, implied</li>
+          <li>Matthew 5:4 — "they will be comforted" — by God, implied</li>
+          <li>Matthew 5:7 — "they will be shown mercy" — from God, implied</li>
+          <li>Luke 6:38 — "it will be given to you" — by God, implied</li>
         </ul>
         <p class="highlight">The divine passive: God is the agent, unnamed but understood. Context and background knowledge are essential for identification.</p>
       </div>
@@ -15631,7 +15630,7 @@ Verb Endings
         <p>Traditionally, a <strong>deponent verb</strong> is defined as a verb that "lacks" active forms but is translated as active in meaning. The Latin <em>deponere</em> means "to lay aside" — the idea being that these verbs have laid aside their active forms.</p>
         <p>Common NT examples described as deponents:</p>
         <ul>
-          <li>ἔρχομαι — to come/go (middle forms throughout)</li>
+          <li><li>ἔρχομαι — to come/go (middle in present and future; aorist ἦλθον and perfect ἐλήλυθα are active)</li></li>
           <li>γίνομαι — to become (middle/passive forms)</li>
           <li>ἀποκρίνομαι — to answer (middle/passive forms)</li>
           <li>προσεύχομαι — to pray (middle forms)</li>
@@ -15839,7 +15838,7 @@ Verb Endings
         <p>Beyond ἵνα, the subjunctive appears in several important constructions:</p>
         <ul>
           <li><strong>ἐάν + subjunctive</strong> — third class conditions: "if (ever) this happens..." (contingent conditions)</li>
-          <li><strong>Deliberative subjunctive</strong> — rhetorical questions about what one should do: "What shall we say?" (τί οὖν ἐροῦμεν;)</li>
+          <li><strong>Deliberative subjunctive</strong> — rhetorical questions about what one should do: "What shall we do?" (τί ποιήσωμεν; Acts 2:37)</li>
           <li><strong>Hortatory subjunctive</strong> — first person exhortation: "Let us..." (ἄγωμεν — "let us go")</li>
           <li><strong>Prohibitive subjunctive</strong> — μή + aorist subjunctive for prohibitions: "do not begin to..."</li>
         </ul>
@@ -15911,7 +15910,7 @@ Verb Endings
         <ul>
           <li><strong>Subject:</strong> τὸ πιστεύειν σωτηρία ἐστίν — "believing is salvation"</li>
           <li><strong>Object:</strong> θέλω πιστεύειν — "I want to believe"</li>
-          <li><strong>Complement:</strong> ἦλθεν σῴζειν — "he came to save" (purpose)</li>
+          <li><li><strong>Purpose (adverbial):</strong> ἦλθεν σῴζειν — "he came to save"</li></li>
         </ul>
         <p>The tense of the infinitive communicates aspect (not time): present infinitive = imperfective; aorist infinitive = perfective.</p>
         <p class="highlight">Infinitive = verbal force + nominal function in the sentence.</p>
@@ -16015,7 +16014,7 @@ Verb Endings
       <div class="lesson-block-header">Participles Are Extremely Common<small class="block-time">~ 2 min</small></div>
       <div class="lesson-block-content">
         <p>Greek participles appear in virtually every passage of the NT. They are not occasional constructions — they are foundational to how Greek communicates complex ideas. Paul's letters in particular are dense with participial constructions.</p>
-        <p>A sentence like Ephesians 1:3-14 — which is a single Greek sentence in some manuscripts — is built largely through participial phrases that elaborate and expand the main assertion. Reading this passage well requires confident handling of participles.</p>
+        <p>A sentence like Ephesians 1:3-14 — which is a single sentence in the Greek text — is built largely through participial phrases that elaborate and expand the main assertion. Reading this passage well requires confident handling of participles.</p>
         <p>Students who struggle with participles will struggle with the NT. Students who master them will find the NT opens up significantly.</p>
       </div>
     </div>
@@ -16120,7 +16119,7 @@ Verb Endings
         <ul>
           <li>John 3:16 — ὁ πιστεύων εἰς αὐτόν — "the one who believes in him" (subject of the purpose clause)</li>
           <li>John 6:35 — ὁ ἐρχόμενος πρός με — "the one who comes to me"</li>
-          <li>John 15:2 — πᾶν κλῆμα ἐν ἐμοὶ μὴ φέρον καρπόν — "every branch in me not bearing fruit"</li>
+          <li><li>John 5:24 — ὁ τὸν λόγον μου ἀκούων — "the one who hears my word"</li></li>
         </ul>
         <p class="highlight">Substantival participle = article + participle functioning as a complete noun phrase.</p>
       </div>
@@ -16196,7 +16195,7 @@ Verb Endings
         <ul>
           <li><strong>Temporal</strong> — "while," "when," "after": πορευόμενος εἶδεν — "while going, he saw"</li>
           <li><strong>Causal</strong> — "because," "since": πιστεύων χαίρει — "because he believes, he rejoices"</li>
-          <li><strong>Concessive</strong> — "although," "even though": ὢν πλούσιος ἐπτώχευσεν — "although he was rich, he became poor" (2 Cor 8:9)</li>
+          <li><strong>Concessive</strong> — "although," "even though": ἐπτώχευσεν πλούσιος ὤν — "although he was rich, he became poor" (2 Cor 8:9)</li>
           <li><strong>Conditional</strong> — "if": πιστεύων σωθήσεται — "if he believes, he will be saved"</li>
           <li><strong>Means</strong> — "by [doing]": τοῦτο ποιῶν... — "by doing this..."</li>
           <li><strong>Manner</strong> — "in a manner of": χαίρων ἐπορεύθη — "he went rejoicing"</li>
@@ -16938,25 +16937,25 @@ Verb Endings
 </section>
 
 </main>
-<script src="vocab.js?v=3.0.8"></script>
-<script src="rhema-align.js?v=3.0.663"></script>
-<script src="app.js?v=3.0.663"></script>
-<script src="rhema-word-study.js?v=3.0.663"></script>
-<script src="rhema-grammar-search.js?v=3.0.663"></script>
-<script src="rhema-xl-views.js?v=3.0.663"></script>
-<script src="rhema-glance.js?v=3.0.663"></script>
-<script src="challenge.js?v=3.0.663"></script>
-<script src="guide-news.js?v=3.0.663"></script>
-<script src="bible-atlas.js?v=3.0.663"></script>
+<script src="vocab.js?v=3.0.664"></script>
+<script src="rhema-align.js?v=3.0.664"></script>
+<script src="app.js?v=3.0.664"></script>
+<script src="rhema-word-study.js?v=3.0.664"></script>
+<script src="rhema-grammar-search.js?v=3.0.664"></script>
+<script src="rhema-xl-views.js?v=3.0.664"></script>
+<script src="rhema-glance.js?v=3.0.664"></script>
+<script src="challenge.js?v=3.0.664"></script>
+<script src="guide-news.js?v=3.0.664"></script>
+<script src="bible-atlas.js?v=3.0.664"></script>
 <script src="bible-genealogy.js?v=3.0.476"></script>
 <script src="bible-regions.js?v=3.0.472"></script>
-<script src="rhema-crossrefs-ui.js?v=3.0.663"></script>
-<script src="verse-structure.js?v=3.0.663"></script>
-<script src="vs-structure.js?v=3.0.663"></script>
-<script src="greek-verbs.js?v=3.0.152"></script>
-<script src="sermon-notes.js?v=3.0.663"></script>
-<script src="bible-quiz.js?v=3.0.663"></script>
-<script src="firebase-lb.js?v=3.0.663" type="module"></script>
+<script src="rhema-crossrefs-ui.js?v=3.0.664"></script>
+<script src="verse-structure.js?v=3.0.664"></script>
+<script src="vs-structure.js?v=3.0.664"></script>
+<script src="greek-verbs.js?v=3.0.664"></script>
+<script src="sermon-notes.js?v=3.0.664"></script>
+<script src="bible-quiz.js?v=3.0.664"></script>
+<script src="firebase-lb.js?v=3.0.664" type="module"></script>
 <!-- Leaderboard Intro Modal -->
 <div class="modal-overlay lb-intro-overlay" id="lbIntroModal">
 <div class="lb-intro-card">

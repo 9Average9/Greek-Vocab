@@ -888,8 +888,8 @@ const VERB_ADV_KC_DATA = {
   kc_va_06_2: [
     { feedback: "The aorist is actually quite common in the NT — this is not the concern. The issue is interpretive overreach." },
     { correct: true, feedback: "Correct! Calling the aorist 'once-for-all' oversimplifies. The aorist does not by itself communicate that an action cannot be repeated. Over-reading it leads to inflated theological claims." },
-    { feedback: "The aorist is not meaningless — it communicates a real perspective. The concern is about reading too much into it." },
-    { feedback: "Calling the aorist 'the tense of completion' is another oversimplification. The aorist presents a whole event — not necessarily one that is complete in the sense of having ongoing results." }
+    { feedback: "'Once-for-all' is not a problem because of where the phrase comes from; the problem is that the aorist form itself does not say an action cannot be repeated." },
+    { feedback: "Scholars broadly agree that the aorist presents action as a whole; the concern is reading too much into it, such as claiming it means 'once-for-all'." }
   ],
   kc_va_07_1: [
     { feedback: "That describes an ingressive use — focusing on the beginning of an action." },
@@ -901,7 +901,7 @@ const VERB_ADV_KC_DATA = {
     { feedback: "The end result or climax is more typical of the culminative category. Ingressive focuses on entry into an action." },
     { correct: true, feedback: "Exactly! The ingressive (inceptive) use of the aorist focuses on the beginning or entry into an action or state." },
     { feedback: "Describing action as ongoing throughout is more typical of the imperfect or present tense." },
-    { feedback: "Ingressive focuses on beginning, not completion. These categories describe patterns, not rigid rules." }
+    { feedback: "The ingressive is a category of aspect and meaning, not voice. It focuses on the beginning of an action in any voice." }
   ],
   kc_va_08_1: [
     { feedback: "The beginning of an action is the ingressive category. The culminative use emphasizes the end result." },
@@ -912,7 +912,7 @@ const VERB_ADV_KC_DATA = {
   kc_va_08_2: [
     { feedback: "The categories are based on real patterns. But they are interpretive tools, not mechanical rules." },
     { correct: true, feedback: "Correct! These categories — constative, ingressive, culminative — are analytical tools that describe patterns. Context always determines which label, if any, best fits." },
-    { feedback: "Rejecting the categories entirely would leave students without interpretive tools. The key is to use them carefully and contextually." },
+    { feedback: "The categories do not replace contextual analysis; they articulate what context already shows." },
     { feedback: "Context is primary — the categories articulate what context shows, not override it." }
   ],
   kc_va_09_1: [
@@ -922,10 +922,10 @@ const VERB_ADV_KC_DATA = {
     { feedback: "Second aorists appear across various moods. The key characteristic is the stem change, not a restriction to the subjunctive." }
   ],
   kc_va_09_2: [
-    { feedback: "While knowing which verbs are deponent is useful, the key skill for second aorists specifically is stem recognition." },
+    { feedback: "Memorizing every form individually is inefficient; the key skill is recognizing the changed stems of common verbs." },
     { correct: true, feedback: "Correct! The key practical skill for second aorists is recognizing the changed stems. Once students know forms like εἶπον (from λέγω) and ἦλθον (from ἔρχομαι), they can work with these common forms confidently." },
     { feedback: "Second aorists should not be avoided — they are very common in NT Greek. εἶπον (said) and ἦλθον (came) appear hundreds of times." },
-    { feedback: "Second aorists are not translated differently from first aorists. They communicate the same aorist aspect." }
+    { feedback: "Second aorists are not present tense. They are aorists with a different stem and carry the same aorist aspect as first aorists." }
   ],
   kc_va_10_1: [
     { feedback: "Greek and English tense work differently. Greek involves both time reference and aspect — a distinction English collapses." },
@@ -1069,7 +1069,7 @@ const VERB_ADV_KC_DATA = {
     { feedback: "The construction communicates temporal, causal, or concessive circumstances — not abstract truth." },
     { correct: true, feedback: "Exactly! 'Absolute' means the participial clause is grammatically independent — it stands on its own, not connected to the main clause grammar." },
     { feedback: "The construction does not always appear at the end of a sentence. Its grammatical independence, not position, makes it 'absolute.'" },
-    { feedback: "The construction does not require four-way agreement. The participle and subject agree with each other in case (genitive) and number." }
+    { feedback: "The construction does not require four-way agreement. The participle and subject agree with each other in gender, case (genitive), and number." }
   ],
   kc_va_22_1: [
     { feedback: "Subject and predicate describe a basic clause structure. Conditional statements have specific names for their parts: protasis and apodosis." },
@@ -1079,7 +1079,7 @@ const VERB_ADV_KC_DATA = {
   ],
   kc_va_22_2: [
     { feedback: "ἐάν + subjunctive is the third class conditional. The first class uses εἰ + indicative." },
-    { feedback: "εἰ + secondary indicative is the second class conditional (contrary-to-fact). The first class uses εἰ + indicative in the present or primary tenses." },
+    { feedback: "εἰ + secondary indicative is the second class conditional (contrary-to-fact). The first class uses εἰ + indicative (any tense) in the protasis." },
     { correct: true, feedback: "Correct! The first class condition uses εἰ + indicative in the protasis, presenting the condition as assumed for the sake of argument — not necessarily declaring it true." },
     { feedback: "ἵνα + subjunctive is a purpose clause construction, not a conditional statement formula." }
   ],
@@ -1159,7 +1159,7 @@ const VERB_ADV_KC_DATA = {
     { feedback: "Personal endings communicate person and number, not the tense system." },
     { correct: true, feedback: "Exactly! The -ο- in λύομεν is the connecting vowel that smooths the junction between stem and ending." },
     { feedback: "The tense formative is a separate element inserted between stem and connecting vowel to mark the tense system." },
-    { feedback: "In λύομεν, the -μεν is the personal ending." }
+    { feedback: "The augment is a prefix (ἐ-) marking past time in the indicative; λύομεν is present and has no augment." }
   ],
   kc_va_29_2: [
     { feedback: "The ending communicates person and number — not the core lexical meaning." },
@@ -1207,7 +1207,7 @@ const VERB_ADV_KC_DATA = {
     { feedback: "Future active uses -σ- as its tense formative, not -θη-." },
     { feedback: "The perfect active uses -κ-. -θη- marks the aorist passive." },
     { correct: true, feedback: "Correct! The -θη- marker is the characteristic tense formative of the aorist passive system." },
-    { feedback: "The imperfect uses no tense formative. -θη- specifically marks the aorist passive." }
+    { feedback: "-α- is not the tense formative of the aorist passive; -θη- specifically marks the aorist passive." }
   ],
   kc_va_31_2: [
     { feedback: "The reduplication prefix (λε-) signals the perfect system, but the tense formative itself is -κ-." },
@@ -1217,8 +1217,8 @@ const VERB_ADV_KC_DATA = {
   ],
   kc_va_31_3: [
     { feedback: "Liquid verbs do form futures — they just do so without the standard -σ- tense formative." },
-    { correct: true, feedback: "Correct! When a stem ends in a liquid (λ, μ, ν, ρ), adding σ is phonologically difficult. The σ drops, and the stem vowel lengthens to compensate — producing forms like κρινῶ from κρίνω." },
-    { feedback: "Liquid verbs do not default to aorist forms. They form distinct futures through compensatory lengthening." },
+    { correct: true, feedback: "Correct! When a stem ends in a liquid (λ, μ, ν, ρ), adding σ is phonologically difficult. Instead the future adds εσ; the σ drops out and the ε contracts with the connecting vowel, producing contracted forms like κρινῶ from κρίνω." },
+    { feedback: "Liquid verbs do not default to aorist forms. They form distinct futures by contraction (εσ is added, the σ drops, and the ε contracts)." },
     { feedback: "Liquid verbs are active verbs. Their unusual futures are a phonological adaptation, not a voice shift." }
   ],
   kc_va_31_4: [
@@ -1463,14 +1463,14 @@ const VERB_ADV_QUIZ_DATA = {
     { text:"In φιλέω (love), when stem-final ε meets connecting vowel ο, the result is:", options:["φιλεο- (both remain separate)","φιλου- (ε + ο contract to ου)","φιλα- (ε + ο contract to α)","φιλη- (ε + ο contract to η)"], correct:1 },
     { text:"When a labial consonant (π, β, φ) combines with the -σ- future marker, they merge to produce:", options:["ξ (xi)","ψ (psi)","The labial drops and σ remains","σσ (double sigma)"], correct:1 },
     { text:"Which principle best explains apparent stem irregularities in Greek verbs?", options:["Irregularities are random and must be memorized","Systematic phonological rules govern every apparent alteration","Most verbs have completely unique paradigms","Contract verbs use different personal endings"], correct:1 },
-    { text:"Liquid verbs (stems ending in λ, μ, ν, ρ) differ primarily in that:", options:["They use a completely different set of personal endings","They never form aorists","They do not use the standard -σ- future tense formative but form futures through compensatory lengthening","They are all deponent verbs"], correct:2 }
+    { text:"Liquid verbs (stems ending in λ, μ, ν, ρ) differ primarily in that:", options:["They use a completely different set of personal endings","They never form aorists","They do not use the standard -σ- future tense formative but add εσ, lose the σ, and contract (e.g., κρινῶ)","They are all deponent verbs"], correct:2 }
   ]},
   va_31: { title:"Tense Formatives and Stem Changes", passMark:4, questions:[
     { text:"Which tense formative is characteristic of the aorist passive system?", options:["-σ-","-κ-","-θη-","-α-"], correct:2 },
-    { text:"In ἔλυσα, the -σα- represents:", options:["Connecting vowel and personal ending combined","First aorist active tense formative (σ) plus thematic vowel (α)","The augment and the stem","The perfect active tense formative"], correct:1 },
+    { text:"In ἔλυσα, the -σα- represents:", options:["Connecting vowel and personal ending combined","First aorist active tense formative (σα)","The augment and the stem","The perfect active tense formative"], correct:1 },
     { text:"If a student spots -κ- between stem and ending, the most likely identification is:", options:["Future active","Aorist passive","Perfect active","Imperfect active"], correct:2 },
     { text:"Why are tense formatives 'diagnostic markers'?", options:["They replace the need to identify the personal ending","They narrow parsing possibilities to a specific tense-voice system before the ending is analyzed","They indicate the mood of the verb","They are only present in irregular verbs"], correct:1 },
-    { text:"Which tense uses no tense formative in active forms but signals itself through reduplication?", options:["Aorist","Future","Perfect","Imperfect"], correct:2 }
+    { text:"Which tense signals itself through reduplication (together with the -κ- formative in the active)?", options:["Aorist","Future","Perfect","Imperfect"], correct:2 }
   ]},
   va_32: { title:"Augment and Reduplication", passMark:4, questions:[
     { text:"The syllabic augment consists of:", options:["Lengthening the initial vowel of a vowel-initial stem","Adding ε- before consonant-initial stems to signal past indicative time","Reduplicating the initial consonant of the stem","Adding -κ- after the stem"], correct:1 },
