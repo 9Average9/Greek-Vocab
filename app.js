@@ -32833,13 +32833,36 @@ function fitHomeLayout() {
     // not the row: an older rule zeroes the height of Home's last child when it
     // has an inline style.)
     grid.classList.remove('ht-fit', 'tg-one-row');
-    ['--ht-col', '--ht-h', '--ht-icon', '--ht-art', '--ht-title', '--ht-sub', '--tg-img'].forEach(k => home.style.removeProperty(k));
+    ['--ht-col', '--ht-h', '--ht-icon', '--ht-art', '--ht-title', '--ht-sub', '--tg-img', '--hh-space'].forEach(k => home.style.removeProperty(k));
     cards.forEach(c => { c.style.removeProperty('min-height'); c.classList.remove('hw-fit'); });
     const m = _homeFitMeasure(home, grid, nav, cards);
     if (!m.tile || !m.tileH) return;
     const extra = m.gap - HOME_FIT_GAP;
     if (Math.abs(extra) < 4) return;
     let toolsGrow = extra;
+    // Header picture on: the room under the greeting (where the picture shows,
+    // 92px by default) gives way first when space is short; on short phones the
+    // tools drop to one row. Cards keep their set heights.
+    if (grid.classList.contains('tools-grid') && home.classList.contains('home-hero-on')) {
+      const BASE = 92, MIN = 10;
+      if (extra >= 0) {
+        if (extra > 6) {
+          const img = m.tile.querySelector('.qa-img');
+          const cur = img ? img.offsetHeight : 50;
+          home.style.setProperty('--tg-img', `${Math.min(60, Math.round(cur + extra / 2))}px`);
+        }
+        return;
+      }
+      let space = Math.max(MIN, BASE + extra);
+      home.style.setProperty('--hh-space', `${space}px`);
+      if (BASE + extra < MIN || window.innerHeight <= 720) {
+        grid.classList.add('tg-one-row');
+        const again = _homeFitMeasure(home, grid, nav, cards);
+        space = Math.max(MIN, Math.min(BASE, space + (again.gap - HOME_FIT_GAP)));
+        home.style.setProperty('--hh-space', `${space}px`);
+      }
+      return;
+    }
     if (extra > 0 && cards.length) {
       const perCard = Math.min(HOME_FIT_CARD_MAX, Math.round(extra * (grid.classList.contains('tools-grid') ? 0.8 : 0.65) / cards.length));
       cards.forEach(c => {
@@ -32985,7 +33008,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.662";
+const APP_VERSION = "3.0.663";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -33008,6 +33031,11 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.663 — The full view</div>
+<ul>
+<li><strong>Bigger header picture</strong> &mdash; The sunrise picture now runs edge to edge across the top of Home with the open Bible on the rock in full view, fading softly into the page along the bottom.</li>
+<li><strong>Even cards</strong> &mdash; Habit Builder and Reading Plan / Journey Maps are the same comfortable size, and the tools are a touch more compact so everything fits above the bottom bar.</li>
+</ul>
 <div class="un-version-label">v3.0.662 — A new top for Home</div>
 <ul>
 <li><strong>Morning on the mountain</strong> &mdash; The top of Home now has a sunrise-over-the-mountains picture with an open Bible, the Rhēma name, and your greeting. Pick a Home background picture of your own and it steps aside.</li>

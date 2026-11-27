@@ -42441,3 +42441,25 @@ html:not(#_t1) body #homeScreen .home-actions-grid.tools-grid.tg-one-row > .home
   html body #homeScreen .home-top-row { margin-bottom: 4px !important; }
   html body #homeScreen .home-greeting-good, html body #homeScreen .home-greeting-time, html body #homeScreen .home-greeting-name { font-size: 1.8rem !important; }
 }
+
+/* ══ Home header picture, v2: edge to edge, Bible on the rock in view, fading
+   only along the bottom. The room under the greeting (--hh-space) is set by the
+   Home fit script so the tools always end above the bar. */
+#homeScreen.home-hero-on > .home-hero-bg {
+  height: 280px; background: url("assets/home-backgrounds/rhema-header.webp?v=3.0.662") 97% 0% / auto 280px no-repeat;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 68%, transparent 100%); mask-image: linear-gradient(180deg, #000 0%, #000 68%, transparent 100%);
+}
+#homeScreen.home-hero-on > .home-hero-bg::after { background: linear-gradient(180deg, rgba(12, 18, 40, .50) 0%, rgba(12, 18, 40, .18) 34%, transparent 56%); }
+html body #homeScreen.home-hero-on .home-top-row { margin-bottom: var(--hh-space, 92px) !important; }
+html body #homeScreen.home-hero-on #hhwSub { display: none !important; }
+html body #homeScreen.home-hero-on .home-habit-widget, html body #homeScreen.home-hero-on .home-swipe-slide { min-height: 118px !important; }
+html body #homeScreen.home-hero-on #homeSwipe.has-plan .home-swipe-slide { min-height: 128px !important; }
+html body #homeScreen.home-hero-on .home-habit-widget, html body #homeScreen.home-hero-on .home-journey-widget { box-shadow: 0 10px 24px rgba(15, 23, 42, .12) !important; }
+html:not(#_t1) body #homeScreen.home-hero-on .home-actions-grid.tools-grid .home-action-tile .qa-img:not(#_t2) { width: var(--tg-img, 50px) !important; height: var(--tg-img, 50px) !important; }
+html:not(#_t1) body #homeScreen.home-hero-on .home-actions-grid.tools-grid > .home-action-tile:not(#_t2) { padding: 10px 6px !important; gap: 6px !important; }
+html body #homeScreen.home-hero-on .home-tools-head { margin: 10px 0 8px !important; }
+@media (max-height: 720px) {
+  html body #homeScreen.home-hero-on .home-habit-widget, html body #homeScreen.home-hero-on .home-swipe-slide, html body #homeScreen.home-hero-on #homeSwipe.has-plan .home-swipe-slide { min-height: 96px !important; }
+  #homeScreen.home-hero-on > .home-hero-bg { height: 230px; background-size: auto 230px; }
+}
+@media (max-height: 720px) { html body #homeScreen.home-hero-on #homeSwipe.has-plan .home-swipe-slide { min-height: 116px !important; } }
