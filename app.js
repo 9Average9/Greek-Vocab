@@ -33044,7 +33044,7 @@ function initHomeQuickActionCarousel() {
 /* =========================
    PWA INSTALL + UPDATE LOGIC
 ========================= */
-const APP_VERSION = "3.0.667";
+const APP_VERSION = "3.0.668";
 
 // Per-file versions for Rhema data bundles - only update a file's entry here
 // when its data actually changes, so app version bumps don't invalidate 15 MB+ of caches.
@@ -33067,6 +33067,10 @@ const RHEMA_DATA_VERSIONS = {
 };
 
 const UPDATE_NOTES_HTML = `
+<div class="un-version-label">v3.0.668 — Steady Home tools</div>
+<ul>
+<li><strong>No more jumpy tools</strong> &mdash; Coming back to Home from Lessons (or anywhere), the tools and cards now rise softly into place instead of swelling past their size for a moment and getting clipped. This was most visible with the Candy and Notebook styles.</li>
+</ul>
 <div class="un-version-label">v3.0.667 — Back to Lessons</div>
 <ul>
 <li><strong>Close the reader, stay in Lessons</strong> &mdash; Open Read from Lessons and tap the home button to close it, and you land back in Lessons with Lessons lit up in the bottom bar, instead of jumping to Home.</li>
