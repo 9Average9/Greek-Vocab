@@ -41798,6 +41798,13 @@ body.you-sheet-open .you-hero-guide { opacity: 0; transition: opacity .2s; }
 :root[data-skin] .screen.active .home-action-tile:nth-child(3), :root[data-skin] #profilePage.active .you-stat:nth-child(3) { animation-delay: .08s; }
 :root[data-skin] .screen.active .home-action-tile:nth-child(4), :root[data-skin] #profilePage.active .you-stat:nth-child(4) { animation-delay: .12s; }
 :root[data-skin] .screen.active .home-action-tile:nth-child(n+5) { animation-delay: .16s; }
+/* Home's cards and tools arrive with a soft rise that never goes past full size
+   (no overshoot, no tilt), so nothing looks bigger for a moment or gets clipped
+   by its row. Each style keeps its own entrance elsewhere. */
+:root[data-skin] #homeScreen.screen.active :is(.home-habit-widget, .home-swipe, .home-action-tile) {
+  animation-name: homeSoftIn !important; animation-duration: .42s !important; animation-timing-function: cubic-bezier(.2, .8, .3, 1) !important;
+}
+@keyframes homeSoftIn { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
 :root[data-skin] :is(.home-action-tile, .main-btn, .you-row, .you-stat, .you-style, .you-seg button, .hpw-go, .ht-btn, .you-sw, .rrp-row, .rrp-tour) { transition: transform .14s ease; }
 :root[data-skin] :is(.home-action-tile, .main-btn, .you-row, .you-stat, .you-style, .you-seg button, .hpw-go, .ht-btn, .you-sw, .rrp-row, .rrp-tour):active { transform: var(--skin-press) !important; }
 @media (prefers-reduced-motion: reduce) {
